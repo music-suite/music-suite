@@ -16,6 +16,9 @@ type Accidental = Int
 -- | Number of octaves raised (positive) or flattened (negative).
 type Octaves    = Int 
 
+-- TODO use invervals Numeric.Inteval ?
+type Interval = (Pitch, Pitch)
+
 withPitch f = Pitch . f . getPitch
 
 sharpen       = withPitch $ \(p,a,o) -> (p,a+1,o)

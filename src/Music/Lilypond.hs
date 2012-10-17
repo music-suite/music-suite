@@ -5,88 +5,9 @@ module Music.Lilypond -- (
   -- )
 where
 
-import Data.Ratio
-import Text.PrettyPrint
+import Data.Semigroup
+import Text.Pretty
 import Music.Lilypond.Pitch
-
--- Doc
--- empty <> <+> hcat hsep
--- $$ $+$ vcat sep cat
--- char text
--- int integer float rational
--- parens brackets braces quotes doubleQuotes
--- mest hang punctuate
--- renderStyle
-
-list :: b -> (a -> [a] -> b) -> [a] -> b
-list z f [] = z
-list z f (x:xs) = x `f` xs
-
-class Pretty a where
-    pretty :: a -> Doc
-    pconcat :: [a] -> Doc
-    pconcat = sep . map pretty
-
-instance Pretty Integer where
-    pretty = integer
-
-instance (Pretty a, Pretty b) => Pretty (a,b) where
-    pretty (x, y) = parens $ pretty x `g` pretty y
-        where x `g` y = x <> char ',' <> y
-
-instance Pretty a => Pretty [a] where
-    pretty = brackets . sepBy (char ',') . map pretty
-
-instance Pretty a => Pretty (Maybe a) where
-    pretty = maybe empty pretty
-
-instance (Pretty a, Integral a) => Pretty (Ratio a) where
-    pretty x = pretty (numerator x) <> char '/' <> pretty (denominator x)
-
-string = text
-
--- |
--- Join with separator.
---
--- > sepBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn.
-sepBy :: Doc -> [Doc] -> Doc
-
--- |
--- Join with initiator.
---
--- > initBy q [x1,x2..xn] = q <> x1 <> q <> x2 <> q .. xn.
-initBy :: Doc -> [Doc] -> Doc
-
--- |
--- Join with terminator.
---
--- > termBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn <> q.
-termBy :: Doc -> [Doc] -> Doc
-sepBy  p = list empty $ \x -> (x <>) . initBy p
-initBy p = hcat . map (p <>)
-termBy p = hcat . map (<> p)
-
-
--- |
--- Join with separator followed by space.
---
--- > sepByS q [x1,x2..xn] = x1 <> q <+> x2 <> q <+>.. xn.
-sepByS :: Doc -> [Doc] -> Doc
-
--- |
--- Join with initiator followed by space.
---
--- > initByS q [x1,x2..xn] = q <+> x1 <> q <+> x2 <> q <+> .. xn.
-initByS :: Doc -> [Doc] -> Doc
-
--- |
--- Join with terminator followed by space.
---
--- > termByS q [x1,x2..xn] = x1 <> q <+> x2 <> q <+> .. xn <> q.
-termByS :: Doc -> [Doc] -> Doc
-sepByS  p = list empty $ \x -> (x <>) . initByS p
-initByS p = hcat . map (p <+>)
-termByS p = hsep . map (<> p)
 
 {-
 data Lilypond 
@@ -112,9 +33,7 @@ data ScoreBlock
     -- full markup etc
 -}
 
--- TODO use invervals Numeric.Inteval ?
-type Interval = (Pitch, Pitch)
-type Dur = Rational
+type Duration = Rational
 
 data Music
     = Simple SimpleMusic                        -- ^ A single chord.
@@ -128,7 +47,7 @@ data Music
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
     | Breathe BreathingSign                     -- ^ Breath mark (caesura)
-    | MetronomeMark (Maybe String) Dur Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
+    | MetronomeMark (Maybe String) Duration Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
     | TempoMark String                          -- ^ Tempo mark.
     deriving (Eq, Show)
 
@@ -138,9 +57,9 @@ data Music
 instance Pretty Music where
     pretty (Simple x)               = pretty x
 
-    pretty (Sequential xs)          = string "{" <+> pconcat xs <+> string "}"
+    pretty (Sequential xs)          = string "{" <+> prettyList xs <+> string "}"
 
-    pretty (Simultaneous xs)        = string "<<" <+> pconcat xs <+> string ">>"
+    pretty (Simultaneous xs)        = string "<<" <+> prettyList xs <+> string ">>"
 
     pretty (Repeat unfold times x y)  = string "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
         where 
@@ -158,8 +77,8 @@ instance Pretty Music where
     -- | Phrase Bool                               -- ^ Begin or end phrase slur
 
 data SimpleMusic
-    = Note Note (Maybe Dur) [PostEvent]
-    | Chord [Note] (Maybe Dur) [PostEvent]
+    = Note Note (Maybe Duration) [PostEvent]
+    | Chord [Note] (Maybe Duration) [PostEvent]
     deriving (Eq, Show)
 
 instance Pretty SimpleMusic where
@@ -168,7 +87,7 @@ instance Pretty SimpleMusic where
 
 data Note
     = NotePitch [Exclamation] [Question] (Maybe OctaveCheck)
-    | NoteDrumPitch (Maybe Dur)
+    | NoteDrumPitch (Maybe Duration)
     deriving (Eq, Show)
     -- TODO lyrics 
 
