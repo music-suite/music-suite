@@ -5,6 +5,7 @@ module Music.Lilypond -- (
   -- )
 where
 
+import Data.Ratio
 import Text.PrettyPrint
 import Music.Lilypond.Pitch
 
@@ -17,9 +18,9 @@ import Music.Lilypond.Pitch
 -- mest hang punctuate
 -- renderStyle
 
-list :: a -> ([b] -> a) -> [b] -> a
+list :: b -> (a -> [a] -> b) -> [a] -> b
 list z f [] = z
-list z f xs = f xs
+list z f (x:xs) = x `f` xs
 
 class Pretty a where
     pretty :: a -> Doc
@@ -36,12 +37,18 @@ instance (Pretty a, Pretty b) => Pretty (a,b) where
 instance Pretty a => Pretty [a] where
     pretty = brackets . sepBy (char ',') . map pretty
 
+instance Pretty a => Pretty (Maybe a) where
+    pretty = maybe empty pretty
+
+instance (Pretty a, Integral a) => Pretty (Ratio a) where
+    pretty x = pretty (numerator x) <> char '/' <> pretty (denominator x)
+
 string = text
 
 -- |
 -- Join with separator.
 --
--- > initBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn.
+-- > sepBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn.
 sepBy :: Doc -> [Doc] -> Doc
 
 -- |
@@ -53,17 +60,31 @@ initBy :: Doc -> [Doc] -> Doc
 -- |
 -- Join with terminator.
 --
--- > initBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn <> q.
+-- > termBy q [x1,x2..xn] = x1 <> q <> x2 <> q .. xn <> q.
 termBy :: Doc -> [Doc] -> Doc
-sepBy  p = list empty $ \(x:xs) -> x <> initBy p xs
+sepBy  p = list empty $ \x -> (x <>) . initBy p
 initBy p = hcat . map (p <>)
 termBy p = hcat . map (<> p)
 
 
+-- |
+-- Join with separator followed by space.
+--
+-- > sepByS q [x1,x2..xn] = x1 <> q <+> x2 <> q <+>.. xn.
 sepByS :: Doc -> [Doc] -> Doc
+
+-- |
+-- Join with initiator followed by space.
+--
+-- > initByS q [x1,x2..xn] = q <+> x1 <> q <+> x2 <> q <+> .. xn.
 initByS :: Doc -> [Doc] -> Doc
+
+-- |
+-- Join with terminator followed by space.
+--
+-- > termByS q [x1,x2..xn] = x1 <> q <+> x2 <> q <+> .. xn <> q.
 termByS :: Doc -> [Doc] -> Doc
-sepByS  p = list empty $ \(x:xs) -> x <> initByS p xs
+sepByS  p = list empty $ \x -> (x <>) . initByS p
 initByS p = hcat . map (p <+>)
 termByS p = hsep . map (<> p)
 
@@ -97,25 +118,36 @@ type Dur = Rational
 
 data Music
     = Simple SimpleMusic                        -- ^ A single chord.
-    | Simultaneous [Music]                      -- ^ Parallel composition.
     | Sequential   [Music]                      -- ^ Sequential composition.
-    | Repeat String Int Music (Maybe Music)     -- ^ Repetition (text, times, music, alt).
+    | Simultaneous [Music]                      -- ^ Parallel composition.
+    | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
     | Transpose Interval Music                  -- ^ Transpose music
     | Times Rational Music                      -- ^ Stretch music
     | Relative Pitch Music                      -- ^ Use relative pitch
     | Clef Clef                                 -- ^ 
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
-    | Breathe BreathingSign                     -- ^ Breath mark (cesura)
+    | Breathe BreathingSign                     -- ^ Breath mark (caesura)
     | MetronomeMark (Maybe String) Dur Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
     | TempoMark String                          -- ^ Tempo mark.
     deriving (Eq, Show)
 
+-- TODO tremolo
+-- TODO percent repeats
+
 instance Pretty Music where
-    pretty (Simple x)               = error "Not implemented"
-    pretty (Simultaneous xs)        = error "Not implemented"
-    pretty (Sequential xs)          = error "Not implemented"
-    pretty (Repeat text times x y)  = error "Not implemented"
+    pretty (Simple x)               = pretty x
+
+    pretty (Sequential xs)          = string "{" <+> pconcat xs <+> string "}"
+
+    pretty (Simultaneous xs)        = string "<<" <+> pconcat xs <+> string ">>"
+
+    pretty (Repeat unfold times x y)  = string "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
+        where 
+            unf p = if p then string "unfold" else string "volta"
+            alt Nothing  = empty
+            alt (Just x) = string "\\alternative" <> pretty x
+
     pretty (Transpose intv x)       = error "Not implemented"
     pretty (Times rat x)            = error "Not implemented"
     pretty (Relative pitch x)       = error "Not implemented"
@@ -131,8 +163,8 @@ data SimpleMusic
     deriving (Eq, Show)
 
 instance Pretty SimpleMusic where
-    pretty (Note n d p)   = string "NOTE"
-    pretty (Chord ns d p) = string "CHORD"
+    pretty (Note n d p)   = pretty n <> pretty d <> pretty p
+    pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
 
 data Note
     = NotePitch [Exclamation] [Question] (Maybe OctaveCheck)
@@ -221,6 +253,8 @@ data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
 data PostEvent = PostEvent
     deriving (Eq, Show)
+
+instance Pretty PostEvent where pretty = error "PostEvent"
                                            
 -- data ChangeHead
 --     = NoteMode
