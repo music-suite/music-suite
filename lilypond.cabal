@@ -4,7 +4,7 @@ version:        0.5
 cabal-version:  >= 1.2
 build-type:     Simple
 author:         Hans Hoglund
-synopsis:       Haskell bindings for Lilypond
+synopsis:       Bindings to Lilypond
 category:       Music
 tested-with:    GHC
 
@@ -24,4 +24,5 @@ library
         -- Music.Lilypond.Rhythms
         -- Music.Lilypond.Expression
         -- Music.Lilypond.Repeats
+        Music.Lilypond.IO
     

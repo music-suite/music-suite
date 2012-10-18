@@ -5,6 +5,7 @@ module Music.Lilypond -- (
   -- )
 where
 
+import Data.Ratio
 import Data.Semigroup
 import Text.Pretty
 import Music.Lilypond.Pitch
@@ -33,7 +34,7 @@ data ScoreBlock
     -- full markup etc
 -}
 
-type Duration = Rational
+type Dur = Ratio Int
 
 data Music
     = Simple SimpleMusic                        -- ^ A single chord.
@@ -47,7 +48,7 @@ data Music
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
     | Breathe BreathingSign                     -- ^ Breath mark (caesura)
-    | MetronomeMark (Maybe String) Duration Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
+    | MetronomeMark (Maybe String) Dur Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
     | TempoMark String                          -- ^ Tempo mark.
     deriving (Eq, Show)
 
@@ -77,8 +78,8 @@ instance Pretty Music where
     -- | Phrase Bool                               -- ^ Begin or end phrase slur
 
 data SimpleMusic
-    = Note Note (Maybe Duration) [PostEvent]
-    | Chord [Note] (Maybe Duration) [PostEvent]
+    = Note Note (Maybe Dur) [PostEvent]
+    | Chord [Note] (Maybe Dur) [PostEvent]
     deriving (Eq, Show)
 
 instance Pretty SimpleMusic where
@@ -87,7 +88,7 @@ instance Pretty SimpleMusic where
 
 data Note
     = NotePitch [Exclamation] [Question] (Maybe OctaveCheck)
-    | NoteDrumPitch (Maybe Duration)
+    | NoteDrumPitch (Maybe Dur)
     deriving (Eq, Show)
     -- TODO lyrics 
 
