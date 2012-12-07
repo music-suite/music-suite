@@ -1,0 +1,22 @@
+
+name:           modulo
+version:        0.5
+cabal-version:  >= 0.14
+build-type:     Simple
+author:         Hans Hoglund
+synopsis:       MusicXML format
+category:       Music
+tested-with:    GHC
+
+
+description: 
+    A representation of the MusicXML format.
+
+library                    
+    build-depends: 
+        base, semigroups, data-default, xml
+
+    hs-source-dirs: src
+    exposed-modules:
+        Music.MusicXml
+    
