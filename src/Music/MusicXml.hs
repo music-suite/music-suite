@@ -6,7 +6,9 @@ module Music.MusicXml (
         ScoreHeader(..),
         Defaults(..),
         MeasureAttrs(..),
-        
+
+        -- * Part list
+
         -- * Music and notes
         Music,
         MusicData(..),
@@ -21,7 +23,7 @@ module Music.MusicXml (
         -- * Layout etc
         Direction(..),
         Attributes(..),
-        
+
         -- * Simple types
         -- ** Miscellaneous types
         NoteSize(..),
@@ -33,7 +35,7 @@ module Music.MusicXml (
         Octaves(..),
         Steps(..),
         Semitones(..),
-        
+
         -- ** Derived types
         -- *** Time
         Dur(..),
@@ -43,7 +45,7 @@ module Music.MusicXml (
         DisplayPitch(..)
  ) where
 
-data Score 
+data Score
     = PartwiseScore
         ScoreAttrs
         ScoreHeader
@@ -55,36 +57,56 @@ data Score
 
 data ScoreAttrs
     = ScoreAttrs
-        [Int]       -- version
+        [Int]               -- version
 
 data ScoreHeader
     = ScoreHeader
-        -- titles?
-        -- identification?
-        -- defaults?
-        -- credit*
-        -- partlist?
+                            -- titles?
+                            -- identification?
+                            -- defaults?
+                            -- credit*
+        PartList            -- partlist?
 
 data Defaults
     = Defaults
-        -- page layout (marigins, distance etc)
-        -- system layout
-        -- staff layout
-        -- scaling
-        -- appearance (line width etc)
+                            -- page layout (marigins, distance etc)
+                            -- system layout
+                            -- staff layout
+                            -- scaling
+                            -- appearance (line width etc)
 
-        
+
 data MeasureAttrs
     = MeasureAttrs
-        -- number
-        -- implicit?
-        -- nonContr?
-        -- width?
+                            -- number
+                            -- implicit?
+                            -- nonContr?
+                            -- width?
+
+
+type PartList = [PartListElem]
+
+data PartListElem
+    = PartListPart
+          String            -- id
+          String            -- name
+          (Maybe String)    -- abbrev
+                            -- instr
+                            -- midi device
+                            -- midi instr
+    | PartListGroup
+          String            -- name
+          (Maybe String)    -- abbrev
+                            -- symbol
+                            -- commonBarline
+                            -- time (?)
+                            -- type (?)
+                            -- number (?)
 
 
 type Music = [MusicData]
 
-data MusicData 
+data MusicData
     = MusicNote Note
     -- |   MusicBackup Backup
     -- |   MusicForward Forward
@@ -99,7 +121,7 @@ data MusicData
     --  | Link Link
     --  | Bookmark Bookmark
 
-data Note 
+data Note
     = Note
         FullNote
         Dur
@@ -115,19 +137,19 @@ data Note
         NoteProps
 
 data FullNote
-    = Pitched       -- isChordNote pitch 
-        Bool 
+    = Pitched       -- isChordNote pitch
+        Bool
         Pitch
-    | Unpitched     -- isChordNote disp 
-        Bool 
+    | Unpitched     -- isChordNote disp
+        Bool
         DisplayPitch
-    | Rest          -- isChordNote disp 
-        Bool 
+    | Rest          -- isChordNote disp
+        Bool
         DisplayPitch
 
 
 -- TODO voice?
-data NoteProps 
+data NoteProps
     = NoteProps
                     -- instr
         NoteType    -- note type
@@ -140,14 +162,14 @@ data NoteProps
                     -- beam
                     -- notations
                     -- lyrics
-    
 
 
-data Tie 
+
+data Tie
     = TieStart Int -- level
     | TieStop  Int -- level
 
-data TieNotation 
+data TieNotation
     = TieNotationStart Int -- level
     | TieNotationStop  Int -- level
     -- TODO type, position, placement
