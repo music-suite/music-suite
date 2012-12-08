@@ -6,32 +6,36 @@ module Music.MusicXml (
         ScoreHeader(..),
         Defaults(..),
         MeasureAttrs(..),
-
-        -- * Part list
+        -- ** Part list
         PartList,
         PartListElem(..),
 
-        -- * Music and notes
+
+        -- * Music
         Music,
         MusicData(..),
+
+        -- * Notes
         Note(..),
         FullNote(..),
         NoteProps(..),
-
-        -- * Ties
         Tie(..),
         TieNotation(..),
 
-        -- * Layout etc
+        -- * Directions
         Direction(..),
+
+        -- * Attributes
         Attributes(..),
 
-        -- * Simple types
-        -- ** Miscellaneous types
+
+
+        -- * Basic types
+        -- ** Enum types
         NoteSize(..),
         Accidental(..),
 
-        -- ** Numerical types
+        -- ** Numeric types
         Divisions(..),
         NoteValue(..),
         Octaves(..),
@@ -46,6 +50,11 @@ module Music.MusicXml (
         Pitch(..),
         DisplayPitch(..)
  ) where
+
+
+-- --------------------------------------------------------------------------------
+-- Score
+-- --------------------------------------------------------------------------------
 
 data Score
     = PartwiseScore
@@ -86,6 +95,10 @@ data MeasureAttrs
                             -- width?
 
 
+-- --------------------------------------------------------------------------------
+-- Part list
+-- --------------------------------------------------------------------------------
+
 type PartList = [PartListElem]
 
 data PartListElem
@@ -106,6 +119,10 @@ data PartListElem
                             -- number (?)
 
 
+-- --------------------------------------------------------------------------------
+-- Music
+-- --------------------------------------------------------------------------------
+
 type Music = [MusicData]
 
 data MusicData
@@ -122,6 +139,11 @@ data MusicData
     --  | Grouping Grouping
     --  | Link Link
     --  | Bookmark Bookmark
+
+
+-- --------------------------------------------------------------------------------
+-- Notes
+-- --------------------------------------------------------------------------------
 
 data Note
     = Note
@@ -177,8 +199,30 @@ data TieNotation
     -- TODO type, position, placement
 
 
+-- --------------------------------------------------------------------------------
+-- Directions
+-- --------------------------------------------------------------------------------
+
 data Direction = Direction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 data Attributes = Attributes
+
+-- --------------------------------------------------------------------------------
+-- Basic types
+-- --------------------------------------------------------------------------------
 
 
 
