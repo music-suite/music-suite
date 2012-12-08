@@ -69,36 +69,44 @@ data Note
         FullNote
         Dur
         NoteProps
-    | GraceNote
+    | GraceNote
         FullNote
         [Tie]
         NoteProps
 
 data FullNote
-    = Pitched Pitch
-    | Unpitched DispStepOct
-    | Rest DispStepOct
+    = Pitched       -- isChord pitch 
+        Bool 
+        Pitch
+    | Unpitched     -- isChord disp 
+        Bool 
+        DispStepOct
+    | Rest          -- isChord disp 
+        Bool 
+        DispStepOct
 
 
 data NoteProps 
     = NoteProps
-        -- instr
-        -- note type
-        -- dots
-        -- accidental
-        -- time modification
-        -- stem
-        -- note head
-        -- staff
-        -- beam
-        -- notations
-        -- lyrics
+                    -- instr
+        NoteType    -- note type
+        Int         -- dots
+                    -- accidental
+                    -- time modification
+                    -- stem
+                    -- note head
+                    -- staff
+                    -- beam
+                    -- notations
+                    -- lyrics
     
 
 
 
-data Tie = Tie
-
+data Tie 
+    = TieStart 
+    | TieStop 
+    | TieStartStop
 
 
 data Backup = Backup
@@ -113,10 +121,13 @@ data Attributes = Attributes
 
 
 
-type Step        = Int -- TODO newtype?
-type Oct         = Int -- TODO newtype?
-type Divs        = Int -- TODO newtype?
+type Step        = Int      -- TODO newtype?
+type Oct         = Int      -- TODO newtype?
+type Divs        = Int      -- TODO newtype?
+type NoteVal     = Rational -- or enum?
+data NoteSize    = SizeFull | SizeCue | SizeLarge
+type NoteType    = (NoteVal, NoteSize)
 type Dur         = Divs
 type Pitch       = (Step, Oct)
 type DispStepOct = (Step, Oct)
-
+data Accidental  = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
