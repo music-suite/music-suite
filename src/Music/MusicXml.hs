@@ -1,7 +1,47 @@
 
-module Music.MusicXml -- (
---  ) 
-where
+module Music.MusicXml (
+        -- * Score
+        Score(..),
+        ScoreAttrs(..),
+        ScoreHeader(..),
+        Defaults(..),
+        MeasureAttrs(..),
+        
+        -- * Music and notes
+        Music,
+        MusicData(..),
+        Note(..),
+        FullNote(..),
+        NoteProps(..),
+
+        -- * Ties
+        Tie(..),
+        TieNotation(..),
+
+        -- * Layout etc
+        Direction(..),
+        Attributes(..),
+        
+        -- * Simple types
+        -- ** Miscellaneous types
+        NoteSize(..),
+        Accidental(..),
+
+        -- ** Numerical types
+        Divisions(..),
+        NoteValue(..),
+        Octaves(..),
+        Steps(..),
+        Semitones(..),
+        
+        -- ** Derived types
+        -- *** Time
+        Dur(..),
+        NoteType(..),
+        -- *** Pitch
+        Pitch(..),
+        DisplayPitch(..)
+ ) where
 
 data Score 
     = PartwiseScore
@@ -15,7 +55,7 @@ data Score
 
 data ScoreAttrs
     = ScoreAttrs
-        -- id?
+        [Int]       -- version
 
 data ScoreHeader
     = ScoreHeader
@@ -108,8 +148,8 @@ data Tie
     | TieStop  Int -- level
 
 data TieNotation 
-    = TieStart Int -- level
-    | TieStop  Int -- level
+    = TieNotationStart Int -- level
+    | TieNotationStop  Int -- level
     -- TODO type, position, placement
 
 
@@ -123,11 +163,11 @@ data Attributes = Attributes
 
 
 
-newtype Divisions = Divisions Int      -- absolute dur
-newtype NoteValue = NoteValue Rational -- relative dur
-newtype Octaves   = Octaves Int
-newtype Steps     = Steps Int
-newtype Semitones = Semitones Int
+newtype Divisions = Divisions { getDivisions :: Int }      -- absolute dur
+newtype NoteValue = NoteValue { getNoteValue :: Rational } -- relative dur
+newtype Octaves   = Octaves { getOctaves :: Int }
+newtype Steps     = Steps { getSteps :: Int }
+newtype Semitones = Semitones { getSemitones :: Int }
 
 data NoteSize     = SizeFull | SizeCue | SizeLarge
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
