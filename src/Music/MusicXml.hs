@@ -8,6 +8,8 @@ module Music.MusicXml (
         MeasureAttrs(..),
 
         -- * Part list
+        PartList,
+        PartListElem(..),
 
         -- * Music and notes
         Music,
