@@ -171,6 +171,10 @@ data FullNote
         Bool
         DisplayPitch
 
+data Tie
+    = TieStart Int -- level
+    | TieStop  Int -- level
+
 
 -- TODO voice?
 data NoteProps
@@ -187,11 +191,22 @@ data NoteProps
                     -- notations
                     -- lyrics
 
-
-
-data Tie
-    = TieStart Int -- level
-    | TieStop  Int -- level
+-- TODO
+data Notation = Notation
+    --  = NotationTied Tied   
+    --  | NotationSlur Slur   
+    --  | NotationTuplet Tuplet   
+    --  | NotationGlissando Glissando     
+    --  | NotationSlide Slide     
+    --  | NotationOrnaments Ornaments     
+    --  | NotationTechnical Technical     
+    --  | NotationArticulations Articulations     
+    --  | NotationDynamics Dynamics   
+    --  | NotationFermata Fermata     
+    --  | NotationArpeggiate Arpeggiate   
+    --  | NotationNonArpeggiate NonArpeggiate     
+    --  | NotationAccidentalMark AccidentalMark   
+    --  | NotationOther OtherNotation
 
 data TieNotation
     = TieNotationStart Int -- level
@@ -205,7 +220,9 @@ data TieNotation
 
 data Direction = Direction
 
-
+-- Words
+-- Dynamics
+-- Wedges
 
 
 
@@ -219,6 +236,12 @@ data Direction = Direction
 
 
 data Attributes = Attributes
+
+-- Key
+-- Time
+-- Divisions
+-- Clef
+-- Staves
 
 -- --------------------------------------------------------------------------------
 -- Basic types
