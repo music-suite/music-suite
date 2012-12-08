@@ -75,23 +75,24 @@ data Note
         NoteProps
 
 data FullNote
-    = Pitched       -- isChord pitch 
+    = Pitched       -- isChordNote pitch 
         Bool 
         Pitch
-    | Unpitched     -- isChord disp 
+    | Unpitched     -- isChordNote disp 
         Bool 
         DispStepOct
-    | Rest          -- isChord disp 
+    | Rest          -- isChordNote disp 
         Bool 
         DispStepOct
 
 
+-- TODO voice?
 data NoteProps 
     = NoteProps
                     -- instr
         NoteType    -- note type
         Int         -- dots
-                    -- accidental
+        Accidental  -- accidental
                     -- time modification
                     -- stem
                     -- note head
