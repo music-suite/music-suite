@@ -37,7 +37,7 @@ data Defaults
 data MeasureAttrs
     = MeasureAttrs
         -- number
-        -- i?mplicit
+        -- implicit?
         -- nonContr?
         -- width?
 
@@ -46,8 +46,8 @@ type Music = [MusicData]
 
 data MusicData 
     = MusicNote Note
-    | MusicBackup Backup
-    | MusicForward Forward
+    -- |   MusicBackup Backup
+    -- |   MusicForward Forward
     | MusicDirection Direction
     | MusicAttributes Attributes
     --  | Harmony Harmony
@@ -103,15 +103,16 @@ data NoteProps
     
 
 
-
 data Tie 
-    = TieStart 
-    | TieStop 
-    | TieStartStop
+    = TieStart Int -- level
+    | TieStop  Int -- level
+
+data TieNotation 
+    = TieStart Int -- level
+    | TieStop  Int -- level
+    -- TODO type, position, placement
 
 
-data Backup = Backup
-data Forward = Forward
 data Direction = Direction
 data Attributes = Attributes
 
