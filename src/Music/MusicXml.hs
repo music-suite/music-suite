@@ -80,10 +80,10 @@ data FullNote
         Pitch
     | Unpitched     -- isChordNote disp 
         Bool 
-        DispStepOct
+        DisplayPitch
     | Rest          -- isChordNote disp 
         Bool 
-        DispStepOct
+        DisplayPitch
 
 
 -- TODO voice?
@@ -122,13 +122,18 @@ data Attributes = Attributes
 
 
 
-type Step        = Int      -- TODO newtype?
-type Oct         = Int      -- TODO newtype?
-type Divs        = Int      -- TODO newtype?
-type NoteVal     = Rational -- or enum?
-data NoteSize    = SizeFull | SizeCue | SizeLarge
-type NoteType    = (NoteVal, NoteSize)
-type Dur         = Divs
-type Pitch       = (Step, Oct)
-type DispStepOct = (Step, Oct)
-data Accidental  = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
+newtype Divisions = Divisions Int      -- absolute dur
+newtype NoteValue = NoteValue Rational -- relative dur
+newtype Octaves   = Octaves Int
+newtype Steps     = Steps Int
+newtype Semitones = Semitones Int
+
+data NoteSize     = SizeFull | SizeCue | SizeLarge
+data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
+
+type Dur          = Divisions
+type NoteType     = (NoteValue, NoteSize)
+type Pitch        = (Steps, Maybe Semitones, Octaves)
+type DisplayPitch = (Steps, Octaves)
+
+
