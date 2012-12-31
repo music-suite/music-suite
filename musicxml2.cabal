@@ -1,5 +1,5 @@
 
-name:           modulo
+name:           musicxml2
 version:        0.5
 cabal-version:  >= 0.14
 build-type:     Simple
