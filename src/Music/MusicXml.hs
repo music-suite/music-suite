@@ -298,12 +298,12 @@ data Direction
 
 type Dur          = Divisions
 type NoteType     = (NoteValue, NoteSize)
-type Pitch        = (Steps, Maybe Semitones, Octaves) -- semitones maybe redundant (use zero)?
+type Pitch        = (Steps, Maybe Semitones, Octaves)       -- semitones maybe redundant (use zero)?
 type DisplayPitch = (Steps, Octaves)
 
-newtype Divisions = Divisions { getDivisions :: Int }      -- absolute dur
+newtype Divisions = Divisions { getDivisions :: Int }       -- absolute dur
     deriving (Eq, Ord, Num, Enum)
-newtype NoteValue = NoteValue { getNoteValue :: Rational } -- relative dur
+newtype NoteValue = NoteValue { getNoteValue :: Rational }  -- relative dur
     deriving (Eq, Ord, Num, Enum)
 
 
@@ -311,16 +311,16 @@ newtype Octaves   = Octaves { getOctaves :: Int }
     deriving (Eq, Ord, Num, Enum)
 newtype Steps     = Steps { getSteps :: Int }
     deriving (Eq, Ord, Num, Enum)
-newtype Semitones = Semitones { getSemitones :: Double } -- Note: microtones allowed here
+newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed here
     deriving (Eq, Ord, Num, Enum)
-newtype Line      = Line { getLine :: Int }               -- line number, from bottom
+newtype Line      = Line { getLine :: Int }                 -- line number, from bottom
     deriving (Eq, Ord, Num, Enum)
 
 newtype Fifths    = Fifths { getFifths :: Int }             -- number of upwards fifths, starting from C
     deriving (Eq, Ord, Num, Enum)
 newtype Beats     = Beats { getBeats :: Int }               -- time nominator
     deriving (Eq, Ord, Num, Enum)
-newtype BeatTypes = BeatTypes { getBeatTypes :: Int }    -- time denominator
+newtype BeatTypes = BeatTypes { getBeatTypes :: Int }       -- time denominator
     deriving (Eq, Ord, Num, Enum)
 
 
@@ -328,7 +328,7 @@ data NoteSize     = SizeFull | SizeCue | SizeLarge
     deriving (Eq, Ord, Enum, Bounded)
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
     deriving (Eq, Ord, Enum, Bounded)
-data DynamicLevel = PPP | PP | P | MP | MF | F | FF | FFF
+data DynamicLevel = PPP | PP | P | MP | MF | F | FF | FFF
     deriving (Eq, Ord, Enum, Bounded)
 
 
