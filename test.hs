@@ -21,11 +21,12 @@ score = Partwise
         ])
     [
         -- part 1
-        [
+        (PartAttrs "P1", [
+        
             -- measure 1
             (MeasureAttrs 1, [                
                 -- setting attributes as this is first measure 
-                MusicAttributes (Div 256)
+                MusicAttributes (Divisions 256)
                 ,
                 MusicAttributes (Clef GClef 2)
                 ,
@@ -43,7 +44,7 @@ score = Partwise
                 MusicNote (Note (Pitched chord (62, noSemitones, 0)) 128 noTies)
                 , 
                 MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
-                ])
+            ])
             ,
             (MeasureAttrs 2, [                      
                 MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
@@ -55,18 +56,13 @@ score = Partwise
                 MusicNote (Note (Pitched chord (62, noSemitones, 0)) 128 noTies)
                 , 
                 MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
-                ])
-        ]
+            ])
+        ])
         ,
         
         -- part 2
-        [
-        ]
-        ,
-        
-        -- part 3
-        [
-        ]
+        (PartAttrs "P2", [
+        ])
     ]
 
 

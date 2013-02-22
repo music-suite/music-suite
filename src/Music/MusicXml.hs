@@ -63,8 +63,8 @@ module Music.MusicXml (
         Level(..),
 
         -- ** Numeric types
-        Divisions(..),
-        NoteValue(..),
+        Divs(..),
+        NoteVal(..),
         Octaves(..),
         Steps(..),
         Semitones(..),
@@ -151,9 +151,7 @@ data PartAttrs
         String                          --   id
 
 
--- This instance is used by toXml and must return a single list
--- TODO use attr
-
+-- This instance is used by toXml and should return a single list
 instance Out Score where
     out (Partwise attr header parts)
         = single . unode "score-partwise" $ out header <> [{-parts-}]
@@ -162,10 +160,8 @@ instance Out Score where
 
 instance Out ScoreHeader where
     out (ScoreHeader title mvm ident partList)
-        = mempty <> outTitle title
-                 <> outMvm mvm
-                 <> outIdent ident
-                 <> outPartList partList
+        = mempty <> outTitle title <> outMvm mvm
+                 <> outIdent ident <> outPartList partList
         where
             outTitle, outMvm :: Maybe String -> [Element]
             outIdent :: Maybe Identification -> [Element]
@@ -177,8 +173,7 @@ instance Out ScoreHeader where
             outPartList = single . unode "part-list" . (out =<<)
 
 instance Out Identification where
-    out (Identification creators)
-        = map outCreator creators
+    out (Identification creators) = map outCreator creators
         where
             outCreator (Creator t n) = unode "creator" (uattr "type" t, n)
 
@@ -198,10 +193,10 @@ instance Out PartListElem where
             single $ unode "score-part"
                         ([Attr (unqual "id") id], outName name <> outAbbrev abbrev)
         where
-            outName = single . unode "part-name"
+            outName   = single . unode "part-name"
             outAbbrev = maybeToList . fmap (unode "part-abbreviation")
 
-    out (Group name abbrev) = single $ unode "part-group" "##E"
+    out (Group name abbrev) = notImplemented "Out instance for PartListElem.Group"
 
 --   TODO instr midi-device midi-instr
 --   TODO symbol barline time?
@@ -236,10 +231,10 @@ data MusicElem
 -- TODO multi-staff
 
 data Attributes
-    = Div  Divisions
-    | Clef ClefSign Line
-    | Key  Fifths Mode
-    | Time TimeSignature
+    = Divisions Divs
+    | Clef      ClefSign Line
+    | Key       Fifths Mode
+    | Time      TimeSignature
 
 data TimeSignature
     = CommonTime
@@ -371,16 +366,16 @@ data Direction
 -- Basic types
 -- --------------------------------------------------------------------------------
 
-type Duration     = Divisions
-type NoteType     = (NoteValue, NoteSize)
+type Duration     = Divs
+type NoteType     = (NoteVal, NoteSize)
 type Pitch        = (Steps, Maybe Semitones, Octaves)
 type DisplayPitch = (Steps, Octaves)
 
 noSemitones = Nothing
 
-newtype Divisions = Divisions { getDivisions :: Int }       -- absolute dur in ticks
+newtype Divs = Divs { getDivs :: Int }                      -- absolute dur in ticks
     deriving (Eq, Ord, Num, Enum)
-newtype NoteValue = NoteValue { getNoteValue :: Rational }  -- relative dur in notated time
+newtype NoteVal = NoteVal { getNoteVal :: Rational }        -- relative dur in notated time
     deriving (Eq, Ord, Num, Enum)
 
 
@@ -452,3 +447,4 @@ fromSingle :: [a] -> a
 fromSingle [x] = x
 fromSingle _   = error "fromSingle: non-single list"
 
+notImplemented x = error $ "Not implemented: " ++ x
