@@ -27,7 +27,7 @@ module Music.MusicXml (
         ScoreAttrs(..),
         PartAttrs(..),
         MeasureAttrs(..),
-        
+
         -- ** Part list
         PartList,
         PartListElem(..),
@@ -43,7 +43,7 @@ module Music.MusicXml (
         ClefSign(..),
 
         -- ** Notes
-        Note(..),      
+        Note(..),
         noTies,
         FullNote(..),
         chord, noChord,
@@ -103,68 +103,70 @@ data Score
     = Partwise
         ScoreAttrs
         ScoreHeader
-        [(PartAttrs, [(MeasureAttrs, Music)])]
+        [(PartAttrs,
+            [(MeasureAttrs, Music)])]   -- music by part and time
     | Timewise
         ScoreAttrs
         ScoreHeader
-        [(MeasureAttrs, [(PartAttrs, Music)])]
+        [(MeasureAttrs,
+            [(PartAttrs, Music)])]      -- music by time and part
 
 data ScoreHeader
-    = ScoreHeader    
-        (Maybe String)              --  title
-        (Maybe String)              --  movement title
-        (Maybe Identification)      --  identification?
-                                    --  defaults?
-                                    --  credit*
-        PartList                    --  partlist?
+    = ScoreHeader
+        (Maybe String)                  --  title
+        (Maybe String)                  --  movement title
+        (Maybe Identification)          --  identification?
+                                        --  defaults?
+                                        --  credit*
+        PartList                        --  partlist?
 
 
-data Identification 
+data Identification
     = Identification
-        [Creator]                   --  creator
+        [Creator]                       --  creator
 
 data Creator
-    = Creator 
-        String                      --  type (composer, lyricist, arranger etc)
-        String                      --  name
-        
+    = Creator
+        String                          --  type (composer, lyricist, arranger etc)
+        String                          --  name
+
 data Defaults
     = Defaults
-                                    --  page layout (marigins, distance etc)
-                                    --  system layout
-                                    --  staff layout
-                                    --  scaling
-                                    --  appearance (line width etc)
+                                        --  page layout (marigins, distance etc)
+                                        --  system layout
+                                        --  staff layout
+                                        --  scaling
+                                        --  appearance (line width etc)
 
 data ScoreAttrs
     = ScoreAttrs
-        [Int]                       --  version
+        [Int]                           --  version
 
 data MeasureAttrs
     = MeasureAttrs
-        Int                         --   number
+        Int                             --   number
 
 data PartAttrs
     = PartAttrs
-        String                      --   id
+        String                          --   id
 
 
 -- This instance is used by toXml and must return a single list
 -- TODO use attr
 
 instance Out Score where
-    out (Partwise attr header parts) 
+    out (Partwise attr header parts)
         = single . unode "score-partwise" $ out header <> [{-parts-}]
-    out (Timewise attr header measures) 
+    out (Timewise attr header measures)
         = single . unode "timewise-score" $ out header <> [{-parts-}]
 
 instance Out ScoreHeader where
-    out (ScoreHeader title mvm ident partList) 
-        = mempty <> outTitle title 
-                 <> outMvm mvm 
-                 <> outIdent ident 
-                 <> outPartList partList 
-        where 
+    out (ScoreHeader title mvm ident partList)
+        = mempty <> outTitle title
+                 <> outMvm mvm
+                 <> outIdent ident
+                 <> outPartList partList
+        where
             outTitle, outMvm :: Maybe String -> [Element]
             outIdent :: Maybe Identification -> [Element]
             outPartList :: [PartListElem] -> [Element]
@@ -175,7 +177,7 @@ instance Out ScoreHeader where
             outPartList = single . unode "part-list" . (out =<<)
 
 instance Out Identification where
-    out (Identification creators) 
+    out (Identification creators)
         = map outCreator creators
         where
             outCreator (Creator t n) = unode "creator" (uattr "type" t, n)
@@ -192,13 +194,13 @@ data PartListElem
     | Group String (Maybe String)       -- name abbrev
 
 instance Out PartListElem where
-    out (Part id name abbrev)   = 
-            single $ unode "score-part" 
+    out (Part id name abbrev)   =
+            single $ unode "score-part"
                         ([Attr (unqual "id") id], outName name <> outAbbrev abbrev)
         where
             outName = single . unode "part-name"
             outAbbrev = maybeToList . fmap (unode "part-abbreviation")
-            
+
     out (Group name abbrev) = single $ unode "part-group" "##E"
 
 --   TODO instr midi-device midi-instr
@@ -244,16 +246,16 @@ data TimeSignature
     | CutTime
     | DivTime Beats BeatTypes
 
-data Mode 
-    = Major 
-    | Minor 
-    | Dorian 
-    | Phrygian 
-    | Lydian 
-    | Mixolydian 
-    | Aeolian 
-    | Ionian 
-    | Locrian 
+data Mode
+    = Major
+    | Minor
+    | Dorian
+    | Phrygian
+    | Lydian
+    | Mixolydian
+    | Aeolian
+    | Ionian
+    | Locrian
     | NoMode
 
 data ClefSign = GClef | CClef | FClef
