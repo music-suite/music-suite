@@ -106,25 +106,6 @@ data Score
         ScoreHeader
         [(MeasureAttrs, [Music])]
 
--- This instance is used by toXml and must return a single list
-instance Out Score where
-
-    out (Partwise attr hdr parts) 
-        = single $ attrs attr $ unode "score-partwise" (out hdr ++ [{-parts-}])
-        where
-            attrs a = id -- TODO
-
-    out (Timewise attr hdr measures) 
-        = single $ attrs attr $ unode "timewise-score" (out hdr ++ [{-parts-}])
-        where
-            attrs a = id -- TODO
-
-            -- attrs (ScoreAttrs as) 
-            --     = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
-
-
--- instance Out
-
 data ScoreAttrs
     = ScoreAttrs
         [Int]                       -- version
@@ -139,25 +120,11 @@ data ScoreHeader
                                     -- credit*
         PartList                    -- partlist?
 
-instance Out ScoreHeader where
-    out (ScoreHeader title mvm ident partList) 
-        = titleN ++ mvmN ++ identN ++ concatMap partListN partList
-        where
-            titleN      = single $ unode "title" ()
-            mvmN        = single $ unode "movement-title" ()
-            identN      = single $ unode "identification" (concatMap out (maybeToList ident))
-            partListN p = single $ unode "part-list" ()
 
 data Identification 
     = Identification
         [Creator]                   -- Creator
                                     -- TODO
-
-instance Out Identification where
-    out (Identification creators) 
-        = map creatorN creators
-        where
-            creatorN (Creator t n) = unode "creator" (Attr (unqual "type") t, n)
 
 data Creator
     = Creator 
@@ -176,6 +143,37 @@ data Defaults
 data MeasureAttrs
     = MeasureAttrs
         Int                         -- TODO only support simple number for now
+
+
+-- This instance is used by toXml and must return a single list
+instance Out Score where
+
+    out (Partwise attr hdr parts) 
+        = single $ attrs attr $ unode "score-partwise" (out hdr ++ [{-parts-}])
+        where
+            attrs a = id -- TODO
+
+    out (Timewise attr hdr measures) 
+        = single $ attrs attr $ unode "timewise-score" (out hdr ++ [{-parts-}])
+        where
+            attrs a = id -- TODO
+
+    -- attrs (ScoreAttrs as) = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
+
+instance Out ScoreHeader where
+    out (ScoreHeader title mvm ident partList) 
+        = titleN ++ mvmN ++ identN ++ concatMap partListN partList
+        where
+            titleN      = single $ unode "title" ()
+            mvmN        = single $ unode "movement-title" ()
+            identN      = single $ unode "identification" (concatMap out (maybeToList ident))
+            partListN p = single $ unode "part-list" ()
+
+instance Out Identification where
+    out (Identification creators) 
+        = map creatorN creators
+        where
+            creatorN (Creator t n) = unode "creator" (Attr (unqual "type") t, n)
 
 
 -- --------------------------------------------------------------------------------
