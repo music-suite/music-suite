@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, CPP #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -10,7 +10,7 @@
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : portable
---     
+--
 -- A Haskell representation of MusicXML.
 --
 -- For an introduction, see <http://www.makemusic.com/musicxml/tutorial>.
@@ -22,25 +22,29 @@ module Music.MusicXml (
         Score(..),
         ScoreAttrs(..),
         ScoreHeader(..),
+        Identification(..),
+        Creator(..),
         Defaults(..),
         MeasureAttrs(..),
         -- ** Part list
         PartList,
         PartListElem(..),
 
-
         -- * Music
         Music,
         MusicElem(..),
 
         -- ** Attributes
-        Attrs(..),
-        TimeSig(..),
+        Attributes(..),
+        TimeSignature(..),
+        Mode(..),
         ClefSign(..),
 
         -- ** Notes
-        Note(..),
+        Note(..),      
+        noTies,
         FullNote(..),
+        chord, noChord,
         NoteProps(..),
         Tie(..),
         TieNotation(..),
@@ -69,10 +73,11 @@ module Music.MusicXml (
 
         -- ** Derived types
         -- *** Time
-        Dur(..),
+        Duration(..),
         NoteType(..),
         -- *** Pitch
         Pitch(..),
+        noSemitones,
         DisplayPitch(..),
 
         -- * Import and export functions
@@ -101,36 +106,44 @@ data Score
 instance Out Score where
     out (Partwise a h ms) = qnode "partwise-score" ()
     out (Timewise a h ms) = qnode "timewise-score" ()
-
+    -- TODO
 
 data ScoreAttrs
     = ScoreAttrs
-        [Int]               -- ^ version
+        [Int]                       -- version
 
 data ScoreHeader
-    = ScoreHeader
-                            --   titles?
-                            --   identification?
-                            --   defaults?
-                            --   credit*
-        PartList            -- ^ partlist?
+    = ScoreHeader    
+        (Maybe String)              -- title
+        (Maybe String)              -- movement title
+        (Maybe Identification)
+                                    -- identification?
+                                    -- defaults?
+                                    -- credit*
+        PartList                    -- partlist?
 
+data Identification 
+    = Identification
+        [Creator]                   -- Creator
+                                    -- TODO
+
+data Creator
+    = Creator 
+        String                      -- Type (composer, lyricist, arranger etc)
+        String                      -- Name
+        
 data Defaults
     = Defaults
-                            --   page layout (marigins, distance etc)
-                            --   system layout
-                            --   staff layout
-                            --   scaling
-                            --   appearance (line width etc)
+                                    --   page layout (marigins, distance etc)
+                                    --   system layout
+                                    --   staff layout
+                                    --   scaling
+                                    --   appearance (line width etc)
 
 -- TODO fancy numbers
 data MeasureAttrs
     = MeasureAttrs
-        Int
-                            -- number
-                            -- implicit?
-                            -- nonContr?
-                            -- width?
+        Int                         -- TODO only support simple number for now
 
 
 -- --------------------------------------------------------------------------------
@@ -140,21 +153,11 @@ data MeasureAttrs
 type PartList = [PartListElem]
 
 data PartListElem
-    = Part
-          String            -- id
-          String            -- name
-          (Maybe String)    -- abbrev
-                            -- instr
-                            -- midi device
-                            -- midi instr
-    | Group
-          String            -- name
-          (Maybe String)    -- abbrev
-                            -- symbol
-                            -- common barline
-                            -- time (?)
-                            -- type (?)
-                            -- number (?)
+    = Part String String (Maybe String) -- id name abbrev?
+    | Group String (Maybe String)       -- name abbrev
+
+--   TODO instr midi-device midi-instr
+--   TODO symbol barline time?
 
 
 -- --------------------------------------------------------------------------------
@@ -164,7 +167,7 @@ data PartListElem
 type Music = [MusicElem]
 
 data MusicElem
-    = MusicAttr Attrs
+    = MusicAttributes Attributes
     --  | MusicBackup Backup
     --  | MusicForward Forward
     | MusicNote Note
@@ -185,16 +188,28 @@ data MusicElem
 
 -- TODO multi-staff
 
-data Attrs
+data Attributes
     = Div  Divisions
     | Clef ClefSign Line
-    | Key  Fifths
-    | Time TimeSig
+    | Key  Fifths Mode
+    | Time TimeSignature
 
-data TimeSig
+data TimeSignature
     = CommonTime
     | CutTime
     | DivTime Beats BeatTypes
+
+data Mode 
+    = Major 
+    | Minor 
+    | Dorian 
+    | Phrygian 
+    | Lydian 
+    | Mixolydian 
+    | Aeolian 
+    | Ionian 
+    | Locrian 
+    | NoMode
 
 data ClefSign = GClef | CClef | FClef
     deriving (Eq, Ord, Enum, Bounded)
@@ -209,17 +224,20 @@ data ClefSign = GClef | CClef | FClef
 data Note
     = Note
         FullNote
-        Dur
+        Duration
         [Tie]
         -- NoteProps
     | CueNote
         FullNote
-        Dur
+        Duration
         -- NoteProps
     | GraceNote
         FullNote
         [Tie]
         -- NoteProps
+
+noTies = []
+
 
 -- Note: Chords are indicated by setting isChord to True (and use same duration)
 data FullNote
@@ -232,6 +250,9 @@ data FullNote
     | Rest          -- isChord disp
         Bool
         DisplayPitch
+
+chord   = True
+noChord = False
 
 -- TODO level
 data Tie
@@ -303,14 +324,16 @@ data Direction
 -- Basic types
 -- --------------------------------------------------------------------------------
 
-type Dur          = Divisions
+type Duration     = Divisions
 type NoteType     = (NoteValue, NoteSize)
-type Pitch        = (Steps, Maybe Semitones, Octaves)       -- semitones maybe redundant (use zero)?
+type Pitch        = (Steps, Maybe Semitones, Octaves)
 type DisplayPitch = (Steps, Octaves)
 
-newtype Divisions = Divisions { getDivisions :: Int }       -- absolute dur
+noSemitones = Nothing
+
+newtype Divisions = Divisions { getDivisions :: Int }       -- absolute dur in ticks
     deriving (Eq, Ord, Num, Enum)
-newtype NoteValue = NoteValue { getNoteValue :: Rational }  -- relative dur
+newtype NoteValue = NoteValue { getNoteValue :: Rational }  -- relative dur in notated time
     deriving (Eq, Ord, Num, Enum)
 
 
@@ -318,12 +341,12 @@ newtype Octaves   = Octaves { getOctaves :: Int }
     deriving (Eq, Ord, Num, Enum)
 newtype Steps     = Steps { getSteps :: Int }
     deriving (Eq, Ord, Num, Enum)
-newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed here
+newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed
     deriving (Eq, Ord, Num, Enum)
 newtype Line      = Line { getLine :: Int }                 -- line number, from bottom
     deriving (Eq, Ord, Num, Enum)
 
-newtype Fifths    = Fifths { getFifths :: Int }             -- number of upwards fifths, starting from C
+newtype Fifths    = Fifths { getFifths :: Int }             -- number of fifths, upwards, starting from C
     deriving (Eq, Ord, Num, Enum)
 newtype Beats     = Beats { getBeats :: Int }               -- time nominator
     deriving (Eq, Ord, Num, Enum)
@@ -351,19 +374,15 @@ showXml = showElement . toXml
 -- |
 -- Render a score as MusicXML.
 toXml :: Score -> Element
-#ifndef __HADDOCK__
 toXml = out
-#else
-toXml = undefined
-#endif
 
 
 -- --------------------------------------------------------------------------------
 
-#ifndef __HADDOCK__
+-- TODO We would like to hide this from the docs
+
 class Out a where
     out :: a -> Element
-#endif
 
 qnode n cs = node (QName n Nothing Nothing) cs
 
