@@ -70,8 +70,8 @@ module Music.MusicXml (
         Semitones(..),
         Line(..),
         Fifths(..),
-        Beats(..),
-        BeatTypes(..),
+        Beat(..),
+        BeatType(..),
 
         -- ** Derived types
         -- *** Time
@@ -88,12 +88,16 @@ module Music.MusicXml (
  ) where
 
 -- import Control.Arrow
+
+import Prelude hiding (getLine)
+
 import Data.Maybe (maybeToList)
 import Data.Semigroup
 import Data.Default
 import Text.XML.Light hiding (Line)
 
 import qualified Data.List as List
+import qualified Data.Char as Char
 
 -- --------------------------------------------------------------------------------
 -- Score
@@ -249,7 +253,7 @@ data MusicElem
     --  | Bookmark Bookmark
 
 instance Out MusicElem where
-    out (MusicAttributes x) = single $ unode "attributes" $ () --out x
+    out (MusicAttributes x) = single $ unode "attributes" $ out x
     out (MusicNote x)       = single $ unode "note"       $ () --out x
     out (MusicDirection x)  = single $ unode "direction"  $ () --out x
 
@@ -261,14 +265,14 @@ instance Out MusicElem where
 
 data Attributes
     = Divisions Divs
-    | Clef      ClefSign Line
+    | Clef      ClefSign Line   -- sign line-from-bottom
     | Key       Fifths Mode
     | Time      TimeSignature
 
 data TimeSignature
     = CommonTime
     | CutTime
-    | DivTime Beats BeatTypes
+    | DivTime Beat BeatType
 
 data Mode
     = Major
@@ -281,15 +285,47 @@ data Mode
     | Ionian
     | Locrian
     | NoMode
+    deriving (Eq, Ord, Show)  
+modeName :: Mode -> String
+modeName = toLowerString . show
 
-data ClefSign = GClef | CClef | FClef
+data ClefSign = GClef | CClef | FClef | PercClef | TabClef
     deriving (Eq, Ord, Enum, Bounded)
+
+clefName GClef    = "G"
+clefName CClef    = "C"
+clefName FClef    = "F"
+clefName PercClef = "percussion"
+clefName TabClef  = "tab"
 
 -- Staves
 -- Transposition
 
 instance Out Attributes where
-    out = notImplemented "Out instance"
+    out (Divisions divs)                  = single $ unode "divisions" 
+                                                   $ show $ getDivs divs
+
+    out (Clef sign line)                  = single $ unode "clef" 
+                                                        [ unode "sign" (clefName sign), 
+                                                          unode "line" (show $ getLine line)]
+
+    out (Key fifths mode)                 = single $ unode "key" 
+                                                        [ unode "fifths" (show $ getFifths fifths), 
+                                                          unode "mode" (modeName mode)]
+
+    out (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common") 
+                                                   $ unode "time" 
+                                                        [ unode "beat" (show 4), 
+                                                          unode "beat-type" (show 4)]
+
+    out (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut") 
+                                                   $ unode "time" 
+                                                        [ unode "beat" (show 4), 
+                                                          unode "beat-type" (show 4) ]
+
+    out (Time (DivTime beats beatType))   = single $ unode "time" 
+                                                        [ unode "beat" (show $ getBeat beats), 
+                                                          unode "beat-type" (show $ getBeatType beatType)]
 
 -- --------------------------------------------------------------------------------
 -- Notes
@@ -428,9 +464,9 @@ newtype Line      = Line { getLine :: Int }                 -- line number, from
 
 newtype Fifths    = Fifths { getFifths :: Int }             -- number of fifths, upwards, starting from C
     deriving (Eq, Ord, Num, Enum)
-newtype Beats     = Beats { getBeats :: Int }               -- time nominator
+newtype Beat     = Beat { getBeat :: Int }                  -- time nominator
     deriving (Eq, Ord, Num, Enum)
-newtype BeatTypes = BeatTypes { getBeatTypes :: Int }       -- time denominator
+newtype BeatType = BeatType { getBeatType :: Int }          -- time denominator
     deriving (Eq, Ord, Num, Enum)
 
 
@@ -477,6 +513,33 @@ sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = concat . sep x
+
+-- |
+-- Synonym for 'Char.toUpper'
+toUpperChar :: Char -> Char
+toUpperChar = Char.toUpper
+ 
+-- |
+-- Synonym for 'Char.toLower'
+toLowerChar :: Char -> Char
+toLowerChar = Char.toLower
+ 
+-- |
+-- Synonym for 'fmap Char.toUpper'
+toUpperString :: String -> String
+toUpperString = fmap Char.toUpper
+ 
+-- |
+-- Synonym for 'fmap Char.toLower'
+toLowerString :: String -> String
+toLowerString = fmap Char.toLower
+ 
+-- |
+-- Convert a string to use upper case for the leading letter and lower case for
+-- remaining letters.
+toCapitalString :: String -> String
+toCapitalString [] = []
+toCapitalString (x:xs) = toUpperChar x : toLowerString xs
 
 single :: a -> [a]
 single = return
