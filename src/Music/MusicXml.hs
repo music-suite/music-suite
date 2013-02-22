@@ -20,12 +20,14 @@
 module Music.MusicXml (
         -- * Score
         Score(..),
-        ScoreAttrs(..),
         ScoreHeader(..),
         Identification(..),
         Creator(..),
         Defaults(..),
+        ScoreAttrs(..),
+        PartAttrs(..),
         MeasureAttrs(..),
+        
         -- ** Part list
         PartList,
         PartListElem(..),
@@ -85,6 +87,7 @@ module Music.MusicXml (
         showXml
  ) where
 
+-- import Control.Arrow
 import Data.Maybe (maybeToList)
 import Data.Semigroup
 import Data.Default
@@ -100,76 +103,82 @@ data Score
     = Partwise
         ScoreAttrs
         ScoreHeader
-        [[(MeasureAttrs, Music)]]
+        [(PartAttrs, [(MeasureAttrs, Music)])]
     | Timewise
         ScoreAttrs
         ScoreHeader
-        [(MeasureAttrs, [Music])]
-
-data ScoreAttrs
-    = ScoreAttrs
-        [Int]                       -- version
+        [(MeasureAttrs, [(PartAttrs, Music)])]
 
 data ScoreHeader
     = ScoreHeader    
-        (Maybe String)              -- title
-        (Maybe String)              -- movement title
-        (Maybe Identification)
-                                    -- identification?
-                                    -- defaults?
-                                    -- credit*
-        PartList                    -- partlist?
+        (Maybe String)              --  title
+        (Maybe String)              --  movement title
+        (Maybe Identification)      --  identification?
+                                    --  defaults?
+                                    --  credit*
+        PartList                    --  partlist?
 
 
 data Identification 
     = Identification
-        [Creator]                   -- Creator
-                                    -- TODO
+        [Creator]                   --  creator
 
 data Creator
     = Creator 
-        String                      -- Type (composer, lyricist, arranger etc)
-        String                      -- Name
+        String                      --  type (composer, lyricist, arranger etc)
+        String                      --  name
         
 data Defaults
     = Defaults
-                                    --   page layout (marigins, distance etc)
-                                    --   system layout
-                                    --   staff layout
-                                    --   scaling
-                                    --   appearance (line width etc)
+                                    --  page layout (marigins, distance etc)
+                                    --  system layout
+                                    --  staff layout
+                                    --  scaling
+                                    --  appearance (line width etc)
 
--- TODO fancy numbers
+data ScoreAttrs
+    = ScoreAttrs
+        [Int]                       --  version
+
 data MeasureAttrs
     = MeasureAttrs
-        Int                         -- TODO only support simple number for now
+        Int                         --   number
+
+data PartAttrs
+    = PartAttrs
+        String                      --   id
 
 
 -- This instance is used by toXml and must return a single list
+-- TODO use attr
+
 instance Out Score where
     out (Partwise attr header parts) 
-        = single $ unode "score-partwise" (out header ++ [{-parts-}])
+        = single . unode "score-partwise" $ out header <> [{-parts-}]
     out (Timewise attr header measures) 
-        = single $ unode "timewise-score" (out header ++ [{-parts-}])
-
-    -- TODO version attr
-    -- attrs (ScoreAttrs as) = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
+        = single . unode "timewise-score" $ out header <> [{-parts-}]
 
 instance Out ScoreHeader where
     out (ScoreHeader title mvm ident partList) 
-        = outTitle title ++ outMvm mvm ++ outIdent ident ++ outPartList partList
-        where
-            outTitle       = maybeToList . fmap (unode "title")
-            outMvm         = maybeToList . fmap (unode "movement-title")
-            outIdent ident = single $ unode "identification" $ concatMap out (maybeToList ident)
+        = mempty <> outTitle title 
+                 <> outMvm mvm 
+                 <> outIdent ident 
+                 <> outPartList partList 
+        where 
+            outTitle, outMvm :: Maybe String -> [Element]
+            outIdent :: Maybe Identification -> [Element]
+            outPartList :: [PartListElem] -> [Element]
 
-            outPartList = single . unode "part-list" . concatMap out
+            outTitle    = fmap (unode "title") . maybeToList
+            outMvm      = fmap (unode "movement-title") . maybeToList
+            outIdent    = single . unode "identification" . (out =<<) . maybeToList
+            outPartList = single . unode "part-list" . (out =<<)
 
 instance Out Identification where
     out (Identification creators) 
-        = map creatorN creators
+        = map outCreator creators
         where
-            creatorN (Creator t n) = unode "creator" (Attr (unqual "type") t, n)
+            outCreator (Creator t n) = unode "creator" (uattr "type" t, n)
 
 
 -- --------------------------------------------------------------------------------
@@ -185,12 +194,12 @@ data PartListElem
 instance Out PartListElem where
     out (Part id name abbrev)   = 
             single $ unode "score-part" 
-                        ([Attr (unqual "id") id], outName name ++ outAbbrev abbrev)
+                        ([Attr (unqual "id") id], outName name <> outAbbrev abbrev)
         where
             outName = single . unode "part-name"
             outAbbrev = maybeToList . fmap (unode "part-abbreviation")
             
-    out (Group name abbrev)     = single $ unode "part-group" "##E"
+    out (Group name abbrev) = single $ unode "part-group" "##E"
 
 --   TODO instr midi-device midi-instr
 --   TODO symbol barline time?
@@ -422,7 +431,11 @@ class Out a where
 
 addAttr  = add_attr
 addAttrs = add_attrs
--- qnode n cs = node (QName n Nothing Nothing) cs
+
+-- unode :: Node t => String -> t -> Element
+
+uattr :: String -> String -> Attr
+uattr n = Attr (unqual n)
 
 sep :: a -> [a] -> [a]
 sep = List.intersperse
