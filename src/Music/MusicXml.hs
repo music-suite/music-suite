@@ -85,6 +85,7 @@ module Music.MusicXml (
         showXml
  ) where
 
+import Data.Maybe (maybeToList)
 import Data.Semigroup
 import Data.Default
 import Text.XML.Light hiding (Line)
@@ -105,14 +106,22 @@ data Score
         ScoreHeader
         [(MeasureAttrs, [Music])]
 
+-- This instance is used by toXml and must return a single list
 instance Out Score where
-    out (Partwise a h ms) 
-        = attrs a $ unode "partwise-score" ()
-        where
-            attrs (ScoreAttrs as) = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
 
-    out (Timewise a h ms) 
-        = unode "timewise-score" ()
+    out (Partwise attr hdr parts) 
+        = single $ attrs attr $ unode "score-partwise" (out hdr ++ [{-parts-}])
+        where
+            attrs a = id -- TODO
+
+    out (Timewise attr hdr measures) 
+        = single $ attrs attr $ unode "timewise-score" (out hdr ++ [{-parts-}])
+        where
+            attrs a = id -- TODO
+
+            -- attrs (ScoreAttrs as) 
+            --     = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
+
 
 -- instance Out
 
@@ -131,13 +140,24 @@ data ScoreHeader
         PartList                    -- partlist?
 
 instance Out ScoreHeader where
-    out (ScoreHeader title mvm id parts) = unode "" ()
-
+    out (ScoreHeader title mvm ident partList) 
+        = titleN ++ mvmN ++ identN ++ concatMap partListN partList
+        where
+            titleN      = single $ unode "title" ()
+            mvmN        = single $ unode "movement-title" ()
+            identN      = single $ unode "identification" (concatMap out (maybeToList ident))
+            partListN p = single $ unode "part-list" ()
 
 data Identification 
     = Identification
         [Creator]                   -- Creator
                                     -- TODO
+
+instance Out Identification where
+    out (Identification creators) 
+        = map creatorN creators
+        where
+            creatorN (Creator t n) = unode "creator" (Attr (unqual "type") t, n)
 
 data Creator
     = Creator 
@@ -381,12 +401,12 @@ data Level = PPP | PP | P | MP | MF | F | FF | FFF
 -- |
 -- Render a score as a MusicXML string.
 showXml :: Score -> String
-showXml = showElement . toXml
+showXml = ppTopElement . toXml
 
 -- |
 -- Render a score as MusicXML.
 toXml :: Score -> Element
-toXml = out
+toXml = fromSingle . out
 
 
 -- --------------------------------------------------------------------------------
@@ -394,7 +414,7 @@ toXml = out
 -- TODO We would like to hide this from the docs
 
 class Out a where
-    out :: a -> Element
+    out :: a -> [Element]
 
 addAttr  = add_attr
 addAttrs = add_attrs
@@ -405,3 +425,11 @@ sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = concat . sep x
+
+single :: a -> [a]
+single = return
+
+fromSingle :: [a] -> a
+fromSingle [x] = x
+fromSingle _   = error "fromSingle: non-single list"
+
