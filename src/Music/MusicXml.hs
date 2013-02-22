@@ -147,27 +147,23 @@ data MeasureAttrs
 
 -- This instance is used by toXml and must return a single list
 instance Out Score where
+    out (Partwise attr header parts) 
+        = single $ unode "score-partwise" (out header ++ [{-parts-}])
+    out (Timewise attr header measures) 
+        = single $ unode "timewise-score" (out header ++ [{-parts-}])
 
-    out (Partwise attr hdr parts) 
-        = single $ attrs attr $ unode "score-partwise" (out hdr ++ [{-parts-}])
-        where
-            attrs a = id -- TODO
-
-    out (Timewise attr hdr measures) 
-        = single $ attrs attr $ unode "timewise-score" (out hdr ++ [{-parts-}])
-        where
-            attrs a = id -- TODO
-
+    -- TODO version attr
     -- attrs (ScoreAttrs as) = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
 
 instance Out ScoreHeader where
     out (ScoreHeader title mvm ident partList) 
-        = titleN ++ mvmN ++ identN ++ concatMap partListN partList
+        = outTitle title ++ outMvm mvm ++ outIdent ident ++ outPartList partList
         where
-            titleN      = single $ unode "title" ()
-            mvmN        = single $ unode "movement-title" ()
-            identN      = single $ unode "identification" (concatMap out (maybeToList ident))
-            partListN p = single $ unode "part-list" ()
+            outTitle       = maybeToList . fmap (unode "title")
+            outMvm         = maybeToList . fmap (unode "movement-title")
+            outIdent ident = single $ unode "identification" $ concatMap out (maybeToList ident)
+
+            outPartList = single . unode "part-list" . concatMap out
 
 instance Out Identification where
     out (Identification creators) 
@@ -185,6 +181,16 @@ type PartList = [PartListElem]
 data PartListElem
     = Part String String (Maybe String) -- id name abbrev?
     | Group String (Maybe String)       -- name abbrev
+
+instance Out PartListElem where
+    out (Part id name abbrev)   = 
+            single $ unode "score-part" 
+                        ([Attr (unqual "id") id], outName name ++ outAbbrev abbrev)
+        where
+            outName = single . unode "part-name"
+            outAbbrev = maybeToList . fmap (unode "part-abbreviation")
+            
+    out (Group name abbrev)     = single $ unode "part-group" "##E"
 
 --   TODO instr midi-device midi-instr
 --   TODO symbol barline time?
