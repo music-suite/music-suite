@@ -1,13 +1,22 @@
 
-{-# LANGUAGE
-    GeneralizedNewtypeDeriving,
-    CPP
-    #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, CPP #-}
 
+-------------------------------------------------------------------------------------
 -- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : portable
+--     
 -- A Haskell representation of MusicXML.
 --
 -- For an introduction, see <http://www.makemusic.com/musicxml/tutorial>.
+--
+-------------------------------------------------------------------------------------
+
 module Music.MusicXml (
         -- * Score
         Score(..),
@@ -45,7 +54,7 @@ module Music.MusicXml (
         -- ** Enum types
         NoteSize(..),
         Accidental(..),
-        DynamicLevel(..),
+        Level(..),
 
         -- ** Numeric types
         Divisions(..),
@@ -89,32 +98,30 @@ data Score
         ScoreHeader
         [(MeasureAttrs, [Music])]
 
-#ifndef __HADDOCK__
 instance Out Score where
     out (Partwise a h ms) = qnode "partwise-score" ()
     out (Timewise a h ms) = qnode "timewise-score" ()
-#endif
 
 
 data ScoreAttrs
     = ScoreAttrs
-        [Int]               -- version
+        [Int]               -- ^ version
 
 data ScoreHeader
     = ScoreHeader
-                            -- titles?
-                            -- identification?
-                            -- defaults?
-                            -- credit*
-        PartList            -- partlist?
+                            --   titles?
+                            --   identification?
+                            --   defaults?
+                            --   credit*
+        PartList            -- ^ partlist?
 
 data Defaults
     = Defaults
-                            -- page layout (marigins, distance etc)
-                            -- system layout
-                            -- staff layout
-                            -- scaling
-                            -- appearance (line width etc)
+                            --   page layout (marigins, distance etc)
+                            --   system layout
+                            --   staff layout
+                            --   scaling
+                            --   appearance (line width etc)
 
 -- TODO fancy numbers
 data MeasureAttrs
@@ -275,7 +282,7 @@ data TieNotation
 
 data Direction
     = Words String            -- TODO separate font style, placement etc
-    | Dynamic DynamicLevel
+    | Dynamic Level
     | Pedal Bool              -- start/stop (the latter usually generates "stop")
     | Crescendo Bool
     | Diminuendo Bool
@@ -328,7 +335,7 @@ data NoteSize     = SizeFull | SizeCue | SizeLarge
     deriving (Eq, Ord, Enum, Bounded)
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
     deriving (Eq, Ord, Enum, Bounded)
-data DynamicLevel = PPP | PP | P | MP | MF | F | FF | FFF
+data Level = PPP | PP | P | MP | MF | F | FF | FFF
     deriving (Eq, Ord, Enum, Bounded)
 
 

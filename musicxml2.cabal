@@ -1,7 +1,7 @@
 
 name:           musicxml2
-version:        0.5
-cabal-version:  >= 0.14
+version:        0.6
+cabal-version:  >= 1.2
 build-type:     Simple
 author:         Hans Hoglund
 synopsis:       MusicXML format

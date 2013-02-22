@@ -1,9 +1,11 @@
 
 module Main where
 
-import Music.MusicXml
 import Data.Semigroup
 import Data.Default
+import Music.MusicXml
+
+-- division 38880 (2^5*3^5*5)
 
 score = Partwise
     (ScoreAttrs [1])
@@ -41,3 +43,8 @@ score = Partwise
 
 
 main = putStrLn $ showXml $ score
+
+openXml :: Score -> IO ()
+openXml = undefined -- open in Sibelius
+
+
