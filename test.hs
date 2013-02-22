@@ -20,10 +20,8 @@ score = Partwise
             Part "P3" "Tenor"   Nothing
         ])
     [
-        -- part 1
         (PartAttrs "P1", [
         
-            -- measure 1
             (MeasureAttrs 1, [                
                 -- setting attributes as this is first measure 
                 MusicAttributes (Divisions 256)
@@ -60,8 +58,11 @@ score = Partwise
         ])
         ,
         
-        -- part 2
         (PartAttrs "P2", [
+        ])
+        ,
+
+        (PartAttrs "P3", [
         ])
     ]
 

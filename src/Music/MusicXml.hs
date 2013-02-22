@@ -140,23 +140,48 @@ data Defaults
 
 data ScoreAttrs
     = ScoreAttrs
-        [Int]                           --  version
-
-data MeasureAttrs
-    = MeasureAttrs
-        Int                             --   number
+        [Int]                           --  score version
 
 data PartAttrs
     = PartAttrs
-        String                          --   id
+        String                          --  part id
+
+data MeasureAttrs
+    = MeasureAttrs
+        Int                             --  measure number
+
+
+
+addScoreAttrs :: ScoreAttrs -> Element -> Element
+addScoreAttrs (ScoreAttrs []) = id
+addScoreAttrs (ScoreAttrs xs) = addAttr (uattr "version" $ concatSep "." $ map show xs)
+
+addPartAttrs :: PartAttrs -> Element -> Element
+addPartAttrs (PartAttrs id) = addAttr (uattr "id" id)
+
+addMeasureAttrs :: MeasureAttrs -> Element -> Element
+addMeasureAttrs (MeasureAttrs n) = addAttr (uattr "number" $ show n)
 
 
 -- This instance is used by toXml and should return a single list
 instance Out Score where
     out (Partwise attr header parts)
-        = single . unode "score-partwise" $ out header <> [{-parts-}]
+        = single . unode "score-partwise" $ out header <> outPartwise parts
     out (Timewise attr header measures)
-        = single . unode "timewise-score" $ out header <> [{-parts-}]
+        = single . unode "timewise-score" $ out header <> outTimewise measures
+
+outPartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
+outPartwise = fmap (\(partAttrs, measures) -> outPar partAttrs 
+            $ fmap (\(measureAttrs, music) -> outMes measureAttrs $ outMus music) measures)
+
+outTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
+outTimewise = fmap (\(measureAttrs, parts) -> outMes measureAttrs 
+            $ fmap (\(partAttrs, music) -> outPar partAttrs $ outMus music) parts)
+
+outPar a xs = addPartAttrs a    $ unode "part"    xs
+outMes a xs = addMeasureAttrs a $ unode "measure" xs
+outMus = concatMap out
+
 
 instance Out ScoreHeader where
     out (ScoreHeader title mvm ident partList)
@@ -223,6 +248,10 @@ data MusicElem
     --  | Link Link
     --  | Bookmark Bookmark
 
+instance Out MusicElem where
+    out (MusicAttributes x) = single $ unode "attributes" $ () --out x
+    out (MusicNote x)       = single $ unode "note"       $ () --out x
+    out (MusicDirection x)  = single $ unode "direction"  $ () --out x
 
 -- --------------------------------------------------------------------------------
 -- Attributes
@@ -258,6 +287,9 @@ data ClefSign = GClef | CClef | FClef
 
 -- Staves
 -- Transposition
+
+instance Out Attributes where
+    out = notImplemented "Out instance"
 
 -- --------------------------------------------------------------------------------
 -- Notes
@@ -339,6 +371,9 @@ data TieNotation
     = TieNotationStart
     | TieNotationStop
 
+instance Out Note where
+    out = notImplemented "Out instance"
+
 -- --------------------------------------------------------------------------------
 -- Directions
 -- --------------------------------------------------------------------------------
@@ -356,6 +391,9 @@ data Direction
     -- dashes, cesuras
     -- metronome
     -- 8va
+
+instance Out Direction where
+    out = notImplemented "Out instance"
 
 -- --------------------------------------------------------------------------------
 -- Notations
