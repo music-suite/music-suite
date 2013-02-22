@@ -89,6 +89,8 @@ import Data.Semigroup
 import Data.Default
 import Text.XML.Light hiding (Line)
 
+import qualified Data.List as List
+
 -- --------------------------------------------------------------------------------
 -- Score
 -- --------------------------------------------------------------------------------
@@ -104,9 +106,15 @@ data Score
         [(MeasureAttrs, [Music])]
 
 instance Out Score where
-    out (Partwise a h ms) = qnode "partwise-score" ()
-    out (Timewise a h ms) = qnode "timewise-score" ()
-    -- TODO
+    out (Partwise a h ms) 
+        = attrs a $ unode "partwise-score" ()
+        where
+            attrs (ScoreAttrs as) = addAttr $ Attr (unqual "version") (concatSep "." $ map show as)
+
+    out (Timewise a h ms) 
+        = unode "timewise-score" ()
+
+-- instance Out
 
 data ScoreAttrs
     = ScoreAttrs
@@ -121,6 +129,10 @@ data ScoreHeader
                                     -- defaults?
                                     -- credit*
         PartList                    -- partlist?
+
+instance Out ScoreHeader where
+    out (ScoreHeader title mvm id parts) = unode "" ()
+
 
 data Identification 
     = Identification
@@ -384,5 +396,12 @@ toXml = out
 class Out a where
     out :: a -> Element
 
-qnode n cs = node (QName n Nothing Nothing) cs
+addAttr  = add_attr
+addAttrs = add_attrs
+-- qnode n cs = node (QName n Nothing Nothing) cs
 
+sep :: a -> [a] -> [a]
+sep = List.intersperse
+
+concatSep :: [a] -> [[a]] -> [a]
+concatSep x = concat . sep x
