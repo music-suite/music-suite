@@ -1,2 +1,5 @@
 .DS_Store
 dist
+.ackoptions
+musicxml30
+test.xml
