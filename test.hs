@@ -9,13 +9,15 @@ import System.Posix.Process
 -- division 38880 (2^5*3^5*5)
 
 score = Partwise
-    (ScoreAttrs [1])
+    (ScoreAttrs [])
     (ScoreHeader 
+        Nothing
         (Just "Frère Jaques") 
-        (Just "I") 
-        (Just (Identification [Creator "Music" "Anonymous"])) 
+        (Just (Identification [Creator "composer" "Anonymous"])) 
         [
-            Part "1" "Voice" Nothing
+            Part "P1" "Soprano" Nothing,
+            Part "P2" "Alto"    Nothing,
+            Part "P3" "Tenor"   Nothing
         ])
     [
         -- part 1
@@ -54,6 +56,16 @@ score = Partwise
                 , 
                 MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
                 ])
+        ]
+        ,
+        
+        -- part 2
+        [
+        ]
+        ,
+        
+        -- part 3
+        [
         ]
     ]
 
