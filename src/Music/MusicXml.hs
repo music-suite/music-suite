@@ -338,15 +338,15 @@ data Note
         FullNote
         Duration
         [Tie]
-        -- TODO NoteProps
+        NoteProps
     | CueNote
         FullNote
         Duration
-        -- TODO NoteProps
+        NoteProps
     | GraceNote
         FullNote
         [Tie]
-        -- TODO NoteProps
+        NoteProps
 
 noTies = []
 
@@ -369,22 +369,51 @@ data Tie
     = TieStart
     | TieStop
 
-
 data NoteProps
-    = NoteProps
-                    -- instr
-        Int         -- editorial-voice
-        NoteType    -- note type
-        Int         -- dots
-        Accidental  -- accidental
-                    -- time-modification
-                    -- stem
-                    -- note head
-                    -- staff
-                    -- beam
-                    -- notations
-                    -- lyrics
-    deriving (Eq, Ord)
+    = NoteProps {
+        notePropType    :: Maybe NoteType,
+        noteDots        :: Int
+    }
+
+
+-- TODO 
+-- accidental
+-- instr 
+-- editorial-voice
+-- time-modification
+-- stem
+-- note head
+-- staff
+-- beam
+-- notations
+-- lyrics
+           
+instance Out NoteProps where
+    out (NoteProps 
+            typ 
+            dots) 
+                    = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
+                             <> replicate dots (unode "dot" ())
+        
+
+noteValName :: NoteVal -> String
+noteValName (NoteVal x)
+    | x == (1/1024) = "1024th" 
+    | x == (1/512)  = "512th" 
+    | x == (1/256)  = "256th" 
+    | x == (1/128)  = "128th"
+    | x == (1/64)   = "64th" 
+    | x == (1/32)   = "32nd" 
+    | x == (1/16)   = "16th" 
+    | x == (1/8)    = "eighth" 
+    | x == (1/4)    = "quarter" 
+    | x == (1/2)    = "half" 
+    | x == (1/1)    = "whole" 
+    | x == (2/1)    = "breve"
+    | x == (4/1)    = "long" 
+    | x == (8/1)    = "maxima"
+    | otherwise     = error $ "Invalid note value:" ++ show x
+
 
 -- TODO
 data Notation = Notation
@@ -412,20 +441,20 @@ instance Out FullNote where
         (steps, alter, octaves))      = mempty
                                         <> singleIf isChord (unode "chord" ()) 
                                         <> single (unode "pitch" (mempty
-                                            <> single ((unode "step" . show . getSteps) steps)
+                                            <> single ((unode "step" . show) steps)
                                             <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
                                             <> single ((unode "octave" . show . getOctaves) octaves)))
     out (Unpitched isChord 
         (steps, octaves))             = mempty
                                         <> singleIf isChord (unode "chord" ()) 
                                         <> single (unode "unpitched" (mempty
-                                            <> single ((unode "display-step" . show . getSteps) steps)
+                                            <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
     out (Rest isChord
         (steps, octaves))             = mempty
                                         <> singleIf isChord (unode "chord" ()) 
                                         <> single (unode "rest" (mempty
-                                            <> single ((unode "display-step" . show . getSteps) steps)
+                                            <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
 
 outDuration :: Duration -> [Element]
@@ -436,9 +465,9 @@ outTie :: Tie -> [Element]
 outTie t = []
 
 instance Out Note where
-    out (Note full dur ties)    = out full <> outDuration dur <> concatMap outTie ties
-    out (CueNote full dur)      = [unode "cue" ()] <> out full <> outDuration dur
-    out (GraceNote full ties)   = [unode "grace" ()] <> out full <> concatMap outTie ties
+    out (Note full dur ties props)    = out full <> outDuration dur <> concatMap outTie ties <> out props
+    out (CueNote full dur props)      = [unode "cue" ()] <> out full <> outDuration dur <> out props
+    out (GraceNote full ties props)   = [unode "grace" ()] <> out full <> concatMap outTie ties <> out props
 
 -- --------------------------------------------------------------------------------
 -- Directions
@@ -471,7 +500,7 @@ instance Out Direction where
 -- --------------------------------------------------------------------------------
 
 type Duration     = Divs
-type NoteType     = (NoteVal, NoteSize)
+type NoteType     = (NoteVal, Maybe NoteSize)
 type Pitch        = (Steps, Maybe Semitones, Octaves)
 type DisplayPitch = (Steps, Octaves)
 
@@ -480,12 +509,10 @@ noSemitones = Nothing
 newtype Divs = Divs { getDivs :: Int }                      -- absolute dur in ticks
     deriving (Eq, Ord, Num, Enum)
 newtype NoteVal = NoteVal { getNoteVal :: Rational }        -- relative dur in notated time
-    deriving (Eq, Ord, Num, Enum)
+    deriving (Eq, Ord, Num, Fractional, Enum)
 
 
 newtype Octaves   = Octaves { getOctaves :: Int }
-    deriving (Eq, Ord, Num, Enum)
-newtype Steps     = Steps { getSteps :: Int }
     deriving (Eq, Ord, Num, Enum)
 newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed
     deriving (Eq, Ord, Num, Enum)
@@ -504,6 +531,9 @@ data NoteSize     = SizeFull | SizeCue | SizeLarge
     deriving (Eq, Ord, Enum, Bounded)
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
     deriving (Eq, Ord, Enum, Bounded)
+data Steps        = C | D | E | {-F | -}G | A | B
+    deriving (Eq, Ord, Show, Enum)
+
 data Level = PPP | PP | P | MP | MF | F | FF | FFF
     deriving (Eq, Ord, Enum, Bounded)
 
