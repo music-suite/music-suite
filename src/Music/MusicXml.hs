@@ -315,16 +315,16 @@ instance Out Attributes where
 
     out (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common") 
                                                    $ unode "time" 
-                                                        [ unode "beat" (show 4), 
+                                                        [ unode "beats" (show 4), 
                                                           unode "beat-type" (show 4)]
 
     out (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut") 
                                                    $ unode "time" 
-                                                        [ unode "beat" (show 4), 
-                                                          unode "beat-type" (show 4) ]
+                                                        [ unode "beats" (show 2), 
+                                                          unode "beat-type" (show 2) ]
 
     out (Time (DivTime beats beatType))   = single $ unode "time" 
-                                                        [ unode "beat" (show $ getBeat beats), 
+                                                        [ unode "beats" (show $ getBeat beats), 
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
 -- --------------------------------------------------------------------------------
