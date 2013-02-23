@@ -15,16 +15,16 @@ score = Partwise
         (Just "Frère Jaques") 
         (Just (Identification [Creator "composer" "Anonymous"])) 
         [
-            Part "P1" "Soprano" Nothing,
-            Part "P2" "Alto"    Nothing,
-            Part "P3" "Tenor"   Nothing
+            Part "P1" "Vln"    Nothing,
+            Part "P2" "Vla"    Nothing,
+            Part "P3" "Vc"    Nothing
         ])
     [
         (PartAttrs "P1", [
         
             (MeasureAttrs 1, [                
                 -- setting attributes as this is first measure 
-                MusicAttributes (Divisions 1024)
+                MusicAttributes (Divisions 256)
                 ,
                 MusicAttributes (Clef GClef 2)
                 ,
@@ -33,36 +33,66 @@ score = Partwise
                 MusicAttributes (Time CommonTime)
                 ,
                             
-                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (63, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))  
             ])
             ,
             (MeasureAttrs 2, [                      
-                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (63, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
                 , 
-                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))   
             ])
         ])
         ,
         
         (PartAttrs "P2", [
+            (MeasureAttrs 1, [                
+                MusicAttributes (Divisions 256)
+                ,
+                MusicAttributes (Key (-3) Major)
+                ,
+                MusicAttributes (Clef CClef 3)
+                ,
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                ,
+                MusicNote (Note (Pitched noChord (G, noSemitones, 3)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                ,
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 512 noTies (NoteProps (Just (1/2, Nothing)) 0))
+            ])
+            ,
+            (MeasureAttrs 2, [                
+                MusicNote (Note (Rest noChord (C, 4)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+            ])
         ])
-        ,
+        ,    
 
         (PartAttrs "P3", [
+            (MeasureAttrs 1, [                
+                MusicAttributes (Divisions 256)
+                ,
+                MusicAttributes (Key (-3) Major)
+                ,
+                MusicAttributes (Clef FClef 4)
+                ,
+                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+            ])
+            ,
+            (MeasureAttrs 2, [                
+                MusicNote (Note (Rest noChord (D, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+            ])
         ])
     ]
 
@@ -73,12 +103,19 @@ score = Partwise
 main = openScore
 
 showScore = putStrLn $ showXml $ score
-openScore = openXml $ score
+openScore = openSib score
 
-openXml :: Score -> IO ()
-openXml score = 
+openSib :: Score -> IO ()
+openSib score = 
     do  writeFile "test.xml" (showXml score)
         execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+
+openLy :: Score -> IO ()
+openLy score = 
+    do  writeFile "test.xml" (showXml score)
+        execute "musicxml2ly" ["test.xml"]
+        execute "lilypond" ["test.ly"]
+        execute "open" ["test.pdf"]
 
 execute :: FilePath -> [String] -> IO ()
 execute program args = do
