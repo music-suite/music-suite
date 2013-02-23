@@ -254,7 +254,7 @@ data MusicElem
 
 instance Out MusicElem where
     out (MusicAttributes x) = single $ unode "attributes" $ out x
-    out (MusicNote x)       = single $ unode "note"       $ () --out x
+    out (MusicNote x)       = single $ unode "note"       $ out x
     out (MusicDirection x)  = single $ unode "direction"  $ () --out x
 
 -- --------------------------------------------------------------------------------
@@ -336,20 +336,18 @@ data Note
         FullNote
         Duration
         [Tie]
-        -- NoteProps
+        -- TODO NoteProps
     | CueNote
         FullNote
         Duration
-        -- NoteProps
+        -- TODO NoteProps
     | GraceNote
         FullNote
         [Tie]
-        -- NoteProps
+        -- TODO NoteProps
 
 noTies = []
 
-
--- Note: Chords are indicated by setting isChord to True (and use same duration)
 data FullNote
     = Pitched       -- isChord pitch
         Bool
@@ -407,8 +405,38 @@ data TieNotation
     = TieNotationStart
     | TieNotationStop
 
+instance Out FullNote where
+    out (Pitched isChord 
+        (steps, alter, octaves))      = mempty
+                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> single (unode "pitch" (mempty
+                                            <> single ((unode "step" . show . getSteps) steps)
+                                            <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
+                                            <> single ((unode "octave" . show . getOctaves) octaves)))
+    out (Unpitched isChord 
+        (steps, octaves))             = mempty
+                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> single (unode "unpitched" (mempty
+                                            <> single ((unode "display-step" . show . getSteps) steps)
+                                            <> single ((unode "display-octave" . show . getOctaves) octaves)))
+    out (Rest isChord
+        (steps, octaves))             = mempty
+                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> single (unode "rest" (mempty
+                                            <> single ((unode "display-step" . show . getSteps) steps)
+                                            <> single ((unode "display-octave" . show . getOctaves) octaves)))
+
+outDuration :: Duration -> [Element]
+outDuration = single . unode "duration" . show . getDivs
+
+-- TODO
+outTie :: Tie -> [Element]
+outTie t = []
+
 instance Out Note where
-    out = notImplemented "Out instance"
+    out (Note full dur ties)    = out full <> outDuration dur <> concatMap outTie ties
+    out (CueNote full dur)      = [unode "cue" ()] <> out full <> outDuration dur
+    out (GraceNote full ties)   = [unode "grace" ()] <> out full <> concatMap outTie ties
 
 -- --------------------------------------------------------------------------------
 -- Directions
@@ -548,4 +576,8 @@ fromSingle :: [a] -> a
 fromSingle [x] = x
 fromSingle _   = error "fromSingle: non-single list"
 
+singleIf :: Bool -> a -> [a]
+singleIf p x = if not p then [] else [x]
+
 notImplemented x = error $ "Not implemented: " ++ x
+
