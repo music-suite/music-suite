@@ -18,6 +18,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml (
+
         -- * Score
         Score(..),
         ScoreHeader(..),
@@ -57,30 +58,33 @@ module Music.MusicXml (
 
 
         -- * Basic types
-        -- ** Enum types
-        NoteSize(..),
-        Accidental(..),
-        Level(..),
 
-        -- ** Numeric types
+        -- ** Pitch
+        Pitch(..),
+        DisplayPitch(..),
+        PitchClass,
+        Semitones(..),
+        noSemitones,
+        
+        Octaves(..),
+        Fifths(..),
+        Line(..),
+
+        Accidental(..),
+
+        -- ** Time
+        Duration(..),
+        NoteType(..),
+
         Divs(..),
         NoteVal(..),
-        Octaves(..),
-        Steps(..),
-        Semitones(..),
-        Line(..),
-        Fifths(..),
+        NoteSize(..),
+
         Beat(..),
         BeatType(..),
 
-        -- ** Derived types
-        -- *** Time
-        Duration(..),
-        NoteType(..),
-        -- *** Pitch
-        Pitch(..),
-        noSemitones,
-        DisplayPitch(..),
+        -- ** Dynamics
+        Level,
 
         -- * Import and export functions
         toXml,
@@ -95,6 +99,10 @@ import Data.Maybe (maybeToList)
 import Data.Semigroup
 import Data.Default
 import Text.XML.Light hiding (Line)
+
+import Music.MusicXml.Time
+import Music.MusicXml.Pitch
+import Music.MusicXml.Dynamics 
 
 import qualified Data.List as List
 import qualified Data.Char as Char
@@ -175,11 +183,11 @@ instance Out Score where
         = single . unode "timewise-score" $ out header <> outTimewise measures
 
 outPartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
-outPartwise = fmap (\(partAttrs, measures) -> outPar partAttrs 
+outPartwise = fmap (\(partAttrs, measures) -> outPar partAttrs
             $ fmap (\(measureAttrs, music) -> outMes measureAttrs $ outMus music) measures)
 
 outTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
-outTimewise = fmap (\(measureAttrs, parts) -> outMes measureAttrs 
+outTimewise = fmap (\(measureAttrs, parts) -> outMes measureAttrs
             $ fmap (\(partAttrs, music) -> outPar partAttrs $ outMus music) parts)
 
 outPar a xs = addPartAttrs a    $ unode "part"    xs
@@ -285,7 +293,7 @@ data Mode
     | Ionian
     | Locrian
     | NoMode
-    deriving (Eq, Ord, Show)  
+    deriving (Eq, Ord, Show)
 
 modeName :: Mode -> String
 modeName = toLowerString . show
@@ -304,29 +312,29 @@ clefName TabClef  = "tab"
 -- Transposition
 
 instance Out Attributes where
-    out (Divisions divs)                  = single $ unode "divisions" 
+    out (Divisions divs)                  = single $ unode "divisions"
                                                    $ show $ getDivs divs
 
-    out (Clef sign line)                  = single $ unode "clef" 
-                                                        [ unode "sign" (clefName sign), 
+    out (Clef sign line)                  = single $ unode "clef"
+                                                        [ unode "sign" (clefName sign),
                                                           unode "line" (show $ getLine line)]
 
-    out (Key fifths mode)                 = single $ unode "key" 
-                                                        [ unode "fifths" (show $ getFifths fifths), 
+    out (Key fifths mode)                 = single $ unode "key"
+                                                        [ unode "fifths" (show $ getFifths fifths),
                                                           unode "mode" (modeName mode)]
 
-    out (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common") 
-                                                   $ unode "time" 
-                                                        [ unode "beats" (show 4), 
+    out (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common")
+                                                   $ unode "time"
+                                                        [ unode "beats" (show 4),
                                                           unode "beat-type" (show 4)]
 
-    out (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut") 
-                                                   $ unode "time" 
-                                                        [ unode "beats" (show 2), 
+    out (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut")
+                                                   $ unode "time"
+                                                        [ unode "beats" (show 2),
                                                           unode "beat-type" (show 2) ]
 
-    out (Time (DivTime beats beatType))   = single $ unode "time" 
-                                                        [ unode "beats" (show $ getBeat beats), 
+    out (Time (DivTime beats beatType))   = single $ unode "time"
+                                                        [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
 -- --------------------------------------------------------------------------------
@@ -348,6 +356,7 @@ data Note
         [Tie]
         NoteProps
 
+noTies :: [Tie]
 noTies = []
 
 data FullNote
@@ -376,9 +385,9 @@ data NoteProps
     }
 
 
--- TODO 
+-- TODO
 -- accidental
--- instr 
+-- instr
 -- editorial-voice
 -- time-modification
 -- stem
@@ -387,30 +396,30 @@ data NoteProps
 -- beam
 -- notations
 -- lyrics
-           
+
 instance Out NoteProps where
-    out (NoteProps 
-            typ 
-            dots) 
+    out (NoteProps
+            typ
+            dots)
                     = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
                              <> replicate dots (unode "dot" ())
-        
+
 
 noteValName :: NoteVal -> String
 noteValName (NoteVal x)
-    | x == (1/1024) = "1024th" 
-    | x == (1/512)  = "512th" 
-    | x == (1/256)  = "256th" 
+    | x == (1/1024) = "1024th"
+    | x == (1/512)  = "512th"
+    | x == (1/256)  = "256th"
     | x == (1/128)  = "128th"
-    | x == (1/64)   = "64th" 
-    | x == (1/32)   = "32nd" 
-    | x == (1/16)   = "16th" 
-    | x == (1/8)    = "eighth" 
-    | x == (1/4)    = "quarter" 
-    | x == (1/2)    = "half" 
-    | x == (1/1)    = "whole" 
+    | x == (1/64)   = "64th"
+    | x == (1/32)   = "32nd"
+    | x == (1/16)   = "16th"
+    | x == (1/8)    = "eighth"
+    | x == (1/4)    = "quarter"
+    | x == (1/2)    = "half"
+    | x == (1/1)    = "whole"
     | x == (2/1)    = "breve"
-    | x == (4/1)    = "long" 
+    | x == (4/1)    = "long"
     | x == (8/1)    = "maxima"
     | otherwise     = error $ "Invalid note value:" ++ show x
 
@@ -437,22 +446,22 @@ data TieNotation
     | TieNotationStop
 
 instance Out FullNote where
-    out (Pitched isChord 
+    out (Pitched isChord
         (steps, alter, octaves))      = mempty
-                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> singleIf isChord (unode "chord" ())
                                         <> single (unode "pitch" (mempty
                                             <> single ((unode "step" . show) steps)
                                             <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
                                             <> single ((unode "octave" . show . getOctaves) octaves)))
-    out (Unpitched isChord 
+    out (Unpitched isChord
         (steps, octaves))             = mempty
-                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> singleIf isChord (unode "chord" ())
                                         <> single (unode "unpitched" (mempty
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
     out (Rest isChord
         (steps, octaves))             = mempty
-                                        <> singleIf isChord (unode "chord" ()) 
+                                        <> singleIf isChord (unode "chord" ())
                                         <> single (unode "rest" (mempty
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
@@ -499,44 +508,7 @@ instance Out Direction where
 -- Basic types
 -- --------------------------------------------------------------------------------
 
-type Duration     = Divs
-type NoteType     = (NoteVal, Maybe NoteSize)
-type Pitch        = (Steps, Maybe Semitones, Octaves)
-type DisplayPitch = (Steps, Octaves)
-
-noSemitones = Nothing
-
-newtype Divs = Divs { getDivs :: Int }                      -- absolute dur in ticks
-    deriving (Eq, Ord, Num, Enum)
-newtype NoteVal = NoteVal { getNoteVal :: Rational }        -- relative dur in notated time
-    deriving (Eq, Ord, Num, Fractional, Enum)
-
-
-newtype Octaves   = Octaves { getOctaves :: Int }
-    deriving (Eq, Ord, Num, Enum)
-newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed
-    deriving (Eq, Ord, Num, Enum)
-newtype Line      = Line { getLine :: Int }                 -- line number, from bottom
-    deriving (Eq, Ord, Num, Enum)
-
-newtype Fifths    = Fifths { getFifths :: Int }             -- number of fifths, upwards, starting from C
-    deriving (Eq, Ord, Num, Enum)
-newtype Beat     = Beat { getBeat :: Int }                  -- time nominator
-    deriving (Eq, Ord, Num, Enum)
-newtype BeatType = BeatType { getBeatType :: Int }          -- time denominator
-    deriving (Eq, Ord, Num, Enum)
-
-
-data NoteSize     = SizeFull | SizeCue | SizeLarge
-    deriving (Eq, Ord, Enum, Bounded)
-data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
-    deriving (Eq, Ord, Enum, Bounded)
-data Steps        = C | D | E | {-F | -}G | A | B
-    deriving (Eq, Ord, Show, Enum)
-
-data Level = PPP | PP | P | MP | MF | F | FF | FFF
-    deriving (Eq, Ord, Enum, Bounded)
-
+-- All imported
 
 -- --------------------------------------------------------------------------------
 -- Import and export functions
@@ -578,22 +550,22 @@ concatSep x = concat . sep x
 -- Synonym for 'Char.toUpper'
 toUpperChar :: Char -> Char
 toUpperChar = Char.toUpper
- 
+
 -- |
 -- Synonym for 'Char.toLower'
 toLowerChar :: Char -> Char
 toLowerChar = Char.toLower
- 
+
 -- |
 -- Synonym for 'fmap Char.toUpper'
 toUpperString :: String -> String
 toUpperString = fmap Char.toUpper
- 
+
 -- |
 -- Synonym for 'fmap Char.toLower'
 toLowerString :: String -> String
 toLowerString = fmap Char.toLower
- 
+
 -- |
 -- Convert a string to use upper case for the leading letter and lower case for
 -- remaining letters.
