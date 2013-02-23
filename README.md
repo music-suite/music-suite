@@ -1,22 +1,29 @@
 
-# MusicXml2
+# musicxml2
 
-A new MusicXml library for Haskell, featuring a type-safe music representation isomorphic to the
-MusicXML 2.0 format.
+MusicXML library for Haskell, including a concise, strongly typed music representation 
+isomorphic to MusicXML 2.0.
 
 ## Supported features
 
-* Part- and timewise score
-* Measure numbers
-* Instruments and part groups
-* Pitches, pitch spelling
-* Grace notes
-* Time signatures
-* Key signatures
-* Clefs
+* Part- and timewise scores
+* Instruments lists and part groups
+* Pitched and unpitched notes, with enharmonic pitch spelling
+* Cue and grace notes
+* Time signatures, Key signatures and clefs
+* Custom note heads
+* Beaming, cross-beams and tremolo
+* Slurs, staccato and misc. articulation
 
-* Non-standard note heads
-* Non-standard beaming
+The following features are currently missing or incomplete:
+
+* Lyrics
+* Chord symbols
+* Fingered bass
+* Tablature
+* Percussion grids
+* Tuning
+* Layouts 
 
 
 ## Requirements
