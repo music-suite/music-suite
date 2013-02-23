@@ -286,12 +286,14 @@ data Mode
     | Locrian
     | NoMode
     deriving (Eq, Ord, Show)  
+
 modeName :: Mode -> String
 modeName = toLowerString . show
 
 data ClefSign = GClef | CClef | FClef | PercClef | TabClef
     deriving (Eq, Ord, Enum, Bounded)
 
+clefName :: ClefSign -> String
 clefName GClef    = "G"
 clefName CClef    = "C"
 clefName FClef    = "F"
@@ -368,21 +370,21 @@ data Tie
     | TieStop
 
 
--- TODO voice?
 data NoteProps
     = NoteProps
                     -- instr
+        Int         -- editorial-voice
         NoteType    -- note type
         Int         -- dots
         Accidental  -- accidental
-                    -- time modification
+                    -- time-modification
                     -- stem
                     -- note head
                     -- staff
                     -- beam
                     -- notations
                     -- lyrics
-
+    deriving (Eq, Ord)
 
 -- TODO
 data Notation = Notation

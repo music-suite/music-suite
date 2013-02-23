@@ -24,7 +24,7 @@ score = Partwise
         
             (MeasureAttrs 1, [                
                 -- setting attributes as this is first measure 
-                MusicAttributes (Divisions 256)
+                MusicAttributes (Divisions 1024)
                 ,
                 MusicAttributes (Clef GClef 2)
                 ,
@@ -33,27 +33,27 @@ score = Partwise
                 MusicAttributes (Time CommonTime)
                 ,
                             
-                MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
                 , 
-                MusicNote (Note (Pitched chord (62, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 256 noTies)
                 , 
-                MusicNote (Note (Pitched chord (63, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (63, noSemitones, 0)) 128 noTies)
                 , 
-                MusicNote (Note (Pitched chord (62, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 128 noTies)
                 , 
-                MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
             ])
             ,
             (MeasureAttrs 2, [                      
-                MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
                 , 
-                MusicNote (Note (Pitched chord (62, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 256 noTies)
                 , 
-                MusicNote (Note (Pitched chord (63, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (63, noSemitones, 0)) 128 noTies)
                 , 
-                MusicNote (Note (Pitched chord (62, noSemitones, 0)) 128 noTies)
+                MusicNote (Note (Pitched noChord (62, noSemitones, 0)) 128 noTies)
                 , 
-                MusicNote (Note (Pitched chord (60, noSemitones, 0)) 256 noTies)
+                MusicNote (Note (Pitched noChord (60, noSemitones, 0)) 256 noTies)
             ])
         ])
         ,
@@ -70,14 +70,15 @@ score = Partwise
 
 
 
+main = openScore
+
 showScore = putStrLn $ showXml $ score
-main = showScore
+openScore = openXml $ score
 
 openXml :: Score -> IO ()
 openXml score = 
     do  writeFile "test.xml" (showXml score)
-        execute "open" ["-a", "/Applications/Sibelius/Sibelius.app", "test.xml"]
-
+        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
 execute :: FilePath -> [String] -> IO ()
 execute program args = do
