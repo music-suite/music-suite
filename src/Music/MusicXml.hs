@@ -103,6 +103,8 @@ import Text.XML.Light hiding (Line)
 import Music.MusicXml.Time
 import Music.MusicXml.Pitch
 import Music.MusicXml.Dynamics 
+import Music.MusicXml.Read
+import Music.MusicXml.Write 
 
 import qualified Data.List as List
 import qualified Data.Char as Char
@@ -176,43 +178,43 @@ addMeasureAttrs (MeasureAttrs n) = addAttr (uattr "number" $ show n)
 
 
 -- This instance is used by toXml and should return a single list
-instance Out Score where
-    out (Partwise attr header parts)
-        = single . unode "score-partwise" $ out header <> outPartwise parts
-    out (Timewise attr header measures)
-        = single . unode "timewise-score" $ out header <> outTimewise measures
+instance WriteMusicXml Score where
+    write (Partwise attr header parts)
+        = single . unode "score-partwise" $ write header <> writePartwise parts
+    write (Timewise attr header measures)
+        = single . unode "timewise-score" $ write header <> writeTimewise measures
 
-outPartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
-outPartwise = fmap (\(partAttrs, measures) -> outPar partAttrs
-            $ fmap (\(measureAttrs, music) -> outMes measureAttrs $ outMus music) measures)
+writePartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
+writePartwise = fmap (\(partAttrs, measures) -> writePar partAttrs
+            $ fmap (\(measureAttrs, music) -> writeMes measureAttrs $ writeMus music) measures)
 
-outTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
-outTimewise = fmap (\(measureAttrs, parts) -> outMes measureAttrs
-            $ fmap (\(partAttrs, music) -> outPar partAttrs $ outMus music) parts)
+writeTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
+writeTimewise = fmap (\(measureAttrs, parts) -> writeMes measureAttrs
+            $ fmap (\(partAttrs, music) -> writePar partAttrs $ writeMus music) parts)
 
-outPar a xs = addPartAttrs a    $ unode "part"    xs
-outMes a xs = addMeasureAttrs a $ unode "measure" xs
-outMus = concatMap out
+writePar a xs = addPartAttrs a    $ unode "part"    xs
+writeMes a xs = addMeasureAttrs a $ unode "measure" xs
+writeMus = concatMap write
 
 
-instance Out ScoreHeader where
-    out (ScoreHeader title mvm ident partList)
-        = mempty <> outTitle title <> outMvm mvm
-                 <> outIdent ident <> outPartList partList
+instance WriteMusicXml ScoreHeader where
+    write (ScoreHeader title mvm ident partList)
+        = mempty <> writeTitle title <> writeMvm mvm
+                 <> writeIdent ident <> writePartList partList
         where
-            outTitle, outMvm :: Maybe String -> [Element]
-            outIdent :: Maybe Identification -> [Element]
-            outPartList :: [PartListElem] -> [Element]
+            writeTitle, writeMvm :: Maybe String -> [Element]
+            writeIdent :: Maybe Identification -> [Element]
+            writePartList :: [PartListElem] -> [Element]
 
-            outTitle    = fmap (unode "title") . maybeToList
-            outMvm      = fmap (unode "movement-title") . maybeToList
-            outIdent    = single . unode "identification" . (out =<<) . maybeToList
-            outPartList = single . unode "part-list" . (out =<<)
+            writeTitle    = fmap (unode "title") . maybeToList
+            writeMvm      = fmap (unode "movement-title") . maybeToList
+            writeIdent    = single . unode "identification" . (write =<<) . maybeToList
+            writePartList = single . unode "part-list" . (write =<<)
 
-instance Out Identification where
-    out (Identification creators) = map outCreator creators
+instance WriteMusicXml Identification where
+    write (Identification creators) = map writeCreator creators
         where
-            outCreator (Creator t n) = unode "creator" (uattr "type" t, n)
+            writeCreator (Creator t n) = unode "creator" (uattr "type" t, n)
 
 
 -- --------------------------------------------------------------------------------
@@ -225,15 +227,15 @@ data PartListElem
     = Part String String (Maybe String) -- id name abbrev?
     | Group String (Maybe String)       -- name abbrev
 
-instance Out PartListElem where
-    out (Part id name abbrev)   =
+instance WriteMusicXml PartListElem where
+    write (Part id name abbrev)   =
             single $ unode "score-part"
-                        ([Attr (unqual "id") id], outName name <> outAbbrev abbrev)
+                        ([Attr (unqual "id") id], writeName name <> writeAbbrev abbrev)
         where
-            outName   = single . unode "part-name"
-            outAbbrev = maybeToList . fmap (unode "part-abbreviation")
+            writeName   = single . unode "part-name"
+            writeAbbrev = maybeToList . fmap (unode "part-abbreviation")
 
-    out (Group name abbrev) = notImplemented "Out instance for PartListElem.Group"
+    write (Group name abbrev) = notImplemented "WriteMusicXml instance for PartListElem.Group"
 
 --   TODO instr midi-device midi-instr
 --   TODO symbol barline time?
@@ -260,10 +262,10 @@ data MusicElem
     --  | Link Link
     --  | Bookmark Bookmark
 
-instance Out MusicElem where
-    out (MusicAttributes x) = single $ unode "attributes" $ out x
-    out (MusicNote x)       = single $ unode "note"       $ out x
-    out (MusicDirection x)  = single $ unode "direction"  $ () --out x
+instance WriteMusicXml MusicElem where
+    write (MusicAttributes x) = single $ unode "attributes" $ write x
+    write (MusicNote x)       = single $ unode "note"       $ write x
+    write (MusicDirection x)  = single $ unode "direction"  $ () --write x
 
 -- --------------------------------------------------------------------------------
 -- Attributes
@@ -311,29 +313,29 @@ clefName TabClef  = "tab"
 -- Staves
 -- Transposition
 
-instance Out Attributes where
-    out (Divisions divs)                  = single $ unode "divisions"
+instance WriteMusicXml Attributes where
+    write (Divisions divs)                  = single $ unode "divisions"
                                                    $ show $ getDivs divs
 
-    out (Clef sign line)                  = single $ unode "clef"
+    write (Clef sign line)                  = single $ unode "clef"
                                                         [ unode "sign" (clefName sign),
                                                           unode "line" (show $ getLine line)]
 
-    out (Key fifths mode)                 = single $ unode "key"
+    write (Key fifths mode)                 = single $ unode "key"
                                                         [ unode "fifths" (show $ getFifths fifths),
                                                           unode "mode" (modeName mode)]
 
-    out (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common")
+    write (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common")
                                                    $ unode "time"
                                                         [ unode "beats" (show 4),
                                                           unode "beat-type" (show 4)]
 
-    out (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut")
+    write (Time (CutTime))                  = single $ addAttr (uattr "symbol" "cut")
                                                    $ unode "time"
                                                         [ unode "beats" (show 2),
                                                           unode "beat-type" (show 2) ]
 
-    out (Time (DivTime beats beatType))   = single $ unode "time"
+    write (Time (DivTime beats beatType))   = single $ unode "time"
                                                         [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
@@ -397,8 +399,8 @@ data NoteProps
 -- notations
 -- lyrics
 
-instance Out NoteProps where
-    out (NoteProps
+instance WriteMusicXml NoteProps where
+    write (NoteProps
             typ
             dots)
                     = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
@@ -445,38 +447,38 @@ data TieNotation
     = TieNotationStart
     | TieNotationStop
 
-instance Out FullNote where
-    out (Pitched isChord
+instance WriteMusicXml FullNote where
+    write (Pitched isChord
         (steps, alter, octaves))      = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "pitch" (mempty
                                             <> single ((unode "step" . show) steps)
                                             <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
                                             <> single ((unode "octave" . show . getOctaves) octaves)))
-    out (Unpitched isChord
+    write (Unpitched isChord
         (steps, octaves))             = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "unpitched" (mempty
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
-    out (Rest isChord
+    write (Rest isChord
         (steps, octaves))             = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "rest" (mempty
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
 
-outDuration :: Duration -> [Element]
-outDuration = single . unode "duration" . show . getDivs
+writeDuration :: Duration -> [Element]
+writeDuration = single . unode "duration" . show . getDivs
 
 -- TODO
-outTie :: Tie -> [Element]
-outTie t = []
+writeTie :: Tie -> [Element]
+writeTie t = []
 
-instance Out Note where
-    out (Note full dur ties props)    = out full <> outDuration dur <> concatMap outTie ties <> out props
-    out (CueNote full dur props)      = [unode "cue" ()] <> out full <> outDuration dur <> out props
-    out (GraceNote full ties props)   = [unode "grace" ()] <> out full <> concatMap outTie ties <> out props
+instance WriteMusicXml Note where
+    write (Note full dur ties props)    = write full <> writeDuration dur <> concatMap writeTie ties <> write props
+    write (CueNote full dur props)      = [unode "cue" ()] <> write full <> writeDuration dur <> write props
+    write (GraceNote full ties props)   = [unode "grace" ()] <> write full <> concatMap writeTie ties <> write props
 
 -- --------------------------------------------------------------------------------
 -- Directions
@@ -496,8 +498,8 @@ data Direction
     -- metronome
     -- 8va
 
-instance Out Direction where
-    out = notImplemented "Out instance"
+instance WriteMusicXml Direction where
+    write = notImplemented "WriteMusicXml instance"
 
 -- --------------------------------------------------------------------------------
 -- Notations
@@ -522,15 +524,10 @@ showXml = ppTopElement . toXml
 -- |
 -- Render a score as MusicXML.
 toXml :: Score -> Element
-toXml = fromSingle . out
+toXml = fromSingle . write
 
 
 -- --------------------------------------------------------------------------------
-
--- TODO We would like to hide this from the docs
-
-class Out a where
-    out :: a -> [Element]
 
 addAttr  = add_attr
 addAttrs = add_attrs

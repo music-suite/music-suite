@@ -22,4 +22,6 @@ library
         Music.MusicXml.Time
         Music.MusicXml.Pitch
         Music.MusicXml.Dynamics
+        Music.MusicXml.Read
+        Music.MusicXml.Write
     
