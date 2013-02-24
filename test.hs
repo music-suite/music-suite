@@ -3,8 +3,11 @@ module Main where
 
 import Data.Semigroup
 import Data.Default
-import Music.MusicXml
 import System.Posix.Process
+
+import Music.MusicXml
+import Music.MusicXml.Pitch
+import qualified Music.MusicXml.Dynamics as Dynamics
 
 -- division 38880 (2^5*3^5*5)
 
@@ -33,27 +36,27 @@ score = Partwise
                 MusicAttributes (Time CommonTime)
                 ,
                             
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))  
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))  
             ])
             ,
             (MeasureAttrs 2, [                      
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) 128 noTies (NoteProps (Just (1/8, Nothing)) 0 Nothing Nothing))
                 , 
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))   
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))   
             ])
         ])
         ,
@@ -66,15 +69,15 @@ score = Partwise
                 ,
                 MusicAttributes (Clef CClef 3)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 ,
-                MusicNote (Note (Pitched noChord (G, noSemitones, 3)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (G, noSemitones, 3)) 256 noTies (NoteProps (Just (1/4, Nothing)) 0 Nothing Nothing))
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 512 noTies (NoteProps (Just (1/2, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) 512 noTies (NoteProps (Just (1/2, Nothing)) 0 Nothing Nothing))
             ])
             ,
             (MeasureAttrs 2, [                
-                MusicNote (Note (Rest noChord (C, 4)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+                MusicNote (Note (Rest noChord (C, 4)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0 Nothing Nothing))
             ])
         ])
         ,    
@@ -87,11 +90,11 @@ score = Partwise
                 ,
                 MusicAttributes (Clef FClef 4)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0 Nothing Nothing))
             ])
             ,
             (MeasureAttrs 2, [                
-                MusicNote (Note (Rest noChord (D, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0))
+                MusicNote (Note (Rest noChord (D, 3)) 1024 noTies (NoteProps (Just (1/1, Nothing)) 0 Nothing Nothing))
             ])
         ])
     ]

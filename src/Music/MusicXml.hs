@@ -400,8 +400,8 @@ data NoteProps
     = NoteProps {
         notePropType    :: Maybe NoteType,
         noteDots        :: Int,       
-        voice           :: Int,
-        beam            :: (Int, Bool)
+        voice           :: Maybe Int,
+        beam            :: Maybe (Int, Bool)
     }
 
 
