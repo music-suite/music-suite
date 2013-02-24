@@ -170,6 +170,7 @@ instance WriteMusicXml Score where
                     header
                     parts) = single
                            $ unode "score-partwise"
+                           -- TODO attrs
                            $ write header <> writePartwise parts
 
     write (Timewise attr
@@ -398,7 +399,9 @@ data Tie
 data NoteProps
     = NoteProps {
         notePropType    :: Maybe NoteType,
-        noteDots        :: Int
+        noteDots        :: Int,       
+        voice           :: Int,
+        beam            :: (Int, Bool)
     }
 
 
@@ -417,9 +420,12 @@ data NoteProps
 instance WriteMusicXml NoteProps where
     write (NoteProps
             typ
-            dots)
-                    = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
+            dots
+            voice
+            beam)   = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
                              <> replicate dots (unode "dot" ())
+
+-- TODO voice, beam
 
 
 noteValName :: NoteVal -> String
@@ -522,7 +528,7 @@ data Direction
     | Diminuendo Bool
     -- segno
     -- coda
-    -- rehearsal
+    | Rehearsal String
     -- pedals
     -- dashes, cesuras
     -- metronome
