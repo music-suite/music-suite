@@ -398,30 +398,28 @@ data Tie
 
 data NoteProps
     = NoteProps {
-        notePropType    :: Maybe NoteType,
-        noteDots        :: Int,       
-        voice           :: Maybe Int,
-        beam            :: Maybe (Int, Bool)
+        -- instrument
+        noteVoice   :: Maybe Int,
+        noteType    :: Maybe NoteType,
+        noteDots    :: Int,
+        -- accidental
+        -- time-modification
+        -- stem
+        -- notehead
+        -- notehead-text
+        -- staff
+        noteBeam    :: Maybe (Int, Bool)
+        -- notations
+        -- lyrics
+        -- play
     }
 
 
--- TODO
--- accidental
--- instr
--- editorial-voice
--- time-modification
--- stem
--- note head
--- staff
--- beam
--- notations
--- lyrics
-
 instance WriteMusicXml NoteProps where
     write (NoteProps
+            voice
             typ
             dots
-            voice
             beam)   = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
                              <> replicate dots (unode "dot" ())
 
@@ -446,27 +444,6 @@ noteValName (NoteVal x)
     | x == (8/1)    = "maxima"
     | otherwise     = error $ "Invalid note value:" ++ show x
 
-
--- TODO
-data Notation = Notation
-    --  = NotationTied Tied
-    --  | NotationSlur Slur
-    --  | NotationTuplet Tuplet
-    --  | NotationGlissando Glissando
-    --  | NotationSlide Slide
-    --  | NotationOrnaments Ornaments
-    --  | NotationTechnical Technical
-    --  | NotationArticulations Articulations
-    --  | NotationDynamics Dynamics
-    --  | NotationFermata Fermata
-    --  | NotationArpeggiate Arpeggiate
-    --  | NotationNonArpeggiate NonArpeggiate
-    --  | NotationAccidentalMark AccidentalMark
-    --  | NotationOther OtherNotation
-
-data TieNotation
-    = TieNotationStart
-    | TieNotationStop
 
 instance WriteMusicXml FullNote where
     write (Pitched isChord
@@ -517,6 +494,32 @@ instance WriteMusicXml Note where
                                                  <> write props
 
 -- --------------------------------------------------------------------------------
+-- Notations
+-- --------------------------------------------------------------------------------
+
+-- TODO
+data Notation = Notation
+    --  = NotationTied Tied
+    --  | NotationSlur Slur
+    --  | NotationTuplet Tuplet
+    --  | NotationGlissando Glissando
+    --  | NotationSlide Slide
+    --  | NotationOrnaments Ornaments
+    --  | NotationTechnical Technical
+    --  | NotationArticulations Articulations
+    --  | NotationDynamics Dynamics
+    --  | NotationFermata Fermata
+    --  | NotationArpeggiate Arpeggiate
+    --  | NotationNonArpeggiate NonArpeggiate
+    --  | NotationAccidentalMark AccidentalMark
+    --  | NotationOther OtherNotation
+
+data TieNotation
+    = TieNotationStart
+    | TieNotationStop
+
+
+-- --------------------------------------------------------------------------------
 -- Directions
 -- --------------------------------------------------------------------------------
 
@@ -536,11 +539,6 @@ data Direction
 
 instance WriteMusicXml Direction where
     write = notImplemented "WriteMusicXml instance"
-
--- --------------------------------------------------------------------------------
--- Notations
--- --------------------------------------------------------------------------------
-
 
 -- --------------------------------------------------------------------------------
 -- Basic types
