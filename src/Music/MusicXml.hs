@@ -64,7 +64,7 @@ module Music.MusicXml (
         PitchClass,
         Semitones(..),
         noSemitones,
-        
+
         Octaves(..),
         Fifths(..),
         Line(..),
@@ -101,9 +101,9 @@ import Text.XML.Light hiding (Line)
 
 import Music.MusicXml.Time
 import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics 
+import Music.MusicXml.Dynamics
 import Music.MusicXml.Read
-import Music.MusicXml.Write 
+import Music.MusicXml.Write
 
 import qualified Data.List as List
 import qualified Data.Char as Char
@@ -166,32 +166,32 @@ data MeasureAttrs
 
 -- This instance is used by toXml and should return a single list
 instance WriteMusicXml Score where
-    write (Partwise attr 
-                    header 
-                    parts) = single 
-                           $ unode "score-partwise" 
+    write (Partwise attr
+                    header
+                    parts) = single
+                           $ unode "score-partwise"
                            $ write header <> writePartwise parts
 
-    write (Timewise attr 
-                    header 
-                    measures) = single 
-                              $ unode "timewise-score" 
+    write (Timewise attr
+                    header
+                    measures) = single
+                              $ unode "timewise-score"
                               $ write header <> writeTimewise measures
 
 writePartwise :: [(PartAttrs, [(MeasureAttrs, Music)])] -> [Element]
 writeTimewise :: [(MeasureAttrs, [(PartAttrs, Music)])] -> [Element]
 
-writePartwise = fmap (\(attrs, measures) -> writePar attrs $ 
-                    fmap (\(attrs, music) -> writeMes attrs $ 
-                        writeMus music) measures)
+writePartwise = fmap (\(attrs, measures) -> writePartElem attrs $
+                    fmap (\(attrs, music) -> writeMeasureElem attrs $
+                        writeMusic music) measures)
 
-writeTimewise = fmap (\(attrs, parts) -> writeMes attrs $ 
-                    fmap (\(attrs, music) -> writePar attrs $ 
-                        writeMus music) parts)
+writeTimewise = fmap (\(attrs, parts) -> writeMeasureElem attrs $
+                    fmap (\(attrs, music) -> writePartElem attrs $
+                        writeMusic music) parts)
 
-writePar a xs = addPartAttrs a    $ unode "part"    xs
-writeMes a xs = addMeasureAttrs a $ unode "measure" xs
-writeMus = concatMap write
+writePartElem attrs     = addPartAttrs attrs    . unode "part"
+writeMeasureElem attrs  = addMeasureAttrs attrs . unode "measure"
+writeMusic              = concatMap write
 
 addScoreAttrs   :: ScoreAttrs   -> Element -> Element
 addPartAttrs    :: PartAttrs    -> Element -> Element
@@ -199,18 +199,19 @@ addMeasureAttrs :: MeasureAttrs -> Element -> Element
 
 addScoreAttrs   (ScoreAttrs [])  = id
 addScoreAttrs   (ScoreAttrs xs)  = addAttr (uattr "version" $ concatSep "." $ map show xs)
+
 addPartAttrs    (PartAttrs x)    = addAttr (uattr "id" x)
 addMeasureAttrs (MeasureAttrs n) = addAttr (uattr "number" $ show n)
 
 
 instance WriteMusicXml ScoreHeader where
-    write (ScoreHeader title 
-                       mvm 
-                       ident 
-                       partList) = mempty <> writeTitle title 
+    write (ScoreHeader title
+                       mvm
+                       ident
+                       partList) = mempty <> writeTitle title
                                           <> writeMvm mvm
-                                          <> writeIdent ident 
-                                          <> writePartList partList 
+                                          <> writeIdent ident
+                                          <> writePartList partList
         where {
             writeTitle, writeMvm :: Maybe String -> [Element]                           ;
             writeIdent           :: Maybe Identification -> [Element]                   ;
@@ -239,11 +240,11 @@ data PartListElem
     | Group String (Maybe String)       -- name abbrev
 
 instance WriteMusicXml PartListElem where
-    write (Part id 
-                name 
-                abbrev) = single 
-                        $ unode "score-part" 
-                        $ (single $ uattr "id" id, 
+    write (Part id
+                name
+                abbrev) = single
+                        $ unode "score-part"
+                        $ (single $ uattr "id" id,
                            writeName name <> writeAbbrev abbrev)
         where
             writeName   = single . unode "part-name"
@@ -490,23 +491,23 @@ writeTie :: Tie -> [Element]
 writeTie t = []
 
 instance WriteMusicXml Note where
-    write (Note full 
-                dur 
-                ties 
-                props) = write full <> writeDuration dur 
-                                    <> concatMap writeTie ties 
+    write (Note full
+                dur
+                ties
+                props) = write full <> writeDuration dur
+                                    <> concatMap writeTie ties
                                     <> write props
 
-    write (CueNote full 
-                   dur 
-                   props) = [unode "cue" ()] <> write full 
-                                             <> writeDuration dur 
+    write (CueNote full
+                   dur
+                   props) = [unode "cue" ()] <> write full
+                                             <> writeDuration dur
                                              <> write props
 
-    write (GraceNote full 
-                     ties 
-                     props) = [unode "grace" ()] <> write full 
-                                                 <> concatMap writeTie ties 
+    write (GraceNote full
+                     ties
+                     props) = [unode "grace" ()] <> write full
+                                                 <> concatMap writeTie ties
                                                  <> write props
 
 -- --------------------------------------------------------------------------------
@@ -607,7 +608,7 @@ fromSingle [x] = x
 fromSingle _   = error "fromSingle: non-single list"
 
 singleIf :: Bool -> a -> [a]
-singleIf p x | not p     = [] 
+singleIf p x | not p     = []
              | otherwise = [x]
 
 notImplemented x = error $ "Not implemented: " ++ x
