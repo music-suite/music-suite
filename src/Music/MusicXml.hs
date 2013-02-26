@@ -383,10 +383,10 @@ data FullNote
         Pitch
     | Unpitched     -- isChord disp
         Bool
-        DisplayPitch
+        (Maybe DisplayPitch)
     | Rest          -- isChord disp
         Bool
-        DisplayPitch
+        (Maybe DisplayPitch)
 
 chord   = True
 noChord = False
@@ -454,13 +454,21 @@ instance WriteMusicXml FullNote where
                                             <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
                                             <> single ((unode "octave" . show . getOctaves) octaves)))
     write (Unpitched isChord
-        (steps, octaves))             = mempty
+        Nothing)                      = mempty
+                                        <> singleIf isChord (unode "chord" ())
+                                        <> single (unode "unpitched" ())
+    write (Unpitched isChord
+        (Just (steps, octaves)))      = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "unpitched" (mempty
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
     write (Rest isChord
-        (steps, octaves))             = mempty
+        Nothing)                      = mempty
+                                        <> singleIf isChord (unode "chord" ())
+                                        <> single (unode "rest" ())
+    write (Rest isChord
+        (Just (steps, octaves)))      = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "rest" (mempty
                                             <> single ((unode "display-step" . show) steps)
