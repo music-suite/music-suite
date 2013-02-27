@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -86,6 +86,7 @@ module Music.MusicXml (
         Level,       
         
         -- ** Misc
+        BeamLevel,
         BeamType(..),
 
         -- * Import and export functions
@@ -100,7 +101,13 @@ import Prelude hiding (getLine)
 import Data.Maybe (maybeToList)
 import Data.Semigroup
 import Data.Default
+import Numeric.Natural
+
+-- Probably always use this, factor out of this module anyway?
 import Text.XML.Light hiding (Line)
+
+-- We will try to use bounded integers for beam levels etc
+import TypeUnary.Nat
 
 import Music.MusicXml.Time
 import Music.MusicXml.Pitch
@@ -402,16 +409,16 @@ data Tie
 data NoteProps
     = NoteProps {
         -- instrument
-        noteVoice   :: Maybe Int,
+        noteVoice   :: Maybe Int,                       -- TODO bounds?
         noteType    :: Maybe NoteType,
-        noteDots    :: Int,
+        noteDots    :: Natural,                         -- TODO bounds?
         -- accidental
         -- time-modification
         -- stem
         -- notehead
         -- notehead-text
         -- staff
-        noteBeam    :: Maybe (Int, BeamType) -- actually (1-8, begin, continue, end, forward hook, and backward hook)
+        noteBeam    :: Maybe (BeamLevel, BeamType)
         -- notations
         -- lyrics
         -- play
@@ -424,11 +431,10 @@ instance WriteMusicXml NoteProps where
             typ
             dots
             beam)   = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
-                             <> replicate dots (unode "dot" ())
+                             <> replicate (fromIntegral dots) (unode "dot" ())
                              <> maybeOne (\n -> unode "voice" $ show n) voice
-                             <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show n) 
-                                                       $ unode "beam" "XX") beam
-                                                        -- TODO
+                             <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n) 
+                                                       $ unode "beam" $ show typ) beam
 
 -- TODO voice, beam
 
@@ -570,6 +576,13 @@ instance Show BeamType where
     show ForwardHook    = "forward-hook"
     show BackwardHook   = "backward-hook"
 
+newtype BeamLevel = BeamLevel { getBeamLevel :: Max8 }
+
+deriving instance Eq            BeamLevel
+deriving instance Show          BeamLevel
+deriving instance Num           BeamLevel
+
+
 
 -- --------------------------------------------------------------------------------
 -- Import and export functions
@@ -588,13 +601,25 @@ toXml = fromSingle . write
 
 -- --------------------------------------------------------------------------------
 
+
+-- XML.Light aliases
+addAttr  :: Attr -> Element -> Element
+addAttrs :: [Attr] -> Element -> Element
 addAttr  = add_attr
 addAttrs = add_attrs
 
--- unode :: Node t => String -> t -> Element
-
 uattr :: String -> String -> Attr
 uattr n = Attr (unqual n)
+
+
+
+-- Some bounded int synonyms
+
+type Max8 = Index N8
+
+
+
+-- Misc
 
 sep :: a -> [a] -> [a]
 sep = List.intersperse
