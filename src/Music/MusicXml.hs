@@ -83,7 +83,10 @@ module Music.MusicXml (
         BeatType(..),
 
         -- ** Dynamics
-        Level,
+        Level,       
+        
+        -- ** Misc
+        BeamType(..),
 
         -- * Import and export functions
         toXml,
@@ -291,7 +294,7 @@ instance WriteMusicXml MusicElem where
 
 data Attributes
     = Divisions Divs
-    | Clef      ClefSign Line   -- sign line-from-bottom
+    | Clef      ClefSign Line
     | Key       Fifths Mode
     | Time      TimeSignature
 
@@ -408,7 +411,7 @@ data NoteProps
         -- notehead
         -- notehead-text
         -- staff
-        noteBeam    :: Maybe (Int, Bool)
+        noteBeam    :: Maybe (Int, BeamType) -- actually (1-8, begin, continue, end, forward hook, and backward hook)
         -- notations
         -- lyrics
         -- play
@@ -422,6 +425,10 @@ instance WriteMusicXml NoteProps where
             dots
             beam)   = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
                              <> replicate dots (unode "dot" ())
+                             <> maybeOne (\n -> unode "voice" $ show n) voice
+                             <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show n) 
+                                                       $ unode "beam" "XX") beam
+                                                        -- TODO
 
 -- TODO voice, beam
 
@@ -445,14 +452,15 @@ noteValName (NoteVal x)
     | otherwise     = error $ "Invalid note value:" ++ show x
 
 
+
 instance WriteMusicXml FullNote where
     write (Pitched isChord
         (steps, alter, octaves))      = mempty
                                         <> singleIf isChord (unode "chord" ())
                                         <> single (unode "pitch" (mempty
-                                            <> single ((unode "step" . show) steps)
-                                            <> maybeToList (fmap (unode "alter" . show . getSemitones) alter)
-                                            <> single ((unode "octave" . show . getOctaves) octaves)))
+                                            <> single   ((unode "step" . show) steps)
+                                            <> maybeOne (unode "alter" . show . getSemitones) alter
+                                            <> single   ((unode "octave" . show . getOctaves) octaves)))
     write (Unpitched isChord
         Nothing)                      = mempty
                                         <> singleIf isChord (unode "chord" ())
@@ -552,7 +560,16 @@ instance WriteMusicXml Direction where
 -- Basic types
 -- --------------------------------------------------------------------------------
 
--- All imported
+-- TODO move to separate module?
+data BeamType = Begin | Continue | End | ForwardHook | BackwardHook
+
+instance Show BeamType where
+    show Begin          = "begin"
+    show Continue       = "continue"
+    show End            = "end"
+    show ForwardHook    = "forward-hook"
+    show BackwardHook   = "backward-hook"
+
 
 -- --------------------------------------------------------------------------------
 -- Import and export functions
@@ -612,6 +629,12 @@ toCapitalString :: String -> String
 toCapitalString [] = []
 toCapitalString (x:xs) = toUpperChar x : toLowerString xs
 
+one :: (a -> b) -> a -> [b]
+one f = single . f
+
+maybeOne :: (a -> b) -> Maybe a -> [b]
+maybeOne f = maybeToList . fmap f
+
 single :: a -> [a]
 single = return
 
@@ -622,6 +645,7 @@ fromSingle _   = error "fromSingle: non-single list"
 singleIf :: Bool -> a -> [a]
 singleIf p x | not p     = []
              | otherwise = [x]
+
 
 notImplemented x = error $ "Not implemented: " ++ x
 

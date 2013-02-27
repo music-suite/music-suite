@@ -16,13 +16,13 @@ module Music.MusicXml.Time (
 type Duration     = Divs
 type NoteType     = (NoteVal, Maybe NoteSize)
 
-newtype Divs      = Divs { getDivs :: Int }                      -- absolute dur in ticks
-newtype NoteVal   = NoteVal { getNoteVal :: Rational }        -- relative dur in notated time
+newtype Divs      = Divs { getDivs :: Int }                   -- ^ Sounding time in ticks
+newtype NoteVal   = NoteVal { getNoteVal :: Rational }        -- ^ Notated time in fractions, in @[2^^i | i <- [-10..3]]@.
 
 data NoteSize     = SizeFull | SizeCue | SizeLarge
 
-newtype Beat      = Beat { getBeat :: Int }                      -- time nominator
-newtype BeatType  = BeatType { getBeatType :: Int }          -- time denominator
+newtype Beat      = Beat { getBeat :: Int }                   -- ^ Time nominator
+newtype BeatType  = BeatType { getBeatType :: Int }           -- ^ Time denominator
 
 
 

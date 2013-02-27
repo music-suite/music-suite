@@ -23,10 +23,10 @@ type DisplayPitch = (PitchClass, Octaves)
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
 data PitchClass   = C | D | E | F | G | A | B
 
-newtype Semitones = Semitones { getSemitones :: Double }    -- microtones allowed
-newtype Octaves   = Octaves { getOctaves :: Int }
-newtype Fifths    = Fifths { getFifths :: Int }             -- number of fifths, upwards, starting from C
-newtype Line      = Line { getLine :: Int }                 -- line number, from bottom
+newtype Semitones = Semitones { getSemitones :: Double }    -- ^ Semitones, i.e 100 cent
+newtype Octaves   = Octaves { getOctaves :: Int }           -- ^ Octaves, i.e. 1200 cent
+newtype Fifths    = Fifths { getFifths :: Int }             -- ^ Number of fifths upwards relative to C (i.e. F is -1, G is 1)
+newtype Line      = Line { getLine :: Int }                 -- ^ Line number, from bottom (i.e. 1-5)
 
 
 deriving instance Eq   PitchClass
