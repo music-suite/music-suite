@@ -43,6 +43,8 @@ partsNoAbbr = zipWith (\partId name -> Part partId name Nothing) partIds
     where
         partIds = [ "P" ++ show n | n <- [1..] ]
 
+version xs = ScoreAttrs xs
+
 header :: String -> String -> PartList -> ScoreHeader
 header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
 
@@ -171,9 +173,8 @@ chord ps d = note (head ps) d
 
 
 
-
 score = Partwise
-    (ScoreAttrs [])
+    (version [])
     (header "Frère Jaques" "Anonymous" $ parts [
         ("Violin",      "Vl."),
         ("Viola",       "Vla."),
