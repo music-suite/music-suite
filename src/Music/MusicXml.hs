@@ -412,7 +412,7 @@ data NoteProps
         noteVoice   :: Maybe Int,                       -- TODO bounds?
         noteType    :: Maybe NoteType,
         noteDots    :: Natural,                         -- TODO bounds?
-        -- accidental
+        -- accidental                                   -- TODO for unusual spelling
         -- time-modification
         -- stem
         -- notehead
@@ -430,7 +430,7 @@ instance WriteMusicXml NoteProps where
             voice
             typ
             dots
-            beam)   = mempty <> maybe [] (\(noteVal, noteSize) -> [unode "type" (noteValName noteVal)]) typ
+            beam)   = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
                              <> replicate (fromIntegral dots) (unode "dot" ())
                              <> maybeOne (\n -> unode "voice" $ show n) voice
                              <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n) 

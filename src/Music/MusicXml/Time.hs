@@ -29,6 +29,8 @@ newtype BeatType  = BeatType { getBeatType :: Int }           -- ^ Time denomina
 deriving instance Eq            Divs
 deriving instance Ord           Divs
 deriving instance Num           Divs
+deriving instance Real          Divs
+deriving instance Integral      Divs
 deriving instance Enum          Divs
 
 deriving instance Eq            NoteVal
