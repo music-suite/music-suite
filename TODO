@@ -1,8 +1,36 @@
 
-- Tuplets
-- Dynamics
-- Ties
-- Articulations (slurs etc)
-- Correct beams
-
+- Dynamics                          directions
+- Ties                              note + notation
+- Articulations (slurs etc)         notations
 - Voices, backup, forward (multi-part)
+
+
+Tyboni
+
+1
+- Clefs: Unusual varieties
+- 8va marks
+- Part group bracket/brace
+- Different number of staff lines
+- Special barlines
+
+2
+Cross-beams, tremolo
+Trills
+Slurs
+Appogiatura/acciatura
+Fermatas
+Cesuars
+Polymetric (possible?)
+Tempo
+Metronome mark
+Correct beaming (in relation to signature; automate?)
+Expression/techinal note (what is MusicXML equivalent?)
+Articulations
+Arpeggios
+Segno/coda
+Rehearsal marks
+Bar numbers
+
+3
+Dynamics

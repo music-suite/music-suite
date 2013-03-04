@@ -164,6 +164,10 @@ score = Partwise
             ,
             (MeasureAttrs 2, [
                 MusicNote (Note (Pitched noChord (C, noSemitones, 3)) 3072 noTies (setValue (1/1) def))
+                ,
+                MusicNote (Note (Pitched chord (G, noSemitones, 3)) 3072 noTies (setValue (1/1) def))
+                ,
+                MusicNote (Note (Pitched chord (E, Just (-1), 4)) 3072 noTies (setValue (1/1) def))
             ])
             ,
             (MeasureAttrs 3, [
