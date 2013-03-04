@@ -1,4 +1,6 @@
 
+-- {-# LANGUAGE RankNTypes #-}
+
 module Main where
 
 import Data.Default
@@ -17,8 +19,8 @@ stdDivs :: Divs
 stdDivs = 768*4
 
 
-stdDivisions :: Attributes
-stdDivisions = Divisions $ stdDivs `div` 4
+stdDivisions :: MusicElem
+stdDivisions = MusicAttributes $ Divisions $ stdDivs `div` 4
 
 trebleClef :: MusicElem
 altoClef   :: MusicElem
@@ -128,14 +130,15 @@ endBeamP :: Int -> NoteProps -> NoteProps
 addDotP :: NoteProps -> NoteProps
 removeDotP :: NoteProps -> NoteProps
 
-setValueP v x = x { noteType = Just (v, Nothing) }
-setVoiceP n x = x { noteVoice = Just (fromIntegral n) }
-beginBeamP n x = x { noteBeam = Just (fromIntegral n, Begin) }
-endBeamP n x = x { noteBeam = Just (fromIntegral n, End) }
-addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
-removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
+setValueP v x = x { noteType = Just (v, Nothing) }
+setVoiceP n x = x { noteVoice = Just (fromIntegral n) }
+beginBeamP n x = x { noteBeam = Just (fromIntegral n, Begin) }
+endBeamP n x = x { noteBeam = Just (fromIntegral n, End) }
+addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
+removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 
 
+infixr 1 &
 (&) = flip ($)
 
 
@@ -145,16 +148,21 @@ rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
-        val   = NoteVal $ toRational $ dur              
+        val   = NoteVal $ toRational $ dur              
+
     
 
 note :: Real b => Pitch -> b -> MusicElem
-note pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
+note pitch dur = note' pitch dur
+
+note' :: Real b => Pitch -> b -> MusicElem
+note' pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
-        val   = NoteVal $ toRational $ dur              
+        val   = NoteVal $ toRational $ dur              
 
+-- (num, denom, dots, val)
 
 -- TODO
 chord :: Real b => [Pitch] -> b -> MusicElem
@@ -166,11 +174,101 @@ chord ps d = note (head ps) d
 --     where
 --         num   = fromIntegral $ numerator   $ toRational $ dur
 --         denom = fromIntegral $ denominator $ toRational $ dur
---         val   = NoteVal $ toRational $ dur              
+--         val   = NoteVal $ toRational $ dur              
+
+class Pitched a where
+    fromPitch :: Pitch -> a
+    
+instance (Enum a, Enum b, Enum c) => Pitched (a, b, c) where
+    fromPitch (p, Nothing, o) = (toEnum $ fromEnum p, toEnum 0, toEnum $ fromEnum o)
+    fromPitch (p, Just s,  o) = (toEnum $ fromEnum p, toEnum $ fromEnum s, toEnum $ fromEnum o)
 
 
+cs' , ds' , es' , fs' , gs' , as' , bs' ::  Pitch
+c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  Pitch
+cb' , db' , eb' , fb' , gb' , ab' , bb' ::  Pitch
+
+cs  , ds  , es  , fs  , gs  , as  , bs  ::  Pitch
+c   , d   , e   , f   , g   , a   , b   ::  Pitch
+cb  , db  , eb  , fb  , gb  , ab  , bb  ::  Pitch
+
+cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  Pitch
+c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  Pitch
+cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  Pitch
 
 
+cs'  = (C, Just 1, 5)
+ds'  = (D, Just 1, 5)
+es'  = (E, Just 1, 5)
+fs'  = (F, Just 1, 5)
+gs'  = (G, Just 1, 5)
+as'  = (A, Just 1, 5)
+bs'  = (B, Just 1, 5)
+
+c'  = (C, Nothing, 5)
+d'  = (D, Nothing, 5)
+e'  = (E, Nothing, 5)
+f'  = (F, Nothing, 5)
+g'  = (G, Nothing, 5)
+a'  = (A, Nothing, 5)
+b'  = (B, Nothing, 5)
+
+cb'  = (C, Just (-1), 5)
+db'  = (D, Just (-1), 5)
+eb'  = (E, Just (-1), 5)
+fb'  = (F, Just (-1), 5)
+gb'  = (G, Just (-1), 5)
+ab'  = (A, Just (-1), 5)
+bb'  = (B, Just (-1), 5)
+
+cs  = (C, Just 1, 4)
+ds  = (D, Just 1, 4)
+es  = (E, Just 1, 4)
+fs  = (F, Just 1, 4)
+gs  = (G, Just 1, 4)
+as  = (A, Just 1, 4)
+bs  = (B, Just 1, 4)
+
+c  = (C, Nothing, 4)
+d  = (D, Nothing, 4)
+e  = (E, Nothing, 4)
+f  = (F, Nothing, 4)
+g  = (G, Nothing, 4)
+a  = (A, Nothing, 4)
+b  = (B, Nothing, 4)
+
+cb  = (C, Just (-1), 4)
+db  = (D, Just (-1), 4)
+eb  = (E, Just (-1), 4)
+fb  = (F, Just (-1), 4)
+gb  = (G, Just (-1), 4)
+ab  = (A, Just (-1), 4)
+bb  = (B, Just (-1), 4)
+
+
+cs_  = (C, Just 1, 3)
+ds_  = (D, Just 1, 3)
+es_  = (E, Just 1, 3)
+fs_  = (F, Just 1, 3)
+gs_  = (G, Just 1, 3)
+as_  = (A, Just 1, 3)
+bs_  = (B, Just 1, 3)
+
+c_  = (C, Nothing, 3)
+d_  = (D, Nothing, 3)
+e_  = (E, Nothing, 3)
+f_  = (F, Nothing, 3)
+g_  = (G, Nothing, 3)
+a_  = (A, Nothing, 3)
+b_  = (B, Nothing, 3)
+
+cb_  = (C, Just (-1), 3)
+db_  = (D, Just (-1), 3)
+eb_  = (E, Just (-1), 3)
+fb_  = (F, Just (-1), 3)
+gb_  = (G, Just (-1), 3)
+ab_  = (A, Just (-1), 3)
+bb_  = (B, Just (-1), 3)
 
 
 score = Partwise
@@ -184,52 +282,34 @@ score = Partwise
 
             (MeasureAttrs 1, [
                 -- setting attributes as this is first measure
-                MusicAttributes stdDivisions
+                stdDivisions
                 ,
-                trebleClef
-                ,
-                key (-3) Major
-                ,
-                commonTime
-                ,
-
-                note (C, noSemitones, 4) (1/4)
-                ,
-                note (D, noSemitones, 4) (1/4)
-                ,
-                note (E, Just (-1),   4) (1/8) & beginBeam 1
-                ,
-                note (D, noSemitones, 4) (1/8) & endBeam 1
-                ,
-                note (C, noSemitones, 4) (1/4)
+                trebleClef,
+                key (-3) Major,
+                commonTime,
+                note c  (1/4),
+                note d  (1/4),
+                note eb (1/8) & beginBeam 1,
+                note d  (1/8) & endBeam 1,
+                note c  (1/4)
             ])
             ,
             (MeasureAttrs 2, [
-                note (C, noSemitones, 4) (1/4)
-                ,
-                note (D, noSemitones, 4) (1/4)
-                ,
-                note (E, Just (-1),   4) (1/8) & beginBeam 1
-                ,
-                note (D, noSemitones, 4) (1/8) & endBeam 1
-                ,
-                note (C, noSemitones, 4) (1/4)
+                note c  (1/4),
+                note d  (1/4),
+                note eb (1/8) & beginBeam 1,
+                note d  (1/8) & endBeam 1,
+                note c  (1/4)
             ])
             ,
             (MeasureAttrs 3, [ 
-                note (G, noSemitones, 4) (1/8) & beginBeam 1 -- TODO handle dot here
-                ,
-                note (A, Just (-1),   4) (1/8) & endBeam 1
-                ,
-                note (G, noSemitones, 4) (1/8) & beginBeam 1
-                ,
-                note (F, noSemitones, 4) (1/8) & endBeam 1
-                ,
-                note (E, Just (-1),   4) (1/8) & beginBeam 1
-                ,
-                note (D, noSemitones, 4) (1/8) & endBeam 1
-                ,
-                note (C, noSemitones, 4) (1/4)
+                note g  (1/8) & beginBeam 1, -- TODO handle dot here
+                note ab (1/8) & endBeam 1,
+                note g  (1/8) & beginBeam 1,
+                note f  (1/8) & endBeam 1,
+                note eb (1/8) & beginBeam 1,
+                note d  (1/8) & endBeam 1,
+                note c  (1/4)
             ])
 
         ])
@@ -237,25 +317,18 @@ score = Partwise
 
         (PartAttrs "P2", [
             (MeasureAttrs 1, [
-                MusicAttributes stdDivisions
-                ,
-                key (-3) Major
-                ,
-                altoClef
-                ,
-                note (C, noSemitones, 4) (1/4)
-                ,
-                note (G, noSemitones, 3) (1/4)
-                ,
-                note (C, noSemitones, 4) (1/2)
+                stdDivisions,
+                key (-3) Major,
+                altoClef,
+                note c  (1/4),
+                note g_ (1/4),
+                note c  (1/2)
             ])
             ,
             (MeasureAttrs 2, [
-                note (C, noSemitones, 4) (1/4)
-                ,
-                note (G, noSemitones, 3) (1/4)
-                ,
-                note (C, noSemitones, 4) (1/2)
+                note c  (1/4),
+                note g_ (1/4),
+                note c  (1/2)
             ])
             ,
             (MeasureAttrs 3, [
@@ -266,19 +339,14 @@ score = Partwise
 
         (PartAttrs "P3", [
             (MeasureAttrs 1, [
-                MusicAttributes stdDivisions
-                ,
-                key (-3) Major
-                ,
-                bassClef
-                ,
-                note (C, noSemitones, 3) (1/1)
+                stdDivisions,
+                key (-3) Major,
+                bassClef,
+                note c_ (1/1)
             ])
             ,
             (MeasureAttrs 2, [
-                chord [(C, noSemitones, 3),
-                       (E, Just (-1),   3),
-                       (G, noSemitones, 3)] (1/1)
+                chord [c_, e_, g] (1/1)
             ])
             ,
             (MeasureAttrs 3, [
