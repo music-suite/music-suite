@@ -49,6 +49,8 @@ module Music.MusicXml (
         FullNote(..),
         chord, noChord,
         NoteProps(..),
+        mapNoteProps,
+        mapNoteProps2,
         Tie(..),
         TieNotation(..),
 
@@ -293,6 +295,10 @@ instance WriteMusicXml MusicElem where
     write (MusicNote x)       = single $ unode "note"       $ write x
     write (MusicDirection x)  = single $ unode "direction"  $ () --write x
 
+mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
+mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
+mapNoteProps2 f x             = x
+
 -- --------------------------------------------------------------------------------
 -- Attributes
 -- --------------------------------------------------------------------------------
@@ -386,6 +392,12 @@ data Note
 
 noTies :: [Tie]
 noTies = []
+
+mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
+mapNoteProps f (Note x d t p)     = Note x d t (f p)
+mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
+mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
+
 
 data FullNote
     = Pitched       -- isChord pitch
