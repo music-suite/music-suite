@@ -7,30 +7,35 @@
 
 Tyboni
 
-1
-- Clefs: Unusual varieties
-- 8va marks
-- Part group bracket/brace
-- Different number of staff lines
-- Special barlines
 
-2
-Cross-beams, tremolo
-Trills
-Slurs
-Appogiatura/acciatura
-Fermatas
-Cesuars
-Polymetric (possible?)
-Tempo
-Metronome mark
-Correct beaming (in relation to signature; automate?)
-Expression/techinal note (what is MusicXML equivalent?)
-Articulations
-Arpeggios
-Segno/coda
-Rehearsal marks
-Bar numbers
+## 1
 
-3
-Dynamics
+* Clefs: Unusual varieties
+* 8va marks
+* Part group bracket/brace
+* Different number of staff lines
+* Special barlines
+
+
+## 2
+
+* Cross-beams, tremolo
+* Trills
+* Slurs
+* Appogiatura/acciatura
+* Fermatas
+* Cesuars
+* Polymetric (possible?)
+* Tempo
+* Metronome mark
+* Correct beaming (in relation to signature; automate?)
+* Expression/techinal note (what is MusicXML equivalent?)
+* Articulations
+* Arpeggios
+* Segno/coda
+* Rehearsal marks
+* Bar numbers
+
+## 3
+
+* Dynamics
