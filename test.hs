@@ -7,7 +7,7 @@ import Data.Semigroup
 import Data.Default
 import System.Posix.Process
 
-import Music.MusicXml
+import Music.MusicXml hiding (chord) -- TODO
 import Music.MusicXml.Pitch
 import Music.MusicXml.Dynamics hiding (F)
 import qualified Music.MusicXml.Dynamics as Dynamics
@@ -136,12 +136,35 @@ removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 
 (&) = flip ($)
 
+
+-- TODO handle dots etc
+rest :: Real b => b -> MusicElem
+rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
+    where
+        num   = fromIntegral $ numerator   $ toRational $ dur
+        denom = fromIntegral $ denominator $ toRational $ dur
+        val   = NoteVal $ toRational $ dur              
+    
+
 note :: Real b => Pitch -> b -> MusicElem
 note pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
         val   = NoteVal $ toRational $ dur              
+
+
+-- TODO
+chord :: Real b => [Pitch] -> b -> MusicElem
+chord ps d = note (head ps) d
+-- chord pitches dur = 
+--     
+--     MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
+--     
+--     where
+--         num   = fromIntegral $ numerator   $ toRational $ dur
+--         denom = fromIntegral $ denominator $ toRational $ dur
+--         val   = NoteVal $ toRational $ dur              
 
 
 
@@ -192,20 +215,20 @@ score = Partwise
                 note (C, noSemitones, 4) (1/4)
             ])
             ,
-            (MeasureAttrs 3, [
-                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8 + stdDivs `div` 16) noTies (beginBeamP 1 $ addDotP $ setValueP (1/8) $ def))
+            (MeasureAttrs 3, [ 
+                note (G, noSemitones, 4) (1/8) & beginBeam 1 -- TODO handle dot here
                 ,
-                MusicNote (Note (Pitched noChord (A, Just (-1),   4)) (stdDivs `div` 16) noTies (endBeamP 1 $ setValueP (1/16) $ def))
+                note (A, Just (-1),   4) (1/8) & endBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8) noTies (beginBeamP 1 $ setValueP (1/8) $ def))
+                note (G, noSemitones, 4) (1/8) & beginBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (F, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeamP 1 $ setValueP (1/8) $ def))
+                note (F, noSemitones, 4) (1/8) & endBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) (stdDivs `div` 8) noTies (beginBeamP 1 $ setValueP (1/8) $ def))
+                note (E, Just (-1),   4) (1/8) & beginBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeamP 1 $ setValueP (1/8) $ def))
+                note (D, noSemitones, 4) (1/8) & endBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
             ])
 
         ])
@@ -219,23 +242,23 @@ score = Partwise
                 ,
                 altoClef
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (G, noSemitones, 3)) (stdDivs `div` 4) noTies def)
+                note (G, noSemitones, 3) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValueP (1/2) def))
+                note (C, noSemitones, 4) (1/2)
             ])
             ,
             (MeasureAttrs 2, [
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (G, noSemitones, 3)) (stdDivs `div` 4) noTies def)
+                note (G, noSemitones, 3) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValueP (1/2) def))
+                note (C, noSemitones, 4) (1/2)
             ])
             ,
             (MeasureAttrs 3, [
-                MusicNote (Note def (stdDivs `div` 1) noTies (setValueP (1/1) def))
+                rest 1
             ])
         ])
         ,
@@ -248,19 +271,17 @@ score = Partwise
                 ,
                 bassClef
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
+                note (C, noSemitones, 3) (1/1)
             ])
             ,
             (MeasureAttrs 2, [
-                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
-                ,
-                MusicNote (Note (Pitched chord (G, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
-                ,
-                MusicNote (Note (Pitched chord (E, Just (-1), 4)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
+                chord [(C, noSemitones, 3),
+                       (E, Just (-1),   3),
+                       (G, noSemitones, 3)] (1/1)
             ])
             ,
             (MeasureAttrs 3, [
-                MusicNote (Note def (stdDivs `div` 1) noTies (setValueP (1/1) def))
+                rest 1
             ])
         ])
     ]
