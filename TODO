@@ -5,10 +5,15 @@
 - Voices, backup, forward (multi-part)
 
 
-Tyboni
+
+## Note
+
+- Lilypond require levels of beams/wedges etc to be >= 1
 
 
-## 1
+## Tyboni
+
+### 1
 
 * Clefs: Unusual varieties
 * 8va marks
@@ -17,7 +22,7 @@ Tyboni
 * Special barlines
 
 
-## 2
+### 2
 
 * Cross-beams, tremolo
 * Trills
@@ -36,6 +41,6 @@ Tyboni
 * Rehearsal marks
 * Bar numbers
 
-## 3
+### 3
 
 * Dynamics
