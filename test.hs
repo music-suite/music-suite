@@ -2,6 +2,7 @@
 module Main where
 
 import Data.Default
+import Data.Ratio
 import Data.Semigroup
 import Data.Default
 import System.Posix.Process
@@ -14,6 +15,38 @@ import qualified Music.MusicXml.Dynamics as Dynamics
 -- division 38880 (2^5*3^5*5)
 stdDivs :: Divs
 stdDivs = 768*4
+
+
+stdDivisions :: Attributes
+stdDivisions = Divisions $ stdDivs `div` 4
+
+trebleClef :: MusicElem
+altoClef   :: MusicElem
+bassClef   :: MusicElem
+trebleClef = MusicAttributes $ Clef GClef 2
+altoClef   = MusicAttributes $ Clef CClef 3
+bassClef   = MusicAttributes $ Clef FClef 4
+
+commonTime = MusicAttributes $ Time CommonTime
+cutTime    = MusicAttributes $ Time CutTime
+time a b   = MusicAttributes $ Time $ DivTime a b
+key n m    = MusicAttributes $ Key n m
+
+
+parts :: [(String, String)] -> PartList
+parts = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
+    where
+        partIds = [ "P" ++ show n | n <- [1..] ]
+
+partsNoAbbr :: [String] -> PartList
+partsNoAbbr = zipWith (\partId name -> Part partId name Nothing) partIds
+    where
+        partIds = [ "P" ++ show n | n <- [1..] ]
+
+header :: String -> String -> PartList -> ScoreHeader
+header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
+
+
 
 
 
@@ -49,38 +82,68 @@ instance Default NoteProps where
 --     sharpen = mapAcc succ
 
 
--- Note properties
+-- Elems
 
-setValue :: NoteVal -> NoteProps -> NoteProps
-setValue v x = x { noteType = Just (v, Nothing) }
+setValue :: NoteVal -> MusicElem -> MusicElem
+setVoice :: Int -> MusicElem -> MusicElem
+beginBeam :: Int -> MusicElem -> MusicElem
+endBeam :: Int -> MusicElem -> MusicElem
+addDot :: MusicElem -> MusicElem
+removeDot :: MusicElem -> MusicElem
 
-setVoice :: Int -> NoteProps -> NoteProps
-setVoice n x = x { noteVoice = Just (fromIntegral n) }
+setValue x = mapNoteProps2 (setValueP x)
+setVoice n = mapNoteProps2 (setVoiceP n)
+beginBeam n = mapNoteProps2 (beginBeamP n)
+endBeam n = mapNoteProps2 (endBeamP n)
+addDot = mapNoteProps2 addDotP
+removeDot = mapNoteProps2 removeDotP
 
-beginBeam :: Int -> NoteProps -> NoteProps
-beginBeam n x = x { noteBeam = Just (fromIntegral n, Begin) }
 
-endBeam :: Int -> NoteProps -> NoteProps
-endBeam n x = x { noteBeam = Just (fromIntegral n, End) }
+-- Notes
+
+setValueN :: NoteVal -> Note -> Note
+setVoiceN :: Int -> Note -> Note
+beginBeamN :: Int -> Note -> Note
+endBeamN :: Int -> Note -> Note
+addDotN :: Note -> Note
+removeDotN :: Note -> Note
+
+setValueN x = mapNoteProps (setValueP x)
+setVoiceN n = mapNoteProps (setVoiceP n)
+beginBeamN n = mapNoteProps (beginBeamP n)
+endBeamN n = mapNoteProps (endBeamP n)
+addDotN = mapNoteProps addDotP
+removeDotN = mapNoteProps removeDotP
 
 -- TODO function beam :: Beamable a -> [a] -> [a]
 
-addDot :: NoteProps -> NoteProps
-addDot x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
+-- Note properties
 
-removeDot :: NoteProps -> NoteProps
-removeDot x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
+setValueP :: NoteVal -> NoteProps -> NoteProps
+setVoiceP :: Int -> NoteProps -> NoteProps
+beginBeamP :: Int -> NoteProps -> NoteProps
+endBeamP :: Int -> NoteProps -> NoteProps
+addDotP :: NoteProps -> NoteProps
+removeDotP :: NoteProps -> NoteProps
+
+setValueP v x = x { noteType = Just (v, Nothing) }
+setVoiceP n x = x { noteVoice = Just (fromIntegral n) }
+beginBeamP n x = x { noteBeam = Just (fromIntegral n, Begin) }
+endBeamP n x = x { noteBeam = Just (fromIntegral n, End) }
+addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
+removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 
 
-stdDivisions :: Attributes
-stdDivisions = Divisions $ stdDivs `div` 4
+(&) = flip ($)
 
-trebleClef :: Attributes
-altoClef   :: Attributes
-bassClef   :: Attributes
-trebleClef = Clef GClef 2
-altoClef   = Clef CClef 3
-bassClef   = Clef FClef 4
+note :: Real b => Pitch -> b -> MusicElem
+note pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
+    where
+        num   = fromIntegral $ numerator   $ toRational $ dur
+        denom = fromIntegral $ denominator $ toRational $ dur
+        val   = NoteVal $ toRational $ dur              
+
+
 
 
 
@@ -88,15 +151,10 @@ bassClef   = Clef FClef 4
 
 score = Partwise
     (ScoreAttrs [])
-    (ScoreHeader
-        Nothing
-        (Just "Frère Jaques")
-        (Just (Identification [Creator "composer" "Anonymous"]))
-        [
-            Part "P1" "Vln" Nothing,
-            Part "P2" "Vla" Nothing,
-            Part "P3" "Vc"  Nothing
-        ])
+    (header "Frère Jaques" "Anonymous" $ parts [
+        ("Violin",      "Vl."),
+        ("Viola",       "Vla."),
+        ("Violoncello", "Vc.")])
     [
         (PartAttrs "P1", [
 
@@ -104,48 +162,48 @@ score = Partwise
                 -- setting attributes as this is first measure
                 MusicAttributes stdDivisions
                 ,
-                MusicAttributes trebleClef
+                trebleClef
                 ,
-                MusicAttributes (Key (-3) Major)
+                key (-3) Major
                 ,
-                MusicAttributes (Time CommonTime)
+                commonTime
                 ,
 
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (D, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) (stdDivs `div` 8) noTies (beginBeam 1 $ setValue (1/8) $ def))
+                note (E, Just (-1),   4) (1/8) & beginBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeam 1 $ setValue (1/8) $ def))
+                note (D, noSemitones, 4) (1/8) & endBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
             ])
             ,
             (MeasureAttrs 2, [
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (D, noSemitones, 4) (1/4)
                 ,
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) (stdDivs `div` 8) noTies (beginBeam 1 $ setValue (1/8) $ def))
+                note (E, Just (-1),   4) (1/8) & beginBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeam 1 $ setValue (1/8) $ def))
+                note (D, noSemitones, 4) (1/8) & endBeam 1
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
+                note (C, noSemitones, 4) (1/4)
             ])
             ,
             (MeasureAttrs 3, [
-                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8 + stdDivs `div` 16) noTies (beginBeam 1 $ addDot $ setValue (1/8) $ def))
+                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8 + stdDivs `div` 16) noTies (beginBeamP 1 $ addDotP $ setValueP (1/8) $ def))
                 ,
-                MusicNote (Note (Pitched noChord (A, Just (-1),   4)) (stdDivs `div` 16) noTies (endBeam 1 $ setValue (1/16) $ def))
+                MusicNote (Note (Pitched noChord (A, Just (-1),   4)) (stdDivs `div` 16) noTies (endBeamP 1 $ setValueP (1/16) $ def))
                 ,
-                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8) noTies (beginBeam 1 $ setValue (1/8) $ def))
+                MusicNote (Note (Pitched noChord (G, noSemitones, 4)) (stdDivs `div` 8) noTies (beginBeamP 1 $ setValueP (1/8) $ def))
                 ,
-                MusicNote (Note (Pitched noChord (F, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeam 1 $ setValue (1/8) $ def))
+                MusicNote (Note (Pitched noChord (F, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeamP 1 $ setValueP (1/8) $ def))
                 ,
-                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) (stdDivs `div` 8) noTies (beginBeam 1 $ setValue (1/8) $ def))
+                MusicNote (Note (Pitched noChord (E, Just (-1),   4)) (stdDivs `div` 8) noTies (beginBeamP 1 $ setValueP (1/8) $ def))
                 ,
-                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeam 1 $ setValue (1/8) $ def))
+                MusicNote (Note (Pitched noChord (D, noSemitones, 4)) (stdDivs `div` 8) noTies (endBeamP 1 $ setValueP (1/8) $ def))
                 ,
                 MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
             ])
@@ -157,15 +215,15 @@ score = Partwise
             (MeasureAttrs 1, [
                 MusicAttributes stdDivisions
                 ,
-                MusicAttributes (Key (-3) Major)
+                key (-3) Major
                 ,
-                MusicAttributes altoClef
+                altoClef
                 ,
                 MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 4) noTies def)
                 ,
                 MusicNote (Note (Pitched noChord (G, noSemitones, 3)) (stdDivs `div` 4) noTies def)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValue (1/2) def))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValueP (1/2) def))
             ])
             ,
             (MeasureAttrs 2, [
@@ -173,11 +231,11 @@ score = Partwise
                 ,
                 MusicNote (Note (Pitched noChord (G, noSemitones, 3)) (stdDivs `div` 4) noTies def)
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValue (1/2) def))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 4)) (stdDivs `div` 2) noTies (setValueP (1/2) def))
             ])
             ,
             (MeasureAttrs 3, [
-                MusicNote (Note def (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note def (stdDivs `div` 1) noTies (setValueP (1/1) def))
             ])
         ])
         ,
@@ -186,23 +244,23 @@ score = Partwise
             (MeasureAttrs 1, [
                 MusicAttributes stdDivisions
                 ,
-                MusicAttributes (Key (-3) Major)
+                key (-3) Major
                 ,
-                MusicAttributes bassClef
+                bassClef
                 ,
-                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
             ])
             ,
             (MeasureAttrs 2, [
-                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note (Pitched noChord (C, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
                 ,
-                MusicNote (Note (Pitched chord (G, noSemitones, 3)) (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note (Pitched chord (G, noSemitones, 3)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
                 ,
-                MusicNote (Note (Pitched chord (E, Just (-1), 4)) (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note (Pitched chord (E, Just (-1), 4)) (stdDivs `div` 1) noTies (setValueP (1/1) def))
             ])
             ,
             (MeasureAttrs 3, [
-                MusicNote (Note def (stdDivs `div` 1) noTies (setValue (1/1) def))
+                MusicNote (Note def (stdDivs `div` 1) noTies (setValueP (1/1) def))
             ])
         ])
     ]
