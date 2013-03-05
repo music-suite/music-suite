@@ -14,7 +14,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml.Score (
-        
+
         -- * Score
         Score(..),
         ScoreHeader(..),
@@ -183,9 +183,6 @@ data MeasureAttrs
         Int                             --  measure number
 
 
-
-
-
 -- --------------------------------------------------------------------------------
 -- Part list
 -- --------------------------------------------------------------------------------
@@ -193,8 +190,14 @@ data MeasureAttrs
 type PartList = [PartListElem]
 
 data PartListElem
-    = Part String String (Maybe String) -- id name abbrev?
-    | Group String (Maybe String)       -- name abbrev
+    = Part
+        String
+        String
+        (Maybe String)                  -- id name abbrev?
+    | Group
+        String
+        (Maybe String)                  -- name abbrev
+
 
 -- --------------------------------------------------------------------------------
 -- Music
@@ -203,19 +206,19 @@ data PartListElem
 type Music = [MusicElem]
 
 data MusicElem
-    = MusicAttributes   Attributes
-    | MusicBackup       -- TODO
-    | MusicForward      -- TODO
-    | MusicNote         Note
-    | MusicDirection    Direction
-    | MusicHarmony      -- TODO
-    | MusicFiguredBass  -- TODO
-    | MusicPrint        -- TODO
-    | MusicSound        -- TODO
-    | MusicBarline      -- TODO
-    | MusicGrouping     -- TODO
-    | MusicLink         -- TODO
-    | MusicBookmark     -- TODO
+    = MusicAttributes       Attributes
+    | MusicBackup           -- TODO
+    | MusicForward          -- TODO
+    | MusicNote             Note
+    | MusicDirection        Direction
+    | MusicHarmony          -- TODO
+    | MusicFiguredBass      -- TODO
+    | MusicPrint            -- TODO
+    | MusicSound            -- TODO
+    | MusicBarline          -- TODO
+    | MusicGrouping         -- TODO
+    | MusicLink             -- TODO
+    | MusicBookmark         -- TODO
 
 
 -- --------------------------------------------------------------------------------
@@ -223,17 +226,17 @@ data MusicElem
 -- --------------------------------------------------------------------------------
 
 data Attributes
-    = Divisions         Divs
-    | Key               Fifths Mode
-    | Time              TimeSignature
-    | Staves            -- TODO
-    | PartSymbol        -- TODO
-    | Instruments       -- TODO
-    | Clef              ClefSign Line
-    | StaffDetails      -- TODO
-    | Transpose         -- TODO
-    | Directive         -- TODO
-    | MeasureStyle      -- TODO
+    = Divisions             Divs
+    | Key                   Fifths Mode
+    | Time                  TimeSignature
+    | Staves                -- TODO
+    | PartSymbol            -- TODO
+    | Instruments           -- TODO
+    | Clef                  ClefSign Line
+    | StaffDetails          -- TODO
+    | Transpose             -- TODO
+    | Directive             -- TODO
+    | MeasureStyle          -- TODO
 
 data TimeSignature
     = CommonTime
@@ -242,9 +245,13 @@ data TimeSignature
         Beat
         BeatType
 
-data ClefSign = GClef | CClef | FClef | PercClef | TabClef
+data ClefSign
+    = GClef
+    | CClef
+    | FClef
+    | PercClef
+    | TabClef
     deriving (Eq, Ord, Enum, Bounded)
-
 
 
 -- --------------------------------------------------------------------------------
@@ -317,32 +324,26 @@ mapNoteProps2 f x             = x
 
 
 
-
-
-
-
-
-
 -- --------------------------------------------------------------------------------
 -- Notations
 -- --------------------------------------------------------------------------------
 
 -- TODO
 data Notation
-     = Tied                             StartStopContinue                   -- type
-     | Slur                             SlurLevel StartStopContinue         -- level type
-     | Tuplet                           TupletLevel StartStopContinue Bool  -- level type bracket
-     | Glissando                        -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Slide                            -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Ornaments                        -- TODO TODO
-     | Technical                        -- TODO TODO
-     | Articulations                    -- TODO TODO
-     | DynamicsN                        Dynamics
-     | Fermata                          -- TODO ferm-type sign
-     | Arpeggiate                       -- TODO bottom/top?
-     | NonArpeggiate                    -- TODO bottom/top?
-     | AccidentalMark                   Accidental
-     | OtherNotation                    String
+     = Tied                         StartStopContinue                   -- type
+     | Slur                         SlurLevel StartStopContinue         -- level type
+     | Tuplet                       TupletLevel StartStopContinue Bool  -- level type bracket
+     | Glissando                    -- TODO line type: solid/dotted/dashed, number, start/stop, text?
+     | Slide                        -- TODO line type: solid/dotted/dashed, number, start/stop, text?
+     | Ornaments                    -- TODO TODO
+     | Technical                    -- TODO TODO
+     | Articulations                -- TODO TODO
+     | DynamicsN                    Dynamics
+     | Fermata                      -- TODO ferm-type sign
+     | Arpeggiate                   -- TODO bottom/top?
+     | NonArpeggiate                -- TODO bottom/top?
+     | AccidentalMark               Accidental
+     | OtherNotation                String
 
 
 
@@ -351,29 +352,29 @@ data Notation
 -- --------------------------------------------------------------------------------
 
 data Direction
-    = Rehearsal                         String
-    | Segno
-    | Words                             String
-    | Coda
-    | Crescendo                         Bool -- start/stop
-    | Diminuendo                        Bool -- start/stop
-    | Dynamics                          Dynamics
-    | Dashes                            DashLevel Bool -- level start/stop
-    | Bracket                           -- TODO TODO
-    | Pedal                             Bool -- start/change/stop
-    | Metronome                         -- TODO unit bpm
-    | OctaveShift                       -- TODO size: 8/15, up/down/stop
-    | HarpPedals                        -- TODO TODO
-    | Damp                              -- TODO TODO
-    | DampAll                           -- TODO TODO
-    | EyeGlasses                        -- TODO TODO
-    | StringMute                        -- TODO TODO
-    | Scordatura                        -- TODO TODO
-    | Image                             -- TODO TODO
-    | PrincipalVoice                    -- TODO TODO
-    | AccordionRegistration             -- TODO TODO
-    | Percussion                        -- TODO TODO
-    | OtherDirection                    String
+    = Rehearsal                     String
+    | Segno                         
+    | Words                         String
+    | Coda                          
+    | Crescendo                     Bool -- start/stop
+    | Diminuendo                    Bool -- start/stop
+    | Dynamics                      Dynamics
+    | Dashes                        DashLevel Bool -- level start/stop
+    | Bracket                       -- TODO TODO
+    | Pedal                         Bool -- start/change/stop
+    | Metronome                     -- TODO unit bpm
+    | OctaveShift                   -- TODO size: 8/15, up/down/stop
+    | HarpPedals                    -- TODO TODO
+    | Damp                          -- TODO TODO
+    | DampAll                       -- TODO TODO
+    | EyeGlasses                    -- TODO TODO
+    | StringMute                    -- TODO TODO
+    | Scordatura                    -- TODO TODO
+    | Image                         -- TODO TODO
+    | PrincipalVoice                -- TODO TODO
+    | AccordionRegistration         -- TODO TODO
+    | Percussion                    -- TODO TODO
+    | OtherDirection                String
 
 
 -- --------------------------------------------------------------------------------
@@ -386,19 +387,6 @@ data Lyric = Lyric -- TODO
 -- --------------------------------------------------------------------------------
 -- Basic types
 -- --------------------------------------------------------------------------------
-
-data Mode
-    = Major
-    | Minor
-    | Dorian
-    | Phrygian
-    | Lydian
-    | Mixolydian
-    | Aeolian
-    | Ionian
-    | Locrian
-    | NoMode
-    deriving (Eq, Ord, Show)
 
 newtype DashLevel   = DashLevel { getDashLevel :: Max8 }
 newtype BeamLevel   = BeamLevel { getBeamLevel :: Max8 }
@@ -421,18 +409,31 @@ data Stem
     = StemDown | StemUp | StemNone | StemDouble
 
 data NoteHead
-    = NoteHeadSlash | NoteHeadTriangle | NoteHeadDiamond | NoteHeadSquare | NoteHeadCross | NoteHeadX
-    | NoteHeadCircleX | NoteHeadInvertedTriangle | NoteHeadArrowDown | NoteHeadArrowUp | NoteHeadSlashed
-    | NoteHeadBackSlashed | NoteHeadNormal | NoteHeadCluster | NoteHeadCircleDot | NoteHeadLeftTriangle
-    | NoteHeadRectangle | NoteHeadNone
-
+    = NoteHeadSlash 
+    | NoteHeadTriangle 
+    | NoteHeadDiamond 
+    | NoteHeadSquare 
+    | NoteHeadCross 
+    | NoteHeadX
+    | NoteHeadCircleX 
+    | NoteHeadInvertedTriangle 
+    | NoteHeadArrowDown 
+    | NoteHeadArrowUp 
+    | NoteHeadSlashed
+    | NoteHeadBackSlashed 
+    | NoteHeadNormal 
+    | NoteHeadCluster 
+    | NoteHeadCircleDot 
+    | NoteHeadLeftTriangle
+    | NoteHeadRectangle 
+    | NoteHeadNone
 
 instance Show BeamType where
-    show BeginBeam          = "begin"
-    show ContinueBeam       = "continue"
-    show EndBeam            = "end"
-    show ForwardHookBeam    = "forward-hook"
-    show BackwardHookBeam   = "backward-hook"
+    show BeginBeam              = "begin"
+    show ContinueBeam           = "continue"
+    show EndBeam                = "end"
+    show ForwardHookBeam        = "forward-hook"
+    show BackwardHookBeam       = "backward-hook"
 
 instance Show StartStopContinue where
     show Start                  = "start"
@@ -454,8 +455,8 @@ deriving instance Num           SlurLevel
 -- --------------------------------------------------------------------------------
 
 -- Bounded ints
-type Max8 = Index N8  
-                                                       
+type Max8 = Index N8
+
 notImplemented x = error $ "Not implemented: " ++ x
 
 
