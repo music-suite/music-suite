@@ -1,5 +1,5 @@
 
-# music-pitched
+# music-pitch-literal
 
 Overloaded pitch literals for Haskell. 
 
