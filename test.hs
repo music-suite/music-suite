@@ -173,31 +173,18 @@ note' pitch dur dots
         denom   = fromIntegral $ denominator $ toRational $ dur
         val     = NoteVal $ toRational $ dur              
 
--- TODO wrong for > 1 dot?
 separateDots :: NoteVal -> (NoteVal, Int)
-separateDots nv | divisibleBy 2 nv = (nv,  0)
-                | otherwise        = (nv', dots' + 1)
+separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
+
+separateDots' :: [NoteVal] -> NoteVal -> (NoteVal, Int)
+separateDots' []         nv                    = error "Note value must be a multiple of two or dotted"
+separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
+                            | otherwise        = (nv', dots' + 1)
     where                            
-        (nv', dots') = separateDots (nv/1.5)
+        (nv', dots') = separateDots' divs (nv*div)
         divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
 
     
-
-logBaseRational :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseRational k n | isInfinite (fromRational n :: a) = logBaseRational k (n/k) + 1
-logBaseRational k n | isDenormalized (fromRational n :: a) = logBaseRational k (n*k) - 1
-logBaseRational k n = logBase (fromRational k) (fromRational n)
-
--- fromNoteValue :: NoteVal -> (Int, Double)
--- fromNoteValue x = (val, dots)
---     where
---         (val, dots) = properFraction . negate . logBaseRational 2 . toRational $ x
---         -- dots' = case dots of
---         --     0.0 -> 0
---         --     _   -> 1
-
-
-
 
 -- TODO
 chord :: [Pitch] -> NoteVal -> MusicElem
@@ -230,26 +217,26 @@ score = Partwise
                 commonTime,
                 note c  (1/4),
                 note d  (1/4),
-                note eb (1/8) & beginBeam 1,
-                note d  (1/8) & endBeam 1,
+                note eb (1/8)       & beginBeam 1,
+                note d  (1/8)       & endBeam 1,
                 note c  (1/4)
             ])
             ,
             (MeasureAttrs 2, [
                 note c  (1/4),
                 note d  (1/4),
-                note eb (1/8) & beginBeam 1,
-                note d  (1/8) & endBeam 1,
+                note eb (1/8)       & beginBeam 1,
+                note d  (1/8)       & endBeam 1,
                 note c  (1/4)
             ])
             ,
             (MeasureAttrs 3, [ 
-                note g  (1/8+1/16) & beginBeam 1,
-                note ab (1/16) & endBeam 1,
-                note g  (1/8) & beginBeam 1,
-                note f  (1/8) & endBeam 1,
-                note eb (1/8) & beginBeam 1,
-                note d  (1/8) & endBeam 1,
+                note g  (3/16)  & beginBeam 1,
+                note ab (1/16)  & endBeam 1,
+                note g  (1/8)   & beginBeam 1,
+                note f  (1/8)   & endBeam 1,
+                note eb (1/8)   & beginBeam 1,
+                note d  (1/8)   & endBeam 1,
                 note c  (1/4)
             ])
 
@@ -322,3 +309,13 @@ execute :: FilePath -> [String] -> IO ()
 execute program args = do
     forkProcess $ executeFile program True args Nothing
     return ()
+
+
+
+
+logBaseRational :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseRational k n 
+    | isInfinite (fromRational n :: a)      = logBaseRational k (n/k) + 1
+logBaseRational k n 
+    | isDenormalized (fromRational n :: a)  = logBaseRational k (n*k) - 1
+logBaseRational k n                         = logBase (fromRational k) (fromRational n)
