@@ -42,11 +42,14 @@ deriving instance Eq   Semitones
 deriving instance Ord  Semitones
 deriving instance Num  Semitones
 deriving instance Enum Semitones
+deriving instance Fractional Semitones
 
 deriving instance Eq   Octaves
 deriving instance Ord  Octaves
 deriving instance Num  Octaves
 deriving instance Enum Octaves
+deriving instance Real Octaves
+deriving instance Integral Octaves
 
 deriving instance Eq   Fifths
 deriving instance Ord  Fifths

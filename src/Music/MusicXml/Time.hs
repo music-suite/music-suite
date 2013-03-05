@@ -38,6 +38,7 @@ deriving instance Ord           NoteVal
 deriving instance Num           NoteVal
 deriving instance Enum          NoteVal
 deriving instance Fractional    NoteVal
+deriving instance Real          NoteVal
 
 deriving instance Eq            NoteSize
 deriving instance Ord           NoteSize
