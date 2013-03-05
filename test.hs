@@ -247,7 +247,7 @@ score = Partwise
         take 200 $ cycles [
             [
                 stdDivisions,
-                key eb Major,
+                key  eb Major,
                 altoClef,
                 note c  (1/4),
                 note g_ (1/4),

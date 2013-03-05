@@ -96,13 +96,14 @@ module Music.MusicXml (
 
 
         -- ** Dynamics
-        Level,
+        Dynamics,
 
 
         -- ** Misc
         Stem(..),
         NoteHead(..),
 
+        DashLevel,
         BeamLevel,
         SlurLevel(..),
         TupletLevel(..),
@@ -566,7 +567,7 @@ data Notation
      | Ornaments                        -- TODO TODO
      | Technical                        -- TODO TODO
      | Articulations                    -- TODO TODO
-     | DynamicsN                        Level
+     | DynamicsN                        Dynamics
      | Fermata                          -- TODO ferm-type sign
      | Arpeggiate                       -- TODO bottom/top?
      | NonArpeggiate                    -- TODO bottom/top?
@@ -586,7 +587,7 @@ data Direction
     | Coda
     | Crescendo                         Bool -- start/stop
     | Diminuendo                        Bool -- start/stop
-    | Dynamics                          Level
+    | Dynamics                          Dynamics
     | Dashes                            DashLevel Bool -- level start/stop
     | Bracket                           -- TODO TODO
     | Pedal                             Bool -- start/change/stop
