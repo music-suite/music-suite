@@ -40,7 +40,6 @@ module Music.MusicXml (
         -- ** Attributes
         Attributes(..),
         TimeSignature(..),
-        Mode(..),
         ClefSign(..),
 
         -- ** Notes
@@ -81,8 +80,8 @@ module Music.MusicXml (
         Fifths(..),
         Line(..),
 
+        Mode(..),
         Accidental(..),
-
 
         -- ** Time
         Duration(..),
@@ -204,7 +203,6 @@ instance WriteMusicXml Score where
                     header
                     parts) = single
                            $ unode "score-partwise"
-                           -- TODO attrs
                            $ write header <> writePartwise parts
 
     write (Timewise attr
@@ -296,18 +294,19 @@ type Music = [MusicElem]
 
 data MusicElem
     = MusicAttributes   Attributes
-    | MusicBackup
-    | MusicForward
+    | MusicBackup       -- TODO
+    | MusicForward      -- TODO
     | MusicNote         Note
     | MusicDirection    Direction
-    | MusicHarmony
-    | MusicFiguredBass
-    | MusicPrint
-    | MusicSound
-    | MusicBarline
-    | MusicGrouping
-    | MusicLink
-    | MusicBookmark
+    | MusicHarmony      -- TODO
+    | MusicFiguredBass  -- TODO
+    | MusicPrint        -- TODO
+    | MusicSound        -- TODO
+    | MusicBarline      -- TODO
+    | MusicGrouping     -- TODO
+    | MusicLink         -- TODO
+    | MusicBookmark     -- TODO
+
 
 instance WriteMusicXml MusicElem where
     write (MusicAttributes x) = single $ unode "attributes" $ write x
@@ -329,31 +328,20 @@ data Attributes
     | Clef              ClefSign Line
     | StaffDetails      -- TODO
     | Transpose         -- TODO
-    | Directive         -- TODO     
+    | Directive         -- TODO
     | MeasureStyle      -- TODO
 
 data TimeSignature
     = CommonTime
     | CutTime
-    | DivTime 
-        Beat 
+    | DivTime
+        Beat
         BeatType
-
-writeMode :: Mode -> String
-writeMode = toLowerString . show
 
 data ClefSign = GClef | CClef | FClef | PercClef | TabClef
     deriving (Eq, Ord, Enum, Bounded)
 
-writeClef :: ClefSign -> String
-writeClef GClef    = "G"
-writeClef CClef    = "C"
-writeClef FClef    = "F"
-writeClef PercClef = "percussion"
-writeClef TabClef  = "tab"
 
--- Staves
--- Transposition
 
 instance WriteMusicXml Attributes where
     write (Divisions divs)                  = single $ unode "divisions"
@@ -381,6 +369,16 @@ instance WriteMusicXml Attributes where
                                                         [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
+writeClef :: ClefSign -> String
+writeClef GClef    = "G"
+writeClef CClef    = "C"
+writeClef FClef    = "F"
+writeClef PercClef = "percussion"
+writeClef TabClef  = "tab"
+
+writeMode :: Mode -> String
+writeMode = toLowerString . show
+
 
 -- --------------------------------------------------------------------------------
 -- Notes
@@ -402,13 +400,13 @@ data Note
         NoteProps
 
 data FullNote
-    = Pitched       -- isChord pitch
+    = Pitched
         IsChord
         Pitch
-    | Unpitched     -- isChord disp
+    | Unpitched
         IsChord
         (Maybe DisplayPitch)
-    | Rest          -- isChord disp
+    | Rest
         IsChord
         (Maybe DisplayPitch)
 
@@ -441,33 +439,44 @@ data NoteProps
         noteLyrics       :: [Lyric]                             -- lyric
     }
 
+mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
+mapNoteProps f (Note x d t p)     = Note x d t (f p)
+mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
+mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
+
+mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
+mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
+mapNoteProps2 f x             = x
+
+
+
+
+
+
 
 instance WriteMusicXml NoteProps where
     write (NoteProps
-            instrument      -- FIXME
+            instrument      -- TODO
             voice
             typ
             dots
-            accidetnal      -- FIXME
-            timeMod         -- FIXME
-            stem            -- FIXME
-            noteHead        -- FIXME
-            noteHeadText    -- FIXME
-            staff           -- FIXME
+            accidetnal      -- TODO
+            timeMod         -- TODO
+            stem            -- TODO
+            noteHead        -- TODO
+            noteHeadText    -- TODO
+            staff           -- TODO
             beam
             notations
-            lyrics)         -- FIXME
-                = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
+            lyrics)         -- TODO
+                = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (writeNoteVal noteVal)) typ
                          <> replicate (fromIntegral dots) (unode "dot" ())
                          <> maybeOne (\n -> unode "voice" $ show n) voice
                          <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n)
                                             $ unode "beam" $ show typ) beam
 
--- TODO voice, beam
-
-
-noteValName :: NoteVal -> String
-noteValName (NoteVal x)
+writeNoteVal :: NoteVal -> String
+writeNoteVal (NoteVal x)
     | x == (1/1024) = "1024th"
     | x == (1/512)  = "512th"
     | x == (1/256)  = "256th"
@@ -515,22 +524,6 @@ instance WriteMusicXml FullNote where
                                             <> single ((unode "display-step" . show) steps)
                                             <> single ((unode "display-octave" . show . getOctaves) octaves)))
 
-writeDuration :: Duration -> [Element]
-writeDuration = single . unode "duration" . show . getDivs
-
--- TODO
-writeTie :: Tie -> [Element]
-writeTie t = []
-
-mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
-mapNoteProps f (Note x d t p)     = Note x d t (f p)
-mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
-mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
-
-mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
-mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
-mapNoteProps2 f x             = x
-
 
 instance WriteMusicXml Note where
     write (Note full
@@ -551,6 +544,13 @@ instance WriteMusicXml Note where
                      props) = [unode "grace" ()] <> write full
                                                  <> concatMap writeTie ties
                                                  <> write props
+writeDuration :: Duration -> [Element]
+writeDuration = single . unode "duration" . show . getDivs
+
+-- TODO
+writeTie :: Tie -> [Element]
+writeTie t = []
+
 
 -- --------------------------------------------------------------------------------
 -- Notations
@@ -558,20 +558,20 @@ instance WriteMusicXml Note where
 
 -- TODO
 data Notation
-     = NotationTied             StartStopContinue                   -- type
-     | NotationSlur             SlurLevel StartStopContinue         -- level type
-     | NotationTuplet           TupletLevel StartStopContinue Bool  -- level type bracket
-     | NotationGlissando        -- Glissando
-     | NotationSlide            -- Slide
-     | NotationOrnaments        -- Ornaments
-     | NotationTechnical        -- Technical
-     | NotationArticulations    -- Articulations
-     | NotationDynamics         -- Dynamics
-     | NotationFermata          -- Fermata
-     | NotationArpeggiate       -- Arpeggiate
-     | NotationNonArpeggiate    -- NonArpeggiate
-     | NotationAccidentalMark   -- AccidentalMark
-     | NotationOther            -- OtherNotation
+     = Tied             StartStopContinue                   -- type
+     | Slur             SlurLevel StartStopContinue         -- level type
+     | Tuplet           TupletLevel StartStopContinue Bool  -- level type bracket
+     | Glissando        -- Glissando
+     | Slide            -- Slide
+     | Ornaments        -- Ornaments
+     | Technical        -- Technical
+     | Articulations    -- Articulations
+     | Dynamics         -- Dynamics
+     | Fermata          -- Fermata
+     | Arpeggiate       -- Arpeggiate
+     | NonArpeggiate    -- NonArpeggiate
+     | AccidentalMark   -- AccidentalMark
+     | OtherNotation            -- OtherNotation
 
 
 
@@ -580,18 +580,28 @@ data Notation
 -- --------------------------------------------------------------------------------
 
 data Direction
-    = Words String            -- TODO separate font style, placement etc
-    | Dynamic Level
-    | Pedal Bool              -- start/stop (the latter usually generates "stop")
-    | Crescendo Bool
-    | Diminuendo Bool
-    -- segno
-    -- coda
-    | Rehearsal String
-    -- pedals
-    -- dashes, cesuras
-    -- metronome
-    -- 8va
+    = Rehearsal String
+    | Segno
+    | Words String
+    | Coda
+    | Wedge
+    | Dynamics_ Level -- TODO resolve
+    | Dashes
+    | Bracket
+    | Pedal Bool
+    | Metronome
+    | OctaveShift
+    | HarpPedals
+    | Damp
+    | DampAll
+    | EyeGlasses
+    | StringMute
+    | Scordatura
+    | Image
+    | PrincipalVoice
+    | AccordionRegistration
+    | Percussion
+    | OtherDirection
 
 instance WriteMusicXml Direction where
     write = notImplemented "WriteMusicXml instance"
