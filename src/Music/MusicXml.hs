@@ -1,6 +1,4 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
-
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -143,9 +141,9 @@ showXml = ppTopElement . toXml
 toXml :: Score -> Element
 toXml = fromSingle . write
 
+-- --------------------------------------------------------------------------------
 
-
-
-
-
+fromSingle :: [a] -> a
+fromSingle [x] = x
+fromSingle _   = error "fromSingle: non-single list"
 

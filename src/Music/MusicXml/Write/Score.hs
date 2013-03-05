@@ -1,7 +1,18 @@
 
-module Music.MusicXml.Write.Score
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : portable
+--
+-------------------------------------------------------------------------------------
 
-where
+module Music.MusicXml.Write.Score (
+  ) where
 
 import Prelude hiding (getLine)
 
