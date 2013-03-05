@@ -24,5 +24,8 @@ library
         Music.MusicXml.Pitch
         Music.MusicXml.Dynamics
         Music.MusicXml.Read
+        Music.MusicXml.Score
         Music.MusicXml.Write
+    other-modules:
+        Music.MusicXml.Write.Score
     
