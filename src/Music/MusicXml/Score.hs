@@ -390,28 +390,28 @@ data Direction
     | Coda                          
     | Crescendo                     
         Bool -- start/stop
-    | Diminuendo                    
+    | Diminuendo                    
         Bool -- start/stop
     | Dynamics                      
         Dynamics
-    | Dashes                        
+    | Dashes                        
         DashLevel 
         Bool -- level start/stop
-    | Bracket                       -- TODO TODO
+    | Bracket                       -- TODO TODO
     | Pedal                         
         Bool -- start/change/stop
-    | Metronome                     -- TODO unit bpm
+    | Metronome                     -- TODO unit bpm
     | OctaveShift                   -- TODO size: 8/15, up/down/stop
-    | HarpPedals                    -- TODO TODO
-    | Damp                          -- TODO TODO
+    | HarpPedals                    -- TODO TODO
+    | Damp                          -- TODO TODO
     | DampAll                       -- TODO TODO
-    | EyeGlasses                    -- TODO TODO
+    | EyeGlasses                    -- TODO TODO
     | StringMute                    -- TODO TODO
     | Scordatura                    -- TODO TODO
     | Image                         -- TODO TODO
-    | PrincipalVoice                -- TODO TODO
+    | PrincipalVoice                -- TODO TODO
     | AccordionRegistration         -- TODO TODO
-    | Percussion                    -- TODO TODO
+    | Percussion                    -- TODO TODO
     | OtherDirection                
         String
 
