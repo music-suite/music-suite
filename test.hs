@@ -1,5 +1,5 @@
 
--- {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, TypeSynonymInstances, FlexibleInstances #-}
 
 module Main where
 
@@ -143,7 +143,7 @@ infixr 1 &
 
 
 -- TODO handle dots etc
-rest :: Real b => b -> MusicElem
+rest :: NoteVal -> MusicElem
 rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
@@ -152,11 +152,11 @@ rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
 
     
 
-note :: Real b => Pitch -> b -> MusicElem
+note :: Pitch -> NoteVal -> MusicElem
 note pitch dur = note' pitch dur
 
-note' :: Real b => Pitch -> b -> MusicElem
-note' pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
+note' :: Pitch -> NoteVal -> MusicElem
+note' pitch dur = MusicNote $ Note (Pitched noChord $ pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
@@ -165,7 +165,7 @@ note' pitch dur = MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom)
 -- (num, denom, dots, val)
 
 -- TODO
-chord :: Real b => [Pitch] -> b -> MusicElem
+chord :: [Pitch] -> NoteVal -> MusicElem
 chord ps d = note (head ps) d
 -- chord pitches dur = 
 --     
@@ -176,99 +176,105 @@ chord ps d = note (head ps) d
 --         denom = fromIntegral $ denominator $ toRational $ dur
 --         val   = NoteVal $ toRational $ dur              
 
+newtype PitchL = PitchL { fromPitchL :: (Int, Maybe Double, Int) }
+
+-- Like Num can be expressed using arabic numerals, instances
+-- of Pitched can be expressed using Western pitch names (c, c sharp, c flat etc)    
 class Pitched a where
-    fromPitch :: Pitch -> a
-    
-instance (Enum a, Enum b, Enum c) => Pitched (a, b, c) where
-    fromPitch (p, Nothing, o) = (toEnum $ fromEnum p, toEnum 0, toEnum $ fromEnum o)
-    fromPitch (p, Just s,  o) = (toEnum $ fromEnum p, toEnum $ fromEnum s, toEnum $ fromEnum o)
+    fromPitch :: PitchL -> a
+
+instance Pitched PitchL where
+    fromPitch = id
+
+instance Pitched Pitch where
+    fromPitch (PitchL (pc, Nothing, oct)) = (toEnum pc, Nothing, fromIntegral oct)
+    fromPitch (PitchL (pc, Just st, oct)) = (toEnum pc, Just $ fromRational $ toRational $ st, fromIntegral oct)
 
 
-cs' , ds' , es' , fs' , gs' , as' , bs' ::  Pitch
-c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  Pitch
-cb' , db' , eb' , fb' , gb' , ab' , bb' ::  Pitch
+cs' , ds' , es' , fs' , gs' , as' , bs' ::  Pitched a => a
+c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  Pitched a => a
+cb' , db' , eb' , fb' , gb' , ab' , bb' ::  Pitched a => a
 
-cs  , ds  , es  , fs  , gs  , as  , bs  ::  Pitch
-c   , d   , e   , f   , g   , a   , b   ::  Pitch
-cb  , db  , eb  , fb  , gb  , ab  , bb  ::  Pitch
+cs  , ds  , es  , fs  , gs  , as  , bs  ::  Pitched a => a
+c   , d   , e   , f   , g   , a   , b   ::  Pitched a => a
+cb  , db  , eb  , fb  , gb  , ab  , bb  ::  Pitched a => a
 
-cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  Pitch
-c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  Pitch
-cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  Pitch
-
-
-cs'  = (C, Just 1, 5)
-ds'  = (D, Just 1, 5)
-es'  = (E, Just 1, 5)
-fs'  = (F, Just 1, 5)
-gs'  = (G, Just 1, 5)
-as'  = (A, Just 1, 5)
-bs'  = (B, Just 1, 5)
-
-c'  = (C, Nothing, 5)
-d'  = (D, Nothing, 5)
-e'  = (E, Nothing, 5)
-f'  = (F, Nothing, 5)
-g'  = (G, Nothing, 5)
-a'  = (A, Nothing, 5)
-b'  = (B, Nothing, 5)
-
-cb'  = (C, Just (-1), 5)
-db'  = (D, Just (-1), 5)
-eb'  = (E, Just (-1), 5)
-fb'  = (F, Just (-1), 5)
-gb'  = (G, Just (-1), 5)
-ab'  = (A, Just (-1), 5)
-bb'  = (B, Just (-1), 5)
-
-cs  = (C, Just 1, 4)
-ds  = (D, Just 1, 4)
-es  = (E, Just 1, 4)
-fs  = (F, Just 1, 4)
-gs  = (G, Just 1, 4)
-as  = (A, Just 1, 4)
-bs  = (B, Just 1, 4)
-
-c  = (C, Nothing, 4)
-d  = (D, Nothing, 4)
-e  = (E, Nothing, 4)
-f  = (F, Nothing, 4)
-g  = (G, Nothing, 4)
-a  = (A, Nothing, 4)
-b  = (B, Nothing, 4)
-
-cb  = (C, Just (-1), 4)
-db  = (D, Just (-1), 4)
-eb  = (E, Just (-1), 4)
-fb  = (F, Just (-1), 4)
-gb  = (G, Just (-1), 4)
-ab  = (A, Just (-1), 4)
-bb  = (B, Just (-1), 4)
+cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  Pitched a => a
+c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  Pitched a => a
+cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  Pitched a => a
 
 
-cs_  = (C, Just 1, 3)
-ds_  = (D, Just 1, 3)
-es_  = (E, Just 1, 3)
-fs_  = (F, Just 1, 3)
-gs_  = (G, Just 1, 3)
-as_  = (A, Just 1, 3)
-bs_  = (B, Just 1, 3)
+cs'  = fromPitch $ PitchL (0, Just 1, 5)
+ds'  = fromPitch $ PitchL (1, Just 1, 5)
+es'  = fromPitch $ PitchL (2, Just 1, 5)
+fs'  = fromPitch $ PitchL (3, Just 1, 5)
+gs'  = fromPitch $ PitchL (4, Just 1, 5)
+as'  = fromPitch $ PitchL (5, Just 1, 5)
+bs'  = fromPitch $ PitchL (6, Just 1, 5)
 
-c_  = (C, Nothing, 3)
-d_  = (D, Nothing, 3)
-e_  = (E, Nothing, 3)
-f_  = (F, Nothing, 3)
-g_  = (G, Nothing, 3)
-a_  = (A, Nothing, 3)
-b_  = (B, Nothing, 3)
+c'   = fromPitch $ PitchL (0, Nothing, 5)
+d'   = fromPitch $ PitchL (1, Nothing, 5)
+e'   = fromPitch $ PitchL (2, Nothing, 5)
+f'   = fromPitch $ PitchL (3, Nothing, 5)
+g'   = fromPitch $ PitchL (4, Nothing, 5)
+a'   = fromPitch $ PitchL (5, Nothing, 5)
+b'   = fromPitch $ PitchL (6, Nothing, 5)
 
-cb_  = (C, Just (-1), 3)
-db_  = (D, Just (-1), 3)
-eb_  = (E, Just (-1), 3)
-fb_  = (F, Just (-1), 3)
-gb_  = (G, Just (-1), 3)
-ab_  = (A, Just (-1), 3)
-bb_  = (B, Just (-1), 3)
+cb'  = fromPitch $ PitchL (0, Just (-1), 5)
+db'  = fromPitch $ PitchL (1, Just (-1), 5)
+eb'  = fromPitch $ PitchL (2, Just (-1), 5)
+fb'  = fromPitch $ PitchL (3, Just (-1), 5)
+gb'  = fromPitch $ PitchL (4, Just (-1), 5)
+ab'  = fromPitch $ PitchL (5, Just (-1), 5)
+bb'  = fromPitch $ PitchL (6, Just (-1), 5)
+
+cs   = fromPitch $ PitchL (0, Just 1, 4)
+ds   = fromPitch $ PitchL (1, Just 1, 4)
+es   = fromPitch $ PitchL (2, Just 1, 4)
+fs   = fromPitch $ PitchL (3, Just 1, 4)
+gs   = fromPitch $ PitchL (4, Just 1, 4)
+as   = fromPitch $ PitchL (5, Just 1, 4)
+bs   = fromPitch $ PitchL (6, Just 1, 4)
+
+c    = fromPitch $ PitchL (0, Nothing, 4)
+d    = fromPitch $ PitchL (1, Nothing, 4)
+e    = fromPitch $ PitchL (2, Nothing, 4)
+f    = fromPitch $ PitchL (3, Nothing, 4)
+g    = fromPitch $ PitchL (4, Nothing, 4)
+a    = fromPitch $ PitchL (5, Nothing, 4)
+b    = fromPitch $ PitchL (6, Nothing, 4)
+
+cb   = fromPitch $ PitchL (0, Just (-1), 4)
+db   = fromPitch $ PitchL (1, Just (-1), 4)
+eb   = fromPitch $ PitchL (2, Just (-1), 4)
+fb   = fromPitch $ PitchL (3, Just (-1), 4)
+gb   = fromPitch $ PitchL (4, Just (-1), 4)
+ab   = fromPitch $ PitchL (5, Just (-1), 4)
+bb   = fromPitch $ PitchL (6, Just (-1), 4)
+
+cs_  = fromPitch $ PitchL (0, Just 1, 3)
+ds_  = fromPitch $ PitchL (1, Just 1, 3)
+es_  = fromPitch $ PitchL (2, Just 1, 3)
+fs_  = fromPitch $ PitchL (3, Just 1, 3)
+gs_  = fromPitch $ PitchL (4, Just 1, 3)
+as_  = fromPitch $ PitchL (5, Just 1, 3)
+bs_  = fromPitch $ PitchL (6, Just 1, 3)
+
+c_   = fromPitch $ PitchL (0, Nothing, 3)
+d_   = fromPitch $ PitchL (1, Nothing, 3)
+e_   = fromPitch $ PitchL (2, Nothing, 3)
+f_   = fromPitch $ PitchL (3, Nothing, 3)
+g_   = fromPitch $ PitchL (4, Nothing, 3)
+a_   = fromPitch $ PitchL (5, Nothing, 3)
+b_   = fromPitch $ PitchL (6, Nothing, 3)
+
+cb_  = fromPitch $ PitchL (0, Just (-1), 3)
+db_  = fromPitch $ PitchL (1, Just (-1), 3)
+eb_  = fromPitch $ PitchL (2, Just (-1), 3)
+fb_  = fromPitch $ PitchL (3, Just (-1), 3)
+gb_  = fromPitch $ PitchL (4, Just (-1), 3)
+ab_  = fromPitch $ PitchL (5, Just (-1), 3)
+bb_  = fromPitch $ PitchL (6, Just (-1), 3)
 
 
 score = Partwise
