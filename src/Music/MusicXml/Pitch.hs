@@ -29,6 +29,7 @@ instance Pitched Pitch where
 instance Pitched DisplayPitch where
     fromPitch (PitchL (pc, _, oct)) = (toEnum pc, fromIntegral oct)
 
+-- TODO add the rest
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
 data PitchClass   = C | D | E | F | G | A | B
 

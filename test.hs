@@ -69,7 +69,7 @@ instance Default FullNote where
     def = Rest noChord Nothing
 
 instance Default NoteProps where
-    def = NoteProps Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing []
+    def = NoteProps Nothing Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
 
 
 -- class HasDyn a where
@@ -133,8 +133,8 @@ setTimeModP :: Int -> Int -> NoteProps -> NoteProps
 
 setValueP v x = x { noteType = Just (v, Nothing) }
 setVoiceP n x = x { noteVoice = Just (fromIntegral n) }
-beginBeamP n x = x { noteBeam = Just (fromIntegral n, Begin) }
-endBeamP n x = x { noteBeam = Just (fromIntegral n, End) }
+beginBeamP n x = x { noteBeam = Just (fromIntegral n, BeginBeam) }
+endBeamP n x = x { noteBeam = Just (fromIntegral n, EndBeam) }
 addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 setTimeModP m n x = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
@@ -206,10 +206,10 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
 
 score = Partwise
     (version [])
-    (header "Frère Jaques" "Anonymous" $ partList [
+    (header "Frère Jaques" "Anonymous" (partList [
         ("Violin",      "Vl."),
         ("Viola",       "Vla."),
-        ("Violoncello", "Vc.")])
+        ("Violoncello", "Vc.")]))
         
     $ parts [
         take 200 $ cycles [
@@ -234,12 +234,12 @@ score = Partwise
             ]
             ,
             [ 
-                note g  (3/16)  & beginBeam 1,
-                note ab (1/16)  & endBeam 1,
-                note g  (1/8)   & beginBeam 1,
-                note f  (1/8)   & endBeam 1,
-                note eb (1/8)   & beginBeam 1,
-                note d  (1/8)   & endBeam 1,
+                note g  (3/16)      & beginBeam 1,
+                note ab (1/16)      & endBeam 1,
+                note g  (1/8)       & beginBeam 1,
+                note f  (1/8)       & endBeam 1,
+                note eb (1/8)       & beginBeam 1,
+                note d  (1/8)       & endBeam 1,
                 note c  (1/4)
             ]
         ]

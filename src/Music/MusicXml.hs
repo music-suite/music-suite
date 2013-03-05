@@ -55,7 +55,6 @@ module Music.MusicXml (
 
         -- ** Notations
         Notation(..),
-        TieNotation(..),
 
         -- ** Directions
         Direction(..),
@@ -97,6 +96,9 @@ module Music.MusicXml (
         Stem(..),
         NoteHead(..),
         BeamLevel,
+        SlurLevel(..),
+        TupletLevel(..),
+        StartStopContinue(..),
         BeamType(..),
 
         -- * Import and export functions
@@ -427,20 +429,19 @@ data Tie
 
 data NoteProps
     = NoteProps {
-        -- instrument
-        noteVoice        :: Maybe Natural,
-        noteType         :: Maybe NoteType,
-        noteDots         :: Natural,
-        -- accidental
-        noteTimeMod      :: Maybe (Natural, Natural),        -- actual, normal
-        noteStem         :: Maybe Stem,
-        noteNoteHead     :: Maybe (NoteHead, Bool, Bool),    -- notehead, filled, parentheses
-        noteNoteHeadText :: Maybe String,
-        noteStaff        :: Maybe Natural,
-        noteBeam         :: Maybe (BeamLevel, BeamType),
-        noteNotations    :: [Notation]
-        -- lyrics
-        -- play
+        noteInstrument   :: Maybe String,                       -- instrument
+        noteVoice        :: Maybe Natural,                      -- voice
+        noteType         :: Maybe NoteType,                     -- type
+        noteDots         :: Natural,                            -- dots
+        noteAccidental   :: Maybe (Accidental, Bool, Bool),     -- accidental, cautionary, editorial
+        noteTimeMod      :: Maybe (Natural, Natural),           -- actual, normal
+        noteStem         :: Maybe Stem,                         -- stem
+        noteNoteHead     :: Maybe (NoteHead, Bool, Bool),       -- notehead, filled, parentheses
+        noteNoteHeadText :: Maybe String,                       -- notehead-text
+        noteStaff        :: Maybe Natural,                      -- staff
+        noteBeam         :: Maybe (BeamLevel, BeamType),        -- beam-level, beam-type
+        noteNotations    :: [Notation],                         -- notation
+        noteLyrics       :: [Lyric]                             -- lyric
     }
 
 data Stem 
@@ -454,16 +455,19 @@ data NoteHead
 
 instance WriteMusicXml NoteProps where
     write (NoteProps
+            instrument      -- FIXME
             voice
             typ
             dots
+            accidetnal      -- FIXME
             timeMod         -- FIXME
             stem            -- FIXME
             noteHead        -- FIXME
             noteHeadText    -- FIXME
             staff           -- FIXME
             beam
-            notations)
+            notations
+            lyrics)         -- FIXME
                 = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
                          <> replicate (fromIntegral dots) (unode "dot" ())
                          <> maybeOne (\n -> unode "voice" $ show n) voice
@@ -555,9 +559,9 @@ instance WriteMusicXml Note where
 
 -- TODO
 data Notation
-     = NotationTied             -- Tied
-     | NotationSlur             -- Slur
-     | NotationTuplet           -- Tuplet
+     = NotationTied             StartStopContinue                   -- type
+     | NotationSlur             SlurLevel StartStopContinue         -- level type
+     | NotationTuplet           TupletLevel StartStopContinue Bool  -- level type bracket
      | NotationGlissando        -- Glissando
      | NotationSlide            -- Slide
      | NotationOrnaments        -- Ornaments
@@ -570,9 +574,6 @@ data Notation
      | NotationAccidentalMark   -- AccidentalMark
      | NotationOther            -- OtherNotation
 
-data TieNotation
-    = TieNotationStart
-    | TieNotationStop
 
 
 -- --------------------------------------------------------------------------------
@@ -608,20 +609,44 @@ data Lyric = Lyric -- TODO
 -- --------------------------------------------------------------------------------
 
 -- TODO move to separate module?
-data BeamType = Begin | Continue | End | ForwardHook | BackwardHook
+data BeamType 
+    = BeginBeam 
+    | ContinueBeam 
+    | EndBeam
+    | ForwardHookBeam 
+    | BackwardHookBeam
 
 instance Show BeamType where
-    show Begin          = "begin"
-    show Continue       = "continue"
-    show End            = "end"
-    show ForwardHook    = "forward-hook"
-    show BackwardHook   = "backward-hook"
+    show BeginBeam          = "begin"
+    show ContinueBeam       = "continue"
+    show EndBeam            = "end"
+    show ForwardHookBeam    = "forward-hook"
+    show BackwardHookBeam   = "backward-hook"
 
-newtype BeamLevel = BeamLevel { getBeamLevel :: Max8 }
+data StartStopContinue
+    = Start | Stop | Continue
+
+instance Show StartStopContinue where
+    show Start                  = "start"
+    show Stop                   = "stop"
+    show Continue               = "continue"
+
+newtype BeamLevel   = BeamLevel { getBeamLevel :: Max8 }
+newtype SlurLevel   = SlurLevel { getSlurLevel :: Max8 }
+newtype TupletLevel = TupletLevel { getTupletLevel :: Max8 }
 
 deriving instance Eq            BeamLevel
 deriving instance Show          BeamLevel
 deriving instance Num           BeamLevel
+
+deriving instance Eq            TupletLevel
+deriving instance Show          TupletLevel
+deriving instance Num           TupletLevel
+
+deriving instance Eq            SlurLevel
+deriving instance Show          SlurLevel
+deriving instance Num           SlurLevel
+
 
 
 
