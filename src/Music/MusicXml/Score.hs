@@ -427,7 +427,10 @@ data StartStopContinue
     | Continue
 
 data Stem
-    = StemDown | StemUp | StemNone | StemDouble
+    = StemDown 
+    | StemUp 
+    | StemNone 
+    | StemDouble
 
 data NoteHead
     = NoteHeadSlash 
@@ -448,18 +451,6 @@ data NoteHead
     | NoteHeadLeftTriangle
     | NoteHeadRectangle 
     | NoteHeadNone
-
-instance Show BeamType where
-    show BeginBeam              = "begin"
-    show ContinueBeam           = "continue"
-    show EndBeam                = "end"
-    show ForwardHookBeam        = "forward-hook"
-    show BackwardHookBeam       = "backward-hook"
-
-instance Show StartStopContinue where
-    show Start                  = "start"
-    show Stop                   = "stop"
-    show Continue               = "continue"
 
 deriving instance Eq            BeamLevel
 deriving instance Show          BeamLevel

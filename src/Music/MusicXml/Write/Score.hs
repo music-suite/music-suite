@@ -193,7 +193,19 @@ instance WriteMusicXml NoteProps where
                          <> replicate (fromIntegral dots) (unode "dot" ())
                          <> maybeOne (\n -> unode "voice" $ show n) voice
                          <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n)
-                                            $ unode "beam" $ show typ) beam
+                                            $ unode "beam" $ writeBeamType typ) beam
+
+writeBeamType :: BeamType -> String
+writeBeamType BeginBeam              = "begin"
+writeBeamType ContinueBeam           = "continue"
+writeBeamType EndBeam                = "end"
+writeBeamType ForwardHookBeam        = "forward-hook"
+writeBeamType BackwardHookBeam       = "backward-hook"
+
+writeStartStopContinue :: StartStopContinue -> String
+writeStartStopContinue Start                  = "start"
+writeStartStopContinue Stop                   = "stop"
+writeStartStopContinue Continue               = "continue"
 
 writeNoteVal :: NoteVal -> String
 writeNoteVal (NoteVal x)
