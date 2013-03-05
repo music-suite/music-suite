@@ -11,10 +11,9 @@ import System.Posix.Process
 
 import Music.Pitch.Literal
 
-import Music.MusicXml hiding (chord) -- TODO
+import Music.MusicXml
 import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics hiding (F)
-import qualified Music.MusicXml.Dynamics as Dynamics
+import Music.MusicXml.Dynamics
 
 -- division 38880 (2^5*3^5*5)
 stdDivs :: Divs

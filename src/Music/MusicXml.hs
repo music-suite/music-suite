@@ -47,11 +47,14 @@ module Music.MusicXml (
         Note(..),
         noTies,
         FullNote(..),
-        chord, noChord,
+        noChord,
+        Tie(..),
         NoteProps(..),
         mapNoteProps,
         mapNoteProps2,
-        Tie(..),
+
+        -- ** Notations
+        Notation(..),
         TieNotation(..),
 
         -- ** Directions
@@ -91,6 +94,8 @@ module Music.MusicXml (
         Level,
 
         -- ** Misc
+        Stem(..),
+        NoteHead(..),
         BeamLevel,
         BeamType(..),
 
@@ -413,7 +418,6 @@ data FullNote
         Bool
         (Maybe DisplayPitch)
 
-chord   = True
 noChord = False
 
 -- TODO level
