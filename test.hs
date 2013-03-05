@@ -1,5 +1,5 @@
 
---{-# LANGUAGE  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
@@ -155,16 +155,49 @@ rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
     
 
 note :: Pitch -> NoteVal -> MusicElem
-note pitch dur = note' pitch dur
-
-note' :: Pitch -> NoteVal -> MusicElem
-note' pitch dur = MusicNote $ Note (Pitched noChord $ pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
+note pitch dur = note' pitch dur' dots
     where
-        num   = fromIntegral $ numerator   $ toRational $ dur
-        denom = fromIntegral $ denominator $ toRational $ dur
-        val   = NoteVal $ toRational $ dur              
+        (dur', dots) = separateDots dur
 
--- (num, denom, dots, val)
+note' :: Pitch -> NoteVal -> Int -> MusicElem
+note' pitch dur dots 
+    = MusicNote $ 
+        Note 
+            (Pitched noChord $ pitch) 
+            (stdDivs `div` denom) 
+            noTies 
+            (setValueP val $ addDots $ def)
+    where                    
+        addDots = foldl (.) id (replicate dots addDotP)
+        num     = fromIntegral $ numerator   $ toRational $ dur
+        denom   = fromIntegral $ denominator $ toRational $ dur
+        val     = NoteVal $ toRational $ dur              
+
+-- TODO wrong for > 1 dot?
+separateDots :: NoteVal -> (NoteVal, Int)
+separateDots nv | divisibleBy 2 nv = (nv,  0)
+                | otherwise        = (nv', dots' + 1)
+    where                            
+        (nv', dots') = separateDots (nv/1.5)
+        divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
+
+    
+
+logBaseRational :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseRational k n | isInfinite (fromRational n :: a) = logBaseRational k (n/k) + 1
+logBaseRational k n | isDenormalized (fromRational n :: a) = logBaseRational k (n*k) - 1
+logBaseRational k n = logBase (fromRational k) (fromRational n)
+
+-- fromNoteValue :: NoteVal -> (Int, Double)
+-- fromNoteValue x = (val, dots)
+--     where
+--         (val, dots) = properFraction . negate . logBaseRational 2 . toRational $ x
+--         -- dots' = case dots of
+--         --     0.0 -> 0
+--         --     _   -> 1
+
+
+
 
 -- TODO
 chord :: [Pitch] -> NoteVal -> MusicElem
@@ -193,7 +226,7 @@ score = Partwise
                 stdDivisions
                 ,
                 trebleClef,
-                key (-3) Major,
+                key eb Major,
                 commonTime,
                 note c  (1/4),
                 note d  (1/4),
@@ -211,8 +244,8 @@ score = Partwise
             ])
             ,
             (MeasureAttrs 3, [ 
-                note g  (1/8) & beginBeam 1, -- TODO handle dot here
-                note ab (1/8) & endBeam 1,
+                note g  (1/8+1/16) & beginBeam 1,
+                note ab (1/16) & endBeam 1,
                 note g  (1/8) & beginBeam 1,
                 note f  (1/8) & endBeam 1,
                 note eb (1/8) & beginBeam 1,
@@ -226,7 +259,7 @@ score = Partwise
         (PartAttrs "P2", [
             (MeasureAttrs 1, [
                 stdDivisions,
-                key (-3) Major,
+                key eb Major,
                 altoClef,
                 note c  (1/4),
                 note g_ (1/4),
@@ -248,7 +281,7 @@ score = Partwise
         (PartAttrs "P3", [
             (MeasureAttrs 1, [
                 stdDivisions,
-                key (-3) Major,
+                key eb Major,
                 bassClef,
                 note c_ (1/1)
             ])
