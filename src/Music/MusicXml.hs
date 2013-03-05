@@ -421,17 +421,17 @@ data Tie
 data NoteProps
     = NoteProps {
         -- instrument
-        noteVoice   :: Maybe Int,                       -- TODO bounds?
-        noteType    :: Maybe NoteType,
-        noteDots    :: Natural,                         -- TODO bounds?
+        noteVoice       :: Maybe Int,                       -- TODO bounds?
+        noteType        :: Maybe NoteType,
+        noteDots        :: Natural,                         -- TODO bounds?
         -- accidental                                   -- TODO for unusual spelling
-        -- time-modification
+        noteTimeMod     :: Maybe (Int, Int),                -- actual, normal 
         -- stem
         -- notehead
         -- notehead-text
         -- staff
-        noteBeam    :: Maybe (BeamLevel, BeamType)
-        -- notations
+        noteBeam        :: Maybe (BeamLevel, BeamType),
+        noteNotations   :: [Notation]
         -- lyrics
         -- play
     }
@@ -442,11 +442,14 @@ instance WriteMusicXml NoteProps where
             voice
             typ
             dots
-            beam)   = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
-                             <> replicate (fromIntegral dots) (unode "dot" ())
-                             <> maybeOne (\n -> unode "voice" $ show n) voice
-                             <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n) 
-                                                       $ unode "beam" $ show typ) beam
+            timeMod -- FIXME
+            beam
+            notations) 
+                = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
+                         <> replicate (fromIntegral dots) (unode "dot" ())
+                         <> maybeOne (\n -> unode "voice" $ show n) voice
+                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n) 
+                                            $ unode "beam" $ show typ) beam
 
 -- TODO voice, beam
 
@@ -532,21 +535,21 @@ instance WriteMusicXml Note where
 -- --------------------------------------------------------------------------------
 
 -- TODO
-data Notation = Notation
-    --  = NotationTied Tied
-    --  | NotationSlur Slur
-    --  | NotationTuplet Tuplet
-    --  | NotationGlissando Glissando
-    --  | NotationSlide Slide
-    --  | NotationOrnaments Ornaments
-    --  | NotationTechnical Technical
-    --  | NotationArticulations Articulations
-    --  | NotationDynamics Dynamics
-    --  | NotationFermata Fermata
-    --  | NotationArpeggiate Arpeggiate
-    --  | NotationNonArpeggiate NonArpeggiate
-    --  | NotationAccidentalMark AccidentalMark
-    --  | NotationOther OtherNotation
+data Notation
+     = NotationTied             -- Tied
+     | NotationSlur             -- Slur
+     | NotationTuplet           -- Tuplet
+     | NotationGlissando        -- Glissando
+     | NotationSlide            -- Slide
+     | NotationOrnaments        -- Ornaments
+     | NotationTechnical        -- Technical
+     | NotationArticulations    -- Articulations
+     | NotationDynamics         -- Dynamics
+     | NotationFermata          -- Fermata
+     | NotationArpeggiate       -- Arpeggiate
+     | NotationNonArpeggiate    -- NonArpeggiate
+     | NotationAccidentalMark   -- AccidentalMark
+     | NotationOther            -- OtherNotation
 
 data TieNotation
     = TieNotationStart
