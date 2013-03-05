@@ -199,8 +199,8 @@ writeBeamType :: BeamType -> String
 writeBeamType BeginBeam              = "begin"
 writeBeamType ContinueBeam           = "continue"
 writeBeamType EndBeam                = "end"
-writeBeamType ForwardHookBeam        = "forward-hook"
-writeBeamType BackwardHookBeam       = "backward-hook"
+writeBeamType ForwardHook            = "forward-hook"
+writeBeamType BackwardHook           = "backward-hook"
 
 writeStartStopContinue :: StartStopContinue -> String
 writeStartStopContinue Start                  = "start"

@@ -98,7 +98,7 @@ module Music.MusicXml (
 
 
         -- ** Misc
-        Stem(..),
+        StemDirection(..),
         NoteHead(..),
 
         DashLevel,
