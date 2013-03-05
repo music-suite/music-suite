@@ -220,20 +220,20 @@ type Music = [MusicElem]
 data MusicElem
     = MusicAttributes       
         Attributes
-    | MusicBackup           -- TODO
-    | MusicForward          -- TODO
+    | MusicBackup                       -- TODO
+    | MusicForward                      -- TODO
     | MusicNote             
         Note
     | MusicDirection        
         Direction
-    | MusicHarmony          -- TODO
-    | MusicFiguredBass      -- TODO
-    | MusicPrint            -- TODO
-    | MusicSound            -- TODO
-    | MusicBarline          -- TODO
-    | MusicGrouping         -- TODO
-    | MusicLink             -- TODO
-    | MusicBookmark         -- TODO
+    | MusicHarmony                      -- TODO
+    | MusicFiguredBass                  -- TODO
+    | MusicPrint                        -- TODO
+    | MusicSound                        -- TODO
+    | MusicBarline                      -- TODO
+    | MusicGrouping                     -- TODO
+    | MusicLink                         -- TODO
+    | MusicBookmark                     -- TODO
 
 
 -- ----------------------------------------------------------------------------------
@@ -248,16 +248,16 @@ data Attributes
         Mode
     | Time                  
         TimeSignature
-    | Staves                -- TODO
-    | PartSymbol            -- TODO
-    | Instruments           -- TODO
-    | Clef                  
-        ClefSign 
-        Line
-    | StaffDetails          -- TODO
-    | Transpose             -- TODO
-    | Directive             -- TODO
-    | MeasureStyle          -- TODO
+    | Staves                            -- TODO
+    | PartSymbol                        -- TODO
+    | Instruments                       -- TODO
+    | Clef                              
+        ClefSign                        
+        Line                            
+    | StaffDetails                      -- TODO
+    | Transpose                         -- TODO
+    | Directive                         -- TODO
+    | MeasureStyle                      -- TODO
 
 data TimeSignature
     = CommonTime
@@ -360,17 +360,17 @@ data Notation
         TupletLevel 
         StartStopContinue 
         Bool                            -- level type bracket
-     | Glissando                    -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Slide                        -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Ornaments                    -- TODO TODO
-     | Technical                    -- TODO TODO
-     | Articulations                -- TODO TODO
-     | DynamicNotation              
-        Dynamics
-     | Fermata                      -- TODO ferm-type sign
-     | Arpeggiate                   -- TODO bottom/top?
-     | NonArpeggiate                -- TODO bottom/top?
-     | AccidentalMark               
+     | Glissando                        -- TODO line type: solid/dotted/dashed, number, start/stop, text?
+     | Slide                            -- TODO line type: solid/dotted/dashed, number, start/stop, text?
+     | Ornaments                        -- TODO TODO
+     | Technical                        -- TODO TODO
+     | Articulations                    -- TODO TODO
+     | DynamicNotation                  
+        Dynamics                        
+     | Fermata                          -- TODO ferm-type sign
+     | Arpeggiate                       -- TODO bottom/top?
+     | NonArpeggiate                    -- TODO bottom/top?
+     | AccidentalMark                   
         Accidental
      | OtherNotation                
         String
@@ -397,22 +397,22 @@ data Direction
     | Dashes                        
         DashLevel 
         Bool -- level start/stop
-    | Bracket                       -- TODO TODO
+    | Bracket                           -- TODO TODO
     | Pedal                         
         Bool -- start/change/stop
-    | Metronome                     -- TODO unit bpm
-    | OctaveShift                   -- TODO size: 8/15, up/down/stop
-    | HarpPedals                    -- TODO TODO
-    | Damp                          -- TODO TODO
-    | DampAll                       -- TODO TODO
-    | EyeGlasses                    -- TODO TODO
-    | StringMute                    -- TODO TODO
-    | Scordatura                    -- TODO TODO
-    | Image                         -- TODO TODO
-    | PrincipalVoice                -- TODO TODO
-    | AccordionRegistration         -- TODO TODO
-    | Percussion                    -- TODO TODO
-    | OtherDirection                
+    | Metronome                         -- TODO unit bpm
+    | OctaveShift                       -- TODO size: 8/15, up/down/stop
+    | HarpPedals                        -- TODO TODO
+    | Damp                              -- TODO TODO
+    | DampAll                           -- TODO TODO
+    | EyeGlasses                        -- TODO TODO
+    | StringMute                        -- TODO TODO
+    | Scordatura                        -- TODO TODO
+    | Image                             -- TODO TODO
+    | PrincipalVoice                    -- TODO TODO
+    | AccordionRegistration             -- TODO TODO
+    | Percussion                        -- TODO TODO
+    | OtherDirection                    
         String
 
 
