@@ -154,15 +154,20 @@ rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
     
 
 note :: Pitch -> NoteVal -> MusicElem
-note pitch dur = note' pitch dur' dots
+note pitch dur = note' False pitch dur' dots
     where
         (dur', dots) = separateDots dur
 
-note' :: Pitch -> NoteVal -> Int -> MusicElem
-note' pitch dur dots 
+chordNote :: Pitch -> NoteVal -> MusicElem
+chordNote pitch dur = note' True pitch dur' dots
+    where
+        (dur', dots) = separateDots dur
+
+note' :: Bool -> Pitch -> NoteVal -> Int -> MusicElem
+note' isChord pitch dur dots 
     = MusicNote $ 
         Note 
-            (Pitched noChord $ pitch) 
+            (Pitched isChord $ pitch) 
             (stdDivs `div` denom) 
             noTies 
             (setValueP val $ addDots $ def)
@@ -184,8 +189,11 @@ separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
         divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
 
     
-chord :: [Pitch] -> NoteVal -> MusicElem
-chord ps d = note (head ps) d
+chord :: [Pitch] -> NoteVal -> [MusicElem]
+chord [] d      = error "No notes in chord"
+chord (p:ps) d  = [note p d] ++ map (\p -> chordNote p d) ps
+
+
 
 
 parts :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
@@ -260,9 +268,7 @@ score = Partwise
                 note c_ (1/1)
             ]
             ,
-            [
-                chord [c_, e_, g] (1/1)
-            ]  
+            chord [c_, g_, eb] (1/1)
         ]
     ] 
     
