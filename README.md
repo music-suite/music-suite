@@ -10,7 +10,7 @@ For example:
 ```haskell
 import Music.Pitched
 
-frere :: Pitched a => a
+frere :: Pitched a => [a]
 
 frere1 =  [c, d, e, c]
        ++ [e, f, g]
