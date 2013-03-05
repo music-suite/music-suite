@@ -45,11 +45,14 @@ module Music.MusicXml (
 
         -- ** Notes
         Note(..),
-        noTies,
         FullNote(..),
+        IsChord,
         noChord,
         Tie(..),
+        noTies,
         NoteProps(..),
+
+        -- TODO rewrite these
         mapNoteProps,
         mapNoteProps2,
 
@@ -64,7 +67,9 @@ module Music.MusicXml (
 
 
 
+
         -- * Basic types
+
         -- ** Pitch
         Pitch(..),
         DisplayPitch(..),
@@ -78,6 +83,7 @@ module Music.MusicXml (
 
         Accidental(..),
 
+
         -- ** Time
         Duration(..),
         NoteType(..),
@@ -89,22 +95,28 @@ module Music.MusicXml (
         Beat(..),
         BeatType(..),
 
+
         -- ** Dynamics
         Level,
+
 
         -- ** Misc
         Stem(..),
         NoteHead(..),
+
         BeamLevel,
         SlurLevel(..),
         TupletLevel(..),
-        StartStopContinue(..),
+
         BeamType(..),
+        StartStopContinue(..),
+
 
         -- * Import and export functions
         toXml,
         showXml
- ) where
+
+  ) where
 
 -- import Control.Arrow
 
@@ -275,9 +287,6 @@ instance WriteMusicXml PartListElem where
 
     write (Group name abbrev) = notImplemented "WriteMusicXml instance for PartListElem.Group"
 
---   TODO instr midi-device midi-instr
---   TODO symbol barline time?
-
 
 -- --------------------------------------------------------------------------------
 -- Music
@@ -305,52 +314,41 @@ instance WriteMusicXml MusicElem where
     write (MusicNote x)       = single $ unode "note"       $ write x
     write (MusicDirection x)  = single $ unode "direction"  $ () --write x
 
-mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
-mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
-mapNoteProps2 f x             = x
 
 -- --------------------------------------------------------------------------------
 -- Attributes
 -- --------------------------------------------------------------------------------
 
--- TODO multi-staff
-
 data Attributes
-    = Divisions Divs
-    | Clef      ClefSign Line
-    | Key       Fifths Mode
-    | Time      TimeSignature
+    = Divisions     Divs
+    | Key           Fifths Mode
+    | Time          TimeSignature
+    | Staves        -- TODO
+    | PartSymbol    -- TODO
+    | Instruments   -- TODO
+    | Clef          ClefSign Line
+    | StaffDetails  -- TODO
+    | Transpose     -- TODO
+    | Directive     -- TODO     
+    | MeasureStyle  -- TODO
 
 data TimeSignature
     = CommonTime
     | CutTime
     | DivTime Beat BeatType
 
-data Mode
-    = Major
-    | Minor
-    | Dorian
-    | Phrygian
-    | Lydian
-    | Mixolydian
-    | Aeolian
-    | Ionian
-    | Locrian
-    | NoMode
-    deriving (Eq, Ord, Show)
-
-modeName :: Mode -> String
-modeName = toLowerString . show
+writeMode :: Mode -> String
+writeMode = toLowerString . show
 
 data ClefSign = GClef | CClef | FClef | PercClef | TabClef
     deriving (Eq, Ord, Enum, Bounded)
 
-clefName :: ClefSign -> String
-clefName GClef    = "G"
-clefName CClef    = "C"
-clefName FClef    = "F"
-clefName PercClef = "percussion"
-clefName TabClef  = "tab"
+writeClef :: ClefSign -> String
+writeClef GClef    = "G"
+writeClef CClef    = "C"
+writeClef FClef    = "F"
+writeClef PercClef = "percussion"
+writeClef TabClef  = "tab"
 
 -- Staves
 -- Transposition
@@ -360,12 +358,12 @@ instance WriteMusicXml Attributes where
                                                    $ show $ getDivs divs
 
     write (Clef sign line)                  = single $ unode "clef"
-                                                        [ unode "sign" (clefName sign),
+                                                        [ unode "sign" (writeClef sign),
                                                           unode "line" (show $ getLine line)]
 
     write (Key fifths mode)                 = single $ unode "key"
                                                         [ unode "fifths" (show $ getFifths fifths),
-                                                          unode "mode" (modeName mode)]
+                                                          unode "mode" (writeMode mode)]
 
     write (Time (CommonTime))               = single $ addAttr (uattr "symbol" "common")
                                                    $ unode "time"
@@ -380,6 +378,7 @@ instance WriteMusicXml Attributes where
     write (Time (DivTime beats beatType))   = single $ unode "time"
                                                         [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
+
 
 -- --------------------------------------------------------------------------------
 -- Notes
@@ -403,29 +402,26 @@ data Note
 noTies :: [Tie]
 noTies = []
 
-mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
-mapNoteProps f (Note x d t p)     = Note x d t (f p)
-mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
-mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
+data Tie
+    = TieStart
+    | TieStop
 
 
 data FullNote
     = Pitched       -- isChord pitch
-        Bool
+        IsChord
         Pitch
     | Unpitched     -- isChord disp
-        Bool
+        IsChord
         (Maybe DisplayPitch)
     | Rest          -- isChord disp
-        Bool
+        IsChord
         (Maybe DisplayPitch)
 
-noChord = False
+type IsChord = Bool
 
--- TODO level
-data Tie
-    = TieStart
-    | TieStop
+noChord :: IsChord
+noChord = False
 
 data NoteProps
     = NoteProps {
@@ -444,14 +440,16 @@ data NoteProps
         noteLyrics       :: [Lyric]                             -- lyric
     }
 
-data Stem 
-    = StemDown | StemUp | StemNone | StemDouble
+data Stem
+    = StemDown | StemUp | StemNone | StemDouble
 
 data NoteHead
     = NoteHeadSlash | NoteHeadTriangle | NoteHeadDiamond | NoteHeadSquare | NoteHeadCross | NoteHeadX
     | NoteHeadCircleX | NoteHeadInvertedTriangle | NoteHeadArrowDown | NoteHeadArrowUp | NoteHeadSlashed
     | NoteHeadBackSlashed | NoteHeadNormal | NoteHeadCluster | NoteHeadCircleDot | NoteHeadLeftTriangle
     | NoteHeadRectangle | NoteHeadNone
+
+
 
 instance WriteMusicXml NoteProps where
     write (NoteProps
@@ -533,6 +531,16 @@ writeDuration = single . unode "duration" . show . getDivs
 writeTie :: Tie -> [Element]
 writeTie t = []
 
+mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
+mapNoteProps f (Note x d t p)     = Note x d t (f p)
+mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
+mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
+
+mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
+mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
+mapNoteProps2 f x             = x
+
+
 instance WriteMusicXml Note where
     write (Note full
                 dur
@@ -608,13 +616,35 @@ data Lyric = Lyric -- TODO
 -- Basic types
 -- --------------------------------------------------------------------------------
 
--- TODO move to separate module?
-data BeamType 
-    = BeginBeam 
-    | ContinueBeam 
+data Mode
+    = Major
+    | Minor
+    | Dorian
+    | Phrygian
+    | Lydian
+    | Mixolydian
+    | Aeolian
+    | Ionian
+    | Locrian
+    | NoMode
+    deriving (Eq, Ord, Show)
+
+newtype BeamLevel   = BeamLevel { getBeamLevel :: Max8 }
+newtype SlurLevel   = SlurLevel { getSlurLevel :: Max8 }
+newtype TupletLevel = TupletLevel { getTupletLevel :: Max8 }
+
+data BeamType
+    = BeginBeam
+    | ContinueBeam
     | EndBeam
-    | ForwardHookBeam 
+    | ForwardHookBeam
     | BackwardHookBeam
+
+data StartStopContinue
+    = Start
+    | Stop
+    | Continue
+
 
 instance Show BeamType where
     show BeginBeam          = "begin"
@@ -623,17 +653,10 @@ instance Show BeamType where
     show ForwardHookBeam    = "forward-hook"
     show BackwardHookBeam   = "backward-hook"
 
-data StartStopContinue
-    = Start | Stop | Continue
-
 instance Show StartStopContinue where
     show Start                  = "start"
     show Stop                   = "stop"
     show Continue               = "continue"
-
-newtype BeamLevel   = BeamLevel { getBeamLevel :: Max8 }
-newtype SlurLevel   = SlurLevel { getSlurLevel :: Max8 }
-newtype TupletLevel = TupletLevel { getTupletLevel :: Max8 }
 
 deriving instance Eq            BeamLevel
 deriving instance Show          BeamLevel
@@ -646,8 +669,6 @@ deriving instance Num           TupletLevel
 deriving instance Eq            SlurLevel
 deriving instance Show          SlurLevel
 deriving instance Num           SlurLevel
-
-
 
 
 -- --------------------------------------------------------------------------------
@@ -665,6 +686,14 @@ toXml :: Score -> Element
 toXml = fromSingle . write
 
 
+
+
+
+
+
+
+
+
 -- --------------------------------------------------------------------------------
 
 
@@ -680,42 +709,28 @@ uattr n = Attr (unqual n)
 
 
 -- Some bounded int synonyms
-
 type Max8 = Index N8
 
 
-
 -- Misc
-
 sep :: a -> [a] -> [a]
 sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = concat . sep x
 
--- |
--- Synonym for 'Char.toUpper'
 toUpperChar :: Char -> Char
 toUpperChar = Char.toUpper
 
--- |
--- Synonym for 'Char.toLower'
 toLowerChar :: Char -> Char
 toLowerChar = Char.toLower
 
--- |
--- Synonym for 'fmap Char.toUpper'
 toUpperString :: String -> String
 toUpperString = fmap Char.toUpper
 
--- |
--- Synonym for 'fmap Char.toLower'
 toLowerString :: String -> String
 toLowerString = fmap Char.toLower
 
--- |
--- Convert a string to use upper case for the leading letter and lower case for
--- remaining letters.
 toCapitalString :: String -> String
 toCapitalString [] = []
 toCapitalString (x:xs) = toUpperChar x : toLowerString xs
@@ -736,7 +751,6 @@ fromSingle _   = error "fromSingle: non-single list"
 singleIf :: Bool -> a -> [a]
 singleIf p x | not p     = []
              | otherwise = [x]
-
 
 notImplemented x = error $ "Not implemented: " ++ x
 
