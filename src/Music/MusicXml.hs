@@ -295,19 +295,19 @@ instance WriteMusicXml PartListElem where
 type Music = [MusicElem]
 
 data MusicElem
-    = MusicAttributes Attributes
-    --  | MusicBackup Backup
-    --  | MusicForward Forward
-    | MusicNote Note
-    | MusicDirection Direction
-    --  | Harmony Harmony
-    --  | FiguredBass FiguredBass
-    --  | Print Print
-    --  | Sound Sound
-    --  | Barline Barline
-    --  | Grouping Grouping
-    --  | Link Link
-    --  | Bookmark Bookmark
+    = MusicAttributes   Attributes
+    | MusicBackup
+    | MusicForward
+    | MusicNote         Note
+    | MusicDirection    Direction
+    | MusicHarmony
+    | MusicFiguredBass
+    | MusicPrint
+    | MusicSound
+    | MusicBarline
+    | MusicGrouping
+    | MusicLink
+    | MusicBookmark
 
 instance WriteMusicXml MusicElem where
     write (MusicAttributes x) = single $ unode "attributes" $ write x
@@ -320,22 +320,24 @@ instance WriteMusicXml MusicElem where
 -- --------------------------------------------------------------------------------
 
 data Attributes
-    = Divisions     Divs
-    | Key           Fifths Mode
-    | Time          TimeSignature
-    | Staves        -- TODO
-    | PartSymbol    -- TODO
-    | Instruments   -- TODO
-    | Clef          ClefSign Line
-    | StaffDetails  -- TODO
-    | Transpose     -- TODO
-    | Directive     -- TODO     
-    | MeasureStyle  -- TODO
+    = Divisions         Divs
+    | Key               Fifths Mode
+    | Time              TimeSignature
+    | Staves            -- TODO
+    | PartSymbol        -- TODO
+    | Instruments       -- TODO
+    | Clef              ClefSign Line
+    | StaffDetails      -- TODO
+    | Transpose         -- TODO
+    | Directive         -- TODO     
+    | MeasureStyle      -- TODO
 
 data TimeSignature
     = CommonTime
     | CutTime
-    | DivTime Beat BeatType
+    | DivTime 
+        Beat 
+        BeatType
 
 writeMode :: Mode -> String
 writeMode = toLowerString . show
@@ -399,14 +401,6 @@ data Note
         [Tie]
         NoteProps
 
-noTies :: [Tie]
-noTies = []
-
-data Tie
-    = TieStart
-    | TieStop
-
-
 data FullNote
     = Pitched       -- isChord pitch
         IsChord
@@ -422,6 +416,13 @@ type IsChord = Bool
 
 noChord :: IsChord
 noChord = False
+
+data Tie
+    = TieStart
+    | TieStop
+
+noTies :: [Tie]
+noTies = []
 
 data NoteProps
     = NoteProps {
@@ -439,16 +440,6 @@ data NoteProps
         noteNotations    :: [Notation],                         -- notation
         noteLyrics       :: [Lyric]                             -- lyric
     }
-
-data Stem
-    = StemDown | StemUp | StemNone | StemDouble
-
-data NoteHead
-    = NoteHeadSlash | NoteHeadTriangle | NoteHeadDiamond | NoteHeadSquare | NoteHeadCross | NoteHeadX
-    | NoteHeadCircleX | NoteHeadInvertedTriangle | NoteHeadArrowDown | NoteHeadArrowUp | NoteHeadSlashed
-    | NoteHeadBackSlashed | NoteHeadNormal | NoteHeadCluster | NoteHeadCircleDot | NoteHeadLeftTriangle
-    | NoteHeadRectangle | NoteHeadNone
-
 
 
 instance WriteMusicXml NoteProps where
@@ -644,6 +635,15 @@ data StartStopContinue
     = Start
     | Stop
     | Continue
+
+data Stem
+    = StemDown | StemUp | StemNone | StemDouble
+
+data NoteHead
+    = NoteHeadSlash | NoteHeadTriangle | NoteHeadDiamond | NoteHeadSquare | NoteHeadCross | NoteHeadX
+    | NoteHeadCircleX | NoteHeadInvertedTriangle | NoteHeadArrowDown | NoteHeadArrowUp | NoteHeadSlashed
+    | NoteHeadBackSlashed | NoteHeadNormal | NoteHeadCluster | NoteHeadCircleDot | NoteHeadLeftTriangle
+    | NoteHeadRectangle | NoteHeadNone
 
 
 instance Show BeamType where
