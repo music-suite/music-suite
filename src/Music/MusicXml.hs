@@ -57,6 +57,9 @@ module Music.MusicXml (
         -- ** Directions
         Direction(..),
 
+        -- ** Lyrics
+        Lyric(..),
+
 
 
         -- * Basic types
@@ -85,8 +88,8 @@ module Music.MusicXml (
         BeatType(..),
 
         -- ** Dynamics
-        Level,       
-        
+        Level,
+
         -- ** Misc
         BeamLevel,
         BeamType(..),
@@ -421,34 +424,46 @@ data Tie
 data NoteProps
     = NoteProps {
         -- instrument
-        noteVoice       :: Maybe Int,                       -- TODO bounds?
-        noteType        :: Maybe NoteType,
-        noteDots        :: Natural,                         -- TODO bounds?
-        -- accidental                                   -- TODO for unusual spelling
-        noteTimeMod     :: Maybe (Int, Int),                -- actual, normal 
-        -- stem
-        -- notehead
-        -- notehead-text
-        -- staff
-        noteBeam        :: Maybe (BeamLevel, BeamType),
-        noteNotations   :: [Notation]
+        noteVoice        :: Maybe Natural,
+        noteType         :: Maybe NoteType,
+        noteDots         :: Natural,
+        -- accidental
+        noteTimeMod      :: Maybe (Natural, Natural),        -- actual, normal
+        noteStem         :: Maybe Stem,
+        noteNoteHead     :: Maybe (NoteHead, Bool, Bool),    -- notehead, filled, parentheses
+        noteNoteHeadText :: Maybe String,
+        noteStaff        :: Maybe Natural,
+        noteBeam         :: Maybe (BeamLevel, BeamType),
+        noteNotations    :: [Notation]
         -- lyrics
         -- play
     }
 
+data Stem 
+    = StemDown | StemUp | StemNone | StemDouble
+
+data NoteHead
+    = NoteHeadSlash | NoteHeadTriangle | NoteHeadDiamond | NoteHeadSquare | NoteHeadCross | NoteHeadX
+    | NoteHeadCircleX | NoteHeadInvertedTriangle | NoteHeadArrowDown | NoteHeadArrowUp | NoteHeadSlashed
+    | NoteHeadBackSlashed | NoteHeadNormal | NoteHeadCluster | NoteHeadCircleDot | NoteHeadLeftTriangle
+    | NoteHeadRectangle | NoteHeadNone
 
 instance WriteMusicXml NoteProps where
     write (NoteProps
             voice
             typ
             dots
-            timeMod -- FIXME
+            timeMod         -- FIXME
+            stem            -- FIXME
+            noteHead        -- FIXME
+            noteHeadText    -- FIXME
+            staff           -- FIXME
             beam
-            notations) 
+            notations)
                 = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (noteValName noteVal)) typ
                          <> replicate (fromIntegral dots) (unode "dot" ())
                          <> maybeOne (\n -> unode "voice" $ show n) voice
-                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n) 
+                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n)
                                             $ unode "beam" $ show typ) beam
 
 -- TODO voice, beam
@@ -576,6 +591,13 @@ data Direction
 
 instance WriteMusicXml Direction where
     write = notImplemented "WriteMusicXml instance"
+
+
+-- --------------------------------------------------------------------------------
+-- Lyrics
+-- --------------------------------------------------------------------------------
+
+data Lyric = Lyric -- TODO
 
 -- --------------------------------------------------------------------------------
 -- Basic types

@@ -70,7 +70,7 @@ instance Default FullNote where
     def = Rest noChord Nothing
 
 instance Default NoteProps where
-    def = NoteProps Nothing (Just (1/4, Nothing)) 0 Nothing Nothing []
+    def = NoteProps Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing []
 
 
 -- class HasDyn a where
@@ -138,7 +138,7 @@ beginBeamP n x = x { noteBeam = Just (fromIntegral n, Begin) }
 endBeamP n x = x { noteBeam = Just (fromIntegral n, End) }
 addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
 removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
-setTimeModP m n x = x { noteTimeMod = Just (m, n) }
+setTimeModP m n x = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
 
 
 infixr 1 &
