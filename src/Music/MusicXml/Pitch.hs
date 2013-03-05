@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances #-}
 
 module Music.MusicXml.Pitch (
 
@@ -17,8 +17,17 @@ module Music.MusicXml.Pitch (
 
   ) where
 
+import Music.Pitch.Literal
+
 type Pitch        = (PitchClass, Maybe Semitones, Octaves)
 type DisplayPitch = (PitchClass, Octaves)
+
+instance Pitched Pitch where
+    fromPitch (PitchL (pc, Nothing, oct)) = (toEnum pc, Nothing, fromIntegral oct)
+    fromPitch (PitchL (pc, Just st, oct)) = (toEnum pc, Just $ fromRational $ toRational $ st, fromIntegral oct)
+
+instance Pitched DisplayPitch where
+    fromPitch (PitchL (pc, _, oct)) = (toEnum pc, fromIntegral oct)
 
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
 data PitchClass   = C | D | E | F | G | A | B

@@ -1,6 +1,6 @@
 
 name:               musicxml2
-version:            0.6
+version:            1.1
 cabal-version:      >= 1.2
 author:             Hans Hoglund
 synopsis:           MusicXML format
@@ -14,7 +14,8 @@ description:
 
 library                    
     build-depends: 
-        base, semigroups, data-default, type-unary, xml
+        base, semigroups, data-default, type-unary, xml,
+        music-pitch-literal >= 1.0
 
     hs-source-dirs: src
     exposed-modules:
