@@ -37,6 +37,25 @@ newtype Octaves   = Octaves { getOctaves :: Int }           -- ^ Octaves, i.e. 1
 newtype Fifths    = Fifths { getFifths :: Int }             -- ^ Number of fifths upwards relative to C (i.e. F is -1, G is 1)
 newtype Line      = Line { getLine :: Int }                 -- ^ Line number, from bottom (i.e. 1-5)
 
+instance Pitched Fifths where
+    fromPitch (PitchL (pc, Nothing, _)) = pitchToFifths pc 0
+    fromPitch (PitchL (pc, Just ac, _)) = pitchToFifths pc (round ac)
+
+pitchToFifths 1 (-1) = (-4)
+pitchToFifths 2 (-1) = (-3)
+pitchToFifths 4 (-1) = (-6)
+pitchToFifths 5 (-1) = (-5)
+pitchToFifths 6 (-1) = (-2)
+pitchToFifths 0 0 = 0
+pitchToFifths 1 0 = 2
+pitchToFifths 2 0 = 4
+pitchToFifths 3 0 = (-1)
+pitchToFifths 4 0 = 1
+pitchToFifths 5 0 = 3
+pitchToFifths 6 0 = 5
+pitchToFifths 3 1 = 6
+
+
 
 deriving instance Eq   PitchClass
 deriving instance Ord  PitchClass
