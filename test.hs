@@ -37,15 +37,14 @@ time a b   = MusicAttributes $ Time $ DivTime a b
 key n m    = MusicAttributes $ Key n m
 
 
-parts :: [(String, String)] -> PartList
-parts = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
-    where
-        partIds = [ "P" ++ show n | n <- [1..] ]
+kPartIds :: [String]
+kPartIds = [ "P" ++ show n | n <- [1..] ]
 
-partsNoAbbr :: [String] -> PartList
-partsNoAbbr = zipWith (\partId name -> Part partId name Nothing) partIds
-    where
-        partIds = [ "P" ++ show n | n <- [1..] ]
+partList :: [(String, String)] -> PartList
+partList = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) kPartIds
+
+partListNoAbbr :: [String] -> PartList
+partListNoAbbr = zipWith (\partId name -> Part partId name Nothing) kPartIds
 
 version xs = ScoreAttrs xs
 
@@ -185,33 +184,28 @@ separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
         divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
 
     
-
--- TODO
 chord :: [Pitch] -> NoteVal -> MusicElem
 chord ps d = note (head ps) d
--- chord pitches dur = 
---     
---     MusicNote $ Note (Pitched noChord pitch) (stdDivs `div` denom) noTies (setValueP val $ def)
---     
---     where
---         num   = fromIntegral $ numerator   $ toRational $ dur
---         denom = fromIntegral $ denominator $ toRational $ dur
---         val   = NoteVal $ toRational $ dur              
+
+
+parts :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
+parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds
+    where
+        partIds = kPartIds
+        barIds  = [1..]
 
 
 score = Partwise
     (version [])
-    (header "Frère Jaques" "Anonymous" $ parts [
+    (header "Frère Jaques" "Anonymous" $ partList [
         ("Violin",      "Vl."),
         ("Viola",       "Vla."),
         ("Violoncello", "Vc.")])
-    [
-        (PartAttrs "P1", [
-
-            (MeasureAttrs 1, [
-                -- setting attributes as this is first measure
-                stdDivisions
-                ,
+        
+    $ parts [
+        take 200 $ cycles [
+            [
+                stdDivisions,
                 trebleClef,
                 key eb Major,
                 commonTime,
@@ -220,17 +214,17 @@ score = Partwise
                 note eb (1/8)       & beginBeam 1,
                 note d  (1/8)       & endBeam 1,
                 note c  (1/4)
-            ])
+            ]
             ,
-            (MeasureAttrs 2, [
+            [
                 note c  (1/4),
                 note d  (1/4),
                 note eb (1/8)       & beginBeam 1,
                 note d  (1/8)       & endBeam 1,
                 note c  (1/4)
-            ])
+            ]
             ,
-            (MeasureAttrs 3, [ 
+            [ 
                 note g  (3/16)  & beginBeam 1,
                 note ab (1/16)  & endBeam 1,
                 note g  (1/8)   & beginBeam 1,
@@ -238,50 +232,42 @@ score = Partwise
                 note eb (1/8)   & beginBeam 1,
                 note d  (1/8)   & endBeam 1,
                 note c  (1/4)
-            ])
-
-        ])
+            ]
+        ]
         ,
-
-        (PartAttrs "P2", [
-            (MeasureAttrs 1, [
+        take 200 $ cycles [
+            [
                 stdDivisions,
                 key eb Major,
                 altoClef,
                 note c  (1/4),
                 note g_ (1/4),
                 note c  (1/2)
-            ])
+            ]
             ,
-            (MeasureAttrs 2, [
+            [
                 note c  (1/4),
                 note g_ (1/4),
                 note c  (1/2)
-            ])
-            ,
-            (MeasureAttrs 3, [
-                rest 1
-            ])
-        ])
+            ]
+        ]
         ,
-
-        (PartAttrs "P3", [
-            (MeasureAttrs 1, [
+        take 200 $ cycles [
+            [
                 stdDivisions,
                 key eb Major,
                 bassClef,
                 note c_ (1/1)
-            ])
+            ]
             ,
-            (MeasureAttrs 2, [
+            [
                 chord [c_, e_, g] (1/1)
-            ])
-            ,
-            (MeasureAttrs 3, [
-                rest 1
-            ])
-        ])
-    ]
+            ]  
+        ]
+    ] 
+    
+cycles [] = []
+cycles (x:xs) = x:(cycle xs)
 
 
 
