@@ -32,6 +32,7 @@ deriving instance Num           Divs
 deriving instance Real          Divs
 deriving instance Integral      Divs
 deriving instance Enum          Divs
+deriving instance Show          Divs
 
 deriving instance Eq            NoteVal
 deriving instance Ord           NoteVal
@@ -39,6 +40,8 @@ deriving instance Num           NoteVal
 deriving instance Enum          NoteVal
 deriving instance Fractional    NoteVal
 deriving instance Real          NoteVal
+deriving instance RealFrac      NoteVal
+deriving instance Show          NoteVal
 
 deriving instance Eq            NoteSize
 deriving instance Ord           NoteSize
