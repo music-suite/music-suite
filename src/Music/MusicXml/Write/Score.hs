@@ -116,7 +116,13 @@ instance WriteMusicXml PartListElem where
             writeName   = single . unode "part-name"
             writeAbbrev = maybeToList . fmap (unode "part-abbreviation")
 
-    write (Group name abbrev) = notImplemented "WriteMusicXml instance for PartListElem.Group"
+    write (Group level
+                 startStop
+                 name
+                 abbrev
+                 symbol
+                 barlines
+                 time) = notImplemented "WriteMusicXml instance for PartListElem.Group"
 
 
 -- ----------------------------------------------------------------------------------
@@ -159,17 +165,6 @@ instance WriteMusicXml Attributes where
                                                         [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
-writeClef :: ClefSign -> String
-writeClef GClef    = "G"
-writeClef CClef    = "C"
-writeClef FClef    = "F"
-writeClef PercClef = "percussion"
-writeClef TabClef  = "tab"
-
-writeMode :: Mode -> String
-writeMode = toLowerString . show
-
-
 -- ----------------------------------------------------------------------------------
 -- Notes
 -- ----------------------------------------------------------------------------------
@@ -194,26 +189,6 @@ instance WriteMusicXml NoteProps where
                          <> maybeOne (\n -> unode "voice" $ show n) voice
                          <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
                                             $ unode "beam" $ writeBeamType typ) beam
-
-writeNoteVal :: NoteVal -> String
-writeNoteVal (NoteVal x)
-    | x == (1/1024) = "1024th"
-    | x == (1/512)  = "512th"
-    | x == (1/256)  = "256th"
-    | x == (1/128)  = "128th"
-    | x == (1/64)   = "64th"
-    | x == (1/32)   = "32nd"
-    | x == (1/16)   = "16th"
-    | x == (1/8)    = "eighth"
-    | x == (1/4)    = "quarter"
-    | x == (1/2)    = "half"
-    | x == (1/1)    = "whole"
-    | x == (2/1)    = "breve"
-    | x == (4/1)    = "long"
-    | x == (8/1)    = "maxima"
-    | otherwise     = error $ "Invalid note value:" ++ show x
-
-
 
 instance WriteMusicXml FullNote where
     write (Pitched isChord
@@ -278,6 +253,39 @@ writeTie t = []
 -- ----------------------------------------------------------------------------------
 
 instance WriteMusicXml Notation where
+    write (Tied typ)                            = single 
+                                                    $ addAttr (uattr "type" $ writeStartStopContinue typ) 
+                                                    $ unode "tied" ()
+    write (Slur level typ)                      = single
+                                                    $ unode "slur" ()
+    write (Tuplet  level typ bracket)           = single
+                                                    $ unode "tuplet" [
+                                                        unode "tuplet-actual" (),
+                                                        unode "tuplet-normal" ()                                                    
+                                                    ]
+    write (Glissando typ level startStop text)  = single
+                                                    $ unode "glissando" ()
+    write (Slide typ level startStop text)      = single
+                                                    $ unode "slide" ()
+    write (Ornaments orns)                      = single $ unode "ornaments" [unode "" ()]
+    write (Technical techns)                    = single $ unode "technical" [unode "" ()]
+    write (Articulations arts)                  = single $ unode "articulations" [unode "" ()]
+    write (DynamicNotation dyn)                 = single $ unode "articulations" [unode "" ()]
+    write (Fermata sign)                        = single $ unode "fermata" (writeFermataSign sign)
+    write Arpeggiate                            = single $ unode "arpeggiate" ()
+    write NonArpeggiate                         = single $ unode "non-arpeggiate" ()
+    write (AccidentalMark acc)                  = single $ unode "accidental-mark" (writeAccidental acc)
+    write (OtherNotation not)                   = []
+
+    -- write = notImplemented "WriteMusicXml instance"
+
+instance WriteMusicXml Articulation where
+    write = notImplemented "WriteMusicXml instance"
+
+instance WriteMusicXml Ornament where
+    write = notImplemented "WriteMusicXml instance"
+
+instance WriteMusicXml Technical where
     write = notImplemented "WriteMusicXml instance"
 
 
@@ -346,9 +354,54 @@ writeNoteHead LeftTriangleNoteHead      = "left-triangle"
 writeNoteHead RectangleNoteHead         = "rectangle"
 writeNoteHead NoNoteHead                = "none"
 
+writeAccidental DoubleFlat              = "double-flat"
+writeAccidental Flat                    = "flat"
+writeAccidental Natural                 = "natural"
+writeAccidental Sharp                   = "sharp"
+writeAccidental DoubleSharp             = "double-sharp"
 
+writeNoteVal :: NoteVal -> String
+writeNoteVal (NoteVal x)
+    | x == (1/1024) = "1024th"
+    | x == (1/512)  = "512th"
+    | x == (1/256)  = "256th"
+    | x == (1/128)  = "128th"
+    | x == (1/64)   = "64th"
+    | x == (1/32)   = "32nd"
+    | x == (1/16)   = "16th"
+    | x == (1/8)    = "eighth"
+    | x == (1/4)    = "quarter"
+    | x == (1/2)    = "half"
+    | x == (1/1)    = "whole"
+    | x == (2/1)    = "breve"
+    | x == (4/1)    = "long"
+    | x == (8/1)    = "maxima"
+    | otherwise     = error $ "Invalid note value:" ++ show x
 
+writeClef :: ClefSign -> String
+writeClef GClef    = "G"
+writeClef CClef    = "C"
+writeClef FClef    = "F"
+writeClef PercClef = "percussion"
+writeClef TabClef  = "tab"
 
+writeMode :: Mode -> String
+writeMode NoMode = "none"
+writeMode x = toLowerString . show $ x
+
+writeGroupSymbol GroupBrace     = "brace"
+writeGroupSymbol GroupLine      = "line"
+writeGroupSymbol GroupBracket   = "bracket"
+writeGroupSymbol GroupSquare    = "square"
+writeGroupSymbol NoGroupSymbol  = "none"
+
+writeGroupBarlines GroupBarLines        = "yes"
+writeGroupBarlines GroupNoBarLines      = "no"
+writeGroupBarlines GroupMensurstrich    = "Mensurstrich"
+
+writeFermataSign NormalFermata          = "normal"
+writeFermataSign AngledFermata          = "angled"
+writeFermataSign SquaredFermata         = "squared"
 
 -- ----------------------------------------------------------------------------------
 

@@ -31,6 +31,8 @@ module Music.MusicXml.Score (
         -- ** Part list
         PartList,
         PartListElem(..),
+        GroupSymbol(..),
+        GroupBarlines(..),
 
         -----------------------------------------------------------------------------
         -- * Music
@@ -63,6 +65,7 @@ module Music.MusicXml.Score (
         -- ** Notations
 
         Notation(..),
+        FermataSign(..),
         Articulation(..),
         Ornament(..),
         Technical(..),
@@ -209,10 +212,17 @@ data PartListElem
         String
         String
         (Maybe String)                  -- id name abbrev?
-    | Group
+    | Group                                           
+        Level                                                
+        StartStop
         String
-        (Maybe String)                  -- name abbrev
+        (Maybe String)
+        (Maybe GroupSymbol)
+        (Maybe GroupBarlines)
+        Bool                            -- number start/stop name abbrev? symbol barline style
 
+data GroupSymbol   = GroupBrace | GroupLine | GroupBracket | GroupSquare | NoGroupSymbol
+data GroupBarlines = GroupBarLines | GroupNoBarLines | GroupMensurstrich
 
 -- ----------------------------------------------------------------------------------
 -- Music
@@ -365,13 +375,13 @@ data Notation
         StartStopContinue
         Bool                            -- level type bracket
      | Glissando
-        LineType
         Level
+        LineType
         Bool
-        (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
+        (Maybe String)                  -- solid/dotted/dashed etc number, start/stop, text?
      | Slide
-        LineType
         Level
+        LineType
         Bool
         (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
      | Ornaments
@@ -382,13 +392,15 @@ data Notation
         [Articulation]
      | DynamicNotation
         Dynamics
-     | Fermata
+     | Fermata FermataSign
      | Arpeggiate
      | NonArpeggiate
      | AccidentalMark
         Accidental
      | OtherNotation
         String
+
+data FermataSign = NormalFermata | AngledFermata | SquaredFermata
 
 data Articulation
     = Accent 
