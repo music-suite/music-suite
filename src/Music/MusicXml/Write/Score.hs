@@ -195,18 +195,6 @@ instance WriteMusicXml NoteProps where
                          <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
                                             $ unode "beam" $ writeBeamType typ) beam
 
-writeBeamType :: BeamType -> String
-writeBeamType BeginBeam              = "begin"
-writeBeamType ContinueBeam           = "continue"
-writeBeamType EndBeam                = "end"
-writeBeamType ForwardHook            = "forward-hook"
-writeBeamType BackwardHook           = "backward-hook"
-
-writeStartStopContinue :: StartStopContinue -> String
-writeStartStopContinue Start                  = "start"
-writeStartStopContinue Stop                   = "stop"
-writeStartStopContinue Continue               = "continue"
-
 writeNoteVal :: NoteVal -> String
 writeNoteVal (NoteVal x)
     | x == (1/1024) = "1024th"
@@ -289,6 +277,9 @@ writeTie t = []
 -- Notations
 -- ----------------------------------------------------------------------------------
 
+instance WriteMusicXml Notation where
+    write = notImplemented "WriteMusicXml instance"
+
 
 -- ----------------------------------------------------------------------------------
 -- Directions
@@ -302,6 +293,58 @@ instance WriteMusicXml Direction where
 -- Lyrics
 -- ----------------------------------------------------------------------------------
 
+instance WriteMusicXml Lyric where
+    write = notImplemented "WriteMusicXml instance"
+
+
+-- ----------------------------------------------------------------------------------
+-- Basic types
+-- ----------------------------------------------------------------------------------
+
+
+writeBeamType BeginBeam                 = "begin"
+writeBeamType ContinueBeam              = "continue"
+writeBeamType EndBeam                   = "end"
+writeBeamType ForwardHook               = "forward-hook"
+writeBeamType BackwardHook              = "backward-hook"
+
+writeStartStop         = writeStartStopContinueChange
+writeStartStopChange   = writeStartStopContinueChange
+writeStartStopContinue = writeStartStopContinueChange
+
+writeStartStopContinueChange Start      = "start"
+writeStartStopContinueChange Stop       = "stop"
+writeStartStopContinueChange Continue   = "continue"
+writeStartStopContinueChange Change     = "change"
+
+writeStemDirection StemDown             = "down"
+writeStemDirection StemUp               = "up"
+writeStemDirection StemNone             = "none"
+writeStemDirection StemDouble           = "double"
+
+writeLineType Solid                     = "solid"
+writeLineType Dashed                    = "dashed"
+writeLineType Dotted                    = "dotted"
+writeLineType Wavy                      = "wavy"
+
+writeNoteHead SlashNoteHead             = "slash"
+writeNoteHead TriangleNoteHead          = "triangle"
+writeNoteHead DiamondNoteHead           = "diamond"
+writeNoteHead SquareNoteHead            = "square"
+writeNoteHead CrossNoteHead             = "cross"
+writeNoteHead XNoteHead                 = "x"
+writeNoteHead CircleXNoteHead           = "circle"
+writeNoteHead InvertedTriangleNoteHead  = "inverted-triangle"
+writeNoteHead ArrowDownNoteHead         = "arrow-down"
+writeNoteHead ArrowUpNoteHead           = "arrow-up"
+writeNoteHead SlashedNoteHead           = "slashed"
+writeNoteHead BackSlashedNoteHead       = "back-slashed"
+writeNoteHead NormalNoteHead            = "normal"
+writeNoteHead ClusterNoteHead           = "cluster"
+writeNoteHead CircleDotNoteHead         = "circle"
+writeNoteHead LeftTriangleNoteHead      = "left-triangle"
+writeNoteHead RectangleNoteHead         = "rectangle"
+writeNoteHead NoNoteHead                = "none"
 
 
 

@@ -55,6 +55,9 @@ module Music.MusicXml (
 
         -- ** Notations
         Notation(..),
+        Articulation(..),
+        Ornament(..),
+        Technical(..),
 
         -- ** Directions
         Direction(..),

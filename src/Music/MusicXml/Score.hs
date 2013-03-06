@@ -128,6 +128,7 @@ module Music.MusicXml.Score (
         StartStop(..),
         StartStopChange(..),
         StartStopContinue(..),
+        StartStopContinueChange(..),
 
   ) where
 
@@ -512,14 +513,15 @@ data BeamType
     | ForwardHook
     | BackwardHook
 
--- FIXME unify these...
-data StartStop = StartStop
-data StartStopChange = StartStopChange
+type StartStop         = StartStopContinueChange
+type StartStopChange   = StartStopContinueChange
+type StartStopContinue = StartStopContinueChange
 
-data StartStopContinue
+data StartStopContinueChange
     = Start
     | Stop
-    | Continue
+    | Continue              
+    | Change
 
 data StemDirection
     = StemDown
