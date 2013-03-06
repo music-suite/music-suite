@@ -55,8 +55,8 @@ module Music.MusicXml.Score (
         FullNote(..),
         IsChord,
         noChord,
-        Tie(..),
         noTies,
+        Tie,
         NoteProps(..),
         mapNoteProps,
         mapNoteProps2,
@@ -321,10 +321,7 @@ data FullNote
         (Maybe DisplayPitch)
 
 type IsChord = Bool
-
-data Tie
-    = TieStart
-    | TieStop
+type Tie = StartStop
 
 data NoteProps
     = NoteProps {

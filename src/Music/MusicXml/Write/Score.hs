@@ -264,9 +264,8 @@ instance WriteMusicXml Note where
 writeDuration :: Duration -> [Element]
 writeDuration = single . unode "duration" . show . getDivs
 
--- TODO
 writeTie :: Tie -> [Element]
-writeTie t = []
+writeTie typ = single $ addAttr (uattr "type" $ writeStartStopContinue typ) $ unode "tie" ()
 
 
 
