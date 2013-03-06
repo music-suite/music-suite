@@ -369,21 +369,20 @@ data Notation
         StartStopContinue               -- type
      | Slur
         Level
-        StartStopContinue               -- level type
+        StartStopContinue               -- level start/stop
      | Tuplet
         Level
-        StartStopContinue
-        Bool                            -- level type bracket
+        StartStopContinue               -- level start/stop
      | Glissando
         Level
+        StartStopContinue
         LineType
-        Bool
-        (Maybe String)                  -- solid/dotted/dashed etc number, start/stop, text?
+        (Maybe String)                  -- level type start/stop text?
      | Slide
         Level
+        StartStopContinue
         LineType
-        Bool
-        (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
+        (Maybe String)                  -- level type start/stop text?
      | Ornaments
         [(Ornament, [Accidental])]
      | Technical

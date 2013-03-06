@@ -120,18 +120,25 @@ instance WriteMusicXml PartListElem where
                  startStop
                  name
                  abbrev
-                 symbol     -- TODO
-                 barlines   -- TODO
+                 symbol
+                 barlines
                  time)  = single
                         $ addAttr (uattr "number" $ show level)
                         $ addAttr (uattr "type" $ writeStartStop startStop)
                         $ unode "part-group"
-                        $ writeName name <> writeAbbrev abbrev
+                        $ mempty
+                            <> writeName name
+                            <> writeAbbrev abbrev
+                            <> writeSymbol symbol
+                            <> writeBarlines barlines
         where
-            writeName   = single . unode "group-name"
-            writeAbbrev = maybeToList . fmap (unode "group-abbreviation")
+            writeName     = single . unode "group-name"
+            writeAbbrev   = maybeToList . fmap (unode "group-abbreviation")
+            writeSymbol   = maybeToList . fmap (unode "group-symbol" . writeGroupSymbol)
+            writeBarlines = maybeToList . fmap (unode "group-barline" . writeGroupBarlines)
 
-
+writeGroupSymbol :: GroupSymbol -> String
+writeGroupBarlines :: GroupBarlines -> String
 
 -- ----------------------------------------------------------------------------------
 -- Music
@@ -265,43 +272,43 @@ instance WriteMusicXml Notation where
                                                     $ addAttr (uattr "type" $ writeStartStopContinue typ)
                                                     $ unode "tied" ()
     write (Slur level typ)                      = single
+                                                    $ addAttr (uattr "number" $ show level)
+                                                    $ addAttr (uattr "type"   $ writeStartStopContinue typ)
                                                     $ unode "slur" ()
-    write (Tuplet  level typ bracket)           = single
-                                                    $ unode "tuplet" [
-                                                        unode "tuplet-actual" (),
-                                                        unode "tuplet-normal" ()
-                                                    ]
-    write (Glissando typ level startStop text)  = single
-                                                    $ unode "glissando" ()
-    write (Slide typ level startStop text)      = single
-                                                    $ unode "slide" ()
-    write (Ornaments orns)                      = single $ unode "ornaments" [unode "" ()]
-    write (Technical techns)                    = single $ unode "technical" [unode "" ()]
-    write (Articulations arts)                  = single $ unode "articulations" [unode "" ()]
-    write (DynamicNotation dyn)                 = single $ unode "articulations" [unode "" ()]
+    write (Tuplet  level typ)                   = single
+                                                    $ addAttr (uattr "number" $ show level)
+                                                    $ addAttr (uattr "type"   $ writeStartStopContinue typ)
+                                                    $ unode "tuplet" ()
+
+    write (Glissando level typ lineTyp text)    = single
+                                                    $ addAttr (uattr "number"    $ show level)
+                                                    $ addAttr (uattr "type"      $ writeStartStopContinue typ)
+                                                    $ addAttr (uattr "line-type" $ writeLineType lineTyp)
+                                                    $ case text of 
+                                                        Nothing   -> unode "glissando" ()
+                                                        Just text -> unode "glissando" text
+
+    write (Slide level typ lineTyp text)        = single
+                                                    $ addAttr (uattr "number"    $ show level)
+                                                    $ addAttr (uattr "type"      $ writeStartStopContinue typ)
+                                                    $ addAttr (uattr "line-type" $ writeLineType lineTyp)
+                                                    $ case text of 
+                                                        Nothing   -> unode "slide" ()
+                                                        Just text -> unode "slide" text
+
+    write (Ornaments xs)                        = single $ unode "ornaments" (concatMap writeOrnamentWithAcc xs)
+                                                    where
+                                                        writeOrnamentWithAcc (o, as) = write o 
+                                                            <> fmap (unode "accidental-mark" . writeAccidental) as
+
+    write (Technical xs)                        = single $ unode "technical" (concatMap write xs)
+    write (Articulations xs)                    = single $ unode "articulations" (concatMap write xs)
+    write (DynamicNotation dyn)                 = single $ unode "dynamics" (writeDynamics dyn)
     write (Fermata sign)                        = single $ unode "fermata" (writeFermataSign sign)
     write Arpeggiate                            = single $ unode "arpeggiate" ()
     write NonArpeggiate                         = single $ unode "non-arpeggiate" ()
     write (AccidentalMark acc)                  = single $ unode "accidental-mark" (writeAccidental acc)
     write (OtherNotation not)                   = notImplemented "OtherNotation"
-
-instance WriteMusicXml Articulation where
-    write Accent                                = single $ unode "accent" ()
-    write StrongAccent                          = single $ unode "strong-accent" ()
-    write Staccato                              = single $ unode "staccato" ()
-    write Tenuto                                = single $ unode "tenuto" ()
-    write DetachedLegato                        = single $ unode "detached-legato" ()
-    write Staccatissimo                         = single $ unode "staccatissimo" ()
-    write Spiccato                              = single $ unode "spiccato" ()
-    write Scoop                                 = single $ unode "scoop" ()
-    write Plop                                  = single $ unode "plop" ()
-    write Doit                                  = single $ unode "doit" ()
-    write Falloff                               = single $ unode "falloff" ()
-    write BreathMark                            = single $ unode "breathmark" ()
-    write Caesura                               = single $ unode "caesura" ()
-    write Stress                                = single $ unode "stress" ()
-    write Unstress                              = single $ unode "unstress" ()
-    write OtherArticulation                     = notImplemented "OtherArticulation"
 
 instance WriteMusicXml Ornament where
     write TrillMark                             = single $ unode "trill-mark" ()
@@ -343,6 +350,25 @@ instance WriteMusicXml Technical where
     write Handbell                              = single $ unode "handbell" ()
     write (OtherTechnical tech)                 = notImplemented "OtherTechnical"
 
+instance WriteMusicXml Articulation where
+    write Accent                                = single $ unode "accent" ()
+    write StrongAccent                          = single $ unode "strong-accent" ()
+    write Staccato                              = single $ unode "staccato" ()
+    write Tenuto                                = single $ unode "tenuto" ()
+    write DetachedLegato                        = single $ unode "detached-legato" ()
+    write Staccatissimo                         = single $ unode "staccatissimo" ()
+    write Spiccato                              = single $ unode "spiccato" ()
+    write Scoop                                 = single $ unode "scoop" ()
+    write Plop                                  = single $ unode "plop" ()
+    write Doit                                  = single $ unode "doit" ()
+    write Falloff                               = single $ unode "falloff" ()
+    write BreathMark                            = single $ unode "breathmark" ()
+    write Caesura                               = single $ unode "caesura" ()
+    write Stress                                = single $ unode "stress" ()
+    write Unstress                              = single $ unode "unstress" ()
+    write OtherArticulation                     = notImplemented "OtherArticulation"
+
+
 
 -- ----------------------------------------------------------------------------------
 -- Directions
@@ -352,15 +378,15 @@ instance WriteMusicXml Direction where
     write (Rehearsal str)                       = single $ unode "rehearsal" str
     write Segno                                 = single $ unode "segno" ()
     write (Words str)                           = single $ unode "words" str
-    write Coda                                  = single $ unode "coda" () 
-    
+    write Coda                                  = single $ unode "coda" ()
+
     write (Crescendo Start)                     = single $ addAttr (uattr "type" "crescendo") $ unode "wedge" ()
     write (Diminuendo Start)                    = single $ addAttr (uattr "type" "diminuendo") $ unode "wedge" ()
     write (Crescendo Stop)                      = single $ addAttr (uattr "type" "stop") $ unode "wedge" ()
     write (Diminuendo Stop)                     = single $ addAttr (uattr "type" "stop") $ unode "wedge" ()
-    
+
     write (Dynamics dyn)                        = single $ unode "dynamics" (writeDynamics dyn)
-    write (Metronome noteVal dotted tempo)      = single $ unode "metronome" $ 
+    write (Metronome noteVal dotted tempo)      = single $ unode "metronome" $
                                                        [ unode "beat-unit" (writeNoteVal noteVal) ]
                                                     <> singleIf dotted (unode "beat-unit-dot" ())
                                                     <> [ unode "per-minute" (show tempo) ]
@@ -373,7 +399,7 @@ instance WriteMusicXml Direction where
 -- ----------------------------------------------------------------------------------
 
 instance WriteMusicXml Lyric where
-    write = notImplemented "WriteMusicXml instance"
+    write = notImplemented "WriteMusicXml instance for Lyric"
 
 
 -- ----------------------------------------------------------------------------------
