@@ -190,7 +190,7 @@ instance WriteMusicXml NoteProps where
             voice
             typ
             dots
-            accidetnal      -- TODO
+            accidental      -- TODO
             timeMod         -- TODO
             stem            -- TODO
             noteHead        -- TODO
@@ -199,10 +199,17 @@ instance WriteMusicXml NoteProps where
             beam
             notations
             lyrics)         -- TODO
-                = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (writeNoteVal noteVal)) typ
-                         <> replicate (fromIntegral dots) (unode "dot" ())
-                         <> maybeOne (\n -> unode "voice" $ show n) voice
-                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
+                = mempty 
+                    <> maybeOne (\n -> unode "voice" $ show n) voice
+                    <> maybeOne (\(noteVal, noteSize) -> unode "type" (writeNoteVal noteVal)) typ
+                    <> replicate (fromIntegral dots) (unode "dot" ())
+                    
+                    <> maybeOne (\(m, n) -> unode "time-modification" [
+                            unode "actual-notes" (show m),
+                            unode "normal-notes" (show n)
+                        ]) timeMod
+
+                    <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
                                             $ unode "beam" $ writeBeamType typ) beam
 
 instance WriteMusicXml FullNote where
