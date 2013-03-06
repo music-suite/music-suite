@@ -119,11 +119,7 @@ module Music.MusicXml.Score (
         StemDirection(..),
         NoteHead(..),
 
-        DashLevel(..),
-        BeamLevel(..),
-        SlurLevel(..),
-        TupletLevel(..),
-
+        Level(..),
         BeamType(..),
         StartStopContinue(..),
 
@@ -323,7 +319,7 @@ data NoteProps
         noteNoteHead     :: Maybe (NoteHead, Bool, Bool),       -- notehead, filled, parentheses
         noteNoteHeadText :: Maybe String,                       -- notehead-text
         noteStaff        :: Maybe Natural,                      -- staff
-        noteBeam         :: Maybe (BeamLevel, BeamType),        -- beam-level, beam-type
+        noteBeam         :: Maybe (Level, BeamType),            -- beam-level, beam-type
         noteNotations    :: [Notation],                         -- notation
         noteLyrics       :: [Lyric]                             -- lyric
     }
@@ -354,17 +350,25 @@ data Notation
      = Tied                         
         StartStopContinue               -- type
      | Slur                         
-        SlurLevel 
+        Level 
         StartStopContinue               -- level type
      | Tuplet                       
-        TupletLevel 
+        Level 
         StartStopContinue 
         Bool                            -- level type bracket
-     | Glissando                        -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Slide                            -- TODO line type: solid/dotted/dashed, number, start/stop, text?
-     | Ornaments                        -- TODO TODO
-     | Technical                        -- TODO TODO
-     | Articulations                    -- TODO TODO
+     | Glissando
+        LineType
+        Level
+        Bool
+        (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
+     | Slide                            -- TODO
+        LineType
+        Level
+        Bool
+        (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
+     | Ornaments                        -- TODO
+     | Technical                        -- TODO
+     | Articulations                    -- TODO
      | DynamicNotation                  
         Dynamics                        
      | Fermata                          -- TODO ferm-type sign
@@ -389,29 +393,29 @@ data Direction
         String
     | Coda                          
     | Crescendo                     
-        Bool -- start/stop
+        Bool                            -- start/stop
     | Diminuendo                    
-        Bool -- start/stop
+        Bool                            -- start/stop
     | Dynamics                      
         Dynamics
     | Dashes                        
-        DashLevel 
-        Bool -- level start/stop
+        Level 
+        Bool                            -- level start/stop
     | Bracket                           -- TODO TODO
     | Pedal                         
-        Bool -- start/change/stop
+        StartStopContinue               -- start/change/stop
     | Metronome                         -- TODO unit bpm
-    | OctaveShift                       -- TODO size: 8/15, up/down/stop
-    | HarpPedals                        -- TODO TODO
-    | Damp                              -- TODO TODO
-    | DampAll                           -- TODO TODO
-    | EyeGlasses                        -- TODO TODO
-    | StringMute                        -- TODO TODO
-    | Scordatura                        -- TODO TODO
-    | Image                             -- TODO TODO
-    | PrincipalVoice                    -- TODO TODO
-    | AccordionRegistration             -- TODO TODO
-    | Percussion                        -- TODO TODO
+    | OctaveShift                       -- TODO
+    | HarpPedals                        -- TODO
+    | Damp                              -- TODO
+    | DampAll                           -- TODO
+    | EyeGlasses                        -- TODO
+    | StringMute                        -- TODO
+    | Scordatura                        -- TODO
+    | Image                             -- TODO
+    | PrincipalVoice                    -- TODO
+    | AccordionRegistration             -- TODO
+    | Percussion                        -- TODO
     | OtherDirection                    
         String
 
@@ -427,10 +431,7 @@ data Lyric = Lyric -- TODO
 -- Basic types
 -- ----------------------------------------------------------------------------------
 
-newtype DashLevel   = DashLevel { getDashLevel :: Max8 }
-newtype BeamLevel   = BeamLevel { getBeamLevel :: Max8 }
-newtype SlurLevel   = SlurLevel { getSlurLevel :: Max8 }
-newtype TupletLevel = TupletLevel { getTupletLevel :: Max8 }
+newtype Level   = Level { getLevel :: Max8 }
 
 data BeamType
     = BeginBeam
@@ -449,6 +450,12 @@ data StemDirection
     | StemUp 
     | StemNone 
     | StemDouble
+
+data LineType
+    = Solid 
+    | Dashed 
+    | Dotted 
+    | Wavy
 
 data NoteHead
     = SlashNoteHead 
@@ -470,17 +477,9 @@ data NoteHead
     | RectangleNoteHead 
     | NoNoteHead                        -- "none"
 
-deriving instance Eq            BeamLevel
-deriving instance Show          BeamLevel
-deriving instance Num           BeamLevel
-
-deriving instance Eq            TupletLevel
-deriving instance Show          TupletLevel
-deriving instance Num           TupletLevel
-
-deriving instance Eq            SlurLevel
-deriving instance Show          SlurLevel
-deriving instance Num           SlurLevel
+deriving instance Eq            Level
+deriving instance Show          Level
+deriving instance Num           Level
 
 -- ----------------------------------------------------------------------------------
 

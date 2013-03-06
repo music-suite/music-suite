@@ -101,10 +101,7 @@ module Music.MusicXml (
         StemDirection(..),
         NoteHead(..),
 
-        DashLevel,
-        BeamLevel,
-        SlurLevel(..),
-        TupletLevel(..),
+        Level(..),
 
         BeamType(..),
         StartStopContinue(..),

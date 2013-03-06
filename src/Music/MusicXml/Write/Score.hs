@@ -192,7 +192,7 @@ instance WriteMusicXml NoteProps where
                 = mempty <> maybeOne (\(noteVal, noteSize) -> unode "type" (writeNoteVal noteVal)) typ
                          <> replicate (fromIntegral dots) (unode "dot" ())
                          <> maybeOne (\n -> unode "voice" $ show n) voice
-                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getBeamLevel n)
+                         <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
                                             $ unode "beam" $ writeBeamType typ) beam
 
 writeBeamType :: BeamType -> String
