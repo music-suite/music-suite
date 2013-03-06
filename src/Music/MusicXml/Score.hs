@@ -489,7 +489,8 @@ data Direction
         StartStopChange
     | Metronome
         NoteVal
-        Tempo
+        Bool
+        Tempo                           -- noteVal isDotted bpm 
     | OctaveShift                       -- TODO
     | HarpPedals                        -- TODO
     | Damp                              -- TODO

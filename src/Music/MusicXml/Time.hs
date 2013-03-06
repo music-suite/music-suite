@@ -75,4 +75,10 @@ deriving instance Ord           BeatType
 deriving instance Num           BeatType
 deriving instance Enum          BeatType
 
+deriving instance Eq            Tempo
+deriving instance Ord           Tempo
+deriving instance Num           Tempo
+deriving instance Enum          Tempo
+deriving instance Show          Tempo
+
 

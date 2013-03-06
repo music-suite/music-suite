@@ -27,4 +27,4 @@ data Dynamics
     | FP | RF 
     | RFZ 
     | SFZ | SFFZ | FZ
-    deriving (Eq, Ord, Enum, Bounded)
+    deriving (Eq, Ord, Show, Enum, Bounded)
