@@ -18,7 +18,7 @@ module Music.MusicXml.Score (
         -----------------------------------------------------------------------------
         -- * Score
         -----------------------------------------------------------------------------
-        
+
         Score(..),
         ScoreHeader(..),
         Identification(..),
@@ -40,7 +40,7 @@ module Music.MusicXml.Score (
         MusicElem(..),
 
         -----------------------------------------------------------------------------
-        
+
         -- ** Attributes
         Attributes(..),
         TimeSignature(..),
@@ -48,7 +48,7 @@ module Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- ** Notes
-        
+
         Note(..),
         FullNote(..),
         IsChord,
@@ -61,17 +61,20 @@ module Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- ** Notations
-        
+
         Notation(..),
+        Articulation(..),
+        Ornament(..),
+        Technical(..),
 
         -----------------------------------------------------------------------------
         -- ** Directions
-        
+
         Direction(..),
 
         -----------------------------------------------------------------------------
         -- ** Lyrics
-        
+
         Lyric(..),
 
 
@@ -81,7 +84,7 @@ module Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- ** Pitch
-        
+
         Pitch(..),
         DisplayPitch(..),
         PitchClass,
@@ -97,7 +100,7 @@ module Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- ** Time
-        
+
         Duration(..),
         NoteType(..),
 
@@ -110,17 +113,20 @@ module Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- ** Dynamics
-        
-        Dynamics,
+
+        Dynamics(..),
 
         -----------------------------------------------------------------------------
         -- ** Misc
-        
+
         StemDirection(..),
         NoteHead(..),
+        LineType(..),
 
         Level(..),
         BeamType(..),
+        StartStop(..),
+        StartStopChange(..),
         StartStopContinue(..),
 
   ) where
@@ -214,13 +220,13 @@ data PartListElem
 type Music = [MusicElem]
 
 data MusicElem
-    = MusicAttributes       
+    = MusicAttributes
         Attributes
     | MusicBackup                       -- TODO
     | MusicForward                      -- TODO
-    | MusicNote             
+    | MusicNote
         Note
-    | MusicDirection        
+    | MusicDirection
         Direction
     | MusicHarmony                      -- TODO
     | MusicFiguredBass                  -- TODO
@@ -237,19 +243,21 @@ data MusicElem
 -- ----------------------------------------------------------------------------------
 
 data Attributes
-    = Divisions             
+    = Divisions
         Divs
-    | Key                   
-        Fifths 
+    | Key
+        Fifths
         Mode
-    | Time                  
+    | Time
         TimeSignature
-    | Staves                            -- TODO
+    | Staves
+        Natural
     | PartSymbol                        -- TODO
-    | Instruments                       -- TODO
-    | Clef                              
-        ClefSign                        
-        Line                            
+    | Instruments
+        Natural
+    | Clef
+        ClefSign
+        Line
     | StaffDetails                      -- TODO
     | Transpose                         -- TODO
     | Directive                         -- TODO
@@ -315,7 +323,7 @@ data NoteProps
         noteDots         :: Natural,                            -- dots
         noteAccidental   :: Maybe (Accidental, Bool, Bool),     -- accidental, cautionary, editorial
         noteTimeMod      :: Maybe (Natural, Natural),           -- actual, normal
-        noteStem         :: Maybe StemDirection,                         -- stem
+        noteStem         :: Maybe StemDirection,                -- stem
         noteNoteHead     :: Maybe (NoteHead, Bool, Bool),       -- notehead, filled, parentheses
         noteNoteHeadText :: Maybe String,                       -- notehead-text
         noteStaff        :: Maybe Natural,                      -- staff
@@ -345,66 +353,130 @@ mapNoteProps2 f x             = x
 -- Notations
 -- ----------------------------------------------------------------------------------
 
--- TODO
 data Notation
-     = Tied                         
+     = Tied
         StartStopContinue               -- type
-     | Slur                         
-        Level 
+     | Slur
+        Level
         StartStopContinue               -- level type
-     | Tuplet                       
-        Level 
-        StartStopContinue 
+     | Tuplet
+        Level
+        StartStopContinue
         Bool                            -- level type bracket
      | Glissando
         LineType
         Level
         Bool
         (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
-     | Slide                            -- TODO
+     | Slide
         LineType
         Level
         Bool
         (Maybe String)                  -- solid/dotted/dashed etc, number, start/stop, text?
-     | Ornaments                        -- TODO
-     | Technical                        -- TODO
-     | Articulations                    -- TODO
-     | DynamicNotation                  
-        Dynamics                        
-     | Fermata                          -- TODO ferm-type sign
-     | Arpeggiate                       -- TODO bottom/top?
-     | NonArpeggiate                    -- TODO bottom/top?
-     | AccidentalMark                   
+     | Ornaments
+        [(Ornament, [Accidental])]
+     | Technical
+        [Technical]
+     | Articulations
+        [Articulation]
+     | DynamicNotation
+        Dynamics
+     | Fermata
+     | Arpeggiate
+     | NonArpeggiate
+     | AccidentalMark
         Accidental
-     | OtherNotation                
+     | OtherNotation
         String
 
+data Articulation
+    = Accent 
+    | StrongAccent 
+    | Staccato 
+    | Tenuto
+    | DetachedLegato 
+    | Staccatissimo 
+    | Spiccato
+    | Scoop 
+    | Plop 
+    | Doit 
+    | Falloff 
+    | BreathMark
+    | Caesura 
+    | Stress 
+    | Unstress 
+    | OtherArticulation
 
+data Ornament
+    = TrillMark 
+    | Turn 
+    | DelayedTurn 
+    | InvertedTurn 
+    | DelayedInvertedTurn 
+    | VerticalTurn 
+    | Shake 
+    | WavyLine 
+    | Mordent 
+    | InvertedMordent 
+    | Schleifer 
+    | Tremolo 
+        Natural                         -- TODO restrict to (1..8) range
+    | OtherOrnament
+        String
+        
+data Technical
+    = UpBow 
+    | DownBow 
+    | Harmonic 
+    | OpenString 
+    | ThumbPosition 
+    | Fingering 
+    | Pluck 
+    | DoubleTongue 
+    | TripleTongue 
+    | Stopped 
+    | SnapPizzicato 
+    | Fret 
+    | String 
+    | HammerOn 
+    | PullOff 
+    | Bend 
+    | Tap 
+    | Heel 
+    | Toe 
+    | Fingernails 
+    | Hole 
+    | Arrow 
+    | Handbell 
+    | OtherTechnical
+        String
 
 -- ----------------------------------------------------------------------------------
 -- Directions
 -- ----------------------------------------------------------------------------------
 
 data Direction
-    = Rehearsal                     
+    = Rehearsal
         String
-    | Segno                         
-    | Words                         
+    | Segno
+    | Words
         String
-    | Coda                          
-    | Crescendo                     
-        Bool                            -- start/stop
-    | Diminuendo                    
-        Bool                            -- start/stop
-    | Dynamics                      
+    | Coda
+    | Crescendo
+        StartStop                       -- start/stop
+    | Diminuendo
+        StartStop                       -- start/stop
+    | Dynamics
         Dynamics
-    | Dashes                        
-        Level 
-        Bool                            -- level start/stop
-    | Bracket                           -- TODO TODO
-    | Pedal                         
-        StartStopContinue               -- start/change/stop
-    | Metronome                         -- TODO unit bpm
+    | Dashes
+        Level
+        StartStop                       -- level start/stop
+    | Bracket                           -- TODO
+    | Pedal
+        StartStopChange
+    | Metronome
+        NoteVal
+        Tempo
     | OctaveShift                       -- TODO
     | HarpPedals                        -- TODO
     | Damp                              -- TODO
@@ -416,7 +488,7 @@ data Direction
     | PrincipalVoice                    -- TODO
     | AccordionRegistration             -- TODO
     | Percussion                        -- TODO
-    | OtherDirection                    
+    | OtherDirection
         String
 
 
@@ -440,41 +512,45 @@ data BeamType
     | ForwardHook
     | BackwardHook
 
+-- FIXME unify these...
+data StartStop = StartStop
+data StartStopChange = StartStopChange
+
 data StartStopContinue
     = Start
     | Stop
     | Continue
 
 data StemDirection
-    = StemDown 
-    | StemUp 
-    | StemNone 
+    = StemDown
+    | StemUp
+    | StemNone
     | StemDouble
 
 data LineType
-    = Solid 
-    | Dashed 
-    | Dotted 
+    = Solid
+    | Dashed
+    | Dotted
     | Wavy
 
 data NoteHead
-    = SlashNoteHead 
-    | TriangleNoteHead 
-    | DiamondNoteHead 
-    | SquareNoteHead 
-    | CrossNoteHead 
+    = SlashNoteHead
+    | TriangleNoteHead
+    | DiamondNoteHead
+    | SquareNoteHead
+    | CrossNoteHead
     | XNoteHead
-    | CircleXNoteHead 
-    | InvertedTriangleNoteHead 
-    | ArrowDownNoteHead 
-    | ArrowUpNoteHead 
+    | CircleXNoteHead
+    | InvertedTriangleNoteHead
+    | ArrowDownNoteHead
+    | ArrowUpNoteHead
     | SlashedNoteHead
-    | BackSlashedNoteHead 
-    | NormalNoteHead 
-    | ClusterNoteHead 
-    | CircleDotNoteHead 
+    | BackSlashedNoteHead
+    | NormalNoteHead
+    | ClusterNoteHead
+    | CircleDotNoteHead
     | LeftTriangleNoteHead
-    | RectangleNoteHead 
+    | RectangleNoteHead
     | NoNoteHead                        -- "none"
 
 deriving instance Eq            Level

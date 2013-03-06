@@ -22,7 +22,9 @@ module Music.MusicXml.Time (
         NoteSize(..),
 
         Beat(..),
-        BeatType(..)
+        BeatType(..),
+        
+        Tempo(..)
   ) where
 
 type Duration     = Divs
@@ -35,6 +37,9 @@ data NoteSize     = SizeFull | SizeCue | SizeLarge
 
 newtype Beat      = Beat { getBeat :: Int }                   -- ^ Time nominator
 newtype BeatType  = BeatType { getBeatType :: Int }           -- ^ Time denominator
+
+newtype Tempo     = Tempo { getTempo :: Double }              -- ^ Tempo in BPM
+
 
 
 

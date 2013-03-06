@@ -103,24 +103,6 @@ addDot = mapNoteProps2 addDotP
 removeDot = mapNoteProps2 removeDotP
 
 
--- Notes
-
-setValueN :: NoteVal -> Note -> Note
-setVoiceN :: Int -> Note -> Note
-beginBeamN :: Int -> Note -> Note
-endBeamN :: Int -> Note -> Note
-addDotN :: Note -> Note
-removeDotN :: Note -> Note
-
-setValueN x = mapNoteProps (setValueP x)
-setVoiceN n = mapNoteProps (setVoiceP n)
-beginBeamN n = mapNoteProps (beginBeamP n)
-endBeamN n = mapNoteProps (endBeamP n)
-addDotN = mapNoteProps addDotP
-removeDotN = mapNoteProps removeDotP
-
--- TODO function beam :: Beamable a -> [a] -> [a]
-
 -- Note properties
 
 setValueP :: NoteVal -> NoteProps -> NoteProps
