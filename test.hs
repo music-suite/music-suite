@@ -209,6 +209,12 @@ tenuto    = addNotation (Articulations [Tenuto])
 beginTie = beginTie' . addNotation (Tied Start)
 endTie   = endTie' . addNotation (Tied Stop)
 
+beginCresc = [MusicDirection $ Crescendo Start]
+endCresc = [MusicDirection $ Crescendo Stop]
+mp = [MusicDirection $ Dynamics MP]
+pp = [MusicDirection $ Dynamics PP]
+ff = [MusicDirection $ Dynamics FF]
+
 tuplet :: Int -> Int -> [Music] -> Music
 tuplet m n []   = []
 tuplet m n [xs] = xs
@@ -217,6 +223,19 @@ tuplet m n xs   = setTimeMod m n $ concat ([a] ++ bs ++ [c])
         a   = beginTuplet $ head xs
         bs  = init (tail xs)
         c   = endTuplet $ last (tail xs)
+
+-- TODO combine tuplet, beam, slur etc
+
+beam :: [Music] -> Music
+beam []   = []
+beam [xs] = xs
+beam xs   = concat ([a] ++ bs ++ [c])
+    where
+        a   = beginBeam 1 $ head xs
+        bs  = fmap (continueBeam 1) (init (tail xs))
+        c   = endBeam 1 $ last (tail xs)
+
+
 
 score = foo
 
@@ -233,6 +252,8 @@ foo = Partwise
                 
                 rehearsal "A",
                 text "hello world!",
+
+                mp,
                 
                 tuplet 5 4 [
                     note c  (1/8)       & beginSlur . beginBeam 1,
@@ -246,17 +267,38 @@ foo = Partwise
                     note eb (1/4),
                     chord [d,a,fs'] (1/4),
                     note g_  (1/4)      & beginTie
-                ]
+                ] 
             ]     
             ,
             concat [
-                note g_  (1/4)      & endTie,
-                segno,
-                metronome (1/8) False 96
+                -- segno,
+                -- metronome (1/8) False 96,
+                note g_   (1/4)      & endTie,
+                note ab_  (1/4)      & endTie,
+            
+                beam [
+                    note c  (1/16),
+                    note c  (2/16),
+                    note c  (1/16)
+                ],
+                beam [
+                    note c  (3/8),
+                    note c  (1/8)
+                ]
+            ]  
+            ,  
+            concat [
+                pp,
+                beginCresc,
+                note c  (3/8),
+                note d  (1/8),
+                note e  (3/8),
+                endCresc,
+                ff,
+                note f  (1/8)
             ]
         ]    
     ]
-        
 
 
 
