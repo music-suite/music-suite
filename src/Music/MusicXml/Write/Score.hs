@@ -510,7 +510,7 @@ writeFermataSign NormalFermata          = "normal"
 writeFermataSign AngledFermata          = "angled"
 writeFermataSign SquaredFermata         = "squared"
 
-writeDynamics x = unode (show x) ()
+writeDynamics x = unode (toLowerString $ show x) ()
 
 
 -- ----------------------------------------------------------------------------------
