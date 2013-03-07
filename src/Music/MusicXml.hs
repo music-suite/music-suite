@@ -108,6 +108,7 @@ module Music.MusicXml (
 
         BeamType(..),
         StartStopContinue(..),
+        StartStopContinueChange(..),
 
 
         -- * Import and export functions

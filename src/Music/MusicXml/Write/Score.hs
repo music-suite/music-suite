@@ -123,7 +123,7 @@ instance WriteMusicXml PartListElem where
                  symbol
                  barlines
                  time)  = single
-                        $ addAttr (uattr "number" $ show level)
+                        $ addAttr (uattr "number" $ show $ getLevel level)
                         $ addAttr (uattr "type" $ writeStartStop startStop)
                         $ unode "part-group"
                         $ mempty
@@ -147,7 +147,7 @@ writeGroupBarlines :: GroupBarlines -> String
 instance WriteMusicXml MusicElem where
     write (MusicAttributes x) = single $ unode "attributes" $ write x
     write (MusicNote x)       = single $ unode "note"       $ write x
-    write (MusicDirection x)  = single $ unode "direction"  $ () --write x
+    write (MusicDirection x)  = single $ unode "direction" (unode "direction-type" $ write x)
 
 -- ----------------------------------------------------------------------------------
 -- Attributes
@@ -211,6 +211,10 @@ instance WriteMusicXml NoteProps where
 
                     <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
                                             $ unode "beam" $ writeBeamType typ) beam
+
+                    <> case notations of
+                        [] -> []
+                        ns -> [unode "notations" (concatMap write ns)]
 
 instance WriteMusicXml FullNote where
     write (Pitched isChord
@@ -278,16 +282,16 @@ instance WriteMusicXml Notation where
                                                     $ addAttr (uattr "type" $ writeStartStopContinue typ)
                                                     $ unode "tied" ()
     write (Slur level typ)                      = single
-                                                    $ addAttr (uattr "number" $ show level)
+                                                    $ addAttr (uattr "number" $ show $ getLevel level)
                                                     $ addAttr (uattr "type"   $ writeStartStopContinue typ)
                                                     $ unode "slur" ()
     write (Tuplet  level typ)                   = single
-                                                    $ addAttr (uattr "number" $ show level)
+                                                    $ addAttr (uattr "number" $ show $ getLevel level)
                                                     $ addAttr (uattr "type"   $ writeStartStopContinue typ)
                                                     $ unode "tuplet" ()
 
     write (Glissando level typ lineTyp text)    = single
-                                                    $ addAttr (uattr "number"    $ show level)
+                                                    $ addAttr (uattr "number"    $ show $ getLevel level)
                                                     $ addAttr (uattr "type"      $ writeStartStopContinue typ)
                                                     $ addAttr (uattr "line-type" $ writeLineType lineTyp)
                                                     $ case text of 
@@ -295,7 +299,7 @@ instance WriteMusicXml Notation where
                                                         Just text -> unode "glissando" text
 
     write (Slide level typ lineTyp text)        = single
-                                                    $ addAttr (uattr "number"    $ show level)
+                                                    $ addAttr (uattr "number"    $ show $ getLevel level)
                                                     $ addAttr (uattr "type"      $ writeStartStopContinue typ)
                                                     $ addAttr (uattr "line-type" $ writeLineType lineTyp)
                                                     $ case text of 
@@ -395,7 +399,7 @@ instance WriteMusicXml Direction where
     write (Metronome noteVal dotted tempo)      = single $ unode "metronome" $
                                                        [ unode "beat-unit" (writeNoteVal noteVal) ]
                                                     <> singleIf dotted (unode "beat-unit-dot" ())
-                                                    <> [ unode "per-minute" (show tempo) ]
+                                                    <> [ unode "per-minute" (show $ getTempo tempo) ]
     write Bracket                               = notImplemented "Unsupported directions"
     write (OtherDirection dir)                  = notImplemented "OtherDirection"
 
