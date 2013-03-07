@@ -8,7 +8,7 @@ This package allow you to write the pitches of standard notation as expressions 
 For example:
 
 ```haskell
-import Music.Pitched
+import Music.Pitch.Literal
 
 frere :: Pitched a => [a]
 
