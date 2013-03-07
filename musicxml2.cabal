@@ -26,6 +26,7 @@ library
         Music.MusicXml.Read
         Music.MusicXml.Score
         Music.MusicXml.Write
+        Music.MusicXml.Simple
     other-modules:
         Music.MusicXml.Write.Score
     
