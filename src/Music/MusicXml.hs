@@ -100,18 +100,25 @@ module Music.MusicXml (
         Dynamics,
 
 
+        -----------------------------------------------------------------------------
         -- ** Misc
+
         StemDirection(..),
         NoteHead(..),
+        LineType(..),
 
         Level(..),
-
         BeamType(..),
+        StartStop(..),
+        StartStopChange(..),
         StartStopContinue(..),
         StartStopContinueChange(..),
-
-
+        
+        
+        -----------------------------------------------------------------------------
         -- * Import and export functions
+        -----------------------------------------------------------------------------
+
         toXml,
         showXml
 
