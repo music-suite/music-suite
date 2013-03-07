@@ -2,7 +2,7 @@
 # musicxml2
 
 MusicXML library for Haskell, including a concise, strongly typed music representation 
-isomorphic to MusicXML 2.0.
+isomorphic to MusicXML 3.0.
 
 ## Supported features
 
@@ -13,7 +13,7 @@ isomorphic to MusicXML 2.0.
 * Time signatures, Key signatures and clefs
 * Custom note heads
 * Beaming, cross-beams and tremolo
-* Slurs, staccato and misc. articulation
+* Ornaments and articulation
 
 The following features are currently missing or incomplete:
 
@@ -22,7 +22,7 @@ The following features are currently missing or incomplete:
 * Fingered bass
 * Tablature
 * Percussion grids
-* Tuning
+* Scordatura
 * Layouts 
 
 
