@@ -1,5 +1,5 @@
 
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, NoMonomorphismRestriction #-}
 
 module Main where
 
@@ -88,42 +88,43 @@ instance Default NoteProps where
 
 -- Elems
 
-setValue :: NoteVal -> MusicElem -> MusicElem
-setVoice :: Int -> MusicElem -> MusicElem
-beginBeam :: Int -> MusicElem -> MusicElem
-endBeam :: Int -> MusicElem -> MusicElem
-addDot :: MusicElem -> MusicElem
-removeDot :: MusicElem -> MusicElem
+setVoice    :: Int -> MusicElem -> MusicElem
+setValue    :: NoteVal -> MusicElem -> MusicElem
+addDot      :: MusicElem -> MusicElem
+setTimeMod  :: Int -> Int -> MusicElem -> MusicElem
+addNotation :: Notation -> MusicElem -> MusicElem
+beginBeam   :: Int -> MusicElem -> MusicElem
+endBeam     :: Int -> MusicElem -> MusicElem
 
-setValue x = mapNoteProps2 (setValueP x)
-setVoice n = mapNoteProps2 (setVoiceP n)
-beginBeam n = mapNoteProps2 (beginBeamP n)
-endBeam n = mapNoteProps2 (endBeamP n)
-addDot = mapNoteProps2 addDotP
-removeDot = mapNoteProps2 removeDotP
+beginTie    :: MusicElem -> MusicElem
+endTie      :: MusicElem -> MusicElem
+
+setValue x      = mapNoteProps2 (setValueP x)
+setVoice n      = mapNoteProps2 (setVoiceP n)
+addDot          = mapNoteProps2 addDotP
+setTimeMod m n  = mapNoteProps2 (setTimeModP m n)
+addNotation x   = mapNoteProps2 (addNotationP x)
+beginBeam n     = mapNoteProps2 (beginBeamP n)
+endBeam n       = mapNoteProps2 (endBeamP n)
+
+beginTie (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
+endTie   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
 
 
--- Note properties
 
-setValueP :: NoteVal -> NoteProps -> NoteProps
-setVoiceP :: Int -> NoteProps -> NoteProps
-beginBeamP :: Int -> NoteProps -> NoteProps
-endBeamP :: Int -> NoteProps -> NoteProps
-addDotP :: NoteProps -> NoteProps
-removeDotP :: NoteProps -> NoteProps
-setTimeModP :: Int -> Int -> NoteProps -> NoteProps
-
-setValueP v x = x { noteType = Just (v, Nothing) }
-setVoiceP n x = x { noteVoice = Just (fromIntegral n) }
-beginBeamP n x = x { noteBeam = Just (fromIntegral n, BeginBeam) }
-endBeamP n x = x { noteBeam = Just (fromIntegral n, EndBeam) }
-addDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
-removeDotP x@(NoteProps { noteDots = n@_ }) = x { noteDots = succ n }
-setTimeModP m n x = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
+setValueP v x       = x { noteType = Just (v, Nothing) }
+setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
+addDotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
+setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
+addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
+beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
+endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 
 
 infixr 1 &
-(&) = flip ($)
+infixr 1 $$
+(&)  = flip ($)
+($$) = flip fmap
 
 
 -- TODO handle dots etc
@@ -186,13 +187,57 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
         barIds  = [1..]
 
 
-score = Partwise
+rehearsal = MusicDirection . Rehearsal
+segno     = MusicDirection $ Segno
+text      = MusicDirection . Words
+
+
+
+
+
+score = foo
+
+
+foo = Partwise
+    (version [])
+    (header "Frère Jaques" "Anonymous" (partList [("Voice","Voice")]))
+    $ parts [ 
+        [
+            [
+                stdDivisions,
+                trebleClef,
+                key eb Major,
+                commonTime,                       
+                
+                rehearsal "A",
+                text "hello world!",
+                
+                note c  (1/4)  & addNotation (Slur 1 Start),
+                note d  (1/4)  & addNotation (Slur 1 Stop) . addNotation (Articulations [Staccato, Tenuto]),
+                note eb (1/4)  & setTimeMod 3 2 . addNotation (Tuplet 1 Start)
+            ] 
+            <> concat [chord [d,a,fs'] (1/4) $$ setTimeMod 3 2]
+            <> [
+                note g_  (1/4)  & setTimeMod 3 2 . addNotation (Tuplet 1 Stop) . beginTie . addNotation (Tied Start)
+            ]     
+            ,
+            [
+                note g_  (1/4) & endTie . addNotation (Tied Stop),
+                segno,
+                MusicDirection (Metronome (1/8) False 96)
+            ]
+        ]    
+    ]
+        
+
+
+
+frere = Partwise
     (version [])
     (header "Frère Jaques" "Anonymous" (partList [
         ("Violin",      "Vl."),
         ("Viola",       "Vla."),
         ("Violoncello", "Vc.")]))
-        
     $ parts [
         take 200 $ cycles [
             [
