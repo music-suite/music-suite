@@ -20,20 +20,20 @@ stdDivs :: Divs
 stdDivs = 768*4
 
 
-stdDivisions :: MusicElem
-stdDivisions = MusicAttributes $ Divisions $ stdDivs `div` 4
+stdDivisions :: Music
+stdDivisions = single $ MusicAttributes $ Divisions $ stdDivs `div` 4
 
-trebleClef :: MusicElem
-altoClef   :: MusicElem
-bassClef   :: MusicElem
-trebleClef = MusicAttributes $ Clef GClef 2
-altoClef   = MusicAttributes $ Clef CClef 3
-bassClef   = MusicAttributes $ Clef FClef 4
+trebleClef :: Music
+altoClef   :: Music
+bassClef   :: Music
+trebleClef = single $ MusicAttributes $ Clef GClef 2
+altoClef   = single $ MusicAttributes $ Clef CClef 3
+bassClef   = single $ MusicAttributes $ Clef FClef 4
 
-commonTime = MusicAttributes $ Time CommonTime
-cutTime    = MusicAttributes $ Time CutTime
-time a b   = MusicAttributes $ Time $ DivTime a b
-key n m    = MusicAttributes $ Key n m
+commonTime = single $ MusicAttributes $ Time CommonTime
+cutTime    = single $ MusicAttributes $ Time CutTime
+time a b   = single $ MusicAttributes $ Time $ DivTime a b
+key n m    = single $ MusicAttributes $ Key n m
 
 
 kPartIds :: [String]
@@ -88,27 +88,31 @@ instance Default NoteProps where
 
 -- Elems
 
-setVoice    :: Int -> MusicElem -> MusicElem
-setValue    :: NoteVal -> MusicElem -> MusicElem
-addDot      :: MusicElem -> MusicElem
-setTimeMod  :: Int -> Int -> MusicElem -> MusicElem
-addNotation :: Notation -> MusicElem -> MusicElem
-beginBeam   :: Int -> MusicElem -> MusicElem
-endBeam     :: Int -> MusicElem -> MusicElem
+setVoice    :: Int -> Music -> Music
+setValue    :: NoteVal -> Music -> Music
+addDot      :: Music -> Music
+setTimeMod  :: Int -> Int -> Music -> Music
+addNotation :: Notation -> Music -> Music
+beginBeam    :: Int -> Music -> Music
+continueBeam :: Int -> Music -> Music
+endBeam      :: Int -> Music -> Music
 
-beginTie    :: MusicElem -> MusicElem
-endTie      :: MusicElem -> MusicElem
+beginTie    :: Music -> Music
+endTie      :: Music -> Music
 
-setValue x      = mapNoteProps2 (setValueP x)
-setVoice n      = mapNoteProps2 (setVoiceP n)
-addDot          = mapNoteProps2 addDotP
-setTimeMod m n  = mapNoteProps2 (setTimeModP m n)
-addNotation x   = mapNoteProps2 (addNotationP x)
-beginBeam n     = mapNoteProps2 (beginBeamP n)
-endBeam n       = mapNoteProps2 (endBeamP n)
+setValue x      = fmap $ mapNoteProps2 (setValueP x)
+setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
+addDot          = fmap $ mapNoteProps2 addDotP
+setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
+addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
+beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
+continueBeam n     = fmap $ mapNoteProps2 (continueBeamP n)
+endBeam n       = fmap $ mapNoteProps2 (endBeamP n)
 
-beginTie (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
-endTie   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
+beginTie' = fmap beginTie''
+endTie'   = fmap endTie''
+beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
+endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
 
 
 
@@ -118,18 +122,17 @@ addDotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
 setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
 addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
 beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
+continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
 endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 
 
 infixr 1 &
-infixr 1 $$
 (&)  = flip ($)
-($$) = flip fmap
 
 
 -- TODO handle dots etc
-rest :: NoteVal -> MusicElem
-rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
+rest :: NoteVal -> Music
+rest dur = single $ MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
@@ -137,19 +140,19 @@ rest dur = MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
 
     
 
-note :: Pitch -> NoteVal -> MusicElem
+note :: Pitch -> NoteVal -> Music
 note pitch dur = note' False pitch dur' dots
     where
         (dur', dots) = separateDots dur
 
-chordNote :: Pitch -> NoteVal -> MusicElem
+chordNote :: Pitch -> NoteVal -> Music
 chordNote pitch dur = note' True pitch dur' dots
     where
         (dur', dots) = separateDots dur
 
-note' :: Bool -> Pitch -> NoteVal -> Int -> MusicElem
+note' :: Bool -> Pitch -> NoteVal -> Int -> Music
 note' isChord pitch dur dots 
-    = MusicNote $ 
+    = single $ MusicNote $ 
         Note 
             (Pitched isChord $ pitch) 
             (stdDivs `div` denom) 
@@ -173,9 +176,9 @@ separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
         divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
 
     
-chord :: [Pitch] -> NoteVal -> [MusicElem]
+chord :: [Pitch] -> NoteVal -> Music
 chord [] d      = error "No notes in chord"
-chord (p:ps) d  = [note p d] ++ map (\p -> chordNote p d) ps
+chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
 
 
 
@@ -187,23 +190,42 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
         barIds  = [1..]
 
 
-rehearsal = MusicDirection . Rehearsal
-segno     = MusicDirection $ Segno
-text      = MusicDirection . Words
 
 
 
 
+rehearsal = single . MusicDirection . Rehearsal
+segno     = single . MusicDirection $ Segno
+text      = single . MusicDirection . Words
+metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
+
+beginSlur = addNotation (Slur 1 Start)
+endSlur   = addNotation (Slur 1 Stop)
+endTuplet = addNotation (Tuplet 1 Stop)
+beginTuplet = addNotation (Tuplet 1 Start)
+stacc     = addNotation (Articulations [Staccato])
+tenuto    = addNotation (Articulations [Tenuto])
+
+beginTie = beginTie' . addNotation (Tied Start)
+endTie   = endTie' . addNotation (Tied Stop)
+
+tuplet :: Int -> Int -> [Music] -> Music
+tuplet m n []   = []
+tuplet m n [xs] = xs
+tuplet m n xs   = setTimeMod m n $ concat ([a] ++ bs ++ [c])
+    where
+        a   = beginTuplet $ head xs
+        bs  = init (tail xs)
+        c   = endTuplet $ last (tail xs)
 
 score = foo
-
 
 foo = Partwise
     (version [])
     (header "Frère Jaques" "Anonymous" (partList [("Voice","Voice")]))
     $ parts [ 
         [
-            [
+            concat [
                 stdDivisions,
                 trebleClef,
                 key eb Major,
@@ -212,19 +234,25 @@ foo = Partwise
                 rehearsal "A",
                 text "hello world!",
                 
-                note c  (1/4)  & addNotation (Slur 1 Start),
-                note d  (1/4)  & addNotation (Slur 1 Stop) . addNotation (Articulations [Staccato, Tenuto]),
-                note eb (1/4)  & setTimeMod 3 2 . addNotation (Tuplet 1 Start)
-            ] 
-            <> concat [chord [d,a,fs'] (1/4) $$ setTimeMod 3 2]
-            <> [
-                note g_  (1/4)  & setTimeMod 3 2 . addNotation (Tuplet 1 Stop) . beginTie . addNotation (Tied Start)
+                tuplet 5 4 [
+                    note c  (1/8)       & beginSlur . beginBeam 1,
+                    note d  (1/8)       & endSlur . stacc . tenuto . continueBeam 1,
+                    note c  (1/8)       & endSlur . stacc . tenuto . continueBeam 1,
+                    note d  (1/8)       & endSlur . stacc . tenuto . continueBeam 1,
+                    note c  (1/8)       & endSlur . stacc . tenuto . endBeam 1
+                ],
+                
+                tuplet 3 2 [
+                    note eb (1/4),
+                    chord [d,a,fs'] (1/4),
+                    note g_  (1/4)      & beginTie
+                ]
             ]     
             ,
-            [
-                note g_  (1/4) & endTie . addNotation (Tied Stop),
+            concat [
+                note g_  (1/4)      & endTie,
                 segno,
-                MusicDirection (Metronome (1/8) False 96)
+                metronome (1/8) False 96
             ]
         ]    
     ]
@@ -232,73 +260,73 @@ foo = Partwise
 
 
 
-frere = Partwise
-    (version [])
-    (header "Frère Jaques" "Anonymous" (partList [
-        ("Violin",      "Vl."),
-        ("Viola",       "Vla."),
-        ("Violoncello", "Vc.")]))
-    $ parts [
-        take 200 $ cycles [
-            [
-                stdDivisions,
-                trebleClef,
-                key eb Major,
-                commonTime,
-                note c  (1/4),
-                note d  (1/4),
-                note eb (1/8)       & beginBeam 1,
-                note d  (1/8)       & endBeam 1,
-                note c  (1/4)
-            ]
-            ,
-            [
-                note c  (1/4),
-                note d  (1/4),
-                note eb (1/8)       & beginBeam 1,
-                note d  (1/8)       & endBeam 1,
-                note c  (1/4)
-            ]
-            ,
-            [ 
-                note g  (3/16)      & beginBeam 1,
-                note ab (1/16)      & endBeam 1,
-                note g  (1/8)       & beginBeam 1,
-                note f  (1/8)       & endBeam 1,
-                note eb (1/8)       & beginBeam 1,
-                note d  (1/8)       & endBeam 1,
-                note c  (1/4)
-            ]
-        ]
-        ,
-        take 200 $ cycles [
-            [
-                stdDivisions,
-                key  eb Major,
-                altoClef,
-                note c  (1/4),
-                note g_ (1/4),
-                note c  (1/2)
-            ]
-            ,
-            [
-                note c  (1/4),
-                note g_ (1/4),
-                note c  (1/2)
-            ]
-        ]
-        ,
-        take 200 $ cycles [
-            [
-                stdDivisions,
-                key eb Major,
-                bassClef,
-                note c_ (1/1)
-            ]
-            ,
-            chord [c_, g_, eb] (1/1)
-        ]
-    ] 
+-- frere = Partwise
+--     (version [])
+--     (header "Frère Jaques" "Anonymous" (partList [
+--         ("Violin",      "Vl."),
+--         ("Viola",       "Vla."),
+--         ("Violoncello", "Vc.")]))
+--     $ parts [
+--         take 200 $ cycles [
+--             [
+--                 stdDivisions,
+--                 trebleClef,
+--                 key eb Major,
+--                 commonTime,
+--                 note c  (1/4),
+--                 note d  (1/4),
+--                 note eb (1/8)       & beginBeam 1,
+--                 note d  (1/8)       & endBeam 1,
+--                 note c  (1/4)
+--             ]
+--             ,
+--             [
+--                 note c  (1/4),
+--                 note d  (1/4),
+--                 note eb (1/8)       & beginBeam 1,
+--                 note d  (1/8)       & endBeam 1,
+--                 note c  (1/4)
+--             ]
+--             ,
+--             [ 
+--                 note g  (3/16)      & beginBeam 1,
+--                 note ab (1/16)      & endBeam 1,
+--                 note g  (1/8)       & beginBeam 1,
+--                 note f  (1/8)       & endBeam 1,
+--                 note eb (1/8)       & beginBeam 1,
+--                 note d  (1/8)       & endBeam 1,
+--                 note c  (1/4)
+--             ]
+--         ]
+--         ,
+--         take 200 $ cycles [
+--             [
+--                 stdDivisions,
+--                 key  eb Major,
+--                 altoClef,
+--                 note c  (1/4),
+--                 note g_ (1/4),
+--                 note c  (1/2)
+--             ]
+--             ,
+--             [
+--                 note c  (1/4),
+--                 note g_ (1/4),
+--                 note c  (1/2)
+--             ]
+--         ]
+--         ,
+--         take 200 $ cycles [
+--             [
+--                 stdDivisions,
+--                 key eb Major,
+--                 bassClef,
+--                 note c_ (1/1)
+--             ]
+--             ,
+--             chord [c_, g_, eb] (1/1)
+--         ]
+--     ]       
     
 cycles [] = []
 cycles (x:xs) = x:(cycle xs)
@@ -339,3 +367,6 @@ logBaseRational k n
 logBaseRational k n 
     | isDenormalized (fromRational n :: a)  = logBaseRational k (n*k) - 1
 logBaseRational k n                         = logBase (fromRational k) (fromRational n)
+
+
+single x = [x]
