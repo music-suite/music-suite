@@ -153,6 +153,7 @@ module Music.MusicXml.Simple (
         endCresc,
         beginDim,
         endDim,
+        dynamic,
 
         -- ** Dynamic levels
         pppppp,
@@ -299,6 +300,14 @@ time a b   = single $ MusicAttributes $ Time $ DivTime a b
 -- Notes
 -- ----------------------------------------------------------------------------------
 
+-- |
+-- Create a single rest.
+--
+-- > rest (1/4)
+-- > rest (3/8)
+-- > rest quarter
+-- > rest (dotted eight)
+--
 rest :: NoteVal -> Music
 rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNoteValP val def))
     where
@@ -309,22 +318,23 @@ rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNote
 -- |
 -- Create a single note.
 --
--- The duration must be a valid rhythm value, that is, a multiple of two or the result of 
--- adding a dot to a valid rhythm value.
---
--- You can use the 'Num' or 'Pitched' instances for pitch, and the 'Num' or 'Rhythmic' instances
--- for duration. For example
---
--- > note 'c'   (1/4)
--- > note 'fs_' (3/8)
--- > note 'c'   quarter
--- > note ('c' + pure fifth) (dotted eight)
+-- > note c   (1/4)
+-- > note fs_ (3/8)
+-- > note c   quarter
+-- > note (c + pure fifth) (dotted eight)
 --
 note :: Pitch -> NoteVal -> Music
 note pitch dur = note' False pitch dur' dots
     where
         (dur', dots) = separateDots dur
 
+-- |
+-- Create a chord.
+-- 
+-- > chord [c,eb,fs_] (3/8)
+-- > chord [c,d,e] quarter
+-- > chord [c,d,e] (dotted eight)
+--
 chord :: [Pitch] -> NoteVal -> Music
 chord [] d      = rest d
 chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
@@ -497,6 +507,9 @@ fff             = [MusicDirection $ Dynamics FFF]
 ffff            = [MusicDirection $ Dynamics FFFF]
 fffff           = [MusicDirection $ Dynamics FFFFF]
 ffffff          = [MusicDirection $ Dynamics FFFFFF]
+
+dynamic :: Dynamics -> Music
+dynamic level   = [MusicDirection $ Dynamics level]
 
 
 tuplet :: Int -> Int -> [Music] -> Music
