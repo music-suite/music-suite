@@ -11,16 +11,22 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Provides smart(er) constructors for the MusicXML representation.
+-- Provides smart constructors for the MusicXML representation.
 --
+
+
+
+-- TODO cue and grace notes
+-- TODO custom note heads
+-- TODO tremolo
+-- TODO trills
+-- TODO ornaments
+-- TODO arpeggio
 
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml.Simple (
 
-        (&),
-        (&!),
-    
         -----------------------------------------------------------------------------
         -- * Score and parts
         -----------------------------------------------------------------------------
@@ -34,6 +40,10 @@ module Music.MusicXml.Simple (
         partListAbbr,
         bracket,
         brace,
+               
+        -- ** Measures
+        measure,
+        bar,
 
         -- -- ** Others
         -- partIds,
@@ -47,24 +57,22 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
 
         -- ** Pitch
-        -- *** Clef
         trebleClef,
         altoClef,
         bassClef,
+        defaultClef,
         clef, 
-        
-        -- *** Key signature
+        defaultKey,
         key,
 
         -- ** Time
-        -- *** Divisions
-        stdDivs,        
-        -- *** Time signature
+        defaultDivisions,
+        divisions,        
         commonTime,
         cutTime,
         time,
 
-        -- *** Tempo
+        -- ** Tempo
         -- TODO tempo
         metronome,
         
@@ -82,65 +90,73 @@ module Music.MusicXml.Simple (
 
         -- ** Duration
         dot,
+        tuplet,
         setNoteVal,
-        setTimeMod,
+        -- setTimeMod,
+        -- beginTuplet,
+        -- endTuplet,
 
-        -- ** Ties and beams
-        beginTie,
-        endTie,
-
+        -- ** Beams
         beam,
         beginBeam,
         continueBeam,
         endBeam,
 
-        -- ** Tuplets
-        tuplet,
-        -- beginTuplet,
-        -- endTuplet,
+        -- ** Ties
+        beginTie,
+        endTie,
 
         -- ** Notations
         addNotation,
 
         -----------------------------------------------------------------------------
-        -- * Text
+        -- * Pitch transformations
         -----------------------------------------------------------------------------
-
-        rehearsal,
-        segno,
-        text,
-
-        -----------------------------------------------------------------------------
-        -- * Glissando etc
-        -----------------------------------------------------------------------------
-
+        
+        -- ** Glissando
         beginGliss,
         endGliss,
+
+        -- ** Slides
         beginSlide,
         endSlide,
-        fermata,
-        caesura,
 
+        -----------------------------------------------------------------------------
+        -- * Time transformations
+        -----------------------------------------------------------------------------
+
+        -- ** Accelerando and ritardando
+        -- TODO accelerando,
+        -- TODO ritardando,
+
+        -- ** Fermatas and breaks
+        fermata,
+        breathMark,
+        caesura,
 
         -----------------------------------------------------------------------------
         -- * Articulation
         -----------------------------------------------------------------------------
-
+        
+        -- ** Slurs
         beginSlur,
-        endSlur,
+        endSlur,   
+        
+        -- ** Staccato and tenuto
         staccato,
         tenuto,
+        spiccato,
+        staccatissimo,
 
+        -- ** Accents
         accent,
         strongAccent,
-        detachedLegato,
-        staccatissimo,
-        spiccato,
+
+        -- ** Miscellaneous
         scoop,
         plop,
         doit,
         falloff,
-        breathMark,
         stress,
         unstress,
 
@@ -149,11 +165,20 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
 
         -- ** Crescendo and diminuendo
-        beginCresc,
-        endCresc,
-        beginDim,
-        endDim,
+        cresc,
+        dim,
+        crescFrom,
+        crescTo,
+        crescFromTo,
+        dimFrom,
+        dimTo,
+        dimFromTo,        
+
         dynamic,
+        -- beginCresc,
+        -- endCresc,
+        -- beginDim,
+        -- endDim,
 
         -- ** Dynamic levels
         pppppp,
@@ -169,12 +194,21 @@ module Music.MusicXml.Simple (
         ffff,
         fffff,
         ffffff,
+
+        -----------------------------------------------------------------------------
+        -- * Text
+        -----------------------------------------------------------------------------
+
+        text,
+        rehearsal,
+        segno,
+
   ) 
 where
 
 import Data.Default
 import Data.Ratio
-import Control.Apply.Reverse
+import Data.Monoid
 
 import Music.MusicXml.Score
 import Music.MusicXml.Time
@@ -190,13 +224,11 @@ import Music.MusicXml.Write
 -- | 
 -- Create a single-part score.
 --
--- Arguments:
---
 -- > fromPart title composer partName measures
 --
 -- Example:
 --
--- @ 'fromPart' \"Suite\" \"Bach\" \"Cello solo\" [[]] @
+-- @ 'fromPart' \"Suite\" \"Bach\" \"Cello solo\" [] @
 --
 fromPart :: String -> String -> String -> [Music] -> Score
 fromPart title composer partName music = 
@@ -204,8 +236,6 @@ fromPart title composer partName music =
 
 -- | 
 -- Create a multi-part score.
---
--- Arguments:
 --
 -- > fromParts title composer partList parts
 --
@@ -248,6 +278,32 @@ bracket = undefined
 brace :: PartList -> PartList
 brace = undefined
 
+-- |
+-- Convenient synonym for 'mconcat', allowing us to write things like
+--
+-- > measure [
+-- >    beam [ 
+-- >        note c  (1/8), 
+-- >        note d  (1/8),
+-- >        note e  (1/8),
+-- >        note f  (1/8) 
+-- >    ],
+-- >    tuplet 3 2 [ 
+-- >        note g  (1/4),
+-- >        note a  (1/4),
+-- >        note b  (1/4) 
+-- >    ]
+-- > ]
+-- 
+measure :: [Music] -> Music
+measure = mconcat
+
+-- |
+-- Convenient synonym for 'mconcat'.
+-- 
+bar :: [Music] -> Music
+bar = measure
+
 
 header :: String -> String -> PartList -> ScoreHeader
 header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
@@ -271,29 +327,65 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
 -- ----------------------------------------------------------------------------------
 
 trebleClef, altoClef, bassClef :: Music
-clef :: ClefSign -> Line -> Music
+trebleClef = clef GClef 2
+altoClef   = clef CClef 3
+bassClef   = clef FClef 4
 
-trebleClef      = single $ MusicAttributes $ Clef GClef 2
-altoClef         = single $ MusicAttributes $ Clef CClef 3
-bassClef         = single $ MusicAttributes $ Clef FClef 4
+defaultClef :: Music
+defaultClef = trebleClef
+
+-- |
+-- Create a clef.
+--
+clef :: ClefSign -> Line -> Music
 clef symbol line = single $ MusicAttributes $ Clef symbol line
 
+defaultKey :: Music
+defaultKey = key 0 Major
+
+-- |
+-- Create a key signature.
+--
 key :: Fifths -> Mode -> Music
 key n m = single $ MusicAttributes $ Key n m
 
-stdDivsVal          :: Divs
-stdDivs             :: Music
 
-stdDivsVal = 768*4
-stdDivs    = single $ MusicAttributes $ Divisions $ stdDivsVal `div` 4
+-- Number of ticks per whole note (we use 768 per quarter like Sibelius).
+defaultDivisionsVal :: Divs      
+defaultDivisionsVal = 768 * 4
 
+-- |
+-- Set the tick division to the default value. 
+--
+-- The 'rest', 'note' and 'chord' functions assumes that this definition is the first
+-- element in each part.
+--
+defaultDivisions    :: Music
+defaultDivisions    = single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
+
+-- |
+-- Define the number of ticks per quarter note.
+--
+divisions :: Divs -> Music
+divisions n = single $ MusicAttributes $ Divisions $ n
 
 commonTime, cutTime :: Music
-time                :: Beat -> BeatType -> Music
-
 commonTime = single $ MusicAttributes $ Time CommonTime
 cutTime    = single $ MusicAttributes $ Time CutTime
+
+-- |
+-- Create a time signature.
+--
+time :: Beat -> BeatType -> Music
 time a b   = single $ MusicAttributes $ Time $ DivTime a b
+
+-- |
+-- Create a metronome mark.
+--
+metronome :: NoteVal -> Bool -> Tempo -> Music
+metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
+
+-- TODO tempo
 
 
 -- ----------------------------------------------------------------------------------
@@ -301,7 +393,7 @@ time a b   = single $ MusicAttributes $ Time $ DivTime a b
 -- ----------------------------------------------------------------------------------
 
 -- |
--- Create a single rest.
+-- Create a rest.
 --
 -- > rest (1/4)
 -- > rest (3/8)
@@ -309,7 +401,7 @@ time a b   = single $ MusicAttributes $ Time $ DivTime a b
 -- > rest (dotted eight)
 --
 rest :: NoteVal -> Music
-rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNoteValP val def))
+rest dur = single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
@@ -350,7 +442,7 @@ note' isChord pitch dur dots
     = single $ MusicNote $ 
         Note 
             (Pitched isChord $ pitch) 
-            (stdDivsVal `div` denom) 
+            (defaultDivisionsVal `div` denom) 
             noTies 
             (setNoteValP val $ addDots $ def)
     where                    
@@ -424,10 +516,8 @@ rehearsal = single . MusicDirection . Rehearsal
 
 
 segno :: Music
-metronome :: NoteVal -> Bool -> Tempo -> Music
 
 segno     = single . MusicDirection $ Segno
-metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
 
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
@@ -468,6 +558,25 @@ caesura         = addNotation (Articulations [Caesura])
 stress          = addNotation (Articulations [Stress])	 
 unstress        = addNotation (Articulations [Unstress])	 
 
+cresc           :: Music -> Music
+dim             :: Music -> Music
+crescFrom       :: Dynamics -> Music -> Music 
+crescTo         :: Dynamics -> Music -> Music 
+crescFromTo     :: Dynamics -> Dynamics -> Music -> Music 
+dimFrom         :: Dynamics -> Music -> Music 
+dimTo           :: Dynamics -> Music -> Music 
+dimFromTo       :: Dynamics -> Dynamics -> Music -> Music 
+
+cresc           = undefined
+dim             = undefined
+crescFrom       = undefined
+crescTo         = undefined
+crescFromTo     = undefined
+dimFrom         = undefined
+dimTo           = undefined
+dimFromTo       = undefined
+
+
 beginCresc      = [MusicDirection $ Crescendo Start]
 endCresc        = [MusicDirection $ Crescendo Stop]
 beginDim        = [MusicDirection $ Diminuendo Start]
@@ -478,6 +587,9 @@ beginCresc      :: Music
 endCresc        :: Music
 beginDim        :: Music
 endDim          :: Music
+
+dynamic :: Dynamics -> Music
+dynamic level   = [MusicDirection $ Dynamics level]
 
 pppppp      :: Music
 ppppp       :: Music
@@ -508,8 +620,6 @@ ffff            = [MusicDirection $ Dynamics FFFF]
 fffff           = [MusicDirection $ Dynamics FFFFF]
 ffffff          = [MusicDirection $ Dynamics FFFFFF]
 
-dynamic :: Dynamics -> Music
-dynamic level   = [MusicDirection $ Dynamics level]
 
 
 tuplet :: Int -> Int -> [Music] -> Music
@@ -558,7 +668,7 @@ instance Default Note where
     def = Note def def [] def
 
 instance Default Divs where
-    def = stdDivsVal
+    def = defaultDivisionsVal
 
 instance Default FullNote where
     def = Rest noChord Nothing

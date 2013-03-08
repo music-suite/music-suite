@@ -5,6 +5,7 @@ module Main where
 
 import Data.Default
 import Data.Semigroup
+import Control.Apply.Reverse
 import System.Posix.Process
 
 import Music.Pitch.Literal
@@ -12,16 +13,63 @@ import Music.MusicXml
 import Music.MusicXml.Simple
 
 
-score = foo
+score = testTuplets
 
-foo = fromParts 
-    "Frère Jaques"
-    "Anonymous" 
+testNotes = fromPart
+    "Test notes"
+    "None" 
+    "Treble"
+    [      
+        bar [ 
+            note c (1/4), 
+            note d (1/2), 
+            note e (1/4) ],
+        
+        bar [
+            beam [ 
+                note c  (1/8), 
+                note d  (1/8),
+                note e  (1/8),
+                note f  (1/8) ],
+
+            beam [ 
+                note g  (1/8),
+                note a  (1/8),
+                note b  (1/8),
+                note c' (1/8) ]
+        ]
+    ]
+
+testTuplets = fromPart
+    "Test tuplets"
+    "None"
+    "Treble"
+    [
+        bar [
+           beam [ 
+               note c  (1/8), 
+               note d  (1/8),
+               note e  (1/8),
+               note f  (1/8) 
+           ],
+           tuplet 3 2 [ 
+               note g  (1/4),
+               note a  (1/4),
+               note b  (1/4) 
+           ]
+        ]
+    ]
+
+
+
+misc = fromParts 
+    "Miscellaneous tests"
+    "None" 
     (partList ["Voice"])
     [ 
         [
             mconcat [
-                stdDivs,
+                defaultDivisions,
                 trebleClef,
                 key eb Major,
                 commonTime,                       
@@ -63,11 +111,11 @@ foo = fromParts
             ,  
             mconcat [
                 pp,
-                beginCresc,
+                -- beginCresc,
                 note c (3/8),
                 note d (1/8),
                 note e (3/8),
-                endCresc,
+                -- endCresc,
                 ff,
                 note f (1/8)
             ]
