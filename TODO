@@ -1,9 +1,4 @@
 
-- Tupliets
-- Ties                              note + notation
-- Dynamics                          directions
-- Articulations (slurs etc)         notations
-
 
 Later:
 
@@ -19,7 +14,6 @@ Later:
 
 ### 1
 
-* Clefs: Unusual varieties
 * 8va marks
 * Part group bracket/brace
 * Different number of staff lines
@@ -41,10 +35,3 @@ Later:
 * Expression/techinal note (what is MusicXML equivalent?)
 * Articulations
 * Arpeggios
-* Segno/coda
-* Rehearsal marks
-* Bar numbers
-
-### 3
-
-* Dynamics
