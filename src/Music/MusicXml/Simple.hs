@@ -306,6 +306,20 @@ rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNote
         denom = fromIntegral $ denominator $ toRational $ dur
         val   = NoteVal $ toRational $ dur              
 
+-- |
+-- Create a single note.
+--
+-- The duration must be a valid rhythm value, that is, a multiple of two or the result of 
+-- adding a dot to a valid rhythm value.
+--
+-- You can use the 'Num' or 'Pitched' instances for pitch, and the 'Num' or 'Rhythmic' instances
+-- for duration. For example
+--
+-- > note 'c'   (1/4)
+-- > note 'fs_' (3/8)
+-- > note 'c'   quarter
+-- > note ('c' + pure fifth) (dotted eight)
+--
 note :: Pitch -> NoteVal -> Music
 note pitch dur = note' False pitch dur' dots
     where
