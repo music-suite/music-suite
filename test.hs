@@ -3,10 +3,8 @@
 
 module Main where
 
--- import Data.Default
--- import Data.Ratio
--- import Data.Semigroup
--- import Data.Default
+import Data.Default
+import Data.Semigroup
 import System.Posix.Process
 
 import Music.Pitch.Literal
@@ -18,13 +16,14 @@ import Music.MusicXml.Simple
 
 score = foo
 
-foo = Partwise
-    (ScoreAttrs [])
-    (header "Frère Jaques" "Anonymous" (partList [("Voice","Voice")]))
-    $ parts [ 
+foo = simpleScore 
+    "Frère Jaques"
+    "Anonymous" 
+    (partList [("Voice","Voice")])
+    [ 
         [
             concat [
-                stdDivisions,
+                stdDivs,
                 trebleClef,
                 key eb Major,
                 commonTime,                       

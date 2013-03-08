@@ -13,10 +13,153 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Simple -- (
+module Music.MusicXml.Simple (
+
+        (&),
+    
+        -----------------------------------------------------------------------------
+        -- * Score and parts
+        -----------------------------------------------------------------------------
+
+        -- ** Basic constructors
+        simpleScore,
+        partList,
+        partListNoAbbr,
+
+        -- -- ** Others
+        -- partIds,
+        -- header,
+        -- setHeader,
+        -- setTitle,
+        -- setMvmTitle,
+        -- parts, 
+
+        -----------------------------------------------------------------------------
+        -- * Top-level attributes
+        -----------------------------------------------------------------------------
+
+        -- ** Pitch
+        -- *** Clef
+        trebleClef,
+        altoClef,
+        bassClef, 
+        
+        -- *** Key signature
+        key,
+
+        -- ** Time
+        -- *** Divisions
+        stdDivs,        
+        -- *** Time signature
+        commonTime,
+        cutTime,
+        time,
+
+        -- *** Tempo
+        -- TODO tempo
+        metronome,
+        
+        -----------------------------------------------------------------------------
+        -- * Notes
+        -----------------------------------------------------------------------------
+        
+        -- ** Basic constructors
+        rest,
+        note,
+        chord,
+
+        -- ** Voice
+        setVoice,
+
+        -- ** Duration
+        dot,
+        setNoteVal,
+        setTimeMod,
+
+        -- ** Ties and beams
+        beginTie,
+        endTie,
+
+        beam,
+        beginBeam,
+        continueBeam,
+        endBeam,
+
+        -- ** Tuplets
+        tuplet,
+        beginTuplet,
+        endTuplet,
+
+        -- ** Notations
+        addNotation,
+
+        -----------------------------------------------------------------------------
+        -- * Text
+        -----------------------------------------------------------------------------
+
+        rehearsal,
+        segno,
+        text,
+
+        -----------------------------------------------------------------------------
+        -- * Glissando etc
+        -----------------------------------------------------------------------------
+
+        beginGliss,
+        endGliss,
+        beginSlide,
+        endSlide,
+        fermata,
+        caesura,
 
 
---  ) 
+        -----------------------------------------------------------------------------
+        -- * Articulation
+        -----------------------------------------------------------------------------
+
+        beginSlur,
+        endSlur,
+        staccato,
+        tenuto,
+
+        accent,
+        strongAccent,
+        detachedLegato,
+        staccatissimo,
+        spiccato,
+        scoop,
+        plop,
+        doit,
+        falloff,
+        breathMark,
+        stress,
+        unstress,
+
+        -----------------------------------------------------------------------------
+        -- * Dynamics
+        -----------------------------------------------------------------------------
+
+        -- ** Crescendo and diminuendo
+        beginCresc,
+        endCresc,
+        beginDim,
+        endDim,
+
+        -- ** Dynamic levels
+        pppppp,
+        ppppp,
+        pppp,
+        ppp,
+        pp,
+        p,
+        mp,
+        mf,
+        ff,
+        fff,
+        ffff,
+        fffff,
+        ffffff,
+  ) 
 where
 
 import Data.Default
@@ -29,6 +172,9 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Read
 import Music.MusicXml.Write
 
+instance Default ScoreAttrs where
+    def = ScoreAttrs []
+
 instance Default ScoreHeader where
     def = ScoreHeader Nothing Nothing Nothing []
 
@@ -36,7 +182,7 @@ instance Default Note where
     def = Note def def [] def
 
 instance Default Divs where
-    def = stdDivs
+    def = stdDivsVal
 
 instance Default FullNote where
     def = Rest noChord Nothing
@@ -62,37 +208,36 @@ instance Default NoteProps where
 
 
 
-stdDivs :: Divs
-stdDivs = 768*4
+stdDivsVal :: Divs
+stdDivsVal = 768*4
 
-stdDivisions :: Music
-stdDivisions = single $ MusicAttributes $ Divisions $ stdDivs `div` 4
+stdDivs :: Music
+stdDivs = single $ MusicAttributes $ Divisions $ stdDivsVal `div` 4
 
-trebleClef :: Music
-altoClef   :: Music
-bassClef   :: Music
+trebleClef, altoClef, bassClef :: Music
+
 trebleClef = single $ MusicAttributes $ Clef GClef 2
 altoClef   = single $ MusicAttributes $ Clef CClef 3
 bassClef   = single $ MusicAttributes $ Clef FClef 4
 
-commonTime :: Music
-cutTime    :: Music
+commonTime, cutTime  :: Music
 time       :: Beat -> BeatType -> Music
 key        :: Fifths -> Mode -> Music
+
 commonTime = single $ MusicAttributes $ Time CommonTime
 cutTime    = single $ MusicAttributes $ Time CutTime
 time a b   = single $ MusicAttributes $ Time $ DivTime a b
 key n m    = single $ MusicAttributes $ Key n m
 
 
-kPartIds :: [String]
-kPartIds = [ "P" ++ show n | n <- [1..] ]
+partIds :: [String]
+partIds = [ "P" ++ show n | n <- [1..] ]
 
 partList :: [(String, String)] -> PartList
-partList = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) kPartIds
+partList = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
 
 partListNoAbbr :: [String] -> PartList
-partListNoAbbr = zipWith (\partId name -> Part partId name Nothing) kPartIds
+partListNoAbbr = zipWith (\partId name -> Part partId name Nothing) partIds
 
 
 header :: String -> String -> PartList -> ScoreHeader
@@ -105,22 +250,37 @@ setTitle    title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader title
 setMvmTitle mvmTitle (ScoreHeader title _ ident partList) = ScoreHeader title (Just mvmTitle) ident partList
 -- addIdent    ident    (ScoreHeader title mvmTitle idents partList) = ScoreHeader title mvmTitle (ident:idents) partList
 
+parts :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
+parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
+    where
+        partIds' = partIds
+        barIds   = [1..]
+
+
+
+simpleScore :: String -> String -> PartList -> [[Music]] -> Score
+simpleScore title comp partList music 
+    = Partwise 
+        (def)
+        (header title comp partList)
+        (parts music)  
+
 
 
 
 
 setVoice     :: Int -> Music -> Music
-setValue     :: NoteVal -> Music -> Music
-addDot       :: Music -> Music
+setNoteVal     :: NoteVal -> Music -> Music
+dot       :: Music -> Music
 setTimeMod   :: Int -> Int -> Music -> Music
 addNotation  :: Notation -> Music -> Music
 beginBeam    :: Int -> Music -> Music
 continueBeam :: Int -> Music -> Music
 endBeam      :: Int -> Music -> Music
 
-setValue x      = fmap $ mapNoteProps2 (setValueP x)
+setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
 setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
-addDot          = fmap $ mapNoteProps2 addDotP
+dot             = fmap $ mapNoteProps2 dotP
 setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
 beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
@@ -132,9 +292,9 @@ endTie'   = fmap endTie''
 beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
 endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
 
-setValueP v x       = x { noteType = Just (v, Nothing) }
+setNoteValP v x       = x { noteType = Just (v, Nothing) }
 setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
-addDotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
+dotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
 setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
 addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
 beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
@@ -148,7 +308,7 @@ infixr 1 &
 
 -- TODO handle dots etc
 rest :: NoteVal -> Music
-rest dur = single $ MusicNote (Note def (stdDivs `div` denom) noTies (setValueP val def))
+rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNoteValP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
@@ -171,11 +331,11 @@ note' isChord pitch dur dots
     = single $ MusicNote $ 
         Note 
             (Pitched isChord $ pitch) 
-            (stdDivs `div` denom) 
+            (stdDivsVal `div` denom) 
             noTies 
-            (setValueP val $ addDots $ def)
+            (setNoteValP val $ addDots $ def)
     where                    
-        addDots = foldl (.) id (replicate dots addDotP)
+        addDots = foldl (.) id (replicate dots dotP)
         num     = fromIntegral $ numerator   $ toRational $ dur
         denom   = fromIntegral $ denominator $ toRational $ dur
         val     = NoteVal $ toRational $ dur              
@@ -193,20 +353,16 @@ separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
 
     
 chord :: [Pitch] -> NoteVal -> Music
-chord [] d      = error "No notes in chord"
+chord [] d      = rest d
 chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
 
 
-parts :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
-parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds
-    where
-        partIds = kPartIds
-        barIds  = [1..]
 
 
-
-
-
+rehearsal :: String -> Music
+segno :: Music
+text :: String -> Music
+metronome :: NoteVal -> Bool -> Tempo -> Music
 
 rehearsal = single . MusicDirection . Rehearsal
 segno     = single . MusicDirection $ Segno
@@ -258,6 +414,26 @@ endCresc        = [MusicDirection $ Crescendo Stop]
 beginDim        = [MusicDirection $ Diminuendo Start]
 endDim          = [MusicDirection $ Diminuendo Stop]
 
+
+beginCresc      :: Music
+endCresc        :: Music
+beginDim        :: Music
+endDim          :: Music
+
+pppppp      :: Music
+ppppp       :: Music
+pppp        :: Music
+ppp         :: Music
+pp          :: Music
+p           :: Music
+mp          :: Music
+mf          :: Music
+ff          :: Music
+fff         :: Music
+ffff        :: Music
+fffff       :: Music
+ffffff      :: Music
+
 pppppp          = [MusicDirection $ Dynamics PPPPPP]
 ppppp           = [MusicDirection $ Dynamics PPPPP]
 pppp            = [MusicDirection $ Dynamics PPPP]
@@ -283,8 +459,6 @@ tuplet m n xs   = setTimeMod m n $ concat ([a] ++ bs ++ [c])
         bs  = init (tail xs)
         c   = endTuplet $ last (tail xs)
 
--- TODO combine tuplet, beam, slur etc
-
 beam :: [Music] -> Music
 beam []   = []
 beam [xs] = xs
@@ -294,6 +468,9 @@ beam xs   = concat ([a] ++ bs ++ [c])
         bs  = fmap (continueBeam 1) (init (tail xs))
         c   = endBeam 1 $ last (tail xs)
                                            
+-- TODO combine tuplet, beam, slur etc
+
+
 
 
 
