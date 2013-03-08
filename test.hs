@@ -9,8 +9,6 @@ import System.Posix.Process
 
 import Music.Pitch.Literal
 import Music.MusicXml
-import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
@@ -34,11 +32,11 @@ foo = simpleScore
                 mp,
                 
                 tuplet 5 4 [
-                    note c  (1/8)       & beginSlur . beginBeam 1,
-                    note d  (1/8)       & endSlur . staccato . tenuto . continueBeam 1,
-                    note c  (1/8)       & endSlur . staccato . tenuto . continueBeam 1,
-                    note d  (1/8)       & endSlur . staccato . tenuto . continueBeam 1,
-                    note c  (1/8)       & endSlur . staccato . tenuto . endBeam 1
+                    note c  (1/8) & beginSlur . beginBeam 1,
+                    note d  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
+                    note c  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
+                    note d  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
+                    note c  (1/8) & endSlur & staccato & tenuto & endBeam 1
                 ],
                 
                 tuplet 3 2 [
@@ -49,31 +47,29 @@ foo = simpleScore
             ]     
             ,
             concat [
-                segno,
-                metronome (1/8) False 96,
-                note g_   (1/4)      & endTie,
-                note ab_  (1/4)      & endTie,
+                note g_  (1/4) & endTie,
+                note ab_ (1/4) & endTie,
             
                 beam [
-                    note c  (1/16),
-                    note c  (2/16),
-                    note c  (1/16)
+                    note c (1/16),
+                    note c (2/16),
+                    note c (1/16)
                 ],
                 beam [
-                    note c  (3/8) & beginGliss,
-                    note d  (1/8) & endGliss
+                    note c (3/8) & beginGliss,
+                    note d (1/8) & endGliss
                 ]
             ]  
             ,  
             concat [
                 pp,
                 beginCresc,
-                note c  (3/8),
-                note d  (1/8),
-                note e  (3/8),
+                note c (3/8),
+                note d (1/8),
+                note e (3/8),
                 endCresc,
                 ff,
-                note f  (1/8)
+                note f (1/8)
             ]
         ]    
     ]

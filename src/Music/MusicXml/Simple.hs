@@ -11,11 +11,15 @@
 -- Stability   : experimental
 -- Portability : portable
 --
+-- Provides smart(er) constructors for the MusicXML representation.
+--
+
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml.Simple (
 
         (&),
+        (&!),
     
         -----------------------------------------------------------------------------
         -- * Score and parts
@@ -164,6 +168,7 @@ where
 
 import Data.Default
 import Data.Ratio
+import Control.Apply.Reverse
 
 import Music.MusicXml.Score
 import Music.MusicXml.Time
@@ -301,9 +306,6 @@ beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
 continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
 endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 
-
-infixr 1 &
-(&)  = flip ($)
 
 
 -- TODO handle dots etc
