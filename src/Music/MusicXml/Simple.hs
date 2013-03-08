@@ -26,9 +26,9 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
 
         -- ** Basic constructors
-        simpleScore,
         partList,
-        partListNoAbbr,
+        partListAbbr,
+        partwise,
 
         -- -- ** Others
         -- partIds,
@@ -238,11 +238,12 @@ key n m    = single $ MusicAttributes $ Key n m
 partIds :: [String]
 partIds = [ "P" ++ show n | n <- [1..] ]
 
-partList :: [(String, String)] -> PartList
-partList = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
+partList :: [String] -> PartList
+partList = zipWith (\partId name -> Part partId name Nothing) partIds
 
-partListNoAbbr :: [String] -> PartList
-partListNoAbbr = zipWith (\partId name -> Part partId name Nothing) partIds
+partListAbbr :: [(String, String)] -> PartList
+partListAbbr = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
+
 
 
 header :: String -> String -> PartList -> ScoreHeader
@@ -263,8 +264,8 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
 
 
 
-simpleScore :: String -> String -> PartList -> [[Music]] -> Score
-simpleScore title comp partList music 
+partwise :: String -> String -> PartList -> [[Music]] -> Score
+partwise title comp partList music 
     = Partwise 
         (def)
         (header title comp partList)

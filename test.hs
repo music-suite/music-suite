@@ -14,10 +14,10 @@ import Music.MusicXml.Simple
 
 score = foo
 
-foo = simpleScore 
+foo = partwise 
     "Frère Jaques"
     "Anonymous" 
-    (partList [("Voice","Voice")])
+    (partListAbbr [("Voice","Voice")])
     [ 
         [
             concat [
