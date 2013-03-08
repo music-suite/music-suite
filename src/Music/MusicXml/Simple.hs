@@ -26,9 +26,14 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
 
         -- ** Basic constructors
+        fromPart,
+        fromParts,
+
+        -- ** Part lists
         partList,
         partListAbbr,
-        partwise,
+        bracket,
+        brace,
 
         -- -- ** Others
         -- partIds,
@@ -36,7 +41,6 @@ module Music.MusicXml.Simple (
         -- setHeader,
         -- setTitle,
         -- setMvmTitle,
-        -- parts, 
 
         -----------------------------------------------------------------------------
         -- * Top-level attributes
@@ -46,7 +50,8 @@ module Music.MusicXml.Simple (
         -- *** Clef
         trebleClef,
         altoClef,
-        bassClef, 
+        bassClef,
+        clef, 
         
         -- *** Key signature
         key,
@@ -91,8 +96,8 @@ module Music.MusicXml.Simple (
 
         -- ** Tuplets
         tuplet,
-        beginTuplet,
-        endTuplet,
+        -- beginTuplet,
+        -- endTuplet,
 
         -- ** Notations
         addNotation,
@@ -177,73 +182,70 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Read
 import Music.MusicXml.Write
 
-instance Default ScoreAttrs where
-    def = ScoreAttrs []
+-- ----------------------------------------------------------------------------------
+-- Score and parts
+-- ----------------------------------------------------------------------------------
 
-instance Default ScoreHeader where
-    def = ScoreHeader Nothing Nothing Nothing []
+-- | 
+-- Create a single-part score.
+--
+-- Arguments:
+--
+-- > fromPart title composer partName measures
+--
+-- Example:
+--
+-- @ 'fromPart' \"Suite\" \"Bach\" \"Cello solo\" [[]] @
+--
+fromPart :: String -> String -> String -> [Music] -> Score
+fromPart title composer partName music = 
+    fromParts title composer (partList [partName]) [music]
 
-instance Default Note where
-    def = Note def def [] def
-
-instance Default Divs where
-    def = stdDivsVal
-
-instance Default FullNote where
-    def = Rest noChord Nothing
-
-instance Default NoteProps where
-    def = NoteProps Nothing Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
-
-
--- class HasDyn a where
---     mapLevel :: (Level -> Level) -> (a -> a)
--- 
--- class HasPitch a where
---     mapPitch :: (Pitch -> Pitch) -> (a -> a)
--- 
--- class HasPitch a => HasAcc a where
---     flatten :: a -> a
---     sharpen :: a -> a
---     mapAcc  :: (Semitones -> Semitones) -> a -> a
---     flatten = mapAcc pred
---     sharpen = mapAcc succ
-
-
-
-
-
-stdDivsVal :: Divs
-stdDivsVal = 768*4
-
-stdDivs :: Music
-stdDivs = single $ MusicAttributes $ Divisions $ stdDivsVal `div` 4
-
-trebleClef, altoClef, bassClef :: Music
-
-trebleClef = single $ MusicAttributes $ Clef GClef 2
-altoClef   = single $ MusicAttributes $ Clef CClef 3
-bassClef   = single $ MusicAttributes $ Clef FClef 4
-
-commonTime, cutTime  :: Music
-time       :: Beat -> BeatType -> Music
-key        :: Fifths -> Mode -> Music
-
-commonTime = single $ MusicAttributes $ Time CommonTime
-cutTime    = single $ MusicAttributes $ Time CutTime
-time a b   = single $ MusicAttributes $ Time $ DivTime a b
-key n m    = single $ MusicAttributes $ Key n m
+-- | 
+-- Create a multi-part score.
+--
+-- Arguments:
+--
+-- > fromParts title composer partList parts
+--
+-- Example:
+--
+-- @ 'fromParts' \"4'33\" \"Cage\" ('partList' [\"Violin\", \"Viola\", \"Cello\"]) [[]] @
+--
+fromParts :: String -> String -> PartList -> [[Music]] -> Score
+fromParts title composer partList music 
+    = Partwise 
+        (def)
+        (header title composer partList)
+        (parts music)  
 
 
 partIds :: [String]
 partIds = [ "P" ++ show n | n <- [1..] ]
 
+-- | 
+-- Create a part list from instrument names.
+--
 partList :: [String] -> PartList
 partList = zipWith (\partId name -> Part partId name Nothing) partIds
 
+-- | 
+-- Create a part list from instrument names and abbreviations.
+--
 partListAbbr :: [(String, String)] -> PartList
 partListAbbr = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
 
+-- | 
+-- Enclose the given parts in a bracket.
+-- 
+bracket :: PartList -> PartList
+bracket = undefined
+
+-- | 
+-- Enclose the given parts in a brace.
+-- 
+brace :: PartList -> PartList
+brace = undefined
 
 
 header :: String -> String -> PartList -> ScoreHeader
@@ -261,55 +263,42 @@ parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs 
     where
         partIds' = partIds
         barIds   = [1..]
+                        
+
+-- ----------------------------------------------------------------------------------
+-- Top-level attributes
+-- ----------------------------------------------------------------------------------
+
+trebleClef, altoClef, bassClef :: Music
+clef :: ClefSign -> Line -> Music
+
+trebleClef      = single $ MusicAttributes $ Clef GClef 2
+altoClef         = single $ MusicAttributes $ Clef CClef 3
+bassClef         = single $ MusicAttributes $ Clef FClef 4
+clef symbol line = single $ MusicAttributes $ Clef symbol line
+
+key :: Fifths -> Mode -> Music
+key n m = single $ MusicAttributes $ Key n m
+
+stdDivsVal          :: Divs
+stdDivs             :: Music
+
+stdDivsVal = 768*4
+stdDivs    = single $ MusicAttributes $ Divisions $ stdDivsVal `div` 4
 
 
+commonTime, cutTime :: Music
+time                :: Beat -> BeatType -> Music
 
-partwise :: String -> String -> PartList -> [[Music]] -> Score
-partwise title comp partList music 
-    = Partwise 
-        (def)
-        (header title comp partList)
-        (parts music)  
-
+commonTime = single $ MusicAttributes $ Time CommonTime
+cutTime    = single $ MusicAttributes $ Time CutTime
+time a b   = single $ MusicAttributes $ Time $ DivTime a b
 
 
+-- ----------------------------------------------------------------------------------
+-- Notes
+-- ----------------------------------------------------------------------------------
 
-
-setVoice     :: Int -> Music -> Music
-setNoteVal     :: NoteVal -> Music -> Music
-dot       :: Music -> Music
-setTimeMod   :: Int -> Int -> Music -> Music
-addNotation  :: Notation -> Music -> Music
-beginBeam    :: Int -> Music -> Music
-continueBeam :: Int -> Music -> Music
-endBeam      :: Int -> Music -> Music
-
-setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
-setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
-dot             = fmap $ mapNoteProps2 dotP
-setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
-addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
-beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
-continueBeam n  = fmap $ mapNoteProps2 (continueBeamP n)
-endBeam n       = fmap $ mapNoteProps2 (endBeamP n)
-
-beginTie' = fmap beginTie''
-endTie'   = fmap endTie''
-beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
-endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
-
-setNoteValP v x       = x { noteType = Just (v, Nothing) }
-setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
-dotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
-setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
-addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
-beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
-continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
-endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
-
-
-
--- TODO handle dots etc
 rest :: NoteVal -> Music
 rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNoteValP val def))
     where
@@ -317,12 +306,15 @@ rest dur = single $ MusicNote (Note def (stdDivsVal `div` denom) noTies (setNote
         denom = fromIntegral $ denominator $ toRational $ dur
         val   = NoteVal $ toRational $ dur              
 
-    
-
 note :: Pitch -> NoteVal -> Music
 note pitch dur = note' False pitch dur' dots
     where
         (dur', dots) = separateDots dur
+
+chord :: [Pitch] -> NoteVal -> Music
+chord [] d      = rest d
+chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
+
 
 chordNote :: Pitch -> NoteVal -> Music
 chordNote pitch dur = note' True pitch dur' dots
@@ -347,31 +339,71 @@ separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 
 separateDots' :: [NoteVal] -> NoteVal -> (NoteVal, Int)
-separateDots' []         nv                    = error "Note value must be a multiple of two or dotted"
-separateDots' (div:divs) nv | divisibleBy 2 nv = (nv,  0)
-                            | otherwise        = (nv', dots' + 1)
-    where                            
-        (nv', dots') = separateDots' divs (nv*div)
-        divisibleBy n = (== 0.0) . snd . properFraction . logBaseRational n . toRational
-
-    
-chord :: [Pitch] -> NoteVal -> Music
-chord [] d      = rest d
-chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
+separateDots' []         nv                      = errorNoteValue
+    where
+        errorNoteValue  = error "Note value must be a multiple of two or dotted"
+separateDots' (div:divs) nv | isDivisibleBy 2 nv = (nv,  0)
+                            | otherwise          = (nv', dots' + 1)
+    where                                                        
+        (nv', dots')    = separateDots' divs (nv*div)
+        isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseRational n . toRational
 
 
+setVoice     :: Int -> Music -> Music
+dot       :: Music -> Music
+setNoteVal     :: NoteVal -> Music -> Music
+setTimeMod   :: Int -> Int -> Music -> Music
+
+setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
+dot             = fmap $ mapNoteProps2 dotP
+setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
+setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 
 
-rehearsal :: String -> Music
-segno :: Music
+
+addNotation  :: Notation -> Music -> Music
+beginBeam    :: Int -> Music -> Music
+continueBeam :: Int -> Music -> Music
+endBeam      :: Int -> Music -> Music
+addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
+beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
+continueBeam n  = fmap $ mapNoteProps2 (continueBeamP n)
+endBeam n       = fmap $ mapNoteProps2 (endBeamP n)
+
+
+beginTie' = fmap beginTie''
+endTie'   = fmap endTie''
+beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
+endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
+
+-- TODO clean
+setNoteValP v x       = x { noteType = Just (v, Nothing) }
+setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
+dotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
+setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
+addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
+beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
+continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
+endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
+
+
+-- ----------------------------------------------------------------------------------
+-- Text
+-- ----------------------------------------------------------------------------------
+
 text :: String -> Music
+rehearsal :: String -> Music
+
+text      = single . MusicDirection . Words
+rehearsal = single . MusicDirection . Rehearsal
+
+
+
+segno :: Music
 metronome :: NoteVal -> Bool -> Tempo -> Music
 
-rehearsal = single . MusicDirection . Rehearsal
 segno     = single . MusicDirection $ Segno
-text      = single . MusicDirection . Words
 metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
-
 
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
@@ -486,3 +518,40 @@ logBaseRational k n
 logBaseRational k n                         = logBase (fromRational k) (fromRational n)
 
 single x = [x]
+equalTo  = (==)
+
+
+instance Default ScoreAttrs where
+    def = ScoreAttrs []
+
+instance Default ScoreHeader where
+    def = ScoreHeader Nothing Nothing Nothing []
+
+instance Default Note where
+    def = Note def def [] def
+
+instance Default Divs where
+    def = stdDivsVal
+
+instance Default FullNote where
+    def = Rest noChord Nothing
+
+instance Default NoteProps where
+    def = NoteProps Nothing Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
+
+
+-- class HasDyn a where
+--     mapLevel :: (Level -> Level) -> (a -> a)
+-- 
+-- class HasPitch a where
+--     mapPitch :: (Pitch -> Pitch) -> (a -> a)
+-- 
+-- class HasPitch a => HasAcc a where
+--     flatten :: a -> a
+--     sharpen :: a -> a
+--     mapAcc  :: (Semitones -> Semitones) -> a -> a
+--     flatten = mapAcc pred
+--     sharpen = mapAcc succ
+
+
+                               

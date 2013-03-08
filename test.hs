@@ -14,13 +14,13 @@ import Music.MusicXml.Simple
 
 score = foo
 
-foo = partwise 
+foo = fromParts 
     "Frère Jaques"
     "Anonymous" 
-    (partListAbbr [("Voice","Voice")])
+    (partList ["Voice"])
     [ 
         [
-            concat [
+            mconcat [
                 stdDivs,
                 trebleClef,
                 key eb Major,
@@ -46,7 +46,7 @@ foo = partwise
                 ] 
             ]     
             ,
-            concat [
+            mconcat [
                 note g_  (1/4) & endTie,
                 note ab_ (1/4) & endTie,
             
@@ -61,7 +61,7 @@ foo = partwise
                 ]
             ]  
             ,  
-            concat [
+            mconcat [
                 pp,
                 beginCresc,
                 note c (3/8),
