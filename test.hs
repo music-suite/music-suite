@@ -180,6 +180,7 @@ testTies = fromParts
         ],
         [
             bar [
+                defaultDivisions,
                 note c 1
             ],
             bar [
