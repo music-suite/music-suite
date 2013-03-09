@@ -13,7 +13,7 @@ import Music.MusicXml
 import Music.MusicXml.Simple
 
 
-score = testTuplets
+score = testArticulations
 
 testNotes = fromPart
     "Test notes"
@@ -41,6 +41,7 @@ testNotes = fromPart
         ]
     ]
 
+-- FIXME #1
 testTuplets = fromPart
     "Test tuplets"
     "None"
@@ -59,6 +60,44 @@ testTuplets = fromPart
                note a  (1/4),
                note b  (1/4) 
            ]
+        ]
+    ]
+
+testArticulations = fromPart
+    "Test articulations"
+    "None"
+    "Viola"
+    [
+        bar [
+            defaultDivisions,
+            
+            beam [
+                note c (1/16) & staccato,
+                note d (1/16) & tenuto,
+                note c (1/16) & staccato & tenuto,
+                note d (1/16) & spiccato
+            ],
+
+            beam [
+                note c (1/16) & staccatissimo,
+                note d (1/16) & accent,
+                note c (1/16) & strongAccent,
+                note d (1/16) & accent & staccato & tenuto
+            ],
+
+            beam [
+                note c (1/16) & beginSlur & accent,
+                note d (1/16) & endSlur & staccato,
+                note g (1/16) & beginSlur & staccato,
+                note g (1/16) & endSlur & staccato
+            ],
+
+            beam [
+                note c (1/16) & doit,
+                note d (1/16) & falloff,
+                note c (1/16) & stress,
+                note d (1/16) & unstress
+            ]
         ]
     ]
 
@@ -130,8 +169,8 @@ misc = fromParts
 
 main = openScore
 
--- openScore = openSib score
-openScore = openLy score
+openScore = openSib score
+-- openScore = openLy score
 
 showScore = putStrLn $ showXml $ score
 
