@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testGliss
+score = testDynamics
 
 testNotes = fromPart
     "Test notes"
@@ -28,13 +28,13 @@ testNotes = fromPart
             note e (1/4) ],
         
         bar [
-            beam $ mconcat [ 
+            beam $ music [ 
                 note c  (1/8), 
                 note d  (1/8),
                 note e  (1/8),
                 note f  (1/8) ],
 
-            beam $ mconcat [ 
+            beam $ music [ 
                 note g  (1/8),
                 note a  (1/8),
                 note b  (1/8),
@@ -50,17 +50,17 @@ testTuplets = fromPart
     [
         bar [
             defaultDivisions,
-           beam $ mconcat [ 
-               note c  (1/8), 
-               note d  (1/8),
-               note e  (1/8),
-               note f  (1/8) 
-           ],
-           tuplet 3 2 $ mconcat [ 
-               note g  (1/4),
-               note a  (1/4),
-               note b  (1/4) 
-           ]
+            beam $ music [ 
+                note c  (1/8), 
+                note d  (1/8),
+                note e  (1/8),
+                note f  (1/8) 
+            ],
+            tuplet 3 2 $ music [ 
+                note g  (1/4),
+                note a  (1/4),
+                note b  (1/4) 
+            ]
         ]
     ]
 
@@ -71,29 +71,28 @@ testArticulations = fromPart
     [
         bar [
             defaultDivisions,
-            
-            beam $ mconcat [
+            beam $ music [
                 note c (1/16) & staccato,
                 note d (1/16) & tenuto,
                 note c (1/16) & staccato & tenuto,
                 note d (1/16) & spiccato
             ],
 
-            beam $ mconcat [
+            beam $ music [
                 note c (1/16) & staccatissimo,
                 note d (1/16) & accent,
                 note c (1/16) & strongAccent,
                 note d (1/16) & accent & staccato & tenuto
             ],
 
-            beam $ mconcat [
+            beam $ music [
                 note c (1/16) & beginSlur & accent,
                 note d (1/16) & endSlur & staccato,
                 note g (1/16) & beginSlur & staccato,
                 note g (1/16) & endSlur & staccato
             ],
 
-            beam $ mconcat [
+            beam $ music [
                 note c (1/16) & doit,
                 note d (1/16) & falloff,
                 note c (1/16) & stress,
@@ -111,31 +110,31 @@ testDynamics = fromPart
             defaultDivisions,
             metronome (1/4) False 72,
 
-            crescFromTo PPP MP $ beam $ mconcat [
-                note c (1/8) & tenuto & beginSlur,
-                note c (1/8) & tenuto,
-                note c (1/8) & tenuto,
-                note c (1/8) & tenuto 
+            crescFromTo PPP MP $ beam $ tenuto $ music [
+                note c (1/8) & beginSlur,
+                note c (1/8),
+                note c (1/8),
+                note c (1/8) 
             ],
-            beam $ mconcat [
+            beam $ music [
                 note c (1/8) & tenuto & endSlur,
-                dimFromTo FF PP $ mconcat [
-                    note c (1/8) & tenuto & beginSlur,
-                    note c (1/8) & tenuto,
-                    note c (1/8) & tenuto & endSlur 
+                dimFromTo FF PP $ slur $ tenuto $ music [
+                    note c (1/8),
+                    note c (1/8),
+                    note c (1/8) 
                 ]
             ]
         ],
         bar [
             defaultDivisions,            
-            beam $ mconcat [
+            beam $ music [
                 note c (1/8),
                 note c (1/8),
                 note c (1/8),
                 note c (1/8)
             ],
 
-            beam $ mconcat [
+            beam $ music [
                 note c (1/8),
                 note c (1/8),
                 note c (1/8),
@@ -144,7 +143,7 @@ testDynamics = fromPart
         ]
     ]
 
--- Note not supported by Sibelius...
+-- Gliss not supported by Sibelius...
 testGliss = fromParts
     "Test gliss"
     "None"
@@ -253,18 +252,18 @@ misc = fromParts
 
                 dynamic MP,
                 
-                tuplet 5 4 $ beam $ slur $ mconcat [
-                    note c  (1/8) & tenuto,
-                    note d  (1/8) & tenuto,
-                    note c  (1/8) & tenuto,
-                    note d  (1/8) & tenuto,
-                    note c  (1/8) & tenuto
+                tuplet 5 4 $ beam $ slur $ staccato $ music [
+                    note c  (1/8),
+                    note d  (1/8),
+                    note c  (1/8),
+                    note d  (1/8),
+                    note c  (1/8)
                 ],
                 
-                tuplet 3 2 $ mconcat [
-                    note eb (1/4),
+                tuplet 3 2 $ music [
+                    note eb (1/4) & accent,
                     chord [d,a,fs'] (1/4),
-                    note g_  (1/4)      & beginTie & beginSlur
+                    note g_  (1/4) & beginTie & beginSlur
                 ] 
             ]     
             ,
@@ -272,24 +271,28 @@ misc = fromParts
                 note g_  (1/4) & endTie,
                 note ab_ (1/4) & endSlur,
             
-                beam $ mconcat [
+                beam $ music [
                     note c (1/16) & accent,
                     note c (2/16),
                     note c (1/16)
                 ],
-                beam $ mconcat [
+                slur $ music [
                     note c  (3/8) & beginGliss,
                     note b_ (1/8) & endGliss
                 ]
             ]  
             ,  
             bar [
-                crescFromTo PP FF $ mconcat [
-                    note c (3/8),
-                    note d (1/8),
-                    note e (3/8)
-                ],
-                note f (1/8)
+                crescFromTo PP FF $ music [
+                    slur $ music [
+                        note c (3/8),
+                        note d (1/8)
+                    ],
+                    slur $ music [
+                        note e (3/8),
+                        note f (1/8)  
+                    ]
+                ]
             ]
         ]    
     ]
@@ -297,6 +300,7 @@ misc = fromParts
 
 
 
+music = mconcat
 
 main = openScore
 
