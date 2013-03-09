@@ -465,30 +465,42 @@ separateDots' (div:divs) nv
 
 errorNoteValue  = error "Note value must be a multiple of two or dotted"
 
-setVoice     :: Int -> Music -> Music
+
+
+setVoice        :: Int -> Music -> Music
 setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
 
-dot       :: Music -> Music
-setNoteVal     :: NoteVal -> Music -> Music
-setTimeMod   :: Int -> Int -> Music -> Music
+dot             :: Music -> Music
+setNoteVal      :: NoteVal -> Music -> Music
+setTimeMod      :: Int -> Int -> Music -> Music
 dot             = fmap $ mapNoteProps2 dotP
 setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
 setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 
-beginBeam    :: Int -> Music -> Music
-continueBeam :: Int -> Music -> Music
-endBeam      :: Int -> Music -> Music
-beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
-continueBeam n  = fmap $ mapNoteProps2 (continueBeamP n)
-endBeam n       = fmap $ mapNoteProps2 (endBeamP n)
+beginTuplet     :: Music -> Music
+endTuplet       :: Music -> Music
+beginTuplet     = addNotation (Tuplet 1 Start)
+endTuplet       = addNotation (Tuplet 1 Stop)
 
-addNotation  :: Notation -> Music -> Music
-addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
+beginBeam       :: Music -> Music
+continueBeam    :: Music -> Music
+endBeam         :: Music -> Music
+beginBeam       = fmap $ mapNoteProps2 (beginBeamP 1)
+continueBeam    = fmap $ mapNoteProps2 (continueBeamP 1)
+endBeam         = fmap $ mapNoteProps2 (endBeamP 1)
 
 beginTie' = fmap beginTie''
 endTie'   = fmap endTie''
 beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
 endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
+
+beginTie    :: Music -> Music
+endTie      :: Music -> Music
+beginTie        = beginTie' . addNotation (Tied Start)
+endTie          = endTie' . addNotation (Tied Stop)
+
+addNotation  :: Notation -> Music -> Music
+addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
 
 setNoteValP v x     = x { noteType = Just (v, Nothing) }
 setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
@@ -501,52 +513,35 @@ addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n
 
 
 -- ----------------------------------------------------------------------------------
--- Text
+
+beginGliss   :: Music -> Music
+endGliss     :: Music -> Music
+beginSlide   :: Music -> Music
+endSlide     :: Music -> Music
+beginGliss   = addNotation (Glissando 1 Start Solid Nothing)
+endGliss     = addNotation (Glissando 1 Stop Solid Nothing)
+beginSlide   = addNotation (Slide 1 Start Solid Nothing)
+endSlide     = addNotation (Slide 1 Stop Solid Nothing)
+
 -- ----------------------------------------------------------------------------------
 
-text :: String -> Music
-rehearsal :: String -> Music
+fermata :: FermataSign -> Music -> Music
+breathMark :: Music -> Music
+caesura :: Music -> Music
+fermata         = addNotation . Fermata
+breathMark      = addNotation (Articulations [BreathMark])	 
+caesura         = addNotation (Articulations [Caesura])	 
 
-text      = single . MusicDirection . Words
-rehearsal = single . MusicDirection . Rehearsal
+-- ----------------------------------------------------------------------------------
 
-
-segno, coda :: Music
-segno = single . MusicDirection $ Segno
-coda  = single . MusicDirection $ Coda
-
-
-
-
-
-
-
-
-
-
-
-beginTie    :: Music -> Music
-endTie      :: Music -> Music
 beginSlur   :: Music -> Music
 endSlur     :: Music -> Music
-beginTuplet :: Music -> Music
-endTuplet   :: Music -> Music
+beginSlur       = addNotation (Slur 1 Start)
+endSlur         = addNotation (Slur 1 Stop)
 
 staccato    :: Music -> Music
 tenuto      :: Music -> Music
 
-beginTie        = beginTie' . addNotation (Tied Start)
-endTie          = endTie' . addNotation (Tied Stop)
-beginSlur       = addNotation (Slur 1 Start)
-endSlur         = addNotation (Slur 1 Stop)
-beginTuplet     = addNotation (Tuplet 1 Start)
-endTuplet       = addNotation (Tuplet 1 Stop)
-beginGliss      = addNotation (Glissando 1 Start Solid Nothing)
-endGliss        = addNotation (Glissando 1 Stop Solid Nothing)
-beginSlide      = addNotation (Slide 1 Start Solid Nothing)
-endSlide        = addNotation (Slide 1 Stop Solid Nothing)
-
-fermata         = addNotation . Fermata
 
 accent          = addNotation (Articulations [Accent])	 
 strongAccent    = addNotation (Articulations [StrongAccent])	 
@@ -559,8 +554,6 @@ scoop           = addNotation (Articulations [Scoop])
 plop            = addNotation (Articulations [Plop])	 
 doit            = addNotation (Articulations [Doit])	 
 falloff         = addNotation (Articulations [Falloff])	 
-breathMark      = addNotation (Articulations [BreathMark])	 
-caesura         = addNotation (Articulations [Caesura])	 
 stress          = addNotation (Articulations [Stress])	 
 unstress        = addNotation (Articulations [Unstress])	 
 
@@ -635,17 +628,39 @@ beam []   = []
 beam [xs] = xs
 beam xs   = concat ([a] ++ bs ++ [c])
     where
-        a   = beginBeam 1 $ head xs
-        bs  = fmap (continueBeam 1) (init (tail xs))
-        c   = endBeam 1 $ last (tail xs)
+        a   = beginBeam $ head xs
+        bs  = fmap continueBeam (init (tail xs))
+        c   = endBeam $ last (tail xs)
+
+slur :: [Music] -> Music
+slur []   = []
+slur [xs] = xs
+slur xs   = concat ([a] ++ bs ++ [c])
+    where
+        a   = beginSlur $ head xs
+        bs  = init (tail xs)
+        c   = endSlur $ last (tail xs)
                                            
 -- TODO combine tuplet, beam, slur etc
 
 
 
+-- ----------------------------------------------------------------------------------
+-- Text
+-- ----------------------------------------------------------------------------------
+
+text :: String -> Music
+rehearsal :: String -> Music
+
+text      = single . MusicDirection . Words
+rehearsal = single . MusicDirection . Rehearsal
+
+segno, coda :: Music
+segno = single . MusicDirection $ Segno
+coda  = single . MusicDirection $ Coda
 
 
-
+-- ----------------------------------------------------------------------------------
 
 instance Default ScoreAttrs where
     def = ScoreAttrs []
