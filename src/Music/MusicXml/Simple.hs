@@ -465,43 +465,39 @@ separateDots' (div:divs) nv
 
 errorNoteValue  = error "Note value must be a multiple of two or dotted"
 
-
 setVoice     :: Int -> Music -> Music
+setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
+
 dot       :: Music -> Music
 setNoteVal     :: NoteVal -> Music -> Music
 setTimeMod   :: Int -> Int -> Music -> Music
-
-setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
 dot             = fmap $ mapNoteProps2 dotP
 setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
 setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 
-
-
-addNotation  :: Notation -> Music -> Music
 beginBeam    :: Int -> Music -> Music
 continueBeam :: Int -> Music -> Music
 endBeam      :: Int -> Music -> Music
-addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
 beginBeam n     = fmap $ mapNoteProps2 (beginBeamP n)
 continueBeam n  = fmap $ mapNoteProps2 (continueBeamP n)
 endBeam n       = fmap $ mapNoteProps2 (endBeamP n)
 
+addNotation  :: Notation -> Music -> Music
+addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
 
 beginTie' = fmap beginTie''
 endTie'   = fmap endTie''
 beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
 endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
 
--- TODO clean
-setNoteValP v x       = x { noteType = Just (v, Nothing) }
+setNoteValP v x     = x { noteType = Just (v, Nothing) }
 setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
-dotP x@(NoteProps { noteDots = n@_ })    = x { noteDots = succ n }
 setTimeModP m n x   = x { noteTimeMod = Just (fromIntegral m, fromIntegral n) }
-addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
 beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
 continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
 endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
+dotP x@(NoteProps { noteDots = n@_ })       = x { noteDots = succ n }
+addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
 
 
 -- ----------------------------------------------------------------------------------
