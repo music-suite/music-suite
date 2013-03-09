@@ -574,21 +574,21 @@ dimFrom         :: Dynamics -> Music -> Music
 dimTo           :: Dynamics -> Music -> Music 
 dimFromTo       :: Dynamics -> Dynamics -> Music -> Music 
 
-cresc           = undefined
-dim             = undefined
-crescFrom       = undefined
-crescTo         = undefined
-crescFromTo     = undefined
-dimFrom         = undefined
-dimTo           = undefined
-dimFromTo       = undefined
+cresc           = \m -> beginCresc <> m <> endCresc
+dim             = \m -> beginDim   <> m <> endDim
 
+crescFrom x     = \m -> dynamic x <> cresc m
+crescTo x       = \m ->              cresc m <> dynamic x
+crescFromTo x y = \m -> dynamic x <> cresc m <> dynamic y
 
-beginCresc      = [MusicDirection $ Crescendo Start]
-endCresc        = [MusicDirection $ Crescendo Stop]
+dimFrom x       = \m -> dynamic x <> dim m
+dimTo x         = \m ->              dim m <> dynamic x
+dimFromTo x y   = \m -> dynamic x <> dim m <> dynamic y
+
+beginCresc      = [MusicDirection $ Crescendo  Start]
+endCresc        = [MusicDirection $ Crescendo  Stop]
 beginDim        = [MusicDirection $ Diminuendo Start]
 endDim          = [MusicDirection $ Diminuendo Stop]
-
 
 beginCresc      :: Music
 endCresc        :: Music
