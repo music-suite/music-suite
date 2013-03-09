@@ -14,15 +14,6 @@
 -- Provides smart constructors for the MusicXML representation.
 --
 
-
-
--- TODO cue and grace notes
--- TODO custom note heads
--- TODO tremolo
--- TODO trills
--- TODO ornaments
--- TODO arpeggio
-
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml.Simple (
