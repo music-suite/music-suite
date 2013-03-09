@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testDynamics
+score = testTies
 
 testNotes = fromPart
     "Test notes"
@@ -144,6 +144,63 @@ testDynamics = fromPart
         ]
     ]
 
+testTies = fromParts
+    "Test ties"
+    "None"
+    (partList ["Violin", "Viola"])
+    [
+        [
+            bar [
+                defaultDivisions,
+                metronome (1/2) False 90,
+                
+                note g (1/2),
+                note c' (1/2) & beginTie
+            ],
+            bar [
+                note c' (1/2) & endTie,
+                note b (1/2) & beginTie
+            ],
+            bar [
+                note b (1/2) & endTie,
+                note a (1/2) & beginTie
+            ],
+            bar [
+                note a (1/2) & endTie,
+                note g (1/2) & beginTie
+            ],
+            bar [
+                note g (1/2) & endTie,
+                note a (1/2) & beginTie
+            ],
+            bar [
+                note a (1/2) & endTie,
+                note g (1/2)
+            ]
+        ],
+        [
+            bar [
+                note c 1
+            ],
+            bar [
+                note e 1
+            ],
+            bar [
+                note d 1
+            ],
+            bar [
+                note f 1
+            ],
+            bar [
+                note e 1
+            ],
+            bar [
+                note d 1
+            ]
+        ]
+    ]
+
+
 
 
 misc = fromParts 
@@ -161,7 +218,7 @@ misc = fromParts
                 rehearsal "A",
                 text "hello world!",
 
-                mp,
+                dynamic MP,
                 
                 tuplet 5 4 [
                     note c  (1/8) & beginSlur . beginBeam 1,
@@ -194,13 +251,13 @@ misc = fromParts
             ]  
             ,  
             bar [
-                pp,
-                -- beginCresc,
-                note c (3/8),
-                note d (1/8),
-                note e (3/8),
-                -- endCresc,
-                ff,
+                dynamic PP,
+                cresc $ mconcat [
+                    note c (3/8),
+                    note d (1/8),
+                    note e (3/8)
+                ],
+                dynamic FF,
                 note f (1/8)
             ]
         ]    

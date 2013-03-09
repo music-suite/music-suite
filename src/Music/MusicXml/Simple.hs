@@ -167,6 +167,29 @@ module Music.MusicXml.Simple (
         -- ** Crescendo and diminuendo
         cresc,
         dim,
+        beginCresc,
+        endCresc,
+        beginDim,
+        endDim,
+
+        -- ** Dynamic levels
+        dynamic,
+
+        -- pppppp,
+        -- ppppp,
+        -- pppp,
+        -- ppp,
+        -- pp,
+        -- p,
+        -- mp,
+        -- mf,
+        -- ff,
+        -- fff,
+        -- ffff,
+        -- fffff,
+        -- ffffff, 
+
+        -- ** Both
         crescFrom,
         crescTo,
         crescFromTo,
@@ -174,26 +197,6 @@ module Music.MusicXml.Simple (
         dimTo,
         dimFromTo,        
 
-        dynamic,
-        -- beginCresc,
-        -- endCresc,
-        -- beginDim,
-        -- endDim,
-
-        -- ** Dynamic levels
-        pppppp,
-        ppppp,
-        pppp,
-        ppp,
-        pp,
-        p,
-        mp,
-        mf,
-        ff,
-        fff,
-        ffff,
-        fffff,
-        ffffff,
 
         -----------------------------------------------------------------------------
         -- * Text
@@ -565,14 +568,9 @@ caesura         = addNotation (Articulations [Caesura])
 stress          = addNotation (Articulations [Stress])	 
 unstress        = addNotation (Articulations [Unstress])	 
 
-cresc           :: Music -> Music
-dim             :: Music -> Music
-crescFrom       :: Dynamics -> Music -> Music 
-crescTo         :: Dynamics -> Music -> Music 
-crescFromTo     :: Dynamics -> Dynamics -> Music -> Music 
-dimFrom         :: Dynamics -> Music -> Music 
-dimTo           :: Dynamics -> Music -> Music 
-dimFromTo       :: Dynamics -> Dynamics -> Music -> Music 
+cresc, dim                         :: Music -> Music
+crescFrom, crescTo, dimFrom, dimTo :: Dynamics -> Music -> Music 
+crescFromTo, dimFromTo             :: Dynamics -> Dynamics -> Music -> Music 
 
 cresc           = \m -> beginCresc <> m <> endCresc
 dim             = \m -> beginDim   <> m <> endDim
@@ -585,47 +583,45 @@ dimFrom x       = \m -> dynamic x <> dim m
 dimTo x         = \m ->              dim m <> dynamic x
 dimFromTo x y   = \m -> dynamic x <> dim m <> dynamic y
 
+beginCresc, endCresc, beginDim, endDim :: Music
+
 beginCresc      = [MusicDirection $ Crescendo  Start]
 endCresc        = [MusicDirection $ Crescendo  Stop]
 beginDim        = [MusicDirection $ Diminuendo Start]
 endDim          = [MusicDirection $ Diminuendo Stop]
 
-beginCresc      :: Music
-endCresc        :: Music
-beginDim        :: Music
-endDim          :: Music
 
 dynamic :: Dynamics -> Music
 dynamic level   = [MusicDirection $ Dynamics level]
 
-pppppp      :: Music
-ppppp       :: Music
-pppp        :: Music
-ppp         :: Music
-pp          :: Music
-p           :: Music
-mp          :: Music
-mf          :: Music
-ff          :: Music
-fff         :: Music
-ffff        :: Music
-fffff       :: Music
-ffffff      :: Music
-
-pppppp          = [MusicDirection $ Dynamics PPPPPP]
-ppppp           = [MusicDirection $ Dynamics PPPPP]
-pppp            = [MusicDirection $ Dynamics PPPP]
-ppp             = [MusicDirection $ Dynamics PPP]
-pp              = [MusicDirection $ Dynamics PP]
-p               = [MusicDirection $ Dynamics P]
-mp              = [MusicDirection $ Dynamics MP]
-mf              = [MusicDirection $ Dynamics MF]
--- f               = [MusicDirection $ Dynamics F]
-ff              = [MusicDirection $ Dynamics FF]
-fff             = [MusicDirection $ Dynamics FFF]
-ffff            = [MusicDirection $ Dynamics FFFF]
-fffff           = [MusicDirection $ Dynamics FFFFF]
-ffffff          = [MusicDirection $ Dynamics FFFFFF]
+-- pppppp      :: Music
+-- ppppp       :: Music
+-- pppp        :: Music
+-- ppp         :: Music
+-- pp          :: Music
+-- p           :: Music
+-- mp          :: Music
+-- mf          :: Music
+-- ff          :: Music
+-- fff         :: Music
+-- ffff        :: Music
+-- fffff       :: Music
+-- ffffff      :: Music
+-- 
+-- pppppp          = [MusicDirection $ Dynamics PPPPPP]
+-- ppppp           = [MusicDirection $ Dynamics PPPPP]
+-- pppp            = [MusicDirection $ Dynamics PPPP]
+-- ppp             = [MusicDirection $ Dynamics PPP]
+-- pp              = [MusicDirection $ Dynamics PP]
+-- p               = [MusicDirection $ Dynamics P]
+-- mp              = [MusicDirection $ Dynamics MP]
+-- mf              = [MusicDirection $ Dynamics MF]
+-- -- f               = [MusicDirection $ Dynamics F]
+-- ff              = [MusicDirection $ Dynamics FF]
+-- fff             = [MusicDirection $ Dynamics FFF]
+-- ffff            = [MusicDirection $ Dynamics FFFF]
+-- fffff           = [MusicDirection $ Dynamics FFFFF]
+-- ffffff          = [MusicDirection $ Dynamics FFFFFF]
 
 
 -- FIXME should scale duration by inverse
