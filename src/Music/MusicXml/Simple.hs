@@ -202,6 +202,7 @@ module Music.MusicXml.Simple (
         text,
         rehearsal,
         segno,
+        coda,
 
   ) 
 where
@@ -355,10 +356,7 @@ defaultDivisionsVal :: Divs
 defaultDivisionsVal = 768 * 4
 
 -- |
--- Set the tick division to the default value. 
---
--- The 'rest', 'note' and 'chord' functions assumes that this definition is the first
--- element in each part.
+-- Set the tick division to the default value.
 --
 defaultDivisions    :: Music
 defaultDivisions    = single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
@@ -514,10 +512,19 @@ text      = single . MusicDirection . Words
 rehearsal = single . MusicDirection . Rehearsal
 
 
+segno, coda :: Music
+segno = single . MusicDirection $ Segno
+coda  = single . MusicDirection $ Coda
 
-segno :: Music
 
-segno     = single . MusicDirection $ Segno
+
+
+
+
+
+
+
+
 
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
@@ -621,7 +628,7 @@ fffff           = [MusicDirection $ Dynamics FFFFF]
 ffffff          = [MusicDirection $ Dynamics FFFFFF]
 
 
-
+-- FIXME should scale duration by inverse
 tuplet :: Int -> Int -> [Music] -> Music
 tuplet m n []   = []
 tuplet m n [xs] = xs

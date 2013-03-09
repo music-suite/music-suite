@@ -20,7 +20,8 @@ testNotes = fromPart
     "None" 
     "Treble"
     [      
-        bar [ 
+        bar [   
+            defaultDivisions,
             note c (1/4), 
             note d (1/2), 
             note e (1/4) ],
@@ -46,6 +47,7 @@ testTuplets = fromPart
     "Treble"
     [
         bar [
+            defaultDivisions,
            beam [ 
                note c  (1/8), 
                note d  (1/8),
@@ -128,8 +130,8 @@ misc = fromParts
 
 main = openScore
 
-openScore = openSib score
--- openScore = openLy score
+-- openScore = openSib score
+openScore = openLy score
 
 showScore = putStrLn $ showXml $ score
 
