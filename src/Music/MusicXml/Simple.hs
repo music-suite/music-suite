@@ -453,14 +453,14 @@ separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 
 separateDots' :: [NoteVal] -> NoteVal -> (NoteVal, Int)
-separateDots' []         nv                      = errorNoteValue
-    where
-        errorNoteValue  = error "Note value must be a multiple of two or dotted"
-separateDots' (div:divs) nv | isDivisibleBy 2 nv = (nv,  0)
-                            | otherwise          = (nv', dots' + 1)
+separateDots' []         nv = errorNoteValue
+separateDots' (div:divs) nv 
+    | isDivisibleBy 2 nv = (nv,  0)
+    | otherwise          = (nv', dots' + 1)
     where                                                        
         (nv', dots')    = separateDots' divs (nv*div)
-        isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseRational n . toRational
+
+errorNoteValue  = error "Note value must be a multiple of two or dotted"
 
 
 setVoice     :: Int -> Music -> Music
@@ -654,16 +654,6 @@ beam xs   = concat ([a] ++ bs ++ [c])
 
 
 
-logBaseRational :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseRational k n 
-    | isInfinite (fromRational n :: a)      = logBaseRational k (n/k) + 1
-logBaseRational k n 
-    | isDenormalized (fromRational n :: a)  = logBaseRational k (n*k) - 1
-logBaseRational k n                         = logBase (fromRational k) (fromRational n)
-
-single x = [x]
-equalTo  = (==)
-
 
 instance Default ScoreAttrs where
     def = ScoreAttrs []
@@ -698,4 +688,19 @@ instance Default NoteProps where
 --     sharpen = mapAcc succ
 
 
-                               
+
+-------------------------------------------------------------------------------------
+
+
+logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseR k n 
+    | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
+logBaseR k n 
+    | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
+logBaseR k n                         = logBase (fromRational k) (fromRational n)
+
+isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
+isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
+single x = [x]
+equalTo  = (==)
