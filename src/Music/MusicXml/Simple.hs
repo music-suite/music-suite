@@ -219,6 +219,8 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Read
 import Music.MusicXml.Write
 
+import qualified Data.List as List
+
 -- ----------------------------------------------------------------------------------
 -- Score and parts
 -- ----------------------------------------------------------------------------------
@@ -476,7 +478,33 @@ setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
 setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 
 addNotation  :: Notation -> Music -> Music
-addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
+addNotation x = fmap $ mapNoteProps2 (addNotationP x)
+
+mergeNotations :: [Notation] -> [Notation]
+mergeNotations notations = mempty
+    <> [foldOrnaments ornaments] 
+    <> [foldTechnical technical] 
+    <> [foldArticulations articulations]
+    <> others
+    where
+        (ornaments,notations')  = List.partition isOrnaments notations
+        (technical,notations'') = List.partition isTechnical notations'
+        (articulations,others)  = List.partition isArticulations notations'
+
+        isOrnaments (Ornaments _)         = True
+        isOrnaments _                     = False
+        isTechnical (Technical _)         = True
+        isTechnical _                     = False
+        isArticulations (Articulations _) = True
+        isArticulations _                 = False
+        
+        (Ornaments xs) `mergeN` (Ornaments ys)         = Ornaments (xs <> ys)
+        (Technical xs) `mergeN` (Technical ys)         = Technical (xs <> ys)
+        (Articulations xs) `mergeN` (Articulations ys) = Articulations (xs <> ys)
+        foldOrnaments     = foldr mergeN (Ornaments [])
+        foldTechnical     = foldr mergeN (Technical [])
+        foldArticulations = foldr mergeN (Articulations [])
+
 
 beginTuplet     :: Music -> Music
 endTuplet       :: Music -> Music
@@ -508,7 +536,8 @@ beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
 continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
 endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 dotP x@(NoteProps { noteDots = n@_ })       = x { noteDots = succ n }
-addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = (ns++[n]) }
+addNotationP  n x@(NoteProps { noteNotations = ns@_ }) = x { noteNotations = (mergeNotations $ ns++[n]) }
+mapNotationsP f x@(NoteProps { noteNotations = ns@_ }) = x { noteNotations = (f ns) }
 
 
 -- ----------------------------------------------------------------------------------
