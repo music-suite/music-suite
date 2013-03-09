@@ -10,10 +10,11 @@ import System.Posix.Process
 
 import Music.Pitch.Literal
 import Music.MusicXml
+import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testArticulations
+score = testDynamics
 
 testNotes = fromPart
     "Test notes"
@@ -101,6 +102,48 @@ testArticulations = fromPart
         ]
     ]
 
+testDynamics = fromPart
+    "Test dynamics"
+    "None"
+    "Viola"
+    [    
+        bar [
+            defaultDivisions,
+            metronome (1/4) False 72,
+
+            crescFromTo PPP MP $ beam [
+                note c (1/8) & tenuto & beginSlur,
+                note c (1/8) & tenuto,
+                note c (1/8) & tenuto,
+                note c (1/8) & tenuto 
+            ],
+            beam [
+                note c (1/8) & tenuto & endSlur,
+                dimFromTo FF PP $ mconcat [
+                    note c (1/8) & tenuto & beginSlur,
+                    note c (1/8) & tenuto,
+                    note c (1/8) & tenuto & endSlur 
+                ]
+            ]
+        ],
+        bar [
+            defaultDivisions,            
+            beam [
+                note c (1/8),
+                note c (1/8),
+                note c (1/8),
+                note c (1/8)
+            ],
+
+            beam [
+                note c (1/8),
+                note c (1/8),
+                note c (1/8),
+                note c (1/8)
+            ]
+        ]
+    ]
+
 
 
 misc = fromParts 
@@ -109,7 +152,7 @@ misc = fromParts
     (partList ["Voice"])
     [ 
         [
-            mconcat [
+            bar [
                 defaultDivisions,
                 trebleClef,
                 key eb Major,
@@ -135,7 +178,7 @@ misc = fromParts
                 ] 
             ]     
             ,
-            mconcat [
+            bar [
                 note g_  (1/4) & endTie,
                 note ab_ (1/4) & endTie,
             
@@ -150,7 +193,7 @@ misc = fromParts
                 ]
             ]  
             ,  
-            mconcat [
+            bar [
                 pp,
                 -- beginCresc,
                 note c (3/8),
