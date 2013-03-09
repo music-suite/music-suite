@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testTies
+score = misc
 
 testNotes = fromPart
     "Test notes"
@@ -28,13 +28,13 @@ testNotes = fromPart
             note e (1/4) ],
         
         bar [
-            beam [ 
+            beam $ mconcat [ 
                 note c  (1/8), 
                 note d  (1/8),
                 note e  (1/8),
                 note f  (1/8) ],
 
-            beam [ 
+            beam $ mconcat [ 
                 note g  (1/8),
                 note a  (1/8),
                 note b  (1/8),
@@ -50,13 +50,13 @@ testTuplets = fromPart
     [
         bar [
             defaultDivisions,
-           beam [ 
+           beam $ mconcat [ 
                note c  (1/8), 
                note d  (1/8),
                note e  (1/8),
                note f  (1/8) 
            ],
-           tuplet 3 2 [ 
+           tuplet 3 2 $ mconcat [ 
                note g  (1/4),
                note a  (1/4),
                note b  (1/4) 
@@ -72,28 +72,28 @@ testArticulations = fromPart
         bar [
             defaultDivisions,
             
-            beam [
+            beam $ mconcat [
                 note c (1/16) & staccato,
                 note d (1/16) & tenuto,
                 note c (1/16) & staccato & tenuto,
                 note d (1/16) & spiccato
             ],
 
-            beam [
+            beam $ mconcat [
                 note c (1/16) & staccatissimo,
                 note d (1/16) & accent,
                 note c (1/16) & strongAccent,
                 note d (1/16) & accent & staccato & tenuto
             ],
 
-            beam [
+            beam $ mconcat [
                 note c (1/16) & beginSlur & accent,
                 note d (1/16) & endSlur & staccato,
                 note g (1/16) & beginSlur & staccato,
                 note g (1/16) & endSlur & staccato
             ],
 
-            beam [
+            beam $ mconcat [
                 note c (1/16) & doit,
                 note d (1/16) & falloff,
                 note c (1/16) & stress,
@@ -111,13 +111,13 @@ testDynamics = fromPart
             defaultDivisions,
             metronome (1/4) False 72,
 
-            crescFromTo PPP MP $ beam [
+            crescFromTo PPP MP $ beam $ mconcat [
                 note c (1/8) & tenuto & beginSlur,
                 note c (1/8) & tenuto,
                 note c (1/8) & tenuto,
                 note c (1/8) & tenuto 
             ],
-            beam [
+            beam $ mconcat [
                 note c (1/8) & tenuto & endSlur,
                 dimFromTo FF PP $ mconcat [
                     note c (1/8) & tenuto & beginSlur,
@@ -128,14 +128,14 @@ testDynamics = fromPart
         ],
         bar [
             defaultDivisions,            
-            beam [
+            beam $ mconcat [
                 note c (1/8),
                 note c (1/8),
                 note c (1/8),
                 note c (1/8)
             ],
 
-            beam [
+            beam $ mconcat [
                 note c (1/8),
                 note c (1/8),
                 note c (1/8),
@@ -221,33 +221,33 @@ misc = fromParts
 
                 dynamic MP,
                 
-                tuplet 5 4 [
-                    note c  (1/8) & beginSlur . beginBeam 1,
-                    note d  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
-                    note c  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
-                    note d  (1/8) & endSlur & staccato & tenuto & continueBeam 1,
-                    note c  (1/8) & endSlur & staccato & tenuto & endBeam 1
+                tuplet 5 4 $ beam $ slur $ mconcat [
+                    note c  (1/8) & tenuto,
+                    note d  (1/8) & tenuto,
+                    note c  (1/8) & tenuto,
+                    note d  (1/8) & tenuto,
+                    note c  (1/8) & tenuto
                 ],
                 
-                tuplet 3 2 [
+                tuplet 3 2 $ mconcat [
                     note eb (1/4),
                     chord [d,a,fs'] (1/4),
-                    note g_  (1/4)      & beginTie
+                    note g_  (1/4)      & beginTie & beginSlur
                 ] 
             ]     
             ,
             bar [
                 note g_  (1/4) & endTie,
-                note ab_ (1/4) & endTie,
+                note ab_ (1/4) & endSlur,
             
-                beam [
-                    note c (1/16),
+                beam $ mconcat [
+                    note c (1/16) & accent,
                     note c (2/16),
                     note c (1/16)
                 ],
-                beam [
-                    note c (3/8) & beginGliss,
-                    note d (1/8) & endGliss
+                beam $ mconcat [
+                    note c  (3/8) & beginGliss,
+                    note b_ (1/8) & endGliss
                 ]
             ]  
             ,  

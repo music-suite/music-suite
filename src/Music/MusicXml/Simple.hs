@@ -139,6 +139,7 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
         
         -- ** Slurs
+        slur,
         beginSlur,
         endSlur,   
         
@@ -614,32 +615,32 @@ dynamic level   = [MusicDirection $ Dynamics level]
 
 
 -- FIXME should scale duration by inverse
-tuplet :: Int -> Int -> [Music] -> Music
+tuplet :: Int -> Int -> Music -> Music
 tuplet m n []   = []
-tuplet m n [xs] = xs
-tuplet m n xs   = setTimeMod m n $ concat ([a] ++ bs ++ [c])
+tuplet m n [xs] = [xs]
+tuplet m n xs   = setTimeMod m n $ (as ++ bs ++ cs)
     where
-        a   = beginTuplet $ head xs
+        as  = beginTuplet [head xs]
         bs  = init (tail xs)
-        c   = endTuplet $ last (tail xs)
+        cs  = endTuplet [last (tail xs)]
 
-beam :: [Music] -> Music
+beam :: Music -> Music
 beam []   = []
-beam [xs] = xs
-beam xs   = concat ([a] ++ bs ++ [c])
+beam [xs] = [xs]
+beam xs   = (as ++ bs ++ cs)
     where
-        a   = beginBeam $ head xs
-        bs  = fmap continueBeam (init (tail xs))
-        c   = endBeam $ last (tail xs)
+        as  = beginBeam [head xs]
+        bs  = continueBeam (init (tail xs))
+        cs  = endBeam [last (tail xs)]
 
-slur :: [Music] -> Music
+slur :: Music -> Music
 slur []   = []
-slur [xs] = xs
-slur xs   = concat ([a] ++ bs ++ [c])
+slur [xs] = [xs]
+slur xs   = (as ++ bs ++ cs)
     where
-        a   = beginSlur $ head xs
+        as  = beginSlur [head xs]
         bs  = init (tail xs)
-        c   = endSlur $ last (tail xs)
+        cs  = endSlur [last (tail xs)]
                                            
 -- TODO combine tuplet, beam, slur etc
 
