@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = misc
+score = testGliss
 
 testNotes = fromPart
     "Test notes"
@@ -144,6 +144,38 @@ testDynamics = fromPart
         ]
     ]
 
+-- Note not supported by Sibelius...
+testGliss = fromParts
+    "Test gliss"
+    "None"
+    (partList ["Violin", "Viola"])
+    [
+        [
+            bar [
+                defaultDivisions,
+                metronome (1/4) False 120,
+                note g (3/4) & beginSlide,
+                note c' (1/4) & endSlide & beginTie
+            ],
+            bar [
+                note c' (1/4)  & endTie & beginSlide,
+                note b (3/4) & endSlide
+            ]
+        ],
+        [
+            bar [
+                defaultDivisions,
+                metronome (1/4) False 120,
+                note g (3/4) & beginSlide,
+                note c' (1/4) & endSlide & beginTie
+            ],
+            bar [
+                note c' (1/4)  & endTie & beginSlide,
+                note b (3/4) & endSlide
+            ]
+        ]
+    ] 
+
 testTies = fromParts
     "Test ties"
     "None"
@@ -252,13 +284,11 @@ misc = fromParts
             ]  
             ,  
             bar [
-                dynamic PP,
-                cresc $ mconcat [
+                crescFromTo PP FF $ mconcat [
                     note c (3/8),
                     note d (1/8),
                     note e (3/8)
                 ],
-                dynamic FF,
                 note f (1/8)
             ]
         ]    
