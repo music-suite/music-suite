@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testDynamics
+score = testArticulations
 
 testNotes = fromPart
     "Test notes"
@@ -72,7 +72,7 @@ testArticulations = fromPart
         bar [
             defaultDivisions,
             beam $ music [
-                note c (1/16) & staccato,
+                note c (1/16) & accent & tenuto,
                 note d (1/16) & tenuto,
                 note c (1/16) & staccato & tenuto,
                 note d (1/16) & spiccato
@@ -142,6 +142,46 @@ testDynamics = fromPart
             ]
         ]
     ]
+    
+testTremoloTrills = fromParts
+    "Test dynamics"
+    "None"
+    (partList ["Violin", "Viola"])
+    [ 
+        prepend [
+            defaultDivisions, 
+            metronome (1/4) False 72
+        ] 
+        [    
+            bar [
+                note g (1/2) & tenuto,
+                note g (1/2)
+            ],
+            bar [
+                note g (1/2),
+                note g (1/2)
+            ]
+        ],
+        prepend [
+            defaultDivisions, 
+            metronome (1/4) False 72
+        ] 
+        [    
+            bar [
+                note c (1/2),
+                note c (1/2)
+            ],
+            bar [
+                note c (1/2),
+                note c (1/2)
+            ]
+        ]
+    ]
+
+
+prepend :: Monoid a => [a] -> [a] -> [a]
+prepend xs (y:ys) = mconcat xs `mappend` y : ys
+
 
 -- Gliss not supported by Sibelius...
 testGliss = fromParts

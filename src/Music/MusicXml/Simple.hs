@@ -189,6 +189,12 @@ module Music.MusicXml.Simple (
         dimTo,
         dimFromTo,        
 
+        -----------------------------------------------------------------------------
+        -- * Ornaments
+        -----------------------------------------------------------------------------
+        
+        tremolo,
+
 
         -----------------------------------------------------------------------------
         -- * Text
@@ -469,6 +475,9 @@ dot             = fmap $ mapNoteProps2 dotP
 setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
 setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 
+addNotation  :: Notation -> Music -> Music
+addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
+
 beginTuplet     :: Music -> Music
 endTuplet       :: Music -> Music
 beginTuplet     = addNotation (Tuplet 1 Start)
@@ -491,8 +500,6 @@ endTie      :: Music -> Music
 beginTie        = beginTie' . addNotation (Tied Start)
 endTie          = endTie' . addNotation (Tied Stop)
 
-addNotation  :: Notation -> Music -> Music
-addNotation x   = fmap $ mapNoteProps2 (addNotationP x)
 
 setNoteValP v x     = x { noteType = Just (v, Nothing) }
 setVoiceP n x       = x { noteVoice = Just (fromIntegral n) }
@@ -501,7 +508,7 @@ beginBeamP n x      = x { noteBeam = Just (fromIntegral n, BeginBeam) }
 continueBeamP n x   = x { noteBeam = Just (fromIntegral n, ContinueBeam) }
 endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 dotP x@(NoteProps { noteDots = n@_ })       = x { noteDots = succ n }
-addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = n:ns }
+addNotationP n x@(NoteProps { noteNotations = ns@_ })    = x { noteNotations = (ns++[n]) }
 
 
 -- ----------------------------------------------------------------------------------
@@ -517,24 +524,22 @@ endSlide     = addNotation (Slide 1 Stop Solid Nothing)
 
 -- ----------------------------------------------------------------------------------
 
-fermata :: FermataSign -> Music -> Music
-breathMark :: Music -> Music
-caesura :: Music -> Music
+fermata         :: FermataSign -> Music -> Music
+breathMark      :: Music -> Music
+caesura         :: Music -> Music
 fermata         = addNotation . Fermata
 breathMark      = addNotation (Articulations [BreathMark])	 
 caesura         = addNotation (Articulations [Caesura])	 
 
 -- ----------------------------------------------------------------------------------
 
-beginSlur   :: Music -> Music
-endSlur     :: Music -> Music
+beginSlur       :: Music -> Music
+endSlur         :: Music -> Music
 beginSlur       = addNotation (Slur 1 Start)
 endSlur         = addNotation (Slur 1 Stop)
 
-staccato    :: Music -> Music
-tenuto      :: Music -> Music
-
-
+staccato        :: Music -> Music
+tenuto          :: Music -> Music
 accent          = addNotation (Articulations [Accent])	 
 strongAccent    = addNotation (Articulations [StrongAccent])	 
 staccato        = addNotation (Articulations [Staccato])	 
@@ -548,6 +553,8 @@ doit            = addNotation (Articulations [Doit])
 falloff         = addNotation (Articulations [Falloff])	 
 stress          = addNotation (Articulations [Stress])	 
 unstress        = addNotation (Articulations [Unstress])	 
+
+-- ----------------------------------------------------------------------------------
 
 cresc, dim                         :: Music -> Music
 crescFrom, crescTo, dimFrom, dimTo :: Dynamics -> Music -> Music 
@@ -636,6 +643,13 @@ slur xs   = (as ++ bs ++ cs)
 -- TODO combine tuplet, beam, slur etc
 
 
+
+-----------------------------------------------------------------------------
+-- * Ornaments
+-----------------------------------------------------------------------------
+
+tremolo :: Int -> Music -> Music
+tremolo = undefined
 
 -- ----------------------------------------------------------------------------------
 -- Text
