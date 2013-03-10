@@ -108,7 +108,7 @@ testDynamics = fromPart
     [
         bar [
             defaultDivisions,
-            metronome (1/4) False 72,
+            metronome (1/4) 72,
 
             crescFromTo PPP MP $ beam $ tenuto $ music [
                 note c (1/8) & beginSlur,
@@ -150,7 +150,7 @@ testTremoloTrills = fromParts
     [
         prepend [
             defaultDivisions,
-            metronome (1/4) False 72
+            metronome (1/4) 72
         ]
         [
             bar [
@@ -164,7 +164,7 @@ testTremoloTrills = fromParts
         ],
         prepend [
             defaultDivisions,
-            metronome (1/4) False 72
+            metronome (1/4) 72
         ]
         [
             bar [
@@ -192,7 +192,7 @@ testGliss = fromParts
         [
             bar [
                 defaultDivisions,
-                metronome (1/4) False 120,
+                metronome (1/4) 120,
                 note g (3/4) & beginSlide,
                 note c' (1/4) & endSlide & beginTie
             ],
@@ -204,7 +204,7 @@ testGliss = fromParts
         [
             bar [
                 defaultDivisions,
-                metronome (1/4) False 120,
+                metronome (1/4) 120,
                 note g (3/4) & beginSlide,
                 note c' (1/4) & endSlide & beginTie
             ],
@@ -223,7 +223,7 @@ testTies = fromParts
         [
             bar [
                 defaultDivisions,
-                metronome (1/2) False 90,
+                metronome (1/2) 90,
 
                 note g (1/2),
                 note c' (1/2) & beginTie

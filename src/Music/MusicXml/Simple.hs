@@ -66,6 +66,7 @@ module Music.MusicXml.Simple (
         -- ** Tempo
         -- TODO tempo
         metronome,
+        metronome',
         
         -----------------------------------------------------------------------------
         -- * Notes
@@ -86,6 +87,7 @@ module Music.MusicXml.Simple (
         -- setTimeMod,
         -- beginTuplet,
         -- endTuplet,
+        separateDots,
 
         -- ** Beams
         beam,
@@ -390,8 +392,19 @@ time a b = Music . single $ MusicAttributes $ Time $ DivTime a b
 -- |
 -- Create a metronome mark.
 --
-metronome :: NoteVal -> Bool -> Tempo -> Music
-metronome nv dot tempo = Music . single $ MusicDirection (Metronome nv dot tempo)
+metronome :: NoteVal -> Tempo -> Music
+metronome nv tempo = case dots of
+    0 -> metronome' nv' False tempo
+    1 -> metronome' nv' True  tempo
+    _ -> error "Metronome mark requires a maximum of one dot."
+    where
+        (nv', dots) = separateDots nv
+
+-- |
+-- Create a metronome mark.
+--
+metronome' :: NoteVal -> Bool -> Tempo -> Music
+metronome' nv dot tempo = Music . single $ MusicDirection (Metronome nv dot tempo)
 
 -- TODO tempo
 
