@@ -274,7 +274,7 @@ partListAbbr = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) par
 -- Enclose the given parts in a bracket.
 -- 
 bracket :: PartList -> PartList
-bracket = undefined
+bracket ps = undefined
 
 -- | 
 -- Enclose the given parts in a brace.
@@ -480,6 +480,7 @@ setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
 addNotation  :: Notation -> Music -> Music
 addNotation x = fmap $ mapNoteProps2 (addNotationP x)
 
+-- TODO clean up, skip empty notation groups etc
 mergeNotations :: [Notation] -> [Notation]
 mergeNotations notations = mempty
     <> [foldOrnaments ornaments] 
@@ -678,7 +679,7 @@ slur xs   = (as ++ bs ++ cs)
 -----------------------------------------------------------------------------
 
 tremolo :: Int -> Music -> Music
-tremolo = undefined
+tremolo n = addNotation (Ornaments [(Tremolo $ fromIntegral n, [])])
 
 -- ----------------------------------------------------------------------------------
 -- Text

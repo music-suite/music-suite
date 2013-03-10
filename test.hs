@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testArticulations
+score = testTremoloTrills
 
 testNotes = fromPart
     "Test notes"
@@ -154,12 +154,12 @@ testTremoloTrills = fromParts
         ] 
         [    
             bar [
-                note g (1/2) & tenuto,
-                note g (1/2)
+                note g (1/2) & tremolo 1,
+                note g (1/2) & tremolo 2
             ],
             bar [
-                note g (1/2),
-                note g (1/2)
+                note g (1/2) & tremolo 3,
+                note g (1/2) & tremolo 4
             ]
         ],
         prepend [
@@ -344,8 +344,8 @@ music = mconcat
 
 main = openScore
 
-openScore = openSib score
--- openScore = openLy score
+-- openScore = openSib score
+openScore = openLy score
 
 showScore = putStrLn $ showXml $ score
 
