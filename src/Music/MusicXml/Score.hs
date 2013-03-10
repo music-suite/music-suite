@@ -29,7 +29,7 @@ module Music.MusicXml.Score (
         MeasureAttrs(..),
 
         -- ** Part list
-        PartList,
+        PartList(..),
         PartListElem(..),
         GroupSymbol(..),
         GroupBarlines(..),
@@ -137,6 +137,8 @@ module Music.MusicXml.Score (
 
 import Prelude hiding (getLine)
 
+import Data.Semigroup
+import Data.Foldable
 import Numeric.Natural
 import TypeUnary.Nat
 
@@ -205,7 +207,8 @@ data MeasureAttrs
 -- Part list
 -- ----------------------------------------------------------------------------------
 
-type PartList = [PartListElem]
+newtype PartList = PartList { getPartList :: [PartListElem] }
+    deriving (Semigroup, Monoid)
 
 data PartListElem
     = Part

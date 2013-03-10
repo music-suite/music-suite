@@ -262,30 +262,30 @@ partIds = [ "P" ++ show n | n <- [1..] ]
 -- Create a part list from instrument names.
 --
 partList :: [String] -> PartList
-partList = zipWith (\partId name -> Part partId name Nothing) partIds
+partList = PartList . zipWith (\partId name -> Part partId name Nothing) partIds
 
 -- | 
 -- Create a part list from instrument names and abbreviations.
 --
 partListAbbr :: [(String, String)] -> PartList
-partListAbbr = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
+partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
 
 -- | 
 -- Enclose the given parts in a bracket.
 -- 
 bracket :: PartList -> PartList
-bracket ps = mempty
+bracket ps = PartList $ mempty
         <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False] 
-        <> ps 
+        <> getPartList ps 
         <> [Group 1 Stop "" Nothing Nothing Nothing False]
 
 -- | 
 -- Enclose the given parts in a brace.
 -- 
 brace :: PartList -> PartList
-brace ps = mempty
+brace ps = PartList $ mempty
         <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False] 
-        <> ps 
+        <> getPartList ps 
         <> [Group 1 Stop "" Nothing Nothing Nothing False]
 
 
@@ -709,7 +709,7 @@ instance Default ScoreAttrs where
     def = ScoreAttrs []
 
 instance Default ScoreHeader where
-    def = ScoreHeader Nothing Nothing Nothing []
+    def = ScoreHeader Nothing Nothing Nothing mempty
 
 instance Default Note where
     def = Note def def [] def

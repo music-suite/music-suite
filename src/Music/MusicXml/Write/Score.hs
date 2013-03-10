@@ -85,12 +85,12 @@ instance WriteMusicXml ScoreHeader where
         where {
             writeTitle, writeMvm :: Maybe String -> [Element]                           ;
             writeIdent           :: Maybe Identification -> [Element]                   ;
-            writePartList        :: [PartListElem] -> [Element]                         ;
+            writePartList        :: PartList -> [Element]                               ;
 
             writeTitle    = fmap (unode "title") . maybeToList                          ;
             writeMvm      = fmap (unode "movement-title") . maybeToList                 ;
             writeIdent    = single . unode "identification" . (write =<<) . maybeToList ;
-            writePartList = single . unode "part-list" . (write =<<)                    ;
+            writePartList = single . unode "part-list" . (write =<<) . getPartList      ;
         }
 
 instance WriteMusicXml Identification where
