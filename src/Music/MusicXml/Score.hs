@@ -38,7 +38,7 @@ module Music.MusicXml.Score (
         -- * Music
         -----------------------------------------------------------------------------
 
-        Music,
+        Music(..),
         MusicElem(..),
 
         -----------------------------------------------------------------------------
@@ -231,7 +231,8 @@ data GroupBarlines = GroupBarLines | GroupNoBarLines | GroupMensurstrich
 -- Music
 -- ----------------------------------------------------------------------------------
 
-type Music = [MusicElem]
+newtype Music = Music { getMusic :: [MusicElem] }
+    deriving (Semigroup, Monoid)
 
 data MusicElem
     = MusicAttributes

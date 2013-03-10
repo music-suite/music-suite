@@ -61,7 +61,7 @@ writeTimewise = fmap (\(attrs, parts) -> writeMeasureElem attrs $
 
 writePartElem attrs     = addPartAttrs attrs    . unode "part"
 writeMeasureElem attrs  = addMeasureAttrs attrs . unode "measure"
-writeMusic              = concatMap write
+writeMusic              = concatMap write . getMusic
 
 addScoreAttrs   :: ScoreAttrs   -> Element -> Element
 addPartAttrs    :: PartAttrs    -> Element -> Element

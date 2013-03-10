@@ -349,7 +349,7 @@ defaultClef = trebleClef
 -- Create a clef.
 --
 clef :: ClefSign -> Line -> Music
-clef symbol line = single $ MusicAttributes $ Clef symbol line
+clef symbol line = Music . single $ MusicAttributes $ Clef symbol line
 
 defaultKey :: Music
 defaultKey = key 0 Major
@@ -358,7 +358,7 @@ defaultKey = key 0 Major
 -- Create a key signature.
 --
 key :: Fifths -> Mode -> Music
-key n m = single $ MusicAttributes $ Key n m
+key n m = Music . single $ MusicAttributes $ Key n m
 
 
 -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
@@ -368,30 +368,30 @@ defaultDivisionsVal = 768 * 4
 -- |
 -- Set the tick division to the default value.
 --
-defaultDivisions    :: Music
-defaultDivisions    = single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
+defaultDivisions :: Music
+defaultDivisions = Music $ single $ MusicAttributes $ Divisions $ defaultDivisionsVal `div` 4
 
 -- |
 -- Define the number of ticks per quarter note.
 --
 divisions :: Divs -> Music
-divisions n = single $ MusicAttributes $ Divisions $ n
+divisions n = Music . single $ MusicAttributes $ Divisions $ n
 
 commonTime, cutTime :: Music
-commonTime = single $ MusicAttributes $ Time CommonTime
-cutTime    = single $ MusicAttributes $ Time CutTime
+commonTime = Music . single $ MusicAttributes $ Time CommonTime
+cutTime    = Music . single $ MusicAttributes $ Time CutTime
 
 -- |
 -- Create a time signature.
 --
 time :: Beat -> BeatType -> Music
-time a b   = single $ MusicAttributes $ Time $ DivTime a b
+time a b = Music . single $ MusicAttributes $ Time $ DivTime a b
 
 -- |
 -- Create a metronome mark.
 --
 metronome :: NoteVal -> Bool -> Tempo -> Music
-metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
+metronome nv dot tempo = Music . single $ MusicDirection (Metronome nv dot tempo)
 
 -- TODO tempo
 
@@ -409,7 +409,7 @@ metronome nv dot tempo = single $ MusicDirection (Metronome nv dot tempo)
 -- > rest (dotted eight)
 --
 rest :: NoteVal -> Music
-rest dur = single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
+rest dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
@@ -428,6 +428,11 @@ note pitch dur = note' False pitch dur' dots
     where
         (dur', dots) = separateDots dur
 
+chordNote :: Pitch -> NoteVal -> Music
+chordNote pitch dur = note' True pitch dur' dots
+    where
+        (dur', dots) = separateDots dur
+
 -- |
 -- Create a chord.
 -- 
@@ -437,17 +442,12 @@ note pitch dur = note' False pitch dur' dots
 --
 chord :: [Pitch] -> NoteVal -> Music
 chord [] d      = rest d
-chord (p:ps) d  = note p d ++ concatMap (\p -> chordNote p d) ps
+chord (p:ps) d  = note p d <> Music (concatMap (\p -> getMusic $ chordNote p d) ps)
 
-
-chordNote :: Pitch -> NoteVal -> Music
-chordNote pitch dur = note' True pitch dur' dots
-    where
-        (dur', dots) = separateDots dur
 
 note' :: Bool -> Pitch -> NoteVal -> Int -> Music
 note' isChord pitch dur dots 
-    = single $ MusicNote $ 
+    = Music . single $ MusicNote $ 
         Note 
             (Pitched isChord $ pitch) 
             (defaultDivisionsVal `div` denom) 
@@ -475,17 +475,17 @@ errorNoteValue  = error "Note value must be a multiple of two or dotted"
 
 
 setVoice        :: Int -> Music -> Music
-setVoice n      = fmap $ mapNoteProps2 (setVoiceP n)
+setVoice n      = Music . fmap (mapNoteProps2 (setVoiceP n)) . getMusic
 
 dot             :: Music -> Music
 setNoteVal      :: NoteVal -> Music -> Music
 setTimeMod      :: Int -> Int -> Music -> Music
-dot             = fmap $ mapNoteProps2 dotP
-setNoteVal x    = fmap $ mapNoteProps2 (setNoteValP x)
-setTimeMod m n  = fmap $ mapNoteProps2 (setTimeModP m n)
+dot             = Music . fmap (mapNoteProps2 dotP) . getMusic
+setNoteVal x    = Music . fmap (mapNoteProps2 (setNoteValP x)) . getMusic
+setTimeMod m n  = Music . fmap (mapNoteProps2 (setTimeModP m n)) . getMusic
 
 addNotation  :: Notation -> Music -> Music
-addNotation x = fmap $ mapNoteProps2 (addNotationP x)
+addNotation x = Music . fmap (mapNoteProps2 (addNotationP x)) . getMusic
 
 -- TODO clean up, skip empty notation groups etc
 mergeNotations :: [Notation] -> [Notation]
@@ -522,19 +522,19 @@ endTuplet       = addNotation (Tuplet 1 Stop)
 beginBeam       :: Music -> Music
 continueBeam    :: Music -> Music
 endBeam         :: Music -> Music
-beginBeam       = fmap $ mapNoteProps2 (beginBeamP 1)
-continueBeam    = fmap $ mapNoteProps2 (continueBeamP 1)
-endBeam         = fmap $ mapNoteProps2 (endBeamP 1)
+beginBeam       = Music . fmap (mapNoteProps2 (beginBeamP 1)) . getMusic
+continueBeam    = Music . fmap (mapNoteProps2 (continueBeamP 1)) . getMusic
+endBeam         = Music . fmap (mapNoteProps2 (endBeamP 1)) . getMusic
 
-beginTie' = fmap beginTie''
-endTie'   = fmap endTie''
+beginTie' = Music . fmap beginTie'' . getMusic
+endTie'   = Music . fmap endTie'' . getMusic
 beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
 endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
 
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
-beginTie        = beginTie' . addNotation (Tied Start)
-endTie          = endTie' . addNotation (Tied Stop)
+beginTie    = beginTie' . addNotation (Tied Start)
+endTie      = endTie' . addNotation (Tied Stop)
 
 
 setNoteValP v x     = x { noteType = Just (v, Nothing) }
@@ -610,14 +610,14 @@ dimFromTo x y   = \m -> dynamic x <> dim m <> dynamic y
 
 beginCresc, endCresc, beginDim, endDim :: Music
 
-beginCresc      = [MusicDirection $ Crescendo  Start]
-endCresc        = [MusicDirection $ Crescendo  Stop]
-beginDim        = [MusicDirection $ Diminuendo Start]
-endDim          = [MusicDirection $ Diminuendo Stop]
+beginCresc      = Music $ [MusicDirection $ Crescendo  Start]
+endCresc        = Music $ [MusicDirection $ Crescendo  Stop]
+beginDim        = Music $ [MusicDirection $ Diminuendo Start]
+endDim          = Music $ [MusicDirection $ Diminuendo Stop]
 
 
 dynamic :: Dynamics -> Music
-dynamic level   = [MusicDirection $ Dynamics level]
+dynamic level   = Music $ [MusicDirection $ Dynamics level]
 
 -- pppppp      :: Music
 -- ppppp       :: Music
@@ -651,31 +651,31 @@ dynamic level   = [MusicDirection $ Dynamics level]
 
 -- FIXME should scale duration by inverse
 tuplet :: Int -> Int -> Music -> Music
-tuplet m n []   = []
-tuplet m n [xs] = [xs]
-tuplet m n xs   = setTimeMod m n $ (as ++ bs ++ cs)
+tuplet m n (Music [])   = Music []
+tuplet m n (Music [xs]) = Music [xs]
+tuplet m n (Music xs)   = setTimeMod m n $ (as <> bs <> cs)
     where
-        as  = beginTuplet [head xs]
-        bs  = init (tail xs)
-        cs  = endTuplet [last (tail xs)]
+        as  = beginTuplet $ Music [head xs]
+        bs  = Music $ init (tail xs)
+        cs  = endTuplet $ Music [last (tail xs)]
 
 beam :: Music -> Music
-beam []   = []
-beam [xs] = [xs]
-beam xs   = (as ++ bs ++ cs)
+beam (Music [])   = Music []
+beam (Music [xs]) = Music [xs]
+beam (Music xs)   = (as <> bs <> cs)
     where
-        as  = beginBeam [head xs]
-        bs  = continueBeam (init (tail xs))
-        cs  = endBeam [last (tail xs)]
+        as  = beginBeam $ Music [head xs]
+        bs  = continueBeam $ Music (init (tail xs))
+        cs  = endBeam $ Music [last (tail xs)]
 
 slur :: Music -> Music
-slur []   = []
-slur [xs] = [xs]
-slur xs   = (as ++ bs ++ cs)
+slur (Music [])   = Music []
+slur (Music [xs]) = Music [xs]
+slur (Music xs)   = (as <> bs <> cs)
     where
-        as  = beginSlur [head xs]
-        bs  = init (tail xs)
-        cs  = endSlur [last (tail xs)]
+        as  = beginSlur $ Music [head xs]
+        bs  = Music $ init (tail xs)
+        cs  = endSlur $ Music [last (tail xs)]
                                            
 -- TODO combine tuplet, beam, slur etc
 
@@ -695,12 +695,12 @@ tremolo n = addNotation (Ornaments [(Tremolo $ fromIntegral n, [])])
 text :: String -> Music
 rehearsal :: String -> Music
 
-text      = single . MusicDirection . Words
-rehearsal = single . MusicDirection . Rehearsal
+text      = Music . single . MusicDirection . Words
+rehearsal = Music . single . MusicDirection . Rehearsal
 
 segno, coda :: Music
-segno = single . MusicDirection $ Segno
-coda  = single . MusicDirection $ Coda
+segno = Music . single . MusicDirection $ Segno
+coda  = Music . single . MusicDirection $ Coda
 
 
 -- ----------------------------------------------------------------------------------
