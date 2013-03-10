@@ -281,27 +281,26 @@ testManyParts = fromParts
     where
         winds   = partList ["Flute", "Oboe", "Clarinet"]
         brass   = partList ["Horn in F", "Trumpet in Bb I", "Trumpet in Bb II"]
-        strings = partList ["Violin I", "Violin II", "Viola", "Cello", "Contrabass"]
+        strings = partList ["Violin I", "Violin II", "Viola", "Violoncello", "Double Bass"]
 
         parts = bracket winds <> bracket brass <> bracket strings
         
         contents = [
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+                                                     
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
 
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2],
-
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2],
-            [bar1,bar2]
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> trebleClef <> bar1, bar2],
+            [defaultDivisions <> altoClef   <> bar1, bar2],
+            [defaultDivisions <> bassClef   <> bar1, bar2],
+            [defaultDivisions <> bassClef   <> bar1, bar2]
             ]
-        bar1 = music [defaultDivisions, trebleClef, key c Major, dynamic PP, note g 1]
+        bar1 = music [key c Major, dynamic PP, note g 1]
         bar2 = music [note c (1/4), note d (1/2), note fs_ (1/4)]
 
 
@@ -377,6 +376,7 @@ main = openScore
 
 openScore = openSib score
 -- openScore = openLy score
+-- openScore = openMus score
 
 showScore = putStrLn $ showXml $ score
 
@@ -391,6 +391,12 @@ openLy score =
         execute "musicxml2ly" ["test.xml"]
         execute "lilypond" ["test.ly"]
         execute "open" ["test.pdf"]
+
+openMus :: Score -> IO ()
+openMus score =
+    do  writeFile "test.xml" (showXml score)
+        execute "open" ["-a", "/Applications/MuseScore.app/Contents/MacOS/mscore", "test.xml"]
+
 
 execute :: FilePath -> [String] -> IO ()
 execute program args = do

@@ -137,6 +137,7 @@ module Music.MusicXml.Score (
 
 import Prelude hiding (getLine)
 
+import Data.Default
 import Data.Semigroup
 import Data.Foldable
 import Numeric.Natural
@@ -146,6 +147,7 @@ import Music.MusicXml.Time
 import Music.MusicXml.Pitch
 import Music.MusicXml.Dynamics
 
+import qualified Data.List as List
 
 -- ----------------------------------------------------------------------------------
 -- Score
@@ -208,7 +210,23 @@ data MeasureAttrs
 -- ----------------------------------------------------------------------------------
 
 newtype PartList = PartList { getPartList :: [PartListElem] }
-    deriving (Semigroup, Monoid)
+
+-- TODO fix for #11, by overwriting id when part list is merged
+
+instance Default PartList where
+    def = PartList []
+
+instance Semigroup PartList where
+    PartList xs <> PartList ys = PartList (setIds $ xs <> ys)
+        where
+            setIds = snd . List.mapAccumL setId partIds
+            setId id (Part _ name abbr) = (tail id, Part (head id) name abbr)
+            setId id x                  = (id, x)
+            partIds = [ "P" ++ show n | n <- [1..] ]
+
+instance Monoid PartList where
+    mempty  = def
+    mappend = (<>)
 
 data PartListElem
     = Part
