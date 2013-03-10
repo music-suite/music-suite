@@ -274,13 +274,20 @@ partListAbbr = zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) par
 -- Enclose the given parts in a bracket.
 -- 
 bracket :: PartList -> PartList
-bracket ps = undefined
+bracket ps = mempty
+        <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False] 
+        <> ps 
+        <> [Group 1 Stop "" Nothing Nothing Nothing False]
 
 -- | 
 -- Enclose the given parts in a brace.
 -- 
 brace :: PartList -> PartList
-brace = undefined
+brace ps = mempty
+        <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False] 
+        <> ps 
+        <> [Group 1 Stop "" Nothing Nothing Nothing False]
+
 
 -- |
 -- Convenient synonym for 'mconcat', allowing us to write things like

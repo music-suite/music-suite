@@ -14,27 +14,27 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testTremoloTrills
+score = testManyParts
 
 testNotes = fromPart
     "Test notes"
-    "None" 
+    "None"
     "Treble"
-    [      
-        bar [   
-            defaultDivisions,
-            note c (1/4), 
-            note d (1/2), 
-            note e (1/4) ],
-        
+    [
         bar [
-            beam $ music [ 
-                note c  (1/8), 
+            defaultDivisions,
+            note c (1/4),
+            note d (1/2),
+            note e (1/4) ],
+
+        bar [
+            beam $ music [
+                note c  (1/8),
                 note d  (1/8),
                 note e  (1/8),
                 note f  (1/8) ],
 
-            beam $ music [ 
+            beam $ music [
                 note g  (1/8),
                 note a  (1/8),
                 note b  (1/8),
@@ -50,16 +50,16 @@ testTuplets = fromPart
     [
         bar [
             defaultDivisions,
-            beam $ music [ 
-                note c  (1/8), 
+            beam $ music [
+                note c  (1/8),
                 note d  (1/8),
                 note e  (1/8),
-                note f  (1/8) 
+                note f  (1/8)
             ],
-            tuplet 3 2 $ music [ 
+            tuplet 3 2 $ music [
                 note g  (1/4),
                 note a  (1/4),
-                note b  (1/4) 
+                note b  (1/4)
             ]
         ]
     ]
@@ -105,7 +105,7 @@ testDynamics = fromPart
     "Test dynamics"
     "None"
     "Viola"
-    [    
+    [
         bar [
             defaultDivisions,
             metronome (1/4) False 72,
@@ -114,19 +114,19 @@ testDynamics = fromPart
                 note c (1/8) & beginSlur,
                 note c (1/8),
                 note c (1/8),
-                note c (1/8) 
+                note c (1/8)
             ],
             beam $ music [
                 note c (1/8) & tenuto & endSlur,
                 dimFromTo FF PP $ slur $ tenuto $ music [
                     note c (1/8),
                     note c (1/8),
-                    note c (1/8) 
+                    note c (1/8)
                 ]
             ]
         ],
         bar [
-            defaultDivisions,            
+            defaultDivisions,
             beam $ music [
                 note c (1/8),
                 note c (1/8),
@@ -142,17 +142,17 @@ testDynamics = fromPart
             ]
         ]
     ]
-    
+
 testTremoloTrills = fromParts
     "Test dynamics"
     "None"
     (partList ["Violin", "Viola"])
-    [ 
+    [
         prepend [
-            defaultDivisions, 
+            defaultDivisions,
             metronome (1/4) False 72
-        ] 
-        [    
+        ]
+        [
             bar [
                 note g (1/2) & tremolo 1,
                 note g (1/2) & tremolo 2
@@ -163,10 +163,10 @@ testTremoloTrills = fromParts
             ]
         ],
         prepend [
-            defaultDivisions, 
+            defaultDivisions,
             metronome (1/4) False 72
-        ] 
-        [    
+        ]
+        [
             bar [
                 note c (1/2),
                 note c (1/2)
@@ -213,7 +213,7 @@ testGliss = fromParts
                 note b (3/4) & endSlide
             ]
         ]
-    ] 
+    ]
 
 testTies = fromParts
     "Test ties"
@@ -224,7 +224,7 @@ testTies = fromParts
             bar [
                 defaultDivisions,
                 metronome (1/2) False 90,
-                
+
                 note g (1/2),
                 note c' (1/2) & beginTie
             ],
@@ -273,25 +273,56 @@ testTies = fromParts
     ]
 
 
+testManyParts = fromParts
+    "Many parts"
+    "None"
+    parts
+    contents
+    where
+        winds   = partList ["Flute", "Oboe", "Clarinet"]
+        brass   = partList ["Horn in F", "Trumpet in Bb I", "Trumpet in Bb II"]
+        strings = partList ["Violin I", "Violin II", "Viola", "Cello", "Contrabass"]
+
+        parts = bracket winds <> bracket brass <> bracket strings
+        
+        contents = [
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2],
+
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2],
+
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2],
+            [bar1,bar2]
+            ]
+        bar1 = music [defaultDivisions, trebleClef, key c Major, dynamic PP, note g 1]
+        bar2 = music [note c (1/4), note d (1/2), note fs_ (1/4)]
 
 
-misc = fromParts 
+
+misc = fromParts
     "Miscellaneous tests"
-    "None" 
+    "None"
     (partList ["Voice"])
-    [ 
+    [
         [
             bar [
                 defaultDivisions,
                 trebleClef,
                 key eb Major,
-                commonTime,                       
-                
+                commonTime,
+
                 rehearsal "A",
                 text "hello world!",
 
                 dynamic MP,
-                
+
                 tuplet 5 4 $ beam $ slur $ staccato $ music [
                     note c  (1/8),
                     note d  (1/8),
@@ -299,18 +330,18 @@ misc = fromParts
                     note d  (1/8),
                     note c  (1/8)
                 ],
-                
+
                 tuplet 3 2 $ music [
                     note eb (1/4) & accent,
                     chord [d,a,fs'] (1/4),
                     note g_  (1/4) & beginTie & beginSlur
-                ] 
-            ]     
+                ]
+            ]
             ,
             bar [
                 note g_  (1/4) & endTie,
                 note ab_ (1/4) & endSlur,
-            
+
                 beam $ music [
                     note c (1/16) & accent,
                     note c (2/16),
@@ -320,8 +351,8 @@ misc = fromParts
                     note c  (3/8) & beginGliss,
                     note b_ (1/8) & endGliss
                 ]
-            ]  
-            ,  
+            ]
+            ,
             bar [
                 crescFromTo PP FF $ music [
                     slur $ music [
@@ -330,11 +361,11 @@ misc = fromParts
                     ],
                     slur $ music [
                         note e (3/8),
-                        note f (1/8)  
+                        note f (1/8)
                     ]
                 ]
             ]
-        ]    
+        ]
     ]
 
 
@@ -344,8 +375,8 @@ music = mconcat
 
 main = openScore
 
--- openScore = openSib score
-openScore = openLy score
+openScore = openSib score
+-- openScore = openLy score
 
 showScore = putStrLn $ showXml $ score
 
