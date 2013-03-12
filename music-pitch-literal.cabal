@@ -3,10 +3,12 @@ name:               music-pitch-literal
 version:            1.0
 cabal-version:      >= 1.2
 author:             Hans Hoglund
-synopsis:           Overloaded pitch literals
+maintainer:         Hans Hoglund
+license:            BSD3
+license-file:       COPYING
+synopsis:           Overloaded pitch literals.
 category:           Music
 tested-with:        GHC
-default-language:   Haskell2010
 build-type:         Simple
 
 description: 
