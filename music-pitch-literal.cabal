@@ -18,7 +18,7 @@ description:
 
 library                    
     build-depends: 
-        base
+        base >= 4 && < 5
     hs-source-dirs: src
     exposed-modules:
         Music.Pitch.Literal
