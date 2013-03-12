@@ -32,7 +32,7 @@ module Music.Pitch.Literal (
 
   ) where
 
-newtype PitchL = PitchL { fromPitchL :: (Int, Maybe Double, Int) }
+newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
 
 -- Like Num can be expressed using arabic numerals, instances
 -- of Pitched can be expressed using Western pitch names (c, c sharp, c flat etc)    
