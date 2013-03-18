@@ -18,32 +18,28 @@
 --
 -- Provides a musical score represenation.
 --
--- A score is list of events with a specified part, time and duration. We use
--- relative time so for each event @x@:
---
--- > onset x  = time x
--- > offset x = time x + duration x
---
--- An event can have a negative onset, representing a events occuring before the
+-- An value can have a negative onset, representing a values occuring before the
 -- reference time. Event durations must be positive, allthough the types does not
 -- enforce this.
 --
--- An event is either a /note/ or a /rest/ (represented by the 'Just' and 'Nothing'
+-- An value is either a /note/ or a /rest/ (represented by the 'Just' and 'Nothing'
 -- constructors). Having explicit rests allow us to concatenate scores based on
 -- duration even if the score is actually empty.
 --
--- Scores allow overlapping events, but can be split into parts, which does not.
+-- Scores allow overlapping values, but can be split into parts, which does not.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Score (
 
         -- * Basic types
-        Part,
+        Voice,
         Time,
         Duration,
 
         -- * Score
+        Track(..),
+        Part(..),
         Score(..),
 
         -- ** Creating
@@ -58,6 +54,7 @@ module Music.Score (
         -- ** Transforming
         delay,
         stretch,
+        compress,
 
         -- ** Composing
         (|>),
@@ -66,19 +63,19 @@ module Music.Score (
         pcat,
         
         -- ** Decomposing
-        parts,
-        numParts,
+        voices,
+        numVoices,
         split,
         split',
         -- splitAll,
         partDuration,
-        -- occsInPart,
+        -- occsInVoice,
         -- normalizeScore,
         -- getEventTime,
         -- getEventDuration,
-        -- mapPart,
-        -- getEventPart,
-        -- eventPartIs,
+        -- mapVoice,
+        -- getEventVoice,
+        -- valueVoiceIs,
 )
 where
 
@@ -86,8 +83,7 @@ import Prelude hiding (concatMap, maximum)
 
 import Data.Semigroup
 import Control.Applicative
-import Control.Monad (ap)
-
+import Control.Monad (ap, join)
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -97,66 +93,69 @@ import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.Basis
 
--- import Music.Pitch
--- import Music.Dynamics
--- import Music.Articulation
-
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
--- import Codec.Midi hiding (Time)
 
 import qualified Data.List as List
 
--- import System.Posix -- DEBUG
-
 infixr 6 |>
 
--- |
--- A synonym for '^+^'.
---
--- > pitches  = (c |> d |> e |> f) <> (g |> fs ) ^* 2
--- > dynamics = (p |> cresc |> ff) ^*4
--- > score    = pitches <> dynamics
---
-(|>) = (^+^)
 
--- |
--- A synonym for @flip '<|'@.
---
-(<|) = flip (^+^)
-
-
-type Part     = Int
+type Voice     = Int
 type Time     = Double
-type Duration = Time
-newtype Score a  = Score { getScore :: [(Part, Duration, Maybe a)] }
+type Duration = Time                                  
+
+-- |
+-- A part is a list of absolute-time occurences.
+--
+newtype Track a = Track { getTrack :: [(Time, a)] }
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+
+-- |
+-- A part is a list of relative-time notes and rests.
+--
+newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+-- |
+-- A score is list of parts.
+--
+-- Score is a 'Monoid' under parallel compisiton. 'mempty' is a score of no parts.
+-- For sequential composition of scores, use '|>' or '^+^'.
+--
+-- Score has an 'Applicative' instance derived from the 'Monad' instance. Not sure it is useful.
+--
+-- Score is a 'Monad'. 'return' creates a score containing a single note of
+-- duration one, and '>>=' transforms the values of a score, while allowing
+-- transformations of time and duration. More intuitively, 'join' scales and
+-- offsets an inner score to fit into an outer score, then removes the intermediate
+-- structure. 
+--
+-- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using sequential
+-- composition as addition, time scaling as scalar multiplication and rests of
+-- duration 0 and 1 for 'zeroV' and 'basisValue' respectively. The values of each
+-- part has a separate basis, so 'decompose' separates parts.
+--
+newtype Score a  = Score { getScore :: [(Voice, Part a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
-    Score xs <> Score ys = Score (leftParts xs <> rightParts ys)
-        where
-            leftParts  = fmap $ mapPart $ \x -> x * 2
-            rightParts = fmap $ mapPart $ \x -> x * 2 + 1
+    Score xs <> Score ys = undefined
+    -- Score xs <> Score ys = Score (leftVoices xs <> rightVoices ys)
+    --     where
+    --         leftVoices  = fmap $ mapVoice $ \x -> x * 2
+    --         rightVoices = fmap $ mapVoice $ \x -> x * 2 + 1
 
--- | 
--- @Score a@ is an instance of 'Monoid'. 'mempty' is a rest of duration zero and 'mappend' performs
--- parallel composition. For sequential composition, use @|>@ or '^+^'.
---
 instance Monoid (Score a) where
     mempty  = Score []
     mappend = (<>)
 
--- | 
--- 'Applicative' derived from 'Monad' instance. Not sure it is useful.
 instance Applicative Score where
     pure  = return
     (<*>) = ap
 
 -- | 
--- @Score@ is an instance of 'Monad'. 'return' creates a score containing a single note of time zero and
--- duration one, and '>>=' transforms the events of a score, while allowing transformations of time and duration.
--- More intuitively, 'join' scales and offsets an inner score to fit into an outer score, then removes the
--- intermediate structure. 
 --
 instance Monad Score where
     return = note
@@ -189,17 +188,11 @@ instance VectorSpace (Score a) where
     --     where
     --         scaleTimeDur n (p,t,d,x) = (p,n*t,n*d,x)
 
--- | 
--- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using sequential
--- composition as addition, time scaling as scalar multiplication and rests of
--- duration 0 and 1 for 'zeroV' and 'basisValue' respectively. The events of each
--- part has a separate basis, so 'decompose' separates parts.
---
 instance HasBasis (Score a) where
-    type Basis (Score a) = Part
-    basisValue p = Score [(p,1,Nothing)]
-    decompose sc = fmap (\p -> (p, decompose' sc p)) (parts sc)
-    decompose'   = partDuration
+    type Basis (Score a) = Voice
+    -- basisValue p = Score [(p,1,Nothing)]
+    -- decompose sc = fmap (\p -> (p, decompose' sc p)) (parts sc)
+    -- decompose'   = partDuration
 
 
 
@@ -211,20 +204,35 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 
 -- |
+-- A synonym for '^+^'.
+--
+-- > Score a -> Score a -> Score a
+(|>) = (^+^)
+
+-- |
+-- A synonym for @flip '<|'@.
+--
+-- > Score a -> Score a -> Score a
+(<|) = flip (^+^)
+
+-- |
 -- Sequential concatentation.
 --
-scat :: [Score t] -> Score t
+-- > [Score t] -> Score t
 scat = Prelude.foldr (^+^) mempty
 
 -- |
 -- Parallel concatentation.
 --
-pcat :: [Score t] -> Score t
+-- > [Score t] -> Score t
 pcat = Prelude.foldr (<>) mempty
 
 
 -- | 
 -- Returns the duration of the given score.
+--
+-- > onset x  = time x
+-- > offset x = time x + duration x
 --
 duration :: Score a -> Duration
 duration = maximum . fmap (\(p,x) -> partDuration x p) . split
@@ -235,78 +243,95 @@ onset = undefined
 offset :: Score a -> Time
 offset = undefined
 
-
-
-
--- | 
--- Returns the parts in the given score.
---
-parts :: Score a -> [Part]
-parts = List.nub . fmap getEventPart . getScore
-
--- | 
--- Returns the number of parts in the given score.
---
-numParts :: Score a -> Int
-numParts = length . parts
-
--- | 
--- Split a given score into its parts.
---
-split :: Score a -> [(Part, Score a)]
-split sc = fmap (\p -> (p, split' p sc)) (parts sc)
-
-split' :: Part -> Score a -> Score a
-split' p sc = Score . occsInPart p $ sc
-
--- splitAll :: Score a -> [Score a]
--- splitAll = fmap snd . split
-
-partDuration :: Score a -> Part -> Duration
-partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInPart p $ sc
-
-occsInPart :: Part -> Score a -> [(Part, Duration, Maybe a)]
-occsInPart p = filter (eventPartIs p) . getScore
-
-
-normalizeScore :: [(Part, Duration, Maybe a)] -> [(Part, Duration, Maybe a)]
-normalizeScore = List.sortBy (comparing getEventTime)
-
-getEventTime :: (Part, Duration, Maybe a) -> Time
-getEventTime = undefined
-getEventDuration (p,d,x) = d
-
-mapPart      f  (p,d,x) = (f p,d,x)
-getEventPart    (p,d,x) = p
-eventPartIs  p' (p,d,x) = (p' == p)
-
-
 -- |
--- Create a score of duration 0 with no events.
---
--- Equivalent to 'mempty', 'mzero' and 'zeroV'.
+-- Create a score of duration 1 with no values.
 --
 rest :: Score a
-rest = Score [(0,1, Nothing)]
+rest = undefined
+-- rest = Score [(0,1, Nothing)]
 
 -- |
--- Create a score of duration 1 with the given event.
+-- Create a score of duration 1 with the given value.
 --
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [(0,1, Just x)]
+note = undefined
+-- note x = Score [(0,1, Just x)]
 
-delay :: Duration -> Score a -> Score a
-delay d x = (d *^ rest) ^+^ x
+-- |
+-- Delay a score.
+-- 
+-- > Duration -> Score a -> Score a
+delay :: (Num a, a ~ (Basis v), HasBasis v) => Scalar v -> v -> v
+delay d x = rest' ^* d ^+^ x where rest' = basisValue 0
 
-stretch :: Duration -> Score a -> Score a
-stretch d x = d *^ x
+-- |
+-- Stretch a score. Equivalent to '*^'.
+-- 
+-- > Duration -> Score a -> Score a
+stretch :: VectorSpace v => Scalar v -> v -> v
+stretch = (*^)
+
+-- |
+-- Compress a score. Flipped version of '^/'.
+-- 
+-- > Duration -> Score a -> Score a
+compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
+compress = flip (^/)
 
 
 
 
 
+
+
+
+
+-- | 
+-- Returns the voices in the given score.
+--
+voices :: Score a -> [Voice]
+voices = undefined
+-- voices = List.nub . fmap getEventVoice . getScore
+
+-- | 
+-- Returns the number of voices in the given score.
+--
+numVoices :: Score a -> Int
+numVoices = length . voices
+
+-- | 
+-- Split a given score into its parts.
+--
+split :: Score a -> [(Voice, Score a)]
+split sc = fmap (\p -> (p, split' p sc)) (voices sc)
+
+split' :: Voice -> Score a -> Score a
+split' = undefined
+-- split' p sc = Score . occsInVoice p $ sc
+
+-- splitAll :: Score a -> [Score a]
+-- splitAll = fmap snd . split
+
+partDuration :: Score a -> Voice -> Duration
+partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInVoice p $ sc
+
+occsInVoice :: Voice -> Score a -> [(Voice, Duration, Maybe a)]
+occsInVoice = undefined
+-- occsInVoice p = filter (valueVoiceIs p) . getScore
+
+
+normalizeScore :: [(Voice, Duration, Maybe a)] -> [(Voice, Duration, Maybe a)]
+normalizeScore = List.sortBy (comparing getEventTime)
+
+getEventTime :: (Voice, Duration, Maybe a) -> Time
+getEventTime = undefined
+getEventDuration (p,d,x) = d
+
+mapVoice      f  (p,d,x) = (f p,d,x)
+getEventVoice    (p,d,x) = p
+valueVoiceIs  p' (p,d,x) = (p' == p)
 
 
 
@@ -321,9 +346,9 @@ showScore = show
 
 {-
 midiSc :: Score Int -> Midi
-midiSc = Midi kType kDiv . (++ [controlTrack]) . (fmap $ absToRel . (++ [(10000,TrackEnd)])) . scToTr
+midiSc = Midi kType kDiv . (++ [controlPart]) . (fmap $ absToRel . (++ [(10000,PartEnd)])) . scToTr
     where
-        kType  = MultiTrack
+        kType  = MultiPart
         kDiv   = TicksPerBeat 1024 -- fps tpf
         scToTr = fmap (List.sortBy (comparing fst)) . fmap (\(c,evs) -> concatMap (occToEv c) evs)
             . fmap (second getScore) . split
@@ -334,7 +359,7 @@ midiSc = Midi kType kDiv . (++ [controlTrack]) . (fmap $ absToRel . (++ [(10000,
 
         absToRel = snd . mapAccumL (\t' (t,x) -> (t, (t-t',x))) 0
 
-        controlTrack = [(0, TempoChange 1000000), (10000,TrackEnd)]
+        controlPart = [(0, TempoChange 1000000), (10000,PartEnd)]
 
 
 second f (x,y) = (x,f y)
@@ -344,6 +369,7 @@ playSc sc = do
     exportFile "test.mid" (midiSc sc)
     execute "timidity" ["test.mid"]
                                      -}
+{-
 instance IsPitch Int where
     fromPitch (PitchL (pc, sem, oct)) = semitones sem + diatonic pc + (oct+1) * 12
         where
@@ -356,6 +382,7 @@ instance IsPitch Int where
                 4 -> 7
                 5 -> 9
                 6 -> 11
+-}
 
 list z f [] = z
 list z f xs = f xs
