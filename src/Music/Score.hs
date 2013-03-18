@@ -69,8 +69,8 @@ module Music.Score (
         parts,
         numParts,
         split,
-        split,
-        splitAll,
+        split',
+        -- splitAll,
         partDuration,
         -- occsInPart,
         -- normalizeScore,
@@ -169,9 +169,11 @@ instance Monad Score where
 
 instance AdditiveGroup (Score a) where
     zeroV   = Score []
-    (Score xs) ^+^ (Score ys) = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
+
+    Score xs ^+^ Score ys = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
         where
             moveTime n (p,t,d,x) = (p,t+n,d,x)
+
     negateV (Score xs) = Score (normalizeScore $ fmap negTime $ xs)
         where
             negTime (p,t,d,x) = (p,negate t - d,d,x)
@@ -179,7 +181,7 @@ instance AdditiveGroup (Score a) where
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    n *^ (Score xs) = Score (fmap (scaleTimeDur n) xs)
+    n *^ Score xs = Score $ fmap (scaleTimeDur n) xs
         where
             scaleTimeDur n (p,t,d,x) = (p,n*t,n*d,x)
 
@@ -216,32 +218,6 @@ scat = Prelude.foldr (^+^) mempty
 pcat :: [Score t] -> Score t
 pcat = Prelude.foldr (<>) mempty
 
--- | 
--- Returns the parts in the given score.
---
-parts :: Score a -> [Part]
-parts = List.nub . fmap getEventPart . getScore
-
--- | 
--- Split a given score into its parts.
---
-split :: Score a -> [(Part, Score a)]
-split sc = fmap (\p -> (p, split' p sc)) (parts sc)
-
-split' :: Part -> Score a -> Score a
-split' p sc = Score . occsInPart p $ sc
-
-splitAll :: Score a -> [Score a]
-splitAll = fmap snd . split
-
--- | 
--- Returns the number of parts in the given score.
---
-numParts :: Score a -> Int
-numParts = length . parts
-
-partDuration :: Score a -> Part -> Duration
-partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInPart p $ sc
 
 -- | 
 -- Returns the duration of the given score.
@@ -255,8 +231,39 @@ onset = undefined
 offset :: Score a -> Time
 offset = undefined
 
+
+
+
+-- | 
+-- Returns the parts in the given score.
+--
+parts :: Score a -> [Part]
+parts = List.nub . fmap getEventPart . getScore
+
+-- | 
+-- Returns the number of parts in the given score.
+--
+numParts :: Score a -> Int
+numParts = length . parts
+
+-- | 
+-- Split a given score into its parts.
+--
+split :: Score a -> [(Part, Score a)]
+split sc = fmap (\p -> (p, split' p sc)) (parts sc)
+
+split' :: Part -> Score a -> Score a
+split' p sc = Score . occsInPart p $ sc
+
+-- splitAll :: Score a -> [Score a]
+-- splitAll = fmap snd . split
+
+partDuration :: Score a -> Part -> Duration
+partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInPart p $ sc
+
 occsInPart :: Part -> Score a -> [(Part, Time, Duration, Maybe a)]
 occsInPart p = filter (eventPartIs p) . getScore
+
 
 normalizeScore = List.sortBy (comparing getEventTime)
 getEventTime (p,t,d,x) = t
