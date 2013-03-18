@@ -1,0 +1,32 @@
+
+name:               music-dynamics
+version:            0.5
+cabal-version:      >= 1.2
+author:             Hans Hoglund
+maintainer:         Hans Hoglund
+license:            BSD3
+license-file:       COPYING
+synopsis:           To be written.
+category:           Music
+tested-with:        GHC
+build-type:         Simple
+
+description: 
+    To be written.
+
+library                    
+    build-depends: 
+        base >= 4 && < 5,
+        unix,
+        time,
+        random,
+        semigroups,
+        semigroupoids
+
+    hs-source-dirs: src
+    exposed-modules:
+        Music.Dynamics
+        Music.Dynamics.Absolute
+        Music.Dynamics.Relative
+        Music.Dynamics.Balance
+    
