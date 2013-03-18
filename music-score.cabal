@@ -23,8 +23,10 @@ library
         semigroups,
         semigroupoids,
         vector-space,
-        music-pitch,
-        music-dynamics,
+        -- music-pitch,
+        music-pitch-literal,
+        -- music-dynamics,
+        music-dynamics-literal,
         music-articulation
 
     hs-source-dirs: src
