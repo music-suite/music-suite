@@ -16,7 +16,7 @@
 module Music.Pitch.Literal (
 
         PitchL(..),
-        Pitched(..),
+        IsPitch(..),
         
         cs' , ds' , es' , fs' , gs' , as' , bs' ,
         c'  , d'  , e'  , f'  , g'  , a'  , b'  ,
@@ -35,25 +35,25 @@ module Music.Pitch.Literal (
 newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
 
 -- Like Num can be expressed using arabic numerals, instances
--- of Pitched can be expressed using Western pitch names (c, c sharp, c flat etc)    
-class Pitched a where
+-- of IsPitch can be expressed using Western pitch names (c, c sharp, c flat etc)    
+class IsPitch a where
     fromPitch :: PitchL -> a
 
-instance Pitched PitchL where
+instance IsPitch PitchL where
     fromPitch = id
 
 
-cs' , ds' , es' , fs' , gs' , as' , bs' ::  Pitched a => a
-c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  Pitched a => a
-cb' , db' , eb' , fb' , gb' , ab' , bb' ::  Pitched a => a
+cs' , ds' , es' , fs' , gs' , as' , bs' ::  IsPitch a => a
+c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  IsPitch a => a
+cb' , db' , eb' , fb' , gb' , ab' , bb' ::  IsPitch a => a
 
-cs  , ds  , es  , fs  , gs  , as  , bs  ::  Pitched a => a
-c   , d   , e   , f   , g   , a   , b   ::  Pitched a => a
-cb  , db  , eb  , fb  , gb  , ab  , bb  ::  Pitched a => a
+cs  , ds  , es  , fs  , gs  , as  , bs  ::  IsPitch a => a
+c   , d   , e   , f   , g   , a   , b   ::  IsPitch a => a
+cb  , db  , eb  , fb  , gb  , ab  , bb  ::  IsPitch a => a
 
-cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  Pitched a => a
-c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  Pitched a => a
-cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  Pitched a => a
+cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  IsPitch a => a
+c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  IsPitch a => a
+cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  IsPitch a => a
 
 
 cs'  = fromPitch $ PitchL (0, Just 1, 5)
