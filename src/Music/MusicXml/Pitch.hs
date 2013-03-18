@@ -89,14 +89,14 @@ deriving instance Ord  Line
 deriving instance Num  Line
 deriving instance Enum Line
 
-instance Pitched Pitch where
+instance IsPitch Pitch where
     fromPitch (PitchL (pc, Nothing, oct)) = (toEnum pc, Nothing, fromIntegral oct)
     fromPitch (PitchL (pc, Just st, oct)) = (toEnum pc, Just $ fromRational $ toRational $ st, fromIntegral oct)
 
-instance Pitched DisplayPitch where
+instance IsPitch DisplayPitch where
     fromPitch (PitchL (pc, _, oct)) = (toEnum pc, fromIntegral oct)
 
-instance Pitched Fifths where
+instance IsPitch Fifths where
     fromPitch (PitchL (pc, Nothing, _)) = pitchToFifths pc 0
     fromPitch (PitchL (pc, Just ac, _)) = pitchToFifths pc (round ac)
 

@@ -14,8 +14,11 @@ description:
 
 library                    
     build-depends: 
-        base, semigroups, data-default, type-unary, reverse-apply,
-        xml, music-pitch-literal
+        base >= 4 && < 5,
+        semigroups, data-default, type-unary, reverse-apply,
+        xml, 
+        music-pitch-literal,
+        music-dynamics-literal
 
     hs-source-dirs: src
     exposed-modules:
