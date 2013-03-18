@@ -129,7 +129,7 @@ infixr 6 |>
 type Part     = Int
 type Time     = Double
 type Duration = Time
-newtype Score a  = Score { getScore :: [(Part, Time, Duration, Maybe a)] }
+newtype Score a  = Score { getScore :: [(Part, Duration, Maybe a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
@@ -162,28 +162,32 @@ instance Monad Score where
     return = note
     x >>= k = join' $ k <$> x
         where
-            join' sc = pcat $ ev'
-                where
-                    ev = getScore sc
-                    ev' = catMaybes $ fmap (\(p,t,d,x) -> fmap (delay t . stretch d) x) $ ev
+            join' sc = undefined
+            -- join' sc = pcat $ ev'
+            --     where
+            --         ev = getScore sc
+            --         ev' = catMaybes $ fmap (\(p,t,d,x) -> fmap (delay t . stretch d) x) $ ev
 
 instance AdditiveGroup (Score a) where
     zeroV   = Score []
 
-    Score xs ^+^ Score ys = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
-        where
-            moveTime n (p,t,d,x) = (p,t+n,d,x)
+    Score xs ^+^ Score ys = undefined
+    -- Score xs ^+^ Score ys = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
+        -- where
+            -- moveTime n (p,t,d,x) = (p,t+n,d,x)
 
-    negateV (Score xs) = Score (normalizeScore $ fmap negTime $ xs)
-        where
-            negTime (p,t,d,x) = (p,negate t - d,d,x)
+    negateV (Score xs) = undefined
+    -- negateV (Score xs) = Score (normalizeScore $ fmap negTime $ xs)
+    --     where
+    --         negTime (p,t,d,x) = (p,negate t - d,d,x)
 
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    n *^ Score xs = Score $ fmap (scaleTimeDur n) xs
-        where
-            scaleTimeDur n (p,t,d,x) = (p,n*t,n*d,x)
+    n *^ Score xs = undefined
+    -- n *^ Score xs = Score $ fmap (scaleTimeDur n) xs
+    --     where
+    --         scaleTimeDur n (p,t,d,x) = (p,n*t,n*d,x)
 
 -- | 
 -- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using sequential
@@ -193,7 +197,7 @@ instance VectorSpace (Score a) where
 --
 instance HasBasis (Score a) where
     type Basis (Score a) = Part
-    basisValue p = Score [(p,0,1,Nothing)]
+    basisValue p = Score [(p,1,Nothing)]
     decompose sc = fmap (\p -> (p, decompose' sc p)) (parts sc)
     decompose'   = partDuration
 
@@ -261,17 +265,20 @@ split' p sc = Score . occsInPart p $ sc
 partDuration :: Score a -> Part -> Duration
 partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInPart p $ sc
 
-occsInPart :: Part -> Score a -> [(Part, Time, Duration, Maybe a)]
+occsInPart :: Part -> Score a -> [(Part, Duration, Maybe a)]
 occsInPart p = filter (eventPartIs p) . getScore
 
 
+normalizeScore :: [(Part, Duration, Maybe a)] -> [(Part, Duration, Maybe a)]
 normalizeScore = List.sortBy (comparing getEventTime)
-getEventTime (p,t,d,x) = t
-getEventDuration (p,t,d,x) = d
 
-mapPart      f  (p,t,d,x) = (f p,t,d,x)
-getEventPart    (p,t,d,x) = p
-eventPartIs  p' (p,t,d,x) = (p' == p)
+getEventTime :: (Part, Duration, Maybe a) -> Time
+getEventTime = undefined
+getEventDuration (p,d,x) = d
+
+mapPart      f  (p,d,x) = (f p,d,x)
+getEventPart    (p,d,x) = p
+eventPartIs  p' (p,d,x) = (p' == p)
 
 
 -- |
@@ -280,7 +287,7 @@ eventPartIs  p' (p,t,d,x) = (p' == p)
 -- Equivalent to 'mempty', 'mzero' and 'zeroV'.
 --
 rest :: Score a
-rest = Score [(0,0,1, Nothing)]
+rest = Score [(0,1, Nothing)]
 
 -- |
 -- Create a score of duration 1 with the given event.
@@ -288,7 +295,7 @@ rest = Score [(0,0,1, Nothing)]
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [(0,0,1, Just x)]
+note x = Score [(0,1, Just x)]
 
 delay :: Duration -> Score a -> Score a
 delay d x = (d *^ rest) ^+^ x
