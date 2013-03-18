@@ -37,33 +37,48 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score (
-        (´),
-        -- (|*),
-        -- (*|),
+
+        -- * Basic types
         Part,
         Time,
         Duration,
+
+        -- * Score
         Score(..),
+
+        -- ** Creating
+        rest,
+        note,
+
+        -- ** Inspecting
+        onset,
+        offset,
+        duration,
+
+        -- ** Transforming
+        delay,
+        stretch,
+
+        -- ** Composing
+        (|>),
+        (<>),
         scat,
         pcat,
+        
+        -- ** Decomposing
         parts,
+        numParts,
         split,
         split,
         splitAll,
-        numParts,
-        partDur,
-        dur,
-        occsInPart,
-        -- normScore,
-        -- time,
-        -- duration,
+        partDuration,
+        -- occsInPart,
+        -- normalizeScore,
+        -- getEventTime,
+        -- getEventDuration,
         -- mapPart,
-        -- part,
-        -- partIs,
-        rest,
-        note,
-        delay,
-        stretch
+        -- getEventPart,
+        -- eventPartIs,
 )
 where
 
@@ -87,22 +102,28 @@ import Data.Basis
 -- import Music.Articulation
 
 import Music.Pitch.Literal
+import Music.Dynamics.Literal
 -- import Codec.Midi hiding (Time)
 
 import qualified Data.List as List
 
 -- import System.Posix -- DEBUG
 
-infixr 6 ´
+infixr 6 |>
 
 -- |
 -- A synonym for '^+^'.
 --
--- > pitches  = (c ´ d ´ e ´ f) <> (g ´ fs ) ^* 2
--- > dynamics = (p ´ cresc ´ ff) ^*4
+-- > pitches  = (c |> d |> e |> f) <> (g |> fs ) ^* 2
+-- > dynamics = (p |> cresc |> ff) ^*4
 -- > score    = pitches <> dynamics
 --
-(´) = (^+^)
+(|>) = (^+^)
+
+-- |
+-- A synonym for @flip '<|'@.
+--
+(<|) = flip (^+^)
 
 
 type Part     = Int
@@ -119,7 +140,7 @@ instance Semigroup (Score a) where
 
 -- | 
 -- @Score a@ is an instance of 'Monoid'. 'mempty' is a rest of duration zero and 'mappend' performs
--- parallel composition. For sequential composition, use @´@ or '^+^'.
+-- parallel composition. For sequential composition, use @|>@ or '^+^'.
 --
 instance Monoid (Score a) where
     mempty  = Score []
@@ -148,10 +169,10 @@ instance Monad Score where
 
 instance AdditiveGroup (Score a) where
     zeroV   = Score []
-    (Score xs) ^+^ (Score ys) = Score (normScore $ xs <> fmap (moveTime (dur $ Score xs)) ys)
+    (Score xs) ^+^ (Score ys) = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
         where
             moveTime n (p,t,d,x) = (p,t+n,d,x)
-    negateV (Score xs) = Score (normScore $ fmap negTime $ xs)
+    negateV (Score xs) = Score (normalizeScore $ fmap negTime $ xs)
         where
             negTime (p,t,d,x) = (p,negate t - d,d,x)
 
@@ -172,7 +193,15 @@ instance HasBasis (Score a) where
     type Basis (Score a) = Part
     basisValue p = Score [(p,0,1,Nothing)]
     decompose sc = fmap (\p -> (p, decompose' sc p)) (parts sc)
-    decompose'   = partDur
+    decompose'   = partDuration
+
+
+
+instance IsPitch a => IsPitch (Score a) where
+    fromPitch = pure . fromPitch
+
+instance IsDynamics a => IsDynamics (Score a) where
+    fromDynamics = pure . fromDynamics
 
 
 -- |
@@ -181,6 +210,9 @@ instance HasBasis (Score a) where
 scat :: [Score t] -> Score t
 scat = Prelude.foldr (^+^) mempty
 
+-- |
+-- Parallel concatentation.
+--
 pcat :: [Score t] -> Score t
 pcat = Prelude.foldr (<>) mempty
 
@@ -188,7 +220,7 @@ pcat = Prelude.foldr (<>) mempty
 -- Returns the parts in the given score.
 --
 parts :: Score a -> [Part]
-parts = List.nub . fmap part . getScore
+parts = List.nub . fmap getEventPart . getScore
 
 -- | 
 -- Split a given score into its parts.
@@ -208,26 +240,31 @@ splitAll = fmap snd . split
 numParts :: Score a -> Int
 numParts = length . parts
 
-partDur :: Score a -> Part -> Duration
-partDur sc p = list 0 ((\x -> time x + duration x) . last) . occsInPart p $ sc
+partDuration :: Score a -> Part -> Duration
+partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInPart p $ sc
 
 -- | 
 -- Returns the duration of the given score.
 --
-dur :: Score a -> Duration
-dur = maximum . fmap (\(p,x) -> partDur x p) . split
+duration :: Score a -> Duration
+duration = maximum . fmap (\(p,x) -> partDuration x p) . split
 
+onset :: Score a -> Time
+onset = undefined
 
-occsInPart p = filter (partIs p) . getScore
+offset :: Score a -> Time
+offset = undefined
 
-normScore = List.sortBy (comparing time)
-time (p,t,d,x) = t
-duration (p,t,d,x) = d
+occsInPart :: Part -> Score a -> [(Part, Time, Duration, Maybe a)]
+occsInPart p = filter (eventPartIs p) . getScore
 
-mapPart f (p,t,d,x) = (f p,t,d,x)
-part (p,t,d,x) = p
-partIs p' (p,t,d,x) = (p' == p)
+normalizeScore = List.sortBy (comparing getEventTime)
+getEventTime (p,t,d,x) = t
+getEventDuration (p,t,d,x) = d
 
+mapPart      f  (p,t,d,x) = (f p,t,d,x)
+getEventPart    (p,t,d,x) = p
+eventPartIs  p' (p,t,d,x) = (p' == p)
 
 
 -- |
@@ -238,8 +275,8 @@ partIs p' (p,t,d,x) = (p' == p)
 rest :: Score a
 rest = Score [(0,0,1, Nothing)]
 
--- | 
--- Create a score of duration 0 with no events.
+-- |
+-- Create a score of duration 1 with the given event.
 --
 -- Equivalent to 'pure' and 'return'.
 --
@@ -293,10 +330,6 @@ playSc sc = do
     exportFile "test.mid" (midiSc sc)
     execute "timidity" ["test.mid"]
                                      -}
-
-instance IsPitch a => IsPitch (Score a) where
-    fromPitch = note . fromPitch
-
 instance IsPitch Int where
     fromPitch (PitchL (pc, sem, oct)) = semitones sem + diatonic pc + (oct+1) * 12
         where
