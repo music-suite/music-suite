@@ -19,7 +19,7 @@
 -- Provides a musical score represenation.
 --
 -- An value can have a negative onset, representing a values occuring before the
--- reference time. Event durations must be positive, allthough the types does not
+-- reference time. Durations must be positive, allthough the types does not
 -- enforce this.
 --
 -- An value is either a /note/ or a /rest/ (represented by the 'Just' and 'Nothing'
@@ -94,6 +94,7 @@ import Data.Basis
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
+import qualified Data.Map as Map
 import qualified Data.List as List
 
 infixr 6 |>
@@ -157,7 +158,7 @@ instance Delayable (Part a) where
 -- A score is list of parts.
 --
 -- Score is a 'Monoid' under parallel compisiton. 'mempty' is a score of no parts.
--- For sequential composition of scores, use '|>' or '^+^'.
+-- For sequential composition of scores, use '|>'.
 --
 -- Score has an 'Applicative' instance derived from the 'Monad' instance. Not sure it is useful.
 --
@@ -167,7 +168,7 @@ instance Delayable (Part a) where
 -- offsets an inner score to fit into an outer score, then removes the intermediate
 -- structure. 
 --
--- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using sequential
+-- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using parallel
 -- composition as addition, time scaling as scalar multiplication and rests of
 -- duration 0 and 1 for 'zeroV' and 'basisValue' respectively. The values of each
 -- part has a separate basis, so 'decompose' separates parts.
@@ -176,7 +177,10 @@ newtype Score a  = Score { getScore :: [(Voice, Part a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
-    Score as <> Score bs = Score (as <> bs)
+    Score as <> Score bs = Score (norm $ as <> bs)
+        where                  
+            norm = id
+            -- norm = Map.toList . Map.fromList
     -- TODO merge parts?
 
 instance Monoid (Score a) where
@@ -204,7 +208,7 @@ instance Monad Score where
                     xs' = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x))) xs
 
                     -- xs'' :: [Score a]
-                    xs'' = fmap (\(v,ps) -> scat $ fmap (setVoice v) ps) xs'
+                    xs'' = fmap (\(v,ps) -> pcat $ fmap (setVoice v) ps) xs'
 
 
 partValues :: Part a -> [a]
@@ -291,7 +295,7 @@ class HasOnset a where
 class Delayable a where
     delay :: Duration -> a -> a
     
-offset :: (HasOnset a, HasDuration a) => a -> Maybe Duration
+offset :: (HasOnset a, HasDuration a) => a -> Maybe Time
 offset x = liftA2 (+) (onset x) (Just $ duration x)
 
 
@@ -382,11 +386,25 @@ numVoices = length . voices
 
 
 
-{-
-showScore :: Score Int -> String
-showScore = show
--}
 
+showScore :: Score Double -> String
+showScore = show
+
+instance IsPitch Double where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+instance IsDynamics Double where
+    fromDynamics (DynamicsL (Just x, _)) = x
+    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
 {-
 midiSc :: Score Int -> Midi
@@ -413,20 +431,6 @@ playSc sc = do
     exportFile "test.mid" (midiSc sc)
     execute "timidity" ["test.mid"]
                                      -}
-{-
-instance IsPitch Int where
-    fromPitch (PitchL (pc, sem, oct)) = semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
--}
 
 list z f [] = z
 list z f xs = f xs
