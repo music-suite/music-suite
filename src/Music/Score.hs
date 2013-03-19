@@ -195,7 +195,30 @@ instance Monad Score where
     return = note
     x >>= k = join' $ fmap k x
         where
-            join' = undefined            
+            join' (Score xs) = pcat xs''
+                where
+                    -- xs :: [(Voice, Part (Score a))]
+                    -- xs = undefined
+
+                    -- xs' :: [(Voice, [Score a])]
+                    xs' = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x))) xs
+
+                    -- xs'' :: [Score a]
+                    xs'' = fmap (\(v,ps) -> scat $ fmap (setVoice v) ps) xs'
+
+
+partValues :: Part a -> [a]
+partValues = catMaybes . fmap snd . getPart
+
+mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
+mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
+mapWithTimeDur' f = Part . snd . mapAccumL (\t (d,x)->(t+d,(d,f t d x))) 0 . getPart
+            
+            
+-- TODO do somwthing more intelligent with voices at join
+-- More sophisticated voice type?
+setVoice :: Voice -> Score a -> Score a
+setVoice v = Score . fmap (first (const v)) . getScore            
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -223,6 +246,9 @@ instance IsPitch a => IsPitch (Score a) where
 
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
+
+instance Delayable (Score a) where
+    delay t (Score xs) = Score (fmap (second (delay t)) xs)
 
 
 -- |
