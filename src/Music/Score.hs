@@ -177,14 +177,13 @@ newtype Score a  = Score { getScore :: [(Voice, Part a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
-    Score as <> Score bs = Score (norm $ as <> bs)
+    Score as <> Score bs = Score (l as <> r bs)
         where                  
-            norm = id
-            -- norm = Map.toList . Map.fromList
-    -- TODO merge parts?
+            l = fmap (first $ (* 2))
+            r = fmap (first $ (+ 1) . (* 2))
 
 instance Monoid (Score a) where
-    mempty  = mempty
+    mempty  = Score mempty
     mappend = (<>)
 
 instance Applicative Score where
@@ -197,18 +196,18 @@ instance Alternative Score where
 
 instance Monad Score where
     return = note
-    x >>= k = join' $ fmap k x
+    aaa >>= kkk = join' $ fmap kkk aaa
         where
-            join' (Score xs) = pcat xs''
+            join' (Score xs) = pcat $ pcat $ f $ g $ xs
                 where
                     -- xs :: [(Voice, Part (Score a))]
                     -- xs = undefined
 
-                    -- xs' :: [(Voice, [Score a])]
-                    xs' = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x))) xs
+                    -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
+                    g = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x)))
 
-                    -- xs'' :: [Score a]
-                    xs'' = fmap (\(v,ps) -> pcat $ fmap (setVoice v) ps) xs'
+                    -- f :: [(Voice, [Score a])]  -> [[Score a]]
+                    f = fmap (\(v,ps) -> fmap (setVoice v) ps)
 
 
 partValues :: Part a -> [a]
@@ -384,7 +383,11 @@ numVoices = length . voices
 
 
 
+prettyPart :: Show a => Part a -> String
+prettyPart = concatSep " |> " . fmap (\(t,x) -> show t ++ "*^"++ maybe "rest" show x) . getPart
 
+prettyScore :: Show a => Score a -> String
+prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
 
 
 showScore :: Score Double -> String
@@ -437,3 +440,10 @@ list z f xs = f xs
 
 first f (x,y)  = (f x, y)
 second f (x,y) = (x, f y)
+
+
+sep :: a -> [a] -> [a]
+sep = List.intersperse
+
+concatSep :: [a] -> [[a]] -> [a]
+concatSep x = List.concat . sep x
