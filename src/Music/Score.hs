@@ -47,39 +47,37 @@ module Music.Score (
         note,
 
         -- ** Inspecting
-        onset,
+        HasDuration(..),
+        HasOnset(..),
+        Delayable(..),
         offset,
-        duration,
 
         -- ** Transforming
-        delay,
         stretch,
         compress,
+        sustain,
+        -- prolong,
+        anticipate,
+        stretchTo,
 
         -- ** Composing
         (|>),
-        (<>),
+        (<|),
         scat,
         pcat,
+        
+        (<<|),
+        (|>>),
+        loopOverlay,
+        loopOverlayAll,
         
         -- ** Decomposing
         voices,
         numVoices,
-        split,
-        split',
-        -- splitAll,
-        partDuration,
-        -- occsInVoice,
-        -- normalizeScore,
-        -- getEventTime,
-        -- getEventDuration,
-        -- mapVoice,
-        -- getEventVoice,
-        -- valueVoiceIs,
 )
 where
 
-import Prelude hiding (concatMap, maximum)
+import Prelude hiding (concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
 import Control.Applicative
@@ -100,7 +98,6 @@ import qualified Data.List as List
 
 infixr 6 |>
 
-
 type Voice     = Int
 type Time     = Double
 type Duration = Time                                  
@@ -111,12 +108,50 @@ type Duration = Time
 newtype Track a = Track { getTrack :: [(Time, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
+instance AdditiveGroup (Track a) where
+    zeroV   = mempty
+    (^+^)   = mappend
+    negateV = id
+
+instance VectorSpace (Track a) where
+    type Scalar (Track a) = Duration
+    n *^ Track as = Track (fmap (first (n*^)) as)
+
+instance HasOnset (Track a) where
+    onset (Track []) = Nothing
+    onset (Track xs) = Just . fst . head $ xs
+
+instance Delayable (Track a) where
+    delay t = Track . fmap (first (+ t)) . getTrack
 
 -- |
 -- A part is a list of relative-time notes and rests.
 --
 newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+instance AdditiveGroup (Part a) where
+    zeroV   = mempty
+    (^+^)   = mappend
+    negateV = id
+
+instance VectorSpace (Part a) where
+    type Scalar (Part a) = Duration
+    n *^ Part as = Part (fmap (first (n*^)) as)
+
+instance HasDuration (Part a) where
+    duration (Part []) = zeroV
+    duration (Part xs) = sum $ fmap fst $ xs
+
+instance HasOnset (Part a) where
+    onset (Part []) = Nothing
+    onset (Part xs) = Just $ sum $ fmap fst $ takeWhile isRest $ xs
+        where
+            isRest (_,Nothing) = True
+            isRest (_,Just _)  = False
+
+instance Delayable (Part a) where
+    delay t (Part xs) = Part ((t, Nothing) : xs)
 
 -- |
 -- A score is list of parts.
@@ -141,60 +176,47 @@ newtype Score a  = Score { getScore :: [(Voice, Part a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
-    Score xs <> Score ys = undefined
-    -- Score xs <> Score ys = Score (leftVoices xs <> rightVoices ys)
-    --     where
-    --         leftVoices  = fmap $ mapVoice $ \x -> x * 2
-    --         rightVoices = fmap $ mapVoice $ \x -> x * 2 + 1
+    Score as <> Score bs = Score (as <> bs)
+    -- TODO merge parts?
 
 instance Monoid (Score a) where
-    mempty  = Score []
+    mempty  = mempty
     mappend = (<>)
 
 instance Applicative Score where
     pure  = return
     (<*>) = ap
 
--- | 
---
+instance Alternative Score where
+    empty = mempty
+    (<|>) = mappend
+
 instance Monad Score where
     return = note
-    x >>= k = join' $ k <$> x
+    x >>= k = join' $ fmap k x
         where
-            join' sc = undefined
-            -- join' sc = pcat $ ev'
-            --     where
-            --         ev = getScore sc
-            --         ev' = catMaybes $ fmap (\(p,t,d,x) -> fmap (delay t . stretch d) x) $ ev
+            join' = undefined            
 
 instance AdditiveGroup (Score a) where
-    zeroV   = Score []
-
-    Score xs ^+^ Score ys = undefined
-    -- Score xs ^+^ Score ys = Score (normalizeScore $ xs <> fmap (moveTime (duration $ Score xs)) ys)
-        -- where
-            -- moveTime n (p,t,d,x) = (p,t+n,d,x)
-
-    negateV (Score xs) = undefined
-    -- negateV (Score xs) = Score (normalizeScore $ fmap negTime $ xs)
-    --     where
-    --         negTime (p,t,d,x) = (p,negate t - d,d,x)
-
+    zeroV   = mempty
+    (^+^)   = mappend
+    negateV = id
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    n *^ Score xs = undefined
-    -- n *^ Score xs = Score $ fmap (scaleTimeDur n) xs
-    --     where
-    --         scaleTimeDur n (p,t,d,x) = (p,n*t,n*d,x)
+    n *^ Score xs = Score (fmap (second (n*^)) xs)
 
 instance HasBasis (Score a) where
     type Basis (Score a) = Voice
-    -- basisValue p = Score [(p,1,Nothing)]
-    -- decompose sc = fmap (\p -> (p, decompose' sc p)) (parts sc)
-    -- decompose'   = partDuration
+    basisValue p = Score [(p, Part [(1, Nothing)])]
+    decompose' s = fromJust . (flip lookup) (decompose s)
+    decompose    = fmap (second duration) . getScore
 
+instance HasDuration (Score a) where
+    duration (Score as) = maximum $ fmap (duration . snd) $ as
 
+instance HasOnset (Score a) where
+    onset (Score as) = minimum $ fmap (onset . snd) $ as
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -204,51 +226,54 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 
 -- |
--- A synonym for '^+^'.
+-- Compose in sequence.
 --
 -- > Score a -> Score a -> Score a
-(|>) = (^+^)
+a |> b = a <> delay (duration a) b
 
 -- |
 -- A synonym for @flip '<|'@.
 --
 -- > Score a -> Score a -> Score a
-(<|) = flip (^+^)
+a <| b = delay (duration b) a <> b
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat = Prelude.foldr (^+^) mempty
+scat = Prelude.foldr (|>) mempty
 
 -- |
--- Parallel concatentation.
+-- Parallel concatentation. Identical to 'mconcat'.
 --
 -- > [Score t] -> Score t
-pcat = Prelude.foldr (<>) mempty
+pcat = mconcat
 
 
 -- | 
 -- Returns the duration of the given score.
 --
--- > onset x  = time x
--- > offset x = time x + duration x
+-- > offset x = onset x + duration x
 --
-duration :: Score a -> Duration
-duration = maximum . fmap (\(p,x) -> partDuration x p) . split
 
-onset :: Score a -> Time
-onset = undefined
+class HasDuration a where
+    duration :: a -> Duration
 
-offset :: Score a -> Time
-offset = undefined
+class HasOnset a where
+    onset :: a -> Maybe Time
+
+class Delayable a where
+    delay :: Duration -> a -> a
+    
+offset :: (HasOnset a, HasDuration a) => a -> Maybe Duration
+offset x = liftA2 (+) (onset x) (Just $ duration x)
+
 
 -- |
 -- Create a score of duration 1 with no values.
 --
 rest :: Score a
-rest = undefined
--- rest = Score [(0,1, Nothing)]
+rest = Score [(0, Part [(1, Nothing)])]
 
 -- |
 -- Create a score of duration 1 with the given value.
@@ -256,15 +281,7 @@ rest = undefined
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note = undefined
--- note x = Score [(0,1, Just x)]
-
--- |
--- Delay a score.
--- 
--- > Duration -> Score a -> Score a
-delay :: (Num a, a ~ (Basis v), HasBasis v) => Scalar v -> v -> v
-delay d x = rest' ^* d ^+^ x where rest' = basisValue 0
+note x = Score [(0, Part [(1, Just x)])]
 
 -- |
 -- Stretch a score. Equivalent to '*^'.
@@ -280,10 +297,45 @@ stretch = (*^)
 compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
 compress = flip (^/)
 
+-- | 
+-- Like '<>', but scaling the second agument to the duration of the first.
+sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
+sustain x y = x <> stretchTo (duration x) y
 
 
+-- Like '<>', but truncating the second agument to the duration of the first.
+-- prolong x y = x <> before (duration x) y
+
+-- |
+-- Like '|>' but with a negative delay on the second element.
+anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a -> a
+anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
+
+-- | 
+-- Stretch to the given duration. 
+-- stretchTo :: Duration -> Score a -> Score a
+stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
+stretchTo t x 
+    | duration x == t  =  x
+    | otherwise        =  stretch (t / duration x) x 
 
 
+infixr 8 <<|
+infixr 8 |>>
+
+-- (<<|) :: Time t => Score t a -> Score t a -> Score t a
+-- (|>>) :: Time t => Score t a -> Score t a -> Score t a
+
+x <<| y  =  y |>> x    
+x |>> y  =  x <> delay t y where t = duration x / 2    
+
+-- loopOverlay :: Time t => Score t a -> Score t a
+loopOverlay x = x |>> loopOverlay x
+
+-- loopOverlayAll :: Time t => [Score t a] -> Score t a
+loopOverlayAll xs = l xs xs
+    where l xs []     = l xs xs
+          l xs (y:ys) = y |>> l xs ys   
 
 
 
@@ -292,47 +344,13 @@ compress = flip (^/)
 -- Returns the voices in the given score.
 --
 voices :: Score a -> [Voice]
-voices = undefined
--- voices = List.nub . fmap getEventVoice . getScore
+voices = fmap fst . decompose
 
 -- | 
 -- Returns the number of voices in the given score.
 --
 numVoices :: Score a -> Int
 numVoices = length . voices
-
--- | 
--- Split a given score into its parts.
---
-split :: Score a -> [(Voice, Score a)]
-split sc = fmap (\p -> (p, split' p sc)) (voices sc)
-
-split' :: Voice -> Score a -> Score a
-split' = undefined
--- split' p sc = Score . occsInVoice p $ sc
-
--- splitAll :: Score a -> [Score a]
--- splitAll = fmap snd . split
-
-partDuration :: Score a -> Voice -> Duration
-partDuration sc p = list 0 ((\x -> getEventTime x + getEventDuration x) . last) . occsInVoice p $ sc
-
-occsInVoice :: Voice -> Score a -> [(Voice, Duration, Maybe a)]
-occsInVoice = undefined
--- occsInVoice p = filter (valueVoiceIs p) . getScore
-
-
-normalizeScore :: [(Voice, Duration, Maybe a)] -> [(Voice, Duration, Maybe a)]
-normalizeScore = List.sortBy (comparing getEventTime)
-
-getEventTime :: (Voice, Duration, Maybe a) -> Time
-getEventTime = undefined
-getEventDuration (p,d,x) = d
-
-mapVoice      f  (p,d,x) = (f p,d,x)
-getEventVoice    (p,d,x) = p
-valueVoiceIs  p' (p,d,x) = (p' == p)
-
 
 
 
@@ -386,3 +404,6 @@ instance IsPitch Int where
 
 list z f [] = z
 list z f xs = f xs
+
+first f (x,y)  = (f x, y)
+second f (x,y) = (x, f y)
