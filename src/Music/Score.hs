@@ -174,12 +174,12 @@ instance HasDuration (Part a) where
     duration (Part []) = zeroV
     duration (Part xs) = sum $ fmap fst $ xs
 
-instance HasOnset (Part a) where
-    onset (Part []) = Nothing
-    onset (Part xs) = Just $ sum $ fmap fst $ takeWhile isRest $ xs
-        where
-            isRest (_,Nothing) = True
-            isRest (_,Just _)  = False
+-- instance HasOnset (Part a) where
+--     onset (Part []) = Nothing
+--     onset (Part xs) = Just $ sum $ fmap fst $ takeWhile isRest $ xs
+--         where
+--             isRest (_,Nothing) = True
+--             isRest (_,Just _)  = False
 
 instance Delayable (Part a) where
     delay t (Part xs) = Part ((t, Nothing) : xs)
@@ -271,8 +271,8 @@ instance HasBasis (Score a) where
 instance HasDuration (Score a) where
     duration (Score as) = maximum $ fmap (duration . snd) $ as
 
-instance HasOnset (Score a) where
-    onset (Score as) = minimum $ fmap (onset . snd) $ as
+-- instance HasOnset (Score a) where
+--     onset (Score as) = minimum $ fmap (onset . snd) $ as
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
