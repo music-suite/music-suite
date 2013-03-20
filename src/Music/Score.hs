@@ -55,17 +55,16 @@ module Music.Score (
         -- ** Transforming
         stretch,
         compress,
-        sustain,
-        -- prolong,
-        anticipate,
-        stretchTo,
+        stretchTo,        
 
         -- ** Composing
         (|>),
         (<|),
         scat,
         pcat,
-        
+        sustain,
+        -- prolong,
+        anticipate,
         (<<|),
         (|>>),
         
@@ -292,20 +291,6 @@ instance Monad Score where
                     -- f :: [(Voice, [Score a])]  -> [[Score a]]
                     f = fmap (uncurry map . first setVoice)
 
-
--- partToList :: Part a -> [a]
--- partToList = catMaybes . fmap snd . getPart
-
-mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
-mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
-mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t+d, (d, f t d x))) zeroV . getPart
-            
-            
--- TODO do somwthing more intelligent with voices at join
--- More sophisticated voice type?
-setVoice :: Voice -> Score a -> Score a
-setVoice v = Score . fmap (first (const v)) . getScore            
-
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
     (^+^)   = mappend
@@ -324,9 +309,6 @@ instance HasBasis (Score a) where
 instance HasDuration (Score a) where
     duration (Score as) = maximum $ fmap (duration . snd) $ as
 
--- instance HasOnset (Score a) where
---     onset (Score as) = minimum $ fmap (onset . snd) $ as
-
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
 
@@ -335,35 +317,6 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 instance Delayable (Score a) where
     delay t (Score xs) = Score (fmap (second (delay t)) xs)
-
-
--- |
--- Compose in sequence.
---
--- To compose in parallel, use '<|>' or '<>'.
---
--- > Score a -> Score a -> Score a
-a |> b = a <> delay (duration a) b
-
--- |
--- Compose in reverse seqience. 
---
--- To compose in parallel, use '<|>' or '<>'.
---
--- > Score a -> Score a -> Score a
-a <| b = delay (duration b) a <> b
-
--- |
--- Sequential concatentation.
---
--- > [Score t] -> Score t
-scat = Prelude.foldr (|>) mempty
-
--- |
--- Parallel concatentation. Identical to 'mconcat'.
---
--- > [Score t] -> Score t
-pcat = mconcat
 
 
 -- |
@@ -403,8 +356,56 @@ compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
 compress = flip (^/)
 
 -- | 
+-- Stretch to the given duration. 
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
+stretchTo t x 
+    | duration x == t  =  x
+    | otherwise        =  stretch (t / duration x) x 
+
+
+
+-- |
+-- Compose in sequence.
+--
+-- To compose in parallel, use '<|>' or '<>'.
+--
+-- > Score a -> Score a -> Score a
+(|>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
+a |> b = a <> delay (duration a) b
+
+-- |
+-- Compose in reverse sequence. 
+--
+-- To compose in parallel, use '<|>' or '<>'.
+--
+-- > Score a -> Score a -> Score a
+(<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
+a <| b = delay (duration b) a <> b
+
+-- |
+-- Sequential concatentation.
+--
+-- > [Score t] -> Score t
+scat :: (Monoid b, Semigroup b, Delayable b, HasDuration b) => [b] -> b
+scat = Prelude.foldr (|>) mempty
+
+-- |
+-- Parallel concatentation. Identical to 'mconcat'.
+--
+-- > [Score t] -> Score t
+pcat :: Monoid a => [a] -> a
+pcat = mconcat
+
+
+
+-- | 
 -- Like '<>', but scaling the second agument to the duration of the first.
 -- 
+-- > Score a -> Score a -> Score a
+--
 sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
 sustain x y = x <> stretchTo (duration x) y
 
@@ -415,19 +416,10 @@ sustain x y = x <> stretchTo (duration x) y
 -- |
 -- Like '|>' but with a negative delay on the second element.
 -- 
+-- > Duration -> Score a -> Score a -> Score a
+-- 
 anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
-
--- | 
--- Stretch to the given duration. 
--- 
--- > Duration -> Score a -> Score a
--- 
-stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
-stretchTo t x 
-    | duration x == t  =  x
-    | otherwise        =  stretch (t / duration x) x 
-
 
 
 infixr 8 <<|
@@ -551,3 +543,12 @@ sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
+
+
+
+mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
+mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
+mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t+d, (d, f t d x))) zeroV . getPart
+            
+setVoice :: Voice -> Score a -> Score a
+setVoice v = Score . fmap (first (const v)) . getScore            
