@@ -164,9 +164,6 @@ instance Alternative Track where
     (<|>) = mappend
 
 -- Satisfies left distribution
---     mplus a b >>= k = mplus (a >>= k) (b >>= k)
--- but not left catch
---     mplus (return a) b = return a
 instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
@@ -277,32 +274,31 @@ instance Alternative Score where
     (<|>) = mappend
 
 -- Satisfies left distribution
---     mplus a b >>= k = mplus (a >>= k) (b >>= k)
--- but not left catch
---     mplus (return a) b = return a
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
 
 instance Monad Score where
     return = note
-    aaa >>= kkk = join' $ fmap kkk aaa
+    a >>= k = join' $ fmap k a
         where
             join' (Score xs) = pcat $ pcat $ f $ g $ xs
                 where
                     -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
-                    g = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x)))
+                    g = fmap (second h)
+                    -- g :: Part (Score a))  -> [Score a]
+                    h = toList . mapWithTimeDur (\t d -> delay t . stretch d)
 
                     -- f :: [(Voice, [Score a])]  -> [[Score a]]
-                    f = fmap (\(v,ps) -> fmap (setVoice v) ps)
+                    f = fmap (uncurry map . first setVoice)
 
 
-partValues :: Part a -> [a]
-partValues = catMaybes . fmap snd . getPart
+-- partToList :: Part a -> [a]
+-- partToList = catMaybes . fmap snd . getPart
 
 mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
 mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
-mapWithTimeDur' f = Part . snd . mapAccumL (\t (d,x)->(t+d,(d,f t d x))) 0 . getPart
+mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t+d, (d, f t d x))) zeroV . getPart
             
             
 -- TODO do somwthing more intelligent with voices at join
