@@ -86,6 +86,7 @@ import Data.Maybe
 import Data.Either
 import Data.Foldable
 import Data.Traversable
+import Data.Function (on)
 import Data.Ord (comparing)
 
 import Data.VectorSpace
@@ -94,6 +95,8 @@ import Data.Basis
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
+
+import qualified Codec.Midi as Midi
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -106,8 +109,35 @@ type Duration = Time
 -- |
 -- A part is a list of absolute-time occurences.
 --
+-- Track is a 'Monoid' under parallel compisiton. 'mempty' is the empty track and 'mappend'
+-- interleaves values.
+--
+-- Track has an 'Applicative' instance derived from the 'Monad' instance.
+--
+-- Track is a 'Monad'. 'return' creates a track containing a single value at
+-- time zero one, and '>>=' transforms the values of a track, while allowing
+-- transformations of time. More intuitively, 'join' delays an inner track to
+-- start at the offset of an outer track, then removes the intermediate structure. 
+--
+-- Track is an instance of 'VectorSpace' using parallel composition as addition, 
+-- and time scaling as scalar multiplication.
+--
 newtype Track a = Track { getTrack :: [(Time, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+    deriving (Eq, Ord, Show, Functor, Foldable)
+
+instance Monoid (Track a) where
+    mempty = Track []
+    Track as `mappend` Track bs = Track (List.sortBy (comparing fst) $ as `mappend` bs)
+
+instance Applicative Track where
+    pure  = return
+    (<*>) = ap
+
+instance Monad Track where
+    return a = Track [(0, a)]
+    a >>= k = join' . fmap k $ a
+        where
+            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay t tr) $ tts
 
 instance AdditiveGroup (Track a) where
     zeroV   = mempty
@@ -257,11 +287,15 @@ instance Delayable (Score a) where
 -- |
 -- Compose in sequence.
 --
+-- To compose in parallel, use '<|>' or '<>'.
+--
 -- > Score a -> Score a -> Score a
 a |> b = a <> delay (duration a) b
 
 -- |
--- A synonym for @flip '<|'@.
+-- Compose in reverse seqience. 
+--
+-- To compose in parallel, use '<|>' or '<>'.
 --
 -- > Score a -> Score a -> Score a
 a <| b = delay (duration b) a <> b
@@ -279,12 +313,6 @@ scat = Prelude.foldr (|>) mempty
 pcat = mconcat
 
 
--- | 
--- Returns the duration of the given score.
---
--- > offset x = onset x + duration x
---
-
 class HasDuration a where
     duration :: a -> Duration
 
@@ -293,10 +321,15 @@ class HasOnset a where
 
 class Delayable a where
     delay :: Duration -> a -> a
-    
+
+
+-- FIXME offset and duration are mixed up...
+
+-- |
+-- > Score a -> Maybe Time    
+-- 
 offset :: (HasOnset a, HasDuration a) => a -> Maybe Time
 offset x = liftA2 (+) (onset x) (Just $ duration x)
-
 
 -- |
 -- Create a score of duration 1 with no values.
@@ -316,6 +349,7 @@ note x = Score [(0, Part [(1, Just x)])]
 -- Stretch a score. Equivalent to '*^'.
 -- 
 -- > Duration -> Score a -> Score a
+-- 
 stretch :: VectorSpace v => Scalar v -> v -> v
 stretch = (*^)
 
@@ -323,11 +357,13 @@ stretch = (*^)
 -- Compress a score. Flipped version of '^/'.
 -- 
 -- > Duration -> Score a -> Score a
+-- 
 compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
 compress = flip (^/)
 
 -- | 
 -- Like '<>', but scaling the second agument to the duration of the first.
+-- 
 sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
 sustain x y = x <> stretchTo (duration x) y
 
@@ -337,25 +373,35 @@ sustain x y = x <> stretchTo (duration x) y
 
 -- |
 -- Like '|>' but with a negative delay on the second element.
+-- 
 anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 -- | 
 -- Stretch to the given duration. 
--- stretchTo :: Duration -> Score a -> Score a
+-- 
+-- > Duration -> Score a -> Score a
+-- 
 stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
 stretchTo t x 
     | duration x == t  =  x
     | otherwise        =  stretch (t / duration x) x 
 
 
+
 infixr 8 <<|
 infixr 8 |>>
 
--- (<<|) :: Time t => Score t a -> Score t a -> Score t a
--- (|>>) :: Time t => Score t a -> Score t a -> Score t a
-
+-- |
+-- > Score a -> Score a -> Score a
+--
+(<<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 x <<| y  =  y |>> x    
+
+-- |
+-- > Score a -> Score a -> Score a
+--
+(|>>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 x |>> y  =  x <> delay t y where t = duration x / 2    
 
 -- loopOverlay :: Time t => Score t a -> Score t a
@@ -380,8 +426,21 @@ voices = fmap fst . decompose
 --
 numVoices :: Score a -> Int
 numVoices = length . voices
+ 
 
 
+
+
+
+
+
+
+
+
+-- Test stuff
+
+score :: Score a -> Score a
+score = id
 
 prettyPart :: Show a => Part a -> String
 prettyPart = concatSep " |> " . fmap (\(t,x) -> show t ++ "*^"++ maybe "rest" show x) . getPart
@@ -409,31 +468,33 @@ instance IsDynamics Double where
     fromDynamics (DynamicsL (Just x, _)) = x
     fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
-{-
-midiSc :: Score Int -> Midi
-midiSc = Midi kType kDiv . (++ [controlPart]) . (fmap $ absToRel . (++ [(10000,PartEnd)])) . scToTr
-    where
-        kType  = MultiPart
-        kDiv   = TicksPerBeat 1024 -- fps tpf
-        scToTr = fmap (List.sortBy (comparing fst)) . fmap (\(c,evs) -> concatMap (occToEv c) evs)
-            . fmap (second getScore) . split
+-- midiSc :: Score Int -> Midi
+-- midiSc = undefined
 
-        occToEv c (p,t,d,Nothing) = []
-        occToEv c (p,t,d,Just x)  = [(round $ t*1024, NoteOn c x 127)]
-        -- TODO carry over channel etc
+-- midiSc :: Score Int -> Midi
+-- midiSc = Midi kType kDiv . (++ [controlPart]) . (fmap $ absToRel . (++ [(10000,PartEnd)])) . scToTr
+--     where
+--         kType  = MultiPart
+--         kDiv   = TicksPerBeat 1024 -- fps tpf
+--         scToTr = fmap (List.sortBy (comparing fst)) . fmap (\(c,evs) -> concatMap (occToEv c) evs)
+--             . fmap (second getScore) . split
+-- 
+--         occToEv c (p,t,d,Nothing) = []
+--         occToEv c (p,t,d,Just x)  = [(round $ t*1024, NoteOn c x 127)]
+--         -- TODO carry over channel etc
+-- 
+--         absToRel = snd . mapAccumL (\t' (t,x) -> (t, (t-t',x))) 0
+-- 
+--         controlPart = [(0, TempoChange 1000000), (10000,PartEnd)]
 
-        absToRel = snd . mapAccumL (\t' (t,x) -> (t, (t-t',x))) 0
-
-        controlPart = [(0, TempoChange 1000000), (10000,PartEnd)]
 
 
-second f (x,y) = (x,f y)
+-- playSc :: Score Int -> IO ()
+-- playSc sc = do
+--     exportFile "test.mid" (midiSc sc)
+--     execute "timidity" ["test.mid"]
 
-playSc :: Score Int -> IO ()
-playSc sc = do
-    exportFile "test.mid" (midiSc sc)
-    execute "timidity" ["test.mid"]
-                                     -}
+
 
 list z f [] = z
 list z f xs = f xs
