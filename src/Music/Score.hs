@@ -102,12 +102,12 @@ import qualified Data.List as List
 
 infixr 6 |>
 
-type Voice     = Int
+type Voice    = Int
 type Time     = Double
 type Duration = Time                                  
 
 -- |
--- A part is a list of absolute-time occurences.
+-- A track is a list of absolute-time occurences.
 --
 -- Track is a 'Monoid' under parallel compisiton. 'mempty' is the empty track and 'mappend'
 -- interleaves values.
@@ -158,8 +158,25 @@ instance Delayable (Track a) where
 -- |
 -- A part is a list of relative-time notes and rests.
 --
+-- Part is a 'Monoid' under sequential compisiton. 'mempty' is the empty part and 'mappend'
+-- appends parts.
+--
+-- Part is an instance of 'VectorSpace' using parallel composition as addition, 
+-- and time scaling as scalar multiplication.
+--
 newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+-- instance Applicative Part where
+--     pure  = return
+--     (<*>) = ap
+-- 
+-- instance Monad Part where
+--     return a = Part [(1, Just a)]
+--     a >>= k = join' . fmap (fmap k) $ a
+--         where
+--             join' (Part pps) = mconcat . fmap (\(d, p) -> d *^ p) $ pps
+--    -- TODO divide by sum of duration?
 
 instance AdditiveGroup (Part a) where
     zeroV   = mempty
@@ -323,10 +340,8 @@ class Delayable a where
     delay :: Duration -> a -> a
 
 
--- FIXME offset and duration are mixed up...
-
 -- |
--- > Score a -> Maybe Time    
+-- > offset x = onset x + duration x
 -- 
 offset :: (HasOnset a, HasDuration a) => a -> Maybe Time
 offset x = liftA2 (+) (onset x) (Just $ duration x)
