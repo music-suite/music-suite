@@ -68,8 +68,6 @@ module Music.Score (
         
         (<<|),
         (|>>),
-        loopOverlay,
-        loopOverlayAll,
         
         -- ** Decomposing
         voices,
@@ -81,7 +79,7 @@ import Prelude hiding (concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
 import Control.Applicative
-import Control.Monad (ap, join)
+import Control.Monad (ap, join, MonadPlus(..))
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -106,6 +104,18 @@ type Voice    = Int
 type Time     = Double
 type Duration = Time                                  
 
+class HasDuration a where
+    duration :: a -> Duration
+
+class HasOnset a where
+    onset :: a -> Maybe Time
+
+class Delayable a where
+    delay :: Duration -> a -> a
+
+
+
+
 -- |
 -- A track is a list of absolute-time occurences.
 --
@@ -114,10 +124,15 @@ type Duration = Time
 --
 -- Track has an 'Applicative' instance derived from the 'Monad' instance.
 --
--- Track is a 'Monad'. 'return' creates a track containing a single value at
--- time zero one, and '>>=' transforms the values of a track, while allowing
--- transformations of time. More intuitively, 'join' delays an inner track to
--- start at the offset of an outer track, then removes the intermediate structure. 
+-- Track is a 'Monad'. 'return' creates a track containing a single value at time
+-- zero, and '>>=' transforms the values of a track, allowing the addition and
+-- removal of values relative to the time of the value. More intuitively,
+-- 'join' delays each inner track to start at the offset of an outer track, then
+-- removes the intermediate structure. 
+--
+-- > let s = Track [(0,65),(1,66)] 
+-- > t >>= \x -> Track [(0,'a'),(10,toEnum x)]
+-- >   ==> Track {getTrack = [(0.0,'a'),(1.0,'a'),(10.0,'A'),(11.0,'B')]}
 --
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
 -- and time scaling as scalar multiplication.
@@ -125,9 +140,14 @@ type Duration = Time
 newtype Track a = Track { getTrack :: [(Time, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
+instance Semigroup (Track a) where
+    (<>) = mappend
+
 instance Monoid (Track a) where
     mempty = Track []
-    Track as `mappend` Track bs = Track (List.sortBy (comparing fst) $ as `mappend` bs)
+    Track as `mappend` Track bs = Track (as `merge` bs)
+        where
+            as `merge` bs = List.sortBy (comparing fst) $ as <> bs
 
 instance Applicative Track where
     pure  = return
@@ -138,6 +158,18 @@ instance Monad Track where
     a >>= k = join' . fmap k $ a
         where
             join' (Track tts) = mconcat . fmap (\(t,tr) -> delay t tr) $ tts
+
+instance Alternative Track where
+    empty = mempty
+    (<|>) = mappend
+
+-- Satisfies left distribution
+--     mplus a b >>= k = mplus (a >>= k) (b >>= k)
+-- but not left catch
+--     mplus (return a) b = return a
+instance MonadPlus Track where
+    mzero = mempty
+    mplus = mappend
 
 instance AdditiveGroup (Track a) where
     zeroV   = mempty
@@ -166,6 +198,9 @@ instance Delayable (Track a) where
 --
 newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+instance Semigroup (Part a) where
+    (<>) = mappend
 
 -- instance Applicative Part where
 --     pure  = return
@@ -212,7 +247,7 @@ instance Delayable (Part a) where
 -- Score is a 'Monad'. 'return' creates a score containing a single note of
 -- duration one, and '>>=' transforms the values of a score, while allowing
 -- transformations of time and duration. More intuitively, 'join' scales and
--- offsets an inner score to fit into an outer score, then removes the intermediate
+-- offsets each inner score to fit into an outer score, then removes the intermediate
 -- structure. 
 --
 -- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using parallel
@@ -224,14 +259,14 @@ newtype Score a  = Score { getScore :: [(Voice, Part a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 instance Semigroup (Score a) where
-    Score as <> Score bs = Score (l as <> r bs)
-        where                  
-            l = fmap (first $ (* 2))
-            r = fmap (first $ (+ 1) . (* 2))
+    (<>) = mappend
 
 instance Monoid (Score a) where
     mempty  = Score mempty
-    mappend = (<>)
+    Score as `mappend` Score bs = Score (l as `mappend` r bs)
+        where                  
+            l = fmap (first $ (* 2))
+            r = fmap (first $ (+ 1) . (* 2))
 
 instance Applicative Score where
     pure  = return
@@ -241,15 +276,20 @@ instance Alternative Score where
     empty = mempty
     (<|>) = mappend
 
+-- Satisfies left distribution
+--     mplus a b >>= k = mplus (a >>= k) (b >>= k)
+-- but not left catch
+--     mplus (return a) b = return a
+instance MonadPlus Score where
+    mzero = mempty
+    mplus = mappend
+
 instance Monad Score where
     return = note
     aaa >>= kkk = join' $ fmap kkk aaa
         where
             join' (Score xs) = pcat $ pcat $ f $ g $ xs
                 where
-                    -- xs :: [(Voice, Part (Score a))]
-                    -- xs = undefined
-
                     -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
                     g = fmap (second (partValues . mapWithTimeDur (\t d x -> delay t . stretch d $ x)))
 
@@ -328,16 +368,6 @@ scat = Prelude.foldr (|>) mempty
 --
 -- > [Score t] -> Score t
 pcat = mconcat
-
-
-class HasDuration a where
-    duration :: a -> Duration
-
-class HasOnset a where
-    onset :: a -> Maybe Time
-
-class Delayable a where
-    delay :: Duration -> a -> a
 
 
 -- |
@@ -419,6 +449,7 @@ x <<| y  =  y |>> x
 (|>>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 x |>> y  =  x <> delay t y where t = duration x / 2    
 
+{-
 -- loopOverlay :: Time t => Score t a -> Score t a
 loopOverlay x = x |>> loopOverlay x
 
@@ -427,6 +458,7 @@ loopOverlayAll xs = l xs xs
     where l xs []     = l xs xs
           l xs (y:ys) = y |>> l xs ys   
 
+-}
 
 
 
