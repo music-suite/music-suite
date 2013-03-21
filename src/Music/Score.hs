@@ -79,6 +79,17 @@ module Music.Score (
 )
 where
 
+{-
+    TODO
+        Monoid instance for Part is strange
+        Can be bad if used with |> etc, we should add some constraint to prevent this
+        Delayable?
+            'delay' is really similar to (.+^)
+            But (.-.) does not really make sense, or does it?
+            We could take differnce in onset, but that would require HasOnset
+            
+-}  
+
 import Prelude hiding (concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
@@ -221,14 +232,14 @@ instance AdditiveGroup (Track a) where
 
 instance VectorSpace (Track a) where
     type Scalar (Track a) = Time
-    n *^ Track as = Track (fmap (first (n*^)) as)
+    n *^ tr = Track . (fmap (first (n*^))) . getTrack $ tr
+
+instance Delayable (Track a) where
+    d `delay` tr = Track . fmap (first (.+^ d)) . getTrack $ tr
 
 instance HasOnset (Track a) where
     onset (Track []) = 0
-    onset (Track xs) = fst . head $ xs
-
-instance Delayable (Track a) where
-    delay d = Track . fmap (first (.+^ d)) . getTrack
+    onset (Track as) = fst . head $ as
 
 -- |
 -- A part is a list of relative-time notes and rests.
@@ -265,9 +276,12 @@ instance VectorSpace (Part a) where
     type Scalar (Part a) = Duration
     n *^ Part as = Part (fmap (first (n*^)) as)
 
+instance Delayable (Part a) where
+    t `delay` (Part as) = Part $ (t, Nothing) : as
+
 instance HasDuration (Part a) where
-    duration (Part []) = zeroV
-    duration (Part xs) = sum $ fmap fst $ xs
+    duration (Part []) = 0
+    duration (Part as) = sum . fmap fst $ as
 
 -- instance HasOnset (Part a) where
 --     onset (Part []) = Nothing
@@ -275,9 +289,6 @@ instance HasDuration (Part a) where
 --         where
 --             isRest (_,Nothing) = True
 --             isRest (_,Just _)  = False
-
-instance Delayable (Part a) where
-    delay t (Part xs) = Part ((t, Nothing) : xs)
 
 -- |
 -- A score is list of parts.
@@ -348,6 +359,9 @@ instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     n *^ Score xs = Score (fmap (second (n*^)) xs)
 
+instance Delayable (Score a) where
+    delay t (Score xs) = Score (fmap (second (delay t)) xs)
+
 -- Experimental instance. We want to do something more sophisticated with parts later on.
 instance HasBasis (Score a) where
     type Basis (Score a) = Voice
@@ -363,9 +377,6 @@ instance IsPitch a => IsPitch (Score a) where
 
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
-
-instance Delayable (Score a) where
-    delay t (Score xs) = Score (fmap (second (delay t)) xs)
 
 instance Performable Score where
     perform (Score ps) = concatMap (uncurry gatherPart) ps
