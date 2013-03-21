@@ -33,9 +33,9 @@
 module Music.Score (
 
         -- * Basic types
-        Voice,
-        Time,
-        Duration,
+        Voice(..),
+        Time(..),
+        Duration(..),
 
         -- * Score
         Track(..),
@@ -87,6 +87,7 @@ import Data.Function (on)
 import Data.Ord (comparing)
 
 import Data.VectorSpace
+import Data.AffineSpace
 import Data.Basis
 
 import Music.Pitch.Literal
@@ -97,11 +98,52 @@ import qualified Codec.Midi as Midi
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-infixr 6 |>
 
-type Voice    = Int
-type Time     = Double
-type Duration = Time                                  
+newtype Voice    = Voice{getVoice::Int}
+    deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
+
+newtype Time     = Time{getTime::Double}
+    deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
+    -- Note: no Floating as we want to be able to switch to rational
+
+newtype Duration = Duration{getDuration::Double}                                  
+    deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
+    -- Note: no Floating as we want to be able to switch to rational
+
+instance AdditiveGroup Time where
+    zeroV=0
+    (^+^) = (+)
+    negateV = negate
+
+instance VectorSpace Time where
+    type Scalar Time = Time
+    (*^) = (*)
+
+instance InnerSpace Time where (<.>) = (*)
+
+instance  AffineSpace Time where
+    type Diff Time = Duration
+    a .-. b =  t2d $ a - b
+    a .+^ b =  a + d2t b
+
+instance AdditiveGroup Duration where
+    zeroV=0
+    (^+^) = (+)
+    negateV = negate
+
+instance VectorSpace Duration where
+    type Scalar Duration = Duration
+    (*^) = (*)
+
+instance InnerSpace Duration where (<.>) = (*)
+
+-- TODO factor out these and use AffineSpace instance instead
+d2t = Time . getDuration
+t2d = Duration . getTime
+
+
+
+
 
 class HasDuration a where
     duration :: a -> Duration
@@ -156,7 +198,8 @@ instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay t tr) $ tts
+            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay (t2d t) tr) $ tts
+
 
 instance Alternative Track where
     empty = mempty
@@ -173,7 +216,7 @@ instance AdditiveGroup (Track a) where
     negateV = id
 
 instance VectorSpace (Track a) where
-    type Scalar (Track a) = Duration
+    type Scalar (Track a) = Time
     n *^ Track as = Track (fmap (first (n*^)) as)
 
 instance HasOnset (Track a) where
@@ -181,7 +224,7 @@ instance HasOnset (Track a) where
     onset (Track xs) = Just . fst . head $ xs
 
 instance Delayable (Track a) where
-    delay t = Track . fmap (first (+ t)) . getTrack
+    delay t = Track . fmap (first (+ (d2t t))) . getTrack
 
 -- |
 -- A part is a list of relative-time notes and rests.
@@ -286,7 +329,7 @@ instance Monad Score where
                     -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
                     g = fmap (second h)
                     -- g :: Part (Score a))  -> [Score a]
-                    h = toList . mapWithTimeDur (\t d -> delay t . stretch d)
+                    h = toList . mapWithTimeDur (\t d -> delay (t2d t) . stretch d)
 
                     -- f :: [(Voice, [Score a])]  -> [[Score a]]
                     f = fmap (uncurry map . first setVoice)
@@ -323,7 +366,7 @@ instance Delayable (Score a) where
 -- > offset x = onset x + duration x
 -- 
 offset :: (HasOnset a, HasDuration a) => a -> Maybe Time
-offset x = liftA2 (+) (onset x) (Just $ duration x)
+offset x = liftA2 (+) (onset x) (Just $ d2t $ duration x)
 
 -- |
 -- Create a score of duration 1 with no values.
@@ -366,6 +409,8 @@ stretchTo t x
     | otherwise        =  stretch (t / duration x) x 
 
 
+infixr 7 |>
+infixr 7 <|
 
 -- |
 -- Compose in sequence.
@@ -422,8 +467,8 @@ anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a ->
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
-infixr 8 <<|
-infixr 8 |>>
+infixr 7 <<|
+infixr 7 |>>
 
 -- |
 -- > Score a -> Score a -> Score a
@@ -547,7 +592,7 @@ concatSep x = List.concat . sep x
 
 
 mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
-mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
+mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f (d2t t) d))
 mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t+d, (d, f t d x))) zeroV . getPart
             
 setVoice :: Voice -> Score a -> Score a
