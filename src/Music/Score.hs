@@ -33,35 +33,46 @@
 module Music.Score (
 
         -- * Basic types
+        -- ** Voice
         Voice(..),
+
+        -- ** Time and duration
         Time(..),
         Duration(..),
 
-        -- * Score
+        HasDuration(..),
+        HasOnset(..),
+        offset,
+
+        -- * Delayable class
+        Delayable(..),
+
+        -- * Performable class
+        Performable(..),
+
+        -- * Track type
         Track(..),
+        -- * Part type
         Part(..),
+        -- * Score type
         Score(..),
 
-        -- ** Creating
+        -- ** Constructors
         rest,
         note,
         chord,
         melody,
         chords,
         melodies,
-
-        -- ** Inspecting
-        -- Monoid'(..),
-        HasDuration(..),
-        HasOnset(..),
-        Delayable(..),
-        Performable(..),
-        offset,
-        startAt,
-        stopAt,
+        chordDelay,
+        melodyStretch,
+        chordDelayStretch,
 
         -- ** Transforming
+        delay,
         stretch,
+        startAt,
+        stopAt,
         compress,
         stretchTo,        
 
@@ -70,11 +81,14 @@ module Music.Score (
         (<|),
         scat,
         pcat,
-        sustain,
-        -- prolong,
-        anticipate,
+        (<||),
+        (||>),
         (<<|),
         (|>>),
+        sustain,
+        overlap,
+        -- prolong,
+        anticipate,
         
         -- ** Decomposing
         voices,
@@ -121,9 +135,18 @@ import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
+        
+-------------------------------------------------------------------------------------
+-- Voice
+-------------------------------------------------------------------------------------
 
 newtype Voice = Voice { getVoice::Int }
     deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
+
+
+-------------------------------------------------------------------------------------
+-- Time and duration
+-------------------------------------------------------------------------------------
 
 newtype Time = Time { getTime::Rational }
     deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
@@ -167,8 +190,43 @@ class HasDuration a where
 class HasOnset a where
     onset :: a -> Time
 
+-- |
+-- > offset x = onset x + duration x
+-- 
+offset :: (HasOnset a, HasDuration a) => a -> Time
+offset x = onset x .+^ duration x
+
+
+-------------------------------------------------------------------------------------
+-- Delayable class
+-------------------------------------------------------------------------------------
+
 class Delayable a where
+
+    -- |
+    -- Delay a score.
+    -- > Duration -> Score a -> Score a
+    -- 
     delay :: Duration -> a -> a
+
+-- |
+-- Move a score to start at a specific time.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+t `startAt` x = delay d x where d = t .-. onset x
+
+-- |
+-- Move a score to stop at a specific time.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+t `stopAt`  x = delay d x where d = t .-. offset x
+
+
+-------------------------------------------------------------------------------------
+-- Performable class
+-------------------------------------------------------------------------------------
 
 class Performable f where
     perform  :: f a -> [(Voice, Time, Duration, a)]
@@ -179,6 +237,10 @@ class Performable f where
             toRel = snd . mapAccumL g 0
             g t' (v,t,d,x) = (t, (v,t-t',d,x))
 
+
+-------------------------------------------------------------------------------------
+-- Track type
+-------------------------------------------------------------------------------------
 
 -- |
 -- A track is a list of absolute-time occurences.
@@ -248,6 +310,11 @@ instance HasOnset (Track a) where
     onset (Track []) = 0
     onset (Track as) = fst . head $ as
 
+
+-------------------------------------------------------------------------------------
+-- Part type
+-------------------------------------------------------------------------------------
+
 -- |
 -- A part is a list of relative-time notes and rests.
 --
@@ -296,6 +363,11 @@ instance HasDuration (Part a) where
 --         where
 --             isRest (_,Nothing) = True
 --             isRest (_,Just _)  = False
+
+
+-------------------------------------------------------------------------------------
+-- Score type
+-------------------------------------------------------------------------------------
 
 -- |
 -- A score is list of parts.
@@ -394,15 +466,10 @@ instance Performable Score where
             snd4 (a,b,c,d) = b
             d2t = Time . getDuration
             
--- |
--- > offset x = onset x + duration x
--- 
-offset :: (HasOnset a, HasDuration a) => a -> Time
-offset x = onset x .+^ duration x
 
-t `startAt` x = delay d x where d = t .-. onset x
-t `stopAt` x  = delay d x where d = t .-. offset x
-
+-------------------------------------------------------------------------------------
+-- Constructors
+-------------------------------------------------------------------------------------
 
 -- |
 -- Create a score of duration 1 with no values.
@@ -451,6 +518,10 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> delay t . stretch d $ note x )
 -- arpeggio t xs = chordDelay (zip [0, t ..] xs)
 
 
+-------------------------------------------------------------------------------------
+-- Transformations
+-------------------------------------------------------------------------------------
+
 -- |
 -- Stretch a score. Equivalent to '*^'.
 -- 
@@ -475,6 +546,10 @@ compress = flip (^/)
 stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x 
 
+
+-------------------------------------------------------------------------------------
+-- Composition
+-------------------------------------------------------------------------------------
 
 infixr 7 |>
 infixr 7 <|
@@ -511,7 +586,15 @@ scat = foldr (|>) mempty
 pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
+infixr 7 <<|
+infixr 7 |>>
+infixr 7 <||
+infixr 7 ||>
 
+(<||) = sustain
+(||>) = flip sustain
+(|>>) = overlap
+(<<|) = flip overlap    
 
 -- | 
 -- Like '<>', but scaling the second agument to the duration of the first.
@@ -521,9 +604,16 @@ pcat = mconcat
 sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
 x `sustain` y = x <> (duration x) `stretchTo` y
 
-
 -- Like '<>', but truncating the second agument to the duration of the first.
 -- prolong x y = x <> before (duration x) y
+
+-- |
+-- Like '|>', but moving second argument halfway to the offset of the first.
+--
+-- > Score a -> Score a -> Score a
+--
+overlap :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
+x `overlap` y  =  x <> delay t y where t = duration x / 2    
 
 -- |
 -- Like '|>' but with a negative delay on the second element.
@@ -534,20 +624,12 @@ anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a ->
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
-infixr 7 <<|
-infixr 7 |>>
 
--- |
--- > Score a -> Score a -> Score a
---
-(<<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-x <<| y  =  y |>> x    
 
--- |
--- > Score a -> Score a -> Score a
---
-(|>>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-x |>> y  =  x <> delay t y where t = duration x / 2    
+
+-------------------------------------------------------------------------------------
+-- Decomposition
+-------------------------------------------------------------------------------------
 
 -- | 
 -- Returns the voices in the given score.
@@ -564,14 +646,10 @@ numVoices = length . voices
 
 
 
-
-
-
-
-
-
-
+-------------------------------------------------------------------------------------
 -- Test stuff
+-------------------------------------------------------------------------------------
+
 
 score :: Score a -> Score a
 score = id
@@ -688,8 +766,11 @@ splitWhile p []     = [[]]
 splitWhile p (x:xs) = case splitWhile p xs of
     (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
 
-(<||) = sustain
-(||>) = flip sustain
+
+
+
+
+
 
 list z f [] = z
 list z f xs = f xs
@@ -703,9 +784,6 @@ sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
-
-
-
 
 -- Accumulating over relative time in score. We do not use the affine space instance here.
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b

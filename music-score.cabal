@@ -22,6 +22,7 @@ library
         random,           
         containers,       
         HCodecs,
+        musicxml2,
         semigroups,
         semigroupoids,
         vector-space,
