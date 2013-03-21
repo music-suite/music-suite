@@ -47,10 +47,13 @@ module Music.Score (
         note,
 
         -- ** Inspecting
+        Monoid'(..),
         HasDuration(..),
         HasOnset(..),
         Delayable(..),
         offset,
+        startAt,
+        stopAt,
 
         -- ** Transforming
         stretch,
@@ -99,19 +102,19 @@ import qualified Data.Map as Map
 import qualified Data.List as List
 
 
-newtype Voice    = Voice{getVoice::Int}
+newtype Voice = Voice { getVoice::Int }
     deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
 
-newtype Time     = Time{getTime::Double}
+newtype Time = Time { getTime::Double }
     deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
-newtype Duration = Duration{getDuration::Double}                                  
+newtype Duration = Duration { getDuration::Double }                                  
     deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
 instance AdditiveGroup Time where
-    zeroV=0
+    zeroV = 0
     (^+^) = (+)
     negateV = negate
 
@@ -127,7 +130,7 @@ instance  AffineSpace Time where
     a .+^ b =  a + d2t b
 
 instance AdditiveGroup Duration where
-    zeroV=0
+    zeroV = 0
     (^+^) = (+)
     negateV = negate
 
@@ -142,19 +145,16 @@ d2t = Time . getDuration
 t2d = Duration . getTime
 
 
-
-
+class (Monoid a, Semigroup a) => Monoid' a
 
 class HasDuration a where
     duration :: a -> Duration
 
 class HasOnset a where
-    onset :: a -> Maybe Time
+    onset :: a -> Time
 
 class Delayable a where
     delay :: Duration -> a -> a
-
-
 
 
 -- |
@@ -198,8 +198,7 @@ instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay (t2d t) tr) $ tts
-
+            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay (t .-. 0) tr) $ tts
 
 instance Alternative Track where
     empty = mempty
@@ -220,11 +219,11 @@ instance VectorSpace (Track a) where
     n *^ Track as = Track (fmap (first (n*^)) as)
 
 instance HasOnset (Track a) where
-    onset (Track []) = Nothing
-    onset (Track xs) = Just . fst . head $ xs
+    onset (Track []) = 0
+    onset (Track xs) = fst . head $ xs
 
 instance Delayable (Track a) where
-    delay t = Track . fmap (first (+ (d2t t))) . getTrack
+    delay d = Track . fmap (first (.+^ d)) . getTrack
 
 -- |
 -- A part is a list of relative-time notes and rests.
@@ -329,7 +328,7 @@ instance Monad Score where
                     -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
                     g = fmap (second h)
                     -- g :: Part (Score a))  -> [Score a]
-                    h = toList . mapWithTimeDur (\t d -> delay (t2d t) . stretch d)
+                    h = toList . mapWithTimeDur (\t d -> delay (t .-. 0) . stretch d)
 
                     -- f :: [(Voice, [Score a])]  -> [[Score a]]
                     f = fmap (uncurry map . first setVoice)
@@ -343,6 +342,7 @@ instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     n *^ Score xs = Score (fmap (second (n*^)) xs)
 
+-- Experimental instance. We want to do something more sophisticated with parts later on.
 instance HasBasis (Score a) where
     type Basis (Score a) = Voice
     basisValue p = Score [(p, Part [(1, Nothing)])]
@@ -365,8 +365,12 @@ instance Delayable (Score a) where
 -- |
 -- > offset x = onset x + duration x
 -- 
-offset :: (HasOnset a, HasDuration a) => a -> Maybe Time
-offset x = liftA2 (+) (onset x) (Just $ d2t $ duration x)
+offset :: (HasOnset a, HasDuration a) => a -> Time
+offset x = onset x .+^ duration x
+
+t `startAt` x = delay d x where d = t .-. onset x
+t `stopAt` x  = delay d x where d = t .-. offset x
+
 
 -- |
 -- Create a score of duration 1 with no values.
@@ -434,7 +438,7 @@ a <| b = delay (duration b) a <> b
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid b, Semigroup b, Delayable b, HasDuration b) => [b] -> b
+scat :: (Monoid' b, Delayable b, HasDuration b) => [b] -> b
 scat = Prelude.foldr (|>) mempty
 
 -- |
@@ -592,8 +596,8 @@ concatSep x = List.concat . sep x
 
 
 mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
-mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f (d2t t) d))
-mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t+d, (d, f t d x))) zeroV . getPart
+mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
+mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t .+^ d, (d, f t d x))) 0 . getPart
             
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore            
