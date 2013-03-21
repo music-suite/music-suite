@@ -100,6 +100,8 @@ module Music.Score (
         HasMidi(..),
         toMidi,
         writeMidi,
+        playMidi,
+        playMidiIO,
 
         -- ** MusicXML export
         HasXml(..),
@@ -143,12 +145,15 @@ import System.IO
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
+import Music.Imitator.Reactive
+import Music.Imitator.Reactive.Midi
+
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-        
+
 -------------------------------------------------------------------------------------
 -- Voice
 -------------------------------------------------------------------------------------
@@ -575,8 +580,8 @@ t `stretchTo` x = (t / duration x) `stretch` x
 -- Composition
 -------------------------------------------------------------------------------------
 
-infixr 7 |>
-infixr 7 <|
+infixr 6 |>
+infixr 6 <|
 
 -- |
 -- Compose in sequence.
@@ -680,19 +685,39 @@ instance HasMidi Integer where
     getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
     
 toMidi :: HasMidi a => Score a -> Midi.Midi
-toMidi score = Midi.Midi type' div [ctrlTr, evTr]
-    where                         
-        divs    = 1024
-        type'   = Midi.MultiTrack       
-        div     = Midi.TicksPerBeat divs
-        ctrlTr  = [(0, Midi.TempoChange 1000000), (10000, Midi.TrackEnd)]
-        evTr    = evs <> [(10000, Midi.TrackEnd)] 
-        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performRelative $ (>>= getMidi) $ score
-        -- TODO handle duration, voice
-        -- FIXME relative time ...
+toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
+    where                                                        
+        endPos          = 10000
+        fileType        = Midi.MultiTrack       
+        divisions       = 1024
+        divisions'      = Midi.TicksPerBeat divisions
+        controlTrack    = [(0, Midi.TempoChange 1000000), (endPos, Midi.TrackEnd)]
+        eventTrack      = events <> [(endPos, Midi.TrackEnd)] 
+
+        events :: [(Midi.Ticks, Midi.Message)]
+        events          = (\(_,t,_,x) -> (round (t * divisions), x)) <$> performance
+
+        performance :: [(Voice, Time, Duration, Midi.Message)]
+        performance     = performRelative (getMidi =<< score)
+
+        -- FIXME arbitrary endTime (files won't work without this...)
+        -- TODO handle voice
 
 writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
+
+playMidi :: HasMidi a => Score a -> Event MidiMessage
+playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
+    where
+        trig        = accumR 0 ((+ 0.01) <$ pulse 0.01)        
+        toTrack     = fmap (\(v,t,_,m) -> (t,m)) . perform . (getMidi =<<)
+        midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
+        -- FIXME hardcoded output...
+
+playMidiIO :: HasMidi a => Score a -> IO ()
+playMidiIO = runEvent . playMidi
+
+        
 
 
 -------------------------------------------------------------------------------------
@@ -747,6 +772,9 @@ ssm = mapM putStrLn . fmap show . perform
 
 ssd :: Score Double -> IO [()]
 ssd = mapM putStrLn . fmap show . perform
+
+spanien :: Score Double
+spanien = (c^*3 |> d |> e^*3 |> d |> c^*2 |> g_^*2 |> g_^*4)^/10
 
 
 openSib :: Xml.Score -> IO ()
