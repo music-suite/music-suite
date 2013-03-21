@@ -94,6 +94,14 @@ module Music.Score (
         voices,
         numVoices,
         setVoice,
+        
+        -- * Utility
+        HasMidi(..),
+        toMidi,
+        writeMidi,
+        HasXml(..),
+        -- toXml,
+        -- writeXml,
 )
 where
 
@@ -105,6 +113,8 @@ where
             'delay' is really similar to (.+^)
             But (.-.) does not really make sense, or does it?
             We could take differnce in onset, but that would require HasOnset
+       Split and reverse
+       Zipper applicative (for appying dynamic and articulation transformations etc)
             
 -}  
 
@@ -229,13 +239,24 @@ t `stopAt`  x = delay d x where d = t .-. offset x
 -------------------------------------------------------------------------------------
 
 class Performable f where
+    -- |
+    -- Render as a list of @(voice, time, duration, value)@ tuples.
+    --
+    -- Time since reference time.
+    --
     perform  :: f a -> [(Voice, Time, Duration, a)]
-    performR :: f a -> [(Voice, Time, Duration, a)]
+    
+    -- |
+    -- Render as a list of @(voice, time, duration, value)@ tuples.
+    --
+    -- Time since last event.
+    --
+    performRelative :: f a -> [(Voice, Time, Duration, a)]
     -- TODO split and remerge parts...
-    performR = toRel . perform
+    performRelative = toRel . perform
         where
             toRel = snd . mapAccumL g 0
-            g t' (v,t,d,x) = (t, (v,t-t',d,x))
+            g now (v,t,d,x) = (t, (v,t-now,d,x))
 
 
 -------------------------------------------------------------------------------------
@@ -700,29 +721,32 @@ instance IsDynamics Double where
 
 
 class HasMidi a where
-    toMidi :: a -> Score Midi.Message
+    getMidi :: a -> Score Midi.Message
 instance HasMidi Midi.Message where
-    toMidi = return
+    getMidi = return
 instance HasMidi Double where
-    toMidi = toMidi . toInteger . round
+    getMidi = getMidi . toInteger . round
 instance HasMidi Integer where
-    toMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
+    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
     
-scoreToMidi :: HasMidi a => Score a -> Midi.Midi
-scoreToMidi score = Midi.Midi type' div [ctrlTr, evTr]
+toMidi :: HasMidi a => Score a -> Midi.Midi
+toMidi score = Midi.Midi type' div [ctrlTr, evTr]
     where                         
         divs    = 1024
         type'   = Midi.MultiTrack       
         div     = Midi.TicksPerBeat divs
         ctrlTr  = [(0, Midi.TempoChange 1000000), (10000, Midi.TrackEnd)]
         evTr    = evs <> [(10000, Midi.TrackEnd)] 
-        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performR $ (>>= toMidi) $ score
+        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performRelative $ (>>= getMidi) $ score
         -- TODO handle duration, voice
         -- FIXME relative time ...
 
+writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
+writeMidi path sc = Midi.exportFile path (toMidi sc)
+
 playScore :: HasMidi a => Score a -> IO ()
 playScore sc = do
-    Midi.exportFile "test.mid" (scoreToMidi sc)
+    Midi.exportFile "test.mid" (toMidi sc)
     execute "timidity" ["test.mid"]
 
 
