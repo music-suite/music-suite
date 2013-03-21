@@ -51,6 +51,7 @@ module Music.Score (
         HasDuration(..),
         HasOnset(..),
         Delayable(..),
+        Performable(..),
         offset,
         startAt,
         stopAt,
@@ -74,6 +75,7 @@ module Music.Score (
         -- ** Decomposing
         voices,
         numVoices,
+        setVoice,
 )
 where
 
@@ -155,6 +157,9 @@ class HasOnset a where
 
 class Delayable a where
     delay :: Duration -> a -> a
+
+class Performable f where
+    perform :: f a -> [(Voice, Time, Duration, a)]
 
 
 -- |
@@ -294,7 +299,13 @@ instance Delayable (Part a) where
 -- part has a separate basis, so 'decompose' separates parts.
 --
 newtype Score a  = Score { getScore :: [(Voice, Part a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable)
+    deriving (Show, Functor, Foldable)
+
+instance Eq a => Eq (Score a) where
+    a == b = perform a == perform b
+
+instance Ord a => Ord (Score a) where
+    a `compare` b = perform a `compare` perform b
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -302,9 +313,6 @@ instance Semigroup (Score a) where
 instance Monoid (Score a) where
     mempty  = Score mempty
     Score as `mappend` Score bs = Score (as `mappend` bs)
-        -- where                  
-        --     l = fmap (first $ (* 2))
-        --     r = fmap (first $ (+ 1) . (* 2))
 
 instance Applicative Score where
     pure  = return
@@ -359,7 +367,12 @@ instance IsDynamics a => IsDynamics (Score a) where
 instance Delayable (Score a) where
     delay t (Score xs) = Score (fmap (second (delay t)) xs)
 
-
+instance Performable Score where
+    perform (Score ps) = concatMap (uncurry gatherPart) ps
+        where            
+            gatherPart :: Voice -> Part a -> [(Voice, Time, Duration, a)]
+            gatherPart v = toList . fmap (snd4 d2t). mapWithTimeDur ((,,,) v)
+            snd4 f (a,b,c,d) = (a,f b,c,d)
 -- |
 -- > offset x = onset x + duration x
 -- 
@@ -597,6 +610,6 @@ concatSep x = List.concat . sep x
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
 mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
 mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 0 . getPart
-            
+
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore            
