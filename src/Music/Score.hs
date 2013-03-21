@@ -323,15 +323,13 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where
-            join' (Score xs) = pcat $ pcat $ f $ g $ xs
+            join' (Score xs) = pcat $ pcat $ fmap (g . f) $ xs
                 where
-                    -- g :: [(Voice, Part (Score a))]  -> [(Voice, [Score a])]
-                    g = fmap (second h)
-                    -- g :: Part (Score a))  -> [Score a]
-                    h = toList . mapWithTimeDur (\t d -> delay (t .-. 0) . stretch d)
+                    -- g :: Part (Score a)  -> [Score a]
+                    g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
 
-                    -- f :: [(Voice, [Score a])]  -> [[Score a]]
-                    f = fmap (uncurry map . first setVoice)
+                    -- f :: (Voice, Part (Score a))  -> Part (Score a)
+                    f = uncurry fmap . first setVoice
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -595,9 +593,10 @@ concatSep x = List.concat . sep x
 
 
 
-mapWithTimeDur :: (Time -> Duration -> a -> b) -> Part a -> Part b
-mapWithTimeDur f = mapWithTimeDur' (\t d -> fmap (f t d))
-mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t .+^ d, (d, f t d x))) 0 . getPart
+-- Accumulating over relative time in score. We do not use the affine space instance here.
+mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
+mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
+mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 0 . getPart
             
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore            
