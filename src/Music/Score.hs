@@ -240,15 +240,15 @@ newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
 instance Semigroup (Part a) where
     (<>) = mappend
 
--- instance Applicative Part where
---     pure  = return
---     (<*>) = ap
--- 
--- instance Monad Part where
---     return a = Part [(1, Just a)]
---     a >>= k = join' . fmap (fmap k) $ a
---         where
---             join' (Part pps) = mconcat . fmap (\(d, p) -> d *^ p) $ pps
+instance Applicative Part where
+    pure  = return
+    (<*>) = ap
+
+instance Monad Part where
+    return a = Part [(1, Just a)]
+    a >>= k = join' $ fmap k a
+        where
+            join' (Part pps) = mconcat . fmap (\(d, p) -> maybe mempty (d *^) p) $ pps
 --    -- TODO divide by sum of duration?
 
 instance AdditiveGroup (Part a) where
@@ -301,10 +301,10 @@ instance Semigroup (Score a) where
 
 instance Monoid (Score a) where
     mempty  = Score mempty
-    Score as `mappend` Score bs = Score (l as `mappend` r bs)
-        where                  
-            l = fmap (first $ (* 2))
-            r = fmap (first $ (+ 1) . (* 2))
+    Score as `mappend` Score bs = Score (as `mappend` bs)
+        -- where                  
+        --     l = fmap (first $ (* 2))
+        --     r = fmap (first $ (+ 1) . (* 2))
 
 instance Applicative Score where
     pure  = return
