@@ -145,8 +145,10 @@ import System.IO
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
+{-
 import Music.Imitator.Reactive
 import Music.Imitator.Reactive.Midi
+-}
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
@@ -706,6 +708,9 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
 writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
+playMidi :: HasMidi a => Score a -> ()
+playMidi = error "Can not use Reactivity from music-score yet..."
+{-
 playMidi :: HasMidi a => Score a -> Event MidiMessage
 playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
     where
@@ -713,9 +718,14 @@ playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
         toTrack     = fmap (\(v,t,_,m) -> (t,m)) . perform . (getMidi =<<)
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
+-}
 
 playMidiIO :: HasMidi a => Score a -> IO ()
+playMidiIO = error "Can not use Reactivity from music-score yet..."
+{-
+playMidiIO :: HasMidi a => Score a -> IO ()
 playMidiIO = runEvent . playMidi
+-}
 
         
 
