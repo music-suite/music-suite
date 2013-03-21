@@ -126,6 +126,7 @@ where
 import Prelude hiding (foldr, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
+import Data.Ratio
 import Control.Applicative
 import Control.Monad (ap, join, MonadPlus(..))
 import Data.Maybe
@@ -741,16 +742,16 @@ class HasXml a where
 -- instance HasXml Integer where
 --     toXml x = undefined   
 
--- TODO assumes length one
+toXml :: Score Integer -> Xml.Score
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap toMusic . intoBars
+
+-- TODO assumes bar length of one
 intoBars :: Score a -> [[(Voice, Duration, a)]]
 intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
     where  
         g (v,bn,bt,d,x) = (v,d,x)
         f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
         trd5 (a,b,c,d,e) = c
-
-toXml :: Score Integer -> Xml.Score
-toXml = Xml.fromPart "" "" "" . fmap toMusic . intoBars
 
 toMusic :: [(Voice, Duration, Integer)] -> Xml.Music
 toMusic = mconcat . fmap toMusic1
@@ -768,11 +769,14 @@ toMusic1 (v,d,p) = Xml.note (toEnum . fromIntegral . (`mod` 6) $ p, Nothing, 4) 
 score :: Score a -> Score a
 score = id
 
-prettyPart :: Show a => Part a -> String
-prettyPart = concatSep " |> " . fmap (\(t,x) -> show t ++ "*^"++ maybe "rest" show x) . getPart
-
 prettyScore :: Show a => Score a -> String
 prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
+
+prettyPart :: Show a => Part a -> String
+prettyPart = concatSep " |> " . fmap (\(d,x) -> prettyDur d ++ "*^"++ maybe "rest" prettyVal x) . getPart
+    where                                                                                   
+        prettyVal x = "pure " ++ show x
+        prettyDur (Duration d) = "("++show (numerator d) ++ "/" ++ show (denominator d)++")"
 
 showScore :: Score Double -> String
 showScore = show
