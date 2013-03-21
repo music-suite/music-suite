@@ -430,9 +430,7 @@ compress = flip (^/)
 -- > Duration -> Score a -> Score a
 -- 
 stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
-stretchTo t x 
-    | duration x == t  =  x
-    | otherwise        =  stretch (t / duration x) x 
+t `stretchTo` x = (t / duration x) `stretch` x 
 
 
 infixr 7 |>
