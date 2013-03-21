@@ -104,6 +104,8 @@ module Music.Score (
         playMidiIO,
 
         -- ** MusicXML export
+        XmlScore,
+        XmlMusic,
         HasXml(..),
         toXml,
         writeXml,
@@ -734,8 +736,12 @@ playMidiIO = runEvent . playMidi
 
 -------------------------------------------------------------------------------------
 
+type XmlScore = Xml.Score
+type XmlMusic = Xml.Music
+
 class HasXml a where
---    getXml :: a -> Score ()
+   getXml :: Voice -> Duration -> a -> XmlMusic
+
 instance HasXml Xml.Score where
 --     toXml = return
 instance HasXml Double where
@@ -743,23 +749,28 @@ instance HasXml Double where
 instance HasXml Integer where
 --     toXml x = undefined   
 
-toXml :: Score a -> Xml.Score
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap toMusic . intoBars
+toXml :: Score a -> XmlScore
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . performBars
 
-intoBars :: Score a -> [[(Voice, Duration, a)]]
-intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
+performBars :: Score a -> [[(Voice, Duration, a)]]
+performBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime . perform
     where  
-        g (v,bn,bt,d,x) = (v,d,x)
-        f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
-        trd5 (a,b,c,d,e) = c
+        discardTime (v,_,_,d,x) = (v,d,x)              
+        splitAtTimeZero = splitWhile ((== 0) . get3Of5)
+        separateTime (v,t,d,x) = (v,bn,bt,d,x) 
+            where (bn,bt) = properFraction (toRational t)
+        get3Of5 (a,b,c,d,e) = c
         -- FIXME assumes bar length of one
+        -- FIXME must include rests. How? Can we define a separate performRests?
+        -- FIXME beaming?
 
 -- translate one bar
-toMusic :: [(Voice, Duration, a)] -> Xml.Music
-toMusic = mconcat . fmap toMusic1
+translBar :: [(Voice, Duration, a)] -> Xml.Music
+translBar = mconcat . fmap translNote
+    -- FIXME find tuplets
 
-toMusic1 :: (Voice, Duration, a) -> Xml.Music
-toMusic1 (v,d,p) = Xml.note p' d'
+translNote :: (Voice, Duration, a) -> Xml.Music
+translNote (v,d,p) = Xml.note p' d'
     where
         p' = (toEnum 0, Nothing, 4)
         d' = (fromRational . toRational $ d)
@@ -890,9 +901,13 @@ concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
 
 splitWhile :: (a -> Bool) -> [a] -> [[a]]
-splitWhile p []     = [[]]
-splitWhile p (x:xs) = case splitWhile p xs of
-    (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
+splitWhile p xs = case splitWhile' p xs of
+    []:xss -> xss
+    xss    -> xss
+    where
+        splitWhile' p []     = [[]]
+        splitWhile' p (x:xs) = case splitWhile' p xs of
+            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
 
 execute :: FilePath -> [String] -> IO ()
 execute program args = do
