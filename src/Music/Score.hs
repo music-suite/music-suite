@@ -95,12 +95,15 @@ module Music.Score (
         numVoices,
         setVoice,
         
-        -- * Utility
+        -- * Utility         
+        -- ** MIDI export
         HasMidi(..),
         toMidi,
         writeMidi,
+
+        -- ** MusicXML export
         HasXml(..),
-        -- toXml,
+        toXml,
         -- writeXml,
 )
 where
@@ -665,8 +668,63 @@ numVoices :: Score a -> Int
 numVoices = length . voices
  
 
+-------------------------------------------------------------------------------------
+
+class HasMidi a where
+    getMidi :: a -> Score Midi.Message
+instance HasMidi Midi.Message where
+    getMidi = return
+instance HasMidi Double where
+    getMidi = getMidi . toInteger . round
+instance HasMidi Integer where
+    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
+    
+toMidi :: HasMidi a => Score a -> Midi.Midi
+toMidi score = Midi.Midi type' div [ctrlTr, evTr]
+    where                         
+        divs    = 1024
+        type'   = Midi.MultiTrack       
+        div     = Midi.TicksPerBeat divs
+        ctrlTr  = [(0, Midi.TempoChange 1000000), (10000, Midi.TrackEnd)]
+        evTr    = evs <> [(10000, Midi.TrackEnd)] 
+        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performRelative $ (>>= getMidi) $ score
+        -- TODO handle duration, voice
+        -- FIXME relative time ...
+
+writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
+writeMidi path sc = Midi.exportFile path (toMidi sc)
 
 
+-------------------------------------------------------------------------------------
+
+class HasXml a where
+    getXml :: a -> Score ()
+-- instance HasXml Xml.Score where
+--     toXml = return
+-- instance HasXml Double where
+--     toXml = toXml . toInteger . round
+-- instance HasXml Integer where
+--     toXml x = undefined   
+
+-- TODO assumes length one
+intoBars :: Score a -> [[(Voice, Duration, a)]]
+intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
+    where  
+        g (v,bn,bt,d,x) = (v,d,x)
+        f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
+        trd5 (a,b,c,d,e) = c
+
+toXml :: Score Integer -> Xml.Score
+toXml = Xml.fromPart "" "" "" . fmap toMusic . intoBars
+
+toMusic :: [(Voice, Duration, Integer)] -> Xml.Music
+toMusic = mconcat . fmap toMusic1
+
+toMusic1 :: (Voice, Duration, Integer) -> Xml.Music
+toMusic1 (v,d,p) = Xml.note (toEnum . fromIntegral . (`mod` 6) $ p, Nothing, 4) (fromRational . toRational $ d)
+
+
+                                                                                                           
 -------------------------------------------------------------------------------------
 -- Test stuff
 -------------------------------------------------------------------------------------
@@ -689,6 +747,17 @@ ssm = mapM putStrLn . fmap show . perform
 
 ssd :: Score Double -> IO [()]
 ssd = mapM putStrLn . fmap show . perform
+
+
+openSib :: Xml.Score -> IO ()
+openSib score =
+    do  writeFile "test.xml" (Xml.showXml score)
+        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+
+openTim :: HasMidi a => Score a -> IO ()
+openTim sc = do
+    Midi.exportFile "test.mid" (toMidi sc)
+    execute "timidity" ["test.mid"]
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
@@ -720,75 +789,6 @@ instance IsDynamics Double where
     fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
 
-class HasMidi a where
-    getMidi :: a -> Score Midi.Message
-instance HasMidi Midi.Message where
-    getMidi = return
-instance HasMidi Double where
-    getMidi = getMidi . toInteger . round
-instance HasMidi Integer where
-    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
-    
-toMidi :: HasMidi a => Score a -> Midi.Midi
-toMidi score = Midi.Midi type' div [ctrlTr, evTr]
-    where                         
-        divs    = 1024
-        type'   = Midi.MultiTrack       
-        div     = Midi.TicksPerBeat divs
-        ctrlTr  = [(0, Midi.TempoChange 1000000), (10000, Midi.TrackEnd)]
-        evTr    = evs <> [(10000, Midi.TrackEnd)] 
-        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performRelative $ (>>= getMidi) $ score
-        -- TODO handle duration, voice
-        -- FIXME relative time ...
-
-writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
-writeMidi path sc = Midi.exportFile path (toMidi sc)
-
-playScore :: HasMidi a => Score a -> IO ()
-playScore sc = do
-    Midi.exportFile "test.mid" (toMidi sc)
-    execute "timidity" ["test.mid"]
-
-
-
-
-
--- class HasXml a where
---     toXml :: a -> Score Xml.Score
--- instance HasXml Xml.Score where
---     toXml = return
--- instance HasXml Double where
---     toXml = toXml . toInteger . round
--- instance HasXml Integer where
---     toXml x = undefined   
-
-testXml :: Score Integer -> Xml.Score
-testXml = Xml.fromPart "" "" "" . fmap toMusic . intoBars
-
--- TODO assumes length one
-intoBars :: Score a -> [[(Voice, Duration, a)]]
-intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
-    where  
-        g (v,bn,bt,d,x) = (v,d,x)
-        f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
-        trd5 (a,b,c,d,e) = c
-
-openSib :: Xml.Score -> IO ()
-openSib score =
-    do  writeFile "test.xml" (Xml.showXml score)
-        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-
-toMusic :: [(Voice, Duration, Integer)] -> Xml.Music
-toMusic = mconcat . fmap toMusic1
-
-toMusic1 :: (Voice, Duration, Integer) -> Xml.Music
-toMusic1 (v,d,p) = Xml.note (toEnum . fromIntegral . (`mod` 6) $ p, Nothing, 4) (fromRational . toRational $ d)
-
-
-splitWhile :: (a -> Bool) -> [a] -> [[a]]
-splitWhile p []     = [[]]
-splitWhile p (x:xs) = case splitWhile p xs of
-    (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
 
 
 
@@ -796,20 +796,19 @@ splitWhile p (x:xs) = case splitWhile p xs of
 
 
 
-list z f [] = z
-list z f xs = f xs
-
-first f (x,y)  = (f x, y)
-second f (x,y) = (x, f y)
 
 
-sep :: a -> [a] -> [a]
-sep = List.intersperse
 
-concatSep :: [a] -> [[a]] -> [a]
-concatSep x = List.concat . sep x
 
--- Accumulating over relative time in score. We do not use the affine space instance here.
+
+
+
+
+
+
+-- Some accumulators etc. Internal for now.
+
+-- | Accumulating over relative time in score. We do not use the affine space instance here.
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
 mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
 mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 0 . getPart
@@ -817,6 +816,25 @@ mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore            
 
+
+-- Generic stuff (not exported)
+
+list z f [] = z
+list z f xs = f xs
+
+first f (x,y)  = (f x, y)
+second f (x,y) = (x, f y)
+
+sep :: a -> [a] -> [a]
+sep = List.intersperse
+
+concatSep :: [a] -> [[a]] -> [a]
+concatSep x = List.concat . sep x
+
+splitWhile :: (a -> Bool) -> [a] -> [[a]]
+splitWhile p []     = [[]]
+splitWhile p (x:xs) = case splitWhile p xs of
+    (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
 
 execute :: FilePath -> [String] -> IO ()
 execute program args = do
