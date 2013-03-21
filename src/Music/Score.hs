@@ -110,6 +110,8 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
+import System.Posix -- debug
+
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
@@ -173,8 +175,15 @@ class Delayable a where
     delay :: Duration -> a -> a
 
 class Performable f where
-    perform :: f a -> [(Voice, Time, Duration, a)]
+    perform  :: f a -> [(Voice, Time, Duration, a)]
+    performR :: f a -> [(Voice, Time, Duration, a)]
+    -- TODO split and remerge parts...
+    performR = toRel . List.sortBy (comparing snd4) . perform
+        where
+            toRel = snd . mapAccumL g 0
+            g t' (v,t,d,x) = (t, (v,t-t',d,x))
 
+snd4 (a,b,c,d) = b
 
 -- |
 -- A track is a list of absolute-time occurences.
@@ -595,33 +604,45 @@ instance IsDynamics Double where
     fromDynamics (DynamicsL (Just x, _)) = x
     fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
--- midiSc :: Score Int -> Midi
--- midiSc = undefined
 
--- midiSc :: Score Int -> Midi
--- midiSc = Midi kType kDiv . (++ [controlPart]) . (fmap $ absToRel . (++ [(10000,PartEnd)])) . scToTr
---     where
---         kType  = MultiPart
---         kDiv   = TicksPerBeat 1024 -- fps tpf
---         scToTr = fmap (List.sortBy (comparing fst)) . fmap (\(c,evs) -> concatMap (occToEv c) evs)
---             . fmap (second getScore) . split
--- 
---         occToEv c (p,t,d,Nothing) = []
---         occToEv c (p,t,d,Just x)  = [(round $ t*1024, NoteOn c x 127)]
---         -- TODO carry over channel etc
--- 
---         absToRel = snd . mapAccumL (\t' (t,x) -> (t, (t-t',x))) 0
--- 
---         controlPart = [(0, TempoChange 1000000), (10000,PartEnd)]
+class HasMidi a where
+    toMidi :: a -> Score Midi.Message
+instance HasMidi Midi.Message where
+    toMidi = return
+instance HasMidi Double where
+    toMidi = toMidi . toInteger . round
+instance HasMidi Integer where
+    toMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
+    
+scoreToMidi :: HasMidi a => Score a -> Midi.Midi
+scoreToMidi score = Midi.Midi type' div [ctrlTr, evTr]
+    where                         
+        divs    = 1024
+        type'   = Midi.MultiTrack       
+        div     = Midi.TicksPerBeat divs
+        ctrlTr  = [(0, Midi.TempoChange 1000000), (10000, Midi.TrackEnd)]
+        evTr    = evs <> [(10000, Midi.TrackEnd)] 
+        evs     = fmap (\(v,t,d,x) -> (round (t * divs), x)) $ performR $ (>>= toMidi) $ score
+        -- TODO handle duration, voice
+        -- FIXME relative time ...
+
+ssm :: Score Midi.Message -> IO [()]
+ssm = Prelude.mapM putStrLn . fmap show . perform
+
+ssd :: Score Double -> IO [()]
+ssd = Prelude.mapM putStrLn . fmap show . perform
+
+play :: Score Double -> IO ()
+play = playScore
+
+playScore :: HasMidi a => Score a -> IO ()
+playScore sc = do
+    Midi.exportFile "test.mid" (scoreToMidi sc)
+    execute "timidity" ["test.mid"]
 
 
-
--- playSc :: Score Int -> IO ()
--- playSc sc = do
---     exportFile "test.mid" (midiSc sc)
---     execute "timidity" ["test.mid"]
-
-
+(<||) = sustain
+(||>) = flip sustain
 
 list z f [] = z
 list z f xs = f xs
@@ -638,6 +659,7 @@ concatSep x = List.concat . sep x
 
 
 
+
 -- Accumulating over relative time in score. We do not use the affine space instance here.
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
 mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
@@ -645,3 +667,9 @@ mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 
 
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore            
+
+
+execute :: FilePath -> [String] -> IO ()
+execute program args = do
+    forkProcess $ executeFile program True args Nothing
+    return ()
