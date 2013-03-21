@@ -146,8 +146,8 @@ instance InnerSpace Time where (<.>) = (*)
 
 instance  AffineSpace Time where
     type Diff Time = Duration
-    a .-. b =  t2d $ a - b
-    a .+^ b =  a + d2t b
+    a .-. b =  t2d $ a - b      where t2d = Duration . getTime
+    a .+^ b =  a + d2t b        where d2t = Time . getDuration
 
 instance AdditiveGroup Duration where
     zeroV = 0
@@ -160,12 +160,6 @@ instance VectorSpace Duration where
 
 instance InnerSpace Duration where (<.>) = (*)
 
--- TODO factor out these and use AffineSpace instance instead
-d2t = Time . getDuration
-t2d = Duration . getTime
-
-
--- class (Monoid a, Semigroup a) => Monoid' a
 
 class HasDuration a where
     duration :: a -> Duration
@@ -398,6 +392,7 @@ instance Performable Score where
             gatherPart v = toList . fmap (second4 d2t). mapWithTimeDur ((,,,) v)
             second4 f (a,b,c,d) = (a,f b,c,d)
             snd4 (a,b,c,d) = b
+            d2t = Time . getDuration
             
 -- |
 -- > offset x = onset x + duration x
