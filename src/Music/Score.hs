@@ -45,9 +45,13 @@ module Music.Score (
         -- ** Creating
         rest,
         note,
+        chord,
+        melody,
+        chords,
+        melodies,
 
         -- ** Inspecting
-        Monoid'(..),
+        -- Monoid'(..),
         HasDuration(..),
         HasOnset(..),
         Delayable(..),
@@ -157,7 +161,7 @@ d2t = Time . getDuration
 t2d = Duration . getTime
 
 
-class (Monoid a, Semigroup a) => Monoid' a
+-- class (Monoid a, Semigroup a) => Monoid' a
 
 class HasDuration a where
     duration :: a -> Duration
@@ -407,6 +411,39 @@ rest = Score [(0, Part [(1, Nothing)])]
 note :: a -> Score a
 note x = Score [(0, Part [(1, Just x)])]
 
+-- | Creates a score containing the given elements, composed in sequence.
+melody :: [a] -> Score a
+melody = scat . map note
+
+-- | Creates a score containing the given elements, composed in parallel.
+chord :: [a] -> Score a
+chord = pcat . map note
+
+-- | Creates a score from a the given melodies, composed in parallel.
+melodies :: [[a]] -> Score a
+melodies = pcat . map melody
+
+-- | Creates a score from a the given chords, composed in sequence.
+chords :: [[a]] -> Score a
+chords = scat . map chord
+
+-- | Like 'melody', but stretching each note by the given factors.
+melodyStretch :: [(Duration, a)] -> Score a
+melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
+
+-- | Like 'chord', but delays each note the given amounts.
+chordDelay :: [(Duration, a)] -> Score a
+chordDelay = pcat . map ( \(t, x) -> delay t $ note x )
+
+-- | Like 'chord', but delays and stretches each note the given amounts.
+chordDelayStretch :: [(Duration, Duration, a)] -> Score a
+chordDelayStretch = pcat . map ( \(t, d, x) -> delay t . stretch d $ note x )
+
+-- -- | Like chord, but delaying each note the given amount.
+-- arpeggio :: t -> [a] -> Score a
+-- arpeggio t xs = chordDelay (zip [0, t ..] xs)
+
+
 -- |
 -- Stretch a score. Equivalent to '*^'.
 -- 
@@ -457,7 +494,7 @@ a <| b = delay (duration b) a <> b
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid' b, Delayable b, HasDuration b) => [b] -> b
+scat :: (Monoid a, Semigroup a, Delayable a, HasDuration a) => [a] -> a
 scat = foldr (|>) mempty
 
 -- |
