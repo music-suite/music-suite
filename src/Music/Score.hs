@@ -106,7 +106,8 @@ module Music.Score (
         -- ** MusicXML export
         HasXml(..),
         toXml,
-        -- writeXml,
+        writeXml,
+        openXml
 )
 where
 
@@ -734,32 +735,44 @@ playMidiIO = runEvent . playMidi
 -------------------------------------------------------------------------------------
 
 class HasXml a where
-    getXml :: a -> Score ()
--- instance HasXml Xml.Score where
+--    getXml :: a -> Score ()
+instance HasXml Xml.Score where
 --     toXml = return
--- instance HasXml Double where
+instance HasXml Double where
 --     toXml = toXml . toInteger . round
--- instance HasXml Integer where
+instance HasXml Integer where
 --     toXml x = undefined   
 
-toXml :: Score Integer -> Xml.Score
+toXml :: Score a -> Xml.Score
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap toMusic . intoBars
 
--- TODO assumes bar length of one
 intoBars :: Score a -> [[(Voice, Duration, a)]]
 intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
     where  
         g (v,bn,bt,d,x) = (v,d,x)
         f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
         trd5 (a,b,c,d,e) = c
+        -- FIXME assumes bar length of one
 
-toMusic :: [(Voice, Duration, Integer)] -> Xml.Music
+-- translate one bar
+toMusic :: [(Voice, Duration, a)] -> Xml.Music
 toMusic = mconcat . fmap toMusic1
 
-toMusic1 :: (Voice, Duration, Integer) -> Xml.Music
-toMusic1 (v,d,p) = Xml.note (toEnum . fromIntegral . (`mod` 6) $ p, Nothing, 4) (fromRational . toRational $ d)
+toMusic1 :: (Voice, Duration, a) -> Xml.Music
+toMusic1 (v,d,p) = Xml.note p' d'
+    where
+        p' = (toEnum 0, Nothing, 4)
+        d' = (fromRational . toRational $ d)
 
 
+writeXml :: HasXml a => FilePath -> Score a -> IO ()
+writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
+
+openXml :: HasXml a => Score a -> IO ()
+openXml sc = do
+    writeXml "test.xml" sc
+    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
@@ -788,7 +801,10 @@ ssd :: Score Double -> IO [()]
 ssd = mapM putStrLn . fmap show . perform
 
 spanien :: Score Double
-spanien = (c^*3 |> d |> e^*3 |> d |> c^*2 |> g_^*2 |> g_^*4)^/10
+spanien = (c^*3 |> d |> e^*3 |> d |> c^*2 |> g_^*2 |> g_^*4)^/8
+
+rep 0 x = mempty
+rep n x = x |> rep (n-1) x
 
 
 openSib :: Xml.Score -> IO ()
