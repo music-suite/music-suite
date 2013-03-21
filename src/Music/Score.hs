@@ -94,7 +94,7 @@ where
             
 -}  
 
-import Prelude hiding (foldr, concatMap, maximum, sum, minimum)
+import Prelude hiding (foldr, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
 import Control.Applicative
@@ -111,11 +111,13 @@ import Data.AffineSpace
 import Data.Basis
 
 import System.Posix -- debug
+import System.IO
 
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
 import qualified Codec.Midi as Midi
+import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -123,11 +125,11 @@ import qualified Data.List as List
 newtype Voice = Voice { getVoice::Int }
     deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
 
-newtype Time = Time { getTime::Double }
+newtype Time = Time { getTime::Rational }
     deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
-newtype Duration = Duration { getDuration::Double }                                  
+newtype Duration = Duration { getDuration::Rational }                                  
     deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
@@ -178,12 +180,11 @@ class Performable f where
     perform  :: f a -> [(Voice, Time, Duration, a)]
     performR :: f a -> [(Voice, Time, Duration, a)]
     -- TODO split and remerge parts...
-    performR = toRel . List.sortBy (comparing snd4) . perform
+    performR = toRel . perform
         where
             toRel = snd . mapAccumL g 0
             g t' (v,t,d,x) = (t, (v,t-t',d,x))
 
-snd4 (a,b,c,d) = b
 
 -- |
 -- A track is a list of absolute-time occurences.
@@ -391,11 +392,13 @@ instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
 instance Performable Score where
-    perform (Score ps) = concatMap (uncurry gatherPart) ps
+    perform (Score ps) = List.sortBy (comparing snd4) $ concatMap (uncurry gatherPart) ps
         where            
             gatherPart :: Voice -> Part a -> [(Voice, Time, Duration, a)]
-            gatherPart v = toList . fmap (snd4 d2t). mapWithTimeDur ((,,,) v)
-            snd4 f (a,b,c,d) = (a,f b,c,d)
+            gatherPart v = toList . fmap (second4 d2t). mapWithTimeDur ((,,,) v)
+            second4 f (a,b,c,d) = (a,f b,c,d)
+            snd4 (a,b,c,d) = b
+            
 -- |
 -- > offset x = onset x + duration x
 -- 
@@ -584,9 +587,27 @@ prettyPart = concatSep " |> " . fmap (\(t,x) -> show t ++ "*^"++ maybe "rest" sh
 prettyScore :: Show a => Score a -> String
 prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
 
-
 showScore :: Score Double -> String
 showScore = show
+
+ssm :: Score Midi.Message -> IO [()]
+ssm = mapM putStrLn . fmap show . perform
+
+ssd :: Score Double -> IO [()]
+ssd = mapM putStrLn . fmap show . perform
+
+instance IsPitch Integer where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
 
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
@@ -626,20 +647,51 @@ scoreToMidi score = Midi.Midi type' div [ctrlTr, evTr]
         -- TODO handle duration, voice
         -- FIXME relative time ...
 
-ssm :: Score Midi.Message -> IO [()]
-ssm = Prelude.mapM putStrLn . fmap show . perform
-
-ssd :: Score Double -> IO [()]
-ssd = Prelude.mapM putStrLn . fmap show . perform
-
-play :: Score Double -> IO ()
-play = playScore
-
 playScore :: HasMidi a => Score a -> IO ()
 playScore sc = do
     Midi.exportFile "test.mid" (scoreToMidi sc)
     execute "timidity" ["test.mid"]
 
+
+
+
+
+-- class HasXml a where
+--     toXml :: a -> Score Xml.Score
+-- instance HasXml Xml.Score where
+--     toXml = return
+-- instance HasXml Double where
+--     toXml = toXml . toInteger . round
+-- instance HasXml Integer where
+--     toXml x = undefined   
+
+testXml :: Score Integer -> Xml.Score
+testXml = Xml.fromPart "" "" "" . fmap toMusic . intoBars
+
+-- TODO assumes length one
+intoBars :: Score a -> [[(Voice, Duration, a)]]
+intoBars = fmap (fmap g) . splitWhile ((== 0) . trd5) . map f . perform
+    where  
+        g (v,bn,bt,d,x) = (v,d,x)
+        f (v,t,d,x) = (v,bn,bt,d,x) where (bn,bt) = properFraction (toRational t)
+        trd5 (a,b,c,d,e) = c
+
+openSib :: Xml.Score -> IO ()
+openSib score =
+    do  writeFile "test.xml" (Xml.showXml score)
+        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+
+toMusic :: [(Voice, Duration, Integer)] -> Xml.Music
+toMusic = mconcat . fmap toMusic1
+
+toMusic1 :: (Voice, Duration, Integer) -> Xml.Music
+toMusic1 (v,d,p) = Xml.note (toEnum . fromIntegral . (`mod` 6) $ p, Nothing, 4) (fromRational . toRational $ d)
+
+
+splitWhile :: (a -> Bool) -> [a] -> [[a]]
+splitWhile p []     = [[]]
+splitWhile p (x:xs) = case splitWhile p xs of
+    (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
 
 (<||) = sustain
 (||>) = flip sustain
