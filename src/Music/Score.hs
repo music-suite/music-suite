@@ -90,7 +90,7 @@ where
             
 -}  
 
-import Prelude hiding (concatMap, maximum, sum, minimum)
+import Prelude hiding (foldr, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
 import Control.Applicative
@@ -108,7 +108,6 @@ import Data.Basis
 
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
-
 
 import qualified Codec.Midi as Midi
 import qualified Data.Map as Map
@@ -459,7 +458,7 @@ a <| b = delay (duration b) a <> b
 --
 -- > [Score t] -> Score t
 scat :: (Monoid' b, Delayable b, HasDuration b) => [b] -> b
-scat = Prelude.foldr (|>) mempty
+scat = foldr (|>) mempty
 
 -- |
 -- Parallel concatentation. Identical to 'mconcat'.
@@ -476,7 +475,7 @@ pcat = mconcat
 -- > Score a -> Score a -> Score a
 --
 sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
-sustain x y = x <> stretchTo (duration x) y
+x `sustain` y = x <> (duration x) `stretchTo` y
 
 
 -- Like '<>', but truncating the second agument to the duration of the first.
@@ -505,19 +504,6 @@ x <<| y  =  y |>> x
 --
 (|>>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 x |>> y  =  x <> delay t y where t = duration x / 2    
-
-{-
--- loopOverlay :: Time t => Score t a -> Score t a
-loopOverlay x = x |>> loopOverlay x
-
--- loopOverlayAll :: Time t => [Score t a] -> Score t a
-loopOverlayAll xs = l xs xs
-    where l xs []     = l xs xs
-          l xs (y:ys) = y |>> l xs ys   
-
--}
-
-
 
 -- | 
 -- Returns the voices in the given score.
