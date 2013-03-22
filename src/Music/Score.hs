@@ -750,16 +750,19 @@ instance HasXml Integer where
 --     toXml x = undefined   
 
 toXml :: Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . performBars
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
 
-performBars :: Score a -> [[(Voice, Duration, a)]]
-performBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime . perform
+separateBars :: [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
+separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
     where  
         discardTime (v,_,_,d,x) = (v,d,x)              
-        splitAtTimeZero = splitWhile ((== 0) . get3Of5)
+        
+        splitAtTimeZero = splitWhile ((== 0) . getBarTime)
+        
         separateTime (v,t,d,x) = (v,bn,bt,d,x) 
             where (bn,bt) = properFraction (toRational t)
-        get3Of5 (a,b,c,d,e) = c
+        
+        getBarTime (_,_,bt,_,_) = bt
         -- FIXME assumes bar length of one
         -- FIXME must include rests. How? Can we define a separate performRests?
         -- FIXME beaming?
@@ -784,6 +787,8 @@ openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     
+sc :: Score Double -> Score Double
+sc = id
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
@@ -900,6 +905,16 @@ sep = List.intersperse
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
 
+-- | 
+-- Group a list into sublists whereever a predicate holds. The matched element
+-- is the first in the sublist.
+--
+-- > splitWhile isSpace "foo bar baz"
+-- >    ===> ["foo"," bar"," baz"]
+-- >
+-- > splitWhile (> 3) [1,5,4,7,0,1,2]
+-- >    ===> [[1],[5],[4],[7,0,1,2]]
+--
 splitWhile :: (a -> Bool) -> [a] -> [[a]]
 splitWhile p xs = case splitWhile' p xs of
     []:xss -> xss
