@@ -126,7 +126,7 @@ where
             
 -}  
 
-import Prelude hiding (foldr, foldl, mapM, concatMap, maximum, sum, minimum)
+import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
 import Data.Ratio
@@ -771,6 +771,61 @@ separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
 translBar :: [(Voice, Duration, a)] -> Xml.Music
 translBar = mconcat . fmap translNote
     -- FIXME find tuplets
+
+
+
+
+type Rhythm = [Duration]
+
+-- > sum (syncopate a) == a
+syncopate :: Duration -> [Duration]
+syncopate d = [d/4, d/2, d/4]
+
+-- > sum (divideBy n a) == a
+divideBy :: Int -> Duration -> [Duration]
+divideBy n d = replicate n (d/fromIntegral n)
+
+
+
+
+
+divisions :: Duration -> [[Duration]]
+divisions = List.nub . generations 
+    (Just 5)
+    (\x -> (x,concat x))
+    [
+        -- fmap syncopate,
+        divideBy 2
+    ]
+
+gens :: Int -> [a -> a] -> a -> [a]
+gens n ks = generations (Just n) (\x -> (x, x)) ks
+
+-- |
+-- Generate a list of values by recursively applying the given computations.
+-- If given a generation limit (using 'Just'), the result is a finite list
+-- otherwise the result in an infinite list.
+--
+-- > generations n r ks :: a -> [b] where
+-- >      n  :: Maybe Int           is optional generation limit
+-- >      r  :: [b] -> ([b],[a])    selects individuals to add to final set and next generation respectively
+-- >      ks :: [a -> [b]]          are the computations generating offspring
+--      
+generations :: Maybe Int -> ([b] -> ([b],[a])) -> [a -> b] -> a -> [b]
+generations n r ks z = case n of 
+    Just 0 -> []
+    _      -> both $ second more $ r $ run
+    where            
+        both = uncurry (<>)
+        more = concatMap (generations (fmap pred n) r ks)
+        run  = ks <*> single z
+
+single x = [x]
+
+
+
+
+
 
 translNote :: (Voice, Duration, a) -> Xml.Music
 translNote (v,d,p) = Xml.note p' d'
