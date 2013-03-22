@@ -65,9 +65,9 @@ module Music.Score (
         melody,
         chords,
         melodies,
-        chordDelay,
-        melodyStretch,
-        chordDelayStretch,
+        -- chordDelay,
+        -- melodyStretch,
+        -- chordDelayStretch,
 
         -- ** Transforming
         delay,
@@ -82,14 +82,14 @@ module Music.Score (
         (<|),
         scat,
         pcat,
-        (<||),
-        (||>),
-        (<<|),
-        (|>>),
-        sustain,
-        overlap,
+        -- (<||),
+        -- (||>),
+        -- (<<|),
+        -- (|>>),
+        -- sustain,
+        -- overlap,
         -- prolong,
-        anticipate,
+        -- anticipate,
         
         -- ** Decomposing
         voices,
@@ -145,7 +145,7 @@ import Data.AffineSpace
 import Data.Basis
 
 import Data.Functor.Identity
-import Text.Parsec
+import Text.Parsec hiding ((<|>))
 import Text.Parsec.Pos
 
 import System.Posix -- debug
@@ -687,31 +687,37 @@ numVoices = length . voices
 -------------------------------------------------------------------------------------
 
 -- |
--- Class of types that can be converted to Midi scores.
+-- Class of types that can be converted to MIDI scores.
 --
--- Numeric types are implemented as notes with a default velocity, pairs are
--- implemented as @(pitch, velocity)@ pairs.
+-- Numeric types are interpreted as notes with a default velocity, pairs are
+-- interpreted as @(pitch, velocity)@ pairs.
 --
--- Minimal definition: 'getMidi'. Given 'runMidi', 'getMidi' can be implemented
--- as @runMidi . return@.
+-- Minimal definition: 'getMidi'. Given 'getMidiScore', 'getMidi' can be implemented
+-- as @getMidiScore . return@.
 --
 class HasMidi a where
+    -- | Convert a value to a MIDI score.
+    --   Typically, generates an /on/ event using 'note' followed by an optional /off/ event.
     getMidi :: a -> Score Midi.Message
 
-    runMidi :: Score a -> Score Midi.Message
-    runMidi = (>>= getMidi)
+    -- | Convert a score to a MIDI score.
+    --   The default definition can be overriden for efficiency.
+    getMidiScore :: Score a -> Score Midi.Message
+    getMidiScore = (>>= getMidi)
 
 instance HasMidi Midi.Message where
     getMidi = return
-instance HasMidi Double where
-    getMidi = getMidi . toInteger . round
+
+instance HasMidi ()                      where   getMidi = getMidi . toInteger . const 60
+instance HasMidi Double                  where   getMidi = getMidi . toInteger . round
+instance HasMidi Int                     where   getMidi = getMidi . toInteger    
+instance Integral a => HasMidi (Ratio a) where   getMidi = getMidi . toInteger . round    
+
 instance HasMidi Integer where
     getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
-instance HasMidi () where
-    getMidi x = note (Midi.NoteOn 0 60 100) |> note (Midi.NoteOff 0 60 0)
 
 -- |
--- Convert a score to a Midi file representaiton.
+-- Convert a score to a MIDI file representaiton.
 --    
 toMidi :: HasMidi a => Score a -> Midi.Midi
 toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
@@ -733,13 +739,13 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         -- TODO handle voice
 
 -- |
--- Convert a score to a Midi file and write to disc.
+-- Convert a score to a MIDI file and write to disc.
 --    
 writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
 -- |
--- Convert a score to a Midi event.
+-- Convert a score to a MIDI event.
 --    
 playMidi :: HasMidi a => Score a -> ()
 playMidi = error "Can not use Reactivity from music-score yet..."
@@ -754,7 +760,7 @@ playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
 -}
 
 -- |
--- Convert a score to a Midi event and run it.
+-- Convert a score to a MIDI event and run it.
 --    
 playMidiIO :: HasMidi a => Score a -> IO ()
 playMidiIO = error "Can not use Reactivity from music-score yet..."
@@ -822,10 +828,10 @@ quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' rhythm
 
 
--- A RhytmParser can convert (Score b) to a 
-type RhythmParser b a = Parsec [(Duration, b)] () a 
+-- A RhytmParser can convert (Part a) to b 
+type RhythmParser a b = Parsec [(Duration, a)] () b
 
-quantize' :: RhythmParser b a -> [(Duration, b)] -> Either String a
+quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p () ""
 
 -- pt :: Show a => RhythmParser b a -> [(Duration, b)] -> IO ()
@@ -842,9 +848,18 @@ match p = tokenPrim show next test
     
 rhythm :: RhythmParser a (Rhythm a)
 rhythm = mzero
+    <|> beat
+    <|> rseq
 
 beat :: RhythmParser a (Rhythm a)
-beat = mzero
+beat = match (const . isDivisibleBy 2)
+
+-- dotted
+-- rev dotted
+-- tuplet
+
+rseq :: RhythmParser a (Rhythm a)
+rseq = RSeq <$> Text.Parsec.many beat
 
 
 
