@@ -178,12 +178,16 @@ newtype Voice = Voice { getVoice::Int }
 -------------------------------------------------------------------------------------
 
 newtype Time = Time { getTime::Rational }
-    deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
+    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
 newtype Duration = Duration { getDuration::Rational }                                  
-    deriving (Eq, Ord, Show, Num, Enum, Real, Fractional, RealFrac)
+    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
+
+-- TODO for debugging
+instance Show Time where show = show . getTime
+instance Show Duration where show = show . getDuration
 
 instance AdditiveGroup Time where
     zeroV = 0
@@ -822,7 +826,10 @@ data Rhythm a
     | RTuplet     Duration (Rhythm a)           -- d is 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11 ...
     | RInvTuplet  Duration (Rhythm a)           -- d is 3/2,      6/4
     | RSeq        [Rhythm a]                    
+    deriving (Eq, Show)
 
+quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
+quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
 
 quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' rhythm
@@ -848,7 +855,6 @@ match p = tokenPrim show next test
     
 rhythm :: RhythmParser a (Rhythm a)
 rhythm = mzero
-    <|> beat
     <|> rseq
 
 beat :: RhythmParser a (Rhythm a)
@@ -859,7 +865,7 @@ beat = match (const . isDivisibleBy 2)
 -- tuplet
 
 rseq :: RhythmParser a (Rhythm a)
-rseq = RSeq <$> Text.Parsec.many beat
+rseq = RSeq <$> Text.Parsec.many1 beat
 
 
 
