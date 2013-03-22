@@ -19,16 +19,6 @@
 --
 -- Provides a musical score represenation.
 --
--- An value can have a negative onset, representing a values occuring before the
--- reference time. Durations must be positive, allthough the types does not
--- enforce this.
---
--- An value is either a /note/ or a /rest/ (represented by the 'Just' and 'Nothing'
--- constructors). Having explicit rests allow us to concatenate scores based on
--- duration even if the score is actually empty.
---
--- Scores allow overlapping values, but can be split into parts, which does not.
---
 -------------------------------------------------------------------------------------
 
 module Music.Score (
@@ -47,9 +37,6 @@ module Music.Score (
 
         -- * Delayable class
         Delayable(..),
-
-        -- * Performable class
-        Performable(..),
 
         -- * Track type
         Track(..),
@@ -177,10 +164,20 @@ newtype Voice = Voice { getVoice::Int }
 -- Time and duration
 -------------------------------------------------------------------------------------
 
+-- |
+-- This type represents absolute time. This means seconds elapsed since a known 
+-- reference time. The reference time can be anything, but is usually the 
+-- the beginning of the musical performance.
+--
+-- Times forms an affine space with durations as the underlying vector space.
+--
 newtype Time = Time { getTime::Rational }
     deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
+-- |
+-- This type represents relative time in seconds.
+--
 newtype Duration = Duration { getDuration::Rational }                                  
     deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
@@ -234,6 +231,10 @@ offset x = onset x .+^ duration x
 -- Delayable class
 -------------------------------------------------------------------------------------
 
+-- |
+-- Delayable values. This is really similar to 'AffineSpace', except that there
+-- is no '.-.'.
+-- 
 class Delayable a where
 
     -- |
@@ -257,30 +258,6 @@ t `startAt` x = delay d x where d = t .-. onset x
 t `stopAt`  x = delay d x where d = t .-. offset x
 
 
--------------------------------------------------------------------------------------
--- Performable class
--------------------------------------------------------------------------------------
-
-class Performable f where
-    -- |
-    -- Render as a list of @(voice, time, duration, value)@ tuples.
-    --
-    -- Time since reference time.
-    --
-    perform  :: f a -> [(Voice, Time, Duration, a)]
-    
-    -- |
-    -- Render as a list of @(voice, time, duration, value)@ tuples.
-    --
-    -- Time since last event.
-    --
-    performRelative :: f a -> [(Voice, Time, Duration, a)]
-    -- TODO split and remerge parts...
-    performRelative = toRel . perform
-        where
-            toRel = snd . mapAccumL g 0
-            g now (v,t,d,x) = (t, (v,t-now,d,x))
-
 
 -------------------------------------------------------------------------------------
 -- Track type
@@ -296,16 +273,21 @@ class Performable f where
 --
 -- Track is a 'Monad'. 'return' creates a track containing a single value at time
 -- zero, and '>>=' transforms the values of a track, allowing the addition and
--- removal of values relative to the time of the value. More intuitively,
+-- removal of values relative to the time of the value. Perhaps more intuitively,
 -- 'join' delays each inner track to start at the offset of an outer track, then
 -- removes the intermediate structure. 
 --
--- > let s = Track [(0,65),(1,66)] 
+-- > let t = Track [(0,65),(1,66)] 
+-- >
 -- > t >>= \x -> Track [(0,'a'),(10,toEnum x)]
--- >   ==> Track {getTrack = [(0.0,'a'),(1.0,'a'),(10.0,'A'),(11.0,'B')]}
+-- >
+-- >   ==> Track {getTrack = [ (0.0,'a'),
+-- >                           (1.0,'a'),
+-- >                           (10.0,'A'),
+-- >                           (11.0,'B') ]}
 --
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
--- and time scaling as scalar multiplication.
+-- and time scaling as scalar multiplication. 
 --
 newtype Track a = Track { getTrack :: [(Time, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
@@ -327,7 +309,7 @@ instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track tts) = mconcat . fmap (\(t,tr) -> delay (t .-. 0) tr) $ tts
+            join' (Track ts) = foldMap (uncurry $ \t -> delay (t .-. 0)) $ ts
 
 instance Alternative Track where
     empty = mempty
@@ -365,8 +347,26 @@ instance HasOnset (Track a) where
 -- Part is a 'Monoid' under sequential compisiton. 'mempty' is the empty part and 'mappend'
 -- appends parts.
 --
--- Part is an instance of 'VectorSpace' using parallel composition as addition, 
--- and time scaling as scalar multiplication.
+-- Track has an 'Applicative' instance derived from the 'Monad' instance.
+--
+-- Part is a 'Monad'. 'return' creates a part containing a single value of duration
+-- one, and '>>=' transforms the values of a part, allowing the addition and
+-- removal of values under relative duration. Perhaps more intuitively, 'join' scales 
+-- each inner part to the duration of the outer part, then removes the 
+-- intermediate structure. 
+--
+-- > let p = Part [(1,Just 0), (2, Just 1)] :: Part Int
+-- >
+-- > p >>= \x -> Part [ (1, Just $ toEnum $ x+65), 
+-- >                    (3, Just $ toEnum $ x+97) ] :: Part Char
+-- >
+-- >     ===> Part {getPart = [ (1 % 1,Just 'A'),
+-- >                            (3 % 1,Just 'a'),
+-- >                            (2 % 1,Just 'B'),
+-- >                            (6 % 1,Just 'b') ]}
+--
+-- Part is a 'VectorSpace' using parallel composition as addition, and time scaling
+-- as scalar multiplication.
 --
 newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
@@ -382,8 +382,7 @@ instance Monad Part where
     return a = Part [(1, Just a)]
     a >>= k = join' $ fmap k a
         where
-            join' (Part pps) = mconcat . fmap (\(d, p) -> maybe mempty (d *^) p) $ pps
---    -- TODO divide by sum of duration?
+            join' (Part ps) = foldMap (uncurry $ \d -> maybe mempty (d *^)) $ ps
 
 instance AdditiveGroup (Part a) where
     zeroV   = mempty
@@ -400,13 +399,6 @@ instance Delayable (Part a) where
 instance HasDuration (Part a) where
     duration (Part []) = 0
     duration (Part as) = sum . fmap fst $ as
-
--- instance HasOnset (Part a) where
---     onset (Part []) = Nothing
---     onset (Part xs) = Just $ sum $ fmap fst $ takeWhile isRest $ xs
---         where
---             isRest (_,Nothing) = True
---             isRest (_,Just _)  = False
 
 
 -------------------------------------------------------------------------------------
@@ -501,14 +493,22 @@ instance IsPitch a => IsPitch (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
-instance Performable Score where
-    perform (Score ps) = List.sortBy (comparing snd4) $ concatMap (uncurry gatherPart) ps
-        where            
-            gatherPart :: Voice -> Part a -> [(Voice, Time, Duration, a)]
-            gatherPart v = toList . fmap (second4 d2t). mapWithTimeDur ((,,,) v)
-            second4 f (a,b,c,d) = (a,f b,c,d)
-            snd4 (a,b,c,d) = b
-            d2t = Time . getDuration
+
+perform :: Score a -> [(Voice, Time, Duration, a)]
+perform (Score ps) = List.sortBy (comparing snd4) $ concatMap (uncurry gatherPart) ps
+    where            
+        gatherPart :: Voice -> Part a -> [(Voice, Time, Duration, a)]
+        gatherPart v = toList . fmap (second4 d2t). mapWithTimeDur ((,,,) v)
+        second4 f (a,b,c,d) = (a,f b,c,d)
+        snd4 (a,b,c,d) = b
+        d2t = Time . getDuration
+
+performRelative :: Score a -> [(Voice, Time, Duration, a)]
+performRelative = toRel . perform
+    where
+        toRel = snd . mapAccumL g 0
+        g now (v,t,d,x) = (t, (v,t-now,d,x))
+        -- TODO split and remerge parts...
             
 
 -------------------------------------------------------------------------------------
@@ -605,7 +605,7 @@ infixr 6 <|
 --
 -- > Score a -> Score a -> Score a
 (|>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-a |> b = a <> delay (duration a) b
+a |> b = a <> duration a `delay` b
 
 -- |
 -- Compose in reverse sequence. 
@@ -614,7 +614,7 @@ a |> b = a <> delay (duration a) b
 --
 -- > Score a -> Score a -> Score a
 (<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-a <| b = delay (duration b) a <> b
+a <| b = duration b `delay` a <> b
 
 -- |
 -- Sequential concatentation.
