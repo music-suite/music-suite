@@ -21,6 +21,8 @@ library
         time,
         random,           
         containers,       
+        parsec,
+        transformers,
         HCodecs,
         musicxml2,
         semigroups,

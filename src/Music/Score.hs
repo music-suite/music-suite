@@ -144,6 +144,10 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
+import Data.Functor.Identity
+import Text.Parsec
+import Text.Parsec.Pos
+
 import System.Posix -- debug
 import System.IO
 
@@ -682,8 +686,21 @@ numVoices = length . voices
 
 -------------------------------------------------------------------------------------
 
+-- |
+-- Class of types that can be converted to Midi scores.
+--
+-- Numeric types are implemented as notes with a default velocity, pairs are
+-- implemented as @(pitch, velocity)@ pairs.
+--
+-- Minimal definition: 'getMidi'. Given 'runMidi', 'getMidi' can be implemented
+-- as @runMidi . return@.
+--
 class HasMidi a where
     getMidi :: a -> Score Midi.Message
+
+    runMidi :: Score a -> Score Midi.Message
+    runMidi = (>>= getMidi)
+
 instance HasMidi Midi.Message where
     getMidi = return
 instance HasMidi Double where
@@ -692,7 +709,10 @@ instance HasMidi Integer where
     getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
 instance HasMidi () where
     getMidi x = note (Midi.NoteOn 0 60 100) |> note (Midi.NoteOff 0 60 0)
-    
+
+-- |
+-- Convert a score to a Midi file representaiton.
+--    
 toMidi :: HasMidi a => Score a -> Midi.Midi
 toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
     where                                                        
@@ -712,9 +732,15 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO handle voice
 
+-- |
+-- Convert a score to a Midi file and write to disc.
+--    
 writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
+-- |
+-- Convert a score to a Midi event.
+--    
 playMidi :: HasMidi a => Score a -> ()
 playMidi = error "Can not use Reactivity from music-score yet..."
 {-
@@ -727,6 +753,9 @@ playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
         -- FIXME hardcoded output...
 -}
 
+-- |
+-- Convert a score to a Midi event and run it.
+--    
 playMidiIO :: HasMidi a => Score a -> IO ()
 playMidiIO = error "Can not use Reactivity from music-score yet..."
 {-
@@ -770,7 +799,7 @@ separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
         getBarTime (_,_,bt,_,_) = bt
         -- FIXME assumes bar length of one
         -- FIXME must include rests. How? Can we define a separate performRests?
-        -- FIXME beaming?
+        -- FIXME ties?
 
 -- translate one bar
 translBar :: [(Voice, Duration, a)] -> Xml.Music
@@ -780,7 +809,46 @@ translBar = mconcat . fmap translNote
 
 
 
-type Rhythm = [Duration]
+data Rhythm a 
+    = RBeat       Duration a                    -- d is divisible by 2
+    | RDotted     (Rhythm a) (Rhythm a)
+    | RRevDotted  (Rhythm a) (Rhythm a)
+    | RTuplet     Duration (Rhythm a)           -- d is 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11 ...
+    | RInvTuplet  Duration (Rhythm a)           -- d is 3/2,      6/4
+    | RSeq        [Rhythm a]                    
+
+
+quantize :: [(Duration, a)] -> Either String (Rhythm a)
+quantize = quantize' rhythm
+
+
+-- A RhytmParser can convert (Score b) to a 
+type RhythmParser b a = Parsec [(Duration, b)] () a 
+
+quantize' :: RhythmParser b a -> [(Duration, b)] -> Either String a
+quantize' p = left show . runParser p () ""
+
+-- pt :: Show a => RhythmParser b a -> [(Duration, b)] -> IO ()
+-- pt = parseTest
+
+
+match :: (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
+match p = tokenPrim show next test
+    where
+        show x        = ""
+        next pos _ _  = updatePosChar pos 'x'
+        test (d,x)    = if p d x then Just (RBeat d x) else Nothing
+
+    
+rhythm :: RhythmParser a (Rhythm a)
+rhythm = mzero
+
+beat :: RhythmParser a (Rhythm a)
+beat = mzero
+
+
+
+{-
 
 -- > sum (syncopate a) == a
 syncopate :: Duration -> Rhythm
@@ -811,17 +879,18 @@ divideBy n d = replicate n (d/fromIntegral n)
 combinations :: [[a]] -> [[a]]
 combinations = sequenceA
 
+
 -- iterateBounded :: ([a] -> [a]) -> a -> [a]
 -- iterateBounded = iterate 
 
-makeAll :: Rhythm -> [Rhythm]
-makeAll r = concat $ takeWhile (\x -> length x > 0) $ iterate (concatMap makeRhythms . filter notTooSmall) [r]
-    -- where
+makeAll :: Rhythm -> [Rhythm]                                                                  
+makeAll = (!! 2) . (List.reverse . List.nub) . iterate ({-reverse . -}List.sort . concat . traverse divideRhythm) . single
 
-notTooSmall = List.all (> (1/4))
+--notTooSmall = List.all (> (1/4))
+--concatWhile f = concat . takeWhile f
 
-makeRhythms :: Rhythm -> [Rhythm]
-makeRhythms rs = fmap concat $ sequenceA $ alts
+divideRhythm :: Rhythm -> [Rhythm]
+divideRhythm rs = fmap concat $ sequenceA $ alts
     where               
         alts :: [[Rhythm]]
         alts = divideDur <$> rs
@@ -830,43 +899,22 @@ divideDur :: Duration -> [Rhythm]
 divideDur ds = ks <*> [ds]
     where               
         ks = [  
-                -- single,      FIXME need this to get all perms, but that breaks length check above
+                single,
                 divideBy 2,
-                -- divideBy 4,
+                syncopate
                 -- dotSafe,     TODO must use safe versions here
                 -- revDotSafe,
-                syncopate
             ]
+                                     -}
 
 
-testRhSc = (^/1) $ scat $ fmap r2s $ makeAll [1]
+testRhSc :: Score ()
+testRhSc = (^/1) $ undefined
     where           
-        r2s :: Rhythm -> Score ()
-        r2s = scat . fmap (\d -> (note ())^*d)
+        -- r2s :: Rhythm -> Score ()
+        -- r2s = scat . fmap (\d -> (note ())^*d)
 
-gens :: Int -> [a -> a] -> a -> [a]
-gens n ks = generations (Just n) (\x -> (x, x)) ks
 
--- |
--- Generate a list of values by recursively applying the given computations.
--- If given a generation limit (using 'Just'), the result is a finite list
--- otherwise the result in an infinite list.
---
--- > generations n r ks :: a -> [b] where
--- >      n  :: Maybe Int           is optional generation limit
--- >      r  :: [b] -> ([b],[a])    selects individuals to add to final set and next generation respectively
--- >      ks :: [a -> [b]]          are the computations generating offspring
---      
-generations :: Maybe Int -> ([b] -> ([b],[a])) -> [a -> b] -> a -> [b]
-generations n r ks z = case n of 
-    Just 0 -> []
-    _      -> both $ second more $ r $ run
-    where            
-        both = uncurry (<>)
-        more = concatMap (generations (fmap pred n) r ks)
-        run  = ks <*> single z
-
-single x = [x]
 
 
 
@@ -1042,3 +1090,12 @@ logBaseR k n                         = logBase (fromRational k) (fromRational n)
 
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
+single x = [x]            
+fmap2 = fmap . fmap
+fmap3 = fmap . fmap . fmap
+
+dump = mapM putStrLn . fmap show
+
+left f (Left x)  = Left (f x)
+left f (Right y) = Right y
