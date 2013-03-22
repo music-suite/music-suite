@@ -3,7 +3,8 @@
     TypeFamilies,
     GeneralizedNewtypeDeriving,
     DeriveFunctor,
-    DeriveFoldable,
+    DeriveFoldable,     
+    ScopedTypeVariables,
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -689,6 +690,8 @@ instance HasMidi Double where
     getMidi = getMidi . toInteger . round
 instance HasMidi Integer where
     getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
+instance HasMidi () where
+    getMidi x = note (Midi.NoteOn 0 60 100) |> note (Midi.NoteOff 0 60 0)
     
 toMidi :: HasMidi a => Score a -> Midi.Midi
 toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
@@ -748,6 +751,8 @@ instance HasXml Double where
 --     toXml = toXml . toInteger . round
 instance HasXml Integer where
 --     toXml x = undefined   
+instance HasXml () where
+--     toXml x = undefined   
 
 toXml :: Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
@@ -778,25 +783,66 @@ translBar = mconcat . fmap translNote
 type Rhythm = [Duration]
 
 -- > sum (syncopate a) == a
-syncopate :: Duration -> [Duration]
+syncopate :: Duration -> Rhythm
 syncopate d = [d/4, d/2, d/4]
 
+dot :: Duration -> Rhythm
+dot d = [d*3/4, d/4]
+
+revDot :: Duration -> Rhythm
+revDot d = [d/4, d*3/4]
+
+dotSafe :: Duration -> Maybe Rhythm
+dotSafe d | isDivisibleBy 2 d = Just (dot d)
+          | otherwise         = Nothing
+
+revDotSafe :: Duration -> Maybe Rhythm
+revDotSafe d | isDivisibleBy 2 d = Just (revDot d)
+             | otherwise         = Nothing
+
+          
 -- > sum (divideBy n a) == a
-divideBy :: Int -> Duration -> [Duration]
+divideBy :: Int -> Duration -> Rhythm
 divideBy n d = replicate n (d/fromIntegral n)
 
 
+-- 
+-- combinations [[1,2],[3,4]] ==> [1,3],[1,4],[2,3],[2,4]
+combinations :: [[a]] -> [[a]]
+combinations = sequenceA
+
+-- iterateBounded :: ([a] -> [a]) -> a -> [a]
+-- iterateBounded = iterate 
+
+makeAll :: Rhythm -> [Rhythm]
+makeAll r = concat $ takeWhile (\x -> length x > 0) $ iterate (concatMap makeRhythms . filter notTooSmall) [r]
+    -- where
+
+notTooSmall = List.all (> (1/4))
+
+makeRhythms :: Rhythm -> [Rhythm]
+makeRhythms rs = fmap concat $ sequenceA $ alts
+    where               
+        alts :: [[Rhythm]]
+        alts = divideDur <$> rs
+
+divideDur :: Duration -> [Rhythm]
+divideDur ds = ks <*> [ds]
+    where               
+        ks = [  
+                -- single,      FIXME need this to get all perms, but that breaks length check above
+                divideBy 2,
+                -- divideBy 4,
+                -- dotSafe,     TODO must use safe versions here
+                -- revDotSafe,
+                syncopate
+            ]
 
 
-
-divisions :: Duration -> [[Duration]]
-divisions = List.nub . generations 
-    (Just 5)
-    (\x -> (x,concat x))
-    [
-        -- fmap syncopate,
-        divideBy 2
-    ]
+testRhSc = (^/1) $ scat $ fmap r2s $ makeAll [1]
+    where           
+        r2s :: Rhythm -> Score ()
+        r2s = scat . fmap (\d -> (note ())^*d)
 
 gens :: Int -> [a -> a] -> a -> [a]
 gens n ks = generations (Just n) (\x -> (x, x)) ks
@@ -983,3 +1029,16 @@ execute :: FilePath -> [String] -> IO ()
 execute program args = do
     forkProcess $ executeFile program True args Nothing
     return ()
+
+
+
+
+logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseR k n 
+    | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
+logBaseR k n 
+    | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
+logBaseR k n                         = logBase (fromRational k) (fromRational n)
+
+isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
+isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
