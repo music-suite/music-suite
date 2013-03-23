@@ -28,11 +28,9 @@ library
         semigroups,
         semigroupoids,
         vector-space,
-        -- music-pitch,
         music-pitch-literal,
-        -- music-dynamics,
         music-dynamics-literal,
-        music-articulation
+        reenact
 
     hs-source-dirs: src
     exposed-modules:
