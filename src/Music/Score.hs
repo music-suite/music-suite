@@ -24,8 +24,10 @@
 module Music.Score (
 
         -- * Basic types
-        -- ** Voice
+{-
+        ** Voice
         Voice(..),
+-}
 
         -- ** Time and duration
         Time(..),
@@ -78,10 +80,12 @@ module Music.Score (
         -- prolong,
         -- anticipate,
         
+{-
         -- ** Decomposing
         voices,
         numVoices,
         setVoice,
+-}
         
         -- * Utility         
         -- ** MIDI export
@@ -150,12 +154,14 @@ import qualified Data.Map as Map
 import qualified Data.List as List
 
 
+{-
 -------------------------------------------------------------------------------------
 -- Voice
 -------------------------------------------------------------------------------------
 
 newtype Voice = Voice { getVoice::Int }
     deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
+-}
 
 
 -------------------------------------------------------------------------------------
@@ -422,7 +428,7 @@ instance HasDuration (Part a) where
 -- duration 0 and 1 for 'zeroV' and 'basisValue' respectively. The values of each
 -- part has a separate basis, so 'decompose' separates parts.
 --
-newtype Score a  = Score { getScore :: [(Voice, Part a)] }
+newtype Score a  = Score { getScore :: [(Part a)] }
     deriving (Show, Functor, Foldable)
 
 instance Eq a => Eq (Score a) where
@@ -455,16 +461,20 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where
-            join' (Score xs) = pcat $ pcat $ fmap (g . f) $ xs
+            join' (Score xs) = pcat $ pcat $ fmap g $ xs
                 where
                     -- g :: Part (Score a)  -> [Score a]
                     g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
 
+{-
                     -- f :: (Voice, Part (Score a))  -> Part (Score a)
                     f = uncurry fmap . first setVoice
+-}
 
+{-
 setVoice :: Voice -> Score a -> Score a
 setVoice v = Score . fmap (first (const v)) . getScore
+-}
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -473,20 +483,22 @@ instance AdditiveGroup (Score a) where
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    n *^ Score xs = Score (fmap (second (n*^)) xs)
+    n *^ Score xs = Score (fmap (n*^) xs)
 
 instance Delayable (Score a) where
-    delay t (Score xs) = Score (fmap (second (delay t)) xs)
+    delay t (Score xs) = Score (fmap (delay t) xs)
 
+{-
 -- Experimental instance. We want to do something more sophisticated with parts later on.
 instance HasBasis (Score a) where
     type Basis (Score a) = Voice
     basisValue p = Score [(p, Part [(1, Nothing)])]
     decompose' s = fromJust . (flip lookup) (decompose s)
     decompose    = fmap (second duration) . getScore
+-}
 
 instance HasDuration (Score a) where
-    duration (Score as) = maximum $ fmap (duration . snd) $ as
+    duration (Score as) = maximum $ fmap (duration) $ as
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -495,21 +507,20 @@ instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
 
-perform :: Score a -> [(Voice, Time, Duration, a)]
-perform (Score ps) = List.sortBy (comparing snd4) $ concatMap (uncurry gatherPart) ps
+perform :: Score a -> [(Time, Duration, a)]
+perform (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
     where            
-        gatherPart :: Voice -> Part a -> [(Voice, Time, Duration, a)]
-        gatherPart v = toList . fmap (second4 d2t). mapWithTimeDur ((,,,) v)
-        second4 f (a,b,c,d) = (a,f b,c,d)
-        snd4 (a,b,c,d) = b
+        gatherPart :: Part a -> [(Time, Duration, a)]
+        gatherPart = toList . fmap (first3 d2t). mapWithTimeDur ((,,))
+        first3 f (b,c,d) = (f b,c,d)
+        fst3 (b,c,d) = b
         d2t = Time . getDuration
 
-performRelative :: Score a -> [(Voice, Time, Duration, a)]
+performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . perform
     where
         toRel = snd . mapAccumL g 0
-        g now (v,t,d,x) = (t, (v,t-now,d,x))
-        -- TODO split and remerge parts...
+        g now (t,d,x) = (t, (t-now,d,x))
             
 
 -------------------------------------------------------------------------------------
@@ -520,7 +531,7 @@ performRelative = toRel . perform
 -- Create a score of duration 1 with no values.
 --
 rest :: Score a
-rest = Score [(0, Part [(1, Nothing)])]
+rest = Score [Part [(1, Nothing)]]
 
 -- |
 -- Create a score of duration 1 with the given value.
@@ -528,7 +539,7 @@ rest = Score [(0, Part [(1, Nothing)])]
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [(0, Part [(1, Just x)])]
+note x = Score [Part [(1, Just x)]]
 
 -- | Creates a score containing the given elements, composed in sequence.
 melody :: [a] -> Score a
@@ -676,6 +687,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 -- Decomposition
 -------------------------------------------------------------------------------------
 
+{-
 -- | 
 -- Returns the voices in the given score.
 --
@@ -687,6 +699,7 @@ voices = fmap fst . decompose
 --
 numVoices :: Score a -> Int
 numVoices = length . voices
+-}
  
 
 -------------------------------------------------------------------------------------
@@ -735,9 +748,9 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         eventTrack      = events <> [(endPos, Midi.TrackEnd)] 
 
         events :: [(Midi.Ticks, Midi.Message)]
-        events          = (\(_,t,_,x) -> (round (t * divisions), x)) <$> performance
+        events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
 
-        performance :: [(Voice, Time, Duration, Midi.Message)]
+        performance :: [(Time, Duration, Midi.Message)]
         performance     = performRelative (getMidi =<< score)
 
         -- FIXME arbitrary endTime (files won't work without this...)
@@ -756,7 +769,7 @@ playMidi :: HasMidi a => Score a -> Event MidiMessage
 playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
-        toTrack     = fmap (\(v,t,_,m) -> (t,m)) . perform . (getMidi =<<)
+        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . (getMidi =<<)
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
 
@@ -820,28 +833,28 @@ instance HasMusicXml Integer where
 toXml :: HasMusicXml a => Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
 
-separateBars :: HasMusicXml a => [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
-separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
+separateBars :: HasMusicXml a => [(Time, Duration, a)] -> [[(Duration, a)]]
+separateBars = fmap (fmap discardTime) . splitAtTimeZero . fmap separateTime
     where  
-        discardTime (v,_,_,d,x) = (v,d,x)              
+        discardTime (_,_,d,x) = (d,x)              
         
         splitAtTimeZero = splitWhile ((== 0) . getBarTime)
         
-        separateTime (v,t,d,x) = (v,bn,bt,d,x) 
+        separateTime (t,d,x) = (bn,bt,d,x) 
             where (bn,bt) = properFraction (toRational t)
         
-        getBarTime (_,_,bt,_,_) = bt
+        getBarTime (_,bt,_,_) = bt
         -- FIXME assumes bar length of one
         -- FIXME must include rests. How? Can we define a separate performRests?
         -- FIXME ties?
 
 -- translate one bar
-translBar :: HasMusicXml a => [(Voice, Duration, a)] -> Xml.Music
+translBar :: HasMusicXml a => [(Duration, a)] -> Xml.Music
 translBar = mconcat . fmap translNote
     -- FIXME find tuplets
 
-translNote :: HasMusicXml a => (Voice, Duration, a) -> Xml.Music
-translNote (_,d,p) = getXml d p
+translNote :: HasMusicXml a => (Duration, a) -> Xml.Music
+translNote (d,p) = getXml d p
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
