@@ -268,7 +268,7 @@ t `stopAt`  x = delay d x where d = t .-. offset x
 -------------------------------------------------------------------------------------
 
 -- |
--- A track is a list of absolute-time occurences.
+-- A track is a sorted list of absolute-time occurences.
 --
 -- Track is a 'Monoid' under parallel compisiton. 'mempty' is the empty track and 'mappend'
 -- interleaves values.
@@ -346,7 +346,7 @@ instance HasOnset (Track a) where
 -------------------------------------------------------------------------------------
 
 -- |
--- A part is a list of relative-time notes and rests.
+-- A part is a sorted list of relative-time notes and rests.
 --
 -- Part is a 'Monoid' under sequential compisiton. 'mempty' is the empty part and 'mappend'
 -- appends parts.
@@ -410,7 +410,7 @@ instance HasDuration (Part a) where
 -------------------------------------------------------------------------------------
 
 -- |
--- A score is list of parts.
+-- A score is a list of parts.
 --
 -- Score is a 'Monoid' under parallel compisiton. 'mempty' is a score of no parts.
 -- For sequential composition of scores, use '|>'.
@@ -432,10 +432,10 @@ newtype Score a  = Score { getScore :: [(Part a)] }
     deriving (Show, Functor, Foldable)
 
 instance Eq a => Eq (Score a) where
-    a == b = perform a == perform b
+    a == b = performAbsolute a == performAbsolute b
 
 instance Ord a => Ord (Score a) where
-    a `compare` b = perform a `compare` perform b
+    a `compare` b = performAbsolute a `compare` performAbsolute b
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -463,18 +463,8 @@ instance Monad Score where
         where
             join' (Score xs) = pcat $ pcat $ fmap g $ xs
                 where
-                    -- g :: Part (Score a)  -> [Score a]
                     g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
 
-{-
-                    -- f :: (Voice, Part (Score a))  -> Part (Score a)
-                    f = uncurry fmap . first setVoice
--}
-
-{-
-setVoice :: Voice -> Score a -> Score a
-setVoice v = Score . fmap (first (const v)) . getScore
--}
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -488,15 +478,6 @@ instance VectorSpace (Score a) where
 instance Delayable (Score a) where
     delay t (Score xs) = Score (fmap (delay t) xs)
 
-{-
--- Experimental instance. We want to do something more sophisticated with parts later on.
-instance HasBasis (Score a) where
-    type Basis (Score a) = Voice
-    basisValue p = Score [(p, Part [(1, Nothing)])]
-    decompose' s = fromJust . (flip lookup) (decompose s)
-    decompose    = fmap (second duration) . getScore
--}
-
 instance HasDuration (Score a) where
     duration (Score as) = maximum $ fmap (duration) $ as
 
@@ -506,9 +487,18 @@ instance IsPitch a => IsPitch (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
+{-
+-- Experimental instance. We want to do something more sophisticated with parts later on.
+instance HasBasis (Score a) where
+    type Basis (Score a) = Voice
+    basisValue p = Score [(p, Part [(1, Nothing)])]
+    decompose' s = fromJust . (flip lookup) (decompose s)
+    decompose    = fmap (second duration) . getScore
+-}
 
-perform :: Score a -> [(Time, Duration, a)]
-perform (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
+
+performAbsolute :: Score a -> [(Time, Duration, a)]
+performAbsolute (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
     where            
         gatherPart :: Part a -> [(Time, Duration, a)]
         gatherPart = toList . fmap (first3 d2t). mapWithTimeDur ((,,))
@@ -517,7 +507,7 @@ perform (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
         d2t = Time . getDuration
 
 performRelative :: Score a -> [(Time, Duration, a)]
-performRelative = toRel . perform
+performRelative = toRel . performAbsolute
     where
         toRel = snd . mapAccumL g 0
         g now (t,d,x) = (t, (t-now,d,x))
@@ -769,7 +759,7 @@ playMidi :: HasMidi a => Score a -> Event MidiMessage
 playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
-        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . (getMidi =<<)
+        toTrack     = fmap (\(t,_,m) -> (t,m)) . performAbsolute . (getMidi =<<)
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
 
@@ -831,7 +821,7 @@ instance HasMusicXml Integer where
 -- Convert a score to a MusicXML representaiton. 
 -- 
 toXml :: HasMusicXml a => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . performAbsolute
 
 separateBars :: HasMusicXml a => [(Time, Duration, a)] -> [[(Duration, a)]]
 separateBars = fmap (fmap discardTime) . splitAtTimeZero . fmap separateTime
@@ -1004,10 +994,10 @@ showScore :: Score Double -> String
 showScore = show
 
 ssm :: Score Midi.Message -> IO [()]
-ssm = mapM putStrLn . fmap show . perform
+ssm = mapM putStrLn . fmap show . performAbsolute
 
 ssd :: Score Double -> IO [()]
-ssd = mapM putStrLn . fmap show . perform
+ssd = mapM putStrLn . fmap show . performAbsolute
 
 spanien :: Score Double
 spanien = (c^*3 |> d |> e^*3 |> d |> c^*2 |> g_^*2 |> g_^*4)^/8
