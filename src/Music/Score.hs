@@ -412,7 +412,8 @@ instance HasDuration (Part a) where
 -------------------------------------------------------------------------------------
 
 -- |
--- A score is a list of parts.
+-- A score is a list of absolute time notes and rests. A rest is a duration and 
+-- a note is a value and a duration.
 --
 -- Score is a 'Monoid' under parallel compisiton. 'mempty' is a score of no parts.
 -- For sequential composition of scores, use '|>'.
@@ -428,12 +429,12 @@ instance HasDuration (Part a) where
 -- > let s = Score [(0, 1, Just 0), (1, 2, Just 1)] :: Score Int
 -- >
 -- > s >>= \x -> Score [ (0, 1, Just $ toEnum $ x+65), 
--- >                     (1, 3, Just $ toEnum $ x+97) ] :: Part Char
+-- >                     (1, 3, Just $ toEnum $ x+97) ] :: Score Char
 -- >
--- >     ===> Part {getPart = [ (1 % 1,Just 'A'),
--- >                            (3 % 1,Just 'a'),
--- >                            (2 % 1,Just 'B'),
--- >                            (6 % 1,Just 'b') ]}
+-- >     ===> Score {getScore = [ (0 % 1, 1 % 1, Just 'A'),
+-- >                              (1 % 1, 3 % 1, Just 'a'),
+-- >                              (1 % 1, 2 % 1, Just 'B'),
+-- >                              (3 % 1, 6 % 1, Just 'b') ]}
 --
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
 -- and time scaling as scalar multiplication. 
