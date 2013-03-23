@@ -14,6 +14,7 @@ isomorphic to MusicXML 3.0.
 * Custom note heads
 * Beaming, cross-beams and tremolo
 * Ornaments and articulation
+* Dynamics
 
 The following features are currently missing or incomplete:
 
