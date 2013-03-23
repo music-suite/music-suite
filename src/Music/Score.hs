@@ -781,19 +781,37 @@ type XmlMusic = Xml.Music
 class HasXml a where
    getXml :: Duration -> a -> XmlMusic
 
-instance HasXml Xml.Score where
---     toXml = return
-instance HasXml Double where
---     toXml = toXml . toInteger . round
-instance HasXml Integer where
---     toXml x = undefined   
-instance HasXml () where
---     toXml x = undefined   
+instance HasXml ()                      where   getXml d = getXml d . toInteger . const 60
+instance HasXml Double                  where   getXml d = getXml d . toInteger . round
+instance HasXml Int                     where   getXml d = getXml d . toInteger    
+instance Integral a => HasXml (Ratio a) where   getXml d = getXml d . toInteger . round    
 
-toXml :: Score a -> XmlScore
+instance HasXml Integer where
+    getXml d p =  Xml.note p' d'
+        where
+            p' = spell (fromIntegral p)
+            d' = (fromRational . toRational $ d)   
+            
+            step xs p = xs !! (p `mod` length xs)
+            fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
+            scaleFromSteps = snd . List.mapAccumL add 0
+                where
+                    add a x = (a + x, a + x)
+            major = scaleFromSteps [0,2,2,1,2,2,2,1]
+
+            spell :: Int -> Xml.Pitch
+            spell p = (toEnum pitchClass, if (alteration == 0) then Nothing else Just (fromIntegral alteration), fromIntegral octave) -- FIXME
+                where
+                    octave     = (p `div` 12) - 1
+                    semitone   = p `mod` 12
+                    pitchClass = fromStep major semitone
+                    alteration = semitone - step major pitchClass
+
+
+toXml :: HasXml a => Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
 
-separateBars :: [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
+separateBars :: HasXml a => [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
 separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
     where  
         discardTime (v,_,_,d,x) = (v,d,x)              
@@ -809,15 +827,12 @@ separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
         -- FIXME ties?
 
 -- translate one bar
-translBar :: [(Voice, Duration, a)] -> Xml.Music
+translBar :: HasXml a => [(Voice, Duration, a)] -> Xml.Music
 translBar = mconcat . fmap translNote
     -- FIXME find tuplets
 
-translNote :: (Voice, Duration, a) -> Xml.Music
-translNote (v,d,p) = Xml.note p' d'
-    where
-        p' = (toEnum 0, Nothing, 4)
-        d' = (fromRational . toRational $ d)
+translNote :: HasXml a => (Voice, Duration, a) -> Xml.Music
+translNote (_,d,p) = getXml d p
 
 
 writeXml :: HasXml a => FilePath -> Score a -> IO ()
