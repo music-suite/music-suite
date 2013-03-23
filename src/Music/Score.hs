@@ -438,7 +438,7 @@ instance HasDuration (Part a) where
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
 -- and time scaling as scalar multiplication. 
 --
-newtype Score a  = Score { getScore :: [(Part a)] }
+newtype Score a  = Score { getScore :: {-[(Part a)]-}() }
     deriving (Show, Functor, Foldable)
 
 instance Eq a => Eq (Score a) where
@@ -470,10 +470,11 @@ instance MonadPlus Score where
 instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
-        where
-            join' (Score xs) = pcat $ pcat $ fmap g $ xs
-                where
-                    g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
+        where  
+            join' = undefined
+            -- join' (Score xs) = pcat $ pcat $ fmap g $ xs
+            --     where
+            --         g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
 
 
 instance AdditiveGroup (Score a) where
@@ -483,13 +484,16 @@ instance AdditiveGroup (Score a) where
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    n *^ Score xs = Score (fmap (n*^) xs)
+    -- n *^ Score xs = Score (fmap (n*^) xs)
+    n *^ Score xs = undefined
 
 instance Delayable (Score a) where
-    delay t (Score xs) = Score (fmap (delay t) xs)
+    -- delay t (Score xs) = Score (fmap (delay t) xs)
+    delay t (Score xs) = undefined
 
 instance HasDuration (Score a) where
-    duration (Score as) = maximum $ fmap (duration) $ as
+    -- duration (Score as) = maximum $ fmap (duration) $ as
+    duration (Score as) = undefined
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -508,13 +512,14 @@ instance HasBasis (Score a) where
 
 
 performAbsolute :: Score a -> [(Time, Duration, a)]
-performAbsolute (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
-    where            
-        gatherPart :: Part a -> [(Time, Duration, a)]
-        gatherPart = toList . fmap (first3 d2t). mapWithTimeDur ((,,))
-        first3 f (b,c,d) = (f b,c,d)
-        fst3 (b,c,d) = b
-        d2t = Time . getDuration
+performAbsolute (Score ps) = undefined
+-- performAbsolute (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
+--     where            
+--         gatherPart :: Part a -> [(Time, Duration, a)]
+--         gatherPart = toList . fmap (first3 d2t). mapWithTimeDur ((,,))
+--         first3 f (b,c,d) = (f b,c,d)
+--         fst3 (b,c,d) = b
+--         d2t = Time . getDuration
 
 performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . performAbsolute
@@ -531,7 +536,8 @@ performRelative = toRel . performAbsolute
 -- Create a score of duration 1 with no values.
 --
 rest :: Score a
-rest = Score [Part [(1, Nothing)]]
+-- rest = Score [Part [(1, Nothing)]]
+rest = undefined
 
 -- |
 -- Create a score of duration 1 with the given value.
@@ -539,7 +545,8 @@ rest = Score [Part [(1, Nothing)]]
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [Part [(1, Just x)]]
+note = undefined
+-- note x = Score [Part [(1, Just x)]]
 
 -- | Creates a score containing the given elements, composed in sequence.
 melody :: [a] -> Score a
