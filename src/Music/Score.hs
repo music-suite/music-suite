@@ -438,21 +438,25 @@ instance HasDuration (Part a) where
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
 -- and time scaling as scalar multiplication. 
 --
-newtype Score a  = Score { getScore :: {-[(Part a)]-}() }
-    deriving (Show, Functor, Foldable)
+newtype Score a  = Score { getScore :: [(Time, Duration, Maybe a)] }
+    deriving (Eq, Ord, Show, Functor, Foldable)
 
-instance Eq a => Eq (Score a) where
-    a == b = performAbsolute a == performAbsolute b
-
-instance Ord a => Ord (Score a) where
-    a `compare` b = performAbsolute a `compare` performAbsolute b
+-- instance Eq a => Eq (Score a) where
+--     a == b = performAbsolute a == performAbsolute b
+-- 
+-- instance Ord a => Ord (Score a) where
+--     a `compare` b = performAbsolute a `compare` performAbsolute b
 
 instance Semigroup (Score a) where
     (<>) = mappend
 
+-- Equivalent to the deriving Monoid, except for the sorted invariant.
 instance Monoid (Score a) where
-    mempty  = Score mempty
-    Score as `mappend` Score bs = Score (as `mappend` bs)
+    mempty = Score []
+    Score as `mappend` Score bs = Score (as `m` bs)
+        where
+            m = mergeBy (comparing fst3)
+            fst3 (a,b,c) = a
 
 instance Applicative Score where
     pure  = return
@@ -471,11 +475,18 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where  
-            join' = undefined
-            -- join' (Score xs) = pcat $ pcat $ fmap g $ xs
-            --     where
-            --         g = toList . mapWithTimeDur (\t d -> delay t . stretch d)
+            join' sc = pcat $ catMaybes $ values $ getScore $ mapWithTimeDur (\t d -> fmap (delay t . stretch d)) $ sc
+            values = fmap (\(t,d,x) -> x)
 
+mapWithTimeDur :: (Duration -> Duration -> Maybe a -> Maybe b) -> Score a -> Score b
+mapWithTimeDur f = Score . fmap (liftTimeDur f) . getScore
+
+liftTimeDur :: (Duration -> Duration -> Maybe a -> Maybe b) -> (Time, Duration, Maybe a) -> (Time, Duration, Maybe b)
+liftTimeDur f (t,d,x) = case f (t2d t) d x of
+    Nothing -> (t,d,Nothing)
+    Just y  -> (t,d,Just y)
+    where
+        t2d = Duration . getTime
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -484,16 +495,23 @@ instance AdditiveGroup (Score a) where
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    -- n *^ Score xs = Score (fmap (n*^) xs)
-    n *^ Score xs = undefined
-
+    d *^ Score sc = Score . fmap (first3 (^* d2t d) . second3 (^* d)) $ sc
+        where
+            first3 f (a,b,c) = (f a,b,c)
+            second3 f (a,b,c) = (a,f b,c)                      
+            d2t = Time . getDuration
+            
 instance Delayable (Score a) where
-    -- delay t (Score xs) = Score (fmap (delay t) xs)
-    delay t (Score xs) = undefined
+    d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
+        where
+            first3 f (a,b,c) = (f a,b,c)
 
 instance HasDuration (Score a) where
-    -- duration (Score as) = maximum $ fmap (duration) $ as
-    duration (Score as) = undefined
+    duration (Score sc) = maximum $ fmap off $ sc
+        where
+            off (t,d,_) = t2d t + d
+            t2d = Duration . getTime
+            
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -512,14 +530,11 @@ instance HasBasis (Score a) where
 
 
 performAbsolute :: Score a -> [(Time, Duration, a)]
-performAbsolute (Score ps) = undefined
--- performAbsolute (Score ps) = List.sortBy (comparing fst3) $ concatMap gatherPart ps
---     where            
---         gatherPart :: Part a -> [(Time, Duration, a)]
---         gatherPart = toList . fmap (first3 d2t). mapWithTimeDur ((,,))
---         first3 f (b,c,d) = (f b,c,d)
---         fst3 (b,c,d) = b
---         d2t = Time . getDuration
+performAbsolute = removeRests . getScore
+    where
+        removeRests = catMaybes . fmap mbRest
+        mbRest (t,d,Just x)  = Just (t,d,x)
+        mbRest (t,d,Nothing) = Nothing
 
 performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . performAbsolute
@@ -537,7 +552,7 @@ performRelative = toRel . performAbsolute
 --
 rest :: Score a
 -- rest = Score [Part [(1, Nothing)]]
-rest = undefined
+rest = Score [(0,1,Nothing)]
 
 -- |
 -- Create a score of duration 1 with the given value.
@@ -545,7 +560,7 @@ rest = undefined
 -- Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note = undefined
+note x = Score [(0,1,Just x)]
 -- note x = Score [Part [(1, Just x)]]
 
 -- | Creates a score containing the given elements, composed in sequence.
@@ -1082,10 +1097,6 @@ instance IsDynamics Double where
 
 -- Some accumulators etc. Internal for now.
 
--- | Accumulating over relative time in score. We do not use the affine space instance here.
-mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
-mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
-mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 0 . getPart
 
 
 -- Generic stuff (not exported)
