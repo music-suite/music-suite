@@ -79,6 +79,10 @@ module Music.Score (
         -- overlap,
         -- prolong,
         -- anticipate,
+
+        -- ** Performance
+        performAbsolute,
+        performRelative,
         
 {-
         -- ** Decomposing
@@ -340,7 +344,7 @@ instance Delayable (Track a) where
 
 instance HasOnset (Track a) where
     onset (Track []) = 0
-    onset (Track as) = fst . head $ as
+    onset (Track as) = head . fmap fst $ as
 
 
 -------------------------------------------------------------------------------------
@@ -374,7 +378,7 @@ instance HasOnset (Track a) where
 -- Part is a 'VectorSpace' using sequential composition as addition, and time scaling
 -- as scalar multiplication.
 --
-newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
+newtype Part a = Part { getPart :: [(Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
 instance Semigroup (Part a) where
@@ -385,10 +389,10 @@ instance Applicative Part where
     (<*>) = ap
 
 instance Monad Part where
-    return a = Part [(1, Just a)]
+    return a = Part [(1, a)]
     a >>= k = join' $ fmap k a
         where
-            join' (Part ps) = foldMap (uncurry $ \d -> maybe mempty (d *^)) $ ps
+            join' (Part ps) = foldMap (uncurry $ \d -> (d *^)) $ ps
 
 instance AdditiveGroup (Part a) where
     zeroV   = mempty
@@ -399,8 +403,8 @@ instance VectorSpace (Part a) where
     type Scalar (Part a) = Duration
     n *^ Part as = Part (fmap (first (n*^)) as)
 
-instance Delayable (Part a) where
-    t `delay` Part as = Part $ (t, Nothing) : as
+instance Monoid a => Delayable (Part a) where
+    t `delay` Part as = Part $ (t, mempty) : as
 
 instance HasDuration (Part a) where
     duration (Part []) = 0
@@ -641,6 +645,9 @@ infixr 6 <|
 -- > Score a -> Score a -> Score a
 (|>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 a |> b = a <> duration a `delay` b
+-- a |> b =  a <> startAt (offset a) b
+-- a |< b =  a <> stopAt (onset a) b
+
 
 -- |
 -- Compose in reverse sequence. 
@@ -650,6 +657,7 @@ a |> b = a <> duration a `delay` b
 -- > Score a -> Score a -> Score a
 (<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 a <| b = duration b `delay` a <> b
+-- a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
@@ -1017,11 +1025,11 @@ sc = id
 -- prettyScore :: Show a => Score a -> String
 -- prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
 
-prettyPart :: Show a => Part a -> String
-prettyPart = concatSep " |> " . fmap (\(d,x) -> prettyDur d ++ "*^"++ maybe "rest" prettyVal x) . getPart
-    where                                                                                   
-        prettyVal x = "pure " ++ show x
-        prettyDur (Duration d) = "("++show (numerator d) ++ "/" ++ show (denominator d)++")"
+-- prettyPart :: Show a => Part a -> String
+-- prettyPart = concatSep " |> " . fmap (\(d,x) -> prettyDur d ++ "*^"++ maybe "rest" prettyVal x) . getPart
+--     where                                                                                   
+--         prettyVal x = "pure " ++ show x
+--         prettyDur (Duration d) = "("++show (numerator d) ++ "/" ++ show (denominator d)++")"
 
 showScore :: Score Double -> String
 showScore = show
