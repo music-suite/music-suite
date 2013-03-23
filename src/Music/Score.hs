@@ -94,7 +94,7 @@ module Music.Score (
         -- ** MusicXML export
         XmlScore,
         XmlMusic,
-        HasXml(..),
+        HasMusicXml(..),
         toXml,
         writeXml,
         openXml
@@ -463,6 +463,9 @@ instance Monad Score where
                     -- f :: (Voice, Part (Score a))  -> Part (Score a)
                     f = uncurry fmap . first setVoice
 
+setVoice :: Voice -> Score a -> Score a
+setVoice v = Score . fmap (first (const v)) . getScore
+
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
     (^+^)   = mappend
@@ -689,7 +692,7 @@ numVoices = length . voices
 -------------------------------------------------------------------------------------
 
 -- |
--- Class of types that can be converted to MIDI scores.
+-- Class of types that can be converted to MIDI.
 --
 -- Numeric types are interpreted as notes with a default velocity, pairs are
 -- interpreted as @(pitch, velocity)@ pairs.
@@ -741,7 +744,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         -- TODO handle voice
 
 -- |
--- Convert a score to a MIDI file and write to disc.
+-- Convert a score MIDI and write to a file.
 --    
 writeMidi :: HasMidi a => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
@@ -778,15 +781,18 @@ fj' = fj <> delay 2 fj <> delay 4 fj <> delay 6 fj
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
 
-class HasXml a where
+-- |
+-- Class of types that can be converted to MusicXML.
+--
+class HasMusicXml a where
    getXml :: Duration -> a -> XmlMusic
 
-instance HasXml ()                      where   getXml d = getXml d . toInteger . const 60
-instance HasXml Double                  where   getXml d = getXml d . toInteger . round
-instance HasXml Int                     where   getXml d = getXml d . toInteger    
-instance Integral a => HasXml (Ratio a) where   getXml d = getXml d . toInteger . round    
+instance HasMusicXml ()                      where   getXml d = getXml d . toInteger . const 60
+instance HasMusicXml Double                  where   getXml d = getXml d . toInteger . round
+instance HasMusicXml Int                     where   getXml d = getXml d . toInteger    
+instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . toInteger . round    
 
-instance HasXml Integer where
+instance HasMusicXml Integer where
     getXml d p =  Xml.note p' d'
         where
             p' = spell (fromIntegral p)
@@ -808,10 +814,13 @@ instance HasXml Integer where
                     alteration = semitone - step major pitchClass
 
 
-toXml :: HasXml a => Score a -> XmlScore
+-- |
+-- Convert a score to a MusicXML representaiton. 
+-- 
+toXml :: HasMusicXml a => Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . perform
 
-separateBars :: HasXml a => [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
+separateBars :: HasMusicXml a => [(Voice, Time, Duration, a)] -> [[(Voice, Duration, a)]]
 separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
     where  
         discardTime (v,_,_,d,x) = (v,d,x)              
@@ -827,18 +836,23 @@ separateBars = fmap (fmap discardTime) . splitAtTimeZero . map separateTime
         -- FIXME ties?
 
 -- translate one bar
-translBar :: HasXml a => [(Voice, Duration, a)] -> Xml.Music
+translBar :: HasMusicXml a => [(Voice, Duration, a)] -> Xml.Music
 translBar = mconcat . fmap translNote
     -- FIXME find tuplets
 
-translNote :: HasXml a => (Voice, Duration, a) -> Xml.Music
+translNote :: HasMusicXml a => (Voice, Duration, a) -> Xml.Music
 translNote (_,d,p) = getXml d p
 
-
-writeXml :: HasXml a => FilePath -> Score a -> IO ()
+-- |
+-- Convert a score to MusicXML and write to a file. 
+-- 
+writeXml :: HasMusicXml a => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
-openXml :: HasXml a => Score a -> IO ()
+-- |
+-- Convert a score to MusicXML and open it. 
+-- 
+openXml :: HasMusicXml a => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -854,8 +868,8 @@ data Rhythm a
     | RSeq        [Rhythm a]                    
     deriving (Eq, Show)
 
-quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
-quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
+-- quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
+-- quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
 
 quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' rhythm
@@ -964,8 +978,8 @@ divideDur ds = ks <*> [ds]
 sc :: Score Double -> Score Double
 sc = id
 
-prettyScore :: Show a => Score a -> String
-prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
+-- prettyScore :: Show a => Score a -> String
+-- prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
 
 prettyPart :: Show a => Part a -> String
 prettyPart = concatSep " |> " . fmap (\(d,x) -> prettyDur d ++ "*^"++ maybe "rest" prettyVal x) . getPart
@@ -1052,9 +1066,6 @@ instance IsDynamics Double where
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Part a -> Part b
 mapWithTimeDur f = mapWithTimeDur' (\t -> fmap . f t)
 mapWithTimeDur' f = Part . snd . mapAccumL (\t (d, x) -> (t + d, (d, f t d x))) 0 . getPart
-
-setVoice :: Voice -> Score a -> Score a
-setVoice v = Score . fmap (first (const v)) . getScore            
 
 
 -- Generic stuff (not exported)
