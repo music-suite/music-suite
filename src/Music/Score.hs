@@ -141,10 +141,8 @@ import System.IO
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
-{-
-import Music.Imitator.Reactive
-import Music.Imitator.Reactive.Midi
--}
+import Control.Reactive
+import Control.Reactive.Midi
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
@@ -751,38 +749,37 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 -- |
 -- Convert a score to a MIDI event.
 --    
-playMidi :: HasMidi a => Score a -> ()
-playMidi = error "Can not use Reactivity from music-score yet..."
-{-
 playMidi :: HasMidi a => Score a -> Event MidiMessage
-playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest |> x)
+playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
-        trig        = accumR 0 ((+ 0.01) <$ pulse 0.01)        
+        trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
         toTrack     = fmap (\(v,t,_,m) -> (t,m)) . perform . (getMidi =<<)
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
--}
 
 -- |
 -- Convert a score to a MIDI event and run it.
 --    
 playMidiIO :: HasMidi a => Score a -> IO ()
-playMidiIO = error "Can not use Reactivity from music-score yet..."
-{-
-playMidiIO :: HasMidi a => Score a -> IO ()
-playMidiIO = runEvent . playMidi
--}
+playMidiIO = runLoop . playMidi
 
         
 
 
 -------------------------------------------------------------------------------------
 
+fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
+fj2 = sc $ melody [eb,f] |> g^*2
+fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
+fj4 = c |> g_ |> c^*2
+fj = (rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4)^/2
+fj' = fj <> delay 2 fj <> delay 4 fj <> delay 6 fj
+
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
 
 class HasXml a where
-   getXml :: Voice -> Duration -> a -> XmlMusic
+   getXml :: Duration -> a -> XmlMusic
 
 instance HasXml Xml.Score where
 --     toXml = return
@@ -816,6 +813,20 @@ translBar :: [(Voice, Duration, a)] -> Xml.Music
 translBar = mconcat . fmap translNote
     -- FIXME find tuplets
 
+translNote :: (Voice, Duration, a) -> Xml.Music
+translNote (v,d,p) = Xml.note p' d'
+    where
+        p' = (toEnum 0, Nothing, 4)
+        d' = (fromRational . toRational $ d)
+
+
+writeXml :: HasXml a => FilePath -> Score a -> IO ()
+writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
+
+openXml :: HasXml a => Score a -> IO ()
+openXml sc = do
+    writeXml "test.xml" sc
+    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
 
 
@@ -929,44 +940,14 @@ divideDur ds = ks <*> [ds]
                                      -}
 
 
-testRhSc :: Score ()
-testRhSc = (^/1) $ undefined
-    where           
-        -- r2s :: Rhythm -> Score ()
-        -- r2s = scat . fmap (\d -> (note ())^*d)
-
-
-
-
-
-
-
-
-translNote :: (Voice, Duration, a) -> Xml.Music
-translNote (v,d,p) = Xml.note p' d'
-    where
-        p' = (toEnum 0, Nothing, 4)
-        d' = (fromRational . toRational $ d)
-
-
-writeXml :: HasXml a => FilePath -> Score a -> IO ()
-writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
-
-openXml :: HasXml a => Score a -> IO ()
-openXml sc = do
-    writeXml "test.xml" sc
-    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     
-sc :: Score Double -> Score Double
-sc = id
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-
-score :: Score a -> Score a
-score = id
+sc :: Score Double -> Score Double
+sc = id
 
 prettyScore :: Show a => Score a -> String
 prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
