@@ -281,14 +281,14 @@ t `stopAt`  x = delay d x where d = t .-. offset x
 -- 'join' delays each inner track to start at the offset of an outer track, then
 -- removes the intermediate structure. 
 --
--- > let t = Track [(0,65),(1,66)] 
+-- > let t = Track [(0, 65),(1, 66)] 
 -- >
--- > t >>= \x -> Track [(0,'a'),(10,toEnum x)]
+-- > t >>= \x -> Track [(0, 'a'), (10, toEnum x)]
 -- >
--- >   ==> Track {getTrack = [ (0.0,'a'),
--- >                           (1.0,'a'),
--- >                           (10.0,'A'),
--- >                           (11.0,'B') ]}
+-- >   ==> Track {getTrack = [ (0.0,  'a'),
+-- >                           (1.0,  'a'),
+-- >                           (10.0, 'A'),
+-- >                           (11.0, 'B') ]}
 --
 -- Track is an instance of 'VectorSpace' using parallel composition as addition, 
 -- and time scaling as scalar multiplication. 
@@ -299,11 +299,12 @@ newtype Track a = Track { getTrack :: [(Time, a)] }
 instance Semigroup (Track a) where
     (<>) = mappend
 
+-- Equivalent to the deriving Monoid, except for the sorted invariant.
 instance Monoid (Track a) where
     mempty = Track []
-    Track as `mappend` Track bs = Track (as `merge` bs)
+    Track as `mappend` Track bs = Track (as `m` bs)
         where
-            as `merge` bs = List.sortBy (comparing fst) $ as <> bs
+            m = mergeBy (comparing fst)
 
 instance Applicative Track where
     pure  = return
@@ -313,7 +314,8 @@ instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track ts) = foldMap (uncurry $ \t -> delay (t .-. 0)) $ ts
+            join' (Track ts) = foldMap (uncurry delay') $ ts
+            delay' t = delay (Duration (getTime t))
 
 instance Alternative Track where
     empty = mempty
@@ -331,10 +333,10 @@ instance AdditiveGroup (Track a) where
 
 instance VectorSpace (Track a) where
     type Scalar (Track a) = Time
-    n *^ tr = Track . (fmap (first (n*^))) . getTrack $ tr
+    n *^ Track tr = Track . (fmap (first (n*^))) $ tr
 
 instance Delayable (Track a) where
-    d `delay` tr = Track . fmap (first (.+^ d)) . getTrack $ tr
+    d `delay` Track tr = Track . fmap (first (.+^ d)) $ tr
 
 instance HasOnset (Track a) where
     onset (Track []) = 0
@@ -359,7 +361,7 @@ instance HasOnset (Track a) where
 -- each inner part to the duration of the outer part, then removes the 
 -- intermediate structure. 
 --
--- > let p = Part [(1,Just 0), (2, Just 1)] :: Part Int
+-- > let p = Part [(1, Just 0), (2, Just 1)] :: Part Int
 -- >
 -- > p >>= \x -> Part [ (1, Just $ toEnum $ x+65), 
 -- >                    (3, Just $ toEnum $ x+97) ] :: Part Char
@@ -369,7 +371,7 @@ instance HasOnset (Track a) where
 -- >                            (2 % 1,Just 'B'),
 -- >                            (6 % 1,Just 'b') ]}
 --
--- Part is a 'VectorSpace' using parallel composition as addition, and time scaling
+-- Part is a 'VectorSpace' using sequential composition as addition, and time scaling
 -- as scalar multiplication.
 --
 newtype Part a = Part { getPart :: [(Duration, Maybe a)] }
@@ -398,7 +400,7 @@ instance VectorSpace (Part a) where
     n *^ Part as = Part (fmap (first (n*^)) as)
 
 instance Delayable (Part a) where
-    t `delay` (Part as) = Part $ (t, Nothing) : as
+    t `delay` Part as = Part $ (t, Nothing) : as
 
 instance HasDuration (Part a) where
     duration (Part []) = 0
@@ -423,10 +425,18 @@ instance HasDuration (Part a) where
 -- offsets each inner score to fit into an outer score, then removes the intermediate
 -- structure. 
 --
--- 'Score' is an instance of 'VectorSpace' and 'HasBasis' using parallel
--- composition as addition, time scaling as scalar multiplication and rests of
--- duration 0 and 1 for 'zeroV' and 'basisValue' respectively. The values of each
--- part has a separate basis, so 'decompose' separates parts.
+-- > let s = Score [(0, 1, Just 0), (1, 2, Just 1)] :: Score Int
+-- >
+-- > s >>= \x -> Score [ (0, 1, Just $ toEnum $ x+65), 
+-- >                     (1, 3, Just $ toEnum $ x+97) ] :: Part Char
+-- >
+-- >     ===> Part {getPart = [ (1 % 1,Just 'A'),
+-- >                            (3 % 1,Just 'a'),
+-- >                            (2 % 1,Just 'B'),
+-- >                            (6 % 1,Just 'b') ]}
+--
+-- Track is an instance of 'VectorSpace' using parallel composition as addition, 
+-- and time scaling as scalar multiplication. 
 --
 newtype Score a  = Score { getScore :: [(Part a)] }
     deriving (Show, Functor, Foldable)
@@ -1130,3 +1140,6 @@ dump = mapM putStrLn . fmap show
 
 left f (Left x)  = Left (f x)
 left f (Right y) = Right y
+
+mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
+mergeBy f as bs = List.sortBy f $ as <> bs
