@@ -35,6 +35,8 @@ library
     hs-source-dirs: src
     exposed-modules:
         Music.Score
+        Music.Score.Track
+        Music.Score.Part
         Music.Score.Time
         Music.Score.Duration
         Music.Score.Rhythm

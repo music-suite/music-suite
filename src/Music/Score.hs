@@ -144,20 +144,22 @@ import System.Posix -- debug
 import System.IO
 import System.IO.Unsafe --debug
 
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-
-import Control.Reactive
-import Control.Reactive.Midi
-
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
+import Control.Reactive
+import Control.Reactive.Midi
+
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
+
 import Music.Score.Time
 import Music.Score.Duration
 import Music.Score.Rhythm
+import Music.Score.Track
+import Music.Score.Part
 
 
 {-
@@ -171,151 +173,7 @@ newtype Voice = Voice { getVoice::Int }
 
 
 
--------------------------------------------------------------------------------------
--- Track type
--------------------------------------------------------------------------------------
 
--- |
--- A track is a sorted list of absolute-time occurences.
---
--- Track is a 'Monoid' under parallel compisiton. 'mempty' is the empty track and 'mappend'
--- interleaves values.
---
--- Track has an 'Applicative' instance derived from the 'Monad' instance.
---
--- Track is a 'Monad'. 'return' creates a track containing a single value at time
--- zero, and '>>=' transforms the values of a track, allowing the addition and
--- removal of values relative to the time of the value. Perhaps more intuitively,
--- 'join' delays each inner track to start at the offset of an outer track, then
--- removes the intermediate structure. 
---
--- > let t = Track [(0, 65),(1, 66)] 
--- >
--- > t >>= \x -> Track [(0, 'a'), (10, toEnum x)]
--- >
--- >   ==> Track {getTrack = [ (0.0,  'a'),
--- >                           (1.0,  'a'),
--- >                           (10.0, 'A'),
--- >                           (11.0, 'B') ]}
---
--- Track is an instance of 'VectorSpace' using parallel composition as addition, 
--- and time scaling as scalar multiplication. 
---
-newtype Track a = Track { getTrack :: [(Time, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable)
-
-instance Semigroup (Track a) where
-    (<>) = mappend
-
--- Equivalent to the deriving Monoid, except for the sorted invariant.
-instance Monoid (Track a) where
-    mempty = Track []
-    Track as `mappend` Track bs = Track (as `m` bs)
-        where
-            m = mergeBy (comparing fst)
-
-instance Applicative Track where
-    pure  = return
-    (<*>) = ap
-
-instance Monad Track where
-    return a = Track [(0, a)]
-    a >>= k = join' . fmap k $ a
-        where
-            join' (Track ts) = foldMap (uncurry delay') $ ts
-            delay' t = delay (Duration . getTime $ t)
-
-instance Alternative Track where
-    empty = mempty
-    (<|>) = mappend
-
--- Satisfies left distribution
-instance MonadPlus Track where
-    mzero = mempty
-    mplus = mappend
-
-instance AdditiveGroup (Track a) where
-    zeroV   = mempty
-    (^+^)   = mappend
-    negateV = id
-
-instance VectorSpace (Track a) where
-    type Scalar (Track a) = Time
-    n *^ Track tr = Track . (fmap (first (n*^))) $ tr
-
-instance Delayable (Track a) where
-    d `delay` Track tr = Track . fmap (first (.+^ d)) $ tr
-
-instance HasOnset (Track a) where
-    onset  (Track []) = 0
-    onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
-    offset (Track []) = 0
-    offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
-
-instance HasDuration (Track a) where
-    duration x = offset x .-. onset x
-
---    offset x = maximum (fmap off x)   where off (t,x) = t
-
--------------------------------------------------------------------------------------
--- Part type
--------------------------------------------------------------------------------------
-
--- |
--- A part is a sorted list of relative-time notes and rests.
---
--- Part is a 'Monoid' under sequential compisiton. 'mempty' is the empty part and 'mappend'
--- appends parts.
---
--- Track has an 'Applicative' instance derived from the 'Monad' instance.
---
--- Part is a 'Monad'. 'return' creates a part containing a single value of duration
--- one, and '>>=' transforms the values of a part, allowing the addition and
--- removal of values under relative duration. Perhaps more intuitively, 'join' scales 
--- each inner part to the duration of the outer part, then removes the 
--- intermediate structure. 
---
--- > let p = Part [(1, Just 0), (2, Just 1)] :: Part Int
--- >
--- > p >>= \x -> Part [ (1, Just $ toEnum $ x+65), 
--- >                    (3, Just $ toEnum $ x+97) ] :: Part Char
--- >
--- >     ===> Part {getPart = [ (1 % 1,Just 'A'),
--- >                            (3 % 1,Just 'a'),
--- >                            (2 % 1,Just 'B'),
--- >                            (6 % 1,Just 'b') ]}
---
--- Part is a 'VectorSpace' using sequential composition as addition, and time scaling
--- as scalar multiplication.
---
-newtype Part a = Part { getPart :: [(Duration, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
-
-instance Semigroup (Part a) where
-    (<>) = mappend
-
-instance Applicative Part where
-    pure  = return
-    (<*>) = ap
-
-instance Monad Part where
-    return a = Part [(1, a)]
-    a >>= k = join' $ fmap k a
-        where
-            join' (Part ps) = foldMap (uncurry (*^)) ps
-
-instance AdditiveGroup (Part a) where
-    zeroV   = mempty
-    (^+^)   = mappend
-    negateV = id
-
-instance VectorSpace (Part a) where
-    type Scalar (Part a) = Duration
-    n *^ Part as = Part (fmap (first (n*^)) as)
-
-instance HasDuration (Part a) where
-    duration (Part []) = 0
-    duration (Part as) = sum (fmap fst as)
 
 
 -------------------------------------------------------------------------------------
@@ -347,7 +205,7 @@ instance HasDuration (Part a) where
 -- >                              (1 % 1, 2 % 1, Just 'B'),
 -- >                              (3 % 1, 6 % 1, Just 'b') ]}
 --
--- Track is an instance of 'VectorSpace' using parallel composition as addition, 
+-- Score is an instance of 'VectorSpace' using sequential composition as addition, 
 -- and time scaling as scalar multiplication. 
 --
 newtype Score a  = Score { getScore :: [(Time, Duration, Maybe a)] }
@@ -464,7 +322,6 @@ performRelative = toRel . performAbsolute
 -- Create a score of duration 1 with no values.
 --
 rest :: Score a
--- rest = Score [Part [(1, Nothing)]]
 rest = Score [(0,1,Nothing)]
 
 -- |
@@ -474,7 +331,6 @@ rest = Score [(0,1,Nothing)]
 --
 note :: a -> Score a
 note x = Score [(0,1,Just x)]
--- note x = Score [Part [(1, Just x)]]
 
 -- | Creates a score containing the given elements, composed in sequence.
 melody :: [a] -> Score a
