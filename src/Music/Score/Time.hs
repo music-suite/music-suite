@@ -41,11 +41,13 @@ import Music.Score.Duration
 -------------------------------------------------------------------------------------
 
 -- |
--- This type represents absolute time. This means seconds elapsed since a known 
--- reference time. The reference time can be anything, but is usually the 
--- the beginning of the musical performance.
+-- This type represents absolute time in seconds a known reference time.
+-- The reference time can be any time, but is usually the the beginning of the 
+-- musical performance.
 --
--- Times forms an affine space with durations as the underlying vector space.
+-- Times forms an affine space with durations as the underlying vector space,
+-- that is, we can add a time to a duration to get a new time using '.+^', 
+-- take the difference of two times to get a duration using '.-.'.
 --
 newtype Time = Time { getTime::Rational }
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)

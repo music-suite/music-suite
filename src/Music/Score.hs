@@ -23,26 +23,12 @@
 
 module Music.Score (
 
-        -- * Basic types
-{-
-        ** Voice
-        Voice(..),
--}
+        module Music.Score.Time,
+        module Music.Score.Duration,
+        module Music.Score.Track,
+        module Music.Score.Part,
 
-        -- ** Time and duration
-        Time(..),
-        Duration(..),
-        HasDuration(..),
-        HasOnset(..),
-
-        -- * Delayable class
-        Delayable(..),
-
-        -- * Track type
-        Track(..),
-        -- * Part type
-        Part(..),
-        -- * Score type
+        -- ** Score type
         Score(..),
 
         -- ** Constructors
@@ -69,18 +55,14 @@ module Music.Score (
         (<|),
         scat,
         pcat,
-        -- (<||),
-        -- (||>),
-        -- (<<|),
-        -- (|>>),
         -- sustain,
         -- overlap,
         -- prolong,
         -- anticipate,
 
-        -- ** Performance
-        performAbsolute,
-        performRelative,
+        -- -- ** Performance
+        -- performAbsolute,
+        -- performRelative,
         
 {-
         -- ** Decomposing
@@ -89,15 +71,15 @@ module Music.Score (
         setVoice,
 -}
         
-        -- * Utility         
-        -- ** MIDI export
+        -- * Export         
+        -- ** MIDI
         HasMidi(..),
         toMidi,
         writeMidi,
         playMidi,
         playMidiIO,
 
-        -- ** MusicXML export
+        -- ** MusicXML
         XmlScore,
         XmlMusic,
         HasMusicXml(..),
