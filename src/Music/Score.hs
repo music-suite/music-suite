@@ -32,10 +32,8 @@ module Music.Score (
         -- ** Time and duration
         Time(..),
         Duration(..),
-
         HasDuration(..),
         HasOnset(..),
-        offset,
 
         -- * Delayable class
         Delayable(..),
@@ -116,7 +114,6 @@ where
         Delayable?
             'delay' is really similar to (.+^)
             But (.-.) does not really make sense, or does it?
-            We could take differnce in onset, but that would require HasOnset
        Split and reverse
        Zipper applicative (for appying dynamic and articulation transformations etc)
             
@@ -226,13 +223,8 @@ class HasDuration a where
     duration :: a -> Duration
 
 class HasOnset a where
-    onset :: a -> Time
-
--- |
--- > offset x = onset x + duration x
--- 
-offset :: (HasOnset a, HasDuration a) => a -> Time
-offset x = onset x .+^ duration x
+    onset  :: a -> Time
+    offset :: a -> Time
 
 
 -------------------------------------------------------------------------------------
@@ -319,7 +311,7 @@ instance Monad Track where
     a >>= k = join' . fmap k $ a
         where
             join' (Track ts) = foldMap (uncurry delay') $ ts
-            delay' t = delay (Duration (getTime t))
+            delay' t = delay (Duration . getTime $ t)
 
 instance Alternative Track where
     empty = mempty
@@ -343,9 +335,15 @@ instance Delayable (Track a) where
     d `delay` Track tr = Track . fmap (first (.+^ d)) $ tr
 
 instance HasOnset (Track a) where
-    onset (Track []) = 0
-    onset (Track as) = head . fmap fst $ as
+    onset  (Track []) = 0
+    onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
+    offset (Track []) = 0
+    offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
 
+instance HasDuration (Track a) where
+    duration x = offset x .-. onset x
+
+--    offset x = maximum (fmap off x)   where off (t,x) = t
 
 -------------------------------------------------------------------------------------
 -- Part type
@@ -392,7 +390,7 @@ instance Monad Part where
     return a = Part [(1, a)]
     a >>= k = join' $ fmap k a
         where
-            join' (Part ps) = foldMap (uncurry $ \d -> (d *^)) $ ps
+            join' (Part ps) = foldMap (uncurry (*^)) ps
 
 instance AdditiveGroup (Part a) where
     zeroV   = mempty
@@ -403,12 +401,9 @@ instance VectorSpace (Part a) where
     type Scalar (Part a) = Duration
     n *^ Part as = Part (fmap (first (n*^)) as)
 
-instance Monoid a => Delayable (Part a) where
-    t `delay` Part as = Part $ (t, mempty) : as
-
 instance HasDuration (Part a) where
     duration (Part []) = 0
-    duration (Part as) = sum . fmap fst $ as
+    duration (Part as) = sum (fmap fst as)
 
 
 -------------------------------------------------------------------------------------
@@ -480,8 +475,7 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where  
-            join' sc = pcat $ catMaybes $ values $ getScore $ mapWithTimeDur (\t d -> fmap (delay t . stretch d)) $ sc
-            values = fmap (\(t,d,x) -> x)
+            join' sc = pcat $ toList $ mapWithTimeDur (\t d -> fmap (delay t . stretch d)) $ sc
 
 mapWithTimeDur :: (Duration -> Duration -> Maybe a -> Maybe b) -> Score a -> Score b
 mapWithTimeDur f = Score . fmap (liftTimeDur f) . getScore
@@ -511,12 +505,14 @@ instance Delayable (Score a) where
         where
             first3 f (a,b,c) = (f a,b,c)
 
+instance HasOnset (Score a) where
+    onset  (Score []) = 0
+    onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
+    offset (Score []) = 0
+    offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (Time . getDuration $ d)
+        
 instance HasDuration (Score a) where
-    duration (Score sc) = maximum $ fmap off $ sc
-        where
-            off (t,d,_) = t2d t + d
-            t2d = Duration . getTime
-            
+    duration x = offset x .-. onset x            
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -820,7 +816,7 @@ fj2 = sc $ melody [eb,f] |> g^*2
 fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
 fj4 = c |> g_ |> c^*2
 fj = (rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4)^/2
-fj' = fj <> delay 2 fj <> delay 4 fj <> delay 6 fj
+fj' = fj <> delay 4 fj <> delay 8 fj <> delay 12 fj
 
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
