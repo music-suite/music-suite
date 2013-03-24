@@ -639,7 +639,7 @@ infixr 6 <|
 -- To compose in parallel, use '<|>' or '<>'.
 --
 -- > Score a -> Score a -> Score a
-(|>) :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => a -> a -> a
+(|>) :: (Semigroup a, Delayable a, HasOnset a) => a -> a -> a
 a |> b =  a <> startAt (offset a) b
 -- a |< b =  a <> stopAt (onset a) b
 
@@ -650,21 +650,21 @@ a |> b =  a <> startAt (offset a) b
 -- To compose in parallel, use '<|>' or '<>'.
 --
 -- > Score a -> Score a -> Score a
-(<|) :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => a -> a -> a
+(<|) :: (Semigroup a, Delayable a, HasOnset a) => a -> a -> a
 a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid a, Semigroup a, Delayable a, HasDuration a, HasOnset a) => [a] -> a
+scat :: (Monoid a, Semigroup a, Delayable a, HasOnset a) => [a] -> a
 scat = foldr (|>) mempty
 
 -- |
 -- Parallel concatentation. Identical to 'mconcat'.
 --
 -- > [Score t] -> Score t
-pcat :: Monoid a => [a] -> a
+-- pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
 infixr 7 <<|
