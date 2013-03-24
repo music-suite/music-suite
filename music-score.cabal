@@ -1,6 +1,6 @@
 
 name:               music-score
-version:            0.5
+version:            0.6
 cabal-version:      >= 1.2
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
@@ -35,10 +35,11 @@ library
     hs-source-dirs: src
     exposed-modules:
         Music.Score
-        Music.Score.Track
-        Music.Score.Part
         Music.Score.Time
         Music.Score.Duration
+        Music.Score.Track
+        Music.Score.Part
+        Music.Score.Score
         Music.Score.Rhythm
         Music.Score.Ties
 

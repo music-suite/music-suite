@@ -172,9 +172,7 @@ rest :: Score a
 rest = Score [(0,1,Nothing)]
 
 -- |
--- Create a score of duration one with the given value.
---
--- Equivalent to 'pure' and 'return'.
+-- Create a score of duration one with the given value. Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
 note x = Score [(0,1,Just x)]
@@ -182,9 +180,9 @@ note x = Score [(0,1,Just x)]
 performAbsolute :: Score a -> [(Time, Duration, a)]
 performAbsolute = removeRests . getScore
     where
-        removeRests = catMaybes . fmap mbRest
-        mbRest (t,d,Just x)  = Just (t,d,x)
-        mbRest (t,d,Nothing) = Nothing
+        removeRests = catMaybes . fmap propagateRest
+        propagateRest (t, d, Just x)  = Just (t, d, x)
+        propagateRest (t, d, Nothing) = Nothing
 
 performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . performAbsolute

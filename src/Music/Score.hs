@@ -35,6 +35,15 @@ module Music.Score (
         chord,
         melody,
 
+        -- ** Composing
+        (|>),
+        (<|),
+        scat,
+        -- pcat,
+        -- sustain,
+        -- overlap,
+        -- anticipate,
+        
         -- ** Transforming
         delay,
         stretch,
@@ -43,26 +52,6 @@ module Music.Score (
         compress,
         stretchTo,        
 
-        -- ** Composing
-        (|>),
-        (<|),
-        scat,
-        pcat,
-        sustain,
-        overlap,
-        anticipate,
-
-        -- -- ** Performance
-        -- performAbsolute,
-        -- performRelative,
-        
-{-
-        -- ** Decomposing
-        voices,
-        numVoices,
-        setVoice,
--}
-        
         -- * Export         
         -- ** MIDI
         HasMidi(..),
@@ -186,6 +175,7 @@ stretch = (*^)
 -- 
 -- > Duration -> Score a -> Score a
 -- 
+startAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `startAt` x = delay d x where d = t .-. onset x
 
 -- |
@@ -193,6 +183,7 @@ t `startAt` x = delay d x where d = t .-. onset x
 -- 
 -- > Duration -> Score a -> Score a
 -- 
+stopAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `stopAt`  x = delay d x where d = t .-. offset x
 
 -- |
@@ -294,28 +285,6 @@ anticipate :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => Duration 
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
-
-
-
--------------------------------------------------------------------------------------
--- Decomposition
--------------------------------------------------------------------------------------
-
-{-
--- | 
--- Returns the voices in the given score.
---
-voices :: Score a -> [Voice]
-voices = fmap fst . decompose
-
--- | 
--- Returns the number of voices in the given score.
---
-numVoices :: Score a -> Int
-numVoices = length . voices
--}
- 
-
 -------------------------------------------------------------------------------------
 
 -- |
@@ -410,10 +379,6 @@ type XmlMusic = Xml.Music
 -- Class of types that can be converted to MusicXML.
 --
 class HasMusicXml a where          
-    -- getPartNum      :: a -> Int         
-    -- getDynamics     :: a -> Maybe a
-    -- getArticulation :: a -> Maybe a
-
     -- | 
     -- Convert a value to MusicXML.
     --
@@ -449,23 +414,6 @@ instance HasMusicXml Integer where
 
 
 -- |
--- Convert a score to a MusicXML representaiton. 
--- 
-toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . fmap (fmap removeTime) . separateBars . addRests . performAbsolute
-    where
-        removeTime (t,d,x) = (d,x)
-
-        -- TODO after performAbsolute, separate parts, then separate each part into note layer and dynamic layer tracks
-        
-        -- For each note layer: add rests, separate bars, remove time and create [Rhythm (Maybe a)]
-        -- For each dynamics layer: add rests, separate bars, remove time and create [(BarTime, a)]
-        -- Somehow merge dynamics layer back into note layer to get [Rhythm (Either (Maybe a) Dynamic)]
-        -- Convert to XmlMusic
-        
-        -- Merge parts using Xml.fromParts
-
--- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
 writeXml :: (Show a, HasMusicXml a) => FilePath -> Score a -> IO ()
@@ -479,11 +427,20 @@ openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
+-- |
+-- Convert a score to a MusicXML representaiton. 
+-- 
+toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap barToXml . fmap removeTime . separateBars . addRests . performAbsolute
+
+        -- TODO after performAbsolute, separate parts
+        -- For each note layer: add rests, separate bars, remove time and create [Rhythm (Maybe a)]
+        -- Convert to XmlMusic
+        -- Merge parts using Xml.fromParts
+
 -- | 
--- Given a rest-free, one-part score, add rests.
---
--- Note that these are not the padding rests used by Score, but the real-thing, i.e. the result will have
--- no empty space.
+-- Given a rest-free one-part score (such as those produced by perform), explicit add rests.
+-- The result will have no empty space.
 --
 addRests :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests = concat . snd . mapAccumL g 0
@@ -500,33 +457,29 @@ addRests = concat . snd . mapAccumL g 0
 separateBars :: (Show a, HasMusicXml a) => [(Time, Duration, Maybe a)] -> [[(Time, Duration, Maybe a)]]
 separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
     where  
-        discardBarNumber ((bn,bt),d,x) = (fromRational bt, d, x)
+        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
+        splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
+        discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
 
-        splitAtTimeZero = splitWhile ((== 0) . getBarTime)
-        
-        separateTime (t,d,x) = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
-        
-        getBarTime ((bn,bt),_,_) = bt
-        -- FIXME assumes bar length of one
-        -- FIXME ties?
+-- TODO assure all bars have duration 1
 
--- translate one bar
-translBar :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
-translBar bar = case quantize bar of
-    Left e   -> error $ "translBar: Could not quantize this bar: " ++ show e
-    Right rh -> translR rh
+removeTime :: [(Time, Duration, Maybe a)] -> [(Duration, Maybe a)]
+removeTime = fmap g where g (t,d,x) = (d,x)
 
-translR :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
-translR (RBeat d x)             = translNoteRest (d, x)
-translR (RDotted n (RBeat d x)) = translNoteRest (dotMod n * d, x)
-translR (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (translR r)
-translR (RSeq rs)               = mconcat $ map translR rs
+barToXml :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
+barToXml bar = case quantize bar of
+    Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToXml rh
 
-translNoteRest :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-translNoteRest (d, Just p)  = getXml d p
-translNoteRest (d, Nothing) = getXmlRest d
+rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
+rhythmToXml (RBeat d x)             = noteRestToXml (d, x)
+rhythmToXml (RDotted n (RBeat d x)) = noteRestToXml (dotMod n * d, x)
+rhythmToXml (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
+rhythmToXml (RSeq rs)               = mconcat $ map rhythmToXml rs
 
-getXmlRest d = Xml.rest d' where d' = (fromRational . toRational $ d)   
+noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
+noteRestToXml (d, Just p)  = getXml d p
+noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
 
                                                                                                            
 -------------------------------------------------------------------------------------
@@ -544,15 +497,6 @@ fj4 = c |> g_ |> c^*2
 fj  = rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4
 fj' = fj <> delay 4 fj <> delay 8 fj <> delay 12 fj
 
-
--- prettyScore :: Show a => Score a -> String
--- prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
-
--- prettyPart :: Show a => Part a -> String
--- prettyPart = concatSep " |> " . fmap (\(d,x) -> prettyDur d ++ "*^"++ maybe "rest" prettyVal x) . getPart
---     where                                                                                   
---         prettyVal x = "pure " ++ show x
---         prettyDur (Duration d) = "("++show (numerator d) ++ "/" ++ show (denominator d)++")"
 
 showScore :: Score Double -> String
 showScore = show
