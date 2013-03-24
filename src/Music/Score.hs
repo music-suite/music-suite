@@ -5,6 +5,7 @@
     DeriveFunctor,
     DeriveFoldable,     
     ScopedTypeVariables,
+    FlexibleInstances,
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -759,7 +760,11 @@ instance HasMidi Int                     where   getMidi = getMidi . toInteger
 instance Integral a => HasMidi (Ratio a) where   getMidi = getMidi . toInteger . round    
 
 instance HasMidi Integer where
-    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 0)
+    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 100)
+
+instance HasMidi (Integer, Integer) where
+    getMidi (p,v) = note (Midi.NoteOn 0 (fromIntegral p) (fromIntegral v)) |> note (Midi.NoteOff 0 (fromIntegral p) (fromIntegral v))
+
 
 -- |
 -- Convert a score to a MIDI file representaiton.
@@ -778,7 +783,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
 
         performance :: [(Time, Duration, Midi.Message)]
-        performance     = performRelative (getMidi =<< score)
+        performance     = performRelative (getMidiScore score)
 
         -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO handle voice
@@ -796,7 +801,7 @@ playMidi :: HasMidi a => Score a -> Event MidiMessage
 playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
-        toTrack     = fmap (\(t,_,m) -> (t,m)) . performAbsolute . (getMidi =<<)
+        toTrack     = fmap (\(t,_,m) -> (t,m)) . performAbsolute . getMidiScore
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
 
@@ -826,18 +831,21 @@ type XmlMusic = Xml.Music
 -- |
 -- Class of types that can be converted to MusicXML.
 --
-class HasMusicXml a where
-   getXml :: Duration -> Maybe a -> XmlMusic
+class HasMusicXml a where          
+    -- getPartNum      :: a -> Int         
+    -- getDynamics     :: a -> Maybe a
+    -- getArticulation :: a -> Maybe a
 
-instance HasMusicXml ()                      where   getXml d = getXml d . fmap (toInteger . const 60)
-instance HasMusicXml Double                  where   getXml d = getXml d . fmap (toInteger . round)
-instance HasMusicXml Int                     where   getXml d = getXml d . fmap toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . fmap (toInteger . round)    
+    -- | Convert a single note or rest.
+    getXmlNote      :: Duration -> a -> XmlMusic
+
+instance HasMusicXml ()                      where   getXmlNote d = getXmlNote d . (toInteger . const 60)
+instance HasMusicXml Double                  where   getXmlNote d = getXmlNote d . (toInteger . round)
+instance HasMusicXml Int                     where   getXmlNote d = getXmlNote d . toInteger    
+instance Integral a => HasMusicXml (Ratio a) where   getXmlNote d = getXmlNote d . (toInteger . round)    
 
 instance HasMusicXml Integer where
-    getXml d nr =  case nr of
-        Just p  -> Xml.note (spell (fromIntegral p)) d'
-        Nothing -> Xml.rest d'
+    getXmlNote d p = Xml.note (spell (fromIntegral p)) d'
         where
             d' = (fromRational . toRational $ d)   
             
@@ -864,6 +872,15 @@ toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . fmap (fmap removeTime) . separateBars . addRests . performAbsolute
     where
         removeTime (t,d,x) = (d,x)
+
+        -- TODO after performAbsolute, separate parts, then separate each part into note layer and dynamic layer tracks
+        
+        -- For each note layer: add rests, separate bars, remove time and create [Rhythm (Maybe a)]
+        -- For each dynamics layer: add rests, separate bars, remove time and create [(BarTime, a)]
+        -- Somehow merge dynamics layer back into note layer to get [Rhythm (Either (Maybe a) Dynamic)]
+        -- Convert to XmlMusic
+        
+        -- Merge parts using Xml.fromParts
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
@@ -923,7 +940,10 @@ translR (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getD
 translR (RSeq rs)               = mconcat $ map translR rs
 
 translNoteRest :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-translNoteRest (d,p) = getXml d p
+translNoteRest (d, Just p)  = getXmlNote d p
+translNoteRest (d, Nothing) = getXmlRest d
+
+getXmlRest d = Xml.rest d' where d' = (fromRational . toRational $ d)   
 
 
 
