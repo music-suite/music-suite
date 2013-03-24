@@ -197,6 +197,7 @@ instance AdditiveGroup Time where
     negateV = negate
 
 instance VectorSpace Time where
+    -- FIXME shouldn't this be Duration?
     type Scalar Time = Time
     (*^) = (*)
 
@@ -899,12 +900,27 @@ openXml sc = do
 
 data Rhythm a 
     = RBeat       Duration a                    -- d is divisible by 2
-    | RDotted     (Rhythm a) (Rhythm a)
-    | RRevDotted  (Rhythm a) (Rhythm a)
+    | RDotted     (Rhythm a)
     | RTuplet     Duration (Rhythm a)           -- d is 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11 ...
     | RInvTuplet  Duration (Rhythm a)           -- d is 3/2,      6/4
     | RSeq        [Rhythm a]                    
     deriving (Eq, Show)
+
+instance AdditiveGroup (Rhythm a) where
+    zeroV   = error "No zeroV for (Rhythm a)"
+    (^+^)   = error "No ^+^ for (Rhythm a)"
+    negateV = error "No negateV for (Rhythm a)"
+
+instance VectorSpace (Rhythm a) where
+    type Scalar (Rhythm a) = Duration
+    a *^ RBeat d x = RBeat (a*d) x
+
+instance HasDuration (Rhythm a) where
+    duration (RBeat d _)        = d
+    duration (RDotted a)        = duration a * (3/2)
+    duration (RTuplet c a)      = duration a * c
+    -- duration (RInvTuplet c a)   = duration a * c
+    duration (RSeq as)          = sum (fmap duration as)    
 
 -- quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
 -- quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
@@ -913,14 +929,46 @@ quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' rhythm
 
 
--- A RhytmParser can convert (Part a) to b 
-type RhythmParser a b = Parsec [(Duration, a)] () b
+-- A RhytmParser can convert (Part a) to b       
+data RState = RState {
+        timeMod :: Duration,
+        -- notatedDur * timeMod = actualDur
+        -- 3/2 for dots
+        -- 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11  for ordinary tuplets
+        -- 3/2,      6/4                        for inverted tuplets
+        dotDepth   :: Int,
+        tupleDepth :: Int
+    }
+
+
+-- [3/2, 7/4, 15/8, 31/16 ..]
+dotMod :: [Rational]
+dotMod = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
+    where
+        times2 = iterate (*2) 1
+
+modifyTimeMod :: (Duration -> Duration) -> RState -> RState
+modifyTimeMod f (RState tm dd td) = RState (f tm) dd td
+
+modifyDotDepth :: (Int -> Int) -> RState -> RState
+modifyDotDepth f (RState tm dd td) = RState tm (f dd) td
+
+modifyTupleDepth :: (Int -> Int) -> RState -> RState
+modifyTupleDepth f (RState tm dd td) = RState tm dd (f td)
+
+
+instance Monoid RState where
+    mempty = RState { timeMod = 1, dotDepth = 0, tupleDepth = 0 }
+    a `mappend` _ = a
+    
+type RhythmParser a b = Parsec [(Duration, a)] RState b
 
 quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b
-quantize' p = left show . runParser p () ""
+quantize' p = left show . runParser p mempty ""
 
--- pt :: Show a => RhythmParser b a -> [(Duration, b)] -> IO ()
--- pt = parseTest
+testq :: [Duration] -> Either String (Rhythm ())
+testq = quantize' rhythm . fmap (\x->(x,()))
+
 
 
 match :: (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
@@ -932,18 +980,43 @@ match p = tokenPrim show next test
 
     
 rhythm :: RhythmParser a (Rhythm a)
-rhythm = mzero
-    <|> rseq
+rhythm = RSeq <$> Text.Parsec.many1 rhythm'
+
+rhythm' :: RhythmParser a (Rhythm a)
+rhythm' = mzero
+    <|> beat
+    <|> dotted
+    <|> tuplet
 
 beat :: RhythmParser a (Rhythm a)
-beat = match (const . isDivisibleBy 2)
+beat = do
+    RState tm _ _ <- getState
+    (^/tm) <$> match (const . isDivisibleBy 2 . (/ tm))
 
--- dotted
--- rev dotted
--- tuplet
+onlyIf :: MonadPlus m => Bool -> m b -> m b
+onlyIf b p = if b then p else mzero
 
-rseq :: RhythmParser a (Rhythm a)
-rseq = RSeq <$> Text.Parsec.many1 beat
+dotted :: RhythmParser a (Rhythm a)
+dotted = do
+    RState _ dd _ <- getState
+    onlyIf (dd < 3) $ do    
+        modifyState $ modifyTimeMod dot
+        modifyState $ modifyDotDepth succ
+
+        r <- beat <|> dotted
+        -- TODO dotted does not compose... instead we should match against 3/2, 7/4, 15/8, 31/16 etc
+
+        modifyState $ modifyDotDepth pred
+        modifyState $ modifyTimeMod undot
+        return (RDotted r)
+        where
+            dot   d = d*(3/2)
+            undot d = d*(2/3)
+
+
+tuplet :: RhythmParser a (Rhythm a)
+tuplet = mzero
+
 
 
 
