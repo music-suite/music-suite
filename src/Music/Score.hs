@@ -742,6 +742,7 @@ numVoices = length . voices
 -- as @getMidiScore . return@.
 --
 class HasMidi a where
+    
     -- | Convert a value to a MIDI score.
     --   Typically, generates an /on/ event using 'note' followed by an optional /off/ event.
     getMidi :: a -> Score Midi.Message
@@ -836,16 +837,21 @@ class HasMusicXml a where
     -- getDynamics     :: a -> Maybe a
     -- getArticulation :: a -> Maybe a
 
-    -- | Convert a single note or rest.
-    getXmlNote      :: Duration -> a -> XmlMusic
+    -- | 
+    -- Convert a value to MusicXML.
+    --
+    -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
+    -- to add beams, slurs, dynamics, articulation etc.
+    --
+    getXml      :: Duration -> a -> XmlMusic
 
-instance HasMusicXml ()                      where   getXmlNote d = getXmlNote d . (toInteger . const 60)
-instance HasMusicXml Double                  where   getXmlNote d = getXmlNote d . (toInteger . round)
-instance HasMusicXml Int                     where   getXmlNote d = getXmlNote d . toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getXmlNote d = getXmlNote d . (toInteger . round)    
+instance HasMusicXml ()                      where   getXml d = getXml d . (toInteger . const 60)
+instance HasMusicXml Double                  where   getXml d = getXml d . (toInteger . round)
+instance HasMusicXml Int                     where   getXml d = getXml d . toInteger    
+instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . (toInteger . round)    
 
 instance HasMusicXml Integer where
-    getXmlNote d p = Xml.note (spell (fromIntegral p)) d'
+    getXml d p = Xml.note (spell (fromIntegral p)) d'
         where
             d' = (fromRational . toRational $ d)   
             
@@ -940,7 +946,7 @@ translR (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getD
 translR (RSeq rs)               = mconcat $ map translR rs
 
 translNoteRest :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-translNoteRest (d, Just p)  = getXmlNote d p
+translNoteRest (d, Just p)  = getXml d p
 translNoteRest (d, Nothing) = getXmlRest d
 
 getXmlRest d = Xml.rest d' where d' = (fromRational . toRational $ d)   
@@ -974,6 +980,9 @@ instance HasDuration (Rhythm a) where
 
 quantize :: Show a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
+
+
+-- Internal...
 
 testq :: [Duration] -> Either String (Rhythm ())
 testq = quantize' (atEnd rhythm) . fmap (\x->(x,()))
@@ -1090,28 +1099,22 @@ sc = id
 showScore :: Score Double -> String
 showScore = show
 
-ssm :: Score Midi.Message -> IO [()]
-ssm = mapM putStrLn . fmap show . performAbsolute
-
-ssd :: Score Double -> IO [()]
-ssd = mapM putStrLn . fmap show . performAbsolute
-
-spanien :: Score Double
-spanien = (c^*3 |> d |> e^*3 |> d |> c^*2 |> g_^*2 |> g_^*4)^/8
+play = playMidiIO . (^* (60/100)) . sc
+open = openXml . (^* (1/4)) . sc
 
 rep 0 x = mempty
 rep n x = x |> rep (n-1) x
 
 
-openSib :: Xml.Score -> IO ()
-openSib score =
-    do  writeFile "test.xml" (Xml.showXml score)
-        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-
-openTim :: HasMidi a => Score a -> IO ()
-openTim sc = do
-    Midi.exportFile "test.mid" (toMidi sc)
-    execute "timidity" ["test.mid"]
+-- openSib :: Xml.Score -> IO ()
+-- openSib score =
+--     do  writeFile "test.xml" (Xml.showXml score)
+--         execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+-- 
+-- openTim :: HasMidi a => Score a -> IO ()
+-- openTim sc = do
+--     Midi.exportFile "test.mid" (toMidi sc)
+--     execute "timidity" ["test.mid"]
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
