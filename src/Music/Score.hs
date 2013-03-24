@@ -1,10 +1,9 @@
 
 {-# LANGUAGE
     TypeFamilies,
-    GeneralizedNewtypeDeriving,
     DeriveFunctor,
     DeriveFoldable,     
-    ScopedTypeVariables,
+    GeneralizedNewtypeDeriving,
     FlexibleInstances,
     NoMonomorphismRestriction #-}
 
@@ -16,7 +15,7 @@
 --
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
--- Portability : portable
+-- Portability : non-portable (TF,GNTD)
 --
 -- Provides a musical score represenation.
 --
@@ -981,17 +980,6 @@ execute :: FilePath -> [String] -> IO ()
 execute program args = do
     forkProcess $ executeFile program True args Nothing
     return ()
-
-
-logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseR k n 
-    | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
-logBaseR k n 
-    | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
-logBaseR k n                         = logBase (fromRational k) (fromRational n)
-
-isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
-isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
 single x = [x]            
 fmap2 = fmap . fmap

@@ -1,11 +1,10 @@
 
 {-# LANGUAGE
     TypeFamilies,
-    GeneralizedNewtypeDeriving,
     DeriveFunctor,
     DeriveFoldable,     
-    ScopedTypeVariables,
-    NoMonomorphismRestriction #-} 
+    GeneralizedNewtypeDeriving,
+    ScopedTypeVariables #-} 
 
 -------------------------------------------------------------------------------------
 -- |
@@ -15,7 +14,7 @@
 --
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
--- Portability : portable
+-- Portability : non-portable (TF,GNTD)
 --
 -- Provides a musical score represenation.
 --
@@ -193,10 +192,6 @@ isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
 single x = [x]            
-fmap2 = fmap . fmap
-fmap3 = fmap . fmap . fmap
-
-dump = mapM putStrLn . fmap show
 
 left f (Left x)  = Left (f x)
 left f (Right y) = Right y

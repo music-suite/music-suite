@@ -13,7 +13,7 @@
 --
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
--- Portability : portable
+-- Portability : non-portable (TF,GNTD)
 --
 -- Provides a musical score represenation.
 --
