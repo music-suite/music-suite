@@ -860,19 +860,21 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: HasMusicXml a => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . addRests . performAbsolute
+toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . fmap (fmap removeTime) . separateBars . addRests . performAbsolute
+    where
+        removeTime (t,d,x) = (d,x)
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: HasMusicXml a => FilePath -> Score a -> IO ()
+writeXml :: (Show a, HasMusicXml a) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: HasMusicXml a => Score a -> IO ()
+openXml :: (Show a, HasMusicXml a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -895,7 +897,7 @@ addRests = concat . snd . mapAccumL g 0
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: HasMusicXml a => [(Time, Duration, Maybe a)] -> [[(Time, Duration, Maybe a)]]
+separateBars :: (Show a, HasMusicXml a) => [(Time, Duration, Maybe a)] -> [[(Time, Duration, Maybe a)]]
 separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
     where  
         discardBarNumber ((bn,bt),d,x) = (fromRational bt, d, x)
@@ -909,12 +911,14 @@ separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTim
         -- FIXME ties?
 
 -- translate one bar
-translBar :: HasMusicXml a => [(Time, Duration, Maybe a)] -> Xml.Music
+translBar :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
 translBar = mconcat . fmap translNote
-    -- FIXME find tuplets
+-- translBar bar = case quantize bar of
+    -- Left e -> error $ "translBar: Could not quantize this bar: " ++ show e
+    -- Right rh -> undefined
 
-translNote :: HasMusicXml a => (Time, Duration, Maybe a) -> Xml.Music
-translNote (t,d,p) = getXml d p
+translNote :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
+translNote (d,p) = getXml d p
 
 
 
