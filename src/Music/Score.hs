@@ -811,7 +811,9 @@ playMidiIO = runLoop . playMidi
 
 -------------------------------------------------------------------------------------
 
-fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
+-- fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
+fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c^/2 |> rest^/2
+
 fj2 = sc $ melody [eb,f] |> g^*2
 fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
 fj4 = c |> g_ |> c^*2
@@ -825,17 +827,18 @@ type XmlMusic = Xml.Music
 -- Class of types that can be converted to MusicXML.
 --
 class HasMusicXml a where
-   getXml :: Duration -> a -> XmlMusic
+   getXml :: Duration -> Maybe a -> XmlMusic
 
-instance HasMusicXml ()                      where   getXml d = getXml d . toInteger . const 60
-instance HasMusicXml Double                  where   getXml d = getXml d . toInteger . round
-instance HasMusicXml Int                     where   getXml d = getXml d . toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . toInteger . round    
+instance HasMusicXml ()                      where   getXml d = getXml d . fmap (toInteger . const 60)
+instance HasMusicXml Double                  where   getXml d = getXml d . fmap (toInteger . round)
+instance HasMusicXml Int                     where   getXml d = getXml d . fmap toInteger    
+instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . fmap (toInteger . round)    
 
 instance HasMusicXml Integer where
-    getXml d p =  Xml.note p' d'
+    getXml d nr =  case nr of
+        Just p  -> Xml.note (spell (fromIntegral p)) d'
+        Nothing -> Xml.rest d'
         where
-            p' = spell (fromIntegral p)
             d' = (fromRational . toRational $ d)   
             
             step xs p = xs !! (p `mod` length xs)
@@ -858,30 +861,7 @@ instance HasMusicXml Integer where
 -- Convert a score to a MusicXML representaiton. 
 -- 
 toXml :: HasMusicXml a => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . performAbsolute
-
-separateBars :: HasMusicXml a => [(Time, Duration, a)] -> [[(Duration, a)]]
-separateBars = fmap (fmap discardTime) . splitAtTimeZero . fmap separateTime
-    where  
-        discardTime (_,_,d,x) = (d,x)              
-        
-        splitAtTimeZero = splitWhile ((== 0) . getBarTime)
-        
-        separateTime (t,d,x) = (bn,bt,d,x) 
-            where (bn,bt) = properFraction (toRational t)
-        
-        getBarTime (_,bt,_,_) = bt
-        -- FIXME assumes bar length of one
-        -- FIXME must include rests. How? Can we define a separate performRests?
-        -- FIXME ties?
-
--- translate one bar
-translBar :: HasMusicXml a => [(Duration, a)] -> Xml.Music
-translBar = mconcat . fmap translNote
-    -- FIXME find tuplets
-
-translNote :: HasMusicXml a => (Duration, a) -> Xml.Music
-translNote (d,p) = getXml d p
+toXml = Xml.fromPart "Title" "Composer" "Part" . fmap translBar . separateBars . addRests . performAbsolute
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
@@ -896,6 +876,46 @@ openXml :: HasMusicXml a => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+
+-- | 
+-- Given a rest-free, one-part score, add rests.
+--
+-- Note that these are not the padding rests used by Score, but the real-thing, i.e. the result will have
+-- no empty space.
+--
+addRests :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
+addRests = concat . snd . mapAccumL g 0
+    where
+        g pos (t,d,x) 
+            | pos == t   =  (t .+^ d, [(t, d, Just x)])
+            | pos <  t   =  (t .+^ d, [(pos, t .-. pos, Nothing), (t, d, Just x)])
+            | otherwise  =  error "addRests: Strange pos"
+            
+-- |
+-- Given a set of absolute-time occurences, separate at each zero-time occurence.
+-- Note that this require every bar to start with a zero-time occurence.
+-- 
+separateBars :: HasMusicXml a => [(Time, Duration, Maybe a)] -> [[(Time, Duration, Maybe a)]]
+separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
+    where  
+        discardBarNumber ((bn,bt),d,x) = (fromRational bt, d, x)
+
+        splitAtTimeZero = splitWhile ((== 0) . getBarTime)
+        
+        separateTime (t,d,x) = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
+        
+        getBarTime ((bn,bt),_,_) = bt
+        -- FIXME assumes bar length of one
+        -- FIXME ties?
+
+-- translate one bar
+translBar :: HasMusicXml a => [(Time, Duration, Maybe a)] -> Xml.Music
+translBar = mconcat . fmap translNote
+    -- FIXME find tuplets
+
+translNote :: HasMusicXml a => (Time, Duration, Maybe a) -> Xml.Music
+translNote (t,d,p) = getXml d p
+
 
 
 
@@ -1021,68 +1041,6 @@ tuplet' d = do
                     . modifyTupleDepth pred
         return (RTuplet d r)
 
-
-
-
-
-{-
-
--- > sum (syncopate a) == a
-syncopate :: Duration -> Rhythm
-syncopate d = [d/4, d/2, d/4]
-
-dot :: Duration -> Rhythm
-dot d = [d*3/4, d/4]
-
-revDot :: Duration -> Rhythm
-revDot d = [d/4, d*3/4]
-
-dotSafe :: Duration -> Maybe Rhythm
-dotSafe d | isDivisibleBy 2 d = Just (dot d)
-          | otherwise         = Nothing
-
-revDotSafe :: Duration -> Maybe Rhythm
-revDotSafe d | isDivisibleBy 2 d = Just (revDot d)
-             | otherwise         = Nothing
-
-          
--- > sum (divideBy n a) == a
-divideBy :: Int -> Duration -> Rhythm
-divideBy n d = replicate n (d/fromIntegral n)
-
-
--- 
--- combinations [[1,2],[3,4]] ==> [1,3],[1,4],[2,3],[2,4]
-combinations :: [[a]] -> [[a]]
-combinations = sequenceA
-
-
--- iterateBounded :: ([a] -> [a]) -> a -> [a]
--- iterateBounded = iterate 
-
-makeAll :: Rhythm -> [Rhythm]                                                                  
-makeAll = (!! 2) . (List.reverse . List.nub) . iterate ({-reverse . -}List.sort . concat . traverse divideRhythm) . single
-
---notTooSmall = List.all (> (1/4))
---concatWhile f = concat . takeWhile f
-
-divideRhythm :: Rhythm -> [Rhythm]
-divideRhythm rs = fmap concat $ sequenceA $ alts
-    where               
-        alts :: [[Rhythm]]
-        alts = divideDur <$> rs
-
-divideDur :: Duration -> [Rhythm]
-divideDur ds = ks <*> [ds]
-    where               
-        ks = [  
-                single,
-                divideBy 2,
-                syncopate
-                -- dotSafe,     TODO must use safe versions here
-                -- revDotSafe,
-            ]
-                                     -}
 
 
     
