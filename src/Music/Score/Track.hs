@@ -79,7 +79,7 @@ newtype Track a = Track { getTrack :: [(Time, a)] }
 instance Semigroup (Track a) where
     (<>) = mappend
 
--- Equivalent to the deriving Monoid, except for the sorted invariant.
+-- Equivalent to the derived Monoid, except for the sorted invariant.
 instance Monoid (Track a) where
     mempty = Track []
     Track as `mappend` Track bs = Track (as `m` bs)

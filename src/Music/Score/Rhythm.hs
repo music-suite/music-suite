@@ -60,6 +60,18 @@ data Rhythm a
     deriving (Eq, Show, Functor, Foldable)
     -- RInvTuplet  Duration (Rhythm a)
 
+instance Semigroup (Rhythm a) where
+    (<>) = mappend
+
+-- Equivalent to the deriving Monoid, except for the sorted invariant.
+instance Monoid (Rhythm a) where
+    mempty = RSeq []
+
+    RSeq as `mappend` RSeq bs   =  RSeq (as <> bs)
+    r       `mappend` RSeq bs   =  RSeq ([r] <> bs)
+    RSeq as `mappend` r         =  RSeq (as <> [r])
+
+
 instance AdditiveGroup (Rhythm a) where
     zeroV   = error "No zeroV for (Rhythm a)"
     (^+^)   = error "No ^+^ for (Rhythm a)"

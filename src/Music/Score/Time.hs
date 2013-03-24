@@ -73,10 +73,45 @@ instance  AffineSpace Time where
     a .-. b =  t2d $ a - b      where t2d = Duration . getTime
     a .+^ b =  a + d2t b        where d2t = Time . getDuration
 
+-- |
+-- Class of types with a position in time.
+--
+-- Onset and offset are logical start and stop time, rather than actual sounding time,
+-- or to put it differently, the time of the attack and damp actions on an instrument,
+-- rather than the actual beginning or end of the sound. 
+--
+-- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
+-- should hold:
+-- 
+-- > duration a = offset a - onset a
+-- > offset a >= onset a
+--
+-- implying
+--
+-- > duration a >= 0
+--
+--
 class HasOnset a where
+    -- | 
+    -- Get the onset of the given value.
+    --
     onset  :: a -> Time
+
+    -- | 
+    -- Get the offset of the given value.
+    --
     offset :: a -> Time
                               
+
+class HasPreOnset a where
+    preOnset :: a -> Time
+
+class HasPostOnset a where
+    postOnset :: a -> Time
+
+class HasPostOffset a where
+    postOffset :: a -> Time
+
                               
 
                  
