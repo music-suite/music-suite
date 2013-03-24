@@ -575,15 +575,6 @@ playMidiIO = runLoop . playMidi
 
 -------------------------------------------------------------------------------------
 
--- fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
-fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c^/2 |> rest^/2
-
-fj2 = sc $ melody [eb,f] |> g^*2
-fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
-fj4 = c |> g_ |> c^*2
-fj = (rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4)^/2
-fj' = fj <> delay 4 fj <> delay 8 fj <> delay 12 fj
-
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
 
@@ -716,6 +707,15 @@ getXmlRest d = Xml.rest d' where d' = (fromRational . toRational $ d)
 
 sc :: Score Double -> Score Double
 sc = id
+
+fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
+fj2 = sc $ melody [eb,f] |> g^*2
+fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
+fj4 = c |> g_ |> c^*2
+
+fj  = rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4
+fj' = fj <> delay 4 fj <> delay 8 fj <> delay 12 fj
+
 
 -- prettyScore :: Show a => Score a -> String
 -- prettyScore = concatSep " <> " . fmap (\(p,x) -> "("++prettyPart x++")") . getScore
