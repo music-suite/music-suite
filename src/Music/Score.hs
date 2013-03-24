@@ -156,6 +156,9 @@ import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
+import Music.Score.Time
+import Music.Score.Duration
+
 
 {-
 -------------------------------------------------------------------------------------
@@ -165,100 +168,6 @@ import qualified Data.List as List
 newtype Voice = Voice { getVoice::Int }
     deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
 -}
-
-
--------------------------------------------------------------------------------------
--- Time and duration
--------------------------------------------------------------------------------------
-
--- |
--- This type represents absolute time. This means seconds elapsed since a known 
--- reference time. The reference time can be anything, but is usually the 
--- the beginning of the musical performance.
---
--- Times forms an affine space with durations as the underlying vector space.
---
-newtype Time = Time { getTime::Rational }
-    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
-    -- Note: no Floating as we want to be able to switch to rational
-
--- |
--- This type represents relative time in seconds.
---
-newtype Duration = Duration { getDuration::Rational }                                  
-    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
-    -- Note: no Floating as we want to be able to switch to rational
-
--- TODO for debugging
-instance Show Time where show = show . getTime
-instance Show Duration where show = show . getDuration
-
-instance AdditiveGroup Time where
-    zeroV = 0
-    (^+^) = (+)
-    negateV = negate
-
-instance VectorSpace Time where
-    -- FIXME shouldn't this be Duration?
-    type Scalar Time = Time
-    (*^) = (*)
-
-instance InnerSpace Time where (<.>) = (*)
-
-instance  AffineSpace Time where
-    type Diff Time = Duration
-    a .-. b =  t2d $ a - b      where t2d = Duration . getTime
-    a .+^ b =  a + d2t b        where d2t = Time . getDuration
-
-instance AdditiveGroup Duration where
-    zeroV = 0
-    (^+^) = (+)
-    negateV = negate
-
-instance VectorSpace Duration where
-    type Scalar Duration = Duration
-    (*^) = (*)
-
-instance InnerSpace Duration where (<.>) = (*)
-
-
-class HasDuration a where
-    duration :: a -> Duration
-
-class HasOnset a where
-    onset  :: a -> Time
-    offset :: a -> Time
-
-
--------------------------------------------------------------------------------------
--- Delayable class
--------------------------------------------------------------------------------------
-
--- |
--- Delayable values. This is really similar to 'AffineSpace', except that there
--- is no '.-.'.
--- 
-class Delayable a where
-
-    -- |
-    -- Delay a score.
-    -- > Duration -> Score a -> Score a
-    -- 
-    delay :: Duration -> a -> a
-
--- |
--- Move a score to start at a specific time.
--- 
--- > Duration -> Score a -> Score a
--- 
-t `startAt` x = delay d x where d = t .-. onset x
-
--- |
--- Move a score to stop at a specific time.
--- 
--- > Duration -> Score a -> Score a
--- 
-t `stopAt`  x = delay d x where d = t .-. offset x
 
 
 
@@ -611,6 +520,20 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> delay t . stretch d $ note x )
 -- 
 stretch :: VectorSpace v => Scalar v -> v -> v
 stretch = (*^)
+
+-- |
+-- Move a score to start at a specific time.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+t `startAt` x = delay d x where d = t .-. onset x
+
+-- |
+-- Move a score to stop at a specific time.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+t `stopAt`  x = delay d x where d = t .-. offset x
 
 -- |
 -- Compress a score. Flipped version of '^/'.
