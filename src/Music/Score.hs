@@ -952,9 +952,6 @@ instance HasDuration (Rhythm a) where
     -- duration (RInvTuplet c a)   = duration a * c
     duration (RSeq as)          = sum (fmap duration as)    
 
--- quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
--- quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
-
 quantize :: Show a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
 
@@ -978,7 +975,6 @@ dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
 tupletMods :: [Duration]
 tupletMods = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
 
--- A RhytmParser can convert (Part a) to b       
 data RState = RState {
         timeMod :: Duration,
         -- notatedDur * timeMod = actualDur
@@ -998,11 +994,12 @@ modifyTimeMod f (RState tm td) = RState (f tm) td
 modifyTupleDepth :: (Int -> Int) -> RState -> RState
 modifyTupleDepth f (RState tm td) = RState tm (f td)
 
+-- | 
+-- A @RhytmParser a b@ converts (Part a) to b.
 type RhythmParser a b = Parsec [(Duration, a)] RState b
 
 quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p mempty ""
-
 
 match :: (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
