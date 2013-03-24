@@ -40,4 +40,5 @@ library
         Music.Score.Time
         Music.Score.Duration
         Music.Score.Rhythm
+        Music.Score.Ties
 
