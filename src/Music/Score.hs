@@ -91,14 +91,8 @@ where
 
 {-
     TODO
-        Monoid instance for Part is strange
-        Can be bad if used with |> etc, we should add some constraint to prevent this
-        Delayable?
-            'delay' is really similar to (.+^)
-            But (.-.) does not really make sense, or does it?
        Split and reverse
        Zipper applicative (for appying dynamic and articulation transformations etc)
-            
 -}  
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -400,7 +394,7 @@ infixr 6 <|
 -- |
 -- Compose in sequence.
 --
--- To compose in parallel, use '<|>' or '<>'.
+-- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
 (|>) :: (Semigroup a, Delayable a, HasOnset a) => a -> a -> a
@@ -411,7 +405,7 @@ a |> b =  a <> startAt (offset a) b
 -- |
 -- Compose in reverse sequence. 
 --
--- To compose in parallel, use '<|>' or '<>'.
+-- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
 (<|) :: (Semigroup a, Delayable a, HasOnset a) => a -> a -> a
@@ -421,14 +415,17 @@ a <| b =  b |> a
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid a, Semigroup a, Delayable a, HasOnset a) => [a] -> a
-scat = foldr (|>) mempty
+scat :: (Monoid a, Delayable a, HasOnset a) => [a] -> a
+scat = unwrapMonoid . foldr (|>) mempty . fmap WrapMonoid
+
+instance Delayable a => Delayable (WrappedMonoid a) where delay t = WrapMonoid . delay t . unwrapMonoid
+instance HasOnset a => HasOnset (WrappedMonoid a) where { onset = onset . unwrapMonoid ; offset = offset . unwrapMonoid }
 
 -- |
--- Parallel concatentation. Identical to 'mconcat'.
+-- Parallel concatentation. A synonym for 'mconcat'.
 --
 -- > [Score t] -> Score t
--- pcat :: Monoid a => [a] -> a
+pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
 infixr 7 <<|
