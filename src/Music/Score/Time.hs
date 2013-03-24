@@ -1,12 +1,9 @@
 
 {-# LANGUAGE
     TypeFamilies,
-    GeneralizedNewtypeDeriving,
     DeriveFunctor,
-    DeriveFoldable,     
-    ScopedTypeVariables,
-    FlexibleInstances,
-    NoMonomorphismRestriction #-} 
+    DeriveFoldable,
+    GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
 -- |

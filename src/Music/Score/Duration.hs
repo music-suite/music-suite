@@ -1,12 +1,9 @@
                               
 {-# LANGUAGE
     TypeFamilies,
-    GeneralizedNewtypeDeriving,
     DeriveFunctor,
-    DeriveFoldable,     
-    ScopedTypeVariables,
-    FlexibleInstances,
-    NoMonomorphismRestriction #-} 
+    DeriveFoldable,
+    GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
 -- |
@@ -27,38 +24,15 @@ module Music.Score.Duration where
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
-import Data.Ratio
 import Control.Applicative
-import Control.Monad (ap, join, MonadPlus(..))
+import Data.Traversable
 import Data.Maybe
 import Data.Either
-import Data.Foldable
-import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)
-
+import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Basis
-
-import Data.Functor.Identity
-import Text.Parsec hiding ((<|>))
-import Text.Parsec.Pos
-
-import System.Posix -- debug
-import System.IO
-import System.IO.Unsafe --debug
-
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-
-import Control.Reactive
-import Control.Reactive.Midi
-
-import qualified Codec.Midi as Midi
-import qualified Music.MusicXml.Simple as Xml
-import qualified Data.Map as Map
-import qualified Data.List as List
 
 
 -------------------------------------------------------------------------------------

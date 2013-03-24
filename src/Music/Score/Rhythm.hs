@@ -27,10 +27,9 @@ module Music.Score.Rhythm (
 
         -- * Quantization
         quantize,
-        -- ** Options
         dotMod,
-        dotMods,
-        tupletMods,
+        -- dotMods,
+        -- tupletMods,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
