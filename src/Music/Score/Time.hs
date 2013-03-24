@@ -27,38 +27,15 @@ module Music.Score.Time where
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
-import Data.Ratio
 import Control.Applicative
-import Control.Monad (ap, join, MonadPlus(..))
+import Data.Traversable
 import Data.Maybe
 import Data.Either
-import Data.Foldable
-import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)
-
+import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Basis
-
-import Data.Functor.Identity
-import Text.Parsec hiding ((<|>))
-import Text.Parsec.Pos
-
-import System.Posix -- debug
-import System.IO
-import System.IO.Unsafe --debug
-
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-
-import Control.Reactive
-import Control.Reactive.Midi
-
-import qualified Codec.Midi as Midi
-import qualified Music.MusicXml.Simple as Xml
-import qualified Data.Map as Map
-import qualified Data.List as List
 
 import Music.Score.Duration
 
@@ -74,12 +51,11 @@ import Music.Score.Duration
 -- Times forms an affine space with durations as the underlying vector space.
 --
 newtype Time = Time { getTime::Rational }
-    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
+    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
 
--- TODO for debugging
-instance Show Time where show = show . getTime
-instance Show Duration where show = show . getDuration
+instance Show Time where 
+    show = show . getTime
 
 instance AdditiveGroup Time where
     zeroV = 0

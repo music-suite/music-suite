@@ -69,8 +69,11 @@ import qualified Data.List as List
 -- This type represents relative time in seconds.
 --
 newtype Duration = Duration { getDuration::Rational }                                  
-    deriving (Eq, Ord, {-Show, -}Num, Enum, Real, Fractional, RealFrac)
+    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
     -- Note: no Floating as we want to be able to switch to rational
+
+instance Show Duration where 
+    show = show . getDuration
 
 instance AdditiveGroup Duration where
     zeroV = 0
