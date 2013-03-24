@@ -912,13 +912,18 @@ separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTim
 
 -- translate one bar
 translBar :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
-translBar = mconcat . fmap translNote
--- translBar bar = case quantize bar of
-    -- Left e -> error $ "translBar: Could not quantize this bar: " ++ show e
-    -- Right rh -> undefined
+translBar bar = case quantize bar of
+    Left e   -> error $ "translBar: Could not quantize this bar: " ++ show e
+    Right rh -> translR rh
 
-translNote :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-translNote (d,p) = getXml d p
+translR :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
+translR (RBeat d x)             = translNoteRest (d, x)
+translR (RDotted n (RBeat d x)) = translNoteRest (dotMod n * d, x)
+translR (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (translR r)
+translR (RSeq rs)               = mconcat $ map translR rs
+
+translNoteRest :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
+translNoteRest (d,p) = getXml d p
 
 
 
