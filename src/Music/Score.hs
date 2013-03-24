@@ -639,9 +639,8 @@ infixr 6 <|
 -- To compose in parallel, use '<|>' or '<>'.
 --
 -- > Score a -> Score a -> Score a
-(|>) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-a |> b = a <> duration a `delay` b
--- a |> b =  a <> startAt (offset a) b
+(|>) :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => a -> a -> a
+a |> b =  a <> startAt (offset a) b
 -- a |< b =  a <> stopAt (onset a) b
 
 
@@ -651,15 +650,14 @@ a |> b = a <> duration a `delay` b
 -- To compose in parallel, use '<|>' or '<>'.
 --
 -- > Score a -> Score a -> Score a
-(<|) :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-a <| b = duration b `delay` a <> b
--- a <| b =  b |> a
+(<|) :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => a -> a -> a
+a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid a, Semigroup a, Delayable a, HasDuration a) => [a] -> a
+scat :: (Monoid a, Semigroup a, Delayable a, HasDuration a, HasOnset a) => [a] -> a
 scat = foldr (|>) mempty
 
 -- |
@@ -703,7 +701,7 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 -- 
 -- > Duration -> Score a -> Score a -> Score a
 -- 
-anticipate :: (Semigroup a, Delayable a, HasDuration a) => Duration -> a -> a -> a
+anticipate :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => Duration -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
