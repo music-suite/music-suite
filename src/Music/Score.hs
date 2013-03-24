@@ -926,9 +926,28 @@ instance HasDuration (Rhythm a) where
 -- quantizeVoice :: Int -> Score a -> Either String (Rhythm (Maybe a))
 -- quantizeVoice n = quantize . getPart . snd . (!! n) . getScore 
 
-quantize :: [(Duration, a)] -> Either String (Rhythm a)
-quantize = quantize' rhythm
+quantize :: Show a => [(Duration, a)] -> Either String (Rhythm a)
+quantize = quantize' (atEnd rhythm)
 
+testq :: [Duration] -> Either String (Rhythm ())
+testq = quantize' (atEnd rhythm) . fmap (\x->(x,()))
+
+atEnd p = do
+    x <- p
+    notFollowedBy anyToken <?> "end of input"
+    return x
+
+dotMod :: Int -> Duration
+dotMod n = dotMods !! (n-1)
+
+-- [3/2, 7/4, 15/8, 31/16 ..]
+dotMods :: [Duration]
+dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
+    where
+        times2 = iterate (*2) 1
+
+tupletMods :: [Duration]
+tupletMods = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
 
 -- A RhytmParser can convert (Part a) to b       
 data RState = RState {
@@ -944,33 +963,16 @@ instance Monoid RState where
     mempty = RState { timeMod = 1, tupleDepth = 0 }
     a `mappend` _ = a
 
-dotMod :: Int -> Duration
-dotMod n = dotMods !! (n-1)
-
--- [3/2, 7/4, 15/8, 31/16 ..]
-dotMods :: [Duration]
-dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
-    where
-        times2 = iterate (*2) 1
-
-tupletMods :: [Duration]
-tupletMods = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
-
 modifyTimeMod :: (Duration -> Duration) -> RState -> RState
 modifyTimeMod f (RState tm td) = RState (f tm) td
 
 modifyTupleDepth :: (Int -> Int) -> RState -> RState
 modifyTupleDepth f (RState tm td) = RState tm (f td)
 
-
 type RhythmParser a b = Parsec [(Duration, a)] RState b
 
 quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p mempty ""
-
-testq :: [Duration] -> Either String (Rhythm ())
-testq = quantize' rhythm . fmap (\x->(x,()))
-
 
 
 match :: (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
@@ -980,7 +982,6 @@ match p = tokenPrim show next test
         next pos _ _  = updatePosChar pos 'x'
         test (d,x)    = if p d x then Just (RBeat d x) else Nothing
 
-    
 rhythm :: RhythmParser a (Rhythm a)
 rhythm = RSeq <$> Text.Parsec.many1 rhythm'
 
@@ -995,11 +996,8 @@ beat = do
     RState tm _ <- getState
     (^/tm) <$> match (const . isDivisibleBy 2 . (/ tm))
 
-onlyIf :: MonadPlus m => Bool -> m b -> m b
-onlyIf b p = if b then p else mzero
-
 dotted :: RhythmParser a (Rhythm a)
-dotted = msum . fmap dotted' $ [1..3] -- max 3 dots
+dotted = msum . fmap dotted' $ [1..3]               -- max 3 dots
 
 dotted' :: Int -> RhythmParser a (Rhythm a)
 dotted' n = do
@@ -1015,14 +1013,12 @@ tuplet = msum . fmap tuplet' $ tupletMods
 tuplet' :: Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
     RState _ depth <- getState
-    onlyIf (depth < 1) $ do             -- max 1 nested tuplets
-        modifyState $ id
-            . modifyTimeMod (* d) 
-            . modifyTupleDepth succ
-        r <- rhythm -- TODO rhythm
-        modifyState $ id
-            . modifyTimeMod (/ d) 
-            . modifyTupleDepth pred
+    onlyIf (depth < 1) $ do                         -- max 1 nested tuplets
+        modifyState $ modifyTimeMod (* d) 
+                    . modifyTupleDepth succ
+        r <- rhythm        
+        modifyState $ modifyTimeMod (/ d) 
+                    . modifyTupleDepth pred
         return (RTuplet d r)
 
 
@@ -1246,3 +1242,7 @@ left f (Right y) = Right y
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f as bs = List.sortBy f $ as <> bs
+
+onlyIf :: MonadPlus m => Bool -> m b -> m b
+onlyIf b p = if b then p else mzero
+
