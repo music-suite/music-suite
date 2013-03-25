@@ -68,8 +68,8 @@ instance Monoid (Rhythm a) where
     mempty = Rhythms []
 
     Rhythms as `mappend` Rhythms bs   =  Rhythms (as <> bs)
-    r       `mappend` Rhythms bs   =  Rhythms ([r] <> bs)
-    Rhythms as `mappend` r         =  Rhythms (as <> [r])
+    r          `mappend` Rhythms bs   =  Rhythms ([r] <> bs)
+    Rhythms as `mappend` r            =  Rhythms (as <> [r])
 
 
 instance AdditiveGroup (Rhythm a) where

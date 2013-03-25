@@ -23,7 +23,7 @@ module Music.Score.Score (
         Score(..),
         rest,
         note,
-        performAbsolute,
+        perform,
         performRelative
   ) where
 
@@ -55,7 +55,7 @@ import Music.Score.Duration
 -------------------------------------------------------------------------------------
 
 -- |
--- A score is a list of absolute time notes and rests. A rest is a duration and 
+-- A score is a sorted list of absolute time notes and rests. A rest is a duration and 
 -- a note is a value and a duration.
 --
 -- Score is a 'Monoid' under parallel composition. 'mempty' is a score of no parts.
@@ -83,18 +83,20 @@ import Music.Score.Duration
 -- and time scaling as scalar multiplication. 
 --
 newtype Score a  = Score { getScore :: [(Time, Duration, Maybe a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable)
+    deriving ({-Eq, Ord, -}Show, Functor, Foldable)
 
--- instance Eq a => Eq (Score a) where
---     a == b = performAbsolute a == performAbsolute b
--- 
--- instance Ord a => Ord (Score a) where
---     a `compare` b = performAbsolute a `compare` performAbsolute b
+-- Performance equality needeed because of rests...
+
+instance Eq a => Eq (Score a) where
+    a == b = perform a == perform b
+
+instance Ord a => Ord (Score a) where
+    a `compare` b = perform a `compare` perform b
 
 instance Semigroup (Score a) where
     (<>) = mappend
 
--- Equivalent to the deriving Monoid, except for the sorted invariant.
+-- Equivalent to the derived Monoid, except for the sorted invariant.
 instance Monoid (Score a) where
     mempty = Score []
     Score as `mappend` Score bs = Score (as `m` bs)
@@ -177,15 +179,15 @@ rest = Score [(0,1,Nothing)]
 note :: a -> Score a
 note x = Score [(0,1,Just x)]
 
-performAbsolute :: Score a -> [(Time, Duration, a)]
-performAbsolute = removeRests . getScore
+perform :: Score a -> [(Time, Duration, a)]
+perform = removeRests . getScore
     where
         removeRests = catMaybes . fmap propagateRest
         propagateRest (t, d, Just x)  = Just (t, d, x)
         propagateRest (t, d, Nothing) = Nothing
 
 performRelative :: Score a -> [(Time, Duration, a)]
-performRelative = toRel . performAbsolute
+performRelative = toRel . perform
     where
         toRel = snd . mapAccumL g 0
         g now (t,d,x) = (t, (t-now,d,x))

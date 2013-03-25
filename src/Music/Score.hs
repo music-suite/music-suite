@@ -108,10 +108,10 @@ import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-import System.Posix -- debug
-import System.IO.Unsafe --debug
-import Music.Pitch.Literal -- debug
-import Music.Dynamics.Literal -- debug
+import System.Posix             -- TODO debug
+import System.IO.Unsafe         -- TODO debug
+import Music.Pitch.Literal      -- TODO debug
+import Music.Dynamics.Literal   -- TODO debug
 
 
 -------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ playMidi :: HasMidi a => Score a -> Event MidiMessage
 playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
-        toTrack     = fmap (\(t,_,m) -> (t,m)) . performAbsolute . getMidiScore
+        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
         -- FIXME hardcoded output...
 
@@ -401,6 +401,7 @@ instance HasMusicXml Double                  where   getXml d = getXml d . (toIn
 instance HasMusicXml Int                     where   getXml d = getXml d . toInteger    
 instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . (toInteger . round)    
 
+-- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
     getXml d p = Xml.note (spell (fromIntegral p)) d'
         where
@@ -414,7 +415,7 @@ instance HasMusicXml Integer where
             major = scaleFromSteps [0,2,2,1,2,2,2,1]
 
             spell :: Int -> Xml.Pitch
-            spell p = (toEnum pitchClass, if (alteration == 0) then Nothing else Just (fromIntegral alteration), fromIntegral octave) -- FIXME
+            spell p = (toEnum pitchClass, if (alteration == 0) then Nothing else Just (fromIntegral alteration), fromIntegral octave) 
                 where
                     octave     = (p `div` 12) - 1
                     semitone   = p `mod` 12
@@ -435,17 +436,21 @@ openXml :: (Show a, HasMusicXml a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    -- FIXME hardcode
 
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
 toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" . fmap barToXml . fmap removeTime . separateBars . addRests . performAbsolute
+toXml = Xml.fromPart "Title" "Composer" "Part" 
+    . fmap barToXml 
+    -- TODO assure bars have proper duration 
+    . separateBars 
+    -- split tied notes here
+    . addRests
+    -- separate parts here
+    . perform
 
-        -- TODO after performAbsolute, separate parts
-        -- For each note layer: add rests, separate bars, remove time and create [Rhythm (Maybe a)]
-        -- Convert to XmlMusic
-        -- Merge parts using Xml.fromParts
 
 -- | 
 -- Given a rest-free one-part score (such as those produced by perform), explicit add rests.
@@ -454,26 +459,23 @@ toXml = Xml.fromPart "Title" "Composer" "Part" . fmap barToXml . fmap removeTime
 addRests :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests = concat . snd . mapAccumL g 0
     where
-        g pos (t,d,x) 
-            | pos == t   =  (t .+^ d, [(t, d, Just x)])
-            | pos <  t   =  (t .+^ d, [(pos, t .-. pos, Nothing), (t, d, Just x)])
-            | otherwise  =  error "addRests: Strange pos"
+        g prevTime (t, d, x) 
+            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
+            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
+            | otherwise       =  error "addRests: Strange prevTime"
             
 -- |
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: (Show a, HasMusicXml a) => [(Time, Duration, Maybe a)] -> [[(Time, Duration, Maybe a)]]
-separateBars = fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
+separateBars :: (Show a, HasMusicXml a) => [(Time, Duration, Maybe a)] -> [[(Duration, Maybe a)]]
+separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
         discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
+        removeTime                      = fmap g where g (t,d,x) = (d,x)
 
--- TODO assure all bars have duration 1
-
-removeTime :: [(Time, Duration, Maybe a)] -> [(Duration, Maybe a)]
-removeTime = fmap g where g (t,d,x) = (d,x)
 
 barToXml :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
 barToXml bar = case quantize bar of

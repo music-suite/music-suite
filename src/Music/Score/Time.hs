@@ -62,7 +62,6 @@ instance AdditiveGroup Time where
     negateV = negate
 
 instance VectorSpace Time where
-    -- FIXME shouldn't this be Duration?
     type Scalar Time = Time
     (*^) = (*)
 
