@@ -50,7 +50,12 @@ class Tiable a where
 
     --   The first returned element will have the original onset.
     --   
-    toTie :: a -> (a, a)
+    toTie    :: a -> (a, a)
+    tieStart :: a -> Bool
+    tieStop  :: a -> Bool
+    tieStart _ = False
+    tieStop  _ = False
+    
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
 instance Tiable Double      where toTie x = (x,x)
@@ -61,7 +66,13 @@ instance Tiable (Ratio a)   where toTie x = (x,x)
 
 instance Tiable a => Tiable (Maybe a) where
     toTie Nothing  = (Nothing, Nothing)
-    toTie (Just x) = (Just x, Just x)
+    toTie (Just a) = (Just b, Just c) where (b,c) = toTie a
+    
+    tieStart Nothing  = False
+    tieStart (Just x) = tieStart x
+    
+    tieStop  Nothing = False
+    tieStop  (Just x) = tieStart x
 
 -- instance Tiable String   where 
 --     toTie ")" = ("~", ")")
@@ -69,6 +80,8 @@ instance Tiable a => Tiable (Maybe a) where
 
 instance Tiable a => Tiable (Bool, a, Bool) where
     toTie (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
+    tieStart (_,_,s) = s
+    tieStop  (s,_,_) = s
 
 -- | 
 -- /Not implemented/
@@ -82,12 +95,21 @@ splitTies = error "splitTies: Not implemented"
 -- Note: only works for single-part scores (with no overlapping events).
 -- 
 splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = Score . accumTime . (getPart . splitTiesPart . Part) . throwTime . getScore
+splitTiesSingle = partToSingleScore . splitTiesPart . singleScoreToPart
+
+partToSingleScore :: Part (Maybe a) -> Score a
+partToSingleScore  = Score . accumTime . getPart
     where
-        throwTime = fmap g where g (t,d,x) = (d,x)
         accumTime = snd . List.mapAccumL g 0
             where
                 g t (d, x) = (t .+^ d, (t, d, x))
+
+singleScoreToPart :: Score a -> Part (Maybe a)
+singleScoreToPart sc = Part . movePart . throwTime . getScore $ sc
+    where
+        throwTime = fmap g where g (t,d,x) = (d,x)
+        d = onset sc .-. 0
+        movePart = if (d == 0) then id else ([(d, Nothing)] ++)
 
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.

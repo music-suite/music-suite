@@ -102,6 +102,7 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Part
 import Music.Score.Score
+import Music.Score.Ties
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
@@ -387,23 +388,23 @@ type XmlMusic = Xml.Music
 -- |
 -- Class of types that can be converted to MusicXML.
 --
-class HasMusicXml a where          
+class Tiable a => HasMusicXml a where          
     -- | 
     -- Convert a value to MusicXML.
     --
     -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
     -- to add beams, slurs, dynamics, articulation etc.
     --
-    getXml      :: Duration -> a -> XmlMusic
+    getMusicXml      :: Duration -> a -> XmlMusic
 
-instance HasMusicXml ()                      where   getXml d = getXml d . (toInteger . const 60)
-instance HasMusicXml Double                  where   getXml d = getXml d . (toInteger . round)
-instance HasMusicXml Int                     where   getXml d = getXml d . toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getXml d = getXml d . (toInteger . round)    
+instance HasMusicXml ()                      where   getMusicXml d = getMusicXml d . (toInteger . const 60)
+instance HasMusicXml Double                  where   getMusicXml d = getMusicXml d . (toInteger . round)
+instance HasMusicXml Int                     where   getMusicXml d = getMusicXml d . toInteger    
+instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
 
 -- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
-    getXml d p = Xml.note (spell (fromIntegral p)) d'
+    getMusicXml d p = Xml.note (spell (fromIntegral p)) d'
         where
             d' = (fromRational . toRational $ d)   
             
@@ -446,7 +447,7 @@ toXml = Xml.fromPart "Title" "Composer" "Part"
     . fmap barToXml 
     -- TODO assure bars have proper duration 
     . separateBars 
-    -- split tied notes here
+    . splitTiesSingle
     . addRests
     -- separate parts here
     . perform
@@ -456,8 +457,8 @@ toXml = Xml.fromPart "Title" "Composer" "Part"
 -- Given a rest-free one-part score (such as those produced by perform), explicit add rests.
 -- The result will have no empty space.
 --
-addRests :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
-addRests = concat . snd . mapAccumL g 0
+addRests :: [(Time, Duration, a)] -> Score a
+addRests = Score . concat . snd . mapAccumL g 0
     where
         g prevTime (t, d, x) 
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
@@ -468,8 +469,8 @@ addRests = concat . snd . mapAccumL g 0
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: (Show a, HasMusicXml a) => [(Time, Duration, Maybe a)] -> [[(Duration, Maybe a)]]
-separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime
+separateBars :: (Show a, HasMusicXml a) => Score a -> [[(Duration, Maybe a)]]
+separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime . getScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
@@ -489,15 +490,19 @@ rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral $ denominator $ ge
 rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-noteRestToXml (d, Just p)  = getXml d p
 noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
-
+noteRestToXml (d, Just p)  = addTies $ getMusicXml d p
+    where
+        addTies | tieStart p && tieStop p = Xml.endTie . Xml.beginTie
+                | tieStart p              = Xml.beginTie
+                | tieStop  p              = Xml.endTie
+                | otherwise               = id
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-sc :: Score Double -> Score Double
+sc :: Score (Bool,Double,Bool) -> Score (Bool,Double,Bool)
 sc = id
 
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
@@ -528,6 +533,17 @@ rep n x = x |> rep (n-1) x
 -- openTim sc = do
 --     Midi.exportFile "test.mid" (toMidi sc)
 --     execute "timidity" ["test.mid"]
+
+instance HasMidi a => HasMidi (Bool, a, Bool) where
+    getMidi (_,x,_) = getMidi x
+
+instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
+    getMusicXml d (_,x,_) = getMusicXml d x
+
+instance IsPitch a => IsPitch (Bool, a, Bool) where
+    fromPitch l = (False, fromPitch l, False)
+instance IsDynamics a => IsDynamics (Bool, a, Bool) where
+    fromDynamics l = (False, fromDynamics l, False)
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
