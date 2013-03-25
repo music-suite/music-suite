@@ -48,7 +48,7 @@ import Music.Score.Duration
 -- |
 -- A part is a sorted list of relative-time notes and rests.
 --
--- Part is a 'Monoid' under sequential compisiton. 'mempty' is the empty part and 'mappend'
+-- Part is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
 -- appends parts.
 --
 -- Part has an 'Applicative' instance derived from the 'Monad' instance.

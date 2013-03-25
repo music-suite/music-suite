@@ -50,7 +50,7 @@ import Music.Score.Duration
 -- |
 -- A track is a sorted list of absolute-time occurences.
 --
--- Track is a 'Monoid' under parallel compisiton. 'mempty' is the empty track and 'mappend'
+-- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track and 'mappend'
 -- interleaves values.
 --
 -- Track has an 'Applicative' instance derived from the 'Monad' instance.

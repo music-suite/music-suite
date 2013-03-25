@@ -21,8 +21,8 @@
 
 module Music.Score.Score (
         Score(..),
-        note,
         rest,
+        note,
         performAbsolute,
         performRelative
   ) where
@@ -58,7 +58,7 @@ import Music.Score.Duration
 -- A score is a list of absolute time notes and rests. A rest is a duration and 
 -- a note is a value and a duration.
 --
--- Score is a 'Monoid' under parallel compisiton. 'mempty' is a score of no parts.
+-- Score is a 'Monoid' under parallel composition. 'mempty' is a score of no parts.
 -- For sequential composition of scores, use '|>'.
 --
 -- Score has an 'Applicative' instance derived from the 'Monad' instance. Not sure it is useful.

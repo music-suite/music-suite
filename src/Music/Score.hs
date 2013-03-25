@@ -45,10 +45,11 @@ module Music.Score (
         -- anticipate,
         
         -- ** Transforming
-        delay,
-        stretch,
+        move,
+        moveBack,
         startAt,
         stopAt,
+        stretch,
         compress,
         stretchTo,        
 
@@ -153,6 +154,22 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> delay t . stretch d $ note x )
 -------------------------------------------------------------------------------------
 -- Transformations
 -------------------------------------------------------------------------------------
+
+-- |
+-- Move a score move in time. Equivalent to 'delay'.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+move :: Delayable a => Duration -> a -> a
+move = delay
+
+-- |
+-- Move a score moveBack in time. Negated verison of 'delay'
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+moveBack :: Delayable a => Duration -> a -> a
+moveBack t = delay (negate t)
 
 -- |
 -- Stretch a score. Equivalent to '*^'.
