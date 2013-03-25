@@ -53,10 +53,10 @@ import Music.Score.Duration
 
 
 data Rhythm a 
-    = RBeat       Duration a                    -- @RBeat d a@,   d is divisible by 2
-    | RDotted     Int (Rhythm a)                -- @RDotted n r@, n > 0.
-    | RTuplet     Duration (Rhythm a)           -- @RTuplet d r@, d is an emelent of 'tupletMods'.
-    | RSeq        [Rhythm a]                    
+    = Beat       Duration a                    -- d is divisible by 2
+    | Dotted     Int (Rhythm a)                -- n > 0.
+    | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'tupletMods'.
+    | Rhythms    [Rhythm a]                    
     deriving (Eq, Show, Functor, Foldable)
     -- RInvTuplet  Duration (Rhythm a)
 
@@ -65,11 +65,11 @@ instance Semigroup (Rhythm a) where
 
 -- Equivalent to the deriving Monoid, except for the sorted invariant.
 instance Monoid (Rhythm a) where
-    mempty = RSeq []
+    mempty = Rhythms []
 
-    RSeq as `mappend` RSeq bs   =  RSeq (as <> bs)
-    r       `mappend` RSeq bs   =  RSeq ([r] <> bs)
-    RSeq as `mappend` r         =  RSeq (as <> [r])
+    Rhythms as `mappend` Rhythms bs   =  Rhythms (as <> bs)
+    r       `mappend` Rhythms bs   =  Rhythms ([r] <> bs)
+    Rhythms as `mappend` r         =  Rhythms (as <> [r])
 
 
 instance AdditiveGroup (Rhythm a) where
@@ -79,14 +79,14 @@ instance AdditiveGroup (Rhythm a) where
 
 instance VectorSpace (Rhythm a) where
     type Scalar (Rhythm a) = Duration
-    a *^ RBeat d x = RBeat (a*d) x
+    a *^ Beat d x = Beat (a*d) x
 
 instance HasDuration (Rhythm a) where
-    duration (RBeat d _)        = d
-    duration (RDotted n a)      = duration a * dotMod n
-    duration (RTuplet c a)      = duration a * c
-    -- duration (RInvTuplet c a)   = duration a * c
-    duration (RSeq as)          = sum (fmap duration as)    
+    duration (Beat d _)        = d
+    duration (Dotted n a)      = duration a * dotMod n
+    duration (Tuplet c a)      = duration a * c
+    -- duration (InverseTuplet c a)   = duration a * c
+    duration (Rhythms as)      = sum (fmap duration as)    
 
 quantize :: Show a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
@@ -145,10 +145,10 @@ match p = tokenPrim show next test
     where
         show x        = ""
         next pos _ _  = updatePosChar pos 'x'
-        test (d,x)    = if p d x then Just (RBeat d x) else Nothing
+        test (d,x)    = if p d x then Just (Beat d x) else Nothing
 
 rhythm :: RhythmParser a (Rhythm a)
-rhythm = RSeq <$> Text.Parsec.many1 rhythm' 
+rhythm = Rhythms <$> Text.Parsec.many1 rhythm' 
 
 rhythm' :: RhythmParser a (Rhythm a)
 rhythm' = mzero
@@ -169,7 +169,7 @@ dotted' n = do
     modifyState $ modifyTimeMod (* dotMod n)
     b <- beat
     modifyState $ modifyTimeMod (/ dotMod n)
-    return (RDotted n b)
+    return (Dotted n b)
 
 tuplet :: RhythmParser a (Rhythm a)
 tuplet = msum . fmap tuplet' $ tupletMods
@@ -184,7 +184,7 @@ tuplet' d = do
         r <- rhythm        
         modifyState $ modifyTimeMod (/ d) 
                     . modifyTupleDepth pred
-        return (RTuplet d r)
+        return (Tuplet d r)
 
 
 

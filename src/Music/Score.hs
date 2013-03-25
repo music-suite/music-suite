@@ -88,27 +88,9 @@ import Data.Foldable
 import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)
-
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
-
-import Data.Functor.Identity
-import Text.Parsec hiding ((<|>))
-import Text.Parsec.Pos
-
-import System.IO
-
-import System.Posix -- debug
-import System.IO.Unsafe --debug
-
-import Music.Pitch.Literal -- debug
-import Music.Dynamics.Literal -- debug
-
-import qualified Codec.Midi as Midi
-import qualified Music.MusicXml.Simple as Xml
-import qualified Data.Map as Map
-import qualified Data.List as List
 
 import Control.Reactive
 import Control.Reactive.Midi
@@ -119,6 +101,16 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Part
 import Music.Score.Score
+
+import qualified Codec.Midi as Midi
+import qualified Music.MusicXml.Simple as Xml
+import qualified Data.Map as Map
+import qualified Data.List as List
+
+import System.Posix -- debug
+import System.IO.Unsafe --debug
+import Music.Pitch.Literal -- debug
+import Music.Dynamics.Literal -- debug
 
 
 -------------------------------------------------------------------------------------
@@ -472,10 +464,10 @@ barToXml bar = case quantize bar of
     Right rh -> rhythmToXml rh
 
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
-rhythmToXml (RBeat d x)             = noteRestToXml (d, x)
-rhythmToXml (RDotted n (RBeat d x)) = noteRestToXml (dotMod n * d, x)
-rhythmToXml (RTuplet m r)           = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
-rhythmToXml (RSeq rs)               = mconcat $ map rhythmToXml rs
+rhythmToXml (Beat d x)            = noteRestToXml (d, x)
+rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d, x)
+rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
+rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
 noteRestToXml (d, Just p)  = getXml d p
