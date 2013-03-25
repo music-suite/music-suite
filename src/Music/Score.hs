@@ -385,10 +385,36 @@ playMidiIO = runLoop . playMidi
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
 
+class HasVoice a where
+    getVoice :: a -> String
+    setVoice :: String -> a -> a
+    mapVoice :: (String -> String) -> a -> a
+    setVoice n = mapVoice (const n)
+    mapVoice f x = x
+
+instance HasVoice ()                            where   getVoice _ = ""
+instance HasVoice Double                        where   getVoice _ = ""
+instance HasVoice Int                           where   getVoice _ = ""    
+instance HasVoice Integer                       where   getVoice _ = ""    
+instance Integral a => HasVoice (Ratio a)       where   getVoice _ = ""
+instance HasVoice (String, a)                   where   
+    getVoice (v,_) = v
+    mapVoice f (v,x) = (f v, x)
+instance HasVoice a => HasVoice (Bool, a, Bool) where   getVoice (_,x,_) = getVoice x
+
+setVoiceS :: HasVoice a => String -> Score a -> Score a
+setVoiceS n = fmap (setVoice n)
+
+separateVoices :: HasVoice a => Score a -> [Score a]
+separateVoices sc = fmap (flip extract $ sc) voices 
+    where                    
+        extract v = filterS ((== v) . getVoice)
+        voices = List.nub $ fmap getVoice $ toList $ sc
+
 -- |
 -- Class of types that can be converted to MusicXML.
 --
-class Tiable a => HasMusicXml a where          
+class (HasVoice a, Tiable a) => HasMusicXml a where          
     -- | 
     -- Convert a value to MusicXML.
     --
@@ -445,12 +471,12 @@ openXml sc = do
 toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
 toXml = Xml.fromPart "Title" "Composer" "Part" 
     . fmap barToXml 
-    -- TODO assure bars have proper duration 
     . separateBars 
     . splitTiesSingle
     . addRests
-    -- separate parts here
     . perform
+    -- separate parts here
+
 
 
 -- | 
@@ -502,7 +528,7 @@ noteRestToXml (d, Just p)  = addTies $ getMusicXml d p
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-sc :: Score (Bool,Double,Bool) -> Score (Bool,Double,Bool)
+sc :: Score (String, (Bool,Double,Bool)) -> Score (String, (Bool,Double,Bool))
 sc = id
 
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
@@ -536,14 +562,27 @@ rep n x = x |> rep (n-1) x
 
 instance HasMidi a => HasMidi (Bool, a, Bool) where
     getMidi (_,x,_) = getMidi x
-
 instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
     getMusicXml d (_,x,_) = getMusicXml d x
-
 instance IsPitch a => IsPitch (Bool, a, Bool) where
     fromPitch l = (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (Bool, a, Bool) where
     fromDynamics l = (False, fromDynamics l, False)
+
+instance HasMidi a => HasMidi (String, a) where
+    getMidi (_,x) = getMidi x
+instance HasMusicXml a => HasMusicXml (String, a) where
+    getMusicXml d (_,x) = getMusicXml d x
+instance IsPitch a => IsPitch (String, a) where
+    fromPitch l = ("", fromPitch l)
+instance IsDynamics a => IsDynamics (String, a) where
+    fromDynamics l = ("", fromDynamics l)
+
+instance Tiable a => Tiable (String, a) where
+    toTie (v,a) = ((v,b),(v,c)) where (b,c) = toTie a
+    tieStart (v,a) = tieStart a
+    tieStop (v,a) = tieStop a
+
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12

@@ -22,7 +22,8 @@
 module Music.Score.Score (
         Score(..),
         rest,
-        note,
+        note,    
+        filterS,
         perform,
         performRelative
   ) where
@@ -178,6 +179,12 @@ rest = Score [(0,1,Nothing)]
 --
 note :: a -> Score a
 note x = Score [(0,1,Just x)]
+
+filterS :: (a -> Bool) -> Score a -> Score a
+filterS f = Score . filter g . getScore
+    where
+       g (t,d,Nothing)  = True
+       g (t,d,(Just x)) = f x
 
 perform :: Score a -> [(Time, Duration, a)]
 perform = removeRests . getScore
