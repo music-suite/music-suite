@@ -55,6 +55,11 @@ module Music.Score (
 
         -- * Export         
         -- ** MIDI
+        HasVoice(..),
+        getVoices,
+        setVoiceS,
+        separateVoices,
+        
         HasMidi(..),
         toMidi,
         writeMidi,
@@ -406,10 +411,12 @@ setVoiceS :: HasVoice a => String -> Score a -> Score a
 setVoiceS n = fmap (setVoice n)
 
 separateVoices :: HasVoice a => Score a -> [Score a]
-separateVoices sc = fmap (flip extract $ sc) voices 
+separateVoices sc = fmap (flip extract $ sc) (getVoices sc) 
     where                    
         extract v = filterS ((== v) . getVoice)
-        voices = List.nub $ fmap getVoice $ toList $ sc
+
+getVoices :: (Foldable t, HasVoice a) => t a -> [String]
+getVoices = List.nub . fmap getVoice . toList
 
 -- |
 -- Class of types that can be converted to MusicXML.
@@ -469,14 +476,24 @@ openXml sc = do
 -- Convert a score to a MusicXML representaiton. 
 -- 
 toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
-toXml = Xml.fromPart "Title" "Composer" "Part" 
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . separateVoices $ sc
+    where
+        pl = Xml.partList (getVoices sc)
+
+-- |
+-- Convert a score to a MusicXML representaiton. 
+-- 
+toXmlPart :: (Show a, HasMusicXml a) => Score a -> XmlScore
+toXmlPart = Xml.fromPart "Title" "Composer" "Part" . toXmlPart'
+
+
+toXmlPart' :: (Show a, HasMusicXml a) => Score a -> [XmlMusic]
+toXmlPart' = id
     . fmap barToXml 
     . separateBars 
     . splitTiesSingle
     . addRests
     . perform
-    -- separate parts here
-
 
 
 -- | 
@@ -537,7 +554,13 @@ fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
 fj4 = c |> g_ |> c^*2
 
 fj  = rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4
-fj' = fj <> delay 4 fj <> delay 8 fj <> delay 12 fj
+
+fj' = mempty
+    <> setVoiceS "Violin I"     fj 
+    <> setVoiceS "Violin II"    (delay 8  $ fj^*(2/3)) 
+    <> setVoiceS "Viola"        (delay 16 $ fj^*(4/5)) 
+    <> setVoiceS "Violoncello"  (delay 24 $ fj^*(4/7))
+
 
 
 showScore :: Score Double -> String
