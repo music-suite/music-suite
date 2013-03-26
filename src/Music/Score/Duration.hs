@@ -80,3 +80,6 @@ class Delayable a where
     -- > Duration -> Score a -> Score a
     -- 
     delay :: Duration -> a -> a
+
+instance Delayable a => Delayable (WrappedMonoid a) where 
+    delay t = WrapMonoid . delay t . unwrapMonoid

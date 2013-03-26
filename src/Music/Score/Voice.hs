@@ -23,6 +23,7 @@
 
 module Music.Score.Voice (
         HasVoice(..),
+        VoiceT(..),
         voices,
         mapVoices,
         getVoices,
@@ -42,7 +43,11 @@ import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
+import Music.Score.Ties
 
+-- See commment in Tie module
+instance Tiable a => Tiable (VoiceT a) where
+    toTied (VoiceT (v,a)) = (VoiceT (v,b), VoiceT (v,c)) where (b,c) = toTied a
 
 
 class HasVoice a where
@@ -69,6 +74,8 @@ class HasVoice a where
     setVoice n = modifyVoice (const n)
     modifyVoice f x = x
 
+newtype VoiceT a = VoiceT { getVoiceT :: (String, a) }
+
 instance HasVoice ()                            where   { type Voice ()         = String ; getVoice _ = "" }
 instance HasVoice Double                        where   { type Voice Double     = String ; getVoice _ = "" }
 instance HasVoice Float                         where   { type Voice Float      = String ; getVoice _ = "" }
@@ -80,10 +87,20 @@ instance HasVoice (String, a) where
     type Voice (String, a) = String
     getVoice (v,_) = v
     modifyVoice f (v,x) = (f v, x)
-
 instance HasVoice a => HasVoice (Bool, a, Bool) where   
     type Voice (Bool, a, Bool) = Voice a
     getVoice (_,x,_) = getVoice x
+
+instance HasVoice (VoiceT a) where   
+    type Voice (VoiceT a)        = String
+    getVoice (VoiceT (v,_))      = v
+    modifyVoice f (VoiceT (v,x)) = VoiceT (f v, x)
+instance HasVoice a => HasVoice (TieT a) where   
+    type Voice (TieT a) = Voice a
+    getVoice (TieT (_,x,_)) = getVoice x
+
+
+
 
 -- | 
 -- Extract parts from the given score. Returns a list of single-part score. A dual of @pcat@.

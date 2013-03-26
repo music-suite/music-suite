@@ -23,6 +23,7 @@
 
 module Music.Score.Ties (
         Tiable(..),
+        TieT(..),
         splitTies,
         splitTiesSingle,
         splitTiesPart,
@@ -51,7 +52,8 @@ class Tiable a where
     --   The first returned element will have the original onset.
     --   
     toTied    :: a -> (a, a)
-    
+
+newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }    
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
 instance Tiable Double      where toTied x = (x,x)
@@ -65,9 +67,13 @@ instance Tiable a => Tiable (Maybe a) where
     toTied Nothing  = (Nothing, Nothing)
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
     
+-- instance Tiable a => Tiable (VoiceT a) where
+-- Note: This instance is in the Voice module to break the recursive dependency
 instance Tiable a => Tiable (String, a) where
     toTied (v,a) = ((v,b),(v,c)) where (b,c) = toTied a
 
+instance Tiable a => Tiable (TieT a) where
+    toTied (TieT (prevTie, x, _)) = (TieT (prevTie, x, True), TieT (True, x, False))
 instance Tiable a => Tiable (Bool, a, Bool) where
     toTied (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
 

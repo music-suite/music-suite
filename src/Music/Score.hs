@@ -253,9 +253,6 @@ a <| b =  b |> a
 scat :: (Monoid a, Delayable a, HasOnset a) => [a] -> a
 scat = unwrapMonoid . foldr (|>) mempty . fmap WrapMonoid
 
-instance Delayable a => Delayable (WrappedMonoid a) where delay t = WrapMonoid . delay t . unwrapMonoid
-instance HasOnset a => HasOnset (WrappedMonoid a) where { onset = onset . unwrapMonoid ; offset = offset . unwrapMonoid }
-
 -- |
 -- Parallel concatentation. A synonym for 'mconcat'.
 --
@@ -330,20 +327,18 @@ class HasMidi a where
     getMidiScore :: Score a -> Score Midi.Message
     getMidiScore = (>>= getMidi)
 
-instance HasMidi Midi.Message where
-    getMidi = return
 
--- instance HasMidi ()                      where   getMidi = getMidi . toInteger . const 60
-instance HasMidi Double                  where   getMidi = getMidi . toInteger . round
-instance HasMidi Float                   where   getMidi = getMidi . toInteger . round
-instance HasMidi Int                     where   getMidi = getMidi . toInteger    
-instance Integral a => HasMidi (Ratio a) where   getMidi = getMidi . toInteger . round    
-
-instance HasMidi Integer where
-    getMidi x = note (Midi.NoteOn 0 (fromIntegral x) 100) |> note (Midi.NoteOff 0 (fromIntegral x) 100)
+instance HasMidi Double                     where   getMidi = getMidi . toInteger . round
+instance HasMidi Float                      where   getMidi = getMidi . toInteger . round
+instance HasMidi Int                        where   getMidi = getMidi . toInteger    
+instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toInteger . round    
+instance HasMidi Midi.Message               where   getMidi = return
+instance HasMidi Integer                    where   getMidi = \x -> getMidi (x,100::Integer)
 
 instance HasMidi (Integer, Integer) where
-    getMidi (p,v) = note (Midi.NoteOn 0 (fromIntegral p) (fromIntegral v)) |> note (Midi.NoteOff 0 (fromIntegral p) (fromIntegral v))
+    getMidi (p,v) = mempty
+        |> note (Midi.NoteOn 0 (fromIntegral p) (fromIntegral v)) 
+        |> note (Midi.NoteOff 0 (fromIntegral p) (fromIntegral v))
 
 
 -- |
@@ -411,11 +406,10 @@ class (HasVoice a, Tiable a) => HasMusicXml a where
     --
     getMusicXml      :: Duration -> a -> XmlMusic
 
---instance HasMusicXml ()                      where   getMusicXml d = getMusicXml d . (toInteger . const 60)
-instance HasMusicXml Double                  where   getMusicXml d = getMusicXml d . (toInteger . round)
-instance HasMusicXml Float                   where   getMusicXml d = getMusicXml d . (toInteger . round)
-instance HasMusicXml Int                     where   getMusicXml d = getMusicXml d . toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
+instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . (toInteger . round)
+instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . (toInteger . round)
+instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger    
+instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . (toInteger . round)    
 
 -- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
@@ -621,6 +615,7 @@ instance IsDynamics a => IsDynamics (Bool, a, Bool) where
     fromDynamics l = (False, fromDynamics l, False)
 
 
+{-
 -- Basic literal instances
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
@@ -634,6 +629,7 @@ instance IsPitch Integer where
                 4 -> 7
                 5 -> 9
                 6 -> 11
+-}
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
         where

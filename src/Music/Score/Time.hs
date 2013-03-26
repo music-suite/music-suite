@@ -101,6 +101,10 @@ class HasOnset a where
     --
     offset :: a -> Time
                               
+instance HasOnset a => HasOnset (WrappedMonoid a) where 
+    onset = onset . unwrapMonoid
+    offset = offset . unwrapMonoid
+
 
 class HasPreOnset a where
     preOnset :: a -> Time
