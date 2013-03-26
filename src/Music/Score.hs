@@ -69,7 +69,10 @@ module Music.Score (
         HasMusicXml(..),
         toXml,
         writeXml,
-        openXml
+        openXml,
+        toXmlPart,
+        writeXmlPart,
+        openXmlPart,
 )
 where
 
@@ -300,6 +303,11 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 -------------------------------------------------------------------------------------
 
+-- mapStartMiddleStop :: (a -> a) -> (a -> a) -> (a -> a) -> Score a -> Score a
+-- mapStartMiddleStop f g h = Score . catMaybes . getScore
+
+-------------------------------------------------------------------------------------
+
 -- |
 -- Class of types that can be converted to MIDI.
 --
@@ -323,8 +331,9 @@ class HasMidi a where
 instance HasMidi Midi.Message where
     getMidi = return
 
-instance HasMidi ()                      where   getMidi = getMidi . toInteger . const 60
+-- instance HasMidi ()                      where   getMidi = getMidi . toInteger . const 60
 instance HasMidi Double                  where   getMidi = getMidi . toInteger . round
+instance HasMidi Float                   where   getMidi = getMidi . toInteger . round
 instance HasMidi Int                     where   getMidi = getMidi . toInteger    
 instance Integral a => HasMidi (Ratio a) where   getMidi = getMidi . toInteger . round    
 
@@ -400,10 +409,11 @@ class (HasVoice a, Tiable a) => HasMusicXml a where
     --
     getMusicXml      :: Duration -> a -> XmlMusic
 
-instance HasMusicXml ()                      where   getMusicXml d = getMusicXml d . (toInteger . const 60)
+--instance HasMusicXml ()                      where   getMusicXml d = getMusicXml d . (toInteger . const 60)
 instance HasMusicXml Double                  where   getMusicXml d = getMusicXml d . (toInteger . round)
+instance HasMusicXml Float                   where   getMusicXml d = getMusicXml d . (toInteger . round)
 instance HasMusicXml Int                     where   getMusicXml d = getMusicXml d . toInteger    
---instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
+instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
 
 -- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
@@ -443,10 +453,26 @@ openXml sc = do
     -- FIXME hardcode
 
 -- |
+-- Convert a score to MusicXML and write to a file. 
+-- 
+writeXmlPart :: HasMusicXml a => FilePath -> Score a -> IO ()
+writeXmlPart path sc = writeFile path (Xml.showXml $ toXmlPart sc)
+
+-- |
+-- Convert a score to MusicXML and open it. 
+-- 
+openXmlPart :: HasMusicXml a => Score a -> IO ()
+openXmlPart sc = do
+    writeXmlPart "test.xml" sc
+    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    -- FIXME hardcode
+
+
+-- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
 toXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . extractVoices $ sc
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . voices $ sc
     where
         pl = Xml.partList (fmap show $ getVoices sc)
 
@@ -579,9 +605,6 @@ instance IsPitch a => IsPitch (String, a) where
     fromPitch l = ("", fromPitch l)
 instance IsDynamics a => IsDynamics (String, a) where
     fromDynamics l = ("", fromDynamics l)
-
-instance Tiable a => Tiable (String, a) where
-    toTie (v,a) = ((v,b),(v,c)) where (b,c) = toTie a
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12

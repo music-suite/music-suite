@@ -50,22 +50,26 @@ class Tiable a where
 
     --   The first returned element will have the original onset.
     --   
-    toTie    :: a -> (a, a)
+    toTied    :: a -> (a, a)
     
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
-instance Tiable Double      where toTie x = (x,x)
-instance Tiable Int         where toTie x = (x,x)
-instance Tiable Integer     where toTie x = (x,x)
-instance Tiable ()          where toTie x = (x,x)
-instance Tiable (Ratio a)   where toTie x = (x,x)
+instance Tiable Double      where toTied x = (x,x)
+instance Tiable Float       where toTied x = (x,x)
+instance Tiable Int         where toTied x = (x,x)
+instance Tiable Integer     where toTied x = (x,x)
+instance Tiable ()          where toTied x = (x,x)
+instance Tiable (Ratio a)   where toTied x = (x,x)
 
 instance Tiable a => Tiable (Maybe a) where
-    toTie Nothing  = (Nothing, Nothing)
-    toTie (Just a) = (Just b, Just c) where (b,c) = toTie a
+    toTied Nothing  = (Nothing, Nothing)
+    toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
     
+instance Tiable a => Tiable (String, a) where
+    toTied (v,a) = ((v,b),(v,c)) where (b,c) = toTied a
+
 instance Tiable a => Tiable (Bool, a, Bool) where
-    toTie (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
+    toTied (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
 
 -- | 
 -- /Not implemented/
@@ -126,7 +130,7 @@ splitDur s x = case splitDur' s x of
 --         
 splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
 splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
-                  | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTie a
+                  | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
                  
 
 
