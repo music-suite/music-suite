@@ -88,7 +88,7 @@ instance HasDuration (Rhythm a) where
     -- duration (InverseTuplet c a)   = duration a * c
     duration (Rhythms as)      = sum (fmap duration as)    
 
-quantize :: Show a => [(Duration, a)] -> Either String (Rhythm a)
+quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
 
 
@@ -97,10 +97,6 @@ quantize = quantize' (atEnd rhythm)
 testq :: [Duration] -> Either String (Rhythm ())
 testq = quantize' (atEnd rhythm) . fmap (\x->(x,()))
 
-atEnd p = do
-    x <- p
-    notFollowedBy anyToken <?> "end of input"
-    return x
 
 dotMod :: Int -> Duration
 dotMod n = dotMods !! (n-1)
@@ -185,6 +181,33 @@ tuplet' d = do
         modifyState $ modifyTimeMod (/ d) 
                     . modifyTupleDepth pred
         return (Tuplet d r)
+
+
+
+-- |
+-- Succeed only if the entire input is consumed.
+--
+atEnd :: RhythmParser a b -> RhythmParser a b
+atEnd p = do
+    x <- p
+    notFollowedBy' anyToken' <?> "end of input"
+    return x
+    where
+        notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
+        anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
+    
+-- |
+-- Like 'notFollowedBy', but not requiring 'Show'.
+--
+-- notFollowedBy' :: Stream s m t => ParsecT s u m a -> ParsecT s u m ()Source
+-- notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
+
+-- |
+-- Like 'anyToken', but not requiring 'Show'.
+--
+-- anyToken' :: Stream s m t => ParsecT s u m tSource
+-- anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
+
 
 
 

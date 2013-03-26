@@ -465,13 +465,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: (Show a, HasMusicXml a) => FilePath -> Score a -> IO ()
+writeXml :: HasMusicXml a => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: (Show a, HasMusicXml a) => Score a -> IO ()
+openXml :: HasMusicXml a => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -480,7 +480,7 @@ openXml sc = do
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: (Show a, HasMusicXml a) => Score a -> XmlScore
+toXml :: HasMusicXml a => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . separateVoices $ sc
     where
         pl = Xml.partList (getVoices sc)
@@ -488,11 +488,11 @@ toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . separateVoice
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXmlPart :: (Show a, HasMusicXml a) => Score a -> XmlScore
+toXmlPart :: HasMusicXml a => Score a -> XmlScore
 toXmlPart = Xml.fromPart "Title" "Composer" "Part" . toXmlPart'
 
 
-toXmlPart' :: (Show a, HasMusicXml a) => Score a -> [XmlMusic]
+toXmlPart' :: HasMusicXml a => Score a -> [XmlMusic]
 toXmlPart' = id
     . fmap barToXml 
     . separateBars 
@@ -517,7 +517,7 @@ addRests = Score . concat . snd . mapAccumL g 0
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: (Show a, HasMusicXml a) => Score a -> [[(Duration, Maybe a)]]
+separateBars :: HasMusicXml a => Score a -> [[(Duration, Maybe a)]]
 separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime . getScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
@@ -526,7 +526,7 @@ separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero 
         removeTime                      = fmap g where g (t,d,x) = (d,x)
 
 
-barToXml :: (Show a, HasMusicXml a) => [(Duration, Maybe a)] -> Xml.Music
+barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
 barToXml bar = case quantize bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
