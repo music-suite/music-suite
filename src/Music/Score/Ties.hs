@@ -51,10 +51,10 @@ class Tiable a where
     --   The first returned element will have the original onset.
     --   
     toTie    :: a -> (a, a)
-    tieStart :: a -> Bool
-    tieStop  :: a -> Bool
-    tieStart _ = False
-    tieStop  _ = False
+    -- tieStart :: a -> Bool
+    -- tieStop  :: a -> Bool
+    -- tieStart _ = False
+    -- tieStop  _ = False
     
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
@@ -68,11 +68,11 @@ instance Tiable a => Tiable (Maybe a) where
     toTie Nothing  = (Nothing, Nothing)
     toTie (Just a) = (Just b, Just c) where (b,c) = toTie a
     
-    tieStart Nothing  = False
-    tieStart (Just x) = tieStart x
+    -- tieStart Nothing  = False
+    -- tieStart (Just x) = tieStart x
     
-    tieStop  Nothing = False
-    tieStop  (Just x) = tieStart x
+    -- tieStop  Nothing = False
+    -- tieStop  (Just x) = tieStart x
 
 -- instance Tiable String   where 
 --     toTie ")" = ("~", ")")
@@ -80,8 +80,8 @@ instance Tiable a => Tiable (Maybe a) where
 
 instance Tiable a => Tiable (Bool, a, Bool) where
     toTie (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
-    tieStart (_,_,s) = s
-    tieStop  (s,_,_) = s
+    -- tieStart (_,_,s) = s
+    -- tieStop  (s,_,_) = s
 
 -- | 
 -- /Not implemented/

@@ -556,12 +556,12 @@ rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
 noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
-noteRestToXml (d, Just p)  = addTies $ getMusicXml d p
-    where
-        addTies | tieStart p && tieStop p = Xml.endTie . Xml.beginTie
-                | tieStart p              = Xml.beginTie
-                | tieStop  p              = Xml.endTie
-                | otherwise               = id
+noteRestToXml (d, Just p)  = {-addTies $ -}getMusicXml d p
+    -- where
+    --     addTies | tieStart p && tieStop p = Xml.endTie . Xml.beginTie
+    --             | tieStart p              = Xml.beginTie
+    --             | tieStop  p              = Xml.endTie
+    --             | otherwise               = id
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
@@ -614,8 +614,15 @@ rep n x = x |> rep (n-1) x
 
 instance HasMidi a => HasMidi (Bool, a, Bool) where
     getMidi (_,x,_) = getMidi x
+
 instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
-    getMusicXml d (_,x,_) = getMusicXml d x
+    getMusicXml d (ta,x,tb) = addTies $ getMusicXml d x
+        where
+            addTies | ta && tb  = Xml.endTie . Xml.beginTie
+                    | tb        = Xml.beginTie
+                    | ta        = Xml.endTie
+                    | otherwise = id
+
 instance IsPitch a => IsPitch (Bool, a, Bool) where
     fromPitch l = (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (Bool, a, Bool) where
@@ -632,8 +639,8 @@ instance IsDynamics a => IsDynamics (String, a) where
 
 instance Tiable a => Tiable (String, a) where
     toTie (v,a) = ((v,b),(v,c)) where (b,c) = toTie a
-    tieStart (v,a) = tieStart a
-    tieStop (v,a) = tieStop a
+    -- tieStart (v,a) = tieStart a
+    -- tieStop (v,a) = tieStop a
 
 
 instance IsPitch Integer where
