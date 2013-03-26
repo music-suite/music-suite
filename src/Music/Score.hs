@@ -87,7 +87,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 import Data.Semigroup
 import Data.Ratio
 import Control.Applicative
-import Control.Monad (ap, join, MonadPlus(..))
+import Control.Monad (ap, msum, mfilter, join, liftM, MonadPlus(..))
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -556,10 +556,17 @@ fj4 = c |> g_ |> c^*2
 fj  = rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4
 
 fj' = mempty
-    <> setVoiceS "Violin I"     fj 
-    <> setVoiceS "Violin II"    (delay 8  $ fj^*(2/3)) 
-    <> setVoiceS "Viola"        (delay 16 $ fj^*(4/5)) 
-    <> setVoiceS "Violoncello"  (delay 24 $ fj^*(4/7))
+    <> setVoiceS "Violin I"     (rep 10 fj) 
+    <> setVoiceS "Violin II"    (delay 8  $ (rep 10 fj)^*(2/3)) 
+    <> setVoiceS "Viola"        (delay 16 $ (rep 10 fj)^*(4/5)) 
+    <> setVoiceS "Violoncello"  (delay 24 $ (rep 10 fj)^*(4/7))
+
+-- classic version...
+fj'' = mempty
+    <> setVoiceS "Violin I"     (rep 10 fj) 
+    <> setVoiceS "Violin II"    (delay 8  $ (rep 10 fj)) 
+    <> setVoiceS "Viola"        (delay 16 $ (rep 10 fj)) 
+    <> setVoiceS "Violoncello"  (delay 24 $ (rep 10 fj))
 
 
 
@@ -653,6 +660,44 @@ sep = List.intersperse
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
 
+
+
+-- Score filtering generalized to MonadPlus
+
+-- | 
+-- Generalizes the 'remove' function.
+-- 
+mremove :: MonadPlus m => (a -> Bool) -> m a -> m a
+mremove p = mfilter (not . p)
+
+-- | 
+-- Generalizes the 'partition' function.
+-- 
+mpartition :: MonadPlus m => (a -> Bool) -> m a -> (m a, m a)
+mpartition p a = (mfilter p a, mremove p a)
+
+-- | 
+-- Pass through @Just@ occurrences.
+-- Generalizes the 'catMaybes' function.
+-- 
+mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
+mcatMaybes = (>>= maybe mzero return)
+
+-- | 
+-- Generalizes the 'mapMaybe' function.
+-- 
+mmapMaybe :: MonadPlus m => (a -> Maybe b) -> m a -> m b
+mmapMaybe f = mcatMaybes . liftM f 
+
+-- | 
+-- Optionally modify a value.
+-- 
+mmodify :: MonadPlus m => (a -> Maybe a) -> m a -> m a
+mmodify f a = liftM (fromJust . f) change `mplus` noChange
+    where
+        (change, noChange) = mpartition (isJust . f) a
+
+
 -- | 
 -- Group a list into sublists whereever a predicate holds. The matched element
 -- is the first in the sublist.
@@ -688,7 +733,4 @@ left f (Right y) = Right y
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f as bs = List.sortBy f $ as <> bs
-
-onlyIf :: MonadPlus m => Bool -> m b -> m b
-onlyIf b p = if b then p else mzero
 
