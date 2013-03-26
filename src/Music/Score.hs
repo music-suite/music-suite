@@ -556,12 +556,7 @@ rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
 noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
-noteRestToXml (d, Just p)  = {-addTies $ -}getMusicXml d p
-    -- where
-    --     addTies | tieStart p && tieStop p = Xml.endTie . Xml.beginTie
-    --             | tieStart p              = Xml.beginTie
-    --             | tieStop  p              = Xml.endTie
-    --             | otherwise               = id
+noteRestToXml (d, Just p)  = getMusicXml d p
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
@@ -639,9 +634,6 @@ instance IsDynamics a => IsDynamics (String, a) where
 
 instance Tiable a => Tiable (String, a) where
     toTie (v,a) = ((v,b),(v,c)) where (b,c) = toTie a
-    -- tieStart (v,a) = tieStart a
-    -- tieStop (v,a) = tieStop a
-
 
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
