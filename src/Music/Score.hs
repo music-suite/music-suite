@@ -303,8 +303,10 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 -------------------------------------------------------------------------------------
 
+-- mapNotes = Score . getScore
+
 -- mapStartMiddleStop :: (a -> a) -> (a -> a) -> (a -> a) -> Score a -> Score a
--- mapStartMiddleStop f g h = Score . catMaybes . getScore
+mapStartMiddleStop f g h = mapVoices (\x -> x)
 
 -------------------------------------------------------------------------------------
 
@@ -581,9 +583,15 @@ rep n x = x |> rep (n-1) x
 --     Midi.exportFile "test.mid" (toMidi sc)
 --     execute "timidity" ["test.mid"]
 
+-- Part transformers
+instance HasMidi a => HasMidi (String, a) where
+    getMidi (_,x) = getMidi x
+instance HasMusicXml a => HasMusicXml (String, a) where
+    getMusicXml d (_,x) = getMusicXml d x
+
+-- Tie transformers
 instance HasMidi a => HasMidi (Bool, a, Bool) where
     getMidi (_,x,_) = getMidi x
-
 instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
     getMusicXml d (ta,x,tb) = addTies $ getMusicXml d x
         where
@@ -592,20 +600,28 @@ instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
                     | ta        = Xml.endTie
                     | otherwise = id
 
+-- Dynamics transformers
+instance HasMidi a => HasMidi (Bool,Double,Bool, a) where
+    getMidi (bc,l,ec,x) = getMidi x
+
+-- Articulation transformers
+instance HasMidi a => HasMidi ([Int],[Int],[Int], a) where
+    getMidi (ba,ma,ea,x) = getMidi x
+
+
+
+-- Literal transformers
+instance IsPitch a => IsPitch (String, a) where
+    fromPitch l = ("", fromPitch l)
 instance IsPitch a => IsPitch (Bool, a, Bool) where
     fromPitch l = (False, fromPitch l, False)
+instance IsDynamics a => IsDynamics (String, a) where
+    fromDynamics l = ("", fromDynamics l)
 instance IsDynamics a => IsDynamics (Bool, a, Bool) where
     fromDynamics l = (False, fromDynamics l, False)
 
-instance HasMidi a => HasMidi (String, a) where
-    getMidi (_,x) = getMidi x
-instance HasMusicXml a => HasMusicXml (String, a) where
-    getMusicXml d (_,x) = getMusicXml d x
-instance IsPitch a => IsPitch (String, a) where
-    fromPitch l = ("", fromPitch l)
-instance IsDynamics a => IsDynamics (String, a) where
-    fromDynamics l = ("", fromDynamics l)
 
+-- Basic literal instances
 instance IsPitch Integer where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
         where
@@ -618,7 +634,6 @@ instance IsPitch Integer where
                 4 -> 7
                 5 -> 9
                 6 -> 11
-
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
         where
@@ -676,18 +691,12 @@ mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
 mcatMaybes = (>>= maybe mzero return)
 
 -- | 
+-- Modify or discard a value.
 -- Generalizes the 'mapMaybe' function.
 -- 
 mmapMaybe :: MonadPlus m => (a -> Maybe b) -> m a -> m b
 mmapMaybe f = mcatMaybes . liftM f 
 
--- | 
--- Optionally modify a value.
--- 
-mmodify :: MonadPlus m => (a -> Maybe a) -> m a -> m a
-mmodify f a = liftM (fromJust . f) change `mplus` noChange
-    where
-        (change, noChange) = mpartition (isJust . f) a
 
 
 -- | 
