@@ -54,6 +54,7 @@ class Tiable a where
     toTied    :: a -> (a, a)
 
 newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }    
+    deriving (Eq, Ord, Show, Functor)
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
 instance Tiable Double      where toTied x = (x,x)
@@ -67,15 +68,16 @@ instance Tiable a => Tiable (Maybe a) where
     toTied Nothing  = (Nothing, Nothing)
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
     
+-- instance Tiable a => Tiable (String, a) where
+--     toTied (v,a) = ((v,b),(v,c)) where (b,c) = toTied a
+-- instance Tiable a => Tiable (Bool, a, Bool) where
+--     toTied (prevTie, a, _) = ((prevTie, b, True), (True, c, False))
+
 -- instance Tiable a => Tiable (VoiceT a) where
 -- Note: This instance is in the Voice module to break the recursive dependency
-instance Tiable a => Tiable (String, a) where
-    toTied (v,a) = ((v,b),(v,c)) where (b,c) = toTied a
-
 instance Tiable a => Tiable (TieT a) where
-    toTied (TieT (prevTie, x, _)) = (TieT (prevTie, x, True), TieT (True, x, False))
-instance Tiable a => Tiable (Bool, a, Bool) where
-    toTied (prevTie, x, _) = ((prevTie, x, True), (True, x, False))
+    toTied (TieT (prevTie, a, _)) = (TieT (prevTie, b, True), TieT (True, c, False))
+         where (b,c) = toTied a
 
 -- | 
 -- /Not implemented/

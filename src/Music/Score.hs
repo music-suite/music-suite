@@ -532,7 +532,7 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-sc :: Score (String, (Bool,Double,Bool)) -> Score (String, (Bool,Double,Bool))
+sc :: Score (VoiceT (TieT Double)) -> Score (VoiceT (TieT Double))
 sc = id
 
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
@@ -577,17 +577,31 @@ rep n x = x |> rep (n-1) x
 --     Midi.exportFile "test.mid" (toMidi sc)
 --     execute "timidity" ["test.mid"]
 
--- Part transformers
-instance HasMidi a => HasMidi (String, a) where
-    getMidi (_,x) = getMidi x
-instance HasMusicXml a => HasMusicXml (String, a) where
-    getMusicXml d (_,x) = getMusicXml d x
+-- Voice transformers
+-- instance HasMidi a => HasMidi (String, a) where
+--     getMidi (_,x) = getMidi x
+-- instance HasMusicXml a => HasMusicXml (String, a) where
+--     getMusicXml d (_,x) = getMusicXml d x
+instance HasMidi a => HasMidi (VoiceT a) where
+    getMidi (VoiceT (_,x)) = getMidi x
+instance HasMusicXml a => HasMusicXml (VoiceT a) where
+    getMusicXml d (VoiceT (_,x)) = getMusicXml d x
+
 
 -- Tie transformers
-instance HasMidi a => HasMidi (Bool, a, Bool) where
-    getMidi (_,x,_) = getMidi x
-instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
-    getMusicXml d (ta,x,tb) = addTies $ getMusicXml d x
+-- instance HasMidi a => HasMidi (Bool, a, Bool) where
+--     getMidi (_,x,_) = getMidi x
+-- instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
+--     getMusicXml d (ta,x,tb) = addTies $ getMusicXml d x
+--         where
+--             addTies | ta && tb  = Xml.endTie . Xml.beginTie
+--                     | tb        = Xml.beginTie
+--                     | ta        = Xml.endTie
+--                     | otherwise = id
+instance HasMidi a => HasMidi (TieT a) where
+    getMidi (TieT (_,x,_)) = getMidi x
+instance HasMusicXml a => HasMusicXml (TieT a) where
+    getMusicXml d (TieT (ta,x,tb)) = addTies $ getMusicXml d x
         where
             addTies | ta && tb  = Xml.endTie . Xml.beginTie
                     | tb        = Xml.beginTie
@@ -609,10 +623,19 @@ instance IsPitch a => IsPitch (String, a) where
     fromPitch l = ("", fromPitch l)
 instance IsPitch a => IsPitch (Bool, a, Bool) where
     fromPitch l = (False, fromPitch l, False)
+instance IsPitch a => IsPitch (VoiceT a) where
+    fromPitch l = VoiceT ("", fromPitch l)
+instance IsPitch a => IsPitch (TieT a) where
+    fromPitch l = TieT (False, fromPitch l, False)
+
 instance IsDynamics a => IsDynamics (String, a) where
     fromDynamics l = ("", fromDynamics l)
 instance IsDynamics a => IsDynamics (Bool, a, Bool) where
     fromDynamics l = (False, fromDynamics l, False)
+instance IsDynamics a => IsDynamics (VoiceT a) where
+    fromDynamics l = VoiceT ("", fromDynamics l)
+instance IsDynamics a => IsDynamics (TieT a) where
+    fromDynamics l = TieT (False, fromDynamics l, False)
 
 
 {-
