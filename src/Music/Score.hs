@@ -59,6 +59,7 @@ module Music.Score (
         getVoices,
         setVoiceS,
         separateVoices,
+        mapVoices,
         
         HasMidi(..),
         toMidi,
@@ -415,8 +416,12 @@ separateVoices sc = fmap (flip extract $ sc) (getVoices sc)
     where                    
         extract v = filterS ((== v) . getVoice)
 
+mapVoices :: HasVoice a => ([Score a] -> [Score b]) -> Score a -> Score b
+mapVoices f = pcat . f . separateVoices
+
 getVoices :: (Foldable t, HasVoice a) => t a -> [String]
 getVoices = List.nub . fmap getVoice . toList
+
 
 -- |
 -- Class of types that can be converted to MusicXML.
