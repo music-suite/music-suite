@@ -57,8 +57,8 @@ module Music.Score (
         -- ** MIDI
         HasVoice(..),
         getVoices,
-        setVoiceS,
-        separateVoices,
+        setVoices,
+        extractVoices,
         mapVoices,
         
         HasMidi(..),
@@ -88,7 +88,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 import Data.Semigroup
 import Data.Ratio
 import Control.Applicative
-import Control.Monad (ap, msum, mfilter, join, liftM, MonadPlus(..))
+import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -392,35 +392,52 @@ type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
 
 class HasVoice a where
-    getVoice :: a -> String
-    setVoice :: String -> a -> a
-    mapVoice :: (String -> String) -> a -> a
+    -- | Associated voice type.
+    --   This should implement 'Eq' and 'Show' to be usable with 'toXml' and friends.
+    type Voice a :: *
+
+    getVoice :: a -> Voice a
+    setVoice :: Voice a -> a -> a
+    mapVoice :: (Voice a -> Voice a) -> a -> a
     setVoice n = mapVoice (const n)
     mapVoice f x = x
 
-instance HasVoice ()                            where   getVoice _ = ""
-instance HasVoice Double                        where   getVoice _ = ""
-instance HasVoice Int                           where   getVoice _ = ""    
-instance HasVoice Integer                       where   getVoice _ = ""    
-instance Integral a => HasVoice (Ratio a)       where   getVoice _ = ""
+instance HasVoice ()                            where   { type Voice () = String ; getVoice _ = "" }
+instance HasVoice Double                        where   { type Voice Double = String ; getVoice _ = "" }
+instance HasVoice Int                           where   { type Voice Int = String ; getVoice _ = ""     }
+instance HasVoice Integer                       where   { type Voice Integer = String ; getVoice _ = ""     }
+-- instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a) = String ; getVoice _ = "" }
 instance HasVoice (String, a)                   where   
+    type Voice (String, a) = String
     getVoice (v,_) = v
     mapVoice f (v,x) = (f v, x)
-instance HasVoice a => HasVoice (Bool, a, Bool) where   getVoice (_,x,_) = getVoice x
+instance HasVoice a => HasVoice (Bool, a, Bool) where   
+    type Voice (Bool, a, Bool) = Voice a
+    getVoice (_,x,_) = getVoice x
 
-setVoiceS :: HasVoice a => String -> Score a -> Score a
-setVoiceS n = fmap (setVoice n)
-
-separateVoices :: HasVoice a => Score a -> [Score a]
-separateVoices sc = fmap (flip extract $ sc) (getVoices sc) 
-    where                    
-        extract v = filterS ((== v) . getVoice)
-
-mapVoices :: HasVoice a => ([Score a] -> [Score b]) -> Score a -> Score b
-mapVoices f = pcat . f . separateVoices
-
-getVoices :: (Foldable t, HasVoice a) => t a -> [String]
+getVoices :: (HasVoice a, Eq v, v ~ Voice a, Foldable s) => s a -> [Voice a]
 getVoices = List.nub . fmap getVoice . toList
+
+setVoices :: (HasVoice a, Functor s) => Voice a -> s a -> s a
+setVoices n = fmap (setVoice n)
+
+-- | 
+-- Extract the voice components of the given score.
+--
+-- > mconcat . extractVoices = id
+--
+extractVoices :: (HasVoice a, Eq v, v ~ Voice a, MonadPlus s, Foldable s) => s a -> [s a]
+extractVoices sc = fmap (flip extract $ sc) (getVoices sc) 
+    where                    
+        extract v = mfilter ((== v) . getVoice)
+
+mapVoices :: (HasVoice a, Eq v, v ~ Voice a, MonadPlus s, Foldable s) 
+    => ([s a] -> [s b]) -> s a -> s b
+mapVoices f = msum . f . extractVoices
+
+
+
+
 
 
 -- |
@@ -438,7 +455,7 @@ class (HasVoice a, Tiable a) => HasMusicXml a where
 instance HasMusicXml ()                      where   getMusicXml d = getMusicXml d . (toInteger . const 60)
 instance HasMusicXml Double                  where   getMusicXml d = getMusicXml d . (toInteger . round)
 instance HasMusicXml Int                     where   getMusicXml d = getMusicXml d . toInteger    
-instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
+--instance Integral a => HasMusicXml (Ratio a) where   getMusicXml d = getMusicXml d . (toInteger . round)    
 
 -- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
@@ -465,13 +482,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: HasMusicXml a => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: HasMusicXml a => Score a -> IO ()
+openXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -480,10 +497,10 @@ openXml sc = do
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: HasMusicXml a => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . separateVoices $ sc
+toXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => Score a -> XmlScore
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . extractVoices $ sc
     where
-        pl = Xml.partList (getVoices sc)
+        pl = Xml.partList (fmap show $ getVoices sc)
 
 -- |
 -- Convert a score to a MusicXML representaiton. 
@@ -561,17 +578,17 @@ fj4 = c |> g_ |> c^*2
 fj  = rep 2 fj1 |> rep 2 fj2 |> rep 2 fj3 |> rep 2 fj4
 
 fj' = mempty
-    <> setVoiceS "Violin I"     (rep 10 fj) 
-    <> setVoiceS "Violin II"    (delay 8  $ (rep 10 fj)^*(2/3)) 
-    <> setVoiceS "Viola"        (delay 16 $ (rep 10 fj)^*(4/5)) 
-    <> setVoiceS "Violoncello"  (delay 24 $ (rep 10 fj)^*(4/7))
+    <> setVoices "Violin I"     (rep 10 fj) 
+    <> setVoices "Violin II"    (delay 8  $ (rep 10 fj)^*(2/3)) 
+    <> setVoices "Viola"        (delay 16 $ (rep 10 fj)^*(4/5)) 
+    <> setVoices "Violoncello"  (delay 24 $ (rep 10 fj)^*(4/7))
 
 -- classic version...
 fj'' = mempty
-    <> setVoiceS "Violin I"     (rep 10 fj) 
-    <> setVoiceS "Violin II"    (delay 8  $ (rep 10 fj)) 
-    <> setVoiceS "Viola"        (delay 16 $ (rep 10 fj)) 
-    <> setVoiceS "Violoncello"  (delay 24 $ (rep 10 fj))
+    <> setVoices "Violin I"     (rep 10 fj) 
+    <> setVoices "Violin II"    (delay 8  $ (rep 10 fj)) 
+    <> setVoices "Viola"        (delay 16 $ (rep 10 fj)) 
+    <> setVoices "Violoncello"  (delay 24 $ (rep 10 fj))
 
 
 
