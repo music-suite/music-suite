@@ -41,5 +41,6 @@ library
         Music.Score.Part
         Music.Score.Score
         Music.Score.Rhythm
+        Music.Score.Voice
         Music.Score.Ties
 
