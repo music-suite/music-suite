@@ -398,9 +398,9 @@ class HasVoice a where
 
     getVoice :: a -> Voice a
     setVoice :: Voice a -> a -> a
-    mapVoice :: (Voice a -> Voice a) -> a -> a
-    setVoice n = mapVoice (const n)
-    mapVoice f x = x
+    modifyVoice :: (Voice a -> Voice a) -> a -> a
+    setVoice n = modifyVoice (const n)
+    modifyVoice f x = x
 
 instance HasVoice ()                            where   { type Voice () = String ; getVoice _ = "" }
 instance HasVoice Double                        where   { type Voice Double = String ; getVoice _ = "" }
@@ -410,7 +410,7 @@ instance HasVoice Integer                       where   { type Voice Integer = S
 instance HasVoice (String, a)                   where   
     type Voice (String, a) = String
     getVoice (v,_) = v
-    mapVoice f (v,x) = (f v, x)
+    modifyVoice f (v,x) = (f v, x)
 instance HasVoice a => HasVoice (Bool, a, Bool) where   
     type Voice (Bool, a, Bool) = Voice a
     getVoice (_,x,_) = getVoice x
@@ -503,7 +503,7 @@ toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . extractVoices
         pl = Xml.partList (fmap show $ getVoices sc)
 
 -- |
--- Convert a score to a MusicXML representaiton. 
+-- Convert a single-part score to a MusicXML representaiton. 
 -- 
 toXmlPart :: HasMusicXml a => Score a -> XmlScore
 toXmlPart = Xml.fromPart "Title" "Composer" "Part" . toXmlPart'
