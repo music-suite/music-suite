@@ -80,18 +80,11 @@ instance HasVoice Int                           where   { type Voice Int        
 instance HasVoice Integer                       where   { type Voice Integer    = String ; getVoice _ = "" }
 instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = String ; getVoice _ = "" }
 
--- instance HasVoice (String, a) where   
---     type Voice (String, a) = String
---     getVoice (v,_) = v
---     modifyVoice f (v,x) = (f v, x)
--- instance HasVoice a => HasVoice (Bool, a, Bool) where   
---     type Voice (Bool, a, Bool) = Voice a
---     getVoice (_,x,_) = getVoice x
-
 instance HasVoice (VoiceT a) where   
     type Voice (VoiceT a)        = String
     getVoice (VoiceT (v,_))      = v
     modifyVoice f (VoiceT (v,x)) = VoiceT (f v, x)
+
 instance HasVoice a => HasVoice (TieT a) where   
     type Voice (TieT a) = Voice a
     getVoice (TieT (_,x,_)) = getVoice x

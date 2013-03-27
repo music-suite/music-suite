@@ -53,7 +53,10 @@ module Music.Score (
         stopAt,
         stretch,
         compress,
-        stretchTo,        
+        stretchTo,
+        ArticulationT(..),
+        DynamicT(..),
+        TremoloT(..),
 
         -- * Export         
         -- ** MIDI        
@@ -527,12 +530,79 @@ rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
 noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
 noteRestToXml (d, Just p)  = getMusicXml d p
+
+-------------------------------------------------------------------------------------
+-- Transformer instances (TODO move)
+-------------------------------------------------------------------------------------
+
+-- VoiceT
+
+instance HasMidi a => HasMidi (VoiceT a) where
+    getMidi (VoiceT (_,x)) = getMidi x
+instance HasMusicXml a => HasMusicXml (VoiceT a) where
+    getMusicXml d (VoiceT (_,x)) = getMusicXml d x
+instance IsPitch a => IsPitch (VoiceT a) where
+    fromPitch l = VoiceT ("", fromPitch l)
+instance IsDynamics a => IsDynamics (VoiceT a) where
+    fromDynamics l = VoiceT ("", fromDynamics l)
+
+
+-- TieT
+
+instance HasMidi a => HasMidi (TieT a) where
+    getMidi (TieT (_,x,_)) = getMidi x
+instance HasMusicXml a => HasMusicXml (TieT a) where
+    getMusicXml d (TieT (ta,x,tb)) = addTies $ getMusicXml d x
+        where
+            addTies | ta && tb  = Xml.endTie . Xml.beginTie
+                    | tb        = Xml.beginTie
+                    | ta        = Xml.endTie
+                    | otherwise = id
+instance IsPitch a => IsPitch (TieT a) where
+    fromPitch l = TieT (False, fromPitch l, False)
+instance IsDynamics a => IsDynamics (TieT a) where
+    fromDynamics l = TieT (False, fromDynamics l, False)
+
+
+-- DynamicT
+
+newtype DynamicT a = DynamicT { getDynamicT :: (Int, a) }
+
+
+-- ArticulationT
+
+newtype ArticulationT a = ArticulationT { getArticulationT :: (Int, a) }
+
+
+-- TremoloT
+
+newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
+
+instance HasMidi a => HasMidi (TremoloT a) where
+    getMidi (TremoloT (_,x)) = getMidi x
+instance HasMusicXml a => HasMusicXml (TremoloT a) where
+    getMusicXml d (TremoloT (_,x)) = getMusicXml d x
+instance Tiable a => Tiable (TremoloT a) where
+    toTied (TremoloT (n,a)) = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (TremoloT a) where   
+    type Voice (TremoloT a)        = Voice a
+    getVoice (TremoloT (_,a))      = getVoice a
+    modifyVoice f (TremoloT (n,x)) = TremoloT (n, modifyVoice f x)
+instance IsPitch a => IsPitch (TremoloT a) where
+    fromPitch l = TremoloT (0, fromPitch l)
+instance IsDynamics a => IsDynamics (TremoloT a) where
+    fromDynamics l = TremoloT (0, fromDynamics l)
+
+
+
+                                     
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-sc :: Score (VoiceT (TieT Double)) -> Score (VoiceT (TieT Double))
+sc :: Score (VoiceT (TieT (TremoloT Double))) -> Score (VoiceT (TieT (TremoloT Double)))
+-- sc :: Score (TieT (VoiceT Double)) -> Score (TieT (VoiceT Double))
 sc = id
 
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
@@ -566,93 +636,7 @@ open = openXml . (^* (1/4)) . sc
 rep 0 x = mempty
 rep n x = x |> rep (n-1) x
 
-
--- openSib :: Xml.Score -> IO ()
--- openSib score =
---     do  writeFile "test.xml" (Xml.showXml score)
---         execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
--- 
--- openTim :: HasMidi a => Score a -> IO ()
--- openTim sc = do
---     Midi.exportFile "test.mid" (toMidi sc)
---     execute "timidity" ["test.mid"]
-
--- Voice transformers
--- instance HasMidi a => HasMidi (String, a) where
---     getMidi (_,x) = getMidi x
--- instance HasMusicXml a => HasMusicXml (String, a) where
---     getMusicXml d (_,x) = getMusicXml d x
-instance HasMidi a => HasMidi (VoiceT a) where
-    getMidi (VoiceT (_,x)) = getMidi x
-instance HasMusicXml a => HasMusicXml (VoiceT a) where
-    getMusicXml d (VoiceT (_,x)) = getMusicXml d x
-
-
--- Tie transformers
--- instance HasMidi a => HasMidi (Bool, a, Bool) where
---     getMidi (_,x,_) = getMidi x
--- instance HasMusicXml a => HasMusicXml (Bool, a, Bool) where
---     getMusicXml d (ta,x,tb) = addTies $ getMusicXml d x
---         where
---             addTies | ta && tb  = Xml.endTie . Xml.beginTie
---                     | tb        = Xml.beginTie
---                     | ta        = Xml.endTie
---                     | otherwise = id
-instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,x,_)) = getMidi x
-instance HasMusicXml a => HasMusicXml (TieT a) where
-    getMusicXml d (TieT (ta,x,tb)) = addTies $ getMusicXml d x
-        where
-            addTies | ta && tb  = Xml.endTie . Xml.beginTie
-                    | tb        = Xml.beginTie
-                    | ta        = Xml.endTie
-                    | otherwise = id
-
--- Dynamics transformers
-instance HasMidi a => HasMidi (Bool,Double,Bool, a) where
-    getMidi (bc,l,ec,x) = getMidi x
-
--- Articulation transformers
-instance HasMidi a => HasMidi ([Int],[Int],[Int], a) where
-    getMidi (ba,ma,ea,x) = getMidi x
-
-
-
--- Literal transformers
-instance IsPitch a => IsPitch (String, a) where
-    fromPitch l = ("", fromPitch l)
-instance IsPitch a => IsPitch (Bool, a, Bool) where
-    fromPitch l = (False, fromPitch l, False)
-instance IsPitch a => IsPitch (VoiceT a) where
-    fromPitch l = VoiceT ("", fromPitch l)
-instance IsPitch a => IsPitch (TieT a) where
-    fromPitch l = TieT (False, fromPitch l, False)
-
-instance IsDynamics a => IsDynamics (String, a) where
-    fromDynamics l = ("", fromDynamics l)
-instance IsDynamics a => IsDynamics (Bool, a, Bool) where
-    fromDynamics l = (False, fromDynamics l, False)
-instance IsDynamics a => IsDynamics (VoiceT a) where
-    fromDynamics l = VoiceT ("", fromDynamics l)
-instance IsDynamics a => IsDynamics (TieT a) where
-    fromDynamics l = TieT (False, fromDynamics l, False)
-
-
-{-
 -- Basic literal instances
-instance IsPitch Integer where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
--}
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
         where
@@ -671,7 +655,6 @@ instance IsDynamics Double where
 
 
 
-
 -------------------------------------------------------------------------------------
 
 list z f [] = z
@@ -686,9 +669,7 @@ sep = List.intersperse
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
 
-
-
--- Score filtering generalized to MonadPlus
+-- Score filtering generalized to MonadPlus (TODO move!)
 
 -- | 
 -- Generalizes the 'remove' function.
@@ -715,8 +696,6 @@ mcatMaybes = (>>= maybe mzero return)
 -- 
 mmapMaybe :: MonadPlus m => (a -> Maybe b) -> m a -> m b
 mmapMaybe f = mcatMaybes . liftM f 
-
-
 
 -- | 
 -- Group a list into sublists whereever a predicate holds. The matched element
