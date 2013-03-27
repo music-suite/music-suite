@@ -24,36 +24,44 @@
 module Music.Score.Pitch (
         HasPitch(..),
         PitchT(..),
+        getPitches,
+        setPitches,
+        modifyPitches,
   ) where
 
-import Data.Ratio
+import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Data.String
+import Data.Foldable
+import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.Ratio
 
 import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
+import Music.Score.Ties
 
 class HasPitch a where
     -- | 
-    -- Associated voice type. Should implement 'Eq' and 'Show' to be usable.
+    -- Associated pitch type. Should implement 'Eq' and 'Show' to be usable.
     -- 
     type Pitch a :: *
 
     -- |
-    -- Get the voice of the given note.
+    -- Get the pitch of the given note.
     -- 
     getPitch :: a -> Pitch a
 
     -- |
-    -- Set the voice of the given note.
+    -- Set the pitch of the given note.
     -- 
     setPitch :: Pitch a -> a -> a
 
     -- |
-    -- Modify the voice of the given note.
+    -- Modify the pitch of the given note.
     -- 
     modifyPitch :: (Pitch a -> Pitch a) -> a -> a
    
@@ -76,3 +84,26 @@ instance HasPitch Int                           where   { type Pitch Int        
 instance HasPitch Integer                       where   { type Pitch Integer    = Integer   ; getPitch = id; modifyPitch = id }
 instance Integral a => HasPitch (Ratio a)       where   { type Pitch (Ratio a)  = (Ratio a) ; getPitch = id; modifyPitch = id }
 
+-- |
+-- Get all pitches in the given score. Returns a list of pitches.
+--
+-- > Score a -> [Pitch]
+--
+getPitches :: (HasPitch a, Eq v, v ~ Pitch a, Foldable s) => s a -> [Pitch a]
+getPitches = List.nub . fmap getPitch . toList
+
+-- |
+-- Set all pitches in the given score.
+--
+-- > Pitch -> Score a -> Score a
+--
+setPitches :: (HasPitch a, Functor s) => Pitch a -> s a -> s a
+setPitches n = fmap (setPitch n)
+
+-- |
+-- Modify all pitches in the given score.
+--
+-- > (Pitch -> Pitch) -> Score a -> Score a
+--
+modifyPitches :: (HasPitch a, Functor s) => (Pitch a -> Pitch a) -> s a -> s a
+modifyPitches n = fmap (modifyPitch n)

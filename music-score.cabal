@@ -41,6 +41,7 @@ library
         Music.Score.Part
         Music.Score.Score
         Music.Score.Rhythm
+        Music.Score.Pitch
         Music.Score.Voice
         Music.Score.Ties
         Music.Score.Articulation
