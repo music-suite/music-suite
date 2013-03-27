@@ -409,7 +409,7 @@ type XmlMusic = Xml.Music
 -- |
 -- Class of types that can be converted to MusicXML.
 --
-class (HasVoice a, Tiable a) => HasMusicXml a where          
+class Tiable a => HasMusicXml a where          
     -- | 
     -- Convert a value to MusicXML.
     --
@@ -448,13 +448,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -479,7 +479,7 @@ openXmlPart sc = do
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: (HasMusicXml a, v ~ Voice a, Eq v, Show v) => Score a -> XmlScore
+toXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . voices $ sc
     where
         pl = Xml.partList (fmap show $ getVoices sc)
@@ -787,15 +787,28 @@ fj'' = mempty
     <> setVoices "Violoncello"  (delay 24 $ (rep 10 fj))
 
 
-testArtDyn = (v 1 (s^*4) <> v 2 (s^*(5/1)) )
+testArtDyn = mempty
+    <> v (0+1) (rep 80 t^*(3*1))
+    <> v (0+2) (rep 80 t^*(4*1)) 
+    <> v (0+3) (rep 80 t^*(5*1))
+    <> v (0+4) (rep 80 t^*(7*1))
+    <> v (4+1) (rep 20 s^*(3*2))
+    <> v (4+2) (rep 20 s^*(4*2)) 
+    <> v (4+3) (rep 20 s^*(5*2))
+    <> v (4+4) (rep 20 s^*(7*2))
     where
-        v x = setVoices (VoiceName $ "Violin " ++ show x)
-        s :: Sc Double
+        v x = setVoices (VoiceName $ "Violin I." ++ show x)
+        s, t :: Sc Double
         s = mempty
             |> (fmap (setLevel (-2.5) . setBeginSlur True . setBeginCresc True) c) 
             |> d 
-            |> e 
-            |> (fmap (setEndSlur True . setLevel (0.5) . setEndCresc True   ) f)
+            |> f 
+            |> (fmap (setEndSlur True . setLevel (0.5) . setEndCresc True   ) e)
+        t = mempty
+            |> (fmap (setLevel (-2.5) . setBeginSlur True . setBeginCresc True) g) 
+            |> a 
+            |> bb 
+            |> (fmap (setEndSlur True . setLevel (0.5) . setEndCresc True   ) a)
 
 showScore :: Score Double -> String
 showScore = show
