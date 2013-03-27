@@ -577,6 +577,7 @@ instance HasMidi a => HasMidi (DynamicT a) where
     getMidi (DynamicT (ec,ed,l,a,bc,bd))        = getMidi a
 instance HasMusicXml a => HasMusicXml (DynamicT a) where
     getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = getMusicXml d a
+    -- TODO
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))         = (DynamicT (ec,ed,l,b,bc,bd),
                                                    DynamicT (ec,ed,l,c,bc,bd)) where (b,c) = toTied a
@@ -592,7 +593,25 @@ instance IsDynamics a => IsDynamics (DynamicT a) where
 
 -- ArticulationT
 
-newtype ArticulationT a = ArticulationT { getArticulationT :: (Int, a) }
+-- end slur, cont slur, acc level, stacc level, begin slur
+newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
+
+instance HasMidi a => HasMidi (ArticulationT a) where
+    getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
+instance HasMusicXml a => HasMusicXml (ArticulationT a) where
+    getMusicXml d (ArticulationT (es,us,al,sl,a,bs))    = getMusicXml d a
+    -- TODO
+instance Tiable a => Tiable (ArticulationT a) where
+    toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (es,us,al,sl,b,bs),
+                                                           ArticulationT (es,us,al,sl,c,bs)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (ArticulationT a) where   
+    type Voice (ArticulationT a)                        = Voice a
+    getVoice (ArticulationT (es,us,al,sl,a,bs))         = getVoice a
+    modifyVoice f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyVoice f a,bs)
+instance IsPitch a => IsPitch (ArticulationT a) where
+    fromPitch l                                         = ArticulationT (False,False,0,0,fromPitch l,False)
+instance IsDynamics a => IsDynamics (ArticulationT a) where
+    fromDynamics l                                      = ArticulationT (False,False,0,0,fromDynamics l,False)
 
 
 -- TremoloT
@@ -624,7 +643,7 @@ instance IsDynamics a => IsDynamics (TremoloT a) where
 
 
 type Fun  a = a -> a
-type Sc   a = Score (VoiceT (TieT (TremoloT (DynamicT a))))
+type Sc   a = Score (VoiceT (TieT (TremoloT (DynamicT (ArticulationT a)))))
 
 sc :: Fun (Sc Double)
 sc = id
