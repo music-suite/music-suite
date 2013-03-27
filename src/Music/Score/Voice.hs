@@ -77,7 +77,7 @@ newtype VoiceName = VoiceName { getVoiceName :: String }
     deriving (Eq, Ord, IsString)
 instance Show VoiceName where show = getVoiceName
 
-newtype VoiceT a = VoiceT { getVoiceT :: (VoiceName, a) }
+newtype VoiceT n a = VoiceT { getVoiceT :: (n, a) }
     deriving (Eq, Ord, Show, Functor)
 
 instance HasVoice ()                            where   { type Voice ()         = VoiceName ; getVoice _ = "" }
@@ -87,8 +87,8 @@ instance HasVoice Int                           where   { type Voice Int        
 instance HasVoice Integer                       where   { type Voice Integer    = VoiceName ; getVoice _ = "" }
 instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = VoiceName ; getVoice _ = "" }
 
-instance HasVoice (VoiceT a) where   
-    type Voice (VoiceT a)        = VoiceName
+instance HasVoice (VoiceT n a) where   
+    type Voice (VoiceT n a)      = n
     getVoice (VoiceT (v,_))      = v
     modifyVoice f (VoiceT (v,x)) = VoiceT (f v, x)
 
@@ -97,7 +97,7 @@ instance HasVoice a => HasVoice (TieT a) where
     getVoice (TieT (_,x,_)) = getVoice x
 
 -- See commment in Tie module
-instance Tiable a => Tiable (VoiceT a) where
+instance Tiable a => Tiable (VoiceT n a) where
     toTied (VoiceT (v,a)) = (VoiceT (v,b), VoiceT (v,c)) where (b,c) = toTied a
 
 

@@ -110,6 +110,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 
 import Data.Semigroup
 import Data.Ratio
+import Data.String
 import Control.Applicative
 -- import Control.Compose
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -606,27 +607,27 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 
 -- VoiceT
 
-instance HasMidi a => HasMidi (VoiceT a) where
+instance HasMidi a => HasMidi (VoiceT n a) where
     getMidi (VoiceT (_,x))          = getMidi x
-instance HasMusicXml a => HasMusicXml (VoiceT a) where
+instance HasMusicXml a => HasMusicXml (VoiceT n a) where
     getMusicXml d (VoiceT (_,x))    = getMusicXml d x
-instance IsPitch a => IsPitch (VoiceT a) where
+instance (IsPitch a, IsString n) => IsPitch (VoiceT n a) where
     fromPitch l                     = VoiceT ("", fromPitch l)
-instance IsDynamics a => IsDynamics (VoiceT a) where
+instance (IsDynamics a, IsString n) => IsDynamics (VoiceT n a) where
     fromDynamics l                  = VoiceT ("", fromDynamics l)
-instance HasDynamic a => HasDynamic (VoiceT a) where
+instance HasDynamic a => HasDynamic (VoiceT n a) where
     setBeginCresc n (VoiceT (v,x)) = VoiceT (v, setBeginCresc n x)
     setEndCresc   n (VoiceT (v,x)) = VoiceT (v, setEndCresc n x)
     setBeginDim   n (VoiceT (v,x)) = VoiceT (v, setBeginDim n x)
     setEndDim     n (VoiceT (v,x)) = VoiceT (v, setEndDim n x)
     setLevel      n (VoiceT (v,x)) = VoiceT (v, setLevel n x)
-instance HasArticulation a => HasArticulation (VoiceT a) where
+instance HasArticulation a => HasArticulation (VoiceT n a) where
     setEndSlur    n (VoiceT (v,x)) = VoiceT (v, setEndSlur n x)
     setContSlur   n (VoiceT (v,x)) = VoiceT (v, setContSlur n x)
     setBeginSlur  n (VoiceT (v,x)) = VoiceT (v, setBeginSlur n x)
     setAccLevel   n (VoiceT (v,x)) = VoiceT (v, setAccLevel n x)
     setStaccLevel n (VoiceT (v,x)) = VoiceT (v, setStaccLevel n x)
-instance HasTremolo a => HasTremolo (VoiceT a) where
+instance HasTremolo a => HasTremolo (VoiceT n a) where
     setTrem       n (VoiceT (v,x)) = VoiceT (v, setTrem n x)
 
 
@@ -803,7 +804,7 @@ instance HasTremolo (TremoloT a) where
 
 
 type Fun  a = a -> a
-type Sc   a = Score (VoiceT (TieT (TremoloT (DynamicT (ArticulationT a)))))
+type Sc   a = Score (VoiceT VoiceName (TieT (TremoloT (DynamicT (ArticulationT a)))))
 
 sc :: Fun (Sc Double)
 sc = id
