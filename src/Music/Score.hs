@@ -66,6 +66,13 @@ module Music.Score (
         DynamicT(..),
         TremoloT(..),
 
+        -- ** Conversions
+        scoreToTrack,
+        scoreToPart,
+        scoreToParts,
+        partToScore,
+        trackToScore,
+
         -- * Export         
         -- ** MIDI        
         HasMidi(..),
@@ -316,6 +323,49 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 -- mapStartMiddleStop :: (a -> a) -> (a -> a) -> (a -> a) -> Score a -> Score a
 mapStartMiddleStop f g h = mapVoices (\x -> x)
+
+
+-------------------------------------------------------------------------------------
+-- Conversion
+
+-- |
+-- Convert a score to a track by throwing away durations.
+--
+scoreToTrack :: Score a -> Track a
+scoreToTrack = Track . fmap g . perform
+    where
+        g (t,d,x) = (t,x)
+
+-- |
+-- Convert a single-part score to a part.
+--
+scoreToPart :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> Part a
+scoreToPart = Part . fmap g . perform
+    where
+        g (t,d,x) = (d,x)
+
+-- |
+-- Convert a score to a list of parts.
+--
+scoreToParts :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> [Part a]
+scoreToParts = fmap scoreToPart . voices
+
+-- |
+-- Convert a part to a score.
+--
+partToScore :: Part a -> Score a
+partToScore = scat . fmap g . getPart
+    where
+        g (d,x) = stretch d (note x)
+
+-- |
+-- Convert a track to a score. Each note gets an arbitrary duration of one.
+--
+trackToScore :: Track a -> Score a
+trackToScore = pcat . fmap g . getTrack
+    where
+        g (t,x) = delay (t .-. 0) (note x)
+
 
 -------------------------------------------------------------------------------------
 

@@ -43,4 +43,8 @@ library
         Music.Score.Rhythm
         Music.Score.Voice
         Music.Score.Ties
+        Music.Score.Articulation
+        Music.Score.Dynamics
+        Music.Score.Ornaments
+        
 
