@@ -691,8 +691,8 @@ instance HasMusicXml a => HasMusicXml (ArticulationT a) where
                 
                 
 instance Tiable a => Tiable (ArticulationT a) where
-    toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (es,us,al,sl,b,bs),
-                                                           ArticulationT (es,us,al,sl,c,bs)) where (b,c) = toTied a
+    toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us,al,sl,b,bs),
+                                                           ArticulationT (es,   us,0,0,c,False)) where (b,c) = toTied a
 instance HasVoice a => HasVoice (ArticulationT a) where   
     type Voice (ArticulationT a)                        = Voice a
     getVoice (ArticulationT (es,us,al,sl,a,bs))         = getVoice a
