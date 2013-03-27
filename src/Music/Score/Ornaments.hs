@@ -22,8 +22,8 @@
 
 
 module Music.Score.Ornaments (
-        -- Tiable(..),
-        -- TieT(..),
+        HasTremolo(..),
+        TremoloT(..),
   ) where
 
 import Data.Ratio
@@ -35,3 +35,8 @@ import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
+
+class HasTremolo a where
+    setTrem :: Int -> a -> a
+
+newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }

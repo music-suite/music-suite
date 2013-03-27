@@ -22,8 +22,8 @@
 
 
 module Music.Score.Articulation (
-        -- Tiable(..),
-        -- TieT(..),
+        HasArticulation(..),
+        ArticulationT(..),
   ) where
 
 import Data.Ratio
@@ -35,3 +35,12 @@ import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
+
+class HasArticulation a where
+    setBeginSlur :: Bool -> a -> a
+    setContSlur :: Bool -> a -> a
+    setEndSlur :: Bool -> a -> a
+    setAccLevel :: Int -> a -> a
+    setStaccLevel :: Int -> a -> a
+    
+newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }

@@ -22,8 +22,8 @@
 
 
 module Music.Score.Dynamics (
-        -- Tiable(..),
-        -- TieT(..),
+        HasDynamic(..),
+        DynamicT(..),
   ) where
 
 import Data.Ratio
@@ -35,3 +35,13 @@ import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
+
+class HasDynamic a where
+    setBeginCresc   :: Bool -> a -> a
+    setEndCresc     :: Bool -> a -> a
+    setBeginDim     :: Bool -> a -> a
+    setEndDim       :: Bool -> a -> a
+    setLevel        :: Double -> a -> a
+
+-- end cresc/dim, level, begin cresc/dim
+newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }

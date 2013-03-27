@@ -27,11 +27,17 @@ module Music.Score (
 
         module Music.Score.Time,
         module Music.Score.Duration,
+
         module Music.Score.Track,
         module Music.Score.Part,
         module Music.Score.Score,
+
         module Music.Score.Voice,
         module Music.Score.Ties,
+
+        module Music.Score.Articulation,
+        module Music.Score.Dynamics,
+        module Music.Score.Ornaments,
 
         -- ** Constructors
         rest,
@@ -128,6 +134,9 @@ import Music.Score.Part
 import Music.Score.Score
 import Music.Score.Ties
 import Music.Score.Voice
+import Music.Score.Articulation
+import Music.Score.Dynamics
+import Music.Score.Ornaments
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
@@ -594,23 +603,6 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 -- Transformer instances (TODO move)
 -------------------------------------------------------------------------------------
 
-class HasDynamic a where
-    setBeginCresc   :: Bool -> a -> a
-    setEndCresc     :: Bool -> a -> a
-    setBeginDim     :: Bool -> a -> a
-    setEndDim       :: Bool -> a -> a
-    setLevel        :: Double -> a -> a
-
-class HasArticulation a where
-    setBeginSlur :: Bool -> a -> a
-    setContSlur :: Bool -> a -> a
-    setEndSlur :: Bool -> a -> a
-    setAccLevel :: Int -> a -> a
-    setStaccLevel :: Int -> a -> a
-    
-class HasTremolo a where
-    setTrem :: Int -> a -> a
-
 
 -- VoiceT
 
@@ -672,7 +664,7 @@ instance HasTremolo a => HasTremolo (TieT a) where
 -- DynamicT
 
 -- end cresc/dim, level, begin cresc/dim
-newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
+-- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
 
 instance HasMidi a => HasMidi (DynamicT a) where
     getMidi (DynamicT (ec,ed,l,a,bc,bd))        = getMidi a
@@ -718,7 +710,7 @@ instance HasTremolo a => HasTremolo (DynamicT a) where
 -- ArticulationT
 
 -- end slur, cont slur, acc level, stacc level, begin slur
-newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
+-- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
 
 instance HasMidi a => HasMidi (ArticulationT a) where
     getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
@@ -769,7 +761,7 @@ instance HasTremolo a => HasTremolo (ArticulationT a) where
  
 -- TremoloT
 
-newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
+-- newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 
 instance HasMidi a => HasMidi (TremoloT a) where
     getMidi (TremoloT (_,x))        = getMidi x
