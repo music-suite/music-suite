@@ -626,8 +626,17 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 instance HasMidi a => HasMidi (DynamicT a) where
     getMidi (DynamicT (ec,ed,l,a,bc,bd))        = getMidi a
 instance HasMusicXml a => HasMusicXml (DynamicT a) where
-    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = getMusicXml d a
-    -- TODO
+    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getMusicXml d a
+        where
+            notate x = nec <> ned <> nl <> nbc <> nbd <> x
+            nec    = if ec then Xml.endCresc    else mempty
+            ned    = if ed then Xml.endDim      else mempty
+            nbc    = if bc then Xml.beginCresc  else mempty
+            nbd    = if bd then Xml.beginDim    else mempty
+            nl     = case l of 
+                Nothing  -> mempty
+                Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))         = (DynamicT (ec,ed,l,b,bc,bd),
                                                    DynamicT (ec,ed,l,c,bc,bd)) where (b,c) = toTied a
@@ -663,8 +672,23 @@ newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, 
 instance HasMidi a => HasMidi (ArticulationT a) where
     getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
 instance HasMusicXml a => HasMusicXml (ArticulationT a) where
-    getMusicXml d (ArticulationT (es,us,al,sl,a,bs))    = getMusicXml d a
-    -- TODO
+    getMusicXml d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getMusicXml d a
+        where
+            notate = nes . nal . nsl . nbs
+            nes    = if es then Xml.endSlur else id
+            nal    = case al of
+                0    -> id
+                1    -> Xml.accent
+                2    -> Xml.strongAccent
+            nsl    = case sl of
+                (-2) -> Xml.tenuto
+                (-1) -> Xml.tenuto . Xml.staccato
+                0    -> id
+                1    -> Xml.staccato
+                2    -> Xml.spiccato
+            nbs    = if bs then Xml.beginSlur else id
+                
+                
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (es,us,al,sl,b,bs),
                                                            ArticulationT (es,us,al,sl,c,bs)) where (b,c) = toTied a
@@ -699,7 +723,10 @@ newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 instance HasMidi a => HasMidi (TremoloT a) where
     getMidi (TremoloT (_,x))        = getMidi x
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (_,x))  = getMusicXml d x
+    getMusicXml d (TremoloT (n,x))  = notate $ getMusicXml d x
+        where
+            notate = Xml.tremolo n
+            
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 instance HasVoice a => HasVoice (TremoloT a) where   
