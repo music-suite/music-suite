@@ -5,6 +5,7 @@
     DeriveFoldable,     
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
+    TypeOperators,
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -54,6 +55,8 @@ module Music.Score (
         stretch,
         compress,
         stretchTo,
+        
+        -- *** Extra transformers
         ArticulationT(..),
         DynamicT(..),
         TremoloT(..),
@@ -90,6 +93,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 import Data.Semigroup
 import Data.Ratio
 import Control.Applicative
+-- import Control.Compose
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.Maybe
 import Data.Either
@@ -538,35 +542,52 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 -- VoiceT
 
 instance HasMidi a => HasMidi (VoiceT a) where
-    getMidi (VoiceT (_,x)) = getMidi x
+    getMidi (VoiceT (_,x))          = getMidi x
 instance HasMusicXml a => HasMusicXml (VoiceT a) where
-    getMusicXml d (VoiceT (_,x)) = getMusicXml d x
+    getMusicXml d (VoiceT (_,x))    = getMusicXml d x
 instance IsPitch a => IsPitch (VoiceT a) where
-    fromPitch l = VoiceT ("", fromPitch l)
+    fromPitch l                     = VoiceT ("", fromPitch l)
 instance IsDynamics a => IsDynamics (VoiceT a) where
-    fromDynamics l = VoiceT ("", fromDynamics l)
+    fromDynamics l                  = VoiceT ("", fromDynamics l)
 
 
 -- TieT
 
 instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,x,_)) = getMidi x
+    getMidi (TieT (_,x,_))          = getMidi x
 instance HasMusicXml a => HasMusicXml (TieT a) where
-    getMusicXml d (TieT (ta,x,tb)) = addTies $ getMusicXml d x
+    getMusicXml d (TieT (ta,x,tb))  = addTies $ getMusicXml d x
         where
-            addTies | ta && tb  = Xml.endTie . Xml.beginTie
-                    | tb        = Xml.beginTie
-                    | ta        = Xml.endTie
-                    | otherwise = id
+            addTies | ta && tb      = Xml.endTie . Xml.beginTie
+                    | tb            = Xml.beginTie
+                    | ta            = Xml.endTie
+                    | otherwise     = id
 instance IsPitch a => IsPitch (TieT a) where
-    fromPitch l = TieT (False, fromPitch l, False)
+    fromPitch l                     = TieT (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (TieT a) where
-    fromDynamics l = TieT (False, fromDynamics l, False)
+    fromDynamics l                  = TieT (False, fromDynamics l, False)
 
 
 -- DynamicT
 
-newtype DynamicT a = DynamicT { getDynamicT :: (Int, a) }
+-- end cresc/dim, level, begin cresc/dim
+newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
+
+instance HasMidi a => HasMidi (DynamicT a) where
+    getMidi (DynamicT (ec,ed,l,a,bc,bd))        = getMidi a
+instance HasMusicXml a => HasMusicXml (DynamicT a) where
+    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = getMusicXml d a
+instance Tiable a => Tiable (DynamicT a) where
+    toTied (DynamicT (ec,ed,l,a,bc,bd))         = (DynamicT (ec,ed,l,b,bc,bd),
+                                                   DynamicT (ec,ed,l,c,bc,bd)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (DynamicT a) where   
+    type Voice (DynamicT a)                     = Voice a
+    getVoice (DynamicT (ec,ed,l,a,bc,bd))       = getVoice a
+    modifyVoice f (DynamicT (ec,ed,l,a,bc,bd))  = DynamicT (ec,ed,l,modifyVoice f a,bc,bd)
+instance IsPitch a => IsPitch (DynamicT a) where
+    fromPitch l                                 = DynamicT (False,False,Nothing,fromPitch l,False,False)
+instance IsDynamics a => IsDynamics (DynamicT a) where
+    fromDynamics l                              = DynamicT (False,False,Nothing,fromDynamics l,False,False)
 
 
 -- ArticulationT
@@ -579,19 +600,19 @@ newtype ArticulationT a = ArticulationT { getArticulationT :: (Int, a) }
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 
 instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,x)) = getMidi x
+    getMidi (TremoloT (_,x))        = getMidi x
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (_,x)) = getMusicXml d x
+    getMusicXml d (TremoloT (_,x))  = getMusicXml d x
 instance Tiable a => Tiable (TremoloT a) where
-    toTied (TremoloT (n,a)) = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+    toTied (TremoloT (n,a))         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 instance HasVoice a => HasVoice (TremoloT a) where   
-    type Voice (TremoloT a)        = Voice a
-    getVoice (TremoloT (_,a))      = getVoice a
-    modifyVoice f (TremoloT (n,x)) = TremoloT (n, modifyVoice f x)
+    type Voice (TremoloT a)         = Voice a
+    getVoice (TremoloT (_,a))       = getVoice a
+    modifyVoice f (TremoloT (n,x))  = TremoloT (n, modifyVoice f x)
 instance IsPitch a => IsPitch (TremoloT a) where
-    fromPitch l = TremoloT (0, fromPitch l)
+    fromPitch l                     = TremoloT (0, fromPitch l)
 instance IsDynamics a => IsDynamics (TremoloT a) where
-    fromDynamics l = TremoloT (0, fromDynamics l)
+    fromDynamics l                  = TremoloT (0, fromDynamics l)
 
 
 
@@ -601,8 +622,11 @@ instance IsDynamics a => IsDynamics (TremoloT a) where
 -- Test stuff
 -------------------------------------------------------------------------------------
 
-sc :: Score (VoiceT (TieT (TremoloT Double))) -> Score (VoiceT (TieT (TremoloT Double)))
--- sc :: Score (TieT (VoiceT Double)) -> Score (TieT (VoiceT Double))
+
+type Fun  a = a -> a
+type Sc   a = Score (VoiceT (TieT (TremoloT (DynamicT a))))
+
+sc :: Fun (Sc Double)
 sc = id
 
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
