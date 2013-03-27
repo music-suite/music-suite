@@ -640,7 +640,7 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
 
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))         = (DynamicT (ec,ed,l,b,bc,bd),
-                                                   DynamicT (ec,ed,l,c,bc,bd)) where (b,c) = toTied a
+                                                   DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
 instance HasVoice a => HasVoice (DynamicT a) where   
     type Voice (DynamicT a)                     = Voice a
     getVoice (DynamicT (ec,ed,l,a,bc,bd))       = getVoice a
@@ -787,6 +787,15 @@ fj'' = mempty
     <> setVoices "Violoncello"  (delay 24 $ (rep 10 fj))
 
 
+testArtDyn = (v 1 (s^*4) <> v 2 (s^*(5/1)) )
+    where
+        v x = setVoices (VoiceName $ "Violin " ++ show x)
+        s :: Sc Double
+        s = mempty
+            |> (fmap (setLevel (-2.5) . setBeginSlur True . setBeginCresc True) c) 
+            |> d 
+            |> e 
+            |> (fmap (setEndSlur True . setLevel (0.5) . setEndCresc True   ) f)
 
 showScore :: Score Double -> String
 showScore = show
