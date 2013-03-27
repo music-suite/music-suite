@@ -57,6 +57,10 @@ module Music.Score (
         stretchTo,
         
         -- *** Extra transformers
+        HasDynamic(..),
+        HasArticulation(..),
+        HasTremolo(..),
+        
         ArticulationT(..),
         DynamicT(..),
         TremoloT(..),
@@ -539,6 +543,24 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 -- Transformer instances (TODO move)
 -------------------------------------------------------------------------------------
 
+class HasDynamic a where
+    setBeginCresc   :: Bool -> a -> a
+    setEndCresc     :: Bool -> a -> a
+    setBeginDim     :: Bool -> a -> a
+    setEndDim       :: Bool -> a -> a
+    setLevel        :: Double -> a -> a
+
+class HasArticulation a where
+    setBeginSlur :: Bool -> a -> a
+    setContSlur :: Bool -> a -> a
+    setEndSlur :: Bool -> a -> a
+    setAccLevel :: Int -> a -> a
+    setStaccLevel :: Int -> a -> a
+    
+class HasTremolo a where
+    setTrem :: Int -> a -> a
+
+
 -- VoiceT
 
 instance HasMidi a => HasMidi (VoiceT a) where
@@ -549,6 +571,20 @@ instance IsPitch a => IsPitch (VoiceT a) where
     fromPitch l                     = VoiceT ("", fromPitch l)
 instance IsDynamics a => IsDynamics (VoiceT a) where
     fromDynamics l                  = VoiceT ("", fromDynamics l)
+instance HasDynamic a => HasDynamic (VoiceT a) where
+    setBeginCresc n (VoiceT (v,x)) = VoiceT (v, setBeginCresc n x)
+    setEndCresc   n (VoiceT (v,x)) = VoiceT (v, setEndCresc n x)
+    setBeginDim   n (VoiceT (v,x)) = VoiceT (v, setBeginDim n x)
+    setEndDim     n (VoiceT (v,x)) = VoiceT (v, setEndDim n x)
+    setLevel      n (VoiceT (v,x)) = VoiceT (v, setLevel n x)
+instance HasArticulation a => HasArticulation (VoiceT a) where
+    setEndSlur    n (VoiceT (v,x)) = VoiceT (v, setEndSlur n x)
+    setContSlur   n (VoiceT (v,x)) = VoiceT (v, setContSlur n x)
+    setBeginSlur  n (VoiceT (v,x)) = VoiceT (v, setBeginSlur n x)
+    setAccLevel   n (VoiceT (v,x)) = VoiceT (v, setAccLevel n x)
+    setStaccLevel n (VoiceT (v,x)) = VoiceT (v, setStaccLevel n x)
+instance HasTremolo a => HasTremolo (VoiceT a) where
+    setTrem       n (VoiceT (v,x)) = VoiceT (v, setTrem n x)
 
 
 -- TieT
@@ -566,6 +602,20 @@ instance IsPitch a => IsPitch (TieT a) where
     fromPitch l                     = TieT (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (TieT a) where
     fromDynamics l                  = TieT (False, fromDynamics l, False)
+instance HasDynamic a => HasDynamic (TieT a) where
+    setBeginCresc n (TieT (b,x,e)) = TieT (b,setBeginCresc n x,e)
+    setEndCresc   n (TieT (b,x,e)) = TieT (b,setEndCresc n x,e)
+    setBeginDim   n (TieT (b,x,e)) = TieT (b,setBeginDim n x,e)
+    setEndDim     n (TieT (b,x,e)) = TieT (b,setEndDim n x,e)
+    setLevel      n (TieT (b,x,e)) = TieT (b,setLevel n x,e)
+instance HasArticulation a => HasArticulation (TieT a) where
+    setEndSlur    n (TieT (b,x,e)) = TieT (b,setEndSlur n x,e)
+    setContSlur   n (TieT (b,x,e)) = TieT (b,setContSlur n x,e)
+    setBeginSlur  n (TieT (b,x,e)) = TieT (b,setBeginSlur n x,e)
+    setAccLevel   n (TieT (b,x,e)) = TieT (b,setAccLevel n x,e)
+    setStaccLevel n (TieT (b,x,e)) = TieT (b,setStaccLevel n x,e)
+instance HasTremolo a => HasTremolo (TieT a) where
+    setTrem       n (TieT (b,x,e)) = TieT (b,setTrem n x,e)
 
 
 -- DynamicT
@@ -589,6 +639,20 @@ instance IsPitch a => IsPitch (DynamicT a) where
     fromPitch l                                 = DynamicT (False,False,Nothing,fromPitch l,False,False)
 instance IsDynamics a => IsDynamics (DynamicT a) where
     fromDynamics l                              = DynamicT (False,False,Nothing,fromDynamics l,False,False)
+instance HasDynamic (DynamicT a) where
+    setBeginCresc bc (DynamicT (ec,ed,l,a,_ ,bd)) = DynamicT (ec,ed,l,a,bc,bd)
+    setEndCresc   ec (DynamicT (_ ,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,a,bc,bd)
+    setBeginDim   bd (DynamicT (ec,ed,l,a,bc,_ )) = DynamicT (ec,ed,l,a,bc,bd)
+    setEndDim     ed (DynamicT (ec,_ ,l,a,bc,bd)) = DynamicT (ec,ed,l,a,bc,bd)
+    setLevel      l  (DynamicT (ec,ed,_,a,bc,bd)) = DynamicT (ec,ed,Just l,a,bc,bd)
+instance HasArticulation a => HasArticulation (DynamicT a) where
+    setEndSlur    n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setEndSlur n a,bc,bd)
+    setContSlur   n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setContSlur n a,bc,bd)
+    setBeginSlur  n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setBeginSlur n a,bc,bd)
+    setAccLevel   n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setAccLevel n a,bc,bd)
+    setStaccLevel n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setStaccLevel n a,bc,bd)
+instance HasTremolo a => HasTremolo (DynamicT a) where
+    setTrem    n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setTrem n a,bc,bd)
 
 
 -- ArticulationT
@@ -612,8 +676,22 @@ instance IsPitch a => IsPitch (ArticulationT a) where
     fromPitch l                                         = ArticulationT (False,False,0,0,fromPitch l,False)
 instance IsDynamics a => IsDynamics (ArticulationT a) where
     fromDynamics l                                      = ArticulationT (False,False,0,0,fromDynamics l,False)
+instance HasDynamic a => HasDynamic (ArticulationT a) where
+    setBeginCresc n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setBeginCresc n a,bs)
+    setEndCresc   n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setEndCresc n a,bs)
+    setBeginDim   n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setBeginDim n a,bs)
+    setEndDim     n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setEndDim n a,bs)
+    setLevel      n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setLevel n a,bs)
+instance HasArticulation (ArticulationT a) where
+    setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    setContSlur   us (ArticulationT (es,_ ,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    setBeginSlur  bs (ArticulationT (es,us,al,sl,a,_ )) = ArticulationT (es,us,al,sl,a,bs)
+    setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+instance HasTremolo a => HasTremolo (ArticulationT a) where
+    setTrem n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setTrem n a,bs)
 
-
+ 
 -- TremoloT
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
@@ -632,8 +710,20 @@ instance IsPitch a => IsPitch (TremoloT a) where
     fromPitch l                     = TremoloT (0, fromPitch l)
 instance IsDynamics a => IsDynamics (TremoloT a) where
     fromDynamics l                  = TremoloT (0, fromDynamics l)
-
-
+instance HasDynamic a => HasDynamic (TremoloT a) where
+    setBeginCresc n (TremoloT (v,x)) = TremoloT (v, setBeginCresc n x)
+    setEndCresc   n (TremoloT (v,x)) = TremoloT (v, setEndCresc n x)
+    setBeginDim   n (TremoloT (v,x)) = TremoloT (v, setBeginDim n x)
+    setEndDim     n (TremoloT (v,x)) = TremoloT (v, setEndDim n x)
+    setLevel      n (TremoloT (v,x)) = TremoloT (v, setLevel n x)
+instance HasArticulation a => HasArticulation (TremoloT a) where
+    setEndSlur    n (TremoloT (v,x)) = TremoloT (v, setEndSlur n x)
+    setContSlur   n (TremoloT (v,x)) = TremoloT (v, setContSlur n x)
+    setBeginSlur  n (TremoloT (v,x)) = TremoloT (v, setBeginSlur n x)
+    setAccLevel   n (TremoloT (v,x)) = TremoloT (v, setAccLevel n x)
+    setStaccLevel n (TremoloT (v,x)) = TremoloT (v, setStaccLevel n x)
+instance HasTremolo (TremoloT a) where
+    setTrem      n (TremoloT (_,x)) = TremoloT (n,x)
 
                                      
                                                                                                            
