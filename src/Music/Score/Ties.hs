@@ -68,9 +68,6 @@ instance Tiable a => Tiable (Maybe a) where
     toTied Nothing  = (Nothing, Nothing)
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
     
--- Note: This instance is in the Voice module to break the recursive dependency
--- instance Tiable a => Tiable (VoiceT a) where
-
 instance Tiable a => Tiable (TieT a) where
     toTied (TieT (prevTie, a, _)) = (TieT (prevTie, b, True), TieT (True, c, False))
          where (b,c) = toTied a

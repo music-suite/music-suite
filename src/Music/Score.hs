@@ -32,6 +32,7 @@ module Music.Score (
         module Music.Score.Part,
         module Music.Score.Score,
 
+        module Music.Score.Pitch,
         module Music.Score.Voice,
         module Music.Score.Ties,
 
@@ -133,6 +134,7 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Part
 import Music.Score.Score
+import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Voice
 import Music.Score.Articulation
@@ -604,17 +606,53 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 -- Transformer instances (TODO move)
 -------------------------------------------------------------------------------------
 
+-- PitchT
+
+-- instance HasMidi a => HasMidi (PitchT p a) where
+--     getMidi (PitchT (_,x))          = getMidi x
+-- instance HasMusicXml a => HasMusicXml (PitchT p a) where
+--     getMusicXml d (PitchT (_,x))    = getMusicXml d x
+-- instance (IsPitch a, IsString n) => IsPitch (PitchT p a) where
+--     fromPitch l                     = PitchT ("", fromPitch l)
+-- instance (IsDynamics a, IsString n) => IsDynamics (PitchT p a) where
+--     fromDynamics l                  = PitchT ("", fromDynamics l)
+-- instance HasDynamic a => HasDynamic (PitchT p a) where
+--     setBeginCresc n (PitchT (v,x)) = PitchT (v, setBeginCresc n x)
+--     setEndCresc   n (PitchT (v,x)) = PitchT (v, setEndCresc n x)
+--     setBeginDim   n (PitchT (v,x)) = PitchT (v, setBeginDim n x)
+--     setEndDim     n (PitchT (v,x)) = PitchT (v, setEndDim n x)
+--     setLevel      n (PitchT (v,x)) = PitchT (v, setLevel n x)
+-- instance HasArticulation a => HasArticulation (PitchT p a) where
+--     setEndSlur    n (PitchT (v,x)) = PitchT (v, setEndSlur n x)
+--     setContSlur   n (PitchT (v,x)) = PitchT (v, setContSlur n x)
+--     setBeginSlur  n (PitchT (v,x)) = PitchT (v, setBeginSlur n x)
+--     setAccLevel   n (PitchT (v,x)) = PitchT (v, setAccLevel n x)
+--     setStaccLevel n (PitchT (v,x)) = PitchT (v, setStaccLevel n x)
+-- instance HasTremolo a => HasTremolo (PitchT p a) where
+--     setTrem       n (PitchT (v,x)) = PitchT (v, setTrem n x)
+-- 
 
 -- VoiceT
+
 
 instance HasMidi a => HasMidi (VoiceT n a) where
     getMidi (VoiceT (_,x))          = getMidi x
 instance HasMusicXml a => HasMusicXml (VoiceT n a) where
     getMusicXml d (VoiceT (_,x))    = getMusicXml d x
+instance HasVoice (VoiceT n a) where   
+    type Voice (VoiceT n a)      = n
+    getVoice (VoiceT (v,_))      = v
+    modifyVoice f (VoiceT (v,x)) = VoiceT (f v, x)
+instance HasPitch a => HasPitch (VoiceT n a) where   
+    type Pitch (VoiceT n a)      = Pitch a
+    getPitch (VoiceT (v,a))      = getPitch a
+    modifyPitch f (VoiceT (v,x)) = VoiceT (v, modifyPitch f x)
 instance (IsPitch a, IsString n) => IsPitch (VoiceT n a) where
     fromPitch l                     = VoiceT ("", fromPitch l)
 instance (IsDynamics a, IsString n) => IsDynamics (VoiceT n a) where
     fromDynamics l                  = VoiceT ("", fromDynamics l)
+instance Tiable a => Tiable (VoiceT n a) where
+    toTied (VoiceT (v,a)) = (VoiceT (v,b), VoiceT (v,c)) where (b,c) = toTied a
 instance HasDynamic a => HasDynamic (VoiceT n a) where
     setBeginCresc n (VoiceT (v,x)) = VoiceT (v, setBeginCresc n x)
     setEndCresc   n (VoiceT (v,x)) = VoiceT (v, setEndCresc n x)
@@ -642,6 +680,14 @@ instance HasMusicXml a => HasMusicXml (TieT a) where
                     | tb            = Xml.beginTie
                     | ta            = Xml.endTie
                     | otherwise     = id
+instance HasVoice a => HasVoice (TieT a) where   
+    type Voice (TieT a) = Voice a
+    getVoice (TieT (_,x,_)) = getVoice x
+    modifyVoice f (TieT (b,x,e)) = TieT (b,modifyVoice f x,e)
+instance HasPitch a => HasPitch (TieT a) where   
+    type Pitch (TieT a) = Pitch a
+    getPitch (TieT (_,x,_)) = getPitch x
+    modifyPitch f (TieT (b,x,e)) = TieT (b,modifyPitch f x,e)
 instance IsPitch a => IsPitch (TieT a) where
     fromPitch l                     = TieT (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (TieT a) where
@@ -688,6 +734,10 @@ instance HasVoice a => HasVoice (DynamicT a) where
     type Voice (DynamicT a)                     = Voice a
     getVoice (DynamicT (ec,ed,l,a,bc,bd))       = getVoice a
     modifyVoice f (DynamicT (ec,ed,l,a,bc,bd))  = DynamicT (ec,ed,l,modifyVoice f a,bc,bd)
+instance HasPitch a => HasPitch (DynamicT a) where   
+    type Pitch (DynamicT a)                     = Pitch a
+    getPitch (DynamicT (ec,ed,l,a,bc,bd))       = getPitch a
+    modifyPitch f (DynamicT (ec,ed,l,a,bc,bd))  = DynamicT (ec,ed,l,modifyPitch f a,bc,bd)
 instance IsPitch a => IsPitch (DynamicT a) where
     fromPitch l                                 = DynamicT (False,False,Nothing,fromPitch l,False,False)
 instance IsDynamics a => IsDynamics (DynamicT a) where
@@ -729,9 +779,8 @@ instance HasMusicXml a => HasMusicXml (ArticulationT a) where
                 (-1) -> Xml.tenuto . Xml.staccato
                 0    -> id
                 1    -> Xml.staccato
-                2    -> Xml.spiccato
+                2    -> Xml.staccatissimo
             nbs    = if bs then Xml.beginSlur else id
-                
                 
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us,al,sl,b,bs),
@@ -740,6 +789,10 @@ instance HasVoice a => HasVoice (ArticulationT a) where
     type Voice (ArticulationT a)                        = Voice a
     getVoice (ArticulationT (es,us,al,sl,a,bs))         = getVoice a
     modifyVoice f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyVoice f a,bs)
+instance HasPitch a => HasPitch (ArticulationT a) where   
+    type Pitch (ArticulationT a)                        = Pitch a
+    getPitch (ArticulationT (es,us,al,sl,a,bs))         = getPitch a
+    modifyPitch f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyPitch f a,bs)
 instance IsPitch a => IsPitch (ArticulationT a) where
     fromPitch l                                         = ArticulationT (False,False,0,0,fromPitch l,False)
 instance IsDynamics a => IsDynamics (ArticulationT a) where
@@ -777,6 +830,10 @@ instance HasVoice a => HasVoice (TremoloT a) where
     type Voice (TremoloT a)         = Voice a
     getVoice (TremoloT (_,a))       = getVoice a
     modifyVoice f (TremoloT (n,x))  = TremoloT (n, modifyVoice f x)
+instance HasPitch a => HasPitch (TremoloT a) where   
+    type Pitch (TremoloT a)         = Pitch a
+    getPitch (TremoloT (_,a))       = getPitch a
+    modifyPitch f (TremoloT (n,x))  = TremoloT (n, modifyPitch f x)
 instance IsPitch a => IsPitch (TremoloT a) where
     fromPitch l                     = TremoloT (0, fromPitch l)
 instance IsDynamics a => IsDynamics (TremoloT a) where
