@@ -158,7 +158,7 @@ beat = do
     (^/tm) <$> match (const . isDivisibleBy 2 . (/ tm))
 
 dotted :: RhythmParser a (Rhythm a)
-dotted = msum . fmap dotted' $ [1..3]               -- max 3 dots
+dotted = msum . fmap dotted' $ [1..2]               -- max 2 dots
 
 dotted' :: Int -> RhythmParser a (Rhythm a)
 dotted' n = do

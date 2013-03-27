@@ -4,6 +4,7 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    OverloadedStrings,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -23,6 +24,7 @@
 
 module Music.Score.Voice (
         HasVoice(..),
+        VoiceName(..),
         VoiceT(..),
         voices,
         mapVoices,
@@ -32,6 +34,7 @@ module Music.Score.Voice (
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Data.String
 import Data.Foldable
 import Data.Traversable
 import qualified Data.List as List
@@ -70,18 +73,22 @@ class HasVoice a where
     setVoice n = modifyVoice (const n)
     modifyVoice f x = x
 
-newtype VoiceT a = VoiceT { getVoiceT :: (String, a) }
+newtype VoiceName = VoiceName { getVoiceName :: String }
+    deriving (Eq, Ord, IsString)
+instance Show VoiceName where show = getVoiceName
+
+newtype VoiceT a = VoiceT { getVoiceT :: (VoiceName, a) }
     deriving (Eq, Ord, Show, Functor)
 
-instance HasVoice ()                            where   { type Voice ()         = String ; getVoice _ = "" }
-instance HasVoice Double                        where   { type Voice Double     = String ; getVoice _ = "" }
-instance HasVoice Float                         where   { type Voice Float      = String ; getVoice _ = "" }
-instance HasVoice Int                           where   { type Voice Int        = String ; getVoice _ = "" }
-instance HasVoice Integer                       where   { type Voice Integer    = String ; getVoice _ = "" }
-instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = String ; getVoice _ = "" }
+instance HasVoice ()                            where   { type Voice ()         = VoiceName ; getVoice _ = "" }
+instance HasVoice Double                        where   { type Voice Double     = VoiceName ; getVoice _ = "" }
+instance HasVoice Float                         where   { type Voice Float      = VoiceName ; getVoice _ = "" }
+instance HasVoice Int                           where   { type Voice Int        = VoiceName ; getVoice _ = "" }
+instance HasVoice Integer                       where   { type Voice Integer    = VoiceName ; getVoice _ = "" }
+instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = VoiceName ; getVoice _ = "" }
 
 instance HasVoice (VoiceT a) where   
-    type Voice (VoiceT a)        = String
+    type Voice (VoiceT a)        = VoiceName
     getVoice (VoiceT (v,_))      = v
     modifyVoice f (VoiceT (v,x)) = VoiceT (f v, x)
 

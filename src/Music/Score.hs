@@ -5,7 +5,8 @@
     DeriveFoldable,     
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
-    TypeOperators,
+    TypeOperators,    
+    OverloadedStrings,
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
