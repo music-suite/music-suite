@@ -342,7 +342,7 @@ scoreToTrack = Track . fmap g . perform
 -- |
 -- Convert a single-part score to a part.
 --
-scoreToPart :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> Part (Maybe a)
+scoreToPart :: Score a -> Part (Maybe a)
 scoreToPart = Part . fmap g . addRests' . perform
     where
         g (t,d,x) = (d,x)
