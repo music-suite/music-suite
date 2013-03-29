@@ -545,13 +545,21 @@ toXmlPart = Xml.fromPart "Title" "Composer" "Part" . toXmlPart'
 
 
 toXmlPart' :: HasMusicXml a => Score a -> [XmlMusic]
-toXmlPart' = id
+toXmlPart' = id               
+    . prelims
     . fmap barToXml 
     . separateBars 
     . splitTiesSingle
     . addRests
-    . perform
-
+    . perform  
+    where
+        prelims []            = []
+        prelims (bar1 : rest) = (pre <> bar1) : rest
+        pre = mempty
+            <> Xml.defaultKey
+            <> Xml.defaultDivisions 
+            <> Xml.metronome (1/4) 60
+            <> Xml.commonTime
 
 -- | 
 -- Given a rest-free one-part score (such as those produced by perform), explicit add rests.
