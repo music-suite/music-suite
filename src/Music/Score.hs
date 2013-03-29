@@ -64,15 +64,6 @@ module Music.Score (
         compress,
         stretchTo,
         
-        -- *** Extra transformers
-        HasDynamic(..),
-        HasArticulation(..),
-        HasTremolo(..),
-        
-        ArticulationT(..),
-        DynamicT(..),
-        TremoloT(..),
-
         -- ** Conversions
         scoreToTrack,
         scoreToPart,
@@ -359,7 +350,7 @@ scoreToPart = Part . fmap g . perform
 -- |
 -- Convert a score to a list of parts.
 --
-scoreToParts :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> [Part a]
+scoreToParts :: (HasVoice a, Voice a ~ v, Ord v) => Score a -> [Part a]
 scoreToParts = fmap scoreToPart . voices
 
 -- |
@@ -510,13 +501,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -541,7 +532,7 @@ openXmlPart sc = do
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Eq v, Show v) => Score a -> XmlScore
+toXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . voices $ sc
     where
         pl = Xml.partList (fmap show $ getVoices sc)

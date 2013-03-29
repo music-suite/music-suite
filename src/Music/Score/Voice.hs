@@ -51,7 +51,7 @@ import Music.Score.Ties
 
 class HasVoice a where
     -- | 
-    -- Associated voice type. Should implement 'Eq' and 'Show' to be usable.
+    -- Associated voice type. Should implement 'Ord' and 'Show' to be usable.
     -- 
     type Voice a :: *
 
@@ -94,7 +94,7 @@ instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  
 --
 -- > Score a -> [Score a]
 --
-voices :: (HasVoice a, Eq v, v ~ Voice a, MonadPlus s, Foldable s) => s a -> [s a]
+voices :: (HasVoice a, Ord v, v ~ Voice a, MonadPlus s, Foldable s) => s a -> [s a]
 voices sc = fmap (flip extract $ sc) (getVoices sc) 
     where                    
         extract v = mfilter ((== v) . getVoice)
@@ -104,7 +104,7 @@ voices sc = fmap (flip extract $ sc) (getVoices sc)
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapVoices :: (HasVoice a, Eq v, v ~ Voice a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
+mapVoices :: (HasVoice a, Ord v, v ~ Voice a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
 mapVoices f = msum . f . voices
 
 -- |
@@ -112,8 +112,8 @@ mapVoices f = msum . f . voices
 --
 -- > Score a -> [Voice]
 --
-getVoices :: (HasVoice a, Eq v, v ~ Voice a, Foldable s) => s a -> [Voice a]
-getVoices = List.nub . fmap getVoice . toList
+getVoices :: (HasVoice a, Ord v, v ~ Voice a, Foldable s) => s a -> [Voice a]
+getVoices = List.sort . List.nub . fmap getVoice . toList
 
 -- |
 -- Set all voices in the given score.
