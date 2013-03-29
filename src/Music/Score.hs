@@ -342,15 +342,15 @@ scoreToTrack = Track . fmap g . perform
 -- |
 -- Convert a single-part score to a part.
 --
-scoreToPart :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> Part a
-scoreToPart = Part . fmap g . perform
+scoreToPart :: (HasVoice a, Voice a ~ v, Eq v) => Score a -> Part (Maybe a)
+scoreToPart = Part . fmap g . addRests' . perform
     where
         g (t,d,x) = (d,x)
 
 -- |
 -- Convert a score to a list of parts.
 --
-scoreToParts :: (HasVoice a, Voice a ~ v, Ord v) => Score a -> [Part a]
+scoreToParts :: (HasVoice a, Voice a ~ v, Ord v) => Score a -> [Part (Maybe a)]
 scoreToParts = fmap scoreToPart . voices
 
 -- |
@@ -562,11 +562,19 @@ toXmlPart' = id
             <> Xml.commonTime
 
 -- | 
--- Given a rest-free one-part score (such as those produced by perform), explicit add rests.
+-- Given a rest-free single-part score (such as those produced by perform), add explicit rests.
 -- The result will have no empty space.
 --
 addRests :: [(Time, Duration, a)] -> Score a
 addRests = Score . concat . snd . mapAccumL g 0
+    where
+        g prevTime (t, d, x) 
+            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
+            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
+            | otherwise       =  error "addRests: Strange prevTime"
+
+addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
+addRests' = concat . snd . mapAccumL g 0
     where
         g prevTime (t, d, x) 
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
