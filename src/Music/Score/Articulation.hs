@@ -27,6 +27,7 @@ module Music.Score.Articulation (
   ) where
 
 import Data.Ratio
+import Data.Foldable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -44,3 +45,5 @@ class HasArticulation a where
     setStaccLevel :: Int -> a -> a
     
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
+    deriving (Eq, Show, Ord, Functor, Foldable)
+

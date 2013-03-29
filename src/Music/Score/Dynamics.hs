@@ -27,6 +27,7 @@ module Music.Score.Dynamics (
   ) where
 
 import Data.Ratio
+import Data.Foldable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -45,3 +46,4 @@ class HasDynamic a where
 
 -- end cresc/dim, level, begin cresc/dim
 newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
+    deriving (Eq, Show, Ord, Functor, Foldable)

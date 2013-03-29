@@ -27,6 +27,7 @@ module Music.Score.Ornaments (
   ) where
 
 import Data.Ratio
+import Data.Foldable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -40,3 +41,4 @@ class HasTremolo a where
     setTrem :: Int -> a -> a
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
+    deriving (Eq, Show, Ord, Functor{-, Foldable-})
