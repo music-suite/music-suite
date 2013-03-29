@@ -17,7 +17,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.MusicXml.Simple (
-
+        
+        module Music.MusicXml,
+        
         -----------------------------------------------------------------------------
         -- * Score and parts
         -----------------------------------------------------------------------------
@@ -214,6 +216,7 @@ import Data.Default
 import Data.Ratio
 import Data.Monoid
 
+import Music.MusicXml
 import Music.MusicXml.Score
 import Music.MusicXml.Time
 import Music.MusicXml.Pitch
@@ -483,7 +486,7 @@ separateDots' (div:divs) nv
     where                                                        
         (nv', dots')    = separateDots' divs (nv*div)
 
-errorNoteValue  = error "Note value must be a multiple of two or dotted"
+errorNoteValue  = error "Music.MusicXml.Simple.separateDots: Note value must be a multiple of two or dotted"
 
 
 
@@ -519,12 +522,12 @@ mergeNotations notations = mempty
         isArticulations (Articulations _) = True
         isArticulations _                 = False
         
-        (Ornaments xs) `mergeN` (Ornaments ys)         = Ornaments (xs <> ys)
-        (Technical xs) `mergeN` (Technical ys)         = Technical (xs <> ys)
-        (Articulations xs) `mergeN` (Articulations ys) = Articulations (xs <> ys)
         foldOrnaments     = foldr mergeN (Ornaments [])
         foldTechnical     = foldr mergeN (Technical [])
         foldArticulations = foldr mergeN (Articulations [])
+        (Ornaments xs) `mergeN` (Ornaments ys)         = Ornaments (xs <> ys)
+        (Technical xs) `mergeN` (Technical ys)         = Technical (xs <> ys)
+        (Articulations xs) `mergeN` (Articulations ys) = Articulations (xs <> ys)
 
 
 beginTuplet     :: Music -> Music
@@ -539,15 +542,16 @@ beginBeam       = Music . fmap (mapNoteProps2 (beginBeamP 1)) . getMusic
 continueBeam    = Music . fmap (mapNoteProps2 (continueBeamP 1)) . getMusic
 endBeam         = Music . fmap (mapNoteProps2 (endBeamP 1)) . getMusic
 
-beginTie' = Music . fmap beginTie'' . getMusic
-endTie'   = Music . fmap endTie'' . getMusic
-beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
-endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
-
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
 beginTie    = beginTie' . addNotation (Tied Start)
 endTie      = endTie' . addNotation (Tied Stop)
+beginTie'   = Music . fmap beginTie'' . getMusic
+endTie'     = Music . fmap endTie'' . getMusic
+beginTie'' (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur (ties++[Start]) props))
+beginTie'' x = x
+endTie''   (MusicNote (Note full dur ties props)) = (MusicNote (Note full dur ([Stop]++ties) props))
+endTie''   x = x
 
 
 setNoteValP v x     = x { noteType = Just (v, Nothing) }

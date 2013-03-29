@@ -399,7 +399,7 @@ instance WriteMusicXml Direction where
     write (Metronome noteVal dotted tempo)      = single $ unode "metronome" $
                                                        [ unode "beat-unit" (writeNoteVal noteVal) ]
                                                     <> singleIf dotted (unode "beat-unit-dot" ())
-                                                    <> [ unode "per-minute" (show $ getTempo tempo) ]
+                                                    <> [ unode "per-minute" (show $ round $ getTempo tempo) ]
     write Bracket                               = notImplemented "Unsupported directions"
     write (OtherDirection dir)                  = notImplemented "OtherDirection"
 
