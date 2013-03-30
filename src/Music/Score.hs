@@ -599,6 +599,7 @@ barToXml bar = case quantize bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
 
+-- FIXME dotted rests does not work...
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml (d, x)
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d, x)
@@ -914,6 +915,43 @@ instance HasTremolo a => HasTremolo (TextT a) where
 instance HasText (TextT a) where
     setText      s (TextT (_,x)) = TextT (Just s,x)
                                      
+
+-- Literals (TODO move)
+
+-------------------------------------------------------------------------------------
+
+instance IsPitch Double where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+
+instance IsPitch Integer where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+
+instance IsDynamics Double where
+    fromDynamics (DynamicsL (Just x, _)) = x
+    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
+
+
+
                                                                                                            
 -------------------------------------------------------------------------------------
 -- Test stuff
@@ -946,6 +984,11 @@ fj'' = mempty
     <> setVoices "Viola"        (delay 16 $ (rep 10 fj)) 
     <> setVoices "Violoncello"  (delay 24 $ (rep 10 fj))
 
+-- rep 0 x = mempty
+-- rep n x = x |> rep (n-1) x
+grp n p = rep n p^/n
+
+-- open$ (rep 3 $ grp 2 c |> grp 4 db |> grp 4 c  |> (rest^*3))
 
 testArtDyn = mempty
     <> v (0+1) (rep 80 t^*(3*1))
@@ -978,25 +1021,6 @@ open = openXml . (^* (1/4)) . sc
 
 rep 0 x = mempty
 rep n x = x |> rep (n-1) x
-
--- Basic literal instances
-instance IsPitch Double where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
-instance IsDynamics Double where
-    fromDynamics (DynamicsL (Just x, _)) = x
-    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
-
-
 
 -------------------------------------------------------------------------------------
 
