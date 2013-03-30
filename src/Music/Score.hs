@@ -881,7 +881,7 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
     getMusicXml d (TextT (s,x))  = notate s $ getMusicXml d x
         where             
             notate Nothing  = id
-            notate (Just s) = (<> Xml.text s)
+            notate (Just s) = (Xml.text s <>)
             
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))         = (TextT (n,b), TextT (n,c)) where (b,c) = toTied a
