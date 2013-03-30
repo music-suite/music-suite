@@ -674,6 +674,8 @@ instance HasArticulation a => HasArticulation (VoiceT n a) where
     setStaccLevel n (VoiceT (v,x)) = VoiceT (v, setStaccLevel n x)
 instance HasTremolo a => HasTremolo (VoiceT n a) where
     setTrem       n (VoiceT (v,x)) = VoiceT (v, setTrem n x)
+instance HasText a => HasText (VoiceT n a) where
+    setText       s (VoiceT (v,x)) = VoiceT (v, setText s x)
 
 
 -- TieT
@@ -713,6 +715,8 @@ instance HasArticulation a => HasArticulation (TieT a) where
     setStaccLevel n (TieT (b,x,e)) = TieT (b,setStaccLevel n x,e)
 instance HasTremolo a => HasTremolo (TieT a) where
     setTrem       n (TieT (b,x,e)) = TieT (b,setTrem n x,e)
+instance HasText a => HasText (TieT a) where
+    setText       s (TieT (b,x,e)) = TieT (b, setText s x, e)
 
 
 -- DynamicT
@@ -762,7 +766,9 @@ instance HasArticulation a => HasArticulation (DynamicT a) where
     setAccLevel   n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setAccLevel n a,bc,bd)
     setStaccLevel n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setStaccLevel n a,bc,bd)
 instance HasTremolo a => HasTremolo (DynamicT a) where
-    setTrem    n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setTrem n a,bc,bd)
+    setTrem       n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setTrem n a,bc,bd)
+instance HasText a => HasText (DynamicT a) where
+    setText       s (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setText s a,bc,bd)
 
 
 -- ArticulationT
@@ -818,7 +824,9 @@ instance HasArticulation (ArticulationT a) where
     setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setTrem n a,bs)
-
+instance HasText a => HasText (ArticulationT a) where
+    setText      s (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setText s a,bs)
+        
  
 -- TremoloT
 
@@ -859,7 +867,52 @@ instance HasArticulation a => HasArticulation (TremoloT a) where
     setStaccLevel n (TremoloT (v,x)) = TremoloT (v, setStaccLevel n x)
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x)) = TremoloT (n,x)
+instance HasText a => HasText (TremoloT a) where
+    setText      s (TremoloT (n,x)) = TremoloT (n,setText s x)
 
+
+-- TextT
+
+-- newtype TextT a = TextT { getTextT :: (Int, a) }
+
+instance HasMidi a => HasMidi (TextT a) where
+    getMidi (TextT (_,x))        = getMidi x
+instance HasMusicXml a => HasMusicXml (TextT a) where
+    getMusicXml d (TextT (s,x))  = notate s $ getMusicXml d x
+        where             
+            notate Nothing  = id
+            notate (Just s) = (<> Xml.text s)
+            
+instance Tiable a => Tiable (TextT a) where
+    toTied (TextT (n,a))         = (TextT (n,b), TextT (n,c)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (TextT a) where   
+    type Voice (TextT a)         = Voice a
+    getVoice (TextT (_,a))       = getVoice a
+    modifyVoice f (TextT (n,x))  = TextT (n, modifyVoice f x)
+instance HasPitch a => HasPitch (TextT a) where   
+    type Pitch (TextT a)         = Pitch a
+    getPitch (TextT (_,a))       = getPitch a
+    modifyPitch f (TextT (n,x))  = TextT (n, modifyPitch f x)
+instance IsPitch a => IsPitch (TextT a) where
+    fromPitch l                     = TextT (Nothing, fromPitch l)
+instance IsDynamics a => IsDynamics (TextT a) where
+    fromDynamics l                  = TextT (Nothing, fromDynamics l)
+instance HasDynamic a => HasDynamic (TextT a) where
+    setBeginCresc n (TextT (v,x)) = TextT (v, setBeginCresc n x)
+    setEndCresc   n (TextT (v,x)) = TextT (v, setEndCresc n x)
+    setBeginDim   n (TextT (v,x)) = TextT (v, setBeginDim n x)
+    setEndDim     n (TextT (v,x)) = TextT (v, setEndDim n x)
+    setLevel      n (TextT (v,x)) = TextT (v, setLevel n x)
+instance HasArticulation a => HasArticulation (TextT a) where
+    setEndSlur    n (TextT (v,x)) = TextT (v, setEndSlur n x)
+    setContSlur   n (TextT (v,x)) = TextT (v, setContSlur n x)
+    setBeginSlur  n (TextT (v,x)) = TextT (v, setBeginSlur n x)
+    setAccLevel   n (TextT (v,x)) = TextT (v, setAccLevel n x)
+    setStaccLevel n (TextT (v,x)) = TextT (v, setStaccLevel n x)
+instance HasTremolo a => HasTremolo (TextT a) where
+    setTrem      n (TextT (s,x)) = TextT (s,setTrem n x)
+instance HasText (TextT a) where
+    setText      s (TextT (_,x)) = TextT (Just s,x)
                                      
                                                                                                            
 -------------------------------------------------------------------------------------

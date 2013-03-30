@@ -24,6 +24,10 @@
 module Music.Score.Ornaments (
         HasTremolo(..),
         TremoloT(..),
+        HasText(..),
+        TextT(..),
+        HasHarmonic(..),
+        HarmonicT(..),
   ) where
 
 import Data.Ratio
@@ -41,4 +45,21 @@ class HasTremolo a where
     setTrem :: Int -> a -> a
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
+    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+
+
+
+class HasText a where
+    setText :: String -> a -> a
+
+newtype TextT a = TextT { getTextT :: (Maybe String, a) }
+    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+
+
+-- TODO natural, artif?
+
+class HasHarmonic a where
+    setHarmonic :: String -> a -> a
+
+newtype HarmonicT a = HarmonicT { getHarmonicT :: (String, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-})
