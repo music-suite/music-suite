@@ -483,7 +483,7 @@ writeNoteVal (NoteVal x)
     | x == (2/1)    = "breve"
     | x == (4/1)    = "long"
     | x == (8/1)    = "maxima"
-    | otherwise     = error $ "Invalid note value:" ++ show x
+    | otherwise     = error $ "Music.MusicXml.Write.Score.wrietNoteVal: Invalid note value:" ++ show x
 
 writeClef :: ClefSign -> String
 writeClef GClef    = "G"

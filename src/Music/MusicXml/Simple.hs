@@ -425,7 +425,15 @@ metronome' nv dot tempo = Music . single $ MusicDirection (Metronome nv dot temp
 -- > rest (dotted eight)
 --
 rest :: NoteVal -> Music
-rest dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
+rest dur = case dots of
+    0 -> rest' dur'
+    1 -> rest' dur' <> rest' (dur' / 2)
+    -- TODO might be the wrong order...
+    where
+        (dur', dots) = separateDots dur              
+
+rest' :: NoteVal -> Music
+rest' dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
