@@ -676,7 +676,7 @@ instance HasArticulation a => HasArticulation (VoiceT n a) where
 instance HasTremolo a => HasTremolo (VoiceT n a) where
     setTrem       n (VoiceT (v,x)) = VoiceT (v, setTrem n x)
 instance HasText a => HasText (VoiceT n a) where
-    setText       s (VoiceT (v,x)) = VoiceT (v, setText s x)
+    addText       s (VoiceT (v,x)) = VoiceT (v, addText s x)
 
 
 -- TieT
@@ -717,7 +717,7 @@ instance HasArticulation a => HasArticulation (TieT a) where
 instance HasTremolo a => HasTremolo (TieT a) where
     setTrem       n (TieT (b,x,e)) = TieT (b,setTrem n x,e)
 instance HasText a => HasText (TieT a) where
-    setText       s (TieT (b,x,e)) = TieT (b, setText s x, e)
+    addText       s (TieT (b,x,e)) = TieT (b, addText s x, e)
 
 
 -- DynamicT
@@ -769,7 +769,7 @@ instance HasArticulation a => HasArticulation (DynamicT a) where
 instance HasTremolo a => HasTremolo (DynamicT a) where
     setTrem       n (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setTrem n a,bc,bd)
 instance HasText a => HasText (DynamicT a) where
-    setText       s (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,setText s a,bc,bd)
+    addText       s (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,addText s a,bc,bd)
 
 
 -- ArticulationT
@@ -826,7 +826,7 @@ instance HasArticulation (ArticulationT a) where
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem n (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setTrem n a,bs)
 instance HasText a => HasText (ArticulationT a) where
-    setText      s (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,setText s a,bs)
+    addText      s (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,addText s a,bs)
         
  
 -- TremoloT
@@ -869,7 +869,7 @@ instance HasArticulation a => HasArticulation (TremoloT a) where
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x)) = TremoloT (n,x)
 instance HasText a => HasText (TremoloT a) where
-    setText      s (TremoloT (n,x)) = TremoloT (n,setText s x)
+    addText      s (TremoloT (n,x)) = TremoloT (n,addText s x)
 
 
 -- TextT
@@ -881,8 +881,7 @@ instance HasMidi a => HasMidi (TextT a) where
 instance HasMusicXml a => HasMusicXml (TextT a) where
     getMusicXml d (TextT (s,x))  = notate s $ getMusicXml d x
         where             
-            notate Nothing  = id
-            notate (Just s) = (Xml.text s <>)
+            notate ts a = (mconcat $ fmap Xml.text ts) <> a
             
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))         = (TextT (n,b), TextT (n,c)) where (b,c) = toTied a
@@ -895,9 +894,9 @@ instance HasPitch a => HasPitch (TextT a) where
     getPitch (TextT (_,a))       = getPitch a
     modifyPitch f (TextT (n,x))  = TextT (n, modifyPitch f x)
 instance IsPitch a => IsPitch (TextT a) where
-    fromPitch l                     = TextT (Nothing, fromPitch l)
+    fromPitch l                     = TextT (mempty, fromPitch l)
 instance IsDynamics a => IsDynamics (TextT a) where
-    fromDynamics l                  = TextT (Nothing, fromDynamics l)
+    fromDynamics l                  = TextT (mempty, fromDynamics l)
 instance HasDynamic a => HasDynamic (TextT a) where
     setBeginCresc n (TextT (v,x)) = TextT (v, setBeginCresc n x)
     setEndCresc   n (TextT (v,x)) = TextT (v, setEndCresc n x)
@@ -913,7 +912,7 @@ instance HasArticulation a => HasArticulation (TextT a) where
 instance HasTremolo a => HasTremolo (TextT a) where
     setTrem      n (TextT (s,x)) = TextT (s,setTrem n x)
 instance HasText (TextT a) where
-    setText      s (TextT (_,x)) = TextT (Just s,x)
+    addText      s (TextT (t,x)) = TextT (t ++ [s],x)
                                      
 
 -- Literals (TODO move)

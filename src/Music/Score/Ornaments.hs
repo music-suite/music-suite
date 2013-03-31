@@ -50,9 +50,9 @@ newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 
 
 class HasText a where
-    setText :: String -> a -> a
+    addText :: String -> a -> a
 
-newtype TextT a = TextT { getTextT :: (Maybe String, a) }
+newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-})
 
 
