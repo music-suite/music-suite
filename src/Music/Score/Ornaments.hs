@@ -28,9 +28,14 @@ module Music.Score.Ornaments (
         TextT(..),
         HasHarmonic(..),
         HarmonicT(..),
+        HasSlide(..),
+        SlideT(..),
         
         tremolo,
         text,
+        harmonic,
+        artificial,
+        slide,
   ) where
 
 import Data.Ratio
@@ -53,8 +58,6 @@ class HasTremolo a where
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-})
 
-
-
 class HasText a where
     addText :: String -> a -> a
 
@@ -62,14 +65,22 @@ newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-})
 
 
--- TODO natural, artif?
-
+-- 0 for none, positive for natural, negative for artificial
 class HasHarmonic a where
-    setHarmonic :: String -> a -> a
+    setHarmonic :: Int -> a -> a
 
-newtype HarmonicT a = HarmonicT { getHarmonicT :: (String, a) }
+newtype HarmonicT a = HarmonicT { getHarmonicT :: (Int, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-})
 
+-- end gliss/slide, level, begin gliss/slide
+class HasSlide a where
+    setBeginGliss :: Bool -> a -> a
+    setBeginSlide :: Bool -> a -> a
+    setEndGliss   :: Bool -> a -> a
+    setEndSlide   :: Bool -> a -> a
+
+newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
+    deriving (Eq, Show, Ord, Functor{-, Foldable-})
 
 
 -- |
@@ -84,7 +95,25 @@ tremolo n = fmap (setTrem n)
 text :: (Ord v, v ~ Voice b, HasVoice b, HasText b) => String -> Score b -> Score b
 text s = mapSep (addText s) id id
 
+-- |
+-- Slide between the first and the last note.
+--
+slide :: (Ord v, v ~ Voice b, HasVoice b, HasSlide b) => Score b -> Score b
+slide = mapSep (setBeginSlide True) id (setEndSlide True)
 
+-- |
+-- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
+-- Sounding pitch is unaffected, but notated output is transposed automatically.
+--
+harmonic :: (Ord v, v ~ Voice b, HasVoice b, HasHarmonic b) => Int -> Score b -> Score b
+harmonic n = mapSep f f f where f = setHarmonic n
+
+-- |
+-- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
+-- Sounding pitch is unaffected, but notated output is transposed automatically.
+--
+artificial :: (Ord v, v ~ Voice b, HasVoice b, HasHarmonic b) => Score b -> Score b
+artificial = mapSep f f f where f = setHarmonic (-4)
 
 -- FIXME consolidate
 
