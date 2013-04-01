@@ -27,6 +27,7 @@ module Music.Score.Voice (
         -- VoiceName(..),
         VoiceT(..),
         voices,
+        mapVoice,
         mapVoices,
         getVoices,
         setVoices,
@@ -107,7 +108,15 @@ voices sc = fmap (flip extract $ sc) (getVoices sc)
         extract v = mfilter ((== v) . getVoice)
 
 -- |
--- Map over the voices in a given score.
+-- Map over a single voice in the given score.
+--
+-- > Voice -> (Score a -> Score a) -> Score a -> Score a
+--
+mapVoice :: (Ord v, v ~ Voice a, HasVoice a, MonadPlus s, Foldable s, Enum b) => b -> (s a -> s a) -> s a -> s a
+mapVoice n f = mapVoices (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
+
+-- |
+-- Map over all voices in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
