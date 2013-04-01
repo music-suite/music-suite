@@ -101,6 +101,9 @@ module Music.MusicXml.Simple (
         beginTie,
         endTie,
 
+        -- ** Note heads
+        setNoteHead,
+
         -- ** Notations
         addNotation,
 
@@ -511,6 +514,9 @@ setTimeMod m n  = Music . fmap (mapNoteProps2 (setTimeModP m n)) . getMusic
 addNotation  :: Notation -> Music -> Music
 addNotation x = Music . fmap (mapNoteProps2 (addNotationP x)) . getMusic
 
+setNoteHead  :: NoteHead -> Music -> Music
+setNoteHead x = Music . fmap (mapNoteProps2 (mapNoteHeadP (const $ Just (x,False,False)))) . getMusic
+
 -- TODO clean up, skip empty notation groups etc
 mergeNotations :: [Notation] -> [Notation]
 mergeNotations notations = mempty
@@ -571,6 +577,8 @@ endBeamP n x        = x { noteBeam = Just (fromIntegral n, EndBeam) }
 dotP x@(NoteProps { noteDots = n@_ })       = x { noteDots = succ n }
 addNotationP  n x@(NoteProps { noteNotations = ns@_ }) = x { noteNotations = (mergeNotations $ ns++[n]) }
 mapNotationsP f x@(NoteProps { noteNotations = ns@_ }) = x { noteNotations = (f ns) }
+mapStemP      f x@(NoteProps { noteStem = a@_ })       = x { noteNotations = (f a) }
+mapNoteHeadP  f x@(NoteProps { noteNoteHead = a@_ })   = x { noteNoteHead = (f a) }
 
 
 -- ----------------------------------------------------------------------------------
