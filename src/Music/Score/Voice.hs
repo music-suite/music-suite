@@ -42,6 +42,7 @@ import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.Semigroup
 import Data.String
 import Data.Foldable
+import Data.Ord (comparing)
 import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace

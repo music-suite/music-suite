@@ -659,10 +659,11 @@ instance HasPitch a => HasPitch (VoiceT n a) where
     type Pitch (VoiceT n a)      = Pitch a
     getPitch (VoiceT (v,a))      = getPitch a
     modifyPitch f (VoiceT (v,x)) = VoiceT (v, modifyPitch f x)
-instance (IsPitch a, IsString n) => IsPitch (VoiceT n a) where
-    fromPitch l                     = VoiceT ("", fromPitch l)
-instance (IsDynamics a, IsString n) => IsDynamics (VoiceT n a) where
-    fromDynamics l                  = VoiceT ("", fromDynamics l)
+-- TODO IsPitch/IsDynamic with mempty/def as default as well?
+instance (IsPitch a, Enum n) => IsPitch (VoiceT n a) where
+    fromPitch l                  = VoiceT (toEnum 0, fromPitch l)
+instance (IsDynamics a, Enum n) => IsDynamics (VoiceT n a) where
+    fromDynamics l               = VoiceT (toEnum 0, fromDynamics l)
 instance Tiable a => Tiable (VoiceT n a) where
     toTied (VoiceT (v,a)) = (VoiceT (v,b), VoiceT (v,c)) where (b,c) = toTied a
 instance HasDynamic a => HasDynamic (VoiceT n a) where
