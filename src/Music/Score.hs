@@ -125,6 +125,7 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Part
 import Music.Score.Score
+import Music.Score.Combinators
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Voice
@@ -143,6 +144,7 @@ import Music.Pitch.Literal      -- TODO debug
 import Music.Dynamics.Literal   -- TODO debug
 
 
+{-
 -------------------------------------------------------------------------------------
 -- Constructors
 -------------------------------------------------------------------------------------
@@ -368,6 +370,8 @@ trackToScore :: Track a -> Score a
 trackToScore = pcat . fmap g . getTrack
     where
         g (t,x) = delay (t .-. 0) (note x)
+
+-}
 
 
 -------------------------------------------------------------------------------------
