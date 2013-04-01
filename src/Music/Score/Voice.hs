@@ -31,9 +31,15 @@ module Music.Score.Voice (
         getVoices,
         setVoices,
         modifyVoices,
+        
+        -- ** Voice composition
+        (</>),
+        moveParts,
+        moveToPart,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Data.Semigroup
 import Data.String
 import Data.Foldable
 import Data.Traversable
@@ -133,3 +139,51 @@ modifyVoices n = fmap (modifyVoice n)
 
 
 
+--------------------------------------------------------------------------------
+-- Voice composition
+--------------------------------------------------------------------------------
+
+infixr 6 </>
+
+-- TODO use Alternative instead of (Functor + MonadPlus) ?
+
+-- |
+-- Similar to '<>', but increases voices in the second part to prevent voice collision.
+--
+(</>) :: (Enum v, Ord v, v ~ Voice a, Functor s, MonadPlus s, Foldable s, HasVoice a) => s a -> s a -> s a
+a </> b = a `mplus` moveParts offset b
+    where               
+        -- max voice in a + 1
+        offset = succ $ maximum' 0 $ fmap fromEnum $ getVoices a
+
+
+-- |
+-- Move down one voice (all parts).
+--
+moveParts :: (Enum v, v ~ Voice a, Integral b, Functor s, HasVoice a) => b -> s a -> s a
+moveParts x = modifyVoices (successor x)
+
+-- |
+-- Move top-part to the specific voice (other parts follow).
+--
+moveToPart :: (Enum v, v ~ Voice a, Functor s, HasVoice a) => v -> s a -> s a
+moveToPart v = moveParts (fromEnum v)
+
+
+
+
+
+
+
+
+
+successor :: (Integral b, Enum a) => b -> a -> a
+successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
+            | n >= 0 = (!! fromIntegral n)       . iterate succ
+
+
+maximum' :: (Ord a, Foldable t) => a -> t a -> a
+maximum' z = option z getMax . foldMap (Option . Just . Max)
+
+minimum' :: (Ord a, Foldable t) => a -> t a -> a
+minimum' z = option z getMin . foldMap (Option . Just . Min)
