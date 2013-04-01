@@ -24,7 +24,7 @@
 
 module Music.Score.Voice (
         HasVoice(..),
-        VoiceName(..),
+        -- VoiceName(..),
         VoiceT(..),
         voices,
         mapVoices,
@@ -79,19 +79,19 @@ class HasVoice a where
     setVoice n = modifyVoice (const n)
     modifyVoice f x = x
 
-newtype VoiceName = VoiceName { getVoiceName :: String }
-    deriving (Eq, Ord, IsString)
-instance Show VoiceName where show = getVoiceName
+-- newtype VoiceName = VoiceName { getVoiceName :: String }
+    -- deriving (Eq, Ord, IsString)
+-- instance Show VoiceName where show = getVoiceName
 
 newtype VoiceT n a = VoiceT { getVoiceT :: (n, a) }
     deriving (Eq, Ord, Show, Functor)
 
-instance HasVoice ()                            where   { type Voice ()         = VoiceName ; getVoice _ = "" }
-instance HasVoice Double                        where   { type Voice Double     = VoiceName ; getVoice _ = "" }
-instance HasVoice Float                         where   { type Voice Float      = VoiceName ; getVoice _ = "" }
-instance HasVoice Int                           where   { type Voice Int        = VoiceName ; getVoice _ = "" }
-instance HasVoice Integer                       where   { type Voice Integer    = VoiceName ; getVoice _ = "" }
-instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = VoiceName ; getVoice _ = "" }
+instance HasVoice ()                            where   { type Voice ()         = Integer ; getVoice _ = 0 }
+instance HasVoice Double                        where   { type Voice Double     = Integer ; getVoice _ = 0 }
+instance HasVoice Float                         where   { type Voice Float      = Integer ; getVoice _ = 0 }
+instance HasVoice Int                           where   { type Voice Int        = Integer ; getVoice _ = 0 }
+instance HasVoice Integer                       where   { type Voice Integer    = Integer ; getVoice _ = 0 }
+instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = Integer ; getVoice _ = 0 }
 
 
 

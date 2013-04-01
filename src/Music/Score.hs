@@ -961,6 +961,7 @@ instance IsDynamics Double where
 -------------------------------------------------------------------------------------
 
 
+{-
 type Fun  a = a -> a
 type Sc   a = Score (VoiceT VoiceName (TieT (TremoloT (DynamicT (ArticulationT a)))))
 
@@ -1024,6 +1025,7 @@ open = openXml . (^* (1/4)) . sc
 
 rep 0 x = mempty
 rep n x = x |> rep (n-1) x
+                              -}
 
 -------------------------------------------------------------------------------------
 
