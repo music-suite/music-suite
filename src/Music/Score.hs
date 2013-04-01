@@ -884,7 +884,7 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
             notate ts a = (mconcat $ fmap Xml.text ts) <> a
             
 instance Tiable a => Tiable (TextT a) where
-    toTied (TextT (n,a))         = (TextT (n,b), TextT (n,c)) where (b,c) = toTied a
+    toTied (TextT (n,a))         = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
 instance HasVoice a => HasVoice (TextT a) where   
     type Voice (TextT a)         = Voice a
     getVoice (TextT (_,a))       = getVoice a
