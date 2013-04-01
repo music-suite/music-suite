@@ -970,7 +970,8 @@ instance HasMidi a => HasMidi (HarmonicT a) where
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
     getMusicXml d (HarmonicT (n,x))  = notate $ getMusicXml d x
         where             
-            notate = Xml.setNoteHead Xml.DiamondNoteHead
+            notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
+                   | otherwise  = id
     -- TODO adjust pitch etc
             
 instance Tiable a => Tiable (HarmonicT a) where
@@ -1019,7 +1020,12 @@ instance HasMidi a => HasMidi (SlideT a) where
 instance HasMusicXml a => HasMusicXml (SlideT a) where
     getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
         where
-            notate = id
+            notate = neg . nes . nbg . nbs
+            neg    = if es then Xml.endGliss else id
+            nes    = if es then Xml.endSlide else id
+            nbg    = if es then Xml.beginGliss else id
+            nbs    = if es then Xml.beginSlide else id
+
                 
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (eg,es,a,bg,bs))           = (SlideT (eg,   es,   b,False,False),
