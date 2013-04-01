@@ -30,6 +30,8 @@ module Music.Score.Articulation (
         marcato,    
         accentLast,
         marcatoLast,
+        accentAll,
+        marcatoAll,
 
         -- ** Phrasing
         tenuto,
@@ -76,6 +78,12 @@ accent = mapSep (setAccLevel 1) id id
 
 marcato :: (HasArticulation a, HasVoice a, Ord v, v ~ Voice a) => Score a -> Score a
 marcato = mapSep (setAccLevel 2) id id
+
+accentAll :: (HasArticulation a, HasVoice a, Ord v, v ~ Voice a) => Score a -> Score a
+accentAll = mapSep (setAccLevel 1) (setAccLevel 1) (setAccLevel 1)
+
+marcatoAll :: (HasArticulation a, HasVoice a, Ord v, v ~ Voice a) => Score a -> Score a
+marcatoAll = mapSep (setAccLevel 2) (setAccLevel 2) (setAccLevel 2)
 
 accentLast :: (HasArticulation a, HasVoice a, Ord v, v ~ Voice a) => Score a -> Score a
 accentLast = mapSep id id (setAccLevel 1)
