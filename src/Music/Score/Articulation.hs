@@ -106,6 +106,8 @@ spiccato = mapSep (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2)
 
 
 
+-- FIXME consolidate
+
 -- | 
 -- Map over first, middle and last elements of list.
 -- Biased on first, then on first and last for short lists.
