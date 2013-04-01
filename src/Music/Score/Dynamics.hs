@@ -26,13 +26,13 @@ module Music.Score.Dynamics (
         DynamicT(..),
 
         -- ** Dynamics over time
-        Dyn(..),
+        Levels(..),
         cresc,
         dim,
 
         -- ** Application
-        dynRel,
-        dynsRel,
+        dynamicSingle,
+        dynamics,
   ) where
 
 import Control.Monad
@@ -69,32 +69,36 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 -- Dynamics
 --------------------------------------------------------------------------------
 
--- | Apply a constant level over the whole score.
+-- Apply a constant level over the whole score.
 -- dynamic :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Double -> Score a -> Score a
 -- dynamic n = mapSep (setLevel n) id id 
 
--- | Apply a variable level over a single-part score.
-dyn :: HasDynamic a => Score (Dyn Double) -> Score a -> Score a
-dyn ds = applyDynSingle (fmap fromJust . scoreToPart $ ds)
+
+dynamics :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
+dynamics d a = (duration a `stretchTo` d) `dyns` a
+
+dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
+dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
 
 -- | Apply a variable level over the score.
-dyns :: (Ord v, v ~ Voice a, HasVoice a, HasDynamic a) => Score (Dyn Double) -> Score a -> Score a
+dyns :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
 dyns ds = mapVoices (fmap $ applyDynSingle (fmap fromJust $ scoreToPart ds))
 
-dynRel :: HasDynamic a => Score (Dyn Double) -> Score a -> Score a
-dynRel d a  = (duration a `stretchTo` d) `dyn` a
-
-dynsRel :: (Ord v, v ~ Voice a, HasVoice a, HasDynamic a) => Score (Dyn Double) -> Score a -> Score a
-dynsRel d a = (duration a `stretchTo` d) `dyns` a
+-- | Apply a variable level over a single-part score.
+dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
+dyn ds = applyDynSingle (fmap fromJust . scoreToPart $ ds)
 
 
--- Dynamic action over a duration
-data Dyn a
+
+-- |
+-- Represents dynamics over a duration.
+--
+data Levels a
     = Level  a
     | Change a a
     deriving (Eq, Show)
 
-instance Fractional a => IsDynamics (Dyn a) where
+instance Fractional a => IsDynamics (Levels a) where
     fromDynamics (DynamicsL (Just a, Nothing)) = Level (toFrac a)
     fromDynamics (DynamicsL (Just a, Just b))  = Change (toFrac a) (toFrac b)
     fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " {- ++ show x-}
@@ -107,9 +111,9 @@ dim a b = fromDynamics $ DynamicsL ((Just a), (Just b))
 
 
 -- end cresc, end dim, level, begin cresc, begin dim
-type Dyn2 a = (Bool, Bool, Maybe a, Bool, Bool)
+type Levels2 a = (Bool, Bool, Maybe a, Bool, Bool)
 
-dyn2 :: Ord a => [Dyn a] -> [Dyn2 a]
+dyn2 :: Ord a => [Levels a] -> [Levels2 a]
 dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
     where
         g (Nothing, False, False) (Level b)     = ((Just b,  False, False), (False, False, Just b,  False, False))
@@ -127,7 +131,7 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 transf :: ([a] -> [b]) -> Part a -> Part b
 transf f = Part . uncurry zip . second f . unzip . getPart
 
-applyDynSingle :: HasDynamic a => Part (Dyn Double) -> Score a -> Score a
+applyDynSingle :: HasDynamic a => Part (Levels Double) -> Score a -> Score a
 applyDynSingle ds as = applySingle' ds3 as
     where
         -- ds2 :: Part (Dyn2 Double)
