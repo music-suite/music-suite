@@ -680,6 +680,13 @@ instance HasArticulation a => HasArticulation (VoiceT n a) where
     setStaccLevel n (VoiceT (v,x))  = VoiceT (v, setStaccLevel n x)
 instance HasTremolo a => HasTremolo (VoiceT n a) where
     setTrem       n (VoiceT (v,x))  = VoiceT (v, setTrem n x)
+instance HasHarmonic a => HasHarmonic (VoiceT n a) where
+    setHarmonic   n (VoiceT (v,x))  = VoiceT (v, setHarmonic n x)
+instance HasSlide a => HasSlide (VoiceT n a) where
+    setBeginGliss n (VoiceT (v,x))  = VoiceT (v, setBeginGliss n x)
+    setBeginSlide n (VoiceT (v,x))  = VoiceT (v, setBeginSlide n x)
+    setEndGliss   n (VoiceT (v,x))  = VoiceT (v, setEndGliss n x)
+    setEndSlide   n (VoiceT (v,x))  = VoiceT (v, setEndSlide n x)
 instance HasText a => HasText (VoiceT n a) where
     addText       s (VoiceT (v,x))  = VoiceT (v, addText s x)
 
@@ -721,6 +728,13 @@ instance HasArticulation a => HasArticulation (TieT a) where
     setStaccLevel n (TieT (b,x,e))  = TieT (b,setStaccLevel n x,e)
 instance HasTremolo a => HasTremolo (TieT a) where
     setTrem       n (TieT (b,x,e))  = TieT (b,setTrem n x,e)
+instance HasHarmonic a => HasHarmonic (TieT a) where
+    setHarmonic   n (TieT (b,x,e))  = TieT (b,setHarmonic n x,e)
+instance HasSlide a => HasSlide (TieT a) where
+    setBeginGliss n (TieT (b,x,e))  = TieT (b,setBeginGliss n x,e)
+    setBeginSlide n (TieT (b,x,e))  = TieT (b,setBeginSlide n x,e)
+    setEndGliss   n (TieT (b,x,e))  = TieT (b,setEndGliss n x,e)
+    setEndSlide   n (TieT (b,x,e))  = TieT (b,setEndSlide n x,e)
 instance HasText a => HasText (TieT a) where
     addText       s (TieT (b,x,e))  = TieT (b, addText s x, e)
 
@@ -774,6 +788,13 @@ instance HasArticulation a => HasArticulation (DynamicT a) where
     setStaccLevel n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setStaccLevel n a,bc,bd)
 instance HasTremolo a => HasTremolo (DynamicT a) where
     setTrem       n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setTrem n a,bc,bd)
+instance HasHarmonic a => HasHarmonic (DynamicT a) where
+    setHarmonic   n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setHarmonic n a,bc,bd)
+instance HasSlide a => HasSlide (DynamicT a) where
+    setBeginGliss n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setBeginGliss n a,bc,bd)
+    setBeginSlide n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setBeginSlide n a,bc,bd)
+    setEndGliss   n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setEndGliss n a,bc,bd)
+    setEndSlide   n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setEndSlide n a,bc,bd)
 instance HasText a => HasText (DynamicT a) where
     addText       s (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,addText s a,bc,bd)
 
@@ -831,6 +852,13 @@ instance HasArticulation (ArticulationT a) where
     setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem n (ArticulationT (es,us,al,sl,a,bs))        = ArticulationT (es,us,al,sl,setTrem n a,bs)
+instance HasHarmonic a => HasHarmonic (ArticulationT a) where
+    setHarmonic   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setHarmonic n a,bs)
+instance HasSlide a => HasSlide (ArticulationT a) where
+    setBeginGliss n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setBeginGliss n a,bs)
+    setBeginSlide n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setBeginSlide n a,bs)
+    setEndGliss   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setEndGliss n a,bs)
+    setEndSlide   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setEndSlide n a,bs)
 instance HasText a => HasText (ArticulationT a) where
     addText      s (ArticulationT (es,us,al,sl,a,bs))   = ArticulationT (es,us,al,sl,addText s a,bs)
         
@@ -874,6 +902,13 @@ instance HasArticulation a => HasArticulation (TremoloT a) where
     setStaccLevel n (TremoloT (v,x))    = TremoloT (v, setStaccLevel n x)
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x))     = TremoloT (n,x)
+instance HasHarmonic a => HasHarmonic (TremoloT a) where
+    setHarmonic   n (TremoloT (v,x))    = TremoloT (v, setHarmonic n x)
+instance HasSlide a => HasSlide (TremoloT a) where
+    setBeginGliss n (TremoloT (v,x))    = TremoloT (v, setBeginGliss n x)
+    setBeginSlide n (TremoloT (v,x))    = TremoloT (v, setBeginSlide n x)
+    setEndGliss   n (TremoloT (v,x))    = TremoloT (v, setEndGliss n x)
+    setEndSlide   n (TremoloT (v,x))    = TremoloT (v, setEndSlide n x)
 instance HasText a => HasText (TremoloT a) where
     addText      s (TremoloT (n,x))     = TremoloT (n,addText s x)
 
@@ -916,16 +951,115 @@ instance HasArticulation a => HasArticulation (TextT a) where
     setAccLevel   n (TextT (v,x))   = TextT (v, setAccLevel n x)
     setStaccLevel n (TextT (v,x))   = TextT (v, setStaccLevel n x)
 instance HasTremolo a => HasTremolo (TextT a) where
-    setTrem      n (TextT (s,x))    = TextT (s,setTrem n x)
+    setTrem       n (TextT (s,x))    = TextT (s,setTrem n x)
+instance HasHarmonic a => HasHarmonic (TextT a) where
+    setHarmonic   n (TextT (v,x))   = TextT (v, setHarmonic n x)
+instance HasSlide a => HasSlide (TextT a) where
+    setBeginGliss n (TextT (v,x))   = TextT (v, setBeginGliss n x)
+    setBeginSlide n (TextT (v,x))   = TextT (v, setBeginSlide n x)
+    setEndGliss   n (TextT (v,x))   = TextT (v, setEndGliss n x)
+    setEndSlide   n (TextT (v,x))   = TextT (v, setEndSlide n x)
 instance HasText (TextT a) where
     addText      s (TextT (t,x))    = TextT (t ++ [s],x)
                                      
 
 -- HarmonicT
 
+instance HasMidi a => HasMidi (HarmonicT a) where
+    getMidi (HarmonicT (_,x))        = getMidi x
+instance HasMusicXml a => HasMusicXml (HarmonicT a) where
+    getMusicXml d (HarmonicT (n,x))  = notate $ getMusicXml d x
+        where             
+            notate = Xml.setNoteHead Xml.DiamondNoteHead
+    -- TODO adjust pitch etc
+            
+instance Tiable a => Tiable (HarmonicT a) where
+    toTied (HarmonicT (n,a))            = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (HarmonicT a) where   
+    type Voice (HarmonicT a)            = Voice a
+    getVoice (HarmonicT (_,a))          = getVoice a
+    modifyVoice f (HarmonicT (n,x))     = HarmonicT (n, modifyVoice f x)
+instance HasPitch a => HasPitch (HarmonicT a) where   
+    type Pitch (HarmonicT a)            = Pitch a
+    getPitch (HarmonicT (_,a))          = getPitch a
+    modifyPitch f (HarmonicT (n,x))     = HarmonicT (n, modifyPitch f x)
+instance IsPitch a => IsPitch (HarmonicT a) where
+    fromPitch l                         = HarmonicT (0, fromPitch l)
+instance IsDynamics a => IsDynamics (HarmonicT a) where
+    fromDynamics l                      = HarmonicT (0, fromDynamics l)
+instance HasDynamic a => HasDynamic (HarmonicT a) where
+    setBeginCresc n (HarmonicT (v,x))   = HarmonicT (v, setBeginCresc n x)
+    setEndCresc   n (HarmonicT (v,x))   = HarmonicT (v, setEndCresc n x)
+    setBeginDim   n (HarmonicT (v,x))   = HarmonicT (v, setBeginDim n x)
+    setEndDim     n (HarmonicT (v,x))   = HarmonicT (v, setEndDim n x)
+    setLevel      n (HarmonicT (v,x))   = HarmonicT (v, setLevel n x)
+instance HasArticulation a => HasArticulation (HarmonicT a) where
+    setEndSlur    n (HarmonicT (v,x))   = HarmonicT (v, setEndSlur n x)
+    setContSlur   n (HarmonicT (v,x))   = HarmonicT (v, setContSlur n x)
+    setBeginSlur  n (HarmonicT (v,x))   = HarmonicT (v, setBeginSlur n x)
+    setAccLevel   n (HarmonicT (v,x))   = HarmonicT (v, setAccLevel n x)
+    setStaccLevel n (HarmonicT (v,x))   = HarmonicT (v, setStaccLevel n x)
+instance HasTremolo a => HasTremolo (HarmonicT a) where
+    setTrem       n (HarmonicT (s,x))    = HarmonicT (s,setTrem n x)
+instance HasHarmonic (HarmonicT a) where
+    setHarmonic   n (HarmonicT (_,x))    = HarmonicT (n,x)
+instance HasSlide a => HasSlide (HarmonicT a) where
+    setBeginGliss n (HarmonicT (s,x))    = HarmonicT (s,setBeginGliss n x)
+    setBeginSlide n (HarmonicT (s,x))    = HarmonicT (s,setBeginSlide n x)
+    setEndGliss   n (HarmonicT (s,x))    = HarmonicT (s,setEndGliss n x)
+    setEndSlide   n (HarmonicT (s,x))    = HarmonicT (s,setEndSlide n x)
+instance HasText a => HasText (HarmonicT a) where
+    addText      s (HarmonicT (n,x))    = HarmonicT (n,addText s x)
+
+
 -- SlideT
 
-
+instance HasMidi a => HasMidi (SlideT a) where
+    getMidi (SlideT (_,_,a,_,_))          = getMidi a
+instance HasMusicXml a => HasMusicXml (SlideT a) where
+    getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
+        where
+            notate = id
+                
+instance Tiable a => Tiable (SlideT a) where
+    toTied (SlideT (eg,es,a,bg,bs))           = (SlideT (eg,   es,   b,False,False),
+                                                 SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
+instance HasVoice a => HasVoice (SlideT a) where   
+    type Voice (SlideT a)                     = Voice a
+    getVoice (SlideT (eg,es,a,bg,bs))         = getVoice a
+    modifyVoice f (SlideT (eg,es,a,bg,bs))    = SlideT (eg,es,modifyVoice f a,bg,bs)
+instance HasPitch a => HasPitch (SlideT a) where   
+    type Pitch (SlideT a)                     = Pitch a
+    getPitch (SlideT (eg,es,a,bg,bs))         = getPitch a
+    modifyPitch f (SlideT (eg,es,a,bg,bs))    = SlideT (eg,es,modifyPitch f a,bg,bs)
+instance IsPitch a => IsPitch (SlideT a) where
+    fromPitch l                               = SlideT (False,False,fromPitch l,False,False)
+instance IsDynamics a => IsDynamics (SlideT a) where
+    fromDynamics l                            = SlideT (False,False,fromDynamics l,False,False)
+instance HasDynamic a => HasDynamic (SlideT a) where
+    setBeginCresc n (SlideT (eg,es,a,bg,bs))  = SlideT (eg,es,setBeginCresc n a,bg,bs)
+    setEndCresc   n (SlideT (eg,es,a,bg,bs))  = SlideT (eg,es,setEndCresc n a,bg,bs)
+    setBeginDim   n (SlideT (eg,es,a,bg,bs))  = SlideT (eg,es,setBeginDim n a,bg,bs)
+    setEndDim     n (SlideT (eg,es,a,bg,bs))  = SlideT (eg,es,setEndDim n a,bg,bs)
+    setLevel      n (SlideT (eg,es,a,bg,bs))  = SlideT (eg,es,setLevel n a,bg,bs)
+instance HasArticulation a => HasArticulation (SlideT a) where
+    setEndSlur    n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setEndSlur n a,bg,bs)
+    setContSlur   n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setContSlur n a,bg,bs)
+    setBeginSlur  n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setBeginSlur n a,bg,bs)
+    setAccLevel   n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setAccLevel n a,bg,bs)
+    setStaccLevel n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setStaccLevel n a,bg,bs)
+instance HasTremolo a => HasTremolo (SlideT a) where
+    setTrem       n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setTrem n a,bg,bs)
+instance HasHarmonic a => HasHarmonic (SlideT a) where
+    setHarmonic   n (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,setHarmonic n a,bg,bs)
+instance HasSlide (SlideT a) where
+    setBeginGliss bg (SlideT (eg,es,a,_,bs)) = SlideT (eg,es,a,bg,bs)
+    setBeginSlide bs (SlideT (eg,es,a,bg,_)) = SlideT (eg,es,a,bg,bs)
+    setEndGliss   eg (SlideT (_,es,a,bg,bs)) = SlideT (eg,es,a,bg,bs)
+    setEndSlide   es (SlideT (eg,_,a,bg,bs)) = SlideT (eg,es,a,bg,bs)
+instance HasText a => HasText (SlideT a) where
+    addText       s (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,addText s a,bg,bs)
+                                                                                                        
 
 
 
