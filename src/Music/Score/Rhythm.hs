@@ -50,6 +50,7 @@ import Text.Parsec.Pos
 
 import Music.Score.Time
 import Music.Score.Duration
+import Music.Score.Ties
 
 
 data Rhythm a 
@@ -88,7 +89,7 @@ instance HasDuration (Rhythm a) where
     -- duration (InverseTuplet c a)   = duration a * c
     duration (Rhythms as)      = sum (fmap duration as)    
 
-quantize :: [(Duration, a)] -> Either String (Rhythm a)
+quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
 
 

@@ -1111,13 +1111,15 @@ instance IsDynamics Double where
 -------------------------------------------------------------------------------------
 
 
-{-
 type Fun  a = a -> a
-type Sc   a = Score (VoiceT VoiceName (TieT (TremoloT (DynamicT (ArticulationT a)))))
+type Sc   a = Score (VoiceT Int (TieT (TremoloT (DynamicT (ArticulationT a)))))
 
-sc :: Fun (Sc Double)
-sc = id
+score :: Fun (Sc Double)
+score = id                     
 
+open = openXml . score
+
+{-
 fj1 = sc $ melody [c,d] |> melody [eb,d]^/2 |> c
 fj2 = sc $ melody [eb,f] |> g^*2
 fj3 = sc $ g^*(3/4) |> ab^*(1/4) |> melody [g,f,eb,d] ^/2 |> c
