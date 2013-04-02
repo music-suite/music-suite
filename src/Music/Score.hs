@@ -1079,7 +1079,7 @@ instance HasText a => HasText (SlideT a) where
                                                                                                         
 
 -------------------------------------------------------------------------------------
--- Num, Enum and Bounded
+-- Num, Integral, Enum and Bounded
 -------------------------------------------------------------------------------------
 
 -- VoiceT
@@ -1100,6 +1100,13 @@ instance (Enum v, Bounded a) => Bounded (VoiceT v a) where
     minBound = VoiceT (toEnum 0, minBound)
     maxBound = VoiceT (toEnum 0, maxBound)
 
+instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (VoiceT v a) where
+    toRational (VoiceT (v,a)) = toRational a
+
+instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (VoiceT v a) where
+    VoiceT (v,a) `quotRem` VoiceT (_,b) = (VoiceT (v,q), VoiceT (v,r)) where (q,r) = a `quotRem` b
+    toInteger (VoiceT (v,a)) = toInteger a
+
 
 -- TieT
 
@@ -1119,6 +1126,14 @@ instance Bounded a => Bounded (TieT a) where
     minBound = TieT (False,minBound,False)
     maxBound = TieT (False,maxBound,False)
 
+instance (Num a, Ord a, Real a) => Real (TieT a) where
+    toRational (TieT (_,a,_)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (TieT a) where
+    TieT (et,a,bt) `quotRem` TieT (_,b,_) = (TieT (et,q,bt), TieT (et,r,bt)) where (q,r) = a `quotRem` b
+    toInteger (TieT (_,a,_)) = toInteger a
+
+
 -- DynamicT
 
 instance Num a => Num (DynamicT a) where
@@ -1136,6 +1151,14 @@ instance Enum a => Enum (DynamicT a) where
 instance Bounded a => Bounded (DynamicT a) where
     minBound = DynamicT (False,False,Nothing,minBound,False,False)
     maxBound = DynamicT (False,False,Nothing,maxBound,False,False)
+
+instance (Num a, Ord a, Real a) => Real (DynamicT a) where
+    toRational (DynamicT (_,_,_,a,_,_)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
+    DynamicT (p,q,r,a,s,t) `quotRem` DynamicT (_,_,_,b,_,_) = (DynamicT (p,q,r,q',s,t), DynamicT (p,q,r,r',s,t)) where (q',r') = a `quotRem` b
+    toInteger (DynamicT (_,_,_,a,_,_)) = toInteger a
+
 
 -- ArticulationT
 
@@ -1155,6 +1178,14 @@ instance Bounded a => Bounded (ArticulationT a) where
     minBound = ArticulationT (False,False,0,0,minBound,False)
     maxBound = ArticulationT (False,False,0,0,maxBound,False)
 
+instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
+    toRational (ArticulationT (_,_,_,_,a,_)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
+    ArticulationT (p,q,r,s,a,t) `quotRem` ArticulationT (_,_,_,_,b,_) = (ArticulationT (p,q,r,s,q',t), ArticulationT (p,q,r,s,r',t)) where (q',r') = a `quotRem` b
+    toInteger (ArticulationT (_,_,_,_,a,_)) = toInteger a
+
+
 -- TremoloT
 
 instance Num a => Num (TremoloT a) where
@@ -1172,6 +1203,14 @@ instance Enum a => Enum (TremoloT a) where
 instance Bounded a => Bounded (TremoloT a) where
     minBound = TremoloT (0, minBound)
     maxBound = TremoloT (0, maxBound)
+
+instance (Num a, Real a, Real a) => Real (TremoloT a) where
+    toRational (TremoloT (_,a)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
+    TremoloT (v,a) `quotRem` TremoloT (_,b) = (TremoloT (v,q), TremoloT   (v,r)) where (q,r) = a `quotRem` b
+    toInteger (TremoloT (_,a)) = toInteger a
+
 
 -- TextT
 
@@ -1191,6 +1230,14 @@ instance Bounded a => Bounded (TextT a) where
     minBound = TextT (mempty, minBound)
     maxBound = TextT (mempty, maxBound)
 
+instance (Num a, Ord a, Real a) => Real (TextT a) where
+    toRational (TextT (v,a)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (TextT a) where
+    TextT (v,a) `quotRem` TextT (_,b) = (TextT (v,q), TextT   (v,r)) where (q,r) = a `quotRem` b
+    toInteger (TextT (v,a)) = toInteger a
+
+
 -- HarmonicT
 
 instance Num a => Num (HarmonicT a) where
@@ -1208,6 +1255,13 @@ instance Enum a => Enum (HarmonicT a) where
 instance Bounded a => Bounded (HarmonicT a) where
     minBound = HarmonicT (0, minBound)
     maxBound = HarmonicT (0, maxBound)
+
+instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
+    toRational (HarmonicT (v,a)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
+    HarmonicT (v,a) `quotRem` HarmonicT (_,b) = (HarmonicT (v,q), HarmonicT   (v,r)) where (q,r) = a `quotRem` b
+    toInteger (HarmonicT (v,a)) = toInteger a
 
 
 -- SlideT
@@ -1227,6 +1281,14 @@ instance Enum a => Enum (SlideT a) where
 instance Bounded a => Bounded (SlideT a) where
     minBound = SlideT (False,False,minBound,False,False)
     maxBound = SlideT (False,False,maxBound,False,False)  
+
+instance (Num a, Ord a, Real a) => Real (SlideT a) where
+    toRational (SlideT (_,_,a,_,_)) = toRational a
+
+instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
+    SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
+    toInteger (SlideT (_,_,a,_,_)) = toInteger a
+
 
 -------------------------------------------------------------------------------------
 -- Literals
