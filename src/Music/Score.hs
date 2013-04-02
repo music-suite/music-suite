@@ -1078,10 +1078,158 @@ instance HasText a => HasText (SlideT a) where
     addText       s (SlideT (eg,es,a,bg,bs)) = SlideT (eg,es,addText s a,bg,bs)
                                                                                                         
 
+-------------------------------------------------------------------------------------
+-- Num, Enum and Bounded
+-------------------------------------------------------------------------------------
+
+-- VoiceT
+
+instance (Enum v, Eq v, Num a) => Num (VoiceT v a) where
+    VoiceT (v,a) + VoiceT (_,b) = VoiceT (v,a+b)
+    VoiceT (v,a) * VoiceT (_,b) = VoiceT (v,a*b)
+    VoiceT (v,a) - VoiceT (_,b) = VoiceT (v,a-b)
+    abs (VoiceT (v,a))          = VoiceT (v,abs a)
+    signum (VoiceT (v,a))       = VoiceT (v,signum a)
+    fromInteger a               = VoiceT (toEnum 0,fromInteger a)
+  
+instance (Enum v, Enum a) => Enum (VoiceT v a) where
+    toEnum a = VoiceT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (VoiceT (v,a)) = fromEnum a
+
+instance (Enum v, Bounded a) => Bounded (VoiceT v a) where
+    minBound = VoiceT (toEnum 0, minBound)
+    maxBound = VoiceT (toEnum 0, maxBound)
 
 
--- Literals (TODO move)
+-- TieT
 
+instance Num a => Num (TieT a) where
+    TieT (et,a,bt) + TieT (_,b,_) = TieT (et,a+b,bt)
+    TieT (et,a,bt) * TieT (_,b,_) = TieT (et,a*b,bt)
+    TieT (et,a,bt) - TieT (_,b,_) = TieT (et,a-b,bt)
+    abs (TieT (et,a,bt))          = TieT (et,abs a,bt)
+    signum (TieT (et,a,bt))       = TieT (et,signum a,bt)
+    fromInteger a               = TieT (False,fromInteger a,False)
+  
+instance Enum a => Enum (TieT a) where
+    toEnum a                = TieT (False,toEnum a,False) 
+    fromEnum (TieT (_,a,_)) = fromEnum a
+
+instance Bounded a => Bounded (TieT a) where
+    minBound = TieT (False,minBound,False)
+    maxBound = TieT (False,maxBound,False)
+
+-- DynamicT
+
+instance Num a => Num (DynamicT a) where
+    DynamicT (p,q,r,a,s,t) + DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a+b,s,t)
+    DynamicT (p,q,r,a,s,t) * DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a*b,s,t)
+    DynamicT (p,q,r,a,s,t) - DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a-b,s,t)
+    abs (DynamicT (p,q,r,a,s,t))                    = DynamicT (p,q,r,abs a,s,t)
+    signum (DynamicT (p,q,r,a,s,t))                 = DynamicT (p,q,r,signum a,s,t)
+    fromInteger a                                   = DynamicT (False,False,Nothing,fromInteger a,False,False)
+  
+instance Enum a => Enum (DynamicT a) where
+    toEnum a                         = DynamicT (False,False,Nothing,toEnum a,False,False) 
+    fromEnum (DynamicT (_,_,_,a,_,_)) = fromEnum a
+
+instance Bounded a => Bounded (DynamicT a) where
+    minBound = DynamicT (False,False,Nothing,minBound,False,False)
+    maxBound = DynamicT (False,False,Nothing,maxBound,False,False)
+
+-- ArticulationT
+
+instance Num a => Num (ArticulationT a) where
+    ArticulationT (p,q,r,s,a,t) + ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a+b,t)
+    ArticulationT (p,q,r,s,a,t) * ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a*b,t)
+    ArticulationT (p,q,r,s,a,t) - ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a-b,t)
+    abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
+    signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
+    fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
+  
+instance Enum a => Enum (ArticulationT a) where
+    toEnum a                               = ArticulationT (False,False,0,0,toEnum a,False) 
+    fromEnum (ArticulationT (_,_,_,_,a,_)) = fromEnum a
+
+instance Bounded a => Bounded (ArticulationT a) where
+    minBound = ArticulationT (False,False,0,0,minBound,False)
+    maxBound = ArticulationT (False,False,0,0,maxBound,False)
+
+-- TremoloT
+
+instance Num a => Num (TremoloT a) where
+    TremoloT (v,a) + TremoloT (_,b) = TremoloT (v,a+b)
+    TremoloT (v,a) * TremoloT (_,b) = TremoloT (v,a*b)
+    TremoloT (v,a) - TremoloT (_,b) = TremoloT (v,a-b)
+    abs (TremoloT (v,a))          = TremoloT (v,abs a)
+    signum (TremoloT (v,a))       = TremoloT (v,signum a)
+    fromInteger a               = TremoloT (toEnum 0,fromInteger a)
+  
+instance Enum a => Enum (TremoloT a) where
+    toEnum a = TremoloT (0, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (TremoloT (v,a)) = fromEnum a
+
+instance Bounded a => Bounded (TremoloT a) where
+    minBound = TremoloT (0, minBound)
+    maxBound = TremoloT (0, maxBound)
+
+-- TextT
+
+instance Num a => Num (TextT a) where
+    TextT (v,a) + TextT (_,b) = TextT (v,a+b)
+    TextT (v,a) * TextT (_,b) = TextT (v,a*b)
+    TextT (v,a) - TextT (_,b) = TextT (v,a-b)
+    abs (TextT (v,a))          = TextT (v,abs a)
+    signum (TextT (v,a))       = TextT (v,signum a)
+    fromInteger a               = TextT (mempty,fromInteger a)
+  
+instance Enum a => Enum (TextT a) where
+    toEnum a = TextT (mempty, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (TextT (v,a)) = fromEnum a
+
+instance Bounded a => Bounded (TextT a) where
+    minBound = TextT (mempty, minBound)
+    maxBound = TextT (mempty, maxBound)
+
+-- HarmonicT
+
+instance Num a => Num (HarmonicT a) where
+    HarmonicT (v,a) + HarmonicT (_,b) = HarmonicT (v,a+b)
+    HarmonicT (v,a) * HarmonicT (_,b) = HarmonicT (v,a*b)
+    HarmonicT (v,a) - HarmonicT (_,b) = HarmonicT (v,a-b)
+    abs (HarmonicT (v,a))          = HarmonicT (v,abs a)
+    signum (HarmonicT (v,a))       = HarmonicT (v,signum a)
+    fromInteger a               = HarmonicT (toEnum 0,fromInteger a)
+  
+instance Enum a => Enum (HarmonicT a) where
+    toEnum a = HarmonicT (0, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (HarmonicT (v,a)) = fromEnum a
+
+instance Bounded a => Bounded (HarmonicT a) where
+    minBound = HarmonicT (0, minBound)
+    maxBound = HarmonicT (0, maxBound)
+
+
+-- SlideT
+
+instance Num a => Num (SlideT a) where
+    SlideT (eg,es,a,bg,bs) + SlideT (_,_,b,_,_) = SlideT (eg,es,a+b,bg,bs)
+    SlideT (eg,es,a,bg,bs) * SlideT (_,_,b,_,_) = SlideT (eg,es,a*b,bg,bs)
+    SlideT (eg,es,a,bg,bs) - SlideT (_,_,b,_,_) = SlideT (eg,es,a-b,bg,bs)
+    abs (SlideT (eg,es,a,bg,bs))                = SlideT (eg,es,abs a,bg,bs)
+    signum (SlideT (eg,es,a,bg,bs))             = SlideT (eg,es,signum a,bg,bs)
+    fromInteger a                               = SlideT (False,False,fromInteger a,False,False)
+  
+instance Enum a => Enum (SlideT a) where
+    toEnum a                        = SlideT (False,False,toEnum a,False,False)
+    fromEnum (SlideT (_,_,a,_,_))   = fromEnum a
+
+instance Bounded a => Bounded (SlideT a) where
+    minBound = SlideT (False,False,minBound,False,False)
+    maxBound = SlideT (False,False,maxBound,False,False)  
+
+-------------------------------------------------------------------------------------
+-- Literals
 -------------------------------------------------------------------------------------
 
 instance IsPitch Double where
