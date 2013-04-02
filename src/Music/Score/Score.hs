@@ -86,6 +86,9 @@ import Music.Score.Duration
 newtype Score a  = Score { getScore :: [(Time, Duration, Maybe a)] }
     deriving ({-Eq, Ord, -}Show, Functor, Foldable)
 
+-- TODO invariant that the list is sorted
+
+
 -- Performance equality needeed because of rests...
 
 instance Eq a => Eq (Score a) where
@@ -154,9 +157,11 @@ instance Delayable (Score a) where
 
 instance HasOnset (Score a) where
     onset  (Score []) = 0
-    onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
+    -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
+    onset  (Score xs) = on (head xs) where on  (t,d,x) = t
     offset (Score []) = 0
     offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (Time . getDuration $ d)
+    -- Note: this version of onset is lazier, but depends on the invariant above
         
 instance HasDuration (Score a) where
     duration x = offset x .-. onset x            
