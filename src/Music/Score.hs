@@ -608,7 +608,18 @@ rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml (d, x)
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d, x)
 rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
+rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d, x) <> rhythmToXml r2
+    where
+        (x,r2) = toTiedRhythm r
 rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
+
+toTiedRhythm :: HasMusicXml a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
+toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
+toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
+toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
+toTiedRhythm (Bound  d r)     = error "toXml: Nested bounded rhytms"
+toTiedRhythm (Rhythms [])     = error "toXml: Bound empty rhythm"
+toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
 noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   

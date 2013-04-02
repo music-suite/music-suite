@@ -57,21 +57,20 @@ data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
     | Dotted     Int (Rhythm a)                -- n > 0.
     | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'tupletMods'.
-    | Rhythms    [Rhythm a]                    
+    | Bound      Duration (Rhythm a)           -- tied from duration
+    | Rhythms    [Rhythm a]                    -- normal note sequence
     deriving (Eq, Show, Functor, Foldable)
     -- RInvTuplet  Duration (Rhythm a)
 
 instance Semigroup (Rhythm a) where
     (<>) = mappend
 
--- Equivalent to the deriving Monoid, except for the sorted invariant.
+-- Catenates using 'Rhythms'
 instance Monoid (Rhythm a) where
     mempty = Rhythms []
-
     Rhythms as `mappend` Rhythms bs   =  Rhythms (as <> bs)
     r          `mappend` Rhythms bs   =  Rhythms ([r] <> bs)
     Rhythms as `mappend` r            =  Rhythms (as <> [r])
-
 
 instance AdditiveGroup (Rhythm a) where
     zeroV   = error "No zeroV for (Rhythm a)"
@@ -82,11 +81,14 @@ instance VectorSpace (Rhythm a) where
     type Scalar (Rhythm a) = Duration
     a *^ Beat d x = Beat (a*d) x
 
+Beat d x `subDur` d' = Beat (d-d') x
+
 instance HasDuration (Rhythm a) where
     duration (Beat d _)        = d
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
     -- duration (InverseTuplet c a)   = duration a * c
+    duration (Bound d a)       = duration a + d
     duration (Rhythms as)      = sum (fmap duration as)    
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
@@ -111,24 +113,29 @@ dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
 tupletMods :: [Duration]
 tupletMods = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
 
+
+-- 3/2 for dots
+-- 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11  for ordinary tuplets
+-- 3/2,      6/4                        for inverted tuplets
+
 data RState = RState {
-        timeMod :: Duration,
-        -- notatedDur * timeMod = actualDur
-        -- 3/2 for dots
-        -- 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11  for ordinary tuplets
-        -- 3/2,      6/4                        for inverted tuplets
+        timeMod :: Duration, -- time modification; notatedDur * timeMod = actualDur
+        timeSub :: Duration, -- time subtraction (in bound note)
         tupleDepth :: Int
     }
 
 instance Monoid RState where
-    mempty = RState { timeMod = 1, tupleDepth = 0 }
+    mempty = RState { timeMod = 1, timeSub = 0, tupleDepth = 0 }
     a `mappend` _ = a
 
 modifyTimeMod :: (Duration -> Duration) -> RState -> RState
-modifyTimeMod f (RState tm td) = RState (f tm) td
+modifyTimeMod f (RState tm ts td) = RState (f tm) ts td
+
+modifyTimeSub :: (Duration -> Duration) -> RState -> RState
+modifyTimeSub f (RState tm ts td) = RState tm (f ts) td
 
 modifyTupleDepth :: (Int -> Int) -> RState -> RState
-modifyTupleDepth f (RState tm td) = RState tm (f td)
+modifyTupleDepth f (RState tm ts td) = RState tm ts (f td)
 
 -- | 
 -- A @RhytmParser a b@ converts (Part a) to b.
@@ -137,6 +144,7 @@ type RhythmParser a b = Parsec [(Duration, a)] RState b
 quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p mempty ""
 
+-- Matches a (duration, value) pair iff the predicate matches, returns beat
 match :: (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
     where
@@ -144,8 +152,12 @@ match p = tokenPrim show next test
         next pos _ _  = updatePosChar pos 'x'
         test (d,x)    = if p d x then Just (Beat d x) else Nothing
 
+-- Matches any rhythm
 rhythm :: RhythmParser a (Rhythm a)
-rhythm = Rhythms <$> Text.Parsec.many1 rhythm' 
+rhythm = Rhythms <$> Text.Parsec.many1 (rhythm' <|> bound)
+
+rhythmNoBound :: RhythmParser a (Rhythm a)
+rhythmNoBound = Rhythms <$> Text.Parsec.many1 rhythm'
 
 rhythm' :: RhythmParser a (Rhythm a)
 rhythm' = mzero
@@ -153,11 +165,18 @@ rhythm' = mzero
     <|> dotted
     <|> tuplet
 
+-- Matches a beat divisible by 2 (notated)
 beat :: RhythmParser a (Rhythm a)
 beat = do
-    RState tm _ <- getState
-    (^/tm) <$> match (const . isDivisibleBy 2 . (/ tm))
+    RState tm ts _ <- getState
+    (\d -> (d^/tm) `subDur` ts) <$> match (\d _ -> 
+        d - ts > 0 
+        &&
+        isDivisibleBy 2 (d / tm - ts)) -- TODO or is it (d - ts) / tm
 
+-- isDivisibleByPos n a = a > 0 && isDivisibleBy n a
+
+-- Matches a dotted rhythm
 dotted :: RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ [1..2]               -- max 2 dots
 
@@ -168,17 +187,27 @@ dotted' n = do
     modifyState $ modifyTimeMod (/ dotMod n)
     return (Dotted n b)
 
+
+-- Matches a bound rhythm
+bound :: RhythmParser a (Rhythm a)
+bound = do
+    modifyState $ modifyTimeSub (+ 0.5)
+    a <- rhythm'
+    modifyState $ modifyTimeSub (subtract 0.5)
+    return $ Bound 0.5 a
+
+-- Matches a tuplet
 tuplet :: RhythmParser a (Rhythm a)
 tuplet = msum . fmap tuplet' $ tupletMods
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
 tuplet' :: Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
-    RState _ depth <- getState
+    RState _ _ depth <- getState
     onlyIf (depth < 1) $ do                         -- max 1 nested tuplets
         modifyState $ modifyTimeMod (* d) 
                     . modifyTupleDepth succ
-        r <- rhythm        
+        r <- rhythmNoBound        
         modifyState $ modifyTimeMod (/ d) 
                     . modifyTupleDepth pred
         return (Tuplet d r)
@@ -224,8 +253,13 @@ logBaseR k n
     | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n                         = logBase (fromRational k) (fromRational n)
 
-isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
+-- As it sounds
+isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
+propFrac :: Duration -> Duration -> (Int, Double)
+propFrac n = properFraction . logBaseR (toRational n) . toRational
+
 
 single x = [x]            
 
