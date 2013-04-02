@@ -23,31 +23,40 @@
 
 
 module Music.Score.Combinators (
-        -- ** Constructors
+        -- ** Constructing scores
         rest,
         note,
         chord,
         melody,
 
-        -- ** Composing
+        -- ** Composing scores
         (|>),
         (<|),
         scat,
         pcat,
+        
+        -- *** Special composition
         sustain,
         overlap,
         anticipate,
         
-        -- ** Transforming
+        -- ** Transforming scores
+        -- *** Moving in time
         move,
         moveBack,
         startAt,
         stopAt,
+
+        -- *** Stretching in time
         stretch,
         compress,
         stretchTo,
         
-        -- ** Conversions
+        -- ** Zipper
+        applySingle,
+        sampleSingle,
+        
+        -- ** Converting scores to parts and tracks
         scoreToTrack,
         scoreToPart,
         scoreToParts,
@@ -254,11 +263,35 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
 -------------------------------------------------------------------------------------
+-- Analysis
 
--- mapNotes = Score . getScore
+-- TODO move these
+-- FIXME work with infinite parts
+applySingle :: Part (Score a -> Score b) -> Score a -> Score b
+applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
+    where            
+        -- This is not join; we simply concatenate all inner scores in parallel
+        notJoin = mconcat . toList
+        sampled = sampleSingle (partToScore fs) as
 
--- mapStartMiddleStop :: (a -> a) -> (a -> a) -> (a -> a) -> Score a -> Score a
-mapStartMiddleStop f g h = mapVoices (\x -> x)
+-- |
+-- Get all notes that start during a given note.
+--
+sampleSingle :: Score a -> Score b -> Score (a, Score b)
+sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . getScore $ as
+    where
+        g Nothing  z = Nothing
+        g (Just a) z = Just (a,z)
+
+
+-- | Filter out events that has its onset in the given time interval (inclusive start).
+--   For example, onset in 1 2 filters events such that (1 <= onset x < 3)
+onsetIn :: Time -> Duration -> Score a -> Score a
+onsetIn a b = Score . filt (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
+    where
+        filt = List.takeWhile
+        -- more lazy than mfilter
+                                                                              
 
 
 -------------------------------------------------------------------------------------

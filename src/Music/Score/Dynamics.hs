@@ -132,7 +132,7 @@ transf :: ([a] -> [b]) -> Part a -> Part b
 transf f = Part . uncurry zip . second f . unzip . getPart
 
 applyDynSingle :: HasDynamic a => Part (Levels Double) -> Score a -> Score a
-applyDynSingle ds as = applySingle' ds3 as
+applyDynSingle ds as = applySingle ds3 as
     where
         -- ds2 :: Part (Dyn2 Double)
         ds2 = transf dyn2 ds
@@ -146,41 +146,6 @@ applyDynSingle ds as = applySingle' ds3 as
                 . (if bd then map1 (setBeginDim     True) else id)
                 . (maybe id (\x -> map1 (setLevel x)) $ l)
         map1 f = mapSepPart f id id
-
-
--- applySingle :: Part (a -> b) -> Score a -> Score b
--- applySingle fs = applySingle' (fmap fmap fs)
-
-
-
-
--- TODO move these
--- FIXME work with infinite parts
-applySingle' :: Part (Score a -> Score b) -> Score a -> Score b
-applySingle' fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
-    where            
-        -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin = mconcat . toList
-        sampled = sampleSingle (partToScore fs) as
-
--- |
--- Get all notes that start during a given note.
---
-sampleSingle :: Score a -> Score b -> Score (a, Score b)
-sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . getScore $ as
-    where
-        g Nothing  z = Nothing
-        g (Just a) z = Just (a,z)
-
-
--- | Filter out events that has its onset in the given time interval (inclusive start).
---   For example, onset in 1 2 filters events such that (1 <= onset x < 3)
-onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = Score . mfilter (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
-                                                                              
-                                                                              
-                                                                              
-
 
 
 
