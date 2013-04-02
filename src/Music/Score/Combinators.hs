@@ -289,10 +289,13 @@ sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . get
 onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = Score . filt (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
     where
-        -- filt = List.takeWhile
-        filt = mfilter
+        -- filt = mfilter
+        filt = takeUntil
         -- more lazy than mfilter
                                                                               
+-- Take until predicate goes from True to False.
+takeUntil :: (a -> Bool) -> [a] -> [a]
+takeUntil p as = List.takeWhile p (List.dropWhile (not . p) as)
 
 
 -------------------------------------------------------------------------------------
