@@ -7,6 +7,7 @@
     FlexibleInstances,
     TypeOperators,    
     OverloadedStrings,
+    FlexibleContexts, -- for IsPitch stuff
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -1204,7 +1205,7 @@ instance Bounded a => Bounded (TremoloT a) where
     minBound = TremoloT (0, minBound)
     maxBound = TremoloT (0, maxBound)
 
-instance (Num a, Real a, Real a) => Real (TremoloT a) where
+instance (Num a, Real a) => Real (TremoloT a) where
     toRational (TremoloT (_,a)) = toRational a
 
 instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
@@ -1325,6 +1326,17 @@ instance IsDynamics Double where
     fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
 
+data Alteration = Sh | Fl
+sharp = Sh
+flat  = Fl
+instance IsPitch (Alteration -> Double) where
+    fromPitch l Sh = fromPitch l + 1
+    fromPitch l Fl = fromPitch l - 1
+instance IsPitch (Alteration -> Integer) where
+    fromPitch l Sh = fromPitch l + 1
+    fromPitch l Fl = fromPitch l - 1
+instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
+    fromPitch l a = (pure . fromPitch l) a
 
                                                                                                            
 -------------------------------------------------------------------------------------
