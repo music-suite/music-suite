@@ -1,7 +1,7 @@
 
-# foobar
+# music-parts
 
-Description.
+Abstract representation of musical parts.
 
 ## Requirements
 
