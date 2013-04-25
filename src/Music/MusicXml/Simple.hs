@@ -592,6 +592,12 @@ endGliss     = addNotation (Glissando 1 Stop Solid Nothing)
 beginSlide   = addNotation (Slide 1 Start Solid Nothing)
 endSlide     = addNotation (Slide 1 Stop Solid Nothing)
 
+arpeggiate      :: Music -> Music
+nonArpeggiate   :: Music -> Music
+arpeggiate      = addNotation Arpeggiate
+nonArpeggiate   = addNotation NonArpeggiate
+
+
 -- ----------------------------------------------------------------------------------
 
 fermata         :: FermataSign -> Music -> Music
