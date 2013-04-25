@@ -14,7 +14,7 @@ import Music.MusicXml.Dynamics
 import Music.MusicXml.Simple
 
 
-score = testManyParts
+score = testNotes
 
 testNotes = fromPart
     "Test notes"
