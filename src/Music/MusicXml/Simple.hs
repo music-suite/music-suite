@@ -158,6 +158,13 @@ module Music.MusicXml.Simple (
         falloff,
         stress,
         unstress,
+        
+        -- ** Ornaments
+        trill,
+        turn,
+        shake,
+        mordent,
+        tremolo,
 
         -----------------------------------------------------------------------------
         -- * Dynamics
@@ -174,20 +181,6 @@ module Music.MusicXml.Simple (
         -- ** Dynamic levels
         dynamic,
 
-        -- pppppp,
-        -- ppppp,
-        -- pppp,
-        -- ppp,
-        -- pp,
-        -- p,
-        -- mp,
-        -- mf,
-        -- ff,
-        -- fff,
-        -- ffff,
-        -- fffff,
-        -- ffffff, 
-
         -- ** Both
         crescFrom,
         crescTo,
@@ -195,13 +188,6 @@ module Music.MusicXml.Simple (
         dimFrom,
         dimTo,
         dimFromTo,        
-
-        -----------------------------------------------------------------------------
-        -- * Ornaments
-        -----------------------------------------------------------------------------
-        
-        tremolo,
-
 
         -----------------------------------------------------------------------------
         -- * Text
@@ -726,6 +712,25 @@ slur (Music xs)   = (as <> bs <> cs)
 
 tremolo :: Int -> Music -> Music
 tremolo n = addNotation (Ornaments [(Tremolo $ fromIntegral n, [])])
+
+trill   :: Music -> Music
+turn    :: Bool -> Bool -> Music -> Music
+shake   :: Music -> Music
+mordent :: Bool -> Music -> Music
+
+trill   = addOrnament TrillMark
+turn delay invert = case (delay,invert) of
+    (False,False) -> addOrnament Turn
+    (True, False) -> addOrnament DelayedTurn
+    (False,True)  -> addOrnament InvertedTurn
+    (True, True)  -> addOrnament DelayedInvertedTurn
+
+shake          = addOrnament Shake
+mordent invert = case invert of
+    False -> addOrnament Mordent
+    True  -> addOrnament InvertedMordent
+
+addOrnament a = addNotation (Ornaments [(a, [])])
 
 -- ----------------------------------------------------------------------------------
 -- Text
