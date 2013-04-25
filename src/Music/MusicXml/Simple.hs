@@ -66,7 +66,7 @@ module Music.MusicXml.Simple (
         time,
 
         -- ** Tempo
-        -- TODO tempo
+        -- TODO #15 tempo
         metronome,
         metronome',
         
@@ -124,8 +124,8 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
 
         -- ** Accelerando and ritardando
-        -- TODO accelerando,
-        -- TODO ritardando,
+        -- TODO #16 accelerando,
+        -- TODO #16 ritardando,
 
         -- ** Fermatas and breaks
         fermata,
@@ -398,7 +398,7 @@ metronome nv tempo = case dots of
 metronome' :: NoteVal -> Bool -> Tempo -> Music
 metronome' nv dot tempo = Music . single $ MusicDirection (Metronome nv dot tempo)
 
--- TODO tempo
+-- TODO #15 tempo
 
 
 -- ----------------------------------------------------------------------------------
@@ -417,9 +417,9 @@ rest :: NoteVal -> Music
 rest dur = case dots of
     0 -> rest' dur'
     1 -> rest' dur' <> rest' (dur' / 2)
-    -- TODO might be the wrong order...
+    _ -> error "Music.MusicXml.Simple.rest: to many dots"
     where
-        (dur', dots) = separateDots dur              
+        (dur', dots) = separateDots dur
 
 rest' :: NoteVal -> Music
 rest' dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` denom) noTies (setNoteValP val def))
