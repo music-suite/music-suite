@@ -2,7 +2,8 @@
 # musicxml2
 
 MusicXML library for Haskell, including a concise, strongly typed music representation 
-isomorphic to MusicXML 3.0.
+isomorphic to MusicXML 3.0. (The library is called musicxml2 because there is already 
+a `musicxml` library on Hackage).
 
 ## Supported features
 
