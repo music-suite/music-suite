@@ -91,7 +91,7 @@ instance HasDuration (Rhythm a) where
     duration (Bound d a)       = duration a + d
     duration (Rhythms as)      = sum (fmap duration as)    
 
-quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
+quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
 
 
