@@ -243,7 +243,7 @@ class Tiable a => HasMusicXml a where
     -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
     -- to add beams, slurs, dynamics, articulation etc.
     --
-    getMusicXml      :: Duration -> a -> XmlMusic
+    getMusicXml :: Duration -> a -> XmlMusic
 
 instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . (toInteger . round)
 instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . (toInteger . round)
