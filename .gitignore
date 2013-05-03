@@ -1,2 +1,6 @@
 dist
 wiki
+*.mid
+*.ly
+*.pdf
+*.xml
