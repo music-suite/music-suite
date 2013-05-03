@@ -87,7 +87,6 @@ instance HasDuration (Rhythm a) where
     duration (Beat d _)        = d
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
-    -- duration (InverseTuplet c a)   = duration a * c
     duration (Bound d a)       = duration a + d
     duration (Rhythms as)      = sum (fmap duration as)    
 
@@ -97,9 +96,8 @@ quantize = quantize' (atEnd rhythm)
 
 -- Internal...
 
-testq :: [Duration] -> Either String (Rhythm ())
-testq = quantize' (atEnd rhythm) . fmap (\x->(x,()))
-
+testQuantize :: [Duration] -> Either String (Rhythm ())
+testQuantize = quantize' (atEnd rhythm) . fmap (\x->(x,()))
 
 dotMod :: Int -> Duration
 dotMod n = dotMods !! (n-1)
@@ -174,29 +172,31 @@ beat = do
         &&
         isDivisibleBy 2 (d / tm - ts)) -- TODO or is it (d - ts) / tm
 
--- isDivisibleByPos n a = a > 0 && isDivisibleBy n a
-
--- Matches a dotted rhythm
+-- | Matches a dotted rhythm
 dotted :: RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ [1..2]               -- max 2 dots
 
 dotted' :: Int -> RhythmParser a (Rhythm a)
 dotted' n = do
     modifyState $ modifyTimeMod (* dotMod n)
-    b <- beat
+    a <- beat
     modifyState $ modifyTimeMod (/ dotMod n)
-    return (Dotted n b)
+    return (Dotted n a)
 
 
--- Matches a bound rhythm
+-- | Matches a bound rhythm
 bound :: RhythmParser a (Rhythm a)
-bound = do
-    modifyState $ modifyTimeSub (+ 0.5)
-    a <- rhythm'
-    modifyState $ modifyTimeSub (subtract 0.5)
-    return $ Bound 0.5 a
+bound = bound' (1/2)
 
--- Matches a tuplet
+
+bound' :: Duration -> RhythmParser a (Rhythm a)
+bound' d = do
+    modifyState $ modifyTimeSub (+ d)
+    a <- rhythm'
+    modifyState $ modifyTimeSub (subtract d)
+    return $ Bound d a
+
+-- | Matches a tuplet
 tuplet :: RhythmParser a (Rhythm a)
 tuplet = msum . fmap tuplet' $ tupletMods
 
@@ -207,10 +207,10 @@ tuplet' d = do
     onlyIf (depth < 1) $ do                         -- max 1 nested tuplets
         modifyState $ modifyTimeMod (* d) 
                     . modifyTupleDepth succ
-        r <- rhythmNoBound        
+        a <- rhythmNoBound        
         modifyState $ modifyTimeMod (/ d) 
                     . modifyTupleDepth pred
-        return (Tuplet d r)
+        return (Tuplet d a)
 
 
 

@@ -1,5 +1,6 @@
 
 {-# LANGUAGE
+    CPP,
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,     
@@ -42,10 +43,12 @@ module Music.Score (
         module Music.Score.Ornaments,
 
         -- ** Constructors
+#ifdef __HADDOCK__
         rest,
         note,
         chord,
-        melody,
+        melody,   
+#endif
 
         -- ** Composing
         (|>),
