@@ -49,4 +49,6 @@ library
         Music.Score.Dynamics
         Music.Score.Ornaments
         
-
+executable "music-score-tests"
+    hs-source-dirs: src test
+    main-is: Main.hs
