@@ -265,8 +265,6 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 -------------------------------------------------------------------------------------
 -- Analysis
 
--- TODO move these
--- FIXME work with infinite parts
 applySingle :: Part (Score a -> Score b) -> Score a -> Score b
 applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
     where            

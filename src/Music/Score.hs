@@ -141,10 +141,10 @@ import qualified Music.MusicXml.Simple as Xml
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-import System.Posix             -- TODO debug
-import System.IO.Unsafe         -- TODO debug
-import Music.Pitch.Literal      -- TODO debug
-import Music.Dynamics.Literal   -- TODO debug
+import System.Posix
+import System.IO.Unsafe
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 
 
 -------------------------------------------------------------------------------------
