@@ -226,23 +226,6 @@ atEnd p = do
         notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
         anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
     
--- |
--- Like 'notFollowedBy', but not requiring 'Show'.
---
--- notFollowedBy' :: Stream s m t => ParsecT s u m a -> ParsecT s u m ()Source
--- notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
-
--- |
--- Like 'anyToken', but not requiring 'Show'.
---
--- anyToken' :: Stream s m t => ParsecT s u m tSource
--- anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
-
-
-
-
-
-
 onlyIf :: MonadPlus m => Bool -> m b -> m b
 onlyIf b p = if b then p else mzero
 
@@ -256,9 +239,6 @@ logBaseR k n                         = logBase (fromRational k) (fromRational n)
 -- As it sounds
 isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
-
-propFrac :: Duration -> Duration -> (Int, Double)
-propFrac n = properFraction . logBaseR (toRational n) . toRational
 
 
 single x = [x]            
