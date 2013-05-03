@@ -640,41 +640,11 @@ endCresc        = Music $ [MusicDirection $ Crescendo  Stop]
 beginDim        = Music $ [MusicDirection $ Diminuendo Start]
 endDim          = Music $ [MusicDirection $ Diminuendo Stop]
 
-
 dynamic :: Dynamics -> Music
 dynamic level   = Music $ [MusicDirection $ Dynamics level]
 
--- pppppp      :: Music
--- ppppp       :: Music
--- pppp        :: Music
--- ppp         :: Music
--- pp          :: Music
--- p           :: Music
--- mp          :: Music
--- mf          :: Music
--- ff          :: Music
--- fff         :: Music
--- ffff        :: Music
--- fffff       :: Music
--- ffffff      :: Music
--- 
--- pppppp          = [MusicDirection $ Dynamics PPPPPP]
--- ppppp           = [MusicDirection $ Dynamics PPPPP]
--- pppp            = [MusicDirection $ Dynamics PPPP]
--- ppp             = [MusicDirection $ Dynamics PPP]
--- pp              = [MusicDirection $ Dynamics PP]
--- p               = [MusicDirection $ Dynamics P]
--- mp              = [MusicDirection $ Dynamics MP]
--- mf              = [MusicDirection $ Dynamics MF]
--- -- f               = [MusicDirection $ Dynamics F]
--- ff              = [MusicDirection $ Dynamics FF]
--- fff             = [MusicDirection $ Dynamics FFF]
--- ffff            = [MusicDirection $ Dynamics FFFF]
--- fffff           = [MusicDirection $ Dynamics FFFFF]
--- ffffff          = [MusicDirection $ Dynamics FFFFFF]
 
-
--- FIXME should scale duration by inverse
+-- FIXME should scale duration by inverse, see #1
 tuplet :: Int -> Int -> Music -> Music
 tuplet m n (Music [])   = Music []
 tuplet m n (Music [xs]) = Music [xs]
