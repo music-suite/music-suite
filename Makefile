@@ -1,8 +1,9 @@
 
-PLUGIN_PATH=~/Library/Application\ Support/Sibelius\ Software/Sibelius\ 6/Plugins
-PATH=$(PLUGIN_PATH)/JSON
+PLUGIN_PATH=~/appsupport/sibelius/Plugins
+EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
 
 test:
-    cp ExportJSON.plg $(PATH)/ExportJSON.plg
-    open -a /Applications/Sibelius\ 6.app
+	cp ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
+	open -a /Applications/Sibelius\ 6.app $(EXAMPLE)
+
 
