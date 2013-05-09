@@ -1,6 +1,7 @@
 
 PLUGIN_PATH=~/appsupport/sibelius/Plugins
-EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
+# EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
+EXAMPLE=test.sib
 
 test:                                          
 	cp ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
