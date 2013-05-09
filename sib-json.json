@@ -1,0 +1,85 @@
+
+
+
+
+var score = {
+  title "",
+  composer : "",
+  information : "",
+  transposing : true,
+  height : 7,
+
+  systemStaff : [
+  ]
+
+  staves : [
+    name : "",
+    shortName : "",
+    bars : [
+      {
+        number : 0,
+        elements : [
+          { 
+            type : "text",
+            style : "",
+            text : ""
+          },
+          { 
+            type : "clef",
+            pitch : "",
+            style : ""
+          },
+          { 
+            type : "line", 
+            duration : 256,
+            style : "", 
+          },
+          { 
+            type : "timesig"
+            value : [4,4],
+            common : false,
+            allaBreve : false
+          },
+          { 
+            type : "keysig"
+            major : false,
+            sharps : 0,
+            isOpen : false
+          },
+          { 
+            type : "barline"
+            top : 0,
+            bottom, 1, 
+          },
+          { 
+            type : "tuplet",
+            position : 256,
+            unit : 256,
+            value : [4,4],
+            bracket : "none|auto",
+            style : "number|ratio|ratio+note",
+          },
+          { 
+            type : "chord",
+            position : 0,
+            duration : 256,
+            arpeggio : "none|normal",
+            beam : "none|single|start|continue",
+            doubleTremolos : 0,
+            singleTremolos : 0,
+            acciaccatura : false,
+            appoggiatura : false,
+            featheredBeam : "none|acc|rit"
+            elements : [
+              [
+              ]
+            ]
+          }, 
+        ]
+      }
+    ]
+  ]
+}
+
+
+
