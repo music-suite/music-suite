@@ -53,6 +53,9 @@ module Music.Score.Combinators (
         stretchTo,
         
         -- ** Zipper
+        apply,
+        sample,
+        trig,
         applySingle,
         sampleSingle, 
         
@@ -60,17 +63,15 @@ module Music.Score.Combinators (
         
         repTimes,
         repWith,
-        scatMap,
         repWithIndex,
         repWithTime,
         group,
         groupWith,
+        scatMap,
         rev,     
-        sampleS,
-        gateS,
-        takeS,
-        headS,
-        tailS,
+        before,
+        first,
+        butFirst,
 
         
         -- ** Conversion
@@ -283,6 +284,15 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 -------------------------------------------------------------------------------------
 -- Analysis
 
+apply :: (Ord v, v ~ Voice a, HasVoice a) => Part (Score a -> Score b) -> Score a -> Score b
+apply x = mapVoices (fmap $ applySingle x)
+
+sample :: (Ord v, v ~ Voice a, HasVoice a) => Score b -> Score a -> Score (b, Score a)
+sample x = mapVoices (fmap $ sampleSingle x)
+
+trig :: Score a -> Score b -> Score b
+trig p as = mconcat $ toList $ fmap snd $ sampleSingle p as
+
 applySingle :: Part (Score a -> Score b) -> Score a -> Score b
 applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
     where            
@@ -374,6 +384,7 @@ repTimes n a = replicate (0 `max` fromEnum n) () `repWith` (const a)
 -- > [a] -> (a -> Score Note) -> Score Note
 --
 -- Example:
+--
 -- > repWith [1,2,1] (c^*)
 --
 repWith :: (Monoid c, HasOnset c, Delayable c) => [a] -> (a -> c) -> c
@@ -397,7 +408,7 @@ repWithIndex n = repWith [0..n-1]
 -- |
 -- Repeat exact amount of times with relative time.
 --
--- > Real a => a -> (Time -> Score Note) -> Score Note
+-- > Duration -> (Time -> Score Note) -> Score Note
 --
 repWithTime :: (Enum a, Fractional a, Monoid c, HasOnset c, Delayable c) => a -> (a -> c) -> c
 repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
@@ -407,11 +418,16 @@ repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
 -- |
 -- Repeat a number of times and scale down by the same amount.
 --
--- > Duration -> Score Note -> Score Note
+-- > Duration -> Score a -> Score a
 --
 group :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => a -> c -> c
 group n a = repTimes n (a^/n)
 
+-- |
+-- Repeat a number of times and scale down by the same amount.
+--
+-- > [Duration] -> Score a -> Score a
+--
 groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
 groupWith = flip $ \p -> scat . fmap (flip group $ p)
 
@@ -461,21 +477,15 @@ rotated n as | n >= 0 = iterate rotr as !! n
 
 
 
-sampleS :: (Ord v, v ~ Voice a, HasVoice a) => Score b -> Score a -> Score (b, Score a)
-sampleS x = mapVoices (fmap $ sampleSingle x)
+before :: Duration -> Score a -> Score a
+before d = trig (on^*d)
 
-gateS :: Score a -> Score b -> Score b
-gateS p as = mconcat $ toList $ fmap snd $ sampleSingle p as
-
-takeS :: Duration -> Score a -> Score a
-takeS d = gateS (on^*d)
-
-headS :: Score a -> a
-headS = get3 . head . perform
+first :: Score a -> a
+first = get3 . head . perform
     where get3 (a,b,c) = c
 
-tailS :: Score a -> Score a
-tailS = Score . tail . getScore
+butFirst :: Score a -> Score a
+butFirst = Score . tail . getScore
 
 on :: Score ()
 on = note ()
