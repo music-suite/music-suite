@@ -54,9 +54,26 @@ module Music.Score.Combinators (
         
         -- ** Zipper
         applySingle,
-        sampleSingle,
+        sampleSingle, 
         
-        -- ** Converting scores to parts and tracks
+        -- *** Structure
+        
+        repTimes,
+        repWith,
+        scatMap,
+        repWithIndex,
+        repWithTime,
+        group,
+        groupWith,
+        rev,     
+        sampleS,
+        gateS,
+        takeS,
+        headS,
+        tailS,
+
+        
+        -- ** Conversion
         scoreToTrack,
         scoreToPart,
         scoreToParts,
@@ -74,7 +91,8 @@ import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Ratio
+import Data.Ratio  
+import Data.Ord
 
 import Music.Score.Track
 import Music.Score.Part
@@ -336,6 +354,151 @@ trackToScore :: Track a -> Score a
 trackToScore = pcat . fmap g . getTrack
     where
         g (t,x) = delay (t .-. 0) (note x)
+
+
+--------------------------------------------------------------------------------
+-- Structure
+--------------------------------------------------------------------------------
+
+-- |
+-- Repeat exact amount of times.
+--
+-- > Duration -> Score Note -> Score Note
+--
+repTimes :: (Enum a, Monoid c, HasOnset c, Delayable c) => a -> c -> c
+repTimes n a = replicate (0 `max` fromEnum n) () `repWith` (const a)
+
+-- |
+-- Repeat once for each element in the list.
+--
+-- > [a] -> (a -> Score Note) -> Score Note
+--
+-- Example:
+-- > repWith [1,2,1] (c^*)
+--
+repWith :: (Monoid c, HasOnset c, Delayable c) => [a] -> (a -> c) -> c
+repWith = flip (\f -> scat . fmap f)
+
+-- |
+-- Combination of 'scat' and 'fmap'. Note that
+--
+-- > scatMap = flip repWith
+--
+scatMap f = scat . fmap f
+
+-- |
+-- Repeat exact amount of times with an index.
+--
+-- > Duration -> (Duration -> Score Note) -> Score Note
+--
+repWithIndex :: (Enum a, Num a, Monoid c, HasOnset c, Delayable c) => a -> (a -> c) -> c
+repWithIndex n = repWith [0..n-1]
+
+-- |
+-- Repeat exact amount of times with relative time.
+--
+-- > Real a => a -> (Time -> Score Note) -> Score Note
+--
+repWithTime :: (Enum a, Fractional a, Monoid c, HasOnset c, Delayable c) => a -> (a -> c) -> c
+repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
+    where
+        n' = n
+
+-- |
+-- Repeat a number of times and scale down by the same amount.
+--
+-- > Duration -> Score Note -> Score Note
+--
+group :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => a -> c -> c
+group n a = repTimes n (a^/n)
+
+groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
+groupWith = flip $ \p -> scat . fmap (flip group $ p)
+
+-- |
+-- Reverse a score around its middle point.
+--
+-- > onset a    = onset (rev a)
+-- > duration a = duration (rev a)
+-- > offset a   = offset (rev a)
+--
+rev :: Score a -> Score a
+rev = startAt 0 . rev'
+    where
+        rev' = Score . List.sortBy (comparing getT) . fmap g . getScore
+        g (t,d,x) = (-(t.+^d),d,x)
+        getT (t,d,x) = t
+
+-- |
+-- Repeat indefinately, like repeat for lists.
+--
+-- > Score Note -> Score Note
+--
+rep :: Score a -> Score a
+rep a = a `plus` delay (duration a) (rep a)
+    where
+        Score as `plus` Score bs = Score (as <> bs)
+
+
+infixl 6 ||>
+a ||> b = padToBar a |> b
+bar = rest^*4
+
+padToBar a = a |> (rest ^* (d' * 4))
+    where
+        d  = snd $ properFraction $ duration a / 4
+        d' = if (d == 0) then 0 else (1-d)
+
+
+rotl []     = []
+rotl (x:xs) = xs ++ [x]
+
+rotr [] = []
+rotr xs = (last xs:init xs)
+
+rotated n as | n >= 0 = iterate rotr as !! n
+             | n <  0 = iterate rotl as !! (abs n)
+
+
+
+sampleS :: (Ord v, v ~ Voice a, HasVoice a) => Score b -> Score a -> Score (b, Score a)
+sampleS x = mapVoices (fmap $ sampleSingle x)
+
+gateS :: Score a -> Score b -> Score b
+gateS p as = mconcat $ toList $ fmap snd $ sampleSingle p as
+
+takeS :: Duration -> Score a -> Score a
+takeS d = gateS (on^*d)
+
+headS :: Score a -> a
+headS = get3 . head . perform
+    where get3 (a,b,c) = c
+
+tailS :: Score a -> Score a
+tailS = Score . tail . getScore
+
+on :: Score ()
+on = note ()
+
+off :: Score ()
+off = rest
+
+
+tau = pi*2
+
+splitWhile :: (a -> Bool) -> [a] -> [[a]]
+splitWhile p xs = case splitWhile' p xs of
+    []:xss -> xss
+    xss    -> xss
+    where
+        splitWhile' p []     = [[]]
+        splitWhile' p (x:xs) = case splitWhile' p xs of
+            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
+
+
+
+
+
 
 
 
