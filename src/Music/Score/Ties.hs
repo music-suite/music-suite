@@ -127,7 +127,7 @@ splitDur s x = case splitDur' s x of
 
 -- |
 -- Extract the the first part of a given duration. If the note is shorter than the given duration,
--- return it and @Nothing@. Otherwise return the extracted part, and @Just@ the rest.
+-- return it and @Nothing@. Otherwise return the extracted part, and the rest.
 --
 -- > splitDur s (d,a)
 --         

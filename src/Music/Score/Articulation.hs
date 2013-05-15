@@ -41,6 +41,9 @@ module Music.Score.Articulation (
         legato,
         spiccato,
         
+        -- ** Miscellaneous
+        resetArticulation,
+        
   ) where
 
 import Data.Ratio
@@ -111,6 +114,8 @@ legato = mapSep (setBeginSlur True) id (setEndSlur True)
 spiccato :: (HasArticulation a, HasVoice a, Ord v, v ~ Voice a) => Score a -> Score a
 spiccato = mapSep (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2) 
 
+resetArticulation :: HasArticulation c => c -> c
+resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
 
 
 

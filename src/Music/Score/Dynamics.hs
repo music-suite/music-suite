@@ -33,6 +33,9 @@ module Music.Score.Dynamics (
         -- ** Application
         dynamicSingle,
         dynamics,
+
+        -- ** Miscellaneous
+        resetDynamics,
   ) where
 
 import Control.Monad
@@ -74,11 +77,19 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 -- dynamic n = mapSep (setLevel n) id id 
 
 
+-- | Apply a dynamic level over the score.
+--   The dynamic score is assumed to have duration one.
+--
 dynamics :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
+-- | Apply a dynamic level over a single-part score.
+--   Equivalent to `dynamics` for single part scores but more efficient.
+--
 dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
+
+
 
 -- | Apply a variable level over the score.
 dyns :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
@@ -88,6 +99,8 @@ dyns ds = mapVoices (fmap $ applyDynSingle (fmap fromJust $ scoreToPart ds))
 dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dyn ds = applyDynSingle (fmap fromJust . scoreToPart $ ds)
 
+resetDynamics :: HasDynamic c => c -> c
+resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
 
 
 -- |
