@@ -6,7 +6,6 @@ author:             Hans Hoglund
 synopsis:           MusicXML format
 category:           Music
 tested-with:        GHC
-default-language:   Haskell2010
 build-type:         Simple
 
 description: 
