@@ -1,6 +1,6 @@
 
 name:               music-pitch
-version:            0.5
+version:            1.2
 cabal-version:      >= 1.2
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
