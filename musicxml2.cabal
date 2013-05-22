@@ -3,7 +3,10 @@ name:               musicxml2
 version:            1.4
 cabal-version:      >= 1.2
 author:             Hans Hoglund
-synopsis:           MusicXML format
+maintainer:         Hans Hoglund
+license:            BSD3
+license-file:       COPYING
+synopsis:           A representation of the MusicXML format.
 category:           Music
 tested-with:        GHC
 build-type:         Simple
