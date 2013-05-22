@@ -1,7 +1,9 @@
 
 # music-parts
 
-Abstract representation of musical parts.
+Abstract representation of musical parts and instruments.
+
+This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
 
 ## Requirements
 

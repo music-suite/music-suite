@@ -1,6 +1,6 @@
 
 name:               music-parts
-version:            0.5
+version:            1.2
 cabal-version:      >= 1.2
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
@@ -12,7 +12,9 @@ tested-with:        GHC
 build-type:         Simple
 
 description: 
-    To be written.
+    Abstract representation of musical parts and instruments.
+
+    This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
 
 library                    
     build-depends: 
@@ -26,9 +28,9 @@ library
     hs-source-dirs: src
     exposed-modules:
         Music.Parts
-        Music.Parts.Strings
-        Music.Parts.Woodwind
-        Music.Parts.Brass
-        Music.Parts.Percussion
-        Music.Parts.Rhythm
-        Music.Parts.Other
+        -- Music.Parts.Strings
+        -- Music.Parts.Woodwind
+        -- Music.Parts.Brass
+        -- Music.Parts.Percussion
+        -- Music.Parts.Rhythm
+        -- Music.Parts.Other
