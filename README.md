@@ -1,7 +1,9 @@
 
 # music-score
 
-A musical score type.
+Musical score and part representation.
+
+This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
 
 ## Requirements
 
