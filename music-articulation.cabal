@@ -6,13 +6,15 @@ author:             Hans Hoglund
 maintainer:         Hans Hoglund
 license:            BSD3
 license-file:       COPYING
-synopsis:           To be written.
+synopsis:           Abstract representation of musical articulation.
 category:           Music
 tested-with:        GHC
 build-type:         Simple
 
 description: 
-    To be written.
+    Abstract representation of musical articulation (staccato, legato etc).
+    
+    This library is part of the Haskell Music Suite, see <https://github.com/music-suite>.
 
 library                    
     build-depends: 
