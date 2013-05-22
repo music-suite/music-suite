@@ -214,19 +214,18 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 -- |
 -- Convert a score to a MIDI event.
 --    
-playMidi :: HasMidi a => Score a -> Event MidiMessage
-playMidi x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
+playMidi :: HasMidi a => String -> Score a -> Event MidiMessage
+playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
         toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
-        midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure "Graphic MIDI")
-        -- FIXME hardcoded output...
+        midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure dest)
 
 -- |
 -- Convert a score to a MIDI event and run it.
 --    
-playMidiIO :: HasMidi a => Score a -> IO ()
-playMidiIO = runLoop . playMidi
+playMidiIO :: HasMidi a => String -> Score a -> IO ()
+playMidiIO dest = runLoop . playMidi dest
 
         
 
