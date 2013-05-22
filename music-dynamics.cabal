@@ -6,13 +6,16 @@ author:             Hans Hoglund
 maintainer:         Hans Hoglund
 license:            BSD3
 license-file:       COPYING
-synopsis:           To be written.
+synopsis:           Abstract representation of musical dynamics.
 category:           Music
 tested-with:        GHC
 build-type:         Simple
 
 description: 
-    To be written.
+    Abstract representation of musical dynamic levels.
+
+    This library is part of the Haskell Music Suite, see <https://github.com/music-suite>.
+
 
 library                    
     build-depends: 
