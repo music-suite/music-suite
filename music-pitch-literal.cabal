@@ -13,8 +13,9 @@ build-type:         Simple
 
 description: 
     This package allow you to write the pitches of standard notation as expressions
-    overloaded on result type. This works exactly like numeric literals (and string
-    literals when using the @OverloadedStrings@ extension).
+    overloaded on result type. This works exactly like numeric literals.
+
+    This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
 
 library                    
     build-depends: 
