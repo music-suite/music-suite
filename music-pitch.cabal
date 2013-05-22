@@ -6,13 +6,15 @@ author:             Hans Hoglund
 maintainer:         Hans Hoglund
 license:            BSD3
 license-file:       COPYING
-synopsis:           To be written.
+synopsis:           Abstract representation of musical pitch.
 category:           Music
 tested-with:        GHC
 build-type:         Simple
 
 description: 
-    To be written.
+    Abstract representation of musical pitch.
+    
+    This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
 
 library                    
     build-depends: 
