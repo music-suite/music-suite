@@ -3,7 +3,7 @@
 
 Abstract representation of musical parts and instruments.
 
-This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
 ## Requirements
 
