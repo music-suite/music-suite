@@ -3,7 +3,7 @@
 
 Abstract representation of musical pitch.
 
-This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
 ## Requirements
 
