@@ -4,3 +4,4 @@ wiki
 *.ly
 *.pdf
 *.xml
+.DS_Store

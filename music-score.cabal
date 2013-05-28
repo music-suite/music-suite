@@ -1,6 +1,6 @@
 
 name:               music-score
-version:            1.2
+version:            1.2.2
 cabal-version:      >= 1.2
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
@@ -14,7 +14,7 @@ build-type:         Simple
 description: 
     Musical score and part representation.
     
-    This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+    This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
 library                    
     build-depends: 
@@ -28,6 +28,7 @@ library
         HCodecs,
         musicxml2,
         semigroups,
+        nats,
         semigroupoids,
         vector-space,
         music-pitch-literal,
