@@ -14,7 +14,7 @@ build-type:         Simple
 description: 
     Abstract representation of musical articulation (staccato, legato etc).
     
-    This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+    This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
 library                    
     build-depends: 
