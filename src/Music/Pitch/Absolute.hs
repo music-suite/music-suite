@@ -49,7 +49,7 @@ newtype Fifths = Fifths { getFifths :: Frequency }
 newtype Cents = Cents { getCents :: Frequency }
     deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
 
-class HasFrequence a where
+class HasFrequency a where
     frequency :: a -> Frequency
 
 -- instance Convert Frequency Octave where
@@ -77,13 +77,13 @@ class HasFrequence a where
 --     reconvert = convert
     
 
-cents :: HasFrequence a => a -> Cents
+cents :: HasFrequency a => a -> Cents
 cents = undefined 
 
-fifths :: HasFrequence a => a -> Fifths
+fifths :: HasFrequency a => a -> Fifths
 fifths = undefined 
 
-octaves :: HasFrequence a => a -> Octaves
+octaves :: HasFrequency a => a -> Octaves
 octaves = undefined 
 
 -- unitFrequency :: Frequency
