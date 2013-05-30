@@ -16,9 +16,16 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Absolute -- (
--- )
-where
+module Music.Pitch.Absolute (
+        Hertz(..),
+        Octaves(..),
+        Cents(..),
+        Fifths(..),
+        HasFrequency(..),
+        octaves,
+        fifths,
+        cents,
+  ) where
 
 import Data.Maybe
 import Data.Either
@@ -26,73 +33,72 @@ import Data.Semigroup
 import Control.Monad
 import Control.Applicative
 
--- | Frequency in Hertz    
-newtype Frequency = Frequency { getFrequency :: Double }
+-- | 
+-- Absolute frequency in Hertz.    
+newtype Hertz = Hertz { getHertz :: Double }
     deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
 
-
--- | Logarithmic pitch reprentation.
+-- | 
+-- Number of pure octaves.
 --
--- > convert (f * 2) = convert f + Octaves 1    
-newtype Octaves = Octaves { getOctaves :: Frequency }
+-- Octaves are a logarithmic representation of frequency such that
+--
+-- > frequency f * (2/1) = octaves f + 1    
+newtype Octaves = Octaves { getOctaves :: Hertz }
     deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
 
--- | Logarithmic pitch reprentation.
+-- | 
+-- Number of pure octaves.
 --
--- > convert (f * 2) = convert f + Octave 1    
-newtype Fifths = Fifths { getFifths :: Frequency }
+-- Cents are a logarithmic representation of frequency such that
+--
+-- > frequency f * (2/1) = cents f + 1200    
+newtype Cents = Cents { getCents :: Hertz }
     deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
 
--- | Logarithmic pitch reprentation.    
+-- | 
+-- Number of pure fifths.
 --
--- > convert (f * 2) = convert f + Cent 1200    
-newtype Cents = Cents { getCents :: Frequency }
+-- Fifths are a logarithmic representation of frequency.
+--
+-- > frequency f * (3/2) = fifths f + 1    
+newtype Fifths = Fifths { getFifths :: Hertz }
     deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
+
+
+instance Semigroup Hertz    where (<>) = (*)
+instance Semigroup Octaves  where (<>) = (+)
+instance Semigroup Fifths   where (<>) = (+)
+instance Semigroup Cents    where (<>) = (+)
+
+instance Monoid Hertz       where { mempty  = 1 ; mappend = (*) }
+instance Monoid Octaves     where { mempty  = 0 ; mappend = (+) }
+instance Monoid Fifths      where { mempty  = 0 ; mappend = (+) }
+instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
 
 class HasFrequency a where
-    frequency :: a -> Frequency
+    frequency :: a -> Hertz
 
--- instance Convert Frequency Octave where
---     convert f             =  Octave (logBase 2 f)
---     reconvert (Octave f)  =  2 ** f
--- 
--- instance Convert Cent Octave where
---     convert (Cent f)      =  Octave (f / 1200)
---     reconvert (Octave f)  =  Cent   (f * 1200)
--- 
--- instance Convert Frequency Cent where
---     convert f             =  Cent   (logBase 2 f * 1200)
---     reconvert (Cent f)    =  2 ** (f / 1200)
--- 
--- instance Convert Octave Frequency where
---     convert = reconvert
---     reconvert = convert
--- 
--- instance Convert Octave Cent where
---     convert = reconvert
---     reconvert = convert
--- 
--- instance Convert Cent Frequency where
---     convert = reconvert
---     reconvert = convert
-    
+instance HasFrequency Hertz where
+    frequency = id
 
-cents :: HasFrequency a => a -> Cents
-cents = undefined 
+instance HasFrequency Octaves where
+    frequency (Octaves f)  = (2/1) ** f
 
-fifths :: HasFrequency a => a -> Fifths
-fifths = undefined 
+instance HasFrequency Fifths where
+    frequency (Fifths f)   =  (3/2) ** f
+
+instance HasFrequency Cents where
+    frequency (Cents f)    =  (2/1) ** (f / 1200)
 
 octaves :: HasFrequency a => a -> Octaves
-octaves = undefined 
+octaves a = Octaves $ logBase (2/1) (frequency a)
 
--- unitFrequency :: Frequency
--- unitFrequency = 1
+fifths :: HasFrequency a => a -> Fifths
+fifths a = Fifths $ logBase (3/2) (frequency a)
 
--- unitOctave :: Octave
--- unitOctave = Octave 0
+cents :: HasFrequency a => a -> Cents
+cents a = Cents $ logBase (2/1) (frequency a) * 1200
 
--- unitCent :: Cent
--- unitCent = Cent 0
 
                              
