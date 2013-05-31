@@ -12,15 +12,18 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Provides overloaded pitch literals.
+-- Absolute pitch representation.
+-- 
+-- The canonical pitch representation is frequency in Hertz (Hz). For conversion, see
+-- 'HasFrequency'.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Absolute (
         Hertz(..),
-        Octaves(..),
-        Cents(..),
-        Fifths(..),
+        Octaves,
+        Cents,
+        Fifths,
         HasFrequency(..),
         octaves,
         fifths,
@@ -36,34 +39,34 @@ import Control.Applicative
 -- | 
 -- Absolute frequency in Hertz.    
 newtype Hertz = Hertz { getHertz :: Double }
-    deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
+    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- | 
 -- Number of pure octaves.
 --
 -- Octaves are a logarithmic representation of frequency such that
 --
--- > frequency f * (2/1) = octaves f + 1    
+-- > f * (2/1) = frequency (octaves f + 1)    
 newtype Octaves = Octaves { getOctaves :: Hertz }
-    deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
+    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- | 
 -- Number of pure octaves.
 --
 -- Cents are a logarithmic representation of frequency such that
 --
--- > frequency f * (2/1) = cents f + 1200    
+-- > f * (2/1) = frequency (cents f + 1200)    
 newtype Cents = Cents { getCents :: Hertz }
-    deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
+    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- | 
 -- Number of pure fifths.
 --
 -- Fifths are a logarithmic representation of frequency.
 --
--- > frequency f * (3/2) = fifths f + 1    
+-- > f * (3/2) = frequency (fifths f + 1)    
 newtype Fifths = Fifths { getFifths :: Hertz }
-    deriving ( Show, Eq, Enum, Num, Ord, Fractional, Floating )
+    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 
 instance Semigroup Hertz    where (<>) = (*)
