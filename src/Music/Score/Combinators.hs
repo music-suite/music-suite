@@ -76,9 +76,9 @@ module Music.Score.Combinators (
         
         -- ** Conversion
         scoreToTrack,
-        scoreToPart,
-        scoreToParts,
-        partToScore,
+        scoreToVoice,
+        scoreToVoices,
+        voiceToScore,
         trackToScore,
   ) where
 
@@ -284,21 +284,21 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 -------------------------------------------------------------------------------------
 -- Analysis
 
-apply :: (Ord v, v ~ Voice a, HasVoice a) => Part (Score a -> Score b) -> Score a -> Score b
-apply x = mapVoices (fmap $ applySingle x)
+apply :: (Ord v, v ~ Part a, HasPart a) => Voice (Score a -> Score b) -> Score a -> Score b
+apply x = mapParts (fmap $ applySingle x)
 
-sample :: (Ord v, v ~ Voice a, HasVoice a) => Score b -> Score a -> Score (b, Score a)
-sample x = mapVoices (fmap $ sampleSingle x)
+sample :: (Ord v, v ~ Part a, HasPart a) => Score b -> Score a -> Score (b, Score a)
+sample x = mapParts (fmap $ sampleSingle x)
 
 trig :: Score a -> Score b -> Score b
 trig p as = mconcat $ toList $ fmap snd $ sampleSingle p as
 
-applySingle :: Part (Score a -> Score b) -> Score a -> Score b
+applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
 applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
     where            
         -- This is not join; we simply concatenate all inner scores in parallel
         notJoin = mconcat . toList
-        sampled = sampleSingle (partToScore fs) as
+        sampled = sampleSingle (voiceToScore fs) as
 
 -- |
 -- Get all notes that start during a given note.
@@ -336,24 +336,24 @@ scoreToTrack = Track . fmap g . perform
         g (t,d,x) = (t,x)
 
 -- |
--- Convert a single-part score to a part.
+-- Convert a single-voice score to a voice.
 --
-scoreToPart :: Score a -> Part (Maybe a)
-scoreToPart = Part . fmap g . addRests' . perform
+scoreToVoice :: Score a -> Voice (Maybe a)
+scoreToVoice = Voice . fmap g . addRests' . perform
     where
         g (t,d,x) = (d,x)
 
 -- |
--- Convert a score to a list of parts.
+-- Convert a score to a list of voices.
 --
-scoreToParts :: (HasVoice a, Voice a ~ v, Ord v) => Score a -> [Part (Maybe a)]
-scoreToParts = fmap scoreToPart . voices
+scoreToVoices :: (HasPart a, Part a ~ v, Ord v) => Score a -> [Voice (Maybe a)]
+scoreToVoices = fmap scoreToVoice . voices
 
 -- |
--- Convert a part to a score.
+-- Convert a voice to a score.
 --
-partToScore :: Part a -> Score a
-partToScore = scat . fmap g . getPart
+voiceToScore :: Voice a -> Score a
+voiceToScore = scat . fmap g . getVoice
     where
         g (d,x) = stretch d (note x)
 

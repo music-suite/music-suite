@@ -46,11 +46,11 @@ import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Score.Part
+import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
-import Music.Score.Voice
+import Music.Score.Part
 import Music.Score.Combinators
 
 import Music.Dynamics.Literal
@@ -73,14 +73,14 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 --------------------------------------------------------------------------------
 
 -- Apply a constant level over the whole score.
--- dynamic :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Double -> Score a -> Score a
+-- dynamic :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Double -> Score a -> Score a
 -- dynamic n = mapSep (setLevel n) id id 
 
 
 -- | Apply a dynamic level over the score.
 --   The dynamic score is assumed to have duration one.
 --
-dynamics :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
+dynamics :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
 -- | Apply a dynamic level over a single-part score.
@@ -92,12 +92,12 @@ dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
 
 
 -- | Apply a variable level over the score.
-dyns :: (HasDynamic a, HasVoice a, Ord v, v ~ Voice a) => Score (Levels Double) -> Score a -> Score a
-dyns ds = mapVoices (fmap $ applyDynSingle (fmap fromJust $ scoreToPart ds))
+dyns :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
+dyns ds = mapParts (fmap $ applyDynSingle (fmap fromJust $ scoreToVoice ds))
 
 -- | Apply a variable level over a single-part score.
 dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
-dyn ds = applyDynSingle (fmap fromJust . scoreToPart $ ds)
+dyn ds = applyDynSingle (fmap fromJust . scoreToVoice $ ds)
 
 resetDynamics :: HasDynamic c => c -> c
 resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
@@ -141,15 +141,15 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 
 
 
-transf :: ([a] -> [b]) -> Part a -> Part b
-transf f = Part . uncurry zip . second f . unzip . getPart
+transf :: ([a] -> [b]) -> Voice a -> Voice b
+transf f = Voice . uncurry zip . second f . unzip . getVoice
 
-applyDynSingle :: HasDynamic a => Part (Levels Double) -> Score a -> Score a
+applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
 applyDynSingle ds as = applySingle ds3 as
     where
-        -- ds2 :: Part (Dyn2 Double)
+        -- ds2 :: Voice (Dyn2 Double)
         ds2 = transf dyn2 ds
-        -- ds3 :: Part (Score a -> Score a)
+        -- ds3 :: Voice (Score a -> Score a)
         ds3 = (flip fmap) ds2 g
         
         g (ec,ed,l,bc,bd) = id
@@ -158,7 +158,7 @@ applyDynSingle ds as = applySingle ds3 as
                 . (if bc then map1 (setBeginCresc   True) else id)
                 . (if bd then map1 (setBeginDim     True) else id)
                 . (maybe id (\x -> map1 (setLevel x)) $ l)
-        map1 f = mapSepPart f id id
+        map1 f = mapSepVoice f id id
 
 
 
@@ -177,13 +177,13 @@ mapSepL f g h [a]     = [f a]
 mapSepL f g h [a,b]   = [f a, h b]
 mapSepL f g h xs      = [f $ head xs] ++ (map g $ tail $ init xs) ++ [h $ last xs]
 
-mapSep :: (HasVoice a, Ord v, v ~ Voice a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSep f g h sc = fixDur . mapVoices (fmap $ mapSepPart f g h) $ sc
+mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapSep f g h sc = fixDur . mapParts (fmap $ mapSepVoice f g h) $ sc
     where
         fixDur a = padAfter (duration sc - duration a) a
 
-mapSepPart :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSepPart f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
+mapSepVoice :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
     where             
         fixDur a = padAfter (duration sc - duration a) a
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x

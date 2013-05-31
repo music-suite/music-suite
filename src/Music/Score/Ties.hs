@@ -26,7 +26,7 @@ module Music.Score.Ties (
         TieT(..),
         splitTies,
         splitTiesSingle,
-        splitTiesPart,
+        splitTiesVoice,
   ) where
 
 import Data.Ratio
@@ -35,7 +35,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 
 
-import Music.Score.Part
+import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
@@ -84,27 +84,27 @@ splitTies = error "splitTies: Not implemented"
 -- Note: only works for single-part scores (with no overlapping events).
 -- 
 splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = partToSingleScore . splitTiesPart . singleScoreToPart
+splitTiesSingle = partToSingleScore . splitTiesVoice . singleScoreToVoice
 
-partToSingleScore :: Part (Maybe a) -> Score a
-partToSingleScore  = Score . accumTime . getPart
+partToSingleScore :: Voice (Maybe a) -> Score a
+partToSingleScore  = Score . accumTime . getVoice
     where
         accumTime = snd . List.mapAccumL g 0
             where
                 g t (d, x) = (t .+^ d, (t, d, x))
 
-singleScoreToPart :: Score a -> Part (Maybe a)
-singleScoreToPart sc = Part . movePart . throwTime . getScore $ sc
+singleScoreToVoice :: Score a -> Voice (Maybe a)
+singleScoreToVoice sc = Voice . moveVoice . throwTime . getScore $ sc
     where
         throwTime = fmap g where g (t,d,x) = (d,x)
         d = onset sc .-. 0
-        movePart = if (d == 0) then id else ([(d, Nothing)] ++)
+        moveVoice = if (d == 0) then id else ([(d, Nothing)] ++)
 
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.
 -- 
-splitTiesPart :: Tiable a => Part a -> Part a
-splitTiesPart = Part . concat . snd . List.mapAccumL g 0 . getPart
+splitTiesVoice :: Tiable a => Voice a -> Voice a
+splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
     where
         g t (d, x) = (t + d, occs)        
             where

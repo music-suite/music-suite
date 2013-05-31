@@ -134,7 +134,7 @@ modifyTupleDepth :: (Int -> Int) -> RState -> RState
 modifyTupleDepth f (RState tm ts td) = RState tm ts (f td)
 
 -- | 
--- A @RhytmParser a b@ converts (Part a) to b.
+-- A @RhytmParser a b@ converts (Voice a) to b.
 type RhythmParser a b = Parsec [(Duration, a)] RState b
 
 quantize' :: RhythmParser a b -> [(Duration, a)] -> Either String b

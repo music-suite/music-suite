@@ -31,11 +31,11 @@ module Music.Score (
         module Music.Score.Duration,
 
         module Music.Score.Track,
-        module Music.Score.Part,
+        module Music.Score.Voice,
         module Music.Score.Score,
 
         module Music.Score.Pitch,
-        module Music.Score.Voice,
+        module Music.Score.Part,
         module Music.Score.Ties,
 
         module Music.Score.Articulation,
@@ -70,9 +70,9 @@ module Music.Score (
         
         -- ** Conversions
         scoreToTrack,
-        scoreToPart,
-        scoreToParts,
-        partToScore,
+        scoreToVoice,
+        scoreToVoices,
+        voiceToScore,
         trackToScore,
 
         -- * Export         
@@ -90,9 +90,9 @@ module Music.Score (
         toXml,
         writeXml,
         openXml,
-        toXmlPart,
-        writeXmlPart,
-        openXmlPart,
+        toXmlVoice,
+        writeXmlVoice,
+        openXmlVoice,
 )
 where
 
@@ -126,12 +126,12 @@ import Music.Score.Time
 import Music.Score.Duration
 import Music.Score.Rhythm
 import Music.Score.Track
-import Music.Score.Part
+import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Pitch
 import Music.Score.Ties
-import Music.Score.Voice
+import Music.Score.Part
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
@@ -277,13 +277,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -292,15 +292,15 @@ openXml sc = do
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXmlPart :: HasMusicXml a => FilePath -> Score a -> IO ()
-writeXmlPart path sc = writeFile path (Xml.showXml $ toXmlPart sc)
+writeXmlVoice :: HasMusicXml a => FilePath -> Score a -> IO ()
+writeXmlVoice path sc = writeFile path (Xml.showXml $ toXmlVoice sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXmlPart :: HasMusicXml a => Score a -> IO ()
-openXmlPart sc = do
-    writeXmlPart "test.xml" sc
+openXmlVoice :: HasMusicXml a => Score a -> IO ()
+openXmlVoice sc = do
+    writeXmlVoice "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     -- FIXME hardcode
 
@@ -308,20 +308,20 @@ openXmlPart sc = do
 -- |
 -- Convert a score to a MusicXML representaiton. 
 -- 
-toXml :: (HasMusicXml a, HasVoice a, v ~ Voice a, Ord v, Show v) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlPart' . voices $ sc
+toXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> XmlScore
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . voices $ sc
     where
-        pl = Xml.partList (fmap show $ getVoices sc)
+        pl = Xml.partList (fmap show $ getParts sc)
 
 -- |
 -- Convert a single-part score to a MusicXML representaiton. 
 -- 
-toXmlPart :: HasMusicXml a => Score a -> XmlScore
-toXmlPart = Xml.fromPart "Title" "Composer" "Part" . toXmlPart'
+toXmlVoice :: HasMusicXml a => Score a -> XmlScore
+toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
 
 
-toXmlPart' :: HasMusicXml a => Score a -> [XmlMusic]
-toXmlPart' = id               
+toXmlVoice' :: HasMusicXml a => Score a -> [XmlMusic]
+toXmlVoice' = id               
     . prelims
     . fmap barToXml 
     . separateBars 
@@ -429,51 +429,51 @@ noteRestToXml (d, Just p)  = getMusicXml d p
 --     setTrem       n (PitchT (v,x)) = PitchT (v, setTrem n x)
 -- 
 
--- VoiceT
+-- PartT
 
 
-instance HasMidi a => HasMidi (VoiceT n a) where
-    getMidi (VoiceT (_,x))          = getMidi x
-instance HasMusicXml a => HasMusicXml (VoiceT n a) where
-    getMusicXml d (VoiceT (_,x))    = getMusicXml d x
-instance HasVoice (VoiceT n a) where   
-    type Voice (VoiceT n a)         = n
-    getVoice (VoiceT (v,_))         = v
-    modifyVoice f (VoiceT (v,x))    = VoiceT (f v, x)
-instance HasPitch a => HasPitch (VoiceT n a) where   
-    type Pitch (VoiceT n a)         = Pitch a
-    getPitch (VoiceT (v,a))         = getPitch a
-    modifyPitch f (VoiceT (v,x))    = VoiceT (v, modifyPitch f x)
+instance HasMidi a => HasMidi (PartT n a) where
+    getMidi (PartT (_,x))          = getMidi x
+instance HasMusicXml a => HasMusicXml (PartT n a) where
+    getMusicXml d (PartT (_,x))    = getMusicXml d x
+instance HasPart (PartT n a) where   
+    type Part (PartT n a)         = n
+    getPart (PartT (v,_))         = v
+    modifyPart f (PartT (v,x))    = PartT (f v, x)
+instance HasPitch a => HasPitch (PartT n a) where   
+    type Pitch (PartT n a)         = Pitch a
+    getPitch (PartT (v,a))         = getPitch a
+    modifyPitch f (PartT (v,x))    = PartT (v, modifyPitch f x)
 -- TODO IsPitch/IsDynamic with mempty/def as default as well?
-instance (IsPitch a, Enum n) => IsPitch (VoiceT n a) where
-    fromPitch l                     = VoiceT (toEnum 0, fromPitch l)
-instance (IsDynamics a, Enum n) => IsDynamics (VoiceT n a) where
-    fromDynamics l                  = VoiceT (toEnum 0, fromDynamics l)
-instance Tiable a => Tiable (VoiceT n a) where
-    toTied (VoiceT (v,a)) = (VoiceT (v,b), VoiceT (v,c)) where (b,c) = toTied a
-instance HasDynamic a => HasDynamic (VoiceT n a) where
-    setBeginCresc n (VoiceT (v,x))  = VoiceT (v, setBeginCresc n x)
-    setEndCresc   n (VoiceT (v,x))  = VoiceT (v, setEndCresc n x)
-    setBeginDim   n (VoiceT (v,x))  = VoiceT (v, setBeginDim n x)
-    setEndDim     n (VoiceT (v,x))  = VoiceT (v, setEndDim n x)
-    setLevel      n (VoiceT (v,x))  = VoiceT (v, setLevel n x)
-instance HasArticulation a => HasArticulation (VoiceT n a) where
-    setEndSlur    n (VoiceT (v,x))  = VoiceT (v, setEndSlur n x)
-    setContSlur   n (VoiceT (v,x))  = VoiceT (v, setContSlur n x)
-    setBeginSlur  n (VoiceT (v,x))  = VoiceT (v, setBeginSlur n x)
-    setAccLevel   n (VoiceT (v,x))  = VoiceT (v, setAccLevel n x)
-    setStaccLevel n (VoiceT (v,x))  = VoiceT (v, setStaccLevel n x)
-instance HasTremolo a => HasTremolo (VoiceT n a) where
-    setTrem       n (VoiceT (v,x))  = VoiceT (v, setTrem n x)
-instance HasHarmonic a => HasHarmonic (VoiceT n a) where
-    setHarmonic   n (VoiceT (v,x))  = VoiceT (v, setHarmonic n x)
-instance HasSlide a => HasSlide (VoiceT n a) where
-    setBeginGliss n (VoiceT (v,x))  = VoiceT (v, setBeginGliss n x)
-    setBeginSlide n (VoiceT (v,x))  = VoiceT (v, setBeginSlide n x)
-    setEndGliss   n (VoiceT (v,x))  = VoiceT (v, setEndGliss n x)
-    setEndSlide   n (VoiceT (v,x))  = VoiceT (v, setEndSlide n x)
-instance HasText a => HasText (VoiceT n a) where
-    addText       s (VoiceT (v,x))  = VoiceT (v, addText s x)
+instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
+    fromPitch l                     = PartT (toEnum 0, fromPitch l)
+instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
+    fromDynamics l                  = PartT (toEnum 0, fromDynamics l)
+instance Tiable a => Tiable (PartT n a) where
+    toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
+instance HasDynamic a => HasDynamic (PartT n a) where
+    setBeginCresc n (PartT (v,x))  = PartT (v, setBeginCresc n x)
+    setEndCresc   n (PartT (v,x))  = PartT (v, setEndCresc n x)
+    setBeginDim   n (PartT (v,x))  = PartT (v, setBeginDim n x)
+    setEndDim     n (PartT (v,x))  = PartT (v, setEndDim n x)
+    setLevel      n (PartT (v,x))  = PartT (v, setLevel n x)
+instance HasArticulation a => HasArticulation (PartT n a) where
+    setEndSlur    n (PartT (v,x))  = PartT (v, setEndSlur n x)
+    setContSlur   n (PartT (v,x))  = PartT (v, setContSlur n x)
+    setBeginSlur  n (PartT (v,x))  = PartT (v, setBeginSlur n x)
+    setAccLevel   n (PartT (v,x))  = PartT (v, setAccLevel n x)
+    setStaccLevel n (PartT (v,x))  = PartT (v, setStaccLevel n x)
+instance HasTremolo a => HasTremolo (PartT n a) where
+    setTrem       n (PartT (v,x))  = PartT (v, setTrem n x)
+instance HasHarmonic a => HasHarmonic (PartT n a) where
+    setHarmonic   n (PartT (v,x))  = PartT (v, setHarmonic n x)
+instance HasSlide a => HasSlide (PartT n a) where
+    setBeginGliss n (PartT (v,x))  = PartT (v, setBeginGliss n x)
+    setBeginSlide n (PartT (v,x))  = PartT (v, setBeginSlide n x)
+    setEndGliss   n (PartT (v,x))  = PartT (v, setEndGliss n x)
+    setEndSlide   n (PartT (v,x))  = PartT (v, setEndSlide n x)
+instance HasText a => HasText (PartT n a) where
+    addText       s (PartT (v,x))  = PartT (v, addText s x)
 
 
 -- TieT
@@ -487,10 +487,10 @@ instance HasMusicXml a => HasMusicXml (TieT a) where
                     | tb            = Xml.beginTie
                     | ta            = Xml.endTie
                     | otherwise     = id
-instance HasVoice a => HasVoice (TieT a) where   
-    type Voice (TieT a)             = Voice a
-    getVoice (TieT (_,x,_))         = getVoice x
-    modifyVoice f (TieT (b,x,e))    = TieT (b,modifyVoice f x,e)
+instance HasPart a => HasPart (TieT a) where   
+    type Part (TieT a)             = Part a
+    getPart (TieT (_,x,_))         = getPart x
+    modifyPart f (TieT (b,x,e))    = TieT (b,modifyPart f x,e)
 instance HasPitch a => HasPitch (TieT a) where   
     type Pitch (TieT a)             = Pitch a
     getPitch (TieT (_,x,_))         = getPitch x
@@ -547,10 +547,10 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
                                                        DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (DynamicT a) where   
-    type Voice (DynamicT a)                         = Voice a
-    getVoice (DynamicT (ec,ed,l,a,bc,bd))           = getVoice a
-    modifyVoice f (DynamicT (ec,ed,l,a,bc,bd))      = DynamicT (ec,ed,l,modifyVoice f a,bc,bd)
+instance HasPart a => HasPart (DynamicT a) where   
+    type Part (DynamicT a)                         = Part a
+    getPart (DynamicT (ec,ed,l,a,bc,bd))           = getPart a
+    modifyPart f (DynamicT (ec,ed,l,a,bc,bd))      = DynamicT (ec,ed,l,modifyPart f a,bc,bd)
 instance HasPitch a => HasPitch (DynamicT a) where   
     type Pitch (DynamicT a)                         = Pitch a
     getPitch (DynamicT (ec,ed,l,a,bc,bd))           = getPitch a
@@ -611,10 +611,10 @@ instance HasMusicXml a => HasMusicXml (ArticulationT a) where
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us,al,sl,b,bs),
                                                            ArticulationT (es,   us,0,0,c,False)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (ArticulationT a) where   
-    type Voice (ArticulationT a)                        = Voice a
-    getVoice (ArticulationT (es,us,al,sl,a,bs))         = getVoice a
-    modifyVoice f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyVoice f a,bs)
+instance HasPart a => HasPart (ArticulationT a) where   
+    type Part (ArticulationT a)                        = Part a
+    getPart (ArticulationT (es,us,al,sl,a,bs))         = getPart a
+    modifyPart f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyPart f a,bs)
 instance HasPitch a => HasPitch (ArticulationT a) where   
     type Pitch (ArticulationT a)                        = Pitch a
     getPitch (ArticulationT (es,us,al,sl,a,bs))         = getPitch a
@@ -663,10 +663,10 @@ instance HasMusicXml a => HasMusicXml (TremoloT a) where
             
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))             = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (TremoloT a) where   
-    type Voice (TremoloT a)             = Voice a
-    getVoice (TremoloT (_,a))           = getVoice a
-    modifyVoice f (TremoloT (n,x))      = TremoloT (n, modifyVoice f x)
+instance HasPart a => HasPart (TremoloT a) where   
+    type Part (TremoloT a)             = Part a
+    getPart (TremoloT (_,a))           = getPart a
+    modifyPart f (TremoloT (n,x))      = TremoloT (n, modifyPart f x)
 instance HasPitch a => HasPitch (TremoloT a) where   
     type Pitch (TremoloT a)             = Pitch a
     getPitch (TremoloT (_,a))           = getPitch a
@@ -713,10 +713,10 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
             
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (TextT a) where   
-    type Voice (TextT a)            = Voice a
-    getVoice (TextT (_,a))          = getVoice a
-    modifyVoice f (TextT (n,x))     = TextT (n, modifyVoice f x)
+instance HasPart a => HasPart (TextT a) where   
+    type Part (TextT a)            = Part a
+    getPart (TextT (_,a))          = getPart a
+    modifyPart f (TextT (n,x))     = TextT (n, modifyPart f x)
 instance HasPitch a => HasPitch (TextT a) where   
     type Pitch (TextT a)            = Pitch a
     getPitch (TextT (_,a))          = getPitch a
@@ -763,10 +763,10 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
             
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))            = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (HarmonicT a) where   
-    type Voice (HarmonicT a)            = Voice a
-    getVoice (HarmonicT (_,a))          = getVoice a
-    modifyVoice f (HarmonicT (n,x))     = HarmonicT (n, modifyVoice f x)
+instance HasPart a => HasPart (HarmonicT a) where   
+    type Part (HarmonicT a)            = Part a
+    getPart (HarmonicT (_,a))          = getPart a
+    modifyPart f (HarmonicT (n,x))     = HarmonicT (n, modifyPart f x)
 instance HasPitch a => HasPitch (HarmonicT a) where   
     type Pitch (HarmonicT a)            = Pitch a
     getPitch (HarmonicT (_,a))          = getPitch a
@@ -817,10 +817,10 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (eg,es,a,bg,bs))           = (SlideT (eg,   es,   b,False,False),
                                                  SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
-instance HasVoice a => HasVoice (SlideT a) where   
-    type Voice (SlideT a)                     = Voice a
-    getVoice (SlideT (eg,es,a,bg,bs))         = getVoice a
-    modifyVoice f (SlideT (eg,es,a,bg,bs))    = SlideT (eg,es,modifyVoice f a,bg,bs)
+instance HasPart a => HasPart (SlideT a) where   
+    type Part (SlideT a)                     = Part a
+    getPart (SlideT (eg,es,a,bg,bs))         = getPart a
+    modifyPart f (SlideT (eg,es,a,bg,bs))    = SlideT (eg,es,modifyPart f a,bg,bs)
 instance HasPitch a => HasPitch (SlideT a) where   
     type Pitch (SlideT a)                     = Pitch a
     getPitch (SlideT (eg,es,a,bg,bs))         = getPitch a
@@ -858,30 +858,30 @@ instance HasText a => HasText (SlideT a) where
 -- Num, Integral, Enum and Bounded
 -------------------------------------------------------------------------------------
 
--- VoiceT
+-- PartT
 
-instance (Enum v, Eq v, Num a) => Num (VoiceT v a) where
-    VoiceT (v,a) + VoiceT (_,b) = VoiceT (v,a+b)
-    VoiceT (v,a) * VoiceT (_,b) = VoiceT (v,a*b)
-    VoiceT (v,a) - VoiceT (_,b) = VoiceT (v,a-b)
-    abs (VoiceT (v,a))          = VoiceT (v,abs a)
-    signum (VoiceT (v,a))       = VoiceT (v,signum a)
-    fromInteger a               = VoiceT (toEnum 0,fromInteger a)
+instance (Enum v, Eq v, Num a) => Num (PartT v a) where
+    PartT (v,a) + PartT (_,b) = PartT (v,a+b)
+    PartT (v,a) * PartT (_,b) = PartT (v,a*b)
+    PartT (v,a) - PartT (_,b) = PartT (v,a-b)
+    abs (PartT (v,a))          = PartT (v,abs a)
+    signum (PartT (v,a))       = PartT (v,signum a)
+    fromInteger a               = PartT (toEnum 0,fromInteger a)
   
-instance (Enum v, Enum a) => Enum (VoiceT v a) where
-    toEnum a = VoiceT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
-    fromEnum (VoiceT (v,a)) = fromEnum a
+instance (Enum v, Enum a) => Enum (PartT v a) where
+    toEnum a = PartT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (PartT (v,a)) = fromEnum a
 
-instance (Enum v, Bounded a) => Bounded (VoiceT v a) where
-    minBound = VoiceT (toEnum 0, minBound)
-    maxBound = VoiceT (toEnum 0, maxBound)
+instance (Enum v, Bounded a) => Bounded (PartT v a) where
+    minBound = PartT (toEnum 0, minBound)
+    maxBound = PartT (toEnum 0, maxBound)
 
-instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (VoiceT v a) where
-    toRational (VoiceT (v,a)) = toRational a
+instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
+    toRational (PartT (v,a)) = toRational a
 
-instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (VoiceT v a) where
-    VoiceT (v,a) `quotRem` VoiceT (_,b) = (VoiceT (v,q), VoiceT (v,r)) where (q,r) = a `quotRem` b
-    toInteger (VoiceT (v,a)) = toInteger a
+instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
+    PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
+    toInteger (PartT (v,a)) = toInteger a
 
 
 -- TieT
@@ -1120,7 +1120,7 @@ instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
 
 
 type Fun  a = a -> a
-type Sc   a = Score (VoiceT Int (TieT (TremoloT (DynamicT (ArticulationT a)))))
+type Sc   a = Score (PartT Int (TieT (TremoloT (DynamicT (ArticulationT a)))))
 
 score :: Fun (Sc Double)
 score = id                     

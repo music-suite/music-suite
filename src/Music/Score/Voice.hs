@@ -3,8 +3,6 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
-    FlexibleInstances,
-    OverloadedStrings,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -21,179 +19,95 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Voice (
-        HasVoice(..),
-        -- VoiceName(..),
-        VoiceT(..),
-        voices,
-        mapVoice,
-        mapVoices,
-        getVoices,
-        setVoices,
-        modifyVoices,
-        
-        -- ** Voice composition
-        (</>),
-        moveParts,
-        moveToPart,
+        Voice(..)
   ) where
 
-import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
+
 import Data.Semigroup
-import Data.String
+import Control.Applicative
+import Control.Monad (ap, join, MonadPlus(..))
 import Data.Foldable
-import Data.Ord (comparing)
 import Data.Traversable
-import qualified Data.List as List
+import Data.Maybe
+import Data.Either
+import Data.Function (on)
+import Data.Ord (comparing)
+import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Ratio
 
-import Music.Score.Part
-import Music.Score.Score
-import Music.Score.Duration
 import Music.Score.Time
-import Music.Score.Ties
+import Music.Score.Duration
 
-
-class HasVoice a where
-    -- | 
-    -- Associated voice type. Should implement 'Ord' and 'Show' to be usable.
-    -- 
-    type Voice a :: *
-
-    -- |
-    -- Get the voice of the given note.
-    -- 
-    getVoice :: a -> Voice a
-
-    -- |
-    -- Set the voice of the given note.
-    -- 
-    setVoice :: Voice a -> a -> a
-
-    -- |
-    -- Modify the voice of the given note.
-    -- 
-    modifyVoice :: (Voice a -> Voice a) -> a -> a
-   
-    setVoice n = modifyVoice (const n)
-    modifyVoice f x = x
-
--- newtype VoiceName = VoiceName { getVoiceName :: String }
-    -- deriving (Eq, Ord, IsString)
--- instance Show VoiceName where show = getVoiceName
-
-newtype VoiceT n a = VoiceT { getVoiceT :: (n, a) }
-    deriving (Eq, Ord, Show, Functor)
-
-instance HasVoice ()                            where   { type Voice ()         = Integer ; getVoice _ = 0 }
-instance HasVoice Double                        where   { type Voice Double     = Integer ; getVoice _ = 0 }
-instance HasVoice Float                         where   { type Voice Float      = Integer ; getVoice _ = 0 }
-instance HasVoice Int                           where   { type Voice Int        = Integer ; getVoice _ = 0 }
-instance HasVoice Integer                       where   { type Voice Integer    = Integer ; getVoice _ = 0 }
-instance Integral a => HasVoice (Ratio a)       where   { type Voice (Ratio a)  = Integer ; getVoice _ = 0 }
-
-
-
--- | 
--- Extract parts from the given score. Returns a list of single-part score. A dual of @pcat@.
---
--- > Score a -> [Score a]
---
-voices :: (HasVoice a, Ord v, v ~ Voice a, MonadPlus s, Foldable s) => s a -> [s a]
-voices sc = fmap (flip extract $ sc) (getVoices sc) 
-    where                    
-        extract v = mfilter ((== v) . getVoice)
+-------------------------------------------------------------------------------------
+-- Voice type
+-------------------------------------------------------------------------------------
 
 -- |
--- Map over a single voice in the given score.
+-- A part is a sorted list of relative-time notes and rests.
 --
--- > Voice -> (Score a -> Score a) -> Score a -> Score a
+-- Voice is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
+-- appends parts.
 --
-mapVoice :: (Ord v, v ~ Voice a, HasVoice a, MonadPlus s, Foldable s, Enum b) => b -> (s a -> s a) -> s a -> s a
-mapVoice n f = mapVoices (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
-
--- |
--- Map over all voices in the given score.
+-- Voice has an 'Applicative' instance derived from the 'Monad' instance.
 --
--- > ([Score a] -> [Score a]) -> Score a -> Score a
+-- Voice is a 'Monad'. 'return' creates a part containing a single value of duration
+-- one, and '>>=' transforms the values of a part, allowing the addition and
+-- removal of values under relative duration. Perhaps more intuitively, 'join' scales 
+-- each inner part to the duration of the outer part, then removes the 
+-- intermediate structure. 
 --
-mapVoices :: (HasVoice a, Ord v, v ~ Voice a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
-mapVoices f = msum . f . voices
-
--- |
--- Get all voices in the given score. Returns a list of voices.
+-- > let p = Voice [(1, Just 0), (2, Just 1)] :: Voice Int
+-- >
+-- > p >>= \x -> Voice [ (1, Just $ toEnum $ x+65), 
+-- >                    (3, Just $ toEnum $ x+97) ] :: Voice Char
+-- >
+-- >     ===> Voice {getVoice = [ (1 % 1,Just 'A'),
+-- >                            (3 % 1,Just 'a'),
+-- >                            (2 % 1,Just 'B'),
+-- >                            (6 % 1,Just 'b') ]}
 --
--- > Score a -> [Voice]
+-- Voice is a 'VectorSpace' using sequential composition as addition, and time scaling
+-- as scalar multiplication.
 --
-getVoices :: (HasVoice a, Ord v, v ~ Voice a, Foldable s) => s a -> [Voice a]
-getVoices = List.sort . List.nub . fmap getVoice . toList
+newtype Voice a = Voice { getVoice :: [(Duration, a)] }
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
--- |
--- Set all voices in the given score.
---
--- > Voice -> Score a -> Score a
---
-setVoices :: (HasVoice a, Functor s) => Voice a -> s a -> s a
-setVoices n = fmap (setVoice n)
+instance Semigroup (Voice a) where
+    (<>) = mappend
 
--- |
--- Modify all voices in the given score.
---
--- > (Voice -> Voice) -> Score a -> Score a
---
-modifyVoices :: (HasVoice a, Functor s) => (Voice a -> Voice a) -> s a -> s a
-modifyVoices n = fmap (modifyVoice n)
+instance Applicative Voice where
+    pure  = return
+    (<*>) = ap
 
+instance Monad Voice where
+    return a = Voice [(1, a)]
+    a >>= k = join' $ fmap k a
+        where
+            join' (Voice ps) = foldMap (uncurry (*^)) ps
 
+instance AdditiveGroup (Voice a) where
+    zeroV   = mempty
+    (^+^)   = mappend
+    negateV = id
 
---------------------------------------------------------------------------------
--- Voice composition
---------------------------------------------------------------------------------
+instance VectorSpace (Voice a) where
+    type Scalar (Voice a) = Duration
+    n *^ Voice as = Voice (fmap (first (n*^)) as)
 
-infixr 6 </>
-
--- TODO use Alternative instead of (Functor + MonadPlus) ?
-
--- |
--- Similar to '<>', but increases voices in the second part to prevent voice collision.
---
-(</>) :: (Enum v, Ord v, v ~ Voice a, Functor s, MonadPlus s, Foldable s, HasVoice a) => s a -> s a -> s a
-a </> b = a `mplus` moveParts offset b
-    where               
-        -- max voice in a + 1
-        offset = succ $ maximum' 0 $ fmap fromEnum $ getVoices a
-
-
--- |
--- Move down one voice (all parts).
---
-moveParts :: (Enum v, v ~ Voice a, Integral b, Functor s, HasVoice a) => b -> s a -> s a
-moveParts x = modifyVoices (successor x)
-
--- |
--- Move top-part to the specific voice (other parts follow).
---
-moveToPart :: (Enum v, v ~ Voice a, Functor s, HasVoice a) => v -> s a -> s a
-moveToPart v = moveParts (fromEnum v)
+instance HasDuration (Voice a) where
+    duration (Voice []) = 0
+    duration (Voice as) = sum (fmap fst as)
+                        
 
 
 
 
 
+list z f [] = z
+list z f xs = f xs
 
-
-
-
-successor :: (Integral b, Enum a) => b -> a -> a
-successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
-            | n >= 0 = (!! fromIntegral n)       . iterate succ
-
-
-maximum' :: (Ord a, Foldable t) => a -> t a -> a
-maximum' z = option z getMax . foldMap (Option . Just . Max)
-
-minimum' :: (Ord a, Foldable t) => a -> t a -> a
-minimum' z = option z getMin . foldMap (Option . Just . Min)
+first f (x,y)  = (f x, y)
+second f (x,y) = (x, f y)
