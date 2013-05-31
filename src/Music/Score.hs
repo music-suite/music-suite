@@ -396,8 +396,12 @@ toTiedRhythm (Rhythms [])     = error "toXml: Bound empty rhythm"
 toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
 
 noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-noteRestToXml (d, Nothing) = Xml.rest d' where d' = (fromRational . toRational $ d)   
-noteRestToXml (d, Just p)  = getMusicXml d p
+noteRestToXml (d, Nothing) = setDefaultVoice $ Xml.rest d' where d' = (fromRational . toRational $ d)   
+noteRestToXml (d, Just p)  = setDefaultVoice $ getMusicXml d p
+
+-- TODO only works for single-voice parts
+setDefaultVoice :: Xml.Music -> Xml.Music
+setDefaultVoice = Xml.setVoice 1
 
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)
