@@ -31,6 +31,7 @@ module Music.Score.Score (
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
+import Data.Default
 import Control.Applicative
 import Control.Monad (ap, join, MonadPlus(..))
 import Data.Foldable
@@ -50,14 +51,16 @@ import Music.Dynamics.Literal
 
 import Music.Score.Time
 import Music.Score.Duration
+import Music.Score.Voice
+import Music.Score.Track
 
 -------------------------------------------------------------------------------------
 -- Score type
 -------------------------------------------------------------------------------------
 
 -- |
--- A score is a sorted list of absolute time notes and rests. A rest is a duration and 
--- a note is a value and a duration.
+-- A score is a list of events with an (absolute-time) onset and (relative-time) duration.
+-- A rest is a duration and a note is a value and a duration.
 --
 -- Score is a 'Monoid' under parallel composition. 'mempty' is a score of no parts.
 -- For sequential composition of scores, use '|>'.
@@ -83,19 +86,17 @@ import Music.Score.Duration
 -- Score is an instance of 'VectorSpace' using sequential composition as addition, 
 -- and time scaling as scalar multiplication. 
 --
-newtype Score a  = Score { getScore :: [(Time, Duration, Maybe a)] }
-    deriving ({-Eq, Ord, -}Show, Functor, Foldable)
+newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
+    deriving (Eq, Ord, Show, Functor, Foldable)
 
--- TODO invariant that the list is sorted
+-- TODO invariant that the list is sorted, see #42
 
 
--- Performance equality needeed because of rests...
-
-instance Eq a => Eq (Score a) where
-    a == b = perform a == perform b
-
-instance Ord a => Ord (Score a) where
-    a `compare` b = perform a `compare` perform b
+-- instance Eq a => Eq (Score a) where
+--     a == b = perform a == perform b
+-- 
+-- instance Ord a => Ord (Score a) where
+--     a `compare` b = perform a `compare` perform b
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -125,15 +126,14 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> fmap (delay t . (d*^) )) $ sc
+            join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> delay t . (d*^) ) $ sc
 
-mapWithTimeDur :: (Duration -> Duration -> Maybe a -> Maybe b) -> Score a -> Score b
+mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Score a -> Score b
 mapWithTimeDur f = Score . fmap (liftTimeDur f) . getScore
 
-liftTimeDur :: (Duration -> Duration -> Maybe a -> Maybe b) -> (Time, Duration, Maybe a) -> (Time, Duration, Maybe b)
+liftTimeDur :: (Duration -> Duration -> a -> b) -> (Time, Duration, a) -> (Time, Duration, b)
 liftTimeDur f (t,d,x) = case f (t2d t) d x of
-    Nothing -> (t,d,Nothing)
-    Just y  -> (t,d,Just y)
+    y  -> (t,d,y)
     where
         t2d = Duration . getTime
 
@@ -156,12 +156,15 @@ instance Delayable (Score a) where
             first3 f (a,b,c) = (f a,b,c)
 
 instance HasOnset (Score a) where
-    onset  (Score []) = 0
+    -- onset  (Score []) = 0
     -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
+
+    -- Note: this version of onset is lazier, but depends on the invariant above
+    onset  (Score []) = 0
     onset  (Score xs) = on (head xs) where on  (t,d,x) = t
+
     offset (Score []) = 0
     offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (Time . getDuration $ d)
-    -- Note: this version of onset is lazier, but depends on the invariant above
         
 instance HasDuration (Score a) where
     duration x = offset x .-. onset x            
@@ -176,14 +179,14 @@ instance IsDynamics a => IsDynamics (Score a) where
 -- |
 -- Create a score of duration one with no values.
 --
-rest :: Score a
-rest = Score [(0,1,Nothing)]
+rest :: Default a => Score a
+rest = Score [(0,1,def)]
 
 -- |
 -- Create a score of duration one with the given value. Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [(0,1,Just x)]
+note x = Score [(0,1, x)]
 
 {-
 -- Use mfilter instead of this
@@ -196,7 +199,7 @@ filterS f = Score . filter g . getScore
 -}
 
 perform :: Score a -> [(Time, Duration, a)]
-perform = removeRests . getScore
+perform = {-removeRests . -}getScore
     where
         removeRests = catMaybes . fmap propagateRest
         propagateRest (t, d, Just x)  = Just (t, d, x)
@@ -207,6 +210,8 @@ performRelative = toRel . perform
     where
         toRel = snd . mapAccumL g 0
         g now (t,d,x) = (t, (t-now,d,x))
+
+
 
 
 
@@ -225,4 +230,5 @@ second f (x,y) = (x, f y)
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f as bs = List.sortBy f $ as <> bs
+
 

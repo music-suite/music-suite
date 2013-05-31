@@ -48,7 +48,7 @@ import Music.Score.Duration
 -------------------------------------------------------------------------------------
 
 -- |
--- A track is a sorted list of absolute-time occurences.
+-- A track is a list of events with explicit onset. Events can not overlap.
 --
 -- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track and 'mappend'
 -- interleaves values.

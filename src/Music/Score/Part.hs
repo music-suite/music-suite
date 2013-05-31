@@ -106,6 +106,7 @@ voices :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s a
 voices sc = fmap (flip extract $ sc) (getParts sc) 
     where                    
         extract v = mfilter ((== v) . getPart)
+-- TODO rename this combinator extract
 
 -- |
 -- Map over a single voice in the given score.

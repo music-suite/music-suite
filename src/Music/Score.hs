@@ -71,7 +71,7 @@ module Music.Score (
         -- ** Conversions
         scoreToTrack,
         scoreToVoice,
-        scoreToVoices,
+        -- scoreToVoices,
         voiceToScore,
         trackToScore,
 
@@ -215,7 +215,7 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 -- Convert a score to a MIDI event.
 --    
 playMidi :: HasMidi a => String -> Score a -> Event MidiMessage
-playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ rest^*0.2 |> x)
+playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ delay 0.2 x)
     where
         trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)        
         toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
@@ -341,7 +341,7 @@ toXmlVoice' = id
 -- Given a rest-free single-part score (such as those produced by perform), add explicit rests.
 -- The result will have no empty space.
 --
-addRests :: [(Time, Duration, a)] -> Score a
+addRests :: [(Time, Duration, a)] -> Score (Maybe a)
 addRests = Score . concat . snd . mapAccumL g 0
     where
         g prevTime (t, d, x) 
@@ -361,7 +361,7 @@ addRests' = concat . snd . mapAccumL g 0
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: HasMusicXml a => Score a -> [[(Duration, Maybe a)]]
+separateBars :: HasMusicXml a => Score (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime . getScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)

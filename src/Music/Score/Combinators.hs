@@ -51,16 +51,8 @@ module Music.Score.Combinators (
         stretch,
         compress,
         stretchTo,
-        
-        -- ** Zipper
-        apply,
-        sample,
-        trig,
-        applySingle,
-        sampleSingle, 
-        
-        -- *** Structure
-        
+                
+        -- *** Structure        
         repTimes,
         repWith,
         repWithIndex,
@@ -69,15 +61,11 @@ module Music.Score.Combinators (
         groupWith,
         scatMap,
         rev,     
-        before,
-        first,
-        butFirst,
 
-        
         -- ** Conversion
         scoreToTrack,
         scoreToVoice,
-        scoreToVoices,
+        -- scoreToVoices,
         voiceToScore,
         trackToScore,
   ) where
@@ -96,12 +84,12 @@ import Data.Ratio
 import Data.Ord
 
 import Music.Score.Track
-import Music.Score.Part
+import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Duration
 import Music.Score.Time
-import Music.Score.Ties
-import Music.Score.Voice
+-- import Music.Score.Part
+-- import Music.Score.Ties
 
 
 -------------------------------------------------------------------------------------
@@ -281,90 +269,6 @@ anticipate :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => Duration 
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
 
--------------------------------------------------------------------------------------
--- Analysis
-
-apply :: (Ord v, v ~ Part a, HasPart a) => Voice (Score a -> Score b) -> Score a -> Score b
-apply x = mapParts (fmap $ applySingle x)
-
-sample :: (Ord v, v ~ Part a, HasPart a) => Score b -> Score a -> Score (b, Score a)
-sample x = mapParts (fmap $ sampleSingle x)
-
-trig :: Score a -> Score b -> Score b
-trig p as = mconcat $ toList $ fmap snd $ sampleSingle p as
-
-applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
-    where            
-        -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin = mconcat . toList
-        sampled = sampleSingle (voiceToScore fs) as
-
--- |
--- Get all notes that start during a given note.
---
-sampleSingle :: Score a -> Score b -> Score (a, Score b)
-sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . getScore $ as
-    where
-        g Nothing  z = Nothing
-        g (Just a) z = Just (a,z)
-
-
--- | Filter out events that has its onset in the given time interval (inclusive start).
---   For example, onset in 1 2 filters events such that (1 <= onset x < 3)
-onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = Score . filt (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
-    where
-        -- filt = mfilter
-        filt = takeUntil
-        -- more lazy than mfilter
-                                                                              
--- Take until predicate goes from True to False.
-takeUntil :: (a -> Bool) -> [a] -> [a]
-takeUntil p as = List.takeWhile p (List.dropWhile (not . p) as)
-
-
--------------------------------------------------------------------------------------
--- Conversion
-
--- |
--- Convert a score to a track by throwing away durations.
---
-scoreToTrack :: Score a -> Track a
-scoreToTrack = Track . fmap g . perform
-    where
-        g (t,d,x) = (t,x)
-
--- |
--- Convert a single-voice score to a voice.
---
-scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = Voice . fmap g . addRests' . perform
-    where
-        g (t,d,x) = (d,x)
-
--- |
--- Convert a score to a list of voices.
---
-scoreToVoices :: (HasPart a, Part a ~ v, Ord v) => Score a -> [Voice (Maybe a)]
-scoreToVoices = fmap scoreToVoice . voices
-
--- |
--- Convert a voice to a score.
---
-voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . getVoice
-    where
-        g (d,x) = stretch d (note x)
-
--- |
--- Convert a track to a score. Each note gets an arbitrary duration of one.
---
-trackToScore :: Track a -> Score a
-trackToScore = pcat . fmap g . getTrack
-    where
-        g (t,x) = delay (t .-. 0) (note x)
-
 
 --------------------------------------------------------------------------------
 -- Structure
@@ -456,8 +360,68 @@ rep a = a `plus` delay (duration a) (rep a)
         Score as `plus` Score bs = Score (as <> bs)
 
 
+
+
+
+
+
+
+-- |
+-- Convert a score to a track by throwing away durations.
+--
+scoreToTrack :: Score a -> Track a
+scoreToTrack = Track . fmap throwDur . perform
+    where
+        throwDur (t,d,x) = (t,x)
+
+-- |
+-- Convert a single-voice score to a voice.
+--
+scoreToVoice :: Score a -> Voice (Maybe a)
+scoreToVoice = Voice . fmap throwTime . addRests' . perform
+    where
+       throwTime (t,d,x) = (d,x)
+
+-- -- |
+-- -- Convert a score to a list of voices.
+-- --
+-- scoreToVoices :: (HasPart a, Part a ~ v, Ord v) => Score a -> [Voice (Maybe a)]
+-- scoreToVoices = fmap scoreToVoice . voices
+
+-- |
+-- Convert a voice to a score.
+--
+voiceToScore :: Voice a -> Score a
+voiceToScore = scat . fmap g . getVoice
+    where
+        g (d,x) = stretch d (note x)
+
+-- |
+-- Convert a track to a score. Each note gets an arbitrary duration of one.
+--
+trackToScore :: Track a -> Score a
+trackToScore = pcat . fmap g . getTrack
+    where
+        g (t,x) = delay (t .-. 0) (note x)     
+        
+-- FIXME consolidate
+addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
+addRests' = concat . snd . mapAccumL g 0
+    where
+        g prevTime (t, d, x) 
+            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
+            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
+            | otherwise       =  error "addRests: Strange prevTime"        
+
+
+
+
+
+
+
 infixl 6 ||>
 a ||> b = padToBar a |> b
+bar :: Score (Maybe a)
 bar = rest^*4
 
 padToBar a = a |> (rest ^* (d' * 4))
@@ -477,21 +441,7 @@ rotated n as | n >= 0 = iterate rotr as !! n
 
 
 
-before :: Duration -> Score a -> Score a
-before d = trig (on^*d)
 
-first :: Score a -> a
-first = get3 . head . perform
-    where get3 (a,b,c) = c
-
-butFirst :: Score a -> Score a
-butFirst = Score . tail . getScore
-
-on :: Score ()
-on = note ()
-
-off :: Score ()
-off = rest
 
 
 tau = pi*2
@@ -512,12 +462,3 @@ splitWhile p xs = case splitWhile' p xs of
 
 
 
-
--- FIXME consolidate
-addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
-addRests' = concat . snd . mapAccumL g 0
-    where
-        g prevTime (t, d, x) 
-            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"

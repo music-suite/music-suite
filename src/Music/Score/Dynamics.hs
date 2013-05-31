@@ -52,6 +52,7 @@ import Music.Score.Duration
 import Music.Score.Time
 import Music.Score.Part
 import Music.Score.Combinators
+import Music.Score.Zip
 
 import Music.Dynamics.Literal
 
@@ -178,19 +179,18 @@ mapSepL f g h [a,b]   = [f a, h b]
 mapSepL f g h xs      = [f $ head xs] ++ (map g $ tail $ init xs) ++ [h $ last xs]
 
 mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSep f g h sc = fixDur . mapParts (fmap $ mapSepVoice f g h) $ sc
-    where
-        fixDur a = padAfter (duration sc - duration a) a
+mapSep f g h sc = {-fixDur . -}mapParts (fmap $ mapSepVoice f g h) $ sc
+    -- where
+        -- fixDur a = padAfter (duration sc - duration a) a
 
 mapSepVoice :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
-    where             
-        fixDur a = padAfter (duration sc - duration a) a
+    where
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
         third f (a,b,c) = (a,b,f c)
 
-padAfter :: Duration -> Score a -> Score a
-padAfter d a = a |> (rest^*d)       
+-- padAfter :: Duration -> Score a -> Score a
+-- padAfter d a = a |> (rest^*d)       
 
 
 

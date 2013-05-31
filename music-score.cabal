@@ -21,7 +21,8 @@ library
         base >= 4 && < 5,
         unix,
         time,
-        random,           
+        random,
+        data-default,           
         containers,       
         parsec,
         transformers,
@@ -41,17 +42,18 @@ library
         Music.Score.Time
         Music.Score.Duration
         Music.Score.Track
-        Music.Score.Part
-        Music.Score.Score
-        Music.Score.Rhythm
-        Music.Score.Combinators
-        Music.Score.Pitch
         Music.Score.Voice
+        Music.Score.Score
+        Music.Score.Combinators
+        Music.Score.Part
         Music.Score.Ties
+        Music.Score.Zip
+        Music.Score.Pitch
         Music.Score.Articulation
         Music.Score.Dynamics
         Music.Score.Ornaments
+        Music.Score.Rhythm
         
-executable "music-score-tests"
-    hs-source-dirs: src test
-    main-is: Main.hs
+-- executable "music-score-tests"
+--     hs-source-dirs: src test
+--     main-is: Main.hs

@@ -29,14 +29,17 @@ module Music.Score.Ties (
         splitTiesVoice,
   ) where
 
+import Control.Monad
+import Data.Default
+import Data.Maybe
 import Data.Ratio
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
 
-
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Combinators
 import Music.Score.Duration
 import Music.Score.Time
 
@@ -84,21 +87,21 @@ splitTies = error "splitTies: Not implemented"
 -- Note: only works for single-part scores (with no overlapping events).
 -- 
 splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = partToSingleScore . splitTiesVoice . singleScoreToVoice
+splitTiesSingle = mcatMaybes . voiceToScore . splitTiesVoice . scoreToVoice
 
-partToSingleScore :: Voice (Maybe a) -> Score a
-partToSingleScore  = Score . accumTime . getVoice
-    where
-        accumTime = snd . List.mapAccumL g 0
-            where
-                g t (d, x) = (t .+^ d, (t, d, x))
-
-singleScoreToVoice :: Score a -> Voice (Maybe a)
-singleScoreToVoice sc = Voice . moveVoice . throwTime . getScore $ sc
-    where
-        throwTime = fmap g where g (t,d,x) = (d,x)
-        d = onset sc .-. 0
-        moveVoice = if (d == 0) then id else ([(d, Nothing)] ++)
+-- voiceToSingleScore :: Voice a -> Score a
+-- voiceToSingleScore  = Score . accumTime . getVoice
+--     where
+--         accumTime = snd . List.mapAccumL g 0
+--             where
+--                 g t (d, x) = (t .+^ d, (t, d, x))
+-- 
+-- singleScoreToVoice :: Default a => Score a -> Voice a
+-- singleScoreToVoice sc = Voice . moveVoice . throwTime . getScore $ sc
+--     where
+--         throwTime = fmap g where g (t,d,x) = (d,x)
+--         d = onset sc .-. 0
+--         moveVoice = if (d == 0) then id else ([(d, def)] ++)
 
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -136,4 +139,8 @@ splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
                   | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
                  
 
+
+-- TODO consolidate
+mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
+mcatMaybes = (>>= maybe mzero return)
 

@@ -46,7 +46,7 @@ import Music.Score.Duration
 -------------------------------------------------------------------------------------
 
 -- |
--- A part is a sorted list of relative-time notes and rests.
+-- A voice is a list of events with explicit duration. Events can not overlap.
 --
 -- Voice is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
 -- appends parts.
