@@ -655,7 +655,9 @@ instance HasMidi a => HasMidi (TremoloT a) where
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
     getMusicXml d (TremoloT (n,x))      = notate $ getMusicXml d x
         where
-            notate = Xml.tremolo n
+            notate = case n of 
+                0 -> id
+                _ -> Xml.tremolo n
             
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))             = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
