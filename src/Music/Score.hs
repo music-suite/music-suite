@@ -379,7 +379,9 @@ barToXml bar = case quantize bar of
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml (d, x)
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d, x)
-rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral $ denominator $ getDuration $ m) (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
+rhythmToXml (Tuplet m r)          = Xml.tuplet 
+                                        (fromIntegral $ denominator $ getDuration $ m) 
+                                        (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
 rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d, x) <> rhythmToXml r2
     where
         (x,r2) = toTiedRhythm r
