@@ -63,11 +63,12 @@ module Music.Score.Combinators (
         rev,     
 
         -- ** Conversion
+        trackToScore,
         scoreToTrack,
         scoreToVoice,
-        -- scoreToVoices,
         voiceToScore,
-        trackToScore,
+        voiceToScore',
+        -- scoreToVoices,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -396,6 +397,9 @@ voiceToScore = scat . fmap g . getVoice
     where
         g (d,x) = stretch d (note x)
 
+voiceToScore' :: Voice (Maybe a) -> Score a
+voiceToScore' = mcatMaybes . voiceToScore
+
 -- |
 -- Convert a track to a score. Each note gets an arbitrary duration of one.
 --
@@ -412,6 +416,10 @@ addRests' = concat . snd . mapAccumL g 0
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
             | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
             | otherwise       =  error "addRests: Strange prevTime"        
+
+-- FIXME consolidate
+mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
+mcatMaybes = (>>= maybe mzero return)
 
 
 

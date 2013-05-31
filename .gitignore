@@ -4,4 +4,7 @@ wiki
 *.ly
 *.pdf
 *.xml
+.DS_Store.ackoptions
+.ackoptions
+
 .DS_Store

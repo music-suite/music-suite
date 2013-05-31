@@ -32,7 +32,6 @@ module Music.Score.Zip (
         before,
         first,
         butFirst,
-
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -110,5 +109,6 @@ butFirst = Score . tail . getScore
 on :: Score ()
 on = note ()
 
-off :: Score ()
-off = rest       
+off :: Score (Maybe a)
+off = rest
+

@@ -31,7 +31,6 @@ module Music.Score.Score (
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
-import Data.Default
 import Control.Applicative
 import Control.Monad (ap, join, MonadPlus(..))
 import Data.Foldable
@@ -179,31 +178,21 @@ instance IsDynamics a => IsDynamics (Score a) where
 -- |
 -- Create a score of duration one with no values.
 --
-rest :: Default a => Score a
-rest = Score [(0,1,def)]
+rest :: Score (Maybe a)
+rest = Score [(0, 1, Nothing)]
 
 -- |
 -- Create a score of duration one with the given value. Equivalent to 'pure' and 'return'.
 --
 note :: a -> Score a
-note x = Score [(0,1, x)]
-
-{-
--- Use mfilter instead of this
-
-filterS :: (a -> Bool) -> Score a -> Score a
-filterS f = Score . filter g . getScore
-    where
-       g (t,d,Nothing)  = True
-       g (t,d,(Just x)) = f x
--}
+note x = Score [(0, 1, x)]
 
 perform :: Score a -> [(Time, Duration, a)]
 perform = {-removeRests . -}getScore
-    where
-        removeRests = catMaybes . fmap propagateRest
-        propagateRest (t, d, Just x)  = Just (t, d, x)
-        propagateRest (t, d, Nothing) = Nothing
+    -- where
+        -- removeRests = catMaybes . fmap propagateRest
+        -- propagateRest (t, d, Just x)  = Just (t, d, x)
+        -- propagateRest (t, d, Nothing) = Nothing
 
 performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . perform

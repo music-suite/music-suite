@@ -248,10 +248,11 @@ class Tiable a => HasMusicXml a where
     --
     getMusicXml :: Duration -> a -> XmlMusic
 
-instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . (toInteger . round)
-instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . (toInteger . round)
 instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger    
+instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . (toInteger . round)
+instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . (toInteger . round)
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . (toInteger . round)    
+-- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
     getMusicXml d p = Xml.note (spell (fromIntegral p)) d'
@@ -311,7 +312,7 @@ openXmlVoice sc = do
 
 
 -- |
--- Convert a score to a MusicXML representaiton. 
+-- Convert a score to a MusicXML representation. 
 -- 
 toXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . voices $ sc
@@ -319,7 +320,7 @@ toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . voices $ sc
         pl = Xml.partList (fmap show $ getParts sc)
 
 -- |
--- Convert a single-part score to a MusicXML representaiton. 
+-- Convert a single-part score to a MusicXML representation. 
 -- 
 toXmlVoice :: HasMusicXml a => Score a -> XmlScore
 toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
@@ -382,12 +383,12 @@ barToXml bar = case quantize bar of
 
 -- FIXME dotted rests does not work...
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
-rhythmToXml (Beat d x)            = noteRestToXml (d, x)
-rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d, x)
+rhythmToXml (Beat d x)            = noteRestToXml d x
+rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet 
                                         (fromIntegral $ denominator $ getDuration $ m) 
                                         (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
-rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d, x) <> rhythmToXml r2
+rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d) x <> rhythmToXml r2
     where
         (x,r2) = toTiedRhythm r
 rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
@@ -400,9 +401,9 @@ toTiedRhythm (Bound  d r)     = error "toXml: Nested bounded rhytms"
 toTiedRhythm (Rhythms [])     = error "toXml: Bound empty rhythm"
 toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
 
-noteRestToXml :: HasMusicXml a => (Duration, Maybe a) -> Xml.Music
-noteRestToXml (d, Nothing) = setDefaultVoice $ Xml.rest d' where d' = (fromRational . toRational $ d)   
-noteRestToXml (d, Just p)  = setDefaultVoice $ getMusicXml d p
+noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = (fromRational . toRational $ d)   
+noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- TODO only works for single-voice parts
 setDefaultVoice :: Xml.Music -> Xml.Music
@@ -437,6 +438,20 @@ setDefaultVoice = Xml.setVoice 1
 -- instance HasTremolo a => HasTremolo (PitchT p a) where
 --     setTrem       n (PitchT (v,x)) = PitchT (v, setTrem n x)
 -- 
+
+-- Maybe
+-- instance HasPart a => HasPart (Maybe a) where   
+--     type Part (Maybe a)         = Part a
+--     getPart Nothing             = error "No part"
+--     getPart (Just a)            = getPart a
+--     modifyPart f                = fmap (modifyPart f)
+-- 
+-- instance HasMusicXml a => HasMusicXml (Maybe a) where
+--     getMusicXml d Nothing   = error "No note"
+--     getMusicXml d (Just a)  = getMusicXml d a
+
+instance IsPitch a => IsPitch (Maybe a) where
+    fromPitch = Just . fromPitch
 
 -- PartT
 
@@ -1128,13 +1143,16 @@ instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
 -------------------------------------------------------------------------------------
 
 
-type Fun  a = a -> a
-type Sc   a = Score (PartT Int (TieT (TremoloT (DynamicT (ArticulationT a)))))
+type Id  a = a -> a
+type Note = (PartT Int (TieT
+    (TremoloT (HarmonicT (SlideT
+        (DynamicT (ArticulationT (TextT Integer))))))))
+-- type Note = (PartT Int (ArticulationT (TieT Integer)))
 
-score :: Fun (Sc Double)
-score = id                     
+asScore :: Id (Score Note)
+asScore = id                     
 
-open = openXml . score
+open = openXml . asScore
 
 -------------------------------------------------------------------------------------
 
