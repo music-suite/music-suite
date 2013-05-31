@@ -170,17 +170,18 @@ class HasMidi a where
     getMidiScore = (>>= getMidi)
 
 
-instance HasMidi Double                     where   getMidi = getMidi . toInteger . round
-instance HasMidi Float                      where   getMidi = getMidi . toInteger . round
-instance HasMidi Int                        where   getMidi = getMidi . toInteger    
-instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toInteger . round    
-instance HasMidi Midi.Message               where   getMidi = return
-instance HasMidi Integer                    where   getMidi = \x -> getMidi (x,100::Integer)
-
 instance HasMidi (Integer, Integer) where
     getMidi (p,v) = mempty
         |> note (Midi.NoteOn 0 (fromIntegral p) (fromIntegral v)) 
         |> note (Midi.NoteOff 0 (fromIntegral p) (fromIntegral v))
+
+instance HasMidi Midi.Message               where   getMidi = return
+instance HasMidi Int                        where   getMidi = getMidi . toInteger    
+instance HasMidi Integer                    where   getMidi = \x -> getMidi (x,100::Integer)
+instance HasMidi Float                      where   getMidi = getMidi . toInteger . round
+instance HasMidi Double                     where   getMidi = getMidi . toInteger . round
+instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toInteger . round    
+instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfromMaybe
 
 
 -- |
@@ -252,27 +253,31 @@ instance HasMusicXml Float                      where   getMusicXml d = getMusic
 instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger    
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . (toInteger . round)    
 
--- FIXME arbitrary spelling, please modularize...
 instance HasMusicXml Integer where
     getMusicXml d p = Xml.note (spell (fromIntegral p)) d'
         where
             d' = (fromRational . toRational $ d)   
             
-            step xs p = xs !! (p `mod` length xs)
-            fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
-            scaleFromSteps = snd . List.mapAccumL add 0
-                where
-                    add a x = (a + x, a + x)
-            major = scaleFromSteps [0,2,2,1,2,2,2,1]
-
+            -- FIXME arbitrary spelling, please modularize...
             spell :: Int -> Xml.Pitch
-            spell p = (toEnum pitchClass, if (alteration == 0) then Nothing else Just (fromIntegral alteration), fromIntegral octave) 
+            spell p = (
+                toEnum pitchClass, 
+                if (alteration == 0) then Nothing else Just (fromIntegral alteration), 
+                fromIntegral octave
+                ) 
                 where
                     octave     = (p `div` 12) - 1
                     semitone   = p `mod` 12
                     pitchClass = fromStep major semitone
                     alteration = semitone - step major pitchClass
 
+                    step xs p = xs !! (p `mod` length xs)
+                    fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
+                    scaleFromSteps = snd . List.mapAccumL add 0
+                        where
+                            add a x = (a + x, a + x)
+                    major = scaleFromSteps [0,2,2,1,2,2,2,1]
+                    
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
@@ -1165,6 +1170,9 @@ mpartition p a = (mfilter p a, mremove p a)
 -- 
 mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
 mcatMaybes = (>>= maybe mzero return)
+
+mfromMaybe :: MonadPlus m => Maybe a -> m a
+mfromMaybe = mcatMaybes . return
 
 -- | 
 -- Modify or discard a value.
