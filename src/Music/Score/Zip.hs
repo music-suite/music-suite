@@ -26,12 +26,12 @@ module Music.Score.Zip (
         -- ** Zipper
         apply,
         sample,
-        trig,
+        -- trig,
         applySingle,
         sampleSingle, 
-        before,
-        first,
-        butFirst,
+        -- before,
+        -- first,
+        -- butFirst,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -76,7 +76,7 @@ applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
 -- Get all notes that start during a given note.
 --
 sampleSingle :: Score a -> Score b -> Score (a, Score b)
-sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . getScore $ as
+sampleSingle as bs = mkScore . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . getScore $ as
     where
         -- g Nothing  z = Nothing
         g = (,)
@@ -85,7 +85,7 @@ sampleSingle as bs = Score . fmap (\(t,d,a) -> (t,d,g a (onsetIn t d bs))) . get
 -- | Filter out events that has its onset in the given time interval (inclusive start).
 --   For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = Score . filt (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
+onsetIn a b = mkScore . filt (\(t,d,x) -> a <= t && t < a .+^ b) . getScore 
     where
         -- filt = mfilter
         filt = takeUntil
@@ -104,6 +104,14 @@ first = get3 . head . perform
     where get3 (a,b,c) = c
 
 butFirst :: Score a -> Score a
-butFirst = Score . tail . getScore
+butFirst = undefined -- FIXME
+-- butFirst = Score . tail . getScore
 
+
+
+
+
+mkScore :: [(Time, Duration, a)] -> Score a
+mkScore = undefined
+getScore = undefined -- FIXME
 

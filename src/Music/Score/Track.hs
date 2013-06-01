@@ -20,7 +20,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Track (
-        Track(..)
+        Track(..),
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)

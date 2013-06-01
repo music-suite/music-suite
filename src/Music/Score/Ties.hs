@@ -88,7 +88,7 @@ splitTies = error "splitTies: Not implemented"
 -- Note: only works for single-part scores (with no overlapping events).
 -- 
 splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = mcatMaybes . voiceToScore . splitTiesVoice . scoreToVoice
+splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
 
 -- voiceToSingleScore :: Voice a -> Score a
 -- voiceToSingleScore  = Score . accumTime . getVoice
@@ -139,3 +139,6 @@ splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Dur
 splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
                   | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
                  
+
+
+

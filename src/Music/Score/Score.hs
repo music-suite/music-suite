@@ -20,10 +20,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Score (
-        Score(..),
-        rest,
+        Score,
         note,    
-        -- filterS,
+        rest,
         perform,
         performRelative
   ) where
@@ -122,7 +121,7 @@ instance MonadPlus Score where
     mplus = mappend
 
 instance Monad Score where
-    return = note
+    return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
         where  
             join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> delay t . (d*^) ) sc
@@ -176,24 +175,30 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 
 -- |
--- Create a score of duration one with no values.
+-- Create a score of duration one with the given value. 
 --
-rest :: Score (Maybe a)
-rest = Score [(0, 1, Nothing)]
-
--- |
--- Create a score of duration one with the given value. Equivalent to 'pure' and 'return'.
+-- Equivalent to @return@.
 --
 note :: a -> Score a
-note x = Score [(0, 1, x)]
+note = return
 
+-- |
+-- Create a score of duration one with no values.
+--
+-- Equivalent to @return Nothing@.
+--
+rest :: Score (Maybe a)
+rest = return Nothing
+
+-- |
+-- Perform the score, yielding a list of absolute-time events.
+--
 perform :: Score a -> [(Time, Duration, a)]
-perform = {-removeRests . -}getScore
-    -- where
-        -- removeRests = catMaybes . fmap propagateRest
-        -- propagateRest (t, d, Just x)  = Just (t, d, x)
-        -- propagateRest (t, d, Nothing) = Nothing
+perform = getScore
 
+-- |
+-- Perform the score, yielding a list of relative-time events.
+--
 performRelative :: Score a -> [(Time, Duration, a)]
 performRelative = toRel . perform
     where
@@ -202,13 +207,6 @@ performRelative = toRel . perform
 
 
 
-
-
-
-
-
-
-                                            
 
 list z f [] = z
 list z f xs = f xs

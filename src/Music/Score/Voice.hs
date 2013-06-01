@@ -20,7 +20,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Voice (
-        Voice(..)
+        Voice(..),
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)

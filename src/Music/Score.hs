@@ -332,7 +332,7 @@ toXmlVoice' = id
     . prelims
     . fmap barToXml 
     . separateBars 
-    . splitTiesSingle
+    . splitTiesVoice
     . addRests
     . perform  
     where
@@ -348,13 +348,10 @@ toXmlVoice' = id
 -- Given a rest-free single-part score (such as those produced by perform), add explicit rests.
 -- The result will have no empty space.
 --
-addRests :: [(Time, Duration, a)] -> Score (Maybe a)
-addRests = Score . concat . snd . mapAccumL g 0
+addRests :: [(Time, Duration, a)] -> Voice (Maybe a)
+addRests = Voice . fmap throwTime . addRests'
     where
-        g prevTime (t, d, x) 
-            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"
+        throwTime (t,d,x) = (d,x)
 
 addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
@@ -368,10 +365,10 @@ addRests' = concat . snd . mapAccumL g 0
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: HasMusicXml a => Score (Maybe a) -> [[(Duration, Maybe a)]]
+separateBars :: HasMusicXml a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars = 
     fmap removeTime . fmap (fmap discardBarNumber) .
-        splitAtTimeZero . fmap separateTime . getScore
+        splitAtTimeZero . fmap separateTime . perform . voiceToScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
@@ -1206,4 +1203,6 @@ left f (Right y) = Right y
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f as bs = List.sortBy f $ as <> bs
+
+
 

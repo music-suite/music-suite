@@ -345,11 +345,14 @@ groupWith = flip $ \p -> scat . fmap (`group` p)
 -- > offset a   = offset (rev a)
 --
 rev :: Score a -> Score a
+rev = undefined -- FIXME
+{-
 rev = startAt 0 . rev'
     where
         rev' = Score . List.sortBy (comparing getT) . fmap g . getScore
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t
+-}
 
 -- |
 -- Repeat indefinately, like repeat for lists.
@@ -359,7 +362,8 @@ rev = startAt 0 . rev'
 rep :: Score a -> Score a
 rep a = a `plus` delay (duration a) (rep a)
     where
-        Score as `plus` Score bs = Score (as <> bs)
+        plus = (<>)
+        -- Score as `plus` Score bs = Score (as <> bs)
 
 
 --------------------------------------------------------------------------------
@@ -451,4 +455,8 @@ splitWhile p xs = case splitWhile' p xs of
         splitWhile' p []     = [[]]
         splitWhile' p (x:xs) = case splitWhile' p xs of
             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
+
+
+
+
 

@@ -199,3 +199,5 @@ toFrac :: (Real a, Fractional b) => a -> b
 toFrac = fromRational . toRational
 
 fromJust (Just x) = x
+
+
