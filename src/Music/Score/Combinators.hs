@@ -388,7 +388,9 @@ trackToScore = pcat . fmap g . getTrack
 -}
 
 -- |
--- Convert a single-voice score to a voice.
+-- Convert a score into a voice.
+--
+-- This function fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
 scoreToVoice = Voice . fmap throwTime . addRests' . perform
@@ -396,19 +398,22 @@ scoreToVoice = Voice . fmap throwTime . addRests' . perform
        throwTime (t,d,x) = (d,x)
 
 -- -- |
--- -- Convert a score to a list of voices.
+-- -- Convert a score into a list of voices.
 -- --
 -- scoreToVoices :: (HasPart a, Part a ~ v, Ord v) => Score a -> [Voice (Maybe a)]
 -- scoreToVoices = fmap scoreToVoice . voices
 
 -- |
--- Convert a voice to a score.
+-- Convert a voice into a score.
 --
 voiceToScore :: Voice a -> Score a
 voiceToScore = scat . fmap g . getVoice
     where
         g (d,x) = stretch d (note x)
 
+-- |
+-- Convert a voice which may contain rests into a score.
+--
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 

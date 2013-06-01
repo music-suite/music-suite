@@ -26,7 +26,7 @@ module Music.Score.Part (
         HasPart(..),
         -- PartName(..),
         PartT(..),
-        voices,
+        extract,
         mapPart,
         mapParts,
         getParts,
@@ -102,10 +102,10 @@ instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = 
 --
 -- > Score a -> [Score a]
 --
-voices :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s a]
-voices sc = fmap (flip extract sc) (getParts sc) 
+extract :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s a]
+extract sc = fmap (flip extract' sc) (getParts sc) 
     where                    
-        extract v = mfilter ((== v) . getPart)
+        extract' v = mfilter ((== v) . getPart)
 -- TODO rename this combinator extract
 
 -- |
@@ -122,7 +122,7 @@ mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat 
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
 mapParts :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
-mapParts f = msum . f . voices
+mapParts f = msum . f . extract
 
 -- |
 -- Get all voices in the given score. Returns a list of voices.

@@ -286,7 +286,7 @@ openXmlVoice sc = do
 -- Convert a score to a MusicXML representation. 
 -- 
 toXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . voices $ sc
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . extract $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)
 
