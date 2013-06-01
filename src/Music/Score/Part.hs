@@ -192,7 +192,6 @@ successor :: (Integral b, Enum a) => b -> a -> a
 successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
             | n >= 0 = (!! fromIntegral n)       . iterate succ
 
-
 maximum' :: (Ord a, Foldable t) => a -> t a -> a
 maximum' z = option z getMax . foldMap (Option . Just . Max)
 

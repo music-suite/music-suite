@@ -30,6 +30,7 @@ module Music.Score.Ties (
   ) where
 
 import Control.Monad
+import Control.Monad.Plus
 import Data.Default
 import Data.Maybe
 import Data.Ratio
@@ -138,9 +139,3 @@ splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Dur
 splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
                   | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
                  
-
-
--- TODO consolidate
-mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
-mcatMaybes = (>>= maybe mzero return)
-

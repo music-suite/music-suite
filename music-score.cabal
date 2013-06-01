@@ -26,6 +26,7 @@ library
         containers,       
         parsec,
         transformers,
+        monadplus,
         HCodecs,
         musicxml2,
         semigroups,

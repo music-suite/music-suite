@@ -108,7 +108,8 @@ import Data.Semigroup
 import Data.Ratio
 import Data.String
 import Control.Applicative
-import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Control.Monad hiding (mapM)
+import Control.Monad.Plus
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -1169,37 +1170,6 @@ sep = List.intersperse
 
 concatSep :: [a] -> [[a]] -> [a]
 concatSep x = List.concat . sep x
-
--- Score filtering generalized to MonadPlus (TODO move!)
-
--- | 
--- Generalizes the 'remove' function.
--- 
-mremove :: MonadPlus m => (a -> Bool) -> m a -> m a
-mremove p = mfilter (not . p)
-
--- | 
--- Generalizes the 'partition' function.
--- 
-mpartition :: MonadPlus m => (a -> Bool) -> m a -> (m a, m a)
-mpartition p a = (mfilter p a, mremove p a)
-
--- | 
--- Pass through @Just@ occurrences.
--- Generalizes the 'catMaybes' function.
--- 
-mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
-mcatMaybes = (>>= maybe mzero return)
-
-mfromMaybe :: MonadPlus m => Maybe a -> m a
-mfromMaybe = mcatMaybes . return
-
--- | 
--- Modify or discard a value.
--- Generalizes the 'mapMaybe' function.
--- 
-mmapMaybe :: MonadPlus m => (a -> Maybe b) -> m a -> m b
-mmapMaybe f = mcatMaybes . liftM f 
 
 -- | 
 -- Group a list into sublists whereever a predicate holds. The matched element

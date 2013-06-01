@@ -192,9 +192,6 @@ mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc 
 -- padAfter :: Duration -> Score a -> Score a
 -- padAfter d a = a |> (rest^*d)       
 
-
-
-
 second :: (a -> b) -> (c,a) -> (c,b)
 second f (a,b) = (a,f b)
 

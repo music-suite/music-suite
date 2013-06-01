@@ -74,6 +74,7 @@ module Music.Score.Combinators (
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Control.Monad.Plus
 import Data.Semigroup
 import Data.String
 import Data.Foldable
@@ -361,11 +362,9 @@ rep a = a `plus` delay (duration a) (rep a)
         Score as `plus` Score bs = Score (as <> bs)
 
 
-
-
-
-
-
+--------------------------------------------------------------------------------
+-- Conversion
+--------------------------------------------------------------------------------
 
 -- |
 -- Convert a score to a track by throwing away durations.
@@ -407,6 +406,12 @@ trackToScore :: Track a -> Score a
 trackToScore = pcat . fmap g . getTrack
     where
         g (t,x) = delay (t .-. 0) (note x)     
+
+
+
+
+--------------------------------------------------------------------------------
+
         
 -- FIXME consolidate
 addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
@@ -416,15 +421,6 @@ addRests' = concat . snd . mapAccumL g 0
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
             | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
             | otherwise       =  error "addRests: Strange prevTime"        
-
--- FIXME consolidate
-mcatMaybes :: MonadPlus m => m (Maybe a) -> m a
-mcatMaybes = (>>= maybe mzero return)
-
-
-
-
-
 
 
 infixl 6 ||>
@@ -447,13 +443,6 @@ rotr xs = last xs : init xs
 rotated n as | n >= 0 = iterate rotr as !! n
              | n <  0 = iterate rotl as !! abs n
 
-
-
-
-
-
-tau = pi*2
-
 splitWhile :: (a -> Bool) -> [a] -> [[a]]
 splitWhile p xs = case splitWhile' p xs of
     []:xss -> xss
@@ -462,11 +451,4 @@ splitWhile p xs = case splitWhile' p xs of
         splitWhile' p []     = [[]]
         splitWhile' p (x:xs) = case splitWhile' p xs of
             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
-
-
-
-
-
-
-
 

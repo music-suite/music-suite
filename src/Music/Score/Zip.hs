@@ -97,7 +97,7 @@ takeUntil p as = List.takeWhile p (List.dropWhile (not . p) as)
 
 
 before :: Duration -> Score a -> Score a
-before d = trig (on^*d)
+before d = trig (note ()^*d)
 
 first :: Score a -> a
 first = get3 . head . perform
@@ -106,9 +106,4 @@ first = get3 . head . perform
 butFirst :: Score a -> Score a
 butFirst = Score . tail . getScore
 
-on :: Score ()
-on = note ()
-
-off :: Score (Maybe a)
-off = rest
 
