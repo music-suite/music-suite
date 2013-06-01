@@ -168,7 +168,7 @@ beat = do
     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ -> 
         d - ts > 0 
         &&
-        isDivisibleBy 2 (d / tm - ts)) -- TODO or is it (d - ts) / tm
+        isDivisibleBy 2 (d / tm - ts)) -- Or is it ((d - ts) / tm)?
 
 -- | Matches a dotted rhythm
 dotted :: RhythmParser a (Rhythm a)

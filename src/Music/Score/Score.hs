@@ -90,15 +90,6 @@ import Music.Score.Track
 newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
--- TODO invariant that the list is sorted, see #42
-
-
--- instance Eq a => Eq (Score a) where
---     a == b = perform a == perform b
--- 
--- instance Ord a => Ord (Score a) where
---     a `compare` b = perform a `compare` perform b
-
 instance Semigroup (Score a) where
     (<>) = mappend
 
@@ -160,7 +151,7 @@ instance HasOnset (Score a) where
     -- onset  (Score []) = 0
     -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
 
-    -- Note: this version of onset is lazier, but depends on the invariant above
+    -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
     onset  (Score []) = 0
     onset  (Score xs) = on (head xs) where on  (t,d,x) = t
 

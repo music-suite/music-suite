@@ -113,7 +113,6 @@ extract :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s 
 extract sc = fmap (flip extract' sc) (getParts sc) 
     where                    
         extract' v = mfilter ((== v) . getPart)
--- TODO rename this combinator extract
 
 -- |
 -- Map over a single voice in the given score.
@@ -162,8 +161,6 @@ modifyParts n = fmap (modifyPart n)
 --------------------------------------------------------------------------------
 
 infixr 6 </>
-
--- TODO use Alternative instead of (Functor + MonadPlus) ?
 
 -- |
 -- Similar to '<>', but increases voices in the second part to prevent voice collision.

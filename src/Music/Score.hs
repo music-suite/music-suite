@@ -340,7 +340,6 @@ barToXml bar = case quantize bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
 
--- FIXME dotted rests does not work...
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x

@@ -31,7 +31,6 @@ module Music.Score.Zip (
         snapshotSingle, 
         -- before,
         -- first,
-        -- butFirst,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -111,9 +110,5 @@ before d = trig (note ()^*d)
 first :: Score a -> a
 first = get3 . head . perform
     where get3 (a,b,c) = c
-
-butFirst :: Score a -> Score a
-butFirst = undefined -- FIXME
--- butFirst = Score . tail . getScore
 
 
