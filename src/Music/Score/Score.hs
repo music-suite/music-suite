@@ -50,8 +50,8 @@ import qualified Data.List as List
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
-import Music.Score.Time
-import Music.Score.Duration
+import Music.Time.Absolute
+import Music.Time.Relative
 import Music.Score.Voice
 import Music.Score.Track
 

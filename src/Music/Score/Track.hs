@@ -40,8 +40,8 @@ import Data.AffineSpace
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-import Music.Score.Time
-import Music.Score.Duration
+import Music.Time.Absolute
+import Music.Time.Relative
 
 -------------------------------------------------------------------------------------
 -- Track type

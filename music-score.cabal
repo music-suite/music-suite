@@ -40,8 +40,8 @@ library
     hs-source-dirs: src
     exposed-modules:
         Music.Score
-        Music.Score.Time
-        Music.Score.Duration
+        Music.Time.Absolute
+        Music.Time.Relative
         Music.Score.Track
         Music.Score.Voice
         Music.Score.Score

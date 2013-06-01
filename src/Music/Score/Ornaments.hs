@@ -47,8 +47,8 @@ import Data.AffineSpace
 
 import Music.Score.Voice
 import Music.Score.Score
-import Music.Score.Duration
-import Music.Score.Time
+import Music.Time.Relative
+import Music.Time.Absolute
 import Music.Score.Part
 import Music.Score.Combinators
 

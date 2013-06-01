@@ -19,7 +19,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Time where
+module Music.Time.Absolute where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
@@ -34,7 +34,7 @@ import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Score.Duration
+import Music.Time.Relative
 
 -------------------------------------------------------------------------------------
 -- Time type

@@ -19,7 +19,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Duration where
+module Music.Time.Relative where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 

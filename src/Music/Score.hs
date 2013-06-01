@@ -27,8 +27,8 @@
 
 module Music.Score (
 
-        module Music.Score.Time,
-        module Music.Score.Duration,
+        module Music.Time.Absolute,
+        module Music.Time.Relative,
 
         module Music.Score.Track,
         module Music.Score.Voice,
@@ -92,8 +92,8 @@ import Data.Basis
 import Control.Reactive
 import Control.Reactive.Midi
 
-import Music.Score.Time
-import Music.Score.Duration
+import Music.Time.Absolute
+import Music.Time.Relative
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice

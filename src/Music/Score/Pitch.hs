@@ -40,8 +40,8 @@ import Data.Ratio
 
 import Music.Score.Voice
 import Music.Score.Score
-import Music.Score.Duration
-import Music.Score.Time
+import Music.Time.Relative
+import Music.Time.Absolute
 import Music.Score.Ties
 
 class HasPitch a where
