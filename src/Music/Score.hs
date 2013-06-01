@@ -48,6 +48,7 @@ module Music.Score (
         -- ** MIDI        
         HasMidi(..),
         toMidi,
+        toMidiTrack,
         writeMidi,
         playMidi,
         playMidiIO,
@@ -59,9 +60,9 @@ module Music.Score (
         toXml,
         writeXml,
         openXml,
-        toXmlVoice,
-        writeXmlVoice,
-        openXmlVoice,
+        toXmlSingle,
+        writeXmlSingle,
+        openXmlSingle,
 )
 where
 
@@ -156,7 +157,7 @@ instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfr
 
 
 -- |
--- Convert a score to a MIDI file representaiton.
+-- Convert a score to a MIDI file representation.
 --    
 toMidi :: HasMidi a => Score a -> Midi.Midi
 toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
@@ -176,6 +177,14 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
 
         -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO handle voice
+
+-- |
+-- Convert a score to a track of MIDI messages.
+--    
+toMidiTrack :: HasMidi a => Score a -> Track Message
+toMidiTrack x = Track $ toTrack $ x
+    where
+        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.
@@ -269,15 +278,15 @@ openXml sc = do
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXmlVoice :: HasMusicXml a => FilePath -> Score a -> IO ()
-writeXmlVoice path sc = writeFile path (Xml.showXml $ toXmlVoice sc)
+writeXmlSingle :: HasMusicXml a => FilePath -> Score a -> IO ()
+writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXmlVoice :: HasMusicXml a => Score a -> IO ()
-openXmlVoice sc = do
-    writeXmlVoice "test.xml" sc
+openXmlSingle :: HasMusicXml a => Score a -> IO ()
+openXmlSingle sc = do
+    writeXmlSingle "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     -- FIXME hardcode
 
@@ -286,19 +295,19 @@ openXmlVoice sc = do
 -- Convert a score to a MusicXML representation. 
 -- 
 toXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlVoice' . extract $ sc
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlSingle' . extract $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)
 
 -- |
 -- Convert a single-part score to a MusicXML representation. 
 -- 
-toXmlVoice :: HasMusicXml a => Score a -> XmlScore
-toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
+toXmlSingle :: HasMusicXml a => Score a -> XmlScore
+toXmlSingle = Xml.fromPart "Title" "Composer" "Voice" . toXmlSingle'
 
 
-toXmlVoice' :: HasMusicXml a => Score a -> [XmlMusic]
-toXmlVoice' = 
+toXmlSingle' :: HasMusicXml a => Score a -> [XmlMusic]
+toXmlSingle' = 
     addDefaultSignatures . 
         fmap barToXml . separateBars . 
         splitTiesVoice . scoreToVoice

@@ -35,8 +35,8 @@ module Music.Score.Combinators (
         -- ** Composing scores
         (|>),
         (<|),
-        scat,
-        pcat,
+        -- scat,
+        -- pcat,
         
         -- *** Special composition
         sustain,
@@ -53,8 +53,9 @@ module Music.Score.Combinators (
         -- *** Stretching in time
         stretch,
         compress,
-        stretchTo,
-                
+        stretchTo,                
+        retrograde,     
+
         -- *** Structure        
         repTimes,
         repWith,
@@ -63,7 +64,6 @@ module Music.Score.Combinators (
         group,
         groupWith,
         scatMap,
-        rev,     
 
         -- ** Conversion
         -- trackToScore,
@@ -343,14 +343,14 @@ groupWith = flip $ \p -> scat . fmap (`group` p)
 -- |
 -- Reverse a score around its middle point.
 --
--- > onset a    = onset (rev a)
--- > duration a = duration (rev a)
--- > offset a   = offset (rev a)
+-- > onset a    = onset (retrograde a)
+-- > duration a = duration (retrograde a)
+-- > offset a   = offset (retrograde a)
 --
-rev :: Score a -> Score a
-rev = startAt 0 . rev'
+retrograde :: Score a -> Score a
+retrograde = startAt 0 . retrograde'
     where
-        rev' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
+        retrograde' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t
 

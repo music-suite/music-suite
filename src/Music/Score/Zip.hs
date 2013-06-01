@@ -25,10 +25,10 @@
 module Music.Score.Zip (
         -- ** Zipper
         apply,
-        sample,
+        snapshot,
         -- trig,
         applySingle,
-        sampleSingle, 
+        snapshotSingle, 
         -- before,
         -- first,
         -- butFirst,
@@ -56,27 +56,36 @@ import Music.Score.Combinators
 -------------------------------------------------------------------------------------
 -- Analysis
 
+-- |
+-- Apply a time-varying function to all events in score.
+--
 apply :: (Ord v, v ~ Part a, HasPart a) => Voice (Score a -> Score b) -> Score a -> Score b
 apply x = mapParts (fmap $ applySingle x)
-
-sample :: (Ord v, v ~ Part a, HasPart a) => Score b -> Score a -> Score (b, Score a)
-sample x = mapParts (fmap $ sampleSingle x)
-
-trig :: Score a -> Score b -> Score b
-trig p as = mconcat $ toList $ fmap snd $ sampleSingle p as
-
-applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ sampled
-    where            
-        -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin = mconcat . toList
-        sampled = sampleSingle (voiceToScore fs) as
 
 -- |
 -- Get all notes that start during a given note.
 --
-sampleSingle :: Score a -> Score b -> Score (a, Score b)
-sampleSingle as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) $ as
+snapshot :: (Ord v, v ~ Part a, HasPart a) => Score b -> Score a -> Score (b, Score a)
+snapshot x = mapParts (fmap $ snapshotSingle x)
+
+trig :: Score a -> Score b -> Score b
+trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
+
+-- |
+-- Apply a time-varying function to all events in score.
+--
+applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
+applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ snapshotd
+    where            
+        -- This is not join; we simply concatenate all inner scores in parallel
+        notJoin = mconcat . toList
+        snapshotd = snapshotSingle (voiceToScore fs) as
+
+-- |
+-- Get all notes that start during a given note.
+--
+snapshotSingle :: Score a -> Score b -> Score (a, Score b)
+snapshotSingle as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) $ as
     where
         -- g Nothing  z = Nothing
         g = (,)

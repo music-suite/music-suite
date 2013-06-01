@@ -98,8 +98,15 @@ instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = 
 
 
 -- | 
--- Extract parts from the given score. Returns a list of single-part score. A dual of @pcat@.
+-- Extract parts from the given score. 
 --
+-- The parts are returned in the order given by the 'Ord' instance for the given part type.
+-- You can recompose the score with 'mconcat', i.e.
+-- 
+-- > mconcat . extract = id
+--
+-- Simple type
+-- 
 -- > Score a -> [Score a]
 --
 extract :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s a]

@@ -84,13 +84,13 @@ newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
 
 
 -- |
--- Add tremolo cross-beams to all notes in the score.
+-- Set the number of tremolo divisions for all notes in the score.
 --
 tremolo :: (Functor f, HasTremolo b) => Int -> f b -> f b
 tremolo n = fmap (setTrem n)
 
 -- |
--- Add text to the first note in the score.
+-- Attach the given text to the first note in the score.
 --
 text :: (Ord v, v ~ Part b, HasPart b, HasText b) => String -> Score b -> Score b
 text s = mapSep (addText s) id id

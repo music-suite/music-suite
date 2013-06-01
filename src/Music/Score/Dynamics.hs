@@ -31,8 +31,9 @@ module Music.Score.Dynamics (
         dim,
 
         -- ** Application
-        dynamicSingle,
         dynamics,
+        dynamicVoice,
+        dynamicSingle,
 
         -- ** Miscellaneous
         resetDynamics,
@@ -84,12 +85,16 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 dynamics :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
--- | Apply a dynamic level over a single-part score.
---   Equivalent to `dynamics` for single part scores but more efficient.
+-- | Equivalent to `dynamics` for single-voice scores but more efficient.
+--   Fails if the score contains overlapping events.
 --
 dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
 
+-- | Apply a dynamic level over a voice.
+--
+dynamicVoice :: HasDynamic a => Score (Levels Double) -> Voice (Maybe a) -> Voice (Maybe a)
+dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
 
 
 -- | Apply a variable level over the score.
