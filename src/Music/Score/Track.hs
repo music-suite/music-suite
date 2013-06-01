@@ -94,7 +94,7 @@ instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track ts) = foldMap (uncurry delay') $ ts
+            join' (Track ts) = foldMap (uncurry delay') ts
             delay' t = delay (Duration . getTime $ t)
 
 instance Alternative Track where
@@ -113,7 +113,7 @@ instance AdditiveGroup (Track a) where
 
 instance VectorSpace (Track a) where
     type Scalar (Track a) = Time
-    n *^ Track tr = Track . (fmap (first (n*^))) $ tr
+    n *^ Track tr = Track $ fmap (first (n*^)) tr
 
 instance Delayable (Track a) where
     d `delay` Track tr = Track . fmap (first (.+^ d)) $ tr

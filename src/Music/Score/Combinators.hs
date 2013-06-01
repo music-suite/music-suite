@@ -248,7 +248,7 @@ pcat = mconcat
 -- > Score a -> Score a -> Score a
 --
 sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
-x `sustain` y = x <> (duration x) `stretchTo` y
+x `sustain` y = x <> duration x `stretchTo` y
 
 -- Like '<>', but truncating the second agument to the duration of the first.
 -- prolong x y = x <> before (duration x) y
@@ -281,7 +281,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 -- > Duration -> Score Note -> Score Note
 --
 repTimes :: (Enum a, Monoid c, HasOnset c, Delayable c) => a -> c -> c
-repTimes n a = replicate (0 `max` fromEnum n) () `repWith` (const a)
+repTimes n a = replicate (0 `max` fromEnum n) () `repWith` const a
 
 -- |
 -- Repeat once for each element in the list.
@@ -334,7 +334,7 @@ group n a = repTimes n (a^/n)
 -- > [Duration] -> Score a -> Score a
 --
 groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
-groupWith = flip $ \p -> scat . fmap (flip group $ p)
+groupWith = flip $ \p -> scat . fmap (`group` p)
 
 -- |
 -- Reverse a score around its middle point.
@@ -435,17 +435,17 @@ bar = rest^*4
 padToBar a = a |> (rest ^* (d' * 4))
     where
         d  = snd $ properFraction $ duration a / 4
-        d' = if (d == 0) then 0 else (1-d)
+        d' = if d == 0 then 0 else 1 - d
 
 
 rotl []     = []
 rotl (x:xs) = xs ++ [x]
 
 rotr [] = []
-rotr xs = (last xs:init xs)
+rotr xs = last xs : init xs
 
 rotated n as | n >= 0 = iterate rotr as !! n
-             | n <  0 = iterate rotl as !! (abs n)
+             | n <  0 = iterate rotl as !! abs n
 
 
 

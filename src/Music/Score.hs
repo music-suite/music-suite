@@ -249,9 +249,9 @@ class Tiable a => HasMusicXml a where
     getMusicXml :: Duration -> a -> XmlMusic
 
 instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger    
-instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . (toInteger . round)
-instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . (toInteger . round)
-instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . (toInteger . round)    
+instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . toInteger . round
+instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . toInteger . round
+instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round    
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
@@ -263,7 +263,7 @@ instance HasMusicXml Integer where
             spell :: Int -> Xml.Pitch
             spell p = (
                 toEnum pitchClass, 
-                if (alteration == 0) then Nothing else Just (fromIntegral alteration), 
+                if alteration == 0 then Nothing else Just (fromIntegral alteration), 
                 fromIntegral octave
                 ) 
                 where
@@ -368,7 +368,9 @@ addRests' = concat . snd . mapAccumL g 0
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
 separateBars :: HasMusicXml a => Score (Maybe a) -> [[(Duration, Maybe a)]]
-separateBars = fmap removeTime . fmap (fmap discardBarNumber) . splitAtTimeZero . fmap separateTime . getScore
+separateBars = 
+    fmap removeTime . fmap (fmap discardBarNumber) .
+        splitAtTimeZero . fmap separateTime . getScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
@@ -386,7 +388,7 @@ rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet 
-                                        (fromIntegral $ denominator $ getDuration $ m) 
+                                        (fromIntegral $ denominator $ getDuration m) 
                                         (fromIntegral $ numerator $ getDuration m) (rhythmToXml r)
 rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d) x <> rhythmToXml r2
     where
@@ -402,7 +404,7 @@ toTiedRhythm (Rhythms [])     = error "toXml: Bound empty rhythm"
 toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = (fromRational . toRational $ d)   
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromRational . toRational $ d   
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- TODO only works for single-voice parts
@@ -733,7 +735,7 @@ instance HasMidi a => HasMidi (TextT a) where
 instance HasMusicXml a => HasMusicXml (TextT a) where
     getMusicXml d (TextT (s,x))  = notate s $ getMusicXml d x
         where             
-            notate ts a = (mconcat $ fmap Xml.text ts) <> a
+            notate ts a = mconcat (fmap Xml.text ts) <> a
             
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
@@ -1135,7 +1137,7 @@ instance IsPitch (Alteration -> Integer) where
     fromPitch l Sh = fromPitch l + 1
     fromPitch l Fl = fromPitch l - 1
 instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
-    fromPitch l a = (pure . fromPitch l) a
+    fromPitch l = pure . fromPitch l
 
                                                                                                            
 -------------------------------------------------------------------------------------

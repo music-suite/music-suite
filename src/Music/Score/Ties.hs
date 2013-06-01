@@ -123,7 +123,7 @@ splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
 --         
 splitDur :: Tiable a => Duration -> (Duration, a) -> [(Duration, a)]
 splitDur s x = case splitDur' s x of
-    (a, Nothing) -> a : []
+    (a, Nothing) -> [a]
     (a, Just b)  -> a : splitDur 1 b
 
 -- FIXME completely assumes bar dur 1, see #36

@@ -118,10 +118,10 @@ instance Fractional a => IsDynamics (Levels a) where
     fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " {- ++ show x-}
 
 cresc :: IsDynamics a => Double -> Double -> a
-cresc a b = fromDynamics $ DynamicsL ((Just a), (Just b))
+cresc a b = fromDynamics $ DynamicsL (Just a, Just b)
 
 dim :: IsDynamics a => Double -> Double -> a
-dim a b = fromDynamics $ DynamicsL ((Just a), (Just b))
+dim a b = fromDynamics $ DynamicsL (Just a, Just b)
 
 
 -- end cresc, end dim, level, begin cresc, begin dim
@@ -146,19 +146,19 @@ transf :: ([a] -> [b]) -> Voice a -> Voice b
 transf f = Voice . uncurry zip . second f . unzip . getVoice
 
 applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
-applyDynSingle ds as = applySingle ds3 as
+applyDynSingle ds = applySingle ds3
     where
         -- ds2 :: Voice (Dyn2 Double)
         ds2 = transf dyn2 ds
         -- ds3 :: Voice (Score a -> Score a)
-        ds3 = (flip fmap) ds2 g
+        ds3 = fmap g ds2
         
         g (ec,ed,l,bc,bd) = id
                 . (if ec then map1 (setEndCresc     True) else id)
                 . (if ed then map1 (setEndDim       True) else id)
                 . (if bc then map1 (setBeginCresc   True) else id)
                 . (if bd then map1 (setBeginDim     True) else id)
-                . (maybe id (\x -> map1 (setLevel x)) $ l)
+                . maybe id (map1 . setLevel) l
         map1 f = mapSepVoice f id id
 
 
@@ -176,7 +176,7 @@ mapSepL :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
 mapSepL f g h []      = []
 mapSepL f g h [a]     = [f a]
 mapSepL f g h [a,b]   = [f a, h b]
-mapSepL f g h xs      = [f $ head xs] ++ (map g $ tail $ init xs) ++ [h $ last xs]
+mapSepL f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
 mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapSep f g h sc = {-fixDur . -}mapParts (fmap $ mapSepVoice f g h) $ sc

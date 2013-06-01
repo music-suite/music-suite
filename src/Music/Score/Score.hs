@@ -125,7 +125,7 @@ instance Monad Score where
     return = note
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> delay t . (d*^) ) $ sc
+            join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> delay t . (d*^) ) sc
 
 mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Score a -> Score b
 mapWithTimeDur f = Score . fmap (liftTimeDur f) . getScore
