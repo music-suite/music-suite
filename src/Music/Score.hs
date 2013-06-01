@@ -328,38 +328,18 @@ toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
 
 
 toXmlVoice' :: HasMusicXml a => Score a -> [XmlMusic]
-toXmlVoice' = id               
-    . prelims
-    . fmap barToXml 
-    . separateBars 
-    . splitTiesVoice
-    . addRests
-    . perform  
+toXmlVoice' = 
+    addDefaultSignatures . 
+        fmap barToXml . separateBars . 
+        splitTiesVoice . scoreToVoice
     where
-        prelims []            = []
-        prelims (bar1 : rest) = (pre <> bar1) : rest
-        pre = mempty
+        addDefaultSignatures []            = []
+        addDefaultSignatures (bar1 : rest) = (defaultSignatures <> bar1) : rest
+        defaultSignatures = mempty
             <> Xml.defaultKey
             <> Xml.defaultDivisions 
             <> Xml.metronome (1/4) 60
             <> Xml.commonTime
-
--- | 
--- Given a rest-free single-part score (such as those produced by perform), add explicit rests.
--- The result will have no empty space.
---
-addRests :: [(Time, Duration, a)] -> Voice (Maybe a)
-addRests = Voice . fmap throwTime . addRests'
-    where
-        throwTime (t,d,x) = (d,x)
-
-addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
-addRests' = concat . snd . mapAccumL g 0
-    where
-        g prevTime (t, d, x) 
-            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"
             
 -- |
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.

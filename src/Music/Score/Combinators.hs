@@ -416,8 +416,6 @@ trackToScore = pcat . fmap g . getTrack
 
 --------------------------------------------------------------------------------
 
-        
--- FIXME consolidate
 addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
     where
@@ -425,6 +423,7 @@ addRests' = concat . snd . mapAccumL g 0
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
             | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
             | otherwise       =  error "addRests: Strange prevTime"        
+
 
 
 infixl 6 ||>
