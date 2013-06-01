@@ -28,6 +28,9 @@ module Music.Score.Combinators (
         note,
         chord,
         melody,
+        melodyStretch,
+        chordDelay,
+        chordDelayStretch,
 
         -- ** Composing scores
         (|>),
@@ -119,12 +122,12 @@ melodyStretch :: [(Duration, a)] -> Score a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
-chordDelay :: [(Duration, a)] -> Score a
-chordDelay = pcat . map ( \(t, x) -> delay t $ note x )
+chordDelay :: [(Time, a)] -> Score a
+chordDelay = pcat . map ( \(t, x) -> startAt t $ note x )
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
-chordDelayStretch :: [(Duration, Duration, a)] -> Score a
-chordDelayStretch = pcat . map ( \(t, d, x) -> delay t . stretch d $ note x )
+chordDelayStretch :: [(Time, Duration, a)] -> Score a
+chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ note x )
 
 -- -- | Like chord, but delaying each note the given amount.
 -- arpeggio :: t -> [a] -> Score a
@@ -345,14 +348,11 @@ groupWith = flip $ \p -> scat . fmap (`group` p)
 -- > offset a   = offset (rev a)
 --
 rev :: Score a -> Score a
-rev = undefined -- FIXME
-{-
 rev = startAt 0 . rev'
     where
-        rev' = Score . List.sortBy (comparing getT) . fmap g . getScore
+        rev' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t
--}
 
 -- |
 -- Repeat indefinately, like repeat for lists.

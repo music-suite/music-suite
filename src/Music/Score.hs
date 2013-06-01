@@ -34,48 +34,15 @@ module Music.Score (
         module Music.Score.Voice,
         module Music.Score.Score,
 
+        module Music.Score.Combinators,
+        module Music.Score.Zip,
+
         module Music.Score.Pitch,
+        module Music.Score.Dynamics,
+        module Music.Score.Articulation,
+        module Music.Score.Ornaments,
         module Music.Score.Part,
         module Music.Score.Ties,
-
-        module Music.Score.Articulation,
-        module Music.Score.Dynamics,
-        module Music.Score.Ornaments,
-
-        -- ** Constructors
-#ifdef __HADDOCK__
-        rest,
-        note,
-        chord,
-        melody,   
-#endif
-
-        -- ** Composing
-        (|>),
-        (<|),
-        scat,
-        -- pcat,
-        -- sustain,
-        -- overlap,
-        -- anticipate,
-        
-        -- ** Transforming
-        move,
-        moveBack,
-        startAt,
-        stopAt,
-        stretch,
-        compress,
-        stretchTo,
-        
-        -- ** Conversions
-        -- scoreToTrack,
-        -- trackToScore,
-
-        scoreToVoice,
-        -- scoreToVoices,
-        voiceToScore,
-        voiceToScore',
 
         -- * Export         
         -- ** MIDI        
@@ -132,6 +99,7 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
+import Music.Score.Zip
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part

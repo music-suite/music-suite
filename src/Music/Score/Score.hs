@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveTraversable,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -23,6 +24,8 @@ module Music.Score.Score (
         Score,
         note,    
         rest,
+        mapEvent,
+        mapEvents,
         perform,
         performRelative
   ) where
@@ -85,7 +88,7 @@ import Music.Score.Track
 -- and time scaling as scalar multiplication. 
 --
 newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 -- TODO invariant that the list is sorted, see #42
 
@@ -124,16 +127,16 @@ instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapWithTimeDur (\t d -> delay t . (d*^) ) sc
+            join' sc = mconcat $ toList $ mapEvents (\t d -> delay (t2d t) . (d*^) ) sc
 
-mapWithTimeDur :: (Duration -> Duration -> a -> b) -> Score a -> Score b
-mapWithTimeDur f = Score . fmap (liftTimeDur f) . getScore
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapEvents f = Score . fmap (mapEvent f) . getScore
 
-liftTimeDur :: (Duration -> Duration -> a -> b) -> (Time, Duration, a) -> (Time, Duration, b)
-liftTimeDur f (t,d,x) = case f (t2d t) d x of
+mapEvent :: (Time -> Duration -> a -> b) -> (Time, Duration, a) -> (Time, Duration, b)
+mapEvent f (t,d,x) = case f t d x of
     y  -> (t,d,y)
-    where
-        t2d = Duration . getTime
+
+t2d = Duration . getTime
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
