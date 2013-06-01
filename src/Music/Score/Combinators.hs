@@ -63,8 +63,8 @@ module Music.Score.Combinators (
         rev,     
 
         -- ** Conversion
-        trackToScore,
-        scoreToTrack,
+        -- trackToScore,
+        -- scoreToTrack,
         scoreToVoice,
         voiceToScore,
         voiceToScore',
@@ -370,6 +370,7 @@ rep a = a `plus` delay (duration a) (rep a)
 -- Conversion
 --------------------------------------------------------------------------------
 
+{-
 -- |
 -- Convert a score to a track by throwing away durations.
 --
@@ -377,6 +378,14 @@ scoreToTrack :: Score a -> Track a
 scoreToTrack = Track . fmap throwDur . perform
     where
         throwDur (t,d,x) = (t,x)
+-- |
+-- Convert a track to a score. Each note gets an arbitrary duration of one.
+--
+trackToScore :: Track a -> Score a
+trackToScore = pcat . fmap g . getTrack
+    where
+        g (t,x) = delay (t .-. 0) (note x)     
+-}
 
 -- |
 -- Convert a single-voice score to a voice.
@@ -403,13 +412,6 @@ voiceToScore = scat . fmap g . getVoice
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
--- |
--- Convert a track to a score. Each note gets an arbitrary duration of one.
---
-trackToScore :: Track a -> Score a
-trackToScore = pcat . fmap g . getTrack
-    where
-        g (t,x) = delay (t .-. 0) (note x)     
 
 
 

@@ -69,11 +69,13 @@ module Music.Score (
         stretchTo,
         
         -- ** Conversions
-        scoreToTrack,
+        -- scoreToTrack,
+        -- trackToScore,
+
         scoreToVoice,
         -- scoreToVoices,
         voiceToScore,
-        trackToScore,
+        voiceToScore',
 
         -- * Export         
         -- ** MIDI        
