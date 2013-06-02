@@ -98,7 +98,6 @@ instance VectorSpace (Voice a) where
     n *^ Voice as = Voice (fmap (first (n*^)) as)
 
 instance HasDuration (Voice a) where
-    duration (Voice []) = 0
     duration (Voice as) = sum (fmap fst as)
                         
 

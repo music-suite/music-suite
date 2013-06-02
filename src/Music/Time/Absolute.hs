@@ -75,9 +75,8 @@ instance  AffineSpace Time where
 -- |
 -- Class of types with a position in time.
 --
--- Onset and offset are logical start and stop time, rather than actual sounding time,
--- or to put it differently, the time of the attack and damp actions on an instrument,
--- rather than the actual beginning or end of the sound. 
+-- Onset and offset are logical start and stop time, i.e. the preferred beginning and end of 
+-- the sound., not o the the time of the attack and damp actions on an instrument,
 --
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
