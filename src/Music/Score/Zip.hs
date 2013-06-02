@@ -84,24 +84,27 @@ applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ snapshotd
 -- Get all notes that start during a given note.
 --
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) $ as
+snapshotSingle as bs = mapTime ( \t d a -> g a (onsetIn t d bs) ) $ as
     where
         -- g Nothing  z = Nothing
         g = (,)
 
 
--- | Filter out events that has its onset in the given time interval (inclusive start).
---   For example, onset in 1 2 filters events such that (1 <= onset x < 3)
+-- | 
+-- Filter out events that has its onset in the given time interval (inclusive start).
+-- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = chordDelayStretch . filt (\(t,d,x) -> a <= t && t < a .+^ b) . perform 
     where
         -- filt = mfilter
-        filt = takeUntil
+        filt = filterOnce
         -- more lazy than mfilter
                                                                               
--- Take until predicate goes from True to False.
-takeUntil :: (a -> Bool) -> [a] -> [a]
-takeUntil p as = List.takeWhile p (List.dropWhile (not . p) as)
+-- | 
+-- Extract the first consecutive sublist for which the predicate returns true, or
+-- the empty list if no such sublist exists.
+filterOnce :: (a -> Bool) -> [a] -> [a]
+filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
 before :: Duration -> Score a -> Score a

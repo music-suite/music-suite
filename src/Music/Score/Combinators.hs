@@ -214,7 +214,7 @@ infixr 6 <|
 -- > Score a -> Score a -> Score a
 (|>) :: (Semigroup a, Delayable a, HasOnset a) => a -> a -> a
 a |> b =  a <> startAt (offset a) b
--- a |< b =  a <> stopAt (onset a) b
+-- a >| b =  stopAt (onset b) a <> b
 
 
 -- |

@@ -27,8 +27,8 @@ module Music.Score.Score (
         repeat,
         null,
         length,
-        mapEvents,
         perform,
+        mapTime,
   ) where
 
 import Prelude hiding (null, length, repeat, foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -119,7 +119,7 @@ instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapEvents (\t d -> delay (t .-. 0) . (d*^) ) sc
+            join' sc = mconcat $ toList $ mapTime (\t d -> delay (t .-. 0) . (d*^) ) sc
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -161,9 +161,7 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 
 -- |
--- Create a score of duration one with the given value. 
---
--- Equivalent to @return@.
+-- Create a score of duration one with the given value (same as 'return').
 --
 note :: a -> Score a
 note = return
@@ -171,13 +169,11 @@ note = return
 -- |
 -- Create a score of duration one with no values.
 --
--- Equivalent to @return Nothing@.
---
 rest :: Score (Maybe a)
 rest = return Nothing
 
 -- |
--- Repeat indefinately, like 'repeat' for lists.
+-- Repeat a score indefinately.
 --
 repeat :: Score a -> Score a
 repeat a = a `plus` delay (duration a) (repeat a)
@@ -185,39 +181,28 @@ repeat a = a `plus` delay (duration a) (repeat a)
         Score as `plus` Score bs = Score (as <> bs)
 
 -- |
--- Repeat indefinately, like 'repeat' for lists.
+-- Is this the empty score.
 --
 null :: Score a -> Bool
 null = List.null . getScore
 
 -- |
--- Repeat indefinately, like 'repeat' for lists.
+-- Returns the number of events in the score.
 --
 length :: Score a -> Int
 length = List.length . getScore
 
 -- |
--- Perform the score, yielding a list of absolute-time events.
+-- Perform the score, yielding a list of events.
 --
 perform :: Score a -> [(Time, Duration, a)]
 perform = getScore
 
 -- |
--- Perform the score, yielding a list of relative-time events.
---
-performRelative :: Score a -> [(Time, Duration, a)]
-performRelative = toRelative . perform
-
-toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
-toRelative = snd . mapAccumL g 0
-    where
-        g now (t,d,x) = (t, (t-now,d,x))
-
--- |
 -- Map over all events in a score.
 --
-mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = Score . fmap (mapEvent f) . getScore
+mapTime :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapTime f = Score . fmap (mapEvent f) . getScore
 
 mapEvent :: (Time -> Duration -> a -> b) -> (Time, Duration, a) -> (Time, Duration, b)
 mapEvent f (t, d, x) = (t, d, f t d x)
