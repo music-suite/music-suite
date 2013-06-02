@@ -142,7 +142,3 @@ mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc 
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
         third f (a,b,c) = (a,b,f c)
 
--- padAfter :: Duration -> Score a -> Score a
--- padAfter d a = a |> (rest^*d)       
-
-

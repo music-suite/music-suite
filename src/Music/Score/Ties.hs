@@ -45,8 +45,6 @@ import Music.Score.Part
 import Music.Time.Relative
 import Music.Time.Absolute
 
-
-
 -- |
 -- Class of types that can be tied.
 --
@@ -89,20 +87,6 @@ splitTies = mapAllParts splitTiesSingle
 -- 
 splitTiesSingle :: Tiable a => Score a -> Score a
 splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
-
--- voiceToSingleScore :: Voice a -> Score a
--- voiceToSingleScore  = Score . accumTime . getVoice
---     where
---         accumTime = snd . List.mapAccumL g 0
---             where
---                 g t (d, x) = (t .+^ d, (t, d, x))
--- 
--- singleScoreToVoice :: Default a => Score a -> Voice a
--- singleScoreToVoice sc = Voice . moveVoice . throwTime . getScore $ sc
---     where
---         throwTime = fmap g where g (t,d,x) = (d,x)
---         d = onset sc .-. 0
---         moveVoice = if (d == 0) then id else ([(d, def)] ++)
 
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.

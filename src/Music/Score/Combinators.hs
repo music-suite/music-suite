@@ -438,11 +438,11 @@ addRests' = concat . snd . mapAccumL g 0
 
 
 infixl 6 ||>
-a ||> b = padToBar a |> b
-bar :: Score (Maybe a)
-bar = rest^*4
 
-padToBar a = a |> (rest ^* (d' * 4))
+(||>) :: Score a -> Score a -> Score a
+a ||> b = mcatMaybes $ padToBar (fmap Just a) |> fmap Just b
+
+padToBar a = a |> rest^*(d'*4)
     where
         d  = snd $ properFraction $ duration a / 4
         d' = if d == 0 then 0 else 1 - d
