@@ -29,6 +29,7 @@ module Music.Score.Part (
         extract,
         mapPart,
         mapParts,
+        mapAllParts,
         getParts,
         setParts,
         modifyParts,
@@ -54,7 +55,6 @@ import Music.Score.Voice
 import Music.Score.Score (Score, note, rest, perform)
 import Music.Time.Relative
 import Music.Time.Absolute
-import Music.Score.Ties
 
 
 class HasPart a where
@@ -129,6 +129,14 @@ mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat 
 --
 mapParts :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
 mapParts f = msum . f . extract
+
+-- |
+-- Map over all voices in the given score.
+--
+-- > ([Score a] -> [Score a]) -> Score a -> Score a
+--
+mapAllParts :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => (s a -> s b) -> s a -> s b
+mapAllParts f = mapParts (fmap f)
 
 -- |
 -- Get all voices in the given score. Returns a list of voices.

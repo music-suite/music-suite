@@ -41,6 +41,7 @@ import Data.AffineSpace
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
+import Music.Score.Part
 import Music.Time.Relative
 import Music.Time.Absolute
 
@@ -77,11 +78,10 @@ instance Tiable a => Tiable (TieT a) where
          where (b,c) = toTied a
 
 -- | 
--- /Not implemented/
 -- Split all notes that cross a barlines into a pair of tied notes.
 -- 
-splitTies :: Tiable a => Score a -> Score a
-splitTies = error "splitTies: Not implemented"
+splitTies :: (HasPart a, Ord v, v ~ Part a, Tiable a) => Score a -> Score a
+splitTies = mapAllParts splitTiesSingle
 
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.
