@@ -4,6 +4,8 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -82,7 +84,7 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 -- | Apply a dynamic level over the score.
 --   The dynamic score is assumed to have duration one.
 --
-dynamics :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
+dynamics :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
 -- | Equivalent to `dynamics` for single-voice scores but more efficient.

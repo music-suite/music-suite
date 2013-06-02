@@ -3,7 +3,9 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
-    FlexibleInstances,
+    FlexibleInstances,        
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -92,27 +94,27 @@ tremolo n = fmap (setTrem n)
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (Ord v, v ~ Part b, HasPart b, HasText b) => String -> Score b -> Score b
+text :: (HasPart' b, HasText b) => String -> Score b -> Score b
 text s = mapSep (addText s) id id
 
 -- |
 -- Slide between the first and the last note.
 --
-slide :: (Ord v, v ~ Part b, HasPart b, HasSlide b) => Score b -> Score b
+slide :: (HasPart' b, HasSlide b) => Score b -> Score b
 slide = mapSep (setBeginSlide True) id (setEndSlide True)
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-harmonic :: (Ord v, v ~ Part b, HasPart b, HasHarmonic b) => Int -> Score b -> Score b
+harmonic :: (HasPart' b, HasHarmonic b) => Int -> Score b -> Score b
 harmonic n = mapSep f f f where f = setHarmonic n
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-artificial :: (Ord v, v ~ Part b, HasPart b, HasHarmonic b) => Score b -> Score b
+artificial :: (HasPart' b, HasHarmonic b) => Score b -> Score b
 artificial = mapSep f f f where f = setHarmonic (-4)
 
 

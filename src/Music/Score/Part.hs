@@ -4,6 +4,8 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     OverloadedStrings,
     GeneralizedNewtypeDeriving #-} 
 
@@ -24,6 +26,7 @@
 
 module Music.Score.Part (
         HasPart(..),
+        HasPart',
         -- PartName(..),
         PartT(..),
         extract,
@@ -94,6 +97,8 @@ instance HasPart Float                         where   { type Part Float      = 
 instance HasPart Int                           where   { type Part Int        = Integer ; getPart _ = 0 }
 instance HasPart Integer                       where   { type Part Integer    = Integer ; getPart _ = 0 }
 instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = Integer ; getPart _ = 0 }
+
+type HasPart' a = (Ord (Part a), HasPart a)
 
 
 
