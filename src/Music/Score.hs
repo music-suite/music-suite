@@ -319,21 +319,6 @@ toXmlSingle' =
             <> Xml.defaultDivisions 
             <> Xml.metronome (1/4) 60
             <> Xml.commonTime
-            
--- |
--- Given a set of absolute-time occurences, separate at each zero-time occurence.
--- Note that this require every bar to start with a zero-time occurence.
--- 
-separateBars :: HasMusicXml a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
-separateBars = 
-    fmap removeTime . fmap (fmap discardBarNumber) .
-        splitAtTimeZero . fmap separateTime . perform . voiceToScore
-    where  
-        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
-        splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
-        discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
-        removeTime                      = fmap g where g (t,d,x) = (d,x)
-
 
 barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
 barToXml bar = case quantize bar of
@@ -351,14 +336,6 @@ rhythmToXml (Bound  d r)          = noteRestToXml (fromRational $ getDuration d)
         (x,r2) = toTiedRhythm r
 rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
 
-toTiedRhythm :: HasMusicXml a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
-toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
-toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
-toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
-toTiedRhythm (Bound  d r)     = error "toXml: Nested bounded rhytms"
-toTiedRhythm (Rhythms [])     = error "toXml: Bound empty rhythm"
-toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
-
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromRational . toRational $ d   
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
@@ -366,6 +343,32 @@ noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 -- TODO only works for single-voice parts
 setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
+
+
+-------------------------------------------------------------------------------------
+
+-- |
+-- Given a set of absolute-time occurences, separate at each zero-time occurence.
+-- Note that this require every bar to start with a zero-time occurence.
+-- 
+separateBars :: HasMusicXml a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
+separateBars = 
+    fmap removeTime . fmap (fmap discardBarNumber) .
+        splitAtTimeZero . fmap separateTime . perform . voiceToScore
+    where  
+        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
+        splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
+        discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
+        removeTime                      = fmap g where g (t,d,x) = (d,x)
+
+
+toTiedRhythm :: HasMusicXml a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
+toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
+toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
+toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
+toTiedRhythm (Bound  d r)     = error "toTiedRhythm: Nested bounded rhytms"
+toTiedRhythm (Rhythms [])     = error "toTiedRhythm: Bound empty rhythm"
+toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
 
 -- |
 -- Perform the score, yielding a list of relative-time events.
@@ -383,41 +386,6 @@ toRelative = snd . mapAccumL g 0
 -------------------------------------------------------------------------------------
 
 -- PitchT
-
--- instance HasMidi a => HasMidi (PitchT p a) where
---     getMidi (PitchT (_,x))          = getMidi x
--- instance HasMusicXml a => HasMusicXml (PitchT p a) where
---     getMusicXml d (PitchT (_,x))    = getMusicXml d x
--- instance (IsPitch a, IsString n) => IsPitch (PitchT p a) where
---     fromPitch l                     = PitchT ("", fromPitch l)
--- instance (IsDynamics a, IsString n) => IsDynamics (PitchT p a) where
---     fromDynamics l                  = PitchT ("", fromDynamics l)
--- instance HasDynamic a => HasDynamic (PitchT p a) where
---     setBeginCresc n (PitchT (v,x)) = PitchT (v, setBeginCresc n x)
---     setEndCresc   n (PitchT (v,x)) = PitchT (v, setEndCresc n x)
---     setBeginDim   n (PitchT (v,x)) = PitchT (v, setBeginDim n x)
---     setEndDim     n (PitchT (v,x)) = PitchT (v, setEndDim n x)
---     setLevel      n (PitchT (v,x)) = PitchT (v, setLevel n x)
--- instance HasArticulation a => HasArticulation (PitchT p a) where
---     setEndSlur    n (PitchT (v,x)) = PitchT (v, setEndSlur n x)
---     setContSlur   n (PitchT (v,x)) = PitchT (v, setContSlur n x)
---     setBeginSlur  n (PitchT (v,x)) = PitchT (v, setBeginSlur n x)
---     setAccLevel   n (PitchT (v,x)) = PitchT (v, setAccLevel n x)
---     setStaccLevel n (PitchT (v,x)) = PitchT (v, setStaccLevel n x)
--- instance HasTremolo a => HasTremolo (PitchT p a) where
---     setTrem       n (PitchT (v,x)) = PitchT (v, setTrem n x)
--- 
-
--- Maybe
--- instance HasPart a => HasPart (Maybe a) where   
---     type Part (Maybe a)         = Part a
---     getPart Nothing             = error "No part"
---     getPart (Just a)            = getPart a
---     modifyPart f                = fmap (modifyPart f)
--- 
--- instance HasMusicXml a => HasMusicXml (Maybe a) where
---     getMusicXml d Nothing   = error "No note"
---     getMusicXml d (Just a)  = getMusicXml d a
 
 instance IsPitch a => IsPitch (Maybe a) where
     fromPitch = Just . fromPitch
