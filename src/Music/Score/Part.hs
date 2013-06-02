@@ -51,7 +51,7 @@ import Data.AffineSpace
 import Data.Ratio
 
 import Music.Score.Voice
-import Music.Score.Score
+import Music.Score.Score (Score, note, rest, perform)
 import Music.Time.Relative
 import Music.Time.Absolute
 import Music.Score.Ties

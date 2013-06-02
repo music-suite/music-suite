@@ -98,7 +98,7 @@ import Music.Time.Relative
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
-import Music.Score.Score
+import Music.Score.Score (Score, note, rest, perform)
 import Music.Score.Combinators
 import Music.Score.Zip
 import Music.Score.Pitch
@@ -366,6 +366,17 @@ noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 -- TODO only works for single-voice parts
 setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
+
+-- |
+-- Perform the score, yielding a list of relative-time events.
+--
+performRelative :: Score a -> [(Time, Duration, a)]
+performRelative = toRelative . perform
+
+toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
+toRelative = snd . mapAccumL g 0
+    where
+        g now (t,d,x) = (t, (t-now,d,x))
 
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)

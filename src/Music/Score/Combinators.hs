@@ -64,6 +64,10 @@ module Music.Score.Combinators (
         group,
         groupWith,
         scatMap,
+        
+        -- *** Padding
+        (||>),
+        padToBar,
 
         -- ** Conversion
         -- trackToScore,
