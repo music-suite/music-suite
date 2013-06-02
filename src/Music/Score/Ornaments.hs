@@ -116,8 +116,7 @@ artificial :: (Ord v, v ~ Part b, HasPart b, HasHarmonic b) => Score b -> Score 
 artificial = mapSep f f f where f = setHarmonic (-4)
 
 
-
-
+-------------------------------------------------------------------------------------
 
 -- FIXME consolidate
 

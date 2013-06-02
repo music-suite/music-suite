@@ -195,10 +195,7 @@ moveToPart v = moveParts (fromEnum v)
 
 
 
-
-
-
-
+-------------------------------------------------------------------------------------
 
 successor :: (Integral b, Enum a) => b -> a -> a
 successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred

@@ -118,6 +118,7 @@ resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
 
 
+-------------------------------------------------------------------------------------
 
 -- FIXME consolidate
 

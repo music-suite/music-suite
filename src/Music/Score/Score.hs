@@ -119,7 +119,7 @@ instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapEvents (\t d -> delay (t2d t) . (d*^) ) sc
+            join' sc = mconcat $ toList $ mapEvents (\t d -> delay (t .-. 0) . (d*^) ) sc
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -222,10 +222,8 @@ mapEvents f = Score . fmap (mapEvent f) . getScore
 mapEvent :: (Time -> Duration -> a -> b) -> (Time, Duration, a) -> (Time, Duration, b)
 mapEvent f (t, d, x) = (t, d, f t d x)
 
-t2d = Duration . getTime
 
-
-
+-------------------------------------------------------------------------------------
 
 list z f [] = z
 list z f xs = f xs

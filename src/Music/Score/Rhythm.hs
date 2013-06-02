@@ -211,6 +211,7 @@ tuplet' d = do
         return (Tuplet d a)
 
 
+-------------------------------------------------------------------------------------
 
 -- |
 -- Succeed only if the entire input is consumed.
@@ -238,8 +239,6 @@ logBaseR k n                         = logBase (fromRational k) (fromRational n)
 isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
-
-single x = [x]            
 
 left f (Left x)  = Left (f x)
 left f (Right y) = Right y

@@ -168,8 +168,7 @@ applyDynSingle ds = applySingle ds3
 
 
 
-
-
+-------------------------------------------------------------------------------------
 
 -- FIXME consolidate
 
@@ -193,9 +192,6 @@ mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc 
     where
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
         third f (a,b,c) = (a,b,f c)
-
--- padAfter :: Duration -> Score a -> Score a
--- padAfter d a = a |> (rest^*d)       
 
 second :: (a -> b) -> (c,a) -> (c,b)
 second f (a,b) = (a,f b)

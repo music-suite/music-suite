@@ -1123,19 +1123,8 @@ asScore = id
 
 open = openXml . asScore
 
+
 -------------------------------------------------------------------------------------
-
-list z f [] = z
-list z f xs = f xs
-
-first f (x,y)  = (f x, y)
-second f (x,y) = (x, f y)
-
-sep :: a -> [a] -> [a]
-sep = List.intersperse
-
-concatSep :: [a] -> [[a]] -> [a]
-concatSep x = List.concat . sep x
 
 -- | 
 -- Group a list into sublists whereever a predicate holds. The matched element
@@ -1160,18 +1149,4 @@ execute :: FilePath -> [String] -> IO ()
 execute program args = do
     forkProcess $ executeFile program True args Nothing
     return ()
-
-single x = [x]            
-fmap2 = fmap . fmap
-fmap3 = fmap . fmap . fmap
-
-dump = mapM putStrLn . fmap show
-
-left f (Left x)  = Left (f x)
-left f (Right y) = Right y
-
-mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
-mergeBy f as bs = List.sortBy f $ as <> bs
-
-
 

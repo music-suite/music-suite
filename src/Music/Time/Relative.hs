@@ -83,3 +83,4 @@ class Delayable a where
 
 instance Delayable a => Delayable (WrappedMonoid a) where 
     delay t = WrapMonoid . delay t . unwrapMonoid
+

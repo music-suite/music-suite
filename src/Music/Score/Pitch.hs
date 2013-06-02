@@ -107,3 +107,4 @@ setPitches n = fmap (setPitch n)
 --
 modifyPitches :: (HasPitch a, Functor s) => (Pitch a -> Pitch a) -> s a -> s a
 modifyPitches n = fmap (modifyPitch n)
+

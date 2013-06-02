@@ -108,7 +108,6 @@ before :: Duration -> Score a -> Score a
 before d = trig (note ()^*d)
 
 first :: Score a -> a
-first = get3 . head . perform
-    where get3 (a,b,c) = c
-
+first = value . head . perform
+    where value (a,b,c) = c
 

@@ -101,12 +101,11 @@ instance HasDuration (Voice a) where
     duration (Voice as) = sum (fmap fst as)
                         
 
-
-
-
+-------------------------------------------------------------------------------------
 
 list z f [] = z
 list z f xs = f xs
 
 first f (x,y)  = (f x, y)
 second f (x,y) = (x, f y)
+
