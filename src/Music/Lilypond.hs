@@ -15,6 +15,8 @@ import Text.Pretty
 import Music.Lilypond.Pitch
 import Music.Pitch.Literal
 
+import System.Process -- TODO debug
+
 {-
 data Lilypond 
     = Book      Id [BookBlock]
@@ -40,7 +42,8 @@ data ScoreBlock
 -}
 
 data Music    
-    = Note Note (Maybe Duration) [PostEvent]    -- ^ A single note.
+    = Rest (Maybe Duration) [PostEvent]         -- ^ A single rest.
+    | Note Note (Maybe Duration) [PostEvent]    -- ^ A single note.
     | Chord [Note] (Maybe Duration) [PostEvent] -- ^ A single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
     | Simultaneous Bool [Music]                 -- ^ Parallel composition (split voices?).
@@ -61,11 +64,13 @@ data Music
 -- TODO percent repeats
 
 instance Pretty Music where
-    pretty (Note n d p)   = pretty n <> pretty d{- <> pretty p-}
+    pretty (Rest d p)       = "r" <> pretty d{- <> pretty p-}
 
-    pretty (Chord ns d p) = "<" <> (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
+    pretty (Note n d p)     = pretty n <> pretty d{- <> pretty p-}
 
-    pretty (Sequential xs) = "{" <+> (hsep . fmap pretty) xs <+> "}"
+    pretty (Chord ns d p)   = "<" <> (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
+
+    pretty (Sequential xs)  = "{" <+> (hsep . fmap pretty) xs <+> "}"
 
     pretty (Simultaneous False xs) = "<<" <+> (hsep . fmap pretty) xs         <+> ">>"
     pretty (Simultaneous True xs)  = "<<" <+> (sepBy " \\\\ " . fmap pretty) xs <+> ">>"
@@ -289,6 +294,20 @@ isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
 isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
 equalTo  = (==)
+
+
+
+-- TODO debug
+
+runLy = runCommand "lilypond -f png test.ly"
+
+engrave :: Music -> IO ()
+engrave e = do
+    writeFile "test.ly" $ show $ pretty e
+    runLy
+    return ()
+
+r d = Rest (Just d) []
 
 
 
