@@ -65,19 +65,26 @@ instance Pretty Music where
     -- FIXME chord
     pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
 
-    pretty (Sequential xs)          = string "{" <+> prettyList xs <+> string "}"
+    pretty (Sequential xs)          = "{" <+> prettyList xs <+> "}"
 
-    pretty (Simultaneous xs)        = string "<<" <+> prettyList xs <+> string ">>"
+    pretty (Simultaneous xs)        = "<<" <+> prettyList xs <+> ">>"
 
     pretty (Repeat unfold times x y) = 
-        string "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
+        "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
         where 
-            unf p = if p then string "unfold" else string "volta"
+            unf p = if p then "unfold" else "volta"
             alt Nothing  = empty
-            alt (Just x) = string "\\alternative" <> pretty x
+            alt (Just x) = "\\alternative" <> pretty x
 
     pretty (Transpose intv x)       = notImpl
-    pretty (Times rat x)            = notImpl
+
+    pretty (Times n x) = 
+        "\\times" <+> frac n <+> pretty x
+        where
+            frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
+        
+
+
     pretty (Relative pitch x)       = notImpl
     pretty _                        = notImpl
     prettyList                      = hsep . fmap pretty
