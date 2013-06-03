@@ -396,21 +396,21 @@ toRelative = snd . mapAccumL g 0
 -------------------------------------------------------------------------------------
 
 instance HasMidi a => HasMidi (PartT n a) where
-    getMidi (PartT (_,x))                           = getMidi x
+    getMidi (PartT (_,a))                           = getMidi a
 instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,x,_))                          = getMidi x
+    getMidi (TieT (_,a,_))                          = getMidi a
 instance HasMidi a => HasMidi (DynamicT a) where
     getMidi (DynamicT (ec,ed,l,a,bc,bd))            = getMidi a
 instance HasMidi a => HasMidi (ArticulationT a) where
-    getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
+    getMidi (ArticulationT (es,us,al,sl,a,bs))      = getMidi a
 instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,x))            = getMidi x
+    getMidi (TremoloT (_,a))                        = getMidi a
 instance HasMidi a => HasMidi (TextT a) where
-    getMidi (TextT (_,x))                           = getMidi x
+    getMidi (TextT (_,a))                           = getMidi a
 instance HasMidi a => HasMidi (HarmonicT a) where
-    getMidi (HarmonicT (_,x))                       = getMidi x
+    getMidi (HarmonicT (_,a))                       = getMidi a
 instance HasMidi a => HasMidi (SlideT a) where
-    getMidi (SlideT (_,_,a,_,_))          = getMidi a
+    getMidi (SlideT (_,_,a,_,_))                    = getMidi a
 
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
@@ -484,14 +484,86 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
 
 
 
+-------------------------------------------------------------------------------------
+
+instance IsPitch a => IsPitch (Maybe a) where
+    fromPitch = Just . fromPitch
+
+instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
+    fromPitch l                                     = PartT (toEnum 0, fromPitch l)
+instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
+    fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
+
+instance IsPitch a => IsPitch (TieT a) where
+    fromPitch l                                     = TieT (False, fromPitch l, False)
+instance IsDynamics a => IsDynamics (TieT a) where
+    fromDynamics l                                  = TieT (False, fromDynamics l, False)
+
+instance IsPitch a => IsPitch (DynamicT a) where
+    fromPitch l                                     = DynamicT (False,False,Nothing,fromPitch l,False,False)
+instance IsDynamics a => IsDynamics (DynamicT a) where
+    fromDynamics l                                  = DynamicT (False,False,Nothing,fromDynamics l,False,False)
+
+instance IsPitch a => IsPitch (ArticulationT a) where
+    fromPitch l                                     = ArticulationT (False,False,0,0,fromPitch l,False)
+instance IsDynamics a => IsDynamics (ArticulationT a) where
+    fromDynamics l                                  = ArticulationT (False,False,0,0,fromDynamics l,False)
+
+instance IsPitch a => IsPitch (TremoloT a) where
+    fromPitch l                                     = TremoloT (0, fromPitch l)
+instance IsDynamics a => IsDynamics (TremoloT a) where
+    fromDynamics l                                  = TremoloT (0, fromDynamics l)
+
+instance IsPitch a => IsPitch (TextT a) where
+    fromPitch l                                     = TextT (mempty, fromPitch l)
+instance IsDynamics a => IsDynamics (TextT a) where
+    fromDynamics l                                  = TextT (mempty, fromDynamics l)
+
+instance IsPitch a => IsPitch (HarmonicT a) where
+    fromPitch l                                     = HarmonicT (0, fromPitch l)
+instance IsDynamics a => IsDynamics (HarmonicT a) where
+    fromDynamics l                                  = HarmonicT (0, fromDynamics l)
+
+instance IsPitch a => IsPitch (SlideT a) where
+    fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
+instance IsDynamics a => IsDynamics (SlideT a) where
+    fromDynamics l                                  = SlideT (False,False,fromDynamics l,False,False)
+
+instance IsPitch Double where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+
+instance IsPitch Integer where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+
+instance IsDynamics Double where
+    fromDynamics (DynamicsL (Just x, _)) = x
+    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"  
 
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 
 -- PitchT
 
-instance IsPitch a => IsPitch (Maybe a) where
-    fromPitch = Just . fromPitch
 
 -- PartT
 
@@ -504,11 +576,6 @@ instance HasPitch a => HasPitch (PartT n a) where
     type Pitch (PartT n a)                          = Pitch a
     getPitch (PartT (v,a))                          = getPitch a
     modifyPitch f (PartT (v,x))                     = PartT (v, modifyPitch f x)
--- TODO IsPitch/IsDynamic with mempty/def as default as well?
-instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
-    fromPitch l                                     = PartT (toEnum 0, fromPitch l)
-instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
-    fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
 instance Tiable a => Tiable (PartT n a) where
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 instance HasDynamic a => HasDynamic (PartT n a) where
@@ -546,10 +613,6 @@ instance HasPitch a => HasPitch (TieT a) where
     type Pitch (TieT a)                             = Pitch a
     getPitch (TieT (_,x,_))                         = getPitch x
     modifyPitch f (TieT (b,x,e))                    = TieT (b,modifyPitch f x,e)
-instance IsPitch a => IsPitch (TieT a) where
-    fromPitch l                                     = TieT (False, fromPitch l, False)
-instance IsDynamics a => IsDynamics (TieT a) where
-    fromDynamics l                                  = TieT (False, fromDynamics l, False)
 instance HasDynamic a => HasDynamic (TieT a) where
     setBeginCresc n (TieT (b,x,e))                  = TieT (b,setBeginCresc n x,e)
     setEndCresc   n (TieT (b,x,e))                  = TieT (b,setEndCresc n x,e)
@@ -591,10 +654,6 @@ instance HasPitch a => HasPitch (DynamicT a) where
     type Pitch (DynamicT a)                         = Pitch a
     getPitch (DynamicT (ec,ed,l,a,bc,bd))           = getPitch a
     modifyPitch f (DynamicT (ec,ed,l,a,bc,bd))      = DynamicT (ec,ed,l,modifyPitch f a,bc,bd)
-instance IsPitch a => IsPitch (DynamicT a) where
-    fromPitch l                                     = DynamicT (False,False,Nothing,fromPitch l,False,False)
-instance IsDynamics a => IsDynamics (DynamicT a) where
-    fromDynamics l                                  = DynamicT (False,False,Nothing,fromDynamics l,False,False)
 instance HasDynamic (DynamicT a) where
     setBeginCresc bc (DynamicT (ec,ed,l,a,_ ,bd))   = DynamicT (ec,ed,l,a,bc,bd)
     setEndCresc   ec (DynamicT (_ ,ed,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
@@ -637,10 +696,6 @@ instance HasPitch a => HasPitch (ArticulationT a) where
     type Pitch (ArticulationT a)                        = Pitch a
     getPitch (ArticulationT (es,us,al,sl,a,bs))         = getPitch a
     modifyPitch f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyPitch f a,bs)
-instance IsPitch a => IsPitch (ArticulationT a) where
-    fromPitch l                                         = ArticulationT (False,False,0,0,fromPitch l,False)
-instance IsDynamics a => IsDynamics (ArticulationT a) where
-    fromDynamics l                                      = ArticulationT (False,False,0,0,fromDynamics l,False)
 instance HasDynamic a => HasDynamic (ArticulationT a) where
     setBeginCresc n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setBeginCresc n a,bs)
     setEndCresc   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setEndCresc n a,bs)
@@ -681,10 +736,6 @@ instance HasPitch a => HasPitch (TremoloT a) where
     type Pitch (TremoloT a)                         = Pitch a
     getPitch (TremoloT (_,a))                       = getPitch a
     modifyPitch f (TremoloT (n,x))                  = TremoloT (n, modifyPitch f x)
-instance IsPitch a => IsPitch (TremoloT a) where
-    fromPitch l                                     = TremoloT (0, fromPitch l)
-instance IsDynamics a => IsDynamics (TremoloT a) where
-    fromDynamics l                                  = TremoloT (0, fromDynamics l)
 instance HasDynamic a => HasDynamic (TremoloT a) where
     setBeginCresc n (TremoloT (v,x))                = TremoloT (v, setBeginCresc n x)
     setEndCresc   n (TremoloT (v,x))                = TremoloT (v, setEndCresc n x)
@@ -724,10 +775,6 @@ instance HasPitch a => HasPitch (TextT a) where
     type Pitch (TextT a)                            = Pitch a
     getPitch (TextT (_,a))                          = getPitch a
     modifyPitch f (TextT (n,x))                     = TextT (n, modifyPitch f x)
-instance IsPitch a => IsPitch (TextT a) where
-    fromPitch l                                     = TextT (mempty, fromPitch l)
-instance IsDynamics a => IsDynamics (TextT a) where
-    fromDynamics l                                  = TextT (mempty, fromDynamics l)
 instance HasDynamic a => HasDynamic (TextT a) where
     setBeginCresc n (TextT (v,x))                   = TextT (v, setBeginCresc n x)
     setEndCresc   n (TextT (v,x))                   = TextT (v, setEndCresc n x)
@@ -765,10 +812,6 @@ instance HasPitch a => HasPitch (HarmonicT a) where
     type Pitch (HarmonicT a)                        = Pitch a
     getPitch (HarmonicT (_,a))                      = getPitch a
     modifyPitch f (HarmonicT (n,x))                 = HarmonicT (n, modifyPitch f x)
-instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch l                                     = HarmonicT (0, fromPitch l)
-instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics l                                  = HarmonicT (0, fromDynamics l)
 instance HasDynamic a => HasDynamic (HarmonicT a) where
     setBeginCresc n (HarmonicT (v,x))               = HarmonicT (v, setBeginCresc n x)
     setEndCresc   n (HarmonicT (v,x))               = HarmonicT (v, setEndCresc n x)
@@ -808,10 +851,6 @@ instance HasPitch a => HasPitch (SlideT a) where
     type Pitch (SlideT a)                          = Pitch a
     getPitch (SlideT (eg,es,a,bg,bs))              = getPitch a
     modifyPitch f (SlideT (eg,es,a,bg,bs))         = SlideT (eg,es,modifyPitch f a,bg,bs)
-instance IsPitch a => IsPitch (SlideT a) where
-    fromPitch l                                    = SlideT (False,False,fromPitch l,False,False)
-instance IsDynamics a => IsDynamics (SlideT a) where
-    fromDynamics l                                 = SlideT (False,False,fromDynamics l,False,False)
 instance HasDynamic a => HasDynamic (SlideT a) where
     setBeginCresc n (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,setBeginCresc n a,bg,bs)
     setEndCresc   n (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,setEndCresc n a,bg,bs)
@@ -1053,36 +1092,7 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 -- Literals
 -------------------------------------------------------------------------------------
 
-instance IsPitch Double where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
-
-instance IsPitch Integer where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
-
-instance IsDynamics Double where
-    fromDynamics (DynamicsL (Just x, _)) = x
-    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
-
+{-
 
 data Alteration = Sh | Fl
 sharp = Sh
@@ -1095,6 +1105,7 @@ instance IsPitch (Alteration -> Integer) where
     fromPitch l Fl = fromPitch l - 1
 instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
     fromPitch l = pure . fromPitch l
+-}
 
                                                                                                            
 -------------------------------------------------------------------------------------
