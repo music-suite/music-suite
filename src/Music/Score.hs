@@ -395,6 +395,99 @@ toRelative = snd . mapAccumL g 0
 -- Transformer instances (TODO move)
 -------------------------------------------------------------------------------------
 
+instance HasMidi a => HasMidi (PartT n a) where
+    getMidi (PartT (_,x))                           = getMidi x
+instance HasMidi a => HasMidi (TieT a) where
+    getMidi (TieT (_,x,_))                          = getMidi x
+instance HasMidi a => HasMidi (DynamicT a) where
+    getMidi (DynamicT (ec,ed,l,a,bc,bd))            = getMidi a
+instance HasMidi a => HasMidi (ArticulationT a) where
+    getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
+instance HasMidi a => HasMidi (TremoloT a) where
+    getMidi (TremoloT (_,x))            = getMidi x
+instance HasMidi a => HasMidi (TextT a) where
+    getMidi (TextT (_,x))                           = getMidi x
+instance HasMidi a => HasMidi (HarmonicT a) where
+    getMidi (HarmonicT (_,x))                       = getMidi x
+instance HasMidi a => HasMidi (SlideT a) where
+    getMidi (SlideT (_,_,a,_,_))          = getMidi a
+
+
+instance HasMusicXml a => HasMusicXml (PartT n a) where
+    getMusicXml d (PartT (_,x))                     = getMusicXml d x
+
+instance HasMusicXml a => HasMusicXml (TieT a) where
+    getMusicXml d (TieT (ta,x,tb))                  = addTies $ getMusicXml d x
+        where
+            addTies | ta && tb                      = Xml.endTie . Xml.beginTie
+                    | tb                            = Xml.beginTie
+                    | ta                            = Xml.endTie
+                    | otherwise                     = id
+
+instance HasMusicXml a => HasMusicXml (DynamicT a) where
+    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getMusicXml d a
+        where
+            notate x = nec <> ned <> nl <> nbc <> nbd <> x
+            nec    = if ec then Xml.endCresc    else mempty
+            ned    = if ed then Xml.endDim      else mempty
+            nbc    = if bc then Xml.beginCresc  else mempty
+            nbd    = if bd then Xml.beginDim    else mempty
+            nl     = case l of 
+                Nothing  -> mempty
+                Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+
+instance HasMusicXml a => HasMusicXml (ArticulationT a) where
+    getMusicXml d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getMusicXml d a
+        where
+            notate = nes . nal . nsl . nbs
+            nes    = if es then Xml.endSlur else id
+            nal    = case al of
+                0    -> id
+                1    -> Xml.accent
+                2    -> Xml.strongAccent
+            nsl    = case sl of
+                (-2) -> Xml.tenuto
+                (-1) -> Xml.tenuto . Xml.staccato
+                0    -> id
+                1    -> Xml.staccato
+                2    -> Xml.staccatissimo
+            nbs    = if bs then Xml.beginSlur else id
+
+instance HasMusicXml a => HasMusicXml (TremoloT a) where
+    getMusicXml d (TremoloT (n,x))      = notate $ getMusicXml d x
+        where
+            notate = case n of 
+                0 -> id
+                _ -> Xml.tremolo n
+
+instance HasMusicXml a => HasMusicXml (TextT a) where
+    getMusicXml d (TextT (s,x))                     = notate s $ getMusicXml d x
+        where             
+            notate ts a = mconcat (fmap Xml.text ts) <> a
+            
+instance HasMusicXml a => HasMusicXml (HarmonicT a) where
+    getMusicXml d (HarmonicT (n,x))                 = notate $ getMusicXml d x
+        where             
+            notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
+                   | otherwise  = id
+    -- TODO adjust pitch etc
+            
+instance HasMusicXml a => HasMusicXml (SlideT a) where
+    getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
+        where
+            notate = neg . nes . nbg . nbs
+            neg    = if es then Xml.endGliss else id
+            nes    = if es then Xml.endSlide else id
+            nbg    = if es then Xml.beginGliss else id
+            nbs    = if es then Xml.beginSlide else id
+
+
+
+
+
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+
 -- PitchT
 
 instance IsPitch a => IsPitch (Maybe a) where
@@ -403,10 +496,6 @@ instance IsPitch a => IsPitch (Maybe a) where
 -- PartT
 
 
-instance HasMidi a => HasMidi (PartT n a) where
-    getMidi (PartT (_,x))                           = getMidi x
-instance HasMusicXml a => HasMusicXml (PartT n a) where
-    getMusicXml d (PartT (_,x))                     = getMusicXml d x
 instance HasPart (PartT n a) where   
     type Part (PartT n a)                           = n
     getPart (PartT (v,_))                           = v
@@ -449,15 +538,6 @@ instance HasText a => HasText (PartT n a) where
 
 -- TieT
 
-instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,x,_))                          = getMidi x
-instance HasMusicXml a => HasMusicXml (TieT a) where
-    getMusicXml d (TieT (ta,x,tb))                  = addTies $ getMusicXml d x
-        where
-            addTies | ta && tb                      = Xml.endTie . Xml.beginTie
-                    | tb                            = Xml.beginTie
-                    | ta                            = Xml.endTie
-                    | otherwise                     = id
 instance HasPart a => HasPart (TieT a) where   
     type Part (TieT a)                              = Part a
     getPart (TieT (_,x,_))                          = getPart x
@@ -499,21 +579,6 @@ instance HasText a => HasText (TieT a) where
 
 -- end cresc/dim, level, begin cresc/dim
 -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
-
-instance HasMidi a => HasMidi (DynamicT a) where
-    getMidi (DynamicT (ec,ed,l,a,bc,bd))            = getMidi a
-
-instance HasMusicXml a => HasMusicXml (DynamicT a) where
-    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getMusicXml d a
-        where
-            notate x = nec <> ned <> nl <> nbc <> nbd <> x
-            nec    = if ec then Xml.endCresc    else mempty
-            ned    = if ed then Xml.endDim      else mempty
-            nbc    = if bc then Xml.beginCresc  else mempty
-            nbd    = if bd then Xml.beginDim    else mempty
-            nl     = case l of 
-                Nothing  -> mempty
-                Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
@@ -560,24 +625,6 @@ instance HasText a => HasText (DynamicT a) where
 -- end slur, cont slur, acc level, stacc level, begin slur
 -- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
 
-instance HasMidi a => HasMidi (ArticulationT a) where
-    getMidi (ArticulationT (es,us,al,sl,a,bs))          = getMidi a
-instance HasMusicXml a => HasMusicXml (ArticulationT a) where
-    getMusicXml d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getMusicXml d a
-        where
-            notate = nes . nal . nsl . nbs
-            nes    = if es then Xml.endSlur else id
-            nal    = case al of
-                0    -> id
-                1    -> Xml.accent
-                2    -> Xml.strongAccent
-            nsl    = case sl of
-                (-2) -> Xml.tenuto
-                (-1) -> Xml.tenuto . Xml.staccato
-                0    -> id
-                1    -> Xml.staccato
-                2    -> Xml.staccatissimo
-            nbs    = if bs then Xml.beginSlur else id
                 
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us,al,sl,b,bs),
@@ -623,14 +670,6 @@ instance HasText a => HasText (ArticulationT a) where
 
 -- newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 
-instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,x))            = getMidi x
-instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (n,x))      = notate $ getMusicXml d x
-        where
-            notate = case n of 
-                0 -> id
-                _ -> Xml.tremolo n
             
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
@@ -675,13 +714,6 @@ instance HasText a => HasText (TremoloT a) where
 
 -- newtype TextT a = TextT { getTextT :: (Int, a) }
 
-instance HasMidi a => HasMidi (TextT a) where
-    getMidi (TextT (_,x))                           = getMidi x
-instance HasMusicXml a => HasMusicXml (TextT a) where
-    getMusicXml d (TextT (s,x))                     = notate s $ getMusicXml d x
-        where             
-            notate ts a = mconcat (fmap Xml.text ts) <> a
-            
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
 instance HasPart a => HasPart (TextT a) where   
@@ -723,15 +755,6 @@ instance HasText (TextT a) where
 
 -- HarmonicT
 
-instance HasMidi a => HasMidi (HarmonicT a) where
-    getMidi (HarmonicT (_,x))                       = getMidi x
-instance HasMusicXml a => HasMusicXml (HarmonicT a) where
-    getMusicXml d (HarmonicT (n,x))                 = notate $ getMusicXml d x
-        where             
-            notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
-                   | otherwise  = id
-    -- TODO adjust pitch etc
-            
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
 instance HasPart a => HasPart (HarmonicT a) where   
@@ -772,17 +795,6 @@ instance HasText a => HasText (HarmonicT a) where
 
 
 -- SlideT
-
-instance HasMidi a => HasMidi (SlideT a) where
-    getMidi (SlideT (_,_,a,_,_))          = getMidi a
-instance HasMusicXml a => HasMusicXml (SlideT a) where
-    getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
-        where
-            notate = neg . nes . nbg . nbs
-            neg    = if es then Xml.endGliss else id
-            nes    = if es then Xml.endSlide else id
-            nbg    = if es then Xml.beginGliss else id
-            nbs    = if es then Xml.beginSlide else id
 
                 
 instance Tiable a => Tiable (SlideT a) where
