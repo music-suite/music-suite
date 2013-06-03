@@ -120,7 +120,7 @@ type HasPart' a = (Ord (Part a), HasPart a)
 -- > Score a -> [Score a]
 --
 extract :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [s a]
-extract sc = fmap (flip extract' sc) (getParts sc) 
+extract sc = fmap (`extract'` sc) (getParts sc) 
     where                    
         extract' v = mfilter ((== v) . getPart)
 

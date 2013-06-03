@@ -193,7 +193,7 @@ length :: Score a -> Int
 length = List.length . getScore
 
 -- |
--- Perform the score, yielding a list of events.
+-- Perform the score, yielding a sorted list of events.
 --
 perform :: Score a -> [(Time, Duration, a)]
 perform = getScore

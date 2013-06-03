@@ -183,9 +183,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
 -- Convert a score to a track of MIDI messages.
 --    
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack x = Track $ toTrack $ x
-    where
-        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
+toMidiTrack = Track . fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.
@@ -238,7 +236,7 @@ instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusic
 instance HasMusicXml Integer where
     getMusicXml d p = Xml.note (spell (fromIntegral p)) d'
         where
-            d' = (fromRational . toRational $ d)   
+            d' = fromRational . toRational $ d
             
             -- FIXME arbitrary spelling, please modularize...
             spell :: Int -> Xml.Pitch
