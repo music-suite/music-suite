@@ -1,5 +1,9 @@
 
-{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE 
+    OverloadedStrings, 
+    GeneralizedNewtypeDeriving,
+    StandaloneDeriving,
+    ScopedTypeVariables #-}
 
 module Music.Lilypond -- (
   -- )
@@ -35,11 +39,9 @@ data ScoreBlock
     -- full markup etc
 -}
 
-type Dur = Ratio Int
-
 data Music    
-    = Note Note (Maybe Dur) [PostEvent]         -- ^ A single note.
-    | Chord [Note] (Maybe Dur) [PostEvent]      -- ^ A single chord.
+    = Note Note (Maybe Duration) [PostEvent]         -- ^ A single note.
+    | Chord [Note] (Maybe Duration) [PostEvent]      -- ^ A single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
     | Simultaneous [Music]                      -- ^ Parallel composition.
     | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
@@ -50,7 +52,7 @@ data Music
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
     | Breathe BreathingSign                     -- ^ Breath mark (caesura)
-    | MetronomeMark (Maybe String) Dur Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
+    | MetronomeMark (Maybe String) Duration Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
     | TempoMark String                          -- ^ Tempo mark.
     deriving (Eq, Show)
 
@@ -58,15 +60,17 @@ data Music
 -- TODO percent repeats
 
 instance Pretty Music where
-    pretty (Note n d p)   = pretty n <> pretty d <> pretty p
+    pretty (Note n d p)   = pretty n <> pretty d{- <> pretty p-}
 
+    -- FIXME chord
     pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
 
     pretty (Sequential xs)          = string "{" <+> prettyList xs <+> string "}"
 
     pretty (Simultaneous xs)        = string "<<" <+> prettyList xs <+> string ">>"
 
-    pretty (Repeat unfold times x y)  = string "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
+    pretty (Repeat unfold times x y) = 
+        string "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
         where 
             unf p = if p then string "unfold" else string "volta"
             alt Nothing  = empty
@@ -76,6 +80,7 @@ instance Pretty Music where
     pretty (Times rat x)            = notImpl
     pretty (Relative pitch x)       = notImpl
     pretty _                        = notImpl
+    prettyList                      = hsep . fmap pretty
 
 
     -- | Slur Bool                                 -- ^ Begin or end slur
@@ -83,14 +88,15 @@ instance Pretty Music where
 
 data Note
     = NotePitch Pitch (Maybe OctaveCheck)
-    | DrumNotePitch (Maybe Dur)
+    | DrumNotePitch (Maybe Duration)
     deriving (Eq, Show)
     -- TODO lyrics 
 
 instance Pretty Note where
     pretty (NotePitch p Nothing)   = pretty p
-    pretty (NotePitch p _)   = notImpl
-    pretty (DrumNotePitch _) = notImpl
+    pretty (NotePitch p _)         = notImpl
+    pretty (DrumNotePitch _)       = notImpl
+    prettyList                     = hsep . fmap pretty
 
 instance Pretty Pitch where
     pretty (Pitch (c,a,o)) = string $ pc c ++ acc a ++ oct (o-4)
@@ -109,12 +115,12 @@ instance Pretty Pitch where
                   | n == 0  =  ""
                   | n >  0  =  concat $ replicate n "'"
 
+instance IsPitch Music where
+    fromPitch = (\p -> Note (NotePitch p Nothing) Nothing []) . fromPitch
+
 instance IsPitch Pitch where
     fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
     fromPitch (PitchL (c, Just a, o))  = Pitch (toEnum c, round a, o)
-
-data Exclamation = Exclamation
-    deriving (Eq, Show)
 
 data Clef
     = Treble
@@ -185,8 +191,6 @@ data Articulation
     | VarCoda
     deriving (Eq, Show)
 
-data Question = Question
-    deriving (Eq, Show)
 data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
 data PostEvent = PostEvent
@@ -202,8 +206,77 @@ instance Pretty PostEvent where pretty = error "PostEvent"
 --     | LyricMode
 
 
+-- | Notated time in fractions, in @[2^^i | i <- [-10..3]]@.
+newtype Duration   = Duration { getDuration :: Rational }
+
+deriving instance Eq            Duration
+deriving instance Ord           Duration
+deriving instance Num           Duration
+deriving instance Enum          Duration
+deriving instance Fractional    Duration
+deriving instance Real          Duration
+deriving instance RealFrac      Duration
+deriving instance Show          Duration
+
+instance Pretty Duration where
+    pretty a = string $ pnv (toRational nv) ++ pds ds
+        where
+            pnv 4 = "\\longa"
+            pnv 2 = "\\breve"
+            pnv n = show (denominator n)             
+            pds n = concat $ replicate n "."
+            (nv, ds) = separateDots a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 notImpl = error "Not implemented"
 asPitch = id
 asPitch :: Pitch -> Pitch
+
+
+
+
+
+
+
+
+
+
+
+separateDots :: Duration -> (Duration, Int)
+separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
+
+separateDots' :: [Duration] -> Duration -> (Duration, Int)
+separateDots' []         nv = error "separateDots: Strange"
+separateDots' (div:divs) nv 
+    | isDivisibleBy 2 nv = (nv,  0)
+    | otherwise          = (nv', dots' + 1)
+    where                                                        
+        (nv', dots')    = separateDots' divs (nv*div)
+
+logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
+logBaseR k n 
+    | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
+logBaseR k n 
+    | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
+logBaseR k n                         = logBase (fromRational k) (fromRational n)
+
+isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
+isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
+equalTo  = (==)
+
+
 
 
