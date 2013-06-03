@@ -113,8 +113,6 @@ splitDur s x = case splitDur' s x of
     (a, Nothing) -> [a]
     (a, Just b)  -> a : splitDur 1 b
 
--- FIXME completely assumes bar dur 1, see #36
-
 -- |
 -- Extract the the first part of a given duration. If the note is shorter than the given duration,
 -- return it and @Nothing@. Otherwise return the extracted part, and the rest.

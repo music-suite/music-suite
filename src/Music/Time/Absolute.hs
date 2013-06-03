@@ -51,7 +51,6 @@ import Music.Time.Relative
 --
 newtype Time = Time { getTime::Rational }
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
-    -- Note: no Floating as we want to be able to switch to rational
 
 instance Show Time where 
     show = show . getTime

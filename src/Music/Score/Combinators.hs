@@ -485,12 +485,12 @@ rotr xs = last xs : init xs
 rotated n as | n >= 0 = iterate rotr as !! n
              | n <  0 = iterate rotl as !! abs n
 
-splitWhile :: (a -> Bool) -> [a] -> [[a]]
-splitWhile p xs = case splitWhile' p xs of
-    []:xss -> xss
-    xss    -> xss
-    where
-        splitWhile' p []     = [[]]
-        splitWhile' p (x:xs) = case splitWhile' p xs of
-            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
+-- splitWhile :: (a -> Bool) -> [a] -> [[a]]
+-- splitWhile p xs = case splitWhile' p xs of
+--     []:xss -> xss
+--     xss    -> xss
+--     where
+--         splitWhile' p []     = [[]]
+--         splitWhile' p (x:xs) = case splitWhile' p xs of
+--             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
 

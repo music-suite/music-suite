@@ -44,7 +44,6 @@ import Data.AffineSpace
 --
 newtype Duration = Duration { getDuration::Rational }                                  
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
-    -- Note: no Floating as we want to be able to switch to rational
 
 instance Show Duration where 
     show = show . getDuration
