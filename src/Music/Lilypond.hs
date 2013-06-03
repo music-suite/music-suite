@@ -20,7 +20,12 @@ module Music.Lilypond (
         Pitch(..),
         PitchClass(..),
         Accidental(..),
-        Octaves(..)
+        Octaves(..),
+        note,
+        rest,
+        chord,
+        addPost,
+        addArticulation
     )
 where
 
@@ -79,11 +84,11 @@ data Music
 -- TODO tremolo
 
 instance Pretty Music where
-    pretty (Rest d p)       = "r" <> pretty d{- <> pretty p-}
+    pretty (Rest d p)       = "r" <> pretty d <> prettyList p
 
-    pretty (Note n d p)     = pretty n <> pretty d{- <> pretty p-}
+    pretty (Note n d p)     = pretty n <> pretty d <> prettyList p
 
-    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' <> pretty d <> prettyList p
 
     pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
 
@@ -193,6 +198,44 @@ data BreathingSign
     | CurvedCaesura
     deriving (Eq, Show)
 
+data PostEvent
+    = Articulation Articulation
+    | Tie
+    | BeginBeam
+    | EndBeam
+    | BeginSlur
+    | EndSlur
+    | BeginPhraseSlur
+    | EndPhraseSlur
+    | BeginCresc
+    | BeginDim
+    | EndCrescDim
+    deriving (Eq, Show)
+
+instance Pretty PostEvent where 
+    pretty (Articulation a) = pretty a
+    pretty Tie              = "~"
+    pretty BeginBeam        = "["
+    pretty EndBeam          = "]"
+    pretty BeginSlur        = "("
+    pretty EndSlur          = ")"
+    pretty BeginPhraseSlur  = "\\("
+    pretty EndPhraseSlur    = "\\)"
+    pretty BeginCresc       = "\\<"
+    pretty BeginDim         = "\\>"
+    pretty EndCrescDim      = "\\!"
+    prettyList              = hcat . fmap pretty
+
+addPost :: PostEvent -> Music -> Music
+addPost a (Rest d es)     = Rest d (es ++ [a])
+addPost a (Note n d es)   = Note n d (es ++ [a])
+addPost a (Chord ns d es) = Chord ns d (es ++ [a])
+addPost a m               = m
+
+addArticulation :: Articulation -> Music -> Music
+addArticulation a = addPost (Articulation a)
+
+-- | Articulations. These include ornaments.
 data Articulation
     = Accent
     | Marcato
@@ -225,7 +268,7 @@ data Articulation
     | PrallDown
     | PrallUp
     | LinePrall
-    | SignumCongruentie
+    | SignumCongruentiae
     | ShortFermata
     | Fermata
     | LongFermata
@@ -235,12 +278,58 @@ data Articulation
     | VarCoda
     deriving (Eq, Show)
 
+instance Pretty Articulation where 
+    -- pretty Accent             = "\\accent"
+    -- pretty Marcato            = "\\marcato"
+    -- pretty Staccatissimo      = "\\staccatissimo"
+    pretty Accent             = "->"
+    pretty Marcato            = "-^"
+    pretty Staccatissimo      = "-|"
+    pretty Espressivo         = "\\espressivo"
+    -- pretty Staccato           = "\\staccato"
+    -- pretty Tenuto             = "\\tenuto"
+    -- pretty Portato            = "\\portato"
+    pretty Staccato           = "-."
+    pretty Tenuto             = "--"
+    pretty Portato            = "-_"
+    pretty Upbow              = "\\upbow"
+    pretty Downbow            = "\\downbow"
+    pretty Flageolet          = "\\flageolet"
+    pretty Thumb              = "\\thumb"
+    pretty LeftHeel           = "\\leftheel"
+    pretty RightHeel          = "\\rightheel"
+    pretty LeftToe            = "\\lefttoe"
+    pretty RightToe           = "\\righttoe"
+    pretty Open               = "\\open"
+    -- pretty Stopped            = "\\stopped"
+    pretty Stopped            = "-+"
+    pretty Turn               = "\\turn"
+    pretty ReverseTurn        = "\\reverseturn"
+    pretty Trill              = "\\trill"
+    pretty Prall              = "\\prall"
+    pretty Mordent            = "\\mordent"
+    pretty PrallPrall         = "\\prallprall"
+    pretty PrallMordent       = "\\prallmordent"
+    pretty UpPrall            = "\\upprall"
+    pretty DownPrall          = "\\downprall"
+    pretty UpMordent          = "\\upmordent"
+    pretty DownMordent        = "\\downmordent"
+    pretty PrallDown          = "\\pralldown"
+    pretty PrallUp            = "\\prallup"
+    pretty LinePrall          = "\\lineprall"
+    pretty SignumCongruentiae = "\\signumCongruentiae"
+    pretty ShortFermata       = "\\shortfermata"
+    pretty Fermata            = "\\fermata"
+    pretty LongFermata        = "\\longfermata"
+    pretty VeryLongFermata    = "\\verylongfermata"
+    pretty Segno              = "\\segno"
+    pretty Coda               = "\\coda"
+    pretty VarCoda            = "\\varcoda"
+    prettyList              = hcat . fmap pretty
+
 data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
-data PostEvent = PostEvent
-    deriving (Eq, Show)
 
-instance Pretty PostEvent where pretty = error "PostEvent"
                                            
 -- data ChangeHead
 --     = NoteMode
@@ -336,7 +425,13 @@ engrave e = do
     runLy
     return ()
 
-rest = Rest (Just $ 1/4) []
+rest :: Music
+rest     = Rest (Just $ 1/4) []
+
+note :: Note -> Music
+note n   = Note n (Just $ 1/4) []
+
+chord :: [Note] -> Music
 chord ns = Chord ns (Just $ 1/4) []
 
 
@@ -346,9 +441,22 @@ main = engrave $
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
-        , Simultaneous False 
-            [ Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
-            , Times (4/5) (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+        , Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+        , Sequential 
+            [ Times (4/5) (Sequential 
+                [
+                    rest,
+                    addArticulation Accent $ addPost BeginSlur $ addPost BeginCresc $ c^*2,
+                    d^*1,
+                    addPost Tie $ e^*1
+                ])
+            , Times (4/5) (Sequential 
+                [
+                    addPost BeginDim $ addPost EndCrescDim $ e^*1,
+                    c^*(3/2),
+                    addPost EndSlur $ fs^*(1/2),
+                    addPost EndCrescDim $ c^*2
+                ])
             ]
         ]
         
