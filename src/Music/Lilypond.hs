@@ -40,14 +40,15 @@ data ScoreBlock
 -}
 
 data Music    
-    = Note Note (Maybe Duration) [PostEvent]         -- ^ A single note.
-    | Chord [Note] (Maybe Duration) [PostEvent]      -- ^ A single chord.
+    = Note Note (Maybe Duration) [PostEvent]    -- ^ A single note.
+    | Chord [Note] (Maybe Duration) [PostEvent] -- ^ A single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
-    | Simultaneous [Music]                      -- ^ Parallel composition.
+    | Simultaneous Bool [Music]                 -- ^ Parallel composition (split voices?).
     | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
-    | Transpose Interval Music                  -- ^ Transpose music
+    | Transpose Pitch Pitch Music               -- ^ Transpose music
     | Times Rational Music                      -- ^ Stretch music
     | Relative Pitch Music                      -- ^ Use relative pitch
+    
     | Clef Clef                                 -- ^ 
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
@@ -62,12 +63,12 @@ data Music
 instance Pretty Music where
     pretty (Note n d p)   = pretty n <> pretty d{- <> pretty p-}
 
-    -- FIXME chord
-    pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
+    pretty (Chord ns d p) = "<" <> (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
 
-    pretty (Sequential xs)          = "{" <+> prettyList xs <+> "}"
+    pretty (Sequential xs) = "{" <+> (hsep . fmap pretty) xs <+> "}"
 
-    pretty (Simultaneous xs)        = "<<" <+> prettyList xs <+> ">>"
+    pretty (Simultaneous False xs) = "<<" <+> (hsep . fmap pretty) xs         <+> ">>"
+    pretty (Simultaneous True xs)  = "<<" <+> (sepBy " \\\\ " . fmap pretty) xs <+> ">>"
 
     pretty (Repeat unfold times x y) = 
         "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
@@ -76,17 +77,19 @@ instance Pretty Music where
             alt Nothing  = empty
             alt (Just x) = "\\alternative" <> pretty x
 
-    pretty (Transpose intv x)       = notImpl
+    pretty (Transpose from to x) = notImpl
+        "\\transpose" <+> pretty from <+> pretty to <+> pretty x
 
     pretty (Times n x) = 
         "\\times" <+> frac n <+> pretty x
         where
             frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
-        
 
+    pretty (Relative p x) =
+        "\\relative" <+> pretty p <+> pretty x
 
-    pretty (Relative pitch x)       = notImpl
     pretty _                        = notImpl
+
     prettyList                      = hsep . fmap pretty
 
 
@@ -123,7 +126,10 @@ instance Pretty Pitch where
                   | n >  0  =  concat $ replicate n "'"
 
 instance IsPitch Music where
-    fromPitch = (\p -> Note (NotePitch p Nothing) Nothing []) . fromPitch
+    fromPitch = (\p -> Note p Nothing []) . fromPitch
+
+instance IsPitch Note where
+    fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
