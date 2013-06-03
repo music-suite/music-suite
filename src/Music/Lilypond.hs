@@ -6,8 +6,22 @@
     TypeFamilies,
     ScopedTypeVariables #-}
 
-module Music.Lilypond -- (
-  -- )
+module Music.Lilypond (
+        Music(..),
+        Note(..),
+        Clef(..),
+        KeyMode(..),
+        Key(..),
+        BreathingSign(..),
+        Articulation(..),
+        OctaveCheck(..),
+        PostEvent(..),
+        Duration(..),
+        Pitch(..),
+        PitchClass(..),
+        Accidental(..),
+        Octaves(..)
+    )
 where
 
 import Data.Ratio
@@ -63,10 +77,6 @@ data Music
     deriving (Eq, Show)
 
 -- TODO tremolo
--- TODO percent repeats
-
-infixl <=>
-a <=> b = sep [a,b]
 
 instance Pretty Music where
     pretty (Rest d p)       = "r" <> pretty d{- <> pretty p-}
@@ -310,6 +320,9 @@ isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
 isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
 equalTo  = (==)
+
+infixl <=>
+a <=> b = sep [a,b]
 
 
 

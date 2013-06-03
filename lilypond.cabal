@@ -18,6 +18,7 @@ library
         semigroups,
         prettify,       
         vector-space,
+        process,
         music-pitch-literal,
         music-dynamics-literal
     hs-source-dirs: src
