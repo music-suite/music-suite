@@ -78,7 +78,7 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 
 -- Apply a constant level over the whole score.
 -- dynamic :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Double -> Score a -> Score a
--- dynamic n = mapSep (setLevel n) id id 
+-- dynamic n = mapPhrase (setLevel n) id id 
 
 
 -- | Apply a dynamic level over the score.
@@ -166,34 +166,11 @@ applyDynSingle ds = applySingle ds3
                 . (if bc then map1 (setBeginCresc   True) else id)
                 . (if bd then map1 (setBeginDim     True) else id)
                 . maybe id (map1 . setLevel) l
-        map1 f = mapSepVoice f id id
+        map1 f = mapPhraseSingle f id id
 
 
 
 -------------------------------------------------------------------------------------
-
--- FIXME consolidate
-
--- | 
--- Map over first, middle and last elements of list.
--- Biased on first, then on first and last for short lists.
--- 
-mapSepL :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapSepL f g h []      = []
-mapSepL f g h [a]     = [f a]
-mapSepL f g h [a,b]   = [f a, h b]
-mapSepL f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
-
-mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSep f g h sc = {-fixDur . -}mapParts (fmap $ mapSepVoice f g h) $ sc
-    -- where
-        -- fixDur a = padAfter (duration sc - duration a) a
-
-mapSepVoice :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
-    where
-        toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
-        third f (a,b,c) = (a,b,f c)
 
 second :: (a -> b) -> (c,a) -> (c,b)
 second f (a,b) = (a,f b)

@@ -4,6 +4,8 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     OverloadedStrings,
     GeneralizedNewtypeDeriving #-} 
 
@@ -56,7 +58,7 @@ module Music.Score.Combinators (
         stretchTo,                
         retrograde,     
 
-        -- *** Structure        
+        -- *** Repetition
         repTimes,
         repWith,
         repWithIndex,
@@ -68,6 +70,10 @@ module Music.Score.Combinators (
         -- *** Padding
         (||>),
         padToBar,
+
+        -- *** Phrases
+        mapPhrase,
+        mapPhraseSingle,
 
         -- ** Conversion
         -- trackToScore,
@@ -95,6 +101,7 @@ import Data.Ord
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Part
 import Music.Time.Relative
 import Music.Time.Absolute
 -- import Music.Score.Part
@@ -448,6 +455,27 @@ padToBar a = a |> rest^*(d'*4)
         d' = if d == 0 then 0 else 1 - d
 
 
+-- | 
+-- Map over first, middle and last elements of list.
+-- Biased on first, then on first and last for short lists.
+-- 
+mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
+mapFirstMiddleLast f g h []      = []
+mapFirstMiddleLast f g h [a]     = [f a]
+mapFirstMiddleLast f g h [a,b]   = [f a, h b]
+mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
+
+mapPhrase :: (HasPart' a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
+
+mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapPhraseSingle f g h sc = mconcat . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
+    where
+        toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
+        third f (a,b,c) = (a,b,f c)
+
+
+
 rotl []     = []
 rotl (x:xs) = xs ++ [x]
 
@@ -465,8 +493,4 @@ splitWhile p xs = case splitWhile' p xs of
         splitWhile' p []     = [[]]
         splitWhile' p (x:xs) = case splitWhile' p xs of
             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
-
-
-
-
 

@@ -216,3 +216,4 @@ maximum' z = option z getMax . foldMap (Option . Just . Max)
 
 minimum' :: (Ord a, Foldable t) => a -> t a -> a
 minimum' z = option z getMin . foldMap (Option . Just . Min)
+

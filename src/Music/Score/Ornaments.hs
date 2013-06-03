@@ -95,51 +95,25 @@ tremolo n = fmap (setTrem n)
 -- Attach the given text to the first note in the score.
 --
 text :: (HasPart' b, HasText b) => String -> Score b -> Score b
-text s = mapSep (addText s) id id
+text s = mapPhrase (addText s) id id
 
 -- |
 -- Slide between the first and the last note.
 --
 slide :: (HasPart' b, HasSlide b) => Score b -> Score b
-slide = mapSep (setBeginSlide True) id (setEndSlide True)
+slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 harmonic :: (HasPart' b, HasHarmonic b) => Int -> Score b -> Score b
-harmonic n = mapSep f f f where f = setHarmonic n
+harmonic n = mapPhrase f f f where f = setHarmonic n
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 artificial :: (HasPart' b, HasHarmonic b) => Score b -> Score b
-artificial = mapSep f f f where f = setHarmonic (-4)
+artificial = mapPhrase f f f where f = setHarmonic (-4)
 
-
--------------------------------------------------------------------------------------
-
--- FIXME consolidate
-
--- | 
--- Map over first, middle and last elements of list.
--- Biased on first, then on first and last for short lists.
--- 
-mapSepL :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapSepL f g h []      = []
-mapSepL f g h [a]     = [f a]
-mapSepL f g h [a,b]   = [f a, h b]
-mapSepL f g h xs      = [f $ head xs] ++ (map g $ tail $ init xs) ++ [h $ last xs]
-
-mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSep f g h sc = {-fixDur . -}mapParts (fmap $ mapSepVoice f g h) $ sc
-    -- where
-        -- fixDur a = padAfter (duration sc - duration a) a
-
-mapSepVoice :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapSepVoice f g h sc = mconcat . mapSepL (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
-    where
-        toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
-        third f (a,b,c) = (a,b,f c)
-                               
