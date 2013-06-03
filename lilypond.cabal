@@ -16,7 +16,8 @@ library
     build-depends: 
         base, 
         semigroups,
-        prettify,
+        prettify,       
+        vector-space,
         music-pitch-literal,
         music-dynamics-literal
     hs-source-dirs: src

@@ -3,6 +3,7 @@
     OverloadedStrings, 
     GeneralizedNewtypeDeriving,
     StandaloneDeriving,
+    TypeFamilies,
     ScopedTypeVariables #-}
 
 module Music.Lilypond -- (
@@ -12,6 +13,7 @@ where
 import Data.Ratio
 import Data.Semigroup
 import Text.Pretty
+import Data.VectorSpace
 import Music.Lilypond.Pitch
 import Music.Pitch.Literal
 
@@ -63,35 +65,38 @@ data Music
 -- TODO tremolo
 -- TODO percent repeats
 
+infixl <=>
+a <=> b = sep [a,b]
+
 instance Pretty Music where
     pretty (Rest d p)       = "r" <> pretty d{- <> pretty p-}
 
     pretty (Note n d p)     = pretty n <> pretty d{- <> pretty p-}
 
-    pretty (Chord ns d p)   = "<" <> (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' <> pretty d{- <> pretty p-}
 
-    pretty (Sequential xs)  = "{" <+> (hsep . fmap pretty) xs <+> "}"
+    pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
 
-    pretty (Simultaneous False xs) = "<<" <+> (hsep . fmap pretty) xs         <+> ">>"
-    pretty (Simultaneous True xs)  = "<<" <+> (sepBy " \\\\ " . fmap pretty) xs <+> ">>"
+    pretty (Simultaneous False xs) = "<<" <//> nest 4 ((vcat . fmap pretty) xs)           <//> ">>"
+    pretty (Simultaneous True xs)  = "<<" <//> nest 4 ((sepByS " \\\\" . fmap pretty) xs) <//> ">>"
 
     pretty (Repeat unfold times x y) = 
-        "\\repeat" <+> unf unfold <+> int times <+> pretty x <+> alt y
+        "\\repeat" <=> unf unfold <=> int times <=> pretty x <=> alt y
         where 
             unf p = if p then "unfold" else "volta"
             alt Nothing  = empty
             alt (Just x) = "\\alternative" <> pretty x
 
     pretty (Transpose from to x) = notImpl
-        "\\transpose" <+> pretty from <+> pretty to <+> pretty x
+        "\\transpose" <+> pretty from <=> pretty to <=> pretty x
 
     pretty (Times n x) = 
-        "\\times" <+> frac n <+> pretty x
+        "\\times" <+> frac n <=> pretty x
         where
             frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
 
     pretty (Relative p x) =
-        "\\relative" <+> pretty p <+> pretty x
+        "\\relative" <=> pretty p <=> pretty x
 
     pretty _                        = notImpl
 
@@ -131,7 +136,7 @@ instance Pretty Pitch where
                   | n >  0  =  concat $ replicate n "'"
 
 instance IsPitch Music where
-    fromPitch = (\p -> Note p Nothing []) . fromPitch
+    fromPitch = (\p -> Note p (Just (1/4)) []) . fromPitch
 
 instance IsPitch Note where
     fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
@@ -139,6 +144,17 @@ instance IsPitch Note where
 instance IsPitch Pitch where
     fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
     fromPitch (PitchL (c, Just a, o))  = Pitch (toEnum c, round a, o)
+
+instance AdditiveGroup Music where
+    zeroV   = Rest (Just $ 1/4) []
+    a ^+^ b = Sequential [a,b]
+    negateV = error "No Music.Lilypond.Music.negateV"
+instance VectorSpace Music where
+    type Scalar Music = Duration
+    a *^ (Rest  (Just d) p)    = Rest (Just $ a*d) p
+    a *^ (Note  n (Just d) p)  = Note n (Just $ a*d) p
+    a *^ (Chord ns (Just d) p) = Chord ns (Just $ a*d) p
+    a *^ x                     = x
 
 data Clef
     = Treble
@@ -307,8 +323,21 @@ engrave e = do
     runLy
     return ()
 
-r d = Rest (Just d) []
+rest = Rest (Just $ 1/4) []
+chord ns = Chord ns (Just $ 1/4) []
 
 
-
-
+main = engrave $ 
+    Simultaneous False 
+        [ Relative g' (Sequential [rest,chord [c,e,g]^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+        , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
+        , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
+        , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
+        , Simultaneous False 
+            [ Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+            , Times (4/5) (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+            ]
+        ]
+        
+        
+    
