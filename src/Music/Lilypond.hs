@@ -30,6 +30,7 @@ module Music.Lilypond (
 where
 
 import Data.Ratio
+import Data.Default
 import Data.Semigroup
 import Text.Pretty
 import Data.VectorSpace
@@ -199,7 +200,7 @@ data BreathingSign
     deriving (Eq, Show)
 
 data PostEvent
-    = Articulation Articulation
+    = Articulation Direction Articulation
     | Tie
     | BeginBeam
     | EndBeam
@@ -210,21 +211,31 @@ data PostEvent
     | BeginCresc
     | BeginDim
     | EndCrescDim
+    | Text Direction String
+    | Markup Direction Markup
     deriving (Eq, Show)
 
 instance Pretty PostEvent where 
-    pretty (Articulation a) = pretty a
-    pretty Tie              = "~"
-    pretty BeginBeam        = "["
-    pretty EndBeam          = "]"
-    pretty BeginSlur        = "("
-    pretty EndSlur          = ")"
-    pretty BeginPhraseSlur  = "\\("
-    pretty EndPhraseSlur    = "\\)"
-    pretty BeginCresc       = "\\<"
-    pretty BeginDim         = "\\>"
-    pretty EndCrescDim      = "\\!"
-    prettyList              = hcat . fmap pretty
+    pretty (Articulation d a) = pretty d <> pretty a
+    pretty Tie                = "~"
+    pretty BeginBeam          = "["
+    pretty EndBeam            = "]"
+    pretty BeginSlur          = "("
+    pretty EndSlur            = ")"
+    pretty BeginPhraseSlur    = "\\("
+    pretty EndPhraseSlur      = "\\)"
+    pretty BeginCresc         = "\\<"
+    pretty BeginDim           = "\\>"
+    pretty EndCrescDim        = "\\!"
+    pretty (Text d s)         = pretty d <> (string . show) s -- add quotes
+    pretty (Markup d m)       = notImpl
+    prettyList                = hcat . fmap pretty
+
+data Markup = Plain Int
+    deriving (Eq, Show)
+
+
+
 
 addPost :: PostEvent -> Music -> Music
 addPost a (Rest d es)     = Rest d (es ++ [a])
@@ -232,8 +243,17 @@ addPost a (Note n d es)   = Note n d (es ++ [a])
 addPost a (Chord ns d es) = Chord ns d (es ++ [a])
 addPost a m               = m
 
+addText :: String -> Music -> Music
+addText s = addPost (Text def s)
+
+addText' :: Direction -> String -> Music -> Music
+addText' d s = addPost (Text d s)
+
 addArticulation :: Articulation -> Music -> Music
-addArticulation a = addPost (Articulation a)
+addArticulation a = addPost (Articulation def a)
+
+addArticulation' :: Direction -> Articulation -> Music -> Music
+addArticulation' d a = addPost (Articulation d a)
 
 -- | Articulations. These include ornaments.
 data Articulation
@@ -282,16 +302,16 @@ instance Pretty Articulation where
     -- pretty Accent             = "\\accent"
     -- pretty Marcato            = "\\marcato"
     -- pretty Staccatissimo      = "\\staccatissimo"
-    pretty Accent             = "->"
-    pretty Marcato            = "-^"
-    pretty Staccatissimo      = "-|"
+    pretty Accent             = ">"
+    pretty Marcato            = "^"
+    pretty Staccatissimo      = "|"
     pretty Espressivo         = "\\espressivo"
     -- pretty Staccato           = "\\staccato"
     -- pretty Tenuto             = "\\tenuto"
     -- pretty Portato            = "\\portato"
-    pretty Staccato           = "-."
-    pretty Tenuto             = "--"
-    pretty Portato            = "-_"
+    pretty Staccato           = "."
+    pretty Tenuto             = "-"
+    pretty Portato            = "_"
     pretty Upbow              = "\\upbow"
     pretty Downbow            = "\\downbow"
     pretty Flageolet          = "\\flageolet"
@@ -302,7 +322,7 @@ instance Pretty Articulation where
     pretty RightToe           = "\\righttoe"
     pretty Open               = "\\open"
     -- pretty Stopped            = "\\stopped"
-    pretty Stopped            = "-+"
+    pretty Stopped            = "+"
     pretty Turn               = "\\turn"
     pretty ReverseTurn        = "\\reverseturn"
     pretty Trill              = "\\trill"
@@ -326,6 +346,20 @@ instance Pretty Articulation where
     pretty Coda               = "\\coda"
     pretty VarCoda            = "\\varcoda"
     prettyList              = hcat . fmap pretty
+
+data Direction
+    = Above
+    | Default
+    | Below
+    deriving (Eq, Ord, Show)
+
+instance Default Direction where
+    def = Default
+    
+instance Pretty Direction where
+    pretty Above              = "^"
+    pretty Default            = "-"
+    pretty Below              = "_"
 
 data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
@@ -417,7 +451,7 @@ a <=> b = sep [a,b]
 
 -- TODO debug
 
-runLy = runCommand "lilypond -f png test.ly"
+runLy = runCommand "lilypond -f pdf test.ly"
 
 engrave :: Music -> IO ()
 engrave e = do
@@ -437,7 +471,14 @@ chord ns = Chord ns (Just $ 1/4) []
 
 main = engrave $ 
     Simultaneous False 
-        [ Relative g' (Sequential [rest,chord [c,e,g]^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
+        [ Relative g' (Sequential [
+            addText' Above "pizz." rest,
+            addArticulation Mordent $ chord [c,e,g]^*2,
+            d^*1,
+            e^*2,
+            c^*(3/2),
+            fs^*(1/2)
+            ])
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
