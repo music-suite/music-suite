@@ -133,7 +133,7 @@ mapPart :: (Ord v, v ~ Part a, HasPart a, MonadPlus s, Foldable s, Enum b) => b 
 mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 
 -- |
--- Map over all voices in the given score.
+-- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
@@ -141,7 +141,7 @@ mapParts :: (HasPart' a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> 
 mapParts f = msum . f . extract
 
 -- |
--- Map over all voices in the given score.
+-- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
@@ -149,7 +149,7 @@ mapAllParts :: (HasPart' a, MonadPlus s, Foldable s) => (s a -> s b) -> s a -> s
 mapAllParts f = mapParts (fmap f)
 
 -- |
--- Get all voices in the given score. Returns a list of voices.
+-- Get all parts in the given score. Returns a list of parts.
 --
 -- > Score a -> [Part]
 --
@@ -157,7 +157,7 @@ getParts :: (HasPart' a, Foldable s) => s a -> [Part a]
 getParts = List.sort . List.nub . fmap getPart . toList
 
 -- |
--- Set all voices in the given score.
+-- Set all parts in the given score.
 --
 -- > Part -> Score a -> Score a
 --
@@ -165,7 +165,7 @@ setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
 setParts n = fmap (setPart n)
 
 -- |
--- Modify all voices in the given score.
+-- Modify all parts in the given score.
 --
 -- > (Part -> Part) -> Score a -> Score a
 --
@@ -181,7 +181,7 @@ modifyParts n = fmap (modifyPart n)
 infixr 6 </>
 
 -- |
--- Similar to '<>', but increases voices in the second part to prevent voice collision.
+-- Similar to '<>', but increases parts in the second part to prevent collision.
 --
 (</>) :: (HasPart' a, Enum (Part a), Functor s, MonadPlus s, Foldable s) => s a -> s a -> s a
 a </> b = a `mplus` moveParts offset b
