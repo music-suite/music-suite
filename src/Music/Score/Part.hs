@@ -60,9 +60,14 @@ import Music.Time.Relative
 import Music.Time.Absolute
 
 
+-- | 
+-- Class of types with an associated part.
+--
+-- The part type can be any type that is orddered.
+-- 
 class HasPart a where
     -- | 
-    -- Associated voice type. Should implement 'Ord' and 'Show' to be usable.
+    -- Associated part type. Should implement 'Ord' and 'Show' to be usable.
     -- 
     type Part a :: *
 
@@ -103,9 +108,9 @@ type HasPart' a = (Ord (Part a), HasPart a)
 
 
 -- | 
--- Extract parts from the given score. 
+-- Extract parts from the a score. 
 --
--- The parts are returned in the order given by the 'Ord' instance for the given part type.
+-- The parts are returned in the order defined the associated 'Ord' instance part type.
 -- You can recompose the score with 'mconcat', i.e.
 -- 
 -- > mconcat . extract = id
@@ -114,7 +119,7 @@ type HasPart' a = (Ord (Part a), HasPart a)
 -- 
 -- > Score a -> [Score a]
 --
-extract :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => s a -> [s a]
+extract :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [s a]
 extract sc = fmap (flip extract' sc) (getParts sc) 
     where                    
         extract' v = mfilter ((== v) . getPart)
@@ -132,7 +137,7 @@ mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat 
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapParts :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
+mapParts :: (HasPart' a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
 mapParts f = msum . f . extract
 
 -- |
@@ -140,7 +145,7 @@ mapParts f = msum . f . extract
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts :: (HasPart a, Ord v, v ~ Part a, MonadPlus s, Foldable s) => (s a -> s b) -> s a -> s b
+mapAllParts :: (HasPart' a, MonadPlus s, Foldable s) => (s a -> s b) -> s a -> s b
 mapAllParts f = mapParts (fmap f)
 
 -- |
@@ -148,7 +153,7 @@ mapAllParts f = mapParts (fmap f)
 --
 -- > Score a -> [Part]
 --
-getParts :: (HasPart a, Ord v, v ~ Part a, Foldable s) => s a -> [Part a]
+getParts :: (HasPart' a, Foldable s) => s a -> [Part a]
 getParts = List.sort . List.nub . fmap getPart . toList
 
 -- |
@@ -178,7 +183,7 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases voices in the second part to prevent voice collision.
 --
-(</>) :: (Enum v, Ord v, v ~ Part a, Functor s, MonadPlus s, Foldable s, HasPart a) => s a -> s a -> s a
+(</>) :: (HasPart' a, Enum (Part a), Functor s, MonadPlus s, Foldable s) => s a -> s a -> s a
 a </> b = a `mplus` moveParts offset b
     where               
         -- max voice in a + 1
@@ -188,13 +193,13 @@ a </> b = a `mplus` moveParts offset b
 -- |
 -- Move down one voice (all parts).
 --
-moveParts :: (Enum v, v ~ Part a, Integral b, Functor s, HasPart a) => b -> s a -> s a
+moveParts :: (HasPart' a, Enum (Part a), Integral b, Functor s) => b -> s a -> s a
 moveParts x = modifyParts (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
-moveToPart :: (Enum v, v ~ Part a, Functor s, HasPart a) => v -> s a -> s a
+moveToPart :: (HasPart' a, Enum (Part a), Functor s) => Part a -> s a -> s a
 moveToPart v = moveParts (fromEnum v)
 
 

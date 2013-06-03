@@ -4,6 +4,8 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     OverloadedStrings,
     GeneralizedNewtypeDeriving #-} 
 
@@ -58,13 +60,13 @@ import Music.Score.Combinators
 -- |
 -- Apply a time-varying function to all events in score.
 --
-apply :: (Ord v, v ~ Part a, HasPart a) => Voice (Score a -> Score b) -> Score a -> Score b
+apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
 apply x = mapParts (fmap $ applySingle x)
 
 -- |
 -- Get all notes that start during a given note.
 --
-snapshot :: (Ord v, v ~ Part a, HasPart a) => Score b -> Score a -> Score (b, Score a)
+snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
 snapshot x = mapParts (fmap $ snapshotSingle x)
 
 trig :: Score a -> Score b -> Score b

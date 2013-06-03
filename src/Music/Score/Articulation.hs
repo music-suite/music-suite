@@ -134,7 +134,7 @@ mapSepL f g h [a]     = [f a]
 mapSepL f g h [a,b]   = [f a, h b]
 mapSepL f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
-mapSep :: (HasPart a, Ord v, v ~ Part a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapSep :: (HasPart' a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapSep f g h = {-fixDur .-} mapParts (fmap $ mapSepVoice f g h)
     -- where
         -- fixDur a = padAfter (duration sc - duration a) a

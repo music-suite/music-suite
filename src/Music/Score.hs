@@ -6,9 +6,10 @@
     DeriveFoldable,     
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     TypeOperators,    
     OverloadedStrings,
-    FlexibleContexts, -- for IsPitch stuff
     NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
@@ -263,13 +264,13 @@ instance HasMusicXml Integer where
 -- |
 -- Convert a score to MusicXML and write to a file. 
 -- 
-writeXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
-openXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -294,7 +295,7 @@ openXmlSingle sc = do
 -- |
 -- Convert a score to a MusicXML representation. 
 -- 
-toXml :: (HasMusicXml a, HasPart a, v ~ Part a, Ord v, Show v) => Score a -> XmlScore
+toXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlSingle' . extract $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)

@@ -4,6 +4,8 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -78,7 +80,7 @@ instance Tiable a => Tiable (TieT a) where
 -- | 
 -- Split all notes that cross a barlines into a pair of tied notes.
 -- 
-splitTies :: (HasPart a, Ord v, v ~ Part a, Tiable a) => Score a -> Score a
+splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
 splitTies = mapAllParts splitTiesSingle
 
 -- | 
