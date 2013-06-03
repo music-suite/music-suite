@@ -9,6 +9,7 @@ import Data.Ratio
 import Data.Semigroup
 import Text.Pretty
 import Music.Lilypond.Pitch
+import Music.Pitch.Literal
 
 {-
 data Lilypond 
@@ -36,8 +37,9 @@ data ScoreBlock
 
 type Dur = Ratio Int
 
-data Music
-    = Simple SimpleMusic                        -- ^ A single chord.
+data Music    
+    = Note Note (Maybe Dur) [PostEvent]         -- ^ A single note.
+    | Chord [Note] (Maybe Dur) [PostEvent]      -- ^ A single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
     | Simultaneous [Music]                      -- ^ Parallel composition.
     | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
@@ -56,7 +58,9 @@ data Music
 -- TODO percent repeats
 
 instance Pretty Music where
-    pretty (Simple x)               = pretty x
+    pretty (Note n d p)   = pretty n <> pretty d <> pretty p
+
+    pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
 
     pretty (Sequential xs)          = string "{" <+> prettyList xs <+> string "}"
 
@@ -68,32 +72,46 @@ instance Pretty Music where
             alt Nothing  = empty
             alt (Just x) = string "\\alternative" <> pretty x
 
-    pretty (Transpose intv x)       = error "Not implemented"
-    pretty (Times rat x)            = error "Not implemented"
-    pretty (Relative pitch x)       = error "Not implemented"
-    pretty _                        = error "Not implemented"
+    pretty (Transpose intv x)       = notImpl
+    pretty (Times rat x)            = notImpl
+    pretty (Relative pitch x)       = notImpl
+    pretty _                        = notImpl
 
 
     -- | Slur Bool                                 -- ^ Begin or end slur
     -- | Phrase Bool                               -- ^ Begin or end phrase slur
 
-data SimpleMusic
-    = Note Note (Maybe Dur) [PostEvent]
-    | Chord [Note] (Maybe Dur) [PostEvent]
-    deriving (Eq, Show)
-
-instance Pretty SimpleMusic where
-    pretty (Note n d p)   = pretty n <> pretty d <> pretty p
-    pretty (Chord ns d p) = char '<' <> (sepByS (char 'x') $ map pretty ns) <> char '>' <> pretty d <> pretty p
-
 data Note
-    = NotePitch [Exclamation] [Question] (Maybe OctaveCheck)
-    | NoteDrumPitch (Maybe Dur)
+    = NotePitch Pitch (Maybe OctaveCheck)
+    | DrumNotePitch (Maybe Dur)
     deriving (Eq, Show)
     -- TODO lyrics 
 
 instance Pretty Note where
-    pretty x = string "NOTE"
+    pretty (NotePitch p Nothing)   = pretty p
+    pretty (NotePitch p _)   = notImpl
+    pretty (DrumNotePitch _) = notImpl
+
+instance Pretty Pitch where
+    pretty (Pitch (c,a,o)) = string $ pc c ++ acc a ++ oct (o-4)
+        where
+            pc C = "c"
+            pc D = "d"
+            pc E = "e"
+            pc F = "f"
+            pc G = "g"
+            pc A = "a"
+            pc B = "b"            
+            acc n | n <  0  =  concat $ replicate (negate n) "es"
+                  | n == 0  =  ""
+                  | n >  0  =  concat $ replicate (n) "is"
+            oct n | n <  0  =  concat $ replicate (negate n) ","
+                  | n == 0  =  ""
+                  | n >  0  =  concat $ replicate n "'"
+
+instance IsPitch Pitch where
+    fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
+    fromPitch (PitchL (c, Just a, o))  = Pitch (toEnum c, round a, o)
 
 data Exclamation = Exclamation
     deriving (Eq, Show)
@@ -182,5 +200,10 @@ instance Pretty PostEvent where pretty = error "PostEvent"
 --     | FigureMdoe
 --     | ChordMode
 --     | LyricMode
+
+
+notImpl = error "Not implemented"
+asPitch = id
+asPitch :: Pitch -> Pitch
 
 

@@ -16,7 +16,9 @@ library
     build-depends: 
         base, 
         semigroups,
-        prettify
+        prettify,
+        music-pitch-literal,
+        music-dynamics-literal
     hs-source-dirs: src
     exposed-modules:
         Music.Lilypond
