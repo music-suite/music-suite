@@ -12,20 +12,29 @@ module Music.Lilypond (
         Clef(..),
         KeyMode(..),
         Key(..),
-        BreathingSign(..),
-        Articulation(..),
-        OctaveCheck(..),
+
         PostEvent(..),
+        Articulation(..),
+        Direction(..),
+        Markup(..),
+
+        OctaveCheck(..),
+        BreathingSign(..),
+        
         Duration(..),
         Pitch(..),
         PitchClass(..),
         Accidental(..),
         Octaves(..),
-        note,
+
         rest,
+        note,
         chord,
         addPost,
-        addArticulation
+        addText,
+        addText',
+        addArticulation,
+        addArticulation',
     )
 where
 
@@ -78,8 +87,8 @@ data Music
     | KeySignature Key                          -- ^
     | TimeSignature Int Int                     -- ^ 
     | Breathe BreathingSign                     -- ^ Breath mark (caesura)
-    | MetronomeMark (Maybe String) Duration Int Int  -- ^ Metronome mark (text, duration, dots, bpm).
-    | TempoMark String                          -- ^ Tempo mark.
+    | Metronome (Maybe String) Duration Int Int -- ^ Metronome mark (text, duration, dots, bpm).
+    | Tempo String                              -- ^ Tempo mark.
     deriving (Eq, Show)
 
 -- TODO tremolo
@@ -89,7 +98,8 @@ instance Pretty Music where
 
     pretty (Note n d p)     = pretty n <> pretty d <> prettyList p
 
-    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' <> pretty d <> prettyList p
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' 
+                                  <> pretty d <> prettyList p
 
     pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
 
@@ -119,14 +129,10 @@ instance Pretty Music where
     prettyList                      = hsep . fmap pretty
 
 
-    -- | Slur Bool                                 -- ^ Begin or end slur
-    -- | Phrase Bool                               -- ^ Begin or end phrase slur
-
 data Note
     = NotePitch Pitch (Maybe OctaveCheck)
     | DrumNotePitch (Maybe Duration)
     deriving (Eq, Show)
-    -- TODO lyrics 
 
 instance Pretty Note where
     pretty (NotePitch p Nothing)   = pretty p
@@ -137,13 +143,8 @@ instance Pretty Note where
 instance Pretty Pitch where
     pretty (Pitch (c,a,o)) = string $ pc c ++ acc a ++ oct (o-4)
         where
-            pc C = "c"
-            pc D = "d"
-            pc E = "e"
-            pc F = "f"
-            pc G = "g"
-            pc A = "a"
-            pc B = "b"            
+            pc C = "c" ; pc D = "d" ; pc E = "e" ; pc F = "f"
+            pc G = "g" ; pc A = "a" ; pc B = "b"            
             acc n | n <  0  =  concat $ replicate (negate n) "es"
                   | n == 0  =  ""
                   | n >  0  =  concat $ replicate (n) "is"
@@ -165,6 +166,7 @@ instance AdditiveGroup Music where
     zeroV   = Rest (Just $ 1/4) []
     a ^+^ b = Sequential [a,b]
     negateV = error "No Music.Lilypond.Music.negateV"
+
 instance VectorSpace Music where
     type Scalar Music = Duration
     a *^ (Rest  (Just d) p)    = Rest (Just $ a*d) p
@@ -231,29 +233,30 @@ instance Pretty PostEvent where
     pretty (Markup d m)       = notImpl
     prettyList                = hcat . fmap pretty
 
-data Markup = Plain Int
+data Markup
+    = MarkupText String
+    | MarkupList [Markup]
+    | Bold Markup
+    | Box Markup
+    | Caps Markup
+    | DynamicsFont Markup
+    | FingeringFont Markup
+    | Fontsize Markup
+    | Huge Markup
+    | Italic Markup
+    | Large Markup
+    | Larger Markup
+    | Magnify Markup
+    | Medium Markup
+    | Roman Markup
+    | Sans Markup
+    | Sub Markup
+    | Super Markup
+    | TextFont Markup
+    | Tiny Markup
+    | TypewriterFont Markup
+    | Upright Markup
     deriving (Eq, Show)
-
-
-
-
-addPost :: PostEvent -> Music -> Music
-addPost a (Rest d es)     = Rest d (es ++ [a])
-addPost a (Note n d es)   = Note n d (es ++ [a])
-addPost a (Chord ns d es) = Chord ns d (es ++ [a])
-addPost a m               = m
-
-addText :: String -> Music -> Music
-addText s = addPost (Text def s)
-
-addText' :: Direction -> String -> Music -> Music
-addText' d s = addPost (Text d s)
-
-addArticulation :: Articulation -> Music -> Music
-addArticulation a = addPost (Articulation def a)
-
-addArticulation' :: Direction -> Articulation -> Music -> Music
-addArticulation' d a = addPost (Articulation d a)
 
 -- | Articulations. These include ornaments.
 data Articulation
@@ -364,7 +367,6 @@ instance Pretty Direction where
 data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
 
-                                           
 -- data ChangeHead
 --     = NoteMode
 --     | DrumMode
@@ -394,6 +396,33 @@ instance Pretty Duration where
             pds n = concat $ replicate n "."
             (nv, ds) = separateDots a
 
+
+rest :: Music
+rest = Rest (Just $ 1/4) []
+
+note :: Note -> Music
+note n = Note n (Just $ 1/4) []
+
+chord :: [Note] -> Music
+chord ns = Chord ns (Just $ 1/4) []
+
+addPost :: PostEvent -> Music -> Music
+addPost a (Rest d es)     = Rest d (es ++ [a])
+addPost a (Note n d es)   = Note n d (es ++ [a])
+addPost a (Chord ns d es) = Chord ns d (es ++ [a])
+addPost a m               = m
+
+addText :: String -> Music -> Music
+addText s = addPost (Text def s)
+
+addText' :: Direction -> String -> Music -> Music
+addText' d s = addPost (Text d s)
+
+addArticulation :: Articulation -> Music -> Music
+addArticulation a = addPost (Articulation def a)
+
+addArticulation' :: Direction -> Articulation -> Music -> Music
+addArticulation' d a = addPost (Articulation d a)
 
 
 
@@ -458,15 +487,6 @@ engrave e = do
     writeFile "test.ly" $ show $ pretty e
     runLy
     return ()
-
-rest :: Music
-rest     = Rest (Just $ 1/4) []
-
-note :: Note -> Music
-note n   = Note n (Just $ 1/4) []
-
-chord :: [Note] -> Music
-chord ns = Chord ns (Just $ 1/4) []
 
 
 main = engrave $ 
