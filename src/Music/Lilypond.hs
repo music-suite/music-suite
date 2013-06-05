@@ -3,6 +3,7 @@
     OverloadedStrings, 
     GeneralizedNewtypeDeriving,
     StandaloneDeriving,
+    FlexibleInstances,
     TypeFamilies,
     ScopedTypeVariables #-}
 
@@ -33,6 +34,8 @@ module Music.Lilypond (
         addPost,
         addText,
         addText',
+        addMarkup,
+        addMarkup',
         addArticulation,
         addArticulation',
 
@@ -91,6 +94,7 @@ module Music.Lilypond (
 where
 
 import Data.Ratio
+import Data.String
 import Data.Default
 import Data.Semigroup
 import Text.Pretty
@@ -221,10 +225,10 @@ instance AdditiveGroup Music where
 
 instance VectorSpace Music where
     type Scalar Music = Duration
-    a *^ (Rest  (Just d) p)    = Rest (Just $ a*d) p
-    a *^ (Note  n (Just d) p)  = Note n (Just $ a*d) p
-    a *^ (Chord ns (Just d) p) = Chord ns (Just $ a*d) p
-    a *^ x                     = x
+    a *^ (Rest  (Just d) p)     = Rest (Just $ a*d) p
+    a *^ (Note  n (Just d) p)   = Note n (Just $ a*d) p
+    a *^ (Chord ns (Just d) p)  = Chord ns (Just $ a*d) p
+    a *^ x                      = x
 
 data Clef
     = Treble
@@ -270,20 +274,20 @@ data PostEvent
     deriving (Eq, Show)
 
 instance Pretty PostEvent where 
-    pretty (Articulation d a) = pretty d <> pretty a
-    pretty Tie                = "~"
-    pretty BeginBeam          = "["
-    pretty EndBeam            = "]"
-    pretty BeginSlur          = "("
-    pretty EndSlur            = ")"
-    pretty BeginPhraseSlur    = "\\("
-    pretty EndPhraseSlur      = "\\)"
-    pretty BeginCresc         = "\\<"
-    pretty BeginDim           = "\\>"
-    pretty EndCrescDim        = "\\!"
-    pretty (Text d s)         = pretty d <> (string . show) s -- add quotes
-    pretty (Markup d m)       = notImpl
-    prettyList                = hcat . fmap pretty
+    pretty (Articulation d a)   = pretty d <> pretty a
+    pretty Tie                  = "~"
+    pretty BeginBeam            = "["
+    pretty EndBeam              = "]"
+    pretty BeginSlur            = "("
+    pretty EndSlur              = ")"
+    pretty BeginPhraseSlur      = "\\("
+    pretty EndPhraseSlur        = "\\)"
+    pretty BeginCresc           = "\\<"
+    pretty BeginDim             = "\\>"
+    pretty EndCrescDim          = "\\!"
+    pretty (Text d s)           = pretty d <> (string . show) s -- add quotes
+    pretty (Markup d m)         = pretty d <> ("\\markup" <+> pretty m)
+    prettyList                  = hcat . fmap pretty
 
 data Markup
     = MarkupText String
@@ -293,7 +297,7 @@ data Markup
     | Caps Markup
     | DynamicsFont Markup
     | FingeringFont Markup
-    | Fontsize Markup
+    | Fontsize Double Markup
     | Huge Markup
     | Italic Markup
     | Large Markup
@@ -309,6 +313,41 @@ data Markup
     | TypewriterFont Markup
     | Upright Markup
     deriving (Eq, Show)
+
+class HasMarkup a where
+    markup :: a -> Markup
+
+instance HasMarkup Markup where
+    markup = id
+instance HasMarkup a => HasMarkup [a] where
+    markup = MarkupList . fmap markup
+instance IsString Markup where
+    fromString = MarkupText
+    
+instance Pretty Markup where
+    pretty (MarkupText s)       = (string . show) s 
+    pretty (MarkupList as)      = "{" <+> hsep (fmap pretty as) <+> "}"
+    pretty (Bold a)             = "\\bold" <+> pretty a
+    pretty (Box a)              = "\\box" <+> pretty a
+    pretty (Caps a)             = "\\caps" <+> pretty a
+    pretty (DynamicsFont a)     = "\\dynamics" <+> pretty a
+    pretty (FingeringFont a)    = "\\fingering" <+> pretty a
+    pretty (Fontsize n a)       = "\\fontsize" <+> ("#" <> pretty n) <+> pretty a
+    pretty (Huge a)             = "\\huge" <+> pretty a
+    pretty (Italic a)           = "\\italic" <+> pretty a
+    pretty (Large a)            = "\\large" <+> pretty a
+    pretty (Larger a)           = "\\larger" <+> pretty a
+    pretty (Magnify a)          = "\\magnify" <+> pretty a
+    pretty (Medium a)           = "\\medium" <+> pretty a
+    pretty (Roman a)            = "\\roman" <+> pretty a
+    pretty (Sans a)             = "\\sans" <+> pretty a
+    pretty (Sub a)              = "\\sub" <+> pretty a
+    pretty (Super a)            = "\\super" <+> pretty a
+    pretty (TextFont a)         = "\\text" <+> pretty a
+    pretty (Tiny a)             = "\\tiny" <+> pretty a
+    pretty (TypewriterFont a)   = "\\typewriter" <+> pretty a
+    pretty (Upright a)          = "\\upright" <+> pretty a
+
 
 -- | Articulations. These include ornaments.
 data Articulation
@@ -469,6 +508,12 @@ addText s = addPost (Text def s)
 
 addText' :: Direction -> String -> Music -> Music
 addText' d s = addPost (Text d s)
+
+addMarkup :: HasMarkup a => a -> Music -> Music
+addMarkup s = addPost (Markup def (markup s))
+
+addMarkup' :: HasMarkup a => Direction -> a -> Music -> Music
+addMarkup' d s = addPost (Markup d (markup s))
 
 addArticulation :: Articulation -> Music -> Music
 addArticulation a = addPost (Articulation def a)
@@ -692,7 +737,7 @@ engrave e = do
 main = engrave $ 
     Simultaneous False 
         [ Relative g' (Sequential [
-            addText' Above "pizz." rest,
+            addMarkup ([Bold "Hello", Italic (markup [MarkupText "cruel", Bold $ MarkupText "world"])]) rest,
             addArticulation Mordent $ chord [c,e,g]^*2,
             d^*1,
             e^*2,
