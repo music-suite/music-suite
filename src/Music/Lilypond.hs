@@ -35,6 +35,58 @@ module Music.Lilypond (
         addText',
         addArticulation,
         addArticulation',
+
+        beginTie,
+        beginBeam,
+        endBeam,
+        beginSlur,
+        endSlur,
+        beginPhraseSlur,
+        endPhraseSlur,
+        beginCresc,
+        endCresc,
+        beginDim,
+        endDim,
+
+        addAccent,
+        addMarcato,
+        addStaccatissimo,
+        addEspressivo,
+        addStaccato,
+        addTenuto,
+        addPortato,
+        addUpbow,
+        addDownbow,
+        addFlageolet,
+        addThumb,
+        addLeftHeel,
+        addRightHeel,
+        addLeftToe,
+        addRightToe,
+        addOpen,
+        addStopped,
+        addTurn,
+        addReverseTurn,
+        addTrill,
+        addPrall,
+        addMordent,
+        addPrallPrall,
+        addPrallMordent,
+        addUpPrall,
+        addDownPrall,
+        addUpMordent,
+        addDownMordent,
+        addPrallDown,
+        addPrallUp,
+        addLinePrall,
+        addSignumCongruentiae,
+        addShortFermata,
+        addFermata,
+        addLongFermata,
+        addVeryLongFermata,
+        addSegno,
+        addCoda,
+        addVarCoda,
     )
 where
 
@@ -424,8 +476,156 @@ addArticulation a = addPost (Articulation def a)
 addArticulation' :: Direction -> Articulation -> Music -> Music
 addArticulation' d a = addPost (Articulation d a)
 
+beginTie :: Music -> Music
+beginTie = addPost Tie
+
+beginBeam :: Music -> Music
+beginBeam = addPost BeginBeam
+
+endBeam :: Music -> Music
+endBeam = addPost EndBeam
+
+beginSlur :: Music -> Music
+beginSlur = addPost BeginSlur
+
+endSlur :: Music -> Music
+endSlur = addPost EndSlur
+
+beginPhraseSlur :: Music -> Music
+beginPhraseSlur = addPost BeginPhraseSlur
+
+endPhraseSlur :: Music -> Music
+endPhraseSlur = addPost EndPhraseSlur
+
+beginCresc :: Music -> Music
+beginCresc = addPost BeginCresc
+
+endCresc :: Music -> Music
+endCresc = addPost EndCrescDim
+
+beginDim :: Music -> Music
+beginDim = addPost BeginDim
+
+endDim :: Music -> Music
+endDim = addPost EndCrescDim
 
 
+addAccent :: Music -> Music
+addAccent = addArticulation Accent
+
+addMarcato :: Music -> Music
+addMarcato = addArticulation Marcato
+
+addStaccatissimo :: Music -> Music
+addStaccatissimo = addArticulation Staccatissimo
+
+addEspressivo :: Music -> Music
+addEspressivo = addArticulation Espressivo
+
+addStaccato :: Music -> Music
+addStaccato = addArticulation Staccato
+
+addTenuto :: Music -> Music
+addTenuto = addArticulation Tenuto
+
+addPortato :: Music -> Music
+addPortato = addArticulation Portato
+
+addUpbow :: Music -> Music
+addUpbow = addArticulation Upbow
+
+addDownbow :: Music -> Music
+addDownbow = addArticulation Downbow
+
+addFlageolet :: Music -> Music
+addFlageolet = addArticulation Flageolet
+
+addThumb :: Music -> Music
+addThumb = addArticulation Thumb
+
+addLeftHeel :: Music -> Music
+addLeftHeel = addArticulation LeftHeel
+
+addRightHeel :: Music -> Music
+addRightHeel = addArticulation RightHeel
+
+addLeftToe :: Music -> Music
+addLeftToe = addArticulation LeftToe
+
+addRightToe :: Music -> Music
+addRightToe = addArticulation RightToe
+
+addOpen :: Music -> Music
+addOpen = addArticulation Open
+
+addStopped :: Music -> Music
+addStopped = addArticulation Stopped
+
+addTurn :: Music -> Music
+addTurn = addArticulation Turn
+
+addReverseTurn :: Music -> Music
+addReverseTurn = addArticulation ReverseTurn
+
+addTrill :: Music -> Music
+addTrill = addArticulation Trill
+
+addPrall :: Music -> Music
+addPrall = addArticulation Prall
+
+addMordent :: Music -> Music
+addMordent = addArticulation Mordent
+
+addPrallPrall :: Music -> Music
+addPrallPrall = addArticulation PrallPrall
+
+addPrallMordent :: Music -> Music
+addPrallMordent = addArticulation PrallMordent
+
+addUpPrall :: Music -> Music
+addUpPrall = addArticulation UpPrall
+
+addDownPrall :: Music -> Music
+addDownPrall = addArticulation DownPrall
+
+addUpMordent :: Music -> Music
+addUpMordent = addArticulation UpMordent
+
+addDownMordent :: Music -> Music
+addDownMordent = addArticulation DownMordent
+
+addPrallDown :: Music -> Music
+addPrallDown = addArticulation PrallDown
+
+addPrallUp :: Music -> Music
+addPrallUp = addArticulation PrallUp
+
+addLinePrall :: Music -> Music
+addLinePrall = addArticulation LinePrall
+
+addSignumCongruentiae :: Music -> Music
+addSignumCongruentiae = addArticulation SignumCongruentiae
+
+addShortFermata :: Music -> Music
+addShortFermata = addArticulation ShortFermata
+
+addFermata :: Music -> Music
+addFermata = addArticulation Fermata
+
+addLongFermata :: Music -> Music
+addLongFermata = addArticulation LongFermata
+
+addVeryLongFermata :: Music -> Music
+addVeryLongFermata = addArticulation VeryLongFermata
+
+addSegno :: Music -> Music
+addSegno = addArticulation Segno
+
+addCoda :: Music -> Music
+addCoda = addArticulation Coda
+
+addVarCoda :: Music -> Music
+addVarCoda = addArticulation VarCoda
 
 
 
