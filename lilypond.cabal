@@ -19,6 +19,7 @@ library
         prettify,       
         vector-space,
         process,
+        data-default,
         music-pitch-literal,
         music-dynamics-literal
     hs-source-dirs: src
