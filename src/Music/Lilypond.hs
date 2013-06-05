@@ -14,8 +14,7 @@ module Music.Lilypond (
         Music(..),
         Note(..),
         Clef(..),
-        KeyMode(..),
-        Key(..),
+        Mode(..),
 
         -- ** Articulation and dynamics
         PostEvent(..),
@@ -113,7 +112,7 @@ import Data.Ratio
 import Data.String
 import Data.Default
 import Data.Semigroup
-import Text.Pretty
+import Text.Pretty hiding (Mode)
 import Data.VectorSpace
 import Music.Lilypond.Pitch
 import Music.Pitch.Literal
@@ -160,9 +159,9 @@ data Music
     | Transpose Pitch Pitch Music               -- ^ Transpose music (from to).
     | Relative Pitch Music                      -- ^ Use relative octave (octave).
     | Clef Clef                                 -- ^ Clef.
-    | KeySignature Key                          -- ^ Key signature.
-    | TimeSignature Int Int                     -- ^ Time signature.
-    | Breathe BreathingSign                     -- ^ Breath mark (caesura)
+    | Key Pitch Mode                            -- ^ Key signature.
+    | Time Rational                             -- ^ Time signature.
+    | Breathe (Maybe BreathingSign)             -- ^ Breath mark (caesura)
     | Metronome (Maybe String) Duration Int Int -- ^ Metronome mark (text, duration, dots, bpm).
     | Tempo String                              -- ^ Tempo mark.
     deriving (Eq, Show)
@@ -197,7 +196,7 @@ instance Pretty Music where
         where
             frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
 
-    pretty (Transpose from to x) = notImpl
+    pretty (Transpose from to x) =
         "\\transpose" <+> pretty from <=> pretty to <=> pretty x
 
     pretty (Relative p x) =
@@ -205,7 +204,14 @@ instance Pretty Music where
 
     pretty (Clef c) = "\\clef" <+> pretty c
 
-    pretty _                        = notImpl
+    pretty (Key p m) = "\\clef" <+> pretty p <+> pretty m
+    
+    pretty (Time n) = "\\time" <+> pretty n
+    
+    pretty (Breathe Nothing) = "\\breathe"
+    pretty (Breathe a)       = notImpl "Non-standard breath marks"
+
+    pretty _                        = notImpl "Unknown music expression"
 
     prettyList                      = hsep . fmap pretty
 
@@ -217,8 +223,8 @@ data Note
 
 instance Pretty Note where
     pretty (NotePitch p Nothing)   = pretty p
-    pretty (NotePitch p _)         = notImpl
-    pretty (DrumNotePitch _)       = notImpl
+    pretty (NotePitch p _)         = notImpl "Non-standard pitch"
+    pretty (DrumNotePitch _)       = notImpl "Non-standard pitch"
     prettyList                     = hsep . fmap pretty
 
 instance Pretty Pitch where
@@ -284,11 +290,12 @@ instance Pretty Clef where
     pretty Percussion   = "percussion"
     pretty Tab          = "tab"
 
-data KeyMode = Major | Minor
+data Mode = Major | Minor
     deriving (Eq, Show)
 
-newtype Key = Key (PitchClass, KeyMode)
-    deriving (Eq, Show)
+instance Pretty Mode where
+    pretty Major = "\\major"
+    pretty Minor = "\\minor"
 
 data BreathingSign
     = RightVarComma
@@ -720,7 +727,7 @@ addVarCoda = addArticulation VarCoda
 
 
 
-notImpl = error "Not implemented"
+notImpl a = error $ "Not implemented: " ++ a
 asPitch = id
 asPitch :: Pitch -> Pitch
 
