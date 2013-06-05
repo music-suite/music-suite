@@ -8,29 +8,43 @@
     ScopedTypeVariables #-}
 
 module Music.Lilypond (
+
+        -- * Representation
+        -- ** Music expressions
         Music(..),
         Note(..),
         Clef(..),
         KeyMode(..),
         Key(..),
 
+        -- ** Articulation and dynamics
         PostEvent(..),
-        Articulation(..),
-        Direction(..),
-        Markup(..),
 
+        -- ** Text
+        Articulation(..),
+        Markup(..),
+        HasMarkup(..),
+
+        -- ** Miscellaneous types
+        Direction(..),
         OctaveCheck(..),
         BreathingSign(..),
-        
+
+        -- ** Time
         Duration(..),
+        -- ** Pitch
         Pitch(..),
         PitchClass(..),
         Accidental(..),
         Octaves(..),
 
+        -- * Constructing Lilypond expresions
+        -- ** Notes and rests
         rest,
         note,
         chord,
+        
+        -- ** Post events
         addPost,
         addText,
         addText',
@@ -39,6 +53,7 @@ module Music.Lilypond (
         addArticulation,
         addArticulation',
 
+        -- ** Curves and lines
         beginTie,
         beginBeam,
         endBeam,
@@ -51,6 +66,7 @@ module Music.Lilypond (
         beginDim,
         endDim,
 
+        -- ** Marks
         addAccent,
         addMarcato,
         addStaccatissimo,
@@ -770,8 +786,7 @@ test =
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
         , Sequential 
-            [ Clef Bass
-            , Times (4/5) (Sequential 
+            [ Times (4/5) (Sequential 
                 [
                     rest,
                     addArticulation Accent $ addPost BeginSlur $ addPost BeginCresc $ c^*2,
