@@ -128,20 +128,23 @@ data ScoreBlock
     -- full markup etc
 -}
 
+-- | A Lilypond music expression.
+--   
+--   Use the 'Pretty' instance to convert into Lilypond syntax.
+--   
 data Music    
-    = Rest (Maybe Duration) [PostEvent]         -- ^ A single rest.
-    | Note Note (Maybe Duration) [PostEvent]    -- ^ A single note.
-    | Chord [Note] (Maybe Duration) [PostEvent] -- ^ A single chord.
+    = Rest (Maybe Duration) [PostEvent]         -- ^ Single rest.
+    | Note Note (Maybe Duration) [PostEvent]    -- ^ Single note.
+    | Chord [Note] (Maybe Duration) [PostEvent] -- ^ Single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
     | Simultaneous Bool [Music]                 -- ^ Parallel composition (split voices?).
     | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
     | Transpose Pitch Pitch Music               -- ^ Transpose music
     | Times Rational Music                      -- ^ Stretch music
     | Relative Pitch Music                      -- ^ Use relative pitch
-    
-    | Clef Clef                                 -- ^ 
-    | KeySignature Key                          -- ^
-    | TimeSignature Int Int                     -- ^ 
+    | Clef Clef                                 -- ^ Clef.
+    | KeySignature Key                          -- ^ Key signature.
+    | TimeSignature Int Int                     -- ^ Time signature.
     | Breathe BreathingSign                     -- ^ Breath mark (caesura)
     | Metronome (Maybe String) Duration Int Int -- ^ Metronome mark (text, duration, dots, bpm).
     | Tempo String                              -- ^ Tempo mark.
@@ -179,6 +182,8 @@ instance Pretty Music where
 
     pretty (Relative p x) =
         "\\relative" <=> pretty p <=> pretty x
+
+    pretty (Clef c) = "\\clef" <+> pretty c
 
     pretty _                        = notImpl
 
@@ -244,6 +249,20 @@ data Clef
     | Percussion
     | Tab
     deriving (Eq, Show)
+
+instance Pretty Clef where
+    pretty Treble       = "treble"
+    pretty Alto         = "alto"
+    pretty Tenor        = "tenor"
+    pretty Bass         = "bass"
+    pretty French       = "french"
+    pretty Soprano      = "soprano"
+    pretty MezzoSoprano = "mezzosoprano"
+    pretty Baritone     = "baritone"
+    pretty VarBaritone  = "varbaritone"
+    pretty SubBass      = "subbass"
+    pretty Percussion   = "percussion"
+    pretty Tab          = "tab"
 
 data KeyMode = Major | Minor
     deriving (Eq, Show)
@@ -734,7 +753,9 @@ engrave e = do
     return ()
 
 
-main = engrave $ 
+main = engrave test
+
+test =
     Simultaneous False 
         [ Relative g' (Sequential [
             addMarkup ([Bold "Hello", Italic (markup [MarkupText "cruel", Bold $ MarkupText "world"])]) rest,
@@ -749,7 +770,8 @@ main = engrave $
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
         , Sequential 
-            [ Times (4/5) (Sequential 
+            [ Clef Bass
+            , Times (4/5) (Sequential 
                 [
                     rest,
                     addArticulation Accent $ addPost BeginSlur $ addPost BeginCresc $ c^*2,
@@ -757,7 +779,7 @@ main = engrave $
                     addPost Tie $ e^*1
                 ])
             , Times (4/5) (Sequential 
-                [
+                [      
                     addPost BeginDim $ addPost EndCrescDim $ e^*1,
                     c^*(3/2),
                     addPost EndSlur $ fs^*(1/2),
