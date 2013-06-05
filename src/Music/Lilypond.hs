@@ -154,10 +154,11 @@ data Music
     | Chord [Note] (Maybe Duration) [PostEvent] -- ^ Single chord.
     | Sequential   [Music]                      -- ^ Sequential composition.
     | Simultaneous Bool [Music]                 -- ^ Parallel composition (split voices?).
-    | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold, times, music, alt).
-    | Transpose Pitch Pitch Music               -- ^ Transpose music
-    | Times Rational Music                      -- ^ Stretch music
-    | Relative Pitch Music                      -- ^ Use relative pitch
+    | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold?, times, music, alternative).
+    | Tremolo Int Music                         -- ^ Tremolo (multiplier).
+    | Times Rational Music                      -- ^ Stretch music (multiplier).
+    | Transpose Pitch Pitch Music               -- ^ Transpose music (from to).
+    | Relative Pitch Music                      -- ^ Use relative octave (octave).
     | Clef Clef                                 -- ^ Clef.
     | KeySignature Key                          -- ^ Key signature.
     | TimeSignature Int Int                     -- ^ Time signature.
@@ -188,13 +189,16 @@ instance Pretty Music where
             alt Nothing  = empty
             alt (Just x) = "\\alternative" <> pretty x
 
-    pretty (Transpose from to x) = notImpl
-        "\\transpose" <+> pretty from <=> pretty to <=> pretty x
+    pretty (Tremolo n x) =
+        "\\repeat tremolo" <+> pretty n <=> pretty x
 
     pretty (Times n x) = 
         "\\times" <+> frac n <=> pretty x
         where
             frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
+
+    pretty (Transpose from to x) = notImpl
+        "\\transpose" <+> pretty from <=> pretty to <=> pretty x
 
     pretty (Relative p x) =
         "\\relative" <=> pretty p <=> pretty x
@@ -781,7 +785,7 @@ test =
             c^*(3/2),
             fs^*(1/2)
             ])
-        , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
+        , Sequential [Tremolo 4 (Sequential [c^/4,d^/4]), Tremolo 4 (Sequential [c^/4,d^/4])]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
         , Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
