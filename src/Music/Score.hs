@@ -340,7 +340,7 @@ rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral b) (fromIntegral a)
 rhythmToXml (Bound  d a)          = noteRestToXml (fromRational $ getDuration d) x <> rhythmToXml b
     where
         (x,b) = toTiedRhythm a
-rhythmToXml (Rhythms rs)          = mconcat $ map rhythmToXml rs
+rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromRational . toRational $ d   
@@ -412,8 +412,8 @@ toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
 toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
 toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
 toTiedRhythm (Bound  d r)     = error "toTiedRhythm: Nested bounded rhytms"
-toTiedRhythm (Rhythms [])     = error "toTiedRhythm: Bound empty rhythm"
-toTiedRhythm (Rhythms (a:as)) = (b, Rhythms (c:as)) where (b,c) = toTiedRhythm a
+toTiedRhythm (Group [])       = error "toTiedRhythm: Bound empty rhythm"
+toTiedRhythm (Group (a:as))   = (b, Group (c:as)) where (b,c) = toTiedRhythm a
 
 -- |
 -- Perform the score, yielding a list of relative-time events.

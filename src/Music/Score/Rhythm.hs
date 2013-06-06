@@ -53,22 +53,22 @@ import Music.Score.Ties
 
 data Rhythm a 
     = Beat       Duration a                    -- d is divisible by 2
+    | Group      [Rhythm a]                    -- normal note sequence
     | Dotted     Int (Rhythm a)                -- n > 0.
     | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'tupletMods'.
     | Bound      Duration (Rhythm a)           -- tied from duration
-    | Rhythms    [Rhythm a]                    -- normal note sequence
     deriving (Eq, Show, Functor, Foldable)
     -- RInvTuplet  Duration (Rhythm a)
 
 instance Semigroup (Rhythm a) where
     (<>) = mappend
 
--- Catenates using 'Rhythms'
+-- Catenates using 'Group'
 instance Monoid (Rhythm a) where
-    mempty = Rhythms []
-    Rhythms as `mappend` Rhythms bs   =  Rhythms (as <> bs)
-    r          `mappend` Rhythms bs   =  Rhythms ([r] <> bs)
-    Rhythms as `mappend` r            =  Rhythms (as <> [r])
+    mempty = Group []
+    Group as `mappend` Group bs   =  Group (as <> bs)
+    r        `mappend` Group bs   =  Group ([r] <> bs)
+    Group as `mappend` r          =  Group (as <> [r])
 
 instance AdditiveGroup (Rhythm a) where
     zeroV   = error "No zeroV for (Rhythm a)"
@@ -86,7 +86,7 @@ instance HasDuration (Rhythm a) where
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
     duration (Bound d a)       = duration a + d
-    duration (Rhythms as)      = sum (fmap duration as)    
+    duration (Group as)      = sum (fmap duration as)    
 
 quantize :: [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
@@ -150,10 +150,10 @@ match p = tokenPrim show next test
 
 -- Matches any rhythm
 rhythm :: RhythmParser a (Rhythm a)
-rhythm = Rhythms <$> Text.Parsec.many1 (rhythm' <|> bound)
+rhythm = Group <$> Text.Parsec.many1 (rhythm' <|> bound)
 
 rhythmNoBound :: RhythmParser a (Rhythm a)
-rhythmNoBound = Rhythms <$> Text.Parsec.many1 rhythm'
+rhythmNoBound = Group <$> Text.Parsec.many1 rhythm'
 
 rhythm' :: RhythmParser a (Rhythm a)
 rhythm' = mzero
