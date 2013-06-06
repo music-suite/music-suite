@@ -370,8 +370,37 @@ instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilyp
 
 instance HasLilypond Integer where
     getLilypond d p = Lilypond.note (spellLy p) ^*(fromDuration d)
-                    
 
+-- |
+-- Convert a voice score to a list of bars. 
+-- 
+toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond.Music]
+toLyVoice' = 
+    {-addDefaultSignatures . -} fmap barToLy . voiceToBars
+    where
+        -- addDefaultSignatures []     = []
+        -- addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
+        -- defaultSignatures = mempty
+            -- <> Ly.defaultKey
+            -- <> Ly.defaultDivisions 
+            -- <> Ly.metronome (1/4) 60
+            -- <> Ly.commonTime
+                    
+barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond.Music
+barToLy bar = case quantize bar of
+    Left e   -> error $ "barToLy: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToLy rh
+
+rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond.Music
+rhythmToLy (Beat d x)            = noteRestToLy d x
+rhythmToLy (Group rs)            = foldr Lilypond.scat (Lilypond.Sequential []) $ map rhythmToLy rs
+rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
+rhythmToLy (Tuplet m r)          = Lilypond.Times (fromDuration m) (rhythmToLy r)
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
+
+noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond.Music
+noteRestToLy d Nothing  = Lilypond.rest^*fromDuration d   
+noteRestToLy d (Just p) = getLilypond d p
 
 
 
