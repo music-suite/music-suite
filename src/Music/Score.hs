@@ -71,6 +71,7 @@ module Music.Score (
         toXml,
         writeXml,
         openXml,
+        toXmlVoice,
         toXmlSingle,
         writeXmlSingle,
         openXmlSingle,
@@ -293,7 +294,7 @@ openXmlSingle sc = do
 -- Convert a score to a MusicXML representation. 
 -- 
 toXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlSingle' . extract $ sc
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap (toXmlVoice' . scoreToVoice) . extract $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)
 
@@ -301,16 +302,20 @@ toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlSingle' . extract $ s
 -- Convert a single-voice score to a MusicXML representation. 
 -- 
 toXmlSingle :: HasMusicXml a => Score a -> XmlScore
-toXmlSingle = Xml.fromPart "Title" "Composer" "Voice" . toXmlSingle'
+toXmlSingle = toXmlVoice . scoreToVoice
+
+-- |
+-- Convert a single-voice score to a MusicXML representation. 
+-- 
+toXmlVoice :: HasMusicXml a => Voice (Maybe a) -> XmlScore
+toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
 
 -- |
 -- Convert a voice score to a list of bars. 
 -- 
-toXmlSingle' :: HasMusicXml a => Score a -> [XmlMusic]
-toXmlSingle' = 
-    addDefaultSignatures . 
-        fmap barToXml . separateBars . 
-        splitTiesVoice . scoreToVoice
+toXmlVoice' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
+toXmlVoice' = 
+    addDefaultSignatures . fmap barToXml . voiceToBars
     where
         addDefaultSignatures []       = []
         addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
@@ -319,6 +324,7 @@ toXmlSingle' =
             <> Xml.defaultDivisions 
             <> Xml.metronome (1/4) 60
             <> Xml.commonTime
+
 
 barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
 barToXml bar = case quantize bar of
@@ -379,6 +385,12 @@ instance HasLilypond Integer where
 
 
 -------------------------------------------------------------------------------------
+
+-- |
+-- Convert a single-voice score to a list of bars.
+-- 
+voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
+voiceToBars = separateBars . splitTiesVoice
 
 -- |
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
