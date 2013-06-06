@@ -151,22 +151,22 @@ data ScoreBlock
 --   Use the 'Pretty' instance to convert into Lilypond syntax.
 --   
 data Music    
-    = Rest (Maybe Duration) [PostEvent]         -- ^ Single rest.
-    | Note Note (Maybe Duration) [PostEvent]    -- ^ Single note.
-    | Chord [Note] (Maybe Duration) [PostEvent] -- ^ Single chord.
-    | Sequential   [Music]                      -- ^ Sequential composition.
-    | Simultaneous Bool [Music]                 -- ^ Parallel composition (split voices?).
-    | Repeat Bool Int Music (Maybe Music)       -- ^ Repetition (unfold?, times, music, alternative).
-    | Tremolo Int Music                         -- ^ Tremolo (multiplier).
-    | Times Rational Music                      -- ^ Stretch music (multiplier).
-    | Transpose Pitch Pitch Music               -- ^ Transpose music (from to).
-    | Relative Pitch Music                      -- ^ Use relative octave (octave).
-    | Clef Clef                                 -- ^ Clef.
-    | Key Pitch Mode                            -- ^ Key signature.
-    | Time Rational                             -- ^ Time signature.
-    | Breathe (Maybe BreathingSign)             -- ^ Breath mark (caesura)
-    | Metronome (Maybe String) Duration Int Int -- ^ Metronome mark (text, duration, dots, bpm).
-    | Tempo String                              -- ^ Tempo mark.
+    = Rest (Maybe Duration) [PostEvent]             -- ^ Single rest.
+    | Note Note (Maybe Duration) [PostEvent]        -- ^ Single note.
+    | Chord [Note] (Maybe Duration) [PostEvent]     -- ^ Single chord.
+    | Sequential   [Music]                          -- ^ Sequential composition.
+    | Simultaneous Bool [Music]                     -- ^ Parallel composition (split voices?).
+    | Repeat Bool Int Music (Maybe (Music, Music))  -- ^ Repetition (unfold?, times, music, alternative).
+    | Tremolo Int Music                             -- ^ Tremolo (multiplier).
+    | Times Rational Music                          -- ^ Stretch music (multiplier).
+    | Transpose Pitch Pitch Music                   -- ^ Transpose music (from to).
+    | Relative Pitch Music                          -- ^ Use relative octave (octave).
+    | Clef Clef                                     -- ^ Clef.
+    | Key Pitch Mode                                -- ^ Key signature.
+    | Time Rational                                 -- ^ Time signature.
+    | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
+    | Metronome (Maybe String) Duration Int Int     -- ^ Metronome mark (text, duration, dots, bpm).
+    | Tempo String                                  -- ^ Tempo mark.
     deriving (Eq, Show)
 
 scat :: Music -> Music -> Music
@@ -190,12 +190,12 @@ instance Pretty Music where
     pretty (Simultaneous False xs) = "<<" <//> nest 4 ((vcat . fmap pretty) xs)           <//> ">>"
     pretty (Simultaneous True xs)  = "<<" <//> nest 4 ((sepByS " \\\\" . fmap pretty) xs) <//> ">>"
 
-    pretty (Repeat unfold times x y) = 
-        "\\repeat" <=> unf unfold <=> int times <=> pretty x <=> alt y
+    pretty (Repeat unfold times x alts) = 
+        "\\repeat" <=> unf unfold <=> int times <=> pretty x <=> alt alts
         where 
             unf p = if p then "unfold" else "volta"
-            alt Nothing  = empty
-            alt (Just x) = "\\alternative" <> pretty x
+            alt Nothing      = empty
+            alt (Just (x,y)) = "\\alternative" <> pretty x <> pretty y
 
     pretty (Tremolo n x) =
         "\\repeat tremolo" <+> pretty n <=> pretty x
