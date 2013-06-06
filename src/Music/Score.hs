@@ -355,14 +355,11 @@ setDefaultVoice = Xml.setVoice 1
 type Lilypond = Lilypond.Music
 
 -- |
--- Class of types that can be converted to MusicXML.
+-- Class of types that can be converted to Lilypond.
 --
 class Tiable a => HasLilypond a where          
     -- | 
-    -- Convert a value to MusicXML.
-    --
-    -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
-    -- to add beams, slurs, dynamics, articulation etc.
+    -- Convert a value to a Lilypond music expression.
     --
     getLilypond :: Duration -> a -> Lilypond
 
