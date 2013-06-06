@@ -188,7 +188,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
 
         performance :: [(Time, Duration, Midi.Message)]
-        performance     = performRelative (getMidiScore score)
+        performance     = (toRelative . perform) (getMidiScore score)
 
         -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO handle voice
@@ -416,11 +416,8 @@ toTiedRhythm (Group [])       = error "toTiedRhythm: Bound empty rhythm"
 toTiedRhythm (Group (a:as))   = (b, Group (c:as)) where (b,c) = toTiedRhythm a
 
 -- |
--- Perform the score, yielding a list of relative-time events.
+-- Convert absolute to relative durations.
 --
-performRelative :: Score a -> [(Time, Duration, a)]
-performRelative = toRelative . perform
-
 toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
 toRelative = snd . mapAccumL g 0
     where
