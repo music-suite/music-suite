@@ -340,7 +340,7 @@ noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d   
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
--- TODO only works for single-voice parts
+-- FIXME only works for single-voice parts
 setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
 
@@ -369,11 +369,10 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round    
 
 instance HasLilypond Integer where
-    getLilypond d p = undefined
-        where
-            d' = fromRational . toRational $ d
-            
+    getLilypond d p = Lilypond.note (spellLy p) ^*(fromDuration d)
                     
+
+
 
 
 
@@ -413,6 +412,28 @@ spellXml :: Int -> Xml.Pitch
 spellXml p = (
     toEnum pitchClass, 
     if alteration == 0 then Nothing else Just (fromIntegral alteration), 
+    fromIntegral octave
+    ) 
+    where
+        octave     = (p `div` 12) - 1
+        semitone   = p `mod` 12
+        pitchClass = fromStep major semitone
+        alteration = semitone - step major pitchClass
+
+        step xs p = xs !! (p `mod` length xs)
+        fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
+        scaleFromSteps = snd . List.mapAccumL add 0
+            where
+                add a x = (a + x, a + x)
+        major = scaleFromSteps [0,2,2,1,2,2,2,1]
+
+spellLy :: Integer -> Lilypond.Note
+spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
+
+spellLy' :: Integer -> Lilypond.Pitch
+spellLy' p = Lilypond.Pitch (
+    toEnum pitchClass, 
+    fromIntegral alteration, 
     fromIntegral octave
     ) 
     where
