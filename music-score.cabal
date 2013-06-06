@@ -27,6 +27,7 @@ library
         parsec,
         transformers,
         monadplus,
+        prettify,
         HCodecs,
         musicxml2,
         lilypond,

@@ -57,9 +57,9 @@ module Music.Score (
         -- ** Lilypond
         Lilypond,
         HasLilypond(..),
-        -- toLy,
-        -- writeLy,
-        -- openLy,
+        toLy,
+        writeLy,
+        openLy,
         -- toLySingle,
         -- writeLySingle,
         -- openLySingle,
@@ -394,7 +394,7 @@ openLy sc = do
     writeLy "test.ly" sc                       
     runLy
     
-runLy = execute "lilypond" ["-f", "pdf", "test.ly"]
+runLy = execute "lilypond" ["-f", "png", "test.ly"]
     -- FIXME hardcode
 
 -- |
@@ -410,16 +410,7 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . s
 -- Convert a voice score to a list of bars. 
 -- 
 toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond.Music]
-toLyVoice' = 
-    {-addDefaultSignatures . -} fmap barToLy . voiceToBars
-    where
-        -- addDefaultSignatures []     = []
-        -- addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
-        -- defaultSignatures = mempty
-            -- <> Ly.defaultKey
-            -- <> Ly.defaultDivisions 
-            -- <> Ly.metronome (1/4) 60
-            -- <> Ly.commonTime
+toLyVoice' = fmap barToLy . voiceToBars
                     
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond.Music
 barToLy bar = case quantize bar of
