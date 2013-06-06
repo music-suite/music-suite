@@ -312,8 +312,8 @@ toXmlSingle' =
         fmap barToXml . separateBars . 
         splitTiesVoice . scoreToVoice
     where
-        addDefaultSignatures []            = []
-        addDefaultSignatures (bar1 : rest) = (defaultSignatures <> bar1) : rest
+        addDefaultSignatures []       = []
+        addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
         defaultSignatures = mempty
             <> Xml.defaultKey
             <> Xml.defaultDivisions 
