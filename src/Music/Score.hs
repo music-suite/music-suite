@@ -54,6 +54,16 @@ module Music.Score (
         playMidi,
         playMidiIO,
 
+        -- ** Lilypond
+        Lilypond,
+        HasLilypond(..),
+        -- toLy,
+        -- writeLy,
+        -- openLy,
+        -- toLySingle,
+        -- writeLySingle,
+        -- openLySingle,
+
         -- ** MusicXML
         XmlScore,
         XmlMusic,
@@ -111,6 +121,7 @@ import Music.Score.Ornaments
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
+import qualified Music.Lilypond as Lilypond
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -120,6 +131,8 @@ import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
 
+-------------------------------------------------------------------------------------
+-- Midi export
 -------------------------------------------------------------------------------------
 
 -- |
@@ -210,6 +223,11 @@ playMidiIO dest = runLoop . playMidi dest
         
 
 
+
+
+
+-------------------------------------------------------------------------------------
+-- MusicXML export
 -------------------------------------------------------------------------------------
 
 type XmlScore = Xml.Score
@@ -234,29 +252,10 @@ instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusic
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spell (fromIntegral p)) d'
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) d'
         where
             d' = fromRational . toRational $ d
             
-            -- FIXME arbitrary spelling, please modularize...
-            spell :: Int -> Xml.Pitch
-            spell p = (
-                toEnum pitchClass, 
-                if alteration == 0 then Nothing else Just (fromIntegral alteration), 
-                fromIntegral octave
-                ) 
-                where
-                    octave     = (p `div` 12) - 1
-                    semitone   = p `mod` 12
-                    pitchClass = fromStep major semitone
-                    alteration = semitone - step major pitchClass
-
-                    step xs p = xs !! (p `mod` length xs)
-                    fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
-                    scaleFromSteps = snd . List.mapAccumL add 0
-                        where
-                            add a x = (a + x, a + x)
-                    major = scaleFromSteps [0,2,2,1,2,2,2,1]
                     
 
 -- |
@@ -346,6 +345,42 @@ setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
 
 
+
+
+
+-------------------------------------------------------------------------------------
+-- Lilypond export
+-------------------------------------------------------------------------------------
+
+type Lilypond = Lilypond.Music
+
+-- |
+-- Class of types that can be converted to MusicXML.
+--
+class Tiable a => HasLilypond a where          
+    -- | 
+    -- Convert a value to MusicXML.
+    --
+    -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
+    -- to add beams, slurs, dynamics, articulation etc.
+    --
+    getLilypond :: Duration -> a -> Lilypond
+
+instance HasLilypond Int                        where   getLilypond d = getLilypond d . toInteger    
+instance HasLilypond Float                      where   getLilypond d = getLilypond d . toInteger . round
+instance HasLilypond Double                     where   getLilypond d = getLilypond d . toInteger . round
+instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round    
+
+instance HasLilypond Integer where
+    getLilypond d p = undefined
+        where
+            d' = fromRational . toRational $ d
+            
+                    
+
+
+
+
 -------------------------------------------------------------------------------------
 
 -- |
@@ -382,16 +417,25 @@ toRelative = snd . mapAccumL g 0
     where
         g now (t,d,x) = (t, (t-now,d,x))
 
+-- FIXME arbitrary spelling, please modularize...
+spellXml :: Int -> Xml.Pitch
+spellXml p = (
+    toEnum pitchClass, 
+    if alteration == 0 then Nothing else Just (fromIntegral alteration), 
+    fromIntegral octave
+    ) 
+    where
+        octave     = (p `div` 12) - 1
+        semitone   = p `mod` 12
+        pitchClass = fromStep major semitone
+        alteration = semitone - step major pitchClass
 
-
-
-
-
-
-
-
-
-
+        step xs p = xs !! (p `mod` length xs)
+        fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
+        scaleFromSteps = snd . List.mapAccumL add 0
+            where
+                add a x = (a + x, a + x)
+        major = scaleFromSteps [0,2,2,1,2,2,2,1]
 
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)
@@ -413,6 +457,9 @@ instance HasMidi a => HasMidi (HarmonicT a) where
     getMidi (HarmonicT (_,a))                       = getMidi a
 instance HasMidi a => HasMidi (SlideT a) where
     getMidi (SlideT (_,_,a,_,_))                    = getMidi a
+
+
+
 
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
@@ -484,6 +531,74 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
             nbs    = if es then Xml.beginSlide else id
 
 
+
+
+
+instance HasLilypond a => HasLilypond (PartT n a) where
+    getLilypond d (PartT (_,x))                     = getLilypond d x
+
+instance HasLilypond a => HasLilypond (TieT a) where
+    getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
+        where
+            addTies | ta && tb                      = id . Lilypond.beginTie
+                    | tb                            = Lilypond.beginTie
+                    | ta                            = id
+                    | otherwise                     = id
+
+instance HasLilypond a => HasLilypond (DynamicT a) where
+    getLilypond d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getLilypond d a
+        where
+            notate x = nec . ned . nl . nbc . nbd $ x
+            nec    = if ec then Lilypond.endCresc    else id
+            ned    = if ed then Lilypond.endDim      else id
+            nbc    = if bc then Lilypond.beginCresc  else id
+            nbd    = if bd then Lilypond.beginDim    else id
+            nl     = id -- FIXME Lilypond dynamics
+            -- nl     = case l of 
+                -- Nothing  -> mempty
+                -- Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+
+instance HasLilypond a => HasLilypond (ArticulationT a) where
+    getLilypond d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getLilypond d a
+        where
+            notate = nes . nal . nsl . nbs
+            nes    = if es then Lilypond.endSlur else id
+            nal    = case al of
+                0    -> id
+                1    -> Lilypond.addAccent
+                2    -> Lilypond.addMarcato
+            nsl    = case sl of
+                (-2) -> Lilypond.addTenuto
+                (-1) -> Lilypond.addPortato
+                0    -> id
+                1    -> Lilypond.addStaccato
+                2    -> Lilypond.addStaccatissimo
+            nbs    = if bs then Lilypond.beginSlur else id 
+
+instance HasLilypond a => HasLilypond (TremoloT a) where
+    getLilypond d (TremoloT (n,x))      = notate $ getLilypond d x
+        where
+            notate = case n of 
+                0 -> id
+                _ -> Lilypond.Tremolo n
+                -- FIXME wrong number?
+
+instance HasLilypond a => HasLilypond (TextT a) where
+    getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
+        where             
+            notate ts = foldr (.) id (fmap Lilypond.addText ts)
+
+instance HasLilypond a => HasLilypond (HarmonicT a) where
+    getLilypond d (HarmonicT (n,x))                 = notate $ getLilypond d x
+        where             
+            notate = id
+            -- FIXME
+
+instance HasLilypond a => HasLilypond (SlideT a) where
+    getLilypond d (SlideT (eg,es,a,bg,bs))    = notate $ getLilypond d a
+        where
+            notate = id
+            -- FIXME
 
 
 -------------------------------------------------------------------------------------
