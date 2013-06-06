@@ -29,6 +29,7 @@ library
         monadplus,
         HCodecs,
         musicxml2,
+        lilypond,
         semigroups,
         nats,
         semigroupoids,
