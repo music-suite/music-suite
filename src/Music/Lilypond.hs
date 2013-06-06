@@ -165,8 +165,7 @@ data Music
     | Key Pitch Mode                                -- ^ Key signature.
     | Time Rational                                 -- ^ Time signature.
     | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
-    | Metronome (Maybe String) Duration Int Int     -- ^ Metronome mark (text, duration, dots, bpm).
-    | Tempo String                                  -- ^ Tempo mark.
+    | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
     | New String (Maybe String) Music               -- ^ New expression.
     | Context String (Maybe String) Music           -- ^ Context expression.
     deriving (Eq, Show)
@@ -214,6 +213,20 @@ instance Pretty Music where
     
     pretty (Breathe Nothing) = "\\breathe"
     pretty (Breathe a)       = notImpl "Non-standard breath marks"
+
+    pretty (Tempo Nothing Nothing)           = mempty
+    pretty (Tempo (Just t) Nothing)          = "\\time" <+> pretty t
+    pretty (Tempo Nothing (Just (d,bpm)))    = "\\time" <+> pretty d <+> "=" <+> pretty bpm
+    pretty (Tempo (Just t) (Just (d,bpm)))   = "\\time" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
+
+    -- TODO metronome
+    -- TODO tempo    
+
+    pretty (New typ name x) = 
+        "\\new" <+> string typ <+> pretty name <+> pretty x
+
+    pretty (Context typ name x) = 
+        "\\context" <+> string typ <+> pretty name <+> pretty x
 
     pretty _                        = notImpl "Unknown music expression"
 
