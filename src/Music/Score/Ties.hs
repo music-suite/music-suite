@@ -100,18 +100,19 @@ splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
             where
                 (_, barTime) = properFraction t
                 remBarTime   = 1 - barTime
-                occs = splitDur remBarTime (d,x)
+                occs = splitDur remBarTime 1 (d,x)
 
 -- |
--- Split an event into a part the given duration, and parts shorter than or equal to one.
--- The returned list is always non-empty.
+-- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
+--
+-- The returned list is always non-empty. All elements but the first and the last must have duration @t@.
 --
 -- > sum $ fmap fst $ splitDur s (x,a) = x
 --         
-splitDur :: Tiable a => Duration -> (Duration, a) -> [(Duration, a)]
-splitDur s x = case splitDur' s x of
+splitDur :: Tiable a => Duration -> Duration -> (Duration, a) -> [(Duration, a)]
+splitDur s t x = case splitDur' s x of
     (a, Nothing) -> [a]
-    (a, Just b)  -> a : splitDur 1 b
+    (a, Just b)  -> a : splitDur t t b
 
 -- |
 -- Extract the the first part of a given duration. If the note is shorter than the given duration,
