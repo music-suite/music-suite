@@ -74,7 +74,7 @@ instance Tiable a => Tiable (Maybe a) where
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
     
 instance Tiable a => Tiable (TieT a) where
-    toTied (TieT (prevTie, a, _)) = (TieT (prevTie, b, True), TieT (True, c, False))
+    toTied (TieT (prevTie, a, nextTie)) = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 
 -- | 
