@@ -9,8 +9,9 @@ category:       Music
 tested-with:    GHC
 
 description: 
-    This package contains a terse Haskell representation of Lilypond expressions and
-    a pretty-printer for such expressions. They can be used to generate musical notation.
+    This package contains a terse Haskell representation of (a subset of) Lilypond 
+    expressions and a pretty-printer for such expressions. They can be used to generate 
+    musical notation.
 
 library                    
     build-depends: 
