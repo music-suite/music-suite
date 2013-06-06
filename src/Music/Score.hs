@@ -315,7 +315,7 @@ toXmlVoice' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
 toXmlVoice' = 
     addDefaultSignatures . fmap barToXml . voiceToBars
     where
-        addDefaultSignatures []       = []
+        addDefaultSignatures []     = []
         addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
         defaultSignatures = mempty
             <> Xml.defaultKey
