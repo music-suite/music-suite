@@ -122,7 +122,7 @@ data Levels a
 instance Fractional a => IsDynamics (Levels a) where
     fromDynamics (DynamicsL (Just a, Nothing)) = Level (toFrac a)
     fromDynamics (DynamicsL (Just a, Just b))  = Change (toFrac a) (toFrac b)
-    fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " {- ++ show x-}
+    fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " ++ show x
 
 cresc :: IsDynamics a => Double -> Double -> a
 cresc a b = fromDynamics $ DynamicsL (Just a, Just b)

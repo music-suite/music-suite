@@ -76,17 +76,17 @@ trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
 -- Apply a time-varying function to all events in score.
 --
 applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (\(f,s) -> f s) $ snapshotd
+applySingle fs as = notJoin $ fmap (\(f,s) -> f s) sampled
     where            
         -- This is not join; we simply concatenate all inner scores in parallel
         notJoin = mconcat . toList
-        snapshotd = snapshotSingle (voiceToScore fs) as
+        sampled = snapshotSingle (voiceToScore fs) as
 
 -- |
 -- Get all notes that start during a given note.
 --
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle as bs = mapTime ( \t d a -> g a (onsetIn t d bs) ) $ as
+snapshotSingle as bs = mapTime ( \t d a -> g a (onsetIn t d bs) ) as
     where
         -- g Nothing  z = Nothing
         g = (,)

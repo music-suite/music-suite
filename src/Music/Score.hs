@@ -253,9 +253,7 @@ instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusic
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) d'
-        where
-            d' = fromRational . toRational $ d
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . fromDuration $ d
             
                     
 
@@ -343,7 +341,7 @@ rhythmToXml (Bound  d a)          = noteRestToXml (fromRational $ getDuration d)
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromRational . toRational $ d   
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromDuration d   
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- TODO only works for single-voice parts
@@ -398,7 +396,7 @@ voiceToBars = separateBars . splitTiesVoice
 -- 
 separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars = 
-    fmap removeTime . fmap (fmap discardBarNumber) .
+    fmap (removeTime . fmap discardBarNumber) .
         splitAtTimeZero . fmap separateTime . perform . voiceToScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
@@ -407,6 +405,7 @@ separateBars =
         removeTime                      = fmap g where g (t,d,x) = (d,x)
 
 -- FIXME sometimes gives the wrong order, see #37
+-- Basically, this should go as soon as Bound is gone
 toTiedRhythm :: Tiable a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
 toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
 toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a

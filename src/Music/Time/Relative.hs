@@ -45,6 +45,12 @@ import Data.AffineSpace
 newtype Duration = Duration { getDuration::Rational }                                  
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
+fromDuration :: Fractional a => Duration -> a
+fromDuration = fromRational . getDuration
+
+toDuration :: Real a => a -> Duration
+toDuration = Duration . toRational
+
 instance Show Duration where 
     show = show . getDuration
 

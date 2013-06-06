@@ -71,6 +71,12 @@ instance  AffineSpace Time where
     a .-. b =  t2d $ a - b      where t2d = Duration . getTime
     a .+^ b =  a + d2t b        where d2t = Time . getDuration
 
+fromTime :: Fractional a => Time -> a
+fromTime = fromRational . getTime
+
+toTime :: Real a => a -> Time
+toTime = Time . toRational
+
 -- |
 -- Class of types with a position in time.
 --
