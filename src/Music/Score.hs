@@ -299,12 +299,14 @@ toXml sc = Xml.fromParts "Title" "Composer" pl . fmap toXmlSingle' . extract $ s
         pl = Xml.partList (fmap show $ getParts sc)
 
 -- |
--- Convert a single-part score to a MusicXML representation. 
+-- Convert a single-voice score to a MusicXML representation. 
 -- 
 toXmlSingle :: HasMusicXml a => Score a -> XmlScore
 toXmlSingle = Xml.fromPart "Title" "Composer" "Voice" . toXmlSingle'
 
-
+-- |
+-- Convert a voice score to a list of bars. 
+-- 
 toXmlSingle' :: HasMusicXml a => Score a -> [XmlMusic]
 toXmlSingle' = 
     addDefaultSignatures . 
@@ -350,7 +352,7 @@ setDefaultVoice = Xml.setVoice 1
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 -- 
-separateBars :: HasMusicXml a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
+separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars = 
     fmap removeTime . fmap (fmap discardBarNumber) .
         splitAtTimeZero . fmap separateTime . perform . voiceToScore
@@ -361,7 +363,7 @@ separateBars =
         removeTime                      = fmap g where g (t,d,x) = (d,x)
 
 
-toTiedRhythm :: HasMusicXml a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
+toTiedRhythm :: Tiable a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
 toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
 toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
 toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
