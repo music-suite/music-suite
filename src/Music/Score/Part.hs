@@ -30,6 +30,7 @@ module Music.Score.Part (
         -- PartName(..),
         PartT(..),
         extract,
+        extractWithNames,
         mapPart,
         mapParts,
         mapAllParts,
@@ -123,6 +124,12 @@ extract :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [s a]
 extract sc = fmap (`extract'` sc) (getParts sc) 
     where                    
         extract' v = mfilter ((== v) . getPart)
+
+extractWithNames :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [(Part a, s a)]
+extractWithNames sc = fmap (`extractWithNames2` sc) (getParts sc) 
+    where                    
+        extractWithNames2 v = (\x -> (v,x)) . mfilter ((== v) . getPart)
+
 
 -- |
 -- Map over a single voice in the given score.

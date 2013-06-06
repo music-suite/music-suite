@@ -123,6 +123,7 @@ import Music.Score.Ornaments
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
 import qualified Music.Lilypond as Lilypond
+import qualified Text.Pretty as Pretty
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -369,7 +370,41 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round    
 
 instance HasLilypond Integer where
-    getLilypond d p = Lilypond.note (spellLy p) ^*(fromDuration d)
+    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*(fromDuration $ d*4)
+
+-- TODO rename                            
+pcatLy :: [Lilypond.Music] -> Lilypond.Music
+pcatLy = foldr Lilypond.pcat (Lilypond.Simultaneous False [])
+
+scatLy :: [Lilypond.Music] -> Lilypond.Music
+scatLy = foldr Lilypond.scat (Lilypond.Sequential [])
+
+
+-- |
+-- Convert a score to MusicXML and write to a file. 
+-- 
+writeLy :: (HasLilypond a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
+writeLy path sc = writeFile path (show $ Pretty.pretty $ toLy sc)
+
+-- |
+-- Convert a score to MusicXML and open it. 
+-- 
+openLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> IO ()
+openLy sc = do
+    writeLy "test.ly" sc                       
+    runLy
+    
+runLy = execute "lilypond" ["-f", "pdf", "test.ly"]
+    -- FIXME hardcode
+
+-- |
+-- Convert a score to a Lilypond representation. 
+-- 
+toLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> Lilypond.Music
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractWithNames $ sc
+    where                           
+        addStaff x = Lilypond.New "Staff" Nothing x
+        prependName (v,x) = [Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v)] ++ x
 
 -- |
 -- Convert a voice score to a list of bars. 
@@ -1278,7 +1313,11 @@ type Note = (PartT Int (TieT
 asScore :: Id (Score Note)
 asScore = id                     
 
-open = openXml . asScore
+main = openLy $ foo
+foo  = asScore $ 
+        (accent $ portato $ melody [c,g',fs',b_,c,cs_]^*(1/3)) 
+    </> c^*23 
+    </> (legato $ c |> d |> e^*2)
 
 
 -------------------------------------------------------------------------------------
