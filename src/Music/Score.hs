@@ -253,9 +253,7 @@ instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusic
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) d'
-        where
-            d' = fromRational . toRational $ d
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . fromDuration $ d
             
                     
 
@@ -333,17 +331,16 @@ barToXml bar = case quantize bar of
 
 rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
 rhythmToXml (Beat d x)            = noteRestToXml d x
+rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
-rhythmToXml (Tuplet m r)          = Xml.tuplet (fromIntegral b) (fromIntegral a) (rhythmToXml r)
-    where
-        (a,b) = unRatio $ getDuration m
+rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
 rhythmToXml (Bound  d a)          = noteRestToXml (fromRational $ getDuration d) x <> rhythmToXml b
     where
         (x,b) = toTiedRhythm a
-rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest d' where d' = fromRational . toRational $ d   
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d   
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- TODO only works for single-voice parts
@@ -398,7 +395,7 @@ voiceToBars = separateBars . splitTiesVoice
 -- 
 separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars = 
-    fmap removeTime . fmap (fmap discardBarNumber) .
+    fmap (removeTime . fmap discardBarNumber) .
         splitAtTimeZero . fmap separateTime . perform . voiceToScore
     where  
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
@@ -407,6 +404,7 @@ separateBars =
         removeTime                      = fmap g where g (t,d,x) = (d,x)
 
 -- FIXME sometimes gives the wrong order, see #37
+-- Basically, this should go as soon as Bound is gone
 toTiedRhythm :: Tiable a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
 toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
 toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
@@ -1273,3 +1271,7 @@ execute program args = do
     return ()
 
 unRatio x = (numerator x, denominator x)
+first f (x, y) = (f x, y)
+second f (x, y) = (x, f y)
+both f g = first f . second g
+
