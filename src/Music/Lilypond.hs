@@ -167,15 +167,10 @@ data Music
     | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
     | Metronome (Maybe String) Duration Int Int     -- ^ Metronome mark (text, duration, dots, bpm).
     | Tempo String                                  -- ^ Tempo mark.
+    | New String (Maybe String) Music               -- ^ New expression.
+    | Context String (Maybe String) Music           -- ^ Context expression.
     deriving (Eq, Show)
 
-scat :: Music -> Music -> Music
-Sequential as `scat` Sequential bs = Sequential (as <> bs)
-Sequential as `scat` b             = Sequential (as <> [b])
-a `scat` Sequential bs             = Sequential ([a] <> bs)
-a `scat` b                         = Sequential ([a,b])
-
--- TODO tremolo
 
 instance Pretty Music where
     pretty (Rest d p)       = "r" <> pretty d <> prettyList p
@@ -551,6 +546,15 @@ note n = Note n (Just $ 1/4) []
 
 chord :: [Note] -> Music
 chord ns = Chord ns (Just $ 1/4) []
+
+
+scat :: Music -> Music -> Music
+Sequential as `scat` Sequential bs = Sequential (as <> bs)
+Sequential as `scat` b             = Sequential (as <> [b])
+a `scat` Sequential bs             = Sequential ([a] <> bs)
+a `scat` b                         = Sequential ([a,b])
+
+
 
 addPost :: PostEvent -> Music -> Music
 addPost a (Rest d es)     = Rest d (es ++ [a])
