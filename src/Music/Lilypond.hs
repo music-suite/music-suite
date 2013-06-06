@@ -5,7 +5,9 @@
     StandaloneDeriving,
     FlexibleInstances,
     TypeFamilies,
-    ScopedTypeVariables #-}
+    ScopedTypeVariables,     
+    ExistentialQuantification,
+    NoMonomorphismRestriction #-}
 
 module Music.Lilypond (
 
@@ -15,6 +17,10 @@ module Music.Lilypond (
         Note(..),
         Clef(..),
         Mode(..),
+        
+        -- ** Attributes
+        Value,
+        toValue,
 
         -- ** Articulation and dynamics
         PostEvent(..),
@@ -168,7 +174,24 @@ data Music
     | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
     | New String (Maybe String) Music               -- ^ New expression.
     | Context String (Maybe String) Music           -- ^ Context expression.
+    | Set String Value                            
     deriving (Eq, Show)
+
+data Value = forall a . Show a => Value a
+
+instance Show Value where
+    show (Value a) = show a
+instance Eq Value where
+    a == b  = show a == show b
+
+toValue :: Show a => a -> Value
+toValue = Value
+
+
+
+-- toValue :: (forall a. Show a => a) -> Value
+-- toValue = Value
+
 
 
 instance Pretty Music where
@@ -228,7 +251,10 @@ instance Pretty Music where
     pretty (Context typ name x) = 
         "\\context" <+> string typ <+> pretty name <+> pretty x
 
-    pretty _                        = notImpl "Unknown music expression"
+    pretty (Set name val) =
+        "\\set" <+> string name <+> "=" <+> (string . show) val
+
+    -- pretty _                        = notImpl "Unknown music expression"
 
     prettyList                      = hsep . fmap pretty
 
