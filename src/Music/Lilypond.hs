@@ -43,6 +43,9 @@ module Music.Lilypond (
         note,
         chord,
         
+        -- ** Composition
+        scat,
+        
         -- ** Post events
         addPost,
         addText,
@@ -165,6 +168,12 @@ data Music
     | Metronome (Maybe String) Duration Int Int -- ^ Metronome mark (text, duration, dots, bpm).
     | Tempo String                              -- ^ Tempo mark.
     deriving (Eq, Show)
+
+scat :: Music -> Music -> Music
+Sequential as `scat` Sequential bs = Sequential (as <> bs)
+Sequential as `scat` b             = Sequential (as <> [b])
+a `scat` Sequential bs             = Sequential ([a] <> bs)
+a `scat` b                         = Sequential ([a,b])
 
 -- TODO tremolo
 
