@@ -335,9 +335,6 @@ rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
     where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
--- rhythmToXml (Bound  d a)          = noteRestToXml (fromRational $ getDuration d) x <> rhythmToXml b
---     where
---         (x,b) = toTiedRhythm a
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d   
@@ -402,18 +399,6 @@ separateBars =
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
         discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
         removeTime                      = fmap g where g (t,d,x) = (d,x)
-
-{-
--- FIXME sometimes gives the wrong order, see #37
--- Basically, this should go as soon as Bound is gone
-toTiedRhythm :: Tiable a => Rhythm (Maybe a) -> (Maybe a, Rhythm (Maybe a))
-toTiedRhythm (Beat d a)       = (b, Beat d c)     where (b,c) = toTied a
-toTiedRhythm (Dotted n a)     = (b, Dotted n c)   where (b,c) = toTiedRhythm a
-toTiedRhythm (Tuplet m a)     = (b, Tuplet m c)   where (b,c) = toTiedRhythm a 
-toTiedRhythm (Bound  d r)     = error "toTiedRhythm: Nested bounded rhytms"
-toTiedRhythm (Group [])       = error "toTiedRhythm: Bound empty rhythm"
-toTiedRhythm (Group (a:as))   = (b, Group (c:as)) where (b,c) = toTiedRhythm a
--}
 
 -- |
 -- Convert absolute to relative durations.

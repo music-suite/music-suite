@@ -57,6 +57,7 @@ data Rhythm a
     | Dotted     Int (Rhythm a)                -- n > 0.
     | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'tupletMods'.
     deriving (Eq, Show, Functor, Foldable)
+    -- RInvTuplet  Duration (Rhythm a)
 
 getBeatValue :: Rhythm a -> a
 getBeatValue (Beat d a) = a
@@ -66,8 +67,6 @@ getBeatDuration :: Rhythm a -> Duration
 getBeatDuration (Beat d a) = d
 getBeatDuration _          = error "getBeatValue: Not a beat"
 
-    -- Bound      Duration (Rhythm a)           -- tied from duration
-    -- RInvTuplet  Duration (Rhythm a)
 
 instance Semigroup (Rhythm a) where
     (<>) = mappend
@@ -94,7 +93,6 @@ instance HasDuration (Rhythm a) where
     duration (Beat d _)        = d
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
-    -- duration (Bound d a)       = duration a + d
     duration (Group as)      = sum (fmap duration as)    
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
@@ -201,7 +199,6 @@ bound' d = do
     modifyState $ modifyTimeSub (+ d)
     a <- beat
     modifyState $ modifyTimeSub (subtract d)
-    -- return $ Bound d a                          
     let (b,c) = toTied $ getBeatValue a
     return $ Group [Beat (getBeatDuration a) $ b, Beat (1/2) $ c]
     -- FIXME doesn't know order
