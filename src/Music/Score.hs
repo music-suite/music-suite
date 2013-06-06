@@ -561,6 +561,23 @@ instance IsDynamics Double where
     fromDynamics (DynamicsL (Just x, _)) = x
     fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"  
 
+{-
+
+data Alteration = Sh | Fl
+sharp = Sh
+flat  = Fl
+instance IsPitch (Alteration -> Double) where
+    fromPitch l Sh = fromPitch l + 1
+    fromPitch l Fl = fromPitch l - 1
+instance IsPitch (Alteration -> Integer) where
+    fromPitch l Sh = fromPitch l + 1
+    fromPitch l Fl = fromPitch l - 1
+instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
+    fromPitch l = pure . fromPitch l
+-}
+
+
+
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 
@@ -1090,26 +1107,7 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
 
 
--------------------------------------------------------------------------------------
--- Literals
--------------------------------------------------------------------------------------
 
-{-
-
-data Alteration = Sh | Fl
-sharp = Sh
-flat  = Fl
-instance IsPitch (Alteration -> Double) where
-    fromPitch l Sh = fromPitch l + 1
-    fromPitch l Fl = fromPitch l - 1
-instance IsPitch (Alteration -> Integer) where
-    fromPitch l Sh = fromPitch l + 1
-    fromPitch l Fl = fromPitch l - 1
-instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
-    fromPitch l = pure . fromPitch l
--}
-
-                                                                                                           
 -------------------------------------------------------------------------------------
 -- Test stuff
 -------------------------------------------------------------------------------------
