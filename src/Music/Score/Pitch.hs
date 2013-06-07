@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,
     GeneralizedNewtypeDeriving #-} 
 
@@ -32,6 +33,7 @@ module Music.Score.Pitch (
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.String
 import Data.Foldable
+import Data.Typeable
 import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace

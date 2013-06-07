@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     DeriveTraversable,
     GeneralizedNewtypeDeriving #-} 
 
@@ -38,6 +39,7 @@ import Control.Applicative
 import Control.Monad (ap, join, MonadPlus(..))
 import Data.Foldable
 import Data.Traversable
+import Data.Typeable
 import Data.Maybe
 import Data.Either
 import Data.Function (on)
@@ -89,7 +91,7 @@ import Music.Score.Track
 -- and time scaling as scalar multiplication. 
 --
 newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
 instance Semigroup (Score a) where
     (<>) = mappend

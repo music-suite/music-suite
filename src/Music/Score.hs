@@ -4,6 +4,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,     
+    DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
     FlexibleContexts,
@@ -95,6 +96,7 @@ import Control.Monad.Plus
 import Data.Maybe
 import Data.Either
 import Data.Foldable
+import Data.Typeable
 import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)

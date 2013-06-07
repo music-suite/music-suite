@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -50,6 +51,7 @@ module Music.Score.Articulation (
 
 import Data.Ratio
 import Data.Foldable
+import Data.Typeable
 import Data.Semigroup
 import qualified Data.List as List
 import Data.VectorSpace
@@ -70,7 +72,7 @@ class HasArticulation a where
     setStaccLevel :: Int -> a -> a
     
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
-    deriving (Eq, Show, Ord, Functor, Foldable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
 --------------------------------------------------------------------------------
 -- Articulation

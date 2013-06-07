@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -45,6 +46,7 @@ import Control.Monad
 import Data.Semigroup
 import Data.Ratio
 import Data.Foldable
+import Data.Typeable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -68,7 +70,7 @@ class HasDynamic a where
 
 -- end cresc/dim, level, begin cresc/dim
 newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
-    deriving (Eq, Show, Ord, Functor, Foldable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
 
 

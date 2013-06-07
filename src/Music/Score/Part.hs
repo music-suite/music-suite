@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -48,6 +49,7 @@ import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.Semigroup
 import Data.String
 import Data.Foldable
+import Data.Typeable
 import Data.Ord (comparing)
 import Data.Traversable
 import qualified Data.List as List
@@ -95,7 +97,10 @@ class HasPart a where
 -- instance Show PartName where show = getPartName
 
 newtype PartT n a = PartT { getPartT :: (n, a) }
-    deriving (Eq, Ord, Show, Functor)
+    deriving (Eq, Ord, Show, Functor, Typeable)
+
+-- instance Foldable (PartT n) where
+    -- foldMap f (PartT (n, a)) = foldMap f a
 
 instance HasPart ()                            where   { type Part ()         = Integer ; getPart _ = 0 }
 instance HasPart Double                        where   { type Part Double     = Integer ; getPart _ = 0 }

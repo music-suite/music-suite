@@ -37,8 +37,8 @@ module Music.Score.Combinators (
         -- ** Composing scores
         (|>),
         (<|),
-        -- scat,
-        -- pcat,
+        scat,
+        pcat,
         
         -- *** Special composition
         sustain,

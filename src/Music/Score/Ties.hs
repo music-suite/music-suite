@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -36,6 +37,8 @@ import Control.Monad.Plus
 import Data.Default
 import Data.Maybe
 import Data.Ratio
+import Data.Foldable hiding (concat)
+import Data.Typeable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -59,7 +62,7 @@ class Tiable a where
     toTied    :: a -> (a, a)
 
 newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }    
-    deriving (Eq, Ord, Show, Functor)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
 instance Tiable Double      where toTied x = (x,x)

@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    DeriveDataTypeable,
     FlexibleInstances,        
     FlexibleContexts,
     ConstraintKinds,
@@ -43,6 +44,7 @@ module Music.Score.Ornaments (
 import Data.Ratio
 import Data.Foldable
 import Data.Monoid
+import Data.Typeable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
@@ -58,13 +60,13 @@ class HasTremolo a where
     setTrem :: Int -> a -> a
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
 
 class HasText a where
     addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
 
 
 -- 0 for none, positive for natural, negative for artificial
@@ -72,7 +74,7 @@ class HasHarmonic a where
     setHarmonic :: Int -> a -> a
 
 newtype HarmonicT a = HarmonicT { getHarmonicT :: (Int, a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
 
 -- end gliss/slide, level, begin gliss/slide
 class HasSlide a where
@@ -82,7 +84,7 @@ class HasSlide a where
     setEndSlide   :: Bool -> a -> a
 
 newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-})
+    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
 
 
 -- |
