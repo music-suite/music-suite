@@ -386,7 +386,22 @@ scatLy = foldr Lilypond.scat (Lilypond.Sequential [])
 -- Convert a score to MusicXML and write to a file. 
 -- 
 writeLy :: (HasLilypond a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
-writeLy path sc = writeFile path (show $ Pretty.pretty $ toLy sc)
+writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
+    where
+        header = ""                                                  ++
+            "\\include \"lilypond-book-preamble.ly\""                 ++
+            "\\paper {"                                               ++
+            "  #(define dump-extents #t)"                            ++
+            ""                                                       ++
+            "  indent = 0\\mm"                                        ++
+            "  line-width = 210\\mm - 2.0 * 0.4\\in"                   ++
+            "  ragged-right = ##t"                                   ++
+            "  force-assignment = #\"\""                             ++
+            "  line-width = #(- line-width (* mm  3.000000))"        ++
+            "}"                                                      ++
+            "\\layout {"                                              ++
+            "}"                                                      
+
 
 -- |
 -- Convert a score to MusicXML and open it. 
