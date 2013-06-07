@@ -29,6 +29,8 @@
 
 module Music.Score (
 
+        module Control.Monad.Plus,
+
         module Music.Time.Absolute,
         module Music.Time.Relative,
 
