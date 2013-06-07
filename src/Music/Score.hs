@@ -442,7 +442,7 @@ rhythmToLy (Tuplet m r)          = Lilypond.Times (fromDuration m) (rhythmToLy r
     where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
 
 noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond.Music
-noteRestToLy d Nothing  = Lilypond.rest^*fromDuration d   
+noteRestToLy d Nothing  = Lilypond.rest^*(fromDuration $ d*4)   
 noteRestToLy d (Just p) = getLilypond d p
 
 
