@@ -7,6 +7,7 @@
     FlexibleContexts,
     ConstraintKinds,
     OverloadedStrings,
+    NoMonomorphismRestriction,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -58,11 +59,17 @@ module Music.Score.Combinators (
         stretchTo,                
         retrograde,     
 
+        -- *** Rests
+        removeRests,
+
         -- *** Repetition
-        repTimes,
-        repWith,
-        repWithIndex,
-        repWithTime,
+        times,    
+        triplet,
+        quadruplet,
+        quintuplet,
+        -- repWith,
+        -- repWithIndex,
+        -- repWithTime,
         group,
         groupWith,
         scatMap,
@@ -295,8 +302,8 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 --
 -- > Duration -> Score Note -> Score Note
 --
-repTimes :: (Enum a, Monoid c, HasOnset c, Delayable c) => a -> c -> c
-repTimes n a = replicate (0 `max` fromEnum n) () `repWith` const a
+times :: (Enum a, Monoid c, HasOnset c, Delayable c) => a -> c -> c
+times n a = replicate (0 `max` fromEnum n) () `repWith` const a
 
 -- |
 -- Repeat once for each element in the list.
@@ -335,13 +342,19 @@ repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
     where
         n' = n
 
+
+removeRests = mcatMaybes
+triplet     = group (3::Rational)
+quadruplet  = group (4::Rational)
+quintuplet  = group (5::Rational)
+
 -- |
 -- Repeat a number of times and scale down by the same amount.
 --
 -- > Duration -> Score a -> Score a
 --
 group :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => a -> c -> c
-group n a = repTimes n (a^/n)
+group n a = times n (a^/n)
 
 -- |
 -- Repeat a number of times and scale down by the same amount.
