@@ -782,6 +782,34 @@ instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 
+-- Maybe
+
+-- TODO this instance may be problematic with mapPhrase
+instance HasArticulation a => HasArticulation (Maybe a) where
+    setEndSlur    n (Just x)                        = Just (setEndSlur n x)
+    setEndSlur    n Nothing                         = Nothing
+    setContSlur   n (Just x)                        = Just (setContSlur n x)
+    setContSlur   n Nothing                         = Nothing
+    setBeginSlur  n (Just x)                        = Just (setBeginSlur n x)
+    setBeginSlur  n Nothing                         = Nothing
+    setAccLevel   n (Just x)                        = Just (setAccLevel n x)
+    setAccLevel   n Nothing                         = Nothing
+    setStaccLevel n (Just x)                        = Just (setStaccLevel n x)
+    setStaccLevel n Nothing                         = Nothing
+instance HasPart a => HasPart (Maybe a) where   
+    type Part (Maybe a)                             = Maybe (Part a) -- !
+    getPart Nothing                                 = Nothing
+    getPart (Just a)                                = Just (getPart a)
+    modifyPart f (Nothing)                          = Nothing
+    modifyPart f (Just a)                           = Just (modifyPart (fromJust . f . Just) a) -- TODO use cofunctor
+instance HasPitch a => HasPitch (Maybe a) where   
+    type Pitch (Maybe a)                             = Maybe (Pitch a) -- !
+    getPitch Nothing                                 = Nothing
+    getPitch (Just a)                                = Just (getPitch a)
+    modifyPitch f (Nothing)                          = Nothing
+    modifyPitch f (Just a)                           = Just (modifyPitch (fromJust . f . Just) a)
+
+
 -- PitchT
 
 
