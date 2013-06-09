@@ -51,6 +51,7 @@ module Music.Lilypond (
         
         -- ** Composition
         scat,
+        pcat,
         
         -- ** Post events
         addPost,
@@ -592,6 +593,12 @@ Sequential as `scat` Sequential bs = Sequential (as <> bs)
 Sequential as `scat` b             = Sequential (as <> [b])
 a `scat` Sequential bs             = Sequential ([a] <> bs)
 a `scat` b                         = Sequential ([a,b])
+
+pcat :: Music -> Music -> Music
+Simultaneous s as `pcat` Simultaneous t bs = Simultaneous True (as <> bs)
+Simultaneous s as `pcat` b                 = Simultaneous s (as <> [b])
+a `pcat` Simultaneous t bs                 = Simultaneous t ([a] <> bs)
+a `pcat` b                                 = Simultaneous True ([a,b])
 
 
 
