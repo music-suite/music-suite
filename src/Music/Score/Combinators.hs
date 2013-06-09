@@ -20,7 +20,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a musical score represenation.
+-- Combinators for manipulating scores.
 --
 -------------------------------------------------------------------------------------
 

@@ -1,6 +1,5 @@
 
 {-# LANGUAGE
-    CPP,
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,     
@@ -23,24 +22,32 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a musical score represenation.
+-- Provides a musical score representation.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Score (
-
+        -- * Prerequisites
+        module Control.Monad,
         module Control.Monad.Plus,
+        module Data.Semigroup,
+        module Data.VectorSpace,
+        module Data.AffineSpace,
 
+        -- * Basic types
+        module Music.Pitch.Literal,
+        module Music.Dynamics.Literal,
         module Music.Time.Absolute,
         module Music.Time.Relative,
 
+        -- * Musical container types
         module Music.Score.Track,
         module Music.Score.Voice,
         module Music.Score.Score,
 
+        -- * Manipulation
         module Music.Score.Combinators,
         module Music.Score.Zip,
-
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
@@ -67,7 +74,7 @@ import Data.Either
 import Data.Foldable
 import Data.Typeable
 import Data.Traversable
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
 import Data.Basis
 

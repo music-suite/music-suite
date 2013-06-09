@@ -17,7 +17,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a musical score represenation.
+-- Provides the 'Score' type.
 --
 -------------------------------------------------------------------------------------
 
