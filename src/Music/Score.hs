@@ -633,10 +633,9 @@ instance HasLilypond a => HasLilypond (DynamicT a) where
             ned    = if ed then Lilypond.endDim      else id
             nbc    = if bc then Lilypond.beginCresc  else id
             nbd    = if bd then Lilypond.beginDim    else id
-            nl     = id -- FIXME Lilypond dynamics
-            -- nl     = case l of 
-                -- Nothing  -> mempty
-                -- Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+            nl     = case l of 
+                Nothing  -> id
+                Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasLilypond a => HasLilypond (ArticulationT a) where
     getLilypond d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getLilypond d a
