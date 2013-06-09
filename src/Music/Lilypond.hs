@@ -23,6 +23,7 @@
 module Music.Lilypond (
 
         -- * Representation
+        
         -- ** Music expressions
         Music(..),
         Note(..),
@@ -256,23 +257,8 @@ instance Pretty Music where
 
     prettyList                      = hsep . fmap pretty
 
-
-data Note
-    = NotePitch Pitch (Maybe OctaveCheck)
-    | DrumNotePitch (Maybe Duration)
-    deriving (Eq, Show)
-
-instance Pretty Note where
-    pretty (NotePitch p Nothing)   = pretty p
-    pretty (NotePitch p _)         = notImpl "Non-standard pitch"
-    pretty (DrumNotePitch _)       = notImpl "Non-standard pitch"
-    prettyList                     = hsep . fmap pretty
-
 instance IsPitch Music where
     fromPitch = (\p -> Note p (Just (1/4)) []) . fromPitch
-
-instance IsPitch Note where
-    fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
 
 instance AdditiveGroup Music where
     zeroV   = Rest (Just $ 1/4) []
@@ -285,6 +271,21 @@ instance VectorSpace Music where
     a *^ (Note  n (Just d) p)   = Note n (Just $ a*d) p
     a *^ (Chord ns (Just d) p)  = Chord ns (Just $ a*d) p
     a *^ x                      = x
+
+
+data Note
+    = NotePitch Pitch (Maybe OctaveCheck)
+    | DrumNotePitch (Maybe Duration)
+    deriving (Eq, Show)
+
+instance Pretty Note where
+    pretty (NotePitch p Nothing)   = pretty p
+    pretty (NotePitch p _)         = notImpl "Non-standard pitch"
+    pretty (DrumNotePitch _)       = notImpl "Non-standard pitch"
+    prettyList                     = hsep . fmap pretty
+
+instance IsPitch Note where
+    fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
 
 data Clef
     = Treble
@@ -519,16 +520,6 @@ instance Pretty Direction where
     pretty Default            = "-"
     pretty Below              = "_"
 
-data OctaveCheck = OctaveCheck
-    deriving (Eq, Show)
-
--- data ChangeHead
---     = NoteMode
---     | DrumMode
---     | FigureMdoe
---     | ChordMode
---     | LyricMode
-
 
 -- | Notated time in fractions, in @[2^^i | i <- [-10..3]]@.
 newtype Duration   = Duration { getDuration :: Rational }
@@ -551,13 +542,24 @@ instance Pretty Duration where
             pds n = concat $ replicate n "."
             (nv, ds) = separateDots a
 
-
+-- | Construct a rest of default duration @1/4@.
+--   
+--   Use the 'VectorSpace' methods to change duration.
+--   
 rest :: Music
 rest = Rest (Just $ 1/4) []
 
+-- | Construct a note of default duration @1/4@.
+--   
+--   Use the 'VectorSpace' methods to change duration.
+--   
 note :: Note -> Music
 note n = Note n (Just $ 1/4) []
 
+-- | Construct a chord of default duration @1/4@.
+--   
+--   Use the 'VectorSpace' methods to change duration.
+--   
 chord :: [Note] -> Music
 chord ns = Chord ns (Just $ 1/4) []
 

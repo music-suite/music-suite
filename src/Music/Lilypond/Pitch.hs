@@ -19,6 +19,7 @@ module Music.Lilypond.Pitch (
         Accidental(..),
         Octaves(..),
         Mode(..),
+        OctaveCheck(..),
   ) where
 
 import Text.Pretty hiding (Mode)
@@ -60,4 +61,7 @@ data Mode = Major | Minor
 instance Pretty Mode where
     pretty Major = "\\major"
     pretty Minor = "\\minor"
+
+data OctaveCheck = OctaveCheck
+    deriving (Eq, Show)
 
