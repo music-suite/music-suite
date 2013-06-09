@@ -133,12 +133,15 @@ import Data.Ratio
 import Data.String
 import Data.Default
 import Data.Semigroup
-import Text.Pretty hiding (Mode)
 import Data.VectorSpace
-import Music.Lilypond.Pitch
+import Text.Pretty hiding (Mode)
 import Music.Pitch.Literal
 
-import System.Process -- TODO debug
+-- import System.Process -- TODO debug
+
+import Music.Lilypond.Pitch
+import Music.Lilypond.Value
+
 
 {-
 data Lilypond 
@@ -188,23 +191,6 @@ data Music
     | Context String (Maybe String) Music           -- ^ Context expression.
     | Set String Value                            
     deriving (Eq, Show)
-
-data Value = forall a . Show a => Value a
-
-instance Show Value where
-    show (Value a) = show a
-instance Eq Value where
-    a == b  = show a == show b
-
-toValue :: Show a => a -> Value
-toValue = Value
-
-
-
--- toValue :: (forall a. Show a => a) -> Value
--- toValue = Value
-
-
 
 instance Pretty Music where
     pretty (Rest d p)       = "r" <> pretty d <> prettyList p
@@ -816,7 +802,8 @@ a <=> b = sep [a,b]
 
 
 
--- TODO debug
+{-
+Debug stuff
 
 runLy = runCommand "lilypond -f pdf test.ly"
 
@@ -828,6 +815,7 @@ engrave e = do
 
 
 main = engrave test
+-}
 
 test = Simultaneous False [
         New "StaffGroup" Nothing (Simultaneous False [
