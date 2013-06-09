@@ -1,15 +1,15 @@
-                              
+
 {-# LANGUAGE
     CPP,
     TypeFamilies,
     DeriveFunctor,
-    DeriveFoldable,     
+    DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
-    TypeOperators,    
+    TypeOperators,
     OverloadedStrings,
     NoMonomorphismRestriction #-}
 
@@ -57,10 +57,9 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
-import Control.Reactive
-import Control.Reactive.Midi
-
 import Music.Time.Absolute
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 import Music.Time.Relative
 import Music.Score.Rhythm
 import Music.Score.Track
@@ -83,11 +82,6 @@ import qualified Text.Pretty as Pretty
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-import System.Posix
-import System.IO.Unsafe
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-
 
 type XmlScore = Xml.Score
 type XmlMusic = Xml.Music
@@ -95,35 +89,35 @@ type XmlMusic = Xml.Music
 -- |
 -- Class of types that can be converted to MusicXML.
 --
-class Tiable a => HasMusicXml a where          
-    -- | 
+class Tiable a => HasMusicXml a where
+    -- |
     -- Convert a value to MusicXML.
     --
-    -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it 
+    -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it
     -- to add beams, slurs, dynamics, articulation etc.
     --
     getMusicXml :: Duration -> a -> XmlMusic
 
-instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger    
+instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger
 instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . toInteger . round
 instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . toInteger . round
-instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round    
+instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
     getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . fromDuration $ d
-            
-                    
+
+
 
 -- |
--- Convert a score to MusicXML and write to a file. 
--- 
+-- Convert a score to MusicXML and write to a file.
+--
 writeXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
--- Convert a score to MusicXML and open it. 
--- 
+-- Convert a score to MusicXML and open it.
+--
 openXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
@@ -131,14 +125,14 @@ openXml sc = do
     -- FIXME hardcoded
 
 -- |
--- Convert a score to MusicXML and write to a file. 
--- 
+-- Convert a score to MusicXML and write to a file.
+--
 writeXmlSingle :: HasMusicXml a => FilePath -> Score a -> IO ()
 writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
 
 -- |
--- Convert a score to MusicXML and open it. 
--- 
+-- Convert a score to MusicXML and open it.
+--
 openXmlSingle :: HasMusicXml a => Score a -> IO ()
 openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
@@ -147,37 +141,37 @@ openXmlSingle sc = do
 
 
 -- |
--- Convert a score to a MusicXML representation. 
--- 
+-- Convert a score to a MusicXML representation.
+--
 toXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> XmlScore
 toXml sc = Xml.fromParts "Title" "Composer" pl . fmap (toXmlVoice' . scoreToVoice) . extract $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)
 
 -- |
--- Convert a single-voice score to a MusicXML representation. 
--- 
+-- Convert a single-voice score to a MusicXML representation.
+--
 toXmlSingle :: HasMusicXml a => Score a -> XmlScore
 toXmlSingle = toXmlVoice . scoreToVoice
 
 -- |
--- Convert a single-voice score to a MusicXML representation. 
--- 
+-- Convert a single-voice score to a MusicXML representation.
+--
 toXmlVoice :: HasMusicXml a => Voice (Maybe a) -> XmlScore
 toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
 
 -- |
--- Convert a voice score to a list of bars. 
--- 
+-- Convert a voice score to a list of bars.
+--
 toXmlVoice' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
-toXmlVoice' = 
+toXmlVoice' =
     addDefaultSignatures . fmap barToXml . voiceToBars
     where
         addDefaultSignatures []     = []
         addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
         defaultSignatures = mempty
             <> Xml.defaultKey
-            <> Xml.defaultDivisions 
+            <> Xml.defaultDivisions
             <> Xml.metronome (1/4) 60
             <> Xml.commonTime
 
@@ -195,7 +189,7 @@ rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
     where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d   
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- FIXME only works for single-voice parts
@@ -205,8 +199,8 @@ setDefaultVoice = Xml.setVoice 1
 -- FIXME arbitrary spelling, please modularize...
 spellXml :: Integer -> Xml.Pitch
 spellXml p = (
-    toEnum $ fromIntegral pc, 
-    if alt == 0 then Nothing else Just (fromIntegral alt), 
+    toEnum $ fromIntegral pc,
+    if alt == 0 then Nothing else Just (fromIntegral alt),
     fromIntegral oct
     )
     where (pc,alt,oct) = spellPitch p
