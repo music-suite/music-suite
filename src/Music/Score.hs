@@ -81,12 +81,6 @@ module Music.Score (
 )
 where
 
-{-
-    TODO
-       Split and reverse
-       Zipper applicative (for appying dynamic and articulation transformations etc)
--}  
-
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
 import Data.Semigroup
@@ -196,7 +190,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         performance     = (toRelative . perform) (getMidiScore score)
 
         -- FIXME arbitrary endTime (files won't work without this...)
-        -- TODO handle voice
+        -- TODO render voices separately
 
 -- |
 -- Convert a score to a track of MIDI messages.
@@ -275,7 +269,7 @@ openXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-    -- FIXME hardcode
+    -- FIXME hardcoded
 
 -- |
 -- Convert a score to MusicXML and write to a file. 
@@ -290,7 +284,7 @@ openXmlSingle :: HasMusicXml a => Score a -> IO ()
 openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-    -- FIXME hardcode
+    -- FIXME hardcoded
 
 
 -- |
@@ -414,7 +408,7 @@ openLy sc = do
     runLy
     
 runLy = execute "lilypond" ["-f", "png", "test.ly"]
-    -- FIXME hardcode
+    -- FIXME hardcoded
 
 -- |
 -- Convert a score to a Lilypond representation. 

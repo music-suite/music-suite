@@ -93,7 +93,6 @@ toTime = Time . toRational
 --
 -- > duration a >= 0
 --
---
 class HasOnset a where
     -- | 
     -- Get the onset of the given value.
@@ -109,7 +108,6 @@ instance HasOnset a => HasOnset (WrappedMonoid a) where
     onset = onset . unwrapMonoid
     offset = offset . unwrapMonoid
 
-
 class HasPreOnset a where
     preOnset :: a -> Time
 
@@ -119,6 +117,3 @@ class HasPostOnset a where
 class HasPostOffset a where
     postOffset :: a -> Time
 
-                              
-
-                 
