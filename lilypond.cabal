@@ -27,6 +27,7 @@ library
     exposed-modules:
         Music.Lilypond
         Music.Lilypond.Pitch
+        Music.Lilypond.Dynamics
         Music.Lilypond.Value
         Music.Lilypond.IO
     

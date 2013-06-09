@@ -3,11 +3,9 @@
     OverloadedStrings, 
     GeneralizedNewtypeDeriving,
     StandaloneDeriving,
-    FlexibleInstances,
     TypeFamilies,
     ScopedTypeVariables,     
-    ExistentialQuantification,
-    NoMonomorphismRestriction #-}
+    ExistentialQuantification #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -68,10 +66,12 @@ module Music.Lilypond (
         -- ** Post events
         addPost,
         addText,
-        addText',
         addMarkup,
-        addMarkup',
+        addDynamics,
         addArticulation,
+        addText',
+        addMarkup',
+        addDynamics',
         addArticulation',
 
         -- ** Curves and lines
@@ -141,6 +141,7 @@ import Music.Pitch.Literal
 -- import System.Process -- TODO debug
 
 import Music.Lilypond.Pitch
+import Music.Lilypond.Dynamics
 import Music.Lilypond.Value
 
 
@@ -324,6 +325,7 @@ data BreathingSign
 
 data PostEvent
     = Articulation Direction Articulation
+    | Dynamics Direction Dynamics
     | Tie
     | BeginBeam
     | EndBeam
@@ -340,6 +342,7 @@ data PostEvent
 
 instance Pretty PostEvent where 
     pretty (Articulation d a)   = pretty d <> pretty a
+    pretty (Dynamics d a)       = pretty d <> pretty a
     pretty Tie                  = "~"
     pretty BeginBeam            = "["
     pretty EndBeam              = "]"
@@ -602,6 +605,12 @@ addArticulation a = addPost (Articulation def a)
 addArticulation' :: Direction -> Articulation -> Music -> Music
 addArticulation' d a = addPost (Articulation d a)
 
+addDynamics :: Dynamics -> Music -> Music
+addDynamics a = addPost (Dynamics def a)
+
+addDynamics' :: Direction -> Dynamics -> Music -> Music
+addDynamics' d a = addPost (Dynamics d a)
+
 beginTie :: Music -> Music
 beginTie = addPost Tie
 
@@ -823,26 +832,7 @@ test = Simultaneous False [
         New "StaffGroup" Nothing (Simultaneous False [
             New "Staff" Nothing (Relative c' $ Sequential [
                 Set "Staff.instrumentName" (toValue "Violin I"),
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e,
-                c, d, e
+                (addDynamics FF c), d, e
                 ]),
             New "Staff" Nothing (Sequential [
                 Set "Staff.instrumentName" (toValue "Violin II"),
