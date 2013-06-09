@@ -48,12 +48,12 @@ module Music.Score (
         -- * Manipulation
         module Music.Score.Combinators,
         module Music.Score.Zip,
+        module Music.Score.Part,
+        module Music.Score.Ties,
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
         module Music.Score.Ornaments,
-        module Music.Score.Part,
-        module Music.Score.Ties,
 
         -- * Export         
         module Music.Score.Export.Midi,

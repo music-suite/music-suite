@@ -64,19 +64,16 @@ module Music.Score.Combinators (
 
         -- *** Repetition
         times,    
+        group,
         triplet,
         quadruplet,
         quintuplet,
         -- repWith,
         -- repWithIndex,
         -- repWithTime,
-        group,
-        groupWith,
-        scatMap,
         
-        -- *** Padding
-        (||>),
-        padToBar,
+        -- (||>),
+        -- padToBar,
 
         -- *** Phrases
         mapPhrase,
@@ -157,7 +154,7 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ note x )
 -------------------------------------------------------------------------------------
 
 -- |
--- Move a score move in time. Equivalent to 'delay'.
+-- Move a score forward in time. Equivalent to 'delay'.
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -165,7 +162,7 @@ move :: Delayable a => Duration -> a -> a
 move = delay
 
 -- |
--- Move a score moveBack in time. Negated verison of 'delay'
+-- Move a score backward in time. Negated verison of 'delay'
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -173,15 +170,7 @@ moveBack :: Delayable a => Duration -> a -> a
 moveBack t = delay (negate t)
 
 -- |
--- Stretch a score. Equivalent to '*^'.
--- 
--- > Duration -> Score a -> Score a
--- 
-stretch :: VectorSpace v => Scalar v -> v -> v
-stretch = (*^)
-
--- |
--- Move a score to start at a specific time.
+-- Move a score so that its onset is at the specific time.
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -189,7 +178,7 @@ startAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `startAt` x = delay d x where d = t .-. onset x
 
 -- |
--- Move a score to stop at a specific time.
+-- Move a score so that its offset is at the specific time.
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -197,7 +186,15 @@ stopAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `stopAt`  x = delay d x where d = t .-. offset x
 
 -- |
--- Compress a score. Flipped version of '^/'.
+-- Stretch (augment) a score by the given factor. Equivalent to '*^'.
+-- 
+-- > Duration -> Score a -> Score a
+-- 
+stretch :: VectorSpace v => Scalar v -> v -> v
+stretch = (*^)
+
+-- |
+-- Compress (diminish) a score. Flipped version of '^/'.
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -205,7 +202,7 @@ compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
 compress = flip (^/)
 
 -- | 
--- Stretch to the given duration. 
+-- Stretch a score to fit into the given duration. 
 -- 
 -- > Duration -> Score a -> Score a
 -- 
@@ -423,23 +420,6 @@ rep a = a `plus` delay (duration a) (rep a)
 -- Conversion
 --------------------------------------------------------------------------------
 
-{-
--- |
--- Convert a score to a track by throwing away durations.
---
-scoreToTrack :: Score a -> Track a
-scoreToTrack = Track . fmap throwDur . perform
-    where
-        throwDur (t,d,x) = (t,x)
--- |
--- Convert a track to a score. Each note gets an arbitrary duration of one.
---
-trackToScore :: Track a -> Score a
-trackToScore = pcat . fmap g . getTrack
-    where
-        g (t,x) = delay (t .-. 0) (note x)     
--}
-
 -- |
 -- Convert a score into a voice.
 --
@@ -507,9 +487,19 @@ mapFirstMiddleLast f g h [a]     = [f a]
 mapFirstMiddleLast f g h [a,b]   = [f a, h b]
 mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
+-- |
+-- Map over the first, middle and last note in each part.
+-- 
+-- If a part has fewer than three notes the first takes precedence over the last, 
+-- and last takes precedence over the middle.
+--
 mapPhrase :: (HasPart' a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
 
+-- | 
+-- Equivalent to `mapPhrase` for single-voice scores.
+-- Fails if the score contains overlapping events.
+--
 mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapPhraseSingle f g h sc = mconcat . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
     where
