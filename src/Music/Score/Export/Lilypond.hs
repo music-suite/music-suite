@@ -1,12 +1,10 @@
 
 {-# LANGUAGE
-    CPP,
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
-    FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
     TypeOperators,

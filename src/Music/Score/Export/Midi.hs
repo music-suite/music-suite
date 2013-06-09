@@ -1,6 +1,5 @@
 
 {-# LANGUAGE
-    CPP,
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
