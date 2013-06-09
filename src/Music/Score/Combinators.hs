@@ -26,6 +26,9 @@
 
 
 module Music.Score.Combinators (
+        -- ** Preliminaries
+        Monoid',
+        MonadPlus',
         -- ** Constructing scores
         rest,
         note,
@@ -102,6 +105,9 @@ import Music.Time.Relative
 import Music.Time.Absolute
 -- import Music.Score.Part
 -- import Music.Score.Ties
+
+type Monoid' a    = (Monoid a, Semigroup a)
+type MonadPlus' m = (Functor m, MonadPlus m, Foldable m)
 
 
 -------------------------------------------------------------------------------------
@@ -198,7 +204,7 @@ compress = flip (^/)
 -- 
 -- > Duration -> Score a -> Score a
 -- 
-stretchTo :: (VectorSpace a, HasDuration a, Scalar a ~ Duration) => Duration -> a -> a
+stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x 
 
  
@@ -233,8 +239,8 @@ a <| b =  b |> a
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid a, Delayable a, HasOnset a) => [a] -> a
-scat = unwrapMonoid . foldr (|>) mempty . fmap WrapMonoid
+scat :: (Monoid' a, Delayable a, HasOnset a) => [a] -> a
+scat = foldr (|>) mempty
 
 -- |
 -- Parallel concatentation. A synonym for 'mconcat'.
@@ -258,7 +264,7 @@ pcat = mconcat
 -- 
 -- > Score a -> Score a -> Score a
 --
-sustain :: (Semigroup a, VectorSpace a, HasDuration a, Scalar a ~ Duration) => a -> a -> a
+sustain :: (Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
 x `sustain` y = x <> duration x `stretchTo` y
 
 -- Like '<>', but truncating the second agument to the duration of the first.
@@ -291,7 +297,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Enum a, Monoid c, HasOnset c, Delayable c) => a -> c -> c
+times :: (Enum a, Monoid' c, HasOnset c, Delayable c) => a -> c -> c
 times n a = replicate (0 `max` fromEnum n) () `repWith` const a
 
 -- |
@@ -303,7 +309,7 @@ times n a = replicate (0 `max` fromEnum n) () `repWith` const a
 --
 -- > repWith [1,2,1] (c^*)
 --
-repWith :: (Monoid c, HasOnset c, Delayable c) => [a] -> (a -> c) -> c
+repWith :: (Monoid' c, HasOnset c, Delayable c) => [a] -> (a -> c) -> c
 repWith = flip (\f -> scat . fmap f)
 
 -- |
@@ -318,7 +324,7 @@ scatMap f = scat . fmap f
 --
 -- > Duration -> (Duration -> Score Note) -> Score Note
 --
-repWithIndex :: (Enum a, Num a, Monoid c, HasOnset c, Delayable c) => a -> (a -> c) -> c
+repWithIndex :: (Enum a, Num a, Monoid' c, HasOnset c, Delayable c) => a -> (a -> c) -> c
 repWithIndex n = repWith [0..n-1]
 
 -- |
@@ -326,7 +332,7 @@ repWithIndex n = repWith [0..n-1]
 --
 -- > Duration -> (Time -> Score Note) -> Score Note
 --
-repWithTime :: (Enum a, Fractional a, Monoid c, HasOnset c, Delayable c) => a -> (a -> c) -> c
+repWithTime :: (Enum a, Fractional a, Monoid' c, HasOnset c, Delayable c) => a -> (a -> c) -> c
 repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
     where
         n' = n
@@ -347,7 +353,7 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
-triplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+triplet :: (Monoid' a, Stretchable a, Delayable a, HasOnset a) => a -> a
 triplet     = group (3::Duration)
 
 -- |
@@ -355,7 +361,7 @@ triplet     = group (3::Duration)
 --
 -- > Score a -> Score a
 --
-quadruplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+quadruplet :: (Monoid' a, Semigroup a, Stretchable a, Delayable a, HasOnset a) => a -> a
 quadruplet  = group (4::Duration)
 
 -- |
@@ -363,7 +369,7 @@ quadruplet  = group (4::Duration)
 --
 -- > Score a -> Score a
 --
-quintuplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+quintuplet :: (Monoid' a, Semigroup a, Stretchable a, Delayable a, HasOnset a) => a -> a
 quintuplet  = group (5::Duration)
 
 -- |
@@ -371,16 +377,16 @@ quintuplet  = group (5::Duration)
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => a -> c -> c
+group :: (Monoid' c, Semigroup c, Stretchable c, HasOnset c, Delayable c) => Duration -> c -> c
 group n a = times n (a^/n)
 
--- |
+--
 -- Repeat a number of times and scale down by the same amount.
 --
 -- > [Duration] -> Score a -> Score a
 --
-groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
-groupWith = flip $ \p -> scat . fmap (`group` p)
+-- groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid' c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
+-- groupWith = flip $ \p -> scat . fmap (`group` p)
 
 -- |
 -- Reverse a score around its middle point.
@@ -502,7 +508,6 @@ mapPhraseSingle f g h sc = mconcat . mapFirstMiddleLast (fmap f) (fmap g) (fmap 
 
 
 
-type MonadPlus' s = (Functor s, MonadPlus s, Foldable s)
 
 -- mapPhrase2
 --   :: (
