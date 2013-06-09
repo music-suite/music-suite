@@ -59,6 +59,8 @@ library
         Music.Score.Export.Midi
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
+    other-modules:
+        Music.Score.Export.Util
         
 -- executable "music-score-tests"
 --     hs-source-dirs: src test
