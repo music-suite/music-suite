@@ -218,8 +218,9 @@ list z f xs = f xs
 first f (x,y)  = (f x, y)
 second f (x,y) = (x, f y)
 
-
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
-mergeBy f as bs = List.sortBy f $ as <> bs
-
+mergeBy f [] ys = ys
+mergeBy f xs [] = xs
+mergeBy f xs'@(x:xs) ys'@(y:ys) | x `f` y == LT   =   x : mergeBy f xs ys'
+                                | x `f` y /= LT   =   y : mergeBy f xs' ys
 
