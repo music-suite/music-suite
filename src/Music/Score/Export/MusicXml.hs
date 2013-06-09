@@ -25,9 +25,18 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.MusicXml -- (
---  ) 
-where
+module Music.Score.Export.MusicXml (
+        XmlScore,
+        XmlMusic,
+        HasMusicXml(..),
+        toXml,
+        writeXml,
+        openXml,
+        toXmlVoice,
+        toXmlSingle,
+        writeXmlSingle,
+        openXmlSingle,
+) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 

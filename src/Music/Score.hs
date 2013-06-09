@@ -49,35 +49,9 @@ module Music.Score (
         module Music.Score.Ties,
 
         -- * Export         
-        -- ** MIDI        
-        HasMidi(..),
-        toMidi,
-        toMidiTrack,
-        writeMidi,
-        playMidi,
-        playMidiIO,
-
-        -- ** Lilypond
-        Lilypond,
-        HasLilypond(..),
-        toLy,
-        writeLy,
-        openLy,
-        -- toLySingle,
-        -- writeLySingle,
-        -- openLySingle,
-
-        -- ** MusicXML
-        XmlScore,
-        XmlMusic,
-        HasMusicXml(..),
-        toXml,
-        writeXml,
-        openXml,
-        toXmlVoice,
-        toXmlSingle,
-        writeXmlSingle,
-        openXmlSingle,
+        module Music.Score.Export.Midi,
+        module Music.Score.Export.Lilypond,
+        module Music.Score.Export.MusicXml,
 )
 where
 

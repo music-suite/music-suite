@@ -25,9 +25,16 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.Lilypond -- (
---  ) 
-where
+module Music.Score.Export.Lilypond (
+        Lilypond,
+        HasLilypond(..),
+        toLy,
+        writeLy,
+        openLy,
+        -- toLySingle,
+        -- writeLySingle,
+        -- openLySingle,
+  ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 

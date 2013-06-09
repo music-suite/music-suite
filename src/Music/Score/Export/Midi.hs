@@ -25,9 +25,14 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.Midi -- (
---  ) 
-where
+module Music.Score.Export.Midi (
+        HasMidi(..),
+        toMidi,
+        toMidiTrack,
+        writeMidi,
+        playMidi,
+        playMidiIO,
+  ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
