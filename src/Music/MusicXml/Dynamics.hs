@@ -22,13 +22,29 @@ module Music.MusicXml.Dynamics (
 import Music.Dynamics.Literal
 
 data Dynamics 
-    = PPPPPP | PPPPP | PPPP | PPP | PP | P 
-    | MP | MF 
-    | F | FF | FFF | FFFF | FFFFF | FFFFFF
-    | SF | SFP | SFPP
-    | FP | RF 
+    = PPPPPP 
+    | PPPPP 
+    | PPPP 
+    | PPP 
+    | PP 
+    | P 
+    | MP 
+    | MF 
+    | F 
+    | FF 
+    | FFF 
+    | FFFF 
+    | FFFFF 
+    | FFFFFF
+    | SF 
+    | SFP 
+    | SFPP
+    | FP 
+    | RF 
     | RFZ 
-    | SFZ | SFFZ | FZ
+    | SFZ 
+    | SFFZ 
+    | FZ
     deriving (Eq, Ord, Show, Enum, Bounded)
 
 instance IsDynamics Dynamics where

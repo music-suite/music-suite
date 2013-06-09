@@ -1,5 +1,9 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE 
+    GeneralizedNewtypeDeriving, 
+    StandaloneDeriving, 
+    TypeSynonymInstances, 
+    FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
