@@ -59,7 +59,6 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 
 import Data.Semigroup
 import Data.Ratio
-import Data.String
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
@@ -68,17 +67,14 @@ import Data.Either
 import Data.Foldable
 import Data.Typeable
 import Data.Traversable
-import Data.Function (on)
-import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
-import Control.Reactive
-import Control.Reactive.Midi
-
 import Music.Time.Absolute
 import Music.Time.Relative
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
@@ -91,21 +87,14 @@ import Music.Score.Part
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
+import Music.Score.Export.Midi
+import Music.Score.Export.Lilypond
+import Music.Score.Export.MusicXml
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml
 import qualified Music.Lilypond as Lilypond
-import qualified Text.Pretty as Pretty
-import qualified Data.Map as Map
-import qualified Data.List as List
 
-import System.Posix
-import System.IO.Unsafe
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-import Music.Score.Export.Midi
-import Music.Score.Export.Lilypond
-import Music.Score.Export.MusicXml
 
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)
@@ -925,13 +914,11 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 -------------------------------------------------------------------------------------
 
 
-type Id  a = a -> a
 type Note = (PartT Int (TieT
     (TremoloT (HarmonicT (SlideT
         (DynamicT (ArticulationT (TextT Integer))))))))
--- type Note = (PartT Int (ArticulationT (TieT Integer)))
 
-asScore :: Id (Score Note)
+asScore :: Score Note -> Score Note
 asScore = id                     
 
 main = openLy $ foo
@@ -939,36 +926,4 @@ foo  = asScore $
         (accent $ portato $ melody [c,g',fs',b_,c,cs_]^*(1/3)) 
     </> c^*23 
     </> (legato $ c |> d |> e^*2)
-
-
--------------------------------------------------------------------------------------
-
--- | 
--- Group a list into sublists whereever a predicate holds. The matched element
--- is the first in the sublist.
---
--- > splitWhile isSpace "foo bar baz"
--- >    ===> ["foo"," bar"," baz"]
--- >
--- > splitWhile (> 3) [1,5,4,7,0,1,2]
--- >    ===> [[1],[5],[4],[7,0,1,2]]
---
-splitWhile :: (a -> Bool) -> [a] -> [[a]]
-splitWhile p xs = case splitWhile' p xs of
-    []:xss -> xss
-    xss    -> xss
-    where
-        splitWhile' p []     = [[]]
-        splitWhile' p (x:xs) = case splitWhile' p xs of
-            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
-
-execute :: FilePath -> [String] -> IO ()
-execute program args = do
-    forkProcess $ executeFile program True args Nothing
-    return ()
-
-unRatio x = (numerator x, denominator x)
-first f (x, y) = (f x, y)
-second f (x, y) = (x, f y)
-both f g = first f . second g
 
