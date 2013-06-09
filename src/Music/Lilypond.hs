@@ -9,6 +9,17 @@
     ExistentialQuantification,
     NoMonomorphismRestriction #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : GHC
+--
+-------------------------------------------------------------------------------------
 module Music.Lilypond (
 
         -- * Representation
@@ -271,27 +282,11 @@ instance Pretty Note where
     pretty (DrumNotePitch _)       = notImpl "Non-standard pitch"
     prettyList                     = hsep . fmap pretty
 
-instance Pretty Pitch where
-    pretty (Pitch (c,a,o)) = string $ pc c ++ acc a ++ oct (o-4)
-        where
-            pc C = "c" ; pc D = "d" ; pc E = "e" ; pc F = "f"
-            pc G = "g" ; pc A = "a" ; pc B = "b"            
-            acc n | n <  0  =  concat $ replicate (negate n) "es"
-                  | n == 0  =  ""
-                  | n >  0  =  concat $ replicate (n) "is"
-            oct n | n <  0  =  concat $ replicate (negate n) ","
-                  | n == 0  =  ""
-                  | n >  0  =  concat $ replicate n "'"
-
 instance IsPitch Music where
     fromPitch = (\p -> Note p (Just (1/4)) []) . fromPitch
 
 instance IsPitch Note where
     fromPitch = (\p -> (NotePitch p Nothing)) . fromPitch
-
-instance IsPitch Pitch where
-    fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
-    fromPitch (PitchL (c, Just a, o))  = Pitch (toEnum c, round a, o)
 
 instance AdditiveGroup Music where
     zeroV   = Rest (Just $ 1/4) []
@@ -333,13 +328,6 @@ instance Pretty Clef where
     pretty SubBass      = "subbass"
     pretty Percussion   = "percussion"
     pretty Tab          = "tab"
-
-data Mode = Major | Minor
-    deriving (Eq, Show)
-
-instance Pretty Mode where
-    pretty Major = "\\major"
-    pretty Minor = "\\minor"
 
 data BreathingSign
     = RightVarComma
