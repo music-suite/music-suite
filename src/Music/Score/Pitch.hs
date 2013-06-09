@@ -40,12 +40,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
 
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Time.Relative
-import Music.Time.Absolute
-import Music.Score.Ties
-
 class HasPitch a where
     -- | 
     -- Associated pitch type. Should implement 'Eq' and 'Show' to be usable.

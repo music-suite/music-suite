@@ -57,11 +57,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
 
-import Music.Score.Voice
-import Music.Score.Score (Score, note, rest, perform)
-import Music.Time.Relative
-import Music.Time.Absolute
-
 
 -- | 
 -- Class of types with an associated part.
