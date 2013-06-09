@@ -343,10 +343,39 @@ repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
         n' = n
 
 
+-- |
+-- Remove rests from a score.
+--
+-- Identical to 'mcatMaybes'.
+-- 
+-- > Score (Maybe a) -> Score a
+-- 
+removeRests :: MonadPlus m => m (Maybe a) -> m a
 removeRests = mcatMaybes
-triplet     = group (3::Rational)
-quadruplet  = group (4::Rational)
-quintuplet  = group (5::Rational)
+
+-- |
+-- Repeat three times and scale down by three.
+--
+-- > Score a -> Score a
+--
+triplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+triplet     = group (3::Duration)
+
+-- |
+-- Repeat three times and scale down by three.
+--
+-- > Score a -> Score a
+--
+quadruplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+quadruplet  = group (4::Duration)
+
+-- |
+-- Repeat three times and scale down by three.
+--
+-- > Score a -> Score a
+--
+quintuplet :: (Monoid a, Semigroup a, VectorSpace a, Delayable a, HasOnset a, Scalar a ~ Duration) => a -> a
+quintuplet  = group (5::Duration)
 
 -- |
 -- Repeat a number of times and scale down by the same amount.
