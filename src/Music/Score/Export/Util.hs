@@ -40,9 +40,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
-import Control.Reactive
-import Control.Reactive.Midi
-
 import Music.Time.Absolute
 import Music.Time.Relative
 import Music.Score.Rhythm

@@ -156,7 +156,8 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 playMidi :: HasMidi a => String -> Score a -> Event MidiMessage
 playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ delay 0.2 x)
     where
-        trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)
+        -- trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)
+        trig        = time
         toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure dest)
 
