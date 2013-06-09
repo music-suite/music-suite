@@ -15,8 +15,6 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a musical score represenation.
---
 -------------------------------------------------------------------------------------
 
 module Music.Time.Absolute where

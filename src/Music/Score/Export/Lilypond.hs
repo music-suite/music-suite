@@ -141,7 +141,7 @@ runLy = execute "lilypond" ["-f", "png", "test.ly"]
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> Lilypond.Music
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractWithNames $ sc
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractParts $ sc
     where
         addStaff x = Lilypond.New "Staff" Nothing x
         prependName (v,x) = [Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v)] ++ x

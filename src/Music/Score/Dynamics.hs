@@ -83,29 +83,30 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 -- dynamic n = mapPhrase (setLevel n) id id 
 
 
--- | Apply a dynamic level over the score.
---   The dynamic score is assumed to have duration one.
+-- | 
+-- Apply a dynamic level over the score.
+-- The dynamic score is assumed to have duration one.
 --
 dynamics :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
--- | Equivalent to `dynamics` for single-voice scores but more efficient.
---   Fails if the score contains overlapping events.
+-- | 
+-- Equivalent to `splitTies` for single-voice scores.
+-- Fails if the score contains overlapping events.
 --
 dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
 
--- | Apply a dynamic level over a voice.
+-- | 
+-- Apply a dynamic level over a voice.
 --
 dynamicVoice :: HasDynamic a => Score (Levels Double) -> Voice (Maybe a) -> Voice (Maybe a)
 dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
 
 
--- | Apply a variable level over the score.
 dyns :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
 dyns ds = mapParts (fmap $ applyDynSingle (fmap fromJust $ scoreToVoice ds))
 
--- | Apply a variable level over a single-part score.
 dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dyn ds = applyDynSingle (fmap fromJust . scoreToVoice $ ds)
 

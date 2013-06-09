@@ -87,9 +87,9 @@ splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
 splitTies = mapAllParts splitTiesSingle
 
 -- | 
--- Split all notes that cross a barlines into a pair of tied notes.
--- Note: only works for single-part scores (with no overlapping events).
--- 
+-- Equivalent to `splitTies` for single-voice scores.
+-- Fails if the score contains overlapping events.
+--
 splitTiesSingle :: Tiable a => Score a -> Score a
 splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
 

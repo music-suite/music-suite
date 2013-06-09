@@ -31,7 +31,7 @@ module Music.Score.Part (
         -- PartName(..),
         PartT(..),
         extract,
-        extractWithNames,
+        extractParts,
         mapPart,
         mapParts,
         mapAllParts,
@@ -69,38 +69,23 @@ import Music.Time.Absolute
 -- The part type can be any type that is orddered.
 -- 
 class HasPart a where
-    -- | 
-    -- Associated part type. Should implement 'Ord' and 'Show' to be usable.
-    -- 
+    -- | Associated part type. Should implement 'Ord' and 'Show'.
     type Part a :: *
 
-    -- |
-    -- Get the voice of the given note.
-    -- 
+    -- | Get the voice of the given note.
     getPart :: a -> Part a
 
-    -- |
-    -- Set the voice of the given note.
-    -- 
+    -- | Set the voice of the given note.
     setPart :: Part a -> a -> a
 
-    -- |
-    -- Modify the voice of the given note.
-    -- 
+    -- | Modify the voice of the given note.
     modifyPart :: (Part a -> Part a) -> a -> a
    
     setPart n = modifyPart (const n)
     modifyPart f x = x
 
--- newtype PartName = PartName { getPartName :: String }
-    -- deriving (Eq, Ord, IsString)
--- instance Show PartName where show = getPartName
-
 newtype PartT n a = PartT { getPartT :: (n, a) }
     deriving (Eq, Ord, Show, Functor, Typeable)
-
--- instance Foldable (PartT n) where
-    -- foldMap f (PartT (n, a)) = foldMap f a
 
 instance HasPart ()                            where   { type Part ()         = Integer ; getPart _ = 0 }
 instance HasPart Double                        where   { type Part Double     = Integer ; getPart _ = 0 }
@@ -109,8 +94,11 @@ instance HasPart Int                           where   { type Part Int        = 
 instance HasPart Integer                       where   { type Part Integer    = Integer ; getPart _ = 0 }
 instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = Integer ; getPart _ = 0 }
 
+-- | 
+-- Like 'HasPart', but enforces the part to be ordered.
+-- This is usually required for part separation and traversal.
+-- 
 type HasPart' a = (Ord (Part a), HasPart a)
-
 
 
 -- | 
@@ -130,10 +118,19 @@ extract sc = fmap (`extract'` sc) (getParts sc)
     where                    
         extract' v = mfilter ((== v) . getPart)
 
-extractWithNames :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [(Part a, s a)]
-extractWithNames sc = fmap (`extractWithNames2` sc) (getParts sc) 
+-- | 
+-- Extract parts from the a score. 
+--
+-- The parts are returned in the order defined the associated 'Ord' instance part type.
+--
+-- Simple type
+-- 
+-- > Score a -> [(Part a, Score a)]
+--
+extractParts :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [(Part a, s a)]
+extractParts sc = fmap (`extractParts2` sc) (getParts sc) 
     where                    
-        extractWithNames2 v = (\x -> (v,x)) . mfilter ((== v) . getPart)
+        extractParts2 v = (\x -> (v,x)) . mfilter ((== v) . getPart)
 
 
 -- |
@@ -200,7 +197,6 @@ a </> b = a `mplus` moveParts offset b
     where               
         -- max voice in a + 1
         offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
-
 
 -- |
 -- Move down one voice (all parts).
