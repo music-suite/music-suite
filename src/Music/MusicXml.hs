@@ -10,8 +10,9 @@
 -- Portability : portable
 --
 -- A Haskell representation of MusicXML.
+-- You may want to use the "Music.MusicXml.Simple" module to generate the representation.
 --
--- For an introduction, see <http://www.makemusic.com/musicxml/tutorial>.
+-- For an introduction to MusicXML, see <http://www.makemusic.com/musicxml/tutorial>.
 --
 -------------------------------------------------------------------------------------
 
