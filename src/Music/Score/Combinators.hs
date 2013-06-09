@@ -89,7 +89,7 @@ import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Control.Monad.Plus
 import Data.Semigroup
 import Data.String
-import Data.Foldable
+import Data.Foldable hiding (msum)
 import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace
@@ -406,7 +406,7 @@ retrograde = startAt 0 . retrograde'
 -- |
 -- Repeat indefinately, like repeat for lists.
 --
--- > Score Note -> Score Note
+-- > Score a -> Score a
 --
 rep :: Score a -> Score a
 rep a = a `plus` delay (duration a) (rep a)
@@ -492,17 +492,23 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 -- If a part has fewer than three notes the first takes precedence over the last, 
 -- and last takes precedence over the middle.
 --
-mapPhrase :: (HasPart' a) => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+-- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapPhrase :: (MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) =>
+     (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
 
 -- | 
 -- Equivalent to `mapPhrase` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
-mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapPhraseSingle f g h sc = mconcat . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
+-- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
+    (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
     where
-        toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
+        toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
 
 
