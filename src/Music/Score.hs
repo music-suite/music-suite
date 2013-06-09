@@ -343,6 +343,15 @@ noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
 
+-- FIXME arbitrary spelling, please modularize...
+spellXml :: Integer -> Xml.Pitch
+spellXml p = (
+    toEnum $ fromIntegral pc, 
+    if alt == 0 then Nothing else Just (fromIntegral alt), 
+    fromIntegral oct
+    )
+    where (pc,alt,oct) = spellPitch p
+
 
 
 
@@ -398,7 +407,6 @@ writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
             "\\layout {\n"                                             ++
             "}\n"                                                      
 
-
 -- |
 -- Convert a score to MusicXML and open it. 
 -- 
@@ -441,6 +449,16 @@ noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond.Music
 noteRestToLy d Nothing  = Lilypond.rest^*(fromDuration $ d*4)   
 noteRestToLy d (Just p) = getLilypond d p
 
+spellLy :: Integer -> Lilypond.Note
+spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
+
+spellLy' :: Integer -> Lilypond.Pitch
+spellLy' p = Lilypond.Pitch (
+    toEnum $ fromIntegral pc, 
+    fromIntegral alt, 
+    fromIntegral oct
+    ) 
+    where (pc,alt,oct) = spellPitch p
 
 
 
@@ -475,25 +493,6 @@ toRelative = snd . mapAccumL g 0
     where
         g now (t,d,x) = (t, (t-now,d,x))
 
--- FIXME arbitrary spelling, please modularize...
-spellXml :: Integer -> Xml.Pitch
-spellXml p = (
-    toEnum $ fromIntegral pc, 
-    if alt == 0 then Nothing else Just (fromIntegral alt), 
-    fromIntegral oct
-    )
-    where (pc,alt,oct) = spellPitch p
-
-spellLy :: Integer -> Lilypond.Note
-spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
-
-spellLy' :: Integer -> Lilypond.Pitch
-spellLy' p = Lilypond.Pitch (
-    toEnum $ fromIntegral pc, 
-    fromIntegral alt, 
-    fromIntegral oct
-    ) 
-    where (pc,alt,oct) = spellPitch p
 
 -- FIXME arbitrary spelling, please modularize...
 spellPitch :: Integral a => a -> (a, a, a)
