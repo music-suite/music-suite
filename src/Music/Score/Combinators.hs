@@ -103,6 +103,7 @@ import Music.Score.Score
 import Music.Score.Part
 import Music.Time.Relative
 import Music.Time.Absolute
+import Music.Time.Performable
 -- import Music.Score.Part
 -- import Music.Score.Ties
 

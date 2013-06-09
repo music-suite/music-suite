@@ -57,12 +57,13 @@ import Control.Reactive.Midi
 
 import Music.Time.Absolute
 import Music.Time.Relative
+import Music.Time.Performable
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
-import Music.Score.Score (Score, note, rest, perform)
+import Music.Score.Score (Score, note, rest)
 import Music.Score.Combinators
 import Music.Score.Zip
 import Music.Score.Pitch

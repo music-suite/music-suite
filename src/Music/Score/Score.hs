@@ -28,7 +28,6 @@ module Music.Score.Score (
         repeat,
         null,
         length,
-        perform,
         mapTime,
   ) where
 
@@ -55,6 +54,7 @@ import Music.Dynamics.Literal
 
 import Music.Time.Absolute
 import Music.Time.Relative
+import Music.Time.Performable
 import Music.Score.Voice
 import Music.Score.Track
 
@@ -122,6 +122,9 @@ instance Monad Score where
     a >>= k = join' $ fmap k a
         where  
             join' sc = mconcat $ toList $ mapTime (\t d -> delay (t .-. 0) . (d*^) ) sc
+
+instance Performable Score where
+    perform = getScore
 
 instance AdditiveGroup (Score a) where
     zeroV   = mempty
@@ -194,11 +197,6 @@ null = List.null . getScore
 length :: Score a -> Int
 length = List.length . getScore
 
--- |
--- Perform the score, yielding a sorted list of events.
---
-perform :: Score a -> [(Time, Duration, a)]
-perform = getScore
 
 -- |
 -- Map over all events in a score.

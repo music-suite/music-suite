@@ -51,6 +51,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Time.Relative
 import Music.Time.Absolute
+import Music.Time.Performable
 import Music.Score.Part
 import Music.Score.Combinators
 
