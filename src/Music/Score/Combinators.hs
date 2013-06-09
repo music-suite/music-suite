@@ -68,20 +68,12 @@ module Music.Score.Combinators (
         triplet,
         quadruplet,
         quintuplet,
-        -- repWith,
-        -- repWithIndex,
-        -- repWithTime,
-        
-        -- (||>),
-        -- padToBar,
 
         -- *** Phrases
         mapPhrase,
         mapPhraseSingle,
 
         -- ** Conversion
-        -- trackToScore,
-        -- scoreToTrack,
         scoreToVoice,
         voiceToScore,
         voiceToScore',
@@ -505,6 +497,28 @@ mapPhraseSingle f g h sc = mconcat . mapFirstMiddleLast (fmap f) (fmap g) (fmap 
     where
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ note x
         third f (a,b,c) = (a,b,f c)
+
+
+
+
+
+type MonadPlus' s = (Functor s, MonadPlus s, Foldable s)
+
+-- mapPhrase2
+--   :: (
+--       MonadPlus' s,
+--       HasPart' a, 
+--       Performable s, 
+--       Delayable (s a),
+--       Stretchable (s a)
+--       ) =>
+--      (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+-- mapPhrase2 f g h = mapParts (fmap $ mapPhraseSingle2 f g h)
+-- 
+-- mapPhraseSingle2 f g h sc = Control.Monad.Plus.msum . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform2 $ sc
+--     where
+--         toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
+--         third f (a,b,c) = (a,b,f c)
 
 
 

@@ -3,6 +3,8 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -63,27 +65,28 @@ instance VectorSpace Duration where
 
 instance InnerSpace Duration where (<.>) = (*)
 
-
 class HasDuration a where
     duration :: a -> Duration
 
 
--------------------------------------------------------------------------------------
--- Delayable class
--------------------------------------------------------------------------------------
-
 -- |
--- Delayable values. This is really similar to 'AffineSpace', except that there
--- is no '.-.'.
+-- Delayable values. 
+-- 
+-- Similar to @(AffineSpace a, Diff a ~ Duration)@.
 -- 
 class Delayable a where
 
     -- |
-    -- Delay a score.
+    -- Delay a value.
     -- > Duration -> Score a -> Score a
     -- 
     delay :: Duration -> a -> a
 
 instance Delayable a => Delayable (WrappedMonoid a) where 
     delay t = WrapMonoid . delay t . unwrapMonoid
+
+-- |
+-- Stretchable values.
+-- 
+type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
 

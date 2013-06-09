@@ -44,6 +44,7 @@ library
         Music.Score
         Music.Time.Absolute
         Music.Time.Relative
+        Music.Time.Performable
         Music.Score.Track
         Music.Score.Voice
         Music.Score.Score
