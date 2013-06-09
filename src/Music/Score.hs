@@ -476,33 +476,31 @@ toRelative = snd . mapAccumL g 0
         g now (t,d,x) = (t, (t-now,d,x))
 
 -- FIXME arbitrary spelling, please modularize...
-spellXml :: Int -> Xml.Pitch
+spellXml :: Integer -> Xml.Pitch
 spellXml p = (
-    toEnum pitchClass, 
-    if alteration == 0 then Nothing else Just (fromIntegral alteration), 
-    fromIntegral octave
-    ) 
-    where
-        octave     = (p `div` 12) - 1
-        semitone   = p `mod` 12
-        pitchClass = fromStep major semitone
-        alteration = semitone - step major pitchClass
-
-        step xs p = xs !! (p `mod` length xs)
-        fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
-        scaleFromSteps = snd . List.mapAccumL add 0
-            where
-                add a x = (a + x, a + x)
-        major = scaleFromSteps [0,2,2,1,2,2,2,1]
+    toEnum $ fromIntegral pc, 
+    if alt == 0 then Nothing else Just (fromIntegral alt), 
+    fromIntegral oct
+    )
+    where (pc,alt,oct) = spellPitch p
 
 spellLy :: Integer -> Lilypond.Note
 spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
 
 spellLy' :: Integer -> Lilypond.Pitch
 spellLy' p = Lilypond.Pitch (
-    toEnum pitchClass, 
-    fromIntegral alteration, 
-    fromIntegral octave
+    toEnum $ fromIntegral pc, 
+    fromIntegral alt, 
+    fromIntegral oct
+    ) 
+    where (pc,alt,oct) = spellPitch p
+
+-- FIXME arbitrary spelling, please modularize...
+spellPitch :: Integral a => a -> (a, a, a)
+spellPitch p = (
+    pitchClass, 
+    alteration,
+    octave
     ) 
     where
         octave     = (p `div` 12) - 1
@@ -510,12 +508,14 @@ spellLy' p = Lilypond.Pitch (
         pitchClass = fromStep major semitone
         alteration = semitone - step major pitchClass
 
-        step xs p = xs !! (p `mod` length xs)
-        fromStep xs p = fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
+        step xs p = xs !! ((fromIntegral p) `mod` length xs)
+        fromStep xs p = fromIntegral $ fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
         scaleFromSteps = snd . List.mapAccumL add 0
             where
                 add a x = (a + x, a + x)
         major = scaleFromSteps [0,2,2,1,2,2,2,1]
+
+
 
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)
