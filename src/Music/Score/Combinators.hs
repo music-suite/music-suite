@@ -29,6 +29,7 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         MonadPlus',
+        PointedMonoid,
         -- ** Constructing scores
         rest,
         note,
@@ -109,39 +110,46 @@ import Music.Time.Performable
 
 type Monoid' a    = (Monoid a, Semigroup a)
 type MonadPlus' m = (Functor m, MonadPlus m, Foldable m)
+type PointedMonoid m a = (MonadPlus' m, Monoid' (m a))
 
 
 -------------------------------------------------------------------------------------
 -- Constructors
 -------------------------------------------------------------------------------------
 
+chord :: PointedMonoid m a => [a] -> m a
+melody :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [a] -> m a
+melodyStretch :: (PointedMonoid m a, Stretchable (m a), Semigroup (m a), Delayable (m a), HasOnset (m a)) => [(Duration, a)] -> m a
+chordDelay :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [(Time, a)] -> m a
+chordDelayStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Time, Duration, a)] -> m a
+
 -- | Creates a score containing the given elements, composed in sequence.
-melody :: [a] -> Score a
-melody = scat . map note
+-- melody :: [a] -> Score a
+melody = scat . map return
 
 -- | Creates a score containing the given elements, composed in parallel.
-chord :: [a] -> Score a
-chord = pcat . map note
+-- chord :: [a] -> Score a
+chord = pcat . map return
 
 -- | Creates a score from a the given melodies, composed in parallel.
-melodies :: [[a]] -> Score a
+-- melodies :: [[a]] -> Score a
 melodies = pcat . map melody
 
 -- | Creates a score from a the given chords, composed in sequence.
-chords :: [[a]] -> Score a
+-- chords :: [[a]] -> Score a
 chords = scat . map chord
 
 -- | Like 'melody', but stretching each note by the given factors.
-melodyStretch :: [(Duration, a)] -> Score a
-melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
+-- melodyStretch :: [(Duration, a)] -> Score a
+melodyStretch = scat . map ( \(d, x) -> stretch d $ return x )
 
 -- | Like 'chord', but delays each note the given amounts.
-chordDelay :: [(Time, a)] -> Score a
-chordDelay = pcat . map ( \(t, x) -> startAt t $ note x )
+-- chordDelay :: [(Time, a)] -> Score a
+chordDelay = pcat . map ( \(t, x) -> startAt t $ return x )
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
-chordDelayStretch :: [(Time, Duration, a)] -> Score a
-chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ note x )
+-- chordDelayStretch :: [(Time, Duration, a)] -> Score a
+chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ return x )
 
 -- -- | Like chord, but delaying each note the given amount.
 -- arpeggio :: t -> [a] -> Score a

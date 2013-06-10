@@ -25,9 +25,9 @@ module Music.Score.Score (
         Score,
         note,    
         rest,
-        repeat,
-        null,
-        length,
+        -- repeat,
+        -- null,
+        -- length,
         mapTime,
   ) where
 
