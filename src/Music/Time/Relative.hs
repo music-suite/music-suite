@@ -19,7 +19,14 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Relative where
+module Music.Time.Relative (
+        Duration,
+        fromDuration,
+        toDuration,
+        HasDuration(..),
+        Delayable(..),
+        Stretchable(..),
+  ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 

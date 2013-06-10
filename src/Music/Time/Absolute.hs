@@ -17,7 +17,15 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Absolute where
+module Music.Time.Absolute (
+        Time,
+        fromTime,
+        toTime,
+        HasOnset(..),
+        HasPreOnset(..),
+        HasPostOnset(..),
+        HasPostOffset(..),
+  ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
@@ -47,7 +55,7 @@ import Music.Time.Relative
 -- that is, we can add a time to a duration to get a new time using '.+^', 
 -- take the difference of two times to get a duration using '.-.'.
 --
-newtype Time = Time { getTime::Rational }
+newtype Time = Time { getTime :: Rational }
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
 instance Show Time where 
@@ -66,8 +74,8 @@ instance InnerSpace Time where (<.>) = (*)
 
 instance  AffineSpace Time where
     type Diff Time = Duration
-    a .-. b =  t2d $ a - b      where t2d = Duration . getTime
-    a .+^ b =  a + d2t b        where d2t = Time . getDuration
+    a .-. b =  fromTime $ a - b
+    a .+^ b =  a + fromDuration b
 
 fromTime :: Fractional a => Time -> a
 fromTime = fromRational . getTime

@@ -163,7 +163,7 @@ rhythmToLy (Beat d x)            = noteRestToLy d x
 rhythmToLy (Group rs)            = foldr Lilypond.scat (Lilypond.Sequential []) $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
 rhythmToLy (Tuplet m r)          = Lilypond.Times (fromDuration m) (rhythmToLy r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ fromDuration m
 
 noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond
 noteRestToLy d Nothing  = Lilypond.rest^*(fromDuration $ d*4)

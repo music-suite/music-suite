@@ -185,7 +185,7 @@ rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ fromDuration m
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d

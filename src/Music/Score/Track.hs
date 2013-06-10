@@ -95,7 +95,7 @@ instance Monad Track where
     a >>= k = join' . fmap k $ a
         where
             join' (Track ts) = foldMap (uncurry delay') ts
-            delay' t = delay (Duration . getTime $ t)
+            delay' t = delay (fromTime t)
 
 instance Alternative Track where
     empty = mempty

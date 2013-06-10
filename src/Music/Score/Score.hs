@@ -133,11 +133,10 @@ instance AdditiveGroup (Score a) where
 
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
-    d *^ Score sc = Score . fmap (first3 (^* d2t d) . second3 (^* d)) $ sc
+    d *^ Score sc = Score . fmap (first3 (^* fromDuration d) . second3 (^* d)) $ sc
         where
             first3 f (a,b,c) = (f a,b,c)
             second3 f (a,b,c) = (a,f b,c)                      
-            d2t = Time . getDuration
             
 instance Delayable (Score a) where
     d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
@@ -153,7 +152,7 @@ instance HasOnset (Score a) where
     onset  (Score xs) = on (head xs) where on  (t,d,x) = t
 
     offset (Score []) = 0
-    offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (Time . getDuration $ d)
+    offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (fromDuration $ d)
         
 instance HasDuration (Score a) where
     duration x = offset x .-. onset x            
