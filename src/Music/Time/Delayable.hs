@@ -41,4 +41,4 @@ class Delayable a where
     -- Delay a value.
     -- > Duration -> Score a -> Score a
     -- 
-    delay :: Diff (Pos a) -> a -> a
+    delay :: Dur a -> a -> a
