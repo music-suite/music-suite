@@ -37,9 +37,7 @@ module Music.Score (
         -- * Basic types
         module Music.Pitch.Literal,
         module Music.Dynamics.Literal,
-        module Music.Time.Absolute,
-        module Music.Time.Relative,
-        module Music.Time.Performable,
+        module Music.Time,
 
         -- * Musical container types
         module Music.Score.Track,
@@ -79,13 +77,8 @@ import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
 import Data.Basis
 
-import Music.Time.Absolute
-import Music.Time.Relative
-import Music.Time.Era
-import Music.Time.Performable
-
+import Music.Time
 import Music.Pitch.Literal
-
 import Music.Dynamics.Literal
 
 import Music.Score.Rhythm

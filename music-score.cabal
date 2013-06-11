@@ -41,11 +41,14 @@ library
 
     hs-source-dirs: src
     exposed-modules:
-        Music.Score
+
+        Music.Time
         Music.Time.Absolute
         Music.Time.Relative
         Music.Time.Performable
         Music.Time.Era
+        
+        Music.Score
         Music.Score.Track
         Music.Score.Voice
         Music.Score.Score
