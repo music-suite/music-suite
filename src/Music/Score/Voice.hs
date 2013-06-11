@@ -38,8 +38,7 @@ import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Time.Absolute
-import Music.Time.Relative
+import Music.Time
 
 -------------------------------------------------------------------------------------
 -- Voice type

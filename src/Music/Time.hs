@@ -29,11 +29,15 @@
 module Music.Time (
         module Music.Time.Absolute,
         module Music.Time.Relative,
+        module Music.Time.Delayable,
+        module Music.Time.Stretchable,
         module Music.Time.Era,
         module Music.Time.Performable,
   ) where
 
 import Music.Time.Absolute
 import Music.Time.Relative
+import Music.Time.Delayable
+import Music.Time.Stretchable
 import Music.Time.Era
 import Music.Time.Performable

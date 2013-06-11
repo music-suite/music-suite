@@ -55,9 +55,7 @@ import Data.Basis
 import Control.Reactive
 import Control.Reactive.Midi
 
-import Music.Time.Absolute
-import Music.Time.Relative
-import Music.Time.Performable
+import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm

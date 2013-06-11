@@ -44,8 +44,7 @@ import Data.VectorSpace
 import Text.Parsec hiding ((<|>))
 import Text.Parsec.Pos
 
-import Music.Time.Absolute
-import Music.Time.Relative
+import Music.Time
 import Music.Score.Ties
 
 

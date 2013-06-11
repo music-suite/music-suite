@@ -40,9 +40,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
 
-import Music.Time.Absolute
-import Music.Time.Relative
-import Music.Time.Performable
+import Music.Time
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice

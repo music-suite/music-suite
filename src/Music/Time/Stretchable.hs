@@ -3,6 +3,8 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -17,8 +19,8 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Era (
-        Era,
+module Music.Time.Stretchable (
+        Stretchable(..),
   ) where
 
 import Data.Semigroup
@@ -27,27 +29,10 @@ import Data.AffineSpace
 
 import Music.Time.Absolute
 import Music.Time.Relative
-import Music.Time.Delayable
-import Music.Time.Stretchable
+
 
 -- |
--- An era is a time interval.
+-- Stretchable values.
 -- 
-newtype Era = Era { getEra :: (Min Time, Max Time) }
-    deriving (Eq, Ord, Show, Semigroup)
+type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
 
-instance HasOnset Era where
-    onset = getMin . fst . getEra
-
-instance HasOffset Era where
-    offset = getMax . snd . getEra
-
-instance HasDuration Era where
-    duration = durationDefault
-
-instance Delayable Era where
-    delay t (Era (Min a, Max b)) = Era (Min $ a .+^ t, Max $ b .+^ t)
-
--- instance Stretchable Era where
-
--- instance VectorSpace Era where

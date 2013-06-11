@@ -99,9 +99,7 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Part
-import Music.Time.Relative
-import Music.Time.Absolute
-import Music.Time.Performable
+import Music.Time
 
 import qualified Data.List as List
 

@@ -49,9 +49,7 @@ import qualified Data.List as List
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
-import Music.Time.Absolute
-import Music.Time.Relative
-import Music.Time.Performable
+import Music.Time
 import Music.Score.Voice
 import Music.Score.Track
 

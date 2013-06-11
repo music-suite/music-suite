@@ -24,8 +24,6 @@ module Music.Time.Relative (
         fromDuration,
         toDuration,
         HasDuration(..),
-        Delayable(..),
-        Stretchable(..),
   ) where
 
 import Data.Semigroup
@@ -65,23 +63,4 @@ fromDuration = fromRational . getDuration
 
 toDuration :: Real a => a -> Duration
 toDuration = Duration . toRational
-
-
--- |
--- Delayable values. 
--- 
--- Similar to @(AffineSpace a, Diff a ~ Duration)@.
--- 
-class Delayable a where
-
-    -- |
-    -- Delay a value.
-    -- > Duration -> Score a -> Score a
-    -- 
-    delay :: Duration -> a -> a
-
--- |
--- Stretchable values.
--- 
-type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
 

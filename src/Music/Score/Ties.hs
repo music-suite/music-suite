@@ -47,8 +47,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Part
-import Music.Time.Relative
-import Music.Time.Absolute
+import Music.Time
 
 -- |
 -- Class of types that can be tied.
