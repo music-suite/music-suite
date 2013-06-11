@@ -25,9 +25,6 @@ module Music.Score.Score (
         Score,
         note,    
         rest,
-        -- repeat,
-        -- null,
-        -- length,
         mapTime,
   ) where
 
@@ -185,19 +182,6 @@ repeat a = a `plus` delay (duration a) (repeat a)
         Score as `plus` Score bs = Score (as <> bs)
 
 -- |
--- Is this the empty score.
---
-null :: Score a -> Bool
-null = List.null . getScore
-
--- |
--- Returns the number of events in the score.
---
-length :: Score a -> Int
-length = List.length . getScore
-
-
--- |
 -- Map over all events in a score.
 --
 mapTime :: (Time -> Duration -> a -> b) -> Score a -> Score b
@@ -218,6 +202,7 @@ second f (x,y) = (x, f y)
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f [] ys = ys
 mergeBy f xs [] = xs
-mergeBy f xs'@(x:xs) ys'@(y:ys) | x `f` y == LT   =   x : mergeBy f xs ys'
-                                | x `f` y /= LT   =   y : mergeBy f xs' ys
+mergeBy f xs'@(x:xs) ys'@(y:ys) 
+    | x `f` y == LT   =   x : mergeBy f xs ys'
+    | x `f` y /= LT   =   y : mergeBy f xs' ys
 
