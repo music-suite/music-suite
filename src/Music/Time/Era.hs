@@ -27,6 +27,7 @@ import Data.AffineSpace
 
 import Music.Time.Time
 import Music.Time.Duration
+import Music.Time.Pos
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
@@ -35,6 +36,8 @@ import Music.Time.Stretchable
 -- 
 newtype Era = Era { getEra :: (Min Time, Max Time) }
     deriving (Eq, Ord, Show, Semigroup)
+
+type instance Pos Era = Time
 
 instance HasOnset Era where
     onset = getMin . fst . getEra
@@ -47,6 +50,8 @@ instance HasDuration Era where
 
 instance Delayable Era where
     delay t (Era (Min a, Max b)) = Era (Min $ a .+^ t, Max $ b .+^ t)
+
+
 
 -- instance Stretchable Era where
 

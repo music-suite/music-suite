@@ -29,6 +29,7 @@ import Data.AffineSpace
 
 import Music.Time.Time
 import Music.Time.Duration
+import Music.Time.Pos
 
 
 -- |
@@ -40,4 +41,4 @@ class Delayable a where
     -- Delay a value.
     -- > Duration -> Score a -> Score a
     -- 
-    delay :: Duration -> a -> a
+    delay :: Diff (Pos a) -> a -> a

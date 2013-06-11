@@ -74,6 +74,8 @@ import Music.Time
 newtype Voice a = Voice { getVoice :: [(Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
+type instance Pos (Voice a) = Time
+
 instance Semigroup (Voice a) where
     (<>) = mappend
 

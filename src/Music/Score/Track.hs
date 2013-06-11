@@ -75,6 +75,8 @@ import Music.Time
 newtype Track a = Track { getTrack :: [(Time, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
+type instance Pos (Track a) = Time
+
 instance Semigroup (Track a) where
     (<>) = mappend
 

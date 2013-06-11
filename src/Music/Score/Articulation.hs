@@ -80,46 +80,45 @@ newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, 
 
 -- Accents
 
--- accent :: (HasArticulation a, HasPart' a) => Score a -> Score a
-accent :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- accent :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 accent = mapPhrase (setAccLevel 1) id id
 
-marcato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- marcato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 marcato = mapPhrase (setAccLevel 2) id id
 
-accentAll :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- accentAll :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 accentAll = mapPhrase (setAccLevel 1) (setAccLevel 1) (setAccLevel 1)
 
-marcatoAll :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- marcatoAll :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 marcatoAll = mapPhrase (setAccLevel 2) (setAccLevel 2) (setAccLevel 2)
 
-accentLast :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- accentLast :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 accentLast = mapPhrase id id (setAccLevel 1)
 
-marcatoLast :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- marcatoLast :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 marcatoLast = mapPhrase id id (setAccLevel 2)
 
 -- Phrasing
 
-tenuto :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- tenuto :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 tenuto = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2)) 
 
-separated :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- separated :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 separated = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1)) 
 
-staccato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- staccato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 staccato = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1) 
 
-portato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- portato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 portato = staccato . legato 
 
-legato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- legato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 legato = mapPhrase (setBeginSlur True) id (setEndSlur True) 
 
-spiccato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
+-- spiccato :: (HasArticulation a, MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) => s a -> s a
 spiccato = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2) 
 
-resetArticulation :: HasArticulation c => c -> c
+-- resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
 
 
