@@ -58,7 +58,7 @@ module Music.Score.Combinators (
         stopAt,
 
         -- *** Stretching in time
-        stretch,
+        -- stretch,
         compress,
         stretchTo,
         retrograde,
@@ -194,8 +194,8 @@ t `stopAt`  x = delay d x where d = t .-. offset x
 --
 -- > Duration -> Score a -> Score a
 --
-stretch :: VectorSpace v => Scalar v -> v -> v
-stretch = (*^)
+-- stretch :: VectorSpace v => Scalar v -> v -> v
+-- stretch = (*^)
 
 -- |
 -- Compress (diminish) a score. Flipped version of '^/'.
@@ -210,7 +210,7 @@ compress = flip (^/)
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
+-- stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x
 
 
@@ -449,6 +449,7 @@ addRests' = concat . snd . mapAccumL g 0
 
 
 
+{-
 infixl 6 ||>
 
 (||>) :: Score a -> Score a -> Score a
@@ -457,7 +458,8 @@ a ||> b = mcatMaybes $ padToBar (fmap Just a) |> fmap Just b
 padToBar a = a |> rest^*(d'*4)
     where
         d  = snd $ properFraction $ duration a / 4
-        d' = if d == 0 then 0 else 1 - d
+        d' = if d == 0 then 0 else 1 - d  -}
+
 
 
 -- |

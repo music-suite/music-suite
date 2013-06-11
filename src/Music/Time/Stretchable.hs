@@ -29,14 +29,14 @@ import Data.AffineSpace
 
 import Music.Time.Time
 import Music.Time.Duration
+import Music.Time.Pos
+
+-- -- |
+-- -- Stretchable values.
+-- -- 
+-- type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
 
 
--- |
--- Stretchable values.
--- 
-type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
-
-{-
 -- |
 -- Stretchable values. 
 -- 
@@ -47,6 +47,4 @@ class Stretchable a where
     -- 
     -- > Duration -> Score a -> Score a
     -- 
-    stretch :: TypeRep a -> a -> a
-
--}
+    stretch :: Diff (Pos a) -> a -> a

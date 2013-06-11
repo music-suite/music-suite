@@ -112,12 +112,14 @@ instance AdditiveGroup (Track a) where
     (^+^)   = mappend
     negateV = id
 
-instance VectorSpace (Track a) where
-    type Scalar (Track a) = Time
-    n *^ Track tr = Track $ fmap (first (n*^)) tr
+-- instance VectorSpace (Track a) where
+--     type Scalar (Track a) = Time
+--     n *^ Track tr = Track $ fmap (first (n*^)) tr
+instance Stretchable (Track a) where
+    n `stretch` Track tr = Track $ fmap (first (^* fromDuration n)) tr
 
 instance Delayable (Track a) where
-    d `delay` Track tr = Track . fmap (first (.+^ d)) $ tr
+    d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
 
 instance HasOnset (Track a) where
     onset  (Track []) = 0

@@ -109,9 +109,11 @@ filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
 before :: Duration -> Score a -> Score a
-before d = trig (note ()^*d)
+before d = trig (note () `stretchedBy` d)
 
 first :: Score a -> a
 first = value . head . perform
     where value (a,b,c) = c
 
+
+stretchedBy = flip stretch

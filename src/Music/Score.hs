@@ -929,7 +929,8 @@ asScore = id
 
 main = openLy $ foo
 foo  = asScore $ 
-        (accent $ portato $ melody [c,g',fs',b_,c,cs_]^*(1/3)) 
-    </> c^*23 
-    </> (legato $ c |> d |> e^*2)
-
+        (accent $ portato $ melody [c,g',fs',b_,c,cs_] `sb` (1/3)) 
+    </> stretch 23 c 
+    </> (legato $ c |> d |> e `sb` 2)
+    where
+        sb = flip stretch

@@ -87,16 +87,18 @@ instance Monad Voice where
     return a = Voice [(1, a)]
     a >>= k = join' $ fmap k a
         where
-            join' (Voice ps) = foldMap (uncurry (*^)) ps
+            join' (Voice ps) = foldMap (uncurry stretch) ps
 
 instance AdditiveGroup (Voice a) where
     zeroV   = mempty
     (^+^)   = mappend
     negateV = id
 
-instance VectorSpace (Voice a) where
-    type Scalar (Voice a) = Duration
-    n *^ Voice as = Voice (fmap (first (n*^)) as)
+-- instance VectorSpace (Voice a) where
+    -- type Scalar (Voice a) = Duration
+
+instance Stretchable (Voice a) where
+    n `stretch` Voice as = Voice (fmap (first (n*^)) as)
 
 instance HasDuration (Voice a) where
     duration (Voice as) = sum (fmap fst as)

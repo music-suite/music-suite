@@ -118,7 +118,8 @@ instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
         where  
-            join' sc = mconcat $ toList $ mapTime (\t d -> delay (t .-. 0) . (d*^) ) sc
+            join' sc = mconcat $ toList $ mapTime (\t d -> delay' t . stretch d) sc
+            delay' t = delay (fromTime t)
 
 instance Performable Score where
     perform = getScore
@@ -128,12 +129,15 @@ instance AdditiveGroup (Score a) where
     (^+^)   = mappend
     negateV = id
 
-instance VectorSpace (Score a) where
-    type Scalar (Score a) = Duration
-    d *^ Score sc = Score . fmap (first3 (^* fromDuration d) . second3 (^* d)) $ sc
-        where
-            first3 f (a,b,c) = (f a,b,c)
-            second3 f (a,b,c) = (a,f b,c)                      
+-- instance VectorSpace (Score a) where
+--     type Scalar (Score a) = Duration
+
+instance Stretchable (Score a) where
+    -- FIXME
+    -- d `stretch` Score sc = Score $ fmap (first3 (`stretch` d) . second3 (`stretch` d)) $ sc
+    --     where
+    --         first3 f (a,b,c) = (f a,b,c)
+    --         second3 f (a,b,c) = (a,f b,c)                      
             
 instance Delayable (Score a) where
     d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
