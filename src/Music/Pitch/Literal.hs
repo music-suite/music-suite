@@ -1,4 +1,6 @@
 
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -18,6 +20,10 @@ module Music.Pitch.Literal (
         PitchL(..),
         IsPitch(..),
         
+        cs'', ds'', es'', fs'', gs'', as'', bs'',
+        c'' , d'' , e'' , f'' , g'' , a'' , b'' ,
+        cb'', db'', eb'', fb'', gb'', ab'', bb'',
+
         cs' , ds' , es' , fs' , gs' , as' , bs' ,
         c'  , d'  , e'  , f'  , g'  , a'  , b'  ,
         cb' , db' , eb' , fb' , gb' , ab' , bb' ,
@@ -28,8 +34,11 @@ module Music.Pitch.Literal (
 
         cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ,
         c_  , d_  , e_  , f_  , g_  , a_  , b_  ,
-        cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_
+        cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ,
 
+        cs__, ds__, es__, fs__, gs__, as__, bs__,
+        c__ , d__ , e__ , f__ , g__ , a__ , b__ ,
+        cb__, db__, eb__, fb__, gb__, ab__, bb__
   ) where
 
 newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
@@ -44,6 +53,11 @@ instance IsPitch PitchL where
     fromPitch = id
 
 
+{-
+cs'', ds'', es'', fs'', gs'', as'', bs''::  IsPitch a => a
+c'' , d'' , e'' , f'' , g'' , a'' , b'' ::  IsPitch a => a
+cb'', db'', eb'', fb'', gb'', ab'', bb''::  IsPitch a => a
+
 cs' , ds' , es' , fs' , gs' , as' , bs' ::  IsPitch a => a
 c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  IsPitch a => a
 cb' , db' , eb' , fb' , gb' , ab' , bb' ::  IsPitch a => a
@@ -55,7 +69,32 @@ cb  , db  , eb  , fb  , gb  , ab  , bb  ::  IsPitch a => a
 cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  IsPitch a => a
 c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  IsPitch a => a
 cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  IsPitch a => a
+-}
 
+
+cs'' = fromPitch $ PitchL (0, Just 1, 6)
+ds'' = fromPitch $ PitchL (1, Just 1, 6)
+es'' = fromPitch $ PitchL (2, Just 1, 6)
+fs'' = fromPitch $ PitchL (3, Just 1, 6)
+gs'' = fromPitch $ PitchL (4, Just 1, 6)
+as'' = fromPitch $ PitchL (5, Just 1, 6)
+bs'' = fromPitch $ PitchL (6, Just 1, 6)
+
+c''  = fromPitch $ PitchL (0, Nothing, 6)
+d''  = fromPitch $ PitchL (1, Nothing, 6)
+e''  = fromPitch $ PitchL (2, Nothing, 6)
+f''  = fromPitch $ PitchL (3, Nothing, 6)
+g''  = fromPitch $ PitchL (4, Nothing, 6)
+a''  = fromPitch $ PitchL (5, Nothing, 6)
+b''  = fromPitch $ PitchL (6, Nothing, 6)
+
+cb'' = fromPitch $ PitchL (0, Just (-1), 6)
+db'' = fromPitch $ PitchL (1, Just (-1), 6)
+eb'' = fromPitch $ PitchL (2, Just (-1), 6)
+fb'' = fromPitch $ PitchL (3, Just (-1), 6)
+gb'' = fromPitch $ PitchL (4, Just (-1), 6)
+ab'' = fromPitch $ PitchL (5, Just (-1), 6)
+bb'' = fromPitch $ PitchL (6, Just (-1), 6)
 
 cs'  = fromPitch $ PitchL (0, Just 1, 5)
 ds'  = fromPitch $ PitchL (1, Just 1, 5)
@@ -128,4 +167,28 @@ fb_  = fromPitch $ PitchL (3, Just (-1), 3)
 gb_  = fromPitch $ PitchL (4, Just (-1), 3)
 ab_  = fromPitch $ PitchL (5, Just (-1), 3)
 bb_  = fromPitch $ PitchL (6, Just (-1), 3)
+
+cs__ = fromPitch $ PitchL (0, Just 1, 2)
+ds__ = fromPitch $ PitchL (1, Just 1, 2)
+es__ = fromPitch $ PitchL (2, Just 1, 2)
+fs__ = fromPitch $ PitchL (3, Just 1, 2)
+gs__ = fromPitch $ PitchL (4, Just 1, 2)
+as__ = fromPitch $ PitchL (5, Just 1, 2)
+bs__ = fromPitch $ PitchL (6, Just 1, 2)
+
+c__  = fromPitch $ PitchL (0, Nothing, 2)
+d__  = fromPitch $ PitchL (1, Nothing, 2)
+e__  = fromPitch $ PitchL (2, Nothing, 2)
+f__  = fromPitch $ PitchL (3, Nothing, 2)
+g__  = fromPitch $ PitchL (4, Nothing, 2)
+a__  = fromPitch $ PitchL (5, Nothing, 2)
+b__  = fromPitch $ PitchL (6, Nothing, 2)
+
+cb__ = fromPitch $ PitchL (0, Just (-1), 2)
+db__ = fromPitch $ PitchL (1, Just (-1), 2)
+eb__ = fromPitch $ PitchL (2, Just (-1), 2)
+fb__ = fromPitch $ PitchL (3, Just (-1), 2)
+gb__ = fromPitch $ PitchL (4, Just (-1), 2)
+ab__ = fromPitch $ PitchL (5, Just (-1), 2)
+bb__ = fromPitch $ PitchL (6, Just (-1), 2)
 
