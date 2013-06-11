@@ -49,12 +49,3 @@ instance Delayable Era where
 -- instance Stretchable Era where
 
 -- instance VectorSpace Era where
-
-    -- instance VectorSpace Era where
-    -- instance Semigroup Era where -- smallest era that contains both eras
-    -- instance HasOnset where
-    -- instance HasOffset where
-    -- instance HasDuration where
-    -- instance Delayable where
-    -- instance Stretchable where
-
