@@ -23,7 +23,6 @@ module Music.Time.Duration (
         Duration,
         fromDuration,
         toDuration,
-        HasDuration(..),
   ) where
 
 import Data.Semigroup
@@ -54,9 +53,6 @@ instance VectorSpace Duration where
     (*^) = (*)
 
 instance InnerSpace Duration where (<.>) = (*)
-
-class HasDuration a where
-    duration :: a -> Duration
 
 fromDuration :: Fractional a => Duration -> a
 fromDuration = fromRational . getDuration

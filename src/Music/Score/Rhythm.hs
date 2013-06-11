@@ -86,11 +86,13 @@ instance VectorSpace (Rhythm a) where
 
 Beat d x `subDur` d' = Beat (d-d') x
 
+{-
 instance HasDuration (Rhythm a) where
     duration (Beat d _)        = d
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
-    duration (Group as)      = sum (fmap duration as)    
+    duration (Group as)        = sum (fmap duration as)    
+-}
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)

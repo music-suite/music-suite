@@ -48,6 +48,7 @@ library
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable
+        Music.Time.Onset
         Music.Time.Era
         Music.Time.Pos
         

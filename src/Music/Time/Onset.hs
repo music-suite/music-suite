@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    FlexibleContexts,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -18,6 +19,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Onset (
+        HasDuration(..),
         HasOnset(..),
         HasOffset(..),
         HasPreOnset(..),
@@ -32,10 +34,14 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 
+import Music.Time.Pos
 import Music.Time.Time
 import Music.Time.Duration
 import Music.Time.Delayable
 import Music.Time.Stretchable
+
+class HasDuration a where
+    duration :: a -> Dur a
 
 -- |
 -- Class of types with a position in time.
@@ -57,32 +63,32 @@ class HasOnset a where
     -- | 
     -- Get the onset of the given value.
     --
-    onset  :: a -> Time
+    onset  :: a -> Pos a
 
 class HasOffset a where
     -- | 
     -- Get the offset of the given value.
     --
-    offset :: a -> Time
+    offset :: a -> Pos a
                               
 class HasPreOnset a where
-    preOnset :: a -> Time
+    preOnset :: a -> Pos a
 
 class HasPostOnset a where
-    postOnset :: a -> Time
+    postOnset :: a -> Pos a
 
 class HasPostOffset a where
-    postOffset :: a -> Time
+    postOffset :: a -> Pos a
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
-durationDefault :: (HasOnset a, HasOffset a) => a -> Duration
+durationDefault :: (AffineSpace (Pos a), HasOffset a, HasOnset a) => a -> Dur a
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
-onsetDefault :: (HasDuration a, HasOffset a) => a -> Time
+onsetDefault :: (AffineSpace (Pos a), HasOffset a, HasDuration a) => a -> Pos a
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
-offsetDefault :: (HasDuration a, HasOnset a) => a -> Time
+offsetDefault :: (AffineSpace (Pos a), HasOnset a, HasDuration a) => a -> Pos a
 offsetDefault x = onset x .+^ duration x
                                                  

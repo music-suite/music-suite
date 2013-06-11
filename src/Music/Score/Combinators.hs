@@ -162,7 +162,7 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ return x 
 --
 -- > Duration -> Score a -> Score a
 --
--- move :: Delayable a => Diff (Pos a) -> a -> a
+move :: Delayable a => Dur a -> a -> a
 move = delay
 
 -- |
@@ -170,15 +170,15 @@ move = delay
 --
 -- > Duration -> Score a -> Score a
 --
--- moveBack :: Delayable a => Diff (Pos a) -> a -> a
-moveBack t = delay (negate t)
+moveBack :: (AdditiveGroup (Dur a), Delayable a) => Dur a -> a -> a
+moveBack t = delay (negateV t)
 
 -- |
 -- Move a score so that its onset is at the specific time.
 --
 -- > Duration -> Score a -> Score a
 --
--- startAt :: (Delayable a, HasOnset a, HasOffset a) => Time -> a -> a
+startAt :: (AffineSpace (Pos a), HasOnset a, Delayable a) => Pos a -> a -> a
 t `startAt` x = delay d x where d = t .-. onset x
 
 -- |
@@ -186,7 +186,7 @@ t `startAt` x = delay d x where d = t .-. onset x
 --
 -- > Duration -> Score a -> Score a
 --
--- stopAt :: (Delayable a, HasOnset a, HasOffset a) => Time -> a -> a
+stopAt :: (AffineSpace (Pos a), HasOffset a, Delayable a) => Pos a -> a -> a
 t `stopAt`  x = delay d x where d = t .-. offset x
 
 -- |
@@ -202,15 +202,15 @@ t `stopAt`  x = delay d x where d = t .-. offset x
 --
 -- > Duration -> Score a -> Score a
 --
-compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
-compress = flip (^/)
+compress :: (Fractional (Dur a), Stretchable a) => Dur a -> a -> a
+compress x = stretch (1/x)
 
 -- |
 -- Stretch a score to fit into the given duration.
 --
 -- > Duration -> Score a -> Score a
 --
--- stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
+stretchTo:: (Fractional (Dur a), Stretchable a, HasDuration a) => Dur a -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x
 
 
@@ -227,7 +227,7 @@ infixr 6 <|
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
--- (|>) :: (Semigroup a, Delayable a, HasOnset a, HasOffset a) => a -> a -> a
+(|>) :: (Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
 a |> b =  a <> startAt (offset a) b
 
 
@@ -237,21 +237,21 @@ a |> b =  a <> startAt (offset a) b
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
--- (<|) :: (Semigroup a, Delayable a, HasOnset a, HasOffset a) => a -> a -> a
+(<|) :: (Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
 a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
--- scat :: (Monoid' a, Delayable a, HasOnset a, HasOffset a) => [a] -> a
+scat :: (Monoid' a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => [a] -> a
 scat = foldr (|>) mempty
 
 -- |
 -- Parallel concatentation. A synonym for 'mconcat'.
 --
 -- > [Score t] -> Score t
--- pcat :: Monoid a => [a] -> a
+pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
 
@@ -260,7 +260,7 @@ pcat = mconcat
 --
 -- > Score a -> Score a -> Score a
 --
--- sustain :: (Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
+sustain :: (Fractional (Dur a), Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
 x `sustain` y = x <> duration x `stretchTo` y
 
 -- Like '<>', but truncating the second agument to the duration of the first.
@@ -271,7 +271,7 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Score a -> Score a -> Score a
 --
--- overlap :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
+overlap :: (Fractional (Dur a), Semigroup a, Delayable a, HasDuration a) => a -> a -> a
 x `overlap` y  =  x <> delay t y where t = duration x / 2
 
 -- |
@@ -279,8 +279,9 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
--- anticipate :: (Semigroup a, Delayable a, HasDuration a, HasOnset a, HasOffset a) => Duration -> a -> a -> a
-anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
+anticipate :: (Ord (Dur a), Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, HasDuration a, Delayable a) 
+    => Dur a -> a -> a -> a
+anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
 
 
 
@@ -480,9 +481,13 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
--- mapPhrase :: (MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretchable (s a)) =>
-     -- (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
+mapPhrase
+  :: (Ord (Part a), MonadPlus' s,
+      Stretchable (s a), Delayable (s a), Performable s, HasPart a
+      , Dur (s a) ~ Duration -- FIXME
+      ) =>
+     (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
 -- |
 -- Equivalent to `mapPhrase` for single-voice scores.
@@ -493,7 +498,7 @@ mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
 -- TODO remove MonadPlus' (we need fmap, return and msum/mconcat)
 -- mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
     -- (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
+mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
     where
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
