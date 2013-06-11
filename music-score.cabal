@@ -43,8 +43,8 @@ library
     exposed-modules:
 
         Music.Time
-        Music.Time.Absolute
-        Music.Time.Relative
+        Music.Time.Time
+        Music.Time.Duration
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable

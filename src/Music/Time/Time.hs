@@ -17,7 +17,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Absolute (
+module Music.Time.Time (
         Time,
         fromTime,
         toTime,
@@ -35,7 +35,7 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Time.Relative
+import Music.Time.Duration
 
 -------------------------------------------------------------------------------------
 -- Time type

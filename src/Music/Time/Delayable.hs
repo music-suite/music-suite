@@ -27,8 +27,8 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Time.Absolute
-import Music.Time.Relative
+import Music.Time.Time
+import Music.Time.Duration
 
 
 -- |

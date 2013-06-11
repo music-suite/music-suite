@@ -27,16 +27,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
-        module Music.Time.Absolute,
-        module Music.Time.Relative,
+        module Music.Time.Time,
+        module Music.Time.Duration,
         module Music.Time.Delayable,
         module Music.Time.Stretchable,
         module Music.Time.Era,
         module Music.Time.Performable,
   ) where
 
-import Music.Time.Absolute
-import Music.Time.Relative
+import Music.Time.Time
+import Music.Time.Duration
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Era

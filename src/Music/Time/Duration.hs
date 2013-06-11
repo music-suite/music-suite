@@ -19,7 +19,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Relative (
+module Music.Time.Duration (
         Duration,
         fromDuration,
         toDuration,
