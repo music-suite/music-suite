@@ -27,6 +27,7 @@ import Data.AffineSpace
 
 import Music.Time.Time
 import Music.Time.Duration
+import Music.Time.Onset
 import Music.Time.Pos
 import Music.Time.Delayable
 import Music.Time.Stretchable
