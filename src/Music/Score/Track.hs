@@ -121,6 +121,8 @@ instance Delayable (Track a) where
 instance HasOnset (Track a) where
     onset  (Track []) = 0
     onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
+
+instance HasOffset (Track a) where
     offset (Track []) = 0
     offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
 

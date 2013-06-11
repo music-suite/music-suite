@@ -22,6 +22,7 @@ module Music.Time.Absolute (
         fromTime,
         toTime,
         HasOnset(..),
+        HasOffset(..),
         HasPreOnset(..),
         HasPostOnset(..),
         HasPostOffset(..),
@@ -47,10 +48,9 @@ import Music.Time.Relative
 -------------------------------------------------------------------------------------
 
 -- |
--- This type represents absolute time in seconds a known reference time.
---
--- The reference time can be any time, but is usually the the beginning of the 
--- musical performance.
+-- This type represents absolute time in seconds since the start time. Note
+-- that time can be negative, representing events occuring before the start time.
+-- The start time is usually the the beginning of the musical performance. 
 --
 -- Time forms an affine space with durations as the underlying vector space,
 -- that is, we can add a time to a duration to get a new time using '.+^', 
@@ -107,6 +107,7 @@ class HasOnset a where
     --
     onset  :: a -> Time
 
+class HasOffset a where
     -- | 
     -- Get the offset of the given value.
     --

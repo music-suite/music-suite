@@ -148,6 +148,7 @@ instance HasOnset (Score a) where
     onset  (Score []) = 0
     onset  (Score xs) = on (head xs) where on  (t,d,x) = t
 
+instance HasOffset (Score a) where
     offset (Score []) = 0
     offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (fromDuration $ d)
         
