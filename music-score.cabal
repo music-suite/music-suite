@@ -45,6 +45,7 @@ library
         Music.Time.Absolute
         Music.Time.Relative
         Music.Time.Performable
+        Music.Time.Era
         Music.Score.Track
         Music.Score.Voice
         Music.Score.Score
