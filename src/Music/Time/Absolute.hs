@@ -31,16 +31,7 @@ module Music.Time.Absolute (
         offsetDefault,
   ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
-
 import Data.Semigroup
-import Control.Applicative
-import Data.Traversable
-import Data.Maybe
-import Data.Either
-import Data.Function (on)
-import Data.Ord (comparing)
-import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
 
