@@ -17,8 +17,8 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.TimeRep (
-        TimeRep(..),
+module Music.Time.Pos (
+        Pos(..),
   ) where
 
 import Music.Time.Time
@@ -29,15 +29,15 @@ import Music.Time.Stretchable
 -- |
 -- This type function returns the time type for a given type.
 --
-type family TimeRep a :: *
+type family Pos a :: *
 
-type instance TimeRep Double    = Double
-type instance TimeRep Rational  = Rational
+type instance Pos Double    = Double
+type instance Pos Rational  = Rational
 
-type instance TimeRep (a -> b)   = TimeRep b
-type instance TimeRep [a]        = TimeRep a
-type instance TimeRep (Maybe a)  = TimeRep a
+type instance Pos (a -> b)   = Pos b
+type instance Pos [a]        = Pos a
+type instance Pos (Maybe a)  = Pos a
 
--- type instance TimeRep (Option a) = TimeRep a
--- type instance TimeRep (Set a)    = TimeRep a
--- type instance TimeRep (Map k a)  = TimeRep a
+-- type instance Pos (Option a) = Pos a
+-- type instance Pos (Set a)    = Pos a
+-- type instance Pos (Map k a)  = Pos a

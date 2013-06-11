@@ -33,7 +33,7 @@ module Music.Time (
         module Music.Time.Stretchable,
         module Music.Time.Era,
         module Music.Time.Performable,
-        module Music.Time.TimeRep,
+        module Music.Time.Pos,
   ) where
 
 import Music.Time.Time
@@ -42,4 +42,4 @@ import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Era
 import Music.Time.Performable
-import Music.Time.TimeRep
+import Music.Time.Pos

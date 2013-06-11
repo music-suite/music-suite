@@ -34,8 +34,6 @@ import Music.Time.Duration
 -- |
 -- Delayable values. 
 -- 
--- Similar to @(AffineSpace a, Diff a ~ Duration)@.
--- 
 class Delayable a where
 
     -- |

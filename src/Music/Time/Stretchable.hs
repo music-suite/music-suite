@@ -36,3 +36,17 @@ import Music.Time.Duration
 -- 
 type Stretchable a = (VectorSpace a, Scalar a ~ Duration)
 
+{-
+-- |
+-- Stretchable values. 
+-- 
+class Stretchable a where
+
+    -- |
+    -- Stretch (augment) a value by the given factor.
+    -- 
+    -- > Duration -> Score a -> Score a
+    -- 
+    stretch :: TypeRep a -> a -> a
+
+-}
