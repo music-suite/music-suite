@@ -52,12 +52,6 @@ import Data.AffineSpace
 newtype Duration = Duration { getDuration::Rational }                                  
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
-fromDuration :: Fractional a => Duration -> a
-fromDuration = fromRational . getDuration
-
-toDuration :: Real a => a -> Duration
-toDuration = Duration . toRational
-
 instance Show Duration where 
     show = show . getDuration
 
@@ -75,6 +69,12 @@ instance InnerSpace Duration where (<.>) = (*)
 class HasDuration a where
     duration :: a -> Duration
 
+fromDuration :: Fractional a => Duration -> a
+fromDuration = fromRational . getDuration
+
+toDuration :: Real a => a -> Duration
+toDuration = Duration . toRational
+
 
 -- |
 -- Delayable values. 
@@ -88,9 +88,6 @@ class Delayable a where
     -- > Duration -> Score a -> Score a
     -- 
     delay :: Duration -> a -> a
-
-instance Delayable a => Delayable (WrappedMonoid a) where 
-    delay t = WrapMonoid . delay t . unwrapMonoid
 
 -- |
 -- Stretchable values.

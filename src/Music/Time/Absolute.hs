@@ -48,10 +48,11 @@ import Music.Time.Relative
 
 -- |
 -- This type represents absolute time in seconds a known reference time.
+--
 -- The reference time can be any time, but is usually the the beginning of the 
 -- musical performance.
 --
--- Times forms an affine space with durations as the underlying vector space,
+-- Time forms an affine space with durations as the underlying vector space,
 -- that is, we can add a time to a duration to get a new time using '.+^', 
 -- take the difference of two times to get a duration using '.-.'.
 --
@@ -70,7 +71,8 @@ instance VectorSpace Time where
     type Scalar Time = Time
     (*^) = (*)
 
-instance InnerSpace Time where (<.>) = (*)
+instance InnerSpace Time where 
+    (<.>) = (*)
 
 instance  AffineSpace Time where
     type Diff Time = Duration
@@ -86,8 +88,8 @@ toTime = Time . toRational
 -- |
 -- Class of types with a position in time.
 --
--- Onset and offset are logical start and stop time, i.e. the preferred beginning and end of 
--- the sound., not o the the time of the attack and damp actions on an instrument,
+-- Onset and offset are logical start and stop time, i.e. the preferred beginning and end
+-- of the sound, not o the the time of the attack and damp actions on an instrument,
 --
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
@@ -110,10 +112,6 @@ class HasOnset a where
     --
     offset :: a -> Time
                               
-instance HasOnset a => HasOnset (WrappedMonoid a) where 
-    onset = onset . unwrapMonoid
-    offset = offset . unwrapMonoid
-
 class HasPreOnset a where
     preOnset :: a -> Time
 
