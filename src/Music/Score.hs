@@ -81,9 +81,13 @@ import Data.Basis
 
 import Music.Time.Absolute
 import Music.Time.Relative
+import Music.Time.Era
 import Music.Time.Performable
+
 import Music.Pitch.Literal
+
 import Music.Dynamics.Literal
+
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice

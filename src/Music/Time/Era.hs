@@ -17,7 +17,13 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Era where
+module Music.Time.Era (
+        Era,
+  ) where
+
+import Data.Semigroup
+import Data.VectorSpace
+import Data.AffineSpace
 
 import Music.Time.Absolute
 import Music.Time.Relative
@@ -25,7 +31,24 @@ import Music.Time.Relative
 -- |
 -- An era is a time interval.
 -- 
-newtype Era = Era { getEra :: (Time, Time) }
+newtype Era = Era { getEra :: (Min Time, Max Time) }
+    deriving (Eq, Ord, Show, Semigroup)
+
+instance HasOnset Era where
+    onset = getMin . fst . getEra
+
+instance HasOffset Era where
+    offset = getMax . snd . getEra
+
+instance HasDuration Era where
+    duration = durationDefault
+
+instance Delayable Era where
+    delay t (Era (Min a, Max b)) = Era (Min $ a .+^ t, Max $ b .+^ t)
+
+-- instance Stretchable Era where
+
+-- instance VectorSpace Era where
 
     -- instance VectorSpace Era where
     -- instance Semigroup Era where -- smallest era that contains both eras

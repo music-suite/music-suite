@@ -26,6 +26,9 @@ module Music.Time.Absolute (
         HasPreOnset(..),
         HasPostOnset(..),
         HasPostOffset(..),
+        durationDefault,
+        onsetDefault,
+        offsetDefault,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -121,4 +124,16 @@ class HasPostOnset a where
 
 class HasPostOffset a where
     postOffset :: a -> Time
+
+-- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
+durationDefault :: (HasOnset a, HasOffset a) => a -> Duration
+durationDefault x = offset x .-. onset x
+
+-- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
+onsetDefault :: (HasDuration a, HasOffset a) => a -> Time
+onsetDefault x = offset x .-^ duration x
+
+-- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
+offsetDefault :: (HasDuration a, HasOnset a) => a -> Time
+offsetDefault x = onset x .+^ duration x
 
