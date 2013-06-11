@@ -1,4 +1,4 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -8,7 +8,7 @@
     ConstraintKinds,
     OverloadedStrings,
     NoMonomorphismRestriction,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -44,12 +44,12 @@ module Music.Score.Combinators (
         (<|),
         scat,
         pcat,
-        
+
         -- *** Special composition
         sustain,
         overlap,
         anticipate,
-        
+
         -- ** Transforming scores
         -- *** Moving in time
         move,
@@ -60,14 +60,14 @@ module Music.Score.Combinators (
         -- *** Stretching in time
         stretch,
         compress,
-        stretchTo,                
-        retrograde,     
+        stretchTo,
+        retrograde,
 
         -- *** Rests
         removeRests,
 
         -- *** Repetition
-        times,    
+        times,
         group,
         triplet,
         quadruplet,
@@ -92,7 +92,7 @@ import Data.Foldable (Foldable)
 import Data.Traversable
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Ratio  
+import Data.Ratio
 import Data.Ord
 
 import Music.Score.Track
@@ -159,61 +159,61 @@ chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ return x 
 
 -- |
 -- Move a score forward in time. Equivalent to 'delay'.
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 move :: Delayable a => Duration -> a -> a
 move = delay
 
 -- |
 -- Move a score backward in time. Negated verison of 'delay'
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 moveBack :: Delayable a => Duration -> a -> a
 moveBack t = delay (negate t)
 
 -- |
 -- Move a score so that its onset is at the specific time.
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 startAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `startAt` x = delay d x where d = t .-. onset x
 
 -- |
 -- Move a score so that its offset is at the specific time.
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 stopAt :: (Delayable a, HasOnset a) => Time -> a -> a
 t `stopAt`  x = delay d x where d = t .-. offset x
 
 -- |
 -- Stretch (augment) a score by the given factor. Equivalent to '*^'.
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 stretch :: VectorSpace v => Scalar v -> v -> v
 stretch = (*^)
 
 -- |
 -- Compress (diminish) a score. Flipped version of '^/'.
--- 
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 compress :: (VectorSpace v, s ~ Scalar v, Fractional s) => s -> v -> v
 compress = flip (^/)
 
--- | 
--- Stretch a score to fit into the given duration. 
--- 
+-- |
+-- Stretch a score to fit into the given duration.
+--
 -- > Duration -> Score a -> Score a
--- 
+--
 stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
-t `stretchTo` x = (t / duration x) `stretch` x 
+t `stretchTo` x = (t / duration x) `stretch` x
 
- 
+
 -------------------------------------------------------------------------------------
 -- Composition
 -------------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ a |> b =  a <> startAt (offset a) b
 
 
 -- |
--- Compose in reverse sequence. 
+-- Compose in reverse sequence.
 --
 -- To compose in parallel, use '<>'.
 --
@@ -256,9 +256,9 @@ pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
 
--- | 
+-- |
 -- Like '<>', but scaling the second agument to the duration of the first.
--- 
+--
 -- > Score a -> Score a -> Score a
 --
 sustain :: (Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
@@ -273,13 +273,13 @@ x `sustain` y = x <> duration x `stretchTo` y
 -- > Score a -> Score a -> Score a
 --
 overlap :: (Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-x `overlap` y  =  x <> delay t y where t = duration x / 2    
+x `overlap` y  =  x <> delay t y where t = duration x / 2
 
 -- |
 -- Like '|>' but with a negative delay on the second element.
--- 
+--
 -- > Duration -> Score a -> Score a -> Score a
--- 
+--
 anticipate :: (Semigroup a, Delayable a, HasDuration a, HasOnset a) => Duration -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x - t) `max` 0
 
@@ -339,9 +339,9 @@ repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
 -- Remove rests from a score.
 --
 -- Identical to 'mcatMaybes'.
--- 
+--
 -- > Score (Maybe a) -> Score a
--- 
+--
 removeRests :: MonadPlus m => m (Maybe a) -> m a
 removeRests = mcatMaybes
 
@@ -443,10 +443,10 @@ voiceToScore' = mcatMaybes . voiceToScore
 addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
     where
-        g prevTime (t, d, x) 
+        g prevTime (t, d, x)
             | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
             | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"        
+            | otherwise       =  error "addRests: Strange prevTime"
 
 
 
@@ -461,10 +461,10 @@ padToBar a = a |> rest^*(d'*4)
         d' = if d == 0 then 0 else 1 - d
 
 
--- | 
+-- |
 -- Map over first, middle and last elements of list.
 -- Biased on first, then on first and last for short lists.
--- 
+--
 mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
 mapFirstMiddleLast f g h []      = []
 mapFirstMiddleLast f g h [a]     = [f a]
@@ -473,8 +473,8 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 
 -- |
 -- Map over the first, middle and last note in each part.
--- 
--- If a part has fewer than three notes the first takes precedence over the last, 
+--
+-- If a part has fewer than three notes the first takes precedence over the last,
 -- and last takes precedence over the middle.
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
@@ -483,7 +483,7 @@ mapPhrase :: (MonadPlus' s, HasPart' a, Performable s, Delayable (s a), Stretcha
      (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
 
--- | 
+-- |
 -- Equivalent to `mapPhrase` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
