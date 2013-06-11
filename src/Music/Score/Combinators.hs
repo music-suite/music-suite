@@ -84,15 +84,12 @@ module Music.Score.Combinators (
         -- scoreToVoices,
   ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
-
-import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Control.Monad
 import Control.Monad.Plus
 import Data.Semigroup
 import Data.String
-import Data.Foldable hiding (msum)
+import Data.Foldable (Foldable)
 import Data.Traversable
-import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio  
@@ -105,8 +102,8 @@ import Music.Score.Part
 import Music.Time.Relative
 import Music.Time.Absolute
 import Music.Time.Performable
--- import Music.Score.Part
--- import Music.Score.Ties
+
+import qualified Data.List as List
 
 type Monoid' a    = (Monoid a, Semigroup a)
 type MonadPlus' m = (Functor m, MonadPlus m, Foldable m)
@@ -119,36 +116,36 @@ type PointedMonoid m a = (MonadPlus' m, Monoid' (m a))
 
 chord :: PointedMonoid m a => [a] -> m a
 melody :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [a] -> m a
-melodyStretch :: (PointedMonoid m a, Stretchable (m a), Semigroup (m a), Delayable (m a), HasOnset (m a)) => [(Duration, a)] -> m a
+melodyStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Duration, a)] -> m a
 chordDelay :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [(Time, a)] -> m a
 chordDelayStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Time, Duration, a)] -> m a
 
 -- | Creates a score containing the given elements, composed in sequence.
--- melody :: [a] -> Score a
+-- > [a] -> Score a
 melody = scat . map return
 
 -- | Creates a score containing the given elements, composed in parallel.
--- chord :: [a] -> Score a
+-- > [a] -> Score a
 chord = pcat . map return
 
 -- | Creates a score from a the given melodies, composed in parallel.
--- melodies :: [[a]] -> Score a
+-- > [[a]] -> Score a
 melodies = pcat . map melody
 
 -- | Creates a score from a the given chords, composed in sequence.
--- chords :: [[a]] -> Score a
+-- > [[a]] -> Score a
 chords = scat . map chord
 
 -- | Like 'melody', but stretching each note by the given factors.
--- melodyStretch :: [(Duration, a)] -> Score a
+-- > [(Duration, a)] -> Score a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ return x )
 
 -- | Like 'chord', but delays each note the given amounts.
--- chordDelay :: [(Time, a)] -> Score a
+-- > [(Time, a)] -> Score a
 chordDelay = pcat . map ( \(t, x) -> startAt t $ return x )
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
--- chordDelayStretch :: [(Time, Duration, a)] -> Score a
+-- > [(Time, Duration, a)] -> Score a
 chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ return x )
 
 -- -- | Like chord, but delaying each note the given amount.
@@ -258,15 +255,6 @@ scat = foldr (|>) mempty
 pcat :: Monoid a => [a] -> a
 pcat = mconcat
 
--- infixr 7 <<|
--- infixr 7 |>>
--- infixr 7 <||
--- infixr 7 ||>
-
--- (<||) = sustain
--- (||>) = flip sustain
--- (|>>) = overlap
--- (<<|) = flip overlap    
 
 -- | 
 -- Like '<>', but scaling the second agument to the duration of the first.
@@ -326,6 +314,7 @@ repWith = flip (\f -> scat . fmap f)
 --
 -- > scatMap = flip repWith
 --
+scatMap :: (Monoid' c, HasOnset c, Delayable c) => (a -> c) -> [a] -> c
 scatMap f = scat . fmap f
 
 -- |
@@ -345,7 +334,6 @@ repWithTime :: (Enum a, Fractional a, Monoid' c, HasOnset c, Delayable c) => a -
 repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
     where
         n' = n
-
 
 -- |
 -- Remove rests from a score.
@@ -388,14 +376,6 @@ quintuplet  = group (5::Duration)
 --
 group :: (Monoid' c, Semigroup c, Stretchable c, HasOnset c, Delayable c) => Duration -> c -> c
 group n a = times n (a^/n)
-
---
--- Repeat a number of times and scale down by the same amount.
---
--- > [Duration] -> Score a -> Score a
---
--- groupWith :: (Enum a, Fractional a, a ~ Scalar c, Monoid' c, Semigroup c, VectorSpace c, HasOnset c, Delayable c) => [a] -> c -> c
--- groupWith = flip $ \p -> scat . fmap (`group` p)
 
 -- |
 -- Reverse a score around its middle point.
@@ -458,9 +438,6 @@ voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
 
-
-
-
 --------------------------------------------------------------------------------
 
 addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
@@ -512,35 +489,13 @@ mapPhrase f g h = mapParts (fmap $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
+-- TODO remove MonadPlus' (we need fmap, return and msum/mconcat)
 mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
     (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform $ sc
     where
         toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
-
-
-
-
-
-
--- mapPhrase2
---   :: (
---       MonadPlus' s,
---       HasPart' a, 
---       Performable s, 
---       Delayable (s a),
---       Stretchable (s a)
---       ) =>
---      (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapPhrase2 f g h = mapParts (fmap $ mapPhraseSingle2 f g h)
--- 
--- mapPhraseSingle2 f g h sc = Control.Monad.Plus.msum . mapFirstMiddleLast (fmap f) (fmap g) (fmap h) . fmap toSc . perform2 $ sc
---     where
---         toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
---         third f (a,b,c) = (a,b,f c)
-
-
 
 rotl []     = []
 rotl (x:xs) = xs ++ [x]
@@ -550,13 +505,3 @@ rotr xs = last xs : init xs
 
 rotated n as | n >= 0 = iterate rotr as !! n
              | n <  0 = iterate rotl as !! abs n
-
--- splitWhile :: (a -> Bool) -> [a] -> [[a]]
--- splitWhile p xs = case splitWhile' p xs of
---     []:xss -> xss
---     xss    -> xss
---     where
---         splitWhile' p []     = [[]]
---         splitWhile' p (x:xs) = case splitWhile' p xs of
---             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss  
-
