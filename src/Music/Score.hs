@@ -919,6 +919,7 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 -- Test stuff
 -------------------------------------------------------------------------------------
 
+{-
 
 type Note = (PartT Int (TieT
     (TremoloT (HarmonicT (SlideT
@@ -934,3 +935,4 @@ foo  = asScore $
     </> (legato $ c |> d |> e `sb` 2)
     where
         sb = flip stretch
+-}

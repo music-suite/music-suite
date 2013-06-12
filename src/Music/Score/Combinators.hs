@@ -31,15 +31,16 @@ module Music.Score.Combinators (
         Monoid',
         HasEvents,
         Transformable,
+
         -- ** Constructing scores
-        note,
-        rest,
-        noteRest,
-        chord,
-        melody,
-        melodyStretch,
-        chordDelay,
-        chordDelayStretch,
+        -- note,
+        -- rest,
+        -- noteRest,
+        -- chord,
+        -- melody,
+        -- melodyStretch,
+        -- chordDelay,
+        -- chordDelayStretch,
 
         -- ** Composing scores
         (|>),
@@ -76,7 +77,8 @@ module Music.Score.Combinators (
         quadruplet,
         quintuplet,
 
-        -- *** Phrases
+        -- *** Mapping
+        recompose,
         mapEvents,
         mapEventsSingle,
         mapFirst,
@@ -159,8 +161,9 @@ type HasEvents s t a  = (
 -- 
 -- > a -> Score a
 -- 
-note :: Pointed s => a -> s a
-note = point
+-- note :: Pointed s => a -> s a
+note :: MonadPlus s => a -> s a
+note = return
 
 -- | 
 -- Create a score containing a rest at time zero of duration one.
@@ -169,8 +172,9 @@ note = point
 -- 
 -- > Score (Maybe a)
 -- 
-rest :: Pointed s => s (Maybe a)
-rest = point Nothing
+-- rest :: Pointed s => s (Maybe a)
+rest :: MonadPlus s => s (Maybe a)
+rest = note Nothing
 
 -- | 
 -- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
@@ -188,39 +192,36 @@ noteRest = mfromMaybe
 -- 
 -- > [a] -> Score a
 -- 
-chord :: (Pointed s, Monoid (s a)) => [a] -> s a
+-- chord :: (Pointed s, Monoid (s a)) => [a] -> s a
+chord :: (MonadPlus s, Monoid' (s a)) => [a] -> s a
 chord = pcat . map note
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- 
 -- > [a] -> Score a
 -- 
-melody :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
+melody :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
 melody = scat . map note
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- 
 -- > [(Duration, a)] -> Score a
 -- 
-melodyStretch :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
+melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- 
 -- > [(Time, a)] -> Score a
 -- 
-chordDelay :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
+chordDelay :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 --
--- This function is an inverse of perform, so
---
--- > chordDelayStretch . perform = id
--- 
 -- > [(Time, Duration, a)] -> Score a
 -- 
-chordDelayStretch :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
+chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
 -------------------------------------------------------------------------------------
@@ -436,7 +437,6 @@ retrograde = {-startAt 0 . -}retrograde'
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
 
-
 --------------------------------------------------------------------------------
 -- Mapping and recomposition
 --------------------------------------------------------------------------------
@@ -446,6 +446,15 @@ retrograde = {-startAt 0 . -}retrograde'
     HasEvents s t a, \
     HasEvents s u b, \
     t ~ u
+
+-- | Recompose a score.
+--
+-- This is the inverse of 'perform'
+--
+-- > [(Time, Duration, a)] -> Score a
+-- 
+recompose :: (MonadPlus s, Transformable t d (s a)) => [(t, d, a)] -> s a
+recompose = msum . liftM eventToScore
 
 -- |
 -- Map over the events in a score.

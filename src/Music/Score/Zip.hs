@@ -95,7 +95,7 @@ snapshotSingle as bs = mapTime ( \t d a -> g a (onsetIn t d bs) ) as
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = chordDelayStretch . filt (\(t,d,x) -> a <= t && t < a .+^ b) . perform 
+onsetIn a b = recompose . filt (\(t,d,x) -> a <= t && t < a .+^ b) . perform 
     where
         -- filt = mfilter
         filt = filterOnce
@@ -109,7 +109,7 @@ filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
 before :: Duration -> Score a -> Score a
-before d = trig (note () `stretchedBy` d)
+before d = trig (return () `stretchedBy` d)
 
 first :: Score a -> a
 first = value . head . perform
