@@ -138,6 +138,10 @@ chordDelay :: [(Time, a)] -> Score a
 chordDelayStretch :: [(Time, Duration, a)] -> Score a
 -}
 
+note = point
+
+rest = point Nothing
+
 -- | Creates a score containing the given elements, composed in sequence.
 -- > [a] -> Score a
 melody = scat . map point

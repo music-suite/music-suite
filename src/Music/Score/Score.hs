@@ -23,8 +23,6 @@
 
 module Music.Score.Score (
         Score,
-        note,    
-        rest,
         mapTime,
   ) where
 

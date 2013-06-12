@@ -44,7 +44,7 @@ import Music.Time
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
-import Music.Score.Score (Score, note, rest)
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Zip
 import Music.Score.Pitch
