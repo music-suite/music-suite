@@ -486,7 +486,9 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 mapPhrase :: (
     HasPart' a, 
-    HasEvents s a
+    HasEvents s a,
+    HasEvents s b,
+    (Diff (Pos (s b)) ~ Diff (Pos (s a)))
     ) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
@@ -496,8 +498,9 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: HasEvents s a => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
+mapPhraseSingle :: (HasEvents s a, HasEvents s b, (Diff (Pos (s b)) ~ Diff (Pos (s a)))) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+-- mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
+mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
