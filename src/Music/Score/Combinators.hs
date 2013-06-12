@@ -430,7 +430,7 @@ group n a = times n (toDuration n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (Pointed s, Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
+retrograde :: (HasEvents s t a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
         retrograde' = recompose . List.sortBy (comparing getT) . fmap g . perform
