@@ -80,19 +80,19 @@ newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, 
 
 -- Accents
 
-accent :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-marcato :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-accentAll :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-marcatoAll :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-accentLast :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-marcatoLast :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
+accent :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+marcato :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+accentAll :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+marcatoAll :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+accentLast :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+marcatoLast :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
 
-tenuto :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-separated :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-staccato :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-portato :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-legato :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
-spiccato :: (HasEvents s a, HasPart' a, HasArticulation a) => s a -> s a
+tenuto :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+separated :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+staccato :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+portato :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+legato :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
+spiccato :: (HasEvents s t a, HasPart' a, HasArticulation a) => s a -> s a
 
 accent = mapPhrase (setAccLevel 1) id id
 marcato = mapPhrase (setAccLevel 2) id id

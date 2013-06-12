@@ -30,9 +30,15 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         HasEvents,
+        Delay,
+        Delay',
+        Stretch,
+        DelayStretch,
+        DelayStretch',
         -- ** Constructing scores
-        rest,
         note,
+        rest,
+        noteRest,
         chord,
         melody,
         melodyStretch,
@@ -75,7 +81,6 @@ module Music.Score.Combinators (
 
         -- *** Phrases
         mapFirst,
-        mapMiddle,
         mapLast,
         mapPhrase,
         mapPhraseSingle,
@@ -107,97 +112,122 @@ import Music.Time
 
 import qualified Data.List as List
 
+-- | 
+-- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
+-- is needed. If 'Monoid' is changed to extend 'Semigroup' it will not be needed.
+--   
 type Monoid' a    = (Monoid a, Semigroup a)
 
-type HasEvents s a = (
-    Performable s,
-    MonadPlus s,
-    Delayable (s a), Stretchable (s a), 
-    AffineSpace (Pos (s a)), AdditiveGroup (Pos (s a))
+type Stretch s t d a = (
+    Stretchable (s a), Delayable (s a), HasOffset (s a), HasOnset (s a),
+    AffineSpace t,
+    Pos (s a) ~ t,
+    Dur (s a) ~ d
     )
 
+type Delay' s t a = (
+    Delayable (s a), 
+    HasOffset (s a), 
+    HasOnset (s a),
+    AffineSpace t,
+    t ~ Pos (s a)
+    )
+
+type Delay s t a = (
+    Delayable (s a), 
+    AdditiveGroup t, 
+    AffineSpace t,
+    Pos (s a) ~ t
+    )
+
+type DelayStretch s t d a = (
+    Stretchable (s a), Delayable (s a), 
+    AdditiveGroup t, 
+    AffineSpace t,
+    Pos (s a) ~ t, 
+    Dur (s a) ~ d
+    )
+
+type DelayStretch' s t a = (
+    Stretchable (s a), Delayable (s a), 
+    AdditiveGroup t, 
+    AffineSpace t,
+    Pos (s a) ~ t
+    )
+
+-- | 
+-- This pseudo-class denotes generalizes structures that can be decomposed into events
+-- and reconstructed.
+--
+type HasEvents s t a  = (
+    Performable s,
+    MonadPlus s,
+    DelayStretch' s t a
+    )
 
 
 -------------------------------------------------------------------------------------
 -- Constructors
 -------------------------------------------------------------------------------------
 
-{-
-chord :: PointedMonoid m a => [a] -> m a
-melody :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [a] -> m a
-melodyStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Duration, a)] -> m a
-chordDelay :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [(Time, a)] -> m a
-chordDelayStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Time, Duration, a)] -> m a
--}
-
-{-
-chord :: [a] -> Score a
-melody :: [a] -> Score a
-melodyStretch :: [(Duration, a)] -> Score a
-chordDelay :: [(Time, a)] -> Score a
-chordDelayStretch :: [(Time, Duration, a)] -> Score a
--}
-
+-- | 
+-- Create a score containing a single event at time zero of duration one.
+-- 
+-- > a -> Score a
+-- 
+note :: Pointed s => a -> s a
 note = point
 
+-- | 
+-- Create a score containing a rest at time zero of duration one.
+-- 
+-- > Score (Maybe a)
+-- 
+rest :: Pointed s => s (Maybe a)
 rest = point Nothing
 
--- | Creates a score containing the given elements, composed in sequence.
--- > [a] -> Score a
-melody = scat . map point
+-- | 
+-- Create a score containing a single event at time zero of duration one.
+-- 
+-- > a -> Score a
+-- 
+noteRest :: MonadPlus s => Maybe a -> s a
+noteRest = mfromMaybe
 
 -- | Creates a score containing the given elements, composed in parallel.
+-- 
 -- > [a] -> Score a
+-- 
+chord :: (Monoid (s a), Pointed s) => [a] -> s a
 chord = pcat . map point
 
--- | Creates a score from a the given melodies, composed in parallel.
--- > [[a]] -> Score a
-melodies = pcat . map melody
-
--- | Creates a score from a the given chords, composed in sequence.
--- > [[a]] -> Score a
-chords = scat . map chord
+-- | Creates a score containing the given elements, composed in sequence.
+-- 
+-- > [a] -> Score a
+-- 
+melody :: (Pointed s, Monoid' (s a), Delay' s t a) => [a] -> s a
+melody = scat . map point
 
 -- | Like 'melody', but stretching each note by the given factors.
+-- 
 -- > [(Duration, a)] -> Score a
-melodyStretch
-  :: (
-      Pointed m, 
-      Monoid' (m a), 
-      Stretchable (m a), Delayable (m a), HasOffset (m a), HasOnset (m a),
-      AffineSpace t,
-      Pos (m a) ~ t,
-      Dur (m a) ~ d
-      ) => [(d, a)] -> m a
+-- 
+melodyStretch :: (Pointed s, Monoid' (s a), Stretch s t d a) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
+-- 
 -- > [(Time, a)] -> Score a
-chordDelay
-  :: (
-      Pointed m, 
-      Monoid (m a), 
-      Delayable (m a), 
-      AdditiveGroup t, 
-      AffineSpace t,
-      Pos (m a) ~ t
-      ) => [(t, a)] -> m a
-chordDelay = pcat . map ( \(t, x) -> delay' t $ point x )
+-- 
+chordDelay :: (Pointed s, Monoid (s a), Delay s t a) => [(t, a)] -> s a
+chordDelay = pcat . map (\(t, x) -> delay' t $ point x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
+-- 
 -- > [(Time, Duration, a)] -> Score a
-chordDelayStretch
-  :: (
-      Pointed m, 
-      Monoid (m a), 
-      Stretchable (m a), Delayable (m a), 
-      AdditiveGroup t, 
-      AffineSpace t,
-      Pos (m a) ~ t, 
-      Dur (m a) ~ d
-      ) => [(t, d, a)] -> m a
-
-chordDelayStretch = pcat . map ( \(t, d, x) -> delay' t . stretch d $ point x )
+-- 
+chordDelayStretch :: (Pointed s, Monoid (s a), DelayStretch s t d a) => [(t, d, a)] -> s a
+chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ point x)
 
 delay' t = delay (t .-. zeroV)
 
@@ -427,14 +457,14 @@ group n a = times n (toDuration n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (Monoid' (s a), HasEvents s a, Num t, Ord t, t ~ Pos (s a)) => s a -> s a
+retrograde :: (Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
         retrograde' = chordDelayStretch' . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
 
-chordDelayStretch' :: (Monoid' (s a), HasEvents s a) => [(Pos (s a), Dur (s a), a)] -> s a
+chordDelayStretch' :: (Monoid' (s a), HasEvents s t a) => [(Pos (s a), Dur (s a), a)] -> s a
 chordDelayStretch' = pcat . map ( \(t, d, x) -> delay (t .-. zeroV) . stretch d $ return x )
 
 
@@ -513,19 +543,31 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 
 #define MAP_PHRASE_CONST \
     HasPart' a, \
-    HasEvents s a, \
-    HasEvents s b, \
-    Dur (s a) ~ Dur (s b)
-    
+    HasEvents s t a, \
+    HasEvents s u b, \
+    t ~ u
 
-mapFirst :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
-mapFirst  f = mapPhrase f id id
+-- |
+-- Map over the first, and remaining notes in each part.
+--
+-- If a part has only one notes, the first function is applied. 
+-- If a part has no notes, the given score is returned unchanged.
+--
+-- > (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapFirst :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> s a -> s b
+mapFirst f g = mapPhrase f g g
 
-mapMiddle :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
-mapMiddle f = mapPhrase id f id
-
-mapLast :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
-mapLast   f = mapPhrase id id f
+-- |
+-- Map over the last, and preceding notes in each part.
+--
+-- If a part has only one notes, the first function is applied. 
+-- If a part has no notes, the given score is returned unchanged.
+--
+-- > (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapLast :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> s a -> s b
+mapLast f g = mapPhrase g g f
 
 -- |
 -- Map over the first, middle and last note in each part.
@@ -539,12 +581,12 @@ mapPhrase :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s 
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
 -- |
--- Equivalent to `mapPhrase` for single-voice scores.
+-- Equivalent to 'mapPhrase' for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (HasEvents s a, HasEvents s b, Dur (s a) ~ Dur (s b)) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: (HasEvents s t a, HasEvents s t b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 -- mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
 mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
     where

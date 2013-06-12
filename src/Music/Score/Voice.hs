@@ -31,6 +31,7 @@ import Control.Monad (ap, join, MonadPlus(..))
 import Data.Foldable
 import Data.Traversable
 import Data.Maybe
+import Data.Pointed
 import Data.Either
 import Data.Function (on)
 import Data.Ord (comparing)
@@ -88,6 +89,9 @@ instance Monad Voice where
         where
             join' (Voice ps) = foldMap (uncurry stretch) ps
 
+instance Pointed Voice where
+    point = return
+    
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
