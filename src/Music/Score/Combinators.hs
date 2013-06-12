@@ -30,9 +30,7 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         HasEvents,
-        Sequential,
-        Parallell,
-        SequentialParallell,
+        Transformable,
         -- ** Constructing scores
         note,
         rest,
@@ -118,26 +116,11 @@ import qualified Data.List as List
 --   
 type Monoid' a    = (Monoid a, Semigroup a)
 
-type Parallell t d a = (
-    Stretchable a, Delayable a, HasOffset a, HasOnset a,
-    AffineSpace t,
-    Pos a ~ t,
-    Dur a ~ d
-    )
-
-type Sequential t a = (
-    Delayable a, 
-    HasOffset a, 
-    HasOnset a,
-    AdditiveGroup t,
-    AffineSpace t,
-    t ~ Pos a
-    )
-
-type SequentialParallell t d a = (
+type Transformable t d a = (
     Stretchable a, Delayable a, 
     AdditiveGroup t, 
     AffineSpace t,
+    HasOnset a, HasOffset a,
     Pos a ~ t, 
     Dur a ~ d
     )
@@ -149,14 +132,7 @@ type SequentialParallell t d a = (
 type HasEvents s t a  = (
     Performable s,
     MonadPlus s,
-    SequentialParallell t (Diff t) (s a)
-    )
-
-type HasEvents' s t d a  = (
-    Performable s,
-    MonadPlus s,
-    SequentialParallell t d (s a),
-    d ~ (Diff t)
+    Transformable t (Diff t) (s a)
     )
 
 
@@ -199,28 +175,28 @@ chord = pcat . map point
 -- 
 -- > [a] -> Score a
 -- 
-melody :: (Pointed s, Monoid' (s a), Sequential t (s a)) => [a] -> s a
+melody :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
 melody = scat . map point
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- 
 -- > [(Duration, a)] -> Score a
 -- 
-melodyStretch :: (Pointed s, Monoid' (s a), Parallell t d (s a)) => [(d, a)] -> s a
+melodyStretch :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- 
 -- > [(Time, a)] -> Score a
 -- 
-chordDelay :: (Pointed s, Monoid (s a), Sequential t (s a)) => [(t, a)] -> s a
+chordDelay :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ point x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 -- 
 -- > [(Time, Duration, a)] -> Score a
 -- 
-chordDelayStretch :: (Pointed s, Monoid (s a), SequentialParallell t d (s a)) => [(t, d, a)] -> s a
+chordDelayStretch :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ point x)
 
 delay' t = delay (t .-. zeroV)
@@ -344,7 +320,7 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup a, HasDuration a, Parallell t d a, Ord d) 
+anticipate :: (Semigroup a, HasDuration a, Transformable t d a, Ord d) 
     => Dur a -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
 
@@ -359,7 +335,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `ma
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Monoid' a, Sequential t a) => Int -> a -> a
+times :: (Monoid' a, Transformable t d a) => Int -> a -> a
 times n a = replicate (0 `max` n) undefined `repWith` const a
 
 -- |
@@ -415,7 +391,7 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
-triplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
+triplet :: (Monoid' a, Transformable t d a, t ~ Time) => a -> a
 triplet = group 3
 
 -- |
@@ -423,7 +399,7 @@ triplet = group 3
 --
 -- > Score a -> Score a
 --
-quadruplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
+quadruplet :: (Monoid' a, Transformable t d a, t ~ Time) => a -> a
 quadruplet  = group 4
 
 -- |
@@ -431,7 +407,7 @@ quadruplet  = group 4
 --
 -- > Score a -> Score a
 --
-quintuplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
+quintuplet :: (Monoid' a,Transformable t d a, t ~ Time) => a -> a
 quintuplet  = group 5
 
 -- |
@@ -439,7 +415,7 @@ quintuplet  = group 5
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => Int -> a -> a
+group :: (Monoid' a, Transformable t d a, t ~ Time) => Int -> a -> a
 group n a = times n (toDuration n `compress` a)
 
 -- |
@@ -530,12 +506,12 @@ padToBar a = a |> rest^*(d'*4)
     HasEvents s u b, \
     t ~ u
 
-#define MAP_EVENTS_CONST \
-    HasPart' a, \
-    HasEvents' s t  d  a, \
-    HasEvents' s t' d' b, \
-    t ~ t', \
-    d ~ d'
+-- #define MAP_EVENTS_CONST \
+--     HasPart' a, \
+--     HasEvents' s t  d  a, \
+--     HasEvents' s t' d' b, \
+--     t ~ t', \
+--     d ~ d'
 
 
 
@@ -544,7 +520,7 @@ padToBar a = a |> rest^*(d'*4)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEvents :: (MAP_EVENTS_CONST) => (t -> d -> a -> b) -> s a -> s b
+mapEvents :: (MAP_PHRASE_CONST, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEvents f = mapParts (liftM $ mapEventsSingle f)
 
 -- |
@@ -553,7 +529,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (MAP_EVENTS_CONST) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (MAP_PHRASE_CONST, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = msum . liftM toSc . fmap (third' f) . perform $ sc
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
