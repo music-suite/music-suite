@@ -29,7 +29,7 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         MonadPlus',
-        Score',
+        HasEvents,
         -- ** Constructing scores
         rest,
         note,
@@ -106,7 +106,7 @@ import qualified Data.List as List
 type Monoid' a    = (Monoid a, Semigroup a)
 type MonadPlus' m = (MonadPlus m, Foldable m)
 
-type Score' s a = (
+type HasEvents s a = (
     Container s,
     Performable s,
     Delayable (s a), Stretchable (s a), 
@@ -488,7 +488,7 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 mapPhrase :: (
     HasPart' a, 
-    Score' s a
+    HasEvents s a
     ) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
@@ -502,7 +502,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 -- mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
     -- (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 
-mapPhraseSingle :: Score' s a => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: HasEvents s a => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
