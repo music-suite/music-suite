@@ -117,35 +117,35 @@ import qualified Data.List as List
 --   
 type Monoid' a    = (Monoid a, Semigroup a)
 
-type Stretch s t d a = (
-    Stretchable (s a), Delayable (s a), HasOffset (s a), HasOnset (s a),
+type Stretch t d a = (
+    Stretchable a, Delayable a, HasOffset a, HasOnset a,
     AffineSpace t,
-    Pos (s a) ~ t,
-    Dur (s a) ~ d
+    Pos a ~ t,
+    Dur a ~ d
     )
 
-type Delay s t a = (
-    Delayable (s a), 
-    HasOffset (s a), 
-    HasOnset (s a),
+type Delay t a = (
+    Delayable a, 
+    HasOffset a, 
+    HasOnset a,
     AdditiveGroup t,
     AffineSpace t,
-    t ~ Pos (s a)
+    t ~ Pos a
     )
 
-type DelayStretch s t d a = (
-    Stretchable (s a), Delayable (s a), 
+type DelayStretch t d a = (
+    Stretchable a, Delayable a, 
     AdditiveGroup t, 
     AffineSpace t,
-    Pos (s a) ~ t, 
-    Dur (s a) ~ d
+    Pos a ~ t, 
+    Dur a ~ d
     )
 
-type DelayStretch' s t a = (
-    Stretchable (s a), Delayable (s a), 
+type DelayStretch' t a = (
+    Stretchable a, Delayable a, 
     AdditiveGroup t, 
     AffineSpace t,
-    Pos (s a) ~ t
+    Pos a ~ t
     )
 
 -- | 
@@ -155,7 +155,7 @@ type DelayStretch' s t a = (
 type HasEvents s t a  = (
     Performable s,
     MonadPlus s,
-    DelayStretch' s t a
+    DelayStretch' t (s a)
     )
 
 
@@ -198,28 +198,28 @@ chord = pcat . map point
 -- 
 -- > [a] -> Score a
 -- 
-melody :: (Pointed s, Monoid' (s a), Delay s t a) => [a] -> s a
+melody :: (Pointed s, Monoid' (s a), Delay t (s a)) => [a] -> s a
 melody = scat . map point
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- 
 -- > [(Duration, a)] -> Score a
 -- 
-melodyStretch :: (Pointed s, Monoid' (s a), Stretch s t d a) => [(d, a)] -> s a
+melodyStretch :: (Pointed s, Monoid' (s a), Stretch t d (s a)) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- 
 -- > [(Time, a)] -> Score a
 -- 
-chordDelay :: (Pointed s, Monoid (s a), Delay s t a) => [(t, a)] -> s a
+chordDelay :: (Pointed s, Monoid (s a), Delay t (s a)) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ point x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 -- 
 -- > [(Time, Duration, a)] -> Score a
 -- 
-chordDelayStretch :: (Pointed s, Monoid (s a), DelayStretch s t d a) => [(t, d, a)] -> s a
+chordDelayStretch :: (Pointed s, Monoid (s a), DelayStretch t d (s a)) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ point x)
 
 delay' t = delay (t .-. zeroV)
