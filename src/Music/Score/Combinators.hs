@@ -433,7 +433,7 @@ group n a = times n (toDuration n `compress` a)
 retrograde :: (Pointed s, Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
-        retrograde' = msum . liftM eventToScore . List.sortBy (comparing getT) . fmap g . perform
+        retrograde' = recompose . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
 
@@ -471,7 +471,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 mapEventsSingle :: (HasEvents s t a, HasEvents s t b, t ~ u, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
-mapEventsSingle f sc = msum . liftM eventToScore . fmap (third' f) . perform $ sc
+mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
 
 
 -- |
@@ -514,7 +514,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhraseSingle :: (HasEvents s t a, HasEvents s t b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhraseSingle f g h sc = msum . liftM eventToScore . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
+mapPhraseSingle f g h sc = recompose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
 
 -- eventToScore :: Scalable t d a => (t, d, a) -> m a
 eventToScore (t,d,x) = delay' t . stretch d $ return x
