@@ -110,7 +110,8 @@ import qualified Data.List as List
 type Monoid' a    = (Monoid a, Semigroup a)
 
 type HasEvents s a = (
-    Container s,
+    Performable s,
+    MonadPlus s,
     Delayable (s a), Stretchable (s a), 
     AffineSpace (Pos (s a)), AdditiveGroup (Pos (s a))
     )
@@ -155,19 +156,46 @@ chords = scat . map chord
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- > [(Duration, a)] -> Score a
+melodyStretch
+  :: (
+      Pointed m, 
+      Monoid' (m a), 
+      Stretchable (m a), Delayable (m a), HasOffset (m a), HasOnset (m a),
+      AffineSpace t,
+      Pos (m a) ~ t,
+      Dur (m a) ~ d
+      ) => [(d, a)] -> m a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- > [(Time, a)] -> Score a
-chordDelay = pcat . map ( \(t, x) -> startAt t $ point x )
+chordDelay
+  :: (
+      Pointed m, 
+      Monoid (m a), 
+      Delayable (m a), 
+      AdditiveGroup t, 
+      AffineSpace t,
+      Pos (m a) ~ t
+      ) => [(t, a)] -> m a
+chordDelay = pcat . map ( \(t, x) -> delay' t $ point x )
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 -- > [(Time, Duration, a)] -> Score a
-chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ point x )
+chordDelayStretch
+  :: (
+      Pointed m, 
+      Monoid (m a), 
+      Stretchable (m a), Delayable (m a), 
+      AdditiveGroup t, 
+      AffineSpace t,
+      Pos (m a) ~ t, 
+      Dur (m a) ~ d
+      ) => [(t, d, a)] -> m a
 
--- -- | Like chord, but delaying each note the given amount.
--- arpeggio :: t -> [a] -> Score a
--- arpeggio t xs = chordDelay (zip [0, t ..] xs)
+chordDelayStretch = pcat . map ( \(t, d, x) -> delay' t . stretch d $ point x )
+
+delay' t = delay (t .-. zeroV)
 
 
 -------------------------------------------------------------------------------------
@@ -395,14 +423,14 @@ group n a = times n (toDuration n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (Monoid' (s a), HasOnset (s a), HasEvents s a, Num t, Ord t, t ~ Pos (s a)) => s a -> s a
+retrograde :: (Monoid' (s a), HasEvents s a, Num t, Ord t, t ~ Pos (s a)) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
         retrograde' = chordDelayStretch' . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
 
-chordDelayStretch' :: (Monoid' (s a), HasOnset (s a), HasEvents s a) => [(Pos (s a), Dur (s a), a)] -> s a
+chordDelayStretch' :: (Monoid' (s a), HasEvents s a) => [(Pos (s a), Dur (s a), a)] -> s a
 chordDelayStretch' = pcat . map ( \(t, d, x) -> delay (t .-. zeroV) . stretch d $ return x )
 
 
