@@ -99,7 +99,12 @@ instance Monoid (Score a) where
     Score as `mappend` Score bs = Score (as `m` bs)
         where
             m = mergeBy (comparing fst3)
-            fst3 (a,b,c) = a
+
+instance Monad Score where
+    return x = Score [(0, 1, x)]
+    a >>= k = join' $ fmap k a
+        where  
+            join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay' t . stretch d) sc
 
 instance Applicative Score where
     pure  = return
@@ -114,35 +119,14 @@ instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
 
-instance Monad Score where
-    return x = Score [(0, 1, x)]
-    a >>= k = join' $ fmap k a
-        where  
-            join' sc = mconcat $ toList $ mapTime (\t d -> delay' t . stretch d) sc
-            delay' t = delay (fromTime t)
-
 instance Performable Score where
     perform = getScore
 
--- Utility
-instance AdditiveGroup (Score a) where
-    zeroV   = error "Not impl"
-    (^+^)   = error "Not impl"
-    negateV = error "Not impl"
-instance VectorSpace (Score a) where
-    type Scalar (Score a) = Duration
-    d *^ s = d `stretch` s
-
 instance Stretchable (Score a) where
     d `stretch` Score sc = Score $ fmap (first3 (^* fromDuration d) . second3 (^* d)) $ sc
-        where
-            first3 f (a,b,c) = (f a,b,c)
-            second3 f (a,b,c) = (a,f b,c)                      
             
 instance Delayable (Score a) where
     d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
-        where
-            first3 f (a,b,c) = (f a,b,c)
 
 instance HasOnset (Score a) where
     -- onset  (Score []) = 0
@@ -150,7 +134,7 @@ instance HasOnset (Score a) where
 
     -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
     onset  (Score []) = 0
-    onset  (Score xs) = on (head xs) where on  (t,d,x) = t
+    onset  (Score xs) = on (head xs) where on (t,d,x) = t
 
 instance HasOffset (Score a) where
     offset (Score []) = 0
@@ -164,6 +148,16 @@ instance IsPitch a => IsPitch (Score a) where
 
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
+
+-- Utility
+instance AdditiveGroup (Score a) where
+    zeroV   = error "Not impl"
+    (^+^)   = error "Not impl"
+    negateV = error "Not impl"
+
+instance VectorSpace (Score a) where
+    type Scalar (Score a) = Duration
+    d *^ s = d `stretch` s
 
 
 -- |
@@ -198,11 +192,18 @@ mapEvent f (t, d, x) = (t, d, f t d x)
 
 -------------------------------------------------------------------------------------
 
+delay' t = delay (fromTime t)
+
+fst3 (a,b,c) = a
+
 list z f [] = z
 list z f xs = f xs
 
 first f (x,y)  = (f x, y)
 second f (x,y) = (x, f y)
+
+first3 f (a,b,c) = (f a,b,c)
+second3 f (a,b,c) = (a,f b,c)                      
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f [] ys = ys

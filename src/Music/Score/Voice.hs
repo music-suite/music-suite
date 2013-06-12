@@ -79,23 +79,15 @@ type instance Pos (Voice a) = Time
 instance Semigroup (Voice a) where
     (<>) = mappend
 
-instance Applicative Voice where
-    pure  = return
-    (<*>) = ap
-
 instance Monad Voice where
     return a = Voice [(1, a)]
     a >>= k = join' $ fmap k a
         where
             join' (Voice ps) = foldMap (uncurry stretch) ps
 
-instance AdditiveGroup (Voice a) where
-    zeroV   = mempty
-    (^+^)   = mappend
-    negateV = id
-
--- instance VectorSpace (Voice a) where
-    -- type Scalar (Voice a) = Duration
+instance Applicative Voice where
+    pure  = return
+    (<*>) = ap
 
 instance Stretchable (Voice a) where
     n `stretch` Voice as = Voice (fmap (first (n*^)) as)

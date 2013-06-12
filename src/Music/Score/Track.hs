@@ -87,16 +87,15 @@ instance Monoid (Track a) where
         where
             m = mergeBy (comparing fst)
 
-instance Applicative Track where
-    pure  = return
-    (<*>) = ap
-
 instance Monad Track where
     return a = Track [(0, a)]
     a >>= k = join' . fmap k $ a
         where
             join' (Track ts) = foldMap (uncurry delay') ts
-            delay' t = delay (fromTime t)
+
+instance Applicative Track where
+    pure  = return
+    (<*>) = ap
 
 instance Alternative Track where
     empty = mempty
@@ -107,14 +106,6 @@ instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
 
-instance AdditiveGroup (Track a) where
-    zeroV   = mempty
-    (^+^)   = mappend
-    negateV = id
-
--- instance VectorSpace (Track a) where
---     type Scalar (Track a) = Time
---     n *^ Track tr = Track $ fmap (first (n*^)) tr
 instance Stretchable (Track a) where
     n `stretch` Track tr = Track $ fmap (first (^* fromDuration n)) tr
 
@@ -137,6 +128,8 @@ instance HasDuration (Track a) where
 
 
 -------------------------------------------------------------------------------------
+
+delay' t = delay (fromTime t)
 
 list z f [] = z
 list z f xs = f xs
