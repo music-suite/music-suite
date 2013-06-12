@@ -30,7 +30,7 @@ module Music.Time (
         module Music.Time.Pos,
         module Music.Time.Time,
         module Music.Time.Duration,
-        module Music.Time.Era,
+        -- module Music.Time.Era,
         module Music.Time.Delayable,
         module Music.Time.Stretchable,
         module Music.Time.Performable,
@@ -41,7 +41,7 @@ import Music.Time.Time
 import Music.Time.Duration
 import Music.Time.Delayable
 import Music.Time.Stretchable
-import Music.Time.Era
+-- import Music.Time.Era
 import Music.Time.Performable
 import Music.Time.Pos
 import Music.Time.Onset

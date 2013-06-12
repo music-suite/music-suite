@@ -49,7 +49,7 @@ library
         Music.Time.Stretchable
         Music.Time.Performable
         Music.Time.Onset
-        Music.Time.Era
+        -- Music.Time.Era
         Music.Time.Pos
         
         Music.Score
