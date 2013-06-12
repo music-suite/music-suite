@@ -40,6 +40,9 @@ import Data.AffineSpace
 
 import Music.Time
 
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
+
 -------------------------------------------------------------------------------------
 -- Voice type
 -------------------------------------------------------------------------------------
@@ -94,6 +97,12 @@ instance Stretchable (Voice a) where
 
 instance HasDuration (Voice a) where
     duration (Voice as) = sum (fmap fst as)
+
+instance IsPitch a => IsPitch (Voice a) where
+    fromPitch = pure . fromPitch
+
+instance IsDynamics a => IsDynamics (Voice a) where
+    fromDynamics = pure . fromDynamics
                         
 
 -------------------------------------------------------------------------------------

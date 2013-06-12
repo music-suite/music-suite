@@ -58,6 +58,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
 
+import Music.Time
 
 -- | 
 -- Class of types with an associated part.
@@ -95,7 +96,7 @@ instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = 
 -- This is usually required for part separation and traversal.
 -- 
 type HasPart' a = (Ord (Part a), HasPart a)
-type Container s = (MonadPlus s, Foldable s)
+type Container s = (MonadPlus s, Performable s)
 
 -- | 
 -- Extract parts from the a score. 
@@ -158,8 +159,8 @@ mapAllParts f = mapParts (fmap f)
 --
 -- > Score a -> [Part]
 --
-getParts :: (HasPart' a, Foldable s) => s a -> [Part a]
-getParts = List.sort . List.nub . fmap getPart . toList
+getParts :: (HasPart' a, Performable s) => s a -> [Part a]
+getParts = List.sort . List.nub . fmap getPart . performableToList
 
 -- |
 -- Set all parts in the given score.

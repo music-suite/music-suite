@@ -1,5 +1,6 @@
 
 {-# LANGUAGE
+    CPP,
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
@@ -73,6 +74,9 @@ module Music.Score.Combinators (
         quintuplet,
 
         -- *** Phrases
+        mapFirst,
+        mapMiddle,
+        mapLast,
         mapPhrase,
         mapPhraseSingle,
 
@@ -106,7 +110,6 @@ type Monoid' a    = (Monoid a, Semigroup a)
 
 type HasEvents s a = (
     Container s,
-    Performable s,
     Delayable (s a), Stretchable (s a), 
     AffineSpace (Pos (s a)), AdditiveGroup (Pos (s a))
     )
@@ -440,6 +443,8 @@ voiceToScore = scat . fmap g . getVoice
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
+instance Performable Voice where
+    perform = perform . voiceToScore
 
 --------------------------------------------------------------------------------
 
@@ -476,6 +481,22 @@ mapFirstMiddleLast f g h [a]     = [f a]
 mapFirstMiddleLast f g h [a,b]   = [f a, h b]
 mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
+#define MAP_PHRASE_CONST \
+    HasPart' a, \
+    HasEvents s a, \
+    HasEvents s b, \
+    Dur (s a) ~ Dur (s b)
+    
+
+mapFirst :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
+mapFirst  f = mapPhrase f id id
+
+mapMiddle :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
+mapMiddle f = mapPhrase id f id
+
+mapLast :: (MAP_PHRASE_CONST) => (a -> a) -> s a -> s a
+mapLast   f = mapPhrase id id f
+
 -- |
 -- Map over the first, middle and last note in each part.
 --
@@ -484,12 +505,7 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhrase :: (
-    HasPart' a, 
-    HasEvents s a,
-    HasEvents s b,
-    (Diff (Pos (s b)) ~ Diff (Pos (s a)))
-    ) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhrase :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
 -- |
@@ -498,7 +514,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (HasEvents s a, HasEvents s b, (Diff (Pos (s b)) ~ Diff (Pos (s a)))) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: (HasEvents s a, HasEvents s b, Dur (s a) ~ Dur (s b)) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 -- mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
 mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
     where
