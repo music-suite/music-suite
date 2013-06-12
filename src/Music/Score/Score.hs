@@ -38,6 +38,7 @@ import Data.Traversable
 import Data.Typeable
 import Data.Maybe
 import Data.Either
+import Data.Pointed
 import Data.Function (on)
 import Data.Ord (comparing)
 import Data.Ratio
@@ -105,6 +106,9 @@ instance Monad Score where
     a >>= k = join' $ fmap k a
         where  
             join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay' t . stretch d) sc
+
+instance Pointed Score where
+    point = return
 
 instance Applicative Score where
     pure  = return

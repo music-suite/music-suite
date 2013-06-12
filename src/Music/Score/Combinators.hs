@@ -96,6 +96,7 @@ import Data.Traversable
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
+import Data.Pointed
 import Data.Ord
 
 import Music.Score.Track
@@ -138,11 +139,11 @@ chordDelayStretch :: [(Time, Duration, a)] -> Score a
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- > [a] -> Score a
-melody = scat . map return
+melody = scat . map point
 
 -- | Creates a score containing the given elements, composed in parallel.
 -- > [a] -> Score a
-chord = pcat . map return
+chord = pcat . map point
 
 -- | Creates a score from a the given melodies, composed in parallel.
 -- > [[a]] -> Score a
@@ -154,15 +155,15 @@ chords = scat . map chord
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- > [(Duration, a)] -> Score a
-melodyStretch = scat . map ( \(d, x) -> stretch d $ return x )
+melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- > [(Time, a)] -> Score a
-chordDelay = pcat . map ( \(t, x) -> startAt t $ return x )
+chordDelay = pcat . map ( \(t, x) -> startAt t $ point x )
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 -- > [(Time, Duration, a)] -> Score a
-chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ return x )
+chordDelayStretch = pcat . map ( \(t, d, x) -> startAt t . stretch d $ point x )
 
 -- -- | Like chord, but delaying each note the given amount.
 -- arpeggio :: t -> [a] -> Score a

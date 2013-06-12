@@ -50,3 +50,8 @@ type instance Pos Duration   = Duration
 -- type instance Pos (Option a) = Pos a
 -- type instance Pos (Set a)    = Pos a
 -- type instance Pos (Map k a)  = Pos a
+
+
+
+
+
