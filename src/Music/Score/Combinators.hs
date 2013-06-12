@@ -88,6 +88,7 @@ module Music.Score.Combinators (
         scoreToVoice,
         voiceToScore,
         voiceToScore',
+        eventToScore,
         -- scoreToVoices,
   ) where
 
@@ -116,6 +117,16 @@ import qualified Data.List as List
 -- is needed. If 'Monoid' is changed to extend 'Semigroup' it will not be needed.
 --   
 type Monoid' a    = (Monoid a, Semigroup a)
+
+-- TODO names?
+type Scalable t d a = (
+    Stretchable a, Delayable a, 
+    AdditiveGroup t, 
+    AffineSpace t,
+    Diff t ~ d,
+    Pos a ~ t, 
+    Dur a ~ d
+    )
 
 type Transformable t d a = (
     Stretchable a, Delayable a, 
@@ -421,50 +432,14 @@ group n a = times n (toDuration n `compress` a)
 retrograde :: (Pointed s, Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
-        retrograde' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
+        retrograde' = msum . liftM eventToScore . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
 
 
 --------------------------------------------------------------------------------
--- Conversion
+-- Mapping and recomposition
 --------------------------------------------------------------------------------
-
--- |
--- Convert a score into a voice.
---
--- This function fails if the score contain overlapping events.
---
-scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = Voice . fmap throwTime . addRests' . perform
-    where
-       throwTime (t,d,x) = (d,x)
-
--- -- |
--- -- Convert a score into a list of voices.
--- --
--- scoreToVoices :: (HasPart a, Part a ~ v, Ord v) => Score a -> [Voice (Maybe a)]
--- scoreToVoices = fmap scoreToVoice . voices
-
--- |
--- Convert a voice into a score.
---
-voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . getVoice
-    where
-        g (d,x) = stretch d (note x)
-
--- |
--- Convert a voice which may contain rests into a score.
---
-voiceToScore' :: Voice (Maybe a) -> Score a
-voiceToScore' = mcatMaybes . voiceToScore
-
-
--- TODO move this instance
-instance Performable Voice where
-    perform = perform . voiceToScore
-
 
 #define MAP_CONSTRAINT \
     HasPart' a, \
@@ -487,10 +462,8 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 mapEventsSingle :: (MAP_CONSTRAINT, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
-mapEventsSingle f sc = msum . liftM toSc . fmap (third' f) . perform $ sc
-    where
-        toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
-        third' f (a,b,c) = (a,b,f a b c)
+mapEventsSingle f sc = msum . liftM eventToScore . fmap (third' f) . perform $ sc
+
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -532,10 +505,44 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhraseSingle :: (HasEvents s t a, HasEvents s t b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
+mapPhraseSingle f g h sc = msum . liftM eventToScore . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
+
+-- eventToScore :: Scalable t d a => (t, d, a) -> m a
+eventToScore (t,d,x) = delay' t . stretch d $ return x
+
+--------------------------------------------------------------------------------
+-- Conversion
+--------------------------------------------------------------------------------
+
+-- |
+-- Convert a score into a voice.
+--
+-- This function fails if the score contain overlapping events.
+--
+scoreToVoice :: Score a -> Voice (Maybe a)
+scoreToVoice = Voice . fmap throwTime . addRests' . perform
     where
-        toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
-        third f (a,b,c) = (a,b,f c)
+       throwTime (t,d,x) = (d,x)
+
+-- |
+-- Convert a voice into a score.
+--
+voiceToScore :: Voice a -> Score a
+voiceToScore = scat . fmap g . getVoice
+    where
+        g (d,x) = stretch d (note x)
+
+-- |
+-- Convert a voice which may contain rests into a score.
+--
+voiceToScore' :: Voice (Maybe a) -> Score a
+voiceToScore' = mcatMaybes . voiceToScore
+
+
+-- TODO move this instance
+instance Performable Voice where
+    perform = perform . voiceToScore
+
 
 --------------------------------------------------------------------------------
 
@@ -558,6 +565,9 @@ mapFirstMiddleLast f g h [a,b]   = [f a, h b]
 mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
 delay' t = delay (t .-. zeroV)
+
+third f (a,b,c) = (a,b,f c)
+third' f (a,b,c) = (a,b,f a b c)
 
 rotl []     = []
 rotl (x:xs) = xs ++ [x]
