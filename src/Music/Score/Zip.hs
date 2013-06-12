@@ -85,7 +85,7 @@ applySingle fs as = notJoin $ fmap (\(f,s) -> f s) sampled
 -- Get all notes that start during a given note.
 --
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle as bs = mapTime ( \t d a -> g a (onsetIn t d bs) ) as
+snapshotSingle as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
     where
         -- g Nothing  z = Nothing
         g = (,)

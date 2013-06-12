@@ -470,7 +470,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (MAP_CONSTRAINT, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (HasEvents s t a, HasEvents s t b, t ~ u, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = msum . liftM eventToScore . fmap (third' f) . perform $ sc
 
 

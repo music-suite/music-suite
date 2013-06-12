@@ -23,7 +23,7 @@
 
 module Music.Score.Score (
         Score,
-        mapTime,
+        -- mapTime,
   ) where
 
 import Prelude hiding (null, length, repeat, foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
