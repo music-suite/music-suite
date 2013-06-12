@@ -29,7 +29,7 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         MonadPlus',
-        PointedMonoid,
+        Score',
         -- ** Constructing scores
         rest,
         note,
@@ -58,7 +58,7 @@ module Music.Score.Combinators (
         stopAt,
 
         -- *** Stretching in time
-        -- stretch,
+        stretch,
         compress,
         stretchTo,
         retrograde,
@@ -104,8 +104,15 @@ import Music.Time
 import qualified Data.List as List
 
 type Monoid' a    = (Monoid a, Semigroup a)
-type MonadPlus' m = (Functor m, MonadPlus m, Foldable m)
-type PointedMonoid m a = (MonadPlus' m, Monoid' (m a))
+type MonadPlus' m = (MonadPlus m, Foldable m)
+
+type Score' s a = (
+    Container s,
+    Performable s,
+    Delayable (s a), Stretchable (s a), 
+    AffineSpace (Pos (s a)), AdditiveGroup (Pos (s a))
+    )
+
 
 
 -------------------------------------------------------------------------------------
@@ -119,6 +126,12 @@ melodyStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnse
 chordDelay :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [(Time, a)] -> m a
 chordDelayStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Time, Duration, a)] -> m a
 -}
+
+chord :: [a] -> Score a
+melody :: [a] -> Score a
+melodyStretch :: [(Duration, a)] -> Score a
+chordDelay :: [(Time, a)] -> Score a
+chordDelayStretch :: [(Time, Duration, a)] -> Score a
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- > [a] -> Score a
@@ -188,14 +201,6 @@ t `startAt` x = delay d x where d = t .-. onset x
 --
 stopAt :: (AffineSpace (Pos a), HasOffset a, Delayable a) => Pos a -> a -> a
 t `stopAt`  x = delay d x where d = t .-. offset x
-
--- |
--- Stretch (augment) a score by the given factor. Equivalent to '*^'.
---
--- > Duration -> Score a -> Score a
---
--- stretch :: VectorSpace v => Scalar v -> v -> v
--- stretch = (*^)
 
 -- |
 -- Compress (diminish) a score. Flipped version of '^/'.
@@ -294,8 +299,8 @@ anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `ma
 --
 -- > Duration -> Score Note -> Score Note
 --
--- times :: (Enum a, Monoid' c, HasOnset c, HasOffset c, Delayable c) => a -> c -> c
-times n a = replicate (0 `max` fromEnum n) () `repWith` const a
+times :: (Monoid' c, AffineSpace (Pos c), Delayable c, HasOffset c, HasOnset c) => Int -> c -> c
+times n a = replicate (0 `max` n) undefined `repWith` const a
 
 -- |
 -- Repeat once for each element in the list.
@@ -350,32 +355,32 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
--- triplet :: (Monoid' a, Stretchable a, Delayable a, HasOnset a, HasOffset a) => a -> a
-triplet     = group (3::Duration)
+triplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+triplet = group 3
 
 -- |
 -- Repeat three times and scale down by three.
 --
 -- > Score a -> Score a
 --
--- quadruplet :: (Monoid' a, Semigroup a, Stretchable a, Delayable a, HasOnset a, HasOffset a) => a -> a
-quadruplet  = group (4::Duration)
+quadruplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+quadruplet  = group 4
 
 -- |
 -- Repeat three times and scale down by three.
 --
 -- > Score a -> Score a
 --
--- quintuplet :: (Monoid' a, Semigroup a, Stretchable a, Delayable a, HasOnset a, HasOffset a) => a -> a
-quintuplet  = group (5::Duration)
+quintuplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+quintuplet  = group 5
 
 -- |
 -- Repeat a number of times and scale down by the same amount.
 --
 -- > Duration -> Score a -> Score a
 --
--- group :: (Monoid' c, Semigroup c, Stretchable c, HasOnset c, HasOffset c, Delayable c) => Duration -> c -> c
-group n a = times n (a^/n)
+group :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => Int -> c -> c
+group n a = times n (toDuration n `compress` a)
 
 -- |
 -- Reverse a score around its middle point.
@@ -481,12 +486,10 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhrase
-  :: (Ord (Part a), MonadPlus' s,
-      Stretchable (s a), Delayable (s a), Performable s, HasPart a
-      , Dur (s a) ~ Duration -- FIXME
-      ) =>
-     (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhrase :: (
+    HasPart' a, 
+    Score' s a
+    ) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
 -- |
@@ -498,9 +501,11 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 -- TODO remove MonadPlus' (we need fmap, return and msum/mconcat)
 -- mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
     -- (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+
+mapPhraseSingle :: Score' s a => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
     where
-        toSc (t,d,x) = delay (t .-. 0) . stretch d $ return x
+        toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
 
 rotl []     = []

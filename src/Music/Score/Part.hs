@@ -28,6 +28,7 @@
 module Music.Score.Part (
         HasPart(..),
         HasPart',
+        Container,
         -- PartName(..),
         PartT(..),
         extract,
@@ -94,7 +95,7 @@ instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = 
 -- This is usually required for part separation and traversal.
 -- 
 type HasPart' a = (Ord (Part a), HasPart a)
-
+type Container s = (MonadPlus s, Foldable s)
 
 -- | 
 -- Extract parts from the a score. 
@@ -108,7 +109,7 @@ type HasPart' a = (Ord (Part a), HasPart a)
 -- 
 -- > Score a -> [Score a]
 --
-extract :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [s a]
+extract :: (HasPart' a, Container s) => s a -> [s a]
 extract sc = fmap (`extract'` sc) (getParts sc) 
     where                    
         extract' v = mfilter ((== v) . getPart)
@@ -122,7 +123,7 @@ extract sc = fmap (`extract'` sc) (getParts sc)
 -- 
 -- > Score a -> [(Part a, Score a)]
 --
-extractParts :: (HasPart' a, MonadPlus s, Foldable s) => s a -> [(Part a, s a)]
+extractParts :: (HasPart' a, Container s) => s a -> [(Part a, s a)]
 extractParts sc = fmap (`extractParts2` sc) (getParts sc) 
     where                    
         extractParts2 v = (\x -> (v,x)) . mfilter ((== v) . getPart)
@@ -133,7 +134,7 @@ extractParts sc = fmap (`extractParts2` sc) (getParts sc)
 --
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
-mapPart :: (Ord v, v ~ Part a, HasPart a, MonadPlus s, Foldable s, Enum b) => b -> (s a -> s a) -> s a -> s a
+mapPart :: (Ord v, v ~ Part a, HasPart a, Container s, Enum b) => b -> (s a -> s a) -> s a -> s a
 mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 
 -- |
@@ -141,7 +142,7 @@ mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat 
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapParts :: (HasPart' a, MonadPlus s, Foldable s) => ([s a] -> [s b]) -> s a -> s b
+mapParts :: (HasPart' a, Container s) => ([s a] -> [s b]) -> s a -> s b
 mapParts f = msum . f . extract
 
 -- |
@@ -149,7 +150,7 @@ mapParts f = msum . f . extract
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts :: (HasPart' a, MonadPlus s, Foldable s) => (s a -> s b) -> s a -> s b
+mapAllParts :: (HasPart' a, Container s) => (s a -> s b) -> s a -> s b
 mapAllParts f = mapParts (fmap f)
 
 -- |
@@ -187,7 +188,7 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
-(</>) :: (HasPart' a, Enum (Part a), Functor s, MonadPlus s, Foldable s) => s a -> s a -> s a
+(</>) :: (HasPart' a, Enum (Part a), Functor s, Container s) => s a -> s a -> s a
 a </> b = a `mplus` moveParts offset b
     where               
         -- max voice in a + 1
