@@ -335,7 +335,7 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Ord (Dur a), Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, HasDuration a, Delayable a) 
+anticipate :: (Semigroup a, HasDuration a, Stretch t d a, Ord d) 
     => Dur a -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
 
