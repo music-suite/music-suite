@@ -31,7 +31,6 @@ module Music.Score.Combinators (
         Monoid',
         HasEvents,
         Delay,
-        Delay',
         Stretch,
         DelayStretch,
         DelayStretch',
@@ -125,19 +124,13 @@ type Stretch s t d a = (
     Dur (s a) ~ d
     )
 
-type Delay' s t a = (
+type Delay s t a = (
     Delayable (s a), 
     HasOffset (s a), 
     HasOnset (s a),
+    AdditiveGroup t,
     AffineSpace t,
     t ~ Pos (s a)
-    )
-
-type Delay s t a = (
-    Delayable (s a), 
-    AdditiveGroup t, 
-    AffineSpace t,
-    Pos (s a) ~ t
     )
 
 type DelayStretch s t d a = (
@@ -198,14 +191,14 @@ noteRest = mfromMaybe
 -- 
 -- > [a] -> Score a
 -- 
-chord :: (Monoid (s a), Pointed s) => [a] -> s a
+chord :: (Pointed s, Monoid (s a)) => [a] -> s a
 chord = pcat . map point
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- 
 -- > [a] -> Score a
 -- 
-melody :: (Pointed s, Monoid' (s a), Delay' s t a) => [a] -> s a
+melody :: (Pointed s, Monoid' (s a), Delay s t a) => [a] -> s a
 melody = scat . map point
 
 -- | Like 'melody', but stretching each note by the given factors.
