@@ -128,11 +128,13 @@ chordDelay :: (PointedMonoid m a, Delayable (m a), HasOnset (m a)) => [(Time, a)
 chordDelayStretch :: (PointedMonoid m a, Stretchable (m a), Delayable (m a), HasOnset (m a)) => [(Time, Duration, a)] -> m a
 -}
 
+{-
 chord :: [a] -> Score a
 melody :: [a] -> Score a
 melodyStretch :: [(Duration, a)] -> Score a
 chordDelay :: [(Time, a)] -> Score a
 chordDelayStretch :: [(Time, Duration, a)] -> Score a
+-}
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- > [a] -> Score a
@@ -390,23 +392,18 @@ group n a = times n (toDuration n `compress` a)
 -- > duration a = duration (retrograde a)
 -- > offset a   = offset (retrograde a)
 --
-retrograde :: Score a -> Score a
-retrograde = startAt 0 . retrograde'
-    where
-        retrograde' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
-        g (t,d,x) = (-(t.+^d),d,x)
-        getT (t,d,x) = t
-
--- |
--- Repeat indefinately, like repeat for lists.
---
 -- > Score a -> Score a
---
-rep :: Score a -> Score a
-rep a = a `plus` delay (duration a) (rep a)
+
+retrograde :: (Monoid' (s a), HasOnset (s a), HasEvents s a, Num t, Ord t, t ~ Pos (s a)) => s a -> s a
+retrograde = {-startAt 0 . -}retrograde'
     where
-        plus = (<>)
-        -- Score as `plus` Score bs = Score (as <> bs)
+        retrograde' = chordDelayStretch' . List.sortBy (comparing getT) . fmap g . perform
+        g (t,d,x) = (-(t.+^d),d,x)
+        getT (t,d,x) = t            
+
+chordDelayStretch' :: (Monoid' (s a), HasOnset (s a), HasEvents s a) => [(Pos (s a), Dur (s a), a)] -> s a
+chordDelayStretch' = pcat . map ( \(t, d, x) -> delay (t .-. zeroV) . stretch d $ return x )
+
 
 
 --------------------------------------------------------------------------------
