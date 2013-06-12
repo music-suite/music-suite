@@ -28,7 +28,6 @@
 module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
-        MonadPlus',
         HasEvents,
         -- ** Constructing scores
         rest,
@@ -104,7 +103,6 @@ import Music.Time
 import qualified Data.List as List
 
 type Monoid' a    = (Monoid a, Semigroup a)
-type MonadPlus' m = (MonadPlus m, Foldable m)
 
 type HasEvents s a = (
     Container s,
@@ -343,7 +341,7 @@ repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
 -- |
 -- Remove rests from a score.
 --
--- Identical to 'mcatMaybes'.
+-- This is just an alias for 'mcatMaybes' which reads better in certain contexts.
 --
 -- > Score (Maybe a) -> Score a
 --
@@ -498,10 +496,6 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
--- TODO remove MonadPlus' (we need fmap, return and msum/mconcat)
--- mapPhraseSingle :: (MonadPlus' s, Performable s, Delayable (s a), Stretchable (s a)) =>
-    -- (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-
 mapPhraseSingle :: HasEvents s a => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
     where
