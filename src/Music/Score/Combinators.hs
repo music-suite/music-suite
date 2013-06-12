@@ -358,7 +358,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `ma
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Monoid' c, AffineSpace (Pos c), Delayable c, HasOffset c, HasOnset c) => Int -> c -> c
+times :: (Monoid' a, Delay t a) => Int -> a -> a
 times n a = replicate (0 `max` n) undefined `repWith` const a
 
 -- |
@@ -414,7 +414,7 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
-triplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+triplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
 triplet = group 3
 
 -- |
@@ -422,7 +422,7 @@ triplet = group 3
 --
 -- > Score a -> Score a
 --
-quadruplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+quadruplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
 quadruplet  = group 4
 
 -- |
@@ -430,7 +430,7 @@ quadruplet  = group 4
 --
 -- > Score a -> Score a
 --
-quintuplet :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => c -> c
+quintuplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
 quintuplet  = group 5
 
 -- |
@@ -438,7 +438,7 @@ quintuplet  = group 5
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' c, Delayable c, Stretchable c, HasOffset c, HasOnset c, Pos c ~ Time) => Int -> c -> c
+group :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => Int -> a -> a
 group n a = times n (toDuration n `compress` a)
 
 -- |
