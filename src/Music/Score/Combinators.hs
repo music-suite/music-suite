@@ -30,9 +30,9 @@ module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
         HasEvents,
-        Delay,
-        Stretch,
-        DelayStretch,
+        Sequential,
+        Parallell,
+        SequentialParallell,
         -- ** Constructing scores
         note,
         rest,
@@ -78,6 +78,8 @@ module Music.Score.Combinators (
         quintuplet,
 
         -- *** Phrases
+        mapEvents,
+        mapEventsSingle,
         mapFirst,
         mapLast,
         mapPhrase,
@@ -116,14 +118,14 @@ import qualified Data.List as List
 --   
 type Monoid' a    = (Monoid a, Semigroup a)
 
-type Stretch t d a = (
+type Parallell t d a = (
     Stretchable a, Delayable a, HasOffset a, HasOnset a,
     AffineSpace t,
     Pos a ~ t,
     Dur a ~ d
     )
 
-type Delay t a = (
+type Sequential t a = (
     Delayable a, 
     HasOffset a, 
     HasOnset a,
@@ -132,7 +134,7 @@ type Delay t a = (
     t ~ Pos a
     )
 
-type DelayStretch t d a = (
+type SequentialParallell t d a = (
     Stretchable a, Delayable a, 
     AdditiveGroup t, 
     AffineSpace t,
@@ -147,7 +149,14 @@ type DelayStretch t d a = (
 type HasEvents s t a  = (
     Performable s,
     MonadPlus s,
-    DelayStretch t (Diff t) (s a)
+    SequentialParallell t (Diff t) (s a)
+    )
+
+type HasEvents' s t d a  = (
+    Performable s,
+    MonadPlus s,
+    SequentialParallell t d (s a),
+    d ~ (Diff t)
     )
 
 
@@ -190,28 +199,28 @@ chord = pcat . map point
 -- 
 -- > [a] -> Score a
 -- 
-melody :: (Pointed s, Monoid' (s a), Delay t (s a)) => [a] -> s a
+melody :: (Pointed s, Monoid' (s a), Sequential t (s a)) => [a] -> s a
 melody = scat . map point
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- 
 -- > [(Duration, a)] -> Score a
 -- 
-melodyStretch :: (Pointed s, Monoid' (s a), Stretch t d (s a)) => [(d, a)] -> s a
+melodyStretch :: (Pointed s, Monoid' (s a), Parallell t d (s a)) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- 
 -- > [(Time, a)] -> Score a
 -- 
-chordDelay :: (Pointed s, Monoid (s a), Delay t (s a)) => [(t, a)] -> s a
+chordDelay :: (Pointed s, Monoid (s a), Sequential t (s a)) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ point x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 -- 
 -- > [(Time, Duration, a)] -> Score a
 -- 
-chordDelayStretch :: (Pointed s, Monoid (s a), DelayStretch t d (s a)) => [(t, d, a)] -> s a
+chordDelayStretch :: (Pointed s, Monoid (s a), SequentialParallell t d (s a)) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ point x)
 
 delay' t = delay (t .-. zeroV)
@@ -335,7 +344,7 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup a, HasDuration a, Stretch t d a, Ord d) 
+anticipate :: (Semigroup a, HasDuration a, Parallell t d a, Ord d) 
     => Dur a -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
 
@@ -350,7 +359,7 @@ anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `ma
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Monoid' a, Delay t a) => Int -> a -> a
+times :: (Monoid' a, Sequential t a) => Int -> a -> a
 times n a = replicate (0 `max` n) undefined `repWith` const a
 
 -- |
@@ -406,7 +415,7 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
-triplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
+triplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
 triplet = group 3
 
 -- |
@@ -414,7 +423,7 @@ triplet = group 3
 --
 -- > Score a -> Score a
 --
-quadruplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
+quadruplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
 quadruplet  = group 4
 
 -- |
@@ -422,7 +431,7 @@ quadruplet  = group 4
 --
 -- > Score a -> Score a
 --
-quintuplet :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => a -> a
+quintuplet :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => a -> a
 quintuplet  = group 5
 
 -- |
@@ -430,7 +439,7 @@ quintuplet  = group 5
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' a, Delay t a, Stretch t d a, t ~ Time) => Int -> a -> a
+group :: (Monoid' a, Sequential t a, Parallell t d a, t ~ Time) => Int -> a -> a
 group n a = times n (toDuration n `compress` a)
 
 -- |
@@ -515,6 +524,43 @@ padToBar a = a |> rest^*(d'*4)
         d' = if d == 0 then 0 else 1 - d  -}
 
 
+#define MAP_PHRASE_CONST \
+    HasPart' a, \
+    HasEvents s t a, \
+    HasEvents s u b, \
+    t ~ u
+
+#define MAP_EVENTS_CONST \
+    HasPart' a, \
+    HasEvents' s t  d  a, \
+    HasEvents' s t' d' b, \
+    t ~ t', \
+    d ~ d'
+
+
+
+-- |
+-- Map over the events in a score.
+--
+-- > (Time -> Duration -> a -> b) -> Score a -> Score b
+--
+mapEvents :: (MAP_EVENTS_CONST) => (t -> d -> a -> b) -> s a -> s b
+mapEvents f = mapParts (liftM $ mapEventsSingle f)
+
+-- |
+-- Equivalent to 'mapEvents' for single-voice scores.
+-- Fails if the score contains overlapping events.
+--
+-- > (Time -> Duration -> a -> b) -> Score a -> Score b
+--
+mapEventsSingle :: (MAP_EVENTS_CONST) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle f sc = msum . liftM toSc . fmap (third' f) . perform $ sc
+    where
+        toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
+        third' f (a,b,c) = (a,b,f a b c)
+
+
+
 
 -- |
 -- Map over first, middle and last elements of list.
@@ -525,12 +571,6 @@ mapFirstMiddleLast f g h []      = []
 mapFirstMiddleLast f g h [a]     = [f a]
 mapFirstMiddleLast f g h [a,b]   = [f a, h b]
 mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
-
-#define MAP_PHRASE_CONST \
-    HasPart' a, \
-    HasEvents s t a, \
-    HasEvents s u b, \
-    t ~ u
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -572,7 +612,6 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhraseSingle :: (HasEvents s t a, HasEvents s t b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapPhraseSingle f g h sc = msum . mapFirstMiddleLast (liftM f) (liftM g) (liftM h) . liftM toSc . perform $ sc
 mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
