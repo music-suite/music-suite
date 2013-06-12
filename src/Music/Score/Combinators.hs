@@ -70,6 +70,7 @@ module Music.Score.Combinators (
 
         -- *** Repetition
         times,
+        repeated,
         group,
         triplet,
         quadruplet,
@@ -141,7 +142,9 @@ type HasEvents s t a  = (
 -------------------------------------------------------------------------------------
 
 -- | 
--- Create a score containing a single event at time zero of duration one.
+-- Create a score containing a single event.
+--
+-- This function uses the unit position (0, 1).
 -- 
 -- > a -> Score a
 -- 
@@ -151,56 +154,63 @@ note = point
 -- | 
 -- Create a score containing a rest at time zero of duration one.
 -- 
+-- This function uses the unit position (0, 1).
+-- 
 -- > Score (Maybe a)
 -- 
 rest :: Pointed s => s (Maybe a)
 rest = point Nothing
 
 -- | 
--- Create a score containing a single event at time zero of duration one.
+-- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
+-- 
+-- This function uses the unit position (0, 1).
 -- 
 -- > a -> Score a
 -- 
 noteRest :: MonadPlus s => Maybe a -> s a
 noteRest = mfromMaybe
 
--- | Creates a score containing the given elements, composed in parallel.
+-- | Creates a score containing a chord.
+-- 
+-- This function uses the unit position (0, 1).
 -- 
 -- > [a] -> Score a
 -- 
 chord :: (Pointed s, Monoid (s a)) => [a] -> s a
-chord = pcat . map point
+chord = pcat . map note
 
 -- | Creates a score containing the given elements, composed in sequence.
 -- 
 -- > [a] -> Score a
 -- 
 melody :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
-melody = scat . map point
+melody = scat . map note
 
 -- | Like 'melody', but stretching each note by the given factors.
 -- 
 -- > [(Duration, a)] -> Score a
 -- 
 melodyStretch :: (Pointed s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
-melodyStretch = scat . map ( \(d, x) -> stretch d $ point x )
+melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
 -- 
 -- > [(Time, a)] -> Score a
 -- 
 chordDelay :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
-chordDelay = pcat . map (\(t, x) -> delay' t $ point x)
+chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
+--
+-- This function is an inverse of perform, so
+--
+-- > chordDelayStretch . perform = id
 -- 
 -- > [(Time, Duration, a)] -> Score a
 -- 
 chordDelayStretch :: (Pointed s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
-chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ point x)
-
-delay' t = delay (t .-. zeroV)
-
+chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
 -------------------------------------------------------------------------------------
 -- Transformations
@@ -211,7 +221,7 @@ delay' t = delay (t .-. zeroV)
 --
 -- > Duration -> Score a -> Score a
 --
-move :: Delayable a => Dur a -> a -> a
+move :: (Delayable a, d ~ Dur a) => d -> a -> a
 move = delay
 
 -- |
@@ -219,7 +229,7 @@ move = delay
 --
 -- > Duration -> Score a -> Score a
 --
-moveBack :: (AdditiveGroup (Dur a), Delayable a) => Dur a -> a -> a
+moveBack :: (Delayable a, AdditiveGroup d, d ~ Dur a) => d -> a -> a
 moveBack t = delay (negateV t)
 
 -- |
@@ -227,31 +237,31 @@ moveBack t = delay (negateV t)
 --
 -- > Duration -> Score a -> Score a
 --
-startAt :: (AffineSpace (Pos a), HasOnset a, Delayable a) => Pos a -> a -> a
-t `startAt` x = delay d x where d = t .-. onset x
+startAt :: (HasOnset a, Delayable a, AffineSpace t, t ~ Pos a) => t -> a -> a
+t `startAt` x = (t .-. onset x) `delay` x
 
 -- |
 -- Move a score so that its offset is at the specific time.
 --
 -- > Duration -> Score a -> Score a
 --
-stopAt :: (AffineSpace (Pos a), HasOffset a, Delayable a) => Pos a -> a -> a
-t `stopAt`  x = delay d x where d = t .-. offset x
+stopAt :: (HasOffset a, Delayable a, AffineSpace t, t ~ Pos a) => t -> a -> a
+t `stopAt`  x = (t .-. offset x) `delay` x
 
 -- |
 -- Compress (diminish) a score. Flipped version of '^/'.
 --
 -- > Duration -> Score a -> Score a
 --
-compress :: (Fractional (Dur a), Stretchable a) => Dur a -> a -> a
-compress x = stretch (1/x)
+compress :: (Stretchable a, Fractional d, d ~ Dur a) => d -> a -> a
+compress x = stretch (recip x)
 
 -- |
 -- Stretch a score to fit into the given duration.
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo:: (Fractional (Dur a), Stretchable a, HasDuration a) => Dur a -> a -> a
+stretchTo :: (Stretchable a, HasDuration a, Fractional d, d ~ Dur a) => d -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x
 
 
@@ -320,8 +330,7 @@ x `overlap` y  =  x <> delay t y where t = duration x / 2
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup a, HasDuration a, Transformable t d a, Ord d) 
-    => Dur a -> a -> a -> a
+anticipate :: (Semigroup a, HasDuration a, Transformable t d a, Ord d) => d -> a -> a -> a
 anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
 
 
@@ -336,45 +345,27 @@ anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `ma
 -- > Duration -> Score Note -> Score Note
 --
 times :: (Monoid' a, Transformable t d a) => Int -> a -> a
-times n a = replicate (0 `max` n) undefined `repWith` const a
+times n a = replicate (0 `max` n) () `repeated` const a
 
 -- |
 -- Repeat once for each element in the list.
 --
--- > [a] -> (a -> Score Note) -> Score Note
---
 -- Example:
 --
--- > repWith [1,2,1] (c^*)
+-- > repeated [1,2,1] (c^*)
 --
--- repWith :: (Monoid' c, HasOnset c, HasOffset c, Delayable c) => [a] -> (a -> c) -> c
-repWith = flip (\f -> scat . fmap f)
+-- Simple type:
+--
+-- > [a] -> (a -> Score Note) -> Score Note
+--
+repeated :: (Monoid' b, Transformable t d b) => [a] -> (a -> b) -> b
+repeated = flip (\f -> scat . fmap f)
 
--- |
--- Combination of 'scat' and 'fmap'. Note that
---
--- > scatMap = flip repWith
---
--- scatMap :: (Monoid' c, HasOnset c, HasOffset c, Delayable c) => (a -> c) -> [a] -> c
-scatMap f = scat . fmap f
 
--- |
--- Repeat exact amount of times with an index.
---
--- > Duration -> (Duration -> Score Note) -> Score Note
---
--- repWithIndex :: (Enum a, Num a, Monoid' c, HasOnset c, HasOffset c, Delayable c) => a -> (a -> c) -> c
-repWithIndex n = repWith [0..n-1]
-
--- |
--- Repeat exact amount of times with relative time.
---
--- > Duration -> (Time -> Score Note) -> Score Note
---
--- repWithTime :: (Enum a, Fractional a, Monoid' c, HasOnset c, HasOffset c, Delayable c) => a -> (a -> c) -> c
-repWithTime n = repWith $ fmap (/ n') [0..(n' - 1)]
-    where
-        n' = n
+{-
+repeatedIndex n = repeated [0..n-1]
+repeatedTime  n = repeated $ fmap (/ n) [0..(n - 1)]
+-}
 
 -- |
 -- Remove rests from a score.
@@ -427,16 +418,12 @@ group n a = times n (toDuration n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
+retrograde :: (Pointed s, Monoid' (s a), HasEvents s t a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
-        retrograde' = chordDelayStretch' . List.sortBy (comparing getT) . fmap g . perform
+        retrograde' = chordDelayStretch . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
         getT (t,d,x) = t            
-
-chordDelayStretch' :: (Monoid' (s a), HasEvents s t a) => [(Pos (s a), Dur (s a), a)] -> s a
-chordDelayStretch' = pcat . map ( \(t, d, x) -> delay (t .-. zeroV) . stretch d $ return x )
-
 
 
 --------------------------------------------------------------------------------
@@ -473,54 +460,24 @@ voiceToScore = scat . fmap g . getVoice
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
+
+-- TODO move this instance
 instance Performable Voice where
     perform = perform . voiceToScore
 
---------------------------------------------------------------------------------
 
-addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
-addRests' = concat . snd . mapAccumL g 0
-    where
-        g prevTime (t, d, x)
-            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"
-
-
-
-{-
-infixl 6 ||>
-
-(||>) :: Score a -> Score a -> Score a
-a ||> b = mcatMaybes $ padToBar (fmap Just a) |> fmap Just b
-
-padToBar a = a |> rest^*(d'*4)
-    where
-        d  = snd $ properFraction $ duration a / 4
-        d' = if d == 0 then 0 else 1 - d  -}
-
-
-#define MAP_PHRASE_CONST \
+#define MAP_CONSTRAINT \
     HasPart' a, \
     HasEvents s t a, \
     HasEvents s u b, \
     t ~ u
-
--- #define MAP_EVENTS_CONST \
---     HasPart' a, \
---     HasEvents' s t  d  a, \
---     HasEvents' s t' d' b, \
---     t ~ t', \
---     d ~ d'
-
-
 
 -- |
 -- Map over the events in a score.
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEvents :: (MAP_PHRASE_CONST, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEvents :: (MAP_CONSTRAINT, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEvents f = mapParts (liftM $ mapEventsSingle f)
 
 -- |
@@ -529,24 +486,11 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (MAP_PHRASE_CONST, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (MAP_CONSTRAINT, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = msum . liftM toSc . fmap (third' f) . perform $ sc
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
         third' f (a,b,c) = (a,b,f a b c)
-
-
-
-
--- |
--- Map over first, middle and last elements of list.
--- Biased on first, then on first and last for short lists.
---
-mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapFirstMiddleLast f g h []      = []
-mapFirstMiddleLast f g h [a]     = [f a]
-mapFirstMiddleLast f g h [a,b]   = [f a, h b]
-mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -556,7 +500,7 @@ mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [
 --
 -- > (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapFirst :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> s a -> s b
+mapFirst :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> s a -> s b
 mapFirst f g = mapPhrase f g g
 
 -- |
@@ -567,7 +511,7 @@ mapFirst f g = mapPhrase f g g
 --
 -- > (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapLast :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> s a -> s b
+mapLast :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> s a -> s b
 mapLast f g = mapPhrase g g f
 
 -- |
@@ -578,7 +522,7 @@ mapLast f g = mapPhrase g g f
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhrase :: (MAP_PHRASE_CONST) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhrase :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 
 -- |
@@ -592,6 +536,28 @@ mapPhraseSingle f g h sc = msum . liftM toSc . mapFirstMiddleLast (third f) (thi
     where
         toSc (t,d,x) = delay (t.-.zeroV) . stretch d $ return x
         third f (a,b,c) = (a,b,f c)
+
+--------------------------------------------------------------------------------
+
+addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
+addRests' = concat . snd . mapAccumL g 0
+    where
+        g prevTime (t, d, x)
+            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
+            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
+            | otherwise       =  error "addRests: Strange prevTime"
+
+-- |
+-- Map over first, middle and last elements of list.
+-- Biased on first, then on first and last for short lists.
+--
+mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
+mapFirstMiddleLast f g h []      = []
+mapFirstMiddleLast f g h [a]     = [f a]
+mapFirstMiddleLast f g h [a,b]   = [f a, h b]
+mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
+
+delay' t = delay (t .-. zeroV)
 
 rotl []     = []
 rotl (x:xs) = xs ++ [x]
