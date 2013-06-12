@@ -33,7 +33,6 @@ module Music.Score.Combinators (
         Delay,
         Stretch,
         DelayStretch,
-        DelayStretch',
         -- ** Constructing scores
         note,
         rest,
@@ -141,13 +140,6 @@ type DelayStretch t d a = (
     Dur a ~ d
     )
 
-type DelayStretch' t a = (
-    Stretchable a, Delayable a, 
-    AdditiveGroup t, 
-    AffineSpace t,
-    Pos a ~ t
-    )
-
 -- | 
 -- This pseudo-class denotes generalizes structures that can be decomposed into events
 -- and reconstructed.
@@ -155,7 +147,7 @@ type DelayStretch' t a = (
 type HasEvents s t a  = (
     Performable s,
     MonadPlus s,
-    DelayStretch' t (s a)
+    DelayStretch t (Diff t) (s a)
     )
 
 

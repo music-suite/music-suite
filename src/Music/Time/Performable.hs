@@ -35,7 +35,7 @@ import Music.Time.Stretchable
 -- Performable values.
 -- 
 class Foldable s => Performable s where
-    perform :: s a -> [(Pos (s a), Dur (s a), a)]
+    perform :: (t ~ Pos (s a), d ~ Dur (s a)) => s a -> [(t, d, a)]
 
 performableToList :: Performable s => s a -> [a]
 performableToList = map trd3 . perform
