@@ -143,11 +143,20 @@ type Transformable t d a = (
 -- This pseudo-class denotes generalizes structures that can be decomposed into events
 -- and reconstructed.
 --
-type HasEvents s t d a  = (
+type HasEvents t d s a  = (
     Performable s,
     MonadPlus s,
     Transformable t d (s a)
     )
+{-
+class (
+    Performable s,
+    MonadPlus s,
+    Transformable t d (s a)
+    ) => HasEvents s t d a where
+
+instance Performable Time Duration (Score )
+-}
 
 
 -------------------------------------------------------------------------------------
@@ -430,7 +439,7 @@ group n a = times n (toDuration n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (HasEvents s t d a, Num t, Ord t) => s a -> s a
+retrograde :: (HasEvents t d s a, Num t, Ord t) => s a -> s a
 retrograde = {-startAt 0 . -}retrograde'
     where
         retrograde' = recompose . List.sortBy (comparing getT) . fmap g . perform
@@ -443,8 +452,8 @@ retrograde = {-startAt 0 . -}retrograde'
 
 #define MAP_CONSTRAINT \
     HasPart' a, \
-    HasEvents s t d a, \
-    HasEvents s u e b, \
+    HasEvents t d s a, \
+    HasEvents u e s b, \
     t ~ u
 
 -- | Recompose a score.
@@ -470,7 +479,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (HasEvents s t d a, HasEvents s t e b, t ~ u, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (HasEvents t d s a, HasEvents t e s b, t ~ u, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
 
 
@@ -513,7 +522,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (HasEvents s t d a, HasEvents s t e b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: (HasEvents t d s a, HasEvents t e s b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = recompose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
 
 -- eventToScore :: Scalable t d a => (t, d, a) -> m a
