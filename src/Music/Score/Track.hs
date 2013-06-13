@@ -73,10 +73,10 @@ import Music.Time
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Track a = Track { getTrack :: [(Time, a)] }
+newtype Track a = Track { getTrack :: [(TimeT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
-type instance Pos (Track a) = Time
+type instance Pos (Track a) = TimeT
 
 instance Semigroup (Track a) where
     (<>) = mappend
@@ -108,7 +108,7 @@ instance MonadPlus Track where
     mplus = mappend
 
 instance Stretchable (Track a) where
-    n `stretch` Track tr = Track $ fmap (first (^* fromDuration n)) tr
+    n `stretch` Track tr = Track $ fmap (first (^* fromDurationT n)) tr
 
 instance Delayable (Track a) where
     d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
@@ -129,15 +129,15 @@ instance HasDuration (Track a) where
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap toDuration $ (arbitrary::Gen Double)
-        d <- fmap toDuration $ (arbitrary::Gen Double)
+        t <- fmap toDurationT $ (arbitrary::Gen Double)
+        d <- fmap toDurationT $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (return x)
 
 
 
 -------------------------------------------------------------------------------------
 
-delay' t = delay (fromTime t)
+delay' t = delay (fromTimeT t)
 
 list z f [] = z
 list z f xs = f xs

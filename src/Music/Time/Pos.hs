@@ -43,8 +43,8 @@ type instance Pos [a]        = Pos a
 type instance Pos (Maybe a)  = Pos a
 
 -- TODO move
-type instance Pos Time       = Time
-type instance Pos Duration   = Duration
+type instance Pos TimeT       = TimeT
+type instance Pos DurationT   = DurationT
 
 
 -- type instance Pos (Option a) = Pos a

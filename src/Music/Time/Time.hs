@@ -18,9 +18,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Time (
-        Time,
-        fromTime,
-        toTime
+        TimeT,
+        fromTimeT,
+        toTimeT
   ) where
 
 import Data.Semigroup
@@ -42,32 +42,32 @@ import Music.Time.Duration
 -- that is, we can add a time to a duration to get a new time using '.+^', 
 -- take the difference of two times to get a duration using '.-.'.
 --
-newtype Time = Time { getTime :: Rational }
+newtype TimeT = TimeT { getTimeT :: Rational }
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
-instance Show Time where 
-    show = show . getTime
+instance Show TimeT where 
+    show = show . getTimeT
 
-instance AdditiveGroup Time where
+instance AdditiveGroup TimeT where
     zeroV = 0
     (^+^) = (+)
     negateV = negate
 
-instance VectorSpace Time where
-    type Scalar Time = Time
+instance VectorSpace TimeT where
+    type Scalar TimeT = TimeT
     (*^) = (*)
 
-instance InnerSpace Time where 
+instance InnerSpace TimeT where 
     (<.>) = (*)
 
-instance  AffineSpace Time where
-    type Diff Time = Duration
-    a .-. b =  fromTime $ a - b
-    a .+^ b =  a + fromDuration b
+instance  AffineSpace TimeT where
+    type Diff TimeT = DurationT
+    a .-. b =  fromTimeT $ a - b
+    a .+^ b =  a + fromDurationT b
 
-fromTime :: Fractional a => Time -> a
-fromTime = fromRational . getTime
+fromTimeT :: Fractional a => TimeT -> a
+fromTimeT = fromRational . getTimeT
 
-toTime :: Real a => a -> Time
-toTime = Time . toRational
+toTimeT :: Real a => a -> TimeT
+toTimeT = TimeT . toRational
 

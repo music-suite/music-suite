@@ -141,8 +141,8 @@ type Transformable t d a = (
     )
 -}
 
-instance Transformable Time Duration (Score a)
-instance Transformable Time Duration (Track a)
+instance Transformable TimeT DurationT (Score a)
+instance Transformable TimeT DurationT (Track a)
 
 
 -- |
@@ -163,7 +163,7 @@ type HasEvents t d s a  = (
     )
 -}
 
-instance HasEvents Time Duration Score a
+instance HasEvents TimeT DurationT Score a
 
 
 -------------------------------------------------------------------------------------
@@ -412,7 +412,7 @@ removeRests = mcatMaybes
 --
 -- > Score a -> Score a
 --
-triplet :: (Monoid' a, Transformable t d a, t ~ Time) => a -> a
+triplet :: (Monoid' a, Transformable t d a, t ~ TimeT) => a -> a
 triplet = group 3
 
 -- |
@@ -420,7 +420,7 @@ triplet = group 3
 --
 -- > Score a -> Score a
 --
-quadruplet :: (Monoid' a, Transformable t d a, t ~ Time) => a -> a
+quadruplet :: (Monoid' a, Transformable t d a, t ~ TimeT) => a -> a
 quadruplet  = group 4
 
 -- |
@@ -428,7 +428,7 @@ quadruplet  = group 4
 --
 -- > Score a -> Score a
 --
-quintuplet :: (Monoid' a,Transformable t d a, t ~ Time) => a -> a
+quintuplet :: (Monoid' a,Transformable t d a, t ~ TimeT) => a -> a
 quintuplet  = group 5
 
 -- |
@@ -436,8 +436,8 @@ quintuplet  = group 5
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' a, Transformable t d a, t ~ Time) => Int -> a -> a
-group n a = times n (toDuration n `compress` a)
+group :: (Monoid' a, Transformable t d a, t ~ TimeT) => Int -> a -> a
+group n a = times n (toDurationT n `compress` a)
 
 -- |
 -- Reverse a score around its middle point.
@@ -570,7 +570,7 @@ instance Performable Voice where
 
 --------------------------------------------------------------------------------
 
-addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
+addRests' :: [(TimeT, DurationT, a)] -> [(TimeT, DurationT, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
     where
         g prevTime (t, d, x)

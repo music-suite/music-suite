@@ -20,9 +20,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Duration (
-        Duration,
-        fromDuration,
-        toDuration,
+        DurationT,
+        fromDurationT,
+        toDurationT,
   ) where
 
 import Data.Semigroup
@@ -37,26 +37,26 @@ import Data.AffineSpace
 -- |
 -- This type represents relative time in seconds.
 --
-newtype Duration = Duration { getDuration::Rational }                                  
+newtype DurationT = DurationT { getDurationT::Rational }                                  
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
-instance Show Duration where 
-    show = show . getDuration
+instance Show DurationT where 
+    show = show . getDurationT
 
-instance AdditiveGroup Duration where
+instance AdditiveGroup DurationT where
     zeroV = 0
     (^+^) = (+)
     negateV = negate
 
-instance VectorSpace Duration where
-    type Scalar Duration = Duration
+instance VectorSpace DurationT where
+    type Scalar DurationT = DurationT
     (*^) = (*)
 
-instance InnerSpace Duration where (<.>) = (*)
+instance InnerSpace DurationT where (<.>) = (*)
 
-fromDuration :: Fractional a => Duration -> a
-fromDuration = fromRational . getDuration
+fromDurationT :: Fractional a => DurationT -> a
+fromDurationT = fromRational . getDurationT
 
-toDuration :: Real a => a -> Duration
-toDuration = Duration . toRational
+toDurationT :: Real a => a -> DurationT
+toDurationT = DurationT . toRational
 

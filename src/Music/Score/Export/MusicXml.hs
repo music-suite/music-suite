@@ -94,7 +94,7 @@ class Tiable a => HasMusicXml a where
     -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it
     -- to add beams, slurs, dynamics, articulation etc.
     --
-    getMusicXml :: Duration -> a -> XmlMusic
+    getMusicXml :: DurationT -> a -> XmlMusic
 
 instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger
 instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . toInteger . round
@@ -103,7 +103,7 @@ instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusic
 -- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . fromDuration $ d
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . fromDurationT $ d
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
@@ -241,7 +241,7 @@ toXmlVoice' =
             <> Xml.commonTime
 
 
-barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
+barToXml :: HasMusicXml a => [(DurationT, Maybe a)] -> Xml.Music
 barToXml bar = case quantize bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
@@ -251,10 +251,10 @@ rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ fromDuration m
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ fromDurationT m
 
-noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDuration d
+noteRestToXml :: HasMusicXml a => DurationT -> Maybe a -> Xml.Music
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ fromDurationT d
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- FIXME only works for single-voice parts

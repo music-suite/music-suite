@@ -35,10 +35,10 @@ import Music.Time.Stretchable
 -- |
 -- An era is a time interval.
 -- 
-newtype Era = Era { getEra :: (Min Time, Max Time) }
+newtype Era = Era { getEra :: (Min TimeT, Max TimeT) }
     deriving (Eq, Ord, Show, Semigroup)
 
-type instance Pos Era = Time
+type instance Pos Era = TimeT
 
 instance HasOnset Era where
     onset = getMin . fst . getEra

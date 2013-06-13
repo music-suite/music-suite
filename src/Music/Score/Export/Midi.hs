@@ -149,10 +149,10 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         events :: [(Midi.Ticks, Midi.Message)]
         events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
 
-        performance :: [(Time, Duration, Midi.Message)]
+        performance :: [(TimeT, DurationT, Midi.Message)]
         performance     = (toRelative . perform) (getMidiScore score)
 
-        -- FIXME arbitrary endTime (files won't work without this...)
+        -- FIXME arbitrary endTimeT (files won't work without this...)
         -- TODO render voices separately
 
 -- |
