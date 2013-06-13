@@ -42,6 +42,7 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
+import Test.QuickCheck (Arbitrary(..),Gen(..))
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -161,6 +162,12 @@ instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     d *^ s = d `stretch` s
 
+instance Arbitrary a => Arbitrary (Score a) where
+    arbitrary = do
+        x <- arbitrary 
+        t <- fmap toDuration $ (arbitrary::Gen Double)
+        d <- fmap toDuration $ (arbitrary::Gen Double)
+        return $ delay t $ stretch d $ (note x)
 
 -- |
 -- Create a score of duration one with the given value (same as 'return').

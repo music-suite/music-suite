@@ -37,6 +37,7 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
+import Test.QuickCheck (Arbitrary(..),Gen(..))
 import qualified Data.Map as Map
 import qualified Data.List as List
 
@@ -120,10 +121,17 @@ instance HasOffset (Track a) where
     offset (Track []) = 0
     offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
 
+--    offset x = maximum (fmap off x)   where off (t,x) = t
+
 instance HasDuration (Track a) where
     duration x = offset x .-. onset x
 
---    offset x = maximum (fmap off x)   where off (t,x) = t
+instance Arbitrary a => Arbitrary (Track a) where
+    arbitrary = do
+        x <- arbitrary 
+        t <- fmap toDuration $ (arbitrary::Gen Double)
+        d <- fmap toDuration $ (arbitrary::Gen Double)
+        return $ delay t $ stretch d $ (return x)
                                                               
 
 
