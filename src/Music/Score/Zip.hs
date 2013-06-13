@@ -7,7 +7,7 @@
     FlexibleContexts,
     ConstraintKinds,
     OverloadedStrings,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -30,7 +30,7 @@ module Music.Score.Zip (
         snapshot,
         -- trig,
         applySingle,
-        snapshotSingle, 
+        snapshotSingle,
         -- before,
         -- first,
   ) where
@@ -43,7 +43,7 @@ import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.Ratio  
+import Data.Ratio
 import Data.Ord
 
 import Music.Score.Track
@@ -76,7 +76,7 @@ trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
 --
 applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
 applySingle fs as = notJoin $ fmap (\(f,s) -> f s) sampled
-    where            
+    where
         -- This is not join; we simply concatenate all inner scores in parallel
         notJoin = mconcat . toList
         sampled = snapshotSingle (voiceToScore fs) as
@@ -91,17 +91,17 @@ snapshotSingle as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
         g = (,)
 
 
--- | 
+-- |
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = recompose . filt (\(t,d,x) -> a <= t && t < a .+^ b) . perform 
+onsetIn a b = recompose . filt (\(t,d,x) -> a <= t && t < a .+^ b) . perform
     where
         -- filt = mfilter
         filt = filterOnce
         -- more lazy than mfilter
-                                                                              
--- | 
+
+-- |
 -- Extract the first consecutive sublist for which the predicate returns true, or
 -- the empty list if no such sublist exists.
 filterOnce :: (a -> Bool) -> [a] -> [a]

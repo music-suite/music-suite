@@ -1,4 +1,4 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -7,7 +7,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -126,7 +126,7 @@ instance IsPitch Integer where
 
 instance IsDynamics Double where
     fromDynamics (DynamicsL (Just x, _)) = x
-    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"  
+    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
 
 {-
 
@@ -162,13 +162,13 @@ instance HasArticulation a => HasArticulation (Maybe a) where
     setAccLevel   n Nothing                         = Nothing
     setStaccLevel n (Just x)                        = Just (setStaccLevel n x)
     setStaccLevel n Nothing                         = Nothing
-instance HasPart a => HasPart (Maybe a) where   
+instance HasPart a => HasPart (Maybe a) where
     type Part (Maybe a)                             = Maybe (Part a) -- !
     getPart Nothing                                 = Nothing
     getPart (Just a)                                = Just (getPart a)
     modifyPart f (Nothing)                          = Nothing
     modifyPart f (Just a)                           = Just (modifyPart (fromJust . f . Just) a) -- TODO use cofunctor
-instance HasPitch a => HasPitch (Maybe a) where   
+instance HasPitch a => HasPitch (Maybe a) where
     type Pitch (Maybe a)                             = Maybe (Pitch a) -- !
     getPitch Nothing                                 = Nothing
     getPitch (Just a)                                = Just (getPitch a)
@@ -182,11 +182,11 @@ instance HasPitch a => HasPitch (Maybe a) where
 -- PartT
 
 
-instance HasPart (PartT n a) where   
+instance HasPart (PartT n a) where
     type Part (PartT n a)                           = n
     getPart (PartT (v,_))                           = v
     modifyPart f (PartT (v,x))                      = PartT (f v, x)
-instance HasPitch a => HasPitch (PartT n a) where   
+instance HasPitch a => HasPitch (PartT n a) where
     type Pitch (PartT n a)                          = Pitch a
     getPitch (PartT (v,a))                          = getPitch a
     modifyPitch f (PartT (v,x))                     = PartT (v, modifyPitch f x)
@@ -219,11 +219,11 @@ instance HasText a => HasText (PartT n a) where
 
 -- TieT
 
-instance HasPart a => HasPart (TieT a) where   
+instance HasPart a => HasPart (TieT a) where
     type Part (TieT a)                              = Part a
     getPart (TieT (_,x,_))                          = getPart x
     modifyPart f (TieT (b,x,e))                     = TieT (b,modifyPart f x,e)
-instance HasPitch a => HasPitch (TieT a) where   
+instance HasPitch a => HasPitch (TieT a) where
     type Pitch (TieT a)                             = Pitch a
     getPitch (TieT (_,x,_))                         = getPitch x
     modifyPitch f (TieT (b,x,e))                    = TieT (b,modifyPitch f x,e)
@@ -260,11 +260,11 @@ instance HasText a => HasText (TieT a) where
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
                                                        DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
-instance HasPart a => HasPart (DynamicT a) where   
+instance HasPart a => HasPart (DynamicT a) where
     type Part (DynamicT a)                          = Part a
     getPart (DynamicT (ec,ed,l,a,bc,bd))            = getPart a
     modifyPart f (DynamicT (ec,ed,l,a,bc,bd))       = DynamicT (ec,ed,l,modifyPart f a,bc,bd)
-instance HasPitch a => HasPitch (DynamicT a) where   
+instance HasPitch a => HasPitch (DynamicT a) where
     type Pitch (DynamicT a)                         = Pitch a
     getPitch (DynamicT (ec,ed,l,a,bc,bd))           = getPitch a
     modifyPitch f (DynamicT (ec,ed,l,a,bc,bd))      = DynamicT (ec,ed,l,modifyPitch f a,bc,bd)
@@ -298,15 +298,15 @@ instance HasText a => HasText (DynamicT a) where
 -- end slur, cont slur, acc level, stacc level, begin slur
 -- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
 
-                
+
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us,al,sl,b,bs),
                                                            ArticulationT (es,   us,0,0,c,False)) where (b,c) = toTied a
-instance HasPart a => HasPart (ArticulationT a) where   
+instance HasPart a => HasPart (ArticulationT a) where
     type Part (ArticulationT a)                         = Part a
     getPart (ArticulationT (es,us,al,sl,a,bs))          = getPart a
     modifyPart f (ArticulationT (es,us,al,sl,a,bs))     = ArticulationT (es,us,al,sl,modifyPart f a,bs)
-instance HasPitch a => HasPitch (ArticulationT a) where   
+instance HasPitch a => HasPitch (ArticulationT a) where
     type Pitch (ArticulationT a)                        = Pitch a
     getPitch (ArticulationT (es,us,al,sl,a,bs))         = getPitch a
     modifyPitch f (ArticulationT (es,us,al,sl,a,bs))    = ArticulationT (es,us,al,sl,modifyPitch f a,bs)
@@ -333,20 +333,20 @@ instance HasSlide a => HasSlide (ArticulationT a) where
     setEndSlide   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setEndSlide n a,bs)
 instance HasText a => HasText (ArticulationT a) where
     addText      s (ArticulationT (es,us,al,sl,a,bs))   = ArticulationT (es,us,al,sl,addText s a,bs)
-        
- 
+
+
 -- TremoloT
 
 -- newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 
-            
+
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
-instance HasPart a => HasPart (TremoloT a) where   
+instance HasPart a => HasPart (TremoloT a) where
     type Part (TremoloT a)                          = Part a
     getPart (TremoloT (_,a))                        = getPart a
     modifyPart f (TremoloT (n,x))                   = TremoloT (n, modifyPart f x)
-instance HasPitch a => HasPitch (TremoloT a) where   
+instance HasPitch a => HasPitch (TremoloT a) where
     type Pitch (TremoloT a)                         = Pitch a
     getPitch (TremoloT (_,a))                       = getPitch a
     modifyPitch f (TremoloT (n,x))                  = TremoloT (n, modifyPitch f x)
@@ -381,11 +381,11 @@ instance HasText a => HasText (TremoloT a) where
 
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
-instance HasPart a => HasPart (TextT a) where   
+instance HasPart a => HasPart (TextT a) where
     type Part (TextT a)                             = Part a
     getPart (TextT (_,a))                           = getPart a
     modifyPart f (TextT (n,x))                      = TextT (n, modifyPart f x)
-instance HasPitch a => HasPitch (TextT a) where   
+instance HasPitch a => HasPitch (TextT a) where
     type Pitch (TextT a)                            = Pitch a
     getPitch (TextT (_,a))                          = getPitch a
     modifyPitch f (TextT (n,x))                     = TextT (n, modifyPitch f x)
@@ -412,17 +412,17 @@ instance HasSlide a => HasSlide (TextT a) where
     setEndSlide   n (TextT (v,x))                   = TextT (v, setEndSlide n x)
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
-                                     
+
 
 -- HarmonicT
 
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
-instance HasPart a => HasPart (HarmonicT a) where   
+instance HasPart a => HasPart (HarmonicT a) where
     type Part (HarmonicT a)                         = Part a
     getPart (HarmonicT (_,a))                       = getPart a
     modifyPart f (HarmonicT (n,x))                  = HarmonicT (n, modifyPart f x)
-instance HasPitch a => HasPitch (HarmonicT a) where   
+instance HasPitch a => HasPitch (HarmonicT a) where
     type Pitch (HarmonicT a)                        = Pitch a
     getPitch (HarmonicT (_,a))                      = getPitch a
     modifyPitch f (HarmonicT (n,x))                 = HarmonicT (n, modifyPitch f x)
@@ -453,15 +453,15 @@ instance HasText a => HasText (HarmonicT a) where
 
 -- SlideT
 
-                
+
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (eg,es,a,bg,bs))                = (SlideT (eg,   es,   b,False,False),
                                                  SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
-instance HasPart a => HasPart (SlideT a) where   
+instance HasPart a => HasPart (SlideT a) where
     type Part (SlideT a)                           = Part a
     getPart (SlideT (eg,es,a,bg,bs))               = getPart a
     modifyPart f (SlideT (eg,es,a,bg,bs))          = SlideT (eg,es,modifyPart f a,bg,bs)
-instance HasPitch a => HasPitch (SlideT a) where   
+instance HasPitch a => HasPitch (SlideT a) where
     type Pitch (SlideT a)                          = Pitch a
     getPitch (SlideT (eg,es,a,bg,bs))              = getPitch a
     modifyPitch f (SlideT (eg,es,a,bg,bs))         = SlideT (eg,es,modifyPitch f a,bg,bs)
@@ -488,7 +488,7 @@ instance HasSlide (SlideT a) where
     setEndSlide   es (SlideT (eg,_,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
 instance HasText a => HasText (SlideT a) where
     addText       s (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,addText s a,bg,bs)
-                                                                                                        
+
 
 -------------------------------------------------------------------------------------
 -- Num, Integral, Enum and Bounded
@@ -503,7 +503,7 @@ instance (Enum v, Eq v, Num a) => Num (PartT v a) where
     abs (PartT (v,a))          = PartT (v,abs a)
     signum (PartT (v,a))       = PartT (v,signum a)
     fromInteger a               = PartT (toEnum 0,fromInteger a)
-  
+
 instance (Enum v, Enum a) => Enum (PartT v a) where
     toEnum a = PartT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
     fromEnum (PartT (v,a)) = fromEnum a
@@ -529,9 +529,9 @@ instance Num a => Num (TieT a) where
     abs (TieT (et,a,bt))          = TieT (et,abs a,bt)
     signum (TieT (et,a,bt))       = TieT (et,signum a,bt)
     fromInteger a               = TieT (False,fromInteger a,False)
-  
+
 instance Enum a => Enum (TieT a) where
-    toEnum a                = TieT (False,toEnum a,False) 
+    toEnum a                = TieT (False,toEnum a,False)
     fromEnum (TieT (_,a,_)) = fromEnum a
 
 instance Bounded a => Bounded (TieT a) where
@@ -555,9 +555,9 @@ instance Num a => Num (DynamicT a) where
     abs (DynamicT (p,q,r,a,s,t))                    = DynamicT (p,q,r,abs a,s,t)
     signum (DynamicT (p,q,r,a,s,t))                 = DynamicT (p,q,r,signum a,s,t)
     fromInteger a                                   = DynamicT (False,False,Nothing,fromInteger a,False,False)
-  
+
 instance Enum a => Enum (DynamicT a) where
-    toEnum a                         = DynamicT (False,False,Nothing,toEnum a,False,False) 
+    toEnum a                         = DynamicT (False,False,Nothing,toEnum a,False,False)
     fromEnum (DynamicT (_,_,_,a,_,_)) = fromEnum a
 
 instance Bounded a => Bounded (DynamicT a) where
@@ -581,9 +581,9 @@ instance Num a => Num (ArticulationT a) where
     abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
     signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
     fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
-  
+
 instance Enum a => Enum (ArticulationT a) where
-    toEnum a                               = ArticulationT (False,False,0,0,toEnum a,False) 
+    toEnum a                               = ArticulationT (False,False,0,0,toEnum a,False)
     fromEnum (ArticulationT (_,_,_,_,a,_)) = fromEnum a
 
 instance Bounded a => Bounded (ArticulationT a) where
@@ -607,7 +607,7 @@ instance Num a => Num (TremoloT a) where
     abs (TremoloT (v,a))          = TremoloT (v,abs a)
     signum (TremoloT (v,a))       = TremoloT (v,signum a)
     fromInteger a               = TremoloT (toEnum 0,fromInteger a)
-  
+
 instance Enum a => Enum (TremoloT a) where
     toEnum a = TremoloT (0, toEnum a) -- TODO use def, mempty or minBound?
     fromEnum (TremoloT (v,a)) = fromEnum a
@@ -633,7 +633,7 @@ instance Num a => Num (TextT a) where
     abs (TextT (v,a))          = TextT (v,abs a)
     signum (TextT (v,a))       = TextT (v,signum a)
     fromInteger a               = TextT (mempty,fromInteger a)
-  
+
 instance Enum a => Enum (TextT a) where
     toEnum a = TextT (mempty, toEnum a) -- TODO use def, mempty or minBound?
     fromEnum (TextT (v,a)) = fromEnum a
@@ -659,7 +659,7 @@ instance Num a => Num (HarmonicT a) where
     abs (HarmonicT (v,a))          = HarmonicT (v,abs a)
     signum (HarmonicT (v,a))       = HarmonicT (v,signum a)
     fromInteger a               = HarmonicT (toEnum 0,fromInteger a)
-  
+
 instance Enum a => Enum (HarmonicT a) where
     toEnum a = HarmonicT (0, toEnum a) -- TODO use def, mempty or minBound?
     fromEnum (HarmonicT (v,a)) = fromEnum a
@@ -685,14 +685,14 @@ instance Num a => Num (SlideT a) where
     abs (SlideT (eg,es,a,bg,bs))                = SlideT (eg,es,abs a,bg,bs)
     signum (SlideT (eg,es,a,bg,bs))             = SlideT (eg,es,signum a,bg,bs)
     fromInteger a                               = SlideT (False,False,fromInteger a,False,False)
-  
+
 instance Enum a => Enum (SlideT a) where
     toEnum a                        = SlideT (False,False,toEnum a,False,False)
     fromEnum (SlideT (_,_,a,_,_))   = fromEnum a
 
 instance Bounded a => Bounded (SlideT a) where
     minBound = SlideT (False,False,minBound,False,False)
-    maxBound = SlideT (False,False,maxBound,False,False)  
+    maxBound = SlideT (False,False,maxBound,False,False)
 
 instance (Num a, Ord a, Real a) => Real (SlideT a) where
     toRational (SlideT (_,_,a,_,_)) = toRational a
@@ -700,4 +700,3 @@ instance (Num a, Ord a, Real a) => Real (SlideT a) where
 instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
-                                                             

@@ -118,35 +118,35 @@ import qualified Data.List as List
 -- | 
 -- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
 -- is needed. If 'Monoid' is changed to extend 'Semigroup' it will not be needed.
---   
+--
 type Monoid' a    = (Monoid a, Semigroup a)
 
 -- TODO names?
 type Scalable t d a = (
-    Stretchable a, Delayable a, 
-    AdditiveGroup t, 
+    Stretchable a, Delayable a,
+    AdditiveGroup t,
     AffineSpace t,
     Diff t ~ d,
-    Pos a ~ t, 
+    Pos a ~ t,
     Dur a ~ d
     )
 
 {-
 type Transformable t d a = (
-    Stretchable a, Delayable a, 
-    AdditiveGroup t, 
+    Stretchable a, Delayable a,
+    AdditiveGroup t,
     AffineSpace t,
     HasOnset a, HasOffset a,
-    Pos a ~ t, 
+    Pos a ~ t,
     Dur a ~ d
     )
 -}
 class (
-    Stretchable a, Delayable a, 
-    AdditiveGroup t, 
+    Stretchable a, Delayable a,
+    AdditiveGroup t,
     AffineSpace t,
     HasOnset a, HasOffset a,
-    Pos a ~ t, 
+    Pos a ~ t,
     Dur a ~ d
     ) => Transformable t d a where
 
@@ -154,7 +154,7 @@ instance Transformable Time Duration (Score a)
 instance Transformable Time Duration (Track a)
 
 
--- | 
+-- |
 -- This pseudo-class denotes generalizes structures that can be decomposed into events
 -- and reconstructed.
 --
@@ -179,73 +179,73 @@ instance HasEvents Time Duration Score a
 -- Constructors
 -------------------------------------------------------------------------------------
 
--- | 
+-- |
 -- Create a score containing a single event.
 --
 -- This function uses the unit position (0, 1).
--- 
+--
 -- > a -> Score a
--- 
+--
 -- note :: Pointed s => a -> s a
 note :: MonadPlus s => a -> s a
 note = return
 
--- | 
+-- |
 -- Create a score containing a rest at time zero of duration one.
--- 
+--
 -- This function uses the unit position (0, 1).
--- 
+--
 -- > Score (Maybe a)
--- 
+--
 -- rest :: Pointed s => s (Maybe a)
 rest :: MonadPlus s => s (Maybe a)
 rest = note Nothing
 
--- | 
+-- |
 -- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
--- 
+--
 -- This function uses the unit position (0, 1).
--- 
+--
 -- > a -> Score a
--- 
+--
 noteRest :: MonadPlus s => Maybe a -> s a
 noteRest = mfromMaybe
 
 -- | Creates a score containing a chord.
--- 
+--
 -- This function uses the unit position (0, 1).
--- 
+--
 -- > [a] -> Score a
--- 
+--
 -- chord :: (Pointed s, Monoid (s a)) => [a] -> s a
 chord :: (MonadPlus s, Monoid' (s a)) => [a] -> s a
 chord = pcat . map note
 
 -- | Creates a score containing the given elements, composed in sequence.
--- 
+--
 -- > [a] -> Score a
--- 
+--
 melody :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
 melody = scat . map note
 
 -- | Like 'melody', but stretching each note by the given factors.
--- 
+--
 -- > [(Duration, a)] -> Score a
--- 
+--
 melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
--- 
+--
 -- > [(Time, a)] -> Score a
--- 
+--
 chordDelay :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 --
 -- > [(Time, Duration, a)] -> Score a
--- 
+--
 chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
@@ -359,7 +359,7 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Score a -> Score a -> Score a
 --
-overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Dur a), 
+overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Dur a),
             t ~ Pos a, d ~ Dur a,
             AffineSpace t, VectorSpace d, Fractional (Scalar d)) => a -> a -> a
 a `overlap` b =  a <> startAt (onset a .+^ (offset a .-. onset a)^/2) b
@@ -462,7 +462,7 @@ retrograde = {-startAt 0 . -}retrograde'
     where
         retrograde' = recompose . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
-        getT (t,d,x) = t            
+        getT (t,d,x) = t
 
 --------------------------------------------------------------------------------
 -- Mapping and recomposition
@@ -479,7 +479,7 @@ retrograde = {-startAt 0 . -}retrograde'
 -- This is the inverse of 'perform'
 --
 -- > [(Time, Duration, a)] -> Score a
--- 
+--
 recompose :: (MonadPlus s, Transformable t d (s a)) => [(t, d, a)] -> s a
 recompose = msum . liftM eventToScore
 
@@ -504,7 +504,7 @@ mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
 -- |
 -- Map over the first, and remaining notes in each part.
 --
--- If a part has only one notes, the first function is applied. 
+-- If a part has only one notes, the first function is applied.
 -- If a part has no notes, the given score is returned unchanged.
 --
 -- > (a -> b) -> (a -> b) -> Score a -> Score b
@@ -515,7 +515,7 @@ mapFirst f g = mapPhrase f g g
 -- |
 -- Map over the last, and preceding notes in each part.
 --
--- If a part has only one notes, the first function is applied. 
+-- If a part has only one notes, the first function is applied.
 -- If a part has no notes, the given score is returned unchanged.
 --
 -- > (a -> b) -> (a -> b) -> Score a -> Score b

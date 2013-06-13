@@ -1,4 +1,4 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -8,7 +8,7 @@
     FlexibleContexts,
     ConstraintKinds,
     GeneralizedNewtypeDeriving,
-    NoMonomorphismRestriction #-} 
+    NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -28,10 +28,10 @@
 module Music.Score.Articulation (
         HasArticulation(..),
         ArticulationT(..),
-        
+
         -- ** Accents
         accent,
-        marcato,    
+        marcato,
         accentLast,
         marcatoLast,
         accentAll,
@@ -44,10 +44,10 @@ module Music.Score.Articulation (
         portato,
         legato,
         spiccato,
-        
+
         -- ** Miscellaneous
         resetArticulation,
-        
+
   ) where
 
 import Data.Ratio
@@ -70,7 +70,7 @@ class HasArticulation a where
     setEndSlur :: Bool -> a -> a
     setAccLevel :: Int -> a -> a
     setStaccLevel :: Int -> a -> a
-    
+
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
@@ -102,12 +102,12 @@ accentLast = mapPhrase id id (setAccLevel 1)
 marcatoLast = mapPhrase id id (setAccLevel 2)
 
 -- Phrasing
-tenuto = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2)) 
-separated = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1)) 
-staccato = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1) 
-portato = staccato . legato 
-legato = mapPhrase (setBeginSlur True) id (setEndSlur True) 
-spiccato = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2) 
+tenuto = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2))
+separated = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1))
+staccato = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1)
+portato = staccato . legato
+legato = mapPhrase (setBeginSlur True) id (setEndSlur True)
+spiccato = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2)
 
 resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0

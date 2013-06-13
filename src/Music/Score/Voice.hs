@@ -1,9 +1,9 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -58,13 +58,13 @@ import Music.Dynamics.Literal
 --
 -- Voice is a 'Monad'. 'return' creates a part containing a single value of duration
 -- one, and '>>=' transforms the values of a part, allowing the addition and
--- removal of values under relative duration. Perhaps more intuitively, 'join' scales 
--- each inner part to the duration of the outer part, then removes the 
--- intermediate structure. 
+-- removal of values under relative duration. Perhaps more intuitively, 'join' scales
+-- each inner part to the duration of the outer part, then removes the
+-- intermediate structure.
 --
 -- > let p = Voice [(1, Just 0), (2, Just 1)] :: Voice Int
 -- >
--- > p >>= \x -> Voice [ (1, Just $ toEnum $ x+65), 
+-- > p >>= \x -> Voice [ (1, Just $ toEnum $ x+65),
 -- >                    (3, Just $ toEnum $ x+97) ] :: Voice Char
 -- >
 -- >     ===> Voice {getVoice = [ (1 % 1,Just 'A'),
@@ -91,7 +91,7 @@ instance Monad Voice where
 
 instance Pointed Voice where
     point = return
-    
+
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
@@ -107,7 +107,7 @@ instance IsPitch a => IsPitch (Voice a) where
 
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
-                        
+
 
 -------------------------------------------------------------------------------------
 

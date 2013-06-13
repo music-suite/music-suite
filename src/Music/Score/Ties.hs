@@ -1,4 +1,4 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -7,7 +7,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -57,10 +57,10 @@ class Tiable a where
     --   Begin properties goes to the first tied note, and end properties to the latter.
 
     --   The first returned element will have the original onset.
-    --   
+    --
     toTied    :: a -> (a, a)
 
-newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }    
+newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
@@ -74,31 +74,31 @@ instance Tiable (Ratio a)   where toTied x = (x,x)
 instance Tiable a => Tiable (Maybe a) where
     toTied Nothing  = (Nothing, Nothing)
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
-    
+
 instance Tiable a => Tiable (TieT a) where
     toTied (TieT (prevTie, a, nextTie)) = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 
--- | 
+-- |
 -- Split all notes that cross a barlines into a pair of tied notes.
--- 
+--
 splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
 splitTies = mapAllParts splitTiesSingle
 
--- | 
+-- |
 -- Equivalent to `splitTies` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
 splitTiesSingle :: Tiable a => Score a -> Score a
 splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
 
--- | 
+-- |
 -- Split all notes that cross a barlines into a pair of tied notes.
--- 
+--
 splitTiesVoice :: Tiable a => Voice a -> Voice a
 splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
     where
-        g t (d, x) = (t + d, occs)        
+        g t (d, x) = (t + d, occs)
             where
                 (_, barTime) = properFraction t
                 remBarTime   = 1 - barTime
@@ -110,7 +110,7 @@ splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
 -- The returned list is always non-empty. All elements but the first and the last must have duration @t@.
 --
 -- > sum $ fmap fst $ splitDur s (x,a) = x
---         
+--
 splitDur :: Tiable a => Duration -> Duration -> (Duration, a) -> [(Duration, a)]
 splitDur s t x = case splitDur' s x of
     (a, Nothing) -> [a]
@@ -121,11 +121,11 @@ splitDur s t x = case splitDur' s x of
 -- return it and @Nothing@. Otherwise return the extracted part, and the rest.
 --
 -- > splitDur s (d,a)
---         
+--
 splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
 splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
                   | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
-                 
+
 
 
 

@@ -2,9 +2,9 @@
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
-    DeriveFoldable,     
+    DeriveFoldable,
     GeneralizedNewtypeDeriving,
-    ScopedTypeVariables #-} 
+    ScopedTypeVariables #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -20,7 +20,7 @@
 
 module Music.Score.Rhythm (
         -- * Rhythm type
-        Rhythm(..), 
+        Rhythm(..),
 
         -- * Quantization
         quantize,
@@ -48,7 +48,7 @@ import Music.Time
 import Music.Score.Ties
 
 
-data Rhythm a 
+data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
     | Group      [Rhythm a]                    -- normal note sequence
     | Dotted     Int (Rhythm a)                -- n > 0.
@@ -91,7 +91,7 @@ instance HasDuration (Rhythm a) where
     duration (Beat d _)        = d
     duration (Dotted n a)      = duration a * dotMod n
     duration (Tuplet c a)      = duration a * c
-    duration (Group as)        = sum (fmap duration as)    
+    duration (Group as)        = sum (fmap duration as)
 -}
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
@@ -139,7 +139,7 @@ modifyTimeSub f (RState tm ts td) = RState tm (f ts) td
 modifyTupleDepth :: (Int -> Int) -> RState -> RState
 modifyTupleDepth f (RState tm ts td) = RState tm ts (f td)
 
--- | 
+-- |
 -- A @RhytmParser a b@ converts (Voice a) to b.
 type RhythmParser a b = Parsec [(Duration, a)] RState b
 
@@ -171,8 +171,8 @@ rhythm' = mzero
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
     RState tm ts _ <- getState
-    (\d -> (d^/tm) `subDur` ts) <$> match (\d _ -> 
-        d - ts > 0 
+    (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
+        d - ts > 0
         &&
         isDivisibleBy 2 (d / tm - ts)) -- Or is it ((d - ts) / tm)?
 
@@ -211,10 +211,10 @@ tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
     RState _ _ depth <- getState
     onlyIf (depth < 1) $ do                         -- max 1 nested tuplets
-        modifyState $ modifyTimeMod (* d) 
+        modifyState $ modifyTimeMod (* d)
                     . modifyTupleDepth succ
-        a <- rhythmNoBound        
-        modifyState $ modifyTimeMod (/ d) 
+        a <- rhythmNoBound
+        modifyState $ modifyTimeMod (/ d)
                     . modifyTupleDepth pred
         return (Tuplet d a)
 
@@ -232,14 +232,14 @@ atEnd p = do
     where
         notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
         anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
-    
+
 onlyIf :: MonadPlus m => Bool -> m b -> m b
 onlyIf b p = if b then p else mzero
 
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseR k n 
+logBaseR k n
     | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
-logBaseR k n 
+logBaseR k n
     | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n                         = logBase (fromRational k) (fromRational n)
 

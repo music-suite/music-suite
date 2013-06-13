@@ -124,7 +124,7 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
             ned    = if ed then Xml.endDim      else mempty
             nbc    = if bc then Xml.beginCresc  else mempty
             nbd    = if bd then Xml.beginDim    else mempty
-            nl     = case l of 
+            nl     = case l of
                 Nothing  -> mempty
                 Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
@@ -148,22 +148,22 @@ instance HasMusicXml a => HasMusicXml (ArticulationT a) where
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
     getMusicXml d (TremoloT (n,x))      = notate $ getMusicXml d x
         where
-            notate = case n of 
+            notate = case n of
                 0 -> id
                 _ -> Xml.tremolo n
 
 instance HasMusicXml a => HasMusicXml (TextT a) where
     getMusicXml d (TextT (s,x))                     = notate s $ getMusicXml d x
-        where             
+        where
             notate ts a = mconcat (fmap Xml.text ts) <> a
-            
+
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
     getMusicXml d (HarmonicT (n,x))                 = notate $ getMusicXml d x
-        where             
+        where
             notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
                    | otherwise  = id
     -- TODO adjust pitch etc
-            
+
 instance HasMusicXml a => HasMusicXml (SlideT a) where
     getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
         where

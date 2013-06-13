@@ -1,4 +1,4 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -7,7 +7,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -79,24 +79,24 @@ newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Boo
 
 -- Apply a constant level over the whole score.
 -- dynamic :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Double -> Score a -> Score a
--- dynamic n = mapPhrase (setLevel n) id id 
+-- dynamic n = mapPhrase (setLevel n) id id
 
 
--- | 
+-- |
 -- Apply a dynamic level over the score.
 -- The dynamic score is assumed to have duration one.
 --
 dynamics :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dyns` a
 
--- | 
+-- |
 -- Equivalent to `splitTies` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
 dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
 
--- | 
+-- |
 -- Apply a dynamic level over a voice.
 --
 dynamicVoice :: HasDynamic a => Score (Levels Double) -> Voice (Maybe a) -> Voice (Maybe a)
@@ -142,10 +142,10 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
         g (Nothing, False, False) (Level b)     = ((Just b,  False, False), (False, False, Just b,  False, False))
         g (Nothing, False, False) (Change b c)  = ((Just b,  b < c, b > c), (False, False, Just b,  b < c, b > c))
 
-        g (Just a , cr, dm) (Level b) 
+        g (Just a , cr, dm) (Level b)
             | a == b                            = ((Just b,  False, False), (cr,    dm,    Nothing, False, False))
             | a /= b                            = ((Just b,  False, False), (cr,    dm,    Just b,  False, False))
-        g (Just a , cr, dm) (Change b c) 
+        g (Just a , cr, dm) (Change b c)
             | a == b                            = ((Just b,  b < c, b > c), (cr,    dm,    Nothing, b < c, b > c))
             | a /= b                            = ((Just b,  b < c, b > c), (cr,    dm,    Just b,  b < c, b > c))
 
@@ -161,7 +161,7 @@ applyDynSingle ds = applySingle ds3
         ds2 = transf dyn2 ds
         -- ds3 :: Voice (Score a -> Score a)
         ds3 = fmap g ds2
-        
+
         g (ec,ed,l,bc,bd) = id
                 . (if ec then map1 (setEndCresc     True) else id)
                 . (if ed then map1 (setEndDim       True) else id)

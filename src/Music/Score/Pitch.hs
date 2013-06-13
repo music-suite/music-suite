@@ -1,11 +1,11 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
     FlexibleInstances,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -41,26 +41,26 @@ import Data.AffineSpace
 import Data.Ratio
 
 class HasPitch a where
-    -- | 
+    -- |
     -- Associated pitch type. Should implement 'Eq' and 'Show' to be usable.
-    -- 
+    --
     type Pitch a :: *
 
     -- |
     -- Get the pitch of the given note.
-    -- 
+    --
     getPitch :: a -> Pitch a
 
     -- |
     -- Set the pitch of the given note.
-    -- 
+    --
     setPitch :: Pitch a -> a -> a
 
     -- |
     -- Modify the pitch of the given note.
-    -- 
+    --
     modifyPitch :: (Pitch a -> Pitch a) -> a -> a
-   
+
     setPitch n = modifyPitch (const n)
     modifyPitch f x = x
 

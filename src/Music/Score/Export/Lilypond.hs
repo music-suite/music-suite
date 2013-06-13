@@ -117,7 +117,7 @@ instance HasLilypond a => HasLilypond (DynamicT a) where
             ned    = if ed then Lilypond.endDim      else id
             nbc    = if bc then Lilypond.beginCresc  else id
             nbd    = if bd then Lilypond.beginDim    else id
-            nl     = case l of 
+            nl     = case l of
                 Nothing  -> id
                 Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
@@ -136,24 +136,24 @@ instance HasLilypond a => HasLilypond (ArticulationT a) where
                 0    -> id
                 1    -> Lilypond.addStaccato
                 2    -> Lilypond.addStaccatissimo
-            nbs    = if bs then Lilypond.beginSlur else id 
+            nbs    = if bs then Lilypond.beginSlur else id
 
 instance HasLilypond a => HasLilypond (TremoloT a) where
     getLilypond d (TremoloT (n,x))      = notate $ getLilypond d x
         where
-            notate = case n of 
+            notate = case n of
                 0 -> id
                 _ -> Lilypond.Tremolo n
                 -- FIXME wrong number?
 
 instance HasLilypond a => HasLilypond (TextT a) where
     getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
-        where             
+        where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
     getLilypond d (HarmonicT (n,x))                 = notate $ getLilypond d x
-        where             
+        where
             notate = id
             -- FIXME
 

@@ -1,9 +1,9 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -59,9 +59,9 @@ import Music.Time
 -- zero, and '>>=' transforms the values of a track, allowing the addition and
 -- removal of values relative to the time of the value. Perhaps more intuitively,
 -- 'join' delays each inner track to start at the offset of an outer track, then
--- removes the intermediate structure. 
+-- removes the intermediate structure.
 --
--- > let t = Track [(0, 65),(1, 66)] 
+-- > let t = Track [(0, 65),(1, 66)]
 -- >
 -- > t >>= \x -> Track [(0, 'a'), (10, toEnum x)]
 -- >
@@ -70,8 +70,8 @@ import Music.Time
 -- >                           (10.0, 'A'),
 -- >                           (11.0, 'B') ]}
 --
--- Track is an instance of 'VectorSpace' using parallel composition as addition, 
--- and time scaling as scalar multiplication. 
+-- Track is an instance of 'VectorSpace' using parallel composition as addition,
+-- and time scaling as scalar multiplication.
 --
 newtype Track a = Track { getTrack :: [(Time, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
@@ -128,11 +128,11 @@ instance HasDuration (Track a) where
 
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
-        x <- arbitrary 
+        x <- arbitrary
         t <- fmap toDuration $ (arbitrary::Gen Double)
         d <- fmap toDuration $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (return x)
-                                                              
+
 
 
 -------------------------------------------------------------------------------------

@@ -1,11 +1,11 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
     DeriveTraversable,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -70,11 +70,11 @@ import Music.Score.Track
 -- duration one, and '>>=' transforms the values of a score, while allowing
 -- transformations of time and duration. More intuitively, 'join' scales and
 -- offsets each inner score to fit into an outer score, then removes the intermediate
--- structure. 
+-- structure.
 --
 -- > let s = Score [(0, 1, Just 0), (1, 2, Just 1)] :: Score Int
 -- >
--- > s >>= \x -> Score [ (0, 1, Just $ toEnum $ x+65), 
+-- > s >>= \x -> Score [ (0, 1, Just $ toEnum $ x+65),
 -- >                     (1, 3, Just $ toEnum $ x+97) ] :: Score Char
 -- >
 -- >     ===> Score {getScore = [ (0 % 1, 1 % 1, Just 'A'),
@@ -82,8 +82,8 @@ import Music.Score.Track
 -- >                              (1 % 1, 2 % 1, Just 'B'),
 -- >                              (3 % 1, 6 % 1, Just 'b') ]}
 --
--- Score is an instance of 'VectorSpace' using sequential composition as addition, 
--- and time scaling as scalar multiplication. 
+-- Score is an instance of 'VectorSpace' using sequential composition as addition,
+-- and time scaling as scalar multiplication.
 --
 newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
@@ -103,7 +103,7 @@ instance Monoid (Score a) where
 instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
-        where  
+        where
             join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay' t . stretch d) sc
 
 instance Pointed Score where
@@ -127,7 +127,7 @@ instance Performable Score where
 
 instance Stretchable (Score a) where
     d `stretch` Score sc = Score $ fmap (first3 (^* fromDuration d) . second3 (^* d)) $ sc
-            
+
 instance Delayable (Score a) where
     d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
 
@@ -142,9 +142,9 @@ instance HasOnset (Score a) where
 instance HasOffset (Score a) where
     offset (Score []) = 0
     offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (fromDuration $ d)
-        
+
 instance HasDuration (Score a) where
-    duration x = offset x .-. onset x            
+    duration x = offset x .-. onset x
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -164,7 +164,7 @@ instance VectorSpace (Score a) where
 
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
-        x <- arbitrary 
+        x <- arbitrary
         t <- fmap toDuration $ (arbitrary::Gen Double)
         d <- fmap toDuration $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (note x)
@@ -212,12 +212,12 @@ first f (x,y)  = (f x, y)
 second f (x,y) = (x, f y)
 
 first3 f (a,b,c) = (f a,b,c)
-second3 f (a,b,c) = (a,f b,c)                      
+second3 f (a,b,c) = (a,f b,c)
 
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f [] ys = ys
 mergeBy f xs [] = xs
-mergeBy f xs'@(x:xs) ys'@(y:ys) 
+mergeBy f xs'@(x:xs) ys'@(y:ys)
     | x `f` y == LT   =   x : mergeBy f xs ys'
     | x `f` y /= LT   =   y : mergeBy f xs' ys
 

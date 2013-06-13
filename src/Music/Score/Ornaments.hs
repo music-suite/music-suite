@@ -1,13 +1,13 @@
-                              
+
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
-    FlexibleInstances,        
+    FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -33,7 +33,7 @@ module Music.Score.Ornaments (
         HarmonicT(..),
         HasSlide(..),
         SlideT(..),
-        
+
         tremolo,
         text,
         harmonic,
