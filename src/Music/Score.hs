@@ -105,28 +105,6 @@ import qualified Music.Lilypond as Lilypond
 -------------------------------------------------------------------------------------
 -- Transformer instances (TODO move)
 -------------------------------------------------------------------------------------
-
-instance HasMidi a => HasMidi (PartT n a) where
-    getMidi (PartT (_,a))                           = getMidi a
-instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,a,_))                          = getMidi a
-instance HasMidi a => HasMidi (DynamicT a) where
-    getMidi (DynamicT (ec,ed,l,a,bc,bd))            = getMidi a
-instance HasMidi a => HasMidi (ArticulationT a) where
-    getMidi (ArticulationT (es,us,al,sl,a,bs))      = getMidi a
-instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,a))                        = getMidi a
-instance HasMidi a => HasMidi (TextT a) where
-    getMidi (TextT (_,a))                           = getMidi a
-instance HasMidi a => HasMidi (HarmonicT a) where
-    getMidi (HarmonicT (_,a))                       = getMidi a
-instance HasMidi a => HasMidi (SlideT a) where
-    getMidi (SlideT (_,_,a,_,_))                    = getMidi a
-
-
-
-
-
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
 
