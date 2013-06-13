@@ -109,12 +109,12 @@ slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 harmonic :: (HasPart' b, HasHarmonic b) => Int -> Score b -> Score b
-harmonic n = mapPhrase f f f where f = setHarmonic n
+harmonic n = fmap f where f = setHarmonic n
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 artificial :: (HasPart' b, HasHarmonic b) => Score b -> Score b
-artificial = mapPhrase f f f where f = setHarmonic (-4)
+artificial = fmap f where f = setHarmonic (-4)
 
