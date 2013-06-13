@@ -8,6 +8,7 @@
     FlexibleContexts,
     ConstraintKinds,
     OverloadedStrings,
+    MultiParamTypeClasses,
     NoMonomorphismRestriction,
     GeneralizedNewtypeDeriving #-}
 
@@ -130,6 +131,7 @@ type Scalable t d a = (
     Dur a ~ d
     )
 
+{-
 type Transformable t d a = (
     Stretchable a, Delayable a, 
     AdditiveGroup t, 
@@ -138,25 +140,39 @@ type Transformable t d a = (
     Pos a ~ t, 
     Dur a ~ d
     )
+-}
+class (
+    Stretchable a, Delayable a, 
+    AdditiveGroup t, 
+    AffineSpace t,
+    HasOnset a, HasOffset a,
+    Pos a ~ t, 
+    Dur a ~ d
+    ) => Transformable t d a where
+
+instance Transformable Time Duration (Score a) where
+instance Transformable Time Duration (Track a) where
+
 
 -- | 
 -- This pseudo-class denotes generalizes structures that can be decomposed into events
 -- and reconstructed.
 --
+{-
 type HasEvents t d s a  = (
     Performable s,
     MonadPlus s,
     Transformable t d (s a)
     )
-{-
+-}
 class (
     Performable s,
     MonadPlus s,
     Transformable t d (s a)
-    ) => HasEvents s t d a where
+    ) => HasEvents t d s a where
 
-instance Performable Time Duration (Score )
--}
+instance HasEvents Time Duration Score a where
+-- instance HasEvents Time Duration Track a where
 
 
 -------------------------------------------------------------------------------------
@@ -343,16 +359,18 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Score a -> Score a -> Score a
 --
-overlap :: (Fractional (Dur a), Semigroup a, Delayable a, HasDuration a) => a -> a -> a
-x `overlap` y  =  x <> delay t y where t = duration x / 2
+overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Dur a), 
+            t ~ Pos a, d ~ Dur a,
+            AffineSpace t, VectorSpace d, Fractional (Scalar d)) => a -> a -> a
+a `overlap` b =  a <> startAt (onset a .+^ (offset a .-. onset a)^/2) b
 
 -- |
 -- Like '|>' but with a negative delay on the second element.
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup a, HasDuration a, Transformable t d a, Ord d) => d -> a -> a -> a
-anticipate t x y = x |> delay t' y where t' = (duration x ^+^ (zeroV ^-^ t)) `max` zeroV
+anticipate :: (Semigroup a, Transformable t d a, Ord d) => d -> a -> a -> a
+anticipate t a b =  a <> startAt (offset a .-^ t) b
 
 
 
