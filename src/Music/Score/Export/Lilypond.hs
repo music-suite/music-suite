@@ -68,6 +68,7 @@ import Music.Score.Part
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
+import Music.Score.Instances
 import Music.Score.Export.Util
 
 import qualified Codec.Midi as Midi
@@ -96,6 +97,74 @@ instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilyp
 
 instance HasLilypond Integer where
     getLilypond d p = Lilypond.note (spellLy $ p+12) ^*(fromDuration $ d*4)
+
+instance HasLilypond a => HasLilypond (PartT n a) where
+    getLilypond d (PartT (_,x))                     = getLilypond d x
+
+instance HasLilypond a => HasLilypond (TieT a) where
+    getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
+        where
+            addTies | ta && tb                      = id . Lilypond.beginTie
+                    | tb                            = Lilypond.beginTie
+                    | ta                            = id
+                    | otherwise                     = id
+
+instance HasLilypond a => HasLilypond (DynamicT a) where
+    getLilypond d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getLilypond d a
+        where
+            notate x = nec . ned . nl . nbc . nbd $ x
+            nec    = if ec then Lilypond.endCresc    else id
+            ned    = if ed then Lilypond.endDim      else id
+            nbc    = if bc then Lilypond.beginCresc  else id
+            nbd    = if bd then Lilypond.beginDim    else id
+            nl     = case l of 
+                Nothing  -> id
+                Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
+
+instance HasLilypond a => HasLilypond (ArticulationT a) where
+    getLilypond d (ArticulationT (es,us,al,sl,a,bs))    = notate $ getLilypond d a
+        where
+            notate = nes . nal . nsl . nbs
+            nes    = if es then Lilypond.endSlur else id
+            nal    = case al of
+                0    -> id
+                1    -> Lilypond.addAccent
+                2    -> Lilypond.addMarcato
+            nsl    = case sl of
+                (-2) -> Lilypond.addTenuto
+                (-1) -> Lilypond.addPortato
+                0    -> id
+                1    -> Lilypond.addStaccato
+                2    -> Lilypond.addStaccatissimo
+            nbs    = if bs then Lilypond.beginSlur else id 
+
+instance HasLilypond a => HasLilypond (TremoloT a) where
+    getLilypond d (TremoloT (n,x))      = notate $ getLilypond d x
+        where
+            notate = case n of 
+                0 -> id
+                _ -> Lilypond.Tremolo n
+                -- FIXME wrong number?
+
+instance HasLilypond a => HasLilypond (TextT a) where
+    getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
+        where             
+            notate ts = foldr (.) id (fmap Lilypond.addText ts)
+
+instance HasLilypond a => HasLilypond (HarmonicT a) where
+    getLilypond d (HarmonicT (n,x))                 = notate $ getLilypond d x
+        where             
+            notate = id
+            -- FIXME
+
+instance HasLilypond a => HasLilypond (SlideT a) where
+    getLilypond d (SlideT (eg,es,a,bg,bs))    = notate $ getLilypond d a
+        where
+            notate = id
+            -- FIXME
+
+
+
 
 -- TODO rename
 pcatLy :: [Lilypond] -> Lilypond

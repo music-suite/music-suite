@@ -43,7 +43,6 @@ library
 
     hs-source-dirs: src
     exposed-modules:
-
         Music.Time
         Music.Time.Time
         Music.Time.Duration
@@ -71,6 +70,7 @@ library
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
     other-modules:
+        Music.Score.Instances
         Music.Score.Export.Util
         
 -- executable "music-score-tests"
