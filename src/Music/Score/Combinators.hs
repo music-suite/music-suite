@@ -33,16 +33,6 @@ module Music.Score.Combinators (
         HasEvents,
         Transformable,
 
-        -- ** Constructing scores
-        -- note,
-        -- rest,
-        -- noteRest,
-        -- chord,
-        -- melody,
-        -- melodyStretch,
-        -- chordDelay,
-        -- chordDelayStretch,
-
         -- ** Composing scores
         (|>),
         (<|),
@@ -131,6 +121,15 @@ type Scalable t d a = (
     Dur a ~ d
     )
 
+class (
+    Stretchable a, Delayable a,
+    AdditiveGroup t,
+    AffineSpace t,
+    HasOnset a, HasOffset a,
+    Pos a ~ t,
+    Dur a ~ d
+    ) => Transformable t d a where
+
 {-
 type Transformable t d a = (
     Stretchable a, Delayable a,
@@ -141,14 +140,6 @@ type Transformable t d a = (
     Dur a ~ d
     )
 -}
-class (
-    Stretchable a, Delayable a,
-    AdditiveGroup t,
-    AffineSpace t,
-    HasOnset a, HasOffset a,
-    Pos a ~ t,
-    Dur a ~ d
-    ) => Transformable t d a where
 
 instance Transformable Time Duration (Score a)
 instance Transformable Time Duration (Track a)
@@ -158,6 +149,12 @@ instance Transformable Time Duration (Track a)
 -- This pseudo-class denotes generalizes structures that can be decomposed into events
 -- and reconstructed.
 --
+class (
+    Performable s,
+    MonadPlus s,
+    Transformable t d (s a)
+    ) => HasEvents t d s a where
+
 {-
 type HasEvents t d s a  = (
     Performable s,
@@ -165,14 +162,8 @@ type HasEvents t d s a  = (
     Transformable t d (s a)
     )
 -}
-class (
-    Performable s,
-    MonadPlus s,
-    Transformable t d (s a)
-    ) => HasEvents t d s a where
 
 instance HasEvents Time Duration Score a
--- instance HasEvents Time Duration Track a
 
 
 -------------------------------------------------------------------------------------
@@ -458,11 +449,9 @@ group n a = times n (toDuration n `compress` a)
 -- > Score a -> Score a
 
 retrograde :: (HasEvents t d s a, Num t, Ord t) => s a -> s a
-retrograde = {-startAt 0 . -}retrograde'
+retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
     where
-        retrograde' = recompose . List.sortBy (comparing getT) . fmap g . perform
         g (t,d,x) = (-(t.+^d),d,x)
-        getT (t,d,x) = t
 
 --------------------------------------------------------------------------------
 -- Mapping and recomposition
@@ -574,7 +563,6 @@ voiceToScore = scat . fmap g . getVoice
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
-
 -- TODO move this instance
 instance Performable Voice where
     perform = perform . voiceToScore
@@ -586,9 +574,9 @@ addRests' :: [(Time, Duration, a)] -> [(Time, Duration, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
     where
         g prevTime (t, d, x)
-            | prevTime == t   =  (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t   =  (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise       =  error "addRests: Strange prevTime"
+            | prevTime == t = (t .+^ d, [(t, d, Just x)])
+            | prevTime <  t = (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
+            | otherwise     = error "addRests: Strange prevTime"
 
 -- |
 -- Map over first, middle and last elements of list.
@@ -601,6 +589,8 @@ mapFirstMiddleLast f g h [a,b]   = [f a, h b]
 mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
 
 delay' t = delay (t .-. zeroV)
+
+fst3 (t, d, x) = t
 
 third f (a,b,c) = (a,b,f c)
 third' f (a,b,c) = (a,b,f a b c)
