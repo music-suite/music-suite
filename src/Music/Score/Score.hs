@@ -88,7 +88,7 @@ import Music.Score.Track
 newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
-type instance Pos (Score a) = TimeT
+type instance Time (Score a) = TimeT
 
 instance Semigroup (Score a) where
     (<>) = mappend

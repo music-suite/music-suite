@@ -78,7 +78,7 @@ import Music.Dynamics.Literal
 newtype Voice a = Voice { getVoice :: [(DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
-type instance Pos (Voice a) = TimeT
+type instance Time (Voice a) = TimeT
 
 instance Semigroup (Voice a) where
     (<>) = mappend

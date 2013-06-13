@@ -117,8 +117,8 @@ type Scalable t d a = (
     AdditiveGroup t,
     AffineSpace t,
     Diff t ~ d,
-    Pos a ~ t,
-    Dur a ~ d
+    Time a ~ t,
+    Duration a ~ d
     )
 
 class (
@@ -126,8 +126,8 @@ class (
     AdditiveGroup t,
     AffineSpace t,
     HasOnset a, HasOffset a,
-    Pos a ~ t,
-    Dur a ~ d
+    Time a ~ t,
+    Duration a ~ d
     ) => Transformable t d a where
 
 {-
@@ -136,8 +136,8 @@ type Transformable t d a = (
     AdditiveGroup t,
     AffineSpace t,
     HasOnset a, HasOffset a,
-    Pos a ~ t,
-    Dur a ~ d
+    Time a ~ t,
+    Duration a ~ d
     )
 -}
 
@@ -249,7 +249,7 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 --
 -- > Duration -> Score a -> Score a
 --
-move :: (Delayable a, d ~ Dur a) => d -> a -> a
+move :: (Delayable a, d ~ Duration a) => d -> a -> a
 move = delay
 
 -- |
@@ -257,7 +257,7 @@ move = delay
 --
 -- > Duration -> Score a -> Score a
 --
-moveBack :: (Delayable a, AdditiveGroup d, d ~ Dur a) => d -> a -> a
+moveBack :: (Delayable a, AdditiveGroup d, d ~ Duration a) => d -> a -> a
 moveBack t = delay (negateV t)
 
 -- |
@@ -265,7 +265,7 @@ moveBack t = delay (negateV t)
 --
 -- > Duration -> Score a -> Score a
 --
-startAt :: (HasOnset a, Delayable a, AffineSpace t, t ~ Pos a) => t -> a -> a
+startAt :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) => t -> a -> a
 t `startAt` x = (t .-. onset x) `delay` x
 
 -- |
@@ -273,7 +273,7 @@ t `startAt` x = (t .-. onset x) `delay` x
 --
 -- > Duration -> Score a -> Score a
 --
-stopAt :: (HasOffset a, Delayable a, AffineSpace t, t ~ Pos a) => t -> a -> a
+stopAt :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) => t -> a -> a
 t `stopAt`  x = (t .-. offset x) `delay` x
 
 -- |
@@ -281,7 +281,7 @@ t `stopAt`  x = (t .-. offset x) `delay` x
 --
 -- > Duration -> Score a -> Score a
 --
-compress :: (Stretchable a, Fractional d, d ~ Dur a) => d -> a -> a
+compress :: (Stretchable a, Fractional d, d ~ Duration a) => d -> a -> a
 compress x = stretch (recip x)
 
 -- |
@@ -289,7 +289,7 @@ compress x = stretch (recip x)
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo :: (Stretchable a, HasDuration a, Fractional d, d ~ Dur a) => d -> a -> a
+stretchTo :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) => d -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x
 
 
@@ -306,7 +306,7 @@ infixr 6 <|
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
-(|>) :: (Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
+(|>) :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
 a |> b =  a <> startAt (offset a) b
 
 
@@ -316,14 +316,14 @@ a |> b =  a <> startAt (offset a) b
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
-(<|) :: (Semigroup a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
+(<|) :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
 a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid' a, AffineSpace (Pos a), HasOnset a, HasOffset a, Delayable a) => [a] -> a
+scat :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => [a] -> a
 scat = foldr (|>) mempty
 
 -- |
@@ -339,7 +339,7 @@ pcat = mconcat
 --
 -- > Score a -> Score a -> Score a
 --
-sustain :: (Fractional (Dur a), Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
+sustain :: (Fractional (Duration a), Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
 x `sustain` y = x <> duration x `stretchTo` y
 
 -- Like '<>', but truncating the second agument to the duration of the first.
@@ -350,8 +350,8 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Score a -> Score a -> Score a
 --
-overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Dur a),
-            t ~ Pos a, d ~ Dur a,
+overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Duration a),
+            t ~ Time a, d ~ Duration a,
             AffineSpace t, VectorSpace d, Fractional (Scalar d)) => a -> a -> a
 a `overlap` b =  a <> startAt (onset a .+^ (offset a .-. onset a)^/2) b
 

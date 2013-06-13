@@ -18,8 +18,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Pos (
-        Pos(..),
-        Dur(..),
+        Time(..),
+        Duration(..),
   ) where
 
 import Data.AffineSpace
@@ -29,22 +29,22 @@ import Music.Time.Duration
 -- |
 -- This type function returns the time type for a given type.
 --
-type family Pos a :: *
+type family Time a :: *
 
 -- |
 -- This type function returns the duration type for a given type.
 --
-type Dur a = Diff (Pos a)
+type Duration a = Diff (Time a)
 
-type instance Pos Double     = Double
-type instance Pos Rational   = Rational
-type instance Pos (a -> b)   = Pos b
-type instance Pos [a]        = Pos a
-type instance Pos (Maybe a)  = Pos a
+type instance Time Double     = Double
+type instance Time Rational   = Rational
+type instance Time (a -> b)   = Time b
+type instance Time [a]        = Time a
+type instance Time (Maybe a)  = Time a
 
 -- TODO move
-type instance Pos TimeT       = TimeT
-type instance Pos DurationT   = DurationT
+type instance Time TimeT       = TimeT
+type instance Time DurationT   = DurationT
 
 
 -- type instance Pos (Option a) = Pos a
