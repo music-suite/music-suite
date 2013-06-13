@@ -150,8 +150,8 @@ class (
     Dur a ~ d
     ) => Transformable t d a where
 
-instance Transformable Time Duration (Score a) where
-instance Transformable Time Duration (Track a) where
+instance Transformable Time Duration (Score a)
+instance Transformable Time Duration (Track a)
 
 
 -- | 
@@ -171,8 +171,8 @@ class (
     Transformable t d (s a)
     ) => HasEvents t d s a where
 
-instance HasEvents Time Duration Score a where
--- instance HasEvents Time Duration Track a where
+instance HasEvents Time Duration Score a
+-- instance HasEvents Time Duration Track a
 
 
 -------------------------------------------------------------------------------------
