@@ -41,7 +41,6 @@ module Music.Score.Combinators (
 
         -- *** Special composition
         sustain,
-        overlap,
         anticipate,
 
         -- ** Transforming scores
@@ -81,8 +80,6 @@ module Music.Score.Combinators (
         scoreToVoice,
         voiceToScore,
         voiceToScore',
-        eventToScore,
-        -- scoreToVoices,
   ) where
 
 import Control.Monad
@@ -346,16 +343,6 @@ x `sustain` y = x <> duration x `stretchTo` y
 -- prolong x y = x <> before (duration x) y
 
 -- |
--- Like '|>', but moving second argument halfway to the offset of the first.
---
--- > Score a -> Score a -> Score a
---
-overlap :: (Semigroup a, Delayable a, HasOnset a, HasOffset a, Fractional (Duration a),
-            t ~ Time a, d ~ Duration a,
-            AffineSpace t, VectorSpace d, Fractional (Scalar d)) => a -> a -> a
-a `overlap` b =  a <> startAt (onset a .+^ (offset a .-. onset a)^/2) b
-
--- |
 -- Like '|>' but with a negative delay on the second element.
 --
 -- > Duration -> Score a -> Score a -> Score a
@@ -573,20 +560,24 @@ instance Performable Voice where
 addRests' :: [(TimeT, DurationT, a)] -> [(TimeT, DurationT, Maybe a)]
 addRests' = concat . snd . mapAccumL g 0
     where
-        g prevTime (t, d, x)
-            | prevTime == t = (t .+^ d, [(t, d, Just x)])
-            | prevTime <  t = (t .+^ d, [(prevTime, t .-. prevTime, Nothing), (t, d, Just x)])
-            | otherwise     = error "addRests: Strange prevTime"
+        g u (t, d, x)
+            | u == t    = (t .+^ d, [(t, d, Just x)])
+            | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+            | otherwise = error "addRests: Strange prevTime"
 
 -- |
 -- Map over first, middle and last elements of list.
 -- Biased on first, then on first and last for short lists.
 --
 mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapFirstMiddleLast f g h []      = []
-mapFirstMiddleLast f g h [a]     = [f a]
-mapFirstMiddleLast f g h [a,b]   = [f a, h b]
-mapFirstMiddleLast f g h xs      = [f $ head xs] ++ map g (tail $ init xs) ++ [h $ last xs]
+mapFirstMiddleLast f g h = go
+    where
+        go []    = []
+        go [a]   = [f a]
+        go [a,b] = [f a, h b]
+        go xs    = [f $ head xs]          ++ 
+                   map g (tail $ init xs) ++ 
+                   [h $ last xs]
 
 delay' t = delay (t .-. zeroV)
 
@@ -601,5 +592,9 @@ rotl (x:xs) = xs ++ [x]
 rotr [] = []
 rotr xs = last xs : init xs
 
-rotated n as | n >= 0 = iterate rotr as !! n
-             | n <  0 = iterate rotl as !! abs n
+rotated = go
+    where
+        go n as 
+            | n >= 0 = iterate rotr as !! n
+            | n <  0 = iterate rotl as !! abs n
+
