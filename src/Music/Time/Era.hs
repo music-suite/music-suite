@@ -49,8 +49,8 @@ instance HasOffset Era where
 instance HasDuration Era where
     duration = durationDefault
 
-instance Delayable Era where
-    delay t (Era (Min a, Max b)) = Era (Min $ a .+^ t, Max $ b .+^ t)
+-- instance Delayable Era where
+--     delay t (Era (Min a, Max b)) = Era (Min $ a .+^ t, Max $ b .+^ t)
 
 
 

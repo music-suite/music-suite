@@ -63,9 +63,9 @@ module Music.Score.Combinators (
         times,
         repeated,
         group,
-        triplet,
-        quadruplet,
-        quintuplet,
+        -- triplet,
+        -- quadruplet,
+        -- quintuplet,
 
         -- *** Mapping
         recompose,
@@ -119,13 +119,13 @@ type Scalable t d a = (
     )
 
 class (
-    Stretchable a, Delayable a,
+    Stretchable s, Delayable s,
+    HasOnset s, HasOffset s,
     AdditiveGroup t,
     AffineSpace t,
-    HasOnset a, HasOffset a,
-    Time a ~ t,
-    Duration a ~ d
-    ) => Transformable t d a where
+    Time s ~ t,
+    Duration s ~ d
+    ) => Transformable t d s where
 
 {-
 type Transformable t d a = (
@@ -138,8 +138,8 @@ type Transformable t d a = (
     )
 -}
 
-instance Transformable TimeT DurationT (Score a)
-instance Transformable TimeT DurationT (Track a)
+instance Transformable TimeT DurationT (Score)
+instance Transformable TimeT DurationT (Track)
 
 
 -- |
@@ -149,8 +149,8 @@ instance Transformable TimeT DurationT (Track a)
 class (
     Performable s,
     MonadPlus s,
-    Transformable t d (s a)
-    ) => HasEvents t d s a where
+    Transformable t d s
+    ) => HasEvents t d s where
 
 {-
 type HasEvents t d s a  = (
@@ -160,7 +160,7 @@ type HasEvents t d s a  = (
     )
 -}
 
-instance HasEvents TimeT DurationT Score a
+instance HasEvents TimeT DurationT Score
 
 
 -------------------------------------------------------------------------------------
@@ -213,28 +213,28 @@ chord = pcat . map note
 --
 -- > [a] -> Score a
 --
-melody :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [a] -> s a
+melody :: (MonadPlus s, Monoid' (s a), Transformable t d s) => [a] -> s a
 melody = scat . map note
 
 -- | Like 'melody', but stretching each note by the given factors.
 --
 -- > [(Duration, a)] -> Score a
 --
-melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable t d (s a)) => [(d, a)] -> s a
+melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable t d s) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
 --
 -- > [(Time, a)] -> Score a
 --
-chordDelay :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, a)] -> s a
+chordDelay :: (MonadPlus s, Monoid (s a), Transformable t d s) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable t d (s a)) => [(t, d, a)] -> s a
+chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable t d s) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
 -------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 --
 -- > Duration -> Score a -> Score a
 --
-move :: (Delayable a, d ~ Duration a) => d -> a -> a
+move :: (Delayable s, d ~ Duration s) => d -> s a -> s a
 move = delay
 
 -- |
@@ -254,7 +254,7 @@ move = delay
 --
 -- > Duration -> Score a -> Score a
 --
-moveBack :: (Delayable a, AdditiveGroup d, d ~ Duration a) => d -> a -> a
+moveBack :: (Delayable s, AdditiveGroup d, d ~ Duration s) => d -> s a -> s a
 moveBack t = delay (negateV t)
 
 -- |
@@ -262,7 +262,7 @@ moveBack t = delay (negateV t)
 --
 -- > Duration -> Score a -> Score a
 --
-startAt :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) => t -> a -> a
+startAt :: (HasOnset s, Delayable s, AffineSpace t, t ~ Time s) => t -> s a -> s a
 t `startAt` x = (t .-. onset x) `delay` x
 
 -- |
@@ -270,7 +270,7 @@ t `startAt` x = (t .-. onset x) `delay` x
 --
 -- > Duration -> Score a -> Score a
 --
-stopAt :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) => t -> a -> a
+stopAt :: (HasOffset s, Delayable s, AffineSpace t, t ~ Time s) => t -> s a -> s a
 t `stopAt`  x = (t .-. offset x) `delay` x
 
 -- |
@@ -278,7 +278,7 @@ t `stopAt`  x = (t .-. offset x) `delay` x
 --
 -- > Duration -> Score a -> Score a
 --
-compress :: (Stretchable a, Fractional d, d ~ Duration a) => d -> a -> a
+compress :: (Stretchable s, Fractional d, d ~ Duration s) => d -> s a -> s a
 compress x = stretch (recip x)
 
 -- |
@@ -286,7 +286,7 @@ compress x = stretch (recip x)
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) => d -> a -> a
+stretchTo :: (Stretchable s, HasDuration s, Fractional d, d ~ Duration s) => d -> s a -> s a
 t `stretchTo` x = (t / duration x) `stretch` x
 
 
@@ -303,7 +303,7 @@ infixr 6 <|
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
-(|>) :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
+(|>) :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => s a -> s a -> s a
 a |> b =  a <> startAt (offset a) b
 
 
@@ -313,14 +313,14 @@ a |> b =  a <> startAt (offset a) b
 -- To compose in parallel, use '<>'.
 --
 -- > Score a -> Score a -> Score a
-(<|) :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => a -> a -> a
+(<|) :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => s a -> s a -> s a
 a <| b =  b |> a
 
 -- |
 -- Sequential concatentation.
 --
 -- > [Score t] -> Score t
-scat :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) => [a] -> a
+scat :: (Monoid' (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => [s a] -> s a
 scat = foldr (|>) mempty
 
 -- |
@@ -336,7 +336,7 @@ pcat = mconcat
 --
 -- > Score a -> Score a -> Score a
 --
-sustain :: (Fractional (Duration a), Semigroup a, Stretchable a, HasDuration a) => a -> a -> a
+sustain :: (Fractional (Duration s), Semigroup (s a), Stretchable s, HasDuration s) => s a -> s a -> s a
 x `sustain` y = x <> duration x `stretchTo` y
 
 -- Like '<>', but truncating the second agument to the duration of the first.
@@ -347,7 +347,7 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup a, Transformable t d a, Ord d) => d -> a -> a -> a
+anticipate :: (Semigroup (s a), Transformable t d s, Ord d) => d -> s a -> s a -> s a
 anticipate t a b =  a <> startAt (offset a .-^ t) b
 
 
@@ -361,7 +361,7 @@ anticipate t a b =  a <> startAt (offset a .-^ t) b
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Monoid' a, Transformable t d a) => Int -> a -> a
+times :: (Monoid' (s a), Transformable t d s) => Int -> s a -> s a
 times n a = replicate (0 `max` n) () `repeated` const a
 
 -- |
@@ -375,7 +375,7 @@ times n a = replicate (0 `max` n) () `repeated` const a
 --
 -- > [a] -> (a -> Score Note) -> Score Note
 --
-repeated :: (Monoid' b, Transformable t d b) => [a] -> (a -> b) -> b
+repeated :: (Monoid' (s b), Transformable t d s) => [a] -> (a -> s b) -> s b
 repeated = flip (\f -> scat . fmap f)
 
 
@@ -394,36 +394,36 @@ repeatedTime  n = repeated $ fmap (/ n) [0..(n - 1)]
 removeRests :: MonadPlus m => m (Maybe a) -> m a
 removeRests = mcatMaybes
 
--- |
--- Repeat three times and scale down by three.
---
--- > Score a -> Score a
---
-triplet :: (Monoid' a, Transformable t d a, t ~ TimeT) => a -> a
-triplet = group 3
-
--- |
--- Repeat three times and scale down by three.
---
--- > Score a -> Score a
---
-quadruplet :: (Monoid' a, Transformable t d a, t ~ TimeT) => a -> a
-quadruplet  = group 4
-
--- |
--- Repeat three times and scale down by three.
---
--- > Score a -> Score a
---
-quintuplet :: (Monoid' a,Transformable t d a, t ~ TimeT) => a -> a
-quintuplet  = group 5
+-- -- |
+-- -- Repeat three times and scale down by three.
+-- --
+-- -- > Score a -> Score a
+-- --
+-- triplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
+-- triplet = group 3
+-- 
+-- -- |
+-- -- Repeat three times and scale down by three.
+-- --
+-- -- > Score a -> Score a
+-- --
+-- quadruplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
+-- quadruplet  = group 4
+-- 
+-- -- |
+-- -- Repeat three times and scale down by three.
+-- --
+-- -- > Score a -> Score a
+-- --
+-- quintuplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
+-- quintuplet  = group 5
 
 -- |
 -- Repeat a number of times and scale down by the same amount.
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' a, Transformable t d a, t ~ TimeT) => Int -> a -> a
+group :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => Int -> s a -> s a
 group n a = times n (toDurationT n `compress` a)
 
 -- |
@@ -435,7 +435,7 @@ group n a = times n (toDurationT n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (HasEvents t d s a, Num t, Ord t) => s a -> s a
+retrograde :: (HasEvents t d s, Num t, Ord t) => s a -> s a
 retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
     where
         g (t,d,x) = (-(t.+^d),d,x)
@@ -446,9 +446,7 @@ retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
 
 #define MAP_CONSTRAINT \
     HasPart' a, \
-    HasEvents t d s a, \
-    HasEvents u e s b, \
-    t ~ u
+    HasEvents t d s
 
 -- | Recompose a score.
 --
@@ -456,7 +454,7 @@ retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-recompose :: (MonadPlus s, Transformable t d (s a)) => [(t, d, a)] -> s a
+recompose :: (MonadPlus s, Transformable t d s) => [(t, d, a)] -> s a
 recompose = msum . liftM eventToScore
 
 -- |
@@ -473,7 +471,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (HasEvents t d s a, HasEvents t e s b, t ~ u, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (HasEvents t d s) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
 
 
@@ -516,7 +514,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (HasEvents t d s a, HasEvents t e s b, t ~ u) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: (HasEvents t d s) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = recompose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
 
 -- eventToScore :: Scalable t d a => (t, d, a) -> m a

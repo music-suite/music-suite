@@ -29,12 +29,14 @@ import Music.Time.Duration
 -- |
 -- This type function returns the time type for a given type.
 --
-type family Time a :: *
+type family Time (s :: * -> *) :: *
 
 -- |
 -- This type function returns the duration type for a given type.
 --
 type Duration a = Diff (Time a)
+
+{-
 
 type instance Time Double     = Double
 type instance Time Rational   = Rational
@@ -45,6 +47,7 @@ type instance Time (Maybe a)  = Time a
 -- TODO move
 type instance Time TimeT       = TimeT
 type instance Time DurationT   = DurationT
+-}
 
 
 -- type instance Pos (Option a) = Pos a

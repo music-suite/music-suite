@@ -78,7 +78,7 @@ import Music.Dynamics.Literal
 newtype Voice a = Voice { getVoice :: [(DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
-type instance Time (Voice a) = TimeT
+type instance Time Voice = TimeT
 
 instance Semigroup (Voice a) where
     (<>) = mappend
@@ -96,10 +96,10 @@ instance Applicative Voice where
     pure  = return
     (<*>) = ap
 
-instance Stretchable (Voice a) where
+instance Stretchable (Voice) where
     n `stretch` Voice as = Voice (fmap (first (n*^)) as)
 
-instance HasDuration (Voice a) where
+instance HasDuration (Voice) where
     duration (Voice as) = sum (fmap fst as)
 
 instance IsPitch a => IsPitch (Voice a) where

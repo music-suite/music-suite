@@ -25,9 +25,9 @@ module Music.Time.Onset (
         HasPreOnset(..),
         HasPostOnset(..),
         HasPostOffset(..),
-        durationDefault,
-        onsetDefault,
-        offsetDefault,
+        -- durationDefault,
+        -- onsetDefault,
+        -- offsetDefault,
   ) where
 
 import Data.Semigroup
@@ -40,8 +40,8 @@ import Music.Time.Duration
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
-class HasDuration a where
-    duration :: a -> Duration a
+class HasDuration s where
+    duration :: s a -> Duration s
 
 -- |
 -- Class of types with a position in time.
@@ -59,27 +59,28 @@ class HasDuration a where
 --
 -- > duration a >= 0
 --
-class HasOnset a where
+class HasOnset s where
     -- | 
     -- Get the onset of the given value.
     --
-    onset  :: a -> Time a
+    onset  :: s a -> Time s
 
-class HasOffset a where
+class HasOffset s where
     -- | 
     -- Get the offset of the given value.
     --
-    offset :: a -> Time a
+    offset :: s a -> Time s
                               
-class HasPreOnset a where
-    preOnset :: a -> Time a
+class HasPreOnset s where
+    preOnset :: s a -> Time s
 
-class HasPostOnset a where
-    postOnset :: a -> Time a
+class HasPostOnset s where
+    postOnset :: s a -> Time s
 
-class HasPostOffset a where
-    postOffset :: a -> Time a
+class HasPostOffset s where
+    postOffset :: s a -> Time s
 
+{-
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
 durationDefault :: (AffineSpace (Time a), HasOffset a, HasOnset a) => a -> Duration a
 durationDefault x = offset x .-. onset x
@@ -91,4 +92,5 @@ onsetDefault x = offset x .-^ duration x
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
 offsetDefault :: (AffineSpace (Time a), HasOnset a, HasDuration a) => a -> Time a
 offsetDefault x = onset x .+^ duration x
+-}
                                                  

@@ -88,7 +88,7 @@ import Music.Score.Track
 newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
-type instance Time (Score a) = TimeT
+type instance Time Score = TimeT
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -125,13 +125,13 @@ instance MonadPlus Score where
 instance Performable Score where
     perform = getScore
 
-instance Stretchable (Score a) where
+instance Stretchable (Score) where
     d `stretch` Score sc = Score $ fmap (first3 (^* fromDurationT d) . second3 (^* d)) $ sc
 
-instance Delayable (Score a) where
+instance Delayable (Score) where
     d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
 
-instance HasOnset (Score a) where
+instance HasOnset (Score) where
     -- onset  (Score []) = 0
     -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
 
@@ -139,11 +139,11 @@ instance HasOnset (Score a) where
     onset  (Score []) = 0
     onset  (Score xs) = on (head xs) where on (t,d,x) = t
 
-instance HasOffset (Score a) where
+instance HasOffset (Score) where
     offset (Score []) = 0
     offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (fromDurationT $ d)
 
-instance HasDuration (Score a) where
+instance HasDuration (Score) where
     duration x = offset x .-. onset x
 
 instance IsPitch a => IsPitch (Score a) where

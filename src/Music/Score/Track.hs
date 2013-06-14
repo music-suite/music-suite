@@ -76,7 +76,7 @@ import Music.Time
 newtype Track a = Track { getTrack :: [(TimeT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
-type instance Time (Track a) = TimeT
+type instance Time Track = TimeT
 
 instance Semigroup (Track a) where
     (<>) = mappend
@@ -107,23 +107,23 @@ instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
 
-instance Stretchable (Track a) where
+instance Stretchable (Track) where
     n `stretch` Track tr = Track $ fmap (first (^* fromDurationT n)) tr
 
-instance Delayable (Track a) where
+instance Delayable (Track) where
     d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
 
-instance HasOnset (Track a) where
+instance HasOnset (Track) where
     onset  (Track []) = 0
     onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
 
-instance HasOffset (Track a) where
+instance HasOffset (Track) where
     offset (Track []) = 0
     offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
 
 --    offset x = maximum (fmap off x)   where off (t,x) = t
 
-instance HasDuration (Track a) where
+instance HasDuration (Track) where
     duration x = offset x .-. onset x
 
 instance Arbitrary a => Arbitrary (Track a) where

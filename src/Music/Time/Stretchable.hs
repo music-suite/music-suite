@@ -40,11 +40,11 @@ import Music.Time.Pos
 -- |
 -- Stretchable values. 
 -- 
-class Stretchable a where
+class Stretchable s where
 
     -- |
     -- Stretch (augment) a value by the given factor.
     -- 
     -- > Duration -> Score a -> Score a
     -- 
-    stretch :: Duration a -> a -> a
+    stretch :: Duration s -> s a -> s a

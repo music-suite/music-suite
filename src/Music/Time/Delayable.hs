@@ -35,10 +35,10 @@ import Music.Time.Pos
 -- |
 -- Delayable values. 
 -- 
-class Delayable a where
+class Delayable s where
 
     -- |
     -- Delay a value.
     -- > Duration -> Score a -> Score a
     -- 
-    delay :: Duration a -> a -> a
+    delay :: Duration s -> s a -> s a
