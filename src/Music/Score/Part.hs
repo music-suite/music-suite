@@ -33,8 +33,8 @@ module Music.Score.Part (
         extract,
         extractParts,
         mapPart,
-        mapParts,
         mapAllParts,
+        mapParts,
         getParts,
         setParts,
         modifyParts,
@@ -134,23 +134,23 @@ extractParts sc = fmap (`extractParts2` sc) (getParts sc)
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
 mapPart :: (Ord v, v ~ Part a, HasPart a, MonadPlus s, Performable s, Enum b) => b -> (s a -> s a) -> s a -> s a
-mapPart n f = mapParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
+mapPart n f = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapParts :: (HasPart' a, MonadPlus s, Performable s) => ([s a] -> [s b]) -> s a -> s b
-mapParts f = msum . f . extract
+mapAllParts :: (HasPart' a, MonadPlus s, Performable s) => ([s a] -> [s b]) -> s a -> s b
+mapAllParts f = msum . f . extract
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts :: (HasPart' a, MonadPlus s, Performable s) => (s a -> s b) -> s a -> s b
-mapAllParts f = mapParts (fmap f)
+mapParts :: (HasPart' a, MonadPlus s, Performable s) => (s a -> s b) -> s a -> s b
+mapParts f = mapAllParts (fmap f)
 
 -- |
 -- Get all parts in the given score. Returns a list of parts.

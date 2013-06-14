@@ -464,7 +464,7 @@ recompose = msum . liftM eventToScore
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 mapEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
-mapEvents f = mapParts (liftM $ mapEventsSingle f)
+mapEvents f = mapAllParts (liftM $ mapEventsSingle f)
 
 -- |
 -- Equivalent to 'mapEvents' for single-voice scores.
@@ -507,7 +507,7 @@ mapLast f g = mapPhrase g g f
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhrase :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
+mapPhrase f g h = mapAllParts (liftM $ mapPhraseSingle f g h)
 
 -- |
 -- Equivalent to 'mapPhrase' for single-voice scores.

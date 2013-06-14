@@ -60,13 +60,13 @@ import Music.Score.Combinators
 -- Apply a time-varying function to all events in score.
 --
 apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
-apply x = mapParts (fmap $ applySingle x)
+apply x = mapAllParts (fmap $ applySingle x)
 
 -- |
 -- Get all notes that start during a given note.
 --
 snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
-snapshot x = mapParts (fmap $ snapshotSingle x)
+snapshot x = mapAllParts (fmap $ snapshotSingle x)
 
 trig :: Score a -> Score b -> Score b
 trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as

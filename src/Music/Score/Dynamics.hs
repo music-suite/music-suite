@@ -104,7 +104,7 @@ dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
 
 
 dyns :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
-dyns ds = mapParts (fmap $ applyDynSingle (fmap fromJust $ scoreToVoice ds))
+dyns ds = mapAllParts (fmap $ applyDynSingle (fmap fromJust $ scoreToVoice ds))
 
 dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
 dyn ds = applyDynSingle (fmap fromJust . scoreToVoice $ ds)

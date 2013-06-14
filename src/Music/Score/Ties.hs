@@ -83,7 +83,7 @@ instance Tiable a => Tiable (TieT a) where
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
-splitTies = mapAllParts splitTiesSingle
+splitTies = mapParts splitTiesSingle
 
 -- |
 -- Equivalent to `splitTies` for single-voice scores.
