@@ -25,9 +25,9 @@ module Music.Time.Onset (
         HasPreOnset(..),
         HasPostOnset(..),
         HasPostOffset(..),
-        -- durationDefault,
-        -- onsetDefault,
-        -- offsetDefault,
+        durationDefault,
+        onsetDefault,
+        offsetDefault,
   ) where
 
 import Data.Semigroup
@@ -80,17 +80,15 @@ class HasPostOnset s where
 class HasPostOffset s where
     postOffset :: s a -> Time s
 
-{-
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
-durationDefault :: (AffineSpace (Time a), HasOffset a, HasOnset a) => a -> Duration a
+durationDefault :: (AffineSpace (Time s), HasOffset s, HasOnset s) => s a -> Duration s
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
-onsetDefault :: (AffineSpace (Time a), HasOffset a, HasDuration a) => a -> Time a
+onsetDefault :: (AffineSpace (Time s), HasOffset s, HasDuration s) => s a -> Time s
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
-offsetDefault :: (AffineSpace (Time a), HasOnset a, HasDuration a) => a -> Time a
+offsetDefault :: (AffineSpace (Time s), HasOnset s, HasDuration s) => s a -> Time s
 offsetDefault x = onset x .+^ duration x
--}
                                                  

@@ -30,8 +30,10 @@
 module Music.Score.Combinators (
         -- ** Preliminaries
         Monoid',
-        HasEvents,
+        Transformable1,
         Transformable,
+        Composable,
+        HasEvents,
 
         -- ** Composing scores
         (|>),
@@ -69,7 +71,7 @@ module Music.Score.Combinators (
 
         -- *** Mapping
         perform,
-        recompose,
+        compose,
         mapEvents,
         mapEventsSingle,
         mapFirst,
@@ -81,6 +83,7 @@ module Music.Score.Combinators (
         scoreToVoice,
         voiceToScore,
         voiceToScore',
+        eventToScore,
   ) where
 
 import Control.Monad
@@ -103,27 +106,42 @@ import Music.Time
 
 import qualified Data.List as List
 
--- | 
+-- |
 -- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
--- is needed. If 'Monoid' is changed to extend 'Semigroup' it will not be needed.
+-- is needed. 
 --
-type Monoid' a    = (Monoid a, Semigroup a)
+-- Ideally, 'Monoid' should be changed to extend 'Semigroup' instead.
+--
+type Monoid' a = (Monoid a, Semigroup a)
 
 -- TODO names?
 type Scalable t d a = (
     Stretchable a, Delayable a,
     AdditiveGroup t,
     AffineSpace t,
-    Diff t ~ d,
+    Diff t ~ d,
     Time a ~ t,
     Duration a ~ d
     )
 
+-- |
+-- This class includes time-based structures that can be stretched and scaled.
+--
 class (
     Stretchable s, Delayable s,
+    AdditiveGroup (Time s), AffineSpace (Time s)
+    ) => Transformable1 s where
+
+instance Transformable1 Score
+instance Transformable1 Track
+
+
+-- |
+-- This class includes time-based structures that can be positioned in time.
+--
+class (
     HasOnset s, HasOffset s,
-    AdditiveGroup (Time s),
-    AffineSpace (Time s)
+    Transformable1 s
     ) => Transformable s where
 
 {-
@@ -140,17 +158,26 @@ type Transformable t d a = (
 instance Transformable Score
 instance Transformable Track
 
+-- |
+-- This class includes time-based structures that can be transcribed.
+--
+class (
+    MonadPlus s,
+    Transformable s
+    ) => Composable s where
+
+instance Composable Score
+instance Composable Track
 
 -- |
 -- This class includes time-based structures that can be perfomed /and/ transcribed.
 --
--- The combined power of 'perform' and 'recompose' give us the power to traverse and
+-- The combined power of 'perform' and 'compose' give us the power to traverse and
 -- the entire event structure, as per 'mapEvents'.
 --
 class (
     Performable s,
-    MonadPlus s,
-    Transformable s
+    Composable s
     ) => HasEvents s where
 
 {-
@@ -221,7 +248,7 @@ melody = scat . map note
 --
 -- > [(Duration, a)] -> Score a
 --
-melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable s, d ~ Duration s) => [(d, a)] -> s a
+melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable s, d ~ Duration s) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
@@ -235,7 +262,7 @@ chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
+chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
 -------------------------------------------------------------------------------------
@@ -348,7 +375,7 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup (s a), Transformable s, d ~ Duration s, Ord d) => d -> s a -> s a -> s a
+anticipate :: (Semigroup (s a), Transformable s, d ~ Duration s, Ord d) => d -> s a -> s a -> s a
 anticipate t a b =  a <> startAt (offset a .-^ t) b
 
 
@@ -437,7 +464,7 @@ group n a = times n (toDurationT n `compress` a)
 -- > Score a -> Score a
 
 retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
-retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
+retrograde = compose . List.sortBy (comparing fst3) . fmap g . perform
     where
         g (t,d,x) = (-(t.+^d),d,x)
 
@@ -455,8 +482,8 @@ retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-recompose :: (MonadPlus s, Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
-recompose = msum . liftM eventToScore
+compose :: (Composable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
+compose = msum . liftM eventToScore
 
 -- |
 -- Map over the events in a score.
@@ -473,8 +500,23 @@ mapEvents f = mapAllParts (liftM $ mapEventsSingle f)
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 mapEventsSingle :: (HasEvents s, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
-mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
+mapEventsSingle f sc = compose . fmap (third' f) . perform $ sc
 
+-- |
+-- Equivalent to 'mapEvents' for single-voice scores.
+-- Fails if the score contains overlapping events.
+--
+-- > ([(Time,Duration,a)] -> [b]) -> Score a -> Score b
+--
+-- mapAllEventsSingle :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> b) -> s a -> s b
+-- mapAllEventsSingle f sc = compose . fmap trd3 . f . perform $ sc
+-- mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [b]) -> s a -> s b
+-- mapAllEventsSingle' f = compose . fmap trd3 . f . perform
+
+trd3 (a,b,c) = c
+
+mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [(t,d,b)]) -> s a -> s b
+mapAllEventsSingle' f = compose . f . perform
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -516,10 +558,17 @@ mapPhrase f g h = mapAllParts (liftM $ mapPhraseSingle f g h)
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhraseSingle :: HasEvents s => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhraseSingle f g h sc = recompose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
+mapPhraseSingle f g h sc = compose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
 
 -- eventToScore :: Scalable t d a => (t, d, a) -> m a
-eventToScore (t,d,x) = delay' t . stretch d $ return x
+
+eventToScore
+  :: (Monad s, 
+      Transformable1 s,
+      Time s ~ t, Duration s ~ d
+      ) => (t, d, a) -> s a
+
+eventToScore (t,d,x) = delay' t . stretch d $ return x
 
 --------------------------------------------------------------------------------
 -- Conversion
@@ -575,7 +624,7 @@ mapFirstMiddleLast f g h = go
         go [a]   = [f a]
         go [a,b] = [f a, h b]
         go xs    = [f $ head xs]          ++ 
-                   map g (tail $ init xs) ++ 
+                   map g (tail $ init xs) ++ 
                    [h $ last xs]
 
 delay' t = delay (t .-. zeroV)

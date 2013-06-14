@@ -95,7 +95,7 @@ snapshotSingle as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 onsetIn :: TimeT -> DurationT -> Score a -> Score a
-onsetIn a b = recompose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
+onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
     where
         filter' = filterOnce
         -- more lazy than mfilter
