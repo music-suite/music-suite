@@ -68,6 +68,7 @@ module Music.Score.Combinators (
         -- quintuplet,
 
         -- *** Mapping
+        perform,
         recompose,
         mapEvents,
         mapEventsSingle,
@@ -141,8 +142,10 @@ instance Transformable Track
 
 
 -- |
--- This pseudo-class denotes generalizes structures that can be decomposed into events
--- and reconstructed.
+-- This class includes time-based structures that can be perfomed /and/ transcribed.
+--
+-- The combined power of 'perform' and 'recompose' give us the power to traverse and
+-- the entire event structure, as per 'mapEvents'.
 --
 class (
     Performable s,
