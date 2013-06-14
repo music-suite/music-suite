@@ -52,6 +52,7 @@ import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Basis
+import System.Process
 
 import Music.Time
 import Music.Pitch.Literal
@@ -175,7 +176,7 @@ scatLy = foldr Lilypond.scat (Lilypond.Sequential [])
 
 
 -- |
--- Convert a score to MusicXML and write to a file.
+-- Convert a score to a Lilypond representation and write to a file.
 --
 writeLy :: (HasLilypond a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
 writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
@@ -195,14 +196,16 @@ writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
             "}\n"
 
 -- |
--- Convert a score to MusicXML and open it.
+-- Typeset a score using Lilypond and open it.
 --
 openLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> IO ()
 openLy sc = do
     writeLy "test.ly" sc
     runLy
+    openLy'
 
-runLy = execute "lilypond" ["-f", "pdf", "test.ly"]
+runLy = runCommand "lilypond -f pdf test.ly" >> return ()
+openLy' = runCommand "open test.pdf" >> return ()
     -- FIXME hardcoded
 
 -- |
