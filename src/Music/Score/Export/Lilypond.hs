@@ -202,7 +202,7 @@ openLy sc = do
     writeLy "test.ly" sc
     runLy
 
-runLy = execute "lilypond" ["-f", "png", "test.ly"]
+runLy = execute "lilypond" ["-f", "pdf", "test.ly"]
     -- FIXME hardcoded
 
 -- |
