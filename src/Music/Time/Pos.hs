@@ -29,6 +29,16 @@ import Music.Time.Duration
 -- |
 -- This type function returns the time type for a given type.
 --
+-- It has kind
+--
+-- > (* -> *) -> *
+--
+-- meaning that an instance should be written on the form:
+--
+-- > type instance Time a = b
+--
+-- where /a/ and /b/ are type-level expression of kind @* -> *@ and @*@ respectively.
+--
 type family Time (s :: * -> *) :: *
 
 -- |

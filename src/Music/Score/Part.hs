@@ -158,7 +158,7 @@ mapParts f = mapAllParts (fmap f)
 -- > Score a -> [Part]
 --
 getParts :: (HasPart' a, Performable s) => s a -> [Part a]
-getParts = List.sort . List.nub . fmap getPart . performableToList
+getParts = List.sort . List.nub . fmap getPart . toList'
 
 -- |
 -- Set all parts in the given score.

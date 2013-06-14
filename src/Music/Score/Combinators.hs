@@ -56,9 +56,9 @@ module Music.Score.Combinators (
         stretch,
         compress,
         stretchTo,
-        retrograde,
 
         -- *** Rests
+        rest,
         removeRests,
 
         -- *** Repetition
@@ -69,10 +69,14 @@ module Music.Score.Combinators (
         -- quadruplet,
         -- quintuplet,
 
-        -- *** Mapping
+        -- *** Transformations
         perform,
         compose,
+        retrograde,
         mapEvents,
+        filterEvents,
+        mapFilterEvents,
+        mapAllEvents,
         mapEventsSingle,
         mapFirst,
         mapLast,
@@ -108,7 +112,7 @@ import qualified Data.List as List
 
 -- |
 -- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
--- is needed. 
+-- constraint is needed.
 --
 -- Ideally, 'Monoid' should be changed to extend 'Semigroup' instead.
 --
@@ -125,7 +129,7 @@ type Scalable t d a = (
     )
 
 -- |
--- This class includes time-based structures that can be stretched and scaled.
+-- This class includes time-based structures that can be scaled and moved in time.
 --
 class (
     Stretchable s, Delayable s,
@@ -137,7 +141,7 @@ instance Transformable1 Track
 
 
 -- |
--- This class includes time-based structures that can be positioned in time.
+-- This class includes time-based structures with a known position in time.
 --
 class (
     HasOnset s, HasOffset s,
@@ -202,8 +206,7 @@ instance HasEvents Score
 --
 -- > a -> Score a
 --
--- note :: Pointed s => a -> s a
-note :: MonadPlus s => a -> s a
+note :: Monad s => a -> s a
 note = return
 
 -- |
@@ -213,7 +216,6 @@ note = return
 --
 -- > Score (Maybe a)
 --
--- rest :: Pointed s => s (Maybe a)
 rest :: MonadPlus s => s (Maybe a)
 rest = note Nothing
 
@@ -412,6 +414,7 @@ repeatedIndex n = repeated [0..n-1]
 repeatedTime  n = repeated $ fmap (/ n) [0..(n - 1)]
 -}
 
+
 -- |
 -- Remove rests from a score.
 --
@@ -484,6 +487,32 @@ retrograde = compose . List.sortBy (comparing fst3) . fmap g . perform
 --
 compose :: (Composable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 compose = msum . liftM eventToScore
+
+-- retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
+mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
+mapAllEvents f = compose . f . perform
+
+{-
+mapFilterAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, Maybe b)]) -> s a -> s b
+mapFilterAllEvents f = mcatMaybes . mapAllEvents f
+-}
+
+-- |
+-- Map over the events in a score.
+--
+-- > (Time -> Duration -> a -> b) -> Score a -> Score b
+--
+filterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Bool) -> s a -> s a
+filterEvents f = mapFilterEvents (predToPartial3 f)
+-- TODO Maybe this could be optimized by using mapEventsSingle?
+
+-- |
+-- Map over the events in a score.
+--
+-- > (Time -> Duration -> a -> b) -> Score a -> Score b
+--
+mapFilterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Maybe b) -> s a -> s b
+mapFilterEvents f = mcatMaybes . mapAllParts (liftM $ mapEventsSingle f)
 
 -- |
 -- Map over the events in a score.
@@ -640,6 +669,25 @@ rotl (x:xs) = xs ++ [x]
 rotr [] = []
 rotr xs = last xs : init xs
 
+
+curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
+curry3 = curry . curry . (. trip)
+
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 = (. untrip) . uncurry . uncurry
+
+untrip (a,b,c) = ((a,b),c)
+trip ((a,b),c) = (a,b,c)
+
+{-
+predToPartial :: (a -> Bool)            -> a -> Maybe a 
+-}
+predToPartial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
+predToPartial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+predToPartial2 f = curry  (fmap snd  . predToPartial (uncurry f))
+predToPartial3 f = curry3 (fmap trd3 . predToPartial (uncurry3 f))
+
+rotated :: Int -> [a] -> [a]
 rotated = go
     where
         go n as 
