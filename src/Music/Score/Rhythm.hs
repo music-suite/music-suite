@@ -156,10 +156,10 @@ match p = tokenPrim show next test
 
 -- Matches any rhythm
 rhythm :: Tiable a => RhythmParser a (Rhythm a)
-rhythm = Group <$> Text.Parsec.many1 (rhythm' <|> bound)
+rhythm = Group <$> many1 (rhythm' <|> bound)
 
 rhythmNoBound :: Tiable a => RhythmParser a (Rhythm a)
-rhythmNoBound = Group <$> Text.Parsec.many1 rhythm'
+rhythmNoBound = Group <$> many1 rhythm'
 
 rhythm' :: Tiable a => RhythmParser a (Rhythm a)
 rhythm' = mzero
@@ -220,6 +220,14 @@ tuplet' d = do
 
 
 -------------------------------------------------------------------------------------
+
+-- | Similar to 'many1', but tries longer sequences before trying one.
+many1long :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
+many1long p = try (many2 p) <|> fmap return p
+
+-- | Similar to 'many1', but applies the parser 2 or more times.
+many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
+many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
 
 -- |
 -- Succeed only if the entire input is consumed.

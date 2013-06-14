@@ -1,4 +1,3 @@
-
 {-# LANGUAGE
     TypeFamilies,
     DeriveFunctor,
@@ -79,11 +78,11 @@ voiceToBars = separateBars . splitTiesVoice
 separateBars :: Voice (Maybe a) -> [[(DurationT, Maybe a)]]
 separateBars =
     fmap (removeTime . fmap discardBarNumber) .
-        splitAtTimeZero . fmap separateTime . perform . voiceToScore
+        splitAtTimeZero . fmap separateTime . perform
     where
-        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t)
+        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t * 1)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
-        discardBarNumber ((bn,bt),d,x)  = (fromRational bt, d, x)
+        discardBarNumber ((bn,bt),d,x)  = (fromRational bt / 1, d, x)
         removeTime                      = fmap g where g (t,d,x) = (d,x)
 
 -- |
