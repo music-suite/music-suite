@@ -89,32 +89,34 @@ newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
 --
-tremolo :: (Functor f, HasTremolo b) => Int -> f b -> f b
+tremolo :: (Functor s, HasTremolo b) => Int -> s b -> s b
 tremolo n = fmap (setTrem n)
 
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (HasPart' b, HasText b) => String -> Score b -> Score b
+text :: (HasEvents s, HasPart' a, HasText a) => String -> s a -> s a
 text s = mapPhrase (addText s) id id
 
 -- |
 -- Slide between the first and the last note.
 --
-slide :: (HasPart' b, HasSlide b) => Score b -> Score b
+slide :: (HasEvents s, HasPart' a, HasSlide a) => s a -> s a
 slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 
+glissando :: (HasEvents s, HasPart' a, HasSlide a) => s a -> s a
+glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-harmonic :: (HasPart' b, HasHarmonic b) => Int -> Score b -> Score b
-harmonic n = fmap f where f = setHarmonic n
+harmonic :: (Functor s, HasHarmonic a) => Int -> s a -> s a
+harmonic n = fmap (setHarmonic n)
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-artificial :: (HasPart' b, HasHarmonic b) => Score b -> Score b
+artificial :: (Functor s, HasHarmonic a) => s a -> s a
 artificial = fmap f where f = setHarmonic (-4)
 
