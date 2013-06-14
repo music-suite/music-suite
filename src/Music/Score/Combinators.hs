@@ -149,8 +149,8 @@ instance Transformable TimeT DurationT (Track)
 class (
     Performable s,
     MonadPlus s,
-    Transformable t d s
-    ) => HasEvents t d s where
+    Transformable (Time s) (Duration s) s
+    ) => HasEvents s where
 
 {-
 type HasEvents t d s a  = (
@@ -160,7 +160,7 @@ type HasEvents t d s a  = (
     )
 -}
 
-instance HasEvents TimeT DurationT Score
+instance HasEvents Score
 
 
 -------------------------------------------------------------------------------------
@@ -435,7 +435,7 @@ group n a = times n (toDurationT n `compress` a)
 --
 -- > Score a -> Score a
 
-retrograde :: (HasEvents t d s, Num t, Ord t) => s a -> s a
+retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
 retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
     where
         g (t,d,x) = (-(t.+^d),d,x)
@@ -446,7 +446,7 @@ retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
 
 #define MAP_CONSTRAINT \
     HasPart' a, \
-    HasEvents t d s
+    HasEvents s
 
 -- | Recompose a score.
 --
@@ -462,7 +462,7 @@ recompose = msum . liftM eventToScore
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEvents :: (MAP_CONSTRAINT, d ~ Diff t) => (t -> d -> a -> b) -> s a -> s b
+mapEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
 mapEvents f = mapParts (liftM $ mapEventsSingle f)
 
 -- |
@@ -471,7 +471,7 @@ mapEvents f = mapParts (liftM $ mapEventsSingle f)
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEventsSingle :: (HasEvents t d s) => (t -> d -> a -> b) -> s a -> s b
+mapEventsSingle :: (HasEvents s, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
 mapEventsSingle f sc = recompose . fmap (third' f) . perform $ sc
 
 
@@ -514,7 +514,7 @@ mapPhrase f g h = mapParts (liftM $ mapPhraseSingle f g h)
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (HasEvents t d s) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+mapPhraseSingle :: HasEvents s => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = recompose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
 
 -- eventToScore :: Scalable t d a => (t, d, a) -> m a
