@@ -121,11 +121,9 @@ type Scalable t d a = (
 class (
     Stretchable s, Delayable s,
     HasOnset s, HasOffset s,
-    AdditiveGroup t,
-    AffineSpace t,
-    Time s ~ t,
-    Duration s ~ d
-    ) => Transformable t d s where
+    AdditiveGroup (Time s),
+    AffineSpace (Time s)
+    ) => Transformable s where
 
 {-
 type Transformable t d a = (
@@ -138,8 +136,8 @@ type Transformable t d a = (
     )
 -}
 
-instance Transformable TimeT DurationT (Score)
-instance Transformable TimeT DurationT (Track)
+instance Transformable Score
+instance Transformable Track
 
 
 -- |
@@ -149,7 +147,7 @@ instance Transformable TimeT DurationT (Track)
 class (
     Performable s,
     MonadPlus s,
-    Transformable (Time s) (Duration s) s
+    Transformable s
     ) => HasEvents s where
 
 {-
@@ -213,28 +211,28 @@ chord = pcat . map note
 --
 -- > [a] -> Score a
 --
-melody :: (MonadPlus s, Monoid' (s a), Transformable t d s) => [a] -> s a
+melody :: (MonadPlus s, Monoid' (s a), Transformable s) => [a] -> s a
 melody = scat . map note
 
 -- | Like 'melody', but stretching each note by the given factors.
 --
 -- > [(Duration, a)] -> Score a
 --
-melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable t d s) => [(d, a)] -> s a
+melodyStretch :: (MonadPlus s, Monoid' (s a), Transformable s, d ~ Duration s) => [(d, a)] -> s a
 melodyStretch = scat . map ( \(d, x) -> stretch d $ note x )
 
 -- | Like 'chord', but delays each note the given amounts.
 --
 -- > [(Time, a)] -> Score a
 --
-chordDelay :: (MonadPlus s, Monoid (s a), Transformable t d s) => [(t, a)] -> s a
+chordDelay :: (MonadPlus s, Monoid (s a), Transformable s, t ~ Time s) => [(t, a)] -> s a
 chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 
 -- | Like 'chord', but delays and stretches each note the given amounts.
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable t d s) => [(t, d, a)] -> s a
+chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 
 -------------------------------------------------------------------------------------
@@ -347,7 +345,7 @@ x `sustain` y = x <> duration x `stretchTo` y
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate :: (Semigroup (s a), Transformable t d s, Ord d) => d -> s a -> s a -> s a
+anticipate :: (Semigroup (s a), Transformable s, d ~ Duration s, Ord d) => d -> s a -> s a -> s a
 anticipate t a b =  a <> startAt (offset a .-^ t) b
 
 
@@ -361,7 +359,7 @@ anticipate t a b =  a <> startAt (offset a .-^ t) b
 --
 -- > Duration -> Score Note -> Score Note
 --
-times :: (Monoid' (s a), Transformable t d s) => Int -> s a -> s a
+times :: (Monoid' (s a), Transformable s) => Int -> s a -> s a
 times n a = replicate (0 `max` n) () `repeated` const a
 
 -- |
@@ -375,7 +373,7 @@ times n a = replicate (0 `max` n) () `repeated` const a
 --
 -- > [a] -> (a -> Score Note) -> Score Note
 --
-repeated :: (Monoid' (s b), Transformable t d s) => [a] -> (a -> s b) -> s b
+repeated :: (Monoid' (s b), Transformable s) => [a] -> (a -> s b) -> s b
 repeated = flip (\f -> scat . fmap f)
 
 
@@ -423,7 +421,7 @@ removeRests = mcatMaybes
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => Int -> s a -> s a
+group :: (Monoid' (s a), Transformable s, Time s ~ TimeT) => Int -> s a -> s a
 group n a = times n (toDurationT n `compress` a)
 
 -- |
@@ -454,7 +452,7 @@ retrograde = recompose . List.sortBy (comparing fst3) . fmap g . perform
 --
 -- > [(Time, Duration, a)] -> Score a
 --
-recompose :: (MonadPlus s, Transformable t d s) => [(t, d, a)] -> s a
+recompose :: (MonadPlus s, Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 recompose = msum . liftM eventToScore
 
 -- |
