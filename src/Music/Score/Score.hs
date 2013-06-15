@@ -58,29 +58,18 @@ import Music.Score.Track
 -------------------------------------------------------------------------------------
 
 -- |
--- A score is a list of events with an (absolute-time) onset and (relative-time) duration.
--- A rest is a duration and a note is a value and a duration.
+-- A score is a list of events, i.e. time-duration-value triplets. Semantically
+--
+-- > type Score a = [(Time, Duration, a)]
+--
+-- There is no explicit representation for rests. However you can use `Score (Maybe a)` to
+-- represent a score with rests. Such rests are only useful when composing scores. They
+-- may be removed with 'removeRests'.
 --
 -- Score is a 'Monoid' under parallel composition. 'mempty' is a score of no parts.
 -- For sequential composition of scores, use '|>'.
 --
 -- Score has an 'Applicative' instance derived from the 'Monad' instance. Not sure it is useful.
---
--- Score is a 'Monad'. 'return' creates a score containing a single note of
--- duration one, and '>>=' transforms the values of a score, while allowing
--- transformations of time and duration. More intuitively, 'join' scales and
--- offsets each inner score to fit into an outer score, then removes the intermediate
--- structure.
---
--- > let s = Score [(0, 1, Just 0), (1, 2, Just 1)] :: Score Int
--- >
--- > s >>= \x -> Score [ (0, 1, Just $ toEnum $ x+65),
--- >                     (1, 3, Just $ toEnum $ x+97) ] :: Score Char
--- >
--- >     ===> Score {getScore = [ (0 % 1, 1 % 1, Just 'A'),
--- >                              (1 % 1, 3 % 1, Just 'a'),
--- >                              (1 % 1, 2 % 1, Just 'B'),
--- >                              (3 % 1, 6 % 1, Just 'b') ]}
 --
 -- Score is an instance of 'VectorSpace' using sequential composition as addition,
 -- and time scaling as scalar multiplication.
@@ -100,6 +89,28 @@ instance Monoid (Score a) where
         where
             m = mergeBy (comparing fst3)
 
+-- |
+-- This instance is somewhat similar to the list instance.
+--
+-- * 'return' creates a score containing a single note at /(0, 1)/.
+-- 
+-- * @s@ '>>=' @k@ maps each note to a new score, which is then scaled and delayed by the onset and
+--   duration of the original note. That is, @k@ returns a score @t@ such that /0 < onset t < offset t < 1/, 
+--   the resulting events will not cross the boundaries of the original note.
+-- 
+-- * 'join' scales and offsets each inner score to fit into the note containing it, then
+--   removes the intermediate structure.
+--
+-- > let s = compose [(0,1,0), (1,2,1)]
+-- >
+-- > s >>= \x -> compose [ (0,1,toEnum $ x+65),
+-- >                       (1,3,toEnum $ x+97) ] :: Score Char
+-- >
+-- >     ===> compose [ (1, 1, 'A'),
+-- >                    (1, 3, 'a'),
+-- >                    (1, 2, 'B'),
+-- >                    (3, 6, 'b') ]}
+-- 
 instance Monad Score where
     return x = Score [(0, 1, x)]
     a >>= k = join' $ fmap k a
