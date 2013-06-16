@@ -503,7 +503,7 @@ mapFilterAllEvents f = mcatMaybes . mapAllEvents f
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 filterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Bool) -> s a -> s a
-filterEvents f = mapFilterEvents (predToPartial3 f)
+filterEvents f = mapFilterEvents (partial3 f)
 -- TODO Maybe this could be optimized by using mapEventsSingle?
 
 -- |
@@ -680,12 +680,12 @@ untrip (a,b,c) = ((a,b),c)
 trip ((a,b),c) = (a,b,c)
 
 {-
-predToPartial :: (a -> Bool)            -> a -> Maybe a 
+partial :: (a -> Bool)            -> a -> Maybe a 
 -}
-predToPartial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
-predToPartial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
-predToPartial2 f = curry  (fmap snd  . predToPartial (uncurry f))
-predToPartial3 f = curry3 (fmap trd3 . predToPartial (uncurry3 f))
+partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
+partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+partial2 f = curry  (fmap snd  . partial (uncurry f))
+partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
 
 rotated :: Int -> [a] -> [a]
 rotated = go
