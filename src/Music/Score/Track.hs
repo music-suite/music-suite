@@ -117,14 +117,18 @@ instance HasOnset (Track) where
     onset  (Track []) = 0
     onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
 
+{-
 instance HasOffset (Track) where
     offset (Track []) = 0
     offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
+-}
 
 --    offset x = maximum (fmap off x)   where off (t,x) = t
 
+{-
 instance HasDuration (Track) where
     duration x = offset x .-. onset x
+-}
 
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do

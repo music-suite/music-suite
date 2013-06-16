@@ -160,7 +160,7 @@ type Transformable t d a = (
 -}
 
 instance Transformable Score
-instance Transformable Track
+-- instance Transformable Track
 
 -- |
 -- This class includes time-based structures that can be transcribed.
@@ -171,7 +171,7 @@ class (
     ) => Composable s where
 
 instance Composable Score
-instance Composable Track
+-- instance Composable Track
 
 -- |
 -- This class includes time-based structures that can be perfomed /and/ transcribed.
