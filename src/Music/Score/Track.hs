@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    FlexibleInstances,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------

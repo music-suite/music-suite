@@ -25,9 +25,12 @@ module Music.Time.Onset (
         HasPreOnset(..),
         HasPostOnset(..),
         HasPostOffset(..),
+        -- ** Defaults
         durationDefault,
         onsetDefault,
         offsetDefault,
+        -- ** Wrappers
+        AddOffset(..),
   ) where
 
 import Data.Semigroup
@@ -92,3 +95,19 @@ onsetDefault x = offset x .-^ duration x
 offsetDefault :: (AffineSpace (Time s), HasOnset s, HasDuration s) => s a -> Time s
 offsetDefault x = onset x .+^ duration x
                                                  
+newtype AddOffset t s a = AddOffset (t, s a)
+
+type instance Time (AddOffset t s) = t
+
+instance (Delayable a, t ~ Time a) => Delayable (AddOffset t a) where
+    delay d (AddOffset (t,a)) = AddOffset (t, delay d a)
+
+instance (Stretchable a, t ~ Time a) => Stretchable (AddOffset t a) where
+    stretch d (AddOffset (t,a)) = AddOffset (t, stretch d a)
+
+instance (HasOnset a, t ~ Time a) => HasOnset (AddOffset t a) where
+    onset (AddOffset (t,a)) = onset a
+
+instance HasOffset (AddOffset t s) where
+    offset (AddOffset (t,_)) = t
+

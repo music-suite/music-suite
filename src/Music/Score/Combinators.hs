@@ -138,6 +138,8 @@ class (
 
 instance Transformable1 Score
 instance Transformable1 Track
+instance (Transformable1 a, t ~ Time a) => Transformable1 (AddOffset t a)
+
 
 
 -- |
@@ -160,7 +162,7 @@ type Transformable t d a = (
 -}
 
 instance Transformable Score
--- instance Transformable Track
+instance (Transformable a, t ~ Time a) => Transformable (AddOffset t a)
 
 -- |
 -- This class includes time-based structures that can be transcribed.
