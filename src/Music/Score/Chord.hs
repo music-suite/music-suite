@@ -28,7 +28,7 @@
 module Music.Score.Chord (
         HasChord(..),
         ChordT(..),
-
+        flatten,
   ) where
 
 import Data.Ratio
@@ -66,7 +66,7 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 --     as appropriate for the given type.
 -- The ChordT instances transforms structure *below* the chord representation
 
-flatten :: (HasChord a, ChordNote a ~ b) => Score a -> Score b
-flatten = mscatter . fmap getChord
+flatten :: (MonadPlus m, HasChord a) => m a -> m (ChordNote a)
+flatten = mscatter . liftM getChord
 
 
