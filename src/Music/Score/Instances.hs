@@ -49,6 +49,7 @@ import Music.Score.Zip
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
+import Music.Score.Chord
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
@@ -215,6 +216,45 @@ instance HasSlide a => HasSlide (PartT n a) where
     setEndSlide   n (PartT (v,x))                   = PartT (v, setEndSlide n x)
 instance HasText a => HasText (PartT n a) where
     addText       s (PartT (v,x))                   = PartT (v, addText s x)
+
+
+-- ChordT
+
+instance Tiable a => Tiable (ChordT a) where
+    toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
+-- No HasPart instance, PartT must be outside ChordT
+-- This restriction assures all chord notes are in the same part 
+instance HasChord (ChordT a) where                  
+    type ChordNote (ChordT a)                       = a                   
+    getChord (ChordT as)                            = as                       
+-- Derived form the [a] instance
+instance HasPitch a => HasPitch (ChordT a) where    
+    type Pitch (ChordT a)                           = Pitch a
+    getPitch (ChordT as)                            = getPitch as
+    modifyPitch f (ChordT as)                       = ChordT (modifyPitch f as)
+instance HasDynamic a => HasDynamic (ChordT a) where
+    setBeginCresc n (ChordT as)                     = ChordT (fmap (setBeginCresc n) as)
+    setEndCresc   n (ChordT as)                     = ChordT (fmap (setEndCresc n) as)
+    setBeginDim   n (ChordT as)                     = ChordT (fmap (setBeginDim n) as)
+    setEndDim     n (ChordT as)                     = ChordT (fmap (setEndDim n) as)
+    setLevel      n (ChordT as)                     = ChordT (fmap (setLevel n) as)
+instance HasArticulation a => HasArticulation (ChordT a) where
+    setEndSlur    n (ChordT as)                     = ChordT (fmap (setEndSlur n) as)
+    setContSlur   n (ChordT as)                     = ChordT (fmap (setContSlur n) as)
+    setBeginSlur  n (ChordT as)                     = ChordT (fmap (setBeginSlur n) as)
+    setAccLevel   n (ChordT as)                     = ChordT (fmap (setAccLevel n) as)
+    setStaccLevel n (ChordT as)                     = ChordT (fmap (setStaccLevel n) as)
+instance HasTremolo a => HasTremolo (ChordT a) where                   
+    setTrem      n (ChordT as)                      = ChordT (fmap (setTrem n) as)
+instance HasHarmonic a => HasHarmonic (ChordT a) where
+    setHarmonic   n (ChordT as)                     = ChordT (fmap (setHarmonic n) as)
+instance HasSlide a => HasSlide (ChordT a) where       
+    setBeginGliss n (ChordT as)                     = ChordT (fmap (setBeginGliss n) as)
+    setBeginSlide n (ChordT as)                     = ChordT (fmap (setBeginSlide n) as)
+    setEndGliss   n (ChordT as)                     = ChordT (fmap (setEndGliss n) as)
+    setEndSlide   n (ChordT as)                     = ChordT (fmap (setEndSlide n) as)
+instance HasText a => HasText (ChordT a) where         
+    addText      s (ChordT as)                      = ChordT (mapFirstL (addText s) as)
 
 
 -- TieT
@@ -700,3 +740,19 @@ instance (Num a, Ord a, Real a) => Real (SlideT a) where
 instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
+
+
+
+
+
+mapFirstL f = mapFirstMiddleLast f id id
+
+mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
+mapFirstMiddleLast f g h = go
+    where
+        go []    = []
+        go [a]   = [f a]
+        go [a,b] = [f a, h b]
+        go xs    = [f $ head xs]          ++ 
+                   map g (tail $ init xs) ++ 
+                   [h $ last xs]

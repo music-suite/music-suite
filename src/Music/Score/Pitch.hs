@@ -80,6 +80,12 @@ instance HasPitch Int                           where   { type Pitch Int        
 instance HasPitch Integer                       where   { type Pitch Integer    = Integer   ; getPitch = id; modifyPitch = id }
 instance Integral a => HasPitch (Ratio a)       where   { type Pitch (Ratio a)  = (Ratio a) ; getPitch = id; modifyPitch = id }
 
+instance HasPitch a => HasPitch [a] where
+    type Pitch [a]   = Pitch a
+    getPitch []      = error "getPitch: Empty list"
+    getPitch as      = getPitch (head as)
+    modifyPitch f as = fmap (modifyPitch f) as
+
 -- |
 -- Get all pitches in the given score. Returns a list of pitches.
 --

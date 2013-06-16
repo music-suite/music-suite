@@ -51,22 +51,26 @@ library
         Music.Time.Stretchable
         Music.Time.Performable
         Music.Time.Onset
-        -- Music.Time.Era
         Music.Time.Pos
+
+        Music.Score.Rhythm
         
         Music.Score
+
         Music.Score.Track
         Music.Score.Voice
         Music.Score.Score
+
         Music.Score.Combinators
-        Music.Score.Part
         Music.Score.Ties
         Music.Score.Zip
+        Music.Score.Part
+        Music.Score.Chord
         Music.Score.Pitch
         Music.Score.Articulation
         Music.Score.Dynamics
         Music.Score.Ornaments
-        Music.Score.Rhythm
+
         Music.Score.Export.Midi
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
