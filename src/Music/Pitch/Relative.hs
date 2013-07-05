@@ -21,8 +21,25 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative -- (
--- )
+module Music.Pitch.Relative (
+    Number,
+    Quality,
+    Interval,
+    
+    d1, _P1, _A1,
+    d2, m2, _M2, _A2,
+    d3, m3, _M3, _A3,
+    d4, _P4, _A4,
+    d5, _P5, _A5,
+    d6, m6, _M6, _A6,
+    d7, m7, _M7, _A7,
+    d8, _P8, _A8,
+    
+    prime, second, third, fourth, fifth, sixth, seventh, octave,
+    invert,
+    separate,
+    respell,
+)
 where
 
 import Data.Maybe
@@ -252,29 +269,58 @@ d3 = Interval (-2,2) ; m3  = Interval (-1,2) ; _M3 = Interval (1,2) ; _A3 = Inte
 d6 = Interval (-2,5) ; m6  = Interval (-1,5) ; _M6 = Interval (1,5) ; _A6 = Interval (2,5)
 d7 = Interval (-2,6) ; m7  = Interval (-1,6) ; _M7 = Interval (1,6) ; _A7 = Interval (2,6)
 
+Interval (q1,n1) `addSimple` Interval (q2,n2) = Interval (quality q1 n1 q2 n2, n1 + n2)
+
+octaveShift :: Integer -> Interval -> Interval
+octaveShift a (Interval (q,n)) = Interval (q, n + 7*fromIntegral a)
+
+-- TODO subtraction
 instance Num Interval where
-    Interval (q1,d1) + Interval (q2,d2) = Interval (quality q1 d1 q2 d2, d1 + d2)
-    -- Interval (q1,d1) - Interval (q2,d2) = Interval (quality q1 d1 q2 d2, d1 - d2)
-    Interval (q1,d1) * Interval (q2,d2) = undefined
-    abs a         = if (a < 0) then negate a else a
-    signum        = error "Interval.signum"        
-    -- negate (Interval (q,d)) = Interval (q, negate d)
+    a + b  = let
+        (ao, as) = separate a
+        (bo, bs) = separate b
+        in addSimple as bs
+        -- TODO
+    a * b  = error "Interval.(*)"
+    abs (Interval (q,d)) | d < 0     = Interval (q, negate d)
+                         | otherwise = Interval (q, d)
+    negate (Interval (q,d)) = Interval (q, negate d)
 
-    fromInteger 0 = Interval (0,0)
-    fromInteger _ = error "Interval.fromInteger"
+    fromInteger = error "Interval.fromInteger"
+    signum      = error "Interval.fromInteger"
 
+-- |
+-- Separate a compound interval
+-- Returns a (possibly negative) number of octaves
+-- For simple interval @a@, returns @(0,a)@.
 separate :: Interval -> (Integer, Interval)
-separate (Interval (q,d)) | d < 8     = (0, Interval (q,d))
-                          | otherwise = let (octaves, steps) = d `divMod` 7
-                                         in (fromIntegral octaves, Interval (q, fromIntegral steps))
+separate (Interval (q,d)) = let (octaves, steps) = d `divMod` 7
+                             in (fromIntegral octaves, Interval (if octaves < 0 then negate q else q, fromIntegral steps))
+
+
                               
-invert :: Interval -> Interval
-invert a = let (_, simp) = separate a in _P8 - simp
+invert :: Interval -> Interval   
+invert (Interval (0,0)) = Interval (0,7)
+invert a = let (_, simp) = separate (negate a) in simp
+
+
 
 -- TODO
 -- | rewrite as pure/major/minor (or aug4/dim5 for tritones)
-simplify :: Interval -> Interval
-simplify = id
+respell :: Interval -> Interval
+respell = error "simplify: Not implemented"
+
+
+type Function = [Interval]
+
+majorTriad :: Function
+majorTriad = [_M3, m3]
+
+minorTriad :: Function
+minorTriad = [m3, _M3]
+
+diminished :: Function
+diminished = [m3, m3, m3]
 
 
 {-  
