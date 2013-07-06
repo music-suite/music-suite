@@ -105,6 +105,7 @@ import Data.Maybe
 import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
+import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
 import Music.Pitch.Absolute
@@ -456,7 +457,21 @@ flats = go
         go 11 = 6
 
 
+-- Pitch is simply interval using MIDI note 0 (5 octaves below middle C) as reference.
+newtype Pitch = Pitch { getPitch :: Interval }
+deriving instance Eq Pitch	 
+deriving instance Num Pitch	 
+deriving instance Ord Pitch	 
+instance AffineSpace Pitch where
+    type Diff Pitch = Interval
+    Pitch a .-. Pitch b = a ^-^ b
+    Pitch a .+^ b       = Pitch (a ^+^ b)
 
+c = Pitch unison .+^ (_P8^*5)
+d = c .+^ _M2
+
+midi :: Pitch -> Integer
+midi = getSemitones . semitones . getPitch
 {-  
     Some terminology:                                           
         
