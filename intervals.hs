@@ -12,19 +12,29 @@ module Intervals where
 import Data.Maybe
 import Data.Either
 import Data.Semigroup
+import Data.VectorSpace
 import Control.Monad
 import Control.Applicative
 import Music.Pitch.Absolute
 import qualified Data.List as List
 
 
+newtype Steps     = Steps { getSteps :: Integer }
+deriving instance Eq Steps
+deriving instance Ord Steps
+instance Show Steps where
+    show (Steps d) = show d
+deriving instance Num Steps
+deriving instance Enum Steps
+deriving instance Real Steps
+deriving instance Integral Steps
+
+
 newtype Number     = Number { getNumber :: Integer }
 deriving instance Eq Number
 deriving instance Ord Number
 instance Show Number where
-    show (Number d) 
-        | d >= 0    = show (d + 1)
-        | otherwise = error "Number.show: Negative value"
+    show (Number d) = show d
 deriving instance Num Number
 deriving instance Enum Number
 deriving instance Real Number
@@ -60,12 +70,28 @@ instance Show Quality where
     show (Quality False 0)    = "_M"
     show (Quality False 1)    = "_A"
     show (Quality False 2)    = "_AA"
-    -- show n | n < 0     = "_" ++ show ((negate $ getQuality n) - 1) ++ "d"
-    --        | otherwise = "_" ++ show (getQuality n - 1) ++ "A"
 
 invertQuality (Quality True q)  = Quality True (negate q)
 invertQuality (Quality False q) = Quality False (negate q - 1)
 
+
+-- TODO strange behaviour for negative values
+major :: Number -> Interval
+major a | isPure (fromIntegral $ (a-1) `mod` 7)  = error $ "major: Invalid number: " ++ show a
+        | otherwise                = let n = a - 1 in Interval (
+            fromIntegral $ n `div` 7, 
+            fromIntegral $ n `mod` 7, 
+            diatonicToChromatic $ fromIntegral $ n `mod` 7)
+minor :: Number -> Interval
+minor a | isPure (fromIntegral $ (a-1) `mod` 7) = error $ "minor: Invalid number: " ++ show a
+        | otherwise                = let n = a - 1 in Interval (
+            fromIntegral $ n `div` 7, 
+            fromIntegral $ n `mod` 7, 
+            pred $ diatonicToChromatic $ fromIntegral $ n `mod` 7)
+        
+-- minor :: Number -> Interval
+-- minor n | isPure n  = error $ "minor: Invalid number: " ++ show n
+--         | otherwise = Interval (-1,n)
 
 
 type Octave = Integer
@@ -77,26 +103,8 @@ newtype Interval = Interval { getInterval :: (
     Chromatic   -- chromatic step [0..11]
 ) }
 
-quality :: Interval -> Quality
-quality (Interval (o, d, c)) 
-    | o >= 0    = Quality (isPure $ fromIntegral d) (c - diatonicToChromatic d)
-    | otherwise = invertQuality $ Quality (isPure $ fromIntegral d) (c - diatonicToChromatic d)
--- FIXME wrong for negative impure intervals!
-
-
-rquality :: Interval -> Integer
-rquality (Interval (o, d, c)) = (c - diatonicToChromatic d)
-
--- OK for negative
--- Number is always positive
-number :: Interval -> Number
-number (Interval (o, d, c)) = Number (abs $ o * 7 + d)
-
--- OK for negative
--- For a negative interval, octave is negative
-octave :: Interval -> Octave
-octave (Interval (o, d, c)) = o
-
+deriving instance Eq Interval
+deriving instance Ord Interval
 instance Num Interval where
     (+) = addInterval
     (*) = undefined
@@ -106,8 +114,52 @@ instance Num Interval where
     fromInteger 0 = _P1
     fromInteger _ = undefined
 instance Show Interval where
-    show a | intervalNegative a = "-" ++ show (quality a) ++ show (number a)
-           | otherwise          = show (quality a) ++ show (number a)
+    show a | intervalNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
+           | otherwise          = show (quality a) ++ show (abs $ number a)
+instance Semigroup Interval where
+    (<>)    = addInterval
+instance Monoid Interval where
+    mempty  = _P1
+    mappend = addInterval
+instance AdditiveGroup Interval where
+    zeroV   = _P1
+    (^+^)   = addInterval
+    negateV = negateInterval
+
+-- rquality :: Interval -> Integer
+-- rquality (Interval (o, d, c)) = (c - diatonicToChromatic d)
+
+quality :: Interval -> Quality
+quality (Interval (o, d, c)) 
+    | o >= 0    =                 Quality (isPure d) (c - diatonicToChromatic d)
+    | otherwise = invertQuality $ Quality (isPure d) (c - diatonicToChromatic d)
+
+-- |
+-- Number of diatonic steps (i.e. 1 for a prime, 2 for second etc).
+-- For a negative interval, its number is negative as well.
+number :: Interval -> Number
+number (Interval (o, d, c)) = Number (inc $ o * 7 + d)
+    where
+        inc a = (abs a + 1) * signum a
+
+-- For a negative interval, the steps is negative as well.
+steps :: Interval -> Steps
+steps (Interval (o, d, c)) = Steps (o * 12 + c)
+
+-- |
+-- In which octave is the inverval.
+-- Simple invervals are in octave 0, compound invervals are not.
+-- For a negative interval, the octave is negative as well.
+octave :: Interval -> Octave
+octave (Interval (o, d, c)) = o
+
+isSimple :: Interval -> Bool
+isSimple = (== 0) . octave
+
+isCompound :: Interval -> Bool
+isCompound = (/= 0) . octave
+
+
 
 intervalNegative :: Interval -> Bool
 intervalNegative (Interval (oa, _, _)) = oa < 0
@@ -115,7 +167,10 @@ intervalNegative (Interval (oa, _, _)) = oa < 0
 negateInterval :: Interval -> Interval
 negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
-invertDiatonic d  = 7  - d
+invertDiatonic :: Num a => a -> a
+invertDiatonic d  = 7  - d       
+
+invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
       
 addInterval :: Interval -> Interval -> Interval
@@ -132,9 +187,9 @@ invert :: Interval -> Interval
 -- invert (Interval (0,0)) = Interval (0,7)
 invert a = let (_, simp) = separate (negate a) in simp
 
-steps :: Interval -> Chromatic
-steps = undefined
 
+spell :: Integral a => (Steps -> a) -> Interval -> Interval
+spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  steps
 
 
 -- respell :: Interval -> Interval
@@ -149,7 +204,7 @@ d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 
 d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
 _ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
 
-isPure :: Number -> Bool
+isPure :: Integer -> Bool
 isPure 0 = True
 isPure 1 = False
 isPure 2 = False
@@ -157,7 +212,6 @@ isPure 3 = True
 isPure 4 = True
 isPure 5 = False
 isPure 6 = False
-isPure 7 = True
 
 diatonicToChromatic :: Integer -> Integer
 diatonicToChromatic = go
@@ -170,8 +224,8 @@ diatonicToChromatic = go
         go 5 = 9
         go 6 = 11
 
-chromaticToDiactonic :: Integer -> Integer
-chromaticToDiactonic = go
+sharps :: Steps -> Integer
+sharps = go
     where
         go 0  = 0
         go 1  = 0
@@ -184,4 +238,20 @@ chromaticToDiactonic = go
         go 8  = 4
         go 9  = 5
         go 10 = 5
+        go 11 = 6
+
+flats :: Steps -> Integer
+flats = go
+    where
+        go 0  = 0
+        go 1  = 1
+        go 2  = 1
+        go 3  = 2
+        go 4  = 2
+        go 5  = 3
+        go 6  = 4
+        go 7  = 4
+        go 8  = 5
+        go 9  = 5
+        go 10 = 6
         go 11 = 6
