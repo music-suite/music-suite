@@ -22,30 +22,38 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Relative (
+    -- ** Semitones
+    Semitones,
+
     -- ** Inverval number
     Number,
 
     -- ** Interval quality
     Quality,    
+    major,
+    minor,
+    augmented,
+    diminished,
     invertQuality,
+
     HasQuality(..),
+    isPerfect,
     isMajor,
     isMinor,
     isAugmented,
     isDiminished,
 
     -- ** Intervals
-    Steps,
     Interval,
     -- *** Constructing intervals
-    major,
-    minor,
+    interval,
 
     -- *** Inspecing intervals
     number,
-    steps,
+    semitones,
     isSimple,
     isCompound,
+    isPositive,
     isNegative,
     
     -- *** Transformations
@@ -90,18 +98,28 @@ import Control.Applicative
 import Music.Pitch.Absolute
 import qualified Data.List as List
 
-newtype Steps     = Steps { getSteps :: Integer }
-deriving instance Eq Steps
-deriving instance Ord Steps
-instance Show Steps where
-    show (Steps d) = show d
-deriving instance Num Steps
-deriving instance Enum Steps
-deriving instance Real Steps
-deriving instance Integral Steps
+-- |
+-- An interval represented as a number of semitones.
+--
+newtype Semitones  = Semitones { getSemitones :: Integer }
+deriving instance Eq Semitones
+deriving instance Ord Semitones
+instance Show Semitones where
+    show (Semitones d) = show d
+deriving instance Num Semitones
+deriving instance Enum Semitones
+deriving instance Real Semitones
+deriving instance Integral Semitones
 
-
-newtype Number     = Number { getNumber :: Integer }
+-- |
+-- The number portion of an interval (i.e. second, third, etc).
+--
+-- Note that the inverval number is always one step larger than number of steps spanned by
+-- the interval (i.e. a third spans two diatonic steps).
+--
+-- > number a + number b = number (a + b) + 1
+--
+newtype Number = Number { getNumber :: Integer }
 deriving instance Eq Number
 deriving instance Ord Number
 instance Show Number where
@@ -150,11 +168,20 @@ class HasQuality a where
 instance HasQuality Quality where
     quality = id
 
+perfect    = Quality True 0
+major      = Quality False 0
+minor      = Quality False (-1)
+augmented  = Quality False 1
+diminished = Quality True (-1) -- TODO this is not unique
+
+isPerfect :: HasQuality a => a -> Bool
+isPerfect = (== perfect) . quality
+
 isMajor :: HasQuality a => a -> Bool
-isMajor = (== Quality False 0) . quality
+isMajor = (== major) . quality
 
 isMinor :: HasQuality a => a -> Bool
-isMinor = (== Quality False (-1)) . quality
+isMinor = (== minor) . quality
 
 isAugmented :: HasQuality a => a -> Bool
 isAugmented = ((== Quality False 1) `or'` (== Quality True 1)) . quality
@@ -168,35 +195,29 @@ or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 or' p q x = p x || q x
 
 
-
-
-
--- TODO strange behaviour for negative values
-major :: Number -> Interval
-major a | isPure (fromIntegral $ (a-1) `mod` 7)  = error $ "major: Invalid number: " ++ show a
-        | otherwise                = let n = a - 1 in Interval (
-            fromIntegral $ n `div` 7, 
-            fromIntegral $ n `mod` 7, 
-            diatonicToChromatic $ fromIntegral $ n `mod` 7)
-minor :: Number -> Interval
-minor a | isPure (fromIntegral $ (a-1) `mod` 7) = error $ "minor: Invalid number: " ++ show a
-        | otherwise                = let n = a - 1 in Interval (
-            fromIntegral $ n `div` 7, 
-            fromIntegral $ n `mod` 7, 
-            pred $ diatonicToChromatic $ fromIntegral $ n `mod` 7)
-        
--- minor :: Number -> Interval
--- minor n | isPure n  = error $ "minor: Invalid number: " ++ show n
---         | otherwise = Interval (-1,n)
-
-
 -- type Integer = Integer
 type Diatonic = Integer
 type Chromatic = Integer
+
+-- |
+-- An interval is the differenceerence between two pitches. Note that this includes
+-- negative invervals. 
+-- 
+-- Adding intervals preserves spelling. For example:
+--
+-- > m3 + _M3 = _P5
+-- > d5 + _M6 = m10 
+--
+-- Intervals are generally described in terms of 'Quality' and 'Number'. 
+-- To construct an interval, use the 'interval' constructor or the interval literals:
+--
+-- > m5 _P5 _M7 etc.
+--
+--
 newtype Interval = Interval { getInterval :: (
     Integer,     -- octaves, may be negative
-    Diatonic,   -- diatonic step [0..6]
-    Chromatic   -- chromatic step [0..11]
+    Diatonic,   -- diatonic semitone [0..6]
+    Chromatic   -- chromatic semitone [0..11]
 ) }
 
 deriving instance Eq Interval
@@ -222,41 +243,76 @@ instance AdditiveGroup Interval where
     (^+^)   = addInterval
     negateV = negateInterval
 
--- rquality :: Interval -> Integer
--- rquality (Interval (o, d, c)) = (c - diatonicToChromatic d)
-
 instance HasQuality Interval where
     quality (Interval (o, d, c)) 
-        | o >= 0    =                 Quality (isPure d) (c - diatonicToChromatic d)
-        | otherwise = invertQuality $ Quality (isPure d) (c - diatonicToChromatic d)
+        | o >= 0    =                 Quality (isPerfectNumber d) (c - diatonicToChromatic d)
+        | otherwise = invertQuality $ Quality (isPerfectNumber d) (c - diatonicToChromatic d)
 
 -- |
--- Number of diatonic steps (i.e. 1 for a prime, 2 for second etc).
--- For a negative interval, its number is negative as well.
+-- Construct an interval from a quality and number.
+--
+interval :: Quality -> Number -> Interval
+interval = go 
+    where
+        go q n | isMajor q = Interval (0,0,0)
+               | isMinor q = Interval (0,0,0)
+
+-- |
+-- Returns the number portion of an interval.
+-- 
+-- The interval number is negative if and only if the interval is negative.
+--
 number :: Interval -> Number
 number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
     where
         inc a = (abs a + 1) * signum a
 
--- For a negative interval, the steps is negative as well.
-steps :: Interval -> Steps
-steps (Interval (o, d, c)) = Steps (fromIntegral o * 12 + c)
-
 -- |
--- In which octave is the inverval.
+-- Returns the number of semitones spanned by an interval.
+--
+-- The number of semitones is negative if and only if the interval is negative.
+--
+-- Examples:
+--                   
+-- > semitones _P1     =  0
+-- > semitones m3      =  3
+-- > semitones d5      =  6
+-- > semitones (-_P8)  =  -12
+--
+semitones :: Interval -> Semitones
+semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
+
 -- Simple invervals are in octave 0, compound invervals are not.
 -- For a negative interval, the octave is negative as well.
 octave :: Interval -> Integer
 octave (Interval (o, d, c)) = o
 
+-- |
+-- Returns whether the given interval is simple.
+--
+-- A simple interval is an positive interval spanning less than one octave.
+--
 isSimple :: Interval -> Bool
 isSimple = (== 0) . octave
 
+-- |
+-- Returns whether the given interval is compound.
+--
+-- A compound interval is either a negative interval, or a positive interval spanning 
+-- more than octave.
+--
 isCompound :: Interval -> Bool
 isCompound = (/= 0) . octave
 
+-- |
+-- Returns whether the given interval is positive. A simple interval is positive by definition.
+--
+isPositive :: Interval -> Bool
+isPositive (Interval (oa, _, _)) = oa >= 0
 
-
+-- |
+-- Returns whether the given interval is negative.
+--
 isNegative :: Interval -> Bool
 isNegative (Interval (oa, _, _)) = oa < 0
 
@@ -271,9 +327,9 @@ invertChromatic c = 12 - c
       
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
-    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma))
+    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, semitones, chroma))
     where
-        (carry, steps) = (da + db) `divMod` 7  
+        (carry, semitones) = (da + db) `divMod` 7  
         chroma         = (ca + cb) `mod` 12
 
 separate :: Interval -> (Integer, Interval)
@@ -284,8 +340,8 @@ invert :: Interval -> Interval
 invert a = let (_, simp) = separate (negate a) in simp
 
 
-spell :: Integral a => (Steps -> a) -> Interval -> Interval
-spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  steps
+spell :: (Semitones -> Number) -> Interval -> Interval
+spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  semitones
 
 
 -- respell :: Interval -> Interval
@@ -300,14 +356,14 @@ d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 
 d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
 _ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
 
-isPure :: Integer -> Bool
-isPure 0 = True
-isPure 1 = False
-isPure 2 = False
-isPure 3 = True
-isPure 4 = True
-isPure 5 = False
-isPure 6 = False
+isPerfectNumber :: Integer -> Bool
+isPerfectNumber 0 = True
+isPerfectNumber 1 = False
+isPerfectNumber 2 = False
+isPerfectNumber 3 = True
+isPerfectNumber 4 = True
+isPerfectNumber 5 = False
+isPerfectNumber 6 = False
 
 diatonicToChromatic :: Integer -> Integer
 diatonicToChromatic = go
@@ -320,7 +376,7 @@ diatonicToChromatic = go
         go 5 = 9
         go 6 = 11
 
-sharps :: Steps -> Integer
+sharps :: Semitones -> Number
 sharps = go
     where
         go 0  = 0
@@ -336,7 +392,7 @@ sharps = go
         go 10 = 5
         go 11 = 6
 
-flats :: Steps -> Integer
+flats :: Semitones -> Number
 flats = go
     where
         go 0  = 0
@@ -357,11 +413,11 @@ flats = go
 {-  
     Some terminology:                                           
         
-        newtype Pitch = (PitchClass, Steps)
+        newtype Pitch = (PitchClass, Semitones)
             For example (E, Natural)
             We write [c,cs,db..] for [(C, Natural), (C, Sharp), (D, Flat)..]
         
-        newtype Interval = (Number, Steps)
+        newtype Interval = (Number, Semitones)
             For example (Augmented, IV)
         
         Interval is the relative representation of pitch 
@@ -376,19 +432,19 @@ flats = go
 
 
         
-        Steps is the smallest musical unit (Semitones in Western music)
+        Semitones is the smallest musical unit (Semitones in Western music)
         
-        The `steps` function retrieves the number of Steps in a pitch, for example
-            steps :: Interval -> Steps
-            steps major third = 4
+        The `semitones` function retrieves the number of Semitones in a pitch, for example
+            semitones :: Interval -> Semitones
+            semitones major third = 4
 
-        Note that steps is surjetive. We can define a non-deterministic function `intervals`
-            intervals :: Steps -> [Interval]
+        Note that semitones is surjetive. We can define a non-deterministic function `intervals`
+            intervals :: Semitones -> [Interval]
             intervals 4 = [majorThird, diminishedFourth]
         Law
-            map steps (intervals a) = replicate n a    for all n > 0
+            map semitones (intervals a) = replicate n a    for all n > 0
         Lemma
-            map steps (intervals a)
+            map semitones (intervals a)
         
 
         isHemitonic   [1,2,2] = True
@@ -397,10 +453,10 @@ flats = go
         isCohemitonic [1,2,1] = False
         isTritonic ...
         
-        A Scale is a [Steps], for example [2,2,1,2,2,2,1]
+        A Scale is a [Semitones], for example [2,2,1,2,2,2,1]
             From this we can derive       [2,4,5,7,9,11,12]
         A Scale is a function (Number -> Interval)
-        A Scale is a function (Number -> Steps)
+        A Scale is a function (Number -> Semitones)
 
     Tonal
         isConsonance :: Interval -> Bool
@@ -412,7 +468,7 @@ flats = go
         isTritonic :: Interval -> Bool
 
         isSemitone :: Interval -> Bool
-        isStep :: Interval -> Bool
+        isSemitone :: Interval -> Bool
         isLeap :: Interval -> Bool
         isSimple :: Interval -> Bool
         isCompound :: Interval -> Bool
@@ -439,41 +495,41 @@ flats = go
 
 
 
--- -- Step is an enumerated associated type
--- type family Step a :: *
+-- -- Semitone is an enumerated associated type
+-- type family Semitone a :: *
 -- type family Alteration a :: *
 -- 
--- -- A scale is a function :: Step a -> a
--- newtype Scale a = Scale { getScale :: [Step a] } 
+-- -- A scale is a function :: Semitone a -> a
+-- newtype Scale a = Scale { getScale :: [Semitone a] } 
 -- -- Eq, Show
 -- 
--- step :: Scale a -> Step a -> a
--- step = undefined
+-- semitone :: Scale a -> Semitone a -> a
+-- semitone = undefined
 
 
--- step (Scale xs) p = xs !! (fromIntegral p `mod` length xs)
+-- semitone (Scale xs) p = xs !! (fromIntegral p `mod` length xs)
 -- 
 -- 
--- fromStep :: (Num a, Ord a, Integral b, Num c) => Scale a -> b -> c
--- fromStep (Scale xs) p = fromIntegral $ fromMaybe (length xs - 1) $ List.findIndex (>= fromIntegral p) xs
+-- fromSemitone :: (Num a, Ord a, Integral b, Num c) => Scale a -> b -> c
+-- fromSemitone (Scale xs) p = fromIntegral $ fromMaybe (length xs - 1) $ List.findIndex (>= fromIntegral p) xs
 -- 
--- scaleFromSteps :: Num a => [a] -> Scale a
--- scaleFromSteps = Scale . accum
+-- scaleFromSemitones :: Num a => [a] -> Scale a
+-- scaleFromSemitones = Scale . accum
 --     where
 --         accum = snd . List.mapAccumL add 0
 --         add a x = (a + x, a + x)
 -- 
--- -- numberOfSteps :: Scale a -> Int
--- numberOfSteps = length . getScale
+-- -- numberOfSemitones :: Scale a -> Int
+-- numberOfSemitones = length . getScale
 -- 
 -- major :: Num a => Scale a
--- major = scaleFromSteps [0,2,2,1,2,2,2,1]
+-- major = scaleFromSemitones [0,2,2,1,2,2,2,1]
 -- 
 -- naturalMinor :: Num a => Scale a
--- naturalMinor = scaleFromSteps [0,2,1,2,2,1,2,2]
+-- naturalMinor = scaleFromSemitones [0,2,1,2,2,1,2,2]
 -- 
 -- harmonicMinor :: Num a => Scale a
--- harmonicMinor = scaleFromSteps [0,2,1,2,2,1,3,1]
+-- harmonicMinor = scaleFromSemitones [0,2,1,2,2,1,3,1]
 
 
 
