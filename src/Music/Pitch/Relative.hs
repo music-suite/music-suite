@@ -22,24 +22,52 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Relative (
+    -- ** Inverval number
     Number,
-    Quality,
+
+    -- ** Interval quality
+    Quality,    
+    invertQuality,
+    HasQuality(..),
+    isMajor,
+    isMinor,
+    isAugmented,
+    isDiminished,
+
+    -- ** Intervals
+    Steps,
     Interval,
-    quality,
-    number,
-    invert,
-    separate,
-    respell,
-    
+    -- *** Constructing intervals
     major,
     minor,
-    _pure,
-    augmented,
-    diminished,
-    
 
-    -- ** Predifined
-    prime, second, third, fourth, fifth, sixth, seventh, octave,
+    -- *** Inspecing intervals
+    number,
+    steps,
+    isSimple,
+    isCompound,
+    isNegative,
+    
+    -- *** Transformations
+    invert,
+    separate,
+    
+    -- * Spelling
+    spell,
+    sharps,
+    flats,
+    
+         
+    -- ** Literals (TODO move)
+    -- prime, 
+    -- second, 
+    -- third, 
+    -- fourth, 
+    -- fifth, 
+    -- sixth, 
+    -- seventh, 
+    -- octave,
+
     d1, _P1, _A1,
     d2, m2, _M2, _A2,
     d3, m3, _M3, _A3,
@@ -47,7 +75,7 @@ module Music.Pitch.Relative (
     d5, _P5, _A5,
     d6, m6, _M6, _A6,
     d7, m7, _M7, _A7,
-    d8, _P8, _A8,
+    d8, _P8, _A8,    
     
     
 )
@@ -56,120 +84,223 @@ where
 import Data.Maybe
 import Data.Either
 import Data.Semigroup
+import Data.VectorSpace
 import Control.Monad
 import Control.Applicative
 import Music.Pitch.Absolute
 import qualified Data.List as List
 
--- data    Class      = C | D |E | F | G | A | B
--- data    Alteration = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
--- newtype Pitch      = Pitch { getPitch :: (Class, Alteration) }
--- deriving instance Eq Class
--- deriving instance Ord Class
--- deriving instance Enum Class
--- deriving instance Eq Alteration
--- instance Ord Alteration where { compare a b = compare (fromEnum a) (fromEnum b) }
--- instance Enum Alteration where { toEnum = undefined ; fromEnum = undefined }
--- 
+newtype Steps     = Steps { getSteps :: Integer }
+deriving instance Eq Steps
+deriving instance Ord Steps
+instance Show Steps where
+    show (Steps d) = show d
+deriving instance Num Steps
+deriving instance Enum Steps
+deriving instance Real Steps
+deriving instance Integral Steps
 
 
-{-
-    Number represented by zero-based index
-    I.e. prime is 0, second is 1 and so on
--}
-newtype Number     = Number { getNumber :: Int }
-
-newtype Quality    = Quality { getQuality :: Int }
+newtype Number     = Number { getNumber :: Integer }
 deriving instance Eq Number
 deriving instance Ord Number
 instance Show Number where
-    show (Number d) 
-        | d >= 0    = show (d + 1)
-        | otherwise = error "Number.show: Negative value"
+    show (Number d) = show d
 deriving instance Num Number
 deriving instance Enum Number
 deriving instance Real Number
 deriving instance Integral Number
 
+-- Bool determines whether the quality refers to a pure interva
+--      Impure    Pure
+--      ===       === 
+-- -3   2dim      3dim
+-- -2   dim       2dim
+-- -1   minor     dim
+-- 0    major     pure
+-- 1    aug       aug
+-- 2    aug       2aug
+data Quality = Quality Bool Integer
 deriving instance Eq Quality
 deriving instance Ord Quality
-deriving instance Num Quality
-deriving instance Enum Quality
-deriving instance Real Quality
-deriving instance Integral Quality
+-- deriving instance Num Quality
+-- deriving instance Enum Quality
+-- deriving instance Real Quality
+-- deriving instance Integral Quality
 instance Show Quality where
-    show (-2) = "d"
-    show (-1) = "m"
-    show (0)  = "_P"
-    show (1)  = "_M"
-    show (2)  = "_A"
-    show n | n < 0     = "_" ++ show ((negate $ getQuality n) - 1) ++ "d"
-           | otherwise = "_" ++ show (getQuality n - 1) ++ "A"
-{-
-    Quality is represented by a number as follows:
+    show (Quality True (-3))  = "ddd"
+    show (Quality True (-2))  = "dd"
+    show (Quality True (-1))  = "d"
+    show (Quality True 0)     = "_P"
+    show (Quality True 1)     = "_A"
+    show (Quality True 2)     = "_AA"
+    
+    show (Quality False (-3)) = "dd"
+    show (Quality False (-2)) = "d"
+    show (Quality False (-1)) = "m"
+    show (Quality False 0)    = "_M"
+    show (Quality False 1)    = "_A"
+    show (Quality False 2)    = "_AA"
 
-        ... dd  d  m  P  M  A  AA ...
-        ... -3 -2 -1  0  1  2  3 ...
+invertQuality (Quality True q)  = Quality True (negate q)
+invertQuality (Quality False q) = Quality False (negate q - 1)
 
--}
+class HasQuality a where
+    quality :: a -> Quality
+instance HasQuality Quality where
+    quality = id
 
-newtype Interval   = Interval { getInterval :: (Quality, Number) }
+isMajor :: HasQuality a => a -> Bool
+isMajor = (== Quality False 0) . quality
 
-quality (Interval (q,n)) = q
-number (Interval (q,n)) = n
+isMinor :: HasQuality a => a -> Bool
+isMinor = (== Quality False (-1)) . quality
+
+isAugmented :: HasQuality a => a -> Bool
+isAugmented = ((== Quality False 1) `or'` (== Quality True 1)) . quality
+
+isDiminished :: HasQuality a => a -> Bool
+isDiminished = ((== Quality False (-2)) `or'` (== Quality True (-1))) . quality
+
+
+
+or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
+or' p q x = p x || q x
+
+
+
+
+
+-- TODO strange behaviour for negative values
+major :: Number -> Interval
+major a | isPure (fromIntegral $ (a-1) `mod` 7)  = error $ "major: Invalid number: " ++ show a
+        | otherwise                = let n = a - 1 in Interval (
+            fromIntegral $ n `div` 7, 
+            fromIntegral $ n `mod` 7, 
+            diatonicToChromatic $ fromIntegral $ n `mod` 7)
+minor :: Number -> Interval
+minor a | isPure (fromIntegral $ (a-1) `mod` 7) = error $ "minor: Invalid number: " ++ show a
+        | otherwise                = let n = a - 1 in Interval (
+            fromIntegral $ n `div` 7, 
+            fromIntegral $ n `mod` 7, 
+            pred $ diatonicToChromatic $ fromIntegral $ n `mod` 7)
+        
+-- minor :: Number -> Interval
+-- minor n | isPure n  = error $ "minor: Invalid number: " ++ show n
+--         | otherwise = Interval (-1,n)
+
+
+-- type Integer = Integer
+type Diatonic = Integer
+type Chromatic = Integer
+newtype Interval = Interval { getInterval :: (
+    Integer,     -- octaves, may be negative
+    Diatonic,   -- diatonic step [0..6]
+    Chromatic   -- chromatic step [0..11]
+) }
 
 deriving instance Eq Interval
-instance Ord Interval where
-    Interval (q1,d1) `compare` Interval (q2,d2) = case d1 `compare` d2 of
-        EQ -> q1 `compare` q2
-        x  -> x
+deriving instance Ord Interval
+instance Num Interval where
+    (+) = addInterval
+    (*) = undefined
+    negate = negateInterval
+    abs = undefined
+    signum = undefined
+    fromInteger 0 = _P1
+    fromInteger _ = undefined
 instance Show Interval where
-    show (Interval (q,d)) | d >= 0    =        show q ++ show d
-                          | otherwise = "-" ++ show q ++ show (negate d)
+    show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
+           | otherwise          = show (quality a) ++ show (abs $ number a)
+instance Semigroup Interval where
+    (<>)    = addInterval
+instance Monoid Interval where
+    mempty  = _P1
+    mappend = addInterval
+instance AdditiveGroup Interval where
+    zeroV   = _P1
+    (^+^)   = addInterval
+    negateV = negateInterval
 
-octaveShift :: Integer -> Interval -> Interval
-octaveShift a (Interval (q,n)) = Interval (q, n + 7*fromIntegral a)
+-- rquality :: Interval -> Integer
+-- rquality (Interval (o, d, c)) = (c - diatonicToChromatic d)
+
+instance HasQuality Interval where
+    quality (Interval (o, d, c)) 
+        | o >= 0    =                 Quality (isPure d) (c - diatonicToChromatic d)
+        | otherwise = invertQuality $ Quality (isPure d) (c - diatonicToChromatic d)
+
+-- |
+-- Number of diatonic steps (i.e. 1 for a prime, 2 for second etc).
+-- For a negative interval, its number is negative as well.
+number :: Interval -> Number
+number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
+    where
+        inc a = (abs a + 1) * signum a
+
+-- For a negative interval, the steps is negative as well.
+steps :: Interval -> Steps
+steps (Interval (o, d, c)) = Steps (fromIntegral o * 12 + c)
+
+-- |
+-- In which octave is the inverval.
+-- Simple invervals are in octave 0, compound invervals are not.
+-- For a negative interval, the octave is negative as well.
+octave :: Interval -> Integer
+octave (Interval (o, d, c)) = o
+
+isSimple :: Interval -> Bool
+isSimple = (== 0) . octave
+
+isCompound :: Interval -> Bool
+isCompound = (/= 0) . octave
 
 
-{-
-    Interval addition can be represented by two infinite matrices (here showing the center):
-    
-    P :=
-        | -5 -4 -3 -2  0 |
-        | -4 -3 -2  0  2 |
-        | -3 -2  0  2  3 |
-        | -2  0  2  3  4 |
-        |  0  2  3  4  5 |
 
-    M :=
-        | -5 -4 -3 -2 -1  1 |
-        | -4 -3 -2 -1  1  2 |
-        | -3 -2 -1  1  2  3 |
-        | -2 -1  1  2  3  4 |
-        | -1  1  2  3  4  5 |
-        
-    P represents degrees of perfect intervals, M major/minor intervals
-    
-    We write P(a,b) for P(i+a,j+b), regarding the middle position as (0,0). For example:
+isNegative :: Interval -> Bool
+isNegative (Interval (oa, _, _)) = oa < 0
 
-    Then we can define a table such as:
+negateInterval :: Interval -> Interval
+negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
-        -	1	2	3	4	5	6	7	8
-        1	P	M+1	M+1	P	P	M+1	M+1	P
-        2	M+1	M+2	P+1	P+1	M+1	M+2	P+1	M+1
-        3	M+1	P+1	P+1	M+1	M+1	P+1	M+1	M+1
-        4	P	P+1	M+1	M+1	P	M+1	M+1	P
-        5	P	M+1	M+1	P	M	M+1	P	P
-        6	M+1	M+2	P+1	M+1	M+1	P+1	P+1	M+1
-        7	M+1	P+1	M+1	M+1	P	P+1	M+1	M+1
-        8	P	M+1	M+1	P	P	M+1	M+1	P
+invertDiatonic :: Num a => a -> a
+invertDiatonic d  = 7  - d       
 
--}                                                    
+invertChromatic :: Num a => a -> a
+invertChromatic c = 12 - c
+      
+addInterval :: Interval -> Interval -> Interval
+addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
+    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma))
+    where
+        (carry, steps) = (da + db) `divMod` 7  
+        chroma         = (ca + cb) `mod` 12
 
-normQuality :: Number -> Quality -> Quality
-normQuality n = if isPure n then normQualityPure else normQualityImpure
+separate :: Interval -> (Integer, Interval)
+separate (Interval (o, d, c)) = (o, Interval (0, d, c))
 
-isPure :: Number -> Bool
+invert :: Interval -> Interval   
+-- invert (Interval (0,0)) = Interval (0,7)
+invert a = let (_, simp) = separate (negate a) in simp
+
+
+spell :: Integral a => (Steps -> a) -> Interval -> Interval
+spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  steps
+
+
+-- respell :: Interval -> Interval
+
+
+_ = 1 ;                  d1 = Interval (0,0,-1) ; _P1 = Interval (0,0,0)  ; _A1 = Interval (0,0,1)
+d2 = Interval (0,1,0)  ; m2 = Interval (0,1,1)  ; _M2 = Interval (0,1,2)  ; _A2 = Interval (0,1,3)
+d3 = Interval (0,2,2)  ; m3 = Interval (0,2,3)  ; _M3 = Interval (0,2,4)  ; _A3 = Interval (0,2,5)
+_ = 1 ;                  d4 = Interval (0,3,4)  ; _P4 = Interval (0,3,5)  ; _A4 = Interval (0,3,6)
+_ = 1 ;                  d5 = Interval (0,4,6)  ; _P5 = Interval (0,4,7)  ; _A5 = Interval (0,4,8)
+d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 = Interval (0,5,10)
+d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
+_ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
+
+isPure :: Integer -> Bool
 isPure 0 = True
 isPure 1 = False
 isPure 2 = False
@@ -177,166 +308,50 @@ isPure 3 = True
 isPure 4 = True
 isPure 5 = False
 isPure 6 = False
-isPure 7 = True
 
-normQualityPure :: Quality -> Quality
-normQualityPure q
-    | q <  (-1) = q + 1
-    | q == 0    = q
-    | q >  1    = q - 1
-    | otherwise = error "Pure quality can not be 1 or -1"
-
-normQualityImpure :: Quality -> Quality
-normQualityImpure q
-    | q <  0 = q + 1
-    | q >  0 = q
-    | otherwise = error "Impure quality can not be 0"
-    
-Interval (q1,n1) `addSimple` Interval (q2,n2) = Interval (addQuality q1 n1 q2 n2, n1 + n2)
-
-addQuality :: Quality -> Number -> Quality -> Number -> Quality
-addQuality q1 n1 q2 n2 = Quality $ lookup2 table (getQuality $ normQuality n1 q1) (getQuality $ normQuality n2 q2) 
+diatonicToChromatic :: Integer -> Integer
+diatonicToChromatic = go
     where
-          table = [
-                [ pt  , mt1 , mt1 , pt  , pt  , mt1 , mt1 , pt  ],
-                [ mt1 , mt2 , pt1 , pt1 , mt1 , mt2 , pt1 , mt1 ],
-                [ mt1 , pt1 , pt1 , mt1 , mt1 , pt1 , mt1 , mt1 ],
-                [ pt  , pt1 , mt1 , mt1 , pt  , mt1 , mt1 , pt  ],
-                [ pt  , mt1 , mt1 , pt  , mt  , mt1 , pt  , pt  ],
-                [ mt1 , mt2 , pt1 , mt1 , mt1 , pt1 , pt1 , mt1 ],
-                [ mt1 , pt1 , mt1 , mt1 , pt  , pt1 , mt1 , mt1 ],
-                [ pt  , mt1 , mt1 , pt  , pt  , mt1 , mt1 , pt  ]
-            ]
-          lookup2 a = (a !! fromIntegral n2) !! fromIntegral n1
-          
-          -- the P and M matrixes with relevant translations
-          pt, mt, mt1, mt2 :: Mat Int
+        go 0 = 0
+        go 1 = 2
+        go 2 = 4
+        go 3 = 5
+        go 4 = 7
+        go 5 = 9
+        go 6 = 11
 
-          pt x y = let n = x + y in n + (1 * signum n)
-          mt x y = let n = x + y in if (n >= 0) then n + 1 else n
-          pt1 = moveX 1 pt
-          mt1 = moveX 1 mt
-          mt2 = moveX 2 mt
-
-type Mat a = a -> a -> a
-
-moveX :: Num a  => a      -> Mat a -> Mat a
-moveY :: Num a  => a      -> Mat a -> Mat a
-moveXY :: Num a => a -> a -> Mat a -> Mat a
-moveX  m z   = \x y -> z (x - m) y
-moveY  m z   = \x y -> z x       (y - m)
-moveXY m n z = \x y -> z (x - m) (y - n)
-
-{-
-putMatrix :: (Eq a, Num a, Ord a, Enum a, Show a) => Mat a -> IO ()
-putMatrix = putStrLn . showMatrix 5 5 . moveXY 2 2
-
-showMatrix :: (Eq a, Num a, Ord a, Enum a, Show a) => a -> a -> Mat a -> String
-showMatrix w z mat = unlines $ do
-    y <- [0..z-1]
-    return $ (++ "|") $ ("| " ++) $ mconcat $ do
-        x <- [0..w-1]
-        return $ padL 3 $ showN $ mat x y
+sharps :: Steps -> Integer
+sharps = go
     where
-        showN n | n >= 0    = " " ++ show n
-                | otherwise = show n
--}
+        go 0  = 0
+        go 1  = 0
+        go 2  = 1
+        go 3  = 1
+        go 4  = 2
+        go 5  = 3
+        go 6  = 3
+        go 7  = 4
+        go 8  = 4
+        go 9  = 5
+        go 10 = 5
+        go 11 = 6
 
+flats :: Steps -> Integer
+flats = go
+    where
+        go 0  = 0
+        go 1  = 1
+        go 2  = 1
+        go 3  = 2
+        go 4  = 2
+        go 5  = 3
+        go 6  = 4
+        go 7  = 4
+        go 8  = 5
+        go 9  = 5
+        go 10 = 6
+        go 11 = 6
 
-
-
--- dim, pur, maj, minor, aug :: Quality
--- dim = (-2)
--- minor = (-1)
--- pur = 0
--- maj = 1
--- aug = 2
-
-major :: Number -> Interval
-major n | isPure n  = error $ "major: Invalid number: " ++ show n
-        | otherwise = Interval (1,n)
-minor :: Number -> Interval
-minor n | isPure n  = error $ "minor: Invalid number: " ++ show n
-        | otherwise = Interval (-1,n)
-_pure :: Number -> Interval
-_pure n | not (isPure n)  = error $ "_pure: Invalid number: " ++ show n
-       | otherwise = Interval (0,n)
-
-augmented :: Number -> Interval
-augmented n = Interval (2,n)
-
-diminished :: Number -> Interval
-diminished n = Interval (-2,n)
-
-
-
-prime, second, third, fourth, fifth, sixth, seventh, octave :: Number
-prime = 0
-second = 1
-third = 2
-fourth = 3
-fifth = 4
-sixth = 5
-seventh = 6
-octave = 7
-
-d1 = Interval (-2,0) ; _P1 = Interval (-0,0) ; _A1 = Interval (2,0)
-d4 = Interval (-2,3) ; _P4 = Interval (-0,3) ; _A4 = Interval (2,3)
-d5 = Interval (-2,4) ; _P5 = Interval (-0,4) ; _A5 = Interval (2,4)
-d8 = Interval (-2,7) ; _P8 = Interval (-0,7) ; _A8 = Interval (2,7)
-d2 = Interval (-2,1) ; m2  = Interval (-1,1) ; _M2 = Interval (1,1) ; _A2 = Interval (2,1)
-d3 = Interval (-2,2) ; m3  = Interval (-1,2) ; _M3 = Interval (1,2) ; _A3 = Interval (2,2)
-d6 = Interval (-2,5) ; m6  = Interval (-1,5) ; _M6 = Interval (1,5) ; _A6 = Interval (2,5)
-d7 = Interval (-2,6) ; m7  = Interval (-1,6) ; _M7 = Interval (1,6) ; _A7 = Interval (2,6)
-
-
--- TODO subtraction
-instance Num Interval where
-    a + b  = let
-        (ao, as) = separate a
-        (bo, bs) = separate b
-        in addSimple as bs
-        -- TODO
-    a * b  = error "Interval.(*)"
-    abs (Interval (q,d)) | d < 0     = Interval (q, negate d)
-                         | otherwise = Interval (q, d)
-    negate (Interval (q,d)) = Interval (q, negate d)
-
-    fromInteger = error "Interval.fromInteger"
-    signum      = error "Interval.fromInteger"
-
--- |
--- Separate a compound interval
--- Returns a (possibly negative) number of octaves
--- For simple interval @a@, returns @(0,a)@.
-separate :: Interval -> (Integer, Interval)
-separate (Interval (q,d)) = let (octaves, steps) = d `divMod` 7
-                             in (fromIntegral octaves, Interval (if octaves < 0 then negate q else q, fromIntegral steps))
-
-
-                              
-invert :: Interval -> Interval   
-invert (Interval (0,0)) = Interval (0,7)
-invert a = let (_, simp) = separate (negate a) in simp
-
-
-
--- TODO
--- | rewrite as pure/major/minor (or aug4/dim5 for tritones)
-respell :: Interval -> Interval
-respell = error "simplify: Not implemented"
-
-
--- type Function = [Interval]
-
--- majorTriad :: Function
--- majorTriad = [_M3, m3]
--- 
--- minorTriad :: Function
--- minorTriad = [m3, _M3]
--- 
--- diminished :: Function
--- diminished = [m3, m3, m3]
 
 
 {-  
@@ -462,9 +477,4 @@ respell = error "simplify: Not implemented"
 
 
 
-
-padL :: Int -> String -> String
-padL n s
-    | length s < n  = s ++ replicate (n - length s) ' '
-    | otherwise     = s
 

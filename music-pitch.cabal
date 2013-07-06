@@ -23,7 +23,8 @@ library
         time,
         random,
         semigroups,
-        semigroupoids
+        semigroupoids,
+        vector-space
 
     hs-source-dirs: src
     exposed-modules:
