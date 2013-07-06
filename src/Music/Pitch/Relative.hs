@@ -49,6 +49,7 @@ module Music.Pitch.Relative (
     -- ** Intervals
     Interval,
     -- *** Constructing intervals
+    unison,
     interval,
 
     -- *** Inspecing intervals
@@ -58,10 +59,14 @@ module Music.Pitch.Relative (
     isCompound,
     isPositive,
     isNegative,
-    
-    -- *** Transformations
-    invert,
+
+    -- *** Simple and compound intervals
     separate,
+    octave,
+    simple,
+    
+    -- *** Inversion
+    invert,
     
     -- * Spelling
     spell,
@@ -137,7 +142,8 @@ isTritone   = (== tritone)  . semitones
 -- The number portion of an interval (i.e. second, third, etc).
 --
 -- Note that the inverval number is always one step larger than number of steps spanned by
--- the interval (i.e. a third spans two diatonic steps).
+-- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
+-- over addition:
 --
 -- > number a + number b = number (a + b) + 1
 --
@@ -163,24 +169,18 @@ deriving instance Integral Number
 data Quality = Quality Bool Integer
 deriving instance Eq Quality
 deriving instance Ord Quality
--- deriving instance Num Quality
--- deriving instance Enum Quality
--- deriving instance Real Quality
--- deriving instance Integral Quality
 instance Show Quality where
-    show (Quality True (-3))  = "ddd"
     show (Quality True (-2))  = "dd"
     show (Quality True (-1))  = "d"
     show (Quality True 0)     = "_P"
     show (Quality True 1)     = "_A"
-    show (Quality True 2)     = "_AA"
+    show (Quality True n)     = "_" ++ if n > 0 then replicate' n 'A' else replicate' (negate n) 'd'
     
-    show (Quality False (-3)) = "dd"
     show (Quality False (-2)) = "d"
     show (Quality False (-1)) = "m"
     show (Quality False 0)    = "_M"
     show (Quality False 1)    = "_A"
-    show (Quality False 2)    = "_AA"
+    show (Quality False n)    = "_" ++ if n > 0 then replicate' n 'A' else replicate' (negate n - 1) 'd'
 
 invertQuality :: Quality -> Quality
 invertQuality (Quality True q)  = Quality True (negate q)
@@ -248,10 +248,10 @@ instance Show Interval where
 instance Semigroup Interval where
     (<>)    = addInterval
 instance Monoid Interval where
-    mempty  = _P1
+    mempty  = unison
     mappend = addInterval
 instance AdditiveGroup Interval where
-    zeroV   = _P1
+    zeroV   = unison
     (^+^)   = addInterval
     negateV = negateInterval
 instance VectorSpace Interval where
@@ -273,6 +273,14 @@ interval = go
         go q n | isMajor q = Interval (0,0,0)
                | isMinor q = Interval (0,0,0)
 
+-- |
+-- The unison interval.
+--
+-- Equivalent to @_P1@.
+--
+unison :: Interval
+unison = _P1
+
 negateInterval :: Interval -> Interval
 negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
@@ -284,13 +292,21 @@ invertChromatic c = 12 - c
       
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
-    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, semitones, chroma))
+    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma))
     where
-        (carry, semitones) = (da + db) `divMod` 7  
-        chroma         = (ca + cb) `mod` 12
+        (carry, steps) = (da + db) `divMod` 7  
+        chroma         = trunc (ca + cb)
+        trunc          = if carry > 0 then (`mod` 12) else id
 
 separate :: Interval -> (Integer, Interval)
 separate (Interval (o, d, c)) = (o, Interval (0, d, c))
+
+octave :: Interval -> Integer
+octave a = o where (o, b) = separate a
+
+simple :: Interval -> Interval
+simple a = b where (o, b) = separate a
+
 
 -- |
 -- Returns the number portion of an interval.
@@ -316,11 +332,6 @@ number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
 --
 semitones :: Interval -> Semitones
 semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
-
--- Simple invervals are in octave 0, compound invervals are not.
--- For a negative interval, the octave is negative as well.
-octave :: Interval -> Integer
-octave (Interval (o, d, c)) = o
 
 -- |
 -- Returns whether the given interval is simple.
@@ -352,14 +363,13 @@ isNegative :: Interval -> Bool
 isNegative (Interval (oa, _, _)) = oa < 0
 
 
-
 stackInterval :: Integer -> Interval -> Interval
 stackInterval n a = mconcat $ replicate (fromIntegral n) a
 
 -- |
--- Interval inversion.
+-- Intervallic inversion.
 --
--- The inversion of a simple interval is determined as follows:
+-- The inversion of a simple interval is determined by the following rules:
 -- 
 -- * The interval number and the number of its inversion always add up to nine
 --   (i.e. 4 + 5 = 9).
@@ -573,3 +583,5 @@ flats = go
 
 or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
 or' p q x = p x || q x
+
+replicate' n = replicate (fromIntegral n)
