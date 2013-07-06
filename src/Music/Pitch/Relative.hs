@@ -25,7 +25,21 @@ module Music.Pitch.Relative (
     Number,
     Quality,
     Interval,
+    quality,
+    number,
+    invert,
+    separate,
+    respell,
     
+    major,
+    minor,
+    _pure,
+    augmented,
+    diminished,
+    
+
+    -- ** Predifined
+    prime, second, third, fourth, fifth, sixth, seventh, octave,
     d1, _P1, _A1,
     d2, m2, _M2, _A2,
     d3, m3, _M3, _A3,
@@ -35,10 +49,7 @@ module Music.Pitch.Relative (
     d7, m7, _M7, _A7,
     d8, _P8, _A8,
     
-    prime, second, third, fourth, fifth, sixth, seventh, octave,
-    invert,
-    separate,
-    respell,
+    
 )
 where
 
@@ -66,14 +77,61 @@ import qualified Data.List as List
     Number represented by zero-based index
     I.e. prime is 0, second is 1 and so on
 -}
-newtype Number     = Number { getNumber :: Integer }
+newtype Number     = Number { getNumber :: Int }
 
+newtype Quality    = Quality { getQuality :: Int }
+deriving instance Eq Number
+deriving instance Ord Number
+instance Show Number where
+    show (Number d) 
+        | d >= 0    = show (d + 1)
+        | otherwise = error "Number.show: Negative value"
+deriving instance Num Number
+deriving instance Enum Number
+deriving instance Real Number
+deriving instance Integral Number
+
+deriving instance Eq Quality
+deriving instance Ord Quality
+deriving instance Num Quality
+deriving instance Enum Quality
+deriving instance Real Quality
+deriving instance Integral Quality
+instance Show Quality where
+    show (-2) = "d"
+    show (-1) = "m"
+    show (0)  = "_P"
+    show (1)  = "_M"
+    show (2)  = "_A"
+    show n | n < 0     = "_" ++ show ((negate $ getQuality n) - 1) ++ "d"
+           | otherwise = "_" ++ show (getQuality n - 1) ++ "A"
 {-
     Quality is represented by a number as follows:
 
         ... dd  d  m  P  M  A  AA ...
         ... -3 -2 -1  0  1  2  3 ...
 
+-}
+
+newtype Interval   = Interval { getInterval :: (Quality, Number) }
+
+quality (Interval (q,n)) = q
+number (Interval (q,n)) = n
+
+deriving instance Eq Interval
+instance Ord Interval where
+    Interval (q1,d1) `compare` Interval (q2,d2) = case d1 `compare` d2 of
+        EQ -> q1 `compare` q2
+        x  -> x
+instance Show Interval where
+    show (Interval (q,d)) | d >= 0    =        show q ++ show d
+                          | otherwise = "-" ++ show q ++ show (negate d)
+
+octaveShift :: Integer -> Interval -> Interval
+octaveShift a (Interval (q,n)) = Interval (q, n + 7*fromIntegral a)
+
+
+{-
     Interval addition can be represented by two infinite matrices (here showing the center):
     
     P :=
@@ -94,13 +152,6 @@ newtype Number     = Number { getNumber :: Integer }
     
     We write P(a,b) for P(i+a,j+b), regarding the middle position as (0,0). For example:
 
-        P(0,0) = ( 0 )
-        P(0,1) = ( 2 )
-        
-        M(0,0)   = ( 1 )
-        M(0,1)   = ( 2 )
-        M(-1,-2) = ( -3 )
-        
     Then we can define a table such as:
 
         -	1	2	3	4	5	6	7	8
@@ -141,38 +192,33 @@ normQualityImpure q
     | q >  0 = q
     | otherwise = error "Impure quality can not be 0"
     
-quality :: Quality -> Number -> Quality -> Number -> Quality
--- quality :: Integer -> Integer -> Integer -> Integer -> Integer
-quality q1 n1 q2 n2 = Quality $ f (getQuality $ normQuality n1 q1) (getQuality $ normQuality n2 q2) 
-    where
-      f = (table !! fromIntegral n2) !! fromIntegral n1
-      table = 
-        [
-            [ p   , m_1 , m_1 , p   , p   , m_1 , m_1 , p   ],
-            [ m_1 , m_2 , p_1 , p_1 , m_1 , m_2 , p_1 , m_1 ],
-            [ m_1 , p_1 , p_1 , m_1 , m_1 , p_1 , m_1 , m_1 ],
-            [ p   , p_1 , m_1 , m_1 , p   , m_1 , m_1 , p   ],
-            [ p   , m_1 , m_1 , p   , m   , m_1 , p   , p   ],
-            [ m_1 , m_2 , p_1 , m_1 , m_1 , p_1 , p_1 , m_1 ],
-            [ m_1 , p_1 , m_1 , m_1 , p   , p_1 , m_1 , m_1 ],
-            [ p   , m_1 , m_1 , p   , p   , m_1 , m_1 , p   ]
-        ]
+Interval (q1,n1) `addSimple` Interval (q2,n2) = Interval (addQuality q1 n1 q2 n2, n1 + n2)
 
--- mP :: Int -> Int -> Int
+addQuality :: Quality -> Number -> Quality -> Number -> Quality
+addQuality q1 n1 q2 n2 = Quality $ lookup2 table (getQuality $ normQuality n1 q1) (getQuality $ normQuality n2 q2) 
+    where
+          table = [
+                [ pt  , mt1 , mt1 , pt  , pt  , mt1 , mt1 , pt  ],
+                [ mt1 , mt2 , pt1 , pt1 , mt1 , mt2 , pt1 , mt1 ],
+                [ mt1 , pt1 , pt1 , mt1 , mt1 , pt1 , mt1 , mt1 ],
+                [ pt  , pt1 , mt1 , mt1 , pt  , mt1 , mt1 , pt  ],
+                [ pt  , mt1 , mt1 , pt  , mt  , mt1 , pt  , pt  ],
+                [ mt1 , mt2 , pt1 , mt1 , mt1 , pt1 , pt1 , mt1 ],
+                [ mt1 , pt1 , mt1 , mt1 , pt  , pt1 , mt1 , mt1 ],
+                [ pt  , mt1 , mt1 , pt  , pt  , mt1 , mt1 , pt  ]
+            ]
+          lookup2 a = (a !! fromIntegral n2) !! fromIntegral n1
+          
+          -- the P and M matrixes with relevant translations
+          pt, mt, mt1, mt2 :: Mat Int
+
+          pt x y = let n = x + y in n + (1 * signum n)
+          mt x y = let n = x + y in if (n >= 0) then n + 1 else n
+          pt1 = moveX 1 pt
+          mt1 = moveX 1 mt
+          mt2 = moveX 2 mt
 
 type Mat a = a -> a -> a
-
-p, m, m_1, m_2 :: Mat Integer
-p x y = case x + y of
-    n -> n + (1 * signum n)
-
-m x y = case x + y of
-    n -> if (n >= 0) then n + 1 else n
-
-p_1 = moveX (1) p
-m_1 = moveX (1) m
-m_2 = moveX (2) m
-
 
 moveX :: Num a  => a      -> Mat a -> Mat a
 moveY :: Num a  => a      -> Mat a -> Mat a
@@ -181,6 +227,7 @@ moveX  m z   = \x y -> z (x - m) y
 moveY  m z   = \x y -> z x       (y - m)
 moveXY m n z = \x y -> z (x - m) (y - n)
 
+{-
 putMatrix :: (Eq a, Num a, Ord a, Enum a, Show a) => Mat a -> IO ()
 putMatrix = putStrLn . showMatrix 5 5 . moveXY 2 2
 
@@ -193,53 +240,35 @@ showMatrix w z mat = unlines $ do
     where
         showN n | n >= 0    = " " ++ show n
                 | otherwise = show n
+-}
 
--- sizedText :: Int -> String -> Printer
 
 
-newtype Quality    = Quality { getQuality :: Integer }
 
-newtype Interval   = Interval { getInterval :: (Quality, Number) }
+-- dim, pur, maj, minor, aug :: Quality
+-- dim = (-2)
+-- minor = (-1)
+-- pur = 0
+-- maj = 1
+-- aug = 2
 
-deriving instance Eq Number
-deriving instance Ord Number
-instance Show Number where
-    show (Number d) 
-        | d >= 0    = show (d + 1)
-        | otherwise = error "Number.show: Negative value"
-deriving instance Num Number
-deriving instance Enum Number
-deriving instance Real Number
-deriving instance Integral Number
+major :: Number -> Interval
+major n | isPure n  = error $ "major: Invalid number: " ++ show n
+        | otherwise = Interval (1,n)
+minor :: Number -> Interval
+minor n | isPure n  = error $ "minor: Invalid number: " ++ show n
+        | otherwise = Interval (-1,n)
+_pure :: Number -> Interval
+_pure n | not (isPure n)  = error $ "_pure: Invalid number: " ++ show n
+       | otherwise = Interval (0,n)
 
-deriving instance Eq Quality
-deriving instance Ord Quality
-deriving instance Num Quality
-deriving instance Enum Quality
-deriving instance Real Quality
-deriving instance Integral Quality
-instance Show Quality where
-    show (-2) = "d"
-    show (-1) = "m"
-    show (0)  = "_P"
-    show (1)  = "_M"
-    show (2)  = "_A"
-    show n | n < 0     = "_" ++ show ((negate $ getQuality n) - 1) ++ "d"
-           | otherwise = "_" ++ show (getQuality n - 1) ++ "A"
+augmented :: Number -> Interval
+augmented n = Interval (2,n)
 
-d, _P, _M, _A :: Quality
-d  = (-2)
--- m  = (-1)
-_P = 0
-_M = 1    
-_A = 2
+diminished :: Number -> Interval
+diminished n = Interval (-2,n)
 
-dim, pur, maj, minor, aug :: Quality
-dim = (-2)
-minor = (-1)
-pur = 0
-maj = 1
-aug = 2
+
 
 prime, second, third, fourth, fifth, sixth, seventh, octave :: Number
 prime = 0
@@ -251,15 +280,6 @@ sixth = 5
 seventh = 6
 octave = 7
 
-deriving instance Eq Interval
-instance Ord Interval where
-    Interval (q1,d1) `compare` Interval (q2,d2) = case d1 `compare` d2 of
-        EQ -> q1 `compare` q2
-        x  -> x
-instance Show Interval where
-    show (Interval (q,d)) | d >= 0    =        show q ++ show d
-                          | otherwise = "-" ++ show q ++ show (negate d)
-
 d1 = Interval (-2,0) ; _P1 = Interval (-0,0) ; _A1 = Interval (2,0)
 d4 = Interval (-2,3) ; _P4 = Interval (-0,3) ; _A4 = Interval (2,3)
 d5 = Interval (-2,4) ; _P5 = Interval (-0,4) ; _A5 = Interval (2,4)
@@ -269,10 +289,6 @@ d3 = Interval (-2,2) ; m3  = Interval (-1,2) ; _M3 = Interval (1,2) ; _A3 = Inte
 d6 = Interval (-2,5) ; m6  = Interval (-1,5) ; _M6 = Interval (1,5) ; _A6 = Interval (2,5)
 d7 = Interval (-2,6) ; m7  = Interval (-1,6) ; _M7 = Interval (1,6) ; _A7 = Interval (2,6)
 
-Interval (q1,n1) `addSimple` Interval (q2,n2) = Interval (quality q1 n1 q2 n2, n1 + n2)
-
-octaveShift :: Integer -> Interval -> Interval
-octaveShift a (Interval (q,n)) = Interval (q, n + 7*fromIntegral a)
 
 -- TODO subtraction
 instance Num Interval where
@@ -311,16 +327,16 @@ respell :: Interval -> Interval
 respell = error "simplify: Not implemented"
 
 
-type Function = [Interval]
+-- type Function = [Interval]
 
-majorTriad :: Function
-majorTriad = [_M3, m3]
-
-minorTriad :: Function
-minorTriad = [m3, _M3]
-
-diminished :: Function
-diminished = [m3, m3, m3]
+-- majorTriad :: Function
+-- majorTriad = [_M3, m3]
+-- 
+-- minorTriad :: Function
+-- minorTriad = [m3, _M3]
+-- 
+-- diminished :: Function
+-- diminished = [m3, m3, m3]
 
 
 {-  
