@@ -24,6 +24,9 @@
 module Music.Pitch.Relative (
     -- ** Semitones
     Semitones,
+    tone, 
+    semitone, 
+    tritone,
 
     -- ** Interval number
     Number,
@@ -65,6 +68,10 @@ module Music.Pitch.Relative (
     sharps,
     flats,
     
+    -- * Harmonic rules
+    isTone,
+    isSemitone,
+    isTritone,
          
     -- ** Literals (TODO move)
     -- prime, 
@@ -110,6 +117,21 @@ deriving instance Num Semitones
 deriving instance Enum Semitones
 deriving instance Real Semitones
 deriving instance Integral Semitones
+
+semitone, tone, ditone, tritone :: Semitones
+
+-- | A synonym for @1@.
+semitone = 1
+-- | A synonym for @2@.
+tone     = 2
+-- | A synonym for @4.
+ditone   = 4
+-- | A synonym for @6@.
+tritone  = 6
+
+isTone      = (== tone)     . semitones
+isSemitone  = (== semitone) . semitones
+isTritone   = (== tritone)  . semitones
 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
@@ -160,6 +182,7 @@ instance Show Quality where
     show (Quality False 1)    = "_A"
     show (Quality False 2)    = "_AA"
 
+invertQuality :: Quality -> Quality
 invertQuality (Quality True q)  = Quality True (negate q)
 invertQuality (Quality False q) = Quality False (negate q - 1)
 
@@ -203,11 +226,10 @@ isDiminished = ((== Quality False (-2)) `or'` (== Quality True (-1))) . quality
 --
 -- > m5 _P5 _M7 etc.
 --
---
 newtype Interval = Interval { getInterval :: (
     Integer,    -- octaves, may be negative
-    Integer,   -- diatonic semitone [0..6]
-    Integer   -- chromatic semitone [0..11]
+    Integer,    -- diatonic semitone [0..6]
+    Integer     -- chromatic semitone [0..11]
 ) }
 
 deriving instance Eq Interval
@@ -222,7 +244,7 @@ instance Num Interval where
     fromInteger _ = undefined
 instance Show Interval where
     show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
-           | otherwise          = show (quality a) ++ show (abs $ number a)
+           | otherwise    =        show (quality a) ++ show (abs $ number a)
 instance Semigroup Interval where
     (<>)    = addInterval
 instance Monoid Interval where
@@ -244,11 +266,31 @@ instance HasQuality Interval where
 -- |
 -- Construct an interval from a quality and number.
 --
+-- FIXME bogus
 interval :: Quality -> Number -> Interval
 interval = go 
     where
         go q n | isMajor q = Interval (0,0,0)
                | isMinor q = Interval (0,0,0)
+
+negateInterval :: Interval -> Interval
+negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
+
+invertDiatonic :: Num a => a -> a
+invertDiatonic d  = 7  - d       
+
+invertChromatic :: Num a => a -> a
+invertChromatic c = 12 - c
+      
+addInterval :: Interval -> Interval -> Interval
+addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
+    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, semitones, chroma))
+    where
+        (carry, semitones) = (da + db) `divMod` 7  
+        chroma         = (ca + cb) `mod` 12
+
+separate :: Interval -> (Integer, Interval)
+separate (Interval (o, d, c)) = (o, Interval (0, d, c))
 
 -- |
 -- Returns the number portion of an interval.
@@ -309,30 +351,29 @@ isPositive (Interval (oa, _, _)) = oa >= 0
 isNegative :: Interval -> Bool
 isNegative (Interval (oa, _, _)) = oa < 0
 
-negateInterval :: Interval -> Interval
-negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
-invertDiatonic :: Num a => a -> a
-invertDiatonic d  = 7  - d       
-
-invertChromatic :: Num a => a -> a
-invertChromatic c = 12 - c
-      
-addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
-    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, semitones, chroma))
-    where
-        (carry, semitones) = (da + db) `divMod` 7  
-        chroma         = (ca + cb) `mod` 12
 
 stackInterval :: Integer -> Interval -> Interval
 stackInterval n a = mconcat $ replicate (fromIntegral n) a
 
-separate :: Interval -> (Integer, Interval)
-separate (Interval (o, d, c)) = (o, Interval (0, d, c))
-
+-- |
+-- Interval inversion.
+--
+-- The inversion of a simple interval is determined as follows:
+-- 
+-- * The interval number and the number of its inversion always add up to nine
+--   (i.e. 4 + 5 = 9).
+--
+-- * The inversion of a major interval is a minor interval, and vice versa;
+--   the inversion of a perfect interval is also perfect; the inversion of an
+--   augmented interval is a diminished interval, and vice versa; the
+--   inversion of a doubly augmented interval is a doubly diminished interval,
+--   and vice versa.
+--
+-- The inversion of any compound interval is always the same as the inversion
+-- of the simple interval from which it is compounded
+-- 
 invert :: Interval -> Interval   
--- invert (Interval (0,0)) = Interval (0,7)
 invert a = let (_, simp) = separate (negate a) in simp
 
 
