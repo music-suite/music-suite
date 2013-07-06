@@ -25,7 +25,7 @@ module Music.Pitch.Relative (
     -- ** Semitones
     Semitones,
 
-    -- ** Inverval number
+    -- ** Interval number
     Number,
 
     -- ** Interval quality
@@ -242,6 +242,9 @@ instance AdditiveGroup Interval where
     zeroV   = _P1
     (^+^)   = addInterval
     negateV = negateInterval
+instance VectorSpace Interval where
+    type Scalar Interval = Integer
+    (*^) = stackInterval
 
 instance HasQuality Interval where
     quality (Interval (o, d, c)) 
@@ -331,6 +334,9 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
     where
         (carry, semitones) = (da + db) `divMod` 7  
         chroma         = (ca + cb) `mod` 12
+
+stackInterval :: Integer -> Interval -> Interval
+stackInterval n a = mconcat $ replicate (fromIntegral n) a
 
 separate :: Interval -> (Integer, Interval)
 separate (Interval (o, d, c)) = (o, Interval (0, d, c))
