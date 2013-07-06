@@ -189,19 +189,9 @@ isAugmented = ((== Quality False 1) `or'` (== Quality True 1)) . quality
 isDiminished :: HasQuality a => a -> Bool
 isDiminished = ((== Quality False (-2)) `or'` (== Quality True (-1))) . quality
 
-
-
-or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
-or' p q x = p x || q x
-
-
--- type Integer = Integer
-type Diatonic = Integer
-type Chromatic = Integer
-
 -- |
--- An interval is the differenceerence between two pitches. Note that this includes
--- negative invervals. 
+-- An interval is the difference between two pitches. Note that this
+-- definitions includes negative invervals.
 -- 
 -- Adding intervals preserves spelling. For example:
 --
@@ -215,9 +205,9 @@ type Chromatic = Integer
 --
 --
 newtype Interval = Interval { getInterval :: (
-    Integer,     -- octaves, may be negative
-    Diatonic,   -- diatonic semitone [0..6]
-    Chromatic   -- chromatic semitone [0..11]
+    Integer,    -- octaves, may be negative
+    Integer,   -- diatonic semitone [0..6]
+    Integer   -- chromatic semitone [0..11]
 ) }
 
 deriving instance Eq Interval
@@ -540,3 +530,5 @@ flats = go
 
 
 
+or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
+or' p q x = p x || q x
