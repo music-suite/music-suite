@@ -32,7 +32,7 @@ module Music.Pitch.Relative (
     Number,
 
     -- ** Interval quality
-    Quality,    
+    Quality(..),    
     major,
     minor,
     augmented,
@@ -112,6 +112,7 @@ import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
 import Music.Pitch.Absolute
+import Music.Pitch.Literal
 import qualified Data.List as List
 
 -- |
@@ -307,10 +308,18 @@ interval q a = Interval (
     where  
         (o, n) = (a - 1) `divMod` 7
 
+interval' :: Int -> Number -> Interval
+interval' d a = Interval (
+    fromIntegral o, 
+    fromIntegral n, 
+    fromIntegral $ diatonicToChromatic (fromIntegral n) 
+        + fromIntegral d
+    )
+    where  
+        (o, n) = (a - 1) `divMod` 7
+
 -- |
 -- The unison interval.
---
--- Equivalent to @_P1@.
 --
 unison :: Interval
 unison = _P1
@@ -350,7 +359,7 @@ simple a = b where (o, b) = separate a
 number :: Interval -> Number
 number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
     where
-        inc a = (abs a + 1) * signum a
+        inc a = if a >= 0 then succ a else pred a
 
 -- |
 -- Returns the number of semitones spanned by an interval.
@@ -398,7 +407,8 @@ isNegative (Interval (oa, _, _)) = oa < 0
 
 
 stackInterval :: Integer -> Interval -> Interval
-stackInterval n a = mconcat $ replicate (fromIntegral n) a
+stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
+                  | otherwise = negate $ stackInterval (negate n) a
 
 -- |
 -- Intervallic inversion.
@@ -424,18 +434,6 @@ invert a = let (_, simp) = separate (negate a) in simp
 spell :: (Semitones -> Number) -> Interval -> Interval
 spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  semitones
 
-
--- respell :: Interval -> Interval
-
-
-_ = 1 ;                  d1 = Interval (0,0,-1) ; _P1 = Interval (0,0,0)  ; _A1 = Interval (0,0,1)
-d2 = Interval (0,1,0)  ; m2 = Interval (0,1,1)  ; _M2 = Interval (0,1,2)  ; _A2 = Interval (0,1,3)
-d3 = Interval (0,2,2)  ; m3 = Interval (0,2,3)  ; _M3 = Interval (0,2,4)  ; _A3 = Interval (0,2,5)
-_ = 1 ;                  d4 = Interval (0,3,4)  ; _P4 = Interval (0,3,5)  ; _A4 = Interval (0,3,6)
-_ = 1 ;                  d5 = Interval (0,4,6)  ; _P5 = Interval (0,4,7)  ; _A5 = Interval (0,4,8)
-d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 = Interval (0,5,10)
-d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
-_ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
 
 isPerfectNumber :: Integer -> Bool
 isPerfectNumber 0 = True
@@ -490,21 +488,44 @@ flats = go
         go 11 = 6
 
 
--- Pitch is simply interval using MIDI note 0 (5 octaves below middle C) as reference.
+
+
+_ = 1 ;                  d1 = Interval (0,0,-1) ; _P1 = Interval (0,0,0)  ; _A1 = Interval (0,0,1)
+d2 = Interval (0,1,0)  ; m2 = Interval (0,1,1)  ; _M2 = Interval (0,1,2)  ; _A2 = Interval (0,1,3)
+d3 = Interval (0,2,2)  ; m3 = Interval (0,2,3)  ; _M3 = Interval (0,2,4)  ; _A3 = Interval (0,2,5)
+_ = 1 ;                  d4 = Interval (0,3,4)  ; _P4 = Interval (0,3,5)  ; _A4 = Interval (0,3,6)
+_ = 1 ;                  d5 = Interval (0,4,6)  ; _P5 = Interval (0,4,7)  ; _A5 = Interval (0,4,8)
+d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 = Interval (0,5,10)
+d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
+_ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
+
+
+
+
+-- Pitch is simply interval using middle C as origin.
 newtype Pitch = Pitch { getPitch :: Interval }
 deriving instance Eq Pitch	 
 deriving instance Num Pitch	 
 deriving instance Ord Pitch	 
+deriving instance Show Pitch	 
 instance AffineSpace Pitch where
     type Diff Pitch = Interval
     Pitch a .-. Pitch b = a ^-^ b
     Pitch a .+^ b       = Pitch (a ^+^ b)
 
-c = Pitch unison .+^ (_P8^*5)
-d = c .+^ _M2
+instance IsPitch Pitch where
+    fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (fromIntegral $ c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
+        where
+            qual Nothing  = 0
+            qual (Just n) = round n
 
-midi :: Pitch -> Integer
-midi = getSemitones . semitones . getPitch
+-- c = Pitch unison .+^ (_P8^*5)
+-- d = c .+^ _M2
+
+midiNumber :: Pitch -> Integer
+midiNumber = getSemitones . semitones . getPitch
+
+
 {-  
     Some terminology:                                           
         
