@@ -28,26 +28,15 @@ module Music.Pitch.Relative (
     semitone, 
     tritone,
 
-    -- ** Interval number
-    Number,
-
-    -- ** Interval quality
-    Quality(..),    
-    major,
-    minor,
-    augmented,
-    diminished,
-    invertQuality,
-
-    HasQuality(..),
-    isPerfect,
-    isMajor,
-    isMinor,
-    isAugmented,
-    isDiminished,
-    
     -- ** Pitch
     Pitch,
+    Name(..),
+    Octave,
+    Accidental,
+    
+    name,
+    accidental,
+    octave_,
 
     -- ** Intervals
     Interval,
@@ -70,6 +59,20 @@ module Music.Pitch.Relative (
     
     -- *** Inversion
     invert,
+    
+    Number,
+    Quality(..),    
+    major,
+    minor,
+    augmented,
+    diminished,
+    invertQuality,
+    HasQuality(..),
+    isPerfect,
+    isMajor,
+    isMinor,
+    isAugmented,
+    isDiminished,
     
     -- * Spelling
     spell,
@@ -294,6 +297,8 @@ instance HasQuality Interval where
         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
 
+intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
+
 
 -- |
 -- Construct an interval from a quality and number.
@@ -505,13 +510,59 @@ _ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 
 -- Pitch is simply interval using middle C as origin.
 newtype Pitch = Pitch { getPitch :: Interval }
 deriving instance Eq Pitch	 
-deriving instance Num Pitch	 
+-- deriving instance Num Pitch   
 deriving instance Ord Pitch	 
-deriving instance Show Pitch	 
 instance AffineSpace Pitch where
     type Diff Pitch = Interval
     Pitch a .-. Pitch b = a ^-^ b
     Pitch a .+^ b       = Pitch (a ^+^ b)
+instance Show Pitch where
+    show p = show (name p) ++ show (accidental p) ++ show (octave_ p)
+
+data Name = C | D | E | F | G | A | B
+    deriving (Eq, Ord, Enum)
+instance Show Name where
+    show C = "c"
+    show D = "d"
+    show E = "e"
+    show F = "f"
+    show G = "g"
+    show A = "a"
+    show B = "b"
+
+newtype Octave = Octave { getOctave :: Integer }
+deriving instance Eq Octave
+deriving instance Ord Octave
+instance Show Octave where
+    show n | n > 0     = replicate' n '\''
+           | otherwise = replicate' (negate n) '_'
+deriving instance Num Octave
+deriving instance Enum Octave
+deriving instance Real Octave
+deriving instance Integral Octave
+
+newtype Accidental = Accidental { getAccidental :: Integer }
+deriving instance Eq Accidental
+deriving instance Ord Accidental
+instance Show Accidental where
+    show n | n > 0     = replicate' n 's'
+           | otherwise = replicate' (negate n) 'b'
+deriving instance Num Accidental
+deriving instance Enum Accidental
+deriving instance Real Accidental
+deriving instance Integral Accidental
+
+asPitch :: Pitch -> Pitch
+asPitch = id
+
+name :: Pitch -> Name
+name = toEnum . fromIntegral . pred . number . simple . getPitch
+
+accidental :: Pitch -> Accidental
+accidental = fromIntegral . intervalDiff . simple . getPitch
+
+octave_ :: Pitch -> Octave
+octave_ = fromIntegral . octave . getPitch
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (fromIntegral $ c + 1) ^+^ (_P8^* fromIntegral (o - 4)))

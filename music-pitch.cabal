@@ -24,6 +24,7 @@ library
         random,
         semigroups,
         semigroupoids,
+        music-pitch-literal,
         vector-space
 
     hs-source-dirs: src
