@@ -161,17 +161,6 @@ deriving instance Enum Number
 deriving instance Real Number
 deriving instance Integral Number
 
--- Bool determines whether the quality refers to a pure interva
---      Impure    Pure
---      ===       === 
--- -3   2dim      3dim
--- -2   dim       2dim
--- -1   minor     dim
--- 0    major     pure
--- 1    aug       aug
--- 2    aug       2aug
-
--- data Quality = Quality Bool Integer
 data Quality 
     = Major
     | Minor
@@ -223,6 +212,36 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
+-- | Convert an offset to a quality.
+--
+--   This is different for perfect and imperfect interals:
+--
+--      Imperfect   Perfect
+--      ===         === 
+-- -3   dd          ddd
+-- -2   d           dd
+-- -1   m           d
+--  0   M           P
+--  1   a           a
+--  2   aa          aa
+--
+diffToQuality :: Bool -> Integer -> Quality
+diffToQuality = go
+    where
+        go True 0     = Perfect
+        go True n     = if n > 0 then Augmented n else Diminished (negate n)
+        go False 0    = Major
+        go False (-1) = Minor
+        go False n    = if n > 0 then Augmented n else Diminished (negate $ n + 1)
+
+qualityToDiff :: Bool -> Quality -> Integer
+qualityToDiff perfect = go
+    where
+        go (Diminished n)   = negate $ if perfect then n else (n + 1)
+        go Minor            = (-1)
+        go Perfect          = 0
+        go Major            = 0
+        go (Augmented n)    = n
 -- |
 -- An interval is the difference between two pitches. Note that this
 -- definitions includes negative invervals.
@@ -274,23 +293,19 @@ instance HasQuality Interval where
         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
 
-diffToQuality = go
-    where
-        go True 0     = Perfect
-        go True n     = if n > 0 then Augmented n else Diminished (negate n)
-        go False 0    = Major
-        go False (-1) = Minor
-        go False n    = if n > 0 then Augmented n else Diminished (negate $ n + 1)
 
 -- |
 -- Construct an interval from a quality and number.
 --
--- FIXME bogus
 interval :: Quality -> Number -> Interval
-interval = go 
-    where
-        go q n | isMajor q = Interval (0,0,0)
-               | isMinor q = Interval (0,0,0)
+interval q a = Interval (
+    fromIntegral o, 
+    fromIntegral n, 
+    fromIntegral $ diatonicToChromatic (fromIntegral n) 
+        + fromIntegral (qualityToDiff (isPerfectNumber $ fromIntegral n) q)
+    )
+    where  
+        (o, n) = (a - 1) `divMod` 7
 
 -- |
 -- The unison interval.
