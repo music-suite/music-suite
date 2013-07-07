@@ -45,6 +45,9 @@ module Music.Pitch.Relative (
     isMinor,
     isAugmented,
     isDiminished,
+    
+    -- ** Pitch
+    Pitch,
 
     -- ** Intervals
     Interval,
@@ -167,51 +170,58 @@ deriving instance Integral Number
 -- 0    major     pure
 -- 1    aug       aug
 -- 2    aug       2aug
-data Quality = Quality Bool Integer
+
+-- data Quality = Quality Bool Integer
+data Quality 
+    = Major
+    | Minor
+    | Perfect
+    | Augmented Integer
+    | Diminished Integer
+
 deriving instance Eq Quality
 deriving instance Ord Quality
 instance Show Quality where
-    show (Quality True (-2))  = "dd"
-    show (Quality True (-1))  = "d"
-    show (Quality True 0)     = "_P"
-    show (Quality True 1)     = "_A"
-    show (Quality True n)     = "_" ++ if n > 0 then replicate' n 'A' else replicate' (negate n) 'd'
-    
-    show (Quality False (-2)) = "d"
-    show (Quality False (-1)) = "m"
-    show (Quality False 0)    = "_M"
-    show (Quality False 1)    = "_A"
-    show (Quality False n)    = "_" ++ if n > 0 then replicate' n 'A' else replicate' (negate n - 1) 'd'
+    show Major            = "_M"
+    show Minor            = "m"
+    show Perfect          = "_P"
+    show (Augmented n)    = "_" ++ replicate' n 'A'
+    show (Diminished n)   = replicate' n 'd'
 
 invertQuality :: Quality -> Quality
-invertQuality (Quality True q)  = Quality True (negate q)
-invertQuality (Quality False q) = Quality False (negate q - 1)
+invertQuality = go
+    where
+        go Major            = Minor
+        go Minor            = Major
+        go Perfect          = Perfect
+        go (Augmented n)    = Diminished n
+        go (Diminished n)   = Augmented n
 
 class HasQuality a where
     quality :: a -> Quality
 instance HasQuality Quality where
     quality = id
 
-perfect    = Quality True 0
-major      = Quality False 0
-minor      = Quality False (-1)
-augmented  = Quality False 1
-diminished = Quality True (-1) -- TODO this is not unique
+perfect    = Perfect
+major      = Major
+minor      = Minor
+augmented  = Augmented 1
+diminished = Diminished 1
 
 isPerfect :: HasQuality a => a -> Bool
-isPerfect = (== perfect) . quality
+isPerfect a = case quality a of { Perfect -> True ; _ -> False }
 
 isMajor :: HasQuality a => a -> Bool
-isMajor = (== major) . quality
+isMajor a = case quality a of { Major -> True ; _ -> False }
 
 isMinor :: HasQuality a => a -> Bool
-isMinor = (== minor) . quality
+isMinor a = case quality a of { Minor -> True ; _ -> False }
 
 isAugmented :: HasQuality a => a -> Bool
-isAugmented = ((== Quality False 1) `or'` (== Quality True 1)) . quality
+isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
 isDiminished :: HasQuality a => a -> Bool
-isDiminished = ((== Quality False (-2)) `or'` (== Quality True (-1))) . quality
+isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
 -- |
 -- An interval is the difference between two pitches. Note that this
@@ -261,8 +271,16 @@ instance VectorSpace Interval where
 
 instance HasQuality Interval where
     quality (Interval (o, d, c)) 
-        | o >= 0    =                 Quality (isPerfectNumber d) (c - diatonicToChromatic d)
-        | otherwise = invertQuality $ Quality (isPerfectNumber d) (c - diatonicToChromatic d)
+        | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+        | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+
+diffToQuality = go
+    where
+        go True 0     = Perfect
+        go True n     = if n > 0 then Augmented n else Diminished (negate n)
+        go False 0    = Major
+        go False (-1) = Minor
+        go False n    = if n > 0 then Augmented n else Diminished (negate $ n + 1)
 
 -- |
 -- Construct an interval from a quality and number.
