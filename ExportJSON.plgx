@@ -215,9 +215,10 @@
             object2['type']                = ToJSONString('tuplet');
             object2['voice']               = object.VoiceNumber;
             object2['position']            = object.Position;
-//            object2['duration']            = object.Duration;
+            object2['duration']            = object.Duration;
+            object2['playedDuration']      = object.PlayedDuration; // TODO What is the difference?
 
-            object2['value']               = CreateJSONArray();
+            object2['ratio']               = CreateJSONArray();
             object2.value[0]               = object.Left;
             object2.value[1]               = object.Right;
         }
