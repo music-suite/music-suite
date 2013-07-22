@@ -36,15 +36,30 @@
             }
         }
     }"
+    
+    WriteScoreToPath "(score, path) {  
+        progress = CreateDictionary();
+        progress.SetMethod('Apply', Self, 'SetProgress');
 
-    WriteScoreToPath "(score, path) {
-        json = ShowJSON(ScoreToJSON(score)) & '\n\n';
+        Sibelius.CreateProgressDialog('Exporting JSON...', 0, score.SystemStaff.BarCount);
+        json = ScoreToJSON(score, progress);
+
+        Sibelius.UpdateProgressDialog(score.SystemStaff.BarCount, 'Writing file...');
+
+        text = ShowJSON(json) & '\n\n';
         Sibelius.CreateTextFile(path);
-        Sibelius.AppendTextFile(path, json, false);
+        Sibelius.AppendTextFile(path, text, false);
+
+        Sibelius.DestroyProgressDialog();
+    }"
+
+    SetProgress "(_, staffName, bar, numBars) {
+        // trace('    Exporting bar' & bar & ' out of ' & numBars & ' in ' & staffName);
+        Sibelius.UpdateProgressDialog(bar, 'Processing staff: ' & staffName);
     }"
 
 
-    ScoreToJSON "(score) {
+    ScoreToJSON "(score, progress) {
         score2 = CreateJSONObject();
         score2['title']                     = ToJSONString(score.Title);
         score2['composer']                  = ToJSONString(score.Composer);
@@ -55,35 +70,41 @@
         score2['systemStaff']               = CreateJSONArray();
         score2['staves']                    = CreateJSONArray();;
 
-        ExportSystemStaff(score2.systemStaff, score);
+        ExportSystemStaff(score2.systemStaff, score, progress);
 
         for each staff in score {
-            ExportStaff(score2.staves, staff);
+            ExportStaff(score2.staves, staff, progress);
         }
 
         return score2;
     }"
 
-    ExportSystemStaff "(score2, staff) {
+    ExportSystemStaff "(score2, staff, progress) {
         ;
         // TODO
     }"
 
-    ExportStaff "(dest, staff) {
-        trace('Exporting staff' & staff.InstrumentName);
+    ExportStaff "(dest, staff, progress) {
+        // trace('Exporting staff' & staff.InstrumentName);
         staff2 = CreateJSONObject();
         staff2['name']                      = ToJSONString(staff.InstrumentName);
         staff2['shortName']                 = ToJSONString(staff.ShortInstrumentName);
         staff2['bars']                      = CreateJSONArray();
 
         for each bar in staff {
+            // trace('    Exporting bar' & bar.BarNumber & ' out of ' & staff.BarCount & ' in ' & staff.InstrumentName);
+            if (progress != null) {
+                progress.Apply(staff.InstrumentName, bar.BarNumber, staff.BarCount);
+            }
+
             ExportBar(staff2.bars, bar);
         }
         PushJSONArray(dest, staff2);
     }"
 
     ExportBar "(dest, bar) {
-        trace('    Exporting bar' & bar.BarNumber);
+        // trace('    Exporting bar' & bar.BarNumber);
+
         bar2 = CreateJSONObject();
         bar2['number']                      = bar.BarNumber;
         bar2['elements']                    = CreateJSONArray();
