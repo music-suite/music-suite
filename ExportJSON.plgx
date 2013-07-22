@@ -223,8 +223,10 @@
             object2.value[1]               = object.Right;
         }
 
-
-        PushJSONArray(dest, object2);
+        // Bar rests are simply empty element arrays
+        if (object.Type != 'BarRest') {
+            PushJSONArray(dest, object2);
+        }
     }"
              
     ExportArticulations "(dest, chord) {
