@@ -1,7 +1,9 @@
 
 PLUGIN_PATH=~/appsupport/sibelius/Plugins
+
 # EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
-EXAMPLE=~/Documents/Musik/Etyder/Kontrapunkt/Fuga\ 106.sib
+#EXAMPLE=~/Documents/Musik/Etyder/Kontrapunkt/Fuga\ 106.sib
+EXAMPLE=test.sib
 
 test:
 	iconv -f UTF-8 -t UTF-16LE <ExportJSON.plgx >ExportJSON.plgy

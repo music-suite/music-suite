@@ -10,6 +10,6 @@ function reload() {
 
 /*
 
-console.log(score.staves[0].bars[0]);
+score.staves[0].bars[0]
 
 */
