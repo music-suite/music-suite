@@ -1,9 +1,9 @@
 {
-	Initialize "(){
-	    AddToPluginsMenu('Export JSON','Run');
-	}"
-	
-	DEBUG "true"
+    Initialize "(){
+        AddToPluginsMenu('Export JSON','Run');
+    }"
+    
+    DEBUG "true"
 
     Info "
         // The wicked for each loop (for each on SparseArray/Dict does not work)
@@ -15,8 +15,8 @@
         }
     "
 
-	Run "() {                  
-	    score = Sibelius.ActiveScore;
+    Run "() {                  
+        score = Sibelius.ActiveScore;
         
         if (DEBUG) {
             path = '/Users/hans/Documents/Kod/manuscript/JSON/test.json';
@@ -250,7 +250,7 @@
 
 
 
-	CreateJSONObject "() {
+    CreateJSONObject "() {
         // () -> JSON
 
         // Creates an empty JSON object
