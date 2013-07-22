@@ -9,6 +9,7 @@ test:
 	rm ExportJSON.plgy
 	cp ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
 
+	killall "Sibelius 6"
 	open -a /Applications/Sibelius\ 6.app $(EXAMPLE)
 
 
