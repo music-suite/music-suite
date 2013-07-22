@@ -70,6 +70,7 @@
     }"
 
     ExportStaff "(dest, staff) {
+        trace('Exporting staff' & staff.InstrumentName);
         staff2 = CreateJSONObject();
         staff2['name']                      = ToJSONString(staff.InstrumentName);
         staff2['shortName']                 = ToJSONString(staff.ShortInstrumentName);
@@ -82,6 +83,7 @@
     }"
 
     ExportBar "(dest, bar) {
+        trace('    Exporting bar' & bar.BarNumber);
         bar2 = CreateJSONObject();
         bar2['number']                      = bar.BarNumber;
         bar2['elements']                    = CreateJSONArray();
@@ -275,7 +277,7 @@
 
         // Pushes an element to a JSON array
         
-        len = obj._propertyNames.Length - 1; // __type__field
+        len = obj._propertyNames.Length - 1; // Ignore the __type__ field
         obj['' & len] = x;
     }"
 
