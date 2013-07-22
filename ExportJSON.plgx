@@ -320,18 +320,18 @@
                 str = str & '{';
                 fst = true;
                 for i = 0 to obj._propertyNames.Length {
-                  k = obj._propertyNames[i];
-                  v = obj[obj._propertyNames[i]];
-                  if (k != '__type__') {
-                      if (not fst) {
-                          str = str & ', ';
-                      } else {
-                          fst = false;
-                      }
-                      str = str & ShowJSON(ToJSONString(k));
-                      str = str & ': ';
-                      str = str & ShowJSON(v);
-                  }
+                    k = obj._propertyNames[i];
+                    v = obj[k];
+                    if (k != '__type__') {
+                        if (not fst) {
+                            str = str & ', ';
+                        } else {
+                            fst = false;
+                        }
+                        str = str & ShowJSON(ToJSONString(k));
+                        str = str & ': ';
+                        str = str & ShowJSON(v);
+                    }
                 }
                 str = str & '}';
             }
@@ -339,17 +339,17 @@
                 if (IsJSONArray(obj)) {
                     str = str & '[';
                     fst = true;
-                    for i = 0 to obj._propertyNames.Length {
-                      k = obj._propertyNames[i];
-                      v = obj[obj._propertyNames[i]];
-                      if (k != '__type__') {
-                          if (not fst) {
-                              str = str & ', ';
-                          } else {
-                              fst = false;
-                          }
-                          str = str & ShowJSON(v);
-                      }
+                    for i = 0 to (obj._propertyNames.Length - 1) { // Ignore __type__
+                        k = '' & i;
+                        v = obj[k];
+                        if (true) {
+                            if (not fst) {
+                                str = str & ', ';
+                            } else {
+                                fst = false;
+                            }
+                            str = str & ShowJSON(v);
+                        }
                     }
                     str = str & ']';
                 }
