@@ -2,6 +2,8 @@
 	Initialize "(){
 	    AddToPluginsMenu('Export JSON','Run');
 	}"
+	
+	DEBUG "true"
 
     Info "
         // The wicked for each loop (for each on SparseArray/Dict does not work)
@@ -13,16 +15,33 @@
         }
     "
 
-	Run "() {
-        obj = ScoreToJSON(Sibelius.ActiveScore);
-        txt = ShowJSON(obj);
-        // trace(txt);
+	Run "() {                  
+	    score = Sibelius.ActiveScore;
+        
+        if (DEBUG) {
+            path = '/Users/hans/Documents/Kod/manuscript/JSON/test.json';
+            WriteScoreToPath(score, path);
+        } else {
+            file = Sibelius.SelectFileToSave(
+                'Export JSON',
+                score.FileName,
+                null,
+                'json',
+                'TEXT',
+                'JSON document');
 
-        path = '/Users/hans/Documents/Kod/manuscript/JSON/test.json';
-        Sibelius.CreateTextFile(path);
-        Sibelius.AppendTextFile(path, txt, false);
+            if (file != null) {
+                path = file.NameWithExt;
+                WriteScoreToPath(score, path);
+            }
+        }
     }"
 
+    WriteScoreToPath "(score, path) {
+        json = ShowJSON(ScoreToJSON(score)) & '\n\n';
+        Sibelius.CreateTextFile(path);
+        Sibelius.AppendTextFile(path, json, false);
+    }"
 
 
     ScoreToJSON "(score) {
