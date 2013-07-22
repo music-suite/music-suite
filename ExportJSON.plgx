@@ -167,7 +167,7 @@
             object2['duration']            = object.Duration;
             
             object2['doubleTremolos']      = object.Position;
-            object2['singleTremolos']      = object.Position;
+            object2['singleTremolos']      = object.SingleTremolos;                 // -1 for Z
             object2['acciaccatura']        = ToJSONBool(object.IsAcciaccatura);
             object2['appoggiatura']        = ToJSONBool(object.IsAppoggiatura);
             
