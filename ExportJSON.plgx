@@ -3,18 +3,14 @@
         AddToPluginsMenu('Export JSON','Run');
     }"
     
+   
+
     DEBUG "true"
 
-    Info "
-        // The wicked for each loop (for each on SparseArray/Dict does not work)
-        for i = 0 to obj._propertyNames.Length {
-          k = obj._propertyNames[i];
-          v = obj[obj._propertyNames[i]];
-          if (k != '__type__') {
-          }
-        }
-    "
 
+    __Main_Functionality__ 
+    "*********************"
+    
     Run "() {                  
         score = Sibelius.ActiveScore;
         
@@ -38,28 +34,64 @@
     }"
     
     WriteScoreToPath "(score, path) {  
-        progress = CreateDictionary();
-        progress.SetMethod('Apply', Self, 'SetProgress');
+        progress = CreateProgressCallback();
 
-        Sibelius.CreateProgressDialog('Exporting JSON...', 0, score.SystemStaff.BarCount);
+        BeginProgress(score);
         json = ScoreToJSON(score, progress);
 
-        Sibelius.UpdateProgressDialog(score.SystemStaff.BarCount, 'Writing file...');
-
+        MidProgress(score);
         text = ShowJSON(json) & '\n\n';
         Sibelius.CreateTextFile(path);
         Sibelius.AppendTextFile(path, text, false);
 
-        Sibelius.DestroyProgressDialog();
+        EndProgress(score);
     }"
 
-    SetProgress "(_, staffName, bar, numBars) {
-        // trace('    Exporting bar' & bar & ' out of ' & numBars & ' in ' & staffName);
+    
+    
+    __Progress__ 
+    "***********"
+    
+    CreateProgressCallback "() {
+        progress = CreateDictionary();
+        progress.SetMethod('Apply', Self, 'SetProgress');
+        return progress;
+    }"
+    
+    BeginProgress "(score) {
+        Sibelius.CreateProgressDialog('Exporting JSON...', 0, score.SystemStaff.BarCount);
+    }"
+    
+    MidProgress "(score) {
+        Sibelius.UpdateProgressDialog(score.SystemStaff.BarCount, 'Writing file...');
+    }"
+    
+    EndProgress "(score) {
+        Sibelius.DestroyProgressDialog();
+    }"
+    
+    SetProgress "(_, staffName, bar, numBars) {       
+        // StaffName -> Bar -> NumBars -> ()
+
+        // Updates the global progress dialog with the current
+        // translation state.
+
         Sibelius.UpdateProgressDialog(bar, 'Processing staff: ' & staffName);
     }"
 
 
+    
+    __Exporting__ 
+    "************"
+    
     ScoreToJSON "(score, progress) {
+        // Score -> (StaffName -> Bar -> NumBars -> ()) -> ()
+
+        // Converts the given score to a JSON representation
+
+        // The progress callback is invoked repeatedly and may be used to report
+        // the current state of the translation to the user.
+
         score2 = CreateJSONObject();
         score2['title']                     = ToJSONString(score.Title);
         score2['composer']                  = ToJSONString(score.Composer);
@@ -80,12 +112,17 @@
     }"
 
     ExportSystemStaff "(score2, staff, progress) {
+        // JSONScore -> Staff -> ()
+        // Converts and sets the system staff in the given score
+
         ;
         // TODO
     }"
 
     ExportStaff "(dest, staff, progress) {
-        // trace('Exporting staff' & staff.InstrumentName);
+        // [JSONStaff] -> Staff -> ()
+        // Appends the given staff to the given destination
+
         staff2 = CreateJSONObject();
         staff2['name']                      = ToJSONString(staff.InstrumentName);
         staff2['shortName']                 = ToJSONString(staff.ShortInstrumentName);
@@ -103,7 +140,8 @@
     }"
 
     ExportBar "(dest, bar) {
-        // trace('    Exporting bar' & bar.BarNumber);
+        // [JSONBar] -> Bar -> ()
+        // Appends the given bar to the given destination
 
         bar2 = CreateJSONObject();
         bar2['number']                      = bar.BarNumber;
@@ -115,6 +153,9 @@
     }"
 
     ExportBarObject "(dest, object) {
+        // [JSONBarObject] -> BarObject -> ()
+        // Appends the given bar object to the given destination
+
         object2 = CreateJSONObject();
 
         object2['type'] = ToJSONString('unknown: ' & object.Type);
@@ -230,6 +271,9 @@
     }"
              
     ExportArticulations "(dest, chord) {
+        // [JSONArticulation] -> Chord -> ()
+        // Appends the articulations of the given chord to the given destination
+
         if (chord.GetArticulation(DownBowArtic)) {
             PushJSONArray(dest, ToJSONString('upBow'));
         }
@@ -263,6 +307,9 @@
     }"
 
     ExportNote "(dest, note) {
+        // [JSONNote] -> Note -> ()
+        // Appends a note to the given destination
+        
         note2 = CreateJSONObject();
         note2['pitch']                      = note.Pitch;
         note2['accidental']                 = note.Accidental;
@@ -273,12 +320,11 @@
 
 
 
-
-
-
+    __JSON_Representation__ 
+    "*********************"
+    
     CreateJSONObject "() {
         // () -> JSON
-
         // Creates an empty JSON object
 
         x = CreateDictionary();
@@ -288,7 +334,6 @@
 
     CreateJSONArray "() {
         // () -> JSON
-
         // Creates an empty JSON array
 
         x = CreateDictionary();
@@ -298,7 +343,6 @@
 
     PushJSONArray "(obj, x) {
         // JSON -> Value -> ()
-
         // Pushes an element to a JSON array
         
         len = obj._propertyNames.Length - 1; // Ignore the __type__ field
