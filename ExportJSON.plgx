@@ -1,0 +1,254 @@
+{
+	Initialize "(){
+	    AddToPluginsMenu('Export JSON','Run');
+	}"
+
+    Info "
+        // The wicked for each loop (for each on SparseArray/Dict does not work)
+        for i = 0 to obj._propertyNames.Length {
+          k = obj._propertyNames[i];
+          v = obj[obj._propertyNames[i]];
+          if (k != '__type__') {
+          }
+        }
+    "
+
+	Run "() {
+        obj = ScoreToJSON(Sibelius.ActiveScore);
+        txt = ShowJSON(obj);
+        // trace(txt);
+
+        path = '/Users/hans/Documents/Kod/manuscript/JSON/test.json';
+        Sibelius.CreateTextFile(path);
+        Sibelius.AppendTextFile(path, txt, false);
+    }"
+
+
+
+    ScoreToJSON "(score) {
+        score2 = CreateJSONObject();
+        score2['title']                     = ToJSONString(score.Title);
+        score2['composer']                  = ToJSONString(score.Composer);
+        score2['information']               = ToJSONString(score.OtherInformation);
+        score2['transposing']               = ToJSONBool(score.TransposingScore);
+        score2['staffHeight']               = score.StaffHeight;
+
+        score2['systemStaff']               = CreateJSONArray();
+        score2['staves']                    = CreateJSONArray();;
+
+        ExportSystemStaff(score2.systemStaff, score);
+
+        for each staff in score {
+            ExportStaff(score2.staves, staff);
+        }
+
+        return score2;
+    }"
+
+    ExportSystemStaff "(score2, staff) {
+        ;
+        // TODO
+    }"
+
+    ExportStaff "(dest, staff) {
+        staff2 = CreateJSONObject();
+        staff2['name']                      = ToJSONString(staff.InstrumentName);
+        staff2['shortName']                 = ToJSONString(staff.ShortInstrumentName);
+        staff2['bars']                      = CreateJSONArray();
+
+        for each bar in staff {
+            ExportBar(staff2.bars, bar);
+        }
+        PushJSONArray(dest, staff2);
+    }"
+
+    ExportBar "(dest, bar) {
+        bar2 = CreateJSONObject();
+        bar2['number']                      = bar.BarNumber;
+        bar2['elements']                    = CreateJSONArray();
+        for each object in bar {
+            ExportBarObject(bar2.elements, object);
+        }
+        PushJSONArray(dest, bar2);
+    }"
+
+    ExportBarObject "(dest, object) {
+        object2 = CreateJSONObject();
+
+        object2['type'] = ToJSONString('unknown: ' & object.Type);
+
+        if (object.Type = 'NoteRest') {
+            object2['type']                = ToJSONString('chord');
+            object2['position']            = object.Position;
+            object2['duration']            = object.Duration;
+            object2['doubleTremolos']      = object.Position;
+            object2['singleTremolos']      = object.Position;
+            object2['acciaccatura']        = ToJSONBool(object.IsAcciaccatura);
+            object2['appoggiatura']        = ToJSONBool(object.IsAppoggiatura);
+            object2['notes']               = CreateJSONArray();
+
+            for each note in object {
+                ExportNote(object2.notes, note);
+            }
+        }
+        if (object.Type = 'Text') {
+            object2['type']                = ToJSONString('text');
+            object2['text']                = ToJSONString(object.Text);
+            if (object.StyleId = 'text.staff.expression') {
+                object2['style']           = ToJSONString('expression');
+            }
+            if (object.StyleId = 'text.staff.technique') {
+                object2['style']           = ToJSONString('technique');
+            }
+        }
+        if (object.Type = 'Clef') {
+            object2['type']                = ToJSONString('clef');
+            object2['pitch']               = object.Pitch;
+            object2['style']               = ToJSONString(object.StyleId);
+        }         
+        if (object.Type = 'Slur') {
+            object2['type']                = ToJSONString('slur');
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'CrescendoLine') {
+            object2['type']                = ToJSONString('cresc');
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'DiminuendoLine') {
+            object2['type']                = ToJSONString('dim');
+            object2['duration']            = object.Duration;
+            object2['style']               = ToJSONString(object.StyleId);
+        }
+        if (object.Type = 'KeySignature') {
+            object2['type']                = ToJSONString('key');
+            object2['major']               = ToJSONBool(object.Major);
+            object2['sharps']              = object.Sharps;
+            object2['isOpen']              = ToJSONBool(false);
+        }
+        if (object.Type = 'TimeSignature') {
+            object2['type']                = ToJSONString('time');
+            object2['value']               = CreateJSONArray();
+            object2.value[0] = object.Numerator;
+            object2.value[1] = object.Denominator;
+            if (object.Text = CommonTimeString) {
+                object2['common']          = ToJSONBool(true);
+            } else {
+                object2['common']          = ToJSONBool(false);
+            }
+            if (object.Text = AllaBreveTimeString) {
+                object2['allaBreve']       = ToJSONBool(true);
+            } else {
+                object2['allaBreve']       = ToJSONBool(false);
+            }
+        }
+        if (object.Type = 'BarLine') {
+            object2['type']                = ToJSONString('barLine');
+            // TODO
+        }
+        if (object.Type = 'Tuplet') {
+            object2['type']                = ToJSONString('tuplet');
+            // TODO
+        }
+
+
+        PushJSONArray(dest, object2);
+    }"
+
+    ExportNote "(dest, note) {
+        note2 = CreateJSONObject();
+        note2['pitch']                      = note.Pitch;
+        note2['accidental']                 = note.Accidental;
+        note2['diatonicPitch']              = note.DiatonicPitch;
+        note2['tied']                       = ToJSONBool(note.Tied);
+        PushJSONArray(dest, note2);
+    }"
+
+
+
+	CreateJSONObject "() {
+        x = CreateDictionary();
+        x._property:__type__ = 'object';
+        return x;
+    }"
+    CreateJSONArray "() {
+        x = CreateDictionary();
+        x._property:__type__ = 'array';
+        return x;
+    }"
+    PushJSONArray "(obj, x) {
+        len = obj._propertyNames.Length - 1; // __type__field
+        obj['' & len] = x;
+    }"
+    IsJSONObject "(obj) {
+        return (obj._property:__type__ = 'object');
+    }"
+    IsJSONArray "(obj) {
+        return (obj._property:__type__ = 'array');
+    }"
+    ToJSONString "(x) {
+        return Chr(34) & x & Chr(34);
+    }"
+    ToJSONBool "(x) {
+        if (x = 0) {
+            return 'false';
+        } else {
+            return 'true';
+        }
+    }"
+
+    ShowJSON "(obj) {
+        str = '';
+        if (not IsObject(obj)) {
+            str = str & obj;
+        }
+        else { if (IsJSONObject(obj)) {
+            str = str & '{';
+            fst = true;
+            for i = 0 to obj._propertyNames.Length {
+              k = obj._propertyNames[i];
+              v = obj[obj._propertyNames[i]];
+              if (k != '__type__') {
+                  if (not fst) {
+                      str = str & ', ';
+                  } else {
+                      fst = false;
+                  }
+                  str = str & ShowJSON(ToJSONString(k));
+                  str = str & ': ';
+                  str = str & ShowJSON(v);
+              }
+            }
+            str = str & '}';
+        }
+        else { if (IsJSONArray(obj)) {
+            str = str & '[';
+            fst = true;
+            for i = 0 to obj._propertyNames.Length {
+              k = obj._propertyNames[i];
+              v = obj[obj._propertyNames[i]];
+              if (k != '__type__') {
+                  if (not fst) {
+                      str = str & ', ';
+                  } else {
+                      fst = false;
+                  }
+                  str = str & ShowJSON(v);
+              }
+            }
+            str = str & ']';
+        }
+        else {
+            StopPlugin('ShowJSON: Could not convert object.');
+        } } }
+        return str;
+    }"
+
+
+
+
+
+
+
+}
