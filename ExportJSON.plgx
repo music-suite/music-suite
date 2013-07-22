@@ -315,6 +315,7 @@
         note2['accidental']                 = note.Accidental;
         note2['diatonicPitch']              = note.DiatonicPitch;
         note2['tied']                       = ToJSONBool(note.Tied);
+        note2['style']                      = note.NoteStyle;       // Number identifier by note style name, 0 for normal
         PushJSONArray(dest, note2);
     }"
 
