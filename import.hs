@@ -259,7 +259,10 @@ fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) =
     -- TODO
 
 fromJSNote :: JSNote -> Score Note
-fromJSNote (JSNote pitch di acc tied style) = modifyPitches (+ (fromIntegral pitch - 60)) c
+fromJSNote (JSNote pitch di acc tied style) = 
+    (if tied then fmap beginTie else id) $
+    modifyPitches (+ (fromIntegral pitch - 60)) $
+    c
     -- TODO
 
     
