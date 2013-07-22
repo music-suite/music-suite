@@ -205,7 +205,7 @@ openLy sc = do
     cleanLy
     openLy'
 
-runLy   = runCommand "lilypond -f pdf test.ly" >> return ()
+runLy   = runCommand "lilypond -f pdf test.ly" >>= waitForProcess >> return ()
 cleanLy = runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
 openLy' = runCommand "open test.pdf" >> return ()
     -- FIXME hardcoded
