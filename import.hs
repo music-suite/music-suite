@@ -241,11 +241,12 @@ fromJSScore (JSScore title composer info staffH transp staves systemStaff) =
 
 fromJSStaff :: JSStaff -> Score Note
 fromJSStaff (JSStaff bars name shortName) =
-    scat $ fmap fromJSBar bars
+    removeRests $ scat $ fmap fromJSBar bars
+    -- FIXME empty bars!
 
-fromJSBar :: JSBar -> Score Note
+fromJSBar :: JSBar -> Score (Maybe Note)
 fromJSBar (JSBar elems) = 
-    pcat $ fmap fromJSElem elems
+    (fmap Just $ pcat $ fmap fromJSElem elems) <> (return Nothing)^*1
 
 fromJSElem :: JSElement -> Score Note
 fromJSElem = go where
@@ -259,6 +260,7 @@ fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) =
 
 fromJSNote :: JSNote -> Score Note
 fromJSNote (JSNote pitch di acc tied style) = modifyPitches (+ (fromIntegral pitch - 60)) c
+    -- TODO
 
     
 main = do
@@ -266,10 +268,15 @@ main = do
     let jsScore = eitherDecode' json :: Either String JSScore
     case jsScore of
         Left e -> putStrLn $ "Error: " ++ e
-        Right x -> openLy $ fromJSScore x
+        Right x -> do
+            writeMidi "test.mid" $ f $ fromJSScore x
+            openLy $ f $ fromJSScore x
 
     -- let score = fromJSScore $ fromJust $ decode' json
     -- openLy score
+    
+    where
+        f = stretch (1)
 
 fromJust (Just x) = x
 
