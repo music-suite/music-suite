@@ -4,15 +4,14 @@
 module Main where
 
 import Data.Aeson
+import Data.Aeson.Types(parse)
 import Control.Applicative
 import Data.Aeson.Types(Parser)
 import Music.Prelude.Basic
 
-import Data.ByteString(ByteString)
-import qualified Data.ByteString as B
-
-fromJson :: ByteString -> Score Note
-fromJson = const c
+import Data.ByteString.Lazy(ByteString)
+import qualified Data.ByteString.Lazy as B
+import qualified Data.HashMap.Strict as HashMap
 
 setTitle :: String -> Score a -> Score a
 setTitle = setMeta "title"
@@ -24,32 +23,50 @@ setMeta :: String -> String -> Score a -> Score a
 setMeta _ _ = id
 
 
--- The whole score
-{-
-newtype WholeScore = JSCore (Score Note)
+
+
+
+data JSScore = JSScore {
+            score_title             :: String,
+            score_composer          :: String,
+            score_information       :: String,
+            score_staffHeight       :: Double,
+            score_transposing       :: Bool,
+            score_staves            :: [JSStaff],
+            score_systemStaff       :: ()
+    }
     deriving (Eq, Ord, Show)
-newtype Staff      = Staff  (Score Note)
-    deriving (Eq, Ord, Show)
-newtype Bar        = Bar    (Score Note)
-    deriving (Eq, Ord, Show)
-newtype BarObject  = BarObject (Score Note)
-    deriving (Eq, Ord, Show)
-instance FromJSON BarObject where
-    parseJSON = undefined
--}
+instance FromJSON JSScore where
+    parseJSON (Object v) = JSScore
+        <$> v .: "title" 
+        <*> v .: "composer"
+        <*> v .: "information"
+        <*> v .: "staffHeight"
+        <*> v .: "transposing"
+        <*> v .: "staves"          
+        -- TODO
+        <*> (return ())
 
 
 data JSStaff = JSStaff {
-            bars                :: [JSBar],
-            name                :: String,
-            shortName           :: String
+            staff_bars                :: [JSBar],
+            staff_name                :: String,
+            staff_shortName           :: String
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSStaff where
+    parseJSON (Object v) = JSStaff
+        <$> v .: "bars"
+        <*> v .: "name"
+        <*> v .: "shortName"
 
 data JSBar = JSBar {
-            elements            :: [JSElement]
+            bar_elements            :: [JSElement]
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSBar where
+    parseJSON (Object v) = JSBar
+        <$> v .: "elements"
 
 data JSElement 
     = JSElementText JSText
@@ -62,6 +79,19 @@ data JSElement
     | JSElementTuplet JSTuplet
     | JSElementChord JSChord
     deriving (Eq, Ord, Show)
+instance FromJSON JSElement where
+    parseJSON x@(Object v) = case HashMap.lookup "type" v of    
+        -- TODO
+        Just "text"      -> error "JsElementText"
+        Just "clef"      -> error "JSElementClef"
+        Just "slur"      -> error "JSElementSlur"
+        Just "cresc"     -> error "JSElementCrescendoLine"
+        Just "dim"       -> error "JSElementDiminuendoLine"
+        Just "time"      -> error "JSElementTimeSignature"
+        Just "key"       -> error "JSElementKeySignature"
+        Just "tuplet"    -> error "JSElementTuplet"
+        Just "chord"     -> JSElementChord <$> parseJSON x
+        _                -> mempty
 
 data JSText = JSText {
             text_voice               :: Int,
@@ -70,12 +100,18 @@ data JSText = JSText {
             text_style               :: Int
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSText where
+    parseJSON = error "Not implemented (instance FromJSON JSText)"
+     
 data JSClef = JSClef {
             clef_voice               :: Int,
             clef_position            :: Int,
             clef_style               :: Int
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSClef where
+    parseJSON = error "Not implemented (instance FromJSON JSClef)"
+
 data JSSlur = JSSlur {
             slur_voice               :: Int,
             slur_position            :: Int,
@@ -83,6 +119,9 @@ data JSSlur = JSSlur {
             slur_style               :: Int
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSSlur where
+    parseJSON = error "Not implemented (instance FromJSON JSSlur)"
+
 data JSCrescendoLine = JSCrescendoLine {  
             cresc_voice               :: Int,
             cresc_position            :: Int,
@@ -90,6 +129,9 @@ data JSCrescendoLine = JSCrescendoLine {
             cresc_style               :: Int
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSCrescendoLine where
+    parseJSON = error "Not implemented (instance FromJSON JSCrescendoLine)"
+
 data JSDiminuendoLine = JSDiminuendoLine {
             dim_voice               :: Int,
             dim_position            :: Int,
@@ -97,6 +139,9 @@ data JSDiminuendoLine = JSDiminuendoLine {
             dim_style               :: Int
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSDiminuendoLine where
+    parseJSON = error "Not implemented (instance FromJSON JSDiminuendoLine)"
+
 data JSTimeSignature = JSTimeSignature {
             time_voice               :: Int,
             time_position            :: Int,
@@ -105,6 +150,9 @@ data JSTimeSignature = JSTimeSignature {
             time_isAllaBreve         :: Bool
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSTimeSignature where
+    parseJSON = error "Not implemented (instance FromJSON JSTimeSignature)"
+
 data JSKeySignature = JSKeySignature {
             key_voice               :: Int,
             key_position            :: Int,
@@ -113,6 +161,9 @@ data JSKeySignature = JSKeySignature {
             key_isOpen              :: Bool
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSKeySignature where
+    parseJSON = error "Not implemented (instance FromJSON JSKeySignature)"
+
 data JSTuplet = JSTuplet {
             tuplet_voice               :: Int,
             tuplet_position            :: Int,
@@ -121,16 +172,25 @@ data JSTuplet = JSTuplet {
             tuplet_value               :: Rational
     }
     deriving (Eq, Ord, Show)
+instance FromJSON JSTuplet where
+    parseJSON (Object v) = JSTuplet 
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "duration"
+        <*> v .: "playedDuration"
+        <*> (v .: "value" >>= \[x,y] -> return $ x / y) -- TODO unsafe
+
+
 data JSChord = JSChord { 
             chord_position            :: Int,
             chord_duration            :: Int,
             chord_voice               :: Int,
-            chord_articulations       :: [()],
+            chord_articulations       :: [()], -- TODO
             chord_singleTremolos      :: Int,
             chord_doubleTremolos      :: Int,
             chord_acciaccatura        :: Bool,
             chord_appoggiatura        :: Bool,
-            chord_notes               :: [()]
+            chord_notes               :: [JSNote]
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSChord where
@@ -138,7 +198,7 @@ instance FromJSON JSChord where
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
-        <*> v .: "articulations"
+        <*> (return [])
         <*> v .: "singleTremolos"
         <*> v .: "doubleTremolos"
         <*> v .: "acciaccatura"
@@ -162,12 +222,33 @@ instance FromJSON JSNote where
         <*> v .: "style"
 
 
--- decode "{\"accidental\":0,\"diatonicPitch\":36,\"pitch\":62,\"style\":0,\"tied\":false}" :: Maybe JSNote
+{-
+decode "{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}" :: Maybe JSStaff
+
+decode "[{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}]" :: Maybe [JSStaff]
+
+decode "{\"composer\":\"Hans\",\"information\":\"none\",\"staffHeight\":7,\"staves\":[{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}],\"systemStaff\":[],\"title\":\"Title\",\"transposing\":false}" :: Maybe JSScore
+
+decode "{\"accidental\":0,\"diatonicPitch\":36,\"pitch\":62,\"style\":0,\"tied\":false}" :: Maybe JSNote
+-}
+
+
+
+
+fromJSScore :: JSScore -> Score Note
+fromJSScore = const c
 
 
 
 main = do
     json <- B.readFile "test.json"
-    let score = fromJson json
-    openLy score
-    
+    let jsScore = eitherDecode' json :: Either String JSScore
+    case jsScore of
+        Left e -> putStrLn $ "Error: " ++ e
+        Right x -> putStrLn $ show x
+
+    -- let score = fromJSScore $ fromJust $ decode' json
+    -- openLy score
+
+fromJust (Just x) = x
+
