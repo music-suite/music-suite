@@ -53,30 +53,38 @@ import Music.Time
 -- Class of types that can be tied.
 --
 class Tiable a where
+    beginTie :: a -> a
+    endTie :: a -> a
+
     -- | Split elements into beginning and end and add tie.
     --   Begin properties goes to the first tied note, and end properties to the latter.
 
     --   The first returned element will have the original onset.
     --
     toTied    :: a -> (a, a)
+    toTied a = (beginTie a, endTie a)
 
 newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
 
 -- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
-instance Tiable Double      where toTied x = (x,x)
-instance Tiable Float       where toTied x = (x,x)
-instance Tiable Int         where toTied x = (x,x)
-instance Tiable Integer     where toTied x = (x,x)
-instance Tiable ()          where toTied x = (x,x)
-instance Tiable (Ratio a)   where toTied x = (x,x)
+instance Tiable Double      where { beginTie = id ; endTie = id }
+instance Tiable Float       where { beginTie = id ; endTie = id }
+instance Tiable Int         where { beginTie = id ; endTie = id }
+instance Tiable Integer     where { beginTie = id ; endTie = id }
+instance Tiable ()          where { beginTie = id ; endTie = id }
+instance Tiable (Ratio a)   where { beginTie = id ; endTie = id }
 
 instance Tiable a => Tiable (Maybe a) where
+    beginTie = fmap beginTie
+    endTie = fmap endTie
     toTied Nothing  = (Nothing, Nothing)
     toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
 
 instance Tiable a => Tiable (TieT a) where
-    toTied (TieT (prevTie, a, nextTie)) = (TieT (prevTie, b, True), TieT (True, c, nextTie))
+    beginTie (TieT (prevTie, a, nextTie)) = TieT (prevTie, a, True)
+    endTie   (TieT (prevTie, a, nextTie)) = TieT (True, a, nextTie)
+    toTied (TieT (prevTie, a, nextTie))   = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 
 -- |
