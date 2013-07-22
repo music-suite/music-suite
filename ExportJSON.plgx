@@ -186,30 +186,59 @@
 
 
 
+
+
+
 	CreateJSONObject "() {
+        // () -> JSON
+
+        // Creates an empty JSON object
+
         x = CreateDictionary();
         x._property:__type__ = 'object';
         return x;
     }"
+
     CreateJSONArray "() {
+        // () -> JSON
+
+        // Creates an empty JSON array
+
         x = CreateDictionary();
         x._property:__type__ = 'array';
         return x;
     }"
+
     PushJSONArray "(obj, x) {
+        // JSON -> Value -> ()
+
+        // Pushes an element to a JSON array
+        
         len = obj._propertyNames.Length - 1; // __type__field
         obj['' & len] = x;
     }"
+
     IsJSONObject "(obj) {
+        // JSON -> Bool
+
         return (obj._property:__type__ = 'object');
     }"
+
     IsJSONArray "(obj) {
+        // JSON -> Bool
+
         return (obj._property:__type__ = 'array');
     }"
+
     ToJSONString "(x) {
+        // String -> JSON
+
         return Chr(34) & x & Chr(34);
     }"
+
     ToJSONBool "(x) {
+        // Bool -> JSON
+
         if (x = 0) {
             return 'false';
         } else {
@@ -218,49 +247,54 @@
     }"
 
     ShowJSON "(obj) {
+        // JSON -> String
+
         str = '';
         if (not IsObject(obj)) {
             str = str & obj;
-        }
-        else { if (IsJSONObject(obj)) {
-            str = str & '{';
-            fst = true;
-            for i = 0 to obj._propertyNames.Length {
-              k = obj._propertyNames[i];
-              v = obj[obj._propertyNames[i]];
-              if (k != '__type__') {
-                  if (not fst) {
-                      str = str & ', ';
-                  } else {
-                      fst = false;
+        } else { 
+            if (IsJSONObject(obj)) {
+                str = str & '{';
+                fst = true;
+                for i = 0 to obj._propertyNames.Length {
+                  k = obj._propertyNames[i];
+                  v = obj[obj._propertyNames[i]];
+                  if (k != '__type__') {
+                      if (not fst) {
+                          str = str & ', ';
+                      } else {
+                          fst = false;
+                      }
+                      str = str & ShowJSON(ToJSONString(k));
+                      str = str & ': ';
+                      str = str & ShowJSON(v);
                   }
-                  str = str & ShowJSON(ToJSONString(k));
-                  str = str & ': ';
-                  str = str & ShowJSON(v);
-              }
+                }
+                str = str & '}';
             }
-            str = str & '}';
+            else { 
+                if (IsJSONArray(obj)) {
+                    str = str & '[';
+                    fst = true;
+                    for i = 0 to obj._propertyNames.Length {
+                      k = obj._propertyNames[i];
+                      v = obj[obj._propertyNames[i]];
+                      if (k != '__type__') {
+                          if (not fst) {
+                              str = str & ', ';
+                          } else {
+                              fst = false;
+                          }
+                          str = str & ShowJSON(v);
+                      }
+                    }
+                    str = str & ']';
+                }
+                else {
+                    StopPlugin('ShowJSON: Could not convert object.');
+                } 
+            } 
         }
-        else { if (IsJSONArray(obj)) {
-            str = str & '[';
-            fst = true;
-            for i = 0 to obj._propertyNames.Length {
-              k = obj._propertyNames[i];
-              v = obj[obj._propertyNames[i]];
-              if (k != '__type__') {
-                  if (not fst) {
-                      str = str & ', ';
-                  } else {
-                      fst = false;
-                  }
-                  str = str & ShowJSON(v);
-              }
-            }
-            str = str & ']';
-        }
-        else {
-            StopPlugin('ShowJSON: Could not convert object.');
-        } } }
         return str;
     }"
 }
