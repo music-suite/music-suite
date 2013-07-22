@@ -236,16 +236,37 @@ decode "{\"accidental\":0,\"diatonicPitch\":36,\"pitch\":62,\"style\":0,\"tied\"
 
 
 fromJSScore :: JSScore -> Score Note
-fromJSScore = const c
+fromJSScore (JSScore title composer info staffH transp staves systemStaff) =
+    foldr (</>) mempty $ fmap fromJSStaff staves
 
+fromJSStaff :: JSStaff -> Score Note
+fromJSStaff (JSStaff bars name shortName) =
+    scat $ fmap fromJSBar bars
 
+fromJSBar :: JSBar -> Score Note
+fromJSBar (JSBar elems) = 
+    pcat $ fmap fromJSElem elems
 
+fromJSElem :: JSElement -> Score Note
+fromJSElem = go where
+    go (JSElementChord chord) = fromJSChord chord
+    -- TODO
+
+fromJSChord :: JSChord -> Score Note
+fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) = 
+    delay (fromIntegral pos / 1024) $ stretch (fromIntegral dur / 1024) $ pcat $ fmap fromJSNote notes
+    -- TODO
+
+fromJSNote :: JSNote -> Score Note
+fromJSNote (JSNote pitch di acc tied style) = modifyPitches (+ (fromIntegral pitch - 60)) c
+
+    
 main = do
     json <- B.readFile "test.json"
     let jsScore = eitherDecode' json :: Either String JSScore
     case jsScore of
         Left e -> putStrLn $ "Error: " ++ e
-        Right x -> putStrLn $ show x
+        Right x -> openLy $ fromJSScore x
 
     -- let score = fromJSScore $ fromJust $ decode' json
     -- openLy score
