@@ -98,20 +98,27 @@
 
         if (object.Type = 'NoteRest') {
             object2['type']                = ToJSONString('chord');
+            object2['voice']               = object.VoiceNumber;
             object2['position']            = object.Position;
             object2['duration']            = object.Duration;
+            
             object2['doubleTremolos']      = object.Position;
             object2['singleTremolos']      = object.Position;
             object2['acciaccatura']        = ToJSONBool(object.IsAcciaccatura);
             object2['appoggiatura']        = ToJSONBool(object.IsAppoggiatura);
+            
+            object2['articulations']       = CreateJSONArray();
+            ExportArticulations(object2.articulations, object);
+            
             object2['notes']               = CreateJSONArray();
-
             for each note in object {
                 ExportNote(object2.notes, note);
             }
         }
         if (object.Type = 'Text') {
             object2['type']                = ToJSONString('text');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['text']                = ToJSONString(object.Text);
             if (object.StyleId = 'text.staff.expression') {
                 object2['style']           = ToJSONString('expression');
@@ -122,35 +129,46 @@
         }
         if (object.Type = 'Clef') {
             object2['type']                = ToJSONString('clef');
-            object2['pitch']               = object.Pitch;
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['style']               = ToJSONString(object.StyleId);
         }         
         if (object.Type = 'Slur') {
             object2['type']                = ToJSONString('slur');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['duration']            = object.Duration;
             object2['style']               = ToJSONString(object.StyleId);
         }
         if (object.Type = 'CrescendoLine') {
             object2['type']                = ToJSONString('cresc');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['duration']            = object.Duration;
             object2['style']               = ToJSONString(object.StyleId);
         }
         if (object.Type = 'DiminuendoLine') {
             object2['type']                = ToJSONString('dim');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['duration']            = object.Duration;
             object2['style']               = ToJSONString(object.StyleId);
         }
         if (object.Type = 'KeySignature') {
             object2['type']                = ToJSONString('key');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['major']               = ToJSONBool(object.Major);
             object2['sharps']              = object.Sharps;
             object2['isOpen']              = ToJSONBool(false);
         }
         if (object.Type = 'TimeSignature') {
             object2['type']                = ToJSONString('time');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             object2['value']               = CreateJSONArray();
-            object2.value[0] = object.Numerator;
-            object2.value[1] = object.Denominator;
+            object2.value[0]               = object.Numerator;
+            object2.value[1]               = object.Denominator;
             if (object.Text = CommonTimeString) {
                 object2['common']          = ToJSONBool(true);
             } else {
@@ -164,15 +182,58 @@
         }
         if (object.Type = 'BarLine') {
             object2['type']                = ToJSONString('barLine');
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
             // TODO
         }
         if (object.Type = 'Tuplet') {
+            // Note: this is an annotation that the given voice is tupleted
+            // from this point on.
             object2['type']                = ToJSONString('tuplet');
-            // TODO
+            object2['voice']               = object.VoiceNumber;
+            object2['position']            = object.Position;
+//            object2['duration']            = object.Duration;
+
+            object2['value']               = CreateJSONArray();
+            object2.value[0]               = object.Left;
+            object2.value[1]               = object.Right;
         }
 
 
         PushJSONArray(dest, object2);
+    }"
+             
+    ExportArticulations "(dest, chord) {
+        if (chord.GetArticulation(DownBowArtic)) {
+            PushJSONArray(dest, ToJSONString('upBow'));
+        }
+        if (chord.GetArticulation(UpBowArtic)) {
+            PushJSONArray(dest, ToJSONString('downBow'));
+        }
+        if (chord.GetArticulation(PlusArtic)) {
+            PushJSONArray(dest, ToJSONString('plus'));
+        }
+        if (chord.GetArticulation(HarmonicArtic)) {
+            PushJSONArray(dest, ToJSONString('harmonic'));
+        }
+        if (chord.GetArticulation(MarcatoArtic)) {
+            PushJSONArray(dest, ToJSONString('marcato'));
+        }
+        if (chord.GetArticulation(AccentArtic)) {
+            PushJSONArray(dest, ToJSONString('accent'));
+        }
+        if (chord.GetArticulation(TenutoArtic)) {
+            PushJSONArray(dest, ToJSONString('tenuto'));
+        }
+        if (chord.GetArticulation(WedgeArtic)) {
+            PushJSONArray(dest, ToJSONString('wedge'));
+        }
+        if (chord.GetArticulation(StaccatissimoArtic)) {
+            PushJSONArray(dest, ToJSONString('staccatissimo'));
+        }
+        if (chord.GetArticulation(StaccatoArtic)) {
+            PushJSONArray(dest, ToJSONString('staccato'));
+        }
     }"
 
     ExportNote "(dest, note) {
