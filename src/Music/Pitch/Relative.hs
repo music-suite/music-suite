@@ -605,24 +605,14 @@ intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 -- a perfect or diminished interval respectively.
 --
 interval :: Quality -> Number -> Interval
-interval q a = Interval (
-    fromIntegral o, 
-    fromIntegral n, 
-    fromIntegral $ diatonicToChromatic (fromIntegral n) 
-        + fromIntegral (qualityToDiff (isPerfectNumber $ fromIntegral n) q)
-    )
+interval quality number = interval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
     where  
-        (o, n) = (a - 1) `divMod` 7
+        (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
 
 interval' :: Int -> Int -> Interval
-interval' d a = Interval (
-    fromIntegral o, 
-    fromIntegral n, 
-    fromIntegral $ diatonicToChromatic n 
-        + fromIntegral d
-    )
+interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
     where  
-        (o, n) = (a - 1) `divMod` 7
+        (octave, diatonic) = (number - 1) `divMod` 7
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
@@ -956,7 +946,10 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
         | acc == flat   = flatten (fromPitch l)
 
 instance IsPitch Pitch where
-    fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
+    fromPitch (PitchL (c, a, o)) = 
+        Pitch $ interval' (qual a) (c + 1) 
+            ^+^ 
+            (_P8^* fromIntegral (o - 4))
         where
             qual Nothing  = 0
             qual (Just n) = round n
