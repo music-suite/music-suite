@@ -37,7 +37,11 @@ module Music.Pitch.Relative (
     semitone, 
     tone, 
     ditone,
-    tritone,    
+    tritone, 
+    isSemitone,
+    isTone,
+    isTritone,
+   
     HasSemitones(..),
     (=:=),
     (/:=),
@@ -111,11 +115,7 @@ module Music.Pitch.Relative (
     spell,
     sharps,
     flats,
-    
-    isTone,
-    isSemitone,
-    isTritone,
-         
+             
     -- * Literals (TODO move)
     unison,
     prime,
@@ -295,18 +295,21 @@ a /:= b = semitones a /= semitones b
 
     
 isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
-isTone      = (== tone)     . abs . semitones
+-- | Returns true iff the given interval spans one semitone.
 isSemitone  = (== semitone) . abs . semitones
+-- | Returns true iff the given interval spans one whole tone (two semitones).
+isTone      = (== tone)     . abs . semitones
+-- | Returns true iff the given interval spans three whole tones (six semitones).
 isTritone   = (== tritone)  . abs . semitones
 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
 --
--- Note that the inverval number is always one step larger than number of steps spanned by
+-- Note that the interval number is always one step larger than number of steps spanned by
 -- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
 -- over addition:
 --
--- > number a + number b = number (a + b) + 1
+-- > number (a + b) = number a + number b - 1
 --
 newtype Number = Number { getNumber :: Integer }
 deriving instance Eq Number
