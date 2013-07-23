@@ -56,8 +56,6 @@ import Music.Score.Ornaments
 
 -------------------------------------------------------------------------------------
 
-instance IsPitch a => IsPitch (Maybe a) where
-    fromPitch = Just . fromPitch
 
 instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
     fromPitch l                                     = PartT (toEnum 0, fromPitch l)
@@ -98,52 +96,6 @@ instance IsPitch a => IsPitch (SlideT a) where
     fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
 instance IsDynamics a => IsDynamics (SlideT a) where
     fromDynamics l                                  = SlideT (False,False,fromDynamics l,False,False)
-
-instance IsPitch Double where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
-
-instance IsPitch Integer where
-    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
-        where
-            semitones = maybe 0 round
-            diatonic pc = case pc of
-                0 -> 0
-                1 -> 2
-                2 -> 4
-                3 -> 5
-                4 -> 7
-                5 -> 9
-                6 -> 11
-
-instance IsDynamics Double where
-    fromDynamics (DynamicsL (Just x, _)) = x
-    fromDynamics (DynamicsL (Nothing, _)) = error "IsDynamics Double: No dynamics"
-
-{-
-
-data Alteration = Sh | Fl
-sharp = Sh
-flat  = Fl
-instance IsPitch (Alteration -> Double) where
-    fromPitch l Sh = fromPitch l + 1
-    fromPitch l Fl = fromPitch l - 1
-instance IsPitch (Alteration -> Integer) where
-    fromPitch l Sh = fromPitch l + 1
-    fromPitch l Fl = fromPitch l - 1
-instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
-    fromPitch l = pure . fromPitch l
--}
-
 
 
 -------------------------------------------------------------------------------------
