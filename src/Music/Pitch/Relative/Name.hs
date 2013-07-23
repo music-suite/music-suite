@@ -1,7 +1,10 @@
  
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
-module Music.Pitch.Relative.Name where
+module Music.Pitch.Relative.Name (
+        -- ** Name
+        Name(..),
+  ) where
 
 instance Show Name where
     show C = "c"

@@ -1,7 +1,25 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
-module Music.Pitch.Relative.Number where
+module Music.Pitch.Relative.Number (
+        -- ** Number
+        Number,   
+        unison,
+        prime,
+        second,
+        third,
+        fourth,
+        fifth,
+        sixth,
+        seventh,
+        octave,
+        -- ninth,
+        -- tenth,
+        -- twelfth,
+        -- thirteenth,
+        -- fourteenth,
+        -- duodecim,
+  ) where
 
 
 -- |

@@ -1,7 +1,28 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
-module Music.Pitch.Relative.Semitones where
+module Music.Pitch.Relative.Semitones (
+        -- ** Octaves
+        Octaves,
+        HasOctaves(..),
+
+        -- ** Steps
+        Steps,
+        HasSteps(..),
+
+        -- ** Semitones
+        Semitones,
+        HasSemitones(..),
+        semitone, 
+        tone, 
+        ditone,
+        tritone, 
+        isSemitone,
+        isTone,
+        isTritone,   
+        (=:=),
+        (/:=),
+  ) where
 
 -- |
 -- An interval represented as a number of octaves, including negative intervals.

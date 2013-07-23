@@ -1,7 +1,24 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
-module Music.Pitch.Relative.Quality where
+module Music.Pitch.Relative.Quality (
+        -- ** Quality
+        Augmentable(..),
+        Quality(..),    
+        HasQuality(..),
+        -- invertQuality,
+        isPerfect,
+        isMajor,
+        isMinor,
+        isAugmented,
+        isDiminished,
+        
+        -- TODO
+        diffToQuality,
+        qualityToDiff,
+        invertQuality,
+        replicate',
+  ) where
 
 class Augmentable a where
     -- | Increase the size of this interval by one.

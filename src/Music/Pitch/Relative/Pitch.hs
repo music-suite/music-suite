@@ -1,7 +1,13 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
 
-module Music.Pitch.Relative.Pitch where
+module Music.Pitch.Relative.Pitch (
+        -- ** Pitch
+        Pitch,    
+        pitch,
+        name,
+        accidental,
+  ) where
 
 import Data.Maybe
 import Data.Either
@@ -124,32 +130,15 @@ instance HasSteps Pitch where
     steps = steps . getPitch
 
 
-sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
--- | The double sharp accidental.
-doubleSharp = 2
--- | The sharp accidental.
-sharp       = 1
--- | The natural accidental.
-natural     = 0
--- | The flat accidental.
-flat        = -1
--- | The double flat accidental.
-doubleFlat  = -2
-
-instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
-    fromPitch l acc
-        | acc == sharp  = sharpen (fromPitch l)
-        | acc == flat   = flatten (fromPitch l)
-
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) =
         Pitch $ interval' (qual a) (c + 1)
             ^+^
-            (_P8^* fromIntegral (o - 4))
+            (perfect octave^* fromIntegral (o - 4))
         where
             qual Nothing  = 0
             qual (Just n) = round n
 
 midiNumber :: Pitch -> Integer
-midiNumber = getSemitones . semitones . getPitch
+midiNumber = fromIntegral . semitones . getPitch
 

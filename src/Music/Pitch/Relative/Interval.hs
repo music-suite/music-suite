@@ -1,7 +1,59 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
 
-module Music.Pitch.Relative.Interval where
+module Music.Pitch.Relative.Interval (
+        -- ** Intervals
+        Interval,
+
+        -- *** Creating intervals
+        interval,
+        perfect,
+        major,
+        minor,
+        augmented,
+        diminished,
+        doublyAugmented,
+        doublyDiminished,
+
+        -- *** Inspecting intervals
+        number,
+        -- isPerfectUnison,
+        isPositive,
+        isNegative,
+
+        -- *** Simple and compound intervals
+        isSimple,
+        isCompound,
+        separate,
+        simple,
+
+        -- *** Inversion
+        invert,
+
+
+
+        -- * Utility
+        -- ** Spelling
+        Spelling,
+        spell,
+        sharps,
+        flats,
+             
+        -- * Literals (TODO move)
+        d1, _P1, _A1,
+        d2, m2, _M2, _A2,
+        d3, m3, _M3, _A3,
+        d4, _P4, _A4,
+        d5, _P5, _A5,
+        d6, m6, _M6, _A6,
+        d7, m7, _M7, _A7,
+        d8, _P8, _A8,
+        
+        -- TODO
+        intervalDiff,
+        interval',
+        octave,
+  ) where
 
 import Data.Maybe
 import Data.Either

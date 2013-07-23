@@ -1,7 +1,18 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, FlexibleInstances #-}
 
-module Music.Pitch.Relative.Accidental where
+module Music.Pitch.Relative.Accidental (
+        -- ** Accidentals
+        Alterable(..),
+        Accidental,
+        doubleFlat, 
+        flat, 
+        natural, 
+        sharp, 
+        doubleSharp,
+  ) where
+
+import Music.Pitch.Literal
 
 class Alterable a where
     -- | Increase the given pitch by one.
@@ -23,4 +34,21 @@ deriving instance Integral Accidental
 instance Alterable Accidental where
     sharpen = succ
     flatten = pred
+
+sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
+-- | The double sharp accidental.
+doubleSharp = 2
+-- | The sharp accidental.
+sharp       = 1
+-- | The natural accidental.
+natural     = 0
+-- | The flat accidental.
+flat        = -1
+-- | The double flat accidental.
+doubleFlat  = -2
+
+instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
+    fromPitch l acc
+        | acc == sharp  = sharpen (fromPitch l)
+        | acc == flat   = flatten (fromPitch l)
 
