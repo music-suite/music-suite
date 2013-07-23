@@ -18,16 +18,12 @@ import Music.Pitch.Relative.Quality
 import Music.Pitch.Relative.Semitones
 import Music.Pitch.Relative.Number
 
-
-
-
-
 -- |
 -- An interval is the difference between two pitches, incuding negative
 -- intervals.
--- 
+--
 -- Intervals and pitches can be added using '.+^'. To get the interval between
--- two pitches, use '.-.'. 
+-- two pitches, use '.-.'.
 --
 -- > c .+^ minor third == eb
 -- > f .-. c           == perfect fourth
@@ -35,7 +31,7 @@ import Music.Pitch.Relative.Number
 -- Adding intervals preserves spelling. For example:
 --
 -- > m3 ^+^ _M3 = _P5
--- > d5 ^+^ _M6 = m10 
+-- > d5 ^+^ _M6 = m10
 --
 -- The scalar type of intervals are 'Integer', using '^*' to stack intervals
 -- of a certain type on top of each other. For example @_P5 ^* 2@ is a stack
@@ -91,7 +87,7 @@ instance VectorSpace Interval where
     (*^) = stackInterval
 
 instance HasQuality Interval where
-    quality (Interval (o, d, c)) 
+    quality (Interval (o, d, c))
         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
 
@@ -120,12 +116,12 @@ intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 --
 interval :: Quality -> Number -> Interval
 interval quality number = interval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
-    where  
+    where
         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
 
 interval' :: Int -> Int -> Interval
 interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
-    where  
+    where
         (octave, diatonic) = (number - 1) `divMod` 7
 
 -- | Creates a perfect interval.
@@ -148,20 +144,20 @@ doublyDiminished = interval (Diminished 2)
 
 
 invertDiatonic :: Num a => a -> a
-invertDiatonic d  = 7  - d       
+invertDiatonic d  = 7  - d
 
 invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
-      
+
 negateInterval :: Interval -> Interval
 negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
 negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
 addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
+addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
     = Interval (oa + ob + carry, steps, chroma)
     where
-        (carry, steps) = (da + db) `divMod` 7  
+        (carry, steps) = (da + db) `divMod` 7
         chroma         = trunc (ca + cb)
         trunc          = if carry > 0 then (`mod` 12) else id
 
@@ -185,13 +181,13 @@ simple = snd . separate
 
 -- |
 -- Returns the number portion of an interval.
--- 
+--
 -- The interval number is negative if and only if the interval is negative.
 --
 -- See also 'quality', 'octaves' and 'semitones'.
 --
 number :: Interval -> Number
-number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
+number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
     where
         inc a = if a >= 0 then succ a else pred a
 
@@ -208,7 +204,7 @@ isSimple = (== 0) . octaves
 -- |
 -- Returns whether the given interval is compound.
 --
--- A compound interval is either a negative interval, or a positive interval spanning 
+-- A compound interval is either a negative interval, or a positive interval spanning
 -- more than octave.
 --
 isCompound :: Interval -> Bool
@@ -238,7 +234,7 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 -- Intervallic inversion.
 --
 -- The inversion of a simple interval is determined by the following rules:
--- 
+--
 -- * The interval number and the number of its inversion always add up to nine
 --   (i.e. 4 + 5 = 9).
 --
@@ -252,8 +248,8 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 -- of the simple interval from which it is compounded, i.e.:
 --
 -- > invert = simple . negate
--- 
-invert :: Interval -> Interval   
+--
+invert :: Interval -> Interval
 invert = simple . negate
 
 

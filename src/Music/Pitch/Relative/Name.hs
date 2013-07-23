@@ -1,4 +1,4 @@
-
+ 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
 module Music.Pitch.Relative.Name where
@@ -14,3 +14,4 @@ instance Show Name where
 
 data Name = C | D | E | F | G | A | B
     deriving (Eq, Ord, Enum)
+

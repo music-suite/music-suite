@@ -5,7 +5,7 @@ module Music.Pitch.Relative.Semitones where
 
 -- |
 -- An interval represented as a number of octaves, including negative intervals.
--- 
+--
 -- > octaves a = semitones a `div` 12
 -- > steps   a = semitones a `mod` 12
 --
@@ -29,7 +29,7 @@ class HasOctaves a where
     -- The number of octaves is negative if and only if the interval is negative.
     --
     -- Examples:
-    --                   
+    --
     -- > octaves (perfect unison)  =  0
     -- > octaves (d5 ^* 4)         =  2
     -- > octaves (-_P8)            =  -1
@@ -39,7 +39,7 @@ class HasOctaves a where
 
 -- |
 -- An interval represented as a number of steps in the range /0 ≤ x < 12/.
--- 
+--
 -- > octaves a = semitones a `div` 12
 -- > steps   a = semitones a `mod` 12
 --
@@ -58,11 +58,11 @@ instance HasSteps Steps where { steps = id }
 -- Class of intervals that has a number of 'Steps'.
 --
 class HasSteps a where
-    -- | 
+    -- | 
     -- The number of steps is always in the range  /0 ≤ x < 12/.
     --
     -- Examples:
-    --                   
+    --
     -- > octaves (perfect unison)  =  0
     -- > octaves (d5 ^* 4)         =  2
     -- > octaves (-m7)             =  2
@@ -82,7 +82,7 @@ class HasSteps a where
 -- > spell sharps tritone == augmented fourth
 -- > spell flats  tritone == diminished fifth
 --
-newtype Semitones = Semitones { getSemitones :: Integer }
+newtype Semitones = Semitones { getSemitones :: Integer }
 deriving instance Eq Semitones
 deriving instance Ord Semitones
 instance Show Semitones where { show = show . getSemitones }
@@ -103,7 +103,7 @@ class HasSemitones a where
     -- The number of semitones is negative if and only if the interval is negative.
     --
     -- Examples:
-    --                   
+    --
     -- > semitones (perfect unison)  =  0
     -- > semitones tritone           =  6
     -- > semitones d5                =  6
@@ -124,11 +124,11 @@ ditone   = 4
 tritone  = 6
 
 isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
--- | Returns true iff the given interval spans one semitone.
+-- | Returns true iff the given interval spans one semitone.
 isSemitone  = (== semitone) . abs . semitones
--- | Returns true iff the given interval spans one whole tone (two semitones).
+-- | Returns true iff the given interval spans one whole tone (two semitones).
 isTone      = (== tone)     . abs . semitones
--- | Returns true iff the given interval spans three whole tones (six semitones).
+-- | Returns true iff the given interval spans three whole tones (six semitones).
 isTritone   = (== tritone)  . abs . semitones
 
 infix 4 =:=

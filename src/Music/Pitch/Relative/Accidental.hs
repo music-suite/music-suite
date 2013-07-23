@@ -4,12 +4,12 @@
 module Music.Pitch.Relative.Accidental where
 
 class Alterable a where
-    -- | Increase the given pitch by one.
+    -- | Increase the given pitch by one.
     sharpen :: a -> a
-    -- | Decrease the given pitch by one.
+    -- | Decrease the given pitch by one.
     flatten :: a -> a
 
-newtype Accidental = Accidental { getAccidental :: Integer }
+newtype Accidental = Accidental { getAccidental :: Integer }
 deriving instance Eq Accidental
 deriving instance Ord Accidental
 deriving instance Show Accidental
@@ -24,5 +24,3 @@ instance Alterable Accidental where
     sharpen = succ
     flatten = pred
 
-
-                    

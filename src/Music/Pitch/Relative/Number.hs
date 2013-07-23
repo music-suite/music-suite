@@ -13,7 +13,7 @@ module Music.Pitch.Relative.Number where
 --
 -- > number (a + b) = number a + number b - 1
 --
-newtype Number = Number { getNumber :: Integer }
+newtype Number = Number { getNumber :: Integer }
 deriving instance Eq Number
 deriving instance Ord Number
 instance Show Number where
@@ -41,4 +41,4 @@ fifth   = 5
 sixth   = 6
 seventh = 7
 octave  = 8
-                   
+
