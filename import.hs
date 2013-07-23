@@ -4,9 +4,8 @@
 module Main where
 
 import Data.Aeson
-import Data.Aeson.Types(parse)
 import Control.Applicative
-import Data.Aeson.Types(Parser)
+import Data.Aeson.Types(parse, Parser)
 import Music.Prelude.Basic
 
 import Data.ByteString.Lazy(ByteString)
@@ -27,13 +26,13 @@ setMeta _ _ = id
 
 
 data JSScore = JSScore {
-            score_title             :: String,
-            score_composer          :: String,
-            score_information       :: String,
-            score_staffHeight       :: Double,
-            score_transposing       :: Bool,
-            score_staves            :: [JSStaff],
-            score_systemStaff       :: ()
+            scoreTitle             :: String,
+            scoreComposer          :: String,
+            scoreInformation       :: String,
+            scoreStaffHeight       :: Double,
+            scoreTransposing       :: Bool,
+            scoreStaves            :: [JSStaff],
+            scoreSystemStaff       :: ()
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSScore where
@@ -45,13 +44,13 @@ instance FromJSON JSScore where
         <*> v .: "transposing"
         <*> v .: "staves"          
         -- TODO
-        <*> (return ())
+        <*> return ()
 
 
 data JSStaff = JSStaff {
-            staff_bars                :: [JSBar],
-            staff_name                :: String,
-            staff_shortName           :: String
+            staffBars                :: [JSBar],
+            staffName                :: String,
+            staffShortName           :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSStaff where
@@ -61,7 +60,7 @@ instance FromJSON JSStaff where
         <*> v .: "shortName"
 
 data JSBar = JSBar {
-            bar_elements            :: [JSElement]
+            barElements            :: [JSElement]
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSBar where
@@ -94,82 +93,82 @@ instance FromJSON JSElement where
         _                -> mempty
 
 data JSText = JSText {
-            text_voice               :: Int,
-            text_position            :: Int,
-            text_text                :: String,
-            text_style               :: Int
+            textVoice               :: Int,
+            textPosition            :: Int,
+            textText                :: String,
+            textStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSText where
     parseJSON = error "Not implemented (instance FromJSON JSText)"
      
 data JSClef = JSClef {
-            clef_voice               :: Int,
-            clef_position            :: Int,
-            clef_style               :: Int
+            clefVoice               :: Int,
+            clefPosition            :: Int,
+            clefStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSClef where
     parseJSON = error "Not implemented (instance FromJSON JSClef)"
 
 data JSSlur = JSSlur {
-            slur_voice               :: Int,
-            slur_position            :: Int,
-            slur_duration            :: Int,
-            slur_style               :: Int
+            slurVoice               :: Int,
+            slurPosition            :: Int,
+            slurDuration            :: Int,
+            slurStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSSlur where
     parseJSON = error "Not implemented (instance FromJSON JSSlur)"
 
 data JSCrescendoLine = JSCrescendoLine {  
-            cresc_voice               :: Int,
-            cresc_position            :: Int,
-            cresc_duration            :: Int,
-            cresc_style               :: Int
+            crescVoice               :: Int,
+            crescPosition            :: Int,
+            crescDuration            :: Int,
+            crescStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSCrescendoLine where
     parseJSON = error "Not implemented (instance FromJSON JSCrescendoLine)"
 
 data JSDiminuendoLine = JSDiminuendoLine {
-            dim_voice               :: Int,
-            dim_position            :: Int,
-            dim_duration            :: Int,
-            dim_style               :: Int
+            dimVoice               :: Int,
+            dimPosition            :: Int,
+            dimDuration            :: Int,
+            dimStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSDiminuendoLine where
     parseJSON = error "Not implemented (instance FromJSON JSDiminuendoLine)"
 
 data JSTimeSignature = JSTimeSignature {
-            time_voice               :: Int,
-            time_position            :: Int,
-            time_value               :: Rational,
-            time_isCommon            :: Bool,
-            time_isAllaBreve         :: Bool
+            timeVoice               :: Int,
+            timePosition            :: Int,
+            timeValue               :: Rational,
+            timeIsCommon            :: Bool,
+            timeIsAllaBreve         :: Bool
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSTimeSignature where
     parseJSON = error "Not implemented (instance FromJSON JSTimeSignature)"
 
 data JSKeySignature = JSKeySignature {
-            key_voice               :: Int,
-            key_position            :: Int,
-            key_major               :: Bool,
-            key_sharps              :: Int,
-            key_isOpen              :: Bool
+            keyVoice               :: Int,
+            keyPosition            :: Int,
+            keyMajor               :: Bool,
+            keySharps              :: Int,
+            keyIsOpen              :: Bool
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSKeySignature where
     parseJSON = error "Not implemented (instance FromJSON JSKeySignature)"
 
 data JSTuplet = JSTuplet {
-            tuplet_voice               :: Int,
-            tuplet_position            :: Int,
-            tuplet_duration            :: Int,
-            tuplet_playedDuration      :: Int,
-            tuplet_value               :: Rational
+            tupletVoice               :: Int,
+            tupletPosition            :: Int,
+            tupletDuration            :: Int,
+            tupletPlayedDuration      :: Int,
+            tupletValue               :: Rational
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSTuplet where
@@ -209,15 +208,15 @@ readJSArticulation = go
         go _                = Nothing
     
 data JSChord = JSChord { 
-            chord_position            :: Int,
-            chord_duration            :: Int,
-            chord_voice               :: Int,
-            chord_articulations       :: [JSArticulation], -- TODO
-            chord_singleTremolos      :: Int,
-            chord_doubleTremolos      :: Int,
-            chord_acciaccatura        :: Bool,
-            chord_appoggiatura        :: Bool,
-            chord_notes               :: [JSNote]
+            chordPosition            :: Int,
+            chordDuration            :: Int,
+            chordVoice               :: Int,
+            chordArticulations       :: [JSArticulation], -- TODO
+            chordSingleTremolos      :: Int,
+            chordDoubleTremolos      :: Int,
+            chordAcciaccatura        :: Bool,
+            chordAppoggiatura        :: Bool,
+            chordNotes               :: [JSNote]
     }
     deriving (Eq, Ord, Show)
 
@@ -226,19 +225,22 @@ instance FromJSON JSChord where
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
-        <*> (join $ fmap sequence $ fmap (fmap (returnMaybe readJSArticulation)) $ v .: "articulations")
+        <*> doThing (v .: "articulations")
         <*> v .: "singleTremolos"
         <*> v .: "doubleTremolos"
         <*> v .: "acciaccatura"
         <*> v .: "appoggiatura"
         <*> v .: "notes"
 
+doThing = (=<<) (sequence . fmap (returnMaybe readJSArticulation))
+
+
 data JSNote = JSNote {
-            note_pitch               :: Int,
-            note_diatonicPitch       :: Int,
-            note_accidental          :: Int,
-            note_tied                :: Bool,
-            note_style               :: Int
+            notePitch               :: Int,
+            noteDiatonicPitch       :: Int,
+            noteAccidental          :: Int,
+            noteTied                :: Bool,
+            noteStyle               :: Int
     }
     deriving (Eq, Ord, Show)
 instance FromJSON JSNote where
@@ -250,36 +252,26 @@ instance FromJSON JSNote where
         <*> v .: "style"
 
 
-{-
-decode "{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}" :: Maybe JSStaff
-
-decode "[{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}]" :: Maybe [JSStaff]
-
-decode "{\"composer\":\"Hans\",\"information\":\"none\",\"staffHeight\":7,\"staves\":[{\"bars\":[],\"name\":\"Violin\",\"shortName\":\"Vln.\"}],\"systemStaff\":[],\"title\":\"Title\",\"transposing\":false}" :: Maybe JSScore
-
-decode "{\"accidental\":0,\"diatonicPitch\":36,\"pitch\":62,\"style\":0,\"tied\":false}" :: Maybe JSNote
--}
-
-
-
 
 fromJSScore :: JSScore -> Score Note
 fromJSScore (JSScore title composer info staffH transp staves systemStaff) =
     foldr (</>) mempty $ fmap fromJSStaff staves
+    -- TODO meta information
 
 fromJSStaff :: JSStaff -> Score Note
 fromJSStaff (JSStaff bars name shortName) =
     removeRests $ scat $ fmap fromJSBar bars
-    -- FIXME empty bars!
+    -- TODO bar length hardcoded
+    -- TODO meta information
 
 fromJSBar :: JSBar -> Score (Maybe Note)
 fromJSBar (JSBar elems) = 
-    (fmap Just $ pcat $ fmap fromJSElem elems) <> (return Nothing)^*1
+    fmap Just (pcat $ fmap fromJSElem elems) <> return Nothing^*1
 
 fromJSElem :: JSElement -> Score Note
 fromJSElem = go where
     go (JSElementChord chord) = fromJSChord chord
-    -- TODO
+    -- TODO tuplet, key/time signature, line and text support
 
 fromJSChord :: JSChord -> Score Note
 fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) = 
@@ -292,15 +284,14 @@ fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) =
         setArt Tenuto          = tenuto
         setArt Staccato        = staccato
         setArt a               = error $ "fromJSChord: Unsupported articulation" ++ show a        
-
     -- TODO tremolo and appogiatura/acciaccatura support
 
 fromJSNote :: JSNote -> Score Note
-fromJSNote (JSNote pitch di acc tied style) = 
-    (if tied then fmap beginTie else id) $
-    modifyPitches (+ (fromIntegral pitch - 60)) $
-    c
-    -- TODO
+fromJSNote (JSNote pitch di acc tied style) =
+    (if tied then fmap beginTie else id)
+    $ modifyPitches (+ (fromIntegral pitch - 60)) def
+    where
+        def = c
 
     
 main = do
