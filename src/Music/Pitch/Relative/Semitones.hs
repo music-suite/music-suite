@@ -33,14 +33,10 @@ module Music.Pitch.Relative.Semitones (
 -- > octaves a = semitones a `div` 12
 -- > steps   a = semitones a `mod` 12
 --
-newtype Octaves = Octaves { getOctaves :: Integer }
-instance Show Octaves where { show = show . getOctaves }
-deriving instance Eq Octaves
-deriving instance Ord Octaves
-deriving instance Num Octaves
-deriving instance Enum Octaves
-deriving instance Real Octaves
-deriving instance Integral Octaves
+newtype Octaves = Octaves { getOctaves :: Integer }     
+    deriving (Eq, Ord, Num, Enum, Real, Integral)
+
+instance Show       Octaves where { show = show . getOctaves }
 instance HasOctaves Octaves where { octaves = id }
 
 -- |
@@ -69,14 +65,9 @@ class HasOctaves a where
 -- > steps   a = semitones a `mod` 12
 --
 newtype Steps = Steps { getSteps :: Integer }
+    deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-deriving instance Eq Steps
-deriving instance Ord Steps
-instance Show Steps where { show = show . getSteps }
-deriving instance Num Steps
-deriving instance Enum Steps
-deriving instance Real Steps
-deriving instance Integral Steps
+instance Show     Steps where { show = show . getSteps }
 instance HasSteps Steps where { steps = id }
 
 -- |
@@ -108,13 +99,9 @@ class HasSteps a where
 -- > spell flats  tritone == diminished fifth
 --
 newtype Semitones = Semitones { getSemitones :: Integer }
-deriving instance Eq Semitones
-deriving instance Ord Semitones
-instance Show Semitones where { show = show . getSemitones }
-deriving instance Num Semitones
-deriving instance Enum Semitones
-deriving instance Real Semitones
-deriving instance Integral Semitones
+    deriving (Eq, Ord, Num, Enum, Real, Integral)
+
+instance Show         Semitones where { show = show . getSemitones }
 instance HasSemitones Semitones where { semitones = id }
 
 -- |

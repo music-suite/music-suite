@@ -53,15 +53,15 @@ data Quality
     | Perfect
     | Augmented Integer
     | Diminished Integer
+    deriving (Eq, Ord)
 
-deriving instance Eq Quality
-deriving instance Ord Quality
 instance Show Quality where
     show Major            = "_M"
     show Minor            = "m"
     show Perfect          = "_P"
     show (Augmented n)    = "_" ++ replicate' n 'A'
     show (Diminished n)   = replicate' n 'd'
+
 instance HasQuality Quality where
     quality = id
 

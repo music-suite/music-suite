@@ -31,16 +31,12 @@ class Alterable a where
     flatten :: a -> a
 
 newtype Accidental = Accidental { getAccidental :: Integer }
-deriving instance Eq Accidental
-deriving instance Ord Accidental
-deriving instance Show Accidental
--- instance Show Accidental where
---     show n | n > 0     = replicate' n 's'
---            | otherwise = replicate' (negate n) 'b'
-deriving instance Num Accidental
-deriving instance Enum Accidental
-deriving instance Real Accidental
-deriving instance Integral Accidental
+    deriving (Eq, Ord, Num, Enum, Real, Integral)
+    
+instance Show Accidental where
+    show n | n == 0 = "natural"
+           | n > 0  = replicate' n 's'
+           | n < 0  = replicate' (negate n) 'b'
 instance Alterable Accidental where
     sharpen = succ
     flatten = pred
@@ -61,4 +57,6 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
     fromPitch l acc
         | acc == sharp  = sharpen (fromPitch l)
         | acc == flat   = flatten (fromPitch l)
+
+replicate' n = replicate (fromIntegral n)
 

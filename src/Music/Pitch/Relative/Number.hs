@@ -31,13 +31,9 @@ module Music.Pitch.Relative.Number (
 -- > number (a + b) = number a + number b - 1
 --
 newtype Number = Number { getNumber :: Integer }
-deriving instance Eq Number
-deriving instance Ord Number
+    deriving (Eq, Ord, Num, Enum, Real, Integral)
+    
 instance Show Number where { show = show . getNumber }
-deriving instance Num Number
-deriving instance Enum Number
-deriving instance Real Number
-deriving instance Integral Number
 
 unison  :: Number
 prime   :: Number

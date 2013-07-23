@@ -101,13 +101,12 @@ import Music.Pitch.Relative.Number
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Interval = Interval { getInterval :: (
-    Int,        -- octaves, may be negative
-    Int,        -- diatonic semitone [0..6]
-    Int         -- chromatic semitone [0..11]
-) }
+            Int,        -- octaves, may be negative
+            Int,        -- diatonic semitone [0..6]
+            Int         -- chromatic semitone [0..11]
+    ) }
+    deriving (Eq, Ord)
 
-deriving instance Eq Interval
-deriving instance Ord Interval
 instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval

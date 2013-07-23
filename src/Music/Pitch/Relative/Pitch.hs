@@ -75,13 +75,13 @@ import Music.Pitch.Relative.Name
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Pitch = Pitch { getPitch :: Interval }
-deriving instance Eq Pitch
-deriving instance Num Pitch
-deriving instance Ord Pitch
+    deriving (Eq, Num, Ord)
+    
 instance AffineSpace Pitch where
-    type Diff Pitch = Interval
+    type Diff Pitch     = Interval
     Pitch a .-. Pitch b = a ^-^ b
     Pitch a .+^ b       = Pitch (a ^+^ b)
+
 instance Show Pitch where
     show p = show (name p) ++ showAccidental (accidental p) ++ showOctave (octaves p)
         where
