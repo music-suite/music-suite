@@ -34,19 +34,19 @@ module Music.Pitch.Relative (
     
     -- ** Semitones
     Semitones,
+    HasSemitones(..),
     semitone, 
     tone, 
     ditone,
     tritone, 
     isSemitone,
     isTone,
-    isTritone,
-   
-    HasSemitones(..),
+    isTritone,   
     (=:=),
     (/:=),
 
     -- ** Quality
+    Augmentable(..),
     Quality(..),    
     HasQuality(..),
     -- invertQuality,
@@ -57,16 +57,13 @@ module Music.Pitch.Relative (
     isDiminished,
 
     -- ** Accidentals
+    Alterable(..),
     Accidental,
     doubleFlat, 
     flat, 
     natural, 
     sharp, 
     doubleSharp,
-
-    -- ** Alteration
-    Alterable(..),
-    Augmentable(..),
 
     -- ** Number
     Number,   
@@ -75,16 +72,10 @@ module Music.Pitch.Relative (
     Name(..),
 
     -- * Pitch and interval types
-    -- ** Pitch
-    Pitch,    
-    pitch,
-    name,
-    accidental,
-
     -- ** Intervals
     Interval,
 
-    -- *** Createsing intervals
+    -- *** Creating intervals
     interval,
     perfect,
     major,
@@ -106,8 +97,14 @@ module Music.Pitch.Relative (
     separate,
     simple,
     
-    -- *** Intervallic inversion
+    -- *** Inversion
     invert,
+
+    -- ** Pitch
+    Pitch,    
+    pitch,
+    name,
+    accidental,
 
     -- * Utility
     -- ** Spelling
@@ -156,6 +153,8 @@ import Control.Applicative
 import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
+
+
 
 -- |
 -- An interval represented as a number of octaves, including negative intervals.
@@ -246,18 +245,6 @@ deriving instance Real Semitones
 deriving instance Integral Semitones
 instance HasSemitones Semitones where { semitones = id }
 
-
-semitone, tone, ditone, tritone :: Semitones
-
--- | Precisely one semitone.
-semitone = 1
--- | Precisely one whole tone, or two semitones.
-tone     = 2
--- | Precisely two whole tones, or four semitones.
-ditone   = 4
--- | Precisely three whole tones, or six semitones.
-tritone  = 6
-
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
 --
@@ -278,6 +265,25 @@ class HasSemitones a where
     semitones :: a -> Semitones
 
 
+semitone, tone, ditone, tritone :: Semitones
+
+-- | Precisely one semitone.
+semitone = 1
+-- | Precisely one whole tone, or two semitones.
+tone     = 2
+-- | Precisely two whole tones, or four semitones.
+ditone   = 4
+-- | Precisely three whole tones, or six semitones.
+tritone  = 6
+
+isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
+-- | Returns true iff the given interval spans one semitone.
+isSemitone  = (== semitone) . abs . semitones
+-- | Returns true iff the given interval spans one whole tone (two semitones).
+isTone      = (== tone)     . abs . semitones
+-- | Returns true iff the given interval spans three whole tones (six semitones).
+isTritone   = (== tritone)  . abs . semitones
+
 infix 4 =:=
 infix 4 /:=
 
@@ -293,52 +299,17 @@ a =:= b = semitones a == semitones b
 (/:=) :: HasSemitones a => a -> a -> Bool
 a /:= b = semitones a /= semitones b
 
-    
-isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
--- | Returns true iff the given interval spans one semitone.
-isSemitone  = (== semitone) . abs . semitones
--- | Returns true iff the given interval spans one whole tone (two semitones).
-isTone      = (== tone)     . abs . semitones
--- | Returns true iff the given interval spans three whole tones (six semitones).
-isTritone   = (== tritone)  . abs . semitones
 
--- |
--- The number portion of an interval (i.e. second, third, etc).
---
--- Note that the interval number is always one step larger than number of steps spanned by
--- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
--- over addition:
---
--- > number (a + b) = number a + number b - 1
---
-newtype Number = Number { getNumber :: Integer }
-deriving instance Eq Number
-deriving instance Ord Number
-instance Show Number where
-    show (Number d) = show d
-deriving instance Num Number
-deriving instance Enum Number
-deriving instance Real Number
-deriving instance Integral Number
 
-unison  :: Number
-prime   :: Number
-second  :: Number
-third   :: Number
-fourth  :: Number
-fifth   :: Number
-sixth   :: Number
-seventh :: Number
-octave  :: Number
-unison  = 1
-prime   = 1
-second  = 2
-third   = 3
-fourth  = 4
-fifth   = 5
-sixth   = 6
-seventh = 7
-octave  = 8
+
+
+
+
+class Augmentable a where
+    -- | Increase the size of this interval by one.
+    augment :: a -> a
+    -- | Decrease the size of this interval by one.
+    diminish :: a -> a
 
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
@@ -364,31 +335,8 @@ instance Show Quality where
     show Perfect          = "_P"
     show (Augmented n)    = "_" ++ replicate' n 'A'
     show (Diminished n)   = replicate' n 'd'
-
-invertQuality :: Quality -> Quality
-invertQuality = go
-    where
-        go Major            = Minor
-        go Minor            = Major
-        go Perfect          = Perfect
-        go (Augmented n)    = Diminished n
-        go (Diminished n)   = Augmented n
-
-class HasQuality a where
-    quality :: a -> Quality
 instance HasQuality Quality where
     quality = id
-class Augmentable a where
-    -- | Increase the size of this interval by one.
-    augment :: a -> a
-    -- | Decrease the size of this interval by one.
-    diminish :: a -> a
-class Alterable a where
-    -- | Increase the given pitch by one.
-    sharpen :: a -> a
-    -- | Decrease the given pitch by one.
-    flatten :: a -> a
-
 
 -- TODO this instance should not be used
 -- instance Augmentable Quality where
@@ -400,6 +348,19 @@ class Alterable a where
 --             go Major            = Augmented 1
 --             go Perfect          = Augmented 1
 --             go (Augmented n)    = Diminished (n)
+
+class HasQuality a where
+    quality :: a -> Quality
+
+invertQuality :: Quality -> Quality
+invertQuality = go
+    where
+        go Major            = Minor
+        go Minor            = Major
+        go Perfect          = Perfect
+        go (Augmented n)    = Diminished n
+        go (Diminished n)   = Augmented n
+
 
 -- | Returns whether the given quality is perfect.
 isPerfect :: HasQuality a => a -> Bool
@@ -451,6 +412,100 @@ qualityToDiff perfect = go
         go Perfect          = 0
         go Major            = 0
         go (Augmented n)    = n
+
+
+data Name = C | D | E | F | G | A | B
+    deriving (Eq, Ord, Enum)
+
+
+
+
+
+
+
+
+
+class Alterable a where
+    -- | Increase the given pitch by one.
+    sharpen :: a -> a
+    -- | Decrease the given pitch by one.
+    flatten :: a -> a
+
+newtype Accidental = Accidental { getAccidental :: Integer }
+deriving instance Eq Accidental
+deriving instance Ord Accidental
+deriving instance Show Accidental
+-- instance Show Accidental where
+--     show n | n > 0     = replicate' n 's'
+--            | otherwise = replicate' (negate n) 'b'
+deriving instance Num Accidental
+deriving instance Enum Accidental
+deriving instance Real Accidental
+deriving instance Integral Accidental
+instance Alterable Accidental where
+    sharpen = succ
+    flatten = pred
+
+
+ 
+
+
+
+
+
+
+-- |
+-- The number portion of an interval (i.e. second, third, etc).
+--
+-- Note that the interval number is always one step larger than number of steps spanned by
+-- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
+-- over addition:
+--
+-- > number (a + b) = number a + number b - 1
+--
+newtype Number = Number { getNumber :: Integer }
+deriving instance Eq Number
+deriving instance Ord Number
+instance Show Number where
+    show (Number d) = show d
+deriving instance Num Number
+deriving instance Enum Number
+deriving instance Real Number
+deriving instance Integral Number
+
+unison  :: Number
+prime   :: Number
+second  :: Number
+third   :: Number
+fourth  :: Number
+fifth   :: Number
+sixth   :: Number
+seventh :: Number
+octave  :: Number
+unison  = 1
+prime   = 1
+second  = 2
+third   = 3
+fourth  = 4
+fifth   = 5
+sixth   = 6
+seventh = 7
+octave  = 8
+
+instance Show Name where
+    show C = "c"
+    show D = "d"
+    show E = "e"
+    show F = "f"
+    show G = "g"
+    show A = "a"
+    show B = "b"
+
+
+
+
+
+
 
 
 -- |
@@ -560,14 +615,6 @@ interval' d a = Interval (
     )
     where  
         (o, n) = (a - 1) `divMod` 7
-
-{-
--- |
--- The unison interval.
---
-unison :: Interval
-unison = _P1
--}
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
@@ -697,6 +744,8 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 invert :: Interval -> Interval   
 invert = simple . negate
 
+
+
 type Spelling = Semitones -> Number
 
 spell :: HasSemitones a => Spelling -> a -> Interval
@@ -777,9 +826,6 @@ d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
 
 
 
-
-
-
 -- |
 -- Standard pitch representation.
 -- 
@@ -845,38 +891,9 @@ instance Show Pitch where
                 | n > 0     = replicate' n 's'
                 | otherwise = replicate' (negate n) 'b'
 
-
 instance Alterable Pitch where
     sharpen (Pitch a) = Pitch (augment a)
     flatten (Pitch a) = Pitch (diminish a)
-
-
-
-data Name = C | D | E | F | G | A | B
-    deriving (Eq, Ord, Enum)
-instance Show Name where
-    show C = "c"
-    show D = "d"
-    show E = "e"
-    show F = "f"
-    show G = "g"
-    show A = "a"
-    show B = "b"
-
-newtype Accidental = Accidental { getAccidental :: Integer }
-deriving instance Eq Accidental
-deriving instance Ord Accidental
-deriving instance Show Accidental
--- instance Show Accidental where
---     show n | n > 0     = replicate' n 's'
---            | otherwise = replicate' (negate n) 'b'
-deriving instance Num Accidental
-deriving instance Enum Accidental
-deriving instance Real Accidental
-deriving instance Integral Accidental
-instance Alterable Accidental where
-    sharpen = succ
-    flatten = pred
 
 asPitch :: Pitch -> Pitch
 asPitch = id
