@@ -1,4 +1,3 @@
-
 {-# LANGUAGE
     GeneralizedNewtypeDeriving,
     DeriveFunctor,
@@ -24,9 +23,12 @@
 module Music.Pitch.Relative (
     -- ** Semitones
     Semitones,
-    tone, 
     semitone, 
-    tritone,
+    tone, 
+    ditone,
+    tritone,    
+    HasSemitones(..),
+    equivalent,
 
     -- ** Pitch
     Pitch,
@@ -38,14 +40,14 @@ module Music.Pitch.Relative (
     name,
     accidental,
     octave_,
-    semitones_,
+    -- semitones_,
 
     -- ** Intervals
     Interval,
 
     -- *** Constructing intervals
-    unison,
     interval,
+    perfect,
     major,
     minor,
     augmented,
@@ -55,7 +57,7 @@ module Music.Pitch.Relative (
 
     -- *** Inspecing intervals
     number,
-    semitones,
+    -- semitones,
     isPositive,
     isNegative,
 
@@ -71,6 +73,7 @@ module Music.Pitch.Relative (
     invert,
     
     Number,
+    unison,
     prime,
     second,
     third,
@@ -90,6 +93,7 @@ module Music.Pitch.Relative (
     isDiminished,
     
     -- * Spelling
+    Spelling,
     spell,
     sharps,
     flats,
@@ -133,8 +137,33 @@ import Music.Pitch.Absolute
 import Music.Pitch.Literal
 import qualified Data.List as List
 
+class HasSemitones a where
+    -- |
+    -- Returns the number of semitones spanned by an interval.
+    --
+    -- The number of semitones is negative if and only if the interval is negative.
+    --
+    -- Examples:
+    --                   
+    -- > semitones (perfect unison)  =  0
+    -- > semitones tritone           =  6
+    -- > semitones d5                =  6
+    -- > semitones (-_P8)            =  -12
+    --
+    semitones :: a -> Semitones
+
 -- |
--- An interval represented as a number of semitones.
+-- An interval represented as a number of semitones, including negative
+-- intervals, as well as intervals larger than one octave. This representation
+-- does not take spelling into account, so for example a major third and a
+-- diminished fourth can not be distinguished.
+--
+-- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does not
+-- have an unequivocal spelling. To convert these to an interval, a 'Spelling' must
+-- be provided as in:
+--
+-- > spell sharps tritone == augmented fourth
+-- > spell flats  tritone == diminished fifth
 --
 newtype Semitones  = Semitones { getSemitones :: Integer }
 deriving instance Eq Semitones
@@ -145,18 +174,31 @@ deriving instance Num Semitones
 deriving instance Enum Semitones
 deriving instance Real Semitones
 deriving instance Integral Semitones
+instance HasSemitones Semitones where
+    semitones = id
 
 semitone, tone, ditone, tritone :: Semitones
 
--- | A synonym for @1@.
+-- | Precisely one semitone.
 semitone = 1
--- | A synonym for @2@.
+-- | Precisely one whole tone, or two semitones.
 tone     = 2
--- | A synonym for @4.
+-- | Precisely two whole tones, or four semitones.
 ditone   = 4
--- | A synonym for @6@.
+-- | Precisely three whole tones, or six semitones.
 tritone  = 6
 
+-- |
+-- Enharmonic equivalence.
+--
+-- For any 'Spelling' @s@ and @t@
+-- 
+-- > spell s a `equivalent` spell t a
+--
+equivalent :: HasSemitones a => a -> a -> Bool
+equivalent a b = semitones a == semitones b
+
+isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
 isTone      = (== tone)     . abs . semitones
 isSemitone  = (== semitone) . abs . semitones
 isTritone   = (== tritone)  . abs . semitones
@@ -180,6 +222,7 @@ deriving instance Enum Number
 deriving instance Real Number
 deriving instance Integral Number
 
+unison  :: Number
 prime   :: Number
 second  :: Number
 third   :: Number
@@ -187,6 +230,7 @@ fourth  :: Number
 fifth   :: Number
 sixth   :: Number
 seventh :: Number
+unison  = 1
 prime   = 1
 second  = 2
 third   = 3
@@ -289,29 +333,35 @@ qualityToDiff perfect = go
         go Major            = 0
         go (Augmented n)    = n
 -- |
--- An interval is the difference between two pitches. Note that this
--- definitions includes negative invervals.
+-- An interval is the difference between two pitches, incuding negative
+-- intervals.
 -- 
+-- Intervals and pitches can be added using '.+^'. To get the interval between
+-- two pitches, use '.-.'. 
+--
+-- > c .+^ minor third == eb
+-- > f .-. c           == perfect fourth
+--
 -- Adding intervals preserves spelling. For example:
 --
--- > m3 + _M3 = _P5
--- > d5 + _M6 = m10 
+-- > m3 ^+^ _M3 = _P5
+-- > d5 ^+^ _M6 = m10 
+--
+-- The scalar type of intervals are 'Integer', using '^*' to stack intervals
+-- of a certain type on top of each other. For example @_P5 ^* 2@ is a stack
+-- of 2 perfect fifths. The 'Num' instance works as expected for '+', 'negate'
+-- and 'abs', and arbitrarily uses octaves for multiplication. If you find
+-- yourself '*', or 'signum' on intervals, consider switching to '^*' or
+-- 'normalized'.
 --
 -- Intervals are generally described in terms of 'Quality' and 'Number'. To
--- construct an interval, use the 'interval' constructor or the interval
--- literals:
+-- construct an interval, use the 'interval' constructor, the utility
+-- constructors 'major', 'minor', 'augmented' and 'diminished', or the
+-- interval literals:
 --
--- > m5 _P5 _M7 etc.
---
--- Note that 'semitone' and 'tritone' are not intervals: use '_A1', 'm2', 'd5' or '_A4'.
---
--- The 'Num' is mainly provided for the convenience of having '+', '-',
--- 'negate' and 'abs' defined on invervals. To preserve the semantics of 'abs'
--- and 'signum', @a * b@ stacks the interval @b@ for each octave in @a@, and
--- 'signum' returns either a positive or negative octave. While there is
--- nothing wrong about this behaviour, the use of octaves for signum and
--- multiplication is arbitrary. The 'VectorSpace' instance does not have this
--- deficiency.
+-- > m5  == minor   fifth    == interval Minor   5
+-- > _P4 == perfect fourth   == interval Perfect 5
+-- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Interval = Interval { getInterval :: (
     Integer,    -- octaves, may be negative
@@ -323,9 +373,9 @@ deriving instance Eq Interval
 deriving instance Ord Interval
 instance Num Interval where
     (+)           = addInterval
-    a * b         = fromIntegral (semitones a `div` 12) `stackInterval` b
     negate        = negateInterval
     abs a         = if isNegative a then negate a else a
+    a * b         = fromIntegral (semitones a `div` 12) `stackInterval` b
     signum a      = if isNegative a then (-_P8) else _P8
     fromInteger 0 = _P1
     fromInteger _ = undefined
@@ -335,10 +385,10 @@ instance Show Interval where
 instance Semigroup Interval where
     (<>)    = addInterval
 instance Monoid Interval where
-    mempty  = unison
+    mempty  = perfect unison
     mappend = addInterval
 instance AdditiveGroup Interval where
-    zeroV   = unison
+    zeroV   = perfect unison
     (^+^)   = addInterval
     negateV = negateInterval
 instance VectorSpace Interval where
@@ -380,18 +430,27 @@ interval' d a = Interval (
     where  
         (o, n) = (a - 1) `divMod` 7
 
+{-
 -- |
 -- The unison interval.
 --
 unison :: Interval
 unison = _P1
+-}
 
+-- | Constructs a perfect interval.
 perfect    = interval Perfect
+-- | Constructs a major interval.
 major      = interval Major
+-- | Constructs a minor interval.
 minor      = interval Minor
+-- | Constructs an augmented interval.
 augmented  = interval (Augmented 1)
+-- | Constructs a diminished interval.
 diminished = interval (Diminished 1)
+-- | Constructs a doubly augmented interval.
 doublyAugmented  = interval (Augmented 2)
+-- | Constructs a doubly diminished interval.
 doublyDiminished = interval (Diminished 2)
 
 
@@ -438,20 +497,9 @@ number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
     where
         inc a = if a >= 0 then succ a else pred a
 
--- |
--- Returns the number of semitones spanned by an interval.
---
--- The number of semitones is negative if and only if the interval is negative.
---
--- Examples:
---                   
--- > semitones _P1     =  0
--- > semitones m3      =  3
--- > semitones d5      =  6
--- > semitones (-_P8)  =  -12
---
-semitones :: Interval -> Semitones
-semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
+
+instance HasSemitones Interval where
+    semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
 
 -- |
 -- Returns whether the given interval is simple.
@@ -509,10 +557,10 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 invert :: Interval -> Interval   
 invert = simple . negate
 
+type Spelling = Semitones -> Number
 
-spell :: (Semitones -> Number) -> Interval -> Interval
-spell toDia = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ toDia s, fromIntegral s)) .  semitones
-
+spell :: HasSemitones a => Spelling -> a -> Interval
+spell z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
 
 isPerfectNumber :: Integer -> Bool
 isPerfectNumber 0 = True
@@ -656,8 +704,8 @@ accidental = fromIntegral . intervalDiff . simple . getPitch
 octave_ :: Pitch -> Octave
 octave_ = fromIntegral . octave . getPitch
 
-semitones_ :: Pitch -> Semitones
-semitones_ = semitones . getPitch
+instance HasSemitones Pitch where
+    semitones = semitones . getPitch
 
 
 instance IsPitch Pitch where
@@ -666,7 +714,7 @@ instance IsPitch Pitch where
             qual Nothing  = 0
             qual (Just n) = round n
 
--- c = Pitch unison .+^ (_P8^*5)
+-- c = c .+^ (_P8^*5)
 -- d = c .+^ _M2
 
 midiNumber :: Pitch -> Integer
