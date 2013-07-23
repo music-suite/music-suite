@@ -35,13 +35,28 @@ module Music.Pitch.Relative (
     (=:=),
     (/:=),
 
+    -- ** Quality
+    HasQuality(..),
+    -- invertQuality,
+    isPerfect,
+    isMajor,
+    isMinor,
+    isAugmented,
+    isDiminished,
+
+    -- ** Alteration
+    Alterable(..),
+    Augmentable(..),
+
+    -- ** Misc
+    Number,
+    Quality(..),    
+    Name(..),
+    Accidental,
+    
+
     -- ** Pitch
     Pitch,
-    Name(..),
-    Octave,
-    Accidental,
-    Alterable(..),
-    
     name,
     accidental,
 
@@ -58,7 +73,7 @@ module Music.Pitch.Relative (
     doublyAugmented,
     doublyDiminished,
 
-    -- *** Inspecing intervals
+    -- *** Inspecting intervals
     number,
     -- isPerfectUnison,
     isPositive,
@@ -70,11 +85,20 @@ module Music.Pitch.Relative (
     separate,
     simple,
     
-    -- *** Inversion
-    Augmentable(..),
+    -- *** Intervallic inversion
     invert,
+
+    -- ** Spelling
+    Spelling,
+    spell,
+    sharps,
+    flats,
     
-    Number,
+    isTone,
+    isSemitone,
+    isTritone,
+         
+    -- ** Literals (TODO move)
     unison,
     prime,
     second,
@@ -90,37 +114,6 @@ module Music.Pitch.Relative (
     -- thirteenth,
     -- fourteenth,
     -- duodecim,
-    
-    
-    Quality(..),    
-    invertQuality,
-    HasQuality(..),
-    isPerfect,
-    isMajor,
-    isMinor,
-    isAugmented,
-    isDiminished,
-    
-    -- * Spelling
-    Spelling,
-    spell,
-    sharps,
-    flats,
-    
-    -- * Harmonic rules
-    isTone,
-    isSemitone,
-    isTritone,
-         
-    -- ** Literals (TODO move)
-    -- prime, 
-    -- second, 
-    -- third, 
-    -- fourth, 
-    -- fifth, 
-    -- sixth, 
-    -- seventh, 
-    -- octave,
 
     d1, _P1, _A1,
     d2, m2, _M2, _A2,
@@ -737,18 +730,6 @@ instance Show Name where
     show G = "g"
     show A = "a"
     show B = "b"
-
-newtype Octave = Octave { getOctave :: Integer }
-deriving instance Eq Octave
-deriving instance Ord Octave
-deriving instance Show Octave -- TODO
--- instance Show Octave where
---     show n | n > 0     = replicate' n '\''
---            | otherwise = replicate' (negate n) '_'
-deriving instance Num Octave
-deriving instance Enum Octave
-deriving instance Real Octave
-deriving instance Integral Octave
 
 newtype Accidental = Accidental { getAccidental :: Integer }
 deriving instance Eq Accidental
