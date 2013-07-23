@@ -1,0 +1,32 @@
+
+name:               music-sibelius
+version:            0.5
+cabal-version:      >= 1.6
+author:             Hans Hoglund
+maintainer:         Hans Hoglund <hans@hanshoglund.se>
+license:            BSD3
+license-file:       COPYING
+synopsis:           To be written.
+category:           
+tested-with:        GHC
+build-type:         Simple
+
+description: 
+    To be written.
+
+source-repository head
+  type:             git
+  location:         git://github.com/hanshoglund/foobar.git
+  
+library                    
+    build-depends: 
+        base >= 4 && < 5,
+        unordered-containers,
+        bytestring,
+        music-preludes,
+        aeson
+    hs-source-dirs: src
+    exposed-modules:
+        Music.Sibelius
+        Music.Score.Import.Sibelius
+

@@ -1,7 +1,7 @@
 
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving #-}
 
-module Main where
+module Music.Sibelius where
 
 import Data.Aeson
 import Control.Applicative
