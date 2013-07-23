@@ -427,8 +427,8 @@ diffToQuality = go
 qualityToDiff :: Bool -> Quality -> Integer
 qualityToDiff perfect = go
     where
-        go (Diminished n)   = negate $ if perfect then n else (n + 1)
-        go Minor            = (-1)
+        go (Diminished n)   = negate $ if perfect then n else n + 1
+        go Minor            = -1
         go Perfect          = 0
         go Major            = 0
         go (Augmented n)    = n
@@ -581,7 +581,7 @@ invertChromatic c = 12 - c
       
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
-    = (Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma))
+    = Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma)
     where
         (carry, steps) = (da + db) `divMod` 7  
         chroma         = trunc (ca + cb)
@@ -902,9 +902,9 @@ sharp       = 1
 -- | The natural accidental.
 natural     = 0
 -- | The flat accidental.
-flat        = (-1)
+flat        = -1
 -- | The double flat accidental.
-doubleFlat  = (-2)
+doubleFlat  = -2
 
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
     fromPitch l acc
