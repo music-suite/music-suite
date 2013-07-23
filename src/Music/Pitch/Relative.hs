@@ -38,6 +38,7 @@ module Music.Pitch.Relative (
     name,
     accidental,
     octave_,
+    semitones_,
 
     -- ** Intervals
     Interval,
@@ -45,6 +46,12 @@ module Music.Pitch.Relative (
     -- *** Constructing intervals
     unison,
     interval,
+    major,
+    minor,
+    augmented,
+    diminished,
+    doublyAugmented,
+    doublyDiminished,
 
     -- *** Inspecing intervals
     number,
@@ -64,11 +71,16 @@ module Music.Pitch.Relative (
     invert,
     
     Number,
+    prime,
+    second,
+    third,
+    fourth,
+    fifth,
+    sixth,
+    seventh,
+    
+    
     Quality(..),    
-    major,
-    minor,
-    augmented,
-    diminished,
     invertQuality,
     HasQuality(..),
     isPerfect,
@@ -168,6 +180,22 @@ deriving instance Enum Number
 deriving instance Real Number
 deriving instance Integral Number
 
+prime   :: Number
+second  :: Number
+third   :: Number
+fourth  :: Number
+fifth   :: Number
+sixth   :: Number
+seventh :: Number
+prime   = 1
+second  = 2
+third   = 3
+fourth  = 4
+fifth   = 5
+sixth   = 6
+seventh = 7
+
+
 data Quality 
     = Major
     | Minor
@@ -214,12 +242,6 @@ class Alterable a where
 --             go Perfect          = Augmented 1
 --             go (Augmented n)    = Diminished (n)
         
-
-perfect    = Perfect
-major      = Major
-minor      = Minor
-augmented  = Augmented 1
-diminished = Diminished 1
 
 isPerfect :: HasQuality a => a -> Bool
 isPerfect a = case quality a of { Perfect -> True ; _ -> False }
@@ -363,6 +385,15 @@ interval' d a = Interval (
 --
 unison :: Interval
 unison = _P1
+
+perfect    = interval Perfect
+major      = interval Major
+minor      = interval Minor
+augmented  = interval (Augmented 1)
+diminished = interval (Diminished 1)
+doublyAugmented  = interval (Augmented 2)
+doublyDiminished = interval (Diminished 2)
+
 
 negateInterval :: Interval -> Interval
 negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
@@ -564,7 +595,7 @@ d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
 -- Pitch is simply interval using middle C as origin.
 newtype Pitch = Pitch { getPitch :: Interval }
 deriving instance Eq Pitch	 
--- deriving instance Num Pitch   
+deriving instance Num Pitch   
 deriving instance Ord Pitch	 
 instance AffineSpace Pitch where
     type Diff Pitch = Interval
@@ -624,6 +655,10 @@ accidental = fromIntegral . intervalDiff . simple . getPitch
 
 octave_ :: Pitch -> Octave
 octave_ = fromIntegral . octave . getPitch
+
+semitones_ :: Pitch -> Semitones
+semitones_ = semitones . getPitch
+
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (fromIntegral $ c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
