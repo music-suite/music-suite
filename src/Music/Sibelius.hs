@@ -1,5 +1,6 @@
 
-{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction, 
+             ConstraintKinds, FlexibleContexts #-}
 
 module Music.Sibelius where
 
@@ -25,18 +26,18 @@ setMeta _ _ = id
 
 
 
-data JSScore = JSScore {
+data SibScore = SibScore {
             scoreTitle             :: String,
             scoreComposer          :: String,
             scoreInformation       :: String,
             scoreStaffHeight       :: Double,
             scoreTransposing       :: Bool,
-            scoreStaves            :: [JSStaff],
+            scoreStaves            :: [SibStaff],
             scoreSystemStaff       :: ()
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSScore where
-    parseJSON (Object v) = JSScore
+instance FromJSON SibScore where
+    parseJSON (Object v) = SibScore
         <$> v .: "title" 
         <*> v .: "composer"
         <*> v .: "information"
@@ -47,101 +48,101 @@ instance FromJSON JSScore where
         <*> return ()
 
 
-data JSStaff = JSStaff {
-            staffBars                :: [JSBar],
+data SibStaff = SibStaff {
+            staffBars                :: [SibBar],
             staffName                :: String,
             staffShortName           :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSStaff where
-    parseJSON (Object v) = JSStaff
+instance FromJSON SibStaff where
+    parseJSON (Object v) = SibStaff
         <$> v .: "bars"
         <*> v .: "name"
         <*> v .: "shortName"
 
-data JSBar = JSBar {
-            barElements            :: [JSElement]
+data SibBar = SibBar {
+            barElements            :: [SibElement]
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSBar where
-    parseJSON (Object v) = JSBar
+instance FromJSON SibBar where
+    parseJSON (Object v) = SibBar
         <$> v .: "elements"
 
-data JSElement 
-    = JSElementText JSText
-    | JSElementClef JSClef
-    | JSElementSlur JSSlur
-    | JSElementCrescendoLine JSCrescendoLine
-    | JSElementDiminuendoLine JSDiminuendoLine
-    | JSElementTimeSignature JSTimeSignature
-    | JSElementKeySignature JSKeySignature
-    | JSElementTuplet JSTuplet
-    | JSElementChord JSChord
+data SibElement 
+    = SibElementText SibText
+    | SibElementClef SibClef
+    | SibElementSlur SibSlur
+    | SibElementCrescendoLine SibCrescendoLine
+    | SibElementDiminuendoLine SibDiminuendoLine
+    | SibElementTimeSignature SibTimeSignature
+    | SibElementKeySignature SibKeySignature
+    | SibElementTuplet SibTuplet
+    | SibElementChord SibChord
     deriving (Eq, Ord, Show)
-instance FromJSON JSElement where
+instance FromJSON SibElement where
     parseJSON x@(Object v) = case HashMap.lookup "type" v of    
         -- TODO
         Just "text"      -> error "JsElementText"
-        Just "clef"      -> error "JSElementClef"
-        Just "slur"      -> error "JSElementSlur"
-        Just "cresc"     -> error "JSElementCrescendoLine"
-        Just "dim"       -> error "JSElementDiminuendoLine"
-        Just "time"      -> error "JSElementTimeSignature"
-        Just "key"       -> error "JSElementKeySignature"
-        Just "tuplet"    -> error "JSElementTuplet"
-        Just "chord"     -> JSElementChord <$> parseJSON x
+        Just "clef"      -> error "SibElementClef"
+        Just "slur"      -> error "SibElementSlur"
+        Just "cresc"     -> error "SibElementCrescendoLine"
+        Just "dim"       -> error "SibElementDiminuendoLine"
+        Just "time"      -> error "SibElementTimeSignature"
+        Just "key"       -> error "SibElementKeySignature"
+        Just "tuplet"    -> error "SibElementTuplet"
+        Just "chord"     -> SibElementChord <$> parseJSON x
         _                -> mempty
 
-data JSText = JSText {
+data SibText = SibText {
             textVoice               :: Int,
             textPosition            :: Int,
             textText                :: String,
             textStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSText where
-    parseJSON = error "Not implemented (instance FromJSON JSText)"
+instance FromJSON SibText where
+    parseJSON = error "Not implemented (instance FromJSON SibText)"
      
-data JSClef = JSClef {
+data SibClef = SibClef {
             clefVoice               :: Int,
             clefPosition            :: Int,
             clefStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSClef where
-    parseJSON = error "Not implemented (instance FromJSON JSClef)"
+instance FromJSON SibClef where
+    parseJSON = error "Not implemented (instance FromJSON SibClef)"
 
-data JSSlur = JSSlur {
+data SibSlur = SibSlur {
             slurVoice               :: Int,
             slurPosition            :: Int,
             slurDuration            :: Int,
             slurStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSSlur where
-    parseJSON = error "Not implemented (instance FromJSON JSSlur)"
+instance FromJSON SibSlur where
+    parseJSON = error "Not implemented (instance FromJSON SibSlur)"
 
-data JSCrescendoLine = JSCrescendoLine {  
+data SibCrescendoLine = SibCrescendoLine {  
             crescVoice               :: Int,
             crescPosition            :: Int,
             crescDuration            :: Int,
             crescStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSCrescendoLine where
-    parseJSON = error "Not implemented (instance FromJSON JSCrescendoLine)"
+instance FromJSON SibCrescendoLine where
+    parseJSON = error "Not implemented (instance FromJSON SibCrescendoLine)"
 
-data JSDiminuendoLine = JSDiminuendoLine {
+data SibDiminuendoLine = SibDiminuendoLine {
             dimVoice               :: Int,
             dimPosition            :: Int,
             dimDuration            :: Int,
             dimStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSDiminuendoLine where
-    parseJSON = error "Not implemented (instance FromJSON JSDiminuendoLine)"
+instance FromJSON SibDiminuendoLine where
+    parseJSON = error "Not implemented (instance FromJSON SibDiminuendoLine)"
 
-data JSTimeSignature = JSTimeSignature {
+data SibTimeSignature = SibTimeSignature {
             timeVoice               :: Int,
             timePosition            :: Int,
             timeValue               :: Rational,
@@ -149,10 +150,10 @@ data JSTimeSignature = JSTimeSignature {
             timeIsAllaBreve         :: Bool
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSTimeSignature where
-    parseJSON = error "Not implemented (instance FromJSON JSTimeSignature)"
+instance FromJSON SibTimeSignature where
+    parseJSON = error "Not implemented (instance FromJSON SibTimeSignature)"
 
-data JSKeySignature = JSKeySignature {
+data SibKeySignature = SibKeySignature {
             keyVoice               :: Int,
             keyPosition            :: Int,
             keyMajor               :: Bool,
@@ -160,10 +161,10 @@ data JSKeySignature = JSKeySignature {
             keyIsOpen              :: Bool
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSKeySignature where
-    parseJSON = error "Not implemented (instance FromJSON JSKeySignature)"
+instance FromJSON SibKeySignature where
+    parseJSON = error "Not implemented (instance FromJSON SibKeySignature)"
 
-data JSTuplet = JSTuplet {
+data SibTuplet = SibTuplet {
             tupletVoice               :: Int,
             tupletPosition            :: Int,
             tupletDuration            :: Int,
@@ -171,15 +172,15 @@ data JSTuplet = JSTuplet {
             tupletValue               :: Rational
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSTuplet where
-    parseJSON (Object v) = JSTuplet 
+instance FromJSON SibTuplet where
+    parseJSON (Object v) = SibTuplet 
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "playedDuration"
         <*> (v .: "value" >>= \[x,y] -> return $ x / y) -- TODO unsafe
 
-data JSArticulation
+data SibArticulation
     = UpBow
     | DownBow
     | Plus
@@ -192,8 +193,8 @@ data JSArticulation
     | Staccato
     deriving (Eq, Ord, Show, Enum)
 
-readJSArticulation :: String -> Maybe JSArticulation
-readJSArticulation = go
+readSibArticulation :: String -> Maybe SibArticulation
+readSibArticulation = go
     where
         go "upbow"          = Just UpBow
         go "downBow"        = Just DownBow
@@ -207,21 +208,21 @@ readJSArticulation = go
         go "staccato"       = Just Staccato
         go _                = Nothing
     
-data JSChord = JSChord { 
+data SibChord = SibChord { 
             chordPosition            :: Int,
             chordDuration            :: Int,
             chordVoice               :: Int,
-            chordArticulations       :: [JSArticulation], -- TODO
+            chordArticulations       :: [SibArticulation], -- TODO
             chordSingleTremolos      :: Int,
             chordDoubleTremolos      :: Int,
             chordAcciaccatura        :: Bool,
             chordAppoggiatura        :: Bool,
-            chordNotes               :: [JSNote]
+            chordNotes               :: [SibNote]
     }
     deriving (Eq, Ord, Show)
 
-instance FromJSON JSChord where
-    parseJSON (Object v) = JSChord 
+instance FromJSON SibChord where
+    parseJSON (Object v) = SibChord 
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
@@ -232,10 +233,10 @@ instance FromJSON JSChord where
         <*> v .: "appoggiatura"
         <*> v .: "notes"
 
-doThing = (=<<) (sequence . fmap (returnMaybe readJSArticulation))
+doThing = (=<<) (sequence . fmap (returnMaybe readSibArticulation))
 
 
-data JSNote = JSNote {
+data SibNote = SibNote {
             notePitch               :: Int,
             noteDiatonicPitch       :: Int,
             noteAccidental          :: Int,
@@ -243,8 +244,8 @@ data JSNote = JSNote {
             noteStyle               :: Int
     }
     deriving (Eq, Ord, Show)
-instance FromJSON JSNote where
-    parseJSON (Object v) = JSNote 
+instance FromJSON SibNote where
+    parseJSON (Object v) = SibNote 
         <$> v .: "pitch" 
         <*> v .: "diatonicPitch"
         <*> v .: "accidental"
@@ -253,29 +254,29 @@ instance FromJSON JSNote where
 
 
 
-fromJSScore :: JSScore -> Score Note
-fromJSScore (JSScore title composer info staffH transp staves systemStaff) =
-    foldr (</>) mempty $ fmap fromJSStaff staves
+fromSib :: IsSibelius a => SibScore -> Score a
+fromSib (SibScore title composer info staffH transp staves systemStaff) =
+    foldr (</>) mempty $ fmap fromSibStaff staves
     -- TODO meta information
 
-fromJSStaff :: JSStaff -> Score Note
-fromJSStaff (JSStaff bars name shortName) =
-    removeRests $ scat $ fmap fromJSBar bars
+fromSibStaff :: IsSibelius a => SibStaff -> Score a
+fromSibStaff (SibStaff bars name shortName) =
+    removeRests $ scat $ fmap fromSibBar bars
     -- TODO bar length hardcoded
     -- TODO meta information
 
-fromJSBar :: JSBar -> Score (Maybe Note)
-fromJSBar (JSBar elems) = 
-    fmap Just (pcat $ fmap fromJSElem elems) <> return Nothing^*1
+fromSibBar :: IsSibelius a => SibBar -> Score (Maybe a)
+fromSibBar (SibBar elems) = 
+    fmap Just (pcat $ fmap fromSibElem elems) <> return Nothing^*1
 
-fromJSElem :: JSElement -> Score Note
-fromJSElem = go where
-    go (JSElementChord chord) = fromJSChord chord
+fromSibElem :: IsSibelius a => SibElement -> Score a
+fromSibElem = go where
+    go (SibElementChord chord) = fromSibChord chord
     -- TODO tuplet, key/time signature, line and text support
 
-fromJSChord :: JSChord -> Score Note
-fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) = 
-    setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromJSNote notes
+fromSibChord :: IsSibelius a => SibChord -> Score a
+fromSibChord (SibChord pos dur voice ar strem dtrem acci appo notes) = 
+    setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromSibNote notes
     where
         setTime = delay (fromIntegral pos / 1024)
         setDur  = stretch (fromIntegral dur / 1024)
@@ -283,37 +284,49 @@ fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) =
         setArt Accent          = accent
         setArt Tenuto          = tenuto
         setArt Staccato        = staccato
-        setArt a               = error $ "fromJSChord: Unsupported articulation" ++ show a        
+        setArt a               = error $ "fromSibChord: Unsupported articulation" ++ show a        
     -- TODO tremolo and appogiatura/acciaccatura support
 
-fromJSNote :: JSNote -> Score Note
-fromJSNote (JSNote pitch di acc tied style) =
+fromSibNote :: IsSibelius a => SibNote -> Score a
+fromSibNote (SibNote pitch di acc tied style) =
     (if tied then fmap beginTie else id)
     $ modifyPitches (+ (fromIntegral pitch - 60)) def
     where
         def = c
 
-readSib :: FilePath -> IO (Score Note)
+readSib :: IsSibelius a => FilePath -> IO (Score a)
 readSib path = fmap (either (\x -> error $ "Could not read score" ++ x) id) $ readSibEither path
 
-readSibMaybe :: FilePath -> IO (Maybe (Score Note))
+readSibMaybe :: IsSibelius a => FilePath -> IO (Maybe (Score a))
 readSibMaybe path = fmap (either (const Nothing) Just) $ readSibEither path
 
-readSibEither :: FilePath -> IO (Either String (Score Note))
+readSibEither :: IsSibelius a => FilePath -> IO (Either String (Score a))
 readSibEither path = do
     json <- B.readFile path
-    return $ fmap fromJSScore $ eitherDecode' json
+    return $ fmap fromSib $ eitherDecode' json
+
+type IsSibelius a = (
+    IsPitch a, 
+    HasPart' a, 
+    Enum (Part a), 
+    HasPitch a, 
+    Num (Pitch a), 
+    HasTremolo a, 
+    HasArticulation a,
+    Tiable a
+    )
+
     
 main = do   
     result <- readSibEither "test.json"
     case result of
         Left e -> putStrLn $ "Error: " ++ e
         Right x -> do
-            writeMidi "test.mid" $ f x
+            writeMidi "test.mid" $ asScore $ f x
             openXml $ f x
             -- openLy  $ f x
 
-    -- let score = fromJSScore $ fromJust $ decode' json
+    -- let score = fromSib $ fromJust $ decode' json
     -- openLy score
     
     where                
