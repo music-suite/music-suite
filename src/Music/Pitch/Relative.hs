@@ -22,6 +22,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Relative (
+
     -- * Base types
     -- ** Octaves
     Octaves,
@@ -163,17 +164,18 @@ import qualified Data.List as List
 -- > steps   a = semitones a `mod` 12
 --
 newtype Octaves = Octaves { getOctaves :: Integer }
+instance Show Octaves where { show = show . getOctaves }
 deriving instance Eq Octaves
 deriving instance Ord Octaves
-instance Show Octaves where
-    show (Octaves d) = show d
 deriving instance Num Octaves
 deriving instance Enum Octaves
 deriving instance Real Octaves
 deriving instance Integral Octaves
-instance HasOctaves Octaves where
-    octaves = id
+instance HasOctaves Octaves where { octaves = id }
 
+-- |
+-- Class of intervals that has a number of 'Octaves'.
+--
 class HasOctaves a where
     -- |
     -- Returns the number of octaves spanned by an interval.
@@ -196,18 +198,29 @@ class HasOctaves a where
 -- > steps   a = semitones a `mod` 12
 --
 newtype Steps = Steps { getSteps :: Integer }
+
 deriving instance Eq Steps
 deriving instance Ord Steps
-instance Show Steps where
-    show (Steps d) = show d
+instance Show Steps where { show = show . getSteps }
 deriving instance Num Steps
 deriving instance Enum Steps
 deriving instance Real Steps
 deriving instance Integral Steps
-instance HasSteps Steps where
-    steps = id
+instance HasSteps Steps where { steps = id }
 
+-- |
+-- Class of intervals that has a number of 'Steps'.
+--
 class HasSteps a where
+    -- | 
+    -- The number of steps is always in the range  /0 ≤ x < 12/.
+    --
+    -- Examples:
+    --                   
+    -- > octaves (perfect unison)  =  0
+    -- > octaves (d5 ^* 4)         =  2
+    -- > octaves (-m7)             =  2
+    --
     steps :: a -> Steps
 
 -- |
@@ -226,14 +239,13 @@ class HasSteps a where
 newtype Semitones = Semitones { getSemitones :: Integer }
 deriving instance Eq Semitones
 deriving instance Ord Semitones
-instance Show Semitones where
-    show (Semitones d) = show d
+instance Show Semitones where { show = show . getSemitones }
 deriving instance Num Semitones
 deriving instance Enum Semitones
 deriving instance Real Semitones
 deriving instance Integral Semitones
-instance HasSemitones Semitones where
-    semitones = id
+instance HasSemitones Semitones where { semitones = id }
+
 
 semitone, tone, ditone, tritone :: Semitones
 
@@ -246,7 +258,11 @@ ditone   = 4
 -- | Precisely three whole tones, or six semitones.
 tritone  = 6
 
+-- |
+-- Class of intervals that can be converted to a number of 'Semitones'.
+--
 class HasSemitones a where
+
     -- |
     -- Returns the number of semitones spanned by an interval.
     --
@@ -916,9 +932,6 @@ instance IsPitch Pitch where
         where
             qual Nothing  = 0
             qual (Just n) = round n
-
--- c = c .+^ (_P8^*5)
--- d = c .+^ _M2
 
 midiNumber :: Pitch -> Integer
 midiNumber = getSemitones . semitones . getPitch
