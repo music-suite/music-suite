@@ -460,7 +460,7 @@ group :: (Monoid' (s a), Transformable s, Time s ~ TimeT) => Int -> s a -> s a
 group n a = times n (toDurationT n `compress` a)
 
 -- |
--- Reverse a score around its middle point.
+-- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
 --
 -- > onset a    = onset (retrograde a)
 -- > duration a = duration (retrograde a)
@@ -469,7 +469,7 @@ group n a = times n (toDurationT n `compress` a)
 -- > Score a -> Score a
 
 retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
-retrograde = compose . List.sortBy (comparing fst3) . fmap g . perform
+retrograde = startAt 0 . (mapAllEvents $ List.sortBy (comparing fst3) . fmap g)
     where
         g (t,d,x) = (-(t.+^d),d,x)
 
