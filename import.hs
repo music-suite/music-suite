@@ -293,16 +293,25 @@ fromJSNote (JSNote pitch di acc tied style) =
     where
         def = c
 
+readSib :: FilePath -> IO (Score Note)
+readSib path = fmap (either (\x -> error $ "Could not read score" ++ x) id) $ readSibEither path
+
+readSibMaybe :: FilePath -> IO (Maybe (Score Note))
+readSibMaybe path = fmap (either (const Nothing) Just) $ readSibEither path
+
+readSibEither :: FilePath -> IO (Either String (Score Note))
+readSibEither path = do
+    json <- B.readFile path
+    return $ fmap fromJSScore $ eitherDecode' json
     
-main = do
-    json <- B.readFile "test.json"
-    let jsScore = eitherDecode' json :: Either String JSScore
-    case jsScore of
+main = do   
+    result <- readSibEither "test.json"
+    case result of
         Left e -> putStrLn $ "Error: " ++ e
         Right x -> do
-            writeMidi "test.mid" $ f $ fromJSScore x
-            openXml $ f $ fromJSScore x
-            -- openLy  $ f $ fromJSScore x
+            writeMidi "test.mid" $ f x
+            openXml $ f x
+            -- openLy  $ f x
 
     -- let score = fromJSScore $ fromJust $ decode' json
     -- openLy score
