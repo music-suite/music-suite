@@ -19,7 +19,7 @@ module Music.Pitch.Literal (
 
         PitchL(..),
         IsPitch(..),
-        
+
         cs'', ds'', es'', fs'', gs'', as'', bs'',
         c'' , d'' , e'' , f'' , g'' , a'' , b'' ,
         cb'', db'', eb'', fb'', gb'', ab'', bb'',
@@ -43,7 +43,7 @@ module Music.Pitch.Literal (
 
 -- |
 -- The 'PitchL' types is used to encode a pitch literal.
--- 
+--
 -- It is defined as /(class, alteration, octave)/, where
 --
 --     * /class/      is a pitch class number in /[0,6]/, starting from C.
@@ -60,12 +60,41 @@ newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
     deriving (Eq, Show, Ord)
 
 -- Like Num can be expressed using arabic numerals, instances
--- of IsPitch can be expressed using Western pitch names (c, c sharp, c flat etc)    
+-- of IsPitch can be expressed using Western pitch names (c, c sharp, c flat etc)
 class IsPitch a where
     fromPitch :: PitchL -> a
 
 instance IsPitch PitchL where
     fromPitch = id
+
+instance IsPitch a => IsPitch (Maybe a) where
+    fromPitch = Just . fromPitch
+
+instance IsPitch Double where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
+
+instance IsPitch Integer where
+    fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12
+        where
+            semitones = maybe 0 round
+            diatonic pc = case pc of
+                0 -> 0
+                1 -> 2
+                2 -> 4
+                3 -> 5
+                4 -> 7
+                5 -> 9
+                6 -> 11
 
 
 {-
