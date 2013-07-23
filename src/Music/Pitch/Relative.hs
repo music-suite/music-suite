@@ -177,6 +177,6 @@ harmonicMinor = scaleFromSemitones [0,2,1,2,2,1,3,1]
 
 
 -- or' :: (t -> Bool) -> (t -> Bool) -> t -> Bool
--- or' p q x = p x || q x
+-- or' p q x = p x || q x
 
 -- replicate' n = replicate (fromIntegral n)
