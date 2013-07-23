@@ -21,11 +21,11 @@
 
 module Music.Pitch.Absolute (
         Hertz(..),
-        Octaves,
+        -- Octaves,
         Cents,
         Fifths,
         HasFrequency(..),
-        octaves,
+        -- octaves,
         fifths,
         cents,
   ) where

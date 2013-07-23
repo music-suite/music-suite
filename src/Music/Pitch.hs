@@ -13,13 +13,13 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch -- (
--- )
-where
+module Music.Pitch (
+        module Music.Pitch.Absolute,
+        module Music.Pitch.Relative,
+        module Music.Pitch.Literal
+  ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Control.Monad
-import Control.Applicative
+import Music.Pitch.Absolute
+import Music.Pitch.Relative
+import Music.Pitch.Literal
 
