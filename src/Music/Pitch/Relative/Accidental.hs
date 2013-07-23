@@ -37,9 +37,23 @@ instance Show Accidental where
     show n | n == 0 = "natural"
            | n > 0  = replicate' n 's'
            | n < 0  = replicate' (negate n) 'b'
+
 instance Alterable Accidental where
     sharpen = succ
     flatten = pred
+
+instance Alterable Double where
+    sharpen = (+ 1)
+    flatten = (subtract 1)
+
+instance Alterable Integer where
+    sharpen = (+ 1)
+    flatten = (subtract 1)
+
+instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
+    fromPitch l acc
+        | acc == sharp  = sharpen (fromPitch l)
+        | acc == flat   = flatten (fromPitch l)
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 -- | The double sharp accidental.
@@ -53,10 +67,6 @@ flat        = -1
 -- | The double flat accidental.
 doubleFlat  = -2
 
-instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
-    fromPitch l acc
-        | acc == sharp  = sharpen (fromPitch l)
-        | acc == flat   = flatten (fromPitch l)
 
 replicate' n = replicate (fromIntegral n)
 
