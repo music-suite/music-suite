@@ -1,6 +1,6 @@
 
 name:               music-sibelius
-version:            0.5
+version:            1.3
 cabal-version:      >= 1.6
 author:             Hans Hoglund
 maintainer:         Hans Hoglund <hans@hanshoglund.se>
