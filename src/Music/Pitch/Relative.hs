@@ -317,8 +317,8 @@ octave  = 8
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
 -- diminished. This representation allows for an arbitrary number of
--- augmentation or diminishions, so A is represented by @Augmented 1@, AA by
--- @Augmented 2@ and so on.
+-- augmentation or diminishions, so /augmented/ is represented by @Augmented 1@,
+-- /doubly augmented/ by @Augmented 2@ and so on.
 -- 
 -- The quality of a compound interval is the quality of the simple interval on
 -- which it is based.
@@ -814,7 +814,7 @@ asPitch :: Pitch -> Pitch
 asPitch = id
 
 -- | 
--- Returns the name (or class) of a pitch.
+-- Returns the name of a pitch.
 -- 
 -- See also 'octaves', and 'steps' and 'semitones'.
 -- 
