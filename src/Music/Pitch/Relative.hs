@@ -395,23 +395,23 @@ isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 --  1   a           a
 --  2   aa          aa
 --
-diffToQuality :: Bool -> Integer -> Quality
+diffToQuality :: Bool -> Int -> Quality
 diffToQuality = go
     where
-        go True 0     = Perfect
-        go True n     = if n > 0 then Augmented n else Diminished (negate n)
+        go True  0   = Perfect
+        go True  n   = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate n)
         go False 0    = Major
         go False (-1) = Minor
-        go False n    = if n > 0 then Augmented n else Diminished (negate $ n + 1)
+        go False n    = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate $ n + 1)
 
-qualityToDiff :: Bool -> Quality -> Integer
+qualityToDiff :: Bool -> Quality -> Int
 qualityToDiff perfect = go
     where
-        go (Diminished n)   = negate $ if perfect then n else n + 1
-        go Minor            = -1
-        go Perfect          = 0
-        go Major            = 0
-        go (Augmented n)    = n
+        go (Diminished n)   = fromIntegral $ negate $ if perfect then n else n + 1
+        go Minor            = fromIntegral $ -1
+        go Perfect          = fromIntegral $ 0
+        go Major            = fromIntegral $ 0
+        go (Augmented n)    = fromIntegral $ n
 
 
 data Name = C | D | E | F | G | A | B
@@ -540,9 +540,9 @@ instance Show Name where
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Interval = Interval { getInterval :: (
-    Integer,    -- octaves, may be negative
-    Integer,    -- diatonic semitone [0..6]
-    Integer     -- chromatic semitone [0..11]
+    Int,        -- octaves, may be negative
+    Int,        -- diatonic semitone [0..6]
+    Int         -- chromatic semitone [0..11]
 ) }
 
 deriving instance Eq Interval
@@ -555,18 +555,23 @@ instance Num Interval where
     signum a      = if isNegative a then (-_P8) else _P8
     fromInteger 0 = _P1
     fromInteger _ = undefined
+
 instance Show Interval where
     show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
            | otherwise    =        show (quality a) ++ show (abs $ number a)
+
 instance Semigroup Interval where
     (<>)    = addInterval
+
 instance Monoid Interval where
     mempty  = perfect unison
     mappend = addInterval
+
 instance AdditiveGroup Interval where
     zeroV   = perfect unison
     (^+^)   = addInterval
     negateV = negateInterval
+
 instance VectorSpace Interval where
     type Scalar Interval = Integer
     (*^) = stackInterval
@@ -582,11 +587,14 @@ instance Augmentable Interval where
 
 instance HasOctaves Interval where
     octaves = fst . separate
+
 instance HasSemitones Interval where
-    semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
+    semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
+
 instance HasSteps Interval where
     steps a = fromIntegral $ semitones a `mod` 12
 
+intervalDiff :: Interval -> Int
 intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
@@ -606,11 +614,11 @@ interval q a = Interval (
     where  
         (o, n) = (a - 1) `divMod` 7
 
-interval' :: Int -> Number -> Interval
+interval' :: Int -> Int -> Interval
 interval' d a = Interval (
     fromIntegral o, 
     fromIntegral n, 
-    fromIntegral $ diatonicToChromatic (fromIntegral n) 
+    fromIntegral $ diatonicToChromatic n 
         + fromIntegral d
     )
     where  
@@ -635,19 +643,19 @@ doublyAugmented  = interval (Augmented 2)
 doublyDiminished = interval (Diminished 2)
 
 
-negateInterval :: Interval -> Interval
-negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
-negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
-
 invertDiatonic :: Num a => a -> a
 invertDiatonic d  = 7  - d       
 
 invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
       
+negateInterval :: Interval -> Interval
+negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
+negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
+
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb)) 
-    = Interval (fromIntegral $ oa + ob + fromIntegral carry, steps, chroma)
+    = Interval (oa + ob + carry, steps, chroma)
     where
         (carry, steps) = (da + db) `divMod` 7  
         chroma         = trunc (ca + cb)
@@ -679,7 +687,7 @@ simple = snd . separate
 -- See also 'quality', 'octaves' and 'semitones'.
 --
 number :: Interval -> Number
-number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
+number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
     where
         inc a = if a >= 0 then succ a else pred a
 
@@ -751,7 +759,7 @@ type Spelling = Semitones -> Number
 spell :: HasSemitones a => Spelling -> a -> Interval
 spell z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
 
-isPerfectNumber :: Integer -> Bool
+isPerfectNumber :: Int -> Bool
 isPerfectNumber 0 = True
 isPerfectNumber 1 = False
 isPerfectNumber 2 = False
@@ -760,7 +768,7 @@ isPerfectNumber 4 = True
 isPerfectNumber 5 = False
 isPerfectNumber 6 = False
 
-diatonicToChromatic :: Integer -> Integer
+diatonicToChromatic :: Int -> Int
 diatonicToChromatic = go
     where
         go 0 = 0
@@ -948,7 +956,7 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
         | acc == flat   = flatten (fromPitch l)
 
 instance IsPitch Pitch where
-    fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (fromIntegral $ c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
+    fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
         where
             qual Nothing  = 0
             qual (Just n) = round n
