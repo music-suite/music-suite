@@ -2,8 +2,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
 module Music.Pitch.Relative.Quality (
-        -- ** Quality
+
+        -- * Augmentable class
         Augmentable(..),
+
+        -- * Quality
         Quality(..),    
         HasQuality(..),
         -- invertQuality,
@@ -20,17 +23,26 @@ module Music.Pitch.Relative.Quality (
         replicate',
   ) where
 
+-- |
+-- Class of types that can be augmented.
+--
 class Augmentable a where
-    -- | Increase the size of this interval by one.
+
+    -- | 
+    -- Increase the size of this interval by one.
+    --
     augment :: a -> a
-    -- | Decrease the size of this interval by one.
+
+    -- | 
+    -- Decrease the size of this interval by one.
+    --
     diminish :: a -> a
 
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
 -- diminished. This representation allows for an arbitrary number of
--- augmentation or diminishions, so /augmented/ is represented by @Augmented 1@,
--- /doubly augmented/ by @Augmented 2@ and so on.
+-- augmentation or diminishions, so /augmented/ is represented by @Augmented
+-- 1@, /doubly augmented/ by @Augmented 2@ and so on.
 --
 -- The quality of a compound interval is the quality of the simple interval on
 -- which it is based.
@@ -77,29 +89,40 @@ invertQuality = go
         go (Diminished n)   = Augmented n
 
 
--- | Returns whether the given quality is perfect.
+-- | 
+-- Returns whether the given quality is perfect.
+-- 
 isPerfect :: HasQuality a => a -> Bool
 isPerfect a = case quality a of { Perfect -> True ; _ -> False }
 
--- | Returns whether the given quality is major.
+-- | 
+-- Returns whether the given quality is major.
+-- 
 isMajor :: HasQuality a => a -> Bool
 isMajor a = case quality a of { Major -> True ; _ -> False }
 
--- | Returns whether the given quality is minor.
+-- | 
+-- Returns whether the given quality is minor.
+-- 
 isMinor :: HasQuality a => a -> Bool
 isMinor a = case quality a of { Minor -> True ; _ -> False }
 
--- | Returns whether the given quality is /augmented/ (including double augmented etc).
+-- | 
+-- Returns whether the given quality is /augmented/ (including double augmented etc).
+-- 
 isAugmented :: HasQuality a => a -> Bool
 isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
--- | Returns whether the given quality is /diminished/ (including double diminished etc).
+-- | 
+-- Returns whether the given quality is /diminished/ (including double diminished etc).
+-- 
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
--- | Convert an offset to a quality.
+-- | 
+-- Convert an offset to a quality.
 --
---   This is different for perfect and imperfect interals:
+-- This is different for perfect and imperfect interals:
 --
 --      Imperfect   Perfect
 --      ===         ===
@@ -128,6 +151,6 @@ qualityToDiff perfect = go
         go Major            = fromIntegral $ 0
         go (Augmented n)    = fromIntegral $ n
 
+
+
 replicate' n = replicate (fromIntegral n)
-
-

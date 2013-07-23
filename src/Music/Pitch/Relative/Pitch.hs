@@ -2,11 +2,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
 
 module Music.Pitch.Relative.Pitch (
-        -- ** Pitch
+        -- * Pitch
         Pitch,    
         pitch,
         name,
         accidental,
+        asPitch,
   ) where
 
 import Data.Maybe
@@ -32,7 +33,7 @@ import Music.Pitch.Relative.Name
 -- Intervals and pitches can be added using '.+^'. To get the interval between
 -- two pitches, use '.-.'.
 --
--- Notes with accidentals can be written by adding the `s` or `b` suffices
+-- Notes with accidentals can be written by adding the @s@ or @b@ suffices
 -- (or two for double sharps and flats).
 --
 -- > cs, ds, es ...    -- sharp
@@ -41,13 +42,13 @@ import Music.Pitch.Relative.Name
 -- > cbb, dbb, ebb ... -- double flat
 --
 -- There is also a convenience syntax for entering pitches one octave up or
--- down, using `'` and `_` respectively.
+-- down, using @'@ and @_@ respectively.
 --
 -- > g a b c'
 -- > d c b_ c
 --
--- Because of some overloading magic, we can actually write `sharp` and
--- `flat` as /postfix/ functions. This gives a better read:
+-- Because of some overloading magic, we can actually write @sharp@ and
+-- @flat@ as /postfix/ functions. This gives a better read:
 --
 -- > cs == c sharp
 -- > db == c flat
@@ -95,6 +96,9 @@ instance Alterable Pitch where
     sharpen (Pitch a) = Pitch (augment a)
     flatten (Pitch a) = Pitch (diminish a)
 
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Pitch'.
+--
 asPitch :: Pitch -> Pitch
 asPitch = id
 

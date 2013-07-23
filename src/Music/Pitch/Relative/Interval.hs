@@ -31,14 +31,13 @@ module Music.Pitch.Relative.Interval (
         invert,
 
 
-
         -- * Utility
         -- ** Spelling
         Spelling,
         spell,
         sharps,
         flats,
-             
+
         -- * Literals (TODO move)
         d1, _P1, _A1,
         d2, m2, _M2, _A2,
@@ -48,7 +47,7 @@ module Music.Pitch.Relative.Interval (
         d6, m6, _M6, _A6,
         d7, m7, _M7, _A7,
         d8, _P8, _A8,
-        
+
         -- TODO
         intervalDiff,
         interval',
@@ -176,6 +175,7 @@ interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic
     where
         (octave, diatonic) = (number - 1) `divMod` 7
 
+
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
 perfect    = interval Perfect
@@ -213,6 +213,10 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
         chroma         = trunc (ca + cb)
         trunc          = if carry > 0 then (`mod` 12) else id
 
+stackInterval :: Integer -> Interval -> Interval
+stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
+                  | otherwise = negate $ stackInterval (negate n) a
+
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
@@ -220,7 +224,6 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
 --
 separate :: Interval -> (Octaves, Interval)
 separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
-
 
 -- |
 -- Returns the simple part of an interval.
@@ -277,10 +280,6 @@ isPositive (Interval (oa, _, _)) = oa > 0
 isNegative :: Interval -> Bool
 isNegative (Interval (oa, _, _)) = oa < 0
 
-
-stackInterval :: Integer -> Interval -> Interval
-stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
-                  | otherwise = negate $ stackInterval (negate n) a
 
 -- |
 -- Intervallic inversion.

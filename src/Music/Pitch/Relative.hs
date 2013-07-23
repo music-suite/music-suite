@@ -44,13 +44,13 @@ import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
 
+import Music.Pitch.Relative.Semitones
 import Music.Pitch.Relative.Accidental
-import Music.Pitch.Relative.Interval
+import Music.Pitch.Relative.Quality
 import Music.Pitch.Relative.Name
 import Music.Pitch.Relative.Number
 import Music.Pitch.Relative.Pitch
-import Music.Pitch.Relative.Quality
-import Music.Pitch.Relative.Semitones
+import Music.Pitch.Relative.Interval
 
 
 {-  

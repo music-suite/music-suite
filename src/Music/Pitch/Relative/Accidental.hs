@@ -2,8 +2,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, FlexibleInstances #-}
 
 module Music.Pitch.Relative.Accidental (
-        -- ** Accidentals
+        -- * Alterable class
         Alterable(..),
+
+        -- * Accidentals
         Accidental,
         doubleFlat, 
         flat, 
@@ -14,10 +16,18 @@ module Music.Pitch.Relative.Accidental (
 
 import Music.Pitch.Literal
 
+-- |
+-- Class of things that can be altered.
+--
 class Alterable a where
-    -- | Increase the given pitch by one.
+    -- | 
+    -- Increase the given pitch by one.
+    -- 
     sharpen :: a -> a
-    -- | Decrease the given pitch by one.
+
+    -- | 
+    -- Decrease the given pitch by one.
+    -- 
     flatten :: a -> a
 
 newtype Accidental = Accidental { getAccidental :: Integer }

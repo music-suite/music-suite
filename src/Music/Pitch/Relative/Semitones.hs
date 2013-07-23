@@ -2,30 +2,33 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 
 module Music.Pitch.Relative.Semitones (
-        -- ** Octaves
+        -- * Octaves
         Octaves,
         HasOctaves(..),
 
-        -- ** Steps
+        -- * Steps
         Steps,
         HasSteps(..),
 
-        -- ** Semitones
+        -- * Semitones
         Semitones,
         HasSemitones(..),
-        semitone, 
-        tone, 
+        semitone,
+        tone,
         ditone,
-        tritone, 
+        tritone,
         isSemitone,
         isTone,
-        isTritone,   
+        isTritone,
+        
+        -- ** Enharmonic equivalence
         (=:=),
         (/:=),
   ) where
 
 -- |
--- An interval represented as a number of octaves, including negative intervals.
+-- An interval represented as a number of octaves, including negative
+-- intervals.
 --
 -- > octaves a = semitones a `div` 12
 -- > steps   a = semitones a `mod` 12
@@ -47,7 +50,8 @@ class HasOctaves a where
     -- |
     -- Returns the number of octaves spanned by an interval.
     --
-    -- The number of octaves is negative if and only if the interval is negative.
+    -- The number of octaves is negative if and only if the interval is
+    -- negative.
     --
     -- Examples:
     --
@@ -79,14 +83,14 @@ instance HasSteps Steps where { steps = id }
 -- Class of intervals that has a number of 'Steps'.
 --
 class HasSteps a where
-    -- | 
-    -- The number of steps is always in the range  /0 ≤ x < 12/.
+    -- |
+    -- The number of steps is always in the range /0 ≤ x < 12/.
     --
     -- Examples:
     --
     -- > octaves (perfect unison)  =  0
     -- > octaves (d5 ^* 4)         =  2
-    -- > octaves (-m7)             =  2
+    -- > octaves (-m7)             =  -1
     --
     steps :: a -> Steps
 
@@ -96,9 +100,9 @@ class HasSteps a where
 -- does not take spelling into account, so for example a major third and a
 -- diminished fourth can not be distinguished.
 --
--- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does not
--- have an unequivocal spelling. To convert these to an interval, a 'Spelling' must
--- be provided as in:
+-- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
+-- not have an unequivocal spelling. To convert these to an interval, a
+-- 'Spelling' must be provided as in:
 --
 -- > spell sharps tritone == augmented fourth
 -- > spell flats  tritone == diminished fifth
@@ -121,7 +125,8 @@ class HasSemitones a where
     -- |
     -- Returns the number of semitones spanned by an interval.
     --
-    -- The number of semitones is negative if and only if the interval is negative.
+    -- The number of semitones is negative if and only if the interval is
+    -- negative.
     --
     -- Examples:
     --
@@ -151,6 +156,7 @@ isSemitone  = (== semitone) . abs . semitones
 isTone      = (== tone)     . abs . semitones
 -- | Returns true iff the given interval spans three whole tones (six semitones).
 isTritone   = (== tritone)  . abs . semitones
+
 
 infix 4 =:=
 infix 4 /:=

@@ -21,7 +21,6 @@ module Music.Pitch.Relative.Number (
         -- duodecim,
   ) where
 
-
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
 --
@@ -34,8 +33,7 @@ module Music.Pitch.Relative.Number (
 newtype Number = Number { getNumber :: Integer }
 deriving instance Eq Number
 deriving instance Ord Number
-instance Show Number where
-    show (Number d) = show d
+instance Show Number where { show = show . getNumber }
 deriving instance Num Number
 deriving instance Enum Number
 deriving instance Real Number
