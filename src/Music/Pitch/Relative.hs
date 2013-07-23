@@ -21,6 +21,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Relative (
+    -- ** Octaves
+    Octaves,
+    HasOctaves(..),
+    
     -- ** Semitones
     Semitones,
     semitone, 
@@ -28,7 +32,8 @@ module Music.Pitch.Relative (
     ditone,
     tritone,    
     HasSemitones(..),
-    equivalent,
+    (=:=),
+    (/:=),
 
     -- ** Pitch
     Pitch,
@@ -39,8 +44,6 @@ module Music.Pitch.Relative (
     
     name,
     accidental,
-    octave_,
-    -- semitones_,
 
     -- ** Intervals
     Interval,
@@ -57,7 +60,7 @@ module Music.Pitch.Relative (
 
     -- *** Inspecing intervals
     number,
-    -- semitones,
+    -- isPerfectUnison,
     isPositive,
     isNegative,
 
@@ -65,7 +68,6 @@ module Music.Pitch.Relative (
     isSimple,
     isCompound,
     separate,
-    octave,
     simple,
     
     -- *** Inversion
@@ -81,6 +83,13 @@ module Music.Pitch.Relative (
     fifth,
     sixth,
     seventh,
+    octave,
+    -- ninth,
+    -- tenth,
+    -- twelfth,
+    -- thirteenth,
+    -- fourteenth,
+    -- duodecim,
     
     
     Quality(..),    
@@ -133,24 +142,35 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
-import Music.Pitch.Absolute
+import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
 
-class HasSemitones a where
+newtype Octaves = Octaves { getOctaves :: Integer }
+deriving instance Eq Octaves
+deriving instance Ord Octaves
+instance Show Octaves where
+    show (Octaves d) = show d
+deriving instance Num Octaves
+deriving instance Enum Octaves
+deriving instance Real Octaves
+deriving instance Integral Octaves
+instance HasOctaves Octaves where
+    octaves = id
+
+class HasOctaves a where
     -- |
-    -- Returns the number of semitones spanned by an interval.
+    -- Returns the number of octaves spanned by an interval.
     --
-    -- The number of semitones is negative if and only if the interval is negative.
+    -- The number of octaves is negative if and only if the interval is negative.
     --
     -- Examples:
     --                   
-    -- > semitones (perfect unison)  =  0
-    -- > semitones tritone           =  6
-    -- > semitones d5                =  6
-    -- > semitones (-_P8)            =  -12
+    -- > octaves (perfect unison)  =  0
+    -- > octaves (d5 ^* 4)         =  2
+    -- > octaves (-_P8)            =  -1
     --
-    semitones :: a -> Semitones
+    octaves :: a -> Octaves
 
 -- |
 -- An interval represented as a number of semitones, including negative
@@ -165,7 +185,7 @@ class HasSemitones a where
 -- > spell sharps tritone == augmented fourth
 -- > spell flats  tritone == diminished fifth
 --
-newtype Semitones  = Semitones { getSemitones :: Integer }
+newtype Semitones = Semitones { getSemitones :: Integer }
 deriving instance Eq Semitones
 deriving instance Ord Semitones
 instance Show Semitones where
@@ -188,16 +208,38 @@ ditone   = 4
 -- | Precisely three whole tones, or six semitones.
 tritone  = 6
 
+class HasSemitones a where
+    -- |
+    -- Returns the number of semitones spanned by an interval.
+    --
+    -- The number of semitones is negative if and only if the interval is negative.
+    --
+    -- Examples:
+    --                   
+    -- > semitones (perfect unison)  =  0
+    -- > semitones tritone           =  6
+    -- > semitones d5                =  6
+    -- > semitones (-_P8)            =  -12
+    --
+    semitones :: a -> Semitones
+
+
+infix 4 =:=
+infix 4 /:=
+
 -- |
 -- Enharmonic equivalence.
 --
--- For any 'Spelling' @s@ and @t@
--- 
--- > spell s a `equivalent` spell t a
---
-equivalent :: HasSemitones a => a -> a -> Bool
-equivalent a b = semitones a == semitones b
+(=:=) :: HasSemitones a => a -> a -> Bool
+a =:= b = semitones a == semitones b
 
+-- |
+-- Enharmonic non-equivalence.
+--
+(/:=) :: HasSemitones a => a -> a -> Bool
+a /:= b = semitones a /= semitones b
+
+    
 isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
 isTone      = (== tone)     . abs . semitones
 isSemitone  = (== semitone) . abs . semitones
@@ -230,6 +272,7 @@ fourth  :: Number
 fifth   :: Number
 sixth   :: Number
 seventh :: Number
+octave  :: Number
 unison  = 1
 prime   = 1
 second  = 2
@@ -238,6 +281,7 @@ fourth  = 4
 fifth   = 5
 sixth   = 6
 seventh = 7
+octave  = 8
 
 
 data Quality 
@@ -410,6 +454,10 @@ intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 -- |
 -- Construct an interval from a quality and number.
 --
+-- If given 'Perfect' with an imperfect number (such as 3 or 7) a major interval is
+-- returned. If given 'Major' or 'Minor' with a perfect number (such as 5), constructs
+-- a perfect or diminished interval respectively.
+--
 interval :: Quality -> Number -> Interval
 interval q a = Interval (
     fromIntegral o, 
@@ -439,10 +487,13 @@ unison = _P1
 -}
 
 -- | Constructs a perfect interval.
+--   If given an inperfect number, constructs a major interval.
 perfect    = interval Perfect
 -- | Constructs a major interval.
+--   If given a perfect number, constructs a perfect interval.
 major      = interval Major
 -- | Constructs a minor interval.
+--   If given a perfect number, constructs a diminished interval.
 minor      = interval Minor
 -- | Constructs an augmented interval.
 augmented  = interval (Augmented 1)
@@ -475,14 +526,19 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
--- > (interval perfect 8)^*x + y = z  iff  (x, y) = separate z
+-- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
 --
-separate :: Interval -> (Integer, Interval)
-separate (Interval (o, d, c)) = (o, Interval (0, d, c))
+separate :: Interval -> (Octaves, Interval)
+separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
 
-octave :: Interval -> Integer
-octave = fst . separate
+instance HasOctaves Interval where
+    octaves = fst . separate
 
+-- |
+-- Returns the simple part of an interval.
+--
+-- > (perfect octave)^*x + y = z  iff  y = simple z
+--
 simple :: Interval -> Interval
 simple = snd . separate
 
@@ -491,6 +547,8 @@ simple = snd . separate
 -- Returns the number portion of an interval.
 -- 
 -- The interval number is negative if and only if the interval is negative.
+--
+-- See also 'quality', 'octaves' and 'semitones'.
 --
 number :: Interval -> Number
 number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
@@ -507,7 +565,7 @@ instance HasSemitones Interval where
 -- A simple interval is an positive interval spanning less than one octave.
 --
 isSimple :: Interval -> Bool
-isSimple = (== 0) . octave
+isSimple = (== 0) . octaves
 
 -- |
 -- Returns whether the given interval is compound.
@@ -516,13 +574,16 @@ isSimple = (== 0) . octave
 -- more than octave.
 --
 isCompound :: Interval -> Bool
-isCompound = (/= 0) . octave
+isCompound = (/= 0) . octaves
+
+isPerfectUnison :: Interval -> Bool
+isPerfectUnison a = a == perfect unison
 
 -- |
--- Returns whether the given interval is positive. A simple interval is positive by definition.
+-- Returns whether the given interval is positive.
 --
 isPositive :: Interval -> Bool
-isPositive (Interval (oa, _, _)) = oa >= 0
+isPositive (Interval (oa, _, _)) = oa > 0
 
 -- |
 -- Returns whether the given interval is negative.
@@ -650,11 +711,21 @@ instance AffineSpace Pitch where
     Pitch a .-. Pitch b = a ^-^ b
     Pitch a .+^ b       = Pitch (a ^+^ b)
 instance Show Pitch where
-    show p = show (name p) ++ show (accidental p) ++ show (octave_ p)
+    show p = show (name p) ++ showAccidental (accidental p) ++ showOctave (octaves p)
+        where
+            showOctave n 
+                | n > 0     = replicate' n '\''
+                | otherwise = replicate' (negate n) '_'
+            showAccidental n 
+                | n > 0     = replicate' n 's'
+                | otherwise = replicate' (negate n) 'b'
+
 
 instance Alterable Pitch where
     sharpen (Pitch a) = Pitch (augment a)
     flatten (Pitch a) = Pitch (diminish a)
+
+
 
 data Name = C | D | E | F | G | A | B
     deriving (Eq, Ord, Enum)
@@ -670,9 +741,10 @@ instance Show Name where
 newtype Octave = Octave { getOctave :: Integer }
 deriving instance Eq Octave
 deriving instance Ord Octave
-instance Show Octave where
-    show n | n > 0     = replicate' n '\''
-           | otherwise = replicate' (negate n) '_'
+deriving instance Show Octave -- TODO
+-- instance Show Octave where
+--     show n | n > 0     = replicate' n '\''
+--            | otherwise = replicate' (negate n) '_'
 deriving instance Num Octave
 deriving instance Enum Octave
 deriving instance Real Octave
@@ -681,9 +753,10 @@ deriving instance Integral Octave
 newtype Accidental = Accidental { getAccidental :: Integer }
 deriving instance Eq Accidental
 deriving instance Ord Accidental
-instance Show Accidental where
-    show n | n > 0     = replicate' n 's'
-           | otherwise = replicate' (negate n) 'b'
+deriving instance Show Accidental
+-- instance Show Accidental where
+--     show n | n > 0     = replicate' n 's'
+--            | otherwise = replicate' (negate n) 'b'
 deriving instance Num Accidental
 deriving instance Enum Accidental
 deriving instance Real Accidental
@@ -701,8 +774,8 @@ name = toEnum . fromIntegral . pred . number . simple . getPitch
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
 
-octave_ :: Pitch -> Octave
-octave_ = fromIntegral . octave . getPitch
+instance HasOctaves Pitch where
+    octaves = octaves . getPitch
 
 instance HasSemitones Pitch where
     semitones = semitones . getPitch
