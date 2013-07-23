@@ -41,6 +41,21 @@ module Music.Pitch.Literal (
         cb__, db__, eb__, fb__, gb__, ab__, bb__
   ) where
 
+-- |
+-- The 'PitchL' types is used to encode a pitch literal.
+-- 
+-- It is defined as /(class, alteration, octave)/, where
+--
+--     * /class/      is a pitch class number in /[0,6]/, starting from C.
+--
+--     * /alteration/ is the number of semitones, i.e. 0 is natural, 1 for sharp 2 for double sharp, -1 for flat and -2 for double flat.
+--       Alteration is in 'Maybe' because some pitch representations differ between explicit and explicit accidentals, i.e. a diatonic
+--       pitch type may assume @(0,Nothing,4)@ to mean C sharp rather than C.
+--
+--     * /octave/     is octave number in scientific pitch notation.
+--
+-- Middle C is represented by the pitch literal @(0, Nothing, 4)@.
+--
 newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
     deriving (Eq, Show, Ord)
 
