@@ -1,5 +1,6 @@
 {-# LANGUAGE
     GeneralizedNewtypeDeriving,
+    FlexibleInstances,
     DeriveFunctor,
     TypeFamilies,
     StandaloneDeriving,
@@ -52,6 +53,11 @@ module Music.Pitch.Relative (
 
     -- ** Accidentals
     Accidental,
+    doubleFlat, 
+    flat, 
+    natural, 
+    sharp, 
+    doubleSharp,
 
     -- ** Alteration
     Alterable(..),
@@ -65,14 +71,15 @@ module Music.Pitch.Relative (
 
     -- * Pitch and interval types
     -- ** Pitch
-    Pitch,
+    Pitch,    
+    pitch,
     name,
     accidental,
 
     -- ** Intervals
     Interval,
 
-    -- *** Constructing intervals
+    -- *** Createsing intervals
     interval,
     perfect,
     major,
@@ -353,12 +360,18 @@ class HasQuality a where
 instance HasQuality Quality where
     quality = id
 class Augmentable a where
+    -- | Increase the size of this interval by one.
     augment :: a -> a
+    -- | Decrease the size of this interval by one.
     diminish :: a -> a
 class Alterable a where
+    -- | Increase the given pitch by one.
     sharpen :: a -> a
+    -- | Decrease the given pitch by one.
     flatten :: a -> a
 
+
+-- TODO this instance should not be used
 -- instance Augmentable Quality where
 --     augment = go
 --         where
@@ -368,20 +381,24 @@ class Alterable a where
 --             go Major            = Augmented 1
 --             go Perfect          = Augmented 1
 --             go (Augmented n)    = Diminished (n)
-        
 
+-- | Returns whether the given quality is perfect.
 isPerfect :: HasQuality a => a -> Bool
 isPerfect a = case quality a of { Perfect -> True ; _ -> False }
 
+-- | Returns whether the given quality is major.
 isMajor :: HasQuality a => a -> Bool
 isMajor a = case quality a of { Major -> True ; _ -> False }
 
+-- | Returns whether the given quality is minor.
 isMinor :: HasQuality a => a -> Bool
 isMinor a = case quality a of { Minor -> True ; _ -> False }
 
+-- | Returns whether the given quality is /augmented/ (including double augmented etc).
 isAugmented :: HasQuality a => a -> Bool
 isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
+-- | Returns whether the given quality is /diminished/ (including double diminished etc).
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
@@ -499,7 +516,7 @@ instance HasSteps Interval where
 intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
--- Construct an interval from a quality and number.
+-- Creates an interval from a quality and number.
 --
 -- If given 'Perfect' with an imperfect number (such as 3 or 7) a major interval is
 -- returned. If given 'Major' or 'Minor' with a perfect number (such as 5), constructs
@@ -533,22 +550,22 @@ unison :: Interval
 unison = _P1
 -}
 
--- | Constructs a perfect interval.
+-- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
 perfect    = interval Perfect
--- | Constructs a major interval.
+-- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
 major      = interval Major
--- | Constructs a minor interval.
+-- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
 minor      = interval Minor
--- | Constructs an augmented interval.
+-- | Creates an augmented interval.
 augmented  = interval (Augmented 1)
--- | Constructs a diminished interval.
+-- | Creates a diminished interval.
 diminished = interval (Diminished 1)
--- | Constructs a doubly augmented interval.
+-- | Creates a doubly augmented interval.
 doublyAugmented  = interval (Augmented 2)
--- | Constructs a doubly diminished interval.
+-- | Creates a doubly diminished interval.
 doublyDiminished = interval (Diminished 2)
 
 
@@ -750,6 +767,38 @@ d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
 -- Intervals and pitches can be added using '.+^'. To get the interval between
 -- two pitches, use '.-.'. 
 --
+-- Notes with accidentals can be written by adding the `s` or `b` suffices
+-- (or two for double sharps and flats).
+-- 
+-- > cs, ds, es ...    -- sharp
+-- > cb, db, eb ...    -- flat
+-- > css, dss, ess ... -- double sharp
+-- > cbb, dbb, ebb ... -- double flat
+-- 
+-- There is also a convenience syntax for entering pitches one octave up or
+-- down, using `'` and `_` respectively.
+-- 
+-- > g a b c'
+-- > d c b_ c
+-- 
+-- Because of some overloading magic, we can actually write `sharp` and
+-- `flat` as /postfix/ functions. This gives a better read:
+-- 
+-- > cs == c sharp
+-- > db == c flat
+-- 
+-- You can of course use typical functional transformation of pitch as well.
+-- For example 'sharpen' and 'flatten' are the ordinary (prefix) versions of
+-- 'sharp' and 'flat'
+-- 
+-- > sharpen c             == c sharp       == cs
+-- > flatten d             == d flat        == ds
+-- > (sharpen . sharpen) c == c doubleSharp == css
+-- > (flatten . flatten) d == d doubleFlat  == dss
+-- 
+-- Note that there is no guarantee that your pitch representation use
+-- enharmonic equivalence, so @cs == db@ may or may not hold.
+--
 -- > c .+^ minor third == eb
 -- > f .-. c           == perfect fourth
 --
@@ -813,6 +862,12 @@ instance Alterable Accidental where
 asPitch :: Pitch -> Pitch
 asPitch = id
 
+-- |
+-- Creates a pitch from name accidental. 
+--
+pitch :: Name -> Accidental -> Pitch
+pitch = undefined
+
 -- | 
 -- Returns the name of a pitch.
 -- 
@@ -838,6 +893,23 @@ instance HasSemitones Pitch where
 instance HasSteps Pitch where
     steps = steps . getPitch
 
+
+sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
+-- | The double sharp accidental.
+doubleSharp = 2
+-- | The sharp accidental.
+sharp       = 1  
+-- | The natural accidental.
+natural     = 0
+-- | The flat accidental.
+flat        = (-1)
+-- | The double flat accidental.
+doubleFlat  = (-2)
+
+instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
+    fromPitch l acc
+        | acc == sharp  = sharpen (fromPitch l)
+        | acc == flat   = flatten (fromPitch l)
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) = Pitch (interval' (qual a) (fromIntegral $ c + 1) ^+^ (_P8^* fromIntegral (o - 4)))
