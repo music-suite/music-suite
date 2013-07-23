@@ -180,12 +180,39 @@ instance FromJSON JSTuplet where
         <*> v .: "playedDuration"
         <*> (v .: "value" >>= \[x,y] -> return $ x / y) -- TODO unsafe
 
+data JSArticulation
+    = UpBow
+    | DownBow
+    | Plus
+    | Harmonic
+    | Marcato
+    | Accent
+    | Tenuto
+    | Wedge
+    | Staccatissimo
+    | Staccato
+    deriving (Eq, Ord, Show, Enum)
 
+readJSArticulation :: String -> Maybe JSArticulation
+readJSArticulation = go
+    where
+        go "upbow"          = Just UpBow
+        go "downBow"        = Just DownBow
+        go "plus"           = Just Plus
+        go "harmonic"       = Just Harmonic
+        go "marcato"        = Just Marcato
+        go "accent"         = Just Accent
+        go "tenuto"         = Just Tenuto
+        go "wedge"          = Just Wedge
+        go "staccatissimo"  = Just Staccatissimo
+        go "staccato"       = Just Staccato
+        go _                = Nothing
+    
 data JSChord = JSChord { 
             chord_position            :: Int,
             chord_duration            :: Int,
             chord_voice               :: Int,
-            chord_articulations       :: [()], -- TODO
+            chord_articulations       :: [JSArticulation], -- TODO
             chord_singleTremolos      :: Int,
             chord_doubleTremolos      :: Int,
             chord_acciaccatura        :: Bool,
@@ -193,12 +220,13 @@ data JSChord = JSChord {
             chord_notes               :: [JSNote]
     }
     deriving (Eq, Ord, Show)
+
 instance FromJSON JSChord where
     parseJSON (Object v) = JSChord 
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
-        <*> (return [])
+        <*> (join $ fmap sequence $ fmap (fmap (returnMaybe readJSArticulation)) $ v .: "articulations")
         <*> v .: "singleTremolos"
         <*> v .: "doubleTremolos"
         <*> v .: "acciaccatura"
@@ -255,8 +283,17 @@ fromJSElem = go where
 
 fromJSChord :: JSChord -> Score Note
 fromJSChord (JSChord pos dur voice ar strem dtrem acci appo notes) = 
-    delay (fromIntegral pos / 1024) $ stretch (fromIntegral dur / 1024) $ pcat $ fmap fromJSNote notes
-    -- TODO
+    setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromJSNote notes
+    where
+        setTime = delay (fromIntegral pos / 1024)
+        setDur  = stretch (fromIntegral dur / 1024)
+        setArt Marcato         = marcato
+        setArt Accent          = accent
+        setArt Tenuto          = tenuto
+        setArt Staccato        = staccato
+        setArt a               = error $ "fromJSChord: Unsupported articulation" ++ show a        
+
+    -- TODO tremolo and appogiatura/acciaccatura support
 
 fromJSNote :: JSNote -> Score Note
 fromJSNote (JSNote pitch di acc tied style) = 
@@ -273,16 +310,22 @@ main = do
         Left e -> putStrLn $ "Error: " ++ e
         Right x -> do
             writeMidi "test.mid" $ f $ fromJSScore x
-            -- openXml $ f $ fromJSScore x
-            openLy  $ f $ fromJSScore x
+            openXml $ f $ fromJSScore x
+            -- openLy  $ f $ fromJSScore x
 
     -- let score = fromJSScore $ fromJust $ decode' json
     -- openLy score
     
     where                
-        -- f = id   
-        f = retrograde
+        f = id   
+        -- f = retrograde
         -- f x = stretch (1/4) $ times 2 x |> times 2 (stretch 2 x)
 
 fromJust (Just x) = x
+
+returnMaybe :: MonadPlus m => (a -> Maybe b) -> a -> m b
+returnMaybe f = mmapMaybe f . return                    
+
+every :: (a -> b -> b) -> [a] -> b -> b
+every f x = foldr (.) id (fmap f x)
 
