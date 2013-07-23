@@ -21,9 +21,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Relative (
+    -- * Base types
     -- ** Octaves
     Octaves,
     HasOctaves(..),
+
+    -- ** Steps
+    Steps,
+    HasSteps(..),
     
     -- ** Semitones
     Semitones,
@@ -36,6 +41,7 @@ module Music.Pitch.Relative (
     (/:=),
 
     -- ** Quality
+    Quality(..),    
     HasQuality(..),
     -- invertQuality,
     isPerfect,
@@ -44,17 +50,20 @@ module Music.Pitch.Relative (
     isAugmented,
     isDiminished,
 
+    -- ** Accidentals
+    Accidental,
+
     -- ** Alteration
     Alterable(..),
     Augmentable(..),
 
-    -- ** Misc
-    Number,
-    Quality(..),    
+    -- ** Number
+    Number,   
+      
+    -- ** Name
     Name(..),
-    Accidental,
-    
 
+    -- * Pitch and interval types
     -- ** Pitch
     Pitch,
     name,
@@ -88,6 +97,7 @@ module Music.Pitch.Relative (
     -- *** Intervallic inversion
     invert,
 
+    -- * Utility
     -- ** Spelling
     Spelling,
     spell,
@@ -98,7 +108,7 @@ module Music.Pitch.Relative (
     isSemitone,
     isTritone,
          
-    -- ** Literals (TODO move)
+    -- * Literals (TODO move)
     unison,
     prime,
     second,
@@ -139,6 +149,12 @@ import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
 
+-- |
+-- An interval represented as a number of octaves, including negative intervals.
+-- 
+-- > octaves a = semitones a `div` 12
+-- > steps   a = semitones a `mod` 12
+--
 newtype Octaves = Octaves { getOctaves :: Integer }
 deriving instance Eq Octaves
 deriving instance Ord Octaves
@@ -164,6 +180,28 @@ class HasOctaves a where
     -- > octaves (-_P8)            =  -1
     --
     octaves :: a -> Octaves
+
+
+-- |
+-- An interval represented as a number of steps in the range /0 ≤ x < 12/.
+-- 
+-- > octaves a = semitones a `div` 12
+-- > steps   a = semitones a `mod` 12
+--
+newtype Steps = Steps { getSteps :: Integer }
+deriving instance Eq Steps
+deriving instance Ord Steps
+instance Show Steps where
+    show (Steps d) = show d
+deriving instance Num Steps
+deriving instance Enum Steps
+deriving instance Real Steps
+deriving instance Integral Steps
+instance HasSteps Steps where
+    steps = id
+
+class HasSteps a where
+    steps :: a -> Steps
 
 -- |
 -- An interval represented as a number of semitones, including negative
@@ -276,7 +314,15 @@ sixth   = 6
 seventh = 7
 octave  = 8
 
-
+-- |
+-- Interval quality is either perfect, major, minor, augmented, and
+-- diminished. This representation allows for an arbitrary number of
+-- augmentation or diminishions, so A is represented by @Augmented 1@, AA by
+-- @Augmented 2@ and so on.
+-- 
+-- The quality of a compound interval is the quality of the simple interval on
+-- which it is based.
+--
 data Quality 
     = Major
     | Minor
@@ -369,6 +415,8 @@ qualityToDiff perfect = go
         go Perfect          = 0
         go Major            = 0
         go (Augmented n)    = n
+
+
 -- |
 -- An interval is the difference between two pitches, incuding negative
 -- intervals.
@@ -441,8 +489,14 @@ instance Augmentable Interval where
     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
 
-intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
+instance HasOctaves Interval where
+    octaves = fst . separate
+instance HasSemitones Interval where
+    semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
+instance HasSteps Interval where
+    steps a = fromIntegral $ semitones a `mod` 12
 
+intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
 -- Construct an interval from a quality and number.
@@ -524,8 +578,6 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
 separate :: Interval -> (Octaves, Interval)
 separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
 
-instance HasOctaves Interval where
-    octaves = fst . separate
 
 -- |
 -- Returns the simple part of an interval.
@@ -549,8 +601,6 @@ number (Interval (o, d, c)) = Number (inc $ fromIntegral o * 7 + d)
         inc a = if a >= 0 then succ a else pred a
 
 
-instance HasSemitones Interval where
-    semitones (Interval (o, d, c)) = Semitones (fromIntegral o * 12 + c)
 
 -- |
 -- Returns whether the given interval is simple.
@@ -694,7 +744,21 @@ d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
 
 
 
--- Pitch is simply interval using middle C as origin.
+-- |
+-- Standard pitch representation.
+-- 
+-- Intervals and pitches can be added using '.+^'. To get the interval between
+-- two pitches, use '.-.'. 
+--
+-- > c .+^ minor third == eb
+-- > f .-. c           == perfect fourth
+--
+-- Pitches are described by name, accidental and octave number. 
+--
+-- > c   == fromIntegral 0
+-- > _P4 == perfect fourth   == interval Perfect 5
+-- > d5  == diminished fifth == diminish (perfect fifth)
+--
 newtype Pitch = Pitch { getPitch :: Interval }
 deriving instance Eq Pitch	 
 deriving instance Num Pitch   
@@ -749,9 +813,19 @@ instance Alterable Accidental where
 asPitch :: Pitch -> Pitch
 asPitch = id
 
+-- | 
+-- Returns the name (or class) of a pitch.
+-- 
+-- See also 'octaves', and 'steps' and 'semitones'.
+-- 
 name :: Pitch -> Name
 name = toEnum . fromIntegral . pred . number . simple . getPitch
 
+-- | 
+-- Returns the accidental of a pitch.
+-- 
+-- See also 'octaves', and 'steps' and 'semitones'.
+-- 
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
 
@@ -760,6 +834,9 @@ instance HasOctaves Pitch where
 
 instance HasSemitones Pitch where
     semitones = semitones . getPitch
+
+instance HasSteps Pitch where
+    steps = steps . getPitch
 
 
 instance IsPitch Pitch where
