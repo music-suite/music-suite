@@ -33,6 +33,7 @@ module Music.Pitch.Relative (
     Name(..),
     Octave,
     Accidental,
+    Alterable(..),
     
     name,
     accidental,
@@ -40,6 +41,7 @@ module Music.Pitch.Relative (
 
     -- ** Intervals
     Interval,
+
     -- *** Constructing intervals
     unison,
     interval,
@@ -47,17 +49,18 @@ module Music.Pitch.Relative (
     -- *** Inspecing intervals
     number,
     semitones,
-    isSimple,
-    isCompound,
     isPositive,
     isNegative,
 
     -- *** Simple and compound intervals
+    isSimple,
+    isCompound,
     separate,
     octave,
     simple,
     
     -- *** Inversion
+    Augmentable(..),
     invert,
     
     Number,
@@ -142,9 +145,9 @@ ditone   = 4
 -- | A synonym for @6@.
 tritone  = 6
 
-isTone      = (== tone)     . semitones
-isSemitone  = (== semitone) . semitones
-isTritone   = (== tritone)  . semitones
+isTone      = (== tone)     . abs . semitones
+isSemitone  = (== semitone) . abs . semitones
+isTritone   = (== tritone)  . abs . semitones
 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
@@ -194,6 +197,23 @@ class HasQuality a where
     quality :: a -> Quality
 instance HasQuality Quality where
     quality = id
+class Augmentable a where
+    augment :: a -> a
+    diminish :: a -> a
+class Alterable a where
+    sharpen :: a -> a
+    flatten :: a -> a
+
+-- instance Augmentable Quality where
+--     augment = go
+--         where
+--             go (Diminished 0)   = Augmented n    -- not unique!
+--             go (Diminished n)   = Augmented n
+--             go Minor            = Major
+--             go Major            = Augmented 1
+--             go Perfect          = Augmented 1
+--             go (Augmented n)    = Diminished (n)
+        
 
 perfect    = Perfect
 major      = Major
@@ -255,10 +275,21 @@ qualityToDiff perfect = go
 -- > m3 + _M3 = _P5
 -- > d5 + _M6 = m10 
 --
--- Intervals are generally described in terms of 'Quality' and 'Number'. 
--- To construct an interval, use the 'interval' constructor or the interval literals:
+-- Intervals are generally described in terms of 'Quality' and 'Number'. To
+-- construct an interval, use the 'interval' constructor or the interval
+-- literals:
 --
 -- > m5 _P5 _M7 etc.
+--
+-- Note that 'semitone' and 'tritone' are not intervals: use '_A1', 'm2', 'd5' or '_A4'.
+--
+-- The 'Num' is mainly provided for the convenience of having '+', '-',
+-- 'negate' and 'abs' defined on invervals. To preserve the semantics of 'abs'
+-- and 'signum', @a * b@ stacks the interval @b@ for each octave in @a@, and
+-- 'signum' returns either a positive or negative octave. While there is
+-- nothing wrong about this behaviour, the use of octaves for signum and
+-- multiplication is arbitrary. The 'VectorSpace' instance does not have this
+-- deficiency.
 --
 newtype Interval = Interval { getInterval :: (
     Integer,    -- octaves, may be negative
@@ -269,11 +300,11 @@ newtype Interval = Interval { getInterval :: (
 deriving instance Eq Interval
 deriving instance Ord Interval
 instance Num Interval where
-    (+) = addInterval
-    (*) = undefined
-    negate = negateInterval
-    abs = undefined
-    signum = undefined
+    (+)           = addInterval
+    a * b         = fromIntegral (semitones a `div` 12) `stackInterval` b
+    negate        = negateInterval
+    abs a         = if isNegative a then negate a else a
+    signum a      = if isNegative a then (-_P8) else _P8
     fromInteger 0 = _P1
     fromInteger _ = undefined
 instance Show Interval where
@@ -296,6 +327,10 @@ instance HasQuality Interval where
     quality (Interval (o, d, c)) 
         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+
+instance Augmentable Interval where
+    augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
+    diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
 
 intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
@@ -330,6 +365,7 @@ unison :: Interval
 unison = _P1
 
 negateInterval :: Interval -> Interval
+negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
 negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
 invertDiatonic :: Num a => a -> a
@@ -346,14 +382,19 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
         chroma         = trunc (ca + cb)
         trunc          = if carry > 0 then (`mod` 12) else id
 
+-- |
+-- Separate a compound interval into octaves and a simple interval.
+--
+-- > (interval perfect 8)^*x + y = z  iff  (x, y) = separate z
+--
 separate :: Interval -> (Integer, Interval)
 separate (Interval (o, d, c)) = (o, Interval (0, d, c))
 
 octave :: Interval -> Integer
-octave a = o where (o, b) = separate a
+octave = fst . separate
 
 simple :: Interval -> Interval
-simple a = b where (o, b) = separate a
+simple = snd . separate
 
 
 -- |
@@ -430,10 +471,12 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 --   and vice versa.
 --
 -- The inversion of any compound interval is always the same as the inversion
--- of the simple interval from which it is compounded
+-- of the simple interval from which it is compounded, i.e.:
+--
+-- > invert = simple . negate
 -- 
 invert :: Interval -> Interval   
-invert a = let (_, simp) = separate (negate a) in simp
+invert = simple . negate
 
 
 spell :: (Semitones -> Number) -> Interval -> Interval
@@ -504,6 +547,17 @@ d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 
 d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
 _ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
 
+d9  = d2  + _P8 ; m9  = m2  + _P8 ; _M9  = _M2 + _P8 ; _A9  = _A2 + _P8
+d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
+
+
+
+
+
+
+
+
+
 
 
 
@@ -518,6 +572,10 @@ instance AffineSpace Pitch where
     Pitch a .+^ b       = Pitch (a ^+^ b)
 instance Show Pitch where
     show p = show (name p) ++ show (accidental p) ++ show (octave_ p)
+
+instance Alterable Pitch where
+    sharpen (Pitch a) = Pitch (augment a)
+    flatten (Pitch a) = Pitch (diminish a)
 
 data Name = C | D | E | F | G | A | B
     deriving (Eq, Ord, Enum)
@@ -551,6 +609,9 @@ deriving instance Num Accidental
 deriving instance Enum Accidental
 deriving instance Real Accidental
 deriving instance Integral Accidental
+instance Alterable Accidental where
+    sharpen = succ
+    flatten = pred
 
 asPitch :: Pitch -> Pitch
 asPitch = id
