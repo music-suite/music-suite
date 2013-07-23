@@ -1,0 +1,340 @@
+instance Fractional a => IsDynamics (Levels a) where
+
+instance HasPitch () where
+instance HasPitch Double where
+instance HasPitch Float where
+instance HasPitch Int where
+instance HasPitch Integer where
+instance Integral a => HasPitch (Ratio a) where
+
+instance Show Time where 
+instance AdditiveGroup Time where
+instance VectorSpace Time where
+instance InnerSpace Time where (<.>) = (*)
+instance AffineSpace Time where
+instance HasOnset a => HasOnset (WrappedMonoid a) where 
+
+instance Show Duration where 
+instance AdditiveGroup Duration where
+instance VectorSpace Duration where
+instance InnerSpace Duration where (<.>) = (*)
+instance Delayable a => Delayable (WrappedMonoid a) where 
+
+instance Semigroup (Rhythm a) where
+instance Monoid (Rhythm a) where
+instance AdditiveGroup (Rhythm a) where
+instance VectorSpace (Rhythm a) where
+instance HasDuration (Rhythm a) where
+
+instance Semigroup (Voice a) where
+instance Applicative Voice where
+instance Monad Voice where
+instance AdditiveGroup (Voice a) where
+instance VectorSpace (Voice a) where
+instance HasDuration (Voice a) where
+
+instance Semigroup (Track a) where
+instance Monoid (Track a) where
+instance Applicative Track where
+instance Monad Track where
+instance Alternative Track where
+instance MonadPlus Track where
+instance AdditiveGroup (Track a) where
+instance VectorSpace (Track a) where
+instance Delayable (Track a) where
+instance HasOnset (Track a) where
+instance HasDuration (Track a) where
+
+instance Semigroup (Score a) where
+instance Monoid (Score a) where
+instance Applicative Score where
+instance Alternative Score where
+instance MonadPlus Score where
+instance Monad Score where
+instance AdditiveGroup (Score a) where
+instance VectorSpace (Score a) where
+instance Delayable (Score a) where
+instance HasOnset (Score a) where
+instance HasDuration (Score a) where
+instance IsPitch a => IsPitch (Score a) where
+instance IsDynamics a => IsDynamics (Score a) where
+
+
+
+
+
+
+
+-- Standard: 
+--              Semigroup/Monoid/AdditiveGroup/VectorSpace
+--              HasDuration/HasOnset/Delayable
+--              Applicative/Alternative,
+--              Monad/MonadPlus
+--              Functor/Foldable/Traversable
+--              Typeable
+
+
+-- HasOnset
+-- HasPreOnset
+-- HasPostOnset
+-- HasPostOffset
+-- HasDuration
+-- Delayable
+
+-- HasPart
+-- Tiable
+-- HasPitch
+-- HasDynamics
+-- HasArticulation
+
+-- HasTremolo
+-- HasText
+-- HasHarmonic
+-- HasSlide
+
+
+instance HasPart () where
+instance HasPart Double where
+instance HasPart Float where
+instance HasPart Int where
+instance HasPart Integer where
+instance Integral a => HasPart (Ratio a) where
+
+
+instance Tiable Double
+instance Tiable Float
+instance Tiable Int
+instance Tiable Integer
+instance Tiable () where
+instance Tiable (Ratio a)
+
+instance HasMidi (Integer, Integer) where
+instance HasMidi Midi.Message                   where
+instance HasMidi Int                            where
+instance HasMidi Integer                        where
+instance HasMidi Float                          where
+instance HasMidi Double                         where
+instance Integral a => HasMidi (Ratio a)        where
+
+instance HasMusicXml Int                        where
+instance HasMusicXml Float                      where
+instance HasMusicXml Double                     where
+instance Integral a => HasMusicXml (Ratio a)    where
+instance HasMusicXml Integer                    where
+
+instance HasLilypond Int                        where
+instance HasLilypond Float                      where
+instance HasLilypond Double                     where
+instance Integral a => HasLilypond (Ratio a)    where
+instance HasLilypond Integer where
+
+instance IsPitch Double where
+instance IsPitch Integer where
+instance IsPitch (Alteration -> Double) where
+instance IsPitch (Alteration -> Integer) where
+instance IsPitch (Alteration -> a) => IsPitch (Alteration -> Score a) where
+instance IsDynamics Double where
+
+
+
+--------------------------------------------------------------------------------
+-- Transformers
+
+-- instance HasPitch (PitchT p a) where
+
+instance HasMidi a => HasMidi (Maybe a) where
+instance HasMidi a => HasMidi (PartT n a) where
+instance HasMidi a => HasMidi (TieT a) where
+instance HasMidi a => HasMidi (DynamicT a) where
+instance HasMidi a => HasMidi (ArticulationT a) where
+instance HasMidi a => HasMidi (TremoloT a) where
+instance HasMidi a => HasMidi (TextT a) where
+instance HasMidi a => HasMidi (HarmonicT a) where
+instance HasMidi a => HasMidi (SlideT a) where
+
+instance HasMusicXml a => HasMusicXml (PartT n a) where
+instance HasMusicXml a => HasMusicXml (TieT a) where
+instance HasMusicXml a => HasMusicXml (DynamicT a) where
+instance HasMusicXml a => HasMusicXml (ArticulationT a) where
+instance HasMusicXml a => HasMusicXml (TremoloT a) where
+instance HasMusicXml a => HasMusicXml (TextT a) where
+instance HasMusicXml a => HasMusicXml (HarmonicT a) where
+instance HasMusicXml a => HasMusicXml (SlideT a) where
+
+instance HasLilypond a => HasLilypond (PartT n a) where
+instance HasLilypond a => HasLilypond (TieT a) where
+instance HasLilypond a => HasLilypond (DynamicT a) where
+instance HasLilypond a => HasLilypond (ArticulationT a) where
+instance HasLilypond a => HasLilypond (TremoloT a) where
+instance HasLilypond a => HasLilypond (TextT a) where
+instance HasLilypond a => HasLilypond (HarmonicT a) where
+instance HasLilypond a => HasLilypond (SlideT a) where
+
+instance IsPitch a => IsPitch (Maybe a) where
+instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
+instance IsPitch a => IsPitch (TieT a) where
+instance IsPitch a => IsPitch (DynamicT a) where
+instance IsPitch a => IsPitch (ArticulationT a) where
+instance IsPitch a => IsPitch (TremoloT a) where
+instance IsPitch a => IsPitch (TextT a) where
+instance IsPitch a => IsPitch (HarmonicT a) where
+instance IsPitch a => IsPitch (SlideT a) where
+
+instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
+instance IsDynamics a => IsDynamics (TieT a) where
+instance IsDynamics a => IsDynamics (DynamicT a) where
+instance IsDynamics a => IsDynamics (ArticulationT a) where
+instance IsDynamics a => IsDynamics (TremoloT a) where
+instance IsDynamics a => IsDynamics (TextT a) where
+instance IsDynamics a => IsDynamics (HarmonicT a) where
+instance IsDynamics a => IsDynamics (SlideT a) where
+
+
+instance HasPart a => HasPart (Maybe a) where   
+instance HasPart (PartT n a) where   
+instance HasPart a => HasPart (TieT a) where   
+instance HasPart a => HasPart (DynamicT a) where   
+instance HasPart a => HasPart (ArticulationT a) where   
+instance HasPart a => HasPart (TremoloT a) where   
+instance HasPart a => HasPart (TextT a) where   
+instance HasPart a => HasPart (HarmonicT a) where   
+instance HasPart a => HasPart (SlideT a) where   
+
+instance Tiable a => Tiable (Maybe a) where
+instance Tiable a => Tiable (PartT n a) where
+instance Tiable a => Tiable (TieT a) where
+instance Tiable a => Tiable (DynamicT a) where
+instance Tiable a => Tiable (ArticulationT a) where
+instance Tiable a => Tiable (TremoloT a) where
+instance Tiable a => Tiable (TextT a) where
+instance Tiable a => Tiable (HarmonicT a) where
+instance Tiable a => Tiable (SlideT a) where
+
+instance HasPitch a => HasPitch (Maybe a) where   
+instance HasPitch a => HasPitch (PartT n a) where   
+instance HasPitch a => HasPitch (TieT a) where   
+instance HasPitch a => HasPitch (DynamicT a) where   
+instance HasPitch a => HasPitch (ArticulationT a) where   
+instance HasPitch a => HasPitch (TremoloT a) where   
+instance HasPitch a => HasPitch (TextT a) where   
+instance HasPitch a => HasPitch (HarmonicT a) where   
+instance HasPitch a => HasPitch (SlideT a) where   
+
+instance HasDynamic a => HasDynamic (PartT n a) where
+instance HasDynamic a => HasDynamic (TieT a) where
+instance HasDynamic (DynamicT a) where
+instance HasDynamic a => HasDynamic (ArticulationT a) where
+instance HasDynamic a => HasDynamic (TremoloT a) where
+instance HasDynamic a => HasDynamic (TextT a) where
+instance HasDynamic a => HasDynamic (HarmonicT a) where
+instance HasDynamic a => HasDynamic (SlideT a) where
+
+instance HasArticulation a => HasArticulation (Maybe a) where
+instance HasArticulation a => HasArticulation (PartT n a) where
+instance HasArticulation a => HasArticulation (TieT a) where
+instance HasArticulation a => HasArticulation (DynamicT a) where
+instance HasArticulation (ArticulationT a) where
+instance HasArticulation a => HasArticulation (TremoloT a) where
+instance HasArticulation a => HasArticulation (TextT a) where
+instance HasArticulation a => HasArticulation (HarmonicT a) where
+instance HasArticulation a => HasArticulation (SlideT a) where
+
+instance HasTremolo a => HasTremolo (PartT n a) where
+instance HasTremolo a => HasTremolo (TieT a) where
+instance HasTremolo a => HasTremolo (DynamicT a) where
+instance HasTremolo a => HasTremolo (ArticulationT a) where
+instance HasTremolo (TremoloT a) where
+instance HasTremolo a => HasTremolo (TextT a) where
+instance HasTremolo a => HasTremolo (HarmonicT a) where
+instance HasTremolo a => HasTremolo (SlideT a) where
+
+instance HasText a => HasText (PartT n a) where
+instance HasText a => HasText (TieT a) where
+instance HasText a => HasText (DynamicT a) where
+instance HasText a => HasText (ArticulationT a) where
+instance HasText a => HasText (TremoloT a) where
+instance HasText (TextT a) where
+instance HasText a => HasText (HarmonicT a) where
+instance HasText a => HasText (SlideT a) where
+
+instance HasHarmonic a => HasHarmonic (PartT n a) where
+instance HasHarmonic a => HasHarmonic (TieT a) where
+instance HasHarmonic a => HasHarmonic (DynamicT a) where
+instance HasHarmonic a => HasHarmonic (ArticulationT a) where
+instance HasHarmonic a => HasHarmonic (TremoloT a) where
+instance HasHarmonic a => HasHarmonic (TextT a) where
+instance HasHarmonic (HarmonicT a) where
+instance HasHarmonic a => HasHarmonic (SlideT a) where
+
+instance HasSlide a => HasSlide (PartT n a) where
+instance HasSlide a => HasSlide (TieT a) where
+instance HasSlide a => HasSlide (DynamicT a) where
+instance HasSlide a => HasSlide (ArticulationT a) where
+instance HasSlide a => HasSlide (TremoloT a) where
+instance HasSlide a => HasSlide (TextT a) where
+instance HasSlide a => HasSlide (HarmonicT a) where
+instance HasSlide (SlideT a) where
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+instance (Enum v, Eq v, Num a) => Num (PartT v a) where
+instance (Enum v, Enum a) => Enum (PartT v a) where
+instance (Enum v, Bounded a) => Bounded (PartT v a) where
+instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
+instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
+
+instance Num a => Num (TieT a) where
+instance Enum a => Enum (TieT a) where
+instance Bounded a => Bounded (TieT a) where
+instance (Num a, Ord a, Real a) => Real (TieT a) where
+instance (Real a, Enum a, Integral a) => Integral (TieT a) where
+
+instance Num a => Num (DynamicT a) where
+instance Enum a => Enum (DynamicT a) where
+instance Bounded a => Bounded (DynamicT a) where
+instance (Num a, Ord a, Real a) => Real (DynamicT a) where
+instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
+
+instance Num a => Num (ArticulationT a) where
+instance Enum a => Enum (ArticulationT a) where
+instance Bounded a => Bounded (ArticulationT a) where
+instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
+instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
+
+instance Num a => Num (TremoloT a) where
+instance Enum a => Enum (TremoloT a) where
+instance Bounded a => Bounded (TremoloT a) where
+instance (Num a, Real a) => Real (TremoloT a) where
+instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
+
+instance Num a => Num (TextT a) where
+instance Enum a => Enum (TextT a) where
+instance Bounded a => Bounded (TextT a) where
+instance (Num a, Ord a, Real a) => Real (TextT a) where
+instance (Real a, Enum a, Integral a) => Integral (TextT a) where
+
+instance Num a => Num (HarmonicT a) where
+instance Enum a => Enum (HarmonicT a) where
+instance Bounded a => Bounded (HarmonicT a) where
+instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
+instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
+
+instance Num a => Num (SlideT a) where
+instance Enum a => Enum (SlideT a) where
+instance Bounded a => Bounded (SlideT a) where
+instance (Num a, Ord a, Real a) => Real (SlideT a) where
+instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
