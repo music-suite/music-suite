@@ -1,7 +1,7 @@
 
 name:               music-parts
-version:            1.3
-cabal-version:      >= 1.2
+version:            1.3.1
+cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
 license:            BSD3
@@ -16,6 +16,10 @@ description:
 
     This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
+source-repository head
+  type:             git
+  location:         git://github.com/hanshoglund/music-parts.git
+  
 library                    
     build-depends: 
         base >= 4 && < 5,
@@ -26,6 +30,7 @@ library
         semigroupoids
 
     hs-source-dirs: src
+    default-language: Haskell2010
     exposed-modules:
         Music.Parts
         -- Music.Parts.Strings
