@@ -28,6 +28,8 @@ module Music.Score.Pitch (
         getPitches,
         setPitches,
         modifyPitches,
+        up,
+        down,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -91,7 +93,7 @@ instance HasPitch a => HasPitch [a] where
 --
 -- > Score a -> [Pitch]
 --
-getPitches :: (HasPitch a, Eq v, v ~ Pitch a, Foldable s) => s a -> [Pitch a]
+getPitches :: (HasPitch a, Eq v, v ~ Pitch a, Foldable s, p ~ Pitch a) => s a -> [p]
 getPitches = List.nub . fmap getPitch . toList
 
 -- |
@@ -99,7 +101,7 @@ getPitches = List.nub . fmap getPitch . toList
 --
 -- > Pitch -> Score a -> Score a
 --
-setPitches :: (HasPitch a, Functor s) => Pitch a -> s a -> s a
+setPitches :: (HasPitch a, Functor s, p ~ Pitch a) => p -> s a -> s a
 setPitches n = fmap (setPitch n)
 
 -- |
@@ -107,6 +109,13 @@ setPitches n = fmap (setPitch n)
 --
 -- > (Pitch -> Pitch) -> Score a -> Score a
 --
-modifyPitches :: (HasPitch a, Functor s) => (Pitch a -> Pitch a) -> s a -> s a
-modifyPitches n = fmap (modifyPitch n)
+modifyPitches :: (HasPitch a, Functor s, p ~ Pitch a) => (p -> p) -> s a -> s a
+modifyPitches f = fmap (modifyPitch f)
+
+up :: (HasPitch a, Functor s, AffineSpace p, p ~ Pitch a) => Diff p -> s a -> s a
+up a = modifyPitches (.+^ a)
+
+down :: (HasPitch a, Functor s, AffineSpace p, p ~ Pitch a) => Diff p -> s a -> s a
+down a = modifyPitches (.-^ a)
+
 
