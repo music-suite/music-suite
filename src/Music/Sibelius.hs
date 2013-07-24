@@ -7,7 +7,8 @@ module Music.Sibelius where
 import Data.Aeson
 import Control.Applicative
 import Data.Aeson.Types(parse, Parser)
-import Music.Prelude.Basic
+import Music.Prelude.StringQuartet
+import qualified Music.Score as Score
 
 import Data.ByteString.Lazy(ByteString)
 import qualified Data.ByteString.Lazy as B
@@ -310,7 +311,7 @@ type IsSibelius a = (
     HasPart' a, 
     Enum (Part a), 
     HasPitch a, 
-    Num (Pitch a), 
+    Num (Score.Pitch a), 
     HasTremolo a, 
     HasArticulation a,
     Tiable a
