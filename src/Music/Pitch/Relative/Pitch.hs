@@ -33,6 +33,10 @@ import Music.Pitch.Relative.Name
 -- Intervals and pitches can be added using '.+^'. To get the interval between
 -- two pitches, use '.-.'.
 --
+-- Pitches are normally entered using the following literals.
+--
+-- > c d e f g a b
+--
 -- Notes with accidentals can be written by adding the @s@ or @b@ suffices
 -- (or two for double sharps and flats).
 --
@@ -83,7 +87,7 @@ instance AffineSpace Pitch where
     Pitch a .+^ b       = Pitch (a ^+^ b)
 
 instance Show Pitch where
-    show p = show (name p) ++ showAccidental (accidental p) ++ showOctave (octaves p)
+    show p = show (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
         where
             showOctave n
                 | n > 0     = replicate' n '\''
@@ -106,7 +110,7 @@ asPitch = id
 -- Creates a pitch from name accidental.
 --
 pitch :: Name -> Accidental -> Pitch
-pitch = undefined
+pitch name acc = Pitch $ interval' (fromIntegral acc) (fromEnum name + 1)
 
 -- |
 -- Returns the name of a pitch.
@@ -124,14 +128,14 @@ name = toEnum . fromIntegral . pred . number . simple . getPitch
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
 
-instance HasOctaves Pitch where
-    octaves = octaves . getPitch
-
-instance HasSemitones Pitch where
-    semitones = semitones . getPitch
-
-instance HasSteps Pitch where
-    steps = steps . getPitch
+-- instance HasOctaves Pitch where
+--     octaves = octaves . getPitch
+-- 
+-- instance HasSemitones Pitch where
+--     semitones = semitones . getPitch
+-- 
+-- instance HasSteps Pitch where
+--     steps = steps . getPitch
 
 
 instance IsPitch Pitch where

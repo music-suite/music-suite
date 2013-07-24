@@ -87,8 +87,8 @@ import Music.Pitch.Relative.Number
 -- The scalar type of intervals are 'Integer', using '^*' to stack intervals
 -- of a certain type on top of each other. For example @_P5 ^* 2@ is a stack
 -- of 2 perfect fifths. The 'Num' instance works as expected for '+', 'negate'
--- and 'abs', and arbitrarily uses octaves for multiplication. If you find
--- yourself '*', or 'signum' on intervals, consider switching to '^*' or
+-- and 'abs', and arbitrarily uses minor seconds for multiplication. If you
+-- find yourself '*', or 'signum' on intervals, consider switching to '*^' or
 -- 'normalized'.
 --
 -- Intervals are generally described in terms of 'Quality' and 'Number'. To
@@ -111,10 +111,10 @@ instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval
     abs a         = if isNegative a then negate a else a
-    a * b         = fromIntegral (semitones a `div` 12) `stackInterval` b
-    signum a      = if isNegative a then (-_P8) else _P8
+    a * b         = fromIntegral (semitones a) `stackInterval` b
+    signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
     fromInteger 0 = _P1
-    fromInteger _ = undefined
+    fromInteger n = spell sharps (fromIntegral n :: Semitones)
 
 instance Show Interval where
     show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
@@ -153,9 +153,6 @@ instance HasSemitones Interval where
 
 instance HasSteps Interval where
     steps a = fromIntegral $ semitones a `mod` 12
-
-intervalDiff :: Interval -> Int
-intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
 -- Creates an interval from a quality and number.
@@ -215,6 +212,9 @@ addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
 stackInterval :: Integer -> Interval -> Interval
 stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
                   | otherwise = negate $ stackInterval (negate n) a
+
+intervalDiff :: Interval -> Int
+intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
 -- Separate a compound interval into octaves and a simple interval.
