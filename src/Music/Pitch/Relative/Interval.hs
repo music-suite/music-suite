@@ -198,8 +198,8 @@ invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
 
 negateInterval :: Interval -> Interval
-negateInterval (Interval (o, 0, 0))   = Interval (negate o, 0, 0)
-negateInterval (Interval (oa, da,ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
+negateInterval (Interval (o, 0, 0))    = Interval (negate o, 0, 0)
+negateInterval (Interval (oa, da, ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))

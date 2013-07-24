@@ -147,6 +147,6 @@ instance IsPitch Pitch where
             qual Nothing  = 0
             qual (Just n) = round n
 
-midiNumber :: Pitch -> Integer
-midiNumber = fromIntegral . semitones . getPitch
+-- midiNumber :: Pitch -> Integer
+-- midiNumber = fromIntegral . semitones . getPitch
 
