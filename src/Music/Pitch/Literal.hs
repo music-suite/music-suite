@@ -17,8 +17,8 @@
 
 module Music.Pitch.Literal (
 
-        PitchL(..),
         IsPitch(..),
+        PitchL(..),
 
         cs'', ds'', es'', fs'', gs'', as'', bs'',
         c'' , d'' , e'' , f'' , g'' , a'' , b'' ,
@@ -42,17 +42,18 @@ module Music.Pitch.Literal (
   ) where
 
 -- |
--- The 'PitchL' types is used to encode a pitch literal.
+-- The 'PitchL' types is used to encode a pitch literal. You don't need to
+-- think about this type unless you are implementing 'IsPitch'.
 --
--- It is defined as /(class, alteration, octave)/, where
+-- It is defined as @(class, alteration, octave)@, where
 --
---     * /class/      is a pitch class number in /[0,6]/, starting from C.
+--     * @class@      is a pitch class number in @[0..6]@, starting from C.
 --
---     * /alteration/ is the number of semitones, i.e. 0 is natural, 1 for sharp 2 for double sharp, -1 for flat and -2 for double flat.
+--     * @alteration@ is the number of semitones, i.e. 0 is natural, 1 for sharp 2 for double sharp, -1 for flat and -2 for double flat.
 --       Alteration is in 'Maybe' because some pitch representations differ between explicit and explicit accidentals, i.e. a diatonic
 --       pitch type may assume @(0,Nothing,4)@ to mean C sharp rather than C.
 --
---     * /octave/     is octave number in scientific pitch notation.
+--     * @octave@     is octave number in scientific pitch notation.
 --
 -- Middle C is represented by the pitch literal @(0, Nothing, 4)@.
 --
