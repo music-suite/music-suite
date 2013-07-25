@@ -9,7 +9,9 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a standard pitch representation.
+-- Provides various pitch representations. See 'Pitch' and 'Interval' for common
+-- representations. If you want to use an alternative represention, import the
+-- relevant submodule.
 --
 -------------------------------------------------------------------------------------
 

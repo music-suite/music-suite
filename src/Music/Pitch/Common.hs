@@ -9,7 +9,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a standard pitch representation.
+-- Provides a representation of pitch as defined in Common Music Theory (CMT).
 --
 -------------------------------------------------------------------------------------
 
