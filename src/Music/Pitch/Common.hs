@@ -22,14 +22,14 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative (
-    module Music.Pitch.Relative.Accidental,
-    module Music.Pitch.Relative.Interval,
-    module Music.Pitch.Relative.Name,
-    module Music.Pitch.Relative.Number,
-    module Music.Pitch.Relative.Pitch,
-    module Music.Pitch.Relative.Quality,
-    module Music.Pitch.Relative.Semitones,
+module Music.Pitch.Common (
+    module Music.Pitch.Common.Accidental,
+    module Music.Pitch.Common.Interval,
+    module Music.Pitch.Common.Name,
+    module Music.Pitch.Common.Number,
+    module Music.Pitch.Common.Pitch,
+    module Music.Pitch.Common.Quality,
+    module Music.Pitch.Common.Semitones,
 )
 where
 
@@ -44,13 +44,13 @@ import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
 
-import Music.Pitch.Relative.Semitones
-import Music.Pitch.Relative.Accidental
-import Music.Pitch.Relative.Quality
-import Music.Pitch.Relative.Name
-import Music.Pitch.Relative.Number
-import Music.Pitch.Relative.Pitch
-import Music.Pitch.Relative.Interval
+import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Accidental
+import Music.Pitch.Common.Quality
+import Music.Pitch.Common.Name
+import Music.Pitch.Common.Number
+import Music.Pitch.Common.Pitch
+import Music.Pitch.Common.Interval
 
 
 {-  

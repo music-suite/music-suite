@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Name (
+module Music.Pitch.Common.Name (
         -- ** Name
         Name(..),
   ) where

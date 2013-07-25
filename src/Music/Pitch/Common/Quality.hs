@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Quality (
+module Music.Pitch.Common.Quality (
 
         -- * Augmentable class
         Augmentable(..),

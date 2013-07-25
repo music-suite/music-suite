@@ -15,13 +15,13 @@
 
 module Music.Pitch (
         module Music.Pitch.Absolute,
-        module Music.Pitch.Relative,
+        module Music.Pitch.Common,
         module Music.Pitch.Literal,
         module Music.Pitch.Interval.Literal
   ) where
 
 import Music.Pitch.Absolute
-import Music.Pitch.Relative
+import Music.Pitch.Common
 import Music.Pitch.Literal
 import Music.Pitch.Interval.Literal
 

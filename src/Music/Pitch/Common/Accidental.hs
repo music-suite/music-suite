@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Accidental (
+module Music.Pitch.Common.Accidental (
         -- * Alterable class
         Alterable(..),
 

@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Semitones (
+module Music.Pitch.Common.Semitones (
         -- * Octaves
         Octaves,
         HasOctaves(..),

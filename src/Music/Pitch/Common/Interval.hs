@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Interval (
+module Music.Pitch.Common.Interval (
         -- ** Intervals
         Interval,
 
@@ -69,9 +69,9 @@ import qualified Data.List as List
 import Music.Pitch.Absolute
 import Music.Pitch.Literal
 import Music.Pitch.Interval.Literal
-import Music.Pitch.Relative.Quality
-import Music.Pitch.Relative.Semitones
-import Music.Pitch.Relative.Number
+import Music.Pitch.Common.Quality
+import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Number
 
 -- |
 -- An interval is the difference between two pitches, incuding negative

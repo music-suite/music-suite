@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Pitch (
+module Music.Pitch.Common.Pitch (
         -- * Pitch
         Pitch,    
         pitch,
@@ -35,14 +35,14 @@ import Music.Pitch.Absolute hiding (Octaves(..), octaves)
 import Music.Pitch.Literal
 import qualified Data.List as List
 
-import Music.Pitch.Relative.Interval
-import Music.Pitch.Relative.Quality
-import Music.Pitch.Relative.Accidental
-import Music.Pitch.Relative.Semitones
-import Music.Pitch.Relative.Name
+import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Quality
+import Music.Pitch.Common.Accidental
+import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Name
 
 -- |
--- Standard pitch representation.
+-- Common pitch representation.
 --
 -- Intervals and pitches can be added using '.+^'. To get the interval between
 -- two pitches, use '.-.'.

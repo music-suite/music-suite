@@ -36,12 +36,12 @@ library
     exposed-modules:
         Music.Pitch
         Music.Pitch.Absolute
-        Music.Pitch.Relative
-        Music.Pitch.Relative.Accidental
-        Music.Pitch.Relative.Interval
-        Music.Pitch.Relative.Name
-        Music.Pitch.Relative.Number
-        Music.Pitch.Relative.Pitch
-        Music.Pitch.Relative.Quality
-        Music.Pitch.Relative.Semitones
+        Music.Pitch.Common
+        Music.Pitch.Common.Accidental
+        Music.Pitch.Common.Interval
+        Music.Pitch.Common.Name
+        Music.Pitch.Common.Number
+        Music.Pitch.Common.Pitch
+        Music.Pitch.Common.Quality
+        Music.Pitch.Common.Semitones
         Music.Pitch.Intonation

@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Relative.Number (
+module Music.Pitch.Common.Number (
         -- ** Number
         Number,   
         unison,
