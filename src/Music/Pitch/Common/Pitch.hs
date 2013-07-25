@@ -166,3 +166,4 @@ instance IsPitch Pitch where
 -- midiNumber :: Pitch -> Integer
 -- midiNumber = fromIntegral . semitones . getPitch
 
+replicate' n = replicate (fromIntegral n)

@@ -31,7 +31,6 @@ module Music.Pitch.Common.Quality (
         diffToQuality,
         qualityToDiff,
         invertQuality,
-        replicate',
   ) where
 
 
@@ -147,7 +146,6 @@ qualityToDiff perfect = go
         go Perfect          = fromIntegral $ 0
         go Major            = fromIntegral $ 0
         go (Augmented n)    = fromIntegral $ n
-
 
 
 replicate' n = replicate (fromIntegral n)
