@@ -39,13 +39,10 @@ module Music.Pitch.Literal (
         cs__, ds__, es__, fs__, gs__, as__, bs__,
         c__ , d__ , e__ , f__ , g__ , a__ , b__ ,
         cb__, db__, eb__, fb__, gb__, ab__, bb__
+
   ) where
 
--- |
--- The 'PitchL' types is used to encode a pitch literal. You don't need to
--- think about this type unless you are implementing 'IsPitch'.
---
--- It is defined as @(class, alteration, octave)@, where
+-- Pitch literal, defined as @(class, alteration, octave)@, where
 --
 --     * @class@      is a pitch class number in @[0..6]@, starting from C.
 --
@@ -60,8 +57,6 @@ module Music.Pitch.Literal (
 newtype PitchL = PitchL { getPitchL :: (Int, Maybe Double, Int) }
     deriving (Eq, Show, Ord)
 
--- Like Num can be expressed using arabic numerals, instances
--- of IsPitch can be expressed using Western pitch names (c, c sharp, c flat etc)
 class IsPitch a where
     fromPitch :: PitchL -> a
 
@@ -96,26 +91,6 @@ instance IsPitch Integer where
                 4 -> 7
                 5 -> 9
                 6 -> 11
-
-
-{-
-cs'', ds'', es'', fs'', gs'', as'', bs''::  IsPitch a => a
-c'' , d'' , e'' , f'' , g'' , a'' , b'' ::  IsPitch a => a
-cb'', db'', eb'', fb'', gb'', ab'', bb''::  IsPitch a => a
-
-cs' , ds' , es' , fs' , gs' , as' , bs' ::  IsPitch a => a
-c'  , d'  , e'  , f'  , g'  , a'  , b'  ::  IsPitch a => a
-cb' , db' , eb' , fb' , gb' , ab' , bb' ::  IsPitch a => a
-
-cs  , ds  , es  , fs  , gs  , as  , bs  ::  IsPitch a => a
-c   , d   , e   , f   , g   , a   , b   ::  IsPitch a => a
-cb  , db  , eb  , fb  , gb  , ab  , bb  ::  IsPitch a => a
-
-cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ::  IsPitch a => a
-c_  , d_  , e_  , f_  , g_  , a_  , b_  ::  IsPitch a => a
-cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ::  IsPitch a => a
--}
-
 
 cs'' = fromPitch $ PitchL (0, Just 1, 6)
 ds'' = fromPitch $ PitchL (1, Just 1, 6)
