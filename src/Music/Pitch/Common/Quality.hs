@@ -17,9 +17,6 @@
 
 module Music.Pitch.Common.Quality (
 
-        -- * Augmentable class
-        Augmentable(..),
-
         -- * Quality
         Quality(..),    
         HasQuality(..),
@@ -37,20 +34,6 @@ module Music.Pitch.Common.Quality (
         replicate',
   ) where
 
--- |
--- Class of types that can be augmented.
---
-class Augmentable a where
-
-    -- | 
-    -- Increase the size of this interval by one.
-    --
-    augment :: a -> a
-
-    -- | 
-    -- Decrease the size of this interval by one.
-    --
-    diminish :: a -> a
 
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and

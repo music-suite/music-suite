@@ -31,10 +31,12 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
-import Music.Pitch.Absolute hiding (Octaves(..), octaves)
-import Music.Pitch.Literal
 import qualified Data.List as List
 
+import Music.Pitch.Absolute
+import Music.Pitch.Literal
+import Music.Pitch.Alterable
+import Music.Pitch.Augmentable
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Accidental

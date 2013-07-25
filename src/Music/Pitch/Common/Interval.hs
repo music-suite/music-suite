@@ -28,6 +28,7 @@ module Music.Pitch.Common.Interval (
         diminished,
         doublyAugmented,
         doublyDiminished,
+        asInterval,
 
         -- *** Inspecting intervals
         number,
@@ -44,8 +45,9 @@ module Music.Pitch.Common.Interval (
         -- *** Inversion
         invert,
 
-
         -- * Utility
+        asInterval,
+
         -- ** Spelling
         Spelling,
         spell,
@@ -67,6 +69,7 @@ import Control.Applicative
 import qualified Data.List as List
 
 import Music.Pitch.Absolute
+import Music.Pitch.Augmentable
 import Music.Pitch.Literal
 import Music.Pitch.Interval.Literal
 import Music.Pitch.Common.Quality
@@ -160,6 +163,12 @@ instance HasSteps Interval where
 
 instance IsInterval Interval where
     fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
+
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Interval'.
+--
+asInterval :: Interval -> Interval
+asInterval = id
 
 -- |
 -- Creates an interval from a quality and number.

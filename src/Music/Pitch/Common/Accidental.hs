@@ -16,9 +16,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common.Accidental (
-        -- * Alterable class
-        Alterable(..),
-
         -- * Accidentals
         Accidental,
         doubleFlat, 
@@ -29,20 +26,7 @@ module Music.Pitch.Common.Accidental (
   ) where
 
 import Music.Pitch.Literal
-
--- |
--- Class of things that can be altered.
---
-class Alterable a where
-    -- | 
-    -- Increase the given pitch by one.
-    -- 
-    sharpen :: a -> a
-
-    -- | 
-    -- Decrease the given pitch by one.
-    -- 
-    flatten :: a -> a
+import Music.Pitch.Alterable
 
 newtype Accidental = Accidental { getAccidental :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
@@ -55,14 +39,6 @@ instance Show Accidental where
 instance Alterable Accidental where
     sharpen = succ
     flatten = pred
-
-instance Alterable Double where
-    sharpen = (+ 1)
-    flatten = (subtract 1)
-
-instance Alterable Integer where
-    sharpen = (+ 1)
-    flatten = (subtract 1)
 
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
     fromPitch l acc

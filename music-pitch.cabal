@@ -36,6 +36,8 @@ library
     exposed-modules:
         Music.Pitch
         Music.Pitch.Absolute
+        Music.Pitch.Alterable
+        Music.Pitch.Augmentable
         Music.Pitch.Common
         Music.Pitch.Common.Accidental
         Music.Pitch.Common.Interval
