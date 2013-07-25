@@ -32,9 +32,13 @@ newtype Accidental = Accidental { getAccidental :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
     
 instance Show Accidental where
-    show n | n == 0 = "natural"
-           | n > 0  = replicate' n 's'
-           | n < 0  = replicate' (negate n) 'b'
+    show n | n == 0    = "natural"
+           | n == 1    = "sharp"
+           | n == (-1) = "flat"
+           | n == 2    = "doubleSharp"
+           | n == (-2) = "doubleFlat"
+           | n > 0     = "sharp * " ++ show (getAccidental n)
+           | n < 0     = "flat * " ++ show (negate $ getAccidental n)
 
 instance Alterable Accidental where
     sharpen = succ
@@ -68,4 +72,3 @@ doubleFlat  = -2
 
 
 replicate' n = replicate (fromIntegral n)
-
