@@ -22,4 +22,5 @@ module Music.Pitch (
 import Music.Pitch.Absolute
 import Music.Pitch.Relative
 import Music.Pitch.Literal
+import Music.Pitch.Interval.Literal
 

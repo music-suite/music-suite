@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, NoMonomorphismRestriction #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -52,17 +52,6 @@ module Music.Pitch.Relative.Interval (
         sharps,
         flats,
 
-        -- * Literals (TODO move)
-        d1, _P1, _A1,
-        d2, m2, _M2, _A2,
-        d3, m3, _M3, _A3,
-        d4, _P4, _A4,
-        d5, _P5, _A5,
-        d6, m6, _M6, _A6,
-        d7, m7, _M7, _A7,
-        d8, _P8, _A8,
-
-        -- TODO
         intervalDiff,
         interval',
         octave,
@@ -75,10 +64,11 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
-import Music.Pitch.Absolute hiding (Octaves(..), octaves)
-import Music.Pitch.Literal
 import qualified Data.List as List
 
+import Music.Pitch.Absolute
+import Music.Pitch.Literal
+import Music.Pitch.Interval.Literal
 import Music.Pitch.Relative.Quality
 import Music.Pitch.Relative.Semitones
 import Music.Pitch.Relative.Number
@@ -167,6 +157,9 @@ instance HasSemitones Interval where
 
 instance HasSteps Interval where
     steps a = fromIntegral $ semitones a `mod` 12
+
+instance IsInterval Interval where
+    fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
 
 -- |
 -- Creates an interval from a quality and number.
@@ -374,21 +367,4 @@ flats = go
         go 9  = 5
         go 10 = 6
         go 11 = 6
-
-
-
-
-_ = 1 ;                  d1 = Interval (0,0,-1) ; _P1 = Interval (0,0,0)  ; _A1 = Interval (0,0,1)
-d2 = Interval (0,1,0)  ; m2 = Interval (0,1,1)  ; _M2 = Interval (0,1,2)  ; _A2 = Interval (0,1,3)
-d3 = Interval (0,2,2)  ; m3 = Interval (0,2,3)  ; _M3 = Interval (0,2,4)  ; _A3 = Interval (0,2,5)
-_ = 1 ;                  d4 = Interval (0,3,4)  ; _P4 = Interval (0,3,5)  ; _A4 = Interval (0,3,6)
-_ = 1 ;                  d5 = Interval (0,4,6)  ; _P5 = Interval (0,4,7)  ; _A5 = Interval (0,4,8)
-d6 = Interval (0,5,7)  ; m6 = Interval (0,5,8)  ; _M6 = Interval (0,5,9)  ; _A6 = Interval (0,5,10)
-d7 = Interval (0,6,9)  ; m7 = Interval (0,6,10) ; _M7 = Interval (0,6,11) ; _A7 = Interval (0,6,12)
-_ = 1 ;                  d8 = Interval (1,0,-1) ; _P8 = Interval (1,0,0)  ; _A8 = Interval (1,0,1)
-
-d9  = d2  + _P8 ; m9  = m2  + _P8 ; _M9  = _M2 + _P8 ; _A9  = _A2 + _P8
-d10 = d3  + _P8 ; m10 = m3  + _P8 ; _M10 = _M3 + _P8 ; _A10 = _A3 + _P8
-
-
 
