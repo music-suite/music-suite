@@ -181,19 +181,25 @@ interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
-perfect    = interval Perfect
+perfect = interval Perfect
+
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
-major      = interval Major
+major = interval Major
+
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
-minor      = interval Minor
+minor = interval Minor
+
 -- | Creates an augmented interval.
 augmented  = interval (Augmented 1)
+
 -- | Creates a diminished interval.
 diminished = interval (Diminished 1)
+
 -- | Creates a doubly augmented interval.
 doublyAugmented  = interval (Augmented 2)
+
 -- | Creates a doubly diminished interval.
 doublyDiminished = interval (Diminished 2)
 
