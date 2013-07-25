@@ -81,13 +81,13 @@ import Music.Pitch.Common.Interval
             semitones :: Interval -> Semitones
             semitones major third = 4
 
-        Note that semitones is surjetive. We can define a non-deterministic function `intervals`
-            intervals :: Semitones -> [Interval]
-            intervals 4 = [majorThird, diminishedFourth]
+        Note that semitones is surjetive. We can define a non-deterministic function `spellings`
+            spellings :: Semitones -> [Interval]
+            spellings 4 = [majorThird, diminishedFourth]
         Law
-            map semitones (intervals a) = replicate n a    for all n > 0
+            map semitones (spellings a) = replicate n a    for all n > 0
         Lemma
-            map semitones (intervals a)
+            map semitones (spellings a)
         
 
         isHemitonic   [1,2,2] = True
