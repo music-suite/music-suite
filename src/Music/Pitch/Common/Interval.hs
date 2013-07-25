@@ -55,9 +55,9 @@ module Music.Pitch.Common.Interval (
         sharps,
         flats,
 
+        -- * TODO
         intervalDiff,
         interval',
-        octave,
   ) where
 
 import Data.Maybe

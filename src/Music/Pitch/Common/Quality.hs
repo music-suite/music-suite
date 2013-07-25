@@ -20,7 +20,7 @@ module Music.Pitch.Common.Quality (
         -- * Quality
         Quality(..),    
         HasQuality(..),
-        -- invertQuality,
+        invertQuality,
         isPerfect,
         isMajor,
         isMinor,
@@ -30,7 +30,6 @@ module Music.Pitch.Common.Quality (
         -- TODO
         diffToQuality,
         qualityToDiff,
-        invertQuality,
   ) where
 
 
@@ -75,6 +74,12 @@ instance HasQuality Quality where
 class HasQuality a where
     quality :: a -> Quality
 
+-- |
+-- Invert a quality.
+-- 
+-- Perfect is unaffected, major becomes minor and vice versa, augmented
+-- becomes diminished and vice versa. 
+--
 invertQuality :: Quality -> Quality
 invertQuality = go
     where
@@ -115,7 +120,6 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
--- | 
 -- Convert an offset to a quality.
 --
 -- This is different for perfect and imperfect interals:
