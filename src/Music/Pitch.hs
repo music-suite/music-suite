@@ -16,7 +16,8 @@
 module Music.Pitch (
         module Music.Pitch.Absolute,
         module Music.Pitch.Relative,
-        module Music.Pitch.Literal
+        module Music.Pitch.Literal,
+        module Music.Pitch.Interval.Literal
   ) where
 
 import Music.Pitch.Absolute
