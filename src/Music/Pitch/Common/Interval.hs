@@ -31,7 +31,6 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
-        number,
         -- isPerfectUnison,
         isPositive,
         isNegative,
@@ -139,6 +138,11 @@ instance HasQuality Interval where
         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
 
+instance HasNumber Interval where
+    number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
+        where
+            inc a = if a >= 0 then succ a else pred a
+
 instance Augmentable Interval where
     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
@@ -244,20 +248,6 @@ separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
 --
 simple :: Interval -> Interval
 simple = snd . separate
-
-
--- |
--- Returns the number portion of an interval.
---
--- The interval number is negative if and only if the interval is negative.
---
--- See also 'quality', 'octaves' and 'semitones'.
---
-number :: Interval -> Number
-number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
-    where
-        inc a = if a >= 0 then succ a else pred a
-
 
 
 -- |

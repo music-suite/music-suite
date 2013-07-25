@@ -95,18 +95,17 @@ import Music.Pitch.Common.Spell
         A Scale is a function (Number -> Semitones)
 
     Tonal
-        isConsonance :: Interval -> Bool
-        isPerfectConsonance :: Interval -> Bool
-        isImperfectConsonance :: Interval -> Bool
-        isDissonance :: Interval -> Bool
-        isHemitonic :: Interval -> Bool
-        isTritonic :: Interval -> Bool
+        isConsonance :: HasNumber a => a -> Bool
+        isPerfectConsonance :: HasNumber a => a -> Bool
+        isImperfectConsonance :: HasNumber a => a -> Bool
+        isDissonance :: HasNumber a => a -> Bool
 
-        isSemitone :: Interval -> Bool
-        isSemitone :: Interval -> Bool
+        isStep :: Interval -> Bool
         isLeap :: Interval -> Bool
-        isSimple :: Interval -> Bool
-        isCompound :: Interval -> Bool
+
+
+        isHemitonic :: HasSemitones a => [a] -> Bool
+        isTritonic :: HasSemitones a => [a] -> Bool
         
         -- TODO simplify etc
         isMelodicDissonance :: Interval -> Bool

@@ -17,7 +17,8 @@
 
 module Music.Pitch.Common.Number (
         -- ** Number
-        Number,   
+        Number,
+        HasNumber(..),   
         unison,
         prime,
         second,
@@ -34,6 +35,12 @@ module Music.Pitch.Common.Number (
         thirteenth,
         fourteenth,
         fifteenth,
+        
+        -- * Inspecting
+        isConsonance,
+        isPerfectConsonance,
+        isImperfectConsonance,
+        isDissonance,
   ) where
 
 -- |
@@ -49,6 +56,7 @@ newtype Number = Number { getNumber :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
     
 instance Show Number where { show = show . getNumber }
+instance HasNumber Number where number = id
 
 unison      :: Number
 prime       :: Number
@@ -85,3 +93,31 @@ thirteenth  = 13
 fourteenth  = 14
 fifteenth   = 15
 
+class HasNumber a where
+    -- |
+    -- Returns the number portion of an interval.
+    --
+    -- The interval number is negative if and only if the interval is negative.
+    --
+    -- See also 'quality', 'octaves' and 'semitones'.
+    --
+    number :: a -> Number
+
+isConsonance :: HasNumber a => a -> Bool
+isConsonance a = isPerfectConsonance a || isImperfectConsonance a
+
+isPerfectConsonance :: HasNumber a => a -> Bool
+isPerfectConsonance a = case number a of
+    1 -> True
+    4 -> True
+    5 -> True
+
+isImperfectConsonance :: HasNumber a => a -> Bool
+isImperfectConsonance a = case number a of
+    3 -> True
+    6 -> True
+
+isDissonance :: HasNumber a => a -> Bool
+isDissonance a = case number a of
+    2 -> True
+    7 -> True
