@@ -14,13 +14,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common (
-    module Music.Pitch.Common.Accidental,
-    module Music.Pitch.Common.Interval,
     module Music.Pitch.Common.Name,
+    module Music.Pitch.Common.Accidental,
+    module Music.Pitch.Common.Quality,
     module Music.Pitch.Common.Number,
     module Music.Pitch.Common.Pitch,
-    module Music.Pitch.Common.Quality,
+    module Music.Pitch.Common.Interval,
     module Music.Pitch.Common.Semitones,
+    module Music.Pitch.Common.Spell,
 )
 where
 
@@ -35,13 +36,14 @@ import qualified Data.List as List
 
 import Music.Pitch.Absolute
 import Music.Pitch.Literal
-import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Name
 import Music.Pitch.Common.Accidental
 import Music.Pitch.Common.Quality
-import Music.Pitch.Common.Name
 import Music.Pitch.Common.Number
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Spell
 
 
 {-  

@@ -37,11 +37,11 @@ import Music.Pitch.Absolute
 import Music.Pitch.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Accidental
 import Music.Pitch.Common.Name
+import Music.Pitch.Common.Accidental
 import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number
+import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Semitones
 
 -- |

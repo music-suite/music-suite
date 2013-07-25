@@ -29,7 +29,6 @@ module Music.Pitch.Common.Interval (
         diminished,
         doublyAugmented,
         doublyDiminished,
-        asInterval,
 
         -- *** Inspecting intervals
         number,
@@ -48,12 +47,6 @@ module Music.Pitch.Common.Interval (
 
         -- * Utility
         asInterval,
-
-        -- ** Spelling
-        Spelling,
-        spell,
-        sharps,
-        flats,
 
         -- * TODO
         intervalDiff,
@@ -121,7 +114,7 @@ instance Num Interval where
     a * b         = fromIntegral (semitones a) `stackInterval` b
     signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
     fromInteger 0 = _P1
-    fromInteger n = spell sharps (fromIntegral n :: Semitones)
+    fromInteger n = n `stackInterval` m2
 
 instance Show Interval where
     show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
@@ -326,11 +319,6 @@ invert = simple . negate
 
 
 
-type Spelling = Semitones -> Number
-
-spell :: HasSemitones a => Spelling -> a -> Interval
-spell z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
-
 isPerfectNumber :: Int -> Bool
 isPerfectNumber 0 = True
 isPerfectNumber 1 = False
@@ -350,36 +338,4 @@ diatonicToChromatic = go
         go 4 = 7
         go 5 = 9
         go 6 = 11
-
-sharps :: Semitones -> Number
-sharps = go
-    where
-        go 0  = 0
-        go 1  = 0
-        go 2  = 1
-        go 3  = 1
-        go 4  = 2
-        go 5  = 3
-        go 6  = 3
-        go 7  = 4
-        go 8  = 4
-        go 9  = 5
-        go 10 = 5
-        go 11 = 6
-
-flats :: Semitones -> Number
-flats = go
-    where
-        go 0  = 0
-        go 1  = 1
-        go 2  = 1
-        go 3  = 2
-        go 4  = 2
-        go 5  = 3
-        go 6  = 4
-        go 7  = 4
-        go 8  = 5
-        go 9  = 5
-        go 10 = 6
-        go 11 = 6
 

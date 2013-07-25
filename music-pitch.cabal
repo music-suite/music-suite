@@ -45,11 +45,12 @@ library
         Music.Pitch.Alterable
         Music.Pitch.Augmentable
         Music.Pitch.Common
-        Music.Pitch.Common.Accidental
-        Music.Pitch.Common.Interval
         Music.Pitch.Common.Name
+        Music.Pitch.Common.Accidental
+        Music.Pitch.Common.Quality
         Music.Pitch.Common.Number
         Music.Pitch.Common.Pitch
-        Music.Pitch.Common.Quality
+        Music.Pitch.Common.Interval
         Music.Pitch.Common.Semitones
+        Music.Pitch.Common.Spell
         Music.Pitch.Intonation
