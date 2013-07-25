@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Interval.Literal (
+module Music.Pitch.Literal.Interval (
 
         IsInterval(..),
         IntervalL(..),

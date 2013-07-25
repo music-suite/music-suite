@@ -28,5 +28,6 @@ library
     default-language: Haskell2010
     exposed-modules:
         Music.Pitch.Literal
-        Music.Pitch.Interval.Literal
+        Music.Pitch.Literal.Pitch
+        Music.Pitch.Literal.Interval
     
