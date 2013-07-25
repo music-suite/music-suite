@@ -1,5 +1,6 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, NoMonomorphismRestriction #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies,
+             NoMonomorphismRestriction #-}
 
 ------------------------------------------------------------------------------------
 -- |

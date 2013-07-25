@@ -40,6 +40,10 @@ instance Alterable Accidental where
     sharpen = succ
     flatten = pred
 
+-- | 
+-- Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
+-- Requires @FlexibleInstances@.
+--
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
     fromPitch l acc
         | acc == sharp  = sharpen (fromPitch l)

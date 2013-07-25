@@ -1,13 +1,4 @@
 
-{-# LANGUAGE
-    GeneralizedNewtypeDeriving,
-    FlexibleInstances,
-    DeriveFunctor,
-    TypeFamilies,
-    StandaloneDeriving,
-    OverloadedStrings,
-    DeriveFoldable #-}
-
 ------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
