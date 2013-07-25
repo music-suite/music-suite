@@ -27,7 +27,6 @@ module Music.Pitch.Common.Quality (
         isAugmented,
         isDiminished,
         
-        -- TODO
         diffToQuality,
         qualityToDiff,
   ) where
@@ -151,5 +150,8 @@ qualityToDiff perfect = go
         go Major            = fromIntegral $ 0
         go (Augmented n)    = fromIntegral $ n
 
+
+{-# DEPRECATED diffToQuality "This should be hidden "#-}
+{-# DEPRECATED qualityToDiff "This should be hidden "#-}
 
 replicate' n = replicate (fromIntegral n)

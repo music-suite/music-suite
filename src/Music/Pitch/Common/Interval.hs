@@ -47,8 +47,6 @@ module Music.Pitch.Common.Interval (
 
         -- * Utility
         asInterval,
-
-        -- * TODO
         intervalDiff,
         interval',
   ) where
@@ -338,4 +336,7 @@ diatonicToChromatic = go
         go 4 = 7
         go 5 = 9
         go 6 = 11
+
+{-# DEPRECATED intervalDiff "This should be hidden" #-}
+{-# DEPRECATED interval'    "This should be hidden "#-}
 

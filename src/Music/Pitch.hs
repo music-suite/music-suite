@@ -23,6 +23,8 @@ module Music.Pitch (
 
         -- * Pitch representation
         module Music.Pitch.Absolute,
+        module Music.Pitch.Augmentable,
+        module Music.Pitch.Alterable,
         module Music.Pitch.Common,
         
         -- * Pitch literals
@@ -34,5 +36,7 @@ import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
 
 import Music.Pitch.Absolute
+import Music.Pitch.Augmentable
+import Music.Pitch.Alterable
 import Music.Pitch.Common
 import Music.Pitch.Literal

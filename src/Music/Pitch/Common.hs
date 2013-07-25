@@ -99,7 +99,6 @@ import Music.Pitch.Common.Spell
         isPerfectConsonance :: Interval -> Bool
         isImperfectConsonance :: Interval -> Bool
         isDissonance :: Interval -> Bool
-        isDissonance :: Interval -> Bool
         isHemitonic :: Interval -> Bool
         isTritonic :: Interval -> Bool
 

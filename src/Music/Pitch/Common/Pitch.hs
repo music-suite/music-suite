@@ -31,6 +31,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
+import qualified Data.Char as Char
 import qualified Data.List as List
 
 import Music.Pitch.Absolute
@@ -104,8 +105,9 @@ instance AffineSpace Pitch where
     Pitch a .+^ b       = Pitch (a ^+^ b)
 
 instance Show Pitch where
-    show p = show (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
-        where
+    show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
+        where        
+            showName = fmap Char.toLower . show
             showOctave n
                 | n > 0     = replicate' n '\''
                 | otherwise = replicate' (negate n) '_'
