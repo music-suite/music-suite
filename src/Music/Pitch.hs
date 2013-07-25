@@ -16,10 +16,22 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch (
+        -- * Prerequisites
+        module Data.Semigroup,
+        module Data.VectorSpace,
+        module Data.AffineSpace,
+
+        -- * Pitch representation
         module Music.Pitch.Absolute,
         module Music.Pitch.Common,
+        
+        -- * Pitch literals
         module Music.Pitch.Literal,
   ) where
+
+import Data.Semigroup
+import Data.VectorSpace hiding (Sum, getSum)
+import Data.AffineSpace
 
 import Music.Pitch.Absolute
 import Music.Pitch.Common

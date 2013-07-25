@@ -27,12 +27,13 @@ module Music.Pitch.Common.Number (
         sixth,
         seventh,
         octave,
-        -- ninth,
-        -- tenth,
-        -- twelfth,
-        -- thirteenth,
-        -- fourteenth,
-        -- duodecim,
+        ninth,
+        tenth,
+        twelfth, 
+        duodecim,
+        thirteenth,
+        fourteenth,
+        fifteenth,
   ) where
 
 -- |
@@ -49,22 +50,38 @@ newtype Number = Number { getNumber :: Integer }
     
 instance Show Number where { show = show . getNumber }
 
-unison  :: Number
-prime   :: Number
-second  :: Number
-third   :: Number
-fourth  :: Number
-fifth   :: Number
-sixth   :: Number
-seventh :: Number
-octave  :: Number
-unison  = 1
-prime   = 1
-second  = 2
-third   = 3
-fourth  = 4
-fifth   = 5
-sixth   = 6
-seventh = 7
-octave  = 8
+unison      :: Number
+prime       :: Number
+second      :: Number
+third       :: Number
+fourth      :: Number
+fifth       :: Number
+sixth       :: Number
+seventh     :: Number
+octave      :: Number
+ninth       :: Number
+tenth       :: Number
+eleventh    :: Number
+twelfth     :: Number
+duodecim    :: Number
+thirteenth  :: Number
+fourteenth  :: Number
+fifteenth   :: Number
+unison      = 1
+prime       = 1
+second      = 2
+third       = 3
+fourth      = 4
+fifth       = 5
+sixth       = 6
+seventh     = 7
+octave      = 8
+ninth       = 9
+tenth       = 10
+eleventh    = 11
+twelfth     = 12
+duodecim    = 12
+thirteenth  = 13
+fourteenth  = 14
+fifteenth   = 15
 
