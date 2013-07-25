@@ -72,7 +72,6 @@ import qualified Data.List as List
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Literal
-import Music.Pitch.Interval.Literal
 import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Number
