@@ -1,6 +1,6 @@
 
 name:               music-articulation
-version:            1.3.1
+version:            1.3.2
 cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
