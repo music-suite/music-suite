@@ -1,6 +1,20 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
 
+------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Provides standard intervals.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Pitch.Relative.Interval (
         -- ** Intervals
         Interval,

@@ -1,6 +1,20 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, FlexibleInstances #-}
 
+------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Provides standard accidentals.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Pitch.Relative.Accidental (
         -- * Alterable class
         Alterable(..),
@@ -56,14 +70,19 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
         | acc == flat   = flatten (fromPitch l)
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
+
 -- | The double sharp accidental.
 doubleSharp = 2
+
 -- | The sharp accidental.
 sharp       = 1
+
 -- | The natural accidental.
 natural     = 0
+
 -- | The flat accidental.
 flat        = -1
+
 -- | The double flat accidental.
 doubleFlat  = -2
 

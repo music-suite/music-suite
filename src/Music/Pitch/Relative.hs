@@ -8,7 +8,7 @@
     OverloadedStrings,
     DeriveFoldable #-}
 
--------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
 --
@@ -16,9 +16,9 @@
 --
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
--- Portability : portable
+-- Portability : non-portable (TF,GNTD)
 --
--- Provides overloaded pitch literals.
+-- Provides a standard pitch representation.
 --
 -------------------------------------------------------------------------------------
 
