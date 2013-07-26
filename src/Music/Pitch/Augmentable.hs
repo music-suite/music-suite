@@ -14,7 +14,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Augmentable (
-        -- * Augmentable class
+        -- * The 'Augmentable' class
         Augmentable(..),
   ) where
 
