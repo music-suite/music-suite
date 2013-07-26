@@ -20,11 +20,20 @@
 module Music.Time.Pos (
         Time(..),
         Duration(..),
+
+        DurationT,
+        fromDurationT,
+        toDurationT,
+
+        TimeT,
+        fromTimeT,
+        toTimeT
   ) where
 
+import Data.Semigroup
+import Data.VectorSpace
 import Data.AffineSpace
-import Music.Time.Time
-import Music.Time.Duration
+
 
 -- |
 -- This type function returns the time type for a given type.
@@ -46,25 +55,88 @@ type family Time (s :: * -> *) :: *
 --
 type Duration a = Diff (Time a)
 
+
+-------------------------------------------------------------------------------------
+-- Duration type
+-------------------------------------------------------------------------------------
+
+-- |
+-- This type represents relative time in seconds.
+--
+newtype DurationT = DurationT { getDurationT :: Rational }                                  
+    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
+
+instance Show DurationT where 
+    show = show . getDurationT
+
+instance AdditiveGroup DurationT where
+    zeroV = 0
+    (^+^) = (+)
+    negateV = negate
+
+instance VectorSpace DurationT where
+    type Scalar DurationT = DurationT
+    (*^) = (*)
+
+instance InnerSpace DurationT where (<.>) = (*)
+
+fromDurationT :: Fractional a => DurationT -> a
+fromDurationT = fromRational . getDurationT
+
+toDurationT :: Real a => a -> DurationT
+toDurationT = DurationT . toRational
+
+
+-------------------------------------------------------------------------------------
+-- Time type
+-------------------------------------------------------------------------------------
+
+-- |
+-- This type represents absolute time in seconds since the start time. Note
+-- that time can be negative, representing events occuring before the start time.
+-- The start time is usually the the beginning of the musical performance. 
+--
+-- Time forms an affine space with durations as the underlying vector space,
+-- that is, we can add a time to a duration to get a new time using '.+^', 
+-- take the difference of two times to get a duration using '.-.'.
+--
+newtype TimeT = TimeT { getTimeT :: Rational }
+    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
+
+instance Show TimeT where 
+    show = show . getTimeT
+
+instance AdditiveGroup TimeT where
+    zeroV = 0
+    (^+^) = (+)
+    negateV = negate
+
+instance VectorSpace TimeT where
+    type Scalar TimeT = TimeT
+    (*^) = (*)
+
+instance InnerSpace TimeT where 
+    (<.>) = (*)
+
+instance  AffineSpace TimeT where
+    type Diff TimeT = DurationT
+    a .-. b =  fromTimeT $ a - b
+    a .+^ b =  a + fromDurationT b
+
+fromTimeT :: Fractional a => TimeT -> a
+fromTimeT = fromRational . getTimeT
+
+toTimeT :: Real a => a -> TimeT
+toTimeT = TimeT . toRational
+
 {-
+    Actually, I would prefer:
 
-type instance Time Double     = Double
-type instance Time Rational   = Rational
-type instance Time (a -> b)   = Time b
-type instance Time [a]        = Time a
-type instance Time (Maybe a)  = Time a
+        type TimeT = Point DurationT
 
--- TODO move
-type instance Time TimeT       = TimeT
-type instance Time DurationT   = DurationT
--}
+        fromTimeT :: Fractional a => TimeT -> a
+        fromTimeT = fromDurationT . unPoint
 
-
--- type instance Pos (Option a) = Pos a
--- type instance Pos (Set a)    = Pos a
--- type instance Pos (Map k a)  = Pos a
-
-
-
-
-
+        toTimeT :: Real a => a -> TimeT
+        toTimeT = P . toDurationT
+-}                 

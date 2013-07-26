@@ -51,8 +51,6 @@ library
     default-language: Haskell2010
     exposed-modules:
         Music.Time
-        Music.Time.Time
-        Music.Time.Duration
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable

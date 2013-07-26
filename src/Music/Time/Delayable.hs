@@ -27,10 +27,7 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Time.Time
-import Music.Time.Duration
 import Music.Time.Pos
-
 
 -- |
 -- Delayable values. 

@@ -38,8 +38,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 
 import Music.Time.Pos
-import Music.Time.Time
-import Music.Time.Duration
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
