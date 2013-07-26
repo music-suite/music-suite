@@ -28,11 +28,8 @@ module Music.Score.Zip (
         -- ** Zipper
         apply,
         snapshot,
-        -- trig,
         applySingle,
         snapshotSingle,
-        -- before,
-        -- first,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -54,7 +51,7 @@ import Music.Score.Part
 import Music.Score.Combinators
 
 -------------------------------------------------------------------------------------
--- Analysis
+-- Zippers
 
 -- |
 -- Apply a time-varying function to all events in score.
@@ -104,15 +101,3 @@ filterOnce :: (a -> Bool) -> [a] -> [a]
 filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
--- trig :: Score a -> Score b -> Score b
--- trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
-
--- before :: DurationT -> Score a -> Score a
--- before d = trig (return () `stretchedBy` d)
--- 
--- first :: Score a -> a
--- first = value . head . perform
---     where 
---         value (a,b,c) = c
--- 
--- stretchedBy = flip stretch
