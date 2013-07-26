@@ -23,6 +23,12 @@ module Music.Pitch.Common.Accidental (
         natural, 
         sharp, 
         doubleSharp,
+
+        -- ** Inspecting accidentals
+        isNatural,
+        isSharpened,
+        isFlattened,
+        isStandard,
   ) where
 
 import Music.Pitch.Literal
@@ -69,6 +75,14 @@ flat        = -1
 
 -- | The double flat accidental.
 doubleFlat  = -2
+
+isNatural, isSharpened, isFlattened :: Accidental -> Bool
+isNatural   = (== 0)
+isSharpened = (> 0)
+isFlattened = (< 0)
+
+isStandard :: Accidental -> Bool
+isStandard a = abs a < 2
 
 
 replicate' n = replicate (fromIntegral n)
