@@ -50,8 +50,8 @@ spell g p = origin .+^ g `spellInterval` semitones (origin2 .-. p)
         origin  = c
 
 spellInterval :: HasSemitones a => Spelling -> a -> Interval
--- spellInterval = undefined
-spellInterval z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
+spellInterval = undefined
+-- spellInterval z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
 
 -- |
 -- Spell pitches as @c cs d eb e f fs g gs a bb b@
