@@ -237,6 +237,7 @@ rest = note Nothing
 noteRest :: MonadPlus s => Maybe a -> s a
 noteRest = mfromMaybe
 
+{-
 -- | Creates a score containing a chord.
 --
 -- This function uses the unit position (0, 1).
@@ -274,6 +275,7 @@ chordDelay = pcat . map (\(t, x) -> delay' t $ note x)
 --
 chordDelayStretch :: (MonadPlus s, Monoid (s a), Transformable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
+-}
 
 -------------------------------------------------------------------------------------
 -- Transformations
@@ -449,7 +451,7 @@ group n a = times n (toDurationT n `compress` a)
 -- > offset a   = offset (retrograde a)
 --
 -- > Score a -> Score a
-
+--
 retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
 retrograde = startAt 0 . (mapAllEvents $ List.sortBy (comparing fst3) . fmap g)
     where
@@ -472,7 +474,6 @@ retrograde = startAt 0 . (mapAllEvents $ List.sortBy (comparing fst3) . fmap g
 compose :: (Composable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 compose = msum . liftM eventToScore
 
--- retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
 mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 mapAllEvents f = compose . f . perform
 
@@ -644,9 +645,16 @@ filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 -- This function fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = Voice . fmap throwTime . addRests' . perform
+scoreToVoice = Voice . fmap throwTime . addRests . perform
     where
        throwTime (t,d,x) = (d,x)
+       addRests = concat . snd . mapAccumL g 0
+           where
+               g u (t, d, x)
+                   | u == t    = (t .+^ d, [(t, d, Just x)])
+                   | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+                   | otherwise = error "addRests: Strange prevTime"
+       
 
 -- |
 -- Convert a voice into a score.
@@ -668,14 +676,6 @@ instance Performable Voice where
 
 
 --------------------------------------------------------------------------------
-
-addRests' :: [(TimeT, DurationT, a)] -> [(TimeT, DurationT, Maybe a)]
-addRests' = concat . snd . mapAccumL g 0
-    where
-        g u (t, d, x)
-            | u == t    = (t .+^ d, [(t, d, Just x)])
-            | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-            | otherwise = error "addRests: Strange prevTime"
 
 -- |
 -- Map over first, middle and last elements of list.
