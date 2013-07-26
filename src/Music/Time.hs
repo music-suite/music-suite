@@ -27,7 +27,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
-        module Music.Time.Pos,
+        module Music.Time.Time,
         module Music.Time.Delayable,
         module Music.Time.Stretchable,
         module Music.Time.Performable,
@@ -37,5 +37,5 @@ module Music.Time (
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Performable
-import Music.Time.Pos
+import Music.Time.Time
 import Music.Time.Onset

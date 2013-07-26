@@ -27,7 +27,7 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 
-import Music.Time.Pos
+import Music.Time.Time
 
 -- |
 -- Stretchable values. 

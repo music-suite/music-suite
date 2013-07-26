@@ -26,7 +26,7 @@ module Music.Time.Performable (
 import Data.Foldable (Foldable(..))
 
 import Data.Semigroup
-import Music.Time.Pos
+import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
