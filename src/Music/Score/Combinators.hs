@@ -433,30 +433,6 @@ repeatedTime  n = repeated $ fmap (/ n) [0..(n - 1)]
 removeRests :: MonadPlus m => m (Maybe a) -> m a
 removeRests = mcatMaybes
 
--- -- |
--- -- Repeat three times and scale down by three.
--- --
--- -- > Score a -> Score a
--- --
--- triplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
--- triplet = group 3
--- 
--- -- |
--- -- Repeat three times and scale down by three.
--- --
--- -- > Score a -> Score a
--- --
--- quadruplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
--- quadruplet  = group 4
--- 
--- -- |
--- -- Repeat three times and scale down by three.
--- --
--- -- > Score a -> Score a
--- --
--- quintuplet :: (Monoid' (s a), Transformable t d s, Time s ~ TimeT) => s a -> s a
--- quintuplet  = group 5
-
 -- |
 -- Repeat a number of times and scale down by the same amount.
 --
