@@ -68,27 +68,24 @@ apply x = mapAllParts (fmap $ applySingle x)
 snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
 snapshot x = mapAllParts (fmap $ snapshotSingle x)
 
-trig :: Score a -> Score b -> Score b
-trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
-
 -- |
 -- Apply a time-varying function to all events in score.
 --
 applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (\(f,s) -> f s) sampled
+applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
     where
         -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin = mconcat . toList
-        sampled = snapshotSingle (voiceToScore fs) as
+        notJoin   = mconcat . toList
+        sample fs = snapshotSingle (voiceToScore fs)
 
 -- |
 -- Get all notes that start during a given note.
 --
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
-    where
-        -- g Nothing  z = Nothing
-        g = (,)
+snapshotSingle = snapshotSingleWith (,)
+
+snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotSingleWith g as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
 
 
 -- |
@@ -107,13 +104,15 @@ filterOnce :: (a -> Bool) -> [a] -> [a]
 filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
-before :: DurationT -> Score a -> Score a
-before d = trig (return () `stretchedBy` d)
+-- trig :: Score a -> Score b -> Score b
+-- trig p as = mconcat $ toList $ fmap snd $ snapshotSingle p as
 
-first :: Score a -> a
-first = value . head . perform
-    where 
-        value (a,b,c) = c
-
-
-stretchedBy = flip stretch
+-- before :: DurationT -> Score a -> Score a
+-- before d = trig (return () `stretchedBy` d)
+-- 
+-- first :: Score a -> a
+-- first = value . head . perform
+--     where 
+--         value (a,b,c) = c
+-- 
+-- stretchedBy = flip stretch
