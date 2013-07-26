@@ -439,8 +439,8 @@ removeRests = mcatMaybes
 --
 -- > Duration -> Score a -> Score a
 --
-group :: (Monoid' (s a), Transformable s, Time s ~ TimeT) => Int -> s a -> s a
-group n a = times n (toDurationT n `compress` a)
+group :: (Monoid' (s a), Transformable s, Fractional d, d ~ Duration s) => Int -> s a -> s a
+group n a = times n (fromIntegral n `compress` a)
 
 -- |
 -- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).

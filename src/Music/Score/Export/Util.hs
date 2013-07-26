@@ -67,14 +67,14 @@ import Music.Dynamics.Literal
 -- |
 -- Convert a single-voice score to a list of bars.
 --
-voiceToBars :: Tiable a => Voice (Maybe a) -> [[(DurationT, Maybe a)]]
+voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration Score, Maybe a)]]
 voiceToBars = separateBars . splitTiesVoice
 
 -- |
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 --
-separateBars :: Voice (Maybe a) -> [[(DurationT, Maybe a)]]
+separateBars :: Voice (Maybe a) -> [[(Duration Score, Maybe a)]]
 separateBars =
     fmap (removeTime . fmap discardBarNumber) .
         splitAtTimeZero . fmap separateTime . perform
@@ -87,7 +87,7 @@ separateBars =
 -- |
 -- Convert absolute to relative durations.
 --
-toRelative :: [(TimeT, DurationT, b)] -> [(TimeT, DurationT, b)]
+toRelative :: [(TimeT, Duration Score, b)] -> [(TimeT, Duration Score, b)]
 toRelative = snd . mapAccumL g 0
     where
         g now (t,d,x) = (t, (t-now,d,x))
