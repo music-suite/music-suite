@@ -104,7 +104,7 @@ splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTiesVoice :: Tiable a => Voice a -> Voice a
-splitTiesVoice = Voice . concat . snd . List.mapAccumL g 0 . getVoice
+splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
     where
         g t (d, x) = (t + d, occs)
             where

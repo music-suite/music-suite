@@ -21,7 +21,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Track (
-        Track(..),
+        Track,
+        track,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -74,10 +75,13 @@ import Music.Time
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Track a = Track { getTrack :: [(TimeT, a)] }
+newtype Track a = Track { getTrack :: [(Time Track, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
 type instance Time Track = TimeT
+
+track :: Real t => [(t, a)] -> Track a
+track = Track . fmap (first toTimeT)
 
 instance Semigroup (Track a) where
     (<>) = mappend

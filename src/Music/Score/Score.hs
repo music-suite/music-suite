@@ -74,7 +74,7 @@ import Music.Score.Track
 -- Score is an instance of 'VectorSpace' using sequential composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
+newtype Score a  = Score { getScore :: [(Time Score, Duration Score, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
 type instance Time Score = TimeT
@@ -203,10 +203,10 @@ repeat a = a `plus` delay (duration a) (repeat a)
 -- |
 -- Map over all events in a score.
 --
-mapTime :: (TimeT -> DurationT -> a -> b) -> Score a -> Score b
+mapTime :: (Time Score -> Duration Score -> a -> b) -> Score a -> Score b
 mapTime f = Score . fmap (mapEvent f) . getScore
 
-mapEvent :: (TimeT -> DurationT -> a -> b) -> (TimeT, DurationT, a) -> (TimeT, DurationT, b)
+mapEvent :: (Time Score -> Duration Score -> a -> b) -> (Time Score, Duration Score, a) -> (Time Score, Duration Score, b)
 mapEvent f (t, d, x) = (t, d, f t d x)
 
 

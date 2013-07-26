@@ -151,7 +151,7 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 
 
 transf :: ([a] -> [b]) -> Voice a -> Voice b
-transf f = Voice . uncurry zip . second f . unzip . getVoice
+transf f = voice . uncurry zip . second f . unzip . getVoice
 
 applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
 applyDynSingle ds = applySingle ds3

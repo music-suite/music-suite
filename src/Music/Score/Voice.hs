@@ -20,7 +20,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Voice (
-        Voice(..),
+        Voice,
+        voice,
+        getVoice,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -75,8 +77,14 @@ import Music.Dynamics.Literal
 -- Voice is a 'VectorSpace' using sequential composition as addition, and time scaling
 -- as scalar multiplication.
 --
-newtype Voice a = Voice { getVoice :: [(DurationT, a)] }
+newtype Voice a = Voice { getVoice' :: [(DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+
+voice :: Real d => [(d, a)] -> Voice a
+voice = Voice . fmap (first toDurationT)
+
+getVoice :: Fractional d => Voice a -> [(d, a)]
+getVoice = fmap (first fromDurationT) . getVoice'
 
 type instance Time Voice = TimeT
 

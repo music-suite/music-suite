@@ -87,7 +87,7 @@ separateBars =
 -- |
 -- Convert absolute to relative durations.
 --
-toRelative :: [(TimeT, Duration Score, b)] -> [(TimeT, Duration Score, b)]
+toRelative :: [(Time Score, Duration Score, b)] -> [(Time Score, Duration Score, b)]
 toRelative = snd . mapAccumL g 0
     where
         g now (t,d,x) = (t, (t-now,d,x))

@@ -148,17 +148,17 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         events :: [(Midi.Ticks, Midi.Message)]
         events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
 
-        performance :: [(TimeT, Duration Score, Midi.Message)]
+        performance :: [(Time Score, Duration Score, Midi.Message)]
         performance     = (toRelative . perform) (getMidiScore score)
 
-        -- FIXME arbitrary endTimeT (files won't work without this...)
+        -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO render voices separately
 
 -- |
 -- Convert a score to a track of MIDI messages.
 --
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack = Track . fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
+toMidiTrack = track . fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.

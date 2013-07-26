@@ -620,7 +620,7 @@ snapshotSingleWith g as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) 
 -- |
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
-onsetIn :: TimeT -> DurationT -> Score a -> Score a
+onsetIn :: Time Score -> Duration Score -> Score a -> Score a
 onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
     where
         filter' = filterOnce
@@ -643,7 +643,7 @@ filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 -- This function fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = Voice . fmap throwTime . addRests . perform
+scoreToVoice = voice . fmap throwTime . addRests . perform
     where
        throwTime (t,d,x) = (d,x)
        addRests = concat . snd . mapAccumL g 0
