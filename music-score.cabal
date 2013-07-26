@@ -67,7 +67,6 @@ library
 
         Music.Score.Combinators
         Music.Score.Ties
-        Music.Score.Zip
         Music.Score.Part
         Music.Score.Chord
         Music.Score.Pitch

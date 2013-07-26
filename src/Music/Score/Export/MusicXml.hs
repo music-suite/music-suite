@@ -63,7 +63,6 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
-import Music.Score.Zip
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part

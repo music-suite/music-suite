@@ -82,6 +82,12 @@ module Music.Score.Combinators (
         mapPhrase,
         mapPhraseSingle,
 
+        -- ** Zipper
+        apply,
+        snapshot,
+        applySingle,
+        snapshotSingle,
+
         -- ** Conversion
         scoreToVoice,
         voiceToScore,
@@ -108,6 +114,7 @@ import Music.Score.Part
 import Music.Time
 
 import qualified Data.List as List
+import qualified Data.Foldable as Foldable
 
 -- |
 -- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
@@ -599,6 +606,57 @@ eventToScore
       ) => (t, d, a) -> s a
 
 eventToScore (t,d,x) = delay' t . stretch d $ return x
+
+-------------------------------------------------------------------------------------
+-- Zippers
+
+-- |
+-- Apply a time-varying function to all events in score.
+--
+apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
+apply x = mapAllParts (fmap $ applySingle x)
+
+-- |
+-- Get all notes that start during a given note.
+--
+snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
+snapshot x = mapAllParts (fmap $ snapshotSingle x)
+
+-- |
+-- Apply a time-varying function to all events in score.
+--
+applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
+applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
+    where
+        -- This is not join; we simply concatenate all inner scores in parallel
+        notJoin   = mconcat . Foldable.toList
+        sample fs = snapshotSingle (voiceToScore fs)
+
+-- |
+-- Get all notes that start during a given note.
+--
+snapshotSingle :: Score a -> Score b -> Score (a, Score b)
+snapshotSingle = snapshotSingleWith (,)
+
+snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotSingleWith g as bs = mapEventsSingle ( \t d a -> g a (onsetIn t d bs) ) as
+
+
+-- |
+-- Filter out events that has its onset in the given time interval (inclusive start).
+-- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
+onsetIn :: TimeT -> DurationT -> Score a -> Score a
+onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
+    where
+        filter' = filterOnce
+        -- more lazy than mfilter
+
+-- |
+-- Extract the first consecutive sublist for which the predicate returns true, or
+-- the empty list if no such sublist exists.
+filterOnce :: (a -> Bool) -> [a] -> [a]
+filterOnce p = List.takeWhile p . List.dropWhile (not . p)
+
 
 --------------------------------------------------------------------------------
 -- Conversion
