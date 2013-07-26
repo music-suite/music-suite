@@ -124,7 +124,6 @@ import qualified Data.Foldable as Foldable
 --
 type Monoid' a = (Monoid a, Semigroup a)
 
--- TODO names?
 type Scalable t d a = (
     Stretchable a, Delayable a,
     AdditiveGroup t,
@@ -489,7 +488,6 @@ mapFilterAllEvents f = mcatMaybes . mapAllEvents f
 --
 filterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Bool) -> s a -> s a
 filterEvents f = mapFilterEvents (partial3 f)
--- TODO Maybe this could be optimized by using mapEventsSingle?
 
 -- |
 -- Map over the events in a score.
