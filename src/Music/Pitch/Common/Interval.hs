@@ -114,8 +114,14 @@ instance Num Interval where
     fromInteger n = n `stackInterval` m2
 
 instance Show Interval where
-    show a | isNegative a = "-" ++ show (quality a) ++ show (abs $ number a)
-           | otherwise    =        show (quality a) ++ show (abs $ number a)
+    show a | isNegative a = "-" ++ showQuality (quality a) ++ show (abs $ number a)
+           | otherwise    =        showQuality (quality a) ++ show (abs $ number a)
+           where
+               showQuality Major            = "_M"
+               showQuality Minor            = "m"
+               showQuality Perfect          = "_P"
+               showQuality (Augmented n)    = "_" ++ replicate' n 'A'
+               showQuality (Diminished n)   = replicate' n 'd'
 
 instance Semigroup Interval where
     (<>)    = addInterval
@@ -330,3 +336,4 @@ diatonicToChromatic = go
 {-# DEPRECATED intervalDiff "This should be hidden" #-}
 {-# DEPRECATED interval'    "This should be hidden "#-}
 
+replicate' n = replicate (fromIntegral n)

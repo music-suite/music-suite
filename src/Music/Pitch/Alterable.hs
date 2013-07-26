@@ -21,6 +21,10 @@ module Music.Pitch.Alterable (
 -- |
 -- Class of things that can be altered.
 --
+-- > accidental (sharpen a) = sharpen (accidental a)
+-- > accidental (flatten a) = flatten (accidental a)
+-- > sharpen . flatten      = id
+--
 class Alterable a where
     -- | 
     -- Increase the given pitch by one.
