@@ -42,6 +42,7 @@ library
         pointed,
         semigroupoids,
         vector-space,
+        vector-space-points,
         music-pitch-literal,
         music-dynamics-literal,
         reenact

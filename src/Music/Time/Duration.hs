@@ -37,7 +37,7 @@ import Data.AffineSpace
 -- |
 -- This type represents relative time in seconds.
 --
-newtype DurationT = DurationT { getDurationT::Rational }                                  
+newtype DurationT = DurationT { getDurationT :: Rational }                                  
     deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
 instance Show DurationT where 

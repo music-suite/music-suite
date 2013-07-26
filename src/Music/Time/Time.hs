@@ -71,3 +71,14 @@ fromTimeT = fromRational . getTimeT
 toTimeT :: Real a => a -> TimeT
 toTimeT = TimeT . toRational
 
+{-
+    Actually, I would prefer:
+
+        type TimeT = Point DurationT
+
+        fromTimeT :: Fractional a => TimeT -> a
+        fromTimeT = fromDurationT . unPoint
+
+        toTimeT :: Real a => a -> TimeT
+        toTimeT = P . toDurationT
+-}
