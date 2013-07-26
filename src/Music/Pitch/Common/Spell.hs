@@ -1,5 +1,5 @@
  
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -19,10 +19,13 @@ module Music.Pitch.Common.Spell (
         -- ** Spelling
         Spelling,
         spell,
+        spellInterval,
         modal,
         sharps,
         flats,
   ) where
+
+import Data.AffineSpace
 
 import Music.Pitch.Absolute
 import Music.Pitch.Literal
@@ -38,9 +41,17 @@ import Music.Pitch.Common.Semitones
 
 type Spelling = Semitones -> Number
 
-spell :: HasSemitones a => Spelling -> a -> Interval
-spell = undefined
--- spell z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
+spell :: (Num a, HasSemitones p, p ~ Diff a, AffineSpace a) => Spelling -> a -> Pitch
+spell g p = origin .+^ g `spellInterval` semitones (origin2 .-. p)
+    where         
+        -- TODO use Data.AffineSpace.Point.origin
+        -- Then we can remove Num constraint
+        origin2 = 0
+        origin  = c
+
+spellInterval :: HasSemitones a => Spelling -> a -> Interval
+-- spellInterval = undefined
+spellInterval z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
 
 -- |
 -- Spell pitches as @c cs d eb e f fs g gs a bb b@
