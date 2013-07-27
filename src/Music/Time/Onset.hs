@@ -30,7 +30,7 @@ module Music.Time.Onset (
         onsetDefault,
         offsetDefault,
         -- ** Wrappers
-        AddOffset(..),
+        -- AddOffset(..),
   ) where
 
 import Data.Semigroup
@@ -41,8 +41,8 @@ import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
-class HasDuration s where
-    duration :: s a -> Duration s
+class HasDuration a where
+    duration :: a -> Duration a
 
 -- |
 -- Class of types with a position in time.
@@ -60,17 +60,17 @@ class HasDuration s where
 --
 -- > duration a >= 0
 --
-class HasOnset s where
+class HasOnset a where
     -- | 
     -- Get the onset of the given value.
     --
-    onset  :: s a -> Time s
+    onset  :: a -> Time a
 
-class HasOffset s where
+class HasOffset a where
     -- | 
     -- Get the offset of the given value.
     --
-    offset :: s a -> Time s
+    offset :: a -> Time a
                               
 {-
 class HasPreOnset s where
@@ -84,17 +84,18 @@ class HasPostOffset s where
 -}
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
-durationDefault :: (AffineSpace (Time s), HasOffset s, HasOnset s) => s a -> Duration s
+-- durationDefault :: (AffineSpace (Time s), HasOffset s, HasOnset s) => s a -> Duration s
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
-onsetDefault :: (AffineSpace (Time s), HasOffset s, HasDuration s) => s a -> Time s
+-- onsetDefault :: (AffineSpace (Time s), HasOffset s, HasDuration s) => s a -> Time s
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
-offsetDefault :: (AffineSpace (Time s), HasOnset s, HasDuration s) => s a -> Time s
+-- offsetDefault :: (AffineSpace (Time s), HasOnset s, HasDuration s) => s a -> Time s
 offsetDefault x = onset x .+^ duration x
                                                  
+{-
 newtype AddOffset t s a = AddOffset (t, s a)
 
 type instance Time (AddOffset t s) = t
@@ -111,3 +112,4 @@ instance (HasOnset a, t ~ Time a) => HasOnset (AddOffset t a) where
 instance HasOffset (AddOffset t s) where
     offset (AddOffset (t,_)) = t
 
+-}

@@ -40,6 +40,7 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 
 import Music.Time
 
@@ -81,12 +82,13 @@ newtype Voice a = Voice { getVoice' :: [(DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
 
 voice :: Real d => [(d, a)] -> Voice a
-voice = Voice . fmap (first toDurationT)
+voice = Voice . fmap (first (fromRational . toRational))
 
 getVoice :: Fractional d => Voice a -> [(d, a)]
-getVoice = fmap (first fromDurationT) . getVoice'
+getVoice = fmap (first (fromRational . toRational)) . getVoice'
 
-type instance Time Voice = TimeT
+type instance Duration (Voice a) = DurationT
+type instance Event (Voice a) = a
 
 instance Semigroup (Voice a) where
     (<>) = mappend
@@ -104,10 +106,10 @@ instance Applicative Voice where
     pure  = return
     (<*>) = ap
 
-instance Stretchable (Voice) where
+instance Stretchable (Voice a) where
     n `stretch` Voice as = Voice (fmap (first (n*^)) as)
 
-instance HasDuration (Voice) where
+instance HasDuration (Voice a) where
     duration (Voice as) = sum (fmap fst as)
 
 instance IsPitch a => IsPitch (Voice a) where

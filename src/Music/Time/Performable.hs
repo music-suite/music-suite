@@ -1,9 +1,8 @@
 
 {-# LANGUAGE
     TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    RankNTypes,
+    ConstraintKinds,
+    FlexibleContexts,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -20,38 +19,60 @@
 
 module Music.Time.Performable (
         Performable(..),
-        foldMapDefault,
+        Composable(..),
+        Monoid'(..),
+        Transformable(..),
+        -- foldMapDefault,
   ) where
 
 import Data.Foldable (Foldable(..))
 
 import Data.Semigroup
+import Data.AffineSpace
+import Data.AffineSpace.Point
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
+
+-- |
+-- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
+-- constraint is needed.
+--
+-- Ideally, 'Monoid' should be changed to extend 'Semigroup' instead.
+--
+type Monoid' a         =  (Monoid a, Semigroup a)
+
+type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
+
+
+class (Monoid a, Transformable a) => Composable a where
+    note    :: Event a -> a
+    event   :: Time a -> Duration a -> Event a -> a
+    compose :: [(Time a, Duration a, Event a)] -> a
+    -- Given Num (Duration a) we have
+    -- note a        = compose [(origin, 1, a)]
+    event t d x   = (delay (t .-. origin) . stretch d) (note x)
+    compose       = mconcat . fmap (uncurry3 event)
 
 -- |
 -- Performable values.
 --
 -- Minimal complete definition: 'perform'.
 -- 
-class Foldable s => Performable s where
+class Performable a where
 
     -- | Perform a score.
     --
     -- This is the inverse of 'compose'
     --
-    perform :: (t ~ Time s, d ~ Duration s) => s a -> [(t, d, a)]
-
-    -- | Perform a score, yielding an ordered list of values.
-    --
-    -- Equivalent to 'Foldable.toList', but may be more efficient.
-    --
-    toList' :: s a -> [a]
-    toList' = map trd3 . perform
-        where
-            trd3 (a,b,c) = c
+    perform :: a -> [(Time a, Duration a, Event a)]
+    events  :: a -> [Event a]
+    events = fmap trd3 . perform
         
--- | This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
-foldMapDefault :: (Performable s, Monoid m) => (a -> m) -> s a -> m
-foldMapDefault f = foldMap f . toList'
+-- -- | This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
+-- foldMapDefault :: (Performable s, Monoid m) => (a -> m) -> s a -> m
+-- foldMapDefault f = foldMap f . toList'
+
+untrip (a,b,c) = ((a,b),c)
+uncurry3 = (. untrip) . uncurry . uncurry
+trd3 (a, b, c) = c

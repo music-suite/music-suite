@@ -80,12 +80,12 @@ newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, 
 
 -- Accents
 
-accent      :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-marcato     :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-accentAll   :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-marcatoAll  :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-accentLast  :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-marcatoLast :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
+-- accent      :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- marcato     :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- accentAll   :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- marcatoAll  :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- accentLast  :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- marcatoLast :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
 accent      = mapPhrase (setAccLevel 1) id id
 marcato     = mapPhrase (setAccLevel 2) id id
 accentAll   = mapPhrase (setAccLevel 1) (setAccLevel 1) (setAccLevel 1)
@@ -95,16 +95,17 @@ marcatoLast = mapPhrase id id (setAccLevel 2)
 
 -- Phrasing
 
-tenuto      :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-separated   :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-staccato    :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-portato     :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-legato      :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
-spiccato    :: (HasEvents s, HasPart' a, HasArticulation a) => s a -> s a
+-- tenuto      :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- separated   :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- staccato    :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- portato     :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- legato      :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
+-- spiccato    :: (Composable a, Performable a, HasPart e, HasArticulation e, e ~ Event a) => a -> a
 tenuto      = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2))
 separated   = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1))
 staccato    = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1)
-portato     = staccato . legato
+-- portato     = staccato . legato
+portato     = undefined
 legato      = mapPhrase (setBeginSlur True) id (setEndSlur True)
 spiccato    = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2)
 

@@ -51,6 +51,7 @@ import Data.Function (on)
 import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.Basis
 import System.Process
 
@@ -88,7 +89,7 @@ class Tiable a => HasLilypond a where
     -- |
     -- Convert a value to a Lilypond music expression.
     --
-    getLilypond :: Duration Score -> a -> Lilypond
+    getLilypond :: DurationT -> a -> Lilypond
 
 instance HasLilypond Int                        where   getLilypond d = getLilypond d . toInteger
 instance HasLilypond Float                      where   getLilypond d = getLilypond d . toInteger . round
@@ -96,7 +97,7 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*(fromDurationT $ d*4)
+    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*((fromRational . toRational) d*4)
 
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
@@ -213,7 +214,7 @@ openLy' = runCommand "open test.pdf" >> return ()
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractParts $ sc
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractParts' $ sc
     where
         addStaff x = Lilypond.New "Staff" Nothing x
         prependName (v,x) = [Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v)] ++ x
@@ -224,7 +225,7 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . s
 toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
 toLyVoice' = fmap barToLy . voiceToBars
 
-barToLy :: HasLilypond a => [(Duration Score, Maybe a)] -> Lilypond
+barToLy :: HasLilypond a => [(DurationT, Maybe a)] -> Lilypond
 barToLy bar = case quantize bar of
     Left e   -> error $ "barToLy: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLy rh
@@ -233,11 +234,11 @@ rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
 rhythmToLy (Beat d x)            = noteRestToLy d x
 rhythmToLy (Group rs)            = foldr Lilypond.scat (Lilypond.Sequential []) $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
-rhythmToLy (Tuplet m r)          = Lilypond.Times (fromDurationT m) (rhythmToLy r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ fromDurationT m
+rhythmToLy (Tuplet m r)          = Lilypond.Times (m) (rhythmToLy r)
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ m
 
-noteRestToLy :: HasLilypond a => Duration Score -> Maybe a -> Lilypond
-noteRestToLy d Nothing  = Lilypond.rest^*(fromDurationT $ d*4)
+noteRestToLy :: HasLilypond a => DurationT -> Maybe a -> Lilypond
+noteRestToLy d Nothing  = Lilypond.rest^*((fromRational . toRational) d*4)
 noteRestToLy d (Just p) = getLilypond d p
 
 spellLy :: Integer -> Lilypond.Note

@@ -95,17 +95,18 @@ tremolo n = fmap (setTrem n)
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (HasEvents s, HasPart' a, HasText a) => String -> s a -> s a
+text :: (Phraseable a a, HasPart' e, HasText e, e ~ Event a) => String -> a -> a
 text s = mapPhrase (addText s) id id
 
 -- |
 -- Slide between the first and the last note.
 --
-slide :: (HasEvents s, HasPart' a, HasSlide a) => s a -> s a
+slide :: (Phraseable a a, Composable a, HasPart' e, HasSlide e, e ~ Event a) => a -> a
 slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 
-glissando :: (HasEvents s, HasPart' a, HasSlide a) => s a -> s a
+glissando :: (Phraseable a a, Composable a, HasPart' e, HasSlide e, e ~ Event a) => a -> a
 glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
+
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.

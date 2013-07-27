@@ -20,20 +20,20 @@
 module Music.Time.Time (
         Time(..),
         Duration(..),
+        Event(..),
 
-        DurationT,
-        fromDurationT,
-        toDurationT,
-
-        TimeT,
-        fromTimeT,
-        toTimeT
+        DurationT(..),
+        TimeT(..),
   ) where
 
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 
+type family Duration (s :: *) :: *
+type family Event (s :: *) :: *
+type Time a = Point (Duration a)
 
 -- |
 -- This type function returns the time type for a given type.
@@ -48,12 +48,14 @@ import Data.AffineSpace
 --
 -- where /a/ and /b/ are type-level expression of kind @* -> *@ and @*@ respectively.
 --
-type family Time (s :: * -> *) :: *
 
 -- |
 -- This type function returns the duration type for a given type.
 --
-type Duration a = Diff (Time a)
+
+type DurationT = Rational
+
+type TimeT = Point DurationT
 
 
 -------------------------------------------------------------------------------------
@@ -63,28 +65,7 @@ type Duration a = Diff (Time a)
 -- |
 -- This type represents relative time in seconds.
 --
-newtype DurationT = DurationT { getDurationT :: Rational }                                  
-    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
 
-instance Show DurationT where 
-    show = show . getDurationT
-
-instance AdditiveGroup DurationT where
-    zeroV = 0
-    (^+^) = (+)
-    negateV = negate
-
-instance VectorSpace DurationT where
-    type Scalar DurationT = DurationT
-    (*^) = (*)
-
-instance InnerSpace DurationT where (<.>) = (*)
-
-fromDurationT :: Fractional a => DurationT -> a
-fromDurationT = fromRational . getDurationT
-
-toDurationT :: Real a => a -> DurationT
-toDurationT = DurationT . toRational
 
 
 -------------------------------------------------------------------------------------
@@ -100,34 +81,6 @@ toDurationT = DurationT . toRational
 -- that is, we can add a time to a duration to get a new time using '.+^', 
 -- take the difference of two times to get a duration using '.-.'.
 --
-newtype TimeT = TimeT { getTimeT :: Rational }
-    deriving (Eq, Ord, Num, Enum, Real, Fractional, RealFrac)
-
-instance Show TimeT where 
-    show = show . getTimeT
-
-instance AdditiveGroup TimeT where
-    zeroV = 0
-    (^+^) = (+)
-    negateV = negate
-
-instance VectorSpace TimeT where
-    type Scalar TimeT = TimeT
-    (*^) = (*)
-
-instance InnerSpace TimeT where 
-    (<.>) = (*)
-
-instance  AffineSpace TimeT where
-    type Diff TimeT = DurationT
-    a .-. b =  fromTimeT $ a - b
-    a .+^ b =  a + fromDurationT b
-
-fromTimeT :: Fractional a => TimeT -> a
-fromTimeT = fromRational . getTimeT
-
-toTimeT :: Real a => a -> TimeT
-toTimeT = TimeT . toRational
 
 {-
     Actually, I would prefer:

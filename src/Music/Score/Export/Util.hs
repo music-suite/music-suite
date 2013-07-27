@@ -37,6 +37,7 @@ import Data.Function (on)
 import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.Basis
 
 import Music.Time
@@ -67,19 +68,19 @@ import Music.Dynamics.Literal
 -- |
 -- Convert a single-voice score to a list of bars.
 --
-voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration Score, Maybe a)]]
+voiceToBars :: Tiable a => Voice (Maybe a) -> [[(DurationT, Maybe a)]]
 voiceToBars = separateBars . splitTiesVoice
 
 -- |
 -- Given a set of absolute-time occurences, separate at each zero-time occurence.
 -- Note that this require every bar to start with a zero-time occurence.
 --
-separateBars :: Voice (Maybe a) -> [[(Duration Score, Maybe a)]]
+separateBars :: Voice (Maybe a) -> [[(DurationT, Maybe a)]]
 separateBars =
     fmap (removeTime . fmap discardBarNumber) .
         splitAtTimeZero . fmap separateTime . perform
     where
-        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (toRational t * 1)
+        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (t .-. origin)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
         discardBarNumber ((bn,bt),d,x)  = (fromRational bt / 1, d, x)
         removeTime                      = fmap g where g (t,d,x) = (d,x)
@@ -87,10 +88,10 @@ separateBars =
 -- |
 -- Convert absolute to relative durations.
 --
-toRelative :: [(Time Score, Duration Score, b)] -> [(Time Score, Duration Score, b)]
-toRelative = snd . mapAccumL g 0
+toRelative :: [(TimeT, DurationT, b)] -> [(TimeT, DurationT, b)]
+toRelative = snd . mapAccumL g origin
     where
-        g now (t,d,x) = (t, (t-now,d,x))
+        g now (t,d,x) = (t, (origin .+^ (t .-. now),d,x))
 
 
 -- FIXME arbitrary spelling, please modularize...

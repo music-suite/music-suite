@@ -39,6 +39,7 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..),Gen(..))
 import qualified Data.Map as Map
 import qualified Data.List as List
@@ -75,13 +76,15 @@ import Music.Time
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Track a = Track { getTrack :: [(Time Track, a)] }
+newtype Track a = Track { getTrack :: [(TimeT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable)
 
-type instance Time Track = TimeT
+type instance Duration (Track a) = DurationT
+type instance Event (Track a) = a
 
 track :: Real t => [(t, a)] -> Track a
-track = Track . fmap (first toTimeT)
+track = undefined
+-- track = Track . fmap (first (fromRational . toRational))
 
 instance Semigroup (Track a) where
     (<>) = mappend
@@ -94,10 +97,11 @@ instance Monoid (Track a) where
             m = mergeBy (comparing fst)
 
 instance Monad Track where
-    return a = Track [(0, a)]
+    return a = Track [(origin, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' (Track ts) = foldMap (uncurry delay') ts
+            join' = undefined
+            -- join' (Track ts) = foldMap (uncurry delay') ts
 
 instance Applicative Track where
     pure  = return
@@ -112,15 +116,18 @@ instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
 
-instance Stretchable (Track) where
-    n `stretch` Track tr = Track $ fmap (first (^* fromDurationT n)) tr
+instance Stretchable (Track a) where
+    stretch = undefined
+    -- n `stretch` Track tr = Track $ fmap (first (^* (fromRational . toRational) n)) tr
 
-instance Delayable (Track) where
-    d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
+instance Delayable (Track a) where
+    delay = undefined
+    -- d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
 
-instance HasOnset (Track) where
-    onset  (Track []) = 0
-    onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
+instance HasOnset (Track a) where
+    onset = undefined
+    -- onset  (Track []) = 0
+    -- onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
 
 {-
 instance HasOffset (Track) where
@@ -138,15 +145,15 @@ instance HasDuration (Track) where
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap toDurationT $ (arbitrary::Gen Double)
-        d <- fmap toDurationT $ (arbitrary::Gen Double)
+        t <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
+        d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (return x)
 
 
 
 -------------------------------------------------------------------------------------
 
-delay' t = delay (fromTimeT t)
+delay' t = delay ((fromRational . toRational) t)
 
 list z f [] = z
 list z f xs = f xs

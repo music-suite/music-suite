@@ -42,6 +42,7 @@ import Data.Ord (comparing)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..),Gen(..))
 import qualified Data.Map as Map
 import qualified Data.List as List
@@ -74,10 +75,11 @@ import Music.Score.Track
 -- Score is an instance of 'VectorSpace' using sequential composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Score a  = Score { getScore :: [(Time Score, Duration Score, a)] }
+newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
-type instance Time Score = TimeT
+type instance Duration (Score a) = DurationT
+type instance Event (Score a)    = a
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -112,10 +114,10 @@ instance Monoid (Score a) where
 -- >                    (3, 6, 'b') ]}
 -- 
 instance Monad Score where
-    return x = Score [(0, 1, x)]
+    return x = Score [(origin, 1, x)]
     a >>= k = join' $ fmap k a
         where
-            join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay' t . stretch d) sc
+            join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay (t .-. origin) . stretch d) sc
 
 instance Pointed Score where
     point = return
@@ -133,29 +135,26 @@ instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
 
-instance Performable Score where
-    perform = getScore
+instance HasDuration (Score a) where
+    duration x = offset x .-. onset x
+instance HasOnset (Score a) where
+    onset (Score a) = list origin (on . head) a where on (t,d,x) = t
+instance HasOffset (Score a) where
+    offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
+instance Delayable (Score a) where
+    d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
+instance Stretchable (Score a) where
+    d `stretch` Score a = Score $ fmap (first3 (\t -> origin .+^(t .-. origin)^*d) . second3 (^* d)) $ a
+instance Performable (Score a) where
+    perform (Score a) = a
+instance Composable (Score a) where
+    note a = Score [(origin, 1, a)]
+    compose = Score
 
-instance Stretchable (Score) where
-    d `stretch` Score sc = Score $ fmap (first3 (^* fromDurationT d) . second3 (^* d)) $ sc
-
-instance Delayable (Score) where
-    d `delay` Score sc = Score . fmap (first3 (.+^ d)) $ sc
-
-instance HasOnset (Score) where
     -- onset  (Score []) = 0
     -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
 
     -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
-    onset  (Score []) = 0
-    onset  (Score xs) = on (head xs) where on (t,d,x) = t
-
-instance HasOffset (Score) where
-    offset (Score []) = 0
-    offset (Score xs) = maximum (fmap off xs) where off (t,d,x) = t + (fromDurationT $ d)
-
-instance HasDuration (Score) where
-    duration x = offset x .-. onset x
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -176,43 +175,21 @@ instance VectorSpace (Score a) where
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap toDurationT $ (arbitrary::Gen Double)
-        d <- fmap toDurationT $ (arbitrary::Gen Double)
+        t <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
+        d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (note x)
-
--- |
--- Create a score of duration one with the given value (same as 'return').
---
-note :: a -> Score a
-note = return
-
--- |
--- Create a score of duration one with no values.
---
-rest :: Score (Maybe a)
-rest = return Nothing
-
--- |
--- Repeat a score indefinately.
---
-repeat :: Score a -> Score a
-repeat a = a `plus` delay (duration a) (repeat a)
-    where
-        Score as `plus` Score bs = Score (as <> bs)
 
 -- |
 -- Map over all events in a score.
 --
-mapTime :: (Time Score -> Duration Score -> a -> b) -> Score a -> Score b
+mapTime :: (TimeT -> DurationT -> a -> b) -> Score a -> Score b
 mapTime f = Score . fmap (mapEvent f) . getScore
 
-mapEvent :: (Time Score -> Duration Score -> a -> b) -> (Time Score, Duration Score, a) -> (Time Score, Duration Score, b)
+mapEvent :: (TimeT -> DurationT -> a -> b) -> (TimeT, DurationT, a) -> (TimeT, DurationT, b)
 mapEvent f (t, d, x) = (t, d, f t d x)
 
 
 -------------------------------------------------------------------------------------
-
-delay' t = delay (fromTimeT t)
 
 fst3 (a,b,c) = a
 

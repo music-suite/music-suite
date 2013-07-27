@@ -50,10 +50,12 @@ import Data.Function (on)
 import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.Basis
 
-import Control.Reactive
+import Control.Reactive hiding (Event)
 import Control.Reactive.Midi
+import qualified Control.Reactive as R
 
 import Music.Time
 import Music.Pitch.Literal
@@ -146,9 +148,9 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
         eventTrack      = events <> [(endPos, Midi.TrackEnd)]
 
         events :: [(Midi.Ticks, Midi.Message)]
-        events          = (\(t,_,x) -> (round (t * divisions), x)) <$> performance
+        events          = (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) <$> performance
 
-        performance :: [(Time Score, Duration Score, Midi.Message)]
+        performance :: [(TimeT, DurationT, Midi.Message)]
         performance     = (toRelative . perform) (getMidiScore score)
 
         -- FIXME arbitrary endTime (files won't work without this...)
@@ -158,7 +160,7 @@ toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
 -- Convert a score to a track of MIDI messages.
 --
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack = track . fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
+toMidiTrack = track . fmap (\(t,_,m) -> (t .-. origin, m)) . perform . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.
@@ -169,12 +171,12 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 -- |
 -- Convert a score to a MIDI event.
 --
-playMidi :: HasMidi a => String -> Score a -> Event MidiMessage
+playMidi :: HasMidi a => String -> Score a -> R.Event MidiMessage
 playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ delay 0.2 x)
     where
         -- trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)
         trig        = time
-        toTrack     = fmap (\(t,_,m) -> (t,m)) . perform . getMidiScore
+        toTrack     = fmap (\(t,_,m) -> (t .-. origin, m)) . perform . getMidiScore
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure dest)
 
 -- |

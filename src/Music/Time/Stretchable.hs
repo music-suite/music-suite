@@ -32,11 +32,11 @@ import Music.Time.Time
 -- |
 -- Stretchable values. 
 -- 
-class Stretchable s where
+class Stretchable a where
 
     -- |
     -- Stretch (augment) a value by the given factor.
     -- 
     -- > Duration -> Score a -> Score a
     -- 
-    stretch :: Duration s -> s a -> s a
+    stretch :: Duration a -> a -> a
