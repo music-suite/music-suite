@@ -75,12 +75,11 @@ module Music.Score.Combinators (
         mapEvents,
         filterEvents,
         mapFilterEvents,
-        mapAllEvents,
-        mapEventsSingle,
         mapFirst,
         mapLast,
         mapPhrase,
         mapPhraseSingle,
+        mapAllEvents,
 
         -- ** Zipper
         apply,
@@ -89,10 +88,10 @@ module Music.Score.Combinators (
         snapshotSingle,
 
         -- ** Conversion
-        scoreToVoice,
         voiceToScore,
         voiceToScore',
-        eventToScore,
+        scoreToVoice,
+        -- eventToScore,
   ) where
 
 import Control.Monad
@@ -473,6 +472,11 @@ retrograde = startAt 0 . (mapAllEvents $ List.sortBy (comparing fst3) . fmap g
 compose :: (Composable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
 compose = msum . liftM eventToScore
 
+-- |
+-- Map over all events in a score.
+--
+-- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
+--
 mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 mapAllEvents f = compose . f . perform
 
