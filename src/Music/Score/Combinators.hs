@@ -31,6 +31,7 @@ module Music.Score.Combinators (
         Monoid',
         Transformable,
         Phraseable(..),
+        Slicable(..),
 
         -- ** Transforming scores
         -- *** Moving in time
@@ -66,16 +67,26 @@ module Music.Score.Combinators (
         repeated,
         group,
 
-        -- *** Transformations
+        -- *** Retrograde
         retrograde,
+
+        -- *** Mappings
         mapEvents,
         filterEvents,
         mapFilterEvents,
+        filter_,
+        mapAll,
+
+        --- *** Truncation
+        before,
+        after,
+        slice,           
+        
+        --- *** Phrases
         -- mapFirst,
         -- mapLast,
         mapPhrase,
         mapPhraseSingle,
-        mapAll,
 
         -- *** Parts
         extractParts,
@@ -340,94 +351,174 @@ anticipate t a b  =  a <> startAt (offset a .-^ t) b
 -- prolong x y = x <> before (duration x) y
 
 
-
 -- --------------------------------------------------------------------------------
 -- -- Structure
 -- --------------------------------------------------------------------------------
--- 
--- -- |
--- -- Repeat exact amount of times.
--- --
--- -- > Duration -> Score Note -> Score Note
--- --
--- times :: (Monoid' (s a), Transformable s) => Int -> s a -> s a
+
+rest            :: MonadPlus m =>
+                m (Maybe a)
+removeRests     :: MonadPlus m =>
+                m (Maybe a) -> m a
+
+rest            = return Nothing
+removeRests     = mcatMaybes
+
+-- |
+-- Repeat exact amount of times.
+--
+-- > Duration -> Score Note -> Score Note
+--
+times           :: (Monoid' a, Transformable a) =>
+                Int -> a -> a
+
+-- |
+-- Repeat once for each element in the list.
+--
+-- Example:
+--
+-- > repeated [1,2,1] (c^*)
+--
+-- Simple type:
+--
+-- > [a] -> (a -> Score Note) -> Score Note
+--
+repeated        :: (Monoid' b, Transformable b) =>
+                [a] -> (a -> b) -> b
+
+-- |
+-- Repeat a number of times and scale down by the same amount.
+--
+-- > Duration -> Score a -> Score a
+--
+group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
+                Int -> a -> a
+
+times = undefined
+repeated = undefined
+group = undefined
 -- times n a = replicate (0 `max` n) () `repeated` const a
--- 
--- -- |
--- -- Repeat once for each element in the list.
--- --
--- -- Example:
--- --
--- -- > repeated [1,2,1] (c^*)
--- --
--- -- Simple type:
--- --
--- -- > [a] -> (a -> Score Note) -> Score Note
--- --
--- repeated :: (Monoid' (s b), Transformable s) => [a] -> (a -> s b) -> s b
 -- repeated = flip (\f -> scat . fmap f)
--- 
--- 
--- {-
--- repeatedIndex n = repeated [0..n-1]
--- repeatedTime  n = repeated $ fmap (/ n) [0..(n - 1)]
--- -}
--- 
--- 
--- -- |
--- -- Remove rests from a score.
--- --
--- -- This is just an alias for 'mcatMaybes' which reads better in certain contexts.
--- --
--- -- > Score (Maybe a) -> Score a
--- --
--- removeRests :: MonadPlus m => m (Maybe a) -> m a
--- removeRests = mcatMaybes
--- 
--- -- |
--- -- Repeat a number of times and scale down by the same amount.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- group :: (Monoid' (s a), Transformable s, Fractional d, d ~ Duration s) => Int -> s a -> s a
 -- group n a = times n (fromIntegral n `compress` a)
+
+
+-- |
+-- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
+--
+-- > onset a    = onset (retrograde a)
+-- > duration a = duration (retrograde a)
+-- > offset a   = offset (retrograde a)
+--
+-- > Score a -> Score a
+--
+retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =>
+                a -> a
+
+retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
+    where
+        g (t,d,x) = (negateP (t .+^ d), d, x)
+        negateP a = origin .-^ (a .-. origin)
+
+--------------------------------------------------------------------------------
+-- Mapping
+--------------------------------------------------------------------------------
+
+-- |
+-- Map over the events in a score.
+--
+-- > (Time -> Duration -> a -> b) -> Score a -> Score b
+--
+mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Event a -> Event b) -> a -> b
+
+-- |
+-- Filter the events in a score.
+--
+-- > (Time -> Duration -> a -> Bool) -> Score a -> Score b
+--
+filterEvents   :: (Performable a, Composable a) =>
+                (Time a -> Duration a -> Event a -> Bool) -> a -> a
+
+-- |
+-- Efficient combination of 'mapEvents' and 'filterEvents'.
+--
+-- > (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+--
+mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
+
+-- |
+-- The same as 'mfilter' but with a non-monadic type.
+--
+-- > (a -> Bool) -> Score a -> Score a
+--
+filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
+
+-- |
+-- Map over all events in a score.
+--
+-- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
+--
+mapAll          :: (Performable a, Composable b, Duration a ~ Duration b) => 
+                ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+
+mapEvents f                 = mapAll $ fmap (third' f)
+filterEvents f              = mapFilterEvents (partial3 f)
+mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
+    where
+        unM (a,b,Nothing) = Nothing
+        unM (a,b,Just c)  = Just (a,b,c)
+filter_ p = filterEvents (\t d x -> p x)
+mapAll f                    = compose . f . perform
+
+
+type Slicable a = (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a)
+
+-- |
+-- Return a score containing only the notes whose offset falls before the given duration.
+--
+-- > Time -> Score a -> Score a
+--
+before          :: Slicable a =>
+                Time a -> a -> a
+
+-- |
+-- Return a score containing only the notes whose onset falls after given duration.
+--
+-- > Time -> Score a -> Score a
+--
+after           :: Slicable a =>
+                Time a -> a -> a
+
+-- |
+-- Return a score containing only the notes whose onset and offset falls between the given durations.
+--
+-- > Time -> Time -> Score a -> Score a
+--
+slice           :: Slicable a =>
+                Time a -> Time a -> a -> a
+
+after  a                    = filterEvents (\t d _ -> a <= t)
+before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
+slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
+
+
+type Phraseable a b = (Performable a, Composable a, Composable b, Semigroup b,
+                       HasPart' (Event a), Duration a ~ Duration b)
+
+mapPhraseSingle :: (Performable a, Composable b, Duration a ~ Duration b, 
+                    e ~ Event a, e' ~ Event b) =>
+                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+
+mapPhrase       :: (Performable a, Composable a, Composable b, Semigroup b,
+                    HasPart' (Event a), Duration a ~ Duration b, e ~ Event a, e' ~ Event b) =>
+                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+
+mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
+
+
+
 -- 
--- -- |
--- -- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
--- --
--- -- > onset a    = onset (retrograde a)
--- -- > duration a = duration (retrograde a)
--- -- > offset a   = offset (retrograde a)
--- --
--- -- > Score a -> Score a
--- --
--- retrograde :: (HasEvents s, t ~ Time s, Num t, Ord t) => s a -> s a
--- retrograde = startAt 0 . (mapAllEvents $ List.sortBy (comparing fst3) . fmap g)
---     where
---         g (t,d,x) = (-(t.+^d),d,x)
--- 
--- --------------------------------------------------------------------------------
--- -- Mapping and recomposition
--- --------------------------------------------------------------------------------
--- 
--- #define MAP_CONSTRAINT \
---     HasPart' a, \
---     HasEvents s
--- 
--- -- | Recompose a score.
--- --
--- -- This is the inverse of 'perform'
--- --
--- -- > [(Time, Duration, a)] -> Score a
--- --
--- compose :: (Composable s, d ~ Duration s, t ~ Time s) => [(t, d, a)] -> s a
--- compose = msum . liftM eventToScore
--- 
--- -- |
--- -- Map over all events in a score.
--- --
--- -- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
--- --
 -- mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 -- mapAllEvents f = compose . f . perform
 -- 
@@ -436,11 +527,6 @@ anticipate t a b  =  a <> startAt (offset a .-^ t) b
 -- mapFilterAllEvents f = mcatMaybes . mapAllEvents f
 -- -}
 -- 
--- -- |
--- -- Map over the events in a score.
--- --
--- -- > (Time -> Duration -> a -> b) -> Score a -> Score b
--- --
 -- filterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Bool) -> s a -> s a
 -- filterEvents f = mapFilterEvents (partial3 f)
 -- 
@@ -534,87 +620,13 @@ anticipate t a b  =  a <> startAt (offset a .-^ t) b
 -- eventToScore (t,d,x) = delay' t . stretch d $ return x   
 
 
-rest            :: MonadPlus m =>
-                m (Maybe a)
-removeRests     :: MonadPlus m =>
-                m (Maybe a) -> m a
-
-rest            = return Nothing
-removeRests     = mcatMaybes
-
-times           :: (Monoid' a, Transformable a) =>
-                Int -> a -> a
-repeated        :: (Monoid' b, Transformable b) =>
-                [a] -> (a -> b) -> b
-group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
-                Int -> a -> a
 
 
-retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =>
-                a -> a
      
-mapAll          :: (Performable a, Composable b, Duration a ~ Duration b) => 
-                ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
-
-mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Time a -> Duration a -> Event a -> Event b) -> a -> b
-
-filterEvents   :: (Performable a, Composable a) =>
-                (Time a -> Duration a -> Event a -> Bool) -> a -> a
-
-filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
-
-mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
-
-mapPhraseSingle      :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
-
-
-slice           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
-                Time a -> Time a -> a -> a
-after           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
-                Time a -> a -> a
-before          :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
-                Time a -> a -> a
-
-type Phraseable a b = (Performable a, Composable a, Composable b, Semigroup b,
-                       HasPart' (Event a), Duration a ~ Duration b)
-
-mapPhrase       :: (Performable a, Composable a, Composable b, Semigroup b,
-                    HasPart' (Event a), Duration a ~ Duration b
-                ) =>
-                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
 
 mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
                  ([a] -> [b]) -> a -> b
 
-
-
-
-
-
-retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
-    where
-        g (t,d,x) = (negateP (t .+^ d), d, x)
-        negateP a = origin .-^ (a .-. origin)
-
-
-mapAll f                    = compose . f . perform
-mapEvents f                 = mapAll $ fmap (third' f)
-mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
-    where
-        unM (a,b,Nothing) = Nothing
-        unM (a,b,Just c)  = Just (a,b,c)
-filterEvents f = mapFilterEvents (partial3 f)
-filter_ p = filterEvents (\t d x -> p x)
-
-after  a                    = filterEvents (\t d _ -> a <= t)
-before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
-slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
-
-mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
-mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
 
 mapAllParts f   = mconcat . f . extractParts
 
@@ -628,9 +640,6 @@ extractParts' :: (HasPart' (Event a), Composable a, Performable a) => a -> [(Par
 extractParts' = undefined
 
 
-times = undefined
-repeated = undefined
-group = undefined
 
                                                                  
 -------------------------------------------------------------------------------------
