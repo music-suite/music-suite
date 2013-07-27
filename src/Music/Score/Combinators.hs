@@ -62,16 +62,16 @@ module Music.Score.Combinators (
 
         -- * Maps and filters
         Mappable(..),
-        mapEvents,
         filterEvents,
+        mapEvents,
         mapFilterEvents,
         -- filter_,
         mapAll,
 
         --- ** Mapping over phrases
-        -- mapFirst,
-        -- mapLast,
         Phraseable(..),
+        mapFirst,
+        mapLast,
         mapPhrase,
         mapPhraseSingle,
 
@@ -486,121 +486,59 @@ slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 type Phraseable a b = (Performable a, Composable a, Composable b, Semigroup b,
                        HasPart' (Event a), Duration a ~ Duration b)
 
-mapPhraseSingle :: (Mappable a b, e ~ Event a, e' ~ Event b) =>
-                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+-- |
+-- Map over the first, and remaining notes in each part.
+--
+-- If a part has only one notes, the first function is applied.
+-- If a part has no notes, the given score is returned unchanged.
+--
+-- > (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapFirst    :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
+            (e -> e') -> (e -> e') -> a -> b
 
+-- |
+-- Map over the last, and preceding notes in each part.
+--
+-- If a part has only one notes, the first function is applied.
+-- If a part has no notes, the given score is returned unchanged.
+--
+-- > (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapLast     :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
+            (e -> e') -> (e -> e') -> a -> b
+
+-- |
+-- Map over the first, middle and last note in each part.
+--
+-- If a part has fewer than three notes the first takes precedence over the last,
+-- and last takes precedence over the middle.
+--
+-- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+--
 mapPhrase       :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
                 (e -> e') -> (e -> e') -> (e -> e') -> a -> b
 
-mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+-- |
+-- Equivalent to 'mapPhrase' for single-part scores.
+--
+-- Fails if the score contains overlapping events.
+--
+-- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+--
+mapPhraseSingle :: (Mappable a b, e ~ Event a, e' ~ Event b) =>
+                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+
+
+mapFirst f g                = mapPhrase f g g
+mapLast f g                 = mapPhrase g g f
 mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
+mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 
 
-
--- 
--- mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
--- mapAllEvents f = compose . f . perform
--- 
--- {-
--- mapFilterAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, Maybe b)]) -> s a -> s b
--- mapFilterAllEvents f = mcatMaybes . mapAllEvents f
--- -}
--- 
--- filterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Bool) -> s a -> s a
--- filterEvents f = mapFilterEvents (partial3 f)
--- 
--- -- |
--- -- Map over the events in a score.
--- --
--- -- > (Time -> Duration -> a -> b) -> Score a -> Score b
--- --
--- mapFilterEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> Maybe b) -> s a -> s b
--- mapFilterEvents f = mcatMaybes . mapAllParts (liftM $ mapEventsSingle f)
--- 
--- -- |
--- -- Map over the events in a score.
--- --
--- -- > (Time -> Duration -> a -> b) -> Score a -> Score b
--- --
--- mapEvents :: (MAP_CONSTRAINT, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
--- mapEvents f = mapAllParts (liftM $ mapEventsSingle f)
--- 
--- -- |
--- -- Equivalent to 'mapEvents' for single-voice scores.
--- -- Fails if the score contains overlapping events.
--- --
--- -- > (Time -> Duration -> a -> b) -> Score a -> Score b
--- --
--- mapEventsSingle :: (HasEvents s, t ~ Time s, d ~ Duration s) => (t -> d -> a -> b) -> s a -> s b
--- mapEventsSingle f sc = compose . fmap (third' f) . perform $ sc
--- 
--- -- |
--- -- Equivalent to 'mapEvents' for single-voice scores.
--- -- Fails if the score contains overlapping events.
--- --
--- -- > ([(Time,Duration,a)] -> [b]) -> Score a -> Score b
--- --
--- -- mapAllEventsSingle :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> b) -> s a -> s b
--- -- mapAllEventsSingle f sc = compose . fmap trd3 . f . perform $ sc
--- -- mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [b]) -> s a -> s b
--- -- mapAllEventsSingle' f = compose . fmap trd3 . f . perform
--- 
--- mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [(t,d,b)]) -> s a -> s b
--- mapAllEventsSingle' f = compose . f . perform
--- 
--- -- |
--- -- Map over the first, and remaining notes in each part.
--- --
--- -- If a part has only one notes, the first function is applied.
--- -- If a part has no notes, the given score is returned unchanged.
--- --
--- -- > (a -> b) -> (a -> b) -> Score a -> Score b
--- --
--- mapFirst :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> s a -> s b
--- mapFirst f g = mapPhrase f g g
--- 
--- -- |
--- -- Map over the last, and preceding notes in each part.
--- --
--- -- If a part has only one notes, the first function is applied.
--- -- If a part has no notes, the given score is returned unchanged.
--- --
--- -- > (a -> b) -> (a -> b) -> Score a -> Score b
--- --
--- mapLast :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> s a -> s b
--- mapLast f g = mapPhrase g g f
--- 
--- -- |
--- -- Map over the first, middle and last note in each part.
--- --
--- -- If a part has fewer than three notes the first takes precedence over the last,
--- -- and last takes precedence over the middle.
--- --
--- -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
--- --
--- mapPhrase :: (MAP_CONSTRAINT) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapPhrase f g h = mapAllParts (liftM $ mapPhraseSingle f g h)
--- 
--- -- |
--- -- Equivalent to 'mapPhrase' for single-voice scores.
--- -- Fails if the score contains overlapping events.
--- --
--- -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
--- --
--- mapPhraseSingle :: HasEvents s => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapPhraseSingle f g h sc = compose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
--- 
--- eventToScore
---   :: (Monad s, 
---       Transformable1 s,
---       Time s ~ t, Duration s ~ d
---       ) => (t, d, a) -> s a
--- 
--- eventToScore (t,d,x) = delay' t . stretch d $ return x   
-
-
-
-
+--------------------------------------------------------------------------------
+-- Parts
+--------------------------------------------------------------------------------
 
 -- |
 -- Extract parts from the a score.
