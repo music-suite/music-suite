@@ -38,12 +38,17 @@ type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
 class (Monoid a, Transformable a) => Composable a where
     note    :: Event a -> a
+    event   :: Time a -> Duration a -> Event a -> a
     compose :: [(Time a, Duration a, Event a)] -> a
-    compose = mconcat . fmap event
+    -- Given Num (Duration a) we have
+    -- note a        = compose [(origin, 1, a)]
+    event t d x   = (delay (t .-. origin) . stretch d) (note x)
+    compose       = mconcat . fmap (uncurry3 event)
+
 class Performable a where
     perform :: a -> [(Time a, Duration a, Event a)]
-    events :: a -> [Event a]
-
+    events  :: a -> [Event a]
+    events = fmap trd3 . perform
 
 
 (|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
@@ -149,8 +154,8 @@ removeRests     = mcatMaybes
 
 retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
     where
-        g (t,d,x) = (negateP (t.+^d),d,x)
-        negateP a = origin .+^ negateV (a .-. origin)
+        g (t,d,x) = (negateP (t .+^ d), d, x)
+        negateP a = origin .-^ (a .-. origin)
 
 
 mapAll f                    = compose . f . perform
@@ -164,7 +169,7 @@ filterEvents f = mapFilterEvents (partial3 f)
 mapPhraseS f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 
 
-mapPhrase f g h             =              mapAllParts (fmap $ mapPhraseS f g h)
+mapPhrase f g h             = mapAllParts (fmap $ mapPhraseS f g h)
 mapAllParts f   = msum . f . extract
     where
         extract a = fmap (`extract'` a) (getParts a)
@@ -204,8 +209,6 @@ instance Composable (S a) where
     note a = S [(origin, 1, a)]
     compose = S
  
-event :: Composable a => (Time a, Duration a, Event a) -> a
-event (t,d,x) = delay (t .-. origin) . stretch d $ note x
 
 
 
