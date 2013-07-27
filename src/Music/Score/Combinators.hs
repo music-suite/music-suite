@@ -33,62 +33,64 @@ module Music.Score.Combinators (
         Phraseable(..),
         Slicable(..),
 
-        -- ** Transforming scores
-        -- *** Moving in time
+        -- * Creating scores
+        note,
+        rest,
+        noteRest,
+        removeRests,
+
+        -- * Transforming scores
+        -- ** Moving in time
         move,
         moveBack,
         startAt,
         stopAt,
 
+        -- ** Stretching in time
+        stretch,
+        compress,
+        stretchTo,
+
         -- ** Juxtaposition
         juxtapose,
+
+        -- ** Retrograde/reflection
+        retrograde,
+
+        --- * Truncation
+        before,
+        after,
+        slice,           
         
-        -- ** Composing scores
+        -- * Composing scores
         (|>),
         (<|),
         scat,
         pcat,
 
-        -- *** Special composition
+        -- ** Special composition
         sustain,
         anticipate,
 
-        -- *** Stretching in time
-        stretch,
-        compress,
-        stretchTo,
-
-        -- *** Rests
-        rest,
-        removeRests,
-
-        -- *** Repetition
+        -- ** Repetition
         times,
         repeated,
         group,
 
-        -- *** Retrograde
-        retrograde,
-
-        -- *** Mappings
+        -- * Maps and filters
         mapEvents,
         filterEvents,
         mapFilterEvents,
         filter_,
         mapAll,
 
-        --- *** Truncation
-        before,
-        after,
-        slice,           
-        
-        --- *** Phrases
+        --- ** Mapping over phrases
         -- mapFirst,
         -- mapLast,
         mapPhrase,
         mapPhraseSingle,
 
-        -- *** Parts
+        -- * Parts
         extractParts,
         extractParts',
         mapPart,
@@ -102,7 +104,8 @@ module Music.Score.Combinators (
         (</>),
         moveParts,
         moveToPart,
-        -- ** Zipper
+
+        -- * Zippers
         apply,
         snapshot,
         applySingle,
@@ -141,35 +144,33 @@ import qualified Data.Foldable as Foldable
 -- Constructors
 -------------------------------------------------------------------------------------
 
--- -- |
--- -- Create a score containing a single event.
--- --
--- -- This function uses the unit position (0, 1).
--- --
--- -- > a -> Score a
--- --
--- note :: Monad s => a -> s a
--- note = return
--- 
--- -- |
--- -- Create a score containing a rest at time zero of duration one.
--- --
--- -- This function uses the unit position (0, 1).
--- --
--- -- > Score (Maybe a)
--- --
--- rest :: MonadPlus s => s (Maybe a)
--- rest = note Nothing
--- 
--- -- |
--- -- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
--- --
--- -- This function uses the unit position (0, 1).
--- --
--- -- > a -> Score a
--- --
--- noteRest :: MonadPlus s => Maybe a -> s a
--- noteRest = mfromMaybe
+-- |
+-- Create a score containing a rest at time zero of duration one.
+--
+-- > Score (Maybe a)
+--
+rest            :: MonadPlus s => s (Maybe a)
+
+-- |
+-- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
+--
+-- This function uses the unit position (0, 1).
+--
+-- > Maybe a -> Score a
+--
+noteRest        :: MonadPlus s => Maybe a -> s a
+
+-- |
+-- Remove all rests from a score. This is an alias for 'mcatMaybes' with a nicer reading.
+--
+-- > Score (Maybe a) -> Score a
+--
+removeRests     :: MonadPlus s => s (Maybe a) -> s a
+
+rest            = return Nothing
+noteRest        = mfromMaybe
+removeRests     = mcatMaybes
+
 
 {-
 -- | Creates a score containing a chord.
@@ -354,14 +355,6 @@ anticipate t a b  =  a <> startAt (offset a .-^ t) b
 -- --------------------------------------------------------------------------------
 -- -- Structure
 -- --------------------------------------------------------------------------------
-
-rest            :: MonadPlus m =>
-                m (Maybe a)
-removeRests     :: MonadPlus m =>
-                m (Maybe a) -> m a
-
-rest            = return Nothing
-removeRests     = mcatMaybes
 
 -- |
 -- Repeat exact amount of times.
@@ -630,68 +623,9 @@ mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) 
 
 mapAllParts f   = mconcat . f . extractParts
 
-extractParts a = fmap (`extractPart` a) (getParts a)
-    where
-        extractPart v = filter_ ((== v) . getPart)
 
 getParts = List.sort . List.nub . fmap getPart . events
 
-extractParts' :: (HasPart' (Event a), Composable a, Performable a) => a -> [(Part (Event a), a)]
-extractParts' = undefined
-
-
-
-                                                                 
--------------------------------------------------------------------------------------
--- Zippers
-
--- |
--- Apply a time-varying function to all events in score.
---
-apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
-apply x = mapAllParts (fmap $ applySingle x)
-
--- |
--- Get all notes that start during a given note.
---
-snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
-snapshot x = mapAllParts (fmap $ snapshotSingle x)
-
--- |
--- Apply a time-varying function to all events in score.
---
-applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
-    where
-        -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin   = mconcat . Foldable.toList
-        sample fs = snapshotSingle (voiceToScore fs)
-
--- |
--- Get all notes that start during a given note.
---
-snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle = snapshotSingleWith (,)
-
-snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
-snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
-
-
--- |
--- Filter out events that has its onset in the given time interval (inclusive start).
--- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
--- onsetIn :: Time Score -> Duration Score -> Score a -> Score a
-onsetIn = undefined
--- onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
-    -- where
-        -- filter' = filterOnce
-        -- more lazy than mfilter
-
--- |
--- Extract the first consecutive sublist for which the predicate returns true, or
--- the empty list if no such sublist exists.
-filterOnce :: (a -> Bool) -> [a] -> [a]
-filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 
 
 -- |
@@ -700,24 +634,18 @@ filterOnce p = List.takeWhile p . List.dropWhile (not . p)
 -- The parts are returned in the order defined the associated 'Ord' instance part type.
 -- You can recompose the score with 'mconcat', i.e.
 --
--- > mconcat . extract = id
---
--- Simple type
+-- > mconcat . extractParts = id
 --
 -- > Score a -> [Score a]
 --
 extractParts :: (HasPart' (Event a), Composable a, Performable a) => a -> [a]
--- extractParts a = fmap (`extractPart` a) (getParts a)
---     where
---         extractPart v = filter_ ((== v) . getPart)
---         getParts = List.sort . List.nub . fmap getPart . events
-
-
-
+extractParts a = fmap (`extractPart` a) (getParts a)
+    where
+        extractPart v = filter_ ((== v) . getPart)
 
         
 -- |
--- Extract parts from the a score.
+-- Extract parts from the a score and include the part name.
 --
 -- The parts are returned in the order defined the associated 'Ord' instance part type.
 --
@@ -725,6 +653,10 @@ extractParts :: (HasPart' (Event a), Composable a, Performable a) => a -> [a]
 --
 -- > Score a -> [(Part a, Score a)]
 --
+extractParts' :: (HasPart' (Event a), Composable a, Performable a) => a -> [(Part (Event a), a)]
+extractParts' a = fmap (\p -> (p, p `extractPart` a)) (getParts a)
+   where
+       extractPart p = filter_ ((== p) . getPart)
 
 
 -- |
@@ -811,11 +743,6 @@ moveToPart
  = undefined
 -- moveToPart v = moveParts (fromEnum v)
 
-
-
-
--------------------------------------------------------------------------------------
-
 successor :: (Integral b, Enum a) => b -> a -> a
 successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
             | n >= 0 = (!! fromIntegral n)       . iterate succ
@@ -825,7 +752,64 @@ maximum' z = option z getMax . foldMap (Option . Just . Max)
 
 minimum' :: (Ord a, Foldable t) => a -> t a -> a
 minimum' z = option z getMin . foldMap (Option . Just . Min)
-                                                               --------------------------------------------------------------------------------
+
+
+
+                                                                 
+-------------------------------------------------------------------------------------
+-- Zippers
+
+-- |
+-- Apply a time-varying function to all events in score.
+--
+apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
+apply x = mapAllParts (fmap $ applySingle x)
+
+-- |
+-- Get all notes that start during a given note.
+--
+snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
+snapshot x = mapAllParts (fmap $ snapshotSingle x)
+
+-- |
+-- Apply a time-varying function to all events in score.
+--
+applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
+applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
+    where
+        -- This is not join; we simply concatenate all inner scores in parallel
+        notJoin   = mconcat . Foldable.toList
+        sample fs = snapshotSingle (voiceToScore fs)
+
+-- |
+-- Get all notes that start during a given note.
+--
+snapshotSingle :: Score a -> Score b -> Score (a, Score b)
+snapshotSingle = snapshotSingleWith (,)
+
+snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
+
+
+-- |
+-- Filter out events that has its onset in the given time interval (inclusive start).
+-- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
+-- onsetIn :: Time Score -> Duration Score -> Score a -> Score a
+onsetIn = undefined
+-- onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
+    -- where
+        -- filter' = filterOnce
+        -- more lazy than mfilter
+
+ 
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
 -- Conversion
 --------------------------------------------------------------------------------
 
@@ -883,6 +867,13 @@ mapFirstMiddleLast f g h = go
         go xs    = [f $ head xs]          ++ 
                    map g (tail $ init xs) ++ 
                    [h $ last xs]
+
+-- |
+-- Extract the first consecutive sublist for which the predicate returns true, or
+-- the empty list if no such sublist exists.
+filterOnce :: (a -> Bool) -> [a] -> [a]
+filterOnce p = List.takeWhile p . List.dropWhile (not . p)
+
 
 delay' t = delay (t .-. zeroV)
 
