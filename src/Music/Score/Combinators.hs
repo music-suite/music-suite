@@ -75,11 +75,16 @@ module Music.Score.Combinators (
         mapPhraseSingle,
 
         -- * Parts
+        -- ** Extracting
         extractParts,
         extractParts',
+        
+        -- ** Mapping
         mapPart,
-        mapAllParts,
         mapParts,
+        mapAllParts,
+
+        -- ** Inspecting
         getParts,
         setParts,
         modifyParts,
@@ -606,7 +611,7 @@ mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
 --
 -- > Score a -> [Score a]
 --
-extractParts :: (HasPart' (Event a), Composable a, Performable a) => a -> [a]
+extractParts :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [a]
 extractParts a = fmap (`extractPart` a) (getParts a)
     where
         extractPart v = filter_ ((== v) . getPart)
@@ -621,7 +626,7 @@ extractParts a = fmap (`extractPart` a) (getParts a)
 --
 -- > Score a -> [(Part a, Score a)]
 --
-extractParts' :: (HasPart' (Event a), Composable a, Performable a) => a -> [(Part (Event a), a)]
+extractParts' :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [(Part e, a)]
 extractParts' a = fmap (\p -> (p, p `extractPart` a)) (getParts a)
    where
        extractPart p = filter_ ((== p) . getPart)
@@ -632,33 +637,36 @@ extractParts' a = fmap (\p -> (p, p `extractPart` a)) (getParts a)
 --
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
-mapPart :: (Enum a, Ord (Part (Event b)), Semigroup b, Performable b, Composable b, HasPart (Event b)) => a -> (b -> b) -> b -> b
-mapPart n f = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
+mapPart         :: (Enum a, Semigroup b, Performable b, Composable b, HasPart' e, e ~ Event b) => 
+                a -> (b -> b) -> b -> b
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
+mapParts        :: (Ord (Part (Event a)), Monoid b, Semigroup b, Performable a, Composable a, HasPart (Event a)) => 
+                (a -> b) -> a -> b
+
+-- |
+-- Map over all parts in the given score.
+--
+-- > ([Score a] -> [Score a]) -> Score a -> Score a
+--
+mapAllParts     :: (Monoid' b, HasPart' e, e ~ Event a, Performable a, Composable a) => 
                  ([a] -> [b]) -> a -> b
+
+
+mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
+mapParts f      = mapAllParts (fmap f)
 mapAllParts f   = mconcat . f . extractParts
-
-
--- |
--- Map over all parts in the given score.
---
--- > ([Score a] -> [Score a]) -> Score a -> Score a
---
-mapParts :: (Ord (Part (Event a)), Monoid b, Semigroup b, Performable a, Composable a, HasPart (Event a)) => (a -> b) -> a -> b
-mapParts f = mapAllParts (fmap f)
 
 -- |
 -- Get all parts in the given score. Returns a list of parts.
 --
 -- > Score a -> [Part]
 --    
-getParts :: (Ord (Part (Event a)), Performable a, HasPart (Event a)) => a -> [Part (Event a)]
+getParts :: (Performable a, HasPart' e, e ~ Event a) => a -> [Part e]
 getParts = List.sort . List.nub . fmap getPart . events
 
 -- |
