@@ -32,11 +32,10 @@ class HasPart a where
     getPart :: a -> Part a
 type HasPart' a = (Ord (Part a), HasPart a)
 
-type Monoid' a          =  (Monoid a, Semigroup a)
-type Transformable1 a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
-type Transformable a    =  (HasOnset a, HasOffset a, Transformable1 a)
+type Monoid' a         =  (Monoid a, Semigroup a)
+type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
-class (Monoid a, Transformable1 a) => Composable a where
+class (Monoid a, Transformable a) => Composable a where
     note    :: Event a -> a
     compose :: [(Time a, Duration a, Event a)] -> a
     compose = mconcat . fmap event
@@ -65,7 +64,7 @@ stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) 
                 d -> a -> a
 sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
                 a -> a -> a
-anticipate      :: (Semigroup a, Transformable a, Ord d, d ~ Duration a) =>
+anticipate      :: (Semigroup a, Transformable a, HasOnset a, HasOffset a, Ord d, d ~ Duration a) =>
                 d -> a -> a -> a
 move            :: (Delayable a, d ~ Duration a) =>
                 d -> a -> a
