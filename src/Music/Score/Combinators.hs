@@ -32,6 +32,16 @@ module Music.Score.Combinators (
         Transformable,
         Phraseable(..),
 
+        -- ** Transforming scores
+        -- *** Moving in time
+        move,
+        moveBack,
+        startAt,
+        stopAt,
+
+        -- ** Juxtaposition
+        juxtapose,
+        
         -- ** Composing scores
         (|>),
         (<|),
@@ -41,13 +51,6 @@ module Music.Score.Combinators (
         -- *** Special composition
         sustain,
         anticipate,
-
-        -- ** Transforming scores
-        -- *** Moving in time
-        move,
-        moveBack,
-        startAt,
-        stopAt,
 
         -- *** Stretching in time
         stretch,
@@ -64,8 +67,6 @@ module Music.Score.Combinators (
         group,
 
         -- *** Transformations
-        perform,
-        compose,
         retrograde,
         mapEvents,
         filterEvents,
@@ -203,117 +204,143 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 -- Transformations
 -------------------------------------------------------------------------------------
 
--- -- |
--- -- Move a score forward in time. Equivalent to 'delay'.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- move :: (Delayable s, d ~ Duration s) => d -> s a -> s a
--- move = delay
--- 
--- -- |
--- -- Move a score backward in time. Negated verison of 'delay'
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- moveBack :: (Delayable s, AdditiveGroup d, d ~ Duration s) => d -> s a -> s a
--- moveBack t = delay (negateV t)
--- 
--- -- |
--- -- Move a score so that its onset is at the specific time.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- startAt :: (HasOnset s, Delayable s, AffineSpace t, t ~ Time s) => t -> s a -> s a
--- t `startAt` x = (t .-. onset x) `delay` x
--- 
--- -- |
--- -- Move a score so that its offset is at the specific time.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- stopAt :: (HasOffset s, Delayable s, AffineSpace t, t ~ Time s) => t -> s a -> s a
--- t `stopAt`  x = (t .-. offset x) `delay` x
--- 
--- -- |
--- -- Compress (diminish) a score. Flipped version of '^/'.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- compress :: (Stretchable s, Fractional d, d ~ Duration s) => d -> s a -> s a
--- compress x = stretch (recip x)
--- 
--- -- |
--- -- Stretch a score to fit into the given duration.
--- --
--- -- > Duration -> Score a -> Score a
--- --
--- stretchTo :: (Stretchable s, HasDuration s, Fractional d, d ~ Duration s) => d -> s a -> s a
--- t `stretchTo` x = (t / duration x) `stretch` x
--- 
--- 
--- -------------------------------------------------------------------------------------
--- -- Composition
--- -------------------------------------------------------------------------------------
--- 
--- infixr 6 |>
--- infixr 6 <|
--- 
--- -- |
--- -- Compose in sequence.
--- --
--- -- To compose in parallel, use '<>'.
--- --
--- -- > Score a -> Score a -> Score a
--- (|>) :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => s a -> s a -> s a
--- a |> b =  a <> startAt (offset a) b
--- 
--- 
--- -- |
--- -- Compose in reverse sequence.
--- --
--- -- To compose in parallel, use '<>'.
--- --
--- -- > Score a -> Score a -> Score a
--- (<|) :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => s a -> s a -> s a
--- a <| b =  b |> a
--- 
--- -- |
--- -- Sequential concatentation.
--- --
--- -- > [Score t] -> Score t
--- scat :: (Monoid' (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) => [s a] -> s a
--- scat = foldr (|>) mempty
--- 
--- -- |
--- -- Parallel concatentation. A synonym for 'mconcat'.
--- --
--- -- > [Score t] -> Score t
--- pcat :: Monoid a => [a] -> a
--- pcat = mconcat
--- 
--- 
--- -- |
--- -- Like '<>', but scaling the second agument to the duration of the first.
--- --
--- -- > Score a -> Score a -> Score a
--- --
--- sustain :: (Fractional (Duration s), Semigroup (s a), Stretchable s, HasDuration s) => s a -> s a -> s a
--- x `sustain` y = x <> duration x `stretchTo` y
--- 
--- -- Like '<>', but truncating the second agument to the duration of the first.
--- -- prolong x y = x <> before (duration x) y
--- 
--- -- |
--- -- Like '|>' but with a negative delay on the second element.
--- --
--- -- > Duration -> Score a -> Score a -> Score a
--- --
--- anticipate :: (Semigroup (s a), Transformable s, d ~ Duration s, Ord d) => d -> s a -> s a -> s a
--- anticipate t a b =  a <> startAt (offset a .-^ t) b
--- 
--- 
--- 
+-- |
+-- Move a score forward in time. Equivalent to 'delay'.
+--
+-- > Duration -> Score a -> Score a
+--
+move            :: (Delayable a, d ~ Duration a) =>
+                d -> a -> a
+
+-- |
+-- Move a score backward in time. Negated verison of 'delay'
+--
+-- > Duration -> Score a -> Score a
+--
+moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
+                d -> a -> a
+-- |
+-- Compress (diminish) a score. Flipped version of '^/'.
+--
+-- > Duration -> Score a -> Score a
+--
+compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+
+move            = delay
+moveBack t      = delay (negateV t)
+compress x      = stretch (recip x)
+
+-- |
+-- Stretch a score to fit into the given duration.
+--
+-- > Duration -> Score a -> Score a
+--
+stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+
+-- |
+-- Move a score so that its onset is at the specific time.
+--
+-- > Time -> Score a -> Score a
+--
+startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t ->  a -> a
+
+-- |
+-- Move a score so that its offset is at the specific time.
+--
+-- > Time -> Score a -> Score a
+--
+stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t -> a -> a
+
+t `stretchTo` x = (t / duration x) `stretch` x
+t `startAt` x   = (t .-. onset x) `delay` x
+t `stopAt`  x   = (t .-. offset x) `delay` x
+                                             
+
+-------------------------------------------------------------------------------------
+-- Juxtaposition
+-------------------------------------------------------------------------------------
+
+juxtapose           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+a `juxtapose` b =  startAt (offset a) b
+
+
+-------------------------------------------------------------------------------------
+-- Composition
+-------------------------------------------------------------------------------------
+
+infixr 6 |>
+infixr 6 <|
+
+-- |
+-- Compose in sequence.
+--
+-- To compose in parallel, use '<>'.
+--
+-- > Score a -> Score a -> Score a
+--
+(|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+-- |
+-- Compose in reverse sequence.
+--
+-- To compose in parallel, use '<>'.
+--
+-- > Score a -> Score a -> Score a
+--
+(<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+
+a |> b =  a <> a `juxtapose` b
+a <| b =  b |> a
+
+-- |
+-- Sequential catenation.
+--
+-- > [Score a] -> Score a
+--
+scat            :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                [a] -> a
+-- |
+-- Parallel catenation.
+--
+-- > [Score a] -> Score a
+--
+pcat            :: Monoid' a =>
+                [a] -> a
+
+scat = Prelude.foldr (|>) mempty
+pcat = Prelude.foldr (<>) mempty
+
+
+-- |
+-- Like '<>', but scaling the second agument to the duration of the first.
+--
+-- > Score a -> Score a -> Score a
+--
+sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+                a -> a -> a
+
+-- |
+-- Like '|>' but with a negative delay on the second element.
+--
+-- > Duration -> Score a -> Score a -> Score a
+--
+anticipate      :: (Semigroup a, Transformable a, HasOnset a, HasOffset a, Ord d, d ~ Duration a) =>
+                d -> a -> a -> a
+
+x `sustain` y     = x <> duration x `stretchTo` y
+anticipate t a b  =  a <> startAt (offset a .-^ t) b
+
+-- Like '<>', but truncating the second agument to the duration of the first.
+-- prolong x y = x <> before (duration x) y
+
+
+
 -- --------------------------------------------------------------------------------
 -- -- Structure
 -- --------------------------------------------------------------------------------
@@ -506,38 +533,14 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 -- 
 -- eventToScore (t,d,x) = delay' t . stretch d $ return x   
 
-align           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
-                a -> a -> a
-(|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
-                a -> a -> a
-(<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
-                a -> a -> a
-scat            :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
-                [a] -> a
-pcat            :: Monoid' a =>
-                [a] -> a
-
-compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
-                d -> a -> a
-stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
-                d -> a -> a
-sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
-                a -> a -> a
-anticipate      :: (Semigroup a, Transformable a, HasOnset a, HasOffset a, Ord d, d ~ Duration a) =>
-                d -> a -> a -> a
-move            :: (Delayable a, d ~ Duration a) =>
-                d -> a -> a
-moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
-                d -> a -> a
-startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
-                t ->  a -> a
-stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
-                t -> a -> a
 
 rest            :: MonadPlus m =>
                 m (Maybe a)
 removeRests     :: MonadPlus m =>
                 m (Maybe a) -> m a
+
+rest            = return Nothing
+removeRests     = mcatMaybes
 
 times           :: (Monoid' a, Transformable a) =>
                 Int -> a -> a
@@ -587,25 +590,9 @@ mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) 
                  ([a] -> [b]) -> a -> b
 
 
-move            = delay
-moveBack t      = delay (negateV t)
-compress x      = stretch (recip x)
-t `stretchTo` x = (t / duration x) `stretch` x
-t `startAt` x   = (t .-. onset x) `delay` x
-t `stopAt`  x   = (t .-. offset x) `delay` x
 
-a `align` b =  startAt (offset a) b
 
-a |> b =  a <> a `align` b
-a <| b =  b |> a
-scat = Prelude.foldr (|>) mempty
-pcat = Prelude.foldr (<>) mempty
 
-x `sustain` y     = x <> duration x `stretchTo` y
-anticipate t a b  =  a <> startAt (offset a .-^ t) b
-
-rest            = return Nothing
-removeRests     = mcatMaybes
 
 retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
     where
