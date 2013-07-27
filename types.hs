@@ -87,6 +87,14 @@ repeated        :: (Monoid' b, Transformable b) =>
 group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
                 Int -> a -> a
 
+
+mapAllEvents    :: (Performable a, Composable b) => 
+                ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+mapAllParts     :: (MonadPlus s, a ~ Event (s a), HasPart' a, Performable (s a)) => 
+                ([s a] -> [s b]) -> s a -> s b
+
+
+
 move = delay
 moveBack t = delay (negateV t)
 compress x = stretch (recip x)
@@ -131,8 +139,6 @@ removeRests = mcatMaybes
 -- mapAllEvents    :: (HasEvents s, d ~ Duration s, t ~ Time s) =>
 --                 ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 -- 
-mapAllEvents :: (Performable a, Composable b) => ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
-mapAllParts :: (MonadPlus m, a ~ Event (m a), HasPart' a, Performable (m a)) => ([m a] -> [m b]) -> m a -> m b
 
 mapEvents f                 =              mapAllParts (liftM $ mapEventsS f)
 mapFilterEvents f           = mcatMaybes . mapAllParts (liftM $ mapEventsS f)
