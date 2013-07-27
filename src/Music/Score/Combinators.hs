@@ -64,9 +64,6 @@ module Music.Score.Combinators (
         times,
         repeated,
         group,
-        -- triplet,
-        -- quadruplet,
-        -- quintuplet,
 
         -- *** Transformations
         perform,
@@ -91,7 +88,6 @@ module Music.Score.Combinators (
         voiceToScore,
         voiceToScore',
         scoreToVoice,
-        -- eventToScore,
   ) where
 
 import Control.Monad
@@ -575,8 +571,6 @@ mapPhrase f g h = mapAllParts (liftM $ mapPhraseSingle f g h)
 --
 mapPhraseSingle :: HasEvents s => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseSingle f g h sc = compose . mapFirstMiddleLast (third f) (third g) (third h) . perform $ sc
-
--- eventToScore :: Scalable t d a => (t, d, a) -> m a
 
 eventToScore
   :: (Monad s, 
