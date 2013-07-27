@@ -61,6 +61,7 @@ module Music.Score.Combinators (
         group,
 
         -- * Maps and filters
+        Mappable(..),
         mapEvents,
         filterEvents,
         mapFilterEvents,
@@ -400,12 +401,14 @@ retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
 -- Mapping
 --------------------------------------------------------------------------------
 
+type Mappable a b = (Performable a, Composable b, Duration a ~ Duration b)
+
 -- |
 -- Map over the events in a score.
 --
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
-mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
+mapEvents       :: Mappable a b =>
                 (Time a -> Duration a -> Event a -> Event b) -> a -> b
 
 -- |
@@ -421,7 +424,7 @@ filterEvents   :: (Performable a, Composable a) =>
 --
 -- > (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 --
-mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
+mapFilterEvents :: Mappable a b =>
                 (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
 
 -- |
@@ -436,8 +439,8 @@ filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
 --
 -- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
 --
-mapAll          :: (Performable a, Composable b, Duration a ~ Duration b) => 
-                ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+mapAll          :: (Mappable a b, t ~ Time a, d ~ Duration a, e ~ Event a, e' ~ Event b) => 
+                ([(t, d, e)] -> [(t, d, e')]) -> a -> b
 
 mapEvents f                 = mapAll $ fmap (third' f)
 filterEvents f              = mapFilterEvents (partial3 f)
@@ -483,12 +486,10 @@ slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 type Phraseable a b = (Performable a, Composable a, Composable b, Semigroup b,
                        HasPart' (Event a), Duration a ~ Duration b)
 
-mapPhraseSingle :: (Performable a, Composable b, Duration a ~ Duration b, 
-                    e ~ Event a, e' ~ Event b) =>
+mapPhraseSingle :: (Mappable a b, e ~ Event a, e' ~ Event b) =>
                 (e -> e') -> (e -> e') -> (e -> e') -> a -> b
 
-mapPhrase       :: (Performable a, Composable a, Composable b, Semigroup b,
-                    HasPart' (Event a), Duration a ~ Duration b, e ~ Event a, e' ~ Event b) =>
+mapPhrase       :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
                 (e -> e') -> (e -> e') -> (e -> e') -> a -> b
 
 mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
