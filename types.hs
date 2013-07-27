@@ -10,9 +10,6 @@ import Data.AffineSpace
 type family Time (s :: * -> *) :: *
 type Duration a = Diff (Time a)
 
-type DurationT = Rational
-type TimeT = Rational
-
 class Delayable s where
     delay :: Duration s -> s a -> s a
 class Stretchable s where
@@ -67,11 +64,6 @@ mapLast :: (HasPart' a, HasEvents s) => (a -> b) -> (a -> b) -> s a -> s b
 mapPhraseS :: HasEvents s => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
 mapAllEvents :: (HasEvents s, d ~ Duration s, t ~ Time s) => ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 mapPhrase :: (HasPart' a, HasEvents s) => (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
--- snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
--- applyS :: Voice (Score a -> Score b) -> Score a -> Score b
--- snapshotS :: Score a -> Score b -> Score (a, Score b)
-
 
 
 (
