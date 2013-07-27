@@ -174,7 +174,7 @@ after  a                    = filterEvents (\t d _ -> a <= t)
 before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
-mapPhraseSingle f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
 
 mapAllParts f   = mconcat . f . extractParts
