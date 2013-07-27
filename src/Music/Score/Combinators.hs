@@ -81,7 +81,7 @@ module Music.Score.Combinators (
         mapEvents,
         filterEvents,
         mapFilterEvents,
-        filter_,
+        -- filter_,
         mapAll,
 
         --- ** Mapping over phrases
@@ -361,7 +361,7 @@ anticipate t a b  =  a <> startAt (offset a .-^ t) b
 --
 -- > Duration -> Score Note -> Score Note
 --
-times           :: (Monoid' a, Transformable a) =>
+times           :: (Monoid' a, Transformable a, HasOnset a, HasOffset a) =>
                 Int -> a -> a
 
 -- |
@@ -375,7 +375,7 @@ times           :: (Monoid' a, Transformable a) =>
 --
 -- > [a] -> (a -> Score Note) -> Score Note
 --
-repeated        :: (Monoid' b, Transformable b) =>
+repeated        :: (Monoid' b, Transformable b, HasOnset b, HasOffset b) =>
                 [a] -> (a -> b) -> b
 
 -- |
@@ -383,16 +383,12 @@ repeated        :: (Monoid' b, Transformable b) =>
 --
 -- > Duration -> Score a -> Score a
 --
-group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
+group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a, HasOnset a, HasOffset a) =>
                 Int -> a -> a
 
-times = undefined
-repeated = undefined
-group = undefined
--- times n a = replicate (0 `max` n) () `repeated` const a
--- repeated = flip (\f -> scat . fmap f)
--- group n a = times n (fromIntegral n `compress` a)
-
+times n a = replicate (0 `max` n) () `repeated` const a
+repeated = flip (\f -> scat . fmap f)
+group n a = times n (fromIntegral n `compress` a)
 
 -- |
 -- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
@@ -615,18 +611,6 @@ mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
 
 
 
-     
-
-mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
-                 ([a] -> [b]) -> a -> b
-
-
-mapAllParts f   = mconcat . f . extractParts
-
-
-getParts = List.sort . List.nub . fmap getPart . events
-
-
 
 -- |
 -- Extract parts from the a score.
@@ -664,51 +648,50 @@ extractParts' a = fmap (\p -> (p, p `extractPart` a)) (getParts a)
 --
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
-mapPart = undefined
-
--- mapPart :: (Ord v, v ~ Part a, HasPart a, MonadPlus s, Performable s, Enum b) => b -> (s a -> s a) -> s a -> s a
--- mapPart n f = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
+mapPart :: (Enum a, Ord (Part (Event b)), Semigroup b, Performable b, Composable b, HasPart (Event b)) => a -> (b -> b) -> b -> b
+mapPart n f = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
--- mapAllParts f   = mconcat . f . extractParts
+mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
+                 ([a] -> [b]) -> a -> b
+mapAllParts f   = mconcat . f . extractParts
+
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapParts = undefined
--- mapParts :: (HasPart' a, MonadPlus s, Performable s) => (s a -> s b) -> s a -> s b
--- mapParts f = mapAllParts (fmap f)
+mapParts :: (Ord (Part (Event a)), Monoid b, Semigroup b, Performable a, Composable a, HasPart (Event a)) => (a -> b) -> a -> b
+mapParts f = mapAllParts (fmap f)
 
 -- |
 -- Get all parts in the given score. Returns a list of parts.
 --
 -- > Score a -> [Part]
 --    
-(setParts, modifyParts) = undefined
--- getParts :: (HasPart' a, Performable s) => s a -> [Part a]
--- getParts = List.sort . List.nub . fmap getPart . events
+getParts :: (Ord (Part (Event a)), Performable a, HasPart (Event a)) => a -> [Part (Event a)]
+getParts = List.sort . List.nub . fmap getPart . events
 
 -- |
 -- Set all parts in the given score.
 --
 -- > Part -> Score a -> Score a
 --
--- setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
--- setParts n = fmap (setPart n)
+setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
+setParts n = fmap (setPart n)
 
 -- |
 -- Modify all parts in the given score.
 --
 -- > (Part -> Part) -> Score a -> Score a
 --
--- modifyParts :: (HasPart a, Functor s) => (Part a -> Part a) -> s a -> s a
--- modifyParts n = fmap (modifyPart n)
+modifyParts :: (HasPart a, Functor s) => (Part a -> Part a) -> s a -> s a
+modifyParts n = fmap (modifyPart n)
 
 
 
