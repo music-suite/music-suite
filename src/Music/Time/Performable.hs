@@ -18,11 +18,18 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Performable (
-        Performable(..),
-        Composable(..),
+        -- * Prerequisites
         Monoid'(..),
+
         Transformable(..),
-        -- foldMapDefault,
+
+        -- * The 'Performable' class
+        Performable(..),
+
+        -- * The 'Composable' class
+        Composable(..),
+        
+        foldMapDefault
   ) where
 
 import Data.Foldable (Foldable(..))
@@ -44,7 +51,11 @@ type Monoid' a         =  (Monoid a, Semigroup a)
 
 type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
-
+-- |
+-- Composable values.
+--
+-- Minimal complete definition: 'note'.
+-- 
 class (Monoid a, Transformable a) => Composable a where
     note    :: Event a -> a
     event   :: Time a -> Duration a -> Event a -> a
@@ -69,9 +80,10 @@ class Performable a where
     events  :: a -> [Event a]
     events = fmap trd3 . perform
         
--- -- | This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
--- foldMapDefault :: (Performable s, Monoid m) => (a -> m) -> s a -> m
--- foldMapDefault f = foldMap f . toList'
+-- | This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
+foldMapDefault :: (Monoid c, Performable a) => (Event a -> c) -> a -> c
+foldMapDefault f = foldMap f . events
+
 
 untrip (a,b,c) = ((a,b),c)
 uncurry3 = (. untrip) . uncurry . uncurry

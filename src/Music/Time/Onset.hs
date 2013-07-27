@@ -84,15 +84,15 @@ class HasPostOffset s where
 -}
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
--- durationDefault :: (AffineSpace (Time s), HasOffset s, HasOnset s) => s a -> Duration s
+durationDefault :: (AdditiveGroup (Duration a), HasOffset a, HasOnset a) => a -> Duration a
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
--- onsetDefault :: (AffineSpace (Time s), HasOffset s, HasDuration s) => s a -> Time s
+onsetDefault :: (AdditiveGroup (Duration a), HasOffset a, HasDuration a) => a -> Time a
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
--- offsetDefault :: (AffineSpace (Time s), HasOnset s, HasDuration s) => s a -> Time s
+offsetDefault :: (AdditiveGroup (Duration a), HasOnset a, HasDuration a) => a -> Time a
 offsetDefault x = onset x .+^ duration x
                                                  
 {-

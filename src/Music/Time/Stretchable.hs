@@ -40,3 +40,4 @@ class Stretchable a where
     -- > Duration -> Score a -> Score a
     -- 
     stretch :: Duration a -> a -> a
+

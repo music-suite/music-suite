@@ -3,7 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
-    GeneralizedNewtypeDeriving #-} 
+    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -18,10 +18,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Time (
+        -- * The 'Time' and 'Duration' type functions
         Time(..),
         Duration(..),
+
+        -- * The 'Event' type functions
         Event(..),
 
+        -- * Basic time and duration types
         DurationT(..),
         TimeT(..),
   ) where
@@ -31,65 +35,34 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
-type family Duration (s :: *) :: *
-type family Event (s :: *) :: *
-type Time a = Point (Duration a)
-
 -- |
--- This type function returns the time type for a given type.
+-- This type function returns the duration type for a given type.
 --
--- It has kind
---
--- > (* -> *) -> *
---
--- meaning that an instance should be written on the form:
---
--- > type instance Time a = b
---
--- where /a/ and /b/ are type-level expression of kind @* -> *@ and @*@ respectively.
---
+type family Duration (s :: *) :: *
 
 -- |
 -- This type function returns the duration type for a given type.
 --
+type Time a = Point (Duration a)
 
-type DurationT = Rational
-
-type TimeT = Point DurationT
-
-
--------------------------------------------------------------------------------------
--- Duration type
--------------------------------------------------------------------------------------
+-- |
+-- This type function returns the value type for a given type.
+--
+type family Event (s :: *) :: *
 
 -- |
 -- This type represents relative time in seconds.
 --
-
-
-
--------------------------------------------------------------------------------------
--- Time type
--------------------------------------------------------------------------------------
+type DurationT = Rational
 
 -- |
 -- This type represents absolute time in seconds since the start time. Note
 -- that time can be negative, representing events occuring before the start time.
--- The start time is usually the the beginning of the musical performance. 
+-- The start time is usually the the beginning of the musical performance.
 --
 -- Time forms an affine space with durations as the underlying vector space,
--- that is, we can add a time to a duration to get a new time using '.+^', 
+-- that is, we can add a time to a duration to get a new time using '.+^',
 -- take the difference of two times to get a duration using '.-.'.
 --
+type TimeT = Point DurationT
 
-{-
-    Actually, I would prefer:
-
-        type TimeT = Point DurationT
-
-        fromTimeT :: Fractional a => TimeT -> a
-        fromTimeT = fromDurationT . unPoint
-
-        toTimeT :: Real a => a -> TimeT
-        toTimeT = P . toDurationT
--}                 
