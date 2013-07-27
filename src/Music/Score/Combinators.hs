@@ -432,7 +432,8 @@ mapFilterEvents :: Mappable a b =>
 --
 -- > (a -> Bool) -> Score a -> Score a
 --
-filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
+filter_         :: (Performable a, Composable a) => (Event a -> Bool)    -> a -> a
+map_            :: Mappable a b => (Event a -> Event b) -> a -> b
 
 -- |
 -- Map over all events in a score.
@@ -449,6 +450,7 @@ mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
         unM (a,b,Nothing) = Nothing
         unM (a,b,Just c)  = Just (a,b,c)
 filter_ p = filterEvents (\t d x -> p x)
+map_ f    = mapEvents (\t d x -> f x)
 mapAll f                    = compose . f . perform
 
 
@@ -621,8 +623,8 @@ setParts n = fmap (setPart n)
 --
 -- > (Part -> Part) -> Score a -> Score a
 --
-modifyParts :: (HasPart a, Functor s) => (Part a -> Part a) -> s a -> s a
-modifyParts n = fmap (modifyPart n)
+modifyParts :: (Mappable a a, HasPart e, e ~ Event a) => (Part e -> Part e) -> a -> a
+modifyParts n = map_ (modifyPart n)
 
 
 
@@ -635,27 +637,25 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
-(</>) :: (HasPart' (Event a), Enum (Part (Event a)), Performable a, Composable a) => a -> a -> a
-(</>) = undefined
--- a </> b = a `mplus` moveParts offset b
---     where
---         -- max voice in a + 1
---         offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
+(</>) :: (Enum (Part e), Semigroup a, Performable a, Composable a, HasPart' e, e ~ Event a) => a -> a -> a
+a </> b = a <> moveParts offset b
+    where
+        -- max voice in a + 1
+        offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
 
 -- |
 -- Move down one voice (all parts).
 --
-moveParts :: (HasPart' a, Enum (Part a), Integral b, Functor s) => b -> s a -> s a
-moveParts = undefined
--- moveParts x = modifyParts (successor x)
+moveParts
+  :: (Enum (Part e), Integral b, Performable a, Composable a, HasPart e, e ~ Event a) =>
+     b -> a -> a
+moveParts x = modifyParts (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
-moveToPart :: (HasPart' a, Enum (Part a), Functor s) => Part a -> s a -> s a
-moveToPart
- = undefined
--- moveToPart v = moveParts (fromEnum v)
+moveToPart :: (Enum (Part e), Enum b, Performable a, Composable a, HasPart e, e ~ Event a) => b -> a -> a
+moveToPart v = moveParts (fromEnum v)
 
 successor :: (Integral b, Enum a) => b -> a -> a
 successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
@@ -708,20 +708,14 @@ snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 -- |
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
--- onsetIn :: Time Score -> Duration Score -> Score a -> Score a
-onsetIn = undefined
--- onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
-    -- where
-        -- filter' = filterOnce
+--
+onsetIn :: (Performable a, Composable a, Ord (Duration a)) => Time a -> Duration a -> a -> a
+onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
+    where
+        filter' = filterOnce
         -- more lazy than mfilter
 
  
-
-
-
-
-
-
 
 --------------------------------------------------------------------------------
 -- Conversion
