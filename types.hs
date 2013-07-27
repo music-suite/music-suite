@@ -1,120 +1,202 @@
 
-{-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts, MultiParamTypeClasses, NoMonomorphismRestriction #-}
 
-import Data.Foldable
+import Data.Foldable (Foldable(..))
 import Data.Semigroup
 import Control.Monad.Plus
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
+import qualified Data.List as List
 
-type family Time (s :: * -> *) :: *
-type Duration a = Diff (Time a)
+-- type family Time (s :: * -> *) :: *
+type family Duration (s :: *) :: *
+type family Event (s :: *) :: *
+type Time a = Point (Duration a)
+-- type Duration a = Diff (Time a)
 
-class Delayable s where
-    delay :: Duration s -> s a -> s a
-class Stretchable s where
-    stretch :: Duration s -> s a -> s a
-class HasDuration s where
-    duration :: s a -> Duration s
-class HasOnset s where
-    onset  :: s a -> Time s
-class HasOffset s where
-    offset :: s a -> Time s
-class Foldable s => Performable s where
-    perform :: (t ~ Time s, d ~ Duration s) => s a -> [(t, d, a)]
+class Delayable a where
+    delay :: Duration a -> a -> a
+class Stretchable a where
+    stretch :: Duration a -> a -> a
+class HasDuration a where
+    duration :: a -> Duration a
+class HasOnset a where
+    onset  :: a -> Time a
+class HasOffset a where
+    offset :: a -> Time a
 
-type Monoid' a = (Monoid a, Semigroup a)
-class (Stretchable s, Delayable s, AdditiveGroup (Time s), AffineSpace (Time s)) => Transformable1 s where
-class (HasOnset s, HasOffset s, Transformable1 s) => Transformable s where
-class (MonadPlus s, Transformable s) => Composable s where
-class (Performable s, Composable s) => HasEvents s where
 
 class HasPart a where
     type Part a :: *
+    getPart :: a -> Part a
 type HasPart' a = (Ord (Part a), HasPart a)
 
+type Monoid' a          =  (Monoid a, Semigroup a)
+type Transformable1 a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
+type Transformable a    =  (HasOnset a, HasOffset a, Transformable1 a)
 
-(|>)            :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) =>
-                s a -> s a -> s a
-(<|)            :: (Semigroup (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) =>
-                s a -> s a -> s a
-scat            :: (Monoid' (s a), AffineSpace (Time s), HasOnset s, HasOffset s, Delayable s) =>
-                [s a] -> s a
-pcat            :: MonadPlus s =>
-                [s a] -> s a
+class Composable a where
+    compose :: [(Time a, Duration a, Event a)] -> a
+class Performable a where
+    perform :: a -> [(Time a, Duration a, Event a)]
+    events :: a -> [Event a]
 
-delay_          :: Delayable s =>
-                Duration s -> s a -> s a
-stretch_        :: Stretchable s =>
-                Duration s -> s a -> s a
-compress        :: (Stretchable s, Fractional d, d ~ Duration s) =>
-                d -> s a -> s a
-stretchTo       :: (Stretchable s, HasDuration s, Fractional d, d ~ Duration s) =>
-                d -> s a -> s a
-sustain         :: (Fractional (Duration s), Semigroup (s a), Stretchable s, HasDuration s) =>
-                s a -> s a -> s a
-anticipate      :: (Semigroup (s a), Transformable s, d ~ Duration s, Ord d) =>
-                d -> s a -> s a -> s a
-move            :: (Delayable s, d ~ Duration s) =>
-                d -> s a -> s a
-moveBack        :: (Delayable s, AdditiveGroup d, d ~ Duration s) =>
-                d -> s a -> s a
-startAt         :: (HasOnset s, Delayable s, AffineSpace t, t ~ Time s) =>
-                t -> s a -> s a
-stopAt          :: (HasOffset s, Delayable s, AffineSpace t, t ~ Time s) =>
-                t -> s a -> s a
 
-rest            :: MonadPlus s =>
-                s (Maybe a)
+
+(|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+(<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+scat            :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                [a] -> a
+pcat            :: Monoid' a =>
+                [a] -> a
+
+delay_          :: Delayable a =>
+                Duration a -> a -> a
+stretch_        :: Stretchable a =>
+                Duration a -> a -> a
+compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+                a -> a -> a
+anticipate      :: (Semigroup a, Transformable a, Ord d, d ~ Duration a) =>
+                d -> a -> a -> a
+move            :: (Delayable a, d ~ Duration a) =>
+                d -> a -> a
+moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
+                d -> a -> a
+startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t ->  a -> a
+stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t -> a -> a
+
+note            :: Monad m =>
+                a -> m a
+rest            :: MonadPlus m =>
+                m (Maybe a)
 removeRests     :: MonadPlus m =>
                 m (Maybe a) -> m a
 
-times           :: (Monoid' (s a), Transformable s) =>
-                Int -> s a -> s a
-repeated        :: (Monoid' (s b), Transformable s) =>
-                [a] -> (a -> s b) -> s b
-group           :: (Monoid' (s a), Transformable s, Fractional d, d ~ Duration s) =>
-                Int -> s a -> s a
+times           :: (Monoid' a, Transformable a) =>
+                Int -> a -> a
+repeated        :: (Monoid' b, Transformable b) =>
+                [a] -> (a -> b) -> b
+group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
+                Int -> a -> a
 
-retrograde      :: (HasEvents s, t ~ Time s, Num t, Ord t) =>
-                s a -> s a
-perform_        :: (Performable s, t ~ Time s, d ~ Duration s) =>
-                s a -> [(t, d, a)]
-compose         :: (Composable s, d ~ Duration s, t ~ Time s) =>
-                [(t, d, a)] -> s a
-mapEvents       :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
-                (t -> d -> a -> b) -> s a -> s b
-filterEvents    :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
-                (t -> d -> a -> Bool) -> s a -> s a
-mapPhraseS      :: HasEvents s =>
-                (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapPhrase       :: (HasPart' a, HasEvents s) =>
-                (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-mapAllEvents    :: (HasEvents s, d ~ Duration s, t ~ Time s) =>
-                ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
+a |> b =  a <> startAt (offset a) b
+a <| b =  b |> a
+scat = Prelude.foldr (|>) mempty
+pcat = Prelude.foldr (<>) mempty
+x `sustain` y = x <> duration x `stretchTo` y
+anticipate t a b =  a <> startAt (offset a .-^ t) b
+move = delay
+moveBack t = delay (negateV t)
+t `startAt` x = (t .-. onset x) `delay` x
+t `stopAt`  x = (t .-. offset x) `delay` x
+compress x = stretch (recip x)
+t `stretchTo` x = (t / duration x) `stretch` x
+note = return
+rest = return Nothing
+removeRests = mcatMaybes
+
+
+
+
+
+
+
+-- class (MonadPlus s, Transformable (s a)) => Composable s a where
+-- class (Performable s, Composable s a) => HasEvents s a where
+
+-- retrograde      :: (HasEvents s a, t ~ Time (s a), Num t, Ord t) =>
+                -- s a -> s a
+-- perform_        :: (Performable s, t ~ Time s, d ~ Duration s) =>
+                -- s a -> [(t, d, a)]
+-- compose         :: (a s, d ~ Duration s, t ~ Time s) =>
+--                 [(t, d, a)] -> s a
+-- mapEvents       :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
+--                 (t -> d -> a -> b) -> s a -> s b
+-- filterEvents    :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
+--                 (t -> d -> a -> Bool) -> s a -> s a
+-- mapPhraseS      :: HasEvents s =>
+--                 (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+-- mapPhrase       :: (HasPart' a, HasEvents s) =>
+--                 (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+-- mapAllEvents    :: (HasEvents s, d ~ Duration s, t ~ Time s) =>
+--                 ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
+-- 
+
+
+
+
+
+
+{-
+perform         :: Performable s => 
+                s a -> [(Time (s a), Duration (s a), a)]
+-}                
+type D = Double
+type T = Point D
+newtype S a = S [(T, D, a)]
+type instance Duration (S a) = D
+type instance Event (S a) = a
+
+instance HasDuration (S a) where
+instance HasOnset (S a) where
+instance HasOffset (S a) where
+instance Delayable (S a) where
+instance Stretchable (S a) where
+instance Monoid (S a) where
+instance Performable (S a) where
+    perform (S a) = a
+instance Composable (S a) where
+    compose = composeDefault
+
+composeDefault :: (Monoid a, Transformable a) => [(Time a, Duration a, Event a)] -> a
+composeDefault = mconcat . fmap event
+ 
+event :: (Transformable a) => (Time a, Duration a, Event a) -> a
+event (t,d,x) = delay (t .-. origin) . stretch d $ note_ x
+
+note_ :: Event a -> a
+note_ = undefined
+
+-- mapEvents f = mapAllParts (liftM $ mapEventsS f)
+-- mapEventsS f sc = compose . fmap (third' f) . perform $ sc
+--   where third' f (a,b,c) = (a,b,f a b c)
+-- mapAllParts f = msum . f . extract
+-- extract sc = fmap (`extract'` sc) (getParts sc)
+--     where
+--         extract' v = mfilter ((== v) . getPart)
+--         getParts = List.sort . List.nub . fmap getPart . events
 
 
 (
-    (|>),
-    (<|),
-    scat,
-    pcat,
-    sustain,
-    anticipate,
-    move,
-    moveBack,
-    startAt,
-    stopAt,
-    compress,
-    stretchTo,
-    rest,
-    removeRests,
+    -- (|>),
+    -- (<|),
+    -- scat,
+    -- pcat,
+    -- sustain,
+    -- anticipate,
+    -- move,
+    -- moveBack,
+    -- startAt,
+    -- stopAt,
+    -- compress,
+    -- stretchTo,
+    -- rest,
+    -- removeRests,
     times,
     repeated,
     group,
-    compose,
+    -- compose,
     retrograde,
-    mapEvents,
+    -- mapEvents,
     filterEvents,
     mapFilterEvents,
     mapFirst,
