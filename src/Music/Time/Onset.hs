@@ -22,9 +22,9 @@ module Music.Time.Onset (
         HasDuration(..),
         HasOnset(..),
         HasOffset(..),
-        HasPreOnset(..),
-        HasPostOnset(..),
-        HasPostOffset(..),
+        -- HasPreOnset(..),
+        -- HasPostOnset(..),
+        -- HasPostOffset(..),
         -- ** Defaults
         durationDefault,
         onsetDefault,
@@ -72,6 +72,7 @@ class HasOffset s where
     --
     offset :: s a -> Time s
                               
+{-
 class HasPreOnset s where
     preOnset :: s a -> Time s
 
@@ -80,6 +81,7 @@ class HasPostOnset s where
 
 class HasPostOffset s where
     postOffset :: s a -> Time s
+-}
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
 durationDefault :: (AffineSpace (Time s), HasOffset s, HasOnset s) => s a -> Duration s
