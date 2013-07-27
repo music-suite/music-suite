@@ -113,6 +113,15 @@ mapPhraseS      :: (Performable a, Composable b, Duration a ~ Duration b) =>
                 (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
 
 
+slice           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
+                Time a -> Time a -> a -> a
+after           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
+                Time a -> a -> a
+before          :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
+                Time a -> a -> a
+
+
+
 
 -- TODO no MonadPlus
 
@@ -159,12 +168,16 @@ retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
 
 
 mapAll f                    = compose . f . perform
-mapEvents f                 = compose . fmap (third' f) . perform
-mapFilterEvents f           = compose . mcatMaybes . fmap (unM . third' f) . perform
+mapEvents f                 = mapAll $ fmap (third' f)
+mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
     where
         unM (a,b,Nothing) = Nothing
         unM (a,b,Just c)  = Just (a,b,c)
 filterEvents f = mapFilterEvents (partial3 f)
+
+after  a                    = filterEvents (\t d _ -> a <= t)
+before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
+slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
 mapPhraseS f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 
