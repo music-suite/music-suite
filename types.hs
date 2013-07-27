@@ -36,8 +36,8 @@ type Monoid' a          =  (Monoid a, Semigroup a)
 type Transformable1 a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 type Transformable a    =  (HasOnset a, HasOffset a, Transformable1 a)
 
-class (Monoid a, Transformable a) => Composable a where
-    note :: Event a -> a
+class (Monoid a, Transformable1 a) => Composable a where
+    note    :: Event a -> a
     compose :: [(Time a, Duration a, Event a)] -> a
     compose = mconcat . fmap event
 class Performable a where
@@ -88,18 +88,21 @@ repeated        :: (Monoid' b, Transformable b) =>
 group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
                 Int -> a -> a
 
+move = delay
+moveBack t = delay (negateV t)
+compress x = stretch (recip x)
+t `stretchTo` x = (t / duration x) `stretch` x
+t `startAt` x = (t .-. onset x) `delay` x
+t `stopAt`  x = (t .-. offset x) `delay` x
+
 a |> b =  a <> startAt (offset a) b
 a <| b =  b |> a
 scat = Prelude.foldr (|>) mempty
 pcat = Prelude.foldr (<>) mempty
-x `sustain` y = x <> duration x `stretchTo` y
+
+x `sustain` y    = x <> duration x `stretchTo` y
 anticipate t a b =  a <> startAt (offset a .-^ t) b
-move = delay
-moveBack t = delay (negateV t)
-t `startAt` x = (t .-. onset x) `delay` x
-t `stopAt`  x = (t .-. offset x) `delay` x
-compress x = stretch (recip x)
-t `stretchTo` x = (t / duration x) `stretch` x
+
 rest = return Nothing
 removeRests = mcatMaybes
 
@@ -129,6 +132,29 @@ removeRests = mcatMaybes
 -- mapAllEvents    :: (HasEvents s, d ~ Duration s, t ~ Time s) =>
 --                 ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
 -- 
+mapAllEvents :: (Performable a, Composable b) => ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+mapAllParts :: (MonadPlus m, a ~ Event (m a), HasPart' a, Performable (m a)) => ([m a] -> [m b]) -> m a -> m b
+
+mapEvents f                 =              mapAllParts (liftM $ mapEventsS f)
+mapFilterEvents f           = mcatMaybes . mapAllParts (liftM $ mapEventsS f)
+mapEventsS f                = compose . fmap (third' f) . perform
+mapAllEvents f              = compose . f . perform
+
+mapPhrase f g h             =              mapAllParts (fmap $ mapPhraseS f g h)
+mapPhraseS f g h            = compose . mapFirstMiddleLast (third f) (third g) (third h) . perform
+mapFirstMiddleLast f g h    = go
+    where
+        go []    = []
+        go [a]   = [f a]
+        go [a,b] = [f a, h b]
+        go xs    = [f $ head xs]          ++ 
+                   map g (tail $ init xs) ++ 
+                   [h $ last xs]
+mapAllParts f   = msum . f . extract
+    where
+        extract a = fmap (`extract'` a) (getParts a)
+        extract' v = mfilter ((== v) . getPart)
+        getParts = List.sort . List.nub . fmap getPart . events
 
 
 
@@ -161,6 +187,7 @@ instance Performable (S a) where
     perform (S a) = a
 instance Composable (S a) where
     note a = S [(origin, 1, a)]
+    compose = S
  
 event :: Composable a => (Time a, Duration a, Event a) -> a
 event (t,d,x) = delay (t .-. origin) . stretch d $ note x
@@ -172,15 +199,9 @@ list z f [] = z
 list z f xs = f xs
 first3 f (a,b,c) = (f a,b,c)
 second3 f (a,b,c) = (a,f b,c)
+third f (a,b,c) = (a,b,f c)
+third' f (a,b,c) = (a,b,f a b c)
 
--- mapEvents f = mapAllParts (liftM $ mapEventsS f)
--- mapEventsS f sc = compose . fmap (third' f) . perform $ sc
---   where third' f (a,b,c) = (a,b,f a b c)
--- mapAllParts f = msum . f . extract
--- extract sc = fmap (`extract'` sc) (getParts sc)
---     where
---         extract' v = mfilter ((== v) . getPart)
---         getParts = List.sort . List.nub . fmap getPart . events
 
 
 (
@@ -204,13 +225,13 @@ second3 f (a,b,c) = (a,f b,c)
     -- compose,
     retrograde,
     -- mapEvents,
-    filterEvents,
-    mapFilterEvents,
-    mapFirst,
-    mapLast,
-    mapPhraseS,
-    mapAllEvents,
-    mapPhrase,
+    -- filterEvents,
+    -- mapFilterEvents,
+    -- mapFirst,
+    -- mapLast,
+    -- mapPhraseS,
+    -- mapAllEvents,
+    -- mapPhrase,
     delay_,
     stretch_,
     perform_
