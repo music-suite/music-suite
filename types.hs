@@ -190,7 +190,7 @@ mapAllParts f   = mconcat . f . extractParts
 perform         :: Performable s => 
                 s a -> [(Time (s a), Duration (s a), a)]
 -}                
-type D = Double
+type D = Rational
 type T = Point D
 newtype S a = S [(T, D, a)]
 type instance Duration (S a) = D
