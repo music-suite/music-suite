@@ -10,11 +10,9 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import qualified Data.List as List
 
--- type family Time (s :: * -> *) :: *
 type family Duration (s :: *) :: *
 type family Event (s :: *) :: *
 type Time a = Point (Duration a)
--- type Duration a = Diff (Time a)
 
 class Delayable a where
     delay :: Duration a -> a -> a
