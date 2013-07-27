@@ -727,43 +727,39 @@ onsetIn = undefined
 -- Conversion
 --------------------------------------------------------------------------------
 
-(scoreToVoice, voiceToScore, voiceToScore') = undefined
-
 -- |
 -- Convert a score into a voice.
 --
 -- This function fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
--- scoreToVoice = voice . fmap throwTime . addRests . perform
---     where
---        throwTime (t,d,x) = (d,x)
---        addRests = concat . snd . mapAccumL g 0
---            where
---                g u (t, d, x)
---                    | u == t    = (t .+^ d, [(t, d, Just x)])
---                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
---                    | otherwise = error "addRests: Strange prevTime"
+scoreToVoice = voice . fmap throwTime . addRests . perform
+    where
+       throwTime (t,d,x) = (d,x)
+       addRests = concat . snd . mapAccumL g origin
+           where
+               g u (t, d, x)
+                   | u == t    = (t .+^ d, [(t, d, Just x)])
+                   | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+                   | otherwise = error "addRests: Strange prevTime"
        
 
 -- |
 -- Convert a voice into a score.
 --
 voiceToScore :: Voice a -> Score a
--- voiceToScore = scat . fmap g . getVoice
---     where
---         g (d,x) = stretch d (note x)
+voiceToScore = scat . fmap g . getVoice
+    where
+        g (d,x) = stretch d (note x)
 
 -- |
 -- Convert a voice which may contain rests into a score.
 --
 voiceToScore' :: Voice (Maybe a) -> Score a
--- voiceToScore' = mcatMaybes . voiceToScore
+voiceToScore' = mcatMaybes . voiceToScore
 
--- TODO move this instance
 instance Performable (Voice a) where
-    perform = undefined
-    -- perform = perform . voiceToScore
+    perform = perform . voiceToScore
 
 
 --------------------------------------------------------------------------------
