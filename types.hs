@@ -36,8 +36,10 @@ type Monoid' a          =  (Monoid a, Semigroup a)
 type Transformable1 a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 type Transformable a    =  (HasOnset a, HasOffset a, Transformable1 a)
 
-class Composable a where
+class (Monoid a, Transformable a) => Composable a where
+    note :: Event a -> a
     compose :: [(Time a, Duration a, Event a)] -> a
+    compose = mconcat . fmap event
 class Performable a where
     perform :: a -> [(Time a, Duration a, Event a)]
     events :: a -> [Event a]
@@ -74,8 +76,6 @@ startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
 stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
                 t -> a -> a
 
-note            :: Monad m =>
-                a -> m a
 rest            :: MonadPlus m =>
                 m (Maybe a)
 removeRests     :: MonadPlus m =>
@@ -100,7 +100,6 @@ t `startAt` x = (t .-. onset x) `delay` x
 t `stopAt`  x = (t .-. offset x) `delay` x
 compress x = stretch (recip x)
 t `stretchTo` x = (t / duration x) `stretch` x
-note = return
 rest = return Nothing
 removeRests = mcatMaybes
 
@@ -147,24 +146,32 @@ type instance Duration (S a) = D
 type instance Event (S a) = a
 
 instance HasDuration (S a) where
+    duration x = offset x .-. onset x
 instance HasOnset (S a) where
+    onset (S a) = list origin (on . head) a where on (t,d,x) = t
 instance HasOffset (S a) where
+    offset (S a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
 instance Delayable (S a) where
+    d `delay` S a = S $ fmap (first3 (.+^ d)) $ a
 instance Stretchable (S a) where
+    d `stretch` S a = S $ fmap (first3 (\t -> origin .+^(t .-. origin)^*d) . second3 (^* d)) $ a
 instance Monoid (S a) where
+instance Monad S where
 instance Performable (S a) where
     perform (S a) = a
 instance Composable (S a) where
-    compose = composeDefault
-
-composeDefault :: (Monoid a, Transformable a) => [(Time a, Duration a, Event a)] -> a
-composeDefault = mconcat . fmap event
+    note a = S [(origin, 1, a)]
  
-event :: (Transformable a) => (Time a, Duration a, Event a) -> a
-event (t,d,x) = delay (t .-. origin) . stretch d $ note_ x
+event :: Composable a => (Time a, Duration a, Event a) -> a
+event (t,d,x) = delay (t .-. origin) . stretch d $ note x
 
-note_ :: Event a -> a
-note_ = undefined
+
+
+
+list z f [] = z
+list z f xs = f xs
+first3 f (a,b,c) = (f a,b,c)
+second3 f (a,b,c) = (a,f b,c)
 
 -- mapEvents f = mapAllParts (liftM $ mapEventsS f)
 -- mapEventsS f sc = compose . fmap (third' f) . perform $ sc
