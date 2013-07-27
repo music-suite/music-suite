@@ -108,10 +108,12 @@ mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
 filterEvents   :: (Performable a, Composable a) =>
                 (Time a -> Duration a -> Event a -> Bool) -> a -> a
 
+filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
+
 mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
                 (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
 
-mapPhraseS      :: (Performable a, Composable b, Duration a ~ Duration b) =>
+mapPhraseSingle      :: (Performable a, Composable b, Duration a ~ Duration b) =>
                 (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
 
 
@@ -122,25 +124,13 @@ after           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a,
 before          :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
                 Time a -> a -> a
 
+mapPhrase       :: (Performable a, Composable a, Composable b, Semigroup b,
+                    HasPart' (Event a), Duration a ~ Duration b
+                ) =>
+                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
 
-
-
--- TODO no MonadPlus
-
--- mapFilterEvents :: (MonadPlus s, Performable a, Composable b,
---                     Duration a ~ Duration (s (Maybe a1))
---                 ) =>
---                 (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
-
-
-mapPhrase       :: (MonadPlus s, Performable (s a),
-                Composable (s b), HasPart' a, 
-                Duration (s a) ~ Duration (s b),
-                Event (s a) ~ a, Event (s b) ~ b) =>
-                (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
-
-mapAllParts     :: (MonadPlus s, a ~ Event (s a), HasPart' a, Performable (s a)) => 
-                ([s a] -> [s b]) -> s a -> s b
+mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
+                 ([a] -> [b]) -> a -> b
 
 
 
@@ -178,19 +168,19 @@ mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
         unM (a,b,Nothing) = Nothing
         unM (a,b,Just c)  = Just (a,b,c)
 filterEvents f = mapFilterEvents (partial3 f)
+filter_ p = filterEvents (\t d x -> p x)
 
 after  a                    = filterEvents (\t d _ -> a <= t)
 before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
-mapPhraseS f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+mapPhraseSingle f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
 
-
-mapPhrase f g h             = mapAllParts (fmap $ mapPhraseS f g h)
-mapAllParts f   = msum . f . extract
+mapAllParts f   = mconcat . f . extractParts
     where
-        extract a = fmap (`extract'` a) (getParts a)
-        extract' v = mfilter ((== v) . getPart)
+        extractParts a = fmap (`extractPart` a) (getParts a)
+        extractPart v = filter_ ((== v) . getPart)
         getParts = List.sort . List.nub . fmap getPart . events
 
 
@@ -256,33 +246,9 @@ partial3 f          = curry3 (fmap trd3 . partial (uncurry3 f))
 
 
 (
-    -- (|>),
-    -- (<|),
-    -- scat,
-    -- pcat,
-    -- sustain,
-    -- anticipate,
-    -- move,
-    -- moveBack,
-    -- startAt,
-    -- stopAt,
-    -- compress,
-    -- stretchTo,
-    -- rest,
-    -- removeRests,
     times,
     repeated,
     group,
-    -- compose,
-    -- retrograde,
-    -- mapEvents,
-    -- filterEvents,
-    -- mapFilterEvents,
-    -- mapFirst,
-    -- mapLast,
-    -- mapPhraseS,
-    -- mapAll,
-    -- mapPhrase,
     delay_,
     stretch_,
     perform_
