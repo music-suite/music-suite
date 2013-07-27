@@ -83,8 +83,7 @@ type instance Duration (Track a) = DurationT
 type instance Event (Track a) = a
 
 track :: Real t => [(t, a)] -> Track a
-track = undefined
--- track = Track . fmap (first (fromRational . toRational))
+track = Track . fmap (first (P . fromRational . toRational))
 
 instance Semigroup (Track a) where
     (<>) = mappend
@@ -100,8 +99,7 @@ instance Monad Track where
     return a = Track [(origin, a)]
     a >>= k = join' . fmap k $ a
         where
-            join' = undefined
-            -- join' (Track ts) = foldMap (uncurry delay') ts
+            join' (Track ts) = foldMap (uncurry delay') ts
 
 instance Applicative Track where
     pure  = return
@@ -116,18 +114,14 @@ instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
 
-instance Stretchable (Track a) where
-    stretch = undefined
-    -- n `stretch` Track tr = Track $ fmap (first (^* (fromRational . toRational) n)) tr
+instance HasOnset (Track a) where
+    onset (Track a) = list origin (on . head) a where on (t,x) = t
 
 instance Delayable (Track a) where
-    delay = undefined
-    -- d `delay` Track tr = Track $ fmap (first (.+^ d)) tr
+    d `delay` Track a = Track $ fmap (first (.+^ d)) $ a
 
-instance HasOnset (Track a) where
-    onset = undefined
-    -- onset  (Track []) = 0
-    -- onset  (Track xs) = minimum (fmap on xs)  where on   (t,x) = t
+instance Stretchable (Track a) where
+    d `stretch` Track a = Track $ fmap (first (\t -> origin .+^(t .-. origin)^*d)) $ a
 
 {-
 instance HasOffset (Track) where
@@ -153,7 +147,7 @@ instance Arbitrary a => Arbitrary (Track a) where
 
 -------------------------------------------------------------------------------------
 
-delay' t = delay ((fromRational . toRational) t)
+delay' t = delay (t .-. origin)
 
 list z f [] = z
 list z f xs = f xs

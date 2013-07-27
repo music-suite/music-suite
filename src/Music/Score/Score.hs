@@ -137,16 +137,22 @@ instance MonadPlus Score where
 
 instance HasDuration (Score a) where
     duration x = offset x .-. onset x
+
 instance HasOnset (Score a) where
     onset (Score a) = list origin (on . head) a where on (t,d,x) = t
+
 instance HasOffset (Score a) where
     offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
+
 instance Delayable (Score a) where
     d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
+
 instance Stretchable (Score a) where
     d `stretch` Score a = Score $ fmap (first3 (\t -> origin .+^(t .-. origin)^*d) . second3 (^* d)) $ a
+
 instance Performable (Score a) where
     perform (Score a) = a
+
 instance Composable (Score a) where
     note a = Score [(origin, 1, a)]
     compose = Score
