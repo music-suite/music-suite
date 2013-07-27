@@ -1,8 +1,9 @@
 
 {-# LANGUAGE TypeFamilies, ConstraintKinds, FlexibleContexts, MultiParamTypeClasses, NoMonomorphismRestriction #-}
 
-import Data.Foldable (Foldable(..))
+import Data.Ord
 import Data.Semigroup
+import Data.Foldable (Foldable(..))
 import Control.Monad.Plus
 import Data.VectorSpace
 import Data.AffineSpace
@@ -88,73 +89,82 @@ group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a) =>
                 Int -> a -> a
 
 
-mapAllEvents    :: (Performable a, Composable b) => 
+retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =>
+                a -> a
+     
+mapAll          :: (Performable a, Composable b, Duration a ~ Duration b) => 
                 ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+
+mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Event a -> Event b) -> a -> b
+
+filterEvents   :: (Performable a, Composable a) =>
+                (Time a -> Duration a -> Event a -> Bool) -> a -> a
+
+mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
+
+mapPhraseS      :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
+
+
+
+-- TODO no MonadPlus
+
+-- mapFilterEvents :: (MonadPlus s, Performable a, Composable b,
+--                     Duration a ~ Duration (s (Maybe a1))
+--                 ) =>
+--                 (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
+
+
+mapPhrase       :: (MonadPlus s, Performable (s a),
+                Composable (s b), HasPart' a, 
+                Duration (s a) ~ Duration (s b),
+                Event (s a) ~ a, Event (s b) ~ b) =>
+                (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
+
 mapAllParts     :: (MonadPlus s, a ~ Event (s a), HasPart' a, Performable (s a)) => 
                 ([s a] -> [s b]) -> s a -> s b
 
 
 
-move = delay
-moveBack t = delay (negateV t)
-compress x = stretch (recip x)
+
+move            = delay
+moveBack t      = delay (negateV t)
+compress x      = stretch (recip x)
 t `stretchTo` x = (t / duration x) `stretch` x
-t `startAt` x = (t .-. onset x) `delay` x
-t `stopAt`  x = (t .-. offset x) `delay` x
+t `startAt` x   = (t .-. onset x) `delay` x
+t `stopAt`  x   = (t .-. offset x) `delay` x
 
 a |> b =  a <> startAt (offset a) b
 a <| b =  b |> a
 scat = Prelude.foldr (|>) mempty
 pcat = Prelude.foldr (<>) mempty
 
-x `sustain` y    = x <> duration x `stretchTo` y
-anticipate t a b =  a <> startAt (offset a .-^ t) b
+x `sustain` y     = x <> duration x `stretchTo` y
+anticipate t a b  =  a <> startAt (offset a .-^ t) b
 
-rest = return Nothing
-removeRests = mcatMaybes
+rest            = return Nothing
+removeRests     = mcatMaybes
+
+retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
+    where
+        g (t,d,x) = (negateP (t.+^d),d,x)
+        negateP a = origin .+^ negateV (a .-. origin)
 
 
+mapAll f                    = compose . f . perform
+mapEvents f                 = compose . fmap (third' f) . perform
+mapFilterEvents f           = compose . mcatMaybes . fmap (unM . third' f) . perform
+    where
+        unM (a,b,Nothing) = Nothing
+        unM (a,b,Just c)  = Just (a,b,c)
+filterEvents f = mapFilterEvents (partial3 f)
 
+mapPhraseS f g h            = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 
-
-
-
--- class (MonadPlus s, Transformable (s a)) => Composable s a where
--- class (Performable s, Composable s a) => HasEvents s a where
-
--- retrograde      :: (HasEvents s a, t ~ Time (s a), Num t, Ord t) =>
-                -- s a -> s a
--- perform_        :: (Performable s, t ~ Time s, d ~ Duration s) =>
-                -- s a -> [(t, d, a)]
--- compose         :: (a s, d ~ Duration s, t ~ Time s) =>
---                 [(t, d, a)] -> s a
--- mapEvents       :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
---                 (t -> d -> a -> b) -> s a -> s b
--- filterEvents    :: (HasPart' a, HasEvents s, t ~ Time s, d ~ Duration s) =>
---                 (t -> d -> a -> Bool) -> s a -> s a
--- mapPhraseS      :: HasEvents s =>
---                 (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapPhrase       :: (HasPart' a, HasEvents s) =>
---                 (a -> b) -> (a -> b) -> (a -> b) -> s a -> s b
--- mapAllEvents    :: (HasEvents s, d ~ Duration s, t ~ Time s) =>
---                 ([(t, d, a)] -> [(t, d, b)]) -> s a -> s b
--- 
-
-mapEvents f                 =              mapAllParts (liftM $ mapEventsS f)
-mapFilterEvents f           = mcatMaybes . mapAllParts (liftM $ mapEventsS f)
-mapEventsS f                = compose . fmap (third' f) . perform
-mapAllEvents f              = compose . f . perform
 
 mapPhrase f g h             =              mapAllParts (fmap $ mapPhraseS f g h)
-mapPhraseS f g h            = compose . mapFirstMiddleLast (third f) (third g) (third h) . perform
-mapFirstMiddleLast f g h    = go
-    where
-        go []    = []
-        go [a]   = [f a]
-        go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++ 
-                   map g (tail $ init xs) ++ 
-                   [h $ last xs]
 mapAllParts f   = msum . f . extract
     where
         extract a = fmap (`extract'` a) (getParts a)
@@ -200,12 +210,28 @@ event (t,d,x) = delay (t .-. origin) . stretch d $ note x
 
 
 
-list z f [] = z
-list z f xs = f xs
-first3 f (a,b,c) = (f a,b,c)
-second3 f (a,b,c) = (a,f b,c)
-third f (a,b,c) = (a,b,f c)
-third' f (a,b,c) = (a,b,f a b c)
+list z f []         = z
+list z f xs         = f xs
+fst3 (a, b, c)      = a
+trd3 (a, b, c)      = c
+curry3              = curry . curry . (. trip)
+uncurry3            = (. untrip) . uncurry . uncurry
+first3 f (a,b,c)    = (f a,b,c)
+second3 f (a,b,c)   = (a,f b,c)
+third f (a,b,c)     = (a,b,f c)
+third' f (a,b,c)    = (a,b,f a b c)
+mapFirstMiddleLast f g h = go
+    where
+        go []    = []
+        go [a]   = [f a]
+        go [a,b] = [f a, h b]
+        go xs    = [f $ head xs]          ++ 
+                   map g (tail $ init xs) ++ 
+                   [h $ last xs]
+untrip (a,b,c)      = ((a,b),c)
+trip ((a,b),c)      = (a,b,c)
+partial2 f          = curry  (fmap snd  . partial (uncurry f))
+partial3 f          = curry3 (fmap trd3 . partial (uncurry3 f))
 
 
 
@@ -228,14 +254,14 @@ third' f (a,b,c) = (a,b,f a b c)
     repeated,
     group,
     -- compose,
-    retrograde,
+    -- retrograde,
     -- mapEvents,
     -- filterEvents,
     -- mapFilterEvents,
     -- mapFirst,
     -- mapLast,
     -- mapPhraseS,
-    -- mapAllEvents,
+    -- mapAll,
     -- mapPhrase,
     delay_,
     stretch_,

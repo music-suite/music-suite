@@ -525,8 +525,6 @@ mapEventsSingle f sc = compose . fmap (third' f) . perform $ sc
 -- mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [b]) -> s a -> s b
 -- mapAllEventsSingle' f = compose . fmap trd3 . f . perform
 
-trd3 (a,b,c) = c
-
 mapAllEventsSingle' :: (HasEvents s, t ~ Time s, d ~ Duration s) => ([(t,d,a)] -> [(t,d,b)]) -> s a -> s b
 mapAllEventsSingle' f = compose . f . perform
 
@@ -690,6 +688,7 @@ mapFirstMiddleLast f g h = go
 delay' t = delay (t .-. zeroV)
 
 fst3 (t, d, x) = t
+trd3 (a,b,c) = c
 
 third f (a,b,c) = (a,b,f c)
 third' f (a,b,c) = (a,b,f a b c)
@@ -710,9 +709,6 @@ uncurry3 = (. untrip) . uncurry . uncurry
 untrip (a,b,c) = ((a,b),c)
 trip ((a,b),c) = (a,b,c)
 
-{-
-partial :: (a -> Bool)            -> a -> Maybe a 
--}
 partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
 partial2 f = curry  (fmap snd  . partial (uncurry f))
