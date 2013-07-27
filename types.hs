@@ -51,6 +51,8 @@ class Performable a where
     events = fmap trd3 . perform
 
 
+align           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
 (|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 (<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
@@ -150,7 +152,9 @@ t `stretchTo` x = (t / duration x) `stretch` x
 t `startAt` x   = (t .-. onset x) `delay` x
 t `stopAt`  x   = (t .-. offset x) `delay` x
 
-a |> b =  a <> startAt (offset a) b
+a `align` b =  startAt (offset a) b
+
+a |> b =  a <> a `align` b
 a <| b =  b |> a
 scat = Prelude.foldr (|>) mempty
 pcat = Prelude.foldr (<>) mempty
