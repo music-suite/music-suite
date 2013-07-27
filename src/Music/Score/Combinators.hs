@@ -1,16 +1,5 @@
 
-{-# LANGUAGE
-    CPP,
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    OverloadedStrings,
-    MultiParamTypeClasses,
-    NoMonomorphismRestriction,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, ConstraintKinds #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -27,14 +16,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Combinators (
-        -- ** Preliminaries
-        Monoid',
-        Transformable,
-        Phraseable(..),
-        Slicable(..),
-
         -- * Creating scores
-        note,
         rest,
         noteRest,
         removeRests,
@@ -58,6 +40,7 @@ module Music.Score.Combinators (
         retrograde,
 
         --- * Truncation
+        Slicable(..),
         before,
         after,
         slice,           
@@ -87,6 +70,7 @@ module Music.Score.Combinators (
         --- ** Mapping over phrases
         -- mapFirst,
         -- mapLast,
+        Phraseable(..),
         mapPhrase,
         mapPhraseSingle,
 
