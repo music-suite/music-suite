@@ -1,6 +1,6 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies,
-             NoMonomorphismRestriction #-}
+             NoMonomorphismRestriction, DeriveDataTypeable #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -55,6 +55,7 @@ import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.Typeable
 import Control.Monad
 import Control.Applicative
 import qualified Data.List as List
@@ -102,7 +103,7 @@ newtype Interval = Interval { getInterval :: (
             Int,        -- diatonic semitone [0..6]
             Int         -- chromatic semitone [0..11]
     ) }
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Typeable)
 
 instance Num Interval where
     (+)           = addInterval

@@ -1,5 +1,6 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, 
+             DeriveDataTypeable #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -29,6 +30,7 @@ import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.Typeable
 import Control.Monad
 import Control.Applicative
 import qualified Data.Char as Char
@@ -97,7 +99,7 @@ import Music.Pitch.Common.Semitones
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Pitch = Pitch { getPitch :: Interval }
-    deriving (Eq, Num, Ord)
+    deriving (Eq, Num, Ord, Typeable)
     
 instance AffineSpace Pitch where
     type Diff Pitch     = Interval
