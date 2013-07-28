@@ -139,6 +139,8 @@ instance HasDuration (Score a) where
     duration x = offset x .-. onset x
 
 instance HasOnset (Score a) where
+    -- onset (Score a) = list origin (minimum . map on) a where on (t,d,x) = t
+    -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
     onset (Score a) = list origin (on . head) a where on (t,d,x) = t
 
 instance HasOffset (Score a) where
@@ -154,13 +156,8 @@ instance Performable (Score a) where
     perform (Score a) = a
 
 instance Composable (Score a) where
-    note a = Score [(origin, 1, a)]
+    note    = return
     compose = Score
-
-    -- onset  (Score []) = 0
-    -- onset  (Score xs) = minimum (fmap on xs)  where on  (t,d,x) = t
-
-    -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -168,7 +165,10 @@ instance IsPitch a => IsPitch (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
+
+
 -- Utility
+
 instance AdditiveGroup (Score a) where
     zeroV   = error "Not impl"
     (^+^)   = error "Not impl"
