@@ -5,13 +5,14 @@ import Data.Ord
 import Data.Semigroup
 import Data.Foldable (Foldable(..))
 import Control.Monad.Plus
+import Data.Pointed
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import qualified Data.List as List
 
 type family Duration (s :: *) :: *
-type family Event (s :: *) :: *
+type family Value (s :: *) :: *
 type Time a = Point (Duration a)
 
 class Delayable a where
@@ -34,18 +35,26 @@ type HasPart' a = (Ord (Part a), HasPart a)
 type Monoid' a         =  (Monoid a, Semigroup a)
 type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
-class (Monoid a, Transformable a) => Composable a where
-    note    :: Event a -> a
-    event   :: Time a -> Duration a -> Event a -> a
-    compose :: [(Time a, Duration a, Event a)] -> a
+
+type HasPoint a = (a ~ (Container a) (Value a), Pointed (Container a))
+
+class (Monoid a, Transformable a, HasPoint a    
+    ) => Composable a where
+    -- note    :: Value a -> a
+    event   :: Time a -> Duration a -> Value a -> a
+    compose :: [(Time a, Duration a, Value a)] -> a
+
+    
+    -- note = point
+    
     -- Given Num (Duration a) we have
     -- note a        = compose [(origin, 1, a)]
-    event t d x   = (delay (t .-. origin) . stretch d) (note x)
+    event t d x   = (delay (t .-. origin) . stretch d) (point x)
     compose       = mconcat . fmap (uncurry3 event)
 
 class Performable a where
-    perform :: a -> [(Time a, Duration a, Event a)]
-    events  :: a -> [Event a]
+    perform :: a -> [(Time a, Duration a, Value a)]
+    events  :: a -> [Value a]
     events = fmap trd3 . perform
 
 
@@ -98,21 +107,21 @@ retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =
                 a -> a
      
 mapAll          :: (Performable a, Composable b, Duration a ~ Duration b) => 
-                ([(Time a, Duration a, Event a)] -> [(Time b, Duration b, Event b)]) -> a -> b
+                ([(Time a, Duration a, Value a)] -> [(Time b, Duration b, Value b)]) -> a -> b
 
-mapEvents       :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Time a -> Duration a -> Event a -> Event b) -> a -> b
+mapValues       :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Value a -> Value b) -> a -> b
 
-filterEvents   :: (Performable a, Composable a) =>
-                (Time a -> Duration a -> Event a -> Bool) -> a -> a
+filterValues   :: (Performable a, Composable a) =>
+                (Time a -> Duration a -> Value a -> Bool) -> a -> a
 
-filter_         :: (Performable a, Composable a) => (Event a -> Bool) -> a -> a
+filter_         :: (Performable a, Composable a) => (Value a -> Bool) -> a -> a
 
-mapFilterEvents :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
+mapFilterValues :: (Performable a, Composable b, Duration a ~ Duration b) =>
+                (Time a -> Duration a -> Value a -> Maybe (Value b)) -> a -> b
 
 mapPhraseSingle      :: (Performable a, Composable b, Duration a ~ Duration b) =>
-                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
+                (Value a -> Value b) -> (Value a -> Value b) -> (Value a -> Value b) -> a -> b
 
 
 slice           :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a) =>
@@ -123,11 +132,11 @@ before          :: (Ord (Duration a), AdditiveGroup (Duration a), Performable a,
                 Time a -> a -> a
 
 mapPhrase       :: (Performable a, Composable a, Composable b, Semigroup b,
-                    HasPart' (Event a), Duration a ~ Duration b
+                    HasPart' (Value a), Duration a ~ Duration b
                 ) =>
-                (Event a -> Event b) -> (Event a -> Event b) -> (Event a -> Event b) -> a -> b
+                (Value a -> Value b) -> (Value a -> Value b) -> (Value a -> Value b) -> a -> b
 
-mapAllParts     :: (Monoid' b, HasPart' (Event a), Performable a, Composable a) => 
+mapAllParts     :: (Monoid' b, HasPart' (Value a), Performable a, Composable a) => 
                  ([a] -> [b]) -> a -> b
 
 
@@ -160,17 +169,17 @@ retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
 
 
 mapAll f                    = compose . f . perform
-mapEvents f                 = mapAll $ fmap (third' f)
-mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
+mapValues f                 = mapAll $ fmap (third' f)
+mapFilterValues f           = mapAll $ mcatMaybes . fmap (unM . third' f)
     where
         unM (a,b,Nothing) = Nothing
         unM (a,b,Just c)  = Just (a,b,c)
-filterEvents f = mapFilterEvents (partial3 f)
-filter_ p = filterEvents (\t d x -> p x)
+filterValues f = mapFilterValues (partial3 f)
+filter_ p = filterValues (\t d x -> p x)
 
-after  a                    = filterEvents (\t d _ -> a <= t)
-before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
-slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
+after  a                    = filterValues (\t d _ -> a <= t)
+before b                    = filterValues (\t d _ -> t .+^ d <= b) 
+slice  a b                  = filterValues (\t d _ -> a <= t && t .+^ d <= b)
 
 mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
 mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
@@ -194,7 +203,7 @@ type D = Rational
 type T = Point D
 newtype S a = S [(T, D, a)]
 type instance Duration (S a) = D
-type instance Event (S a) = a
+type instance Value (S a) = a
 
 instance HasDuration (S a) where
     duration x = offset x .-. onset x
@@ -208,10 +217,11 @@ instance Stretchable (S a) where
     d `stretch` S a = S $ fmap (first3 (\t -> origin .+^(t .-. origin)^*d) . second3 (^* d)) $ a
 instance Monoid (S a) where
 instance Monad S where
+instance Pointed S where
+    point a = S [(origin, 1, a)]
 instance Performable (S a) where
     perform (S a) = a
 instance Composable (S a) where
-    note a = S [(origin, 1, a)]
     compose = S
  
 
@@ -250,4 +260,24 @@ partial3 f          = curry3 (fmap trd3 . partial (uncurry3 f))
     delay_,
     stretch_,
     perform_
-    ) = undefined
+    ) = undefined  
+
+
+type family Container (a :: *) :: (* -> *)    
+type instance Container [a]       = []
+type instance Container (Maybe a) = Maybe
+type instance Container (e,a)     = (,) e
+type instance Container (S a)     = S
+
+{-
+    Given Pointed (Container a)
+    I want to define (a -> Container a)
+-}
+
+
+
+
+
+
+
+
