@@ -207,16 +207,6 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 -------------------------------------------------------------------------------------
 
 -- |
--- Compress (diminish) a score. Flipped version of '^/'.
---
--- > Duration -> Score a -> Score a
---
-compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
-                d -> a -> a
-
-compress x      = stretch (recip x)
-
--- |
 -- Stretch a score to fit into the given duration.
 --
 -- > Duration -> Score a -> Score a

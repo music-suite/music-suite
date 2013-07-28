@@ -21,6 +21,7 @@
 
 module Music.Time.Stretchable (
         Stretchable(..),
+        compress,
   ) where
 
 import Data.Semigroup
@@ -40,4 +41,15 @@ class Stretchable a where
     -- > Duration -> Score a -> Score a
     -- 
     stretch :: Duration a -> a -> a
+
+
+-- |
+-- Compress (diminish) a score. Flipped version of '^/'.
+--
+-- > Duration -> Score a -> Score a
+--
+compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+
+compress x      = stretch (recip x)
 
