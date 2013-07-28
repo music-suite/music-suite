@@ -121,6 +121,12 @@ instance Delayable (Track a) where
 instance Stretchable (Track a) where
     d `stretch` Track a = Track $ fmap (first (d*.)) $ a
 
+instance IsPitch a => IsPitch (Track a) where
+    fromPitch = pure . fromPitch
+
+instance IsDynamics a => IsDynamics (Track a) where
+    fromDynamics = pure . fromDynamics
+
 {-
 instance HasOffset (Track) where
     offset (Track []) = 0
