@@ -105,7 +105,9 @@ instance Monad Score where
     a >>= k = join' $ fmap k $ a
         where
             join' sc = fold $ mapTime (\t d -> delayTime t . stretch d) sc
-
+            mapTime f = Score . fmap (mapEvent f) . getScore
+            mapEvent f (t, d, x) = (t, d, f t d x)
+            
 instance Pointed Score where
     point = return
 
@@ -172,14 +174,6 @@ instance Arbitrary a => Arbitrary (Score a) where
         d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (note x)
 
--- |
--- Map over all events in a score.
---
-mapTime :: (TimeT -> DurationT -> a -> b) -> Score a -> Score b
-mapTime f = Score . fmap (mapEvent f) . getScore
-
-mapEvent :: (TimeT -> DurationT -> a -> b) -> (TimeT, DurationT, a) -> (TimeT, DurationT, b)
-mapEvent f (t, d, x) = (t, d, f t d x)
 
 
 -------------------------------------------------------------------------------------
