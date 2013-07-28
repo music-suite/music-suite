@@ -617,6 +617,7 @@ apply x = mapAllParts (fmap $ applySingle x)
 snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
 snapshot x = mapAllParts (fmap $ snapshotSingle x)
 
+
 -- |
 -- Apply a time-varying function to all events in score.
 --
@@ -642,10 +643,8 @@ snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 --
 onsetIn :: (Performable a, Composable a, Ord (Duration a)) => Time a -> Duration a -> a -> a
-onsetIn a b = compose . filter' (\(t,d,x) -> a <= t && t < a .+^ b) . perform
-    where
-        filter' = filterOnce
-        -- more lazy than mfilter
+onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
+    -- Note: filterOnce is more lazy than mfilter but depends on the events being sorted
 
  
 
