@@ -20,8 +20,12 @@
 
 module Music.Time.Onset (
         HasDuration(..),
+        stretchTo,
         HasOnset(..),
         HasOffset(..),
+        startAt,
+        stopAt,
+        
         -- HasPreOnset(..),
         -- HasPostOnset(..),
         -- HasPostOffset(..),
@@ -41,8 +45,25 @@ import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
+-- |
+-- Class of types with a duration.
+--
+-- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
+-- should hold:
+-- 
+-- > duration a = offset a .-- onset a
+--
 class HasDuration a where
     duration :: a -> Duration a
+
+-- |
+-- Stretch a score to fit into the given duration.
+--
+-- > Duration -> Score a -> Score a
+--
+stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+                d -> a -> a
+
 
 -- |
 -- Class of types with a position in time.
@@ -53,12 +74,7 @@ class HasDuration a where
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
 -- 
--- > duration a = offset a - onset a
--- > offset a >= onset a
---
--- implying
---
--- > duration a >= 0
+-- > duration a = offset a .-- onset a
 --
 class HasOnset a where
     -- | 
@@ -72,6 +88,27 @@ class HasOffset a where
     --
     offset :: a -> Time a
                               
+-- |
+-- Move a score so that its onset is at the specific time.
+--
+-- > Time -> Score a -> Score a
+--
+startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t ->  a -> a
+
+-- |
+-- Move a score so that its offset is at the specific time.
+--
+-- > Time -> Score a -> Score a
+--
+stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
+                t -> a -> a
+
+t `stretchTo` x = (t / duration x) `stretch` x
+t `startAt` x   = (t .-. onset x) `delay` x
+t `stopAt`  x   = (t .-. offset x) `delay` x
+                                             
+
 {-
 class HasPreOnset s where
     preOnset :: s a -> Time s
