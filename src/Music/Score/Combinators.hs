@@ -77,6 +77,7 @@ module Music.Score.Combinators (
 
         -- * Parts
         -- ** Extracting
+        filterPart,
         extractParts,
         extractParts',
         
@@ -483,6 +484,14 @@ mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (th
 --------------------------------------------------------------------------------
 
 -- |
+-- Filter a score to include only those events whose parts match a given predicate.
+--
+-- > (Part -> Bool) -> Score a -> Score a
+--
+filterPart :: (Performable a, Composable a, Event a ~ e, HasPart' e) => (Part e -> Bool) -> a -> a
+filterPart p = filter_ (p . getPart)
+
+-- |
 -- Extract parts from the a score.
 --
 -- The parts are returned in the order defined the associated 'Ord' instance part type.
@@ -493,10 +502,7 @@ mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (th
 -- > Score a -> [Score a]
 --
 extractParts :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [a]
-extractParts a = fmap (`extractPart` a) (getParts a)
-    where
-        extractPart v = filter_ ((== v) . getPart)
-
+extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
         
 -- |
 -- Extract parts from the a score and include the part name.
@@ -508,9 +514,7 @@ extractParts a = fmap (`extractPart` a) (getParts a)
 -- > Score a -> [(Part a, Score a)]
 --
 extractParts' :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [(Part e, a)]
-extractParts' a = fmap (\p -> (p, p `extractPart` a)) (getParts a)
-   where
-       extractPart p = filter_ ((== p) . getPart)
+extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
 
 
 -- |
