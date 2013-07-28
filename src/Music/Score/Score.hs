@@ -1,11 +1,6 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    DeriveTraversable,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
+    DeriveTraversable, GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -107,9 +102,9 @@ instance Monoid (Score a) where
 --
 instance Monad Score where
     return x = Score [(origin, 1, x)]
-    a >>= k = join' $ fmap k a
+    a >>= k = join' $ fmap k $ a
         where
-            join' sc = {-mconcat $ toList-}fold $ mapTime (\t d -> delay (t .-. origin) . stretch d) sc
+            join' sc = fold $ mapTime (\t d -> delayTime t . stretch d) sc
 
 instance Pointed Score where
     point = return

@@ -23,11 +23,13 @@ module Music.Time.Delayable (
         Delayable(..),
         move,
         moveBack,
+        delayTime,
   ) where
 
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 
 import Music.Time.Time
 
@@ -38,13 +40,13 @@ class Delayable a where
 
     -- |
     -- Delay a value.
+    -- 
     -- > Duration -> Score a -> Score a
     -- 
     delay :: Duration a -> a -> a
 
-
 -- |
--- Move a score forward in time. Equivalent to 'delay'.
+-- Move a score forward in time. Equivalent to 'delayTime.
 --
 -- > Duration -> Score a -> Score a
 --
@@ -52,12 +54,25 @@ move            :: (Delayable a, d ~ Duration a) =>
                 d -> a -> a
 
 -- |
--- Move a score backward in time. Negated verison of 'delay'
+-- Move a score backward in time. Negated verison of 'delayTime
 --
 -- > Duration -> Score a -> Score a
 --
 moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
                 d -> a -> a
 
+-- |
+-- Delay relative to 'origin'. Provided for situations when you have a value that
+-- should forward based on the distance between some time @t@ and the origin, but
+-- it does not necessarily have a start time.
+--
+-- > Time -> Score a -> Score a
+--
+delayTime       :: (Delayable a, AdditiveGroup d, d ~ Duration a) => 
+                Time a -> a -> a
+
+
 move            = delay
 moveBack t      = delay (negateV t)
+delayTime t     = delay (t .-. origin)
+

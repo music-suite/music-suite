@@ -1,9 +1,6 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
+    DeriveTraversable, GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,7 +26,9 @@ import Data.Semigroup
 import Control.Applicative
 import Control.Monad            (ap, join, MonadPlus(..))
 
+import Data.Typeable
 import Data.Foldable            (Foldable(..), foldMap)
+import Data.Traversable         (Traversable(..))
 import Data.Pointed
 import Data.Ord                 (comparing)
 import Data.Function            (on)
@@ -75,7 +74,7 @@ import Music.Dynamics.Literal
 -- as scalar multiplication.
 --
 newtype Voice a = Voice { getVoice' :: [(DurationT, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Monoid)
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable)
 
 voice :: Real d => [(d, a)] -> Voice a
 voice = Voice . fmap (first (fromRational . toRational))
@@ -91,7 +90,7 @@ instance Semigroup (Voice a) where
 
 instance Monad Voice where
     return a = Voice [(1, a)]
-    a >>= k = join' $ fmap k a
+    a >>= k = join' $ fmap k $ a
         where
             join' (Voice ps) = foldMap (uncurry stretch) ps
 

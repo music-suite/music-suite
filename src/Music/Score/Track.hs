@@ -1,10 +1,6 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleInstances,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
+    DeriveTraversable, GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,7 +25,9 @@ import Data.Semigroup
 import Control.Applicative
 import Control.Monad            (ap, join, MonadPlus(..))
 
+import Data.Typeable
 import Data.Foldable            (Foldable(..), foldMap)
+import Data.Traversable         (Traversable(..))
 import Data.Pointed
 import Data.Ord                 (comparing)
 import Data.Function            (on)
@@ -75,7 +73,7 @@ import qualified Data.List as List
 -- and time scaling as scalar multiplication.
 --
 newtype Track a = Track { getTrack :: [(TimeT, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
 type instance Duration (Track a) = DurationT
 type instance Event (Track a) = a
@@ -95,9 +93,9 @@ instance Monoid (Track a) where
 
 instance Monad Track where
     return a = Track [(origin, a)]
-    a >>= k = join' . fmap k $ a
+    a >>= k = join' $ fmap k $ a
         where
-            join' (Track ts) = foldMap (uncurry delay') ts
+            join' (Track ts) = foldMap (uncurry delayTime) ts
 
 instance Applicative Track where
     pure  = return
@@ -137,8 +135,6 @@ instance Arbitrary a => Arbitrary (Track a) where
 
 
 -------------------------------------------------------------------------------------
-
-delay' t = delay (t .-. origin)
 
 list z f [] = z
 list z f xs = f xs
