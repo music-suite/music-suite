@@ -95,11 +95,11 @@ instance Monoid (Score a) where
 -- This instance is somewhat similar to the list instance.
 --
 -- * 'return' creates a score containing a single note at /(0, 1)/.
--- 
+--
 -- * @s@ '>>=' @k@ maps each note to a new score, which is then scaled and delayed by the onset and
---   duration of the original note. That is, @k@ returns a score @t@ such that /0 < onset t < offset t < 1/, 
+--   duration of the original note. That is, @k@ returns a score @t@ such that /0 < onset t < offset t < 1/,
 --   the resulting events will not cross the boundaries of the original note.
--- 
+--
 -- * 'join' scales and offsets each inner score to fit into the note containing it, then
 --   removes the intermediate structure.
 --
@@ -112,7 +112,7 @@ instance Monoid (Score a) where
 -- >                    (1, 3, 'a'),
 -- >                    (1, 2, 'B'),
 -- >                    (3, 6, 'b') ]}
--- 
+--
 instance Monad Score where
     return x = Score [(origin, 1, x)]
     a >>= k = join' $ fmap k a
