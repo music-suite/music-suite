@@ -21,18 +21,6 @@ module Music.Score.Combinators (
         noteRest,
         removeRests,
 
-        -- * Transforming scores
-        -- ** Moving in time
-        move,
-        moveBack,
-        startAt,
-        stopAt,
-
-        -- ** Stretching in time
-        stretch,
-        compress,
-        stretchTo,
-
         -- ** Juxtaposition
         juxtapose,
 
