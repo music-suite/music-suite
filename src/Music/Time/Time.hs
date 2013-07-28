@@ -22,6 +22,8 @@ module Music.Time.Time (
         Time(..),
         Duration(..),
 
+        -- $converting
+
         -- * The 'Event' type functions
         Event(..),
 
@@ -34,6 +36,14 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
+
+-- $converting
+--
+-- Note that you should use '.-.' and '.+^' to convert between time and
+-- duration. To refer to time zero (the beginning of the music), use
+-- 'origin'.
+--
+
 
 -- |
 -- This type function returns the duration type for a given type.

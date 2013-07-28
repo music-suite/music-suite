@@ -121,7 +121,7 @@ instance Delayable (Track a) where
     d `delay` Track a = Track $ fmap (first (.+^ d)) $ a
 
 instance Stretchable (Track a) where
-    d `stretch` Track a = Track $ fmap (first (\t -> origin .+^(t .-. origin)^*d)) $ a
+    d `stretch` Track a = Track $ fmap (first (d*.)) $ a
 
 {-
 instance HasOffset (Track) where

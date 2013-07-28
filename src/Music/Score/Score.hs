@@ -150,7 +150,7 @@ instance Delayable (Score a) where
     d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
 
 instance Stretchable (Score a) where
-    d `stretch` Score a = Score $ fmap (first3 (\t -> origin .+^(t .-. origin)^*d) . second3 (^* d)) $ a
+    d `stretch` Score a = Score $ fmap (first3 (d*.) . second3 (d*^)) $ a
 
 instance Performable (Score a) where
     perform (Score a) = a
