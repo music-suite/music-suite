@@ -25,26 +25,24 @@ module Music.Score.Track (
         track,
   ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
-
 import Data.Semigroup
 import Control.Applicative
-import Control.Monad (ap, join, MonadPlus(..))
-import Data.Foldable
-import Data.Traversable
-import Data.Maybe
-import Data.Either
-import Data.Function (on)
-import Data.Ord (comparing)
-import Data.Ratio
+import Control.Monad            (ap, join, MonadPlus(..))
+
+import Data.Foldable            (Foldable(..), foldMap)
+import Data.Pointed
+import Data.Ord                 (comparing)
+import Data.Function            (on)
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import Test.QuickCheck (Arbitrary(..),Gen(..))
-import qualified Data.Map as Map
-import qualified Data.List as List
+import Test.QuickCheck          (Arbitrary(..), Gen(..))
 
 import Music.Time
+import Music.Pitch.Literal
+import Music.Dynamics.Literal   
+
+import qualified Data.List as List
 
 -------------------------------------------------------------------------------------
 -- Track type
