@@ -376,9 +376,9 @@ repeated        :: (Monoid' b, Transformable b, HasOnset b, HasOffset b) =>
 group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a, HasOnset a, HasOffset a) =>
                 Int -> a -> a
 
-times n a = replicate (0 `max` n) () `repeated` const a
-repeated = flip (\f -> scat . fmap f)
-group n a = times n (fromIntegral n `compress` a)
+times n     = scat . replicate n
+repeated    = flip (\f -> scat . fmap f)
+group n     = times n . (fromIntegral n `compress`)
 
 -- |
 -- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
