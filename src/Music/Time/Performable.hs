@@ -28,7 +28,10 @@ module Music.Time.Performable (
 
         -- * The 'Composable' class
         Composable(..),
-        
+
+        -- * Default implementations
+        memptyDefault,
+        mappendDefault,
         foldMapDefault
   ) where
 
@@ -104,6 +107,19 @@ class Performable a where
     --
     events  :: a -> [Event a]
     events = fmap trd3 . perform
+
+-- | 
+-- This function may be used as a value for 'mempty' in a 'Monoid' instance. 
+-- 
+memptyDefault :: Composable a => a
+memptyDefault = compose mempty
+
+-- | 
+-- This function may be used as a value for 'mappend' in a 'Monoid' instance. 
+-- 
+mappendDefault :: (Composable a, Performable a) => a -> a -> a
+a `mappendDefault` b = compose $ perform a `mappend` perform b
+
         
 -- | 
 -- This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
