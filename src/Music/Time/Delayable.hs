@@ -21,6 +21,8 @@
 
 module Music.Time.Delayable (
         Delayable(..),
+        move,
+        moveBack,
   ) where
 
 import Data.Semigroup
@@ -39,3 +41,23 @@ class Delayable a where
     -- > Duration -> Score a -> Score a
     -- 
     delay :: Duration a -> a -> a
+
+
+-- |
+-- Move a score forward in time. Equivalent to 'delay'.
+--
+-- > Duration -> Score a -> Score a
+--
+move            :: (Delayable a, d ~ Duration a) =>
+                d -> a -> a
+
+-- |
+-- Move a score backward in time. Negated verison of 'delay'
+--
+-- > Duration -> Score a -> Score a
+--
+moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
+                d -> a -> a
+
+move            = delay
+moveBack t      = delay (negateV t)

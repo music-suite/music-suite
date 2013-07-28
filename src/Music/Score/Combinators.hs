@@ -207,21 +207,6 @@ chordDelayStretch = pcat . map (\(t, d, x) -> delay' t . stretch d $ note x)
 -------------------------------------------------------------------------------------
 
 -- |
--- Move a score forward in time. Equivalent to 'delay'.
---
--- > Duration -> Score a -> Score a
---
-move            :: (Delayable a, d ~ Duration a) =>
-                d -> a -> a
-
--- |
--- Move a score backward in time. Negated verison of 'delay'
---
--- > Duration -> Score a -> Score a
---
-moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
-                d -> a -> a
--- |
 -- Compress (diminish) a score. Flipped version of '^/'.
 --
 -- > Duration -> Score a -> Score a
@@ -229,8 +214,6 @@ moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
 compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
                 d -> a -> a
 
-move            = delay
-moveBack t      = delay (negateV t)
 compress x      = stretch (recip x)
 
 -- |
