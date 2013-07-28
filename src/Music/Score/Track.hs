@@ -127,19 +127,6 @@ instance IsPitch a => IsPitch (Track a) where
 instance IsDynamics a => IsDynamics (Track a) where
     fromDynamics = pure . fromDynamics
 
-{-
-instance HasOffset (Track) where
-    offset (Track []) = 0
-    offset (Track xs) = maximum (fmap off xs) where off  (t,x) = t
--}
-
---    offset x = maximum (fmap off x)   where off (t,x) = t
-
-{-
-instance HasDuration (Track) where
-    duration x = offset x .-. onset x
--}
-
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
         x <- arbitrary
