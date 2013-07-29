@@ -27,6 +27,7 @@ module Music.Time.Performable (
         Event(..),
         Container(..),
         HasPoint(..),
+        pointEvent,
 
         -- * The 'Performable' class
         Performable(..),
@@ -71,6 +72,9 @@ type family Event (s :: *) :: *
 type family Container (s :: *) :: * -> *
 
 type HasPoint a = (a ~ (Container a) (Event a), Pointed (Container a))
+
+pointEvent :: HasPoint a => Event a -> a
+pointEvent = point
 
 -- |
 -- Composable values.
