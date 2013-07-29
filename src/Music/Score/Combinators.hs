@@ -309,7 +309,7 @@ group n     = times n . (fromIntegral n `compress`)
 retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =>
                 a -> a
 
-retrograde = startAt origin . (mapAll $ List.sortBy (comparing fst3) . fmap g)
+retrograde = startAt origin . (mapAll $ fmap g)
     where
         g (t,d,x) = (negateP (t .+^ d), d, x)
         negateP a = origin .-^ (a .-. origin)

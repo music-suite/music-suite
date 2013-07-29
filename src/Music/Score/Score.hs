@@ -146,7 +146,7 @@ instance Performable (Score a) where
     perform (Score a) = a
 
 instance Composable (Score a) where
-    compose = Score
+    compose = Score . List.sortBy (comparing fst3)
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
