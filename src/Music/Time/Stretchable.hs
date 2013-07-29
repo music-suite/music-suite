@@ -52,7 +52,7 @@ instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) whe
 
 
 -- |
--- Compress (diminish) a score. Flipped version of '^/'.
+-- Compress (diminish) a score. Flipped version of 'stretch'.
 --
 -- > Duration -> Score a -> Score a
 --
