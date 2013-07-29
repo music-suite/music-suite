@@ -31,6 +31,7 @@ module Music.Time.Performable (
 
         -- * The 'Performable' class
         Performable(..),
+        performValues,
 
         -- * The 'Composable' class
         Composable(..),
