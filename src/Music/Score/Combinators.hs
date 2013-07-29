@@ -22,7 +22,8 @@ module Music.Score.Combinators (
         removeRests,
 
         -- ** Juxtaposition
-        juxtapose,
+        follow,
+        precede,
 
         -- ** Retrograde/reflection
         retrograde,
@@ -35,6 +36,7 @@ module Music.Score.Combinators (
         
         -- * Composing scores
         (|>),
+        (>|),
         (<|),
         scat,
         pcat,
@@ -155,9 +157,23 @@ removeRests     = mcatMaybes
 -- Juxtaposition
 -------------------------------------------------------------------------------------
 
-juxtapose           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+-- |
+-- @a \`follow\` b@ moves score /b/ so that its onset is at the offset of score
+-- /a/ and returns the moved score.
+-- 
+follow           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
-a `juxtapose` b =  startAt (offset a) b
+
+-- |
+-- @a \`precede\` b@ moves score /a/ so that its offset is at the onset of score
+-- /b/ and returns the moved score.
+-- 
+precede          :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+
+a `follow` b =  startAt (offset a) b
+
+a `precede` b =  stopAt (onset b) a
 
 
 -------------------------------------------------------------------------------------
@@ -165,17 +181,28 @@ a `juxtapose` b =  startAt (offset a) b
 -------------------------------------------------------------------------------------
 
 infixr 6 |>
+infixr 6 >|
 infixr 6 <|
 
 -- |
 -- Compose in sequence.
 --
--- To compose in parallel, use '<>'.
+-- @a |> b@ moves score /b/ as per 'follow' and then composes the resulting scores with '<>'.
 --
 -- > Score a -> Score a -> Score a
 --
 (|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
+-- |
+-- Compose in sequence.
+--
+-- @a >| b@ moves score /a/ as per 'precede' and then composes the resulting scores with '<>'.
+--
+-- > Score a -> Score a -> Score a
+--
+(>|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+                a -> a -> a
+
 -- |
 -- Compose in reverse sequence.
 --
@@ -186,7 +213,8 @@ infixr 6 <|
 (<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
-a |> b =  a <> a `juxtapose` b
+a |> b =  a <> (a `follow` b)
+a >| b =  (a `precede` b) <> b
 a <| b =  b |> a
 
 -- |
