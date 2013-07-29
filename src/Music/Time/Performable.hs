@@ -97,7 +97,7 @@ performValues = fmap trd3 . perform
 -- superclasses, but are provided so that implementors may provide more
 -- efficient implementations.
 --
-class (Monoid a, Transformable a, HasPoint a) => Composable a where
+class (Monoid' a, Transformable a, HasPoint a) => Composable a where
 
     -- |
     -- Creates a score with the given position and duration.

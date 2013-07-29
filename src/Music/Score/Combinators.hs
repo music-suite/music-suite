@@ -235,7 +235,7 @@ before b                    = filterEvents (\t d _ -> t .+^ d <= b)
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
 
-type Phraseable a b = (Mappable a b, Composable a, Semigroup b, HasPart' (Event a))
+type Phraseable a b = (Mappable a b, Composable a, HasPart' (Event a))
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -296,7 +296,7 @@ mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (th
 --
 -- > (Part -> Bool) -> Score a -> Score a
 --
-filterPart :: (Performable a, Composable a, Event a ~ e, HasPart' e) => (Part e -> Bool) -> a -> a
+filterPart :: (Mappable a a, Event a ~ e, HasPart' e) => (Part e -> Bool) -> a -> a
 filterPart p = filter_ (p . getPart)
 
 -- |
@@ -309,7 +309,7 @@ filterPart p = filter_ (p . getPart)
 --
 -- > Score a -> [Score a]
 --
-extractParts :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [a]
+extractParts :: (HasPart' e, Mappable a a, e ~ Event a) => a -> [a]
 extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
         
 -- |
@@ -321,7 +321,7 @@ extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
 --
 -- > Score a -> [(Part a, Score a)]
 --
-extractParts' :: (HasPart' e, Composable a, Performable a, e ~ Event a) => a -> [(Part e, a)]
+extractParts' :: (HasPart' e, Mappable a a, e ~ Event a) => a -> [(Part e, a)]
 extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
 
 
@@ -330,7 +330,7 @@ extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
 --
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
-mapPart         :: (Enum a, Semigroup b, Performable b, Composable b, HasPart' e, e ~ Event b) => 
+mapPart         :: (Enum a, Mappable b b, HasPart' e, e ~ Event b) => 
                 a -> (b -> b) -> b -> b
 
 -- |
@@ -338,7 +338,7 @@ mapPart         :: (Enum a, Semigroup b, Performable b, Composable b, HasPart' e
 --
 -- > (Score a -> Score a) -> Score a -> Score a
 --
-mapParts        :: (Monoid' b, Performable a, Composable a, HasPart' e, e ~ Event a) => 
+mapParts        :: (Monoid' b, Mappable a a, HasPart' e, e ~ Event a) => 
                 (a -> b) -> a -> b
 
 -- |
@@ -346,7 +346,7 @@ mapParts        :: (Monoid' b, Performable a, Composable a, HasPart' e, e ~ Even
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts     :: (Monoid' b, Performable a, Composable a, HasPart' e, e ~ Event a) => 
+mapAllParts     :: (Monoid' b, Mappable a a, HasPart' e, e ~ Event a) => 
                  ([a] -> [b]) -> a -> b
 
 
@@ -389,7 +389,7 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
-(</>) :: (Enum (Part e), Semigroup a, Performable a, Composable a, HasPart' e, e ~ Event a) => a -> a -> a
+(</>) :: (Enum (Part e), Mappable a a, HasPart' e, e ~ Event a) => a -> a -> a
 a </> b = a <> moveParts offset b
     where
         -- max voice in a + 1
@@ -398,15 +398,14 @@ a </> b = a <> moveParts offset b
 -- |
 -- Move down one voice (all parts).
 --
-moveParts
-  :: (Enum (Part e), Integral b, Performable a, Composable a, HasPart e, e ~ Event a) =>
-     b -> a -> a
+moveParts       :: (Enum (Part e), Integral b, Mappable a a, HasPart e, e ~ Event a) =>
+                b -> a -> a
 moveParts x = modifyParts (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
-moveToPart :: (Enum (Part e), Enum b, Performable a, Composable a, HasPart e, e ~ Event a) => b -> a -> a
+moveToPart :: (Enum (Part e), Enum b, Mappable a a, HasPart e, e ~ Event a) => b -> a -> a
 moveToPart v = moveParts (fromEnum v)
 
 successor :: (Integral b, Enum a) => b -> a -> a
@@ -438,6 +437,21 @@ snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
 snapshot x = mapAllParts (fmap $ snapshotSingle x)
 
 
+snapshot2
+    :: (
+        Mappable a b,
+        Mappable b c,
+        Ord (Duration c),
+        
+        HasPart' (Event b),
+        Event c ~ (Event a, b)
+        ) =>
+       a -> b -> c
+    
+snapshot2 x = mapAllParts (fmap $ snapshotSingle2 x)
+
+
+
 -- |
 -- Apply a time-varying function to all events in score.
 --
@@ -445,7 +459,7 @@ applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
 applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
     where
         -- This is not join; we simply concatenate all inner scores in parallel
-        notJoin   = mconcat . Foldable.toList
+        notJoin   = mconcat . performValues
         sample fs = snapshotSingle (voiceToScore fs)
 
 -- |
@@ -454,7 +468,15 @@ applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
 snapshotSingle = snapshotSingleWith (,)
 
-snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+
+snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration b, Ord d, Event c ~ (Event a, b)) => 
+                       a -> b -> c
+snapshotSingle2 = snapshotSingleWith (,)
+
+-- snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration b, Ord d) =>
+                       (Event a -> b -> Event c) -> a -> b -> c
+    
 snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 
 
