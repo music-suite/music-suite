@@ -18,11 +18,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Performable (
-        -- * Prerequisites
-        Monoid'(..),
-
-        Transformable(..),
-
         -- * The 'Event' type functions
         Event(..),
         Container(..),
@@ -51,16 +46,7 @@ import Data.AffineSpace.Point
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
-
--- |
--- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
--- constraint is needed.
---
--- Ideally, 'Monoid' should be changed to extend 'Semigroup' instead.
---
-type Monoid' a         =  (Monoid a, Semigroup a)
-
-type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
+import Music.Time.Juxtapose
 
 -- |
 -- This type function returns the value type for a given type.
