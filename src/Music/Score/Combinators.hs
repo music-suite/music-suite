@@ -16,7 +16,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Combinators (
-        -- * Creating scores
+        -- * Rests
         rest,
         noteRest,
         removeRests,
@@ -51,14 +51,13 @@ module Music.Score.Combinators (
         group,
 
         -- * Maps and filters
+        -- ** Events
         Mappable(..),
         filterEvents,
         mapEvents,
         mapFilterEvents,
-        -- filter_,
-        mapAll,
 
-        --- ** Mapping over phrases
+        -- ** Phrases
         Phraseable(..),
         mapFirst,
         mapLast,
@@ -402,8 +401,7 @@ before b                    = filterEvents (\t d _ -> t .+^ d <= b)
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
 
-type Phraseable a b = (Performable a, Composable a, Composable b, Semigroup b,
-                       HasPart' (Event a), Duration a ~ Duration b)
+type Phraseable a b = (Mappable a b, Composable a, Semigroup b, HasPart' (Event a))
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -494,7 +492,7 @@ extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
 
 
 -- |
--- Map over a single voice in the given score.
+-- Map over a specific part in the given score.
 --
 -- > Part -> (Score a -> Score a) -> Score a -> Score a
 --
@@ -504,9 +502,9 @@ mapPart         :: (Enum a, Semigroup b, Performable b, Composable b, HasPart' e
 -- |
 -- Map over all parts in the given score.
 --
--- > ([Score a] -> [Score a]) -> Score a -> Score a
+-- > (Score a -> Score a) -> Score a -> Score a
 --
-mapParts        :: (Ord (Part (Event a)), Monoid b, Semigroup b, Performable a, Composable a, HasPart (Event a)) => 
+mapParts        :: (Monoid' b, Performable a, Composable a, HasPart' e, e ~ Event a) => 
                 (a -> b) -> a -> b
 
 -- |
@@ -514,7 +512,7 @@ mapParts        :: (Ord (Part (Event a)), Monoid b, Semigroup b, Performable a, 
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts     :: (Monoid' b, HasPart' e, e ~ Event a, Performable a, Composable a) => 
+mapAllParts     :: (Monoid' b, Performable a, Composable a, HasPart' e, e ~ Event a) => 
                  ([a] -> [b]) -> a -> b
 
 
