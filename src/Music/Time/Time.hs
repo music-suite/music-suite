@@ -52,6 +52,11 @@ type family Duration (s :: *) :: *
 --
 type Time a = Point (Duration a)
 
+type instance Duration [a]       = Duration a
+type instance Duration (t, a)    = Diff t
+type instance Duration (t, d, a) = d
+
+
 -- |
 -- This type represents relative time in seconds.
 --

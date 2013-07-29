@@ -45,6 +45,15 @@ class Delayable a where
     -- 
     delay :: Duration a -> a -> a
 
+instance Delayable a => Delayable [a] where
+    delay n as = fmap (delay n) as
+
+-- instance AffineSpace t => Delayable (t, a) where
+    -- delay n (t, a) = (t .+^ n, a)
+
+instance (AffineSpace t, d ~ Diff t) => Delayable (t, d, a) where
+    delay n (t, d, a) = (t .+^ n, d, a)
+
 -- |
 -- Move a score forward in time. Equivalent to 'delayTime.
 --
@@ -70,7 +79,6 @@ moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
 --
 delayTime       :: (Delayable a, AdditiveGroup d, d ~ Duration a) => 
                 Time a -> a -> a
-
 
 move            = delay
 moveBack t      = delay (negateV t)

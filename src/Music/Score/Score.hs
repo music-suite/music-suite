@@ -63,7 +63,7 @@ import qualified Data.List as List
 -- and time scaling as scalar multiplication.
 --
 newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
 
 type instance Duration (Score a)  = DurationT
 type instance Container (Score a) = Score
@@ -136,11 +136,11 @@ instance HasOnset (Score a) where
 instance HasOffset (Score a) where
     offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
 
-instance Delayable (Score a) where
-    d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
+-- instance Delayable (Score a) where
+    -- d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
 
-instance Stretchable (Score a) where
-    d `stretch` Score a = Score $ fmap (first3 (d*.) . second3 (d*^)) $ a
+-- instance Stretchable (Score a) where
+    -- d `stretch` Score a = Score $ fmap (first3 (d*.) . second3 (d*^)) $ a
 
 instance Performable (Score a) where
     perform (Score a) = a

@@ -5,6 +5,7 @@
     DeriveFoldable,
     FlexibleContexts,
     ConstraintKinds,
+    UndecidableInstances,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -27,6 +28,7 @@ module Music.Time.Stretchable (
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 
 import Music.Time.Time
 
@@ -41,6 +43,12 @@ class Stretchable a where
     -- > Duration -> Score a -> Score a
     -- 
     stretch :: Duration a -> a -> a
+
+instance Stretchable a => Stretchable [a] where
+    stretch n as = fmap (stretch n) as
+
+instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) where
+    stretch n (t, d, a) = (n*.t, n*^d, a)
 
 
 -- |
