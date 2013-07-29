@@ -79,9 +79,17 @@ pointEvent = point
 -- |
 -- Composable values.
 --
+-- As one might expect
+-- 
+-- > compose . perform = id
+-- > perform . compose = id
+--
+-- That is 'compose' is the inverse of 'perform'.
+--
 -- Minimal complete definition: 'note'.
 -- 
 class (Monoid a, Transformable a, HasPoint a) => Composable a where
+
     -- |
     -- Creates a score with the given position and duration.
     --
@@ -92,9 +100,7 @@ class (Monoid a, Transformable a, HasPoint a) => Composable a where
     -- |
     -- Creates a score from a list of timed values.
     --
-    -- As one might expect
-    -- 
-    -- > compose . perform = perform . compose = id
+    -- The given list need not be sorted.
     --
     -- The default definition can be overridden for efficiency.
     --
@@ -114,6 +120,8 @@ class Performable a where
 
     -- |
     -- Convert a score to a list of timed values.
+    --
+    -- The returned list /must/ be sorted by comparing time.
     --
     perform :: a -> [(Time a, Duration a, Event a)]
 
