@@ -24,9 +24,6 @@ module Music.Time.Time (
 
         -- $converting
 
-        -- * The 'Event' type functions
-        Event(..),
-
         -- * Basic time and duration types
         DurationT(..),
         TimeT(..),
@@ -54,11 +51,6 @@ type family Duration (s :: *) :: *
 -- This type function returns the duration type for a given type.
 --
 type Time a = Point (Duration a)
-
--- |
--- This type function returns the value type for a given type.
---
-type family Event (s :: *) :: *
 
 -- |
 -- This type represents relative time in seconds.

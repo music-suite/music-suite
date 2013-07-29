@@ -65,8 +65,9 @@ import qualified Data.List as List
 newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
-type instance Duration (Score a) = DurationT
-type instance Event (Score a)    = a
+type instance Duration (Score a)  = DurationT
+type instance Container (Score a) = Score
+type instance Event (Score a)     = a
 
 instance Semigroup (Score a) where
     (<>) = mappend
@@ -145,7 +146,6 @@ instance Performable (Score a) where
     perform (Score a) = a
 
 instance Composable (Score a) where
-    note    = return
     compose = Score
 
 instance IsPitch a => IsPitch (Score a) where
@@ -172,7 +172,7 @@ instance Arbitrary a => Arbitrary (Score a) where
         x <- arbitrary
         t <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
         d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
-        return $ delay t $ stretch d $ (note x)
+        return $ delay t $ stretch d $ (return x)
 
 
 

@@ -635,7 +635,7 @@ scoreToVoice = voice . fmap throwTime . addRests . perform
 voiceToScore :: Voice a -> Score a
 voiceToScore = scat . fmap g . getVoice
     where
-        g (d,x) = stretch d (note x)
+        g (d,x) = stretch d (return x)
 
 -- |
 -- Convert a voice which may contain rests into a score.

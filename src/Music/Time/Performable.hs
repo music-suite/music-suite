@@ -23,6 +23,11 @@ module Music.Time.Performable (
 
         Transformable(..),
 
+        -- * The 'Event' type functions
+        Event(..),
+        Container(..),
+        HasPoint(..),
+
         -- * The 'Performable' class
         Performable(..),
 
@@ -37,6 +42,7 @@ module Music.Time.Performable (
 
 import Data.Foldable (Foldable(..))
 
+import Data.Pointed
 import Data.Semigroup
 import Data.AffineSpace
 import Data.AffineSpace.Point
@@ -55,16 +61,23 @@ type Monoid' a         =  (Monoid a, Semigroup a)
 type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
 -- |
+-- This type function returns the value type for a given type.
+--
+type family Event (s :: *) :: *
+
+-- |
+-- This type function returns the container type for a given type.
+--
+type family Container (s :: *) :: * -> *
+
+type HasPoint a = (a ~ (Container a) (Event a), Pointed (Container a))
+
+-- |
 -- Composable values.
 --
 -- Minimal complete definition: 'note'.
 -- 
-class (Monoid a, Transformable a) => Composable a where
-    -- |
-    -- Creates a score with position 'origin' and duration one.
-    --
-    note    :: Event a -> a
-
+class (Monoid a, Transformable a, HasPoint a) => Composable a where
     -- |
     -- Creates a score with the given position and duration.
     --
@@ -85,7 +98,7 @@ class (Monoid a, Transformable a) => Composable a where
 
     -- Given Num (Duration a) we have
     -- note a        = compose [(origin, 1, a)]
-    event t d x   = (delay (t .-. origin) . stretch d) (note x)
+    event t d x   = (delay (t .-. origin) . stretch d) (point x)
     compose       = mconcat . fmap (uncurry3 event)
 
 -- |
