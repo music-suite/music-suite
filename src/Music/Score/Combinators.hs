@@ -528,7 +528,7 @@ mapAllParts f   = mconcat . f . extractParts
 -- > Score a -> [Part]
 --    
 getParts :: (Performable a, HasPart' e, e ~ Event a) => a -> [Part e]
-getParts = List.sort . List.nub . fmap getPart . events
+getParts = List.sort . List.nub . fmap getPart . performValues
 
 -- |
 -- Set all parts in the given score.

@@ -77,6 +77,26 @@ pointEvent :: HasPoint a => Event a -> a
 pointEvent = point
 
 -- |
+-- Performable values.
+--
+-- Minimal complete definition: 'perform'.
+-- 
+class Performable a where
+
+    -- |
+    -- Convert a score to a list of timed values.
+    --
+    -- The returned list /must/ be sorted by comparing time.
+    --
+    perform :: a -> [(Time a, Duration a, Event a)]
+
+-- |
+-- Return just the values of the score.
+--
+performValues  :: Performable a => a -> [Event a]
+performValues = fmap trd3 . perform        
+    
+-- |
 -- Composable values.
 --
 -- As one might expect
@@ -86,8 +106,10 @@ pointEvent = point
 --
 -- That is 'compose' is the inverse of 'perform'.
 --
--- Minimal complete definition: 'note'.
--- 
+-- The methods in this class have a default implementation in terms of its
+-- superclasses, but are provided so that implementors may provide more
+-- efficient implementations.
+--
 class (Monoid a, Transformable a, HasPoint a) => Composable a where
 
     -- |
@@ -106,32 +128,8 @@ class (Monoid a, Transformable a, HasPoint a) => Composable a where
     --
     compose :: [(Time a, Duration a, Event a)] -> a
 
-    -- Given Num (Duration a) we have
-    -- note a        = compose [(origin, 1, a)]
     event t d x   = (delay (t .-. origin) . stretch d) (point x)
     compose       = mconcat . fmap (uncurry3 event)
-
--- |
--- Performable values.
---
--- Minimal complete definition: 'perform'.
--- 
-class Performable a where
-
-    -- |
-    -- Convert a score to a list of timed values.
-    --
-    -- The returned list /must/ be sorted by comparing time.
-    --
-    perform :: a -> [(Time a, Duration a, Event a)]
-
-    -- |
-    -- Return the values of the score.
-    --
-    -- The default definition can be overridden for efficiency.
-    --
-    events  :: a -> [Event a]
-    events = fmap trd3 . perform
 
 -- | 
 -- This function may be used as a value for 'mempty' in a 'Monoid' instance. 
@@ -144,13 +142,12 @@ memptyDefault = compose mempty
 -- 
 mappendDefault :: (Composable a, Performable a) => a -> a -> a
 a `mappendDefault` b = compose $ perform a `mappend` perform b
-
         
 -- | 
 -- This function may be used as a value for 'foldMap' in a 'Foldable' instance. 
 -- 
 foldMapDefault :: (Monoid c, Performable a) => (Event a -> c) -> a -> c
-foldMapDefault f = foldMap f . events
+foldMapDefault f = foldMap f . performValues
 
 
 untrip (a,b,c) = ((a,b),c)
