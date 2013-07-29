@@ -60,10 +60,12 @@ import Music.Time.Onset
 -- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
 -- constraint is needed.
 --
--- Ideally, 'Monoid' should be changed to extend 'Semigroup' instead.
---
 type Monoid' a         =  (Monoid a, Semigroup a)
 
+-- |
+-- This pseudo-class gathers the restrictions needed to implement position a value at
+-- any point and duration in time.
+--
 type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 
 
