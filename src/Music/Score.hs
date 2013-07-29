@@ -33,6 +33,7 @@ module Music.Score (
         module Data.Semigroup,
         module Data.VectorSpace,
         module Data.AffineSpace,
+        module Data.AffineSpace.Point,
 
         -- * Basic types
         module Music.Pitch.Literal,
@@ -74,6 +75,7 @@ import Data.Typeable
 import Data.Traversable
 import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.Basis
 
 import Music.Time
