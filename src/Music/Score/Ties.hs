@@ -46,6 +46,7 @@ import Data.AffineSpace
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
+import Music.Score.Convert
 import Music.Score.Part
 import Music.Time
 

@@ -56,6 +56,7 @@ import Music.Score.Score
 import Music.Time
 import Music.Score.Part
 import Music.Score.Combinators
+import Music.Score.Convert
 
 import Music.Dynamics.Literal
 

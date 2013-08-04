@@ -70,11 +70,6 @@ module Music.Score.Combinators (
         snapshot,
         applySingle,
         snapshotSingle,
-
-        -- ** Conversion
-        voiceToScore,
-        voiceToScore',
-        scoreToVoice,
   ) where
 
 import Control.Monad
@@ -94,11 +89,11 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Part
+import Music.Score.Convert
 import Music.Time
 
 import qualified Data.List as List
 import qualified Data.Foldable as Foldable
-
 
 -------------------------------------------------------------------------------------
 -- Constructors
@@ -465,6 +460,7 @@ applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
         notJoin   = mconcat . performValues
         sample fs = snapshotSingle (voiceToScore fs)
 
+
 -- |
 -- Get all notes that start during a given note.
 --
@@ -491,45 +487,6 @@ onsetIn :: (Performable a, Composable a, Ord (Duration a)) => Time a -> Duration
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
     -- Note: filterOnce is more lazy than mfilter but depends on the events being sorted
 
- 
-
---------------------------------------------------------------------------------
--- Conversion
---------------------------------------------------------------------------------
-
--- |
--- Convert a score into a voice.
---
--- This function fails if the score contain overlapping events.
---
-scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = voice . fmap throwTime . addRests . perform
-    where
-       throwTime (t,d,x) = (d,x)
-       addRests = concat . snd . mapAccumL g origin
-           where
-               g u (t, d, x)
-                   | u == t    = (t .+^ d, [(t, d, Just x)])
-                   | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-                   | otherwise = error "addRests: Strange prevTime"
-       
-
--- |
--- Convert a voice into a score.
---
-voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . getVoice
-    where
-        g (d,x) = stretch d (return x)
-
--- |
--- Convert a voice which may contain rests into a score.
---
-voiceToScore' :: Voice (Maybe a) -> Score a
-voiceToScore' = mcatMaybes . voiceToScore
-
-instance Performable (Voice a) where
-    perform = perform . voiceToScore
 
 
 --------------------------------------------------------------------------------
