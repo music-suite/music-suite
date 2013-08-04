@@ -7,8 +7,7 @@ module Music.Sibelius where
 import Data.Aeson
 import Control.Applicative
 import Data.Aeson.Types(parse, Parser)
-import Music.Prelude.StringQuartet
-import qualified Music.Score as Score
+import Music.Prelude.Basic -- TODO
 
 import Data.ByteString.Lazy(ByteString)
 import qualified Data.ByteString.Lazy as B
@@ -311,7 +310,7 @@ type IsSibelius a = (
     HasPart' a, 
     Enum (Part a), 
     HasPitch a, 
-    Num (Score.Pitch a), 
+    Num (PitchOf a), 
     HasTremolo a, 
     HasArticulation a,
     Tiable a
@@ -323,9 +322,9 @@ main = do
     case result of
         Left e -> putStrLn $ "Error: " ++ e
         Right x -> do
-            writeMidi "test.mid" $ asScore $ f x
-            openXml $ f x
-            -- openLy  $ f x
+            -- writeMidi "test.mid" $ asScore $ f x
+            -- openXml $ f x
+            openLy $ asScore $ f x
 
     -- let score = fromSib $ fromJust $ decode' json
     -- openLy score
