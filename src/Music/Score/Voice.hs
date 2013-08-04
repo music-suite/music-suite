@@ -17,6 +17,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Voice (
+        -- * Voice type
         Voice,
         voice,
         getVoice,
@@ -41,18 +42,11 @@ import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
 
-
--------------------------------------------------------------------------------------
--- Voice type
--------------------------------------------------------------------------------------
-
 -- |
 -- A voice is a list of events with explicit duration. Events can not overlap.
 --
 -- Voice is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
 -- appends parts.
---
--- Voice has an 'Applicative' instance derived from the 'Monad' instance.
 --
 -- Voice is a 'Monad'. 'return' creates a part containing a single value of duration
 -- one, and '>>=' transforms the values of a part, allowing the addition and

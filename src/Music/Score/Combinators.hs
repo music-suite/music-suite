@@ -11,7 +11,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Combinators for manipulating scores.
+-- Combinators for manipulating scores and related structures.
 --
 -------------------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ module Music.Score.Combinators (
         mapEvents,
         mapFilterEvents,
 
-        -- ** Phrases
+        -- ** Map over phrases
         Phraseable(..),
         mapFirst,
         mapLast,
@@ -45,19 +45,15 @@ module Music.Score.Combinators (
         mapPhraseSingle,
 
         -- * Parts
-        -- ** Extracting
+        -- ** Extracting parts
         filterPart,
         extractParts,
         extractParts',
         
-        -- ** Mapping
+        -- ** Map over parts
         mapPart,
         mapParts,
         mapAllParts,
-
-        -- ** Inspecting
-        getParts,
-        setParts,
         modifyParts,
 
         -- ** Part composition
@@ -351,22 +347,6 @@ mapAllParts     :: (Monoid' b, Mappable a a, HasPart' e, e ~ Event a) =>
 mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 mapParts f      = mapAllParts (fmap f)
 mapAllParts f   = mconcat . f . extractParts
-
--- |
--- Get all parts in the given score. Returns a list of parts.
---
--- > Score a -> [Part]
---    
-getParts :: (Performable a, HasPart' e, e ~ Event a) => a -> [Part e]
-getParts = List.sort . List.nub . fmap getPart . performValues
-
--- |
--- Set all parts in the given score.
---
--- > Part -> Score a -> Score a
---
-setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
-setParts n = fmap (setPart n)
 
 -- |
 -- Modify all parts in the given score.

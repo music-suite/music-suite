@@ -20,15 +20,17 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides articulation.
+-- Provides functions for manipulating articulation.
 --
 -------------------------------------------------------------------------------------
 
 
 module Music.Score.Articulation (
+        -- * Representation
         HasArticulation(..),
         ArticulationT(..),
 
+        -- * Transformations
         -- ** Accents
         accent,
         marcato,

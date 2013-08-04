@@ -18,11 +18,11 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Time (
-        -- * The 'Time' and 'Duration' type functions
+        -- * Time and duration types
         Time(..),
         Duration(..),
 
-        -- $converting
+        -- $convert
 
         -- * Basic time and duration types
         DurationT(..),
@@ -34,13 +34,12 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
--- $converting
+-- $convert
 --
 -- Note that you should use '.-.' and '.+^' to convert between time and
 -- duration. To refer to time zero (the beginning of the music), use
 -- 'origin'.
 --
-
 
 -- |
 -- This type function returns the duration type for a given type.

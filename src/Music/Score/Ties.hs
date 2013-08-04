@@ -19,14 +19,17 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides tie representation and splitting.
+-- Provides a representation for tied notes, and a way to split a single note
+-- into a pair of tied notes.
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Ties (
+        -- * Tiable class
         Tiable(..),
-        TieT(..),
+        TieT(..),        
+        
+        -- * Splitting tied notes in scores
         splitTies,
         splitTiesSingle,
         splitTiesVoice,
@@ -54,13 +57,24 @@ import Music.Time
 -- Class of types that can be tied.
 --
 class Tiable a where
+    -- |
+    -- Modify a note to be the first note in a tied note pair.
+    -- 
     beginTie :: a -> a
+
+    -- |
+    -- Modify a note to be the second note in a tied note pair.
+    -- 
     endTie :: a -> a
 
-    -- | Split elements into beginning and end and add tie.
-    --   Begin properties goes to the first tied note, and end properties to the latter.
-
-    --   The first returned element will have the original onset.
+    -- | 
+    -- Split a single note into a pair of tied notes.
+    --
+    -- The first returned element should have the original 'onset' and the second
+    -- element should have the original 'offset'. Formally
+    --
+    -- > (onset . fst . toTied) a = onset a
+    -- > (offset . snd . toTied) a = offset a
     --
     toTied    :: a -> (a, a)
     toTied a = (beginTie a, endTie a)

@@ -19,7 +19,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- To be written.
+-- Instances for note transformers. This module should be imported as part
+-- of "Music.Score".
 --
 -------------------------------------------------------------------------------------
 

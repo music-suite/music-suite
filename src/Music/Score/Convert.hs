@@ -20,7 +20,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides articulation.
+-- Provides conversion betwen 'Score', 'Voice' and 'Track'.
 --
 -------------------------------------------------------------------------------------
 

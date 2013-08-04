@@ -20,16 +20,19 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides partwise traversal, part composition and extraction.
+-- Provides functions for manipulating parts.
 --
 -------------------------------------------------------------------------------------
 
 
 module Music.Score.Part (
+
+        -- * Part representation
         HasPart(..),
         HasPart',
-        -- PartName(..),
         PartT(..),
+        getParts,
+        setParts,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -82,5 +85,22 @@ instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = 
 -- This is usually required for part separation and traversal.
 --
 type HasPart' a = (Ord (Part a), HasPart a)
+
+-- |
+-- Get all parts in the given score. Returns a list of parts.
+--
+-- > Score a -> [Part]
+--    
+getParts :: (Performable a, HasPart' e, e ~ Event a) => a -> [Part e]
+getParts = List.sort . List.nub . fmap getPart . performValues
+
+-- |
+-- Set all parts in the given score.
+--
+-- > Part -> Score a -> Score a
+--
+setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
+setParts n = fmap (setPart n)
+
 
 

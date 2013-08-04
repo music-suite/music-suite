@@ -18,9 +18,12 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides stretchable values.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Time.Stretchable (
+        -- * Stretchable class
         Stretchable(..),
         compress,
   ) where

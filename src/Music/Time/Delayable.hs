@@ -17,12 +17,17 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides delayable values.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Time.Delayable (
+        -- * Delayable class
         Delayable(..),
         move,
-        moveBack,
+        moveBack,     
+        
+        -- ** Utility functions
         delayTime,
   ) where
 

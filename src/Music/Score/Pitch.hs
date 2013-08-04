@@ -17,17 +17,21 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides pitch manipulation.
+-- Provides functions for manipulating pitch.
 --
 -------------------------------------------------------------------------------------
 
 
-module Music.Score.Pitch (
+module Music.Score.Pitch (     
+        -- * Pitch representation
         HasPitch(..),
         PitchT(..),
         getPitches,
         setPitches,
         modifyPitches,
+
+        -- * Pitch transformations
+        -- ** Transposition
         up,
         down,
   ) where
@@ -112,9 +116,19 @@ setPitches n = fmap (setPitch n)
 modifyPitches :: (HasPitch a, Functor s, p ~ PitchOf a) => (p -> p) -> s a -> s a
 modifyPitches f = fmap (modifyPitch f)
 
+-- |
+-- Transpose all pitches upwards in the given score.
+--
+-- > Interval -> Score a -> Score a
+--
 up :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => Diff p -> s a -> s a
 up a = modifyPitches (.+^ a)
 
+-- |
+-- Transpose all pitches downwards in the given score.
+--
+-- > Interval -> Score a -> Score a
+--
 down :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => Diff p -> s a -> s a
 down a = modifyPitches (.-^ a)
 

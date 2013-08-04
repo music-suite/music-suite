@@ -1,17 +1,4 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,     
-    DeriveDataTypeable,
-    GeneralizedNewtypeDeriving,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,    
-    OverloadedStrings,
-    NoMonomorphismRestriction #-}
-
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -22,7 +9,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides time representations for use with scores, events etc.
+-- Provides generic functions for manipulating time-based structures.
 --
 -------------------------------------------------------------------------------------
 

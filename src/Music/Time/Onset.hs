@@ -16,11 +16,17 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- This misleadingly named module provide a way to query a value for its
+--  'duration', 'onset' and 'offset'.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Time.Onset (
+        -- * Duration class
         HasDuration(..),
         stretchTo,
+
+        -- * Onset and offset class
         HasOnset(..),
         HasOffset(..),
         startAt,
@@ -29,10 +35,14 @@ module Music.Time.Onset (
         -- HasPreOnset(..),
         -- HasPostOnset(..),
         -- HasPostOffset(..),
-        -- ** Defaults
+
+
+        -- * Utility
+        -- ** Default implementations
         durationDefault,
         onsetDefault,
         offsetDefault,
+
         -- ** Wrappers
         AddOffset(..),
   ) where

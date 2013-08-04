@@ -25,18 +25,18 @@
 
 
 module Music.Score.Dynamics (
+        -- * Dynamics representation
         HasDynamic(..),
         DynamicT(..),
-
-        -- ** Dynamics over time
-        Levels(..),
-        cresc,
-        dim,
-
-        -- ** Application
         dynamics,
         dynamicVoice,
         dynamicSingle,
+
+        -- * Dynamic transformations
+        -- ** Crescendo and diminuendo
+        Levels(..),
+        cresc,
+        dim,
 
         -- ** Miscellaneous
         resetDynamics,

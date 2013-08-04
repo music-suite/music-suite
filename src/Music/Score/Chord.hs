@@ -20,14 +20,17 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides articulation.
+-- Provides a representation for chords.
 --
 -------------------------------------------------------------------------------------
 
 
 module Music.Score.Chord (
+        -- * Chord representation
         HasChord(..),
-        ChordT(..),
+        ChordT(..),      
+        
+        -- * Chord transformations
         flatten,
   ) where
 

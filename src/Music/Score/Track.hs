@@ -17,6 +17,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Track (
+        -- * Track type
         Track,
         track,
   ) where
@@ -42,17 +43,11 @@ import Music.Dynamics.Literal
 
 import qualified Data.List as List
 
--------------------------------------------------------------------------------------
--- Track type
--------------------------------------------------------------------------------------
-
 -- |
--- A track is a list of events with explicit onset. Events can not overlap.
+-- A track is a list of events with explicit onset. 
 --
--- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track and 'mappend'
--- interleaves values.
---
--- Track has an 'Applicative' instance derived from the 'Monad' instance.
+-- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track
+-- and 'mappend' interleaves values.
 --
 -- Track is a 'Monad'. 'return' creates a track containing a single value at time
 -- zero, and '>>=' transforms the values of a track, allowing the addition and

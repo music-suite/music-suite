@@ -15,23 +15,33 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides performable values. To 'perform' a score is to render it as a list
+-- of time-duration-value triplets.
+--
+-- The 'compose' function captures the fact that a value that is a 'Monoid',
+-- 'Transformable' and 'Pointed' can be reconstructed from a performance, i.e.
+-- 'compose' is the inverse of 'perform'.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Time.Performable (
-        -- * The 'Event' type functions
+        -- * Event and container types
         Event(..),
         Container(..),
-        HasPoint(..),
-        pointEvent,
 
-        -- * The 'Performable' class
+        -- * HasPoint class
+        -- $hasPoint
+        HasPoint(..),
+        point',
+
+        -- * Performable values
         Performable(..),
         performValues,
 
-        -- * The 'Composable' class
+        -- * Composable values
         Composable(..),
 
-        -- * Default implementations
+        -- ** Default implementations
         memptyDefault,
         mappendDefault,
         foldMapDefault
@@ -58,10 +68,24 @@ type family Event (s :: *) :: *
 --
 type family Container (s :: *) :: * -> *
 
+-- $hasPoint
+-- 
+-- The 'HasPoint' class serves only to lift the 'Pointed' class into
+-- unary kinds. We could have used 'Applicative' or 'Monad' here, but
+-- as we only care about 'pure' and 'return', 'Pointed' makes more sense.
+--
+-- Recall that:
+--
+-- > pure = return = point
+--
+
 type HasPoint a = (a ~ (Container a) (Event a), Pointed (Container a))
 
-pointEvent :: HasPoint a => Event a -> a
-pointEvent = point
+-- |
+-- Equivalent to 'point', 'pure' and 'return'.
+--
+point' :: HasPoint a => Event a -> a
+point' = point
 
 -- |
 -- Performable values.

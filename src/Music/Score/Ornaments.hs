@@ -19,25 +19,32 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides functions for manipulating ornaments (and some other things...).
+-- Provides functions for manipulating ornaments (and miscellaneous stuff to be
+-- given its own module soon...).
 --
 -------------------------------------------------------------------------------------
 
 
 module Music.Score.Ornaments (
+        -- * Tremolo
         HasTremolo(..),
         TremoloT(..),
+        tremolo,
+
+        -- * Text
         HasText(..),
         TextT(..),
+        text,
+
+        -- * Harmonics
         HasHarmonic(..),
         HarmonicT(..),
-        HasSlide(..),
-        SlideT(..),
-
-        tremolo,
-        text,
         harmonic,
         artificial,
+
+        -- * Slides and glissando
+        HasSlide(..),
+        SlideT(..),
         slide,
   ) where
 
