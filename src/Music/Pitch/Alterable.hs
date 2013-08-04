@@ -14,7 +14,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Alterable (
-        -- * The 'Alterable' class
+        -- * Alterable class
         Alterable(..),
   ) where
 
