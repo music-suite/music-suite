@@ -36,8 +36,6 @@ module Music.Score (
         module Data.AffineSpace.Point,
 
         -- * Basic types
-        module Music.Pitch.Literal,
-        module Music.Dynamics.Literal,
         module Music.Time,
 
         -- * Musical container types
@@ -79,8 +77,6 @@ import Data.AffineSpace.Point
 import Data.Basis
 
 import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
 
 import Music.Score.Rhythm
 import Music.Score.Track

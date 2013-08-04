@@ -21,6 +21,9 @@ module Music.Score.Combinators (
         noteRest,
         removeRests,
 
+        --- * Retrograde
+        retrograde,
+        
         --- * Truncation
         Slicable(..),
         before,
