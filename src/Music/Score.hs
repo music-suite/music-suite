@@ -45,6 +45,7 @@ module Music.Score (
 
         -- * Manipulation
         module Music.Score.Combinators,
+        module Music.Score.Convert,
         module Music.Score.Part,
         module Music.Score.Ties,
         module Music.Score.Pitch,
@@ -83,6 +84,7 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
+import Music.Score.Convert
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
