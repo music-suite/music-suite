@@ -26,7 +26,7 @@ import Control.Applicative
 import Control.Monad            (ap, join, MonadPlus(..))
 
 import Data.Typeable
-import Data.Foldable            (Foldable(..), foldMap)
+import Data.Foldable            (Foldable(..), foldMap, toList)
 import Data.Traversable         (Traversable(..))
 import Data.Pointed
 import Data.Ord                 (comparing)
@@ -145,9 +145,10 @@ instance IsPitch a => IsPitch (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
-
-
--- Utility
+-- This instance is just to be able to write expressions like [c..g]
+instance Enum a => Enum (Score a) where
+    toEnum = return . toEnum
+    fromEnum = list 0 (fromEnum . head) . toList
 
 instance AdditiveGroup (Score a) where
     zeroV   = error "Not impl"
