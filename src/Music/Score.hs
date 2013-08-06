@@ -48,6 +48,7 @@ module Music.Score (
         module Music.Score.Convert,
         module Music.Score.Part,
         module Music.Score.Ties,
+        module Music.Score.Chord,
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
@@ -85,6 +86,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Convert
+import Music.Score.Chord
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part

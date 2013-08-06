@@ -31,7 +31,7 @@ module Music.Score.Chord (
         ChordT(..),      
         
         -- * Chord transformations
-        flatten,
+        renderChord,
   ) where
 
 import Data.Ratio
@@ -64,12 +64,13 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 
 -- Note:                                                    
 --
--- The HasChord instance (for various types) takes care to transform strucuture *above* the chord representation
+-- The HasChord instance (for other transformer types) takes care to transform strucuture *above* the chord representation
 --      In particular, getChord will extract the chord from below and transform each note (or only the first etc) 
---     as appropriate for the given type.
--- The ChordT instances transforms structure *below* the chord representation
+--      as appropriate for the given type.
+-- The ChordT instances (of other transformer classes) transforms structure *below* the chord representation
+--      For example, it allow us to use functions such as up, down, legato etc on chords.
 
-flatten :: (MonadPlus m, HasChord a) => m a -> m (ChordNote a)
-flatten = mscatter . liftM getChord
+renderChord :: (MonadPlus m, HasChord a) => m a -> m (ChordNote a)
+renderChord = mscatter . liftM getChord
 
 
