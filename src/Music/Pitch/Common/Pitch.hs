@@ -121,6 +121,10 @@ instance Alterable Pitch where
     sharpen (Pitch a) = Pitch (augment a)
     flatten (Pitch a) = Pitch (diminish a)
 
+instance Enum Pitch where
+    toEnum = (c .+^) . perfect . fromIntegral
+    fromEnum = fromIntegral . number . (.-. c)
+
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Pitch'.
 --
