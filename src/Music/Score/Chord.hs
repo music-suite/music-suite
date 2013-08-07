@@ -35,12 +35,15 @@ module Music.Score.Chord (
   ) where
 
 import Data.Ratio
-import Data.Foldable
+import Data.Foldable (Foldable(..))
 import Data.Typeable
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
-import Control.Monad.Plus
+import Control.Monad.Plus       
+import Data.Map(Map)
+import qualified Data.Map as Map
+import qualified Data.List as List
 
 import Music.Score.Voice
 import Music.Score.Score
@@ -70,7 +73,76 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 -- The ChordT instances (of other transformer classes) transforms structure *below* the chord representation
 --      For example, it allow us to use functions such as up, down, legato etc on chords.
 
+-- |
+-- Render all chords of a given score into singular notes composed in parallel.
+--
 renderChord :: (MonadPlus m, HasChord a) => m a -> m (ChordNote a)
-renderChord = mscatter . liftM getChord
+renderChord = mscatter . fmap' getChord
+    where fmap' = liftM
+
+
+
+
+
+
+returnChord' :: Score a -> Score [a]
+returnChord' = fmap return
+
+joinChord' :: Score [[a]] -> Score [a]
+joinChord' = fmap join
+
+-- |
+-- Move all simultaneous events into chords.
+--
+-- Two events are considered simultaneous iff their onset and offset are the same.
+--
+gatherChord' :: Score a -> Score [a]
+gatherChord' sc = compose vs
+    where
+        -- es :: [Era]
+        -- evs :: [[a]]
+        -- vs :: [(TimeT, DurationT, [a])]
+        es  = eras sc
+        evs = fmap (flip events $ sc) es
+        vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
+
+eras :: Score a -> [Era]
+eras sc = fmap getEra . perform $ sc
+
+events :: Era -> Score a -> [a]
+events era sc = fmap getValue . filter (\ev -> getEra ev == era) . perform $ sc
+
+
+
+
+getValue :: (TimeT, DurationT, a) -> a
+getValue (t,d,a) = a
+
+getEra :: (TimeT, DurationT, a) -> Era
+getEra (t,d,a) = (t,d)        
+
+type Era = (TimeT, DurationT)
+
+-- Fold over all consecutive events
+
+-- consec (\a b -> if a == b then [a] else [a,b]) [1,1,1,2,3] = [1,2,3]
+
+-- consec :: (a -> a -> [a]) -> [a] -> [a]           
+
+-- consec f as = List.mapAccumL (\(prev, elems) current -> ( (Just x, []) , x)) (Nothing, []) as
+
+
+
+
+
+
+-- consec f = go
+--     where
+--         go []       = []
+--         go [a]      = [a]
+--         go (a:b:cs) = f a b : go cs
+--         
+        
+
 
 

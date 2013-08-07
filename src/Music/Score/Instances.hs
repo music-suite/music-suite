@@ -186,7 +186,6 @@ instance Tiable a => Tiable (ChordT a) where
 instance HasChord (ChordT a) where
     type ChordNote (ChordT a)                       = a
     getChord (ChordT as)                            = as
--- Derived form the [a] instance
 instance HasPitch a => HasPitch (ChordT a) where
     type PitchOf (ChordT a)                         = PitchOf a
     getPitch (ChordT as)                            = getPitch as
