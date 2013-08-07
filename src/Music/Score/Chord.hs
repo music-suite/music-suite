@@ -32,6 +32,7 @@ module Music.Score.Chord (
         
         -- * Chord transformations
         renderChord,
+        simultaneous,
   ) where
 
 import Data.Ratio
@@ -55,11 +56,17 @@ import Music.Score.Combinators
 class HasChord a where
     type ChordNote a :: *
     getChord :: a -> [ChordNote a]
+    -- Score a -> Score a
+    -- modifyChord :: (ChordNote a -> ChordNote a) -> a -> a
+
+instance HasChord [a] where
+    type ChordNote [a] = a
+    getChord = id
 
 -- Actually we should use NonEmpty here
 -- Empty chords will cause error with HasPitch, among others
 newtype ChordT a = ChordT { getChordT :: [a] }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+    deriving (Eq, Show, Ord, Monad, Functor, Foldable, Typeable)
 
 -- instance HasChord 
 
@@ -82,22 +89,19 @@ renderChord = mscatter . fmap' getChord
 
 
 
+-- Score [a] -> Score [a]
 
-
-
-returnChord' :: Score a -> Score [a]
-returnChord' = fmap return
-
-joinChord' :: Score [[a]] -> Score [a]
-joinChord' = fmap join
 
 -- |
 -- Move all simultaneous events into chords.
 --
 -- Two events are considered simultaneous iff their onset and offset are the same.
 --
-gatherChord' :: Score a -> Score [a]
-gatherChord' sc = compose vs
+simultaneous :: Score a -> Score (ChordT a)
+simultaneous = fmap ChordT . simultaneous'
+
+simultaneous' :: Score a -> Score [a]
+simultaneous' sc = compose vs
     where
         -- es :: [Era]
         -- evs :: [[a]]
