@@ -169,7 +169,7 @@ data ScoreBlock
     -- full markup etc
 -}
 
--- | A Lilypond music expression.
+-- | A Lilypond music expression.
 --   
 --   Use the 'Pretty' instance to convert into Lilypond syntax.
 --   
@@ -189,8 +189,8 @@ data Music
     | Time Rational                                 -- ^ Time signature.
     | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
     | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
-    | New String (Maybe String) Music               -- ^ New expression.
-    | Context String (Maybe String) Music           -- ^ Context expression.
+    | New String (Maybe String) Music               -- ^ New expression.
+    | Context String (Maybe String) Music           -- ^ Context expression.
     | Set String Value                            
     deriving (Eq, Show)
 
@@ -333,11 +333,11 @@ data PostEvent
     | EndSlur
     | BeginPhraseSlur
     | EndPhraseSlur
-    | BeginCresc
-    | BeginDim
-    | EndCrescDim
-    | Text Direction String
-    | Markup Direction Markup
+    | BeginCresc
+    | BeginDim
+    | EndCrescDim
+    | Text Direction String
+    | Markup Direction Markup
     deriving (Eq, Show)
 
 instance Pretty PostEvent where 
@@ -417,7 +417,7 @@ instance Pretty Markup where
     pretty (Upright a)          = "\\upright" <+> pretty a
 
 
--- | Articulations. These include ornaments.
+-- | Articulations. These include ornaments.
 data Articulation
     = Accent
     | Marcato
@@ -512,7 +512,7 @@ instance Pretty Articulation where
 data Direction
     = Above
     | Default
-    | Below
+    | Below
     deriving (Eq, Ord, Show)
 
 instance Default Direction where
@@ -545,21 +545,21 @@ instance Pretty Duration where
             pds n = concat $ replicate n "."
             (nv, ds) = separateDots a
 
--- | Construct a rest of default duration @1/4@.
+-- | Construct a rest of default duration @1/4@.
 --   
 --   Use the 'VectorSpace' methods to change duration.
 --   
 rest :: Music
 rest = Rest (Just $ 1/4) []
 
--- | Construct a note of default duration @1/4@.
+-- | Construct a note of default duration @1/4@.
 --   
 --   Use the 'VectorSpace' methods to change duration.
 --   
 note :: Note -> Music
 note n = Note n (Just $ 1/4) []
 
--- | Construct a chord of default duration @1/4@.
+-- | Construct a chord of default duration @1/4@.
 --   
 --   Use the 'VectorSpace' methods to change duration.
 --   
@@ -791,7 +791,7 @@ separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 separateDots' :: [Duration] -> Duration -> (Duration, Int)
 separateDots' []         nv = error "separateDots: Strange"
 separateDots' (div:divs) nv 
-    | isDivisibleBy 2 nv = (nv,  0)
+    | isDivisibleBy 2 nv = (nv,  0)
     | otherwise          = (nv', dots' + 1)
     where                                                        
         (nv', dots')    = separateDots' divs (nv*div)
@@ -820,7 +820,7 @@ runLy = runCommand "lilypond -f pdf test.ly"
 
 engrave :: Music -> IO ()
 engrave e = do
-    writeFile "test.ly" $ show $ pretty e
+    writeFile "test.ly" $ show $ pretty e
     runLy
     return ()
 
@@ -830,7 +830,7 @@ main = engrave test
 
 test = Simultaneous False [
         New "StaffGroup" Nothing (Simultaneous False [
-            New "Staff" Nothing (Relative c' $ Sequential [
+            New "Staff" Nothing (Relative c' $ Sequential [
                 Set "Staff.instrumentName" (toValue "Violin I"),
                 (addDynamics FF c), d, e
                 ]),
@@ -844,7 +844,7 @@ test = Simultaneous False [
 --     Simultaneous False 
 --         [ Relative g' (Sequential [
 --             addMarkup ([Bold "Hello", Italic (markup [MarkupText "cruel", Bold $ MarkupText "world"])]) rest,
---             addArticulation Mordent $ chord [c,e,g]^*2,
+--             addArticulation Mordent $ chord [c,e,g]^*2,
 --             d^*1,
 --             e^*2,
 --             c^*(3/2),
