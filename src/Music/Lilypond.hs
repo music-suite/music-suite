@@ -60,8 +60,8 @@ module Music.Lilypond (
         chord,
         
         -- ** Composition
-        scat,
-        pcat,
+        sequential,
+        simultaneous,
         
         -- ** Post events
         addPost,
@@ -567,17 +567,17 @@ chord :: [Note] -> Music
 chord ns = Chord ns (Just $ 1/4) []
 
 
-scat :: Music -> Music -> Music
-Sequential as `scat` Sequential bs = Sequential (as <> bs)
-Sequential as `scat` b             = Sequential (as <> [b])
-a `scat` Sequential bs             = Sequential ([a] <> bs)
-a `scat` b                         = Sequential ([a,b])
+sequential :: Music -> Music -> Music
+Sequential as `sequential` Sequential bs = Sequential (as <> bs)
+Sequential as `sequential` b             = Sequential (as <> [b])
+a `sequential` Sequential bs             = Sequential ([a] <> bs)
+a `sequential` b                         = Sequential ([a,b])
 
-pcat :: Music -> Music -> Music
-Simultaneous s as `pcat` Simultaneous t bs = Simultaneous True (as <> bs)
-Simultaneous s as `pcat` b                 = Simultaneous s (as <> [b])
-a `pcat` Simultaneous t bs                 = Simultaneous t ([a] <> bs)
-a `pcat` b                                 = Simultaneous True ([a,b])
+simultaneous :: Music -> Music -> Music
+Simultaneous s as `simultaneous` Simultaneous t bs = Simultaneous True (as <> bs)
+Simultaneous s as `simultaneous` b                 = Simultaneous s (as <> [b])
+a `simultaneous` Simultaneous t bs                 = Simultaneous t ([a] <> bs)
+a `simultaneous` b                                 = Simultaneous True ([a,b])
 
 
 
