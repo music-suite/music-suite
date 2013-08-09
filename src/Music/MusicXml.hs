@@ -33,7 +33,7 @@ module Music.MusicXml (
         PartListElem(..),
 
         -- * Music
-        Music,
+        Music(..),
         MusicElem(..),
 
         -- ** Attributes
