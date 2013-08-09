@@ -64,6 +64,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Convert
+import Music.Score.Chord
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
@@ -102,6 +103,9 @@ instance HasLilypond Integer where
 
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
+
+instance HasLilypond a => HasLilypond (ChordT a) where
+    getLilypond d = pcatLy . fmap (getLilypond d) . getChordT
 
 instance HasLilypond a => HasLilypond (TieT a) where
     getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
