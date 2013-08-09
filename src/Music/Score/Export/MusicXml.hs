@@ -101,10 +101,12 @@ instance HasMusicXml Int                        where   getMusicXml d = getMusic
 instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . toInteger . round
 instance HasMusicXml Double                     where   getMusicXml d = getMusicXml d . toInteger . round
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round
--- instance HasMusicXml a => HasMusicXml (Maybe a) where   getMusicXml d = ?
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) . (fromRational . toRational) $ d
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) (fromRational . toRational $ d)
+
+-- instance HasMusicXml a => HasMusicXml (ChordT a) where
+    -- getMusicXml d p = Xml.chord (spellXml (fromIntegral p)) . (fromRational . toRational) $ d
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
