@@ -1,33 +1,41 @@
 
-name:           lilypond
-version:        0.5
-cabal-version:  >= 1.2
-build-type:     Simple
-author:         Hans Hoglund
-synopsis:       Bindings to Lilypond
-category:       Music
-tested-with:    GHC
+name:               lilypond
+version:            1.0
+cabal-version:      >= 1.10
+author:             Hans Hoglund
+maintainer:         Hans Hoglund <hans@hanshoglund.se>
+license:            BSD3
+license-file:       COPYING
+synopsis:           Bindings to Lilypond
+category:           Music
+tested-with:        GHC
+build-type:         Simple
 
-description: 
-    This package contains a terse Haskell representation of (a subset of) Lilypond 
-    expressions and a pretty-printer for such expressions. They can be used to generate 
+description:
+    This package contains a terse Haskell representation of (a subset of) Lilypond
+    expressions and a pretty-printer for such expressions. They can be used to generate
     musical notation.
 
-library                    
-    build-depends: 
-        base, 
+source-repository head
+    type:               git
+    location:           git://github.com/hanshoglund/lilypond.git
+
+
+library
+    build-depends:
+        base            >= 4 && < 5,
         semigroups,
-        prettify,       
+        prettify,
         vector-space,
         process,
         data-default,
         music-pitch-literal,
         music-dynamics-literal
     hs-source-dirs: src
+    default-language:   Haskell2010
     exposed-modules:
         Music.Lilypond
         Music.Lilypond.Pitch
         Music.Lilypond.Dynamics
         Music.Lilypond.Value
         Music.Lilypond.IO
-    
