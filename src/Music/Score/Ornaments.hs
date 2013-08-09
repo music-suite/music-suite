@@ -46,6 +46,7 @@ module Music.Score.Ornaments (
         HasSlide(..),
         SlideT(..),
         slide,
+        glissando,
   ) where
 
 import Data.Ratio

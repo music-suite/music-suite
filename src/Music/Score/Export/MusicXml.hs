@@ -175,7 +175,7 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
             nes    = if es then Xml.endSlide else id
             nbg    = if es then Xml.beginGliss else id
             nbs    = if es then Xml.beginSlide else id
-
+    -- FIXME both start and stop goes to last note
 
 -- |
 -- Convert a score to MusicXML and write to a file.
