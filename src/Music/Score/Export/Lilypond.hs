@@ -104,6 +104,7 @@ instance HasLilypond Integer where
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
 
+-- FIXME should use Lilypond chord notation
 instance HasLilypond a => HasLilypond (ChordT a) where
     getLilypond d = pcatLy . fmap (getLilypond d) . getChordT
 
@@ -172,15 +173,15 @@ instance HasLilypond a => HasLilypond (SlideT a) where
 
 
 
--- TODO rename
-emptyLy :: Lilypond
-emptyLy = Lilypond.Sequential []
-
 pcatLy :: [Lilypond] -> Lilypond
-pcatLy = foldr Lilypond.simultaneous emptyLy
+pcatLy = foldr Lilypond.simultaneous e
+    where
+        e = Lilypond.Simultaneous False []
 
 scatLy :: [Lilypond] -> Lilypond
-scatLy = foldr Lilypond.sequential emptyLy
+scatLy = foldr Lilypond.sequential e
+    where
+        e = Lilypond.Sequential []
 
 
 -- |
