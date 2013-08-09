@@ -103,7 +103,7 @@ instance HasMusicXml Double                     where   getMusicXml d = getMusic
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) (fromRational . toRational $ d)
+    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) (realToFrac $ d)
 
 -- instance HasMusicXml a => HasMusicXml (ChordT a) where
     -- getMusicXml d p = Xml.chord (spellXml (fromIntegral p)) . realToFrac $ d
