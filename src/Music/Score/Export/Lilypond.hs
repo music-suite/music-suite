@@ -148,32 +148,12 @@ instance HasLilypond a => HasLilypond (ArticulationT a) where
 instance HasLilypond a => HasLilypond (TremoloT a) where
     getLilypond d (TremoloT (n,x)) = notate $ getLilypond newDur x
         where            
-            --           
             scale   = 2^n                    
             newDur  = (d `min` (1/4)) / scale
             repeats = d / newDur                                
-            -- d / newDur == repeats
             notate = case n of
                 0 -> id
                 _ -> Lilypond.Tremolo (round repeats)
-                -- FIXME wrong number?
-
--- n  scale     d        newDur repeats
--- 1  2         (1/16)   (1/32)     2     
--- 1  2         (1/8)    (1/16)     2     
--- 1  2         (1/4)    (1/8)      2
--- 1  2         (1/2)    (1/8)      4
--- 1  2         2        (1/8)      8
-
-
-
--- n  scale     d        newDur repeats
--- 2  4         (1/8)    (1/32)     4     
--- 2  4         (1/4)    (1/16)     4
--- 2  4         (1/2)    (1/16)     8
--- 2  4         2        (1/16)     8
-
-
 
 instance HasLilypond a => HasLilypond (TextT a) where
     getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
