@@ -76,6 +76,7 @@ module Music.Lilypond (
 
         -- ** Curves and lines
         beginTie,
+        beginGlissando,
         beginBeam,
         endBeam,
         beginSlur,
@@ -326,7 +327,8 @@ data BreathingSign
 data PostEvent
     = Articulation Direction Articulation
     | Dynamics Direction Dynamics
-    | Tie
+    | Tie      
+    | Glissando
     | BeginBeam
     | EndBeam
     | BeginSlur
@@ -344,6 +346,7 @@ instance Pretty PostEvent where
     pretty (Articulation d a)   = pretty d <> pretty a
     pretty (Dynamics d a)       = pretty d <> pretty a
     pretty Tie                  = "~"
+    pretty Glissando            = "\\glissando"
     pretty BeginBeam            = "["
     pretty EndBeam              = "]"
     pretty BeginSlur            = "("
@@ -613,6 +616,9 @@ addDynamics' d a = addPost (Dynamics d a)
 
 beginTie :: Music -> Music
 beginTie = addPost Tie
+
+beginGlissando :: Music -> Music
+beginGlissando = addPost Glissando
 
 beginBeam :: Music -> Music
 beginBeam = addPost BeginBeam
