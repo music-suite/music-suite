@@ -146,7 +146,8 @@ instance HasLilypond a => HasLilypond (ArticulationT a) where
             nbs    = if bs then Lilypond.beginSlur else id
 
 instance HasLilypond a => HasLilypond (TremoloT a) where
-    getLilypond d (TremoloT (n,x)) = notate $ getLilypond newDur x
+    getLilypond d (TremoloT (0, x)) = getLilypond d x
+    getLilypond d (TremoloT (n, x)) = notate $ getLilypond newDur x
         where            
             scale   = 2^n                    
             newDur  = (d `min` (1/4)) / scale
