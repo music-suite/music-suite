@@ -162,8 +162,8 @@ instance VectorSpace (Score a) where
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
-        d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
+        t <- fmap realToFrac $ (arbitrary::Gen Double)
+        d <- fmap realToFrac $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (return x)
 
 

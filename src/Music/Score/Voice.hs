@@ -71,10 +71,10 @@ newtype Voice a = Voice { getVoice' :: [(DurationT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable)
 
 voice :: Real d => [(d, a)] -> Voice a
-voice = Voice . fmap (first (fromRational . toRational))
+voice = Voice . fmap (first realToFrac)
 
 getVoice :: Fractional d => Voice a -> [(d, a)]
-getVoice = fmap (first (fromRational . toRational)) . getVoice'
+getVoice = fmap (first realToFrac) . getVoice'
 
 type instance Duration (Voice a) = DurationT
 type instance Event (Voice a) = a

@@ -98,7 +98,7 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*((fromRational . toRational) d*4)
+    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*(realToFrac d*4)
 
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
@@ -242,7 +242,7 @@ rhythmToLy (Tuplet m r)          = Lilypond.Times (m) (rhythmToLy r)
     where (a,b) = both fromIntegral fromIntegral $ unRatio $ m
 
 noteRestToLy :: HasLilypond a => DurationT -> Maybe a -> Lilypond
-noteRestToLy d Nothing  = Lilypond.rest^*((fromRational . toRational) d*4)
+noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)
 noteRestToLy d (Just p) = getLilypond d p
 
 spellLy :: Integer -> Lilypond.Note

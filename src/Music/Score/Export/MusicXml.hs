@@ -106,7 +106,7 @@ instance HasMusicXml Integer where
     getMusicXml d p = Xml.note (spellXml (fromIntegral p)) (fromRational . toRational $ d)
 
 -- instance HasMusicXml a => HasMusicXml (ChordT a) where
-    -- getMusicXml d p = Xml.chord (spellXml (fromIntegral p)) . (fromRational . toRational) $ d
+    -- getMusicXml d p = Xml.chord (spellXml (fromIntegral p)) . realToFrac $ d
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
@@ -255,10 +255,10 @@ rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ (fromRational . toRational) m
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ realToFrac m
 
 noteRestToXml :: HasMusicXml a => DurationT -> Maybe a -> Xml.Music
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ (fromRational . toRational) d
+noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 -- FIXME only works for single-voice parts

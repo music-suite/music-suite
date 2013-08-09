@@ -123,8 +123,8 @@ instance IsDynamics a => IsDynamics (Track a) where
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
-        d <- fmap (fromRational . toRational) $ (arbitrary::Gen Double)
+        t <- fmap realToFrac $ (arbitrary::Gen Double)
+        d <- fmap realToFrac $ (arbitrary::Gen Double)
         return $ delay t $ stretch d $ (return x)
 
 
