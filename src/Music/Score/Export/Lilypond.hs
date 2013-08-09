@@ -169,11 +169,14 @@ instance HasLilypond a => HasLilypond (SlideT a) where
 
 
 -- TODO rename
+emptyLy :: Lilypond
+emptyLy = Lilypond.Sequential []
+
 pcatLy :: [Lilypond] -> Lilypond
-pcatLy = foldr Lilypond.pcat (Lilypond.Simultaneous False [])
+pcatLy = foldr Lilypond.simultaneous emptyLy
 
 scatLy :: [Lilypond] -> Lilypond
-scatLy = foldr Lilypond.scat (Lilypond.Sequential [])
+scatLy = foldr Lilypond.sequential emptyLy
 
 
 -- |
@@ -233,7 +236,7 @@ barToLy bar = case quantize bar of
 
 rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
 rhythmToLy (Beat d x)            = noteRestToLy d x
-rhythmToLy (Group rs)            = foldr Lilypond.scat (Lilypond.Sequential []) $ map rhythmToLy rs
+rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
 rhythmToLy (Tuplet m r)          = Lilypond.Times (m) (rhythmToLy r)
     where (a,b) = both fromIntegral fromIntegral $ unRatio $ m
