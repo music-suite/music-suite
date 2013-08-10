@@ -169,8 +169,8 @@ instance HasLilypond a => HasLilypond (HarmonicT a) where
 
 instance HasLilypond a => HasLilypond (SlideT a) where
     getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a
-        where
-            notate = if bg then {-firstLy -}Lilypond.beginGlissando else id
+        where          
+            notate = if (bg || bs) then Lilypond.beginGlissando else id
 
 -- -- Rest/Note/Chord
 -- -- Sequential
