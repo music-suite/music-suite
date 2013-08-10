@@ -30,10 +30,10 @@ module Music.Score.Export.MusicXml (
         toXml,
         writeXml,
         openXml,
-        toXmlVoice,
-        toXmlSingle,
-        writeXmlSingle,
-        openXmlSingle,
+        -- toXmlVoice,
+        -- toXmlSingle,
+        -- writeXmlSingle,
+        -- openXmlSingle,
 ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
