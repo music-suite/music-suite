@@ -20,6 +20,7 @@ module Music.Score.Track (
         -- * Track type
         Track,
         track,
+        getTrack,
   ) where
 
 import Data.Semigroup
@@ -67,14 +68,17 @@ import qualified Data.List as List
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Track a = Track { getTrack :: [(TimeT, a)] }
+newtype Track a = Track { getTrack' :: [(TimeT, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
 
 type instance Duration (Track a) = DurationT
 type instance Event (Track a) = a
 
-track :: Real t => [(t, a)] -> Track a
-track = Track . fmap (first (P . fromRational . toRational))
+track :: Real d => [(Point d, a)] -> Track a
+track = Track . fmap (first $ fmap realToFrac)
+
+getTrack :: Fractional d => Track a -> [(Point d, a)]
+getTrack = fmap (first $ fmap realToFrac) . getTrack'
 
 instance Semigroup (Track a) where
     (<>) = mappend
