@@ -33,18 +33,21 @@ module Music.Score.Chord (
         -- * Chord transformations
         renderChord,
         simultaneous,
+        simultaneous',
   ) where
 
 import Data.Ratio
 import Data.Foldable (Foldable(..))
 import Data.Typeable
 import Data.Semigroup
+import Data.List.NonEmpty (NonEmpty(..))
 import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad.Plus       
 import Data.Map(Map)
 import qualified Data.Map as Map
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
 
 import Music.Score.Voice
 import Music.Score.Score
@@ -88,25 +91,26 @@ renderChord = mscatter . fmap' getChord
     where fmap' = liftM
 
 
-
--- Score [a] -> Score [a]
-
-
 -- |
--- Move all simultaneous events into chords.
+-- Merge simultaneous events.
 --
 -- Two events are considered simultaneous iff their onset and offset are the same.
 --
-simultaneous :: Score a -> Score (ChordT a)
-simultaneous = fmap ChordT . simultaneous'
+simultaneous :: Semigroup a => Score a -> Score a
+simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 
+-- |
+-- Group simultaneous events.
+--
+-- Two events are considered simultaneous iff their onset and offset are the same.
+--
 simultaneous' :: Score a -> Score [a]
 simultaneous' sc = compose vs
     where
         -- es :: [Era]
         -- evs :: [[a]]
         -- vs :: [(TimeT, DurationT, [a])]
-        es  = eras sc
+        es  = List.nub $ eras sc
         evs = fmap (`events` sc) es
         vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
 
@@ -115,9 +119,6 @@ eras sc = fmap getEra . perform $ sc
 
 events :: Era -> Score a -> [a]
 events era sc = fmap getValue . filter (\ev -> getEra ev == era) . perform $ sc
-
-
-
 
 getValue :: (TimeT, DurationT, a) -> a
 getValue (t,d,a) = a
