@@ -69,7 +69,7 @@ instance HasChord [a] where
 -- Actually we should use NonEmpty here
 -- Empty chords will cause error with HasPitch, among others
 newtype ChordT a = ChordT { getChordT :: [a] }
-    deriving (Eq, Show, Ord, Monad, Functor, Foldable, Typeable)
+    deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
 
 -- instance HasChord 
 

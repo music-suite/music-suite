@@ -104,6 +104,25 @@ instance IsDynamics a => IsDynamics (SlideT a) where
 
 
 -------------------------------------------------------------------------------------
+
+instance Semigroup a => Semigroup (DynamicT a) where
+    DynamicT (ec,ed,l,a,bc,bd) <> DynamicT (_,_,_,b,_,_) = DynamicT (ec,ed,l,a <> b,bc,bd)
+instance Semigroup a => Semigroup (SlideT a) where
+    SlideT (eg,es,a,bg,bs) <> SlideT (_,_,b,_,_) = SlideT (eg,es,a <> b,bg,bs)
+instance Semigroup a => Semigroup (TieT a) where
+    TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 || b2, x1 <> x2, e1 || e2)
+instance Semigroup a => Semigroup (HarmonicT a) where
+    HarmonicT (n1,x1) <> HarmonicT (n2,x2) = HarmonicT (n1, x1 <> x2)
+instance Semigroup a => Semigroup (ArticulationT a) where
+    ArticulationT (es,us,al,sl,a,bs) <> ArticulationT (_,_,_,_,b,_) = ArticulationT (es,us,al,sl,a <> b,bs)
+instance Semigroup a => Semigroup (TextT a) where
+    TextT (t1,x1) <> TextT (t2,x2) = TextT (t1 <> t2, x1 <> x2)
+instance Semigroup a => Semigroup (TremoloT a) where
+    TremoloT (n1,x1) <> TremoloT (n2,x2) = TremoloT (n1 `max` n2, x1 <> x2)
+instance Semigroup a => Semigroup (PartT n a) where
+    PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
+
+
 -------------------------------------------------------------------------------------
 
 -- Maybe
