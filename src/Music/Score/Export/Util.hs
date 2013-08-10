@@ -143,3 +143,16 @@ unRatio x = (numerator x, denominator x)
 first f (x, y) = (f x, y)
 second f (x, y) = (x, f y)
 both f g = first f . second g
+
+
+mapFirstL f = mapFirstMiddleLast f id id
+
+mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
+mapFirstMiddleLast f g h = go
+    where
+        go []    = []
+        go [a]   = [f a]
+        go [a,b] = [f a, h b]
+        go xs    = [f $ head xs]          ++ 
+                   map g (tail $ init xs) ++ 
+                   [h $ last xs]

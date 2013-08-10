@@ -162,24 +162,45 @@ instance HasLilypond a => HasLilypond (TextT a) where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
-    getLilypond d (HarmonicT (n,x))                 = notate $ getLilypond d x
+    getLilypond d (HarmonicT (n,x)) = notate $ getLilypond d x
         where
             notate = id
             -- FIXME
 
 instance HasLilypond a => HasLilypond (SlideT a) where
-    getLilypond d (SlideT (eg,es,a,bg,bs))    = notate $ getLilypond d a
+    getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a
         where
-            notate = id
-            -- FIXME
+            notate = if bg then {-firstLy -}Lilypond.beginGlissando else id
 
-
+-- -- Rest/Note/Chord
+-- -- Sequential
+-- -- Simultaneous
+-- -- Others
+-- foldLy :: (Lilypond -> Lilypond)
+--         -> ([Lilypond] -> Lilypond) 
+--         -> (Bool -> [Lilypond] -> Lilypond) 
+--         -> (Lilypond -> Lilypond)
+--         -> Lilypond -> Lilypond
+-- foldLy f h i g = go 
+--     where
+--         go a@(Lilypond.Rest d p)           = f a
+--         go a@(Lilypond.Note n d p)         = f a
+--         go a@(Lilypond.Chord ns d p)       = f a
+--         go a@(Lilypond.Sequential as)      = h as
+--         go a@(Lilypond.Simultaneous p as)  = i p as
+--         go a                               = g a
+-- 
+-- firstLy :: (Lilypond -> Lilypond) -> Lilypond -> Lilypond
+-- firstLy f = foldLy id (scatLy . mapFirstL f) (pcatLy') (firstLy f)
 
 
 pcatLy :: [Lilypond] -> Lilypond
-pcatLy = foldr Lilypond.simultaneous e
+pcatLy = pcatLy' False
+
+pcatLy' :: Bool -> [Lilypond] -> Lilypond
+pcatLy' p = foldr Lilypond.simultaneous e
     where
-        e = Lilypond.Simultaneous False []
+        e = Lilypond.Simultaneous p []
 
 scatLy :: [Lilypond] -> Lilypond
 scatLy = foldr Lilypond.sequential e
