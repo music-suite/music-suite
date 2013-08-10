@@ -99,14 +99,13 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond d p = Lilypond.note (spellLy $ p+12) ^*(realToFrac d*4)
+    getLilypond d = (^*realToFrac (d*4)) . Lilypond.note . spellLy . (+ 12)
+
+-- instance HasLilypond a => HasLilypond (ChordT Integer) where
+    -- getLilypond d = (Lilypond.chord (spellLy $ p+12) ^*(realToFrac d*4)) . getChordT
 
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
-
--- FIXME should use Lilypond chord notation
-instance HasLilypond a => HasLilypond (ChordT a) where
-    getLilypond d = getLilypond d . head . getChordT
 
 instance HasLilypond a => HasLilypond (TieT a) where
     getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
