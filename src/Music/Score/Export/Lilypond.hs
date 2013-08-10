@@ -88,10 +88,14 @@ type Lilypond = Lilypond.Music
 -- Class of types that can be converted to Lilypond.
 --
 class Tiable a => HasLilypond a where
+
     -- |
     -- Convert a value to a Lilypond music expression.
     --
-    getLilypond :: DurationT -> a -> Lilypond
+    getLilypond      :: DurationT -> a -> Lilypond
+
+    getLilypondChord :: DurationT -> [a] -> Lilypond
+    getLilypondChord d = pcatLy . fmap (getLilypond d)
 
 instance HasLilypond Int                        where   getLilypond d = getLilypond d . toInteger
 instance HasLilypond Float                      where   getLilypond d = getLilypond d . toInteger . round
@@ -99,10 +103,11 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond d = (^*realToFrac (d*4)) . Lilypond.note . spellLy . (+ 12)
+    getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLy . (+ 12)
+    getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap (spellLy . (+ 12))
 
--- instance HasLilypond a => HasLilypond (ChordT Integer) where
-    -- getLilypond d = (Lilypond.chord (spellLy $ p+12) ^*(realToFrac d*4)) . getChordT
+instance HasLilypond a => HasLilypond (ChordT a) where
+    getLilypond d = getLilypondChord d . getChordT
 
 instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x

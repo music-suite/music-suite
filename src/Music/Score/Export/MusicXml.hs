@@ -63,6 +63,7 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Chord
 import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Pitch
@@ -95,7 +96,10 @@ class Tiable a => HasMusicXml a where
     -- Typically, generates a 'XmlMusic' value using 'Xml.note' or 'Xml.chord', and transforms it
     -- to add beams, slurs, dynamics, articulation etc.
     --
-    getMusicXml :: DurationT -> a -> XmlMusic
+    getMusicXml      :: DurationT -> a -> XmlMusic
+
+    getMusicXmlChord :: DurationT -> [a] -> XmlMusic
+    getMusicXmlChord d = error "getMusicXmlChord: Not implemented"
 
 instance HasMusicXml Int                        where   getMusicXml d = getMusicXml d . toInteger
 instance HasMusicXml Float                      where   getMusicXml d = getMusicXml d . toInteger . round
@@ -103,10 +107,11 @@ instance HasMusicXml Double                     where   getMusicXml d = getMusic
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round
 
 instance HasMusicXml Integer where
-    getMusicXml d p = Xml.note (spellXml (fromIntegral p)) (realToFrac d)
+    getMusicXml      d = (`Xml.note` realToFrac d)  . spellXml . fromIntegral
+    getMusicXmlChord d = (`Xml.chord` realToFrac d) . fmap (spellXml . fromIntegral)
 
--- instance HasMusicXml a => HasMusicXml (ChordT a) where
-    -- getMusicXml d p = Xml.chord (spellXml (fromIntegral p)) . realToFrac $ d
+instance HasMusicXml a => HasMusicXml (ChordT a) where
+    getMusicXml d = getMusicXmlChord d . getChordT
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
