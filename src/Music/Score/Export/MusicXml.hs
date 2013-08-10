@@ -184,13 +184,13 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
 -- |
 -- Convert a score to MusicXML and write to a file.
 --
-writeXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it.
 --
-openXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -215,8 +215,8 @@ openXmlSingle sc = do
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toXml :: (HasMusicXml a, HasPart' a, Show (Part a)) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap (toXmlVoice' . scoreToVoice) . extractParts $ sc
+toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
+toXml sc = Xml.fromParts "Title" "Composer" pl . fmap (toXmlVoice' . scoreToVoice . simultaneous) . extractParts $ sc
     where
         pl = Xml.partList (fmap show $ getParts sc)
         -- asScore a = (a :: Score a)

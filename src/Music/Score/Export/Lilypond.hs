@@ -213,7 +213,7 @@ scatLy = foldr Lilypond.sequential e
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy :: (HasLilypond a, HasPart' a, Show (Part a)) => FilePath -> Score a -> IO ()
+writeLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
 writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
     where
         header = mempty                                                ++
@@ -233,7 +233,7 @@ writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
 -- |
 -- Typeset a score using Lilypond and open it.
 --
-openLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> IO ()
+openLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 openLy sc = do
     writeLy "test.ly" sc
     runLy
@@ -248,8 +248,8 @@ openLy' = void $ runCommand "open test.pdf"
 -- |
 -- Convert a score to a Lilypond representation.
 --
-toLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractParts' $ sc
+toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice . simultaneous)) . extractParts' $ sc
     where
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
