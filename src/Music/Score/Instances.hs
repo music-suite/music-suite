@@ -551,6 +551,32 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
     toInteger (PartT (v,a)) = toInteger a
 
 
+-- ChordT
+
+-- instance Num a => Num (ChordT a) where
+--     ChordT [a] + ChordT [b]   = ChordT [a+b]
+--     ChordT [a] * ChordT [b]   = ChordT [a*b]
+--     ChordT [a] - ChordT [b]   = ChordT [a-b]
+--     abs (ChordT [a])          = ChordT [abs a]
+--     signum (ChordT [a])       = ChordT [signum a]
+--     fromInteger a             = ChordT [fromInteger a]
+
+instance Enum a => Enum (ChordT a) where
+    toEnum a                  = ChordT [toEnum a]
+    fromEnum (ChordT [a])     = fromEnum a
+
+instance Bounded a => Bounded (ChordT a) where
+    minBound = ChordT [minBound]
+    maxBound = ChordT [maxBound]
+
+-- instance (Num a, Ord a, Real a) => Real (ChordT a) where
+--     toRational (ChordT [a]) = toRational a
+
+-- instance (Real a, Enum a, Integral a) => Integral (ChordT a) where
+--     ChordT [a] `quotRem` ChordT [b] = (ChordT [q], ChordT [r]) where (q,r) = a `quotRem` b
+--     toInteger (ChordT [a]) = toInteger a
+
+
 -- TieT
 
 instance Num a => Num (TieT a) where
