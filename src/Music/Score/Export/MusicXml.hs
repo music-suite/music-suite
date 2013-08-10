@@ -171,11 +171,10 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
     getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
         where
             notate = neg . nes . nbg . nbs
-            neg    = if es then Xml.endGliss else id
+            neg    = if eg then Xml.endGliss else id
             nes    = if es then Xml.endSlide else id
-            nbg    = if es then Xml.beginGliss else id
-            nbs    = if es then Xml.beginSlide else id
-    -- FIXME both start and stop goes to last note
+            nbg    = if bg then Xml.beginGliss else id
+            nbs    = if bs then Xml.beginSlide else id
 
 -- |
 -- Convert a score to MusicXML and write to a file.

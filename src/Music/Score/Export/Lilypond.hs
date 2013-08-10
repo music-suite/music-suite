@@ -106,7 +106,7 @@ instance HasLilypond a => HasLilypond (PartT n a) where
 
 -- FIXME should use Lilypond chord notation
 instance HasLilypond a => HasLilypond (ChordT a) where
-    getLilypond d = pcatLy . fmap (getLilypond d) . getChordT
+    getLilypond d = getLilypond d . head . getChordT
 
 instance HasLilypond a => HasLilypond (TieT a) where
     getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
