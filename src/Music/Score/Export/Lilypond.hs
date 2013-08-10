@@ -152,9 +152,7 @@ instance HasLilypond a => HasLilypond (TremoloT a) where
             scale   = 2^n                    
             newDur  = (d `min` (1/4)) / scale
             repeats = d / newDur                                
-            notate = case n of
-                0 -> id
-                _ -> Lilypond.Tremolo (round repeats)
+            notate = Lilypond.Tremolo (round repeats)
 
 instance HasLilypond a => HasLilypond (TextT a) where
     getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
