@@ -51,7 +51,7 @@ class Delayable a where
     delay :: Duration a -> a -> a
 
 instance Delayable a => Delayable [a] where
-    delay n as = fmap (delay n) as
+    delay n = fmap (delay n)
 
 -- instance AffineSpace t => Delayable (t, a) where
     -- delay n (t, a) = (t .+^ n, a)

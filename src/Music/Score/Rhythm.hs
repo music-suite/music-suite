@@ -199,7 +199,7 @@ bound' d = do
     a <- beat
     modifyState $ modifyTimeSub (subtract d)
     let (b,c) = toTied $ getBeatValue a
-    return $ Group [Beat (getBeatDuration a) $ b, Beat (1/2) $ c]
+    return $ Group [Beat (getBeatDuration a) b, Beat (1/2) c]
     -- FIXME doesn't know order
 
 -- | Matches a tuplet

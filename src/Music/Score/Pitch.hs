@@ -90,7 +90,7 @@ instance HasPitch a => HasPitch [a] where
     type PitchOf [a] = PitchOf a
     getPitch []      = error "getPitch: Empty list"
     getPitch as      = getPitch (head as)
-    modifyPitch f as = fmap (modifyPitch f) as
+    modifyPitch f    = fmap (modifyPitch f)
 
 -- |
 -- Get all pitches in the given score. Returns a list of pitches.

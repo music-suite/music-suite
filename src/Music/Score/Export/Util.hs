@@ -107,7 +107,7 @@ spellPitch p = (
         pitchClass = fromStep major semitone
         alteration = semitone - step major pitchClass
 
-        step xs p = xs !! ((fromIntegral p) `mod` length xs)
+        step xs p = xs !! (fromIntegral p `mod` length xs)
         fromStep xs p = fromIntegral $ fromMaybe (length xs - 1) $ List.findIndex (>= p) xs
         scaleFromSteps = snd . List.mapAccumL add 0
             where

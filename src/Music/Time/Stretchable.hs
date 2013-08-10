@@ -48,7 +48,7 @@ class Stretchable a where
     stretch :: Duration a -> a -> a
 
 instance Stretchable a => Stretchable [a] where
-    stretch n as = fmap (stretch n) as
+    stretch n = fmap (stretch n)
 
 instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) where
     stretch n (t, d, a) = (n*.t, n*^d, a)

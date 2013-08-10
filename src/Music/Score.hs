@@ -61,8 +61,6 @@ module Music.Score (
 )
 where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
-
 import Data.Semigroup
 import Data.Ratio
 import Control.Applicative

@@ -168,7 +168,7 @@ instance HasLilypond a => HasLilypond (HarmonicT a) where
 instance HasLilypond a => HasLilypond (SlideT a) where
     getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a
         where          
-            notate = if (bg || bs) then Lilypond.beginGlissando else id
+            notate = if bg || bs then Lilypond.beginGlissando else id
 
 -- -- Rest/Note/Chord
 -- -- Sequential
@@ -236,9 +236,9 @@ openLy sc = do
     cleanLy
     openLy'
 
-runLy   = runCommand "lilypond -f pdf test.ly" >>= waitForProcess >> return ()
-cleanLy = runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-openLy' = runCommand "open test.pdf" >> return ()
+runLy   = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
+cleanLy = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
+openLy' = void $ runCommand "open test.pdf"
     -- FIXME hardcoded
 
 -- |
@@ -247,8 +247,8 @@ openLy' = runCommand "open test.pdf" >> return ()
 toLy :: (HasLilypond a, HasPart' a, Show (Part a)) => Score a -> Lilypond
 toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second toLyVoice' . second scoreToVoice) . extractParts' $ sc
     where
-        addStaff x = Lilypond.New "Staff" Nothing x
-        prependName (v,x) = [Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v)] ++ x
+        addStaff = Lilypond.New "Staff" Nothing
+        prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
 
 -- |
 -- Convert a voice score to a list of bars.
@@ -265,8 +265,8 @@ rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
 rhythmToLy (Beat d x)            = noteRestToLy d x
 rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
-rhythmToLy (Tuplet m r)          = Lilypond.Times (m) (rhythmToLy r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ m
+rhythmToLy (Tuplet m r)          = Lilypond.Times m (rhythmToLy r)
+    where (a,b) = both fromIntegral fromIntegral $ unRatio m
 
 noteRestToLy :: HasLilypond a => DurationT -> Maybe a -> Lilypond
 noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)

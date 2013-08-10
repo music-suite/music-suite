@@ -107,7 +107,7 @@ simultaneous' sc = compose vs
         -- evs :: [[a]]
         -- vs :: [(TimeT, DurationT, [a])]
         es  = eras sc
-        evs = fmap (flip events $ sc) es
+        evs = fmap (`events` sc) es
         vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
 
 eras :: Score a -> [Era]

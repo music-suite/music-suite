@@ -94,7 +94,7 @@ instance Monoid (Score a) where
 
 instance Monad Score where
     return x = Score [(origin, 1, x)]
-    a >>= k = join' $ fmap k $ a
+    a >>= k = (join' . fmap k) a
         where
             join' sc = fold $ mapTime (\t d -> delayTime t . stretch d) sc
             mapTime f = Score . fmap (mapEvent f) . getScore
@@ -162,9 +162,9 @@ instance VectorSpace (Score a) where
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap realToFrac $ (arbitrary::Gen Double)
-        d <- fmap realToFrac $ (arbitrary::Gen Double)
-        return $ delay t $ stretch d $ (return x)
+        t <- fmap realToFrac (arbitrary::Gen Double)
+        d <- fmap realToFrac (arbitrary::Gen Double)
+        return $ delay t $ stretch d $ return x
 
 
 

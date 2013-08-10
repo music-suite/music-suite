@@ -84,7 +84,7 @@ instance Semigroup (Voice a) where
 
 instance Monad Voice where
     return a = Voice [(1, a)]
-    a >>= k = join' $ fmap k $ a
+    a >>= k = (join' . fmap k) a
         where
             join' (Voice ps) = foldMap (uncurry stretch) ps
 

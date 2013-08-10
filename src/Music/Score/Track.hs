@@ -88,7 +88,7 @@ instance Monoid (Track a) where
 
 instance Monad Track where
     return a = Track [(origin, a)]
-    a >>= k = join' $ fmap k $ a
+    a >>= k = (join' . fmap k) a
         where
             join' (Track ts) = foldMap (uncurry delayTime) ts
 
@@ -109,10 +109,10 @@ instance HasOnset (Track a) where
     onset (Track a) = list origin (on . head) a where on (t,x) = t
 
 instance Delayable (Track a) where
-    d `delay` Track a = Track $ fmap (first (.+^ d)) $ a
+    d `delay` Track a = Track $ first (.+^ d) `fmap` a
 
 instance Stretchable (Track a) where
-    d `stretch` Track a = Track $ fmap (first (d*.)) $ a
+    d `stretch` Track a = Track $ first (d*.) `fmap` a
 
 instance IsPitch a => IsPitch (Track a) where
     fromPitch = pure . fromPitch
@@ -123,9 +123,9 @@ instance IsDynamics a => IsDynamics (Track a) where
 instance Arbitrary a => Arbitrary (Track a) where
     arbitrary = do
         x <- arbitrary
-        t <- fmap realToFrac $ (arbitrary::Gen Double)
-        d <- fmap realToFrac $ (arbitrary::Gen Double)
-        return $ delay t $ stretch d $ (return x)
+        t <- fmap realToFrac (arbitrary::Gen Double)
+        d <- fmap realToFrac (arbitrary::Gen Double)
+        return $ delay t $ stretch d $ return x
 
 
 
