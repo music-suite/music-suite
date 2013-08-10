@@ -62,6 +62,11 @@ instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
 instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
     fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
 
+instance IsPitch a => IsPitch (ChordT a) where
+    fromPitch = return . fromPitch
+instance IsDynamics a => IsDynamics (ChordT a) where
+    fromDynamics = return . fromDynamics
+
 instance IsPitch a => IsPitch (TieT a) where
     fromPitch l                                     = TieT (False, fromPitch l, False)
 instance IsDynamics a => IsDynamics (TieT a) where

@@ -65,6 +65,7 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
+import Music.Score.Chord
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
@@ -117,6 +118,8 @@ instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfr
 
 instance HasMidi a => HasMidi (PartT n a) where
     getMidi (PartT (_,a))                           = getMidi a
+instance HasMidi a => HasMidi (ChordT a) where
+    getMidi = pcat . fmap getMidi . getChordT
 instance HasMidi a => HasMidi (TieT a) where
     getMidi (TieT (_,a,_))                          = getMidi a
 instance HasMidi a => HasMidi (DynamicT a) where
