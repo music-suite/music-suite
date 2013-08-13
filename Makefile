@@ -9,7 +9,7 @@ upload-wiki: transform
 		git add *.png *.ly *.mid && \
 		git add *.md && \
 		git commit -m "Updated wiki" && \
-		git push
+		git push && \
 	popd
 
 pdf: transform
@@ -22,10 +22,9 @@ pdf: transform
 
 html: transform
 	pushd $(OUT) && \
-		(cat 	About.md \
-			User-Guide.md \
+		(cat 	User-Guide.md \
 			) \
-			| pandoc --standalone --toc -Thtml -o test.html && \
+			| pandoc --standalone --toc --css ../styles.css -Thtml -o test.html && \
 	popd
 
 transform:
