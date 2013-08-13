@@ -7,34 +7,33 @@ OUT=music-score.wiki
 upload-wiki: transform
 	pushd $(OUT) && \
 		git add *.png *.ly *.mid && \
-		git add Tutorial && \
+		git add *.md && \
 		git commit -m "Updated wiki" && \
 		git push
 	popd
 
 pdf: transform
 	pushd $(OUT) && \
-		(cat 	Tutorial/About.md \
-			Tutorial/Getting-Started.md \
+		(cat 	About.md \
+			User-Guide.md \
 			) \
 			| pandoc --standalone --toc -Tpdf -o ../test.pdf && \
 	popd
 
 html: transform
 	pushd $(OUT) && \
-		(cat 	Tutorial/About.md \
-			Tutorial/Getting-Started.md \
+		(cat 	About.md \
+			User-Guide.md \
 			) \
 			| pandoc --standalone --toc -Thtml -o test.html && \
 	popd
 
 transform:
 	pushd $(OUT) && \
-		mkdir -p Tutorial && \
 		pwd && \
-		$(TRANSFORM) <../$(SRC)/Tutorial/About.md 	       	>Tutorial/About.md  && \
-		$(TRANSFORM) <../$(SRC)/Tutorial/Usage.md 	       	>Tutorial/Usage.md   && \
-		$(TRANSFORM) <../$(SRC)/Tutorial/Getting-Started.md  	>Tutorial/Getting-Started.md  && \
+		$(TRANSFORM) <../$(SRC)/About.md 	>About.md  && \
+		$(TRANSFORM) <../$(SRC)/Usage.md 	>Usage.md   && \
+		$(TRANSFORM) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \

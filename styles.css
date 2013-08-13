@@ -1,0 +1,118 @@
+
+
+body {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 650px;
+        font-size: 13.2px;
+        line-height:160%;
+        font-family: Geneva;
+        color: #202027;     
+        background: #fcfefe;
+}
+a:link, a:active, a:hover, a:visited {
+        color: #202027;
+}
+h1 > a, h2 > a, h3 > a, h1 > a:visited, h2 > a:visited, h3 > a:visited {
+        color: #202027;
+        text-decoration:none;
+}
+code {
+        line-height:140%;
+}   
+pre {
+        font-size: 12px;
+}
+
+h1 { font-size: 1.9em }
+h2 { font-size: 1.3em }
+h3 { font-size: 1.1em }
+
+
+h1 {
+        margin-top: 2em;
+}
+h2 {
+        margin-top: 2em;
+}
+h3 {
+        margin-top: 1em;
+}
+
+
+
+div.haskell-music {
+        padding: 20px;
+        margin-bottom: 5px;
+        background: #faffff;
+        border-radius: 18px;
+        border: 1px solid LightGrey;
+        box-shadow: 3px 3px 5px #eee;
+        opacity: 0.95;
+        overflow:auto;
+}
+div#TOC {       
+  border-bottom:      1px solid LightGrey;    
+           
+  background-color:   #fff;
+	opacity:            0.92;
+
+  
+/*  font-family: Arial, sans-serif; */
+  font-size:          13px;
+  line-height:        150%;  
+  padding :           5px;
+  padding-bottom :    15px;
+  
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #222; font-weight: bold; }
+code > span.dt { color: #293; }
+code > span.dv { color: #3a3; }
+code > span.bn { color: red; }
+code > span.fl { color: orange; }
+code > span.ch { color: red; }
+code > span.st { color: red; }
+code > span.co { color: gray; font-style: italic; }
+code > span.al { color: green; font-weight: bold; }
+code > span.ot { color: #2573a0; }
+code > span.fu { color: #2573a0; }
+code > span.er { color: red; font-weight: bold; }
+
+
+
+
+
+
+
+
+
+
+
+
+
