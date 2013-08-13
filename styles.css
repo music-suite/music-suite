@@ -1,21 +1,37 @@
 
 
 body {
-        margin-left: auto;
+        margin-left: 300px;
         margin-right: auto;
         max-width: 650px;
-        font-size: 13.2px;
-        line-height:160%;
-        font-family: Geneva;
+        line-height: 160%;
         color: #202027;     
         background: #fcfefe;
+        font-size: 12.2px;
+        font-family: Geneva;
 }
-a:link, a:active, a:hover, a:visited {
-        color: #202027;
-}
-h1 > a, h2 > a, h3 > a, h1 > a:visited, h2 > a:visited, h3 > a:visited {
-        color: #202027;
+a:link, a:active, a:visited {
+        color: #3050a7;
         text-decoration:none;
+}
+a:hover {
+        color: #ccc;
+        text-decoration:none;
+}
+h1 > a, 
+h2 > a, 
+h3 > a, 
+h1 > a:active, 
+h2 > a:active, 
+h3 > a:active, 
+h1 > a:visited, 
+h2 > a:visited, 
+h3 > a:visited 
+{
+        font-family: Palatino;
+        color: black;
+        text-decoration:none;
+        text-shadow: 0px 0px 2px #eef;
 }
 code {
         line-height:140%;
@@ -25,8 +41,8 @@ pre {
 }
 
 h1 { font-size: 1.9em }
-h2 { font-size: 1.3em }
-h3 { font-size: 1.1em }
+h2 { font-size: 1.6em }
+h3 { font-size: 1.4em }
 
 
 h1 {
@@ -42,31 +58,69 @@ h3 {
 
 
 div.haskell-music {
-        padding: 20px;
-        margin-bottom: 5px;
-        background: #faffff;
-        border-radius: 18px;
-        border: 1px solid LightGrey;
-        box-shadow: 3px 3px 5px #eee;
-        opacity: 0.95;
-        overflow:auto;
+        padding:                20px;
+        margin-bottom:          5px;
+        background:             #faffff;
+        border-radius:          12px;
+        border:                 1px solid LightGrey;
+        box-shadow:             3px 3px 5px #eee;
+/*        opacity:                0.95;*/
+        overflow:               auto;
+}
+div.haskell-music img {
+        padding-bottom:         10px;
+}
+body > pre {
+        padding:                20px;
+        margin-bottom:          5px;
+        background:             #faffff;
+        border-radius:          12px;
+        border:                 1px solid LightGrey;
+        box-shadow:             3px 3px 5px #eee;
+/*        opacity:                0.95;*/
+        overflow:               auto;
+        
 }
 div#TOC {       
-  border-bottom:      1px solid LightGrey;    
+        position:               fixed;
+        overflow-y:             auto;
+        top:                    0px;
+        left:                   0px;
+        width:                  260px;
+        
+        border-right:           1px solid LightGrey;
            
-  background-color:   #fff;
-	opacity:            0.92;
-
+/*        background-color:       #3050a7;*/
+	height:                 100%;
   
-/*  font-family: Arial, sans-serif; */
-  font-size:          13px;
-  line-height:        150%;  
-  padding :           5px;
-  padding-bottom :    15px;
-  
+/*        font-family: Arial, sans-serif; */
+        font-family: Palatino;
+        font-size:              14px;
+        padding :               5px;
+        padding-bottom :        15px;
+        line-height:            170%;
 
+        background-color:       #feffff;
 }
 
+div#TOC > ul {
+        margin-top:             40px;
+        
+}
+div#TOC > ul > li {
+        margin-top:             10px;        
+}
+
+div#TOC > ul, div > ul > li > ul {
+        list-style-type: none;
+        margin-left:     -10px;
+}
+
+div#TOC a {
+        color: #222;
+        text-shadow: 0px 0px 1px #ccc;
+        text-decoration:none;
+}
 
 
 
