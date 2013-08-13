@@ -20,6 +20,7 @@ it supports the input and output formats used by the Music Suite.
 
 ## Generating music
 
+<!--
 A piece of music is described by a *expressions* such as this one:
 
 ```haskell
@@ -43,6 +44,7 @@ There are several programs for converting music expressions:
 * `music2pdf` converts a Music file to graphics (using Lilypond)
 
 ## Generating music with explicit Haskell modules
+-->
 
 Alternatively, you can create a file called `test.hs` (or similar) with the following structure:
 
@@ -286,9 +288,10 @@ text "pizz." $ c^/2
 
 ## Rests
 
-Usually, scores contain only notes and *space*, i.e. everything in between notes. Sometimes it is useful to
-work with scores that have a duration but no events. This kind of score is represented by `rest` and has the
-type `Score (Maybe Note)`. We use [`removeRests`][removeRests] to convert a `Score (Maybe a)` into a `Score a`.
+Sometimes it is useful to work with scores that have a duration but no events.
+This kind of score is represented by `rest` and has the type `Score (Maybe
+Note)`. We use [`removeRests`][removeRests] to convert a `Score (Maybe a)`
+into a `Score a`.
 
 This function is very similar to the [`catMaybes`][catMaybes] function which operates on lists.
 
@@ -380,18 +383,16 @@ in compress 4 $ melody </> pedal
 
 ```music+haskell
 let        
-    subj   = removeRests $ 
-        scat [ scat [rest,c,d,e], f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5
-             , scat [a,g,f,e,f,e,d]^/2, c^*2 ]^/8
+    subj = removeRests $ scat [ 
+            scat [rest,c,d,e], 
+            f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5,
+            scat [a,g,f,e,f,e,d]^/2, c^*2 
+        ]^/8
 
-    entry1 = subj
-    entry2 = delay (6/4) $ up (perfect fifth) subj
-
-in entry2 </> entry1
+in delay (6/4) $ up (perfect fifth) subj </> subj
 ```
-<!--
-    subj   = removeRests $ scat [scat [rest, c',ab,db'], e^*2, scat [f,g], ab^*1.5, bb^/2, c'^*2]^/4
--->
+
+
 
 
 
