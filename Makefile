@@ -2,15 +2,17 @@
 #TRANSFORM=(transf | replace -i '~~~' '\`\`\`')
 TRANSFORM=(transf)
 SRC=src
-OUT=music-score.wiki
+# OUT=music-score.wiki
+OUT=build
+CSS=styles.css
 
-upload-wiki: transform
-	pushd $(OUT) && \
-		git add *.png *.ly *.mid && \
-		git add *.md && \
-		git commit -m "Updated wiki" && \
-		git push && \
-	popd
+# upload-wiki: transform
+# 	pushd $(OUT) && \
+# 		git add *.png *.ly *.mid && \
+# 		git add *.md && \
+# 		git commit -m "Updated wiki" && \
+# 		git push && \
+# 	popd
 
 pdf: transform
 	pushd $(OUT) && \
@@ -24,10 +26,12 @@ html: transform
 	pushd $(OUT) && \
 		(cat 	User-Guide.md \
 			) \
-			| pandoc --standalone --toc --css ../styles.css -Thtml -o test.html && \
+			| pandoc --standalone --toc --css styles.css -Thtml -o test.html && \
+		cp ../$(CSS) styles.css && \
 	popd
 
-transform:
+transform: 
+	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
 		$(TRANSFORM) <../$(SRC)/About.md 	>About.md  && \
