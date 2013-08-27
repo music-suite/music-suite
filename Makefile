@@ -4,6 +4,7 @@ TRANSFORM=(transf)
 SRC=src
 # OUT=music-score.wiki
 OUT=build
+PAGE=index.html
 CSS=styles.css
 
 # upload-wiki: transform
@@ -26,7 +27,7 @@ html: transform
 	pushd $(OUT) && \
 		(cat 	User-Guide.md \
 			) \
-			| pandoc --standalone --toc --css styles.css -Thtml -o test.html && \
+			| pandoc --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
 		cp ../$(CSS) styles.css && \
 	popd
 
