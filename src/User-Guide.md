@@ -1,7 +1,6 @@
 
 
-
-# Getting started
+# User Guide
 
 ## Installation
 
@@ -438,50 +437,50 @@ in (delay (6/4) $ up (perfect fifth) subj) </> subj
 
 
 
-[scat]:         http://musicsuite.github.io/docs/api/Music-Time-Juxtapose.html#v:scat
-[pcat]:         http://musicsuite.github.io/docs/api/Music-Time-Juxtapose.html#v:pcat
-[times]:        http://musicsuite.github.io/docs/api/Music-Time-Juxtapose.html#v:times
+[scat]:         docs/api/Music-Time-Juxtapose.html#v:scat
+[pcat]:         docs/api/Music-Time-Juxtapose.html#v:pcat
+[times]:        docs/api/Music-Time-Juxtapose.html#v:times
 [<>]:           http://hackage.haskell.org/packages/archive/semigroups/0.9.2/doc/html/Data-Semigroup.html#v:-60--62-
-[|>]:           http://musicsuite.github.io/docs/api/Music-Time-Juxtapose.html#v:-124--62-
-[</>]:          http://musicsuite.github.io/docs/api/Music-Score-Combinators.html#v:-60--47--62-
+[|>]:           docs/api/Music-Time-Juxtapose.html#v:-124--62-
+[</>]:          docs/api/Music-Score-Combinators.html#v:-60--47--62-
 
-[delay]:        http://musicsuite.github.io/docs/api/Music-Time-Delayable.html#v:delay
-[stretch]:      http://musicsuite.github.io/docs/api/Music-Time-Stretchable.html#v:stretch
-[compress]:     http://musicsuite.github.io/docs/api/Music-Time-Stretchable.html#v:compress
-[removeRests]:  http://musicsuite.github.io/docs/api/Music-Score-Combinators.html#v:removeRests
+[delay]:        docs/api/Music-Time-Delayable.html#v:delay
+[stretch]:      docs/api/Music-Time-Stretchable.html#v:stretch
+[compress]:     docs/api/Music-Time-Stretchable.html#v:compress
+[removeRests]:  docs/api/Music-Score-Combinators.html#v:removeRests
 
-[dynamics]:     http://musicsuite.github.io/docs/api/Music-Score-Dynamics.html#v:dynamics
+[dynamics]:     docs/api/Music-Score-Dynamics.html#v:dynamics
 
-[Score]:        http://musicsuite.github.io/docs/api/Music-Score-Score.html#v:Score
-[Voice]:        http://musicsuite.github.io/docs/api/Music-Score-Score.html#v:Voice
-[Track]:        http://musicsuite.github.io/docs/api/Music-Score-Score.html#v:Track
-[Delayable]:    http://musicsuite.github.io/docs/api/Music-Time-Delayable.html#v:Delayable
-[Stretchable]:  http://musicsuite.github.io/docs/api/Music-Time-Stretchable.html#v:Stretchable
+[Score]:        docs/api/Music-Score-Score.html#v:Score
+[Voice]:        docs/api/Music-Score-Score.html#v:Voice
+[Track]:        docs/api/Music-Score-Score.html#v:Track
+[Delayable]:    docs/api/Music-Time-Delayable.html#v:Delayable
+[Stretchable]:  docs/api/Music-Time-Stretchable.html#v:Stretchable
 
 
-[legato]:       http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:legato
-[staccato]:     http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:staccato
-[portato]:      http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:portato
-[tenuto]:       http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:tenuto
-[separated]:    http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:separated
-[spiccato]:     http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:spiccato
+[legato]:       docs/api/Music-Score-Articulation.html#v:legato
+[staccato]:     docs/api/Music-Score-Articulation.html#v:staccato
+[portato]:      docs/api/Music-Score-Articulation.html#v:portato
+[tenuto]:       docs/api/Music-Score-Articulation.html#v:tenuto
+[separated]:    docs/api/Music-Score-Articulation.html#v:separated
+[spiccato]:     docs/api/Music-Score-Articulation.html#v:spiccato
 
-[accent]:       http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:accent
-[marcato]:      http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:marcato
-[accentLast]:   http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:accentLast
-[accentAll]:    http://musicsuite.github.io/docs/api/Music-Score-Articulation.html#v:accentAll
+[accent]:       docs/api/Music-Score-Articulation.html#v:accent
+[marcato]:      docs/api/Music-Score-Articulation.html#v:marcato
+[accentLast]:   docs/api/Music-Score-Articulation.html#v:accentLast
+[accentAll]:    docs/api/Music-Score-Articulation.html#v:accentAll
 
-[retrograde]:   http://musicsuite.github.io/docs/api/Music-Score-Combinators.html#v:retrograde
+[retrograde]:   docs/api/Music-Score-Combinators.html#v:retrograde
 
-[harmonic]:     http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:harmonic
-[artificial]:   http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:artificial
-[tremolo]:      http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:tremolo
-[glissando]:    http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:glissando
-[slide]:        http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:slide
-[text]:         http://musicsuite.github.io/docs/api/Music-Score-Ornaments.html#v:text
+[harmonic]:     docs/api/Music-Score-Ornaments.html#v:harmonic
+[artificial]:   docs/api/Music-Score-Ornaments.html#v:artificial
+[tremolo]:      docs/api/Music-Score-Ornaments.html#v:tremolo
+[glissando]:    docs/api/Music-Score-Ornaments.html#v:glissando
+[slide]:        docs/api/Music-Score-Ornaments.html#v:slide
+[text]:         docs/api/Music-Score-Ornaments.html#v:text
 
-[up]:           http://musicsuite.github.io/docs/api/Music-Score-Pitch.html#v:up
-[down]:         http://musicsuite.github.io/docs/api/Music-Score-Pitch.html#v:down
+[up]:           docs/api/Music-Score-Pitch.html#v:up
+[down]:         docs/api/Music-Score-Pitch.html#v:down
 
 [catMaybes]:    http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Maybe.html#v:catMaybes
 
