@@ -1,7 +1,7 @@
 
 
 body {
-        margin-left: 300px;
+        margin-left: 350px;
         margin-right: auto;
         max-width: 650px;
         line-height: 160%;
@@ -86,7 +86,7 @@ div#TOC {
         overflow-y:             auto;
         top:                    0px;
         left:                   0px;
-        width:                  260px;
+        width:                  310px;
         
         border-right:           1px solid LightGrey;
            

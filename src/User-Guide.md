@@ -5,17 +5,15 @@
 
 ## Installation
 
-The Music Suite depends on the [Haskell platform](http://www.haskell.org/platform/) as well as some
-other Haskell libraries which can be installed automatically. To install the
-suite, simply:
+The Music Suite depends on the [Haskell platform][HaskellPlatform] as well as some
+other Haskell libraries which can be installed automatically. To install the suite
+with all its dependencies:
 
-1. Get the latest version of the Haskell Platform from [http://www.haskell.org/platform](http://www.haskell.org/platform)
-2. Run `cabal install music-preludes`
+    cabal install music-preludes
 
-It is recommended to also install [Lilypond](http://lilypond.org) and
-[Timidity](http://timidity.sourceforge.net/), which allow you to quickly
-generate musical scores and audio. You can also use other software as long as
-it supports the input and output formats used by the Music Suite.
+It is recommended to also install [Lilypond][Lilypond], which allow you to
+view musical scores. You can also use other software as long as it supports
+the input and output formats used by the Music Suite.
 
 
 ## Generating music
@@ -72,9 +70,13 @@ In fact, the `music2pdf` program is a simple utility that substitutes a single e
 
 
 
-
-
 # Writing music
+
+## Preludes and music representations
+
+The Music Suite is partially a framework for describing various musical representations.
+However for most practical purposes, we will not want to invent a new representation from
+scratch, but rather start with a standard representation.
 
 ## Basics
 
@@ -293,8 +295,6 @@ This kind of score is represented by `rest` and has the type `Score (Maybe
 Note)`. We use [`removeRests`][removeRests] to convert a `Score (Maybe a)`
 into a `Score a`.
 
-This function is very similar to the [`catMaybes`][catMaybes] function which operates on lists.
-
 ```music+haskell
 removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 ```
@@ -327,17 +327,7 @@ let
 in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
 ```
 
-## Pitch
-
-
-
-
-
-## Parts
-
-TODO
-
-## Onset and duration
+### Onset and duration
 
 ```music+haskell
 let                
@@ -345,6 +335,43 @@ let
     pedal  = asScore $ delayTime (onset melody) $ stretch (duration melody) $ c_
 in compress 4 $ melody </> pedal
 ```
+
+## Pitch
+
+### Pitches and intervals
+
+### Name and accidental
+
+### Spelling
+
+### Quality and number
+
+
+## Intonation
+
+TODO
+
+### Inspecting dissonant intervals
+
+### Semitones and enharmonic equivalence
+
+### Spelling
+
+### Scales
+
+### Chords
+
+
+
+## Parts
+
+### Instrument, part and sub-part
+
+### Extracting and modifying parts
+
+### Part composition
+
+
 
 # Time-based structures
 
@@ -382,14 +409,13 @@ in compress 4 $ melody </> pedal
 # Examples
 
 ```music+haskell
-let        
-    subj = removeRests $ scat [ 
+let subj = removeRests $ scat [ 
             scat [rest,c,d,e], 
             f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5,
             scat [a,g,f,e,f,e,d]^/2, c^*2 
         ]^/8
 
-in delay (6/4) $ up (perfect fifth) subj </> subj
+in (delay (6/4) $ up (perfect fifth) subj) </> subj
 ```
 
 
@@ -458,3 +484,8 @@ in delay (6/4) $ up (perfect fifth) subj </> subj
 [down]:         http://musicsuite.github.io/docs/api/Music-Score-Pitch.html#v:down
 
 [catMaybes]:    http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Maybe.html#v:catMaybes
+
+
+[Lilypond]:         http://lilypond.org
+[Timidity]:         http://timidity.sourceforge.net/
+[HaskellPlatform]:  http://www.haskell.org/platform/
