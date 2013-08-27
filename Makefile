@@ -25,7 +25,8 @@ pdf: transform
 
 html: transform
 	pushd $(OUT) && \
-		(cat 	User-Guide.md \
+		(cat 	About.md \
+			User-Guide.md \
 			) \
 			| pandoc --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
 		cp ../$(CSS) styles.css && \
