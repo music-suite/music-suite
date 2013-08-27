@@ -1,2 +1,4 @@
 *.wiki
 .DS_Store
+build
+*.pdf
