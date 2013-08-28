@@ -38,6 +38,7 @@ module Music.Score.Pitch (
         -- ** Transposition
         up,
         down,
+        invertAround,
         octavesUp,
         octavesDown,
   ) where
@@ -147,6 +148,13 @@ up a = modifyPitches (.+^ a)
 down :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> s a -> s a
 down a = modifyPitches (.-^ a)
 
+-- |
+-- Invert around the given pitch.
+--
+-- > Pitch -> Score a -> Score a
+--
+invertAround :: (AffineSpace (PitchOf a), HasPitch a, Functor s) => PitchOf a -> s a -> s a
+invertAround basePitch a = modifyPitches ((basePitch .+^) . negateV . (.-. basePitch)) a
 
 -- |
 -- Transpose up by the given number of octaves.
