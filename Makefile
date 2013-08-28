@@ -1,8 +1,7 @@
 
-#TRANSFORM=(transf | replace -i '~~~' '\`\`\`')
-TRANSFORM=(transf)
+TRANSFORM=transf
+TRANSFORM_PDF=transf --format=pdf
 SRC=src
-# OUT=music-score.wiki
 OUT=build
 PAGE=index.html
 CSS=styles.css
@@ -15,14 +14,6 @@ CSS=styles.css
 # 		git push && \
 # 	popd
 
-pdf: transform
-	pushd $(OUT) && \
-		(cat 	About.md \
-			User-Guide.md \
-			) \
-			| pandoc --standalone --toc -Tpdf -o ../test.pdf && \
-	popd
-
 html: transform
 	pushd $(OUT) && \
 		(cat 	About.md \
@@ -32,6 +23,14 @@ html: transform
 		cp ../$(CSS) styles.css && \
 	popd
 
+pdf: transform-pdf
+	pushd $(OUT) && \
+		(cat 	About.md \
+			User-Guide.md \
+			) \
+			| pandoc --standalone --toc -Tpdf -o ../test.pdf && \
+	popd
+
 transform: 
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
@@ -39,6 +38,19 @@ transform:
 		$(TRANSFORM) <../$(SRC)/About.md 	>About.md  && \
 		$(TRANSFORM) <../$(SRC)/Usage.md 	>Usage.md   && \
 		$(TRANSFORM) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		rm -f *.eps	 && \
+		rm -f *.count	 && \
+		rm -f *.tex	 && \
+		rm -f *.texi && \
+	popd
+
+transform-pdf: 
+	mkdir -p $(OUT)
+	pushd $(OUT) && \
+		pwd && \
+		$(TRANSFORM_PDF) <../$(SRC)/About.md 	>About.md  && \
+		$(TRANSFORM_PDF) <../$(SRC)/Usage.md 	>Usage.md   && \
+		$(TRANSFORM_PDF) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
