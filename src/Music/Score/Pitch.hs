@@ -5,6 +5,8 @@
     DeriveFoldable,
     DeriveDataTypeable,
     FlexibleInstances,
+    FlexibleContexts,
+    ConstraintKinds,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -25,6 +27,8 @@
 module Music.Score.Pitch (     
         -- * Pitch representation
         HasPitch(..),
+        IntervalOf,  
+        HasPitch',
         PitchT(..),
         getPitches,
         setPitches,
@@ -34,6 +38,8 @@ module Music.Score.Pitch (
         -- ** Transposition
         up,
         down,
+        octavesUp,
+        octavesDown,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -45,6 +51,8 @@ import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
+
+import Music.Pitch.Literal
 
 class HasPitch a where
     -- |
@@ -70,6 +78,13 @@ class HasPitch a where
     setPitch n = modifyPitch (const n)
     modifyPitch f x = x
 
+type IntervalOf a = Diff (PitchOf a)
+
+type HasPitch' a = (
+    HasPitch a, 
+    VectorSpace (IntervalOf a), Integer ~ Scalar (IntervalOf a),
+    AffineSpace (PitchOf a)
+    )
 
 newtype PitchT p a = PitchT { getPitchT :: (p, a) }
     deriving (Eq, Ord, Show, Functor)
@@ -117,19 +132,38 @@ modifyPitches :: (HasPitch a, Functor s, p ~ PitchOf a) => (p -> p) -> s a -> s 
 modifyPitches f = fmap (modifyPitch f)
 
 -- |
--- Transpose all pitches upwards in the given score.
+-- Transpose up.
 --
 -- > Interval -> Score a -> Score a
 --
-up :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => Diff p -> s a -> s a
+up :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> s a -> s a
 up a = modifyPitches (.+^ a)
 
 -- |
--- Transpose all pitches downwards in the given score.
+-- Transpose down.
 --
 -- > Interval -> Score a -> Score a
 --
-down :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => Diff p -> s a -> s a
+down :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> s a -> s a
 down a = modifyPitches (.-^ a)
 
+
+-- |
+-- Transpose up by the given number of octaves.
+--
+-- > Integer -> Score a -> Score a
+--
+octavesUp       :: (HasPitch' a, IsInterval (IntervalOf a), Functor s) => 
+                Integer -> s a -> s a
+
+-- |
+-- Transpose down by the given number of octaves.
+--
+-- > Integer -> Score a -> Score a
+--
+octavesDown     :: (HasPitch' a, IsInterval (IntervalOf a), Functor s) => 
+                Integer -> s a -> s a
+
+octavesUp a     = up (_P8^*a)
+octavesDown a   = down (_P8^*a)
 
