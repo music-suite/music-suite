@@ -222,12 +222,12 @@ tuplet' d = do
 -------------------------------------------------------------------------------------
 
 -- | Similar to 'many1', but tries longer sequences before trying one.
-many1long :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
-many1long p = try (many2 p) <|> fmap return p
+-- many1long :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
+-- many1long p = try (many2 p) <|> fmap return p
 
 -- | Similar to 'many1', but applies the parser 2 or more times.
-many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
-many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
+-- many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
+-- many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
 
 -- |
 -- Succeed only if the entire input is consumed.
