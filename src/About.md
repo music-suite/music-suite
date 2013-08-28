@@ -51,7 +51,9 @@ The Music Suite works well with the following input and output formats:
 
 For a complete reference, see the [API documentation](http://musicsuite.github.io/docs/api).
 
+<!--
 For an introduction, see [User Guide](User-Guide).
+-->
 
 [Haskell]:      http://www.haskell.org/haskellwiki/Haskell
 [Haskore]:      http://www.haskell.org/haskellwiki/Haskore
