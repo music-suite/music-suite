@@ -1,4 +1,4 @@
-
+#!/usr/bin/env runhaskell
 
 module Main where
 
@@ -6,7 +6,9 @@ import Data.Char
 import Data.Maybe
 import Text.Regex
 import System.Process
+import System.IO
 import System.IO.Unsafe
+import System.Environment
 import Language.Haskell.Interpreter
 import Data.List (sort, sortBy, intersperse)
 import Distribution.PackageDescription.Parse
@@ -106,22 +108,15 @@ replace1 x y = map (\z -> if z == x then y else z)
 takeLast n = reverse . take n . reverse
 dropLast n = reverse . drop n . reverse
 
-main = do                      
-    let cabals = [
-            "/Users/hans/Documents/Kod/hs/music-score/music-score.cabal"]
-    input <- readFile "/Users/hans/Documents/Kod/hs/music-docs/src/User-Guide.md"
-    output <- runFilter cabals input
-    writeFile "/Users/hans/Documents/Kod/hs/music-docs/src/User-Guide2.md" output
+main = do
+    cabals <- getArgs
+    runStd cabals
 
+runStd :: [FilePath] -> IO ()
+runStd cabals = runFilter cabals stdin stdout
 
-    
-    
-    -- putStrLn $ show $
-    -- whichModule 
-    --     ["Music.Pitch", "Music.Pitch", "Music.Pitch.Common", "Music.Pitch.Common.Quality"]
-    --     "isAugmented"
-
-
+runFilter :: [FilePath] -> Handle -> Handle -> IO ()
+runFilter cabals i o = hGetContents i >>= run cabals >>= hPutStr o
 
 {--
 Given a list of cabal files, process input by replacing all text on the form @@foo@@ with
@@ -133,8 +128,8 @@ Given a list of cabal files, process input by replacing all text on the form @@f
 etc.
 
 --}
-runFilter :: [FilePath] -> String -> IO String
-runFilter cabals input = do
+run :: [FilePath] -> String -> IO String
+run cabals input = do
     modNames <- visibleModsInCabals cabals
 
     -- TODO generate the index
