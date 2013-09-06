@@ -347,15 +347,16 @@ main = do
     -- openLy score
     
     where                
-        f = id   
-        -- f = retrograde
+        -- f = id   
+        f = retrograde
         -- f x = stretch (1/4) $ times 2 x |> times 2 (stretch 2 x)
 
-fromJust (Just x) = x
+        fromJust (Just x) = x
+
+
 
 returnMaybe :: MonadPlus m => (a -> Maybe b) -> a -> m b
 returnMaybe f = mmapMaybe f . return                    
 
 every :: (a -> b -> b) -> [a] -> b -> b
-every f x = foldr (.) id (fmap f x)
-
+every f = flip (foldr f)
