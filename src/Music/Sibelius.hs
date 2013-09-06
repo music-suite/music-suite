@@ -253,7 +253,9 @@ instance FromJSON SibNote where
         <*> v .: "style"
 
 
-
+-- |
+-- Convert a score from a Sibelius representation.
+--
 fromSib :: IsSibelius a => SibScore -> Score a
 fromSib (SibScore title composer info staffH transp staves systemStaff) =
     foldr (</>) mempty $ fmap fromSibStaff staves
@@ -294,17 +296,32 @@ fromSibNote (SibNote pitch di acc tied style) =
     where
         def = c
 
+-- |
+-- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
+-- error occurs.
+-- 
 readSib :: IsSibelius a => FilePath -> IO (Score a)
 readSib path = fmap (either (\x -> error $ "Could not read score" ++ x) id) $ readSibEither path
 
+-- |
+-- Read a Sibelius score from a file. Fails if the file could not be read, and returns
+-- @Nothing@ if a parsing error occurs.
+-- 
 readSibMaybe :: IsSibelius a => FilePath -> IO (Maybe (Score a))
 readSibMaybe path = fmap (either (const Nothing) Just) $ readSibEither path
 
+-- |
+-- Read a Sibelius score from a file. Fails if the file could not be read, and returns
+-- @Left m@ if a parsing error occurs.
+-- 
 readSibEither :: IsSibelius a => FilePath -> IO (Either String (Score a))
 readSibEither path = do
     json <- B.readFile path
     return $ fmap fromSib $ eitherDecode' json
 
+-- |
+-- This constraint includes all note types that can be constructed from a Sibelius representation.
+--
 type IsSibelius a = (
     IsPitch a, 
     HasPart' a, 
