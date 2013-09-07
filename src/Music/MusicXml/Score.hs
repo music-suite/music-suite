@@ -58,8 +58,8 @@ module Music.MusicXml.Score (
         noTies,
         Tie,
         NoteProps(..),
-        mapNoteProps,
-        mapNoteProps2,
+        modifyNoteProps,
+        modifyNoteProps2,
 
         -----------------------------------------------------------------------------
         -- ** Notations
@@ -368,14 +368,16 @@ noChord = False
 noTies :: [Tie]
 noTies = []
 
-mapNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
-mapNoteProps f (Note x d t p)     = Note x d t (f p)
-mapNoteProps f (CueNote x d p)    = CueNote x d (f p)
-mapNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
 
-mapNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
-mapNoteProps2 f (MusicNote n) = MusicNote (mapNoteProps f n)
-mapNoteProps2 f x             = x
+
+modifyNoteProps :: (NoteProps -> NoteProps) -> Note -> Note
+modifyNoteProps f (Note x d t p)     = Note x d t (f p)
+modifyNoteProps f (CueNote x d p)    = CueNote x d (f p)
+modifyNoteProps f (GraceNote x t p)  = GraceNote x t (f p)
+
+modifyNoteProps2 :: (NoteProps -> NoteProps) -> MusicElem -> MusicElem
+modifyNoteProps2 f (MusicNote n) = MusicNote (modifyNoteProps f n)
+modifyNoteProps2 f x             = x
 
 
 

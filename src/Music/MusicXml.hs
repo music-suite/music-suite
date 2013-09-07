@@ -51,8 +51,8 @@ module Music.MusicXml (
         NoteProps(..),
 
         -- TODO rewrite these
-        mapNoteProps,
-        mapNoteProps2,
+        modifyNoteProps,
+        modifyNoteProps2,
 
         -- ** Notations
         Notation(..),
