@@ -36,9 +36,9 @@ fromSibBar :: IsSibelius a => SibBar -> Score (Maybe a)
 fromSibBar (SibBar elems) = 
     fmap Just (pcat $ fmap fromSibElem elems) <> return Nothing^*1
 
-fromSibElem :: IsSibelius a => SibElement -> Score a
+fromSibElem :: IsSibelius a => SibBarObject -> Score a
 fromSibElem = go where
-    go (SibElementChord chord) = fromSibChord chord
+    go (SibBarObjectChord chord) = fromSibChord chord
     -- TODO tuplet, key/time signature, line and text support
 
 fromSibChord :: IsSibelius a => SibChord -> Score a

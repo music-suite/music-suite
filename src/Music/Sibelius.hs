@@ -3,22 +3,35 @@
              ConstraintKinds, FlexibleContexts #-}
 
 module Music.Sibelius (
+
+        -- * Scores and staves
         SibScore(..),
         SibStaff(..),
         SibBar(..),
-        SibElement(..),
-        SibText(..),
-        SibClef(..),
+        
+        -- * Bar objects
+        SibBarObject(..),
+
+        -- ** Notes
+        SibChord(..),
+        SibNote(..),
+
+        -- ** Lines
         SibSlur(..),
         SibCrescendoLine(..),
         SibDiminuendoLine(..),
-        SibTimeSignature(..),
-        SibKeySignature(..),
+
+        -- ** Tuplets
         SibTuplet(..),
         SibArticulation(..),
         readSibArticulation,
-        SibChord(..),
-        SibNote(..),
+
+        -- ** Miscellaneous
+        SibClef(..),
+        SibKeySignature(..),
+        SibTimeSignature(..),
+        SibText(..),
+
   ) where
 
 import Control.Monad.Plus
@@ -76,36 +89,36 @@ instance FromJSON SibStaff where
         <*> v .: "shortName"
 
 data SibBar = SibBar {
-            barElements            :: [SibElement]
+            barElements            :: [SibBarObject]
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibBar where
     parseJSON (Object v) = SibBar
         <$> v .: "elements"
 
-data SibElement 
-    = SibElementText SibText
-    | SibElementClef SibClef
-    | SibElementSlur SibSlur
-    | SibElementCrescendoLine SibCrescendoLine
-    | SibElementDiminuendoLine SibDiminuendoLine
-    | SibElementTimeSignature SibTimeSignature
-    | SibElementKeySignature SibKeySignature
-    | SibElementTuplet SibTuplet
-    | SibElementChord SibChord
+data SibBarObject 
+    = SibBarObjectText SibText
+    | SibBarObjectClef SibClef
+    | SibBarObjectSlur SibSlur
+    | SibBarObjectCrescendoLine SibCrescendoLine
+    | SibBarObjectDiminuendoLine SibDiminuendoLine
+    | SibBarObjectTimeSignature SibTimeSignature
+    | SibBarObjectKeySignature SibKeySignature
+    | SibBarObjectTuplet SibTuplet
+    | SibBarObjectChord SibChord
     deriving (Eq, Ord, Show)
-instance FromJSON SibElement where
+instance FromJSON SibBarObject where
     parseJSON x@(Object v) = case HashMap.lookup "type" v of    
         -- TODO
         Just "text"      -> error "JsElementText"
-        Just "clef"      -> error "SibElementClef"
-        Just "slur"      -> error "SibElementSlur"
-        Just "cresc"     -> error "SibElementCrescendoLine"
-        Just "dim"       -> error "SibElementDiminuendoLine"
-        Just "time"      -> error "SibElementTimeSignature"
-        Just "key"       -> error "SibElementKeySignature"
-        Just "tuplet"    -> error "SibElementTuplet"
-        Just "chord"     -> SibElementChord <$> parseJSON x
+        Just "clef"      -> error "SibBarObjectClef"
+        Just "slur"      -> error "SibBarObjectSlur"
+        Just "cresc"     -> error "SibBarObjectCrescendoLine"
+        Just "dim"       -> error "SibBarObjectDiminuendoLine"
+        Just "time"      -> error "SibBarObjectTimeSignature"
+        Just "key"       -> error "SibBarObjectKeySignature"
+        Just "tuplet"    -> error "SibBarObjectTuplet"
+        Just "chord"     -> SibBarObjectChord <$> parseJSON x
         _                -> mempty
 
 data SibText = SibText {
