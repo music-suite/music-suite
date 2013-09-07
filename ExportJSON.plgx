@@ -73,10 +73,6 @@
     }"
 
 
-    
-    __Exporting__ 
-    "************"
-    
     ScoreToJSON "(score, progress) {
         // Score -> (StaffName -> Bar -> NumBars -> ()) -> ()
 
