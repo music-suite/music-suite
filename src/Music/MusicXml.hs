@@ -29,7 +29,7 @@ module Music.MusicXml (
         MeasureAttrs(..),
 
         -- ** Part list
-        PartList,
+        PartList(..),
         PartListElem(..),
 
         -- * Music
