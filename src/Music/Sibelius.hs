@@ -226,15 +226,12 @@ instance FromJSON SibChord where
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
-        <*> doThing (v .: "articulations")
+        <*> fmap (mmapMaybe readSibArticulation) (v .: "articulations")
         <*> v .: "singleTremolos"
         <*> v .: "doubleTremolos"
         <*> v .: "acciaccatura"
         <*> v .: "appoggiatura"
         <*> v .: "notes"
-
-doThing = (=<<) (sequence . fmap (returnMaybe readSibArticulation))
-
 
 data SibNote = SibNote {
             notePitch               :: Int,
@@ -355,8 +352,8 @@ main = do
 
 
 
-returnMaybe :: MonadPlus m => (a -> Maybe b) -> a -> m b
-returnMaybe f = mmapMaybe f . return                    
+-- returnMaybe :: MonadPlus m => (a -> Maybe b) -> a -> m b
+-- returnMaybe f = mmapMaybe f . return                    
 
 every :: (a -> b -> b) -> [a] -> b -> b
 every f = flip (foldr f)
