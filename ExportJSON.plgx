@@ -4,13 +4,9 @@
     }"
     
    
-
     DEBUG "true"
 
 
-    __Main_Functionality__ 
-    "*********************"
-    
     Run "() {                  
         score = Sibelius.ActiveScore;
         
@@ -48,9 +44,6 @@
     }"
 
     
-    
-    __Progress__ 
-    "***********"
     
     CreateProgressCallback "() {
         progress = CreateDictionary();
@@ -320,10 +313,6 @@
     }"
 
 
-
-    __JSON_Representation__ 
-    "*********************"
-    
     CreateJSONObject "() {
         // () -> JSON
         // Creates an empty JSON object
