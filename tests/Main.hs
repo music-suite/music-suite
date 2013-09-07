@@ -1,6 +1,6 @@
 
 
-import Music.Preludes.Basic
+import Music.Prelude.Basic
 import Music.Score.Import.Sibelius
 
 
@@ -18,7 +18,7 @@ main = do
     
     where                
         -- f = id   
-        f = retrograde
-        -- f x = stretch (1/4) $ times 2 x |> times 2 (stretch 2 x)
+        f = (\x -> text (show $ duration x) x) . retrograde
+        -- f x = stretch (1/1) $ times 2 x |> times 2 (stretch 2 x)
 
         fromJust (Just x) = x
