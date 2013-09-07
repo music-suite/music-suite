@@ -4,15 +4,15 @@
 
 module Music.Sibelius where
 
-import Data.Aeson
+import Control.Monad.Plus
 import Control.Applicative
-import Data.Aeson.Types(parse, Parser)
-import Music.Prelude.Basic -- TODO
+import Data.Semigroup
+import Data.Aeson
 
-import Data.ByteString.Lazy(ByteString)
-import qualified Data.ByteString.Lazy as B
 import qualified Data.HashMap.Strict as HashMap
 
+
+{-
 setTitle :: String -> Score a -> Score a
 setTitle = setMeta "title"
 setComposer :: String -> Score a -> Score a
@@ -21,9 +21,7 @@ setInformation :: String -> Score a -> Score a
 setInformation = setMeta "information"
 setMeta :: String -> String -> Score a -> Score a
 setMeta _ _ = id
-
-
-
+-}
 
 
 data SibScore = SibScore {
@@ -250,110 +248,24 @@ instance FromJSON SibNote where
         <*> v .: "style"
 
 
--- |
--- Convert a score from a Sibelius representation.
---
-fromSib :: IsSibelius a => SibScore -> Score a
-fromSib (SibScore title composer info staffH transp staves systemStaff) =
-    foldr (</>) mempty $ fmap fromSibStaff staves
-    -- TODO meta information
-
-fromSibStaff :: IsSibelius a => SibStaff -> Score a
-fromSibStaff (SibStaff bars name shortName) =
-    removeRests $ scat $ fmap fromSibBar bars
-    -- TODO bar length hardcoded
-    -- TODO meta information
-
-fromSibBar :: IsSibelius a => SibBar -> Score (Maybe a)
-fromSibBar (SibBar elems) = 
-    fmap Just (pcat $ fmap fromSibElem elems) <> return Nothing^*1
-
-fromSibElem :: IsSibelius a => SibElement -> Score a
-fromSibElem = go where
-    go (SibElementChord chord) = fromSibChord chord
-    -- TODO tuplet, key/time signature, line and text support
-
-fromSibChord :: IsSibelius a => SibChord -> Score a
-fromSibChord (SibChord pos dur voice ar strem dtrem acci appo notes) = 
-    setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromSibNote notes
-    where
-        setTime = delay (fromIntegral pos / 1024)
-        setDur  = stretch (fromIntegral dur / 1024)
-        setArt Marcato         = marcato
-        setArt Accent          = accent
-        setArt Tenuto          = tenuto
-        setArt Staccato        = staccato
-        setArt a               = error $ "fromSibChord: Unsupported articulation" ++ show a        
-    -- TODO tremolo and appogiatura/acciaccatura support
-
-fromSibNote :: IsSibelius a => SibNote -> Score a
-fromSibNote (SibNote pitch di acc tied style) =
-    (if tied then fmap beginTie else id)
-    $ modifyPitches (+ (fromIntegral pitch - 60)) def
-    where
-        def = c
-
--- |
--- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
--- error occurs.
--- 
-readSib :: IsSibelius a => FilePath -> IO (Score a)
-readSib path = fmap (either (\x -> error $ "Could not read score" ++ x) id) $ readSibEither path
-
--- |
--- Read a Sibelius score from a file. Fails if the file could not be read, and returns
--- @Nothing@ if a parsing error occurs.
--- 
-readSibMaybe :: IsSibelius a => FilePath -> IO (Maybe (Score a))
-readSibMaybe path = fmap (either (const Nothing) Just) $ readSibEither path
-
--- |
--- Read a Sibelius score from a file. Fails if the file could not be read, and returns
--- @Left m@ if a parsing error occurs.
--- 
-readSibEither :: IsSibelius a => FilePath -> IO (Either String (Score a))
-readSibEither path = do
-    json <- B.readFile path
-    return $ fmap fromSib $ eitherDecode' json
-
--- |
--- This constraint includes all note types that can be constructed from a Sibelius representation.
---
-type IsSibelius a = (
-    IsPitch a, 
-    HasPart' a, 
-    Enum (Part a), 
-    HasPitch a, 
-    Num (PitchOf a), 
-    HasTremolo a, 
-    HasArticulation a,
-    Tiable a
-    )
 
     
-main = do   
-    result <- readSibEither "test.json"
-    case result of
-        Left e -> putStrLn $ "Error: " ++ e
-        Right x -> do
-            -- writeMidi "test.mid" $ asScore $ f x
-            -- openXml $ f x
-            openLy $ asScore $ f x
+-- main = do   
+--     result <- readSibEither "test.json"
+--     case result of
+--         Left e -> putStrLn $ "Error: " ++ e
+--         Right x -> do
+--             -- writeMidi "test.mid" $ asScore $ f x
+--             -- openXml $ f x
+--             openLy $ asScore $ f x
+-- 
+--     -- let score = fromSib $ fromJust $ decode' json
+--     -- openLy score
+--     
+--     where                
+--         -- f = id   
+--         f = retrograde
+--         -- f x = stretch (1/4) $ times 2 x |> times 2 (stretch 2 x)
+-- 
+--         fromJust (Just x) = x
 
-    -- let score = fromSib $ fromJust $ decode' json
-    -- openLy score
-    
-    where                
-        -- f = id   
-        f = retrograde
-        -- f x = stretch (1/4) $ times 2 x |> times 2 (stretch 2 x)
-
-        fromJust (Just x) = x
-
-
-
--- returnMaybe :: MonadPlus m => (a -> Maybe b) -> a -> m b
--- returnMaybe f = mmapMaybe f . return                    
-
-every :: (a -> b -> b) -> [a] -> b -> b
-every f = flip (foldr f)
