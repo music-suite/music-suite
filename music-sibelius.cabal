@@ -23,9 +23,12 @@ source-repository head
 library                    
     build-depends: 
         base >= 4 && < 5,
+        semigroups,
+        monadplus,
         unordered-containers,
         bytestring,
         music-score,
+        music-pitch-literal,
         music-preludes,
         aeson
     hs-source-dirs: src

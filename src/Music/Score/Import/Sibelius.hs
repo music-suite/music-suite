@@ -103,3 +103,6 @@ type IsSibelius a = (
 
 every :: (a -> b -> b) -> [a] -> b -> b
 every f = flip (foldr f)
+
+
+
