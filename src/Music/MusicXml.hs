@@ -49,10 +49,7 @@ module Music.MusicXml (
         Tie(..),
         noTies,
         NoteProps(..),
-
-        -- TODO rewrite these
-        modifyNoteProps,
-        modifyNoteProps2,
+        HasNoteProps(..),
 
         -- ** Notations
         Notation(..),

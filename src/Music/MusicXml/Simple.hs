@@ -488,20 +488,20 @@ errorNoteValue  = error "Music.MusicXml.Simple.separateDots: Note value must be 
 
 
 setVoice        :: Int -> Music -> Music
-setVoice n      = Music . fmap (modifyNoteProps2 (setVoiceP n)) . getMusic
+setVoice n      = Music . fmap (modifyNoteProps (setVoiceP n)) . getMusic
 
 dot             :: Music -> Music
 setNoteVal      :: NoteVal -> Music -> Music
 setTimeMod      :: Int -> Int -> Music -> Music
-dot             = Music . fmap (modifyNoteProps2 dotP) . getMusic
-setNoteVal x    = Music . fmap (modifyNoteProps2 (setNoteValP x)) . getMusic
-setTimeMod m n  = Music . fmap (modifyNoteProps2 (setTimeModP m n)) . getMusic
+dot             = Music . fmap (modifyNoteProps dotP) . getMusic
+setNoteVal x    = Music . fmap (modifyNoteProps (setNoteValP x)) . getMusic
+setTimeMod m n  = Music . fmap (modifyNoteProps (setTimeModP m n)) . getMusic
 
 addNotation  :: Notation -> Music -> Music
-addNotation x = Music . fmap (modifyNoteProps2 (addNotationP x)) . getMusic
+addNotation x = Music . fmap (modifyNoteProps (addNotationP x)) . getMusic
 
 setNoteHead  :: NoteHead -> Music -> Music
-setNoteHead x = Music . fmap (modifyNoteProps2 (mapNoteHeadP (const $ Just (x,False,False)))) . getMusic
+setNoteHead x = Music . fmap (modifyNoteProps (mapNoteHeadP (const $ Just (x,False,False)))) . getMusic
 
 -- TODO clean up, skip empty notation groups etc
 mergeNotations :: [Notation] -> [Notation]
@@ -538,9 +538,9 @@ endTuplet       = addNotation (Tuplet 1 Stop)
 beginBeam       :: Music -> Music
 continueBeam    :: Music -> Music
 endBeam         :: Music -> Music
-beginBeam       = Music . fmap (modifyNoteProps2 (beginBeamP 1)) . getMusic
-continueBeam    = Music . fmap (modifyNoteProps2 (continueBeamP 1)) . getMusic
-endBeam         = Music . fmap (modifyNoteProps2 (endBeamP 1)) . getMusic
+beginBeam       = Music . fmap (modifyNoteProps (beginBeamP 1)) . getMusic
+continueBeam    = Music . fmap (modifyNoteProps (continueBeamP 1)) . getMusic
+endBeam         = Music . fmap (modifyNoteProps (endBeamP 1)) . getMusic
 
 beginTie    :: Music -> Music
 endTie      :: Music -> Music
