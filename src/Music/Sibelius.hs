@@ -2,7 +2,24 @@
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction, 
              ConstraintKinds, FlexibleContexts #-}
 
-module Music.Sibelius where
+module Music.Sibelius (
+        SibScore(..),
+        SibStaff(..),
+        SibBar(..),
+        SibElement(..),
+        SibText(..),
+        SibClef(..),
+        SibSlur(..),
+        SibCrescendoLine(..),
+        SibDiminuendoLine(..),
+        SibTimeSignature(..),
+        SibKeySignature(..),
+        SibTuplet(..),
+        SibArticulation(..),
+        readSibArticulation,
+        SibChord(..),
+        SibNote(..),
+  ) where
 
 import Control.Monad.Plus
 import Control.Applicative
