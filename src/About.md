@@ -4,7 +4,7 @@
 
 > *Please note:* The API and docs are not particularly stable at the moment. An official release note will appear in due time.
 
-The Music Suite is a declarative language embedded in [Haskell][Haskell] for generation and manipulation of music. It is is similar to [Haskore][Haskore] and [Euterpea][Euterpea], but its design and general philosophy is more inspired by [Diagrams][Diagrams] and [Reactive][Reactive].
+The Music Suite is a declarative language embedded in [Haskell][Haskell] for generation and manipulation of music.<!-- It is is similar to [Haskore][Haskore] and [Euterpea][Euterpea], but its design and general philosophy is more inspired by [Diagrams][Diagrams] and [Reactive][Reactive]. -->
 
 The Music Suite was designed with the dual goal of:
 
@@ -49,7 +49,7 @@ The Music Suite works well with the following input and output formats:
 
 ### More information
 
-For a complete reference, see the [API documentation](http://musicsuite.github.io/docs/api).
+For a complete reference, see the [API documentation](/docs/api).
 
 <!--
 For an introduction, see [User Guide](User-Guide).

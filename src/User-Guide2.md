@@ -167,23 +167,13 @@ pcat [c,e..g]^/2
 
 ## Pitch
 
-To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*. 
+To facilitate the use of non-standard pitch, the standard pitch and interval names are provided as overloaded values, referred to as *literals*. This is very similar to how numeric overloading works in Haskell. The number literals `0,1,2,3,4...` can be used with any type that is an instance of `Num`, similarly, the pitch literals `c,d,e,f...` can be used with any type that is an instance of `IsPitch`.
 
-To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type `IsPitch a => a`.
-
-For Western-style pitch types, the standard pitch names can be used:
+Standard pitch names:
 
 ```music+haskell
 scat [c, d, e, f, g, a, b]
 ```
-
-Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`. To use German pitch names you can explicitly hide the `b`:
-
-```haskell
-import Music.Preludes.Basic hiding (b)
-import Music.Pitch.Literal.German
-```
-
 
 You can change octave using `octavesUp` and `octavesDown`:
 
@@ -201,7 +191,7 @@ Shorter syntax for other octaves:
 c__ |> c_ |> c |> c' |> c''
 ```
 
-Sharps and flats can be added by the functions [`sharp`][sharp] and [`flat`][flat], which are written 
+Sharps and flats can be added by the functions [`sharp`][sharp] and [`flat`][sharp`][sharp] and [`flat], which are written 
 *postfix* thanks to some overloading magic.
 
 ```music+haskell
@@ -253,7 +243,7 @@ dynamics _p c
 
 ## Articulation
 
-Some basic articulation functions are [`legato`][legato], [`staccato`][staccato], [`portato`][portato], [`tenuto`][tenuto], [`separated`][separated], [`spiccato`][spiccato]:
+Some basic articulation functions are [`legato`][legato], [`staccato`][staccato], [`portato`][portato], [`tenuto`][tenuto], [`separated`][separated], [`spiccato`][legato`][legato], [`staccato`][staccato], [`portato`][portato], [`tenuto`][tenuto], [`separated`][separated], [`spiccato]:
 
 ```music+haskell
 legato (scat [c..g]^/8)
@@ -292,8 +282,8 @@ Applying articulations over multiple parts:
 ```music+haskell     
 let
     p1 = scat [c..b]^/4
-    p2 = delay (1/4) $ scat [c..b]^/4
-    p3 = delay (3/4) $ scat [c..b]^/4
+    p2 = delay (2/4) $ scat [c..b]^/4
+    p3 = delay (5/4) $ scat [c..b]^/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
@@ -302,7 +292,7 @@ in (accent . legato) (p1 </> p2 </> p3)
 [`tremolo`][tremolo]
 
 ```music+haskell
-tremolo 2 $ times 2 $ (c |> d)^/4
+tremolo 2 $ times 2 $ (c |> d)^/2
 ```
 
 ## Slides and glissando
@@ -551,3 +541,48 @@ in (delay (6/4) $ up (perfect fifth) subj) </> subj
 [Lilypond]:         http://lilypond.org
 [Timidity]:         http://timidity.sourceforge.net/
 [HaskellPlatform]:  http://www.haskell.org/platform/
+
+[`foobar`][foobar]
+
+
+<!-- Unknown: <> No such identifier: <>-->
+
+
+<!-- Unknown: |> No such identifier: |>-->
+
+
+<!-- Unknown: </> No such identifier: </>-->
+
+[scat]: /docs/api/Music-Time-Juxtapose.html#v:scat
+[pcat]: /docs/api/Music-Time-Juxtapose.html#v:pcat
+
+<!-- Unknown: sharp`][sharp] and [`flat No such identifier: sharp`][sharp] and [`flat-->
+
+[dynamics]: /docs/api/Music-Score-Dynamics.html#v:dynamics
+
+<!-- Unknown: legato`][legato], [`staccato`][staccato], [`portato`][portato], [`tenuto`][tenuto], [`separated`][separated], [`spiccato No such identifier: legato`][legato], [`staccato`][staccato], [`portato`][portato], [`tenuto`][tenuto], [`separated`][separated], [`spiccato-->
+
+[accent]: /docs/api/Music-Score-Articulation.html#v:accent
+[marcato]: /docs/api/Music-Score-Articulation.html#v:marcato
+[accentLast]: /docs/api/Music-Score-Articulation.html#v:accentLast
+[accentAll]: /docs/api/Music-Score-Articulation.html#v:accentAll
+[tremolo]: /docs/api/Music-Score-Ornaments.html#v:tremolo
+[slide]: /docs/api/Music-Score-Ornaments.html#v:slide
+[glissando]: /docs/api/Music-Score-Ornaments.html#v:glissando
+[harmonic]: /docs/api/Music-Score-Ornaments.html#v:harmonic
+[artificial]: /docs/api/Music-Score-Ornaments.html#v:artificial
+[text]: /docs/api/Music-Score-Ornaments.html#v:text
+[removeRests]: /docs/api/Music-Score-Combinators.html#v:removeRests
+[retrograde]: /docs/api/Music-Score-Combinators.html#v:retrograde
+[times]: /docs/api/Music-Time-Juxtapose.html#v:times
+[repeated]: /docs/api/Music-Time-Juxtapose.html#v:repeated
+[invertAround]: /docs/api/Music-Score-Pitch.html#v:invertAround
+[Score]: /docs/api/Music-Score-Score.html#t:Score
+[Voice]: /docs/api/Music-Score-Voice.html#t:Voice
+[Track]: /docs/api/Music-Score-Track.html#t:Track
+[Delayable]: /docs/api/Music-Time-Delayable.html#t:Delayable
+[Stretchable]: /docs/api/Music-Time-Stretchable.html#t:Stretchable
+
+<!-- Unknown: foobar No such identifier: foobar-->
+
+
