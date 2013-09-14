@@ -88,9 +88,15 @@ instance Semigroup (Score a) where
 -- Equivalent to the derived Monoid, except for the sorted invariant.
 instance Monoid (Score a) where
     mempty = Score []
-    Score as `mappend` Score bs = Score (as `m` bs)
+    a@(Score as) `mappend` b@(Score bs)
+        | offset a <= onset b   =  Score (as <> bs)
+        | otherwise             =  Score (as `m` bs)
         where
             m = mergeBy (comparing fst3)
+
+-- (onset b) above makes this diverge
+loop :: Score a -> Score a
+loop a = a <> loop a
 
 instance Monad Score where
     return x = Score [(origin, 1, x)]
@@ -125,7 +131,8 @@ instance HasOnset (Score a) where
     onset (Score a) = list origin (on . head) a where on (t,d,x) = t
 
 instance HasOffset (Score a) where
-    offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
+    -- offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
+    offset (Score a) = list origin (off . last) a where off (t,d,x) = t .+^ d
 
 -- instance Delayable (Score a) where
     -- d `delay` Score a = Score $ fmap (first3 (.+^ d)) $ a
