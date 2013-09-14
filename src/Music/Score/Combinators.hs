@@ -145,7 +145,7 @@ retrograde = startAt origin . (mapAll $ fmap g)
 instance Reversible a => Reversible (Score a) where
     rev = fmap rev . withSameOnset (mapAll $ fmap g)
         where
-            g (t,d,x) = (negateP t, d, x)
+            g (t,d,x) = (negateP (t .+^ d), d, x)
             negateP a = origin .-^ (a .-. origin)
 
 --------------------------------------------------------------------------------
