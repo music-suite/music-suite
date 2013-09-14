@@ -31,6 +31,8 @@ module Music.Time.Onset (
         HasOffset(..),
         startAt,
         stopAt,
+        withSameOnset,
+        withSameOffset,
         
         -- HasPreOnset(..),
         -- HasPostOnset(..),
@@ -118,6 +120,29 @@ t `stretchTo` x = (t / duration x) `stretch` x
 t `startAt` x   = (t .-. onset x) `delay` x
 t `stopAt`  x   = (t .-. offset x) `delay` x
                                              
+-- |
+-- Transform a score without affecting its onset.
+--
+-- > Time -> Score a -> Score a
+--
+withSameOnset      :: (Delayable a, HasOnset a, HasOnset b, 
+                        d ~ Duration a, d ~ Duration b, AdditiveGroup d) =>
+
+                    (b -> a) -> b -> a
+
+-- |
+-- Transform a score without affecting its offset.
+--
+-- > Time -> Score a -> Score a
+--
+withSameOffset      :: (Delayable a, HasOffset a, HasOffset b, 
+                        d ~ Duration a, d ~ Duration b, AdditiveGroup d) =>
+
+                    (b -> a) -> b -> a
+
+withSameOnset f a  = startAt (onset a) $ f a
+withSameOffset f a = stopAt (offset a) $ f a
+
 
 {-
 class HasPreOnset s where

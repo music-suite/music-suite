@@ -56,6 +56,7 @@ library
         Music.Time.Performable
         Music.Time.Onset
         Music.Time.Juxtapose
+        Music.Time.Reverse
         Music.Time.Time
 
         Music.Score.Rhythm

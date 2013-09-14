@@ -102,6 +102,25 @@ instance IsPitch a => IsPitch (SlideT a) where
 instance IsDynamics a => IsDynamics (SlideT a) where
     fromDynamics l                                  = SlideT (False,False,fromDynamics l,False,False)
 
+instance Reversible (ChordT a) where
+    rev = id
+instance Reversible a => Reversible (DynamicT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (SlideT a) where
+    rev (SlideT (eg,es,a,bg,bs)) = SlideT (bg,bs,rev a,eg,es)
+instance Reversible a => Reversible (TieT a) where
+    rev (TieT (b,x,e)) = TieT (e,rev x,b)
+instance Reversible a => Reversible (HarmonicT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (ArticulationT a) where
+    rev (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (bs,us,al,sl,rev a,es)
+instance Reversible a => Reversible (TextT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (TremoloT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (PartT p a) where
+    rev = fmap rev
+
 
 -------------------------------------------------------------------------------------
 

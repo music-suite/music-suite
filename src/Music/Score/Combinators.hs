@@ -21,8 +21,8 @@ module Music.Score.Combinators (
         noteRest,
         removeRests,
 
-        --- * Retrograde
-        retrograde,
+        -- --- * Retrograde
+        -- retrograde,
         
         --- * Truncation
         Slicable(..),
@@ -124,6 +124,7 @@ removeRests     = mcatMaybes
 
 
 
+{-
 -- |
 -- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
 --
@@ -140,6 +141,12 @@ retrograde = startAt origin . (mapAll $ fmap g)
     where
         g (t,d,x) = (negateP (t .+^ d), d, x)
         negateP a = origin .-^ (a .-. origin)
+-}
+instance Reversible a => Reversible (Score a) where
+    rev = fmap rev . withSameOnset (mapAll $ fmap g)
+        where
+            g (t,d,x) = (negateP t, d, x)
+            negateP a = origin .-^ (a .-. origin)
 
 --------------------------------------------------------------------------------
 -- Mapping

@@ -19,6 +19,7 @@ module Music.Time (
         module Music.Time.Stretchable,
         module Music.Time.Onset,
         module Music.Time.Juxtapose,
+        module Music.Time.Reverse,
         module Music.Time.Performable,
   ) where
 
@@ -27,4 +28,5 @@ import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Onset
 import Music.Time.Juxtapose
+import Music.Time.Reverse
 import Music.Time.Performable
