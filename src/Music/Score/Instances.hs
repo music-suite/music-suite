@@ -544,6 +544,9 @@ instance HasText a => HasText (SlideT a) where
 -- Num, Integral, Enum and Bounded
 -------------------------------------------------------------------------------------
 
+-- TODO are these instances sane?
+-- Enum and bounded seems harmless, but what about num/real/integral
+
 -- PartT
 
 instance (Enum v, Eq v, Num a) => Num (PartT v a) where
