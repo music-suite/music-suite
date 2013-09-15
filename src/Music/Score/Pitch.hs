@@ -109,11 +109,11 @@ instance HasPitch a => HasPitch [a] where
     modifyPitch f    = fmap (modifyPitch f)
 
 -- |
--- Get all pitches in the given score. Returns a list of pitches.
+-- Get all pitches in the given score. Returns a set of pitches. (TODO use set type?)
 --
 -- > Score a -> [Pitch]
 --
-getPitches :: (HasPitch a, Eq v, v ~ PitchOf a, Foldable s, p ~ PitchOf a) => s a -> [p]
+getPitches :: (HasPitch a, Eq v, v ~ PitchOf a, Foldable f, p ~ PitchOf a) => f a -> [p]
 getPitches = List.nub . fmap getPitch . toList
 
 -- |
