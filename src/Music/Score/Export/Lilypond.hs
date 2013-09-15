@@ -27,6 +27,7 @@ module Music.Score.Export.Lilypond (
         Lilypond,
         HasLilypond(..),
         toLy,
+        toLyString,
         writeLy,
         openLy,
         -- toLySingle,
@@ -244,6 +245,12 @@ runLy   = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
 cleanLy = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
 openLy' = void $ runCommand "open test.pdf"
     -- FIXME hardcoded
+
+-- |
+-- Convert a score to a Lilypond string.
+--
+toLyString :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> String
+toLyString = show . Pretty.pretty . toLy
 
 -- |
 -- Convert a score to a Lilypond representation.
