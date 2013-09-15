@@ -780,6 +780,7 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 
 
 
+-- TODO consolidate
 
 mapFirstL f = mapFirstMiddleLast f id id
 
