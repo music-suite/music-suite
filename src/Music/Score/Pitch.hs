@@ -30,7 +30,7 @@ module Music.Score.Pitch (
         IntervalOf,  
         HasPitch',
         PitchT(..),
-        getPitches,
+        -- getPitches,
         setPitches,
         modifyPitches,
 
@@ -45,7 +45,7 @@ module Music.Score.Pitch (
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.String
-import Data.Foldable
+-- import Data.Foldable
 import Data.Typeable
 import Data.Traversable
 import qualified Data.List as List
@@ -62,9 +62,9 @@ class HasPitch a where
     type PitchOf a :: *
 
     -- |
-    -- Get the pitch of the given note.
+    -- Get the pitches of the given note (TODO should be set?)getPitches
     --
-    getPitch :: a -> PitchOf a
+    getPitches :: a -> [PitchOf a]
 
     -- |
     -- Set the pitch of the given note.
@@ -92,22 +92,23 @@ newtype PitchT p a = PitchT { getPitchT :: (p, a) }
 
 instance HasPitch (PitchT p a) where
     type PitchOf (PitchT p a) = p
-    getPitch (PitchT (v,_))      = v
+    getPitches (PitchT (v,_))    = [v]
     modifyPitch f (PitchT (v,x)) = PitchT (f v, x)
 
-instance HasPitch ()                            where   { type PitchOf ()         = ()        ; getPitch = id; modifyPitch = id }
-instance HasPitch Double                        where   { type PitchOf Double     = Double    ; getPitch = id; modifyPitch = id }
-instance HasPitch Float                         where   { type PitchOf Float      = Float     ; getPitch = id; modifyPitch = id }
-instance HasPitch Int                           where   { type PitchOf Int        = Int       ; getPitch = id; modifyPitch = id }
-instance HasPitch Integer                       where   { type PitchOf Integer    = Integer   ; getPitch = id; modifyPitch = id }
-instance Integral a => HasPitch (Ratio a)       where   { type PitchOf (Ratio a)  = (Ratio a) ; getPitch = id; modifyPitch = id }
+instance HasPitch ()                            where   { type PitchOf ()         = ()        ; getPitches = return; modifyPitch = id }
+instance HasPitch Double                        where   { type PitchOf Double     = Double    ; getPitches = return; modifyPitch = id }
+instance HasPitch Float                         where   { type PitchOf Float      = Float     ; getPitches = return; modifyPitch = id }
+instance HasPitch Int                           where   { type PitchOf Int        = Int       ; getPitches = return; modifyPitch = id }
+instance HasPitch Integer                       where   { type PitchOf Integer    = Integer   ; getPitches = return; modifyPitch = id }
+instance Integral a => HasPitch (Ratio a)       where   { type PitchOf (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id }
 
 instance HasPitch a => HasPitch [a] where
     type PitchOf [a] = PitchOf a
-    getPitch []      = error "getPitch: Empty list"
-    getPitch as      = getPitch (head as)
+    getPitches []    = error "getPitch: Empty list"
+    getPitches as    = concatMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
 
+{-
 -- |
 -- Get all pitches in the given score. Returns a set of pitches. (TODO use set type?)
 --
@@ -115,6 +116,7 @@ instance HasPitch a => HasPitch [a] where
 --
 getPitches :: (HasPitch a, Eq v, v ~ PitchOf a, Foldable f, p ~ PitchOf a) => f a -> [p]
 getPitches = List.nub . fmap getPitch . toList
+-}
 
 -- |
 -- Set all pitches in the given score.
