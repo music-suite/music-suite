@@ -102,6 +102,11 @@ instance HasPitch Int                           where   { type PitchOf Int      
 instance HasPitch Integer                       where   { type PitchOf Integer    = Integer   ; getPitches = return; modifyPitch = id }
 instance Integral a => HasPitch (Ratio a)       where   { type PitchOf (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id }
 
+instance HasPitch a => HasPitch (a,b) where
+    type PitchOf (a,b)  = PitchOf a
+    getPitches (a,b)    = getPitches a
+    modifyPitch f (a,b) = (modifyPitch f a,b)
+
 instance HasPitch a => HasPitch [a] where
     type PitchOf [a] = PitchOf a
     getPitches []    = error "getPitch: Empty list"
