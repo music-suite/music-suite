@@ -78,6 +78,13 @@ instance HasDynamic (DynamicT a) where
     setEndDim     ed (DynamicT (ec,_ ,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
     setLevel      l  (DynamicT (ec,ed,_,a,bc,bd))   = DynamicT (ec,ed,Just l,a,bc,bd)
 
+instance HasDynamic b => HasDynamic (a, b) where
+    setBeginCresc n = fmap (setBeginCresc n)
+    setEndCresc   n = fmap (setEndCresc n)
+    setBeginDim   n = fmap (setBeginDim n)
+    setEndDim     n = fmap (setEndDim n)
+    setLevel      n = fmap (setLevel n)
+
 
 
 --------------------------------------------------------------------------------

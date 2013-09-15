@@ -72,6 +72,9 @@ newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
 
+instance HasTremolo b => HasTremolo (a, b) where
+    setTrem n = fmap (setTrem n)
+
 
 
 
@@ -99,6 +102,15 @@ newtype HarmonicT a = HarmonicT { getHarmonicT :: (Int, a) }
 instance HasHarmonic (HarmonicT a) where
     setHarmonic   n (HarmonicT (_,x))               = HarmonicT (n,x)
 
+instance HasHarmonic a => HasHarmonic (b, a) where
+    setHarmonic   n                                 = fmap (setHarmonic n)
+instance HasSlide a => HasSlide (b, a) where
+    setBeginGliss n                                 = fmap (setBeginGliss n)
+    setBeginSlide n                                 = fmap (setBeginSlide n)
+    setEndGliss   n                                 = fmap (setEndGliss n)
+    setEndSlide   n                                 = fmap (setEndSlide n)
+instance HasText a => HasText (b, a) where
+    addText       s                                 = fmap (addText s)
 
 
 

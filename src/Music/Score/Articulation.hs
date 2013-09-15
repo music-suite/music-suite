@@ -83,6 +83,13 @@ instance HasArticulation (ArticulationT a) where
     setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
     setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
 
+instance HasArticulation b => HasArticulation (a,b) where
+    setEndSlur    n = fmap (setEndSlur n)
+    setContSlur   n = fmap (setContSlur n)
+    setBeginSlur  n = fmap (setBeginSlur n)
+    setAccLevel   n = fmap (setAccLevel n)
+    setStaccLevel n = fmap (setStaccLevel n)
+
 --------------------------------------------------------------------------------
 -- Articulation
 --------------------------------------------------------------------------------

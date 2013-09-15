@@ -4,6 +4,7 @@
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
+    StandaloneDeriving,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -174,9 +175,6 @@ instance HasPitch a => HasPitch (Maybe a) where
     modifyPitch f (Just a)                           = Just (modifyPitch f a)
 
 
--- PitchT
-
-
 -- PartT
 
 
@@ -191,29 +189,12 @@ instance Tiable a => Tiable (PartT n a) where
     beginTie = fmap beginTie
     endTie   = fmap endTie
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
-instance HasDynamic a => HasDynamic (PartT n a) where
-    setBeginCresc n                                 = fmap (setBeginCresc n)
-    setEndCresc   n                                 = fmap (setEndCresc n)
-    setBeginDim   n                                 = fmap (setBeginDim n)
-    setEndDim     n                                 = fmap (setEndDim n)
-    setLevel      n                                 = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (PartT n a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (PartT n a) where
-    setTrem       n                                 = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (PartT n a) where
-    setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (PartT n a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (PartT n a) where
-    addText       s                                 = fmap (addText s)
+deriving instance HasDynamic a => HasDynamic (PartT n a)
+deriving instance HasArticulation a => HasArticulation (PartT n a)
+deriving instance HasTremolo a => HasTremolo (PartT n a)
+deriving instance HasHarmonic a => HasHarmonic (PartT n a)
+deriving instance HasSlide a => HasSlide (PartT n a)
+deriving instance HasText a => HasText (PartT n a)
 
 
 -- ChordT
@@ -394,28 +375,12 @@ instance HasPitch a => HasPitch (TremoloT a) where
     type PitchOf (TremoloT a)                       = PitchOf a
     getPitches (TremoloT (_,a))                     = getPitches a
     modifyPitch f (TremoloT (n,x))                  = TremoloT (n, modifyPitch f x)
-instance HasDynamic a => HasDynamic (TremoloT a) where
-    setBeginCresc n                                 = fmap (setBeginCresc n)
-    setEndCresc   n                                 = fmap (setEndCresc n)
-    setBeginDim   n                                 = fmap (setBeginDim n)
-    setEndDim     n                                 = fmap (setEndDim n)
-    setLevel      n                                 = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (TremoloT a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
+deriving instance HasDynamic a => HasDynamic (TremoloT a)
+deriving instance HasArticulation a => HasArticulation (TremoloT a)
 -- instance HasTremolo (TremoloT a) where
-instance HasHarmonic a => HasHarmonic (TremoloT a) where
-    setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (TremoloT a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (TremoloT a) where
-    addText       s                                 = fmap (addText s)
+deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
+deriving instance HasSlide a => HasSlide (TremoloT a)
+deriving instance HasText a => HasText (TremoloT a)
 
 
 -- TextT
@@ -437,27 +402,11 @@ instance HasPitch a => HasPitch (TextT a) where
     type PitchOf (TextT a)                          = PitchOf a
     getPitches (TextT (_,a))                        = getPitches a
     modifyPitch f (TextT (n,x))                     = TextT (n, modifyPitch f x)
-instance HasDynamic a => HasDynamic (TextT a) where
-    setBeginCresc n                                 = fmap (setBeginCresc n)
-    setEndCresc   n                                 = fmap (setEndCresc n)
-    setBeginDim   n                                 = fmap (setBeginDim n)
-    setEndDim     n                                 = fmap (setEndDim n)
-    setLevel      n                                 = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (TextT a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (TextT a) where
-    setTrem       n                                 = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (TextT a) where
-    setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (TextT a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
+deriving instance HasDynamic a => HasDynamic (TextT a)
+deriving instance HasArticulation a => HasArticulation (TextT a)
+deriving instance HasTremolo a => HasTremolo (TextT a)
+deriving instance HasHarmonic a => HasHarmonic (TextT a)
+deriving instance HasSlide a => HasSlide (TextT a)
 -- instance HasText (TextT a) where
 
 
@@ -478,28 +427,12 @@ instance HasPitch a => HasPitch (HarmonicT a) where
     type PitchOf (HarmonicT a)                      = PitchOf a
     getPitches (HarmonicT (_,a))                    = getPitches a
     modifyPitch f (HarmonicT (n,x))                 = HarmonicT (n, modifyPitch f x)
-instance HasDynamic a => HasDynamic (HarmonicT a) where
-    setBeginCresc n                                 = fmap (setBeginCresc n)
-    setEndCresc   n                                 = fmap (setEndCresc n)
-    setBeginDim   n                                 = fmap (setBeginDim n)
-    setEndDim     n                                 = fmap (setEndDim n)
-    setLevel      n                                 = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (HarmonicT a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (HarmonicT a) where
-    setTrem       n                                 = fmap (setTrem n)
+deriving instance HasDynamic a => HasDynamic (HarmonicT a)
+deriving instance HasArticulation a => HasArticulation (HarmonicT a)
+deriving instance HasTremolo a => HasTremolo (HarmonicT a)
 -- instance HasHarmonic (HarmonicT a) where
-instance HasSlide a => HasSlide (HarmonicT a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (HarmonicT a) where
-    addText       s                                 = fmap (addText s)
+deriving instance HasSlide a => HasSlide (HarmonicT a)
+deriving instance HasText a => HasText (HarmonicT a)
 
 
 -- SlideT
