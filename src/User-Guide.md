@@ -9,14 +9,17 @@ The Music Suite depends on the [Haskell platform][HaskellPlatform].
 While not strictly required,[Lilypond][Lilypond] is highly recommended as it allow you to
 preview musical scores. See [Import and Export](#import-and-export) for other formats.
 
-To install the suite with all its dependencies:
+To install the suite, simply install the Haskell platform, and then run:
 
     cabal install music-preludes
 
 
 ## Generating music
 
-<!--
+This chapter will cover how to use the Music Suite to generate music. Later on we will cover how to *import* and *transform* music.
+
+### With music files
+
 A piece of music is described by a *expressions* such as this one:
 
 ```haskell
@@ -33,14 +36,13 @@ c |> d |> e
 
 There are several programs for converting music expressions:
 
-* `music2musicxml` converts a Music file to MusicXML
-* `music2mid` converts a Music file to MIDI
-* `music2ly` converts a Music file to a Lilypond file
-* `music2wav` converts a Music file to audio (using Timidity)
-* `music2pdf` converts a Music file to graphics (using Lilypond)
+* `music2mid` 
+* `music2musicxml` 
+* `music2ly` 
+* `music2wav` 
+* `music2pdf`
 
-## Generating music with explicit Haskell modules
--->
+### With Haskell files
 
 Alternatively, you can create a file called `test.hs` (or similar) with the following structure:
 
@@ -247,12 +249,14 @@ Pitch.c |> Pitch.d
 
 ## Dynamics
 
+Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
-[`dynamics`][dynamics]
+An overview of the dynamic values:
 
-```music+haskell
-dynamics _p c
+```haskell
+scat $ zipWith dynamics [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
+
 
 ## Articulation
 
@@ -474,12 +478,14 @@ ScoreCleaner](http://scorecleaner.com) to convert raw MIDI input to quantized in
 
 ## Lilypond
 
-All standard representations support Lilypond output. The `lilypond` package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music.
+All standard representations support Lilypond output. The [lilypond](http://hackage.haskell.org/package/lilypond) package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music.
 
 Lilypond input is not available yet but will hopefully be added soon.
 
+An example:
+
 ```haskell
-putStrLn $ show $ Text.Pretty.pretty $ toLy $ asScore $ scat [c,d,e]
+putStrLn $ toLyString $ asScore $ scat [c,d,e]
 ```
 
     <<
@@ -489,13 +495,15 @@ putStrLn $ show $ Text.Pretty.pretty $ toLy $ asScore $ scat [c,d,e]
 
 ## MusicXML
 
-All standard representations support MusicXML output. The `musicxml2` package is used for 
+All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for 
 parsing and pretty printing. 
 
 The output is fairly complete, with some minor limitations. Bug reports are much welcome. There are no plans to support MusicXML import in the near future.
 
+Beware of the extreme verboseness of XML, for example:
+
 ```haskell
-putStrLn $ Xml.showXml $ toXml $ asScore $ scat [c,d,e]
+putStrLn $ toXmlString $ asScore $ scat [c,d,e]
 ```
 
     <?xml version='1.0' ?>
@@ -587,7 +595,7 @@ Vextab output (for use with [Vexflow](http://www.vexflow.com/)) is not supported
 
 ## Sibelius
 
-The `music-sibelius` provides experimental import of Sibelius scores (as MusicXML import is [not supported](#musicxml)).
+The [music-sibelius](http://hackage.haskell.org/package/music-sibelius) package provides experimental import of Sibelius scores (as MusicXML import is [not supported](#musicxml)).
 
 <!--
 This feature could of course also be used to convert Sibelius scores to other formats such as Guido or ABC without having to write in the ManuScript language used by Sibelius.
