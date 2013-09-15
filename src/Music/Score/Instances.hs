@@ -178,10 +178,6 @@ instance HasPitch a => HasPitch (Maybe a) where
 -- PartT
 
 
-instance HasPart (PartT n a) where
-    type Part (PartT n a)                           = n
-    getPart (PartT (v,_))                           = v
-    modifyPart f (PartT (v,x))                      = PartT (f v, x)
 instance HasChord a => HasChord (PartT n a) where
     type ChordNote (PartT n a)                      = PartT n (ChordNote a)
     getChord (PartT (v,x))                          = fmap (\x -> PartT (v,x)) (getChord x)
@@ -226,9 +222,6 @@ instance Tiable a => Tiable (ChordT a) where
     toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
 -- No HasPart instance, PartT must be outside ChordT
 -- This restriction assures all chord notes are in the same part
-instance HasChord (ChordT a) where
-    type ChordNote (ChordT a)                       = a
-    getChord (ChordT as)                            = as
 instance HasPitch a => HasPitch (ChordT a) where
     type PitchOf (ChordT a)                         = PitchOf a
     getPitches (ChordT as)                          = getPitches as
@@ -317,12 +310,7 @@ instance HasPitch a => HasPitch (DynamicT a) where
     type PitchOf (DynamicT a)                       = PitchOf a
     getPitches (DynamicT (ec,ed,l,a,bc,bd))         = getPitches a
     modifyPitch f (DynamicT (ec,ed,l,a,bc,bd))      = DynamicT (ec,ed,l,modifyPitch f a,bc,bd)
-instance HasDynamic (DynamicT a) where
-    setBeginCresc bc (DynamicT (ec,ed,l,a,_ ,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setEndCresc   ec (DynamicT (_ ,ed,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setBeginDim   bd (DynamicT (ec,ed,l,a,bc,_ ))   = DynamicT (ec,ed,l,a,bc,bd)
-    setEndDim     ed (DynamicT (ec,_ ,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setLevel      l  (DynamicT (ec,ed,_,a,bc,bd))   = DynamicT (ec,ed,Just l,a,bc,bd)
+-- HasDynamic (DynamicT a)
 instance HasArticulation a => HasArticulation (DynamicT a) where
     setEndSlur    n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setEndSlur n a,bc,bd)
     setContSlur   n (DynamicT (ec,ed,l,a,bc,bd))    = DynamicT (ec,ed,l,setContSlur n a,bc,bd)
@@ -370,12 +358,7 @@ instance HasDynamic a => HasDynamic (ArticulationT a) where
     setBeginDim   n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setBeginDim n a,bs)
     setEndDim     n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setEndDim n a,bs)
     setLevel      n (ArticulationT (es,us,al,sl,a,bs))  = ArticulationT (es,us,al,sl,setLevel n a,bs)
-instance HasArticulation (ArticulationT a) where
-    setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setContSlur   us (ArticulationT (es,_ ,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setBeginSlur  bs (ArticulationT (es,us,al,sl,a,_ )) = ArticulationT (es,us,al,sl,a,bs)
-    setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+-- instance HasArticulation (ArticulationT a) where
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem n (ArticulationT (es,us,al,sl,a,bs))        = ArticulationT (es,us,al,sl,setTrem n a,bs)
 instance HasHarmonic a => HasHarmonic (ArticulationT a) where
@@ -421,8 +404,7 @@ instance HasArticulation a => HasArticulation (TremoloT a) where
     setBeginSlur  n (TremoloT (v,x))                = TremoloT (v, setBeginSlur n x)
     setAccLevel   n (TremoloT (v,x))                = TremoloT (v, setAccLevel n x)
     setStaccLevel n (TremoloT (v,x))                = TremoloT (v, setStaccLevel n x)
-instance HasTremolo (TremoloT a) where
-    setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
+-- instance HasTremolo (TremoloT a) where
 instance HasHarmonic a => HasHarmonic (TremoloT a) where
     setHarmonic   n (TremoloT (v,x))                = TremoloT (v, setHarmonic n x)
 instance HasSlide a => HasSlide (TremoloT a) where
@@ -474,8 +456,7 @@ instance HasSlide a => HasSlide (TextT a) where
     setBeginSlide n (TextT (v,x))                   = TextT (v, setBeginSlide n x)
     setEndGliss   n (TextT (v,x))                   = TextT (v, setEndGliss n x)
     setEndSlide   n (TextT (v,x))                   = TextT (v, setEndSlide n x)
-instance HasText (TextT a) where
-    addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
+-- instance HasText (TextT a) where
 
 
 -- HarmonicT
@@ -509,8 +490,7 @@ instance HasArticulation a => HasArticulation (HarmonicT a) where
     setStaccLevel n (HarmonicT (v,x))               = HarmonicT (v, setStaccLevel n x)
 instance HasTremolo a => HasTremolo (HarmonicT a) where
     setTrem       n (HarmonicT (s,x))               = HarmonicT (s,setTrem n x)
-instance HasHarmonic (HarmonicT a) where
-    setHarmonic   n (HarmonicT (_,x))               = HarmonicT (n,x)
+-- instance HasHarmonic (HarmonicT a) where
 instance HasSlide a => HasSlide (HarmonicT a) where
     setBeginGliss n (HarmonicT (s,x))               = HarmonicT (s,setBeginGliss n x)
     setBeginSlide n (HarmonicT (s,x))               = HarmonicT (s,setBeginSlide n x)
@@ -555,11 +535,7 @@ instance HasTremolo a => HasTremolo (SlideT a) where
     setTrem       n (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,setTrem n a,bg,bs)
 instance HasHarmonic a => HasHarmonic (SlideT a) where
     setHarmonic   n (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,setHarmonic n a,bg,bs)
-instance HasSlide (SlideT a) where
-    setBeginGliss bg (SlideT (eg,es,a,_,bs))       = SlideT (eg,es,a,bg,bs)
-    setBeginSlide bs (SlideT (eg,es,a,bg,_))       = SlideT (eg,es,a,bg,bs)
-    setEndGliss   eg (SlideT (_,es,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
-    setEndSlide   es (SlideT (eg,_,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
+-- instance HasSlide (SlideT a) where
 instance HasText a => HasText (SlideT a) where
     addText       s (SlideT (eg,es,a,bg,bs))       = SlideT (eg,es,addText s a,bg,bs)
 

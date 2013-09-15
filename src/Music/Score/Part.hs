@@ -80,6 +80,11 @@ instance HasPart Int                           where   { type Part Int        = 
 instance HasPart Integer                       where   { type Part Integer    = Integer ; getPart _ = 0 }
 instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = Integer ; getPart _ = 0 }
 
+instance HasPart (PartT n a) where
+    type Part (PartT n a)                           = n
+    getPart (PartT (v,_))                           = v
+    modifyPart f (PartT (v,x))                      = PartT (f v, x)
+
 -- |
 -- Like 'HasPart', but enforces the part to be ordered.
 -- This is usually required for part separation and traversal.

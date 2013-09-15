@@ -66,6 +66,10 @@ instance HasChord [a] where
     type ChordNote [a] = a
     getChord = id
 
+instance HasChord (ChordT a) where
+    type ChordNote (ChordT a) = a
+    getChord (ChordT as)      = as
+
 -- Actually we should use NonEmpty here
 -- Empty chords will cause error with HasPitch, among others
 newtype ChordT a = ChordT { getChordT :: [a] }

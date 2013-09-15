@@ -69,11 +69,24 @@ class HasTremolo a where
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
 
+instance HasTremolo (TremoloT a) where
+    setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
+
+
+
+
+
 class HasText a where
     addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+instance HasText (TextT a) where
+    addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
+
+
+
 
 
 -- 0 for none, positive for natural, negative for artificial
@@ -82,6 +95,13 @@ class HasHarmonic a where
 
 newtype HarmonicT a = HarmonicT { getHarmonicT :: (Int, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+instance HasHarmonic (HarmonicT a) where
+    setHarmonic   n (HarmonicT (_,x))               = HarmonicT (n,x)
+
+
+
+
 
 -- end gliss/slide, level, begin gliss/slide
 class HasSlide a where
@@ -92,6 +112,12 @@ class HasSlide a where
 
 newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+instance HasSlide (SlideT a) where
+    setBeginGliss bg (SlideT (eg,es,a,_,bs))       = SlideT (eg,es,a,bg,bs)
+    setBeginSlide bs (SlideT (eg,es,a,bg,_))       = SlideT (eg,es,a,bg,bs)
+    setEndGliss   eg (SlideT (_,es,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
+    setEndSlide   es (SlideT (eg,_,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
 
 
 -- |
