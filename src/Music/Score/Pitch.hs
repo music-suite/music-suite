@@ -107,7 +107,7 @@ instance HasPitch a => HasPitch [a] where
     getPitches []    = error "getPitch: Empty list"
     getPitches as    = concatMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
-
+    
 {-
 -- |
 -- Get all pitches in the given score. Returns a set of pitches. (TODO use set type?)
@@ -123,23 +123,23 @@ getPitches = List.nub . fmap getPitch . toList
 --
 -- > Pitch -> Score a -> Score a
 --
-setPitches :: (HasPitch a, Functor s, p ~ PitchOf a) => p -> s a -> s a
-setPitches n = fmap (setPitch n)
+setPitches :: (HasPitch a, p ~ PitchOf a) => p -> a -> a
+setPitches n = setPitch n
 
 -- |
 -- Modify all pitches in the given score.
 --
 -- > (Pitch -> Pitch) -> Score a -> Score a
 --
-modifyPitches :: (HasPitch a, Functor s, p ~ PitchOf a) => (p -> p) -> s a -> s a
-modifyPitches f = fmap (modifyPitch f)
+modifyPitches :: (HasPitch a, p ~ PitchOf a) => (p -> p) -> a -> a
+modifyPitches f = modifyPitch f
 
 -- |
 -- Transpose up.
 --
 -- > Interval -> Score a -> Score a
 --
-up :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> s a -> s a
+up :: (HasPitch a, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> a -> a
 up a = modifyPitches (.+^ a)
 
 -- |
@@ -147,7 +147,7 @@ up a = modifyPitches (.+^ a)
 --
 -- > Interval -> Score a -> Score a
 --
-down :: (HasPitch a, Functor s, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> s a -> s a
+down :: (HasPitch a, AffineSpace p, p ~ PitchOf a) => IntervalOf a -> a -> a
 down a = modifyPitches (.-^ a)
 
 -- |
@@ -155,7 +155,7 @@ down a = modifyPitches (.-^ a)
 --
 -- > Pitch -> Score a -> Score a
 --
-invertAround :: (AffineSpace (PitchOf a), HasPitch a, Functor s) => PitchOf a -> s a -> s a
+invertAround :: (AffineSpace (PitchOf a), HasPitch a) => PitchOf a -> a -> a
 invertAround basePitch a = modifyPitches ((basePitch .+^) . negateV . (.-. basePitch)) a
 
 -- |
@@ -163,16 +163,16 @@ invertAround basePitch a = modifyPitches ((basePitch .+^) . negateV . (.-. baseP
 --
 -- > Integer -> Score a -> Score a
 --
-octavesUp       :: (HasPitch' a, IsInterval (IntervalOf a), Functor s) => 
-                Integer -> s a -> s a
+octavesUp       :: (HasPitch' a, IsInterval (IntervalOf a)) => 
+                Integer -> a -> a
 
 -- |
 -- Transpose down by the given number of octaves.
 --
 -- > Integer -> Score a -> Score a
 --
-octavesDown     :: (HasPitch' a, IsInterval (IntervalOf a), Functor s) => 
-                Integer -> s a -> s a
+octavesDown     :: (HasPitch' a, IsInterval (IntervalOf a)) => 
+                Integer -> a -> a
 
 octavesUp a     = up (_P8^*a)
 octavesDown a   = down (_P8^*a)

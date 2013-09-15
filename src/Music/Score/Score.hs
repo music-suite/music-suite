@@ -39,6 +39,7 @@ import Test.QuickCheck          (Arbitrary(..), Gen(..))
 import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
+import Music.Score.Pitch
 
 import qualified Data.List as List
 
@@ -172,6 +173,12 @@ instance Arbitrary a => Arbitrary (Score a) where
         t <- fmap realToFrac (arbitrary::Gen Double)
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
+
+instance HasPitch a => HasPitch (Score a) where
+    type PitchOf (Score a) = PitchOf a
+    getPitches as    = foldMap getPitches as
+    modifyPitch f    = fmap (modifyPitch f)
+
 
 
 
