@@ -246,6 +246,11 @@ There is nothing special about the pitch and interval literals, they are simply 
 Pitch.c |> Pitch.d
 ```
 
+TODO overloading, explain why the following works:
+
+```haskell
+return (c::Note) == (c::Score Note)
+```
 
 ## Dynamics
 
@@ -253,10 +258,11 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals a
 
 An overview of the dynamic values:
 
-```haskell
+```music+haskell
 scat $ zipWith dynamics [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
+TODO other ways of applying dynamics
 
 ## Articulation
 
