@@ -74,7 +74,7 @@ In fact, the `music2pdf` program is a simple utility that substitutes a single e
 
 One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
 
-Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed.
+Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude.Basic` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
 
 ## Basics
 
@@ -177,11 +177,14 @@ For Western-style pitch types, the standard pitch names can be used:
 scat [c, d, e, f, g, a, b]
 ```
 
-Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`. To use German pitch names you can explicitly hide the `b`:
+Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so, la, ti, si`. German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
 
 ```haskell
 import Music.Preludes.Basic hiding (b)
-import Music.Pitch.Literal.German
+import qualified Music.Pitch.Literal as P
+
+h = P.b
+b = P.bb
 ```
 
 
@@ -354,12 +357,12 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ## Time
 
-[`retrograde`][retrograde]
+[`rev`][rev]
 
 ```music+haskell
 let
     melody = legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
-in melody |> retrograde melody
+in melody |> rev melody
 ```
 
 [`times`][times]
@@ -458,12 +461,138 @@ TODO
 
 # Import and export
 
+The standard distribution (installed as part of `music-preludes`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
+
+The conventions for input or output formats is similar to the convention for properties (TODO ref above): for any type `a` and format `T a`, input formats are defined by a class or constraint `IsT`, and output by a format `HasT a`. For example, types that can be exported to Lilypond are defined by the constraint `HasLilypond a`, while types that can be imported from MIDI are defined by the constraint `IsMidi a`.
+
 ## MIDI
-## MusicXML
+
+All standard representations support MIDI input and output. The MIDI representation uses [HCodecs](http://hackage.haskell.org/package/HCodecs) and the real-time support uses [hamid](http://hackage.haskell.org/package/hamid). You can read and write MIDI files using the functions [`readMidi`][readMidi] and [`writeMidi`][writeMidi]. To play MIDI back in real-time, use [`playMidi`][playMidi] or [`playMidiIO`][playMidiIO], which uses [reenact](http://hackage.haskell.org/package/reenact).
+
+Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need a proper quantization software such as [
+ScoreCleaner](http://scorecleaner.com) to convert raw MIDI input to quantized input.
+
 ## Lilypond
+
+All standard representations support Lilypond output. The `lilypond` package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music.
+
+Lilypond input is not available yet but will hopefully be added soon.
+
+```haskell
+putStrLn $ show $ Text.Pretty.pretty $ toLy $ asScore $ scat [c,d,e]
+```
+
+    <<
+        \new Staff { \set Staff.instrumentName = "" <c'>1 <d'>1 <e'>1 }
+    >>
+
+
+## MusicXML
+
+All standard representations support MusicXML output. The `musicxml2` package is used for 
+parsing and pretty printing. 
+
+The output is fairly complete, with some minor limitations. Bug reports are much welcome. There are no plans to support MusicXML import in the near future.
+
+```haskell
+putStrLn $ Xml.showXml $ toXml $ asScore $ scat [c,d,e]
+```
+
+    <?xml version='1.0' ?>
+    <score-partwise>
+      <movement-title>Title</movement-title>
+      <identification>
+        <creator type="composer">Composer</creator>
+      </identification>
+      <part-list>
+        <score-part id="P1">
+          <part-name></part-name>
+        </score-part>
+      </part-list>
+      <part id="P1">
+        <measure number="1">
+          <attributes>
+            <key>
+              <fifths>0</fifths>
+              <mode>major</mode>
+            </key>
+          </attributes>
+          <attributes>
+            <divisions>768</divisions>
+          </attributes>
+          <direction>
+            <direction-type>
+              <metronome>
+                <beat-unit>quarter</beat-unit>
+                <per-minute>60</per-minute>
+              </metronome>
+            </direction-type>
+          </direction>
+          <attributes>
+            <time symbol="common">
+              <beats>4</beats>
+              <beat-type>4</beat-type>
+            </time>
+          </attributes>
+          <note>
+            <pitch>
+              <step>C</step>
+              <alter>0.0</alter>
+              <octave>4</octave>
+            </pitch>
+            <duration>3072</duration>
+            <voice>1</voice>
+            <type>whole</type>
+          </note>
+        </measure>
+        <measure number="2">
+          <note>
+            <pitch>
+              <step>D</step>
+              <alter>0.0</alter>
+              <octave>4</octave>
+            </pitch>
+            <duration>3072</duration>
+            <voice>1</voice>
+            <type>whole</type>
+          </note>
+        </measure>
+        <measure number="3">
+          <note>
+            <pitch>
+              <step>E</step>
+              <alter>0.0</alter>
+              <octave>4</octave>
+            </pitch>
+            <duration>3072</duration>
+            <voice>1</voice>
+            <type>whole</type>
+          </note>
+        </measure>
+      </part>
+    </score-partwise>
+    
+
 ## ABC Notation
+
+ABC notation (for use with [abcjs](http://code.google.com/p/abcjs/) or similar engines) is still experimental.
+
 ## Guido
+
+Guido output (for use with the [GUIDO engine](http://guidolib.sourceforge.net/)) is not supported yet. This would be useful, as it allow real-time rendering of scores.
+
 ## Vextab
+
+Vextab output (for use with [Vexflow](http://www.vexflow.com/)) is not supported yet.
+
+## Sibelius
+
+The `music-sibelius` provides experimental import of Sibelius scores (as MusicXML import is [not supported](#musicxml)).
+
+<!--
+This feature could of course also be used to convert Sibelius scores to other formats such as Guido or ABC without having to write in the ManuScript language used by Sibelius.
+-->
+
 
 
 # Customizing music representation
@@ -533,7 +662,7 @@ in (delay (6/4) $ up (perfect fifth) subj) </> subj
 [accentLast]:   /docs/api/Music-Score-Articulation.html#v:accentLast
 [accentAll]:    /docs/api/Music-Score-Articulation.html#v:accentAll
 
-[retrograde]:   /docs/api/Music-Score-Combinators.html#v:retrograde
+[rev]:          /docs/api/Music-Time-Reverse.html#v:rev
 
 [harmonic]:     /docs/api/Music-Score-Ornaments.html#v:harmonic
 [artificial]:   /docs/api/Music-Score-Ornaments.html#v:artificial
@@ -544,6 +673,9 @@ in (delay (6/4) $ up (perfect fifth) subj) </> subj
 
 [up]:           /docs/api/Music-Score-Pitch.html#v:up
 [down]:         /docs/api/Music-Score-Pitch.html#v:down
+[octavesUp]:    /docs/api/Music-Score-Pitch.html#v:octavesUp
+[octavesDown]:  /docs/api/Music-Score-Pitch.html#v:octavesDown
+[invertAround]: /docs/api/Music-Score-Pitch.html#v:invertAround
 
 [catMaybes]:    http://hackage.haskell.org/packages/archive/base/latest/doc/html/Data-Maybe.html#v:catMaybes
 
