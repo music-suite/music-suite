@@ -102,6 +102,8 @@ instance IsPitch a => IsPitch (SlideT a) where
 instance IsDynamics a => IsDynamics (SlideT a) where
     fromDynamics l                                  = SlideT (False,False,fromDynamics l,False,False)
 
+-------------------------------------------------------------------------------------
+
 instance Reversible (ChordT a) where
     rev = id
 instance Reversible a => Reversible (DynamicT a) where
