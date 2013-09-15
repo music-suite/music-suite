@@ -613,6 +613,12 @@ This feature could of course also be used to convert Sibelius scores to other fo
 
 # Examples
 
+Some more involved examples:
+
+## Counterpoint
+
+TODO about
+
 ```music+haskell
 let subj = removeRests $ scat [ 
             scat [rest,c,d,e], 
@@ -621,6 +627,15 @@ let subj = removeRests $ scat [
         ]^/8
 
 in (delay (6/4) $ up (perfect fifth) subj) </> subj
+```
+
+## Generative music
+
+```music+haskell
+let
+    row = cycle [c,eb,ab,asPitch g]
+    mel = asScore $ scat [d, scat [g,fs]^/2,bb^*2]^/4
+in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
 
 
