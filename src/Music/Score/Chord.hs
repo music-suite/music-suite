@@ -113,7 +113,7 @@ simultaneous' sc = compose vs
     where
         -- es :: [Era]
         -- evs :: [[a]]
-        -- vs :: [(TimeT, DurationT, [a])]
+        -- vs :: [(Time, Duration, [a])]
         es  = List.nub $ eras sc
         evs = fmap (`events` sc) es
         vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
@@ -124,13 +124,13 @@ eras sc = fmap getEra . perform $ sc
 events :: Era -> Score a -> [a]
 events era sc = fmap getValue . filter (\ev -> getEra ev == era) . perform $ sc
 
-getValue :: (TimeT, DurationT, a) -> a
+getValue :: (Time, Duration, a) -> a
 getValue (t,d,a) = a
 
-getEra :: (TimeT, DurationT, a) -> Era
+getEra :: (Time, Duration, a) -> Era
 getEra (t,d,a) = (t,d)        
 
-type Era = (TimeT, DurationT)
+type Era = (Time, Duration)
 
 -- Fold over all consecutive events
 

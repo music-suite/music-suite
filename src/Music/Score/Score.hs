@@ -76,10 +76,10 @@ import qualified Data.List as List
 -- >                    (3, 6, 'b') ]}
 --
 --
-newtype Score a  = Score { getScore :: [(TimeT, DurationT, a)] }
+newtype Score a  = Score { getScore :: [(Time, Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
 
-type instance Duration (Score a)  = DurationT
+-- type instance Duration (Score a)  = DurationT
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
@@ -164,7 +164,7 @@ instance AdditiveGroup (Score a) where
     negateV = error "Not impl"
 
 instance VectorSpace (Score a) where
-    type Scalar (Score a) = DurationT
+    type Scalar (Score a) = Duration
     d *^ s = d `stretch` s
 
 instance Arbitrary a => Arbitrary (Score a) where

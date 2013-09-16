@@ -134,7 +134,7 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
 --
 -- > sum $ fmap fst $ splitDur s (x,a) = x
 --
-splitDur :: Tiable a => DurationT -> DurationT -> (DurationT, a) -> [(DurationT, a)]
+splitDur :: Tiable a => Duration -> Duration -> (Duration, a) -> [(Duration, a)]
 splitDur s t x = case splitDur' s x of
     (a, Nothing) -> [a]
     (a, Just b)  -> a : splitDur t t b
@@ -145,7 +145,7 @@ splitDur s t x = case splitDur' s x of
 --
 -- > splitDur s (d,a)
 --
-splitDur' :: Tiable a => DurationT -> (DurationT, a) -> ((DurationT, a), Maybe (DurationT, a))
+splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
 splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
                   | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
 

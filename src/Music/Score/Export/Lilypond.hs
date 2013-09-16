@@ -93,9 +93,9 @@ class Tiable a => HasLilypond a where
     -- |
     -- Convert a value to a Lilypond music expression.
     --
-    getLilypond      :: DurationT -> a -> Lilypond
+    getLilypond      :: Duration -> a -> Lilypond
 
-    getLilypondChord :: DurationT -> [a] -> Lilypond
+    getLilypondChord :: Duration -> [a] -> Lilypond
     getLilypondChord d = pcatLy . fmap (getLilypond d)
 
 instance HasLilypond Int                        where   getLilypond d = getLilypond d . toInteger
@@ -267,7 +267,7 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
 toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
 toLyVoice' = fmap barToLy . voiceToBars
 
-barToLy :: HasLilypond a => [(DurationT, Maybe a)] -> Lilypond
+barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
 barToLy bar = case quantize bar of
     Left e   -> error $ "barToLy: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLy rh
@@ -279,7 +279,7 @@ rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
 rhythmToLy (Tuplet m r)          = Lilypond.Times m (rhythmToLy r)
     where (a,b) = both fromIntegral fromIntegral $ unRatio m
 
-noteRestToLy :: HasLilypond a => DurationT -> Maybe a -> Lilypond
+noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond
 noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)
 noteRestToLy d (Just p) = getLilypond d p
 

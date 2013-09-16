@@ -66,7 +66,7 @@ type Monoid' a         =  (Monoid a, Semigroup a)
 -- This pseudo-class gathers the restrictions needed to implement position a value at
 -- any point and duration in time.
 --
-type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
+type Transformable a   =  (Stretchable a, Delayable a)
 
 
 -------------------------------------------------------------------------------------
@@ -77,14 +77,14 @@ type Transformable a   =  (Stretchable a, Delayable a, AffineSpace (Time a))
 -- @a \`follow\` b@ moves score /b/ so that its onset is at the offset of score
 -- /a/ and returns the moved score.
 -- 
-follow           :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+follow           :: (HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
 -- |
 -- @a \`precede\` b@ moves score /a/ so that its offset is at the onset of score
 -- /b/ and returns the moved score.
 -- 
-precede          :: (AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+precede          :: (HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
 a `follow` b =  startAt (offset a) b
@@ -107,7 +107,7 @@ infixr 6 <|
 --
 -- > Score a -> Score a -> Score a
 --
-(|>)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+(|>)            :: (Semigroup a, HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 -- |
 -- Compose in sequence.
@@ -116,7 +116,7 @@ infixr 6 <|
 --
 -- > Score a -> Score a -> Score a
 --
-(>|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+(>|)            :: (Semigroup a, HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
 -- |
@@ -126,7 +126,7 @@ infixr 6 <|
 --
 -- > Score a -> Score a -> Score a
 --
-(<|)            :: (Semigroup a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+(<|)            :: (Semigroup a, HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
 a |> b =  a <> (a `follow` b)
@@ -138,7 +138,7 @@ a <| b =  b |> a
 --
 -- > [Score a] -> Score a
 --
-scat            :: (Monoid' a, AffineSpace (Time a), HasOnset a, HasOffset a, Delayable a) =>
+scat            :: (Monoid' a, HasOnset a, HasOffset a, Delayable a) =>
                 [a] -> a
 -- |
 -- Parallel catenation.
@@ -157,7 +157,7 @@ pcat = Prelude.foldr (<>) mempty
 --
 -- > Score a -> Score a -> Score a
 --
-sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~ Duration) =>
                 a -> a -> a
 
 -- |
@@ -165,7 +165,7 @@ sustain         :: (Semigroup a, Stretchable a, HasDuration a, Fractional d, d ~
 --
 -- > Duration -> Score a -> Score a -> Score a
 --
-anticipate      :: (Semigroup a, Transformable a, HasOnset a, HasOffset a, Ord d, d ~ Duration a) =>
+anticipate      :: (Semigroup a, Transformable a, HasOnset a, HasOffset a, Ord d, d ~ Duration) =>
                 d -> a -> a -> a
 
 x `sustain` y     = x <> duration x `stretchTo` y
@@ -206,7 +206,7 @@ repeated        :: (Monoid' b, Transformable b, HasOnset b, HasOffset b) =>
 --
 -- > Duration -> Score a -> Score a
 --
-group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration a, HasOnset a, HasOffset a) =>
+group           :: (Monoid' a, Transformable a, Fractional d, d ~ Duration, HasOnset a, HasOffset a) =>
                 Int -> a -> a
 
 times n     = scat . replicate n

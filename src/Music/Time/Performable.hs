@@ -99,7 +99,7 @@ class Performable a where
     --
     -- The returned list /must/ be sorted by comparing time.
     --
-    perform :: a -> [(Time a, Duration a, Event a)]
+    perform :: a -> [(Time, Duration, Event a)]
 
 -- |
 -- Return just the values of the score.
@@ -128,7 +128,7 @@ class (Monoid' a, Transformable a, HasPoint a) => Composable a where
     --
     -- The default definition can be overridden for efficiency.
     --
-    event   :: Time a -> Duration a -> Event a -> a
+    event   :: Time -> Duration -> Event a -> a
 
     -- |
     -- Creates a score from a list of timed values.
@@ -137,7 +137,7 @@ class (Monoid' a, Transformable a, HasPoint a) => Composable a where
     --
     -- The default definition can be overridden for efficiency.
     --
-    compose :: [(Time a, Duration a, Event a)] -> a
+    compose :: [(Time, Duration, Event a)] -> a
 
     event t d x   = (delay (t .-. origin) . stretch d) (point x)
     compose       = mconcat . fmap (uncurry3 event)

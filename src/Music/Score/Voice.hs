@@ -67,7 +67,7 @@ import Music.Dynamics.Literal
 -- Voice is a 'VectorSpace' using sequential composition as addition, and time scaling
 -- as scalar multiplication.
 --
-newtype Voice a = Voice { getVoice' :: [(DurationT, a)] }
+newtype Voice a = Voice { getVoice' :: [(Duration, a)] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable)
 
 voice :: Real d => [(d, a)] -> Voice a
@@ -76,7 +76,7 @@ voice = Voice . fmap (first realToFrac)
 getVoice :: Fractional d => Voice a -> [(d, a)]
 getVoice = fmap (first realToFrac) . getVoice'
 
-type instance Duration (Voice a) = DurationT
+-- type instance Duration (Voice a) = DurationT
 type instance Event (Voice a) = a
 
 instance Semigroup (Voice a) where

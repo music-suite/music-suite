@@ -21,12 +21,7 @@ module Music.Time.Time (
         -- * Time and duration types
         Time(..),
         Duration(..),
-
         -- $convert
-
-        -- * Basic time and duration types
-        DurationT(..),
-        TimeT(..),
   ) where
 
 import Data.Semigroup
@@ -41,25 +36,25 @@ import Data.AffineSpace.Point
 -- 'origin'.
 --
 
--- |
--- This type function returns the duration type for a given type.
---
-type family Duration (s :: *) :: *
-
--- |
--- This type function returns the duration type for a given type.
---
-type Time a = Point (Duration a)
-
-type instance Duration [a]       = Duration a
-type instance Duration (t, a)    = Diff t
-type instance Duration (t, d, a) = d
+-- -- |
+-- -- This type function returns the duration type for a given type.
+-- --
+-- type family Duration (s :: *) :: *
+-- 
+-- -- |
+-- -- This type function returns the duration type for a given type.
+-- --
+-- type Time a = Point (Duration a)
+-- 
+-- type instance Duration [a]       = Duration a
+-- type instance Duration (t, a)    = Diff t
+-- type instance Duration (t, d, a) = d
 
 
 -- |
 -- This type represents relative time in seconds.
 --
-type DurationT = Rational
+type Duration = Rational
 
 -- |
 -- This type represents absolute time in seconds since the start time. Note
@@ -70,5 +65,5 @@ type DurationT = Rational
 -- that is, we can add a time to a duration to get a new time using '.+^',
 -- take the difference of two times to get a duration using '.-.'.
 --
-type TimeT = Point DurationT
+type Time = Point Duration
 

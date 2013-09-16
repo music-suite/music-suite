@@ -152,7 +152,7 @@ instance Reversible a => Reversible (Score a) where
 -- Mapping
 --------------------------------------------------------------------------------
 
-type Mappable a b = (Performable a, Composable b, Duration a ~ Duration b)
+type Mappable a b = (Performable a, Composable b)
 
 -- |
 -- Map over the events in a score.
@@ -160,7 +160,7 @@ type Mappable a b = (Performable a, Composable b, Duration a ~ Duration b)
 -- > (Time -> Duration -> a -> b) -> Score a -> Score b
 --
 mapEvents       :: Mappable a b =>
-                (Time a -> Duration a -> Event a -> Event b) -> a -> b
+                (Time -> Duration -> Event a -> Event b) -> a -> b
 
 -- |
 -- Filter the events in a score.
@@ -168,7 +168,7 @@ mapEvents       :: Mappable a b =>
 -- > (Time -> Duration -> a -> Bool) -> Score a -> Score b
 --
 filterEvents   :: (Performable a, Composable a) =>
-                (Time a -> Duration a -> Event a -> Bool) -> a -> a
+                (Time -> Duration -> Event a -> Bool) -> a -> a
 
 -- |
 -- Efficient combination of 'mapEvents' and 'filterEvents'.
@@ -176,7 +176,7 @@ filterEvents   :: (Performable a, Composable a) =>
 -- > (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 --
 mapFilterEvents :: Mappable a b =>
-                (Time a -> Duration a -> Event a -> Maybe (Event b)) -> a -> b
+                (Time -> Duration -> Event a -> Maybe (Event b)) -> a -> b
 
 -- |
 -- The same as 'mfilter' but with a non-monadic type.
@@ -191,7 +191,7 @@ map_            :: Mappable a b => (Event a -> Event b) -> a -> b
 --
 -- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
 --
-mapAll          :: (Mappable a b, t ~ Time a, d ~ Duration a, e ~ Event a, e' ~ Event b) => 
+mapAll          :: (Mappable a b, t ~ Time, d ~ Duration, e ~ Event a, e' ~ Event b) => 
                 ([(t, d, e)] -> [(t, d, e')]) -> a -> b
 
 mapEvents f                 = mapAll $ fmap (third' f)
@@ -205,7 +205,7 @@ map_ f    = mapEvents (\t d x -> f x)
 mapAll f                    = compose . f . perform
 
 
-type Slicable a = (Ord (Duration a), AdditiveGroup (Duration a), Performable a, Composable a)
+type Slicable a = (Performable a, Composable a)
 
 -- |
 -- Return a score containing only the notes whose offset falls before the given duration.
@@ -213,7 +213,7 @@ type Slicable a = (Ord (Duration a), AdditiveGroup (Duration a), Performable a, 
 -- > Time -> Score a -> Score a
 --
 before          :: Slicable a =>
-                Time a -> a -> a
+                Time -> a -> a
 
 -- |
 -- Return a score containing only the notes whose onset falls after given duration.
@@ -221,7 +221,7 @@ before          :: Slicable a =>
 -- > Time -> Score a -> Score a
 --
 after           :: Slicable a =>
-                Time a -> a -> a
+                Time -> a -> a
 
 -- |
 -- Return a score containing only the notes whose onset and offset falls between the given durations.
@@ -229,7 +229,7 @@ after           :: Slicable a =>
 -- > Time -> Time -> Score a -> Score a
 --
 slice           :: Slicable a =>
-                Time a -> Time a -> a -> a
+                Time -> Time -> a -> a
 
 after  a                    = filterEvents (\t d _ -> a <= t)
 before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
@@ -426,7 +426,6 @@ snapshot2
     :: (
         Mappable a b,
         Mappable b c,
-        Ord (Duration c),
         
         HasPart' (Event b),
         Event c ~ (Event a, b)
@@ -455,12 +454,12 @@ snapshotSingle :: Score a -> Score b -> Score (a, Score b)
 snapshotSingle = snapshotSingleWith (,)
 
 
-snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration b, Ord d, Event c ~ (Event a, b)) => 
+snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration, Ord d, Event c ~ (Event a, b)) => 
                        a -> b -> c
 snapshotSingle2 = snapshotSingleWith (,)
 
 -- snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
-snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration b, Ord d) =>
+snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration, Ord d) =>
                        (Event a -> b -> Event c) -> a -> b -> c
     
 snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
@@ -470,7 +469,7 @@ snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 --
-onsetIn :: (Performable a, Composable a, Ord (Duration a)) => Time a -> Duration a -> a -> a
+onsetIn :: (Performable a, Composable a) => Time -> Duration -> a -> a
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
     -- Note: filterOnce is more lazy than mfilter but depends on the events being sorted
 

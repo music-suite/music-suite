@@ -66,14 +66,14 @@ import Music.Time.Stretchable
 -- > duration a = offset a .-- onset a
 --
 class HasDuration a where
-    duration :: a -> Duration a
+    duration :: a -> Duration
 
 -- |
 -- Stretch a score to fit into the given duration.
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration a) =>
+stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration) =>
                 d -> a -> a
 
 
@@ -92,20 +92,20 @@ class HasOnset a where
     -- | 
     -- Get the onset of the given value.
     --
-    onset  :: a -> Time a
+    onset  :: a -> Time
 
 class HasOffset a where
     -- | 
     -- Get the offset of the given value.
     --
-    offset :: a -> Time a
+    offset :: a -> Time
                               
 -- |
 -- Move a score so that its onset is at the specific time.
 --
 -- > Time -> Score a -> Score a
 --
-startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
+startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time) =>
                 t ->  a -> a
 
 -- |
@@ -113,7 +113,7 @@ startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time a) =>
 --
 -- > Time -> Score a -> Score a
 --
-stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time a) =>
+stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time) =>
                 t -> a -> a
 
 t `stretchTo` x = (t / duration x) `stretch` x
@@ -126,7 +126,7 @@ t `stopAt`  x   = (t .-. offset x) `delay` x
 -- > Time -> Score a -> Score a
 --
 withSameOnset      :: (Delayable a, HasOnset a, HasOnset b, 
-                        d ~ Duration a, d ~ Duration b, AdditiveGroup d) =>
+                        d ~ Duration, d ~ Duration, AdditiveGroup d) =>
 
                     (b -> a) -> b -> a
 
@@ -136,7 +136,7 @@ withSameOnset      :: (Delayable a, HasOnset a, HasOnset b,
 -- > Time -> Score a -> Score a
 --
 withSameOffset      :: (Delayable a, HasOffset a, HasOffset b, 
-                        d ~ Duration a, d ~ Duration b, AdditiveGroup d) =>
+                        d ~ Duration, d ~ Duration, AdditiveGroup d) =>
 
                     (b -> a) -> b -> a
 
@@ -156,28 +156,28 @@ class HasPostOffset s where
 -}
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
-durationDefault :: (AdditiveGroup (Duration a), HasOffset a, HasOnset a) => a -> Duration a
+durationDefault :: (AdditiveGroup (Duration), HasOffset a, HasOnset a) => a -> Duration
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
-onsetDefault :: (AdditiveGroup (Duration a), HasOffset a, HasDuration a) => a -> Time a
+onsetDefault :: (AdditiveGroup (Duration), HasOffset a, HasDuration a) => a -> Time
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
-offsetDefault :: (AdditiveGroup (Duration a), HasOnset a, HasDuration a) => a -> Time a
+offsetDefault :: (AdditiveGroup (Duration), HasOnset a, HasDuration a) => a -> Time
 offsetDefault x = onset x .+^ duration x
                                                  
 newtype AddOffset t a = AddOffset (t, a)
 
-type instance Duration (AddOffset t a) = Diff t
+-- type instance Duration (AddOffset t a) = Diff t
 
-instance (Delayable a, Time a ~ t) => Delayable (AddOffset t a) where
+instance (Delayable a, Time ~ t) => Delayable (AddOffset t a) where
     delay d (AddOffset (t, a)) = AddOffset (t, delay d a)
 
-instance (Stretchable a, t ~ Time a) => Stretchable (AddOffset t a) where
+instance (Stretchable a, t ~ Time) => Stretchable (AddOffset t a) where
     stretch d (AddOffset (t, a)) = AddOffset (t, stretch d a)
 
-instance (HasOnset a, t ~ Time a) => HasOnset (AddOffset t a) where
+instance (HasOnset a, t ~ Time) => HasOnset (AddOffset t a) where
     onset (AddOffset (t,a)) = onset a
 
 -- instance HasOffset (AddOffset t s) where

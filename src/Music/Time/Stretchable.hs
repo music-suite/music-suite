@@ -4,6 +4,7 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleContexts,
+    FlexibleInstances,
     ConstraintKinds,
     UndecidableInstances,
     GeneralizedNewtypeDeriving #-} 
@@ -45,12 +46,14 @@ class Stretchable a where
     -- 
     -- > Duration -> Score a -> Score a
     -- 
-    stretch :: Duration a -> a -> a
+    stretch :: Duration -> a -> a
 
 instance Stretchable a => Stretchable [a] where
     stretch n = fmap (stretch n)
 
-instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) where
+-- instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) where
+--     stretch n (t, d, a) = (n*.t, n*^d, a)
+instance Stretchable (Time, Duration, a) where
     stretch n (t, d, a) = (n*.t, n*^d, a)
 
 
@@ -59,7 +62,7 @@ instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) whe
 --
 -- > Duration -> Score a -> Score a
 --
-compress        :: (Stretchable a, Fractional d, d ~ Duration a) =>
+compress        :: (Stretchable a, Fractional d, d ~ Duration) =>
                 d -> a -> a
 
 compress x      = stretch (recip x)

@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
     GeneralizedNewtypeDeriving #-} 
@@ -48,7 +49,7 @@ class Delayable a where
     -- 
     -- > Duration -> Score a -> Score a
     -- 
-    delay :: Duration a -> a -> a
+    delay :: Duration -> a -> a
 
 instance Delayable a => Delayable [a] where
     delay n = fmap (delay n)
@@ -56,7 +57,9 @@ instance Delayable a => Delayable [a] where
 -- instance AffineSpace t => Delayable (t, a) where
     -- delay n (t, a) = (t .+^ n, a)
 
-instance (AffineSpace t, d ~ Diff t) => Delayable (t, d, a) where
+-- instance (AffineSpace t, d ~ Diff t) => Delayable (t, d, a) where
+--     delay n (t, d, a) = (t .+^ n, d, a)
+instance Delayable (Time, Duration, a) where
     delay n (t, d, a) = (t .+^ n, d, a)
 
 -- |
@@ -64,16 +67,16 @@ instance (AffineSpace t, d ~ Diff t) => Delayable (t, d, a) where
 --
 -- > Duration -> Score a -> Score a
 --
-move            :: (Delayable a, d ~ Duration a) =>
-                d -> a -> a
+move            :: (Delayable a) =>
+                Duration -> a -> a
 
 -- |
 -- Move a score backward in time. Negated verison of 'delayTime
 --
 -- > Duration -> Score a -> Score a
 --
-moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
-                d -> a -> a
+moveBack        :: Delayable a =>
+                Duration -> a -> a
 
 -- |
 -- Delay relative to 'origin'. Provided for situations when you have a value that
@@ -82,8 +85,8 @@ moveBack        :: (Delayable a, AdditiveGroup d, d ~ Duration a) =>
 --
 -- > Time -> Score a -> Score a
 --
-delayTime       :: (Delayable a, AdditiveGroup d, d ~ Duration a) => 
-                Time a -> a -> a
+delayTime       :: Delayable a => 
+                Time   -> a -> a
 
 move            = delay
 moveBack t      = delay (negateV t)
