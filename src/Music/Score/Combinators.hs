@@ -25,20 +25,20 @@ module Music.Score.Combinators (
         -- retrograde,
         
         --- * Truncation
-        Slicable(..),
+        -- Slicable(..),
         before,
         after,
         slice,           
         
         -- * Maps and filters
         -- ** Events
-        Mappable(..),
+        -- Mappable(..),
         filterEvents,
         mapEvents,
         mapFilterEvents,
 
         -- ** Map over phrases
-        Phraseable(..),
+        -- Phraseable(..),
         mapFirst,
         mapLast,
         mapPhrase,
@@ -133,47 +133,32 @@ instance Reversible a => Reversible (Score a) where
 -- Mapping
 --------------------------------------------------------------------------------
 
-type Mappable a b = (Performable a, Composable b)
+-- type Mappable a b = (Performable a, Composable b)
 
 -- |
 -- Map over the events in a score.
 --
--- > (Time -> Duration -> a -> b) -> Score a -> Score b
---
-mapEvents       :: Mappable a b =>
-                (Time -> Duration -> Event a -> Event b) -> a -> b
+mapEvents      :: (Time -> Duration -> a -> b) -> Score a -> Score b
 
 -- |
 -- Filter the events in a score.
 --
--- > (Time -> Duration -> a -> Bool) -> Score a -> Score b
---
-filterEvents   :: (Performable a, Composable a) =>
-                (Time -> Duration -> Event a -> Bool) -> a -> a
+filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+
 
 -- |
 -- Efficient combination of 'mapEvents' and 'filterEvents'.
 --
--- > (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
---
-mapFilterEvents :: Mappable a b =>
-                (Time -> Duration -> Event a -> Maybe (Event b)) -> a -> b
+mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 
--- |
--- The same as 'mfilter' but with a non-monadic type.
---
--- > (a -> Bool) -> Score a -> Score a
---
-filter_         :: (Performable a, Composable a) => (Event a -> Bool)    -> a -> a
-map_            :: Mappable a b => (Event a -> Event b) -> a -> b
+-- TODO remove
+-- filter_         :: (a -> Bool) -> Score a -> Score a
+-- map_            :: (a -> b) -> Score a -> Score b
 
 -- |
 -- Map over all events in a score.
 --
--- > ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
---
-mapAll          :: (Mappable a b, t ~ Time, d ~ Duration, e ~ Event a, e' ~ Event b) => 
-                ([(t, d, e)] -> [(t, d, e')]) -> a -> b
+mapAll          :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
 
 mapEvents f                 = mapAll $ fmap (third' f)
 filterEvents f              = mapFilterEvents (partial3 f)
@@ -181,43 +166,30 @@ mapFilterEvents f           = mapAll $ mcatMaybes . fmap (unM . third' f)
     where
         unM (a,b,Nothing) = Nothing
         unM (a,b,Just c)  = Just (a,b,c)
-filter_ p = filterEvents (\t d x -> p x)
-map_ f    = mapEvents (\t d x -> f x)
+-- filter_ p = filterEvents (\t d x -> p x)
+-- map_ f    = mapEvents (\t d x -> f x)
 mapAll f                    = compose . f . perform
 
-
-type Slicable a = (Performable a, Composable a)
 
 -- |
 -- Return a score containing only the notes whose offset falls before the given duration.
 --
--- > Time -> Score a -> Score a
---
-before          :: Slicable a =>
-                Time -> a -> a
+before          :: Time -> Score a -> Score a
 
 -- |
 -- Return a score containing only the notes whose onset falls after given duration.
 --
--- > Time -> Score a -> Score a
---
-after           :: Slicable a =>
-                Time -> a -> a
+after           :: Time -> Score a -> Score a
 
 -- |
 -- Return a score containing only the notes whose onset and offset falls between the given durations.
 --
--- > Time -> Time -> Score a -> Score a
---
-slice           :: Slicable a =>
-                Time -> Time -> a -> a
+slice           :: Time -> Time -> Score a -> Score a
 
 after  a                    = filterEvents (\t d _ -> a <= t)
 before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
-
-type Phraseable a b = (Mappable a b, Composable a, HasPart' (Event a))
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -225,10 +197,7 @@ type Phraseable a b = (Mappable a b, Composable a, HasPart' (Event a))
 -- If a part has only one notes, the first function is applied.
 -- If a part has no notes, the given score is returned unchanged.
 --
--- > (a -> b) -> (a -> b) -> Score a -> Score b
---
-mapFirst    :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
-            (e -> e') -> (e -> e') -> a -> b
+mapFirst    :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 
 -- |
 -- Map over the last, and preceding notes in each part.
@@ -236,10 +205,7 @@ mapFirst    :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
 -- If a part has only one notes, the first function is applied.
 -- If a part has no notes, the given score is returned unchanged.
 --
--- > (a -> b) -> (a -> b) -> Score a -> Score b
---
-mapLast     :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
-            (e -> e') -> (e -> e') -> a -> b
+mapLast     :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 
 -- |
 -- Map over the first, middle and last note in each part.
@@ -247,10 +213,7 @@ mapLast     :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
 -- If a part has fewer than three notes the first takes precedence over the last,
 -- and last takes precedence over the middle.
 --
--- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
---
-mapPhrase       :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
-                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+mapPhrase       :: HasPart' a => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 
 -- |
 -- Equivalent to 'mapPhrase' for single-part scores.
@@ -259,8 +222,7 @@ mapPhrase       :: (Phraseable a b, e ~ Event a, e' ~ Event b) =>
 --
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
-mapPhraseSingle :: (Mappable a b, e ~ Event a, e' ~ Event b) =>
-                (e -> e') -> (e -> e') -> (e -> e') -> a -> b
+mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 
 
 mapFirst f g                = mapPhrase f g g
@@ -276,10 +238,8 @@ mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (th
 -- |
 -- Filter a score to include only those events whose parts match a given predicate.
 --
--- > (Part -> Bool) -> Score a -> Score a
---
-filterPart :: (Mappable a a, Event a ~ e, HasPart' e) => (Part e -> Bool) -> a -> a
-filterPart p = filter_ (p . getPart)
+filterPart :: HasPart' a => (Part a -> Bool) -> Score a -> Score a
+filterPart p = mfilter (p . getPart)
 
 -- |
 -- Extract parts from the a score.
@@ -289,9 +249,7 @@ filterPart p = filter_ (p . getPart)
 --
 -- > mconcat . extractParts = id
 --
--- > Score a -> [Score a]
---
-extractParts :: (HasPart' e, Mappable a a, e ~ Event a) => a -> [a]
+extractParts :: HasPart' a => Score a -> [Score a]
 extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
         
 -- |
@@ -301,35 +259,28 @@ extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
 --
 -- Simple type
 --
--- > Score a -> [(Part a, Score a)]
---
-extractParts' :: (HasPart' e, Mappable a a, e ~ Event a) => a -> [(Part e, a)]
+extractParts' :: HasPart' a => Score a -> [(Part a, Score a)]
 extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
 
 
 -- |
 -- Map over a specific part in the given score.
 --
--- > Part -> (Score a -> Score a) -> Score a -> Score a
---
-mapPart         :: (Enum a, Mappable b b, HasPart' e, e ~ Event b) => 
-                a -> (b -> b) -> b -> b
+mapPart         :: (Enum (Part a), HasPart' a) => Part a -> (Score a -> Score a) -> Score a -> Score a
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > (Score a -> Score a) -> Score a -> Score a
 --
-mapParts        :: (Monoid' b, Mappable a a, HasPart' e, e ~ Event a) => 
-                (a -> b) -> a -> b
+mapParts        :: HasPart' a => (Score a -> Score b) -> Score a -> Score b
 
 -- |
 -- Map over all parts in the given score.
 --
 -- > ([Score a] -> [Score a]) -> Score a -> Score a
 --
-mapAllParts     :: (Monoid' b, Mappable a a, HasPart' e, e ~ Event a) => 
-                 ([a] -> [b]) -> a -> b
+mapAllParts     :: HasPart' a => ([Score a] -> [Score b]) -> Score a -> Score b
 
 
 mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
@@ -341,8 +292,8 @@ mapAllParts f   = mconcat . f . extractParts
 --
 -- > (Part -> Part) -> Score a -> Score a
 --
-modifyParts :: (Mappable a a, HasPart e, e ~ Event a) => (Part e -> Part e) -> a -> a
-modifyParts n = map_ (modifyPart n)
+modifyParts :: HasPart' a => (Part a -> Part a) -> Score a -> Score a
+modifyParts n = fmap (modifyPart n)
 
 
 
@@ -355,7 +306,7 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
-(</>) :: (Enum (Part e), Mappable a a, HasPart' e, e ~ Event a) => a -> a -> a
+-- (</>) :: (HasPart' a) => a -> a -> a
 a </> b = a <> moveParts offset b
     where
         -- max voice in a + 1
@@ -364,14 +315,14 @@ a </> b = a <> moveParts offset b
 -- |
 -- Move down one voice (all parts).
 --
-moveParts       :: (Enum (Part e), Integral b, Mappable a a, HasPart e, e ~ Event a) =>
-                b -> a -> a
+-- moveParts       :: (Enum (Part e), Integral b, Mappable a a, HasPart e, e ~ Event a) =>
+                -- b -> a -> a
 moveParts x = modifyParts (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
-moveToPart :: (Enum (Part e), Enum b, Mappable a a, HasPart e, e ~ Event a) => b -> a -> a
+-- moveToPart :: (Enum (Part e), Enum b, Mappable a a, HasPart e, e ~ Event a) => b -> a -> a
 moveToPart v = moveParts (fromEnum v)
 
 successor :: (Integral b, Enum a) => b -> a -> a
@@ -403,17 +354,17 @@ snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
 snapshot x = mapAllParts (fmap $ snapshotSingle x)
 
 
-snapshot2
-    :: (
-        Mappable a b,
-        Mappable b c,
-        
-        HasPart' (Event b),
-        Event c ~ (Event a, b)
-        ) =>
-       a -> b -> c
+-- snapshot2
+--     :: (
+--         Mappable a b,
+--         Mappable b c,
+--         
+--         HasPart' (Event b),
+--         Event c ~ (Event a, b)
+--         ) =>
+--        a -> b -> c
     
-snapshot2 x = mapAllParts (fmap $ snapshotSingle2 x)
+-- snapshot2 x = mapAllParts (fmap $ snapshotSingle2 x)
 
 
 
@@ -435,13 +386,13 @@ snapshotSingle :: Score a -> Score b -> Score (a, Score b)
 snapshotSingle = snapshotSingleWith (,)
 
 
-snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration, Ord d, Event c ~ (Event a, b)) => 
-                       a -> b -> c
-snapshotSingle2 = snapshotSingleWith (,)
+-- snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration, Ord d, Event c ~ (Event a, b)) => 
+--                        a -> b -> c
+-- snapshotSingle2 = snapshotSingleWith (,)
 
 -- snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
-snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration, Ord d) =>
-                       (Event a -> b -> Event c) -> a -> b -> c
+-- snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration, Ord d) =>
+--                        (Event a -> b -> Event c) -> a -> b -> c
     
 snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 
@@ -450,7 +401,7 @@ snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
 --
-onsetIn :: (Performable a, Composable a) => Time -> Duration -> a -> a
+onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
     -- Note: filterOnce is more lazy than mfilter but depends on the events being sorted
 

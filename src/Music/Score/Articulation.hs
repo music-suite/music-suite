@@ -96,12 +96,12 @@ instance HasArticulation b => HasArticulation (a,b) where
 
 -- Accents
 
-accent      :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-marcato     :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-accentAll   :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-marcatoAll  :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-accentLast  :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-marcatoLast :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
+accent      :: (HasPart' a, HasArticulation a) => Score a -> Score a
+marcato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
+accentAll   :: (HasPart' a, HasArticulation a) => Score a -> Score a
+marcatoAll  :: (HasPart' a, HasArticulation a) => Score a -> Score a
+accentLast  :: (HasPart' a, HasArticulation a) => Score a -> Score a
+marcatoLast :: (HasPart' a, HasArticulation a) => Score a -> Score a
 accent      = mapPhrase (setAccLevel 1) id id
 marcato     = mapPhrase (setAccLevel 2) id id
 accentAll   = mapPhrase (setAccLevel 1) (setAccLevel 1) (setAccLevel 1)
@@ -111,12 +111,12 @@ marcatoLast = mapPhrase id id (setAccLevel 2)
 
 -- Phrasing
 
-tenuto      :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-separated   :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-staccato    :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-portato     :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-legato      :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
-spiccato    :: (Phraseable a a, HasPart' e, HasArticulation e, e ~ Event a) => a -> a
+tenuto      :: (HasPart' a, HasArticulation a) => Score a -> Score a
+separated   :: (HasPart' a, HasArticulation a) => Score a -> Score a
+staccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
+portato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
+legato      :: (HasPart' a, HasArticulation a) => Score a -> Score a
+spiccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
 tenuto      = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2))
 separated   = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1))
 staccato    = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1)

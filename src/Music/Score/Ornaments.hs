@@ -141,16 +141,16 @@ tremolo n = fmap (setTrem n)
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (Phraseable a a, HasPart' e, HasText e, e ~ Event a) => String -> a -> a
+text :: (HasPart' a, HasText a) => String -> Score a -> Score a
 text s = mapPhrase (addText s) id id
 
 -- |
 -- Slide between the first and the last note.
 --
-slide :: (Phraseable a a, Composable a, HasPart' e, HasSlide e, e ~ Event a) => a -> a
+slide :: (HasPart' a, HasSlide a) => Score a -> Score a
 slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 
-glissando :: (Phraseable a a, Composable a, HasPart' e, HasSlide e, e ~ Event a) => a -> a
+glissando :: (HasPart' a, HasSlide a) => Score a -> Score a
 glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
 
 -- |
