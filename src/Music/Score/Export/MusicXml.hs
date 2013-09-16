@@ -212,7 +212,9 @@ openXmlSingle sc = do
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     -- FIXME hardcoded
 
-
+-- |
+-- Convert a score to a MusicXML string.
+--
 toXmlString :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> String
 toXmlString = Xml.showXml . toXml
 

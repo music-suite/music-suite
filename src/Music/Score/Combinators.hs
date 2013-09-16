@@ -17,28 +17,23 @@
 
 module Music.Score.Combinators (
         -- * Rests
+        note,
         rest,
         noteRest,
         removeRests,
 
-        -- --- * Retrograde
-        -- retrograde,
-        
-        --- * Truncation
-        -- Slicable(..),
-        before,
-        after,
-        slice,           
-        
         -- * Maps and filters
         -- ** Events
-        -- Mappable(..),
         filterEvents,
         mapEvents,
         mapFilterEvents,
+        
+        -- ** Editing
+        before,
+        after,
+        slice,           
 
         -- ** Map over phrases
-        -- Phraseable(..),
         mapFirst,
         mapLast,
         mapPhrase,
@@ -96,28 +91,42 @@ import qualified Data.Foldable as Foldable
 -------------------------------------------------------------------------------------
 
 -- |
--- Create a score containing a rest at time zero of duration one.
+-- Create a score containing a note at time zero and duration one.
+--
+-- This is an alias for 'return'.
+--
+-- > a -> Score a
+--
+note            :: a -> Score a
+
+-- |
+-- Create a score containing a rest at time zero and duration one.
+--
+-- This is an alias for @'return' 'Nothing'@.
 --
 -- > Score (Maybe a)
 --
-rest            :: MonadPlus s => s (Maybe a)
+rest            :: Score (Maybe a)
 
 -- |
--- Create a note or a rest. This is an alias for 'mfromMaybe' with a nicer reading.
+-- Create a note or a rest at time zero and duration one.
 --
--- This function uses the unit position (0, 1).
+-- This is an alias for 'mfromMaybe' with a nicer reading.
 --
 -- > Maybe a -> Score a
 --
-noteRest        :: MonadPlus s => Maybe a -> s a
+noteRest        :: Maybe a -> Score a
 
 -- |
--- Remove all rests from a score. This is an alias for 'mcatMaybes' with a nicer reading.
+-- Remove all rests from a score. 
+--
+-- This is an alias for 'mcatMaybes' with a nicer reading.
 --
 -- > Score (Maybe a) -> Score a
 --
-removeRests     :: MonadPlus s => s (Maybe a) -> s a
+removeRests     :: Score (Maybe a) -> Score a
 
+note            = return
 rest            = return Nothing
 noteRest        = mfromMaybe
 removeRests     = mcatMaybes
