@@ -6,7 +6,7 @@
 
 The Music Suite depends on the [Haskell platform][HaskellPlatform].
 
-While not strictly required,[Lilypond][Lilypond] is highly recommended as it allow you to
+While not strictly required, [Lilypond][Lilypond] is highly recommended as it allow you to
 preview musical scores. See [Import and Export](#import-and-export) for other formats.
 
 To install the suite, simply install the Haskell platform, and then run:
@@ -499,7 +499,7 @@ putStrLn $ toLyString $ asScore $ scat [c,d,e]
 ```
 
     <<
-        \new Staff { \set Staff.instrumentName = "" <c'>1 <d'>1 <e'>1 }
+        \new Staff { <c'>1 <d'>1 <e'>1 }
     >>
 
 
@@ -508,7 +508,7 @@ putStrLn $ toLyString $ asScore $ scat [c,d,e]
 All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for 
 parsing and pretty printing. 
 
-The output is fairly complete, with some minor limitations. Bug reports are much welcome. There are no plans to support MusicXML import in the near future.
+The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support MusicXML import in the near future.
 
 Beware of the extreme verboseness of XML, for example:
 
@@ -630,7 +630,7 @@ let subj = removeRests $ scat [
             scat [a,g,f,e,f,e,d]^/2, c^*2 
         ]^/8
 
-in (delay (6/4) $ up (perfect fifth) subj) </> subj
+in (delay 1.5 . up _P5) subj </> subj
 ```
 
 ## Generative music
@@ -716,3 +716,6 @@ in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 [Lilypond]:         http://lilypond.org
 [Timidity]:         http://timidity.sourceforge.net/
 [HaskellPlatform]:  http://www.haskell.org/platform/
+
+[issue-tracker]:    https://github.com/hanshoglund/music-score/issues
+
