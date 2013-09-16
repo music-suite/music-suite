@@ -45,7 +45,6 @@ module Music.Score.Pitch (
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Data.String
--- import Data.Foldable
 import Data.Typeable
 import Data.Traversable
 import qualified Data.List as List
@@ -56,9 +55,8 @@ import Data.Ratio
 import Music.Pitch.Literal
 
 class HasPitch a where
-    -- |
-    -- Associated pitch type. Should implement 'Eq' and 'Show' to be usable.
-    --
+
+    -- | Associated pitch type. Should normally implement 'Ord', 'Show' and 'AffineSpace'.
     type Pitch a :: *
 
     -- |

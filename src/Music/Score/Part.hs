@@ -55,7 +55,8 @@ import Music.Time
 -- The part type can be any type that is orddered.
 --
 class HasPart a where
-    -- | Associated part type. Should implement 'Ord' and 'Show'.
+
+    -- | Associated part type. Should normally implement 'Ord' and 'Show'.
     type Part a :: *
 
     -- | Get the voice of the given note.
