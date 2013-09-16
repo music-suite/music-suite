@@ -175,7 +175,7 @@ instance Arbitrary a => Arbitrary (Score a) where
         return $ delay t $ stretch d $ return x
 
 instance HasPitch a => HasPitch (Score a) where
-    type PitchOf (Score a) = PitchOf a
+    type Pitch (Score a) = Pitch a
     getPitches as    = foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
 
