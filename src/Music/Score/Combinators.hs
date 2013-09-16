@@ -123,25 +123,6 @@ noteRest        = mfromMaybe
 removeRests     = mcatMaybes
 
 
-
-{-
--- |
--- Reverse a score around its middle point (TODO not correct documentation w.r.t to start).
---
--- > onset a    = onset (retrograde a)
--- > duration a = duration (retrograde a)
--- > offset a   = offset (retrograde a)
---
--- > Score a -> Score a
---
-retrograde      :: (Performable a, Composable a, HasOnset a, Ord (Duration a)) =>
-                a -> a
-
-retrograde = startAt origin . (mapAll $ fmap g)
-    where
-        g (t,d,x) = (negateP (t .+^ d), d, x)
-        negateP a = origin .-^ (a .-. origin)
--}
 instance Reversible a => Reversible (Score a) where
     rev = fmap rev . withSameOnset (mapAll $ fmap g)
         where
