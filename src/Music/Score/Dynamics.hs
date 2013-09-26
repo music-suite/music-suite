@@ -91,24 +91,18 @@ instance HasDynamic b => HasDynamic (a, b) where
 -- Dynamics
 --------------------------------------------------------------------------------
 
--- Apply a constant level over the whole score.
--- dynamic :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Double -> Score a -> Score a
--- dynamic n = mapPhrase (setLevel n) id id
-
-
 -- |
 -- Apply a dynamic level over the score.
--- The dynamic score is assumed to have duration one.
 --
 dynamics :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
-dynamics d a = (duration a `stretchTo` d) `dyns` a
+dynamics d a = (duration a `stretchTo` d) `dynamics'` a
 
 -- |
 -- Equivalent to `splitTies` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
 dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
-dynamicSingle d a  = (duration a `stretchTo` d) `dyn` a
+dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
 
 -- |
 -- Apply a dynamic level over a voice.
@@ -117,15 +111,28 @@ dynamicVoice :: HasDynamic a => Score (Levels Double) -> Voice (Maybe a) -> Voic
 dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
 
 
-dyns :: (HasDynamic a, HasPart a, Ord v, v ~ Part a) => Score (Levels Double) -> Score a -> Score a
-dyns ds = mapAllParts (fmap $ applyDynSingle (fmap fromJust $ scoreToVoice ds))
+dynamics' :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
+dynamics' ds = mapAllParts (fmap $ dynamicsSingle' ds)
 
-dyn :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
-dyn ds = applyDynSingle (fmap fromJust . scoreToVoice $ ds)
+dynamicsSingle' :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
+dynamicsSingle' ds = applyDynSingle (fmap fromJust $ scoreToVoice ds)
 
-resetDynamics :: HasDynamic c => c -> c
-resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
 
+applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
+applyDynSingle ds = applySingle ds3
+    where
+        -- ds2 :: Voice (Dyn2 Double)
+        ds2 = transf dyn2 ds
+        -- ds3 :: Voice (Score a -> Score a)
+        ds3 = fmap g ds2
+
+        g (ec,ed,l,bc,bd) = id
+                . (if ec then map1 (setEndCresc     True) else id)
+                . (if ed then map1 (setEndDim       True) else id)
+                . (if bc then map1 (setBeginCresc   True) else id)
+                . (if bd then map1 (setBeginDim     True) else id)
+                . maybe id (map1 . setLevel) l
+        map1 f = mapPhraseSingle f id id
 
 -- |
 -- Represents dynamics over a duration.
@@ -134,18 +141,6 @@ data Levels a
     = Level  a
     | Change a a
     deriving (Eq, Show)
-
-instance Fractional a => IsDynamics (Levels a) where
-    fromDynamics (DynamicsL (Just a, Nothing)) = Level (toFrac a)
-    fromDynamics (DynamicsL (Just a, Just b))  = Change (toFrac a) (toFrac b)
-    fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " ++ show x
-
-cresc :: IsDynamics a => Double -> Double -> a
-cresc a b = fromDynamics $ DynamicsL (Just a, Just b)
-
-dim :: IsDynamics a => Double -> Double -> a
-dim a b = fromDynamics $ DynamicsL (Just a, Just b)
-
 
 -- end cresc, end dim, level, begin cresc, begin dim
 type Levels2 a = (Bool, Bool, Maybe a, Bool, Bool)
@@ -168,22 +163,18 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 transf :: ([a] -> [b]) -> Voice a -> Voice b
 transf f = voice . uncurry zip . second f . unzip . getVoice
 
-applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
-applyDynSingle ds = applySingle ds3
-    where
-        -- ds2 :: Voice (Dyn2 Double)
-        ds2 = transf dyn2 ds
-        -- ds3 :: Voice (Score a -> Score a)
-        ds3 = fmap g ds2
 
-        g (ec,ed,l,bc,bd) = id
-                . (if ec then map1 (setEndCresc     True) else id)
-                . (if ed then map1 (setEndDim       True) else id)
-                . (if bc then map1 (setBeginCresc   True) else id)
-                . (if bd then map1 (setBeginDim     True) else id)
-                . maybe id (map1 . setLevel) l
-        map1 f = mapPhraseSingle f id id
 
+
+cresc :: IsDynamics a => Double -> Double -> a
+cresc a b = fromDynamics $ DynamicsL (Just a, Just b)
+
+dim :: IsDynamics a => Double -> Double -> a
+dim a b = fromDynamics $ DynamicsL (Just a, Just b)
+
+
+resetDynamics :: HasDynamic c => c -> c
+resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
 
 
 -------------------------------------------------------------------------------------
