@@ -110,9 +110,6 @@ instance HasText a => HasText (b, a) where
     addText       s                                 = fmap (addText s)
 
 
-
-
--- end gliss/slide, level, begin gliss/slide
 class HasSlide a where
     setBeginGliss :: Bool -> a -> a
     setBeginSlide :: Bool -> a -> a
@@ -142,11 +139,14 @@ text :: (HasPart' a, HasText a) => String -> Score a -> Score a
 text s = mapPhrase (addText s) id id
 
 -- |
--- Slide between the first and the last note.
+-- Add a slide between the first and the last note.
 --
 slide :: (HasPart' a, HasSlide a) => Score a -> Score a
 slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
 
+-- |
+-- Add a glissando between the first and the last note.
+--
 glissando :: (HasPart' a, HasSlide a) => Score a -> Score a
 glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
 

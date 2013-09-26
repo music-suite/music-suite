@@ -315,7 +315,7 @@ infixr 6 </>
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
--- (</>) :: (HasPart' a) => a -> a -> a
+(</>) :: (HasPart' a, Enum (Part a)) => Score a -> Score a -> Score a
 a </> b = a <> moveParts offset b
     where
         -- max voice in a + 1
@@ -324,14 +324,13 @@ a </> b = a <> moveParts offset b
 -- |
 -- Move down one voice (all parts).
 --
--- moveParts       :: (Enum (Part e), Integral b, Mappable a a, HasPart e, e ~ Event a) =>
-                -- b -> a -> a
+moveParts :: (Integral b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
 moveParts x = modifyParts (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
--- moveToPart :: (Enum (Part e), Enum b, Mappable a a, HasPart e, e ~ Event a) => b -> a -> a
+moveToPart :: (Enum b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
 
 successor :: (Integral b, Enum a) => b -> a -> a
