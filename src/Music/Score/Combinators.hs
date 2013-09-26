@@ -59,8 +59,12 @@ module Music.Score.Combinators (
         -- * Zippers
         apply,
         snapshot,
+        snapshotWith,
+
+        -- ** Single-part versions
         applySingle,
         snapshotSingle,
+        snapshotWithSingle,
   ) where
 
 import Control.Monad
@@ -356,27 +360,6 @@ apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
 apply x = mapAllParts (fmap $ applySingle x)
 
 -- |
--- Get all notes that start during a given note.
---
-snapshot :: HasPart' a => Score b -> Score a -> Score (b, Score a)
-snapshot x = mapAllParts (fmap $ snapshotSingle x)
-
-
--- snapshot2
---     :: (
---         Mappable a b,
---         Mappable b c,
---         
---         HasPart' (Event b),
---         Event c ~ (Event a, b)
---         ) =>
---        a -> b -> c
-    
--- snapshot2 x = mapAllParts (fmap $ snapshotSingle2 x)
-
-
-
--- |
 -- Apply a time-varying function to all events in score.
 --
 applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
@@ -390,19 +373,20 @@ applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
 -- |
 -- Get all notes that start during a given note.
 --
+snapshot :: HasPart' b => Score a -> Score b -> Score (a, Score b)
+snapshot x = mapAllParts (fmap $ snapshotSingle x)
+
+snapshotWith :: HasPart' b => (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotWith f x = mapAllParts (fmap $ snapshotWithSingle f x)
+
+-- |
+-- Get all notes that start during a given note.
+--
 snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle = snapshotSingleWith (,)
+snapshotSingle = snapshotWithSingle (,)
 
-
--- snapshotSingle2     :: (Mappable a b, Mappable b c, d ~ Duration, Ord d, Event c ~ (Event a, b)) => 
---                        a -> b -> c
--- snapshotSingle2 = snapshotSingleWith (,)
-
--- snapshotSingleWith :: (a -> Score b -> c) -> Score a -> Score b -> Score c
--- snapshotSingleWith  :: (Mappable a b, Mappable b c, d ~ Duration, Ord d) =>
---                        (Event a -> b -> Event c) -> a -> b -> c
-    
-snapshotSingleWith g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
+snapshotWithSingle :: (a -> Score b -> c) -> Score a -> Score b -> Score c
+snapshotWithSingle g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 
 
 -- |
