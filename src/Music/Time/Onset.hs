@@ -169,8 +169,6 @@ offsetDefault x = onset x .+^ duration x
                                                  
 newtype AddOffset t a = AddOffset (t, a)
 
--- type instance Duration (AddOffset t a) = Diff t
-
 instance (Delayable a, Time ~ t) => Delayable (AddOffset t a) where
     delay d (AddOffset (t, a)) = AddOffset (t, delay d a)
 

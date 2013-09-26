@@ -276,8 +276,8 @@ rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
 rhythmToLy (Beat d x)            = noteRestToLy d x
 rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
-rhythmToLy (Tuplet m r)          = Lilypond.Times m (rhythmToLy r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio m
+rhythmToLy (Tuplet m r)          = Lilypond.Times (getDuration m) (rhythmToLy r)
+    where (a,b) = both fromIntegral fromIntegral $ unRatio $ getDuration m
 
 noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond
 noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)

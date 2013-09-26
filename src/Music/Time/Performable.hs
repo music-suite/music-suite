@@ -164,3 +164,4 @@ foldMapDefault f = foldMap f . performValues
 untrip (a,b,c) = ((a,b),c)
 uncurry3 = (. untrip) . uncurry . uncurry
 trd3 (a, b, c) = c
+

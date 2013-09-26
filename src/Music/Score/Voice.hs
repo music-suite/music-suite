@@ -107,7 +107,7 @@ instance IsPitch a => IsPitch (Voice a) where
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
-
+    
 -------------------------------------------------------------------------------------
 
 list z f [] = z

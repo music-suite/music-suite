@@ -93,12 +93,12 @@ instance HasPitch (PitchT p a) where
     getPitches (PitchT (v,_))    = [v]
     modifyPitch f (PitchT (v,x)) = PitchT (f v, x)
 
-instance HasPitch ()                            where   { type Pitch ()         = ()        ; getPitches = return; modifyPitch = id }
-instance HasPitch Double                        where   { type Pitch Double     = Double    ; getPitches = return; modifyPitch = id }
-instance HasPitch Float                         where   { type Pitch Float      = Float     ; getPitches = return; modifyPitch = id }
-instance HasPitch Int                           where   { type Pitch Int        = Int       ; getPitches = return; modifyPitch = id }
-instance HasPitch Integer                       where   { type Pitch Integer    = Integer   ; getPitches = return; modifyPitch = id }
-instance Integral a => HasPitch (Ratio a)       where   { type Pitch (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id }
+instance HasPitch ()                        where { type Pitch ()         = ()        ; getPitches = return; modifyPitch = id }
+instance HasPitch Double                    where { type Pitch Double     = Double    ; getPitches = return; modifyPitch = id }
+instance HasPitch Float                     where { type Pitch Float      = Float     ; getPitches = return; modifyPitch = id }
+instance HasPitch Int                       where { type Pitch Int        = Int       ; getPitches = return; modifyPitch = id }
+instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; getPitches = return; modifyPitch = id }
+instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id }
 
 instance HasPitch a => HasPitch (a,b) where
     type Pitch (a,b)  = Pitch a
@@ -111,16 +111,6 @@ instance HasPitch a => HasPitch [a] where
     getPitches as    = concatMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
     
-{-
--- |
--- Get all pitches in the given score. Returns a set of pitches. (TODO use set type?)
---
--- > Score a -> [Pitch]
---
-getPitches :: (HasPitch a, Eq v, v ~ Pitch a, Foldable f, p ~ Pitch a) => f a -> [p]
-getPitches = List.nub . fmap getPitch . toList
--}
-
 -- |
 -- Set all pitches in the given score.
 --

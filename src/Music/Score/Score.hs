@@ -180,8 +180,6 @@ instance HasPitch a => HasPitch (Score a) where
     modifyPitch f    = fmap (modifyPitch f)
 
 
-
-
 -------------------------------------------------------------------------------------
 
 fst3 (a,b,c) = a

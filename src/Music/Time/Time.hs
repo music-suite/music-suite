@@ -1,8 +1,6 @@
 
 {-# LANGUAGE
     TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -36,25 +34,16 @@ import Data.AffineSpace.Point
 -- 'origin'.
 --
 
--- -- |
--- -- This type function returns the duration type for a given type.
--- --
--- type family Duration (s :: *) :: *
--- 
--- -- |
--- -- This type function returns the duration type for a given type.
--- --
--- type Time a = Point (Duration a)
--- 
--- type instance Duration [a]       = Duration a
--- type instance Duration (t, a)    = Diff t
--- type instance Duration (t, d, a) = d
-
-
 -- |
 -- This type represents relative time in seconds.
 --
-type Duration = Rational
+newtype Duration = Duration { getDuration :: Rational }
+    deriving (Eq, Ord, Show, Num, Enum, Fractional, Real, RealFrac, AdditiveGroup)
+
+instance VectorSpace Duration where
+    type Scalar Duration = Duration
+    (Duration x) *^ (Duration y) = Duration (x *^ y)
+
 
 -- |
 -- This type represents absolute time in seconds since the start time. Note

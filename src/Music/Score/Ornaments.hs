@@ -51,15 +51,12 @@ module Music.Score.Ornaments (
 
 import Data.Ratio
 import Data.Foldable
-import Data.Monoid
+import Data.Semigroup
 import Data.Typeable
-import qualified Data.List as List
-import Data.VectorSpace
-import Data.AffineSpace
 
+import Music.Time
 import Music.Score.Voice
 import Music.Score.Score
-import Music.Time
 import Music.Score.Part
 import Music.Score.Combinators
 

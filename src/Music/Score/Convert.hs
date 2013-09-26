@@ -48,7 +48,6 @@ import Data.Ord
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
--- import Music.Score.Part
 import Music.Time
 
 import qualified Data.List as List
@@ -90,6 +89,6 @@ voiceToScore = scat . fmap g . getVoice
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
+-- There must be a better place for this instance
 instance Performable (Voice a) where
     perform = perform . voiceToScore
-

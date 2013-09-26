@@ -52,17 +52,11 @@ module Music.Score.Articulation (
 
   ) where
 
-import Data.Ratio
 import Data.Foldable
 import Data.Typeable
 import Data.Semigroup
-import qualified Data.List as List
-import Data.VectorSpace
-import Data.AffineSpace
 
-import Music.Score.Voice
 import Music.Score.Score
-import Music.Time
 import Music.Score.Part
 import Music.Score.Combinators
 

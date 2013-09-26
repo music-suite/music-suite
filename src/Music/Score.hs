@@ -1,17 +1,4 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    GeneralizedNewtypeDeriving,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,
-    OverloadedStrings,
-    NoMonomorphismRestriction #-}
-
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -95,3 +82,4 @@ import Music.Score.Instances
 import Music.Score.Export.Midi
 import Music.Score.Export.Lilypond
 import Music.Score.Export.MusicXml
+

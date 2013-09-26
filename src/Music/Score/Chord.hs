@@ -36,24 +36,17 @@ module Music.Score.Chord (
         simultaneous',
   ) where
 
-import Data.Ratio
-import Data.Foldable (Foldable(..))
+import Data.Foldable
 import Data.Typeable
 import Data.Semigroup
-import Data.List.NonEmpty (NonEmpty(..))
-import Data.VectorSpace
-import Data.AffineSpace
 import Control.Monad.Plus       
-import Data.Map(Map)
-import qualified Data.Map as Map
-import qualified Data.List as List
+import qualified Data.List          as List
 import qualified Data.List.NonEmpty as NonEmpty
 
+import Music.Time
 import Music.Score.Voice
 import Music.Score.Score
-import Music.Time
 import Music.Score.Part
-import Music.Score.Pitch
 import Music.Score.Combinators
 
 class HasChord a where
@@ -139,10 +132,6 @@ type Era = (Time, Duration)
 -- consec :: (a -> a -> [a]) -> [a] -> [a]           
 
 -- consec f as = List.mapAccumL (\(prev, elems) current -> ( (Just x, []) , x)) (Nothing, []) as
-
-
-
-
 
 
 -- consec f = go

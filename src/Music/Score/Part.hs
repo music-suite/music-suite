@@ -26,7 +26,6 @@
 
 
 module Music.Score.Part (
-
         -- * Part representation
         HasPart(..),
         HasPart',
@@ -35,17 +34,14 @@ module Music.Score.Part (
         setParts,
   ) where
 
-import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
-import Data.Semigroup
-import Data.String
-import Data.Foldable
-import Data.Typeable
+import Control.Monad.Plus
 import Data.Ord (comparing)
-import Data.Traversable
-import qualified Data.List as List
-import Data.VectorSpace
-import Data.AffineSpace
+import Data.Semigroup
 import Data.Ratio
+import Data.Foldable
+import Data.Traversable
+import Data.Typeable
+import qualified Data.List as List
 
 import Music.Time
 
@@ -68,23 +64,23 @@ class HasPart a where
     -- | Modify the voice of the given note.
     modifyPart :: (Part a -> Part a) -> a -> a
 
-    setPart n = modifyPart (const n)
+    setPart n      = modifyPart (const n)
     modifyPart f x = x
 
 newtype PartT n a = PartT { getPartT :: (n, a) }
     deriving (Eq, Ord, Show, Functor, Typeable)
 
-instance HasPart ()                            where   { type Part ()         = Integer ; getPart _ = 0 }
-instance HasPart Double                        where   { type Part Double     = Integer ; getPart _ = 0 }
-instance HasPart Float                         where   { type Part Float      = Integer ; getPart _ = 0 }
-instance HasPart Int                           where   { type Part Int        = Integer ; getPart _ = 0 }
-instance HasPart Integer                       where   { type Part Integer    = Integer ; getPart _ = 0 }
-instance Integral a => HasPart (Ratio a)       where   { type Part (Ratio a)  = Integer ; getPart _ = 0 }
+instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = 0 }
+instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = 0 }
+instance HasPart Float                      where { type Part Float      = Integer ; getPart _ = 0 }
+instance HasPart Int                        where { type Part Int        = Integer ; getPart _ = 0 }
+instance HasPart Integer                    where { type Part Integer    = Integer ; getPart _ = 0 }
+instance Integral a => HasPart (Ratio a)    where { type Part (Ratio a)  = Integer ; getPart _ = 0 }
 
 instance HasPart (PartT n a) where
-    type Part (PartT n a)                           = n
-    getPart (PartT (v,_))                           = v
-    modifyPart f (PartT (v,x))                      = PartT (f v, x)
+    type Part (PartT n a)       = n
+    getPart (PartT (v,_))       = v
+    modifyPart f (PartT (v,x))  = PartT (f v, x)
 
 -- |
 -- Like 'HasPart', but enforces the part to be ordered.
