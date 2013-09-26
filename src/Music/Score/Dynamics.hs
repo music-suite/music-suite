@@ -34,7 +34,7 @@ module Music.Score.Dynamics (
 
         -- * Dynamic transformations
         -- ** Crescendo and diminuendo
-        Levels(..),
+        Level(..),
         cresc,
         dim,
 
@@ -92,60 +92,60 @@ instance HasDynamic b => HasDynamic (a, b) where
 --------------------------------------------------------------------------------
 
 -- |
+-- Represents dynamics over a duration.
+--
+data Level a
+    = Level  a
+    | Change a a
+    deriving (Eq, Show)
+
+-- |
 -- Apply a dynamic level over the score.
 --
-dynamics :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
+dynamics :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dynamics'` a
 
 -- |
 -- Equivalent to `splitTies` for single-voice scores.
 -- Fails if the score contains overlapping events.
 --
-dynamicSingle :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
+dynamicSingle :: HasDynamic a => Score (Level Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
 
 -- |
 -- Apply a dynamic level over a voice.
 --
-dynamicVoice :: HasDynamic a => Score (Levels Double) -> Voice (Maybe a) -> Voice (Maybe a)
+dynamicVoice :: HasDynamic a => Score (Level Double) -> Voice (Maybe a) -> Voice (Maybe a)
 dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
 
 
-dynamics' :: (HasDynamic a, HasPart' a) => Score (Levels Double) -> Score a -> Score a
+dynamics' :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
 dynamics' ds = mapAllParts (fmap $ dynamicsSingle' ds)
 
-dynamicsSingle' :: HasDynamic a => Score (Levels Double) -> Score a -> Score a
+dynamicsSingle' :: HasDynamic a => Score (Level Double) -> Score a -> Score a
 dynamicsSingle' ds = applyDynSingle (fmap fromJust $ scoreToVoice ds)
 
 
-applyDynSingle :: HasDynamic a => Voice (Levels Double) -> Score a -> Score a
+applyDynSingle :: HasDynamic a => Voice (Level Double) -> Score a -> Score a
 applyDynSingle ds = applySingle ds3
     where
         -- ds2 :: Voice (Dyn2 Double)
-        ds2 = transf dyn2 ds
+        ds2 = mapValuesVoice dyn2 ds
         -- ds3 :: Voice (Score a -> Score a)
         ds3 = fmap g ds2
 
         g (ec,ed,l,bc,bd) = id
-                . (if ec then map1 (setEndCresc     True) else id)
-                . (if ed then map1 (setEndDim       True) else id)
-                . (if bc then map1 (setBeginCresc   True) else id)
-                . (if bd then map1 (setBeginDim     True) else id)
-                . maybe id (map1 . setLevel) l
-        map1 f = mapPhraseSingle f id id
-
--- |
--- Represents dynamics over a duration.
---
-data Levels a
-    = Level  a
-    | Change a a
-    deriving (Eq, Show)
+                . (if ec then mapFirstSingle (setEndCresc     True) else id)
+                . (if ed then mapFirstSingle (setEndDim       True) else id)
+                . (if bc then mapFirstSingle (setBeginCresc   True) else id)
+                . (if bd then mapFirstSingle (setBeginDim     True) else id)
+                . maybe id (mapFirstSingle . setLevel) l
+        mapFirstSingle f = mapPhraseSingle f id id
 
 -- end cresc, end dim, level, begin cresc, begin dim
-type Levels2 a = (Bool, Bool, Maybe a, Bool, Bool)
+type LevelDiff a = (Bool, Bool, Maybe a, Bool, Bool)
 
-dyn2 :: Ord a => [Levels a] -> [Levels2 a]
+dyn2 :: Ord a => [Level a] -> [LevelDiff a]
 dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
     where
         g (Nothing, False, False) (Level b)     = ((Just b,  False, False), (False, False, Just b,  False, False))
@@ -160,8 +160,8 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 
 
 
-transf :: ([a] -> [b]) -> Voice a -> Voice b
-transf f = voice . uncurry zip . second f . unzip . getVoice
+mapValuesVoice :: ([a] -> [b]) -> Voice a -> Voice b
+mapValuesVoice f = voice . uncurry zip . second f . unzip . getVoice
 
 
 

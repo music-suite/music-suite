@@ -208,7 +208,7 @@ slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 -- Map over the first, and remaining notes in each part.
 --
 -- If a part has only one notes, the first function is applied.
--- If a part has no notes, the given score is returned unchanged.
+-- If a part has no notes, it is returned unchanged.
 --
 mapFirst    :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 
@@ -216,7 +216,7 @@ mapFirst    :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 -- Map over the last, and preceding notes in each part.
 --
 -- If a part has only one notes, the first function is applied.
--- If a part has no notes, the given score is returned unchanged.
+-- If a part has no notes, it is returned unchanged.
 --
 mapLast     :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 
