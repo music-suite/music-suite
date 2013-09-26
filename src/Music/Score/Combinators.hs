@@ -363,12 +363,10 @@ apply x = mapAllParts (fmap $ applySingle x)
 -- Apply a time-varying function to all events in score.
 --
 applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs as = notJoin $ fmap (uncurry ($)) $ sample fs $ as
+applySingle fs = notJoin . fmap (uncurry ($)) . sample fs
     where
-        -- This is not join; we simply concatenate all inner scores in parallel
         notJoin   = mconcat . performValues
         sample fs = snapshotSingle (voiceToScore fs)
-
 
 -- |
 -- Get all notes that start during a given note.
