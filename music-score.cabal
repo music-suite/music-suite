@@ -72,6 +72,7 @@ library
         Music.Score.Ties
         Music.Score.Part
         Music.Score.Chord
+        Music.Score.Meta
         Music.Score.Pitch
         Music.Score.Articulation
         Music.Score.Dynamics

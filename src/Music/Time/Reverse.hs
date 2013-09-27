@@ -32,11 +32,12 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 
 import Music.Time.Time
+import Music.Time.Onset
 
 -- |
 -- Reversible values.
 --
--- For instances of 'Reversible' and 'HasOnset, the following laws should hold:
+-- For instances of 'Reversible' and 'HasOnset', the following laws should hold:
 --
 -- > onset a    = onset (rev a)
 -- > duration a = duration (rev a)
@@ -46,11 +47,9 @@ class Reversible a where
     -- |
     -- Reverse a value.
     -- 
-    -- Reverse is an involution:
+    -- Reverse is an involution, meaning that:
     --
     -- > rev (rev a) = a
-    -- 
-    -- > Score a -> Score a
     -- 
     rev :: a -> a
 

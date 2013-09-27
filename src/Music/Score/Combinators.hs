@@ -22,17 +22,19 @@ module Music.Score.Combinators (
         noteRest,
         removeRests,
 
-        -- * Maps and filters
-        -- ** Events
-        filterEvents,
-        mapEvents,
-        mapFilterEvents,
-        
         -- ** Editing
         before,
         after,
-        slice,           
+        slice,
+        split,
+        splice,
 
+        -- * Maps and filters
+        -- ** Events
+        mapEvents,
+        filterEvents,
+        mapFilterEvents,
+        
         -- ** Map over phrases
         mapFirst,
         mapLast,
@@ -203,6 +205,8 @@ after  a                    = filterEvents (\t d _ -> a <= t)
 before b                    = filterEvents (\t d _ -> t .+^ d <= b) 
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
+split t a = (before t a, after t a)
+splice t d a = tripRev (before t a, split (t .+^ d) a)
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -443,6 +447,8 @@ uncurry3 = (. untrip) . uncurry . uncurry
 
 untrip (a,b,c) = ((a,b),c)
 trip ((a,b),c) = (a,b,c)
+
+tripRev (a,(b,c)) = (a,b,c)
 
 partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
