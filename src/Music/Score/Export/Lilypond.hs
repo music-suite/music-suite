@@ -175,28 +175,6 @@ instance HasLilypond a => HasLilypond (SlideT a) where
         where          
             notate = if bg || bs then Lilypond.beginGlissando else id
 
--- -- Rest/Note/Chord
--- -- Sequential
--- -- Simultaneous
--- -- Others
--- foldLy :: (Lilypond -> Lilypond)
---         -> ([Lilypond] -> Lilypond) 
---         -> (Bool -> [Lilypond] -> Lilypond) 
---         -> (Lilypond -> Lilypond)
---         -> Lilypond -> Lilypond
--- foldLy f h i g = go 
---     where
---         go a@(Lilypond.Rest d p)           = f a
---         go a@(Lilypond.Note n d p)         = f a
---         go a@(Lilypond.Chord ns d p)       = f a
---         go a@(Lilypond.Sequential as)      = h as
---         go a@(Lilypond.Simultaneous p as)  = i p as
---         go a                               = g a
--- 
--- firstLy :: (Lilypond -> Lilypond) -> Lilypond -> Lilypond
--- firstLy f = foldLy id (scatLy . mapFirstL f) (pcatLy') (firstLy f)
-
-
 pcatLy :: [Lilypond] -> Lilypond
 pcatLy = pcatLy' False
 

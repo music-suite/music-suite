@@ -47,9 +47,9 @@ import Data.Semigroup
 import Data.Ratio
 import Data.Foldable
 import Data.Typeable
-import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
+import qualified Data.List as List
 
 import Music.Score.Voice
 import Music.Score.Score
