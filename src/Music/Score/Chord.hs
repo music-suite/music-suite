@@ -52,7 +52,6 @@ import Music.Score.Combinators
 class HasChord a where
     type ChordNote a :: *
     getChord :: a -> [ChordNote a]
-    -- Score a -> Score a
     -- modifyChord :: (ChordNote a -> ChordNote a) -> a -> a
 
 instance HasChord [a] where
@@ -124,23 +123,8 @@ getEra :: (Time, Duration, a) -> Era
 getEra (t,d,a) = (t,d)        
 
 type Era = (Time, Duration)
-
--- Fold over all consecutive events
-
--- consec (\a b -> if a == b then [a] else [a,b]) [1,1,1,2,3] = [1,2,3]
-
--- consec :: (a -> a -> [a]) -> [a] -> [a]           
-
--- consec f as = List.mapAccumL (\(prev, elems) current -> ( (Just x, []) , x)) (Nothing, []) as
-
-
--- consec f = go
---     where
---         go []       = []
---         go [a]      = [a]
---         go (a:b:cs) = f a b : go cs
---         
         
-
+        
+     
 
 
