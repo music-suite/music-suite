@@ -51,6 +51,7 @@ import Data.Foldable (Foldable(..))
 
 import Data.Pointed
 import Data.Semigroup
+import Data.Monoid.WithSemigroup
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Music.Time.Time

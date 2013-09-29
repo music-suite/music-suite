@@ -38,6 +38,7 @@ library
         musicxml2,
         lilypond,
         semigroups,
+        monoid-extras,
         nats,          
         pointed,
         semigroupoids,

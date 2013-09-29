@@ -21,7 +21,6 @@
 
 module Music.Time.Juxtapose (
         -- * Prerequisites
-        Monoid'(..),
         Transformable(..),
 
         -- ** Juxtaposing values
@@ -47,6 +46,7 @@ module Music.Time.Juxtapose (
 
 
 import Data.Semigroup
+import Data.Monoid.WithSemigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
@@ -55,12 +55,6 @@ import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Onset
-
--- |
--- This pseudo-class can be used in place of 'Monoid' whenever an additional 'Semigroup'
--- constraint is needed.
---
-type Monoid' a         =  (Monoid a, Semigroup a)
 
 -- |
 -- This pseudo-class gathers the restrictions needed to implement position a value at
