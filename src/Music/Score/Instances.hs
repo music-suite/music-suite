@@ -165,10 +165,11 @@ instance HasPart a => HasPart (Maybe a) where
     type Part (Maybe a)                             = Maybe (Part a)
     getPart Nothing                                 = Nothing
     getPart (Just a)                                = Just (getPart a)
-    modifyPart f (Nothing)                          = Nothing
-    modifyPart f (Just a)                           = Just (modifyPart (fromJust . f . Just) a) -- TODO use cofunctor
+    modifyPart f Nothing                            = Nothing
+    modifyPart f (Just a)                           = Just (modifyPart (fromMaybe (getPart a) . f . Just) a) 
+    -- TODO use cofunctor
 instance HasPitch a => HasPitch (Maybe a) where
-    type Pitch (Maybe a)                           = Pitch a
+    type Pitch (Maybe a)                             = Pitch a
     getPitches Nothing                               = []
     getPitches (Just a)                              = getPitches a
     modifyPitch f (Nothing)                          = Nothing
