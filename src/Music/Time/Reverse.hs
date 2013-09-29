@@ -24,6 +24,11 @@
 module Music.Time.Reverse (
         -- * Reversible class
         Reversible(..),
+        -- ** Utility
+        NoRev(..),
+        WithRev(..),
+        withRev,
+        fromWithRev,
   ) where
 
 import Data.Semigroup
@@ -55,5 +60,29 @@ class Reversible a where
 
 instance Reversible a => Reversible [a] where
     rev = fmap rev
+
+
+
+
+newtype NoRev a = NoRev { getNoRev :: a }
+    deriving (Eq, Ord, Enum, Show, Semigroup, Monoid)
+
+instance Reversible (NoRev a) where
+    rev = id
+
+
+newtype WithRev a = WithRev (a,a)
+    deriving (Eq, Ord, Semigroup, Monoid)
+
+
+withRev :: Reversible a => a -> WithRev a
+withRev x = WithRev (rev x, x)
+
+fromWithRev :: Reversible a => WithRev a -> a
+fromWithRev (WithRev (_,x)) = x
+
+instance Reversible a => Reversible (WithRev a) where
+    rev (WithRev (r,x)) = WithRev (x,r)
+
 
 

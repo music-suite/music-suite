@@ -99,6 +99,12 @@ data Level a
     | Change a a
     deriving (Eq, Show)
 
+instance Fractional a => IsDynamics (Level a) where
+    fromDynamics (DynamicsL (Just a, Nothing)) = Level (toFrac a)
+    fromDynamics (DynamicsL (Just a, Just b)) = Change (toFrac a) (toFrac b)
+    fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " ++ show x
+
+
 -- |
 -- Apply a dynamic level over the score.
 --
