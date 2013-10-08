@@ -1,5 +1,5 @@
 
-TRANSFORM=transf
+TRANSFORM=transf +RTS -N4
 TRANSFORM_PDF=transf --format=pdf
 SRC=src
 OUT=build

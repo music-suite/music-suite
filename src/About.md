@@ -6,7 +6,7 @@
 > *Please note:* The API and docs are not particularly stable at the moment. An official release note will appear in due time.
 -->
 
-The Music Suite is a language for representing, creating, transforming or analyzing music, based on the [Haskell][Haskell]. 
+The Music Suite is a language for representing, creating, transforming or analyzing music, based on [Haskell][Haskell]. 
 
 The Music Suite is designed to:
 
