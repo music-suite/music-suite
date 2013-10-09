@@ -1,6 +1,16 @@
 
 TRANSFORM=transf +RTS -N4
 TRANSFORM_PDF=transf --format=pdf
+RESOLVE_LINKS=hslinks
+CABAL_FILES=\
+	../../music-score/music-score.cabal \
+	../../music-pitch/music-pitch.cabal \
+	../../music-dynamics/music-dynamics.cabal \
+	../../music-articulation/music-articulation.cabal \
+	../../music-parts/music-parts.cabal \
+	../../music-pitch-literal/music-pitch-literal.cabal \
+	../../music-dynamics-literal/music-dynamics-literal.cabal
+
 SRC=src
 OUT=build
 PAGE=index.html
@@ -35,9 +45,9 @@ transform:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		$(TRANSFORM) <../$(SRC)/About.md 	>About.md  && \
-		$(TRANSFORM) <../$(SRC)/Usage.md 	>Usage.md   && \
-		$(TRANSFORM) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/About.md 	>About.md  && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Usage.md 	>Usage.md   && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
