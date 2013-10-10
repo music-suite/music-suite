@@ -80,7 +80,7 @@ instance HasBasis (Note a) where type Basis (Note a) = Int -- FIXME
 instance Monad Note where
     return x = Note (mempty, x)
     x >>= f = join' . fmap f $ x where
-        join' (Note (s1,(Note (s2,x)))) = Note (s1 `mappend` s2,x)
+        join' (Note (s1,(Note (s2,x)))) = Note (s1 <> s2,x)
 
 -- TODO Note is also a monad:
 -- join (Note (t1,d1) (Note (t2,d2) x)) = Note (t1<>t2, d1<>d2) x
