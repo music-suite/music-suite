@@ -19,7 +19,10 @@ module NewTyp (
     Era,
     Span,
     Note,
+    play,
     Score,
+    perform,
+    perform_,
     
     -- ** TODO
     Delayable(..),
@@ -45,23 +48,16 @@ import Data.Semigroup
 
 -- import Diagrams.Core.Transform
 
-
-
--- newtype Sum' a = Sum' { getSum' :: a }
---   deriving (Eq, Ord, Read, Show, Bounded)
--- instance Functor Sum' where
---   fmap f (Sum' a) = Sum' (f a)
--- instance Applicative Sum' where
--- instance AdditiveGroup a => Semigroup (Sum' a) where
--- instance AdditiveGroup a => Monoid (Sum' a) where
-
-
-
 class S_ a b where
     s_ :: a -> b
+instance S_ Duration Double where s_ = id
+instance S_ Time     Double where s_ = unPoint
+instance S_ Era (Time, Time) where s_ (Era ((Min t1),(Max t2))) = (t1, t2)
+
 
 -- | Vector in time space.
 type Duration = Double
+
 -- | Point in the time space.
 type Time = Point Duration
 instance AdditiveGroup Time where zeroV = P 0 ; negateV = fmap negate ; (^+^) = inPoint2 (+)
@@ -76,9 +72,7 @@ newtype Span = Span { getSpan :: ({-Sum' Time-}Sum Duration, Product Duration) }
 span t d = Span (Sum t, Product d)
 -- TODO add special onset monoid that uses origin and (.+^)
 
-instance S_ Duration Double where s_ = id
-instance S_ Time     Double where s_ = unPoint
-instance S_ Era (Time, Time) where s_ (Era ((Min t1),(Max t2))) = (t1, t2)
+
 
 
 
@@ -90,23 +84,37 @@ instance Monad Note where
     x >>= f = join' . fmap f $ x where
         join' (Note (s1,(Note (s2,x)))) = Note (s1 <> s2,x)
 
-performNote :: Note t -> (Point Duration, Duration, t)
-performNote (Note (Span (t,d), x)) = (P $ getSum t, getProduct d, x)
+play :: Note t -> (Point Duration, Duration, t)
+play (Note (Span (t,d), x)) = (P $ getSum t, getProduct d, x)
 -}
 
 -- | Value with associated time span.
-type Note a = Writer Span a
+--   
+--   * 'Functor': transforms values.
+--   
+--   * 'Monad': 'return' uses span 'mempty' and '>>=' combines spans pointwise with 'mappend'.
+--   
+newtype Note a = Note { getNote :: Writer Span a }
+    deriving (Functor, Foldable, Monad, Traversable)
 instance Show a => Show (Note a) where
-    show = show . snd . runWriter
+    show = show . snd . runWriter . getNote
 
-performNote :: Note t -> (Time, Duration, t)
-performNote n = let (x, Span (t,d)) = runWriter n
+play :: Note a -> (Time, Duration, a)
+play n = let (x, Span (t,d)) = runWriter $ getNote n
     in (P $ getSum t, getProduct d, x)
     
-    
 -- | Possibly empty sequence of values with possibly overlapping time spans.
+--   
+--   * 'Semigroup': composes in parallel.
+--   
+--   * 'Monoid': empty score has no notes.
+--   
+--   * 'Functor': transforms values.
+--   
+--   * 'Monad': defined in terms of the 'Note' instance.
+--   
 newtype Score a = Score { getScore :: [Note a] } -- Event
-    deriving (Show, Semigroup, Monoid, Functor)
+    deriving (Show, Semigroup, Monoid, Functor, Foldable, Traversable)
 
 instance MonadPlus Score where
     mzero = mempty
@@ -121,8 +129,14 @@ instance Monad Score where
 -- TODO what sort of Monad is this?
 
 perform :: Score a -> [(Time, Duration, a)]
-perform (Score xs) = fmap performNote xs
+perform (Score xs) = fmap play xs
+
+perform_ :: Show a => Score a -> IO ()
 perform_ = mapM_ (putStrLn.show) . perform
+
+
+
+
 
 
 {-
@@ -237,7 +251,7 @@ inSpan = getSpan ~> Span
 inScore = getScore ~> Score
 
 inNote :: ((Span, a) -> (Span, b)) -> Note a -> Note b
-inNote f = mapWriter (swap . f . swap)
+inNote f = Note . mapWriter (swap . f . swap) . getNote
 
 
 first f = swap . fmap f . swap
