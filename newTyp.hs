@@ -58,15 +58,22 @@ instance S_ Era (Time, Time) where s_ (Era ((Min t1),(Max t2))) = (t1, t2)
 -- | Vector in time space.
 type Duration = Double
 
--- | Point in the time space.
 type Time = Point Duration
 instance AdditiveGroup Time where zeroV = P 0 ; negateV = fmap negate ; (^+^) = inPoint2 (+)
 
 -- | Two points in time space.
+--   
+--   * 'Semigroup': smallest era which contains both.
+--   
 newtype Era = Era (Min Time, Max Time)
     deriving (Eq, Ord, Semigroup)
 
 -- | Point and vector in time space.
+--   
+--   * 'Semigroup': offsets in time and scales in duration.
+--   
+--   * 'Monoid': 'origin' and unit vector.
+--   
 newtype Span = Span { getSpan :: ({-Sum' Time-}Sum Duration, Product Duration) }
     deriving (Eq, Ord, Show, Semigroup, Monoid)
 span t d = Span (Sum t, Product d)
@@ -94,13 +101,13 @@ play (Note (Span (t,d), x)) = (P $ getSum t, getProduct d, x)
 --   
 --   * 'Monad': 'return' uses span 'mempty' and '>>=' combines spans pointwise with 'mappend'.
 --   
-newtype Note a = Note { getNote :: Writer Span a }
+newtype Note m a = Note { getNote :: Writer (Span, m) a }
     deriving (Functor, Foldable, Monad, Traversable)
-instance Show a => Show (Note a) where
-    show = show . snd . runWriter . getNote
+instance Show a => Show (Note m a) where
+    show = show . play -- TODO
 
-play :: Note a -> (Time, Duration, a)
-play n = let (x, Span (t,d)) = runWriter $ getNote n
+play :: Note m a -> (Time, Duration, a)
+play n = let (x, (Span (t,d), _)) = runWriter $ getNote n
     in (P $ getSum t, getProduct d, x)
     
 -- | Possibly empty sequence of values with possibly overlapping time spans.
@@ -113,7 +120,7 @@ play n = let (x, Span (t,d)) = runWriter $ getNote n
 --   
 --   * 'Monad': defined in terms of the 'Note' instance.
 --   
-newtype Score a = Score { getScore :: [Note a] } -- Event
+newtype Score a = Score { getScore :: [Note () a] } -- Event
     deriving (Show, Semigroup, Monoid, Functor, Foldable, Traversable)
 
 instance MonadPlus Score where
@@ -164,7 +171,9 @@ instance Delayable a => Delayable (Sum a) where
     delay t (Sum x) = Sum (delay t x)
 instance Delayable Span where
     delay t = inSpan $ first (delay t)
-instance Delayable (Note a) where
+instance Delayable (Span, a) where
+    delay t = first (delay t)
+instance Delayable (Note m a) where
     delay t = inNote $ first (delay t)
 instance Delayable (Score a) where
     delay t = inScore $ fmap (delay t)
@@ -250,7 +259,7 @@ inPoint2 = unPoint ~> inPoint
 inSpan = getSpan ~> Span
 inScore = getScore ~> Score
 
-inNote :: ((Span, a) -> (Span, b)) -> Note a -> Note b
+inNote :: (((Span, m), a) -> ((Span, m), b)) -> Note m a -> Note m b
 inNote f = Note . mapWriter (swap . f . swap) . getNote
 
 
