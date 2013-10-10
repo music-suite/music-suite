@@ -1,6 +1,9 @@
-{-# LANGUAGE 
+{-# LANGUAGE     
+    NoMonomorphismRestriction,
     TypeFamilies,
     TypeOperators,
+    ConstraintKinds,
+    FlexibleContexts,
     FlexibleInstances, -- For Newtypes
     MultiParamTypeClasses,
     DeriveFunctor,
@@ -10,7 +13,7 @@
     StandaloneDeriving,
     GeneralizedNewtypeDeriving 
     #-}
-import Prelude hiding (sequence)
+import Prelude hiding (sequence, span)
 
 import Control.Monad hiding (sequence)
 import Control.Newtype
@@ -26,7 +29,7 @@ import Data.AffineSpace.Point
 import Data.LinearMap
 import Data.Semigroup
 
-import Diagrams.Core.Transform
+-- import Diagrams.Core.Transform
 
 
 
@@ -54,13 +57,15 @@ class S_ a b where
 --     D a <.> D b = D (a <.> b)
 type Duration = Double
 type Time = Point Duration
-instance AdditiveGroup Time where zeroV = P 0 ; negateV = fmap negate ; {-(^+^) = liftA2 (+)-}
+instance AdditiveGroup Time where zeroV = P 0 ; negateV = fmap negate ; (^+^) = inPoint2 (+)
 
 newtype Era = Era (Min Time, Max Time)
     deriving (Eq, Ord, Semigroup) -- FIXME Monoid requires Bounded
 
+-- TODO add special onset monoid that uses origin and (.+^)
 newtype Span = Span ({-Sum' Time-}Sum Duration, Product Duration)
     deriving (Eq, Ord, Show, Semigroup, Monoid)
+span t d = Span (Sum t, Product d)
 
 instance S_ Duration Double where s_ = id
 instance S_ Time     Double where s_ = unPoint
@@ -72,18 +77,16 @@ instance S_ Era (Time, Time) where s_ (Era ((Min t1),(Max t2))) = (t1, t2)
 deriving instance Foldable ((,) Span)
 deriving instance Traversable ((,) Span)
 
-newtype Note a  = Note (Span, a)
+newtype Note a = Note (Span, a)
     deriving (Show, Functor, Foldable, Traversable, Monoid)
-instance AdditiveGroup (Note a) where -- FIXME
-instance VectorSpace (Note a) where -- FIXME
-instance HasBasis (Note a) where type Basis (Note a) = Int -- FIXME
 instance Monad Note where
     return x = Note (mempty, x)
     x >>= f = join' . fmap f $ x where
         join' (Note (s1,(Note (s2,x)))) = Note (s1 <> s2,x)
 
--- TODO Note is also a monad:
--- join (Note (t1,d1) (Note (t2,d2) x)) = Note (t1<>t2, d1<>d2) x
+performNote :: Note t -> (Point Duration, Duration, t)
+performNote (Note (Span (t,d), x)) = (P $ getSum t, getProduct d, x)
+-- TODO is this not just the writer monad?
 
     
 newtype Score a = Score [Note a] -- Event
@@ -101,14 +104,21 @@ instance Monad Score where
             join' :: Score (Score a) -> Score a
             join' = Score . concatMap (fmap join . sequence . fmap unscore) . unscore
 
+-- TODO what sort of Monad is this?
 
+perform :: Score a -> [(Time, Duration, a)]
+perform (Score xs) = fmap performNote xs
+perform_ = mapM_ (putStrLn.show) . perform
 
 -- TODO overloaded time transformations
 
-s1 :: Score (Score Pitch)
-s1 = Score [Note (Span (Sum {getSum = 10.0},Product {getProduct = 3.0}),
-    Score [Note (Span (Sum {getSum = 2.0},Product {getProduct = 2.0}),P 0.0)] )]
 
+
+
+-- s1 :: Score (Score Pitch)
+-- s1 = Score [Note (Span (Sum {getSum = 10.0},Product {getProduct = 3.0}),
+--     Score [Note (Span (Sum {getSum = 2.0},Product {getProduct = 2.0}),P 0.0)] )]
+-- 
 
 
 
@@ -154,18 +164,31 @@ m2 : _M2 : m3 : _M3 : _P4 : a4 : _P5 : m6 : _M6 : m7 : _M7 : _ = [ (interval x) 
 c, d, e, f, g, a, b :: Pitch
 c : cs : d : ds : e : f : fs : g : gs : a : as : b : _ = [ P (interval x) | x <- [0..] ]
 
+data Transformation v = Transformation (v :-* v)       
+app (Transformation x) = lapply x
+type family V a :: *
 
-type Stretch   = Duration :-* Duration
-type Delay     = Time :-* Time
-type Transpose = Pitch :-* Pitch
-type Transf    = forall a . Note a :-* Note a
+class Transformable t where
+    transform :: Transformation (V t) -> t -> t
 
-stretched :: Duration -> Transf
-stretched = undefined
+type HasLinearMap a = (HasTrie (Basis a), HasBasis a)
 
-stretch :: Duration -> Note a -> Note a
-stretch d = lapply (stretched d)
+-- stretched :: (HasLinearMap (V t), Transformable t) => Scalar v -> Transformation v
+stretched d = Transformation (linear (^* d))
+
+stretch :: (HasLinearMap (V t), Transformable t) => Scalar (V t) -> t -> t
+stretch d = transform (stretched d)
 
 
 
 -- lerp, alerp
+
+
+
+
+
+
+(~>) :: (a' -> a) -> (b -> b') -> ((a -> b) -> (a' -> b'))
+(i ~> o) f = o . f . i
+inPoint = unPoint ~> P
+inPoint2 = unPoint ~> inPoint
