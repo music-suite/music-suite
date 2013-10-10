@@ -13,13 +13,27 @@
     StandaloneDeriving,
     GeneralizedNewtypeDeriving 
     #-}
-import Prelude hiding (sequence, span)
+module NewTyp (
+    Duration,
+    Time,
+    Era,
+    Span,
+    Note,
+    Score,
+    
+    -- ** TODO
+    Delayable(..),
+) where
 
-import Control.Monad hiding (sequence)
+import Prelude hiding (span)
+
+import Control.Monad
+import Control.Monad.Writer hiding ((<>))
 import Control.Newtype
 import Control.Applicative
 import Data.Foldable (Foldable)
-import Data.Traversable
+import Data.Traversable (Traversable)
+import qualified Data.Traversable as Traversable
 import Data.MemoTrie
 import Data.Pointed
 import Data.Basis
@@ -46,26 +60,21 @@ import Data.Semigroup
 class S_ a b where
     s_ :: a -> b
 
-
--- newtype Duration = D Double deriving (Eq, Ord, Num, Show, Fractional)
--- instance AdditiveGroup Duration where zeroV = 0 ; negateV = negate ; (^+^) = (+)
--- instance VectorSpace Duration where type Scalar Duration = Duration ; (*^) = (*)
--- instance AffineSpace Duration where type Diff Duration = Duration ; (.-.) = (-) ; (.+^) = (+)
--- instance HasTrie Duration
--- instance HasBasis Duration where type Basis Duration = Duration
--- instance InnerSpace Duration where
---     D a <.> D b = D (a <.> b)
+-- | Vector in time space.
 type Duration = Double
+-- | Point in the time space.
 type Time = Point Duration
 instance AdditiveGroup Time where zeroV = P 0 ; negateV = fmap negate ; (^+^) = inPoint2 (+)
 
+-- | Two points in time space.
 newtype Era = Era (Min Time, Max Time)
-    deriving (Eq, Ord, Semigroup) -- FIXME Monoid requires Bounded
+    deriving (Eq, Ord, Semigroup)
 
--- TODO add special onset monoid that uses origin and (.+^)
-newtype Span = Span ({-Sum' Time-}Sum Duration, Product Duration)
+-- | Point and vector in time space.
+newtype Span = Span { getSpan :: ({-Sum' Time-}Sum Duration, Product Duration) }
     deriving (Eq, Ord, Show, Semigroup, Monoid)
 span t d = Span (Sum t, Product d)
+-- TODO add special onset monoid that uses origin and (.+^)
 
 instance S_ Duration Double where s_ = id
 instance S_ Time     Double where s_ = unPoint
@@ -73,10 +82,7 @@ instance S_ Era (Time, Time) where s_ (Era ((Min t1),(Max t2))) = (t1, t2)
 
 
 
--- TODO why?
-deriving instance Foldable ((,) Span)
-deriving instance Traversable ((,) Span)
-
+{-
 newtype Note a = Note (Span, a)
     deriving (Show, Functor, Foldable, Traversable, Monoid)
 instance Monad Note where
@@ -86,23 +92,31 @@ instance Monad Note where
 
 performNote :: Note t -> (Point Duration, Duration, t)
 performNote (Note (Span (t,d), x)) = (P $ getSum t, getProduct d, x)
--- TODO is this not just the writer monad?
+-}
 
+-- | Value with associated time span.
+type Note a = Writer Span a
+instance Show a => Show (Note a) where
+    show = show . snd . runWriter
+
+performNote :: Note t -> (Time, Duration, t)
+performNote n = let (x, Span (t,d)) = runWriter n
+    in (P $ getSum t, getProduct d, x)
     
-newtype Score a = Score [Note a] -- Event
+    
+-- | Possibly empty sequence of values with possibly overlapping time spans.
+newtype Score a = Score { getScore :: [Note a] } -- Event
     deriving (Show, Semigroup, Monoid, Functor)
-unscore (Score y) = y
 
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
-
 instance Monad Score where
     return = Score . return . return
     x >>= f = (join' . fmap f) x
         where
             join' :: Score (Score a) -> Score a
-            join' = Score . concatMap (fmap join . sequence . fmap unscore) . unscore
+            join' = inScore $ concatMap (fmap join . Traversable.sequence . fmap getScore)
 
 -- TODO what sort of Monad is this?
 
@@ -110,9 +124,36 @@ perform :: Score a -> [(Time, Duration, a)]
 perform (Score xs) = fmap performNote xs
 perform_ = mapM_ (putStrLn.show) . perform
 
--- TODO overloaded time transformations
 
+{-
+TODO overloaded time transformations
+Note: This is the general strategy.
+What we really want is to join all of
 
+    Stretchable (Score a)	 
+    Delayable (Score a)	 
+    HasOffset (Score a)	 
+    HasOnset (Score a)	 
+    HasDuration (Score a)	 
+    Reversible a => Reversible (Score a)	 
+
+into a single class or type+class pair.
+-}
+
+class Delayable a where
+    delay :: Duration -> a -> a
+instance Delayable Time where
+    delay = flip (.+^)
+instance Delayable Duration where
+    delay = (^+^)
+instance Delayable a => Delayable (Sum a) where
+    delay t (Sum x) = Sum (delay t x)
+instance Delayable Span where
+    delay t = inSpan $ first (delay t)
+instance Delayable (Note a) where
+    delay t = inNote $ first (delay t)
+instance Delayable (Score a) where
+    delay t = inScore $ fmap (delay t)
 
 
 -- s1 :: Score (Score Pitch)
@@ -192,3 +233,12 @@ stretch d = transform (stretched d)
 (i ~> o) f = o . f . i
 inPoint = unPoint ~> P
 inPoint2 = unPoint ~> inPoint
+inSpan = getSpan ~> Span
+inScore = getScore ~> Score
+
+inNote :: ((Span, a) -> (Span, b)) -> Note a -> Note b
+inNote f = mapWriter (swap . f . swap)
+
+
+first f = swap . fmap f . swap
+swap (x,y) = (y,x)
