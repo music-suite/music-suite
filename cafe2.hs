@@ -193,17 +193,21 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- -- untrip (a,b,c) = ((a,b),c)
 -- -- trip ((a,b),c) = (a,b,c)
 -- 
--- unpack3 ((c,b),a)                               = (c,b,a)
--- unpack4 (first unpack3 -> ((d,c,b),a))          = (d,c,b,a)
--- unpack5 (first unpack4 -> ((e,d,c,b),a))        = (e,d,c,b,a)
--- unpack6 (first unpack5 -> ((f,e,d,c,b),a))      = (f,e,d,c,b,a)
--- 
--- pack3 (c,b,a) = ()
--- 
--- 
+
+unpack3 ((c,b),a)                           = (c,b,a)
+unpack4 ((unpack3 -> (d,c,b),a))            = (d,c,b,a)
+unpack5 ((unpack4 -> (e,d,c,b),a))          = (e,d,c,b,a)
+unpack6 ((unpack5 -> (f,e,d,c,b),a))        = (f,e,d,c,b,a)
+
+pack3 (c,b,a)                               = ((c,b),a)
+pack4 (d,c,b,a)                             = (pack3 (d,c,b),a)
+pack5 (e,d,c,b,a)                           = (pack4 (e,d,c,b),a)
+pack6 (f,e,d,c,b,a)                         = (pack5 (f,e,d,c,b),a)
+
+
 -- -- first f = swap . fmap f . swap
 -- 
--- actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
+-- actT :: T -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
 -- actT = act
 
 
@@ -224,8 +228,8 @@ instance HasT DT where
 -- Use identity if no such transformation
 get' = option mempty id . get
 
-actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
-actT u ((((),a),p),s) = ((((),a2),p2),s2)  
+actT :: T -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
+actT u (a,p,s) = (a,p,s)  
     where
         a2 = act (get' u :: DT) a
         p2 = act (get' u :: PT) p   
@@ -315,11 +319,11 @@ type Score = WList T
 -- TODO use value
 -- TODO move act formalism up to WList in generalized form
 runScore' = fmap (\(x,t) -> 
-    (actT t ((((),1),60),(0,1)), x)
+    (actT t (1,60,(0,1)), x)
     ) . runWList {- . getScore -}
 
 runScore :: Score a -> [(Dur, Time, Pitch, Amplitude, a)]
-runScore = fmap (\(((((),n), p), (t, d)), x) -> (d,t,p,n,x)) . runScore'
+runScore = fmap (\((n,p,(t,d)), x) -> (d,t,p,n,x)) . runScore'
 
 
 foo :: Score String    
