@@ -229,7 +229,7 @@ instance HasT DT where
 get' = option mempty id . get
 
 actT :: T -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
-actT u (a,p,s) = (a,p,s)  
+actT u (a,p,s) = (a2,p2,s2)  
     where
         a2 = act (get' u :: DT) a
         p2 = act (get' u :: PT) p   
