@@ -76,6 +76,8 @@ instance Monoid m => Monad ((,) m) where
 --
 newtype WList m a = WList { getWList :: [Write m a] }
     deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
+instance (IsString a, Monoid m) => IsString (WList m a) where
+    fromString = return . fromString
 instance Monoid m => Applicative (WList m) where
     pure = return
     (<*>) = ap
@@ -165,25 +167,13 @@ type Time = Double
 type Dur  = Double
 type Span = (Time, Dur)
 
--- type TT = [String]
--- 
--- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
--- applyTT m x = (m,x)
--- 
--- delaying :: Time -> TT
--- delaying x = return $ "delay " ++ show x
--- 
--- stretching :: Dur -> TT
--- stretching x = return $ "stretch " ++ show x
-
 newtype TT = TT (D.Transformation Span)
     deriving (Monoid, Semigroup)
 
-applyTT :: TT -> Span -> Span
-applyTT (TT t) = unPoint . D.papply t . P
+-- TODO generalize all of these from TT to arbitrary T
 
 instance Action TT Span where
-    act = applyTT
+    act (TT t) = unPoint . D.papply t . P
     
 delaying :: Time -> TT
 delaying x = TT $ D.translation (x,0)
@@ -191,9 +181,34 @@ delaying x = TT $ D.translation (x,0)
 stretching :: Dur -> TT
 stretching = TT . D.scaling
 
--- addTT :: TT -> WList TT a -> WList TT a
--- addTT = tells
--- 
+
+----------------------------------------------------------------------
+
+type Pitch = Double
+
+newtype PT = PT (D.Transformation Pitch)
+    deriving (Monoid, Semigroup)
+
+instance Action PT Pitch where
+    act (PT t) = unPoint . D.papply t . P
+    
+transposing :: Pitch -> PT
+transposing x = PT $ D.translation x
+
+----------------------------------------------------------------------
+
+type Amplitude = Double
+
+newtype DT = DT (D.Transformation Amplitude)
+    deriving (Monoid, Semigroup)
+
+instance Action DT Amplitude where
+    act (DT t) = unPoint . D.papply t . P
+    
+amplifying :: Amplitude -> DT
+amplifying = DT . D.scaling
+
+
 -- ----------------------------------------------------------------------
 -- 
 -- -- Compose time transformations with another Monoid
@@ -264,30 +279,31 @@ stretching = TT . D.scaling
 -- 
 -- ----------------------------------------------------------------------
 
-
-delay :: Time -> WList TT a -> WList TT a
+-- Accumulate transformations
 delay x = tells (delaying x)
-
-stretch :: Dur -> WList TT a -> WList TT a
 stretch x = tells (stretching x)
+transpose x = tells (transposing x)
+amplify x = tells (amplifying x)
 
 
-type Score = WList TT
--- Monoid, Functor, Applicative, Monad, Foldable, Traversable
-instance (IsString a, Monoid m) => IsString (WList m a) where
-    fromString = return . fromString
+type Score = WList DT
+--  Monoid, Functor, Applicative, Monad, Foldable, Traversable
 
-
-runScore' :: Action m b => b -> WList m a -> [(b, a)]
-runScore' x = fmap (swap . fmap ((flip act) x)) . runWList
-
-runScore :: Score a -> [(Span, a)]
-runScore = runScore' ((0,1)::Span)
+-- foo :: Score String
+-- foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 
 foo :: Score String
-foo = stretch 2 $
-    "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
---                                               
+foo = amplify 2 "c"
+
+
+
+-- runScore' :: Action m b => b -> WList m a -> [(b, a)]
+-- runScore' x = fmap (swap . fmap (flip act x)) . runWList
+-- 
+-- runScore :: Score a -> [(Span, a)]
+-- runScore = runScore' ((0,1)::Span)
+
+
 
 
 -- ((0.0,2.0),"c")
