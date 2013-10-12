@@ -17,30 +17,51 @@
     #-}
 
 module Cafe2 (
-    Write,
-    runWrite,
-    WList,
-    runWList,
+    -- * Internal
+    Trans,
+    runTrans,
+    TList,
+    tells,
+    runTList,
+    renderTList,
     
-    TT(..),
-    PT(..),
-    DT(..),
-    T,
-    HasT(..),
+    -- * Annotations
+    Annotated(..),
+    runAnnotated,
+    annotate,
+
+    -- * Transformations
+    Transformation,
+    HasTransformation(..),
+    transform,
+    
+    -- ** Specific transformations
+    -- *** Time
     Time,
     Dur,
-    Pitch,
-    Amplitude,
-    Score,   
+    Span,
+    TT(..),
     delaying,
     stretching,
-    transposing,
-    amplifying,
     delay,
     stretch,
+
+    -- *** Pitch
+    Pitch,
+    PT(..),
+    transposing,
     transpose,
+
+    -- *** Dynamics
+    Amplitude,
+    AT(..),
+    amplifying,
     amplify,
+
+    -- * Score
+    Score,   
     runScore,
+    DScore,
 ) where
 
 import Data.Monoid.Action
@@ -72,7 +93,7 @@ import qualified Diagrams.Core.Transform as D
 
 -- Simplified version of the standard writer monad.
 --
-newtype Write m a = Write (Writer m a)
+newtype Trans m a = Trans (Writer m a)
     deriving (Monad, MonadWriter m, Functor, Foldable, Traversable)
 
 {-
@@ -99,33 +120,33 @@ instance Monoid m => Monad ((,) m) where
         in (m1 `mappend` m2,x2)
 
 -- |
--- List of values in the Write monad.
+-- List of values in the 'Trans' monad.
 --
-newtype WList m a = WList { getWList :: [Write m a] }
+newtype TList m a = TList { getTList :: [Trans m a] }
     deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
-instance (IsString a, Monoid m) => IsString (WList m a) where
+instance (IsString a, Monoid m) => IsString (TList m a) where
     fromString = return . fromString
-instance Monoid m => Applicative (WList m) where
+instance Monoid m => Applicative (TList m) where
     pure = return
     (<*>) = ap
-instance Monoid m => Monad (WList m) where
-    return = WList . return . return
-    WList xs >>= f = WList $ xs >>= joinTrav (getWList . f)
-instance Monoid m => MonadPlus (WList m) where
+instance Monoid m => Monad (TList m) where
+    return = TList . return . return
+    TList xs >>= f = TList $ xs >>= joinTrav (getTList . f)
+instance Monoid m => MonadPlus (TList m) where
     mzero = mempty
     mplus = (<>)
 
 -- Same thing with orinary pairs:
 
-newtype WList' m a = WList' { getWList' :: [(m, a)] }
+newtype TList' m a = TList' { getTList' :: [(m, a)] }
     deriving (Show, Semigroup, Monoid, Functor, Foldable, Traversable)
-instance Monoid m => Applicative (WList' m) where
+instance Monoid m => Applicative (TList' m) where
     pure = return
     (<*>) = ap
-instance Monoid m => Monad (WList' m) where
-    return = WList' . return . return
-    WList' xs >>= f = WList' $ xs >>= joinTrav (getWList' . f)
-instance Monoid m => MonadPlus (WList' m) where
+instance Monoid m => Monad (TList' m) where
+    return = TList' . return . return
+    TList' xs >>= f = TList' $ xs >>= joinTrav (getTList' . f)
+instance Monoid m => MonadPlus (TList' m) where
     mzero = mempty
     mplus = (<>)
 
@@ -157,27 +178,39 @@ travBind f = T.traverse (bind f)
 
 -}
 
-runWrite :: Write w a -> (a, w)
-runWrite (Write x) = runWriter x
+runTrans :: Trans m a -> (a, m)
+runTrans (Trans x) = runWriter x
 
-runWList :: WList w a -> [(a, w)]
-runWList (WList xs) = fmap runWrite xs
+renderTList :: TList m a -> [(a, m)]
+renderTList (TList xs) = fmap runTrans xs
 
--- tells :: Monoid m => m -> WList m a -> WList m a
-tells a (WList xs) = WList $ fmap (tell a >>) xs
+runTList :: Action m a => TList m a -> [a]
+runTList (TList xs) = fmap (uncurry $ flip act) $ fmap runTrans xs
+
+tells :: Monoid m => m -> TList m a -> TList m a
+tells a (TList xs) = TList $ fmap (tell a >>) xs
 
 
 
 
 ----------------------------------------------------------------------
 
-type Annotated a = WList [String] a
+newtype Annotated a = Annotated (TList [String] a)
+    deriving (Functor, Applicative, Monad, MonadPlus, Semigroup, Monoid)
+instance Num a => Num (Annotated a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    abs = fmap abs
+    signum = fmap signum
+    negate = fmap negate
+    fromInteger = pure . fromInteger
+
 runAnnotated :: Annotated a -> [(a, [String])]
-runAnnotated = runWList
+runAnnotated (Annotated a) = renderTList a
 
 -- annotate all elements in bar
 annotate :: String -> Annotated a -> Annotated a
-annotate x = tells [x]
+annotate x (Annotated a) = Annotated $ tells [x] $ a
 
 -- a bar with no annotations
 ann1 :: Annotated Int
@@ -199,7 +232,7 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 
 -- ----------------------------------------------------------------------
 -- 
--- type T = ((((),DT),PT),TT)
+-- type T = ((((),AT),PT),TT)
 -- idT = (mempty::T)
 -- 
 -- -- TODO speficy
@@ -214,13 +247,13 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- monL = swap . return
 -- 
 -- class HasT a where
---     liftT :: a -> T
+--     makeTransformation :: a -> T
 -- instance HasT TT where
---     liftT = monR
+--     makeTransformation = monR
 -- instance HasT PT where
---     liftT = monL . monR
--- instance HasT DT where
---     liftT = monL . monL . monR
+--     makeTransformation = monL . monR
+-- instance HasT AT where
+--     makeTransformation = monL . monL . monR
 -- 
 -- 
 -- -- untrip (a,b,c) = ((a,b),c)
@@ -258,23 +291,23 @@ pack6 (f,e,d,c,b,a)                         = (pack5 (f,e,d,c,b),a)
 
 -- Minimal API
 
-type T = TT ::: PT ::: DT ::: () -- Monoid
-class HasT a where
-    liftT :: a -> T
-instance HasT TT where
-    liftT = inj
-instance HasT PT where
-    liftT = inj
-instance HasT DT where
-    liftT = inj
+type Transformation = TT ::: PT ::: AT ::: () -- Monoid
+class HasTransformation a where
+    makeTransformation :: a -> Transformation
+instance HasTransformation TT where
+    makeTransformation = inj
+instance HasTransformation PT where
+    makeTransformation = inj
+instance HasTransformation AT where
+    makeTransformation = inj
 
 -- Use identity if no such transformation
 get' = option mempty id . get
 
-actT :: T -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
-actT u (a,p,s) = (a2,p2,s2)  
+transform :: Transformation -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
+transform u (a,p,s) = (a2,p2,s2)  
     where
-        a2 = act (get' u :: DT) a
+        a2 = act (get' u :: AT) a
         p2 = act (get' u :: PT) p   
         s2 = act (get' u :: TT) s
 
@@ -292,11 +325,11 @@ newtype TT = TT (D.Transformation Span)
 instance Action TT Span where
     act (TT t) = unPoint . D.papply t . P
     
-delaying :: Time -> T
-delaying x = liftT $ TT $ D.translation (x,0)
+delaying :: Time -> Transformation
+delaying x = makeTransformation $ TT $ D.translation (x,0)
 
-stretching :: Dur -> T
-stretching = liftT . TT . D.scaling
+stretching :: Dur -> Transformation
+stretching = makeTransformation . TT . D.scaling
 
 
 ----------------------------------------------------------------------
@@ -309,44 +342,44 @@ newtype PT = PT (D.Transformation Pitch)
 instance Action PT Pitch where
     act (PT t) = unPoint . D.papply t . P
     
-transposing :: Pitch -> T
-transposing x = liftT $ PT $ D.translation x
+transposing :: Pitch -> Transformation
+transposing x = makeTransformation $ PT $ D.translation x
 
 ----------------------------------------------------------------------
 
 type Amplitude = Double
 
-newtype DT = DT (D.Transformation Amplitude)
+newtype AT = AT (D.Transformation Amplitude)
     deriving (Monoid, Semigroup)
 
-instance Action DT Amplitude where
-    act (DT t) = unPoint . D.papply t . P
+instance Action AT Amplitude where
+    act (AT t) = unPoint . D.papply t . P
     
-amplifying :: Amplitude -> T
-amplifying = liftT . DT . D.scaling
+amplifying :: Amplitude -> Transformation
+amplifying = makeTransformation . AT . D.scaling
 
 ----------------------------------------------------------------------
 
 
 -- Accumulate transformations
-delay x = tells (delaying x)
-stretch x = tells (stretching x)
+delay x     = tells (delaying x)
+stretch x   = tells (stretching x)
 transpose x = tells (transposing x)
-amplify x = tells (amplifying x)
+amplify x   = tells (amplifying x)
 
 
--- newtype Score a = Score { getScore :: WList T a }
+-- newtype Score a = Score { getScore :: TList T a }
     -- deriving (Monoid, Functor, Applicative, Monad, Foldable, Traversable)
 -- instance IsString a => IsString (Score a) where
 --     fromString = Score . fromString
 
-type Score = WList T
+type Score = TList Transformation
 
--- TODO move act formalism up to WList in generalized form
+-- TODO move act formalism up to TList in generalized form
 -- TODO generalize transformations
 runScore' = fmap (\(x,t) -> 
-    (actT t (1,60,(0,1)), x)
-    ) . runWList {- . getScore -}
+    (transform t (1,60,(0,1)), x)
+    ) . renderTList {- . getScore -}
 
 runScore :: Score a -> [(Dur, Time, Pitch, Amplitude, a)]
 runScore = fmap (\((n,p,(t,d)), x) -> (d,t,p,n,x)) . runScore'
@@ -360,7 +393,7 @@ foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 
 
 
-data DScore m a = Node a | Nest (WList m (DScore m a)) 
+data DScore m a = Node a | Nest (TList m (DScore m a)) 
     deriving (Functor, Foldable)
 instance Monoid m => Semigroup (DScore m a) where
     Node x <> y      = Nest (return (Node x)) <> y
