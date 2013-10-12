@@ -164,48 +164,72 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 
 
 
+-- ----------------------------------------------------------------------
+-- 
+-- type T = ((((),DT),PT),TT)
+-- idT = (mempty::T)
+-- 
+-- -- TODO speficy
+-- instance (Action t a, Action u b) => Action (t, u) (a, b) where
+--     act (t, u) (a, b) = (act t a, act u b)  
+-- 
+-- -- This is the raw writer defined above
+-- monR :: Monoid b => a -> (b, a)
+-- monR = return
+-- 
+-- monL :: Monoid b => a -> (a, b)
+-- monL = swap . return
+-- 
+-- class HasT a where
+--     liftT :: a -> T
+-- instance HasT TT where
+--     liftT = monR
+-- instance HasT PT where
+--     liftT = monL . monR
+-- instance HasT DT where
+--     liftT = monL . monL . monR
+-- 
+-- 
+-- -- untrip (a,b,c) = ((a,b),c)
+-- -- trip ((a,b),c) = (a,b,c)
+-- 
+-- unpack3 ((c,b),a)                               = (c,b,a)
+-- unpack4 (first unpack3 -> ((d,c,b),a))          = (d,c,b,a)
+-- unpack5 (first unpack4 -> ((e,d,c,b),a))        = (e,d,c,b,a)
+-- unpack6 (first unpack5 -> ((f,e,d,c,b),a))      = (f,e,d,c,b,a)
+-- 
+-- pack3 (c,b,a) = ()
+-- 
+-- 
+-- -- first f = swap . fmap f . swap
+-- 
+-- actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
+-- actT = act
+
+
 ----------------------------------------------------------------------
 
-type T = ((((),DT),PT),TT)
-idT = (mempty::T)
+-- Minimal API
 
--- TODO speficy
-instance (Action t a, Action u b) => Action (t, u) (a, b) where
-    act (t, u) (a, b) = (act t a, act u b)  
-
--- This is the raw writer defined above
-monR :: Monoid b => a -> (b, a)
-monR = return
-
-monL :: Monoid b => a -> (a, b)
-monL = swap . return
-
+type T = TT ::: PT ::: DT ::: () -- Monoid
 class HasT a where
     liftT :: a -> T
 instance HasT TT where
-    liftT = monR
+    liftT = inj
 instance HasT PT where
-    liftT = monL . monR
+    liftT = inj
 instance HasT DT where
-    liftT = monL . monL . monR
+    liftT = inj
 
-
--- untrip (a,b,c) = ((a,b),c)
--- trip ((a,b),c) = (a,b,c)
-
-unpack3 ((c,b),a)                               = (c,b,a)
-unpack4 (first unpack3 -> ((d,c,b),a))          = (d,c,b,a)
-unpack5 (first unpack4 -> ((e,d,c,b),a))        = (e,d,c,b,a)
-unpack6 (first unpack5 -> ((f,e,d,c,b),a))      = (f,e,d,c,b,a)
-
-pack3 (c,b,a) = ()
-
-
--- first f = swap . fmap f . swap
+-- Use identity if no such transformation
+get' = option mempty id . get
 
 actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
-actT = act
-
+actT u ((((),a),p),s) = ((((),a2),p2),s2)  
+    where
+        a2 = act (get' u :: DT) a
+        p2 = act (get' u :: PT) p   
+        s2 = act (get' u :: TT) s
 
 ----------------------------------------------------------------------
 
