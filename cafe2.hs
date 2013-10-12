@@ -130,7 +130,7 @@ runWrite (Write x) = runWriter x
 runWList :: WList w a -> [(a, w)]
 runWList (WList xs) = fmap runWrite xs
 
-tells :: Monoid m => m -> WList m a -> WList m a
+-- tells :: Monoid m => m -> WList m a -> WList m a
 tells a (WList xs) = WList $ fmap (tell a >>) xs
 
 
@@ -177,14 +177,15 @@ monR = return
 monL :: Monoid b => a -> (a, b)
 monL = swap . return
 
-tt2t :: TT -> T
-tt2t = monR
+class HasT a where
+    liftT :: a -> T
 
-pt2t :: PT -> T
-pt2t = monL . monR
-
-dt2t :: DT -> T
-dt2t = monL . monL . monR
+instance HasT TT where
+    liftT = monR
+instance HasT PT where
+    liftT = monL . monR
+instance HasT DT where
+    liftT = monL . monL . monR
 
 actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
 actT = act
@@ -204,10 +205,10 @@ instance Action TT Span where
     act (TT t) = unPoint . D.papply t . P
     
 delaying :: Time -> T
-delaying x = tt2t $ TT $ D.translation (x,0)
+delaying x = liftT $ TT $ D.translation (x,0)
 
 stretching :: Dur -> T
-stretching = tt2t . TT . D.scaling
+stretching = liftT . TT . D.scaling
 
 
 ----------------------------------------------------------------------
@@ -221,7 +222,7 @@ instance Action PT Pitch where
     act (PT t) = unPoint . D.papply t . P
     
 transposing :: Pitch -> T
-transposing x = pt2t $ PT $ D.translation x
+transposing x = liftT $ PT $ D.translation x
 
 ----------------------------------------------------------------------
 
@@ -234,9 +235,9 @@ instance Action DT Amplitude where
     act (DT t) = unPoint . D.papply t . P
     
 amplifying :: Amplitude -> T
-amplifying = dt2t . DT . D.scaling
+amplifying = liftT . DT . D.scaling
 
-
+----------------------------------------------------------------------
 
 
 -- Accumulate transformations
@@ -246,23 +247,28 @@ transpose x = tells (transposing x)
 amplify x = tells (amplifying x)
 
 
+-- newtype Score a = Score { getScore :: WList T a }
+    -- deriving (Monoid, Functor, Applicative, Monad, Foldable, Traversable)
+-- instance IsString a => IsString (Score a) where
+--     fromString = Score . fromString
+
 type Score = WList T
---  Monoid, Functor, Applicative, Monad, Foldable, Traversable
 
-runScore :: Score a -> [(Dur, Time, Pitch, Amplitude)]
-runScore = fmap (\((((),n), p), (t, d)) -> (d,t,p,n)) . runScore'
+-- TODO use value
+runScore' = fmap (\(x,t) -> 
+    (actT t ((((),1),60),(0,1)), x)
+    ) . runWList {- . getScore -}
+
+runScore :: Score a -> [(Dur, Time, Pitch, Amplitude, a)]
+runScore = fmap (\(((((),n), p), (t, d)), x) -> (d,t,p,n,x)) . runScore'
 
 
-foo :: Score String
+foo :: Score String    
 foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 
 -- foo :: Score String
 -- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
--- TODO use value
-runScore' = fmap (\(x,t) -> 
-    actT t ((((),1),60),(0,1))
-    ) . runWList
 
 
 
