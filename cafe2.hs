@@ -313,6 +313,7 @@ amplify x = tells (amplifying x)
 type Score = WList T
 
 -- TODO use value
+-- TODO move act formalism up to WList in generalized form
 runScore' = fmap (\(x,t) -> 
     (actT t ((((),1),60),(0,1)), x)
     ) . runWList {- . getScore -}
