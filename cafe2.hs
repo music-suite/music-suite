@@ -160,6 +160,34 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
  
 
 
+----------------------------------------------------------------------
+
+instance (Action t a, Action u b) => Action (t, u) (a, b) where
+    act (t, u) (a, b) = (act t a, act u b)  
+
+
+----------------------------------------------------------------------
+type T = ((((),DT),PT),TT)
+idT = (mempty::T)
+
+-- This is the raw writer defined above
+monR :: Monoid b => a -> (b, a)
+monR = return
+
+monL :: Monoid b => a -> (a, b)
+monL = swap . return
+
+tt2t :: TT -> T
+tt2t = monR
+
+pt2t :: PT -> T
+pt2t = monL . monR
+
+dt2t :: DT -> T
+dt2t = monL . monL . monR
+
+actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
+actT = act
 
 ----------------------------------------------------------------------
 
@@ -175,11 +203,11 @@ newtype TT = TT (D.Transformation Span)
 instance Action TT Span where
     act (TT t) = unPoint . D.papply t . P
     
-delaying :: Time -> TT
-delaying x = TT $ D.translation (x,0)
+delaying :: Time -> T
+delaying x = tt2t $ TT $ D.translation (x,0)
 
-stretching :: Dur -> TT
-stretching = TT . D.scaling
+stretching :: Dur -> T
+stretching = tt2t . TT . D.scaling
 
 
 ----------------------------------------------------------------------
@@ -192,8 +220,8 @@ newtype PT = PT (D.Transformation Pitch)
 instance Action PT Pitch where
     act (PT t) = unPoint . D.papply t . P
     
-transposing :: Pitch -> PT
-transposing x = PT $ D.translation x
+transposing :: Pitch -> T
+transposing x = pt2t $ PT $ D.translation x
 
 ----------------------------------------------------------------------
 
@@ -205,79 +233,11 @@ newtype DT = DT (D.Transformation Amplitude)
 instance Action DT Amplitude where
     act (DT t) = unPoint . D.papply t . P
     
-amplifying :: Amplitude -> DT
-amplifying = DT . D.scaling
+amplifying :: Amplitude -> T
+amplifying = dt2t . DT . D.scaling
 
 
--- ----------------------------------------------------------------------
--- 
--- -- Compose time transformations with another Monoid
--- -- Generalize this pattern?
--- 
--- -- Monoid and Semigroup instances compose by default
--- -- 'tells' works with all Monoids
--- -- Need a way to generalize constructors and apply
--- 
--- type TT2 = ([String],TT)
--- -- Monoid, Semigroup
--- 
--- liftTT2 :: TT -> TT2
--- liftTT2 = monR
--- 
--- monL :: Monoid b => a -> (a, b)
--- monL = swap . return
--- 
--- -- This is the Writer monad again
--- monR :: Monoid b => a -> (b, a)
--- monR = return
--- 
--- type PT = () -- Semigroup, Monoid
--- type DT = () -- Semigroup, Monoid
--- type AT = () -- Semigroup, Monoid
--- type RT = () -- Semigroup, Monoid
--- 
--- -- Nice pattern here!
--- type T = ((((((),AT),RT),DT),PT),TT)
---  -- Semigroup, Monoid
--- idT = (mempty::T)
--- 
--- newtype Tx = Tx T
---     deriving (Monoid, Semigroup)
--- 
--- -- TODO How to generalize applyTT2 (?)
--- -- All apply functions convert the monoidal transformation to
--- -- an endofunction (a -> a)
--- 
--- -- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
--- -- applyPT :: PT -> Pitch     -> Pitch
--- -- applyDT :: PT -> Amplitude -> Amplitude
--- -- applyRT :: RT -> Part      -> Part
--- -- applyAT :: AT -> (Pitch, Amplitude) -> (Pitch, Amplitude)
--- -- applyST :: AT -> Point R3 -> Point R3
--- -- applyUnit :: () -> a -> a
--- 
--- -- This is Monoidal actions!
--- 
--- instance (Action t a, Action u b) => Action (t, u) (a, b) where
---     act (t, u) (a, b) = (act t a, act u b)
--- 
--- 
--- 
--- applyTT2 :: TT2 -> (Time, Dur) -> ((Time, Dur), [String])
--- applyTT2 (as,t) x = (applyTT t x, as)
---     
--- delaying2 :: Time -> TT2
--- delaying2 x = liftTT2 $ delaying x
--- 
--- stretching2 :: Dur -> TT2
--- stretching2 x = liftTT2 $ stretching x
--- 
--- -- addTT2 :: TT2 -> WList TT2 a -> WList TT2 a
--- -- addTT2 = tells
--- 
--- ----------------------------------------------------------------------
--- 
--- ----------------------------------------------------------------------
+
 
 -- Accumulate transformations
 delay x = tells (delaying x)
@@ -286,23 +246,23 @@ transpose x = tells (transposing x)
 amplify x = tells (amplifying x)
 
 
-type Score = WList DT
+type Score = WList T
 --  Monoid, Functor, Applicative, Monad, Foldable, Traversable
 
--- foo :: Score String
--- foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
+runScore :: Score a -> [(Dur, Time, Pitch, Amplitude)]
+runScore = fmap (\((((),n), p), (t, d)) -> (d,t,p,n)) . runScore'
+
 
 foo :: Score String
-foo = amplify 2 "c"
+foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 
+-- foo :: Score String
+-- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
-
--- runScore' :: Action m b => b -> WList m a -> [(b, a)]
--- runScore' x = fmap (swap . fmap (flip act x)) . runWList
--- 
--- runScore :: Score a -> [(Span, a)]
--- runScore = runScore' ((0,1)::Span)
-
+-- TODO use value
+runScore' = fmap (\(x,t) -> 
+    actT t ((((),1),60),(0,1))
+    ) . runWList
 
 
 
