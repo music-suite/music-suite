@@ -237,23 +237,6 @@ actT u (a,p,s) = (a,p,s)
 
 ----------------------------------------------------------------------
 
--- Minimal API
-
--- type T = () -- Monoid
--- class HasT a where
---     liftT :: a -> T
--- instance HasT TT where
---     liftT = const ()
--- instance HasT PT where
---     liftT = const ()
--- instance HasT DT where
---     liftT = const ()
--- 
--- actT :: T -> ((((),Amplitude),Pitch),Span) -> ((((),Amplitude),Pitch),Span)
--- actT = const id  
-
-----------------------------------------------------------------------
-
 type Time = Double
 type Dur  = Double
 type Span = (Time, Dur)
