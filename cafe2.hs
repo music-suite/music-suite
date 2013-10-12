@@ -8,13 +8,18 @@
     TypeFamilies,
     ViewPatterns,
 
-    TypeSynonymInstances,
-    FlexibleInstances,
+    MultiParamTypeClasses,
+    -- TypeSynonymInstances,
+    -- FlexibleInstances,
     
     OverloadedStrings,
     TypeOperators
     #-}
 
+import Data.Monoid.Action
+import Data.Monoid.MList -- misplaced Action () instance
+
+import Data.Default
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AdditiveGroup hiding (Sum, getSum)
@@ -146,7 +151,22 @@ z = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 type Time = Double
 type Dur = Double
 
-type TT = D.Transformation (Time,Dur)
+newtype Span = Span (Time,Dur)
+    -- deriving (Semigroup,Monoid)
+
+-- type TT = [String]
+-- 
+-- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
+-- applyTT m x = (m,x)
+-- 
+-- delaying :: Time -> TT
+-- delaying x = return $ "delay " ++ show x
+-- 
+-- stretching :: Dur -> TT
+-- stretching x = return $ "stretch " ++ show x
+
+newtype TT = TT (D.Transformation (Time,Dur))
+    deriving (Monoid, Semigroup)
 
 applyTT :: TT -> (Time, Dur) -> (Time, Dur)
 applyTT t = unPoint . D.papply t . P
@@ -157,33 +177,97 @@ delaying x = D.translation (x,0)
 stretching :: Dur -> TT
 stretching = D.scaling
 
+-- addTT :: TT -> Bar TT a -> Bar TT a
+-- addTT = tells
 
--- type TT = [String]
--- 
--- applyTT m x = (m,x)
--- 
--- delaying :: Time -> TT
--- delaying x = return $ "delay " ++ show x
--- 
--- stretching :: Dur -> TT
--- stretching x = return $ "stretch " ++ show x
+----------------------------------------------------------------------
 
-addTT :: TT -> Score a -> Score a
-addTT = tells
+-- Compose time transformations with another Monoid
+-- Generalize this pattern?
 
-delay x = addTT (delaying x)
-stretch x = addTT (stretching x)
+-- Monoid and Semigroup instances compose by default
+-- 'tells' works with all Monoids
+-- Need a way to generalize constructors and apply
+
+type TT2 = ([String],TT)
+-- Monoid, Semigroup
+
+liftTT2 :: TT -> TT2
+liftTT2 = monR
+
+monL :: Monoid b => a -> (a, b)
+monL = swap . return
+
+-- This is the Writer monad again
+monR :: Monoid b => a -> (b, a)
+monR = return
+
+type PT = () -- Semigroup, Monoid
+type DT = () -- Semigroup, Monoid
+type AT = () -- Semigroup, Monoid
+type RT = () -- Semigroup, Monoid
+
+-- Nice pattern here!
+type T = ((((((),AT),RT),DT),PT),TT)
+ -- Semigroup, Monoid
+idT = (mempty::T)
+
+newtype Tx = Tx T
+    deriving (Monoid, Semigroup)
+
+-- TODO How to generalize applyTT2 (?)
+-- All apply functions convert the monoidal transformation to
+-- an endofunction (a -> a)
+
+-- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
+-- applyPT :: PT -> Pitch     -> Pitch
+-- applyDT :: PT -> Amplitude -> Amplitude
+-- applyRT :: RT -> Part      -> Part
+-- applyAT :: AT -> (Pitch, Amplitude) -> (Pitch, Amplitude)
+-- applyST :: AT -> Point R3 -> Point R3
+-- applyUnit :: () -> a -> a
+
+-- This is Monoidal actions!
+
+instance Action TT Span where
+    act = applyTT
+instance (Action t a, Action u b) => Action (t, u) (a, b) where
+    act (t, u) (a, b) = (act t a, act u b)
+
+
+
+applyTT2 :: TT2 -> (Time, Dur) -> ((Time, Dur), [String])
+applyTT2 (as,t) x = (applyTT t x, as)
+    
+delaying2 :: Time -> TT2
+delaying2 x = liftTT2 $ delaying x
+
+stretching2 :: Dur -> TT2
+stretching2 x = liftTT2 $ stretching x
+
+-- addTT2 :: TT2 -> Bar TT2 a -> Bar TT2 a
+-- addTT2 = tells
+
+----------------------------------------------------------------------
+delay :: Time -> Bar TT a -> Bar TT a
+delay x = tells (delaying x)
+
+stretch :: Dur -> Bar TT a -> Bar TT a
+stretch x = tells (stretching x)
 
 ----------------------------------------------------------------------
 
 
 type Score = Bar TT
 -- Monoid, Functor, Applicative, Monad, Foldable, Traversable
-instance (IsString a, t ~ TT) => IsString (Bar t a) where
+instance (IsString a, Monoid m) => IsString (Bar m a) where
     fromString = return . fromString
 
 -- runScore :: Score a -> [((Time, Time), a)]
-runScore = fmap (swap . fmap (flip applyTT (0,1))) . runBar
+-- runScore = fmap (swap . fmap (flip applyTT (0,1))) . runBar
+
+runScore :: Action m b => b -> Bar m a -> [(b, a)]
+runScore x = fmap (swap . fmap ((flip act) x)) . runBar
 
 foo :: Score String
 foo = stretch 2 $
