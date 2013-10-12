@@ -126,12 +126,56 @@ newtype Score a = Score { getScore :: [Note () a] } -- Event
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
+-- instance Monad Score where
+--     return = Score . return . return
+--     x >>= f = (join' . fmap f) x
+--         where
+--             join' :: Score (Score a) -> Score a
+--             join' = inScore $ concatMap (fmap join . Traversable.sequence . fmap getScore)
+
 instance Monad Score where
     return = Score . return . return
-    x >>= f = (join' . fmap f) x
+    Score ns >>= f = (
+            Score .
+
+            concat . 
+            fmap (fmap join) .
+
+            -- [[Note (Note b)]]
+            fmap (Traversable.sequence) . 
+            
+            -- [Note [Note b]]
+            fmap (fmap (getScore . f))
+        ) 
+        ns
+
+{-
+newtype Foo a = Foo (Writer String a)
+    deriving (Monad, MonadWriter String, Functor, Foldable, Traversable)
+
+newtype Bar a = Bar { getBar :: [Foo a] }
+    deriving (Semigroup, Functor, Foldable, Traversable)
+instance Monad Bar where
+    return = Bar . return . return
+    Bar ns >>= f = Bar $ ns >>= joinedSeq . fmap (getBar . f)
         where
-            join' :: Score (Score a) -> Score a
-            join' = inScore $ concatMap (fmap join . Traversable.sequence . fmap getScore)
+            joinedSeq = fmap join . Traversable.sequence
+
+runFoo (Foo x) = runWriter x
+runBar (Bar xs) = fmap runFoo xs
+
+tells a (Bar xs) = Bar $ fmap (\x -> tell a >> x) xs
+
+x :: Bar Int
+x = return 0
+
+y :: Bar Int
+y = x <> tells "a" x >>= (tells "b" . return)
+
+-- runBar y ==> [(0,"b"),(0,"ab")]
+-}
+
+
 
 -- TODO what sort of Monad is this?
 
@@ -139,7 +183,7 @@ perform :: Score a -> [(Time, Duration, a)]
 perform (Score xs) = fmap play xs
 
 perform_ :: Show a => Score a -> IO ()
-perform_ = mapM_ (putStrLn.show) . perform
+perform_ = mapM_ print . perform
 
 
 
