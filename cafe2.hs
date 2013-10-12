@@ -78,6 +78,20 @@ instance Monoid m => Monad (Bar m) where
 joinTrav :: (Monad t, Traversable t, Applicative f) => (a -> f (t b)) -> t a -> f (t b)
 joinTrav f = fmap join . T.traverse f
 
+{-
+join' :: Monad t => t (t b) -> t b
+join' = join
+
+joinedSeq :: (Monad t, Traversable t, Applicative f) => t (f (t a)) -> f (t a)
+joinedSeq = fmap join . T.sequenceA
+
+
+bindSeq :: (Monad f, Applicative f, Traversable t) => f (t (f a)) -> f (t a)
+bindSeq = bind T.sequenceA 
+
+travBind :: (Monad f, Applicative f, Traversable t) => (a -> f b) -> t (f a) -> f (t b)
+travBind f = T.traverse (bind f)
+-}
 
 {-
     Free theorem of sequence/dist    
@@ -89,36 +103,19 @@ joinTrav f = fmap join . T.traverse f
 
 -}
 
-
-
-
-
-ns = undefined
-f  = undefined
-g = undefined
-
-ns :: [Foo m a]
-f :: (a -> [Foo m a])
-g :: (a -> Foo m a)
-
-
--- f ns                             :: [Foo  m [Foo m1 a]]
--- T.mapM f ns                      :: [[Foo m (Foo m1 a)]]
--- T.mapM (T.mapM f) ns             :: [[Foo m (Foo m1 a)]]
--- T.mapM (T.mapM (T.mapM f)) ns    :: [[Foo m [(Foo m1 a)]]]
-
-bind :: Monad m => (a -> m b) -> m a -> m b
-bind = (=<<)
-
-
-
--- joinedSeq2 = fmap join . Traversable.mapM const
+runFoo :: Foo w a -> (a, w)
 runFoo (Foo x) = runWriter x
+
+runBar :: Bar w a -> [(a, w)]
 runBar (Bar xs) = fmap runFoo xs
 
 tells :: Monoid m => m -> Bar m a -> Bar m a
 tells a (Bar xs) = Bar $ fmap (tell a >>) xs
 
+
+
+
+----------------------------------------------------------------------
 
 type Annotated a = Bar [String] a
 runAnnotated :: Annotated a -> [(a, [String])]
@@ -144,20 +141,7 @@ z = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- runBar z ==> [(0,"dc"),(1,"d")]
 
 
-{-
-join' :: Monad t => t (t b) -> t b
-join' = join
-
-joinedSeq :: (Monad t, Traversable t, Applicative f) => t (f (t a)) -> f (t a)
-joinedSeq = fmap join . T.sequenceA
-
-
-bindSeq :: (Monad f, Applicative f, Traversable t) => f (t (f a)) -> f (t a)
-bindSeq = bind T.sequenceA 
-
-travBind :: (Monad f, Applicative f, Traversable t) => (a -> f b) -> t (f a) -> f (t b)
-travBind f = T.traverse (bind f)
--}
+----------------------------------------------------------------------
 
 type Time = Double
 type Dur = Double
@@ -174,7 +158,6 @@ stretching :: Dur -> TT
 stretching = D.scaling
 
 
-
 -- type TT = [String]
 -- 
 -- applyTT m x = (m,x)
@@ -185,24 +168,14 @@ stretching = D.scaling
 -- stretching :: Dur -> TT
 -- stretching x = return $ "stretch " ++ show x
 
-
-
--- time transformation
--- type TT = (Onset, Scaling)
--- getTT = getSum *** getProduct
-
--- unitTT :: TT
--- unitTT = mempty
-
-
--- TODO this is wroing
--- scaling needs to be applied to onset as well!
-
-
-
+addTT :: TT -> Score a -> Score a
 addTT = tells
+
 delay x = addTT (delaying x)
 stretch x = addTT (stretching x)
+
+----------------------------------------------------------------------
+
 
 type Score = Bar TT
 -- Monoid, Functor, Applicative, Monad, Foldable, Traversable
