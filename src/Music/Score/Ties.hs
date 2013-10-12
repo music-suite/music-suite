@@ -56,16 +56,20 @@ import Music.Time
 -- |
 -- Class of types that can be tied.
 --
+-- Minimal definition: 'toTied', or both 'beginTie' and 'endTie'.
+--
 class Tiable a where
     -- |
     -- Modify a note to be the first note in a tied note pair.
     -- 
     beginTie :: a -> a
+    beginTie = fst . toTied
 
     -- |
     -- Modify a note to be the second note in a tied note pair.
     -- 
     endTie :: a -> a
+    endTie = snd . toTied
 
     -- | 
     -- Split a single note into a pair of tied notes.
