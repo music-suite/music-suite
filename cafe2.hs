@@ -9,7 +9,7 @@
     ViewPatterns,
 
     MultiParamTypeClasses,
-    TypeSynonymInstances,
+    TypeSynonymInstances, -- TODO remove
     FlexibleInstances,
     
     OverloadedStrings,
@@ -84,6 +84,9 @@ instance Monoid m => Applicative (WList m) where
 instance Monoid m => Monad (WList m) where
     return = WList . return . return
     WList xs >>= f = WList $ xs >>= joinTrav (getWList . f)
+instance Monoid m => MonadPlus (WList m) where
+    mzero = mempty
+    mplus = (<>)
 
 -- Same thing with orinary pairs:
 
@@ -95,6 +98,9 @@ instance Monoid m => Applicative (WList' m) where
 instance Monoid m => Monad (WList' m) where
     return = WList' . return . return
     WList' xs >>= f = WList' $ xs >>= joinTrav (getWList' . f)
+instance Monoid m => MonadPlus (WList' m) where
+    mzero = mempty
+    mplus = (<>)
 
 joinTrav :: (Monad t, Traversable t, Applicative f) => (a -> f (t b)) -> t a -> f (t b)
 joinTrav f = fmap join . T.traverse f
@@ -315,6 +321,16 @@ foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 -- foo :: Score String
 -- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
+
+
+data DScore m a = Node a | Nest (WList m (DScore m a)) 
+    deriving (Functor, Foldable)
+instance Monoid m => Semigroup (DScore m a) where
+    Node x <> y      = Nest (return (Node x)) <> y
+    x      <> Node y = x <> Nest (return (Node y))
+    Nest x <> Nest y = Nest (x <> y)
+-- TODO Monad
+-- TODO MonadPlus
 
 
 
