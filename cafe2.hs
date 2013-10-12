@@ -9,8 +9,8 @@
     ViewPatterns,
 
     MultiParamTypeClasses,
-    -- TypeSynonymInstances,
-    -- FlexibleInstances,
+    TypeSynonymInstances,
+    FlexibleInstances,
     
     OverloadedStrings,
     TypeOperators
@@ -20,6 +20,7 @@ import Data.Monoid.Action
 import Data.Monoid.MList -- misplaced Action () instance
 
 import Data.Default
+import Data.Basis
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AdditiveGroup hiding (Sum, getSum)
@@ -144,56 +145,54 @@ annotate :: String -> Annotated a -> Annotated a
 annotate x = tells [x]
 
 -- a bar with no annotations
-x :: Annotated Int
-x = return 0
+ann1 :: Annotated Int
+ann1 = return 0
 
 -- annotations compose with >>=
-y :: Annotated Int
-y = x <> annotate "a" x >>= (annotate "b" . return)
+ann2 :: Annotated Int
+ann2 = ann1 <> annotate "a" ann1 >>= (annotate "b" . return)
 
 -- and with join
-z :: Annotated Int
-z = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
-
--- runWList y ==> [(0,"b"),(0,"ab")]
--- runWList z ==> [(0,"dc"),(1,"d")]
+ann3 :: Annotated Int
+ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
  
 
 
--- 
--- ----------------------------------------------------------------------
--- 
--- type Time = Double
--- type Dur = Double
--- 
--- newtype Span = Span (Time,Dur)
---     -- deriving (Semigroup,Monoid)
--- 
--- -- type TT = [String]
--- -- 
--- -- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
--- -- applyTT m x = (m,x)
--- -- 
--- -- delaying :: Time -> TT
--- -- delaying x = return $ "delay " ++ show x
--- -- 
--- -- stretching :: Dur -> TT
--- -- stretching x = return $ "stretch " ++ show x
--- 
--- newtype TT = TT (D.Transformation (Time,Dur))
---     deriving (Monoid, Semigroup)
+
+----------------------------------------------------------------------
+
+type Time = Double
+type Dur  = Double
+type Span = (Time, Dur)
+
+-- type TT = [String]
 -- 
 -- applyTT :: TT -> (Time, Dur) -> (Time, Dur)
--- applyTT t = unPoint . D.papply t . P
---     
+-- applyTT m x = (m,x)
+-- 
 -- delaying :: Time -> TT
--- delaying x = D.translation (x,0)
+-- delaying x = return $ "delay " ++ show x
 -- 
 -- stretching :: Dur -> TT
--- stretching = D.scaling
--- 
--- -- addTT :: TT -> WList TT a -> WList TT a
--- -- addTT = tells
+-- stretching x = return $ "stretch " ++ show x
+
+newtype TT = TT (D.Transformation Span)
+    deriving (Monoid, Semigroup)
+
+applyTT :: TT -> Span -> Span
+applyTT (TT t) = unPoint . D.papply t . P
+
+instance Action TT Span where
+    act = applyTT
+    
+delaying :: Time -> TT
+delaying x = TT $ D.translation (x,0)
+
+stretching :: Dur -> TT
+stretching = TT . D.scaling
+
+-- addTT :: TT -> WList TT a -> WList TT a
+-- addTT = tells
 -- 
 -- ----------------------------------------------------------------------
 -- 
@@ -244,8 +243,6 @@ z = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- 
 -- -- This is Monoidal actions!
 -- 
--- instance Action TT Span where
---     act = applyTT
 -- instance (Action t a, Action u b) => Action (t, u) (a, b) where
 --     act (t, u) (a, b) = (act t a, act u b)
 -- 
@@ -264,29 +261,32 @@ z = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- -- addTT2 = tells
 -- 
 -- ----------------------------------------------------------------------
--- delay :: Time -> WList TT a -> WList TT a
--- delay x = tells (delaying x)
--- 
--- stretch :: Dur -> WList TT a -> WList TT a
--- stretch x = tells (stretching x)
 -- 
 -- ----------------------------------------------------------------------
--- 
--- 
--- type Score = WList TT
--- -- Monoid, Functor, Applicative, Monad, Foldable, Traversable
--- instance (IsString a, Monoid m) => IsString (WList m a) where
---     fromString = return . fromString
--- 
--- -- runScore :: Score a -> [((Time, Time), a)]
--- -- runScore = fmap (swap . fmap (flip applyTT (0,1))) . runWList
--- 
--- runScore :: Action m b => b -> WList m a -> [(b, a)]
--- runScore x = fmap (swap . fmap ((flip act) x)) . runWList
--- 
--- foo :: Score String
--- foo = stretch 2 $
---     "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
+
+
+delay :: Time -> WList TT a -> WList TT a
+delay x = tells (delaying x)
+
+stretch :: Dur -> WList TT a -> WList TT a
+stretch x = tells (stretching x)
+
+
+type Score = WList TT
+-- Monoid, Functor, Applicative, Monad, Foldable, Traversable
+instance (IsString a, Monoid m) => IsString (WList m a) where
+    fromString = return . fromString
+
+
+runScore' :: Action m b => b -> WList m a -> [(b, a)]
+runScore' x = fmap (swap . fmap ((flip act) x)) . runWList
+
+runScore :: Score a -> [(Span, a)]
+runScore = runScore' ((0,1)::Span)
+
+foo :: Score String
+foo = stretch 2 $
+    "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 --                                               
 
 
