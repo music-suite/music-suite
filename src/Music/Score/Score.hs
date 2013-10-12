@@ -179,6 +179,13 @@ instance HasPitch a => HasPitch (Score a) where
     getPitches as    = foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
 
+instance Reversible a => Reversible (Score a) where
+    rev = fmap rev . withSameOnset (mapAll $ fmap g)
+        where
+            g (t,d,x) = (negateP (t .+^ d), d, x)
+            negateP a = origin .-^ (a .-. origin)
+            mapAll f = compose . f . perform
+
 
 -------------------------------------------------------------------------------------
 

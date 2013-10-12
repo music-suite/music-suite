@@ -31,7 +31,8 @@ module Music.Score.Chord (
         ChordT(..),      
         
         -- * Chord transformations
-        renderChord,
+        -- renderChord,
+        -- playChord,
         simultaneous,
         simultaneous',
   ) where
@@ -50,16 +51,16 @@ import Music.Score.Part
 import Music.Score.Combinators
 
 class HasChord a where
-    type ChordNote a :: *
-    getChord :: a -> [ChordNote a]
-    -- modifyChord :: (ChordNote a -> ChordNote a) -> a -> a
+    type Note a :: *
+    getChord :: a -> [Note a]
+    -- modifyChord :: (Note a -> Note a) -> a -> a
 
 instance HasChord [a] where
-    type ChordNote [a] = a
+    type Note [a] = a
     getChord = id
 
 instance HasChord (ChordT a) where
-    type ChordNote (ChordT a) = a
+    type Note (ChordT a) = a
     getChord (ChordT as)      = as
 
 -- Actually we should use NonEmpty here
@@ -82,9 +83,12 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 -- |
 -- Render all chords of a given score into singular notes composed in parallel.
 --
-renderChord :: (MonadPlus m, HasChord a) => m a -> m (ChordNote a)
-renderChord = mscatter . fmap' getChord
-    where fmap' = liftM
+-- renderChord :: (MonadPlus m, HasChord a) => m a -> m (Note a)
+renderChord = join . fmap return . mscatter . fmap getChord
+
+
+-- playChord :: m a -> m (Note a)
+playChord f = join . join . fmap return . fmap f . fmap getChord
 
 
 -- |

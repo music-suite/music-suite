@@ -21,6 +21,8 @@
 -- Portability : non-portable (TF,GNTD)
 --
 -- Provides meta-events.
+-- 
+-- TODO define
 --
 -------------------------------------------------------------------------------------
 

@@ -138,12 +138,6 @@ noteRest        = mfromMaybe
 removeRests     = mcatMaybes
 
 
-instance Reversible a => Reversible (Score a) where
-    rev = fmap rev . withSameOnset (mapAll $ fmap g)
-        where
-            g (t,d,x) = (negateP (t .+^ d), d, x)
-            negateP a = origin .-^ (a .-. origin)
-
 --------------------------------------------------------------------------------
 -- Mapping
 --------------------------------------------------------------------------------
