@@ -16,6 +16,33 @@
     TypeOperators
     #-}
 
+module Cafe2 (
+    Write,
+    runWrite,
+    WList,
+    runWList,
+    
+    TT(..),
+    PT(..),
+    DT(..),
+    T,
+    HasT(..),
+    Time,
+    Dur,
+    Pitch,
+    Amplitude,
+    Score,   
+    delaying,
+    stretching,
+    transposing,
+    amplifying,
+    delay,
+    stretch,
+    transpose,
+    amplify,
+    runScore,
+) where
+
 import Data.Monoid.Action
 import Data.Monoid.MList -- misplaced Action () instance
 
@@ -200,10 +227,20 @@ ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
 -- -- trip ((a,b),c) = (a,b,c)
 -- 
 
+unpack3 :: ((a, b), c) -> (a, b, c)
+unpack4 :: (((a, b), c), d) -> (a, b, c, d)
+unpack5 :: ((((a, b), c), d), e) -> (a, b, c, d, e)
+unpack6 :: (((((a, b), c), d), e), f) -> (a, b, c, d, e, f)
+
 unpack3 ((c,b),a)                           = (c,b,a)
 unpack4 ((unpack3 -> (d,c,b),a))            = (d,c,b,a)
 unpack5 ((unpack4 -> (e,d,c,b),a))          = (e,d,c,b,a)
 unpack6 ((unpack5 -> (f,e,d,c,b),a))        = (f,e,d,c,b,a)
+
+pack3 :: (b, c, a) -> ((b, c), a)
+pack4 :: (c, d, b, a) -> (((c, d), b), a)
+pack5 :: (d, e, c, b, a) -> ((((d, e), c), b), a)
+pack6 :: (e, f, d, c, b, a) -> (((((e, f), d), c), b), a)
 
 pack3 (c,b,a)                               = ((c,b),a)
 pack4 (d,c,b,a)                             = (pack3 (d,c,b),a)
@@ -305,8 +342,8 @@ amplify x = tells (amplifying x)
 
 type Score = WList T
 
--- TODO use value
 -- TODO move act formalism up to WList in generalized form
+-- TODO generalize transformations
 runScore' = fmap (\(x,t) -> 
     (actT t (1,60,(0,1)), x)
     ) . runWList {- . getScore -}
