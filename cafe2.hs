@@ -20,9 +20,12 @@ module Cafe2 (
     -- * Internal
     Trans,
     runTrans,
+    runTransWith,
+    renderTrans,
     TList,
     tells,
     runTList,
+    runTListWith,
     renderTList,
     
     -- * Annotations
@@ -91,7 +94,8 @@ import qualified Diagrams.Core.Transform as D
         - Update Monads: Cointerpreting directed containers
 -}
 
--- Simplified version of the standard writer monad.
+-- |
+-- 'Trans' is just the 'Writer' monad with a simplified interface.
 --
 newtype Trans m a = Trans (Writer m a)
     deriving (Monad, MonadWriter m, Functor, Foldable, Traversable)
@@ -178,18 +182,26 @@ travBind f = T.traverse (bind f)
 
 -}
 
-runTrans :: Trans m a -> (a, m)
-runTrans (Trans x) = runWriter x
+runTrans :: Action m a => Trans m a -> a
+runTrans = runTransWith act
 
-renderTList :: TList m a -> [(a, m)]
-renderTList (TList xs) = fmap runTrans xs
+runTransWith :: (m -> a -> a) -> Trans m a -> a
+runTransWith f = uncurry (flip f) . renderTrans
+
+renderTrans :: Trans m a -> (a, m)
+renderTrans (Trans x) = runWriter x
 
 runTList :: Action m a => TList m a -> [a]
-runTList (TList xs) = fmap (uncurry $ flip act) $ fmap runTrans xs
+runTList (TList xs) = fmap runTrans xs
+
+runTListWith f (TList xs) = fmap (runTransWith f) xs
+
+renderTList :: TList m a -> [(a, m)]
+renderTList (TList xs) = fmap renderTrans xs
+
 
 tells :: Monoid m => m -> TList m a -> TList m a
 tells a (TList xs) = TList $ fmap (tell a >>) xs
-
 
 
 
@@ -291,9 +303,9 @@ pack6 (f,e,d,c,b,a)                         = (pack5 (f,e,d,c,b),a)
 
 -- Minimal API
 
-type Transformation = TT ::: PT ::: AT ::: () -- Monoid
+type Transformation t p a = TT ::: PT ::: AT ::: () -- Monoid
 class HasTransformation a where
-    makeTransformation :: a -> Transformation
+    makeTransformation :: a -> Transformation t p a
 instance HasTransformation TT where
     makeTransformation = inj
 instance HasTransformation PT where
@@ -304,7 +316,7 @@ instance HasTransformation AT where
 -- Use identity if no such transformation
 get' = option mempty id . get
 
-transform :: Transformation -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
+transform :: Transformation t p a -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
 transform u (a,p,s) = (a2,p2,s2)  
     where
         a2 = act (get' u :: AT) a
@@ -325,10 +337,10 @@ newtype TT = TT (D.Transformation Span)
 instance Action TT Span where
     act (TT t) = unPoint . D.papply t . P
     
-delaying :: Time -> Transformation
+delaying :: Time -> Transformation t p a
 delaying x = makeTransformation $ TT $ D.translation (x,0)
 
-stretching :: Dur -> Transformation
+stretching :: Dur -> Transformation t p a
 stretching = makeTransformation . TT . D.scaling
 
 
@@ -342,7 +354,7 @@ newtype PT = PT (D.Transformation Pitch)
 instance Action PT Pitch where
     act (PT t) = unPoint . D.papply t . P
     
-transposing :: Pitch -> Transformation
+transposing :: Pitch -> Transformation t p a
 transposing x = makeTransformation $ PT $ D.translation x
 
 ----------------------------------------------------------------------
@@ -355,7 +367,7 @@ newtype AT = AT (D.Transformation Amplitude)
 instance Action AT Amplitude where
     act (AT t) = unPoint . D.papply t . P
     
-amplifying :: Amplitude -> Transformation
+amplifying :: Amplitude -> Transformation t p a
 amplifying = makeTransformation . AT . D.scaling
 
 ----------------------------------------------------------------------
@@ -373,13 +385,13 @@ amplify x   = tells (amplifying x)
 -- instance IsString a => IsString (Score a) where
 --     fromString = Score . fromString
 
-type Score = TList Transformation
+type Score = TList (Transformation Time Pitch Amplitude)
 
 -- TODO move act formalism up to TList in generalized form
 -- TODO generalize transformations
 runScore' = fmap (\(x,t) -> 
     (transform t (1,60,(0,1)), x)
-    ) . renderTList {- . getScore -}
+    ) . renderTList
 
 runScore :: Score a -> [(Dur, Time, Pitch, Amplitude, a)]
 runScore = fmap (\((n,p,(t,d)), x) -> (d,t,p,n,x)) . runScore'
