@@ -546,27 +546,6 @@ type R2 = (Double, Double)
     -- (Most part functions are const!)
 
 -- Articulation is a transformation that acts over (pitch, dynamics, onset, offset) by ?
-
-{-
-    Semantics of this type.
-    Especially: what is the monoid and what is the action.
--}
-
-{-
--- 0.5 -> staccato/spicc, 1 -> detache/ord, 2 -> legato/bow
--- This may be a logarithm of the relative duration
-type Separation = Double 
-
--- -1 -> start of phrase, -> 0 middle of phrase, -> 1 end of phrase
--- This may be a logarithm of the relative duration
-type Weight     = Double
-
--- 0.5 -> under-accentuated, 1 -> normal accentuation, 2 -> over-accentuated
--- This may be a logarithm of the relative dynamic
-type IndAcc     = Double
--- type Articulation = Time -> (Product Separation, Product Weight, Product IndAcc)
--}
-
 type Articulation = (Endo (Pitch -> Pitch), Endo (Amplitude -> Amplitude))
 
 
@@ -644,34 +623,6 @@ runScore = runTListWith appEndo
 
 
 swap (x,y) = (y,x)
-
-
-
-{-
-join' :: Monad t => t (t b) -> t b
-join' = join
-
-joinedSeq :: (Monad t, Traversable t, Applicative f) => t (f (t a)) -> f (t a)
-joinedSeq = fmap join . T.sequenceA
-
-
-bindSeq :: (Monad f, Applicative f, Traversable t) => f (t (f a)) -> f (t a)
-bindSeq = bind T.sequenceA 
-
-travBind :: (Monad f, Applicative f, Traversable t) => (a -> f b) -> t (f a) -> f (t b)
-travBind f = T.traverse (bind f)
--}
-
-{-
-    Free theorem of sequence/dist    
-        sequence . fmap (fmap k)  =  fmap (fmap k) . sequence
-
-    Corollaries
-        traverse (f . g)  =  traverse f . fmap g
-        traverse (fmap k . f)  =  fmap (fmap k)  =   traverse f
-
--}
-
 
 
 {-
