@@ -159,9 +159,22 @@ instance Monoid m => MonadPlus (LTrans m) where
     mzero = mempty
     mplus = (<>)
 
+-- Trans m [a]
+-- Trans m [Trans m [a]]            -- fmap (fmap f)
+-- Trans m (Trans m [[a]])          -- fmap sequence
+-- Trans m (Trans m [a])            -- fmap (fmap join)
+-- Trans m [a]                      -- join
+
+-- This is NOT equivalent to TList, it will compose transformations over the
+-- *entire* list using monadic sequencing rather than *propagating* the traversion over the list 
+
 
 -- |
--- Transformable list: semantically a list of values in the 'Trans' monad.
+-- Transformable list.
+--
+-- > type TList m a = [Trans m a]
+--
+-- See Jones and Duponcheel, /Composing Monads/ (1993).
 --
 -- TODO This will actually work with any traversable monad, including Writer, Logic, List and Maybe.
 --
@@ -174,13 +187,20 @@ instance Monoid m => Applicative (TList m) where
     (<*>) = ap
 instance Monoid m => Monad (TList m) where
     return = TList . return . return
-    TList xs >>= f = TList $ xs >>= joinTrav (getTList . f)
+    TList xs >>= f = TList $ join . fmap (fmap join . T.traverse (getTList . f)) $ xs
 instance Monoid m => MonadPlus (TList m) where
     mzero = mempty
     mplus = (<>)
 type instance Key (TList m) = m
 instance Keyed (TList m) where
     mapWithKey f (TList xs) = TList $ fmap (mapWithKey f) xs
+
+-- [Trans m a]
+-- [Trans m [Trans m a]]            -- fmap (fmap f)
+-- [[Trans m (Trans m a)]]          -- fmap sequence
+-- [[Trans m a]]                    -- fmap (fmap join)
+-- [Trans m a]                      -- join
+
 
 joinTrav :: (Monad t, Traversable t, Applicative f) => (a -> f (t b)) -> t a -> f (t b)
 joinTrav f = fmap join . T.traverse f
