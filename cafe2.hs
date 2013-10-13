@@ -22,50 +22,60 @@ module Cafe2 (
     tapp,
     runTrans,
     runTransWith,
-    renderTrans,
+    -- renderTrans,
     LTrans,
     TList,
     tlist,
-    tlistApp,
-    fromList,
+    tlapp,
+    tlappWhen,
+    -- fromList,
     runTList,
     runTListWith,
-    renderTList,
+    getTListMonoid,
+    -- renderTList,
+
+    Tree,
+    MTree,
+    TMTree,
     
     -- * Annotations
     Annotated(..),
     runAnnotated,
     annotate,
 
-    -- * Transformations
-    Transformation,
-    HasTransformation(..),
-    transform,
-    
-    -- ** Specific transformations
-    -- *** Time
+    -- -- * Transformations
+    -- Transformation,
+    -- HasTransformation(..),
+    -- transform,
+    -- 
+    -- -- ** Specific transformations
+    -- -- *** Time
     Time,
     Dur,
-    Span,
-    TT(..),
-    delaying,
-    stretching,
-    delay,
-    stretch,
-
-    -- *** Pitch
+    -- Span, 
+    -- Onset,
+    -- Offset,    TT(..),
+    -- delaying,
+    -- stretching,
+    -- delay,
+    -- stretch,
+    -- 
+    -- -- *** Pitch
     Pitch,
-    PT(..),
-    transposing,
-    transpose,
-
-    -- *** Dynamics
+    Frequency,
+    -- PT(..),
+    -- transposing,
+    -- transpose,
+    -- 
+    -- -- *** Dynamics
     Amplitude,
-    AT(..),
-    amplifying,
-    amplify,
+    -- AT(..),
+    -- amplifying,
+    -- amplify,    
 
     -- * Score
+    Behaviour,
+    Articulation,
     Score,   
     runScore,
 ) where
@@ -216,28 +226,43 @@ renderTrans (Trans x) = runWriter x
 
 tapp m = (tell m >>)
 
+
+
+
+
 -- | Construct a 'TList' from a transformation and a list.
 tlist :: Monoid m => m -> [a] -> TList m a
-tlist m xs = tlistApp m (fromList xs)
+tlist m xs = tlapp m (fromList xs)
 
 -- | Construct a 'TList' from a list.
 fromList :: Monoid m => [a] -> TList m a
 fromList = mfromList
 
--- | Transform a list using the given transformation.
+-- | Transform a list.
 --
--- > tlistApp (f <> g) = tlistApp f . tlistApp g
+-- > tlapp (f <> g) = tlapp f . tlapp g
 --
-tlistApp :: Monoid m => m -> TList m a -> TList m a
-tlistApp m (TList xs) = TList $ fmap (tapp m) xs
+tlapp :: Monoid m => m -> TList m a -> TList m a
+tlapp m (TList xs) = TList $ fmap (tapp m) xs
+
+-- | Transform a list if the predicate holds.
+--
+tlappWhen :: Monoid m => (a -> Bool) -> m -> TList m a -> TList m a
+tlappWhen p f xs = let (ts, fs) = mpartition p xs
+    in tlapp f ts `mplus` fs
+
 
 -- | Extract the components.
 runTList :: Action m a => TList m a -> [a]
 runTList (TList xs) = fmap runTrans xs
 
 -- | Extract the components using the supplied function to render the cached transformations.
-runTListWith :: (m -> b -> b) -> TList m b -> [b]
+runTListWith :: (m -> a -> a) -> TList m a -> [a]
 runTListWith f (TList xs) = fmap (runTransWith f) xs
+                               
+-- FIXME not what you'd expect!
+getTListMonoid :: Monoid m => TList m a -> m
+getTListMonoid = mconcat . runTListWith (const) . fmap (const undefined)
 
 -- | Extract the components and cached transformations.
 renderTList :: TList m a -> [(a, m)]
@@ -254,6 +279,60 @@ mapplyIf f = mapplyWhen (predicate f) (fromMaybe (error "mapplyIf") . f)
 mapplyWhen :: (Functor f, MonadPlus f) => (a -> Bool) -> (a -> a) -> f a -> f a
 mapplyWhen p f xs = let (ts, fs) = mpartition p xs
     in fmap f ts `mplus` fs
+
+
+data Tree a = Tip a | Bin (Tree a) (Tree a)
+    deriving (Functor, Foldable, Traversable)
+instance Semigroup (Tree a) where
+    (<>) = Bin       
+-- TODO Default
+instance Monoid a => Monoid (Tree a) where
+    mempty  = Tip mempty
+    mappend = (<>)
+instance Monad Tree where
+    return = Tip
+    Tip x   >>= f = f x
+    Bin x y >>= f = Bin (x >>= f) (y >>= f)
+
+newtype TTree m a = TTree { getTTree :: Tree (Trans m a) }
+    deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
+instance (IsString a, Monoid m) => IsString (TTree m a) where
+    fromString = return . fromString
+instance Monoid m => Applicative (TTree m) where
+    pure = return
+    (<*>) = ap
+instance Monoid m => Monad (TTree m) where
+    return = TTree . return . return
+    TTree xs >>= f = TTree $ join . fmap (fmap join . T.mapM (getTTree . f)) $ xs
+-- instance Monoid m => MonadPlus (TTree m) where
+    -- mzero = mempty
+    -- mplus = (<>)
+
+newtype MTree a = MTree { getMTree :: (Maybe (Tree a)) }
+    deriving (Semigroup, Functor, Foldable, Traversable)
+instance Monoid (MTree a) where
+    mempty  = MTree Nothing
+    mappend = (<>)
+instance Monad MTree where
+    return = MTree . return . return
+    MTree xs >>= f = MTree $ join . fmap (fmap join . T.mapM (getMTree . f)) $ xs
+instance MonadPlus MTree where
+    mzero = mempty
+    mplus = (<>)             
+
+newtype TMTree m a = TMTree { getTMTree :: MTree (Trans m a) }
+    deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
+instance (IsString a, Monoid m) => IsString (TMTree m a) where
+    fromString = return . fromString
+instance Monoid m => Applicative (TMTree m) where
+    pure = return
+    (<*>) = ap
+instance Monoid m => Monad (TMTree m) where
+    return = TMTree . return . return
+    TMTree xs >>= f = TMTree $ join . fmap (fmap join . T.mapM (getTMTree . f)) $ xs
+instance Monoid m => MonadPlus (TMTree m) where
+    mzero = mempty
+    mplus = (<>)
 
 
 
@@ -274,7 +353,7 @@ runAnnotated (Annotated a) = renderTList a
 
 -- annotate all elements in bar
 annotate :: String -> Annotated a -> Annotated a
-annotate x (Annotated a) = Annotated $ tlistApp [x] $ a
+annotate x (Annotated a) = Annotated $ tlapp [x] $ a
 
 -- a bar with no annotations
 ann1 :: Annotated Int
@@ -426,10 +505,10 @@ amplifying = makeTransformation . AT . D.scaling
 
 
 -- Accumulate transformations
-delay x     = tlistApp (delaying x)
-stretch x   = tlistApp (stretching x)
-transpose x = tlistApp (transposing x)
-amplify x   = tlistApp (amplifying x)
+delay x     = tlapp (delaying x)
+stretch x   = tlapp (stretching x)
+transpose x = tlapp (transposing x)
+amplify x   = tlapp (amplifying x)
 
 
 -- type Score = TList (Transformation Time Pitch Amplitude)
@@ -452,9 +531,65 @@ amplify x   = tlistApp (amplifying x)
 -- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
 type Onset   = Sum Time
-type Offset  = Sum Time
-type Score a = TList (Onset, Offset) a
-runScore = runTList
+type Offset  = Sum Time                 
+type Frequency = Double
+type Part = Int
+type Behaviour a = Time -> a
+type R2 = (Double, Double) 
+
+
+-- Time transformation is a function that acts over (time,dur) notes by ?
+-- Pitch transformation is a pitch function that acts over notes by fmap
+-- Dynamic transformation is a pitch function that acts over notes by fmap
+-- Space transformation is a pitch function that acts over notes by fmap
+-- Part transformation is a pitch function that acts over notes by fmap
+    -- (Most part functions are const!)
+
+-- Articulation is a transformation that acts over (pitch, dynamics, onset, offset) by ?
+
+{-
+    Semantics of this type.
+    Especially: what is the monoid and what is the action.
+-}
+
+{-
+-- 0.5 -> staccato/spicc, 1 -> detache/ord, 2 -> legato/bow
+-- This may be a logarithm of the relative duration
+type Separation = Double 
+
+-- -1 -> start of phrase, -> 0 middle of phrase, -> 1 end of phrase
+-- This may be a logarithm of the relative duration
+type Weight     = Double
+
+-- 0.5 -> under-accentuated, 1 -> normal accentuation, 2 -> over-accentuated
+-- This may be a logarithm of the relative dynamic
+type IndAcc     = Double
+-- type Articulation = Time -> (Product Separation, Product Weight, Product IndAcc)
+-}
+
+type Articulation = (Endo (Pitch -> Pitch), Endo (Amplitude -> Amplitude))
+
+
+type Score a = TMTree 
+    ((Sum Time, Sum Time), 
+     (Time -> Product Pitch, Time -> Product Amplitude),
+     Option (Data.Semigroup.Last Part),
+     Time -> Endo (R2 -> R2),
+     Time -> Articulation
+    ) 
+    (Either Pitch (Behaviour Pitch), 
+     Either Amplitude (Behaviour Amplitude),
+     Part,
+     Behaviour R2,
+     a)                
+     
+foo :: Score a
+foo = undefined
+
+-- This requires the transformation type to be a Monoid
+bar = join (return foo)
+     
+runScore = runTListWith appEndo
 
 
 {-
@@ -537,3 +672,12 @@ travBind f = T.traverse (bind f)
 
 -}
 
+
+
+{-
+instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e, Monoid f) => Monoid (a,b,c,d,e,f) where
+    mempty = (mempty,mempty,mempty,mempty,mempty)
+    (a,b,c,d,e,f) `mappend` (a1,b1,c1,d1,e1,f1) = 
+        (a <> a1, b <> b1, c <> c1, d <> d1, e <> e1, f <> f1)
+      where (<>) = mappend
+-}
