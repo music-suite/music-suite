@@ -16,68 +16,36 @@
     TypeOperators
     #-}
 
-module Trans (
+module Transformations (
     -- * Internal
     Trans,
     tapp,
     runTrans,
-    -- runTransWith,
-    -- renderTrans,
-    LTrans,
+
     TList,
     tlist,
     tlapp,
     tlappWhen,
-    -- fromList,
     runTList,
-    -- runTListWith,
-    -- renderTList,
-
-    Tree,
-    MTree,
-    TMTree,
     
-    -- -- * Annotations
-    -- Annotated(..),
-    -- runAnnotated,
-    -- annotate,
+    -- Tree,
+    -- MTree,
+    -- TMTree,
 
-    -- -- * Transformations
-    -- Transformation,
-    -- HasTransformation(..),
-    -- transform,
-    -- 
-    -- -- ** Specific transformations
-    -- -- *** Time
+    -- * Transformations
     Time,
     Dur,
-    -- Span, 
-    -- Onset,
-    -- Offset,    TT(..),
-    -- delaying,
-    -- stretching,
-    -- delay,
-    -- stretch,
-    -- 
-    -- -- *** Pitch
     Pitch,
     Frequency,
-    -- PT(..),
-    -- transposing,
-    -- transpose,
-    -- 
-    -- -- *** Dynamics
     Amplitude,
-    -- AT(..),
-    -- amplifying,
-    -- amplify,    
-
+    
     -- * Score
     Behaviour,
     Articulation,
     Score,   
-    runScore,
-) where
+    runScore, 
+) 
+where
 
 import Data.Monoid.Action
 import Data.Monoid.MList -- misplaced Action () instance
@@ -156,44 +124,25 @@ instance Monoid m => Monad ((,) m) where
 -}
 
 
--- |
--- Transformable list: semantically a list of values in the 'Trans' monad.
---
--- TODO This will actually work with any traversable monad, including Writer, Logic, List and Maybe.
---
+{-
 newtype LTrans m a = LTrans { getLTrans :: Trans m [a] }
     deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
-instance (IsString a, Monoid m) => IsString (LTrans m a) where
-    fromString = return . fromString
-instance Monoid m => Applicative (LTrans m) where
-    pure = return
-    (<*>) = ap
-instance Monoid m => Monad (LTrans m) where
-    return = LTrans . return . return
-    LTrans xs >>= f = LTrans $ xs >>= fmap join . T.sequence . fmap (getLTrans . f)
-instance Monoid m => MonadPlus (LTrans m) where
-    mzero = mempty
-    mplus = (<>)
 
--- Trans m [a]
--- Trans m [Trans m [a]]            -- fmap (fmap f)
--- Trans m (Trans m [[a]])          -- fmap sequence
--- Trans m (Trans m [a])            -- fmap (fmap join)
--- Trans m [a]                      -- join
+Trans m [a]
+Trans m [Trans m [a]]            -- fmap (fmap f)
+Trans m (Trans m [[a]])          -- fmap sequence
+Trans m (Trans m [a])            -- fmap (fmap join)
+Trans m [a]                      -- join
 
--- This is NOT equivalent to TList, it will compose transformations over the
--- *entire* list using monadic sequencing rather than *propagating* the traversion over the list 
---
--- Compare:
---
--- > runTransWith (fmap.appEndo) $ T.sequence $ fmap (tapp (e (+1)) . Trans . return) [1,2,3]
---
--- > fmap (runTransWith appEndo) $ T.sequence $ (tapp (e (+1)) . Trans . return) [1,2,3]
---
+This is NOT equivalent to TList, it will compose transformations over the
+*entire* list using monadic sequencing rather than *propagating* the traversion over the list 
 
--- FIXME move
-instance Action (Endo a) a where
-    act = appEndo
+Compare:
+
+> runTransWith (fmap.appEndo) $ T.sequence $ fmap (tapp (e (+1)) . Trans . return) [1,2,3]
+
+> fmap (runTransWith appEndo) $ T.sequence $ (tapp (e (+1)) . Trans . return) [1,2,3]
+-}
 
 {-
     TODO
@@ -318,10 +267,6 @@ instance Keyed (TList m) where
 -- [[Trans m a]]                    -- fmap (fmap join)
 -- [Trans m a]                      -- join
 
-
-joinTrav :: (Monad t, Traversable t, Applicative f) => (a -> f (t b)) -> t a -> f (t b)
-joinTrav f = fmap join . T.traverse f
-
 runTrans :: Action m a => Trans m a -> a
 runTrans = runTransWith act
 
@@ -383,17 +328,6 @@ renderTList (TList xs) = fmap renderTrans xs
 
 
 
-
--- TODO move
-
-mapplyIf :: (Functor f, MonadPlus f) => (a -> Maybe a) -> f a -> f a
-mapplyIf f = mapplyWhen (predicate f) (fromMaybe (error "mapplyIf") . f)
-
-mapplyWhen :: (Functor f, MonadPlus f) => (a -> Bool) -> (a -> a) -> f a -> f a
-mapplyWhen p f xs = let (ts, fs) = mpartition p xs
-    in fmap f ts `mplus` fs
-
-
 data Tree a = Tip a | Bin (Tree a) (Tree a)
     deriving (Functor, Foldable, Traversable)
 instance Semigroup (Tree a) where
@@ -445,39 +379,7 @@ instance Monoid m => MonadPlus (TMTree m) where
     mplus = (<>)
 
 
-
-----------------------------------------------------------------------
-
--- newtype Annotated a = Annotated (TList [String] a)
---     deriving (Functor, Applicative, Monad, MonadPlus, Semigroup, Monoid)
--- instance Num a => Num (Annotated a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     abs = fmap abs
---     signum = fmap signum
---     negate = fmap negate
---     fromInteger = pure . fromInteger
--- 
--- runAnnotated :: Annotated a -> [(a, [String])]
--- runAnnotated (Annotated a) = renderTList a
--- 
--- -- annotate all elements in bar
--- annotate :: Action [String] a => String -> Annotated a -> Annotated a
--- annotate x (Annotated a) = Annotated $ tlapp [x] $ a
--- 
--- -- a bar with no annotations
--- ann1 :: Annotated Int
--- ann1 = return 0
--- 
--- -- annotations compose with >>=
--- ann2 :: Annotated Int
--- ann2 = ann1 <> annotate "a" ann1 >>= (annotate "b" . return)
--- 
--- -- and with join
--- ann3 :: Annotated Int
--- ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
- 
-
+{-
 ----------------------------------------------------------------------
 
 -- Minimal API
@@ -504,10 +406,6 @@ transform u (a,p,s) = (a2,p2,s2)
 
 ----------------------------------------------------------------------
 
-type Time = Double
-type Dur  = Double
-type Span = (Time, Dur)
-
 newtype TT = TT (D.Transformation Span)
     deriving (Monoid, Semigroup)
 
@@ -525,7 +423,6 @@ stretching = makeTransformation . TT . D.scaling
 
 ----------------------------------------------------------------------
 
-type Pitch = Double
 
 newtype PT = PT (D.Transformation Pitch)
     deriving (Monoid, Semigroup)
@@ -538,7 +435,6 @@ transposing x = makeTransformation $ PT $ D.translation x
 
 ----------------------------------------------------------------------
 
-type Amplitude = Double
 
 newtype AT = AT (D.Transformation Amplitude)
     deriving (Monoid, Semigroup)
@@ -557,21 +453,15 @@ delay x     = tlapp (delaying x)
 stretch x   = tlapp (stretching x)
 transpose x = tlapp (transposing x)
 amplify x   = tlapp (amplifying x)
+-}
 
 
--- type Score = TList (Transformation Time Pitch Amplitude)
--- 
--- -- TODO move act formalism up to TList in generalized form
--- -- TODO generalize transformations
--- runScore' :: Score a -> [(Amplitude, Pitch, Span)]
--- runScore' = runTListWith (\t b -> transform t b) . fmap (const defT)
--- 
--- defT = (1,60,(0,1))
--- 
--- runScore :: Score a -> [(Time, Dur, Pitch, Amplitude)]
--- runScore = fmap (\(n,p,(t,d)) -> (t,d,p,n)) . runScore'
--- 
--- 
+type Time = Double
+type Dur  = Double
+type Span = (Time, Dur)
+type Pitch = Double
+type Amplitude = Double
+
 -- foo :: Score String    
 -- foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
 -- 
@@ -646,17 +536,6 @@ asScore  = (id :: Score a -> Score a)
         Affects pitch, dynamics and timbre
 -}
 
--- data DScore m a = Node a | Nest (TList m (DScore m a)) 
---     deriving (Functor, Foldable)
--- instance Monoid m => Semigroup (DScore m a) where
---     Node x <> y      = Nest (return (Node x)) <> y
---     x      <> Node y = x <> Nest (return (Node y))
---     Nest x <> Nest y = Nest (x <> y)
--- -- TODO Monad
--- -- TODO MonadPlus
-
-
-
 -- ((0.0,2.0),"c")
 -- ((2.0,2.0),"d")
 -- ((2.0,0.2),"e")
@@ -668,10 +547,6 @@ asScore  = (id :: Score a -> Score a)
 -- (0,0.5)
 -- (1,0.5)
 -- (2,1)
-
-
-
-swap (x,y) = (y,x)
 
 
 {-
@@ -706,6 +581,21 @@ instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e, Monoid f) => Monoid 
     
 -}
 
+{-
+    
+
+
+    -- TODO move
+
+    mapplyIf :: (Functor f, MonadPlus f) => (a -> Maybe a) -> f a -> f a
+    mapplyIf f = mapplyWhen (predicate f) (fromMaybe (error "mapplyIf") . f)
+
+    mapplyWhen :: (Functor f, MonadPlus f) => (a -> Bool) -> (a -> a) -> f a -> f a
+    mapplyWhen p f xs = let (ts, fs) = mpartition p xs
+        in fmap f ts `mplus` fs
+
+-}
+
 e = Endo
 appE = tlapp . e
 appWhenE p = tlappWhen p . e
@@ -721,4 +611,9 @@ main = print test
 
 
 
+swap (x,y) = (y,x)
+
+-- FIXME move
+instance Action (Endo a) a where
+    act = appEndo
 
