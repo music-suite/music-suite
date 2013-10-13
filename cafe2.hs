@@ -23,9 +23,10 @@ module Cafe2 (
     runTrans,
     runTransWith,
     renderTrans,
+    LTrans,
     TList,
     tlist,
-    tapply,
+    tlistApp,
     fromList,
     runTList,
     runTListWith,
@@ -197,7 +198,7 @@ tapp m = (tell m >>)
 
 -- | Construct a 'TList' from a transformation and a list.
 tlist :: Monoid m => m -> [a] -> TList m a
-tlist m xs = tapply m (fromList xs)
+tlist m xs = tlistApp m (fromList xs)
 
 -- | Construct a 'TList' from a list.
 fromList :: Monoid m => [a] -> TList m a
@@ -205,10 +206,10 @@ fromList = mfromList
 
 -- | Transform a list using the given transformation.
 --
--- > tapply (f <> g) = tapply f . tapply g
+-- > tlistApp (f <> g) = tlistApp f . tlistApp g
 --
-tapply :: Monoid m => m -> TList m a -> TList m a
-tapply m (TList xs) = TList $ fmap (tapp m) xs
+tlistApp :: Monoid m => m -> TList m a -> TList m a
+tlistApp m (TList xs) = TList $ fmap (tapp m) xs
 
 -- | Extract the components.
 runTList :: Action m a => TList m a -> [a]
@@ -253,7 +254,7 @@ runAnnotated (Annotated a) = renderTList a
 
 -- annotate all elements in bar
 annotate :: String -> Annotated a -> Annotated a
-annotate x (Annotated a) = Annotated $ tapply [x] $ a
+annotate x (Annotated a) = Annotated $ tlistApp [x] $ a
 
 -- a bar with no annotations
 ann1 :: Annotated Int
@@ -405,10 +406,10 @@ amplifying = makeTransformation . AT . D.scaling
 
 
 -- Accumulate transformations
-delay x     = tapply (delaying x)
-stretch x   = tapply (stretching x)
-transpose x = tapply (transposing x)
-amplify x   = tapply (amplifying x)
+delay x     = tlistApp (delaying x)
+stretch x   = tlistApp (stretching x)
+transpose x = tlistApp (transposing x)
+amplify x   = tlistApp (amplifying x)
 
 
 -- type Score = TList (Transformation Time Pitch Amplitude)
