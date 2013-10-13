@@ -19,11 +19,14 @@
 module Cafe2 (
     -- * Internal
     Trans,
+    tapp,
     runTrans,
     runTransWith,
     renderTrans,
     TList,
-    tells,
+    tlist,
+    tapply,
+    fromList,
     runTList,
     runTListWith,
     renderTList,
@@ -64,14 +67,15 @@ module Cafe2 (
     -- * Score
     Score,   
     runScore,
-    DScore,
 ) where
 
 import Data.Monoid.Action
 import Data.Monoid.MList -- misplaced Action () instance
 
+import Data.Key
 import Data.Default
 import Data.Basis
+import Data.Maybe
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.AdditiveGroup hiding (Sum, getSum)
@@ -79,6 +83,7 @@ import Data.VectorSpace hiding (Sum, getSum)
 import Data.LinearMap
 
 import Control.Monad
+import Control.Monad.Plus
 import Control.Arrow
 import Control.Applicative
 import Control.Monad.Writer hiding ((<>))
@@ -95,10 +100,20 @@ import qualified Diagrams.Core.Transform as D
 -}
 
 -- |
--- 'Trans' is just the 'Writer' monad with a simplified interface.
+-- 'Trans' is a restricted version of the 'Writer' monad.
 --
 newtype Trans m a = Trans (Writer m a)
-    deriving (Monad, MonadWriter m, Functor, Foldable, Traversable)
+    deriving (Monad, MonadWriter m, Functor, Applicative, Foldable, Traversable)
+instance (Monoid m, Monoid a) => Semigroup (Trans m a) where 
+    -- TODO not sure this must require Monoid m
+    Trans w <> Trans u = writer $ runWriter w `mappend` runWriter u
+instance (Monoid m, Monoid a) => Monoid (Trans m a) where 
+    mempty  = return mempty
+    mappend = (<>)
+
+type instance Key (Trans m) = m
+instance Keyed (Trans m) where
+    mapWithKey f (Trans w) = Trans $ mapWriter (\(a,w) -> (f w a, w)) w
 
 {-
 Alternative implementation:
@@ -123,8 +138,31 @@ instance Monoid m => Monad ((,) m) where
         (m2,x2) = f x1
         in (m1 `mappend` m2,x2)
 
+
 -- |
--- List of values in the 'Trans' monad.
+-- Transformable list: semantically a list of values in the 'Trans' monad.
+--
+-- TODO This will actually work with any traversable monad, including Writer, Logic, List and Maybe.
+--
+newtype LTrans m a = LTrans { getLTrans :: Trans m [a] }
+    deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
+instance (IsString a, Monoid m) => IsString (LTrans m a) where
+    fromString = return . fromString
+instance Monoid m => Applicative (LTrans m) where
+    pure = return
+    (<*>) = ap
+instance Monoid m => Monad (LTrans m) where
+    return = LTrans . return . return
+    LTrans xs >>= f = LTrans $ xs >>= joinTrav (getLTrans . f)
+instance Monoid m => MonadPlus (LTrans m) where
+    mzero = mempty
+    mplus = (<>)
+
+
+-- |
+-- Transformable list: semantically a list of values in the 'Trans' monad.
+--
+-- TODO This will actually work with any traversable monad, including Writer, Logic, List and Maybe.
 --
 newtype TList m a = TList { getTList :: [Trans m a] }
     deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
@@ -139,48 +177,12 @@ instance Monoid m => Monad (TList m) where
 instance Monoid m => MonadPlus (TList m) where
     mzero = mempty
     mplus = (<>)
-
--- Same thing with orinary pairs:
-
-newtype TList' m a = TList' { getTList' :: [(m, a)] }
-    deriving (Show, Semigroup, Monoid, Functor, Foldable, Traversable)
-instance Monoid m => Applicative (TList' m) where
-    pure = return
-    (<*>) = ap
-instance Monoid m => Monad (TList' m) where
-    return = TList' . return . return
-    TList' xs >>= f = TList' $ xs >>= joinTrav (getTList' . f)
-instance Monoid m => MonadPlus (TList' m) where
-    mzero = mempty
-    mplus = (<>)
+type instance Key (TList m) = m
+instance Keyed (TList m) where
+    mapWithKey f (TList xs) = TList $ fmap (mapWithKey f) xs
 
 joinTrav :: (Monad t, Traversable t, Applicative f) => (a -> f (t b)) -> t a -> f (t b)
 joinTrav f = fmap join . T.traverse f
-
-{-
-join' :: Monad t => t (t b) -> t b
-join' = join
-
-joinedSeq :: (Monad t, Traversable t, Applicative f) => t (f (t a)) -> f (t a)
-joinedSeq = fmap join . T.sequenceA
-
-
-bindSeq :: (Monad f, Applicative f, Traversable t) => f (t (f a)) -> f (t a)
-bindSeq = bind T.sequenceA 
-
-travBind :: (Monad f, Applicative f, Traversable t) => (a -> f b) -> t (f a) -> f (t b)
-travBind f = T.traverse (bind f)
--}
-
-{-
-    Free theorem of sequence/dist    
-        sequence . fmap (fmap k)  =  fmap (fmap k) . sequence
-
-    Corollaries
-        traverse (f . g)  =  traverse f . fmap g
-        traverse (fmap k . f)  =  fmap (fmap k)  =   traverse f
-
--}
 
 runTrans :: Action m a => Trans m a -> a
 runTrans = runTransWith act
@@ -191,17 +193,46 @@ runTransWith f = uncurry (flip f) . renderTrans
 renderTrans :: Trans m a -> (a, m)
 renderTrans (Trans x) = runWriter x
 
+tapp m = (tell m >>)
+
+-- | Construct a 'TList' from a transformation and a list.
+tlist :: Monoid m => m -> [a] -> TList m a
+tlist m xs = tapply m (fromList xs)
+
+-- | Construct a 'TList' from a list.
+fromList :: Monoid m => [a] -> TList m a
+fromList = mfromList
+
+-- | Transform a list using the given transformation.
+--
+-- > tapply (f <> g) = tapply f . tapply g
+--
+tapply :: Monoid m => m -> TList m a -> TList m a
+tapply m (TList xs) = TList $ fmap (tapp m) xs
+
+-- | Extract the components.
 runTList :: Action m a => TList m a -> [a]
 runTList (TList xs) = fmap runTrans xs
 
+-- | Extract the components using the supplied function to render the cached transformations.
+runTListWith :: (m -> b -> b) -> TList m b -> [b]
 runTListWith f (TList xs) = fmap (runTransWith f) xs
 
+-- | Extract the components and cached transformations.
 renderTList :: TList m a -> [(a, m)]
 renderTList (TList xs) = fmap renderTrans xs
 
 
-tells :: Monoid m => m -> TList m a -> TList m a
-tells a (TList xs) = TList $ fmap (tell a >>) xs
+
+
+-- TODO move
+
+mapplyIf :: (Functor f, MonadPlus f) => (a -> Maybe a) -> f a -> f a
+mapplyIf f = mapplyWhen (predicate f) (fromMaybe (error "mapplyIf") . f)
+
+mapplyWhen :: (Functor f, MonadPlus f) => (a -> Bool) -> (a -> a) -> f a -> f a
+mapplyWhen p f xs = let (ts, fs) = mpartition p xs
+    in fmap f ts `mplus` fs
 
 
 
@@ -222,7 +253,7 @@ runAnnotated (Annotated a) = renderTList a
 
 -- annotate all elements in bar
 annotate :: String -> Annotated a -> Annotated a
-annotate x (Annotated a) = Annotated $ tells [x] $ a
+annotate x (Annotated a) = Annotated $ tapply [x] $ a
 
 -- a bar with no annotations
 ann1 :: Annotated Int
@@ -374,45 +405,71 @@ amplifying = makeTransformation . AT . D.scaling
 
 
 -- Accumulate transformations
-delay x     = tells (delaying x)
-stretch x   = tells (stretching x)
-transpose x = tells (transposing x)
-amplify x   = tells (amplifying x)
+delay x     = tapply (delaying x)
+stretch x   = tapply (stretching x)
+transpose x = tapply (transposing x)
+amplify x   = tapply (amplifying x)
 
 
--- newtype Score a = Score { getScore :: TList T a }
-    -- deriving (Monoid, Functor, Applicative, Monad, Foldable, Traversable)
--- instance IsString a => IsString (Score a) where
---     fromString = Score . fromString
-
-type Score = TList (Transformation Time Pitch Amplitude)
-
--- TODO move act formalism up to TList in generalized form
--- TODO generalize transformations
-runScore' = fmap (\(x,t) -> 
-    (transform t (1,60,(0,1)), x)
-    ) . renderTList
-
-runScore :: Score a -> [(Dur, Time, Pitch, Amplitude, a)]
-runScore = fmap (\((n,p,(t,d)), x) -> (d,t,p,n,x)) . runScore'
-
-
-foo :: Score String    
-foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
-
+-- type Score = TList (Transformation Time Pitch Amplitude)
+-- 
+-- -- TODO move act formalism up to TList in generalized form
+-- -- TODO generalize transformations
+-- runScore' :: Score a -> [(Amplitude, Pitch, Span)]
+-- runScore' = runTListWith (\t b -> transform t b) . fmap (const defT)
+-- 
+-- defT = (1,60,(0,1))
+-- 
+-- runScore :: Score a -> [(Time, Dur, Pitch, Amplitude)]
+-- runScore = fmap (\(n,p,(t,d)) -> (t,d,p,n)) . runScore'
+-- 
+-- 
+-- foo :: Score String    
+-- foo = stretch 2 $ "c" <> (delay 1 ("d" <> stretch 0.1 "e"))
+-- 
 -- foo :: Score String
 -- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
+type Onset   = Sum Time
+type Offset  = Sum Time
+type Score a = TList (Onset, Offset) a
+runScore = runTList
 
 
-data DScore m a = Node a | Nest (TList m (DScore m a)) 
-    deriving (Functor, Foldable)
-instance Monoid m => Semigroup (DScore m a) where
-    Node x <> y      = Nest (return (Node x)) <> y
-    x      <> Node y = x <> Nest (return (Node y))
-    Nest x <> Nest y = Nest (x <> y)
--- TODO Monad
--- TODO MonadPlus
+{-
+    Time:
+        For each note: onset and onset (or equivalently onset and duration)
+        Optionally more paramters such as pre-onset, post-onset, post-offset
+            [preOn A on D postOn S off R postOff]
+    Pitch:
+        For each note a custom pitch value (usually Common.Pitch)
+        Optionally for each note a gliss/slide curve, indicating shape to next note
+            (generally a simple slope function)
+        Alternatively, for each part a (Behaviour Frequency) etc
+    Dynamics:
+        For each note an integral dynamic value (usually Common.Level)
+        Optionally for each note a cresc/dim curve, indicating shape to next note
+            (generally a simple slope function)
+        Alternatively, for each part a (Behaviour Amplitude) etc
+    Part:
+        For each note an ordered integral (or fractional) indicator of instrument and/or subpart
+    Space:
+        For each note a point in R2 or R3
+        Alternatively, for each part a (Behaviour R2) etc
+    Misc/Timbre:
+        Instrument changes, playing technique or timbral changes, i.e "sul pont -> sul tasto"
+    Articulation:
+        Affects pitch, dynamics and timbre
+-}
+
+-- data DScore m a = Node a | Nest (TList m (DScore m a)) 
+--     deriving (Functor, Foldable)
+-- instance Monoid m => Semigroup (DScore m a) where
+--     Node x <> y      = Nest (return (Node x)) <> y
+--     x      <> Node y = x <> Nest (return (Node y))
+--     Nest x <> Nest y = Nest (x <> y)
+-- -- TODO Monad
+-- -- TODO MonadPlus
 
 
 
@@ -431,3 +488,31 @@ instance Monoid m => Semigroup (DScore m a) where
 
 
 swap (x,y) = (y,x)
+
+
+
+{-
+join' :: Monad t => t (t b) -> t b
+join' = join
+
+joinedSeq :: (Monad t, Traversable t, Applicative f) => t (f (t a)) -> f (t a)
+joinedSeq = fmap join . T.sequenceA
+
+
+bindSeq :: (Monad f, Applicative f, Traversable t) => f (t (f a)) -> f (t a)
+bindSeq = bind T.sequenceA 
+
+travBind :: (Monad f, Applicative f, Traversable t) => (a -> f b) -> t (f a) -> f (t b)
+travBind f = T.traverse (bind f)
+-}
+
+{-
+    Free theorem of sequence/dist    
+        sequence . fmap (fmap k)  =  fmap (fmap k) . sequence
+
+    Corollaries
+        traverse (f . g)  =  traverse f . fmap g
+        traverse (fmap k . f)  =  fmap (fmap k)  =   traverse f
+
+-}
+
