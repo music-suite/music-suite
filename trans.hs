@@ -16,12 +16,12 @@
     TypeOperators
     #-}
 
-module Cafe2 (
+module Trans (
     -- * Internal
     Trans,
     tapp,
     runTrans,
-    runTransWith,
+    -- runTransWith,
     -- renderTrans,
     LTrans,
     TList,
@@ -30,18 +30,17 @@ module Cafe2 (
     tlappWhen,
     -- fromList,
     runTList,
-    runTListWith,
-    getTListMonoid,
+    -- runTListWith,
     -- renderTList,
 
     Tree,
     MTree,
     TMTree,
     
-    -- * Annotations
-    Annotated(..),
-    runAnnotated,
-    annotate,
+    -- -- * Annotations
+    -- Annotated(..),
+    -- runAnnotated,
+    -- annotate,
 
     -- -- * Transformations
     -- Transformation,
@@ -136,11 +135,17 @@ instance Monoid m => Monad (Write m) where
     Write (x1,m1) >>= f = let
         Write (x2,m2) = f x1
         in Write (x2,m1 `mappend` m2)
+
+    Write (x1,m1) >> y = let
+        Write (x2,m2) = y
+        in Write (x2,m1 `mappend` m2)
+
+    
 -}
 
--- Same thing with orinary pairs:
+{-
+Same thing with orinary pairs:
 
--- instance Functor ((,) a)
 deriving instance Monoid m => Foldable ((,) m)
 deriving instance Monoid m => Traversable ((,) m)
 instance Monoid m => Monad ((,) m) where
@@ -148,6 +153,7 @@ instance Monoid m => Monad ((,) m) where
     (m1,x1) >>= f = let
         (m2,x2) = f x1
         in (m1 `mappend` m2,x2)
+-}
 
 
 -- |
@@ -164,7 +170,7 @@ instance Monoid m => Applicative (LTrans m) where
     (<*>) = ap
 instance Monoid m => Monad (LTrans m) where
     return = LTrans . return . return
-    LTrans xs >>= f = LTrans $ xs >>= joinTrav (getLTrans . f)
+    LTrans xs >>= f = LTrans $ xs >>= fmap join . T.sequence . fmap (getLTrans . f)
 instance Monoid m => MonadPlus (LTrans m) where
     mzero = mempty
     mplus = (<>)
@@ -177,7 +183,108 @@ instance Monoid m => MonadPlus (LTrans m) where
 
 -- This is NOT equivalent to TList, it will compose transformations over the
 -- *entire* list using monadic sequencing rather than *propagating* the traversion over the list 
+--
+-- Compare:
+--
+-- > runTransWith (fmap.appEndo) $ T.sequence $ fmap (tapp (e (+1)) . Trans . return) [1,2,3]
+--
+-- > fmap (runTransWith appEndo) $ T.sequence $ (tapp (e (+1)) . Trans . return) [1,2,3]
+--
 
+-- FIXME move
+instance Action (Endo a) a where
+    act = appEndo
+
+{-
+    TODO
+    Assure consistency of act with fmap
+    
+    We need something like:
+        
+    > tlapp m . fmap g = fmap (act m . g)
+    > fmap g . tlapp m = fmap (g . act m)
+
+    
+    Can this be derived from the Action laws (satisfied for Endo).
+    
+    > act mempty = id
+    > act (m1 `mappend` m2) = act m1 . act m2
+
+    Try
+    > fmap g . tlapp m = fmap (g . act m)
+    -- tlapp law
+    > fmap g . fmap (tapp m) = fmap (g . act m)
+    -- definition
+    > fmap (g . tapp m) = fmap (g . act m)
+    -- functor law
+
+    Need to prove
+    > fmap (g . tapp m)      = fmap (g . act m)
+    -- theorem
+    > fmap (g . (tell m >>)) = fmap (g . act m)
+    -- definition
+    > fmap (g . (Write ((), m) >>)) = fmap (g . act m)
+    -- definition
+    > fmap (g . (\x -> Write ((), m) >> x)) = fmap (g . act m)
+    -- expand section
+    > fmap (g . (\Write (x2,m2) -> Write ((), m) >> Write (x2,m2))) = fmap (g . act m)
+    -- expand
+    > fmap (g . (\Write (x2,m2) -> Write (x2,m <> m2))) = fmap (g . act m)
+    -- expand
+    > \Write (x2,m2) -> Write (x2,m <> m2))) = act m
+    -- simplify
+    
+
+    
+    
+
+    > act mempty = id
+    > act (m1 `mappend` m2) = act m1 . act m2
+
+    Try
+    > fmap g . tlapp m = fmap (g . act m)
+    -- tlapp law
+    > fmap g . fmap (ar . tapp m) = fmap (g . act m)
+    -- definition
+    > fmap (g . ar . tapp m) = fmap (g . act m)
+    -- functor law
+
+    Need to prove
+    > fmap (g . ar . tapp m)      = fmap (g . act m)
+    -- theorem
+    > fmap (g . ar . (tell m >>)) = fmap (g . act m)
+    -- definition
+    > fmap (g . ar . (Write ((), m) >>)) = fmap (g . act m)
+    -- definition
+    > fmap (g . ar . (\x -> Write ((), m) >> x)) = fmap (g . act m)
+    -- expand section
+    > fmap (g . ar . (\Write (x2,m2) -> Write ((), m) >> Write (x2,m2))) = fmap (g . act m)
+    -- expand
+    > fmap (g . ar . (\Write (x2,m2) -> Write (x2,m <> m2))) = fmap (g . act m)
+    -- expand
+    > ar . \Write (x2,m2) -> Write (x2,m <> m2) = act m
+    -- simplify
+    > return . uncurry (flip act) . runWriter . \Write (x2,m2) -> Write (x2,m <> m2) = act m
+    -- simplify
+    > return . uncurry (flip act) . \(x2,m2) -> (x2,m <> m2))) = act m
+    -- removes Write wrapper
+    > (\x -> (x,mempty)) . uncurry (flip act) . \(x2,m2) -> (x2,m <> m2) = act m
+
+    > (\x -> (uncurry (flip act) x,mempty)) . \(x2,m2) -> (x2,m <> m2) = act m
+
+
+    > (\(x,m2) -> (act m2 x, mempty)) . fmap (m <>) = act m
+    
+    > (\(x,m2) -> (act (m <> m2) x, mempty)) = act m
+
+
+
+    ar = return . uncurry (flip act) . runWriter
+
+    tell w = Write ((), w)
+    Write (_,m1) >> Write (x2,m2) = Write (x2,m1 `mappend` m2)
+
+-}
 
 -- |
 -- Transformable list.
@@ -197,7 +304,7 @@ instance Monoid m => Applicative (TList m) where
     (<*>) = ap
 instance Monoid m => Monad (TList m) where
     return = TList . return . return
-    TList xs >>= f = TList $ join . fmap (fmap join . T.traverse (getTList . f)) $ xs
+    TList xs >>= f = TList $ join . fmap (fmap join . T.sequence . fmap (getTList . f)) $ xs
 instance Monoid m => MonadPlus (TList m) where
     mzero = mempty
     mplus = (<>)
@@ -221,17 +328,21 @@ runTrans = runTransWith act
 runTransWith :: (m -> a -> a) -> Trans m a -> a
 runTransWith f = uncurry (flip f) . renderTrans
 
+assureRun :: (Monoid m, Action m a) => Trans m a -> Trans m a
+assureRun = return . runTrans
+
 renderTrans :: Trans m a -> (a, m)
 renderTrans (Trans x) = runWriter x
 
-tapp m = (tell m >>)
+tapp :: (Action m a, Monoid m) => m -> Trans m a -> Trans m a
+tapp m = assureRun . tapp' m
 
-
-
+tapp' :: Monoid m => m -> Trans m a -> Trans m a
+tapp' m = (tell m >>)
 
 
 -- | Construct a 'TList' from a transformation and a list.
-tlist :: Monoid m => m -> [a] -> TList m a
+tlist :: (Action m a, Monoid m)  => m -> [a] -> TList m a
 tlist m xs = tlapp m (fromList xs)
 
 -- | Construct a 'TList' from a list.
@@ -242,12 +353,14 @@ fromList = mfromList
 --
 -- > tlapp (f <> g) = tlapp f . tlapp g
 --
-tlapp :: Monoid m => m -> TList m a -> TList m a
+tlapp :: (Action m a, Monoid m)  => m -> TList m a -> TList m a
 tlapp m (TList xs) = TList $ fmap (tapp m) xs
 
+
+-- FIXME violates which law?
 -- | Transform a list if the predicate holds.
 --
-tlappWhen :: Monoid m => (a -> Bool) -> m -> TList m a -> TList m a
+tlappWhen :: (Action m a, Monoid m)  => (a -> Bool) -> m -> TList m a -> TList m a
 tlappWhen p f xs = let (ts, fs) = mpartition p xs
     in tlapp f ts `mplus` fs
 
@@ -304,9 +417,6 @@ instance Monoid m => Applicative (TTree m) where
 instance Monoid m => Monad (TTree m) where
     return = TTree . return . return
     TTree xs >>= f = TTree $ join . fmap (fmap join . T.mapM (getTTree . f)) $ xs
--- instance Monoid m => MonadPlus (TTree m) where
-    -- mzero = mempty
-    -- mplus = (<>)
 
 newtype MTree a = MTree { getMTree :: (Maybe (Tree a)) }
     deriving (Semigroup, Functor, Foldable, Traversable)
@@ -338,97 +448,35 @@ instance Monoid m => MonadPlus (TMTree m) where
 
 ----------------------------------------------------------------------
 
-newtype Annotated a = Annotated (TList [String] a)
-    deriving (Functor, Applicative, Monad, MonadPlus, Semigroup, Monoid)
-instance Num a => Num (Annotated a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    abs = fmap abs
-    signum = fmap signum
-    negate = fmap negate
-    fromInteger = pure . fromInteger
-
-runAnnotated :: Annotated a -> [(a, [String])]
-runAnnotated (Annotated a) = renderTList a
-
--- annotate all elements in bar
-annotate :: String -> Annotated a -> Annotated a
-annotate x (Annotated a) = Annotated $ tlapp [x] $ a
-
--- a bar with no annotations
-ann1 :: Annotated Int
-ann1 = return 0
-
--- annotations compose with >>=
-ann2 :: Annotated Int
-ann2 = ann1 <> annotate "a" ann1 >>= (annotate "b" . return)
-
--- and with join
-ann3 :: Annotated Int
-ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
+-- newtype Annotated a = Annotated (TList [String] a)
+--     deriving (Functor, Applicative, Monad, MonadPlus, Semigroup, Monoid)
+-- instance Num a => Num (Annotated a) where
+--     (+) = liftA2 (+)
+--     (*) = liftA2 (*)
+--     abs = fmap abs
+--     signum = fmap signum
+--     negate = fmap negate
+--     fromInteger = pure . fromInteger
+-- 
+-- runAnnotated :: Annotated a -> [(a, [String])]
+-- runAnnotated (Annotated a) = renderTList a
+-- 
+-- -- annotate all elements in bar
+-- annotate :: Action [String] a => String -> Annotated a -> Annotated a
+-- annotate x (Annotated a) = Annotated $ tlapp [x] $ a
+-- 
+-- -- a bar with no annotations
+-- ann1 :: Annotated Int
+-- ann1 = return 0
+-- 
+-- -- annotations compose with >>=
+-- ann2 :: Annotated Int
+-- ann2 = ann1 <> annotate "a" ann1 >>= (annotate "b" . return)
+-- 
+-- -- and with join
+-- ann3 :: Annotated Int
+-- ann3 = join $ annotate "d" $ return (annotate "c" (return 0) <> return 1)
  
-
-
-----------------------------------------------------------------------
-
-
-
--- ----------------------------------------------------------------------
--- 
--- type T = ((((),AT),PT),TT)
--- idT = (mempty::T)
--- 
--- -- TODO speficy
--- instance (Action t a, Action u b) => Action (t, u) (a, b) where
---     act (t, u) (a, b) = (act t a, act u b)  
--- 
--- -- This is the raw writer defined above
--- monR :: Monoid b => a -> (b, a)
--- monR = return
--- 
--- monL :: Monoid b => a -> (a, b)
--- monL = swap . return
--- 
--- class HasT a where
---     makeTransformation :: a -> T
--- instance HasT TT where
---     makeTransformation = monR
--- instance HasT PT where
---     makeTransformation = monL . monR
--- instance HasT AT where
---     makeTransformation = monL . monL . monR
--- 
--- 
--- -- untrip (a,b,c) = ((a,b),c)
--- -- trip ((a,b),c) = (a,b,c)
--- 
-
-unpack3 :: ((a, b), c) -> (a, b, c)
-unpack4 :: (((a, b), c), d) -> (a, b, c, d)
-unpack5 :: ((((a, b), c), d), e) -> (a, b, c, d, e)
-unpack6 :: (((((a, b), c), d), e), f) -> (a, b, c, d, e, f)
-
-unpack3 ((c,b),a)                           = (c,b,a)
-unpack4 ((unpack3 -> (d,c,b),a))            = (d,c,b,a)
-unpack5 ((unpack4 -> (e,d,c,b),a))          = (e,d,c,b,a)
-unpack6 ((unpack5 -> (f,e,d,c,b),a))        = (f,e,d,c,b,a)
-
-pack3 :: (b, c, a) -> ((b, c), a)
-pack4 :: (c, d, b, a) -> (((c, d), b), a)
-pack5 :: (d, e, c, b, a) -> ((((d, e), c), b), a)
-pack6 :: (e, f, d, c, b, a) -> (((((e, f), d), c), b), a)
-
-pack3 (c,b,a)                               = ((c,b),a)
-pack4 (d,c,b,a)                             = (pack3 (d,c,b),a)
-pack5 (e,d,c,b,a)                           = (pack4 (e,d,c,b),a)
-pack6 (f,e,d,c,b,a)                         = (pack5 (f,e,d,c,b),a)
-
-
--- -- first f = swap . fmap f . swap
--- 
--- actT :: T -> (Amplitude,Pitch,Span) -> (Amplitude,Pitch,Span)
--- actT = act
-
 
 ----------------------------------------------------------------------
 
@@ -530,11 +578,11 @@ amplify x   = tlapp (amplifying x)
 -- foo :: Score String
 -- foo = amplify 2 $ transpose 1 $ delay 2 $ "c"
 
-type Onset   = Sum Time
-type Offset  = Sum Time                 
-type Frequency = Double
-type Part = Int
-type Behaviour a = Time -> a
+type Onset          = Sum Time
+type Offset         = Sum Time                 
+type Frequency      = Double
+type Part           = Int
+type Behaviour a    = Time -> a
 type R2 = (Double, Double) 
 
 
@@ -549,7 +597,7 @@ type R2 = (Double, Double)
 type Articulation = (Endo (Pitch -> Pitch), Endo (Amplitude -> Amplitude))
 
 
-type Score a = TMTree 
+type Score a = TList 
     ((Sum Time, Sum Time), 
      (Time -> Product Pitch, Time -> Product Amplitude),
      Option (Data.Semigroup.Last Part),
@@ -567,9 +615,10 @@ foo = undefined
 
 -- This requires the transformation type to be a Monoid
 bar = join (return foo)
-     
-runScore = runTListWith appEndo
 
+-- runScore :: {-(Action m-type n-type) =>-} Score a -> [n-type]     
+runScore = runTList . asScore
+asScore  = (id :: Score a -> Score a)
 
 {-
     Time:
@@ -632,3 +681,44 @@ instance (Monoid a, Monoid b, Monoid c, Monoid d, Monoid e, Monoid f) => Monoid 
         (a <> a1, b <> b1, c <> c1, d <> d1, e <> e1, f <> f1)
       where (<>) = mappend
 -}
+
+{-
+    unpack3 :: ((a, b), c) -> (a, b, c)
+    unpack4 :: (((a, b), c), d) -> (a, b, c, d)
+    unpack5 :: ((((a, b), c), d), e) -> (a, b, c, d, e)
+    unpack6 :: (((((a, b), c), d), e), f) -> (a, b, c, d, e, f)
+
+    unpack3 ((c,b),a)                           = (c,b,a)
+    unpack4 ((unpack3 -> (d,c,b),a))            = (d,c,b,a)
+    unpack5 ((unpack4 -> (e,d,c,b),a))          = (e,d,c,b,a)
+    unpack6 ((unpack5 -> (f,e,d,c,b),a))        = (f,e,d,c,b,a)
+
+    pack3 :: (b, c, a) -> ((b, c), a)
+    pack4 :: (c, d, b, a) -> (((c, d), b), a)
+    pack5 :: (d, e, c, b, a) -> ((((d, e), c), b), a)
+    pack6 :: (e, f, d, c, b, a) -> (((((e, f), d), c), b), a)
+
+    pack3 (c,b,a)                               = ((c,b),a)
+    pack4 (d,c,b,a)                             = (pack3 (d,c,b),a)
+    pack5 (e,d,c,b,a)                           = (pack4 (e,d,c,b),a)
+    pack6 (f,e,d,c,b,a)                         = (pack5 (f,e,d,c,b),a)
+
+    
+-}
+
+e = Endo
+appE = tlapp . e
+appWhenE p = tlappWhen p . e
+
+default (Integer)
+
+test :: [Integer]
+test = runTList $ 
+    appWhenE (/= (0::Integer)) (*(10::Integer)) $ (return (-1)) <> return 2
+
+
+main = print test
+
+
+
+
