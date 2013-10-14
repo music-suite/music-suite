@@ -242,8 +242,6 @@ Compare:
 --
 -- See Jones and Duponcheel, /Composing Monads/ (1993).
 --
--- TODO This will actually work with any traversable monad, including Writer, Logic, List and Maybe.
---
 newtype TList m a = TList { getTList :: [Trans m a] }
     deriving (Semigroup, Monoid, Functor, Foldable, Traversable)
 instance (IsString a, Monoid m) => IsString (TList m a) where
@@ -279,6 +277,8 @@ assureRun = return . runTrans
 renderTrans :: Trans m a -> (a, m)
 renderTrans (Trans x) = runWriter x
 
+-- |
+-- > tapp m = fmap (act m)
 tapp :: (Action m a, Monoid m) => m -> Trans m a -> Trans m a
 tapp m = assureRun . tapp' m
 
@@ -295,6 +295,10 @@ fromList :: Monoid m => [a] -> TList m a
 fromList = mfromList
 
 -- | Transform a list.
+--
+-- > tlapp m = fmap (act m)
+--
+-- TODO does it follow:
 --
 -- > tlapp (f <> g) = tlapp f . tlapp g
 --
@@ -486,6 +490,10 @@ type R2 = (Double, Double)
 -- Articulation is a transformation that acts over (pitch, dynamics, onset, offset) by ?
 type Articulation = (Endo (Pitch -> Pitch), Endo (Amplitude -> Amplitude))
 
+{-
+    return x
+    
+-}
 
 type Score a = TList 
     ((Sum Time, Sum Time), 
