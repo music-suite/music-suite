@@ -17,8 +17,20 @@
     #-}
 
 module Trans2 (
-    -- * Basic
+    -- * Basics
+    -- $basics
+    
     module Control.Monad.Plus,
+
+    PTrans(..),
+    papp,
+    papp', -- :: PTrans a -> (a -> Maybe a)
+    pact,
+    palways, -- :: (a -> a) -> PTrans a
+    pnever, -- :: PTrans a
+    pwhen, -- :: (a -> Bool) -> PTrans a
+    peither, -- :: PTrans a -> PTrans a -> PTrans a
+    
     
     -- * Internal
     Trans,
@@ -54,6 +66,7 @@ import Control.Monad
 import Control.Monad.Plus
 import Control.Arrow
 import Control.Applicative
+import qualified Control.Category as Category
 import Control.Monad.Writer hiding ((<>))
 import Data.String
 import Data.Semigroup
@@ -61,6 +74,64 @@ import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import qualified Data.Traversable as T
 import qualified Diagrams.Core.Transform as D
+
+
+
+{- $basics
+
+   A score is a list- or tree like structure, and has a 'MonadPlus' instance. This gives
+   us composition using '<>' or 'mplus', as well as nesting using '>>=' and 'return',
+   We also get /filtering/ using 'mmapMaybe' and 'mpartition' etc.
+   
+   We /transform/ a score by adding /transformation monoids/. These are 'Monoid' values
+   which have an 'Action' into the /note type/ of the score. For example, time transformations
+   act on time and duration, pitch transformations act on pitch etc.
+   
+   TODO Main challenge is how to combine 'MonadPlus' etc with filtering and `ordinary` 
+   transformations such as fmap.
+   
+-}
+
+
+
+
+-- | Partial transformation semigroup.
+
+newtype PTrans a = PTrans { getPTrans :: (Partial a a) }
+
+-- TODO move to monadplus
+backtrack f x = fromMaybe x (f x)
+
+papp :: PTrans a -> (a -> a)
+papp = backtrack . papp'
+
+papp' :: PTrans a -> (a -> Maybe a)
+papp' = getPartial . getPTrans
+
+pact :: (Action m a) => m -> PTrans a
+pact = palways . act
+
+palways :: (a -> a) -> PTrans a
+palways = PTrans . Partial . always
+
+pnever :: PTrans a
+pnever = PTrans . Partial $ never
+
+pwhen :: (a -> Bool) -> PTrans a
+pwhen = PTrans . Partial . partial
+
+peither :: PTrans a -> PTrans a -> PTrans a
+peither = inPTrans2 mplus
+
+inPTrans  = getPTrans ~> PTrans
+inPTrans2 = getPTrans ~> inPTrans
+
+instance Semigroup (PTrans a) where
+    (<>) = inPTrans2 (Category..)
+instance Monoid (PTrans a) where
+    mempty  = PTrans $ Category.id
+    mappend = inPTrans2 (Category..)
+
 
 {-
     Compare
@@ -396,3 +467,6 @@ swap (x,y) = (y,x)
 instance Action (Endo a) a where
     act = appEndo
 
+
+(~>) :: (a' -> a) -> (b -> b') -> ((a -> b) -> (a' -> b'))
+(i ~> o) f = o . f . i
