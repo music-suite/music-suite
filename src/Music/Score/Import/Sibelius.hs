@@ -92,7 +92,7 @@ type IsSibelius a = (
     HasPart' a, 
     Enum (Part a), 
     HasPitch a, 
-    Num (PitchOf a), 
+    Num (Pitch a), 
     HasTremolo a, 
     HasArticulation a,
     Tiable a
