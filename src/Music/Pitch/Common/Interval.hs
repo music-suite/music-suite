@@ -293,21 +293,13 @@ isNegative (Interval (oa, _, _)) = oa < 0
 -- |
 -- Intervallic inversion.
 --
--- The inversion of a simple interval is determined by the following rules:
+-- The inversion an interval is determined as follows:
 --
--- * The interval number and the number of its inversion always add up to nine
---   (i.e. 4 + 5 = 9).
+-- * The number of a simple interval the difference of nine and the number of its inversion.
 --
--- * The inversion of a major interval is a minor interval, and vice versa;
---   the inversion of a perfect interval is also perfect; the inversion of an
---   augmented interval is a diminished interval, and vice versa; the
---   inversion of a doubly augmented interval is a doubly diminished interval,
---   and vice versa.
+-- * The quality of a simple interval is the inversion of the quality of its inversion.
 --
--- The inversion of any compound interval is always the same as the inversion
--- of the simple interval from which it is compounded, i.e.:
---
--- > invert = simple . negate
+-- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
 invert = simple . negate
