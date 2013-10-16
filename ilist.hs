@@ -26,6 +26,7 @@ import Prelude hiding (span) -- TODO
 import Control.Arrow
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Plus
 
 import Control.Lens
 import Data.Key
@@ -76,13 +77,18 @@ written f (Write (a, m)) = Write (a, f m)
     be the key.
 -}
 
+-- TODO move
+mcompose :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
+mcompose = (join .) . fmap . (fmap join .) . T.mapM
+
+
 -- | Value with a focus.
 newtype Focus' k f a = Focus' { unFocus' :: (Write k (f a)) }
     deriving (Functor, Foldable, Traversable, Eq, Show)
 inFocus' = unFocus' ~> Focus'
 instance (Monoid k, k ~ Key f, Monad f, Traversable f) => Monad (Focus' k f) where
     return = Focus' . return . return
-    Focus' xs >>= f = Focus' $ join . fmap (fmap join . T.mapM (unFocus' . f)) $ xs
+    Focus' xs >>= f = Focus' $ mcompose (unFocus' . f) $ xs
 
 type Focus f a = Focus' (Key f) f a
 
@@ -130,9 +136,25 @@ pastKeys    = fmap getKey . past
 example1 :: Focus (Map Int) String
 example1 = pick 0 $ Map.fromList [(0, "hans"), (1, "music")]
 
+example2 :: Focus ((->) Int) Int
+example2 = pick 100 (+ 10)
 
--- example2 :: Focus ((->) Int) Int
 
+newtype Range f a = Range { getRange :: [Focus f a] }
+    deriving (Functor)
+instance Lookup f => Foldable (Range f) where
+    foldMap f (Range xs) = mconcat $ fmap f $ mcatMaybes $ fmap get xs
+
+range :: Enum (Key f) => Key f -> Key f -> f a -> Range f a
+range a b x = Range $ fmap (flip pick $ x) $ enumFromTo a b
+
+
+
+
+
+
+
+range1 = range 30 60 (* 10)
 
 
 
