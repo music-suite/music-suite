@@ -71,10 +71,11 @@ written f (Write (a, m)) = Write (a, f m)
 
 {-
     The Key type family associates "indexed" types with their index.
-    Instances include container-like types, functions and some other common functors.
+    Instances include container-like types, functions and their composition.
 
-    A "focused" value is just a pair (or writer), where the associated monoid is assumed to 
-    be the key.
+    A /focused/ value a value of such a type paired up with its index. This
+    is similar to a zipper, or a data structure paired with a lens into the
+    structure.
 -}
 
 -- TODO move
@@ -83,7 +84,7 @@ mcompose = (join .) . fmap . (fmap join .) . T.mapM
 
 
 -- | Value with a focus.
-newtype Focus' k f a = Focus' { unFocus' :: (Write k (f a)) }
+newtype Focus' k f a = Focus' { unFocus' :: Write k (f a) }
     deriving (Functor, Foldable, Traversable, Eq, Show)
 inFocus' = unFocus' ~> Focus'
 instance (Monoid k, k ~ Key f, Monad f, Traversable f) => Monad (Focus' k f) where
@@ -128,18 +129,20 @@ futureKeys  = fmap getKey . future
 pastKeys    = fmap getKey . past
 
 
+-- List with a focus
+type FList a = Focus [] a
+
+-- List with a selection
+type SList a = Range [] a
+
+-- Transform the structure of a list (but not its values)
+-- retains all current ranges
+-- ([a] -> [a]) -> SList a -> SList a
 
 
 
 
-
-example1 :: Focus (Map Int) String
-example1 = pick 0 $ Map.fromList [(0, "hans"), (1, "music")]
-
-example2 :: Focus ((->) Int) Int
-example2 = pick 100 (+ 10)
-
-
+-- TODO misleading name, keys does not need to be consecutive
 newtype Range f a = Range { getRange :: [Focus f a] }
     deriving (Functor)
 instance Lookup f => Foldable (Range f) where
@@ -148,12 +151,9 @@ instance Lookup f => Foldable (Range f) where
 range :: Enum (Key f) => Key f -> Key f -> f a -> Range f a
 range a b x = Range $ fmap (flip pick $ x) $ enumFromTo a b
 
-
-
-
-
-
-
+focus1 :: Focus (Map String) String
+focus1 = pick "name" $ Map.fromList [("name", "hans"), ("interest", "music")]
+focus2 = pick 100 (+ 10)
 range1 = range 30 60 (* 10)
 
 
