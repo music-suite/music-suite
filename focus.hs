@@ -165,6 +165,7 @@ slist xs = (Spanned' (Write (xs, mempty)))
 reverseS = withValuesS reverse
 takeS n = withValuesS (take n)
 dropS n = withValuesS (drop n)
+duplicateS = withValuesS (\xs -> xs <> xs)
 -- cons x = withValuesS ((:) x)
 
 {-
@@ -178,7 +179,10 @@ unsafeWithValuesS f (Spanned' (Write (a, m))) = (Spanned' (Write (f a, m)))
 
 -- FIXME rename
 -- Transform the structure of a list (but not its values)
--- Retains all current spans
+-- Retains all current spans under filtering or permutation (as long as the values are still there)
+-- Note that the type guarantees that new values can not be added
+-- TODO duplication etc is still problematic
+
 withValuesS :: (forall a . [a] -> [a]) -> SList m a -> SList m a
 withValuesS f sl = res
     where
@@ -186,7 +190,7 @@ withValuesS f sl = res
         xs = writeFst . unSpanned' $ sl
         ks = fmap fst . keyed $ xs -- unique keys
         
-        ks2 = f ks `Prelude.zip` ks -- map old keys to new keys
+        ks2 = f ks `Prelude.zip` {-ks-}[0..] -- map old keys to new keys
         
         kf = flip Prelude.lookup ks2 -- function that maps old keys to new ones
         spans2 = removeNilKeys . Map.mapKeys (mapBothM kf) $ spans
