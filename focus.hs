@@ -8,6 +8,7 @@
     StandaloneDeriving,
     TypeFamilies,
     ViewPatterns,
+    RankNTypes,
 
     MultiParamTypeClasses,
     
@@ -30,6 +31,7 @@ import Control.Monad.Plus
 
 import Control.Lens
 import Data.Key
+import Data.Maybe
 import Data.Tree
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -66,6 +68,8 @@ instance Monoid m => Monad (Write m) where
         Write (x2,m2) = y
         in Write (x2,m1 `mappend` m2)
 
+writeFst (Write x) = fst x
+writeSnd (Write x) = snd x
 written f (Write (a, m)) = Write (a, f m)
 
 
@@ -92,8 +96,6 @@ instance (Monoid k, k ~ Key f, Monad f, Traversable f) => Monad (Focus' k f) whe
     Focus' xs >>= f = Focus' $ mcompose (unFocus' . f) $ xs
 
 type Focus f a = Focus' (Key f) f a
-
-newtype Select c a = Select ([Key c], c a)
 
 
 -- TODO should be called focus
@@ -129,11 +131,109 @@ futureKeys  = fmap getKey . future
 pastKeys    = fmap getKey . past
 
 
+
+
+
+
+
+
+
+-- | Value with a associated spans.
+--   
+--   Spans allow potentially overlapping subranges to be annotated with arbitrary
+--   monoidal values.
+--   
+newtype Spanned' k m f a = Spanned' { unSpanned' :: Write (Map (k,k) m) (f a) }
+    deriving (Functor, Foldable, Traversable, Eq, Show)
+inSpanned' = unSpanned' ~> Spanned'
+
+instance (Ord k, k ~ Key f, Monad f, Traversable f) => Monad (Spanned' k m f) where
+    return = Spanned' . return . return
+    Spanned' xs >>= f = Spanned' $ mcompose (unSpanned' . f) $ xs
+
+type Spanned m f a = Spanned' (Key f) m f a
+
+withSpans f (Spanned' (Write (a, m))) = (Spanned' (Write (a, f m)))
+
+-- addSpan :: (Ord k, Semigroup m) => k -> k -> m -> Spanned' k m f a -> Spanned' k m f a
+addSpan :: Semigroup m => Int -> Int -> m -> SList m a -> SList m a
+addSpan a b x = withSpans $ Map.insertWith (<>) (a,b) x
+
+slist :: [a] -> SList m a
+slist xs = (Spanned' (Write (xs, mempty)))
+
+reverseS = withValuesS reverse
+takeS n = withValuesS (take n)
+dropS n = withValuesS (drop n)
+-- cons x = withValuesS ((:) x)
+
+{-
+FIXME
+consS x = unsafeWithValuesS (mapFirst (const x)) . withValuesS (undefined :)
+    where mapFirst f (x:xs) = (f x):xs
+
+unsafeWithValuesS :: ([a] -> [a]) -> SList m a -> SList m a
+unsafeWithValuesS f (Spanned' (Write (a, m))) = (Spanned' (Write (f a, m)))
+-}
+
+-- FIXME rename
+-- Transform the structure of a list (but not its values)
+-- Retains all current spans
+withValuesS :: (forall a . [a] -> [a]) -> SList m a -> SList m a
+withValuesS f sl = res
+    where
+        spans = writeSnd . unSpanned' $ sl
+        xs = writeFst . unSpanned' $ sl
+        ks = fmap fst . keyed $ xs -- unique keys
+        
+        ks2 = f ks `Prelude.zip` ks -- map old keys to new keys
+        
+        kf = flip Prelude.lookup ks2 -- function that maps old keys to new ones
+        spans2 = removeNilKeys . Map.mapKeys (mapBothM kf) $ spans
+        res = Spanned' (Write (f xs,spans2))
+        
+ex1, ex2, ex3, ex4 :: SList String Int
+ex1 = reverseS $ addSpan 0 1 "h" $ slist [1..10]
+ex2 = takeS 5 $ addSpan 0 1 "h" $ slist [1..10]
+ex3 = dropS 5 $ addSpan 0 1 "h" $ slist [1..10]
+ex4 = undefined
+-- ex4 = consS 33 $ addSpan 0 1 "h" $ slist [1..10]
+
+{-
+    Test:
+    
+        
+-}
+
+    
+-- (f, sl) = undefined
+-- f :: ([a] -> [a])
+-- sl :: SList m a
+-- 
+-- -- [a]
+-- spans = writeSnd . unSpanned' $ sl
+-- 
+-- xs = writeFst . unSpanned' $ sl
+-- ks = fmap fst . keyed $ xs -- unique keys
+-- ks2 = ks `Prelude.zip` f ks -- map old keys to new keys
+-- kf = flip Prelude.lookup ks2 -- function that maps old keys to new ones
+-- spans2 = removeNilKeys . Map.mapKeys (mapBothM kf) $ spans
+-- res = Spanned' (Write (xs,spans2))
+
 -- List with a focus
 type FList a = Focus [] a
 
--- List with a selection
-type SList a = Range [] a
+-- List with spans
+type SList m a = Spanned m [] a
+
+removeNilKeys :: Ord a => Map (Maybe a) b -> Map a b
+removeNilKeys = Map.mapKeys fromJust . Map.filterWithKey (\k v -> isJust k)
+
+mapBothM :: Monad m => (a -> m b) -> (a, a) -> m (b, b)
+mapBothM f (a,b) = do
+    a2 <- f a
+    b2 <- f b
+    return (a2, b2)
 
 -- Transform the structure of a list (but not its values)
 -- retains all current ranges
@@ -142,6 +242,7 @@ type SList a = Range [] a
 
 
 
+{-
 -- TODO misleading name, keys does not need to be consecutive
 newtype Range f a = Range { getRange :: [Focus f a] }
     deriving (Functor)
@@ -155,6 +256,7 @@ focus1 :: Focus (Map String) String
 focus1 = pick "name" $ Map.fromList [("name", "hans"), ("interest", "music")]
 focus2 = pick 100 (+ 10)
 range1 = range 30 60 (* 10)
+-}
 
 
 
