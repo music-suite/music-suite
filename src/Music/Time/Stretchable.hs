@@ -56,6 +56,15 @@ instance Stretchable a => Stretchable [a] where
 instance Stretchable (Time, Duration, a) where
     stretch n (t, d, a) = (n*.t, n*^d, a)
 
+instance Stretchable (Duration -> a) where
+    -- stretch n = flip (.) (^/ n)
+    stretch n f = f . (^/ n)
+
+instance Stretchable (Time -> a) where
+    stretch n f = f . relative origin (^/ n)
+
+relative :: AffineSpace p => p -> (Diff p -> Diff p) -> p -> p
+relative p f = (p .+^) . f . (.-. p)
 
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.

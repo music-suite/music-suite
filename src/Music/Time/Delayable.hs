@@ -62,6 +62,9 @@ instance Delayable a => Delayable [a] where
 instance Delayable (Time, Duration, a) where
     delay n (t, d, a) = (t .+^ n, d, a)
 
+instance Delayable (Time -> a) where
+    delay n = flip (.) (.-^ n)
+
 -- |
 -- Move a score forward in time. Equivalent to 'delayTime.
 --
