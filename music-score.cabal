@@ -37,6 +37,7 @@ library
         HCodecs,
         musicxml2,
         lilypond,
+        void,
         semigroups,
         monoid-extras,
         nats,          
