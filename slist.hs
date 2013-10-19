@@ -46,6 +46,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Plus
 
+import Control.Compose ((~>))
 import Control.Lens
 import Data.Key
 import Data.Maybe
@@ -187,7 +188,3 @@ mapBothM f (a,b) = do
     b2 <- f b
     return (a2, b2)
 
-
-
-(~>) :: (a' -> a) -> (b -> b') -> ((a -> b) -> (a' -> b'))
-(i ~> o) f = o . f . i
