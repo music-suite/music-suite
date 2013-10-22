@@ -9,7 +9,7 @@
     TypeFamilies,
     ViewPatterns,
     RankNTypes,
-
+    PackageImports,
     MultiParamTypeClasses,
     
     OverloadedStrings,
@@ -18,7 +18,6 @@
     
     TemplateHaskell
     #-}
-
 
 module Data.SpanList where
 
@@ -29,6 +28,7 @@ import Control.Arrow
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Plus
+import "mtl" Control.Monad.Writer
 
 import Control.Lens
 import Data.Key
@@ -42,22 +42,22 @@ import Data.Traversable
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 
--- type family RelPos (a :: * -> *) :: *
--- type family Pos  (a :: * -> *) :: *
--- 
--- type instance RelPos [] = Maybe Pos -- Nothing means above
--- type instance Pos    [] = Integer
--- 
--- data TreeRelPos = Maybe TreePos -- Nothing means up
--- data TreePos    = Here | Up | Child Int TreePos
--- type instance RelPos Tree = Int
--- -- type instance Pos Tree = Int
--- 
--- 
 
+-- type Write m a = Writer m a
+-- write :: (a, m) -> Write m a
+-- write = undefined
+-- 
+-- runWrite :: Write m a -> (a, m)
+-- runWrite = undefined
+-- 
+-- writeFst = undefined
+-- writeSnd = undefined
+-- written = undefined
 
-
-newtype Write m a = Write (a, m)
+-- |
+-- 'Write' is the same as 'Writer' but with a more restricted interface.
+--
+newtype Write m a = Write { getWrite :: (a, m) }
     deriving (Show, Functor, Foldable, Traversable, Eq)
 instance Monoid m => Monad (Write m) where
     return x = Write (x, mempty)
@@ -69,8 +69,24 @@ instance Monoid m => Monad (Write m) where
         Write (x2,m2) = y
         in Write (x2,m1 `mappend` m2)
 
+-- Same as 'writer'
+write :: (a, m) -> Write m a
+write = Write
+
+-- Same as 'runWriter'
+runWrite :: Write m a -> (a, m)
+runWrite = getWrite
+
+-- Same as @fst . runWriter@
+writeFst :: Write m a -> a
 writeFst (Write x) = fst x
+
+-- Same as execWriter
+writeSnd :: Write m a -> m
 writeSnd (Write x) = snd x
+
+-- Same as @\f -> mapWriter (id *** f)@.
+written :: (m -> n) -> Write m a -> Write n a
 written f (Write (a, m)) = Write (a, f m)
 
 
@@ -90,8 +106,10 @@ mcompose = (join .) . fmap . (fmap join .) . T.mapM
 
 -- | Value with a focus.
 newtype Focus' k f a = Focus' { unFocus' :: Write k (f a) }
-    deriving (Functor, Foldable, Traversable, Eq, Show)
+    deriving (Functor, Foldable, Traversable{-, Eq, Show-})
+
 inFocus' = unFocus' ~> Focus'
+
 instance (Monoid k, k ~ Key f, Monad f, Traversable f) => Monad (Focus' k f) where
     return = Focus' . return . return
     Focus' xs >>= f = Focus' $ mcompose (unFocus' . f) $ xs
@@ -102,10 +120,10 @@ type Focus f a = Focus' (Key f) f a
 -- TODO should be called focus
 -- | Create a focus by picking an element.
 pick :: Key f -> f a -> Focus f a
-pick n xs = Focus' $ Write (xs, n)
+pick n xs = Focus' $ write (xs, n)
 
 unFocus :: Focus f a -> f a
-unFocus (Focus' (Write (x,_))) = x
+unFocus (Focus' (runWrite -> (x,_))) = x
 
 -- | Move the focus.
 step :: (Key f -> Key f) -> Focus f a -> Focus f a
@@ -125,7 +143,7 @@ get :: Lookup f => Focus f a -> Maybe a
 get x = Data.Key.lookup (getKey x) (unFocus x)
 
 getKey :: Focus f a -> Key f
-getKey (Focus' (Write (x,k))) = k
+getKey (Focus' (runWrite -> (x,k))) = k
 
 pastKeys, futureKeys :: Enum (Key f) => Focus f a -> [Key f]
 futureKeys  = fmap getKey . future
