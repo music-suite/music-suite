@@ -2,6 +2,7 @@
 TRANSFORM=transf +RTS -N4
 TRANSFORM_PDF=transf --format=pdf
 RESOLVE_LINKS=hslinks
+PANDOC=pandoc
 CABAL_FILES=\
 	../../music-score/music-score.cabal \
 	../../music-pitch/music-pitch.cabal \
@@ -15,6 +16,7 @@ SRC=src
 OUT=build
 PAGE=index.html
 CSS=styles.css
+MODULE_GRAPH=module-graph.png
 
 # upload-wiki: transform
 # 	pushd $(OUT) && \
@@ -29,8 +31,9 @@ html: transform
 		(cat 	About.md \
 			User-Guide.md \
 			) \
-			| pandoc --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
+			| $(PANDOC) --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
 		cp ../$(CSS) styles.css && \
+		cp ../$(MODULE_GRAPH) module-graph.png && \
 	popd
 
 pdf: transform-pdf
@@ -38,7 +41,7 @@ pdf: transform-pdf
 		(cat 	About.md \
 			User-Guide.md \
 			) \
-			| pandoc --standalone --toc -Tpdf -o ../test.pdf && \
+			| $(PANDOC) --standalone --toc -Tpdf -o ../test.pdf && \
 	popd
 
 transform: 
