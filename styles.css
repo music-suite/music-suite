@@ -2,13 +2,13 @@
 
 body {
         margin-left: 350px;
-        margin-right: auto;
-        max-width: 650px;
+        margin-right: 40px;
+        max-width: 690px;
         line-height: 160%;
         color: #202027;     
         background: #fcfefe;
-        font-size: 12.2px;
-        font-family: Geneva;
+        font-size: 12.5px;
+        font-family: Geneva, Arial;
 }
 a:link, a:active, a:visited {
         color: #3050a7;
@@ -37,7 +37,7 @@ code {
         line-height:140%;
 }   
 pre {
-        font-size: 12px;
+/*        font-size: 13px;*/
 }
 
 h1 { font-size: 1.9em }
@@ -72,7 +72,8 @@ div.haskell-music img {
 }
 body > pre {
         padding:                20px;
-        margin-bottom:          5px;
+        margin-top:             15px;
+        margin-bottom:          15px;
         background:             #faffff;
         border-radius:          12px;
         border:                 1px solid LightGrey;
