@@ -1,6 +1,6 @@
 
 
-# User Guide
+# Getting Started
 
 ## Installation
 
@@ -14,9 +14,14 @@ To install the suite, simply install the Haskell platform, and then run:
     cabal install music-preludes
 
 
-## Generating music
+## Writing music
 
 This chapter will cover how to use the Music Suite to generate music. Later on we will cover how to *import* and *transform* music.
+
+One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
+
+Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude.Basic` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
+
 
 ### With music files
 
@@ -70,30 +75,32 @@ In fact, the `music2pdf` program is a simple utility that substitutes a single e
 
 
 
-# Writing music
+## Notes, time and duration
 
-## Music representations
-
-One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
-
-Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude.Basic` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
-
-## Basics
-
-A single note can be entered by its name. This will render a note in the middle octave with position zero and duration one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
+A single note can be entered by its name. This will render a note in the middle octave with a duration of one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
 
 ```music+haskell
 c
 ```
 
-To change the duration of a note, use `stretch` or `compress`.
+To change the duration of a note, use @[stretch] or @[compress]. Note that:
+    
+```haskell
+compress x = stretch (1/x)
+```
+
+for all values of *x*.
 
 ```music+haskell
 stretch (1/2) c
-    </>
-stretch 1 c         
-    </>
-stretch 2 c
+```
+
+```music+haskell
+stretch 2 c         
+```
+
+```music+haskell
+stretch (4+1/2) c
 ```
 
 TODO delay
@@ -101,9 +108,11 @@ TODO delay
 Offset and duration is not limited to simple numbers. Here are some more complex examples:
 
 ```music+haskell
-(c^*(9/8) |> d^*(3/8))
-    </>
-(compress 3 (scat [c,d,e]) |> f^*(3/4))
+c^*(9/8) |> d^*(7/8)
+```
+
+```music+haskell
+stretch (2/3) (scat [c,d,e]) |> f^*(3/2)
 ```
 
 The `^*` and `^/` operators can be used as shorthands for `delay` and `compress`.
@@ -146,9 +155,10 @@ c </> e </> g
 Here is a more complex example:
 
 ```music+haskell
-let
+let            
+    scale = scat [c,d,e,f,g,a,g,f]^/8
     triad a = a <> up _M3 a <> up _P5 a
-in up _P8 (scat [c,d,e,f,g,a,g,f]^/8) </> (triad c)^/2 |> (triad g_)^/2
+in up _P8 scale </> (triad c)^/2 |> (triad g_)^/2
 ```
 
 As a shorthand for `x |> y |> z ..`, we can write `scat [x, y, z]`.
@@ -308,18 +318,22 @@ Applying articulations over multiple parts:
 
 ```music+haskell     
 let
-    p1 = scat [c..b]^/4
-    p2 = delay (1/4) $ scat [c..b]^/4
-    p3 = delay (3/4) $ scat [c..b]^/4
+    p1 = scat [c..c']^/4
+    p2 = delay (1/4) $ scat [c..c']^/4
+    p3 = delay (3/4) $ scat [c..c']^/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
+
+## Parts
+
+## Space
 
 ## Tremolo
 
 @[tremolo]
 
 ```music+haskell
-tremolo 2 $ times 2 $ (c |> d)^/4
+tremolo 2 $ times 2 $ (c |> d)^/2
 ```
 
 ## Slides and glissando
@@ -404,7 +418,7 @@ let
 in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
 ```
 
-### Onset and duration
+## Onset and duration
 
 ```music+haskell
 let                
@@ -426,38 +440,38 @@ in compress 4 $ melody </> pedal
 ```
 
 
-### Pitches and intervals
+## Pitches and intervals
 
-### Name and accidental
+## Name and accidental
 
-### Spelling
+## Spelling
 
-### Quality and number
+## Quality and number
 
 
 ## Intonation
 
 TODO
 
-### Inspecting dissonant intervals
+## Inspecting dissonant intervals
 
-### Semitones and enharmonic equivalence
+## Semitones and enharmonic equivalence
 
-### Spelling
+## Spelling
 
-### Scales
+## Scales
 
-### Chords
+## Chords
 
 
 
 ## Parts
 
-### Instrument, part and sub-part
+## Instrument, part and sub-part
 
-### Extracting and modifying parts
+## Extracting and modifying parts
 
-### Part composition
+## Part composition
 
 
 
@@ -626,6 +640,8 @@ This feature could of course also be used to convert Sibelius scores to other fo
 
 # Customizing music representation
 
+TODO
+
 # Examples
 
 Some more involved examples:
@@ -653,6 +669,62 @@ let
 in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
 
+
+# Design overview
+
+<!--
+To develop the Music Suite you need the following tools:
+
+* Pandoc
+* Transf
+* Hslinks
+* Lilypond
+
+Most of these can be installed using `cabal install`.
+
+There is a utility program called `music-util`, which simplifies the kind of cross-package development used throughout the Music Suite. This can be installed in the same manner as the packages, i.e. `cabal install music-util`. See [its documentation][music-util-docs] for an overview of the things it can do.
+
+-->
+
+TODO
+
+The Music Suite consists of a number of packages. These can be divided into two categories: 
+
+- *Music* packages that provide classes, types and functions related to a particular aspect of musical representation such as time, pitch, dynamics and so on. The name of these packages always begin with `music`.
+
+- *Supporting* packages that implement a musical representation (`musicxml2`, `lilypond`, `abcnotation`), or miscellaneous functionality such as cross-platform MIDI support (`hamid`). These packages can be used as stand-alone packages but are included in the Suite for completeness.
+
+There is no central package, instead the aim has been to separate the various issues that arise in music representations as clearly as possible. In particular, the `music-score` package, which provide scores and other temporal containers, does *not* depend on packages that provide models of musical aspects such as `music-pitch`, neither do these libraries depend on `music-score`. 
+
+The reason for this is that we want to keep musical structure and content separate. This is a form of the [expression problem](http://en.wikipedia.org/wiki/Expression_problem): if one depended on the other we would either always force the user into a particular form of musical structure, or a particular form of musical material.
+
+However, some packages have special roles:
+
+- The `music-pitch-literal` and `music-dynamics-literal` are minimal packages that provide musical *literals*, i.e. common vocabulary overloaded on result type. This means other packages can import and provide instances for the literals without having to depend on a specific representation.
+
+- The `music-preludes` provides modules that import modules from both `music-score` and `music-pitch` and its sister packages.
+
+
+### Compability with other libraries
+
+The Music Suite libraries does not profess to be compatible with any other music *representation* library^[Including Haskore, Euterpea, hts and temporal-media], and deliberately claims the whole `Music` top-level package. The aim is that functionality from these packages should eventually be included into the Music Suite packages. However it can be used with packages that implement audio processing, synthesis, interaction with musical instruments, FRP libraries and so on. 
+
+The concepts and abstractions used in the suite overlap with some fundamental concepts form FRP, but the focus is fundamentally different. While FRP libraries focus on reacting to the external world, the Music Suite focus on modeling temporal values and musical concepts.
+
+
+### Acknowledgements
+
+The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
+
+It obviously ows a lot to the Haskell libraries that it follows including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite]. The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
+
+
+<!--
+![Modules](module-graph.png)
+-->
+
+
+
 @@@hslinks@@@
 
 [Lilypond]:         http://lilypond.org
@@ -660,4 +732,24 @@ in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 [HaskellPlatform]:  http://www.haskell.org/platform/
 
 [issue-tracker]:    https://github.com/hanshoglund/music-score/issues
+
+[pandoc]:           http://johnmacfarlane.net/pandoc/
+[haskell-suite]:    https://github.com/haskell-suite
+[music-util-docs]:  https://github.com/hanshoglund/music-util/blob/master/README.md#music-util
+
+[common-music]:     http://commonmusic.sourceforge.net/
+[temporal-media]:   http://hackage.haskell.org/package/temporal-media
+[abjad]:            https://pypi.python.org/pypi/Abjad/2.3
+[max-msp]:          http://cycling74.com/products/max/
+[reactive]:         http://www.haskell.org/haskellwiki/Reactive
+[diagrams]:         http://projects.haskell.org/diagrams/
+[supercollider]:    http://supercollider.sourceforge.net/
+[music21]:          http://music21-mit.blogspot.se/
+[guido]:            http://guidolib.sourceforge.net/
+[lilypond]:         http://lilypond.org/
+[fomus]:            http://fomus.sourceforge.net/
+[haskore]:          http://www.haskell.org/haskellwiki/Haskore
+[euterpea]:         http://haskell.cs.yale.edu/euterpea/
+[haskell]:          http://haskell.org
+[pandoc]:           http://johnmacfarlane.net/pandoc/
 

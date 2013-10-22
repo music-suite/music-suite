@@ -6,13 +6,12 @@
 > *Please note:* The API and docs are not particularly stable at the moment. An official release note will appear in due time.
 -->
 
-The Music Suite is a language for representing, creating, transforming or analyzing music, based on [Haskell][Haskell]. 
+The Music Suite is a language for creating, processing or analyzing music. It is based on [Haskell][Haskell], the world's greatest functional programming language^[In fact it is a so-called embedded domain-specific language, see http://www.haskell.org/haskellwiki/Embedded_domain_specific_language].
 
 The Music Suite is designed to:
 
-* Be usable with various types of music. It should allow custom representation of time, pitch, dynamics and so on.
-
-* It should include standard notation as a *special case*, including a full representation of time, pitch, rhythm, dynamics, articulation, part structure, and so on. 
+* Be usable with any kind of music. There are no stylistic or theoretical assumptions on how music should be described.
+* It should include standard notation as a *special case*. 
 
 
 
@@ -52,7 +51,7 @@ The Music Suite works well with the following input and output formats:
 
 ### More information
 
-For a complete reference, see the [API documentation](/docs/api).
+For a complete reference, see the [reference documentation](/docs/api).
 
 <!--
 For an introduction, see [User Guide](User-Guide).
