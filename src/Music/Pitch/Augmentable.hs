@@ -23,6 +23,10 @@ import Data.Ratio
 -- |
 -- Class of types that can be augmented.
 --
+-- > quality (augment a)  = augment (quality a)
+-- > quality (diminish a) = diminish (quality a)
+-- > augment . diminish   = id
+--
 class Augmentable a where
 
     -- | 
