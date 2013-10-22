@@ -18,6 +18,8 @@ module Music.Pitch.Augmentable (
         Augmentable(..),
   ) where
 
+import Data.Ratio
+
 -- |
 -- Class of types that can be augmented.
 --
@@ -33,3 +35,14 @@ class Augmentable a where
     --
     diminish :: a -> a
 
+instance Augmentable Double where
+    augment  = (+ 1)
+    diminish = (subtract 1)
+
+instance Augmentable Integer where
+    augment  = (+ 1)
+    diminish = (subtract 1)
+
+instance Integral a => Augmentable (Ratio a) where
+    augment  = (+ 1)
+    diminish = (subtract 1)

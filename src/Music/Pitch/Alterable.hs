@@ -18,6 +18,8 @@ module Music.Pitch.Alterable (
         Alterable(..),
   ) where
 
+import Data.Ratio
+
 -- |
 -- Class of things that can be altered.
 --
@@ -44,3 +46,6 @@ instance Alterable Integer where
     sharpen = (+ 1)
     flatten = (subtract 1)
 
+instance Integral a => Alterable (Ratio a) where
+    sharpen = (+ 1)
+    flatten = (subtract 1)
