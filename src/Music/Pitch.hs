@@ -9,9 +9,11 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides various pitch representations. See 'Pitch' and 'Interval' for common
--- representations. If you want to use an alternative represention, import the
--- relevant submodule.
+-- The "music-pitch" package provides several pitch and interval types. 
+--
+-- See 'Pitch' and 'Interval' for common
+-- representations. If you want to use an alternative represention, import the relevant
+-- submodule.
 --
 -------------------------------------------------------------------------------------
 
@@ -22,9 +24,20 @@ module Music.Pitch (
         module Data.AffineSpace,
 
         -- * Pitch representation
-        module Music.Pitch.Absolute,
+        
+        -- | Augmentation and diminishing, generalized to work on all interval types.
         module Music.Pitch.Augmentable,
+
+        -- | Alteration, sharps and flats, generalized to work on all pitch types.
         module Music.Pitch.Alterable,
+
+        -- | Frequency, cents and other absolute measurements of pitch.
+        module Music.Pitch.Absolute,
+
+        -- | Pitch and intervals, as defined in Common Music Theory (CMT).
+        --
+        --   Includes representation of common practice pitches and intervalssuch as /c sharp/, 
+        --   /diminished second/ and so on.
         module Music.Pitch.Common,
         
         -- * Pitch literals
