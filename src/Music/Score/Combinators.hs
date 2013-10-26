@@ -201,7 +201,7 @@ before b                    = filterEvents (\t d _ -> t .+^ d <= b)
 slice  a b                  = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
 
 split t a = (before t a, after t a)
-splice t d a = tripRev (before t a, split (t .+^ d) a)
+splice t d a = tripr (before t a, split (t .+^ d) a)
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -406,33 +406,8 @@ trd3 (a,b,c) = c
 third f (a,b,c) = (a,b,f c)
 third' f (a,b,c) = (a,b,f a b c)
 
-rotl []     = []
-rotl (x:xs) = xs ++ [x]
-
-rotr [] = []
-rotr xs = last xs : init xs
-
-
-curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
-curry3 = curry . curry . (. trip)
-
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 = (. untrip) . uncurry . uncurry
-
-untrip (a,b,c) = ((a,b),c)
-trip ((a,b),c) = (a,b,c)
-
-tripRev (a,(b,c)) = (a,b,c)
-
 partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
 partial2 f = curry  (fmap snd  . partial (uncurry f))
 partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
-
-rotated :: Int -> [a] -> [a]
-rotated = go
-    where
-        go n as 
-            | n >= 0 = iterate rotr as !! n
-            | n <  0 = iterate rotl as !! abs n
 
