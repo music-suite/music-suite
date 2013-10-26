@@ -62,6 +62,7 @@ import qualified Data.List as List
 
 import System.Posix
 import System.IO.Unsafe
+import Music.Score.Util
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
@@ -114,45 +115,9 @@ spellPitch p = (
                 add a x = (a + x, a + x)
         major = scaleFromSteps [0,2,2,1,2,2,2,1]
 
-
--- |
--- Group a list into sublists whereever a predicate holds. The matched element
--- is the first in the sublist.
---
--- > splitWhile isSpace "foo bar baz"
--- >    ===> ["foo"," bar"," baz"]
--- >
--- > splitWhile (> 3) [1,5,4,7,0,1,2]
--- >    ===> [[1],[5],[4],[7,0,1,2]]
---
-splitWhile :: (a -> Bool) -> [a] -> [[a]]
-splitWhile p xs = case splitWhile' p xs of
-    []:xss -> xss
-    xss    -> xss
-    where
-        splitWhile' p []     = [[]]
-        splitWhile' p (x:xs) = case splitWhile' p xs of
-            (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
-
 execute :: FilePath -> [String] -> IO ()
 execute program args = do
     forkProcess $ executeFile program True args Nothing
     return ()
 
 unRatio x = (numerator x, denominator x)
--- first f (x, y) = (f x, y)
--- second f (x, y) = (x, f y)
--- both f g = first f . second g
-
-
-mapFirstL f = mapFirstMiddleLast f id id
-
-mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapFirstMiddleLast f g h = go
-    where
-        go []    = []
-        go [a]   = [f a]
-        go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++ 
-                   map g (tail $ init xs) ++ 
-                   [h $ last xs]

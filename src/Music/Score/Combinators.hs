@@ -87,6 +87,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Part
 import Music.Score.Convert
+import Music.Score.Util
 import Music.Time
 
 import qualified Data.List as List
@@ -239,7 +240,7 @@ mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapFirst f g                = mapPhrase f g g
 mapLast f g                 = mapPhrase g g f
 mapPhrase f g h             = mapAllParts (fmap $ mapPhraseSingle f g h)
-mapPhraseSingle f g h       = mapAll (mapFirstMiddleLast (third f) (third g) (third h))
+mapPhraseSingle f g h       = mapAll (mapFTL (third f) (third g) (third h))
 
 
 --------------------------------------------------------------------------------
@@ -396,27 +397,6 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 
 
 --------------------------------------------------------------------------------
-
--- |
--- Map over first, middle and last elements of list.
--- Biased on first, then on first and last for short lists.
---
-mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapFirstMiddleLast f g h = go
-    where
-        go []    = []
-        go [a]   = [f a]
-        go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++ 
-                   map g (tail $ init xs) ++ 
-                   [h $ last xs]
-
--- |
--- Extract the first consecutive sublist for which the predicate returns true, or
--- the empty list if no such sublist exists.
-filterOnce :: (a -> Bool) -> [a] -> [a]
-filterOnce p = List.takeWhile p . List.dropWhile (not . p)
-
 
 delay' t = delay (t .-. zeroV)
 

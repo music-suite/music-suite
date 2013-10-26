@@ -9,7 +9,7 @@ license-file:       COPYING
 synopsis:           Musical score and part representation.
 category:           Music
 tested-with:        GHC
-build-type:         Simple
+build-type:         Custom
 
 description: 
     Musical score and part representation.
@@ -84,6 +84,7 @@ library
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
     other-modules:
+        Music.Score.Util
         Music.Score.Instances
         Music.Score.Export.Util
         
