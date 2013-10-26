@@ -45,6 +45,7 @@ import Data.String
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
+import Control.Arrow
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -265,7 +266,7 @@ rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
-    where (a,b) = both fromIntegral fromIntegral $ unRatio $ realToFrac m
+    where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
 noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d

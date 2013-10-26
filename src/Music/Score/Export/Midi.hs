@@ -41,6 +41,7 @@ import Data.String
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
+import Control.Arrow
 import Data.Maybe
 import Data.Either
 import Data.Foldable

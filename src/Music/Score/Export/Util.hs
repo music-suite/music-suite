@@ -140,9 +140,9 @@ execute program args = do
     return ()
 
 unRatio x = (numerator x, denominator x)
-first f (x, y) = (f x, y)
-second f (x, y) = (x, f y)
-both f g = first f . second g
+-- first f (x, y) = (f x, y)
+-- second f (x, y) = (x, f y)
+-- both f g = first f . second g
 
 
 mapFirstL f = mapFirstMiddleLast f id id
