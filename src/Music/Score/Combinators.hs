@@ -336,17 +336,6 @@ moveParts x = modifyParts (successor x)
 moveToPart :: (Enum b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
 
-successor :: (Integral b, Enum a) => b -> a -> a
-successor n | n <  0 = (!! fromIntegral (abs n)) . iterate pred
-            | n >= 0 = (!! fromIntegral n)       . iterate succ
-
-maximum' :: (Ord a, Foldable t) => a -> t a -> a
-maximum' z = option z getMax . foldMap (Option . Just . Max)
-
-minimum' :: (Ord a, Foldable t) => a -> t a -> a
-minimum' z = option z getMin . foldMap (Option . Just . Min)
-
-
 
                                                                  
 -------------------------------------------------------------------------------------
@@ -407,3 +396,17 @@ partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
 partial2 f = curry  (fmap snd  . partial (uncurry f))
 partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
 
+iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
+iterating f g n
+    | n <  0 = f . iterating f g (n + 1)
+    | n == 0 = id
+    | n >  0 = g . iterating f g (n - 1)
+
+successor :: (Integral b, Enum a) => b -> a -> a
+successor n = iterating pred succ (fromIntegral n)
+
+maximum' :: (Ord a, Foldable t) => a -> t a -> a
+maximum' z = option z getMax . foldMap (Option . Just . Max)
+
+minimum' :: (Ord a, Foldable t) => a -> t a -> a
+minimum' z = option z getMin . foldMap (Option . Just . Min)
