@@ -11,7 +11,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides standard pith names.
+-- Provides pitch spellings.
 --
 -------------------------------------------------------------------------------------
 
@@ -19,7 +19,6 @@ module Music.Pitch.Common.Spell (
         -- ** Spelling
         Spelling,
         spell,
-        spellInterval,
         modal,
         sharps,
         flats,
@@ -40,23 +39,37 @@ import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Enharmonic
 
 -- | 
+-- The `semitones` function retrieves the number of Semitones in a pitch, for example
 -- 
+-- > semitones :: Interval -> Semitones
+-- > semitones major third = 4
+-- 
+-- Note that semitones is surjetive. We can define a non-deterministic function `spellings`
+-- 
+-- > spellings :: Semitones -> [Interval]
+-- > spellings 4 = [majorThird, diminishedFourth]
+--
+-- Law
+-- 
+-- > map semitones (spellings a) = replicate n a    for all n > 0
+--
+-- Lemma
+-- 
+-- > map semitones (spellings a)
+--
 type Spelling = Semitones -> Number
 
-spell :: (Num a, HasSemitones p, p ~ Diff a, AffineSpace a) => Spelling -> a -> Pitch
-spell g p = origin .+^ g `spellInterval` semitones (origin2 .-. p)
-    where         
-        -- TODO use Data.AffineSpace.Point.origin
-        -- Then we can remove Num constraint
-        origin2 = 0
-        origin  = c
-
-spellInterval :: HasSemitones a => Spelling -> a -> Interval
-spellInterval = undefined
+spell :: HasSemitones a => Spelling -> a -> Interval
+spell = undefined
 -- spellInterval z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
 
 -- |
--- Spell pitches as @c cs d eb e f fs g gs a bb b@
+-- Spell using the most the most common accidentals. Double sharps and flats are not
+-- preserved.
+--
+-- This spelling is particularly useful for modal music with C or F as tonic.
+--
+-- > c cs d eb e f fs g gs a bb b
 --
 modal :: Spelling
 modal = go
@@ -75,7 +88,9 @@ modal = go
         go 11 = 6
 
 -- |
--- Spell pitches as @c cs d ds e f fs g gs a as b@
+-- Spell using sharps. Double sharps and flats are not preserved.
+--
+-- > c cs d ds e f fs g gs a as b
 --
 sharps :: Spelling
 sharps = go
@@ -94,7 +109,9 @@ sharps = go
         go 11 = 6
 
 -- |
--- Spell pitches as @c db d eb e f gb g ab a bb b@
+-- Spell using flats. Double sharps and flats are not preserved.
+--
+-- > c db d eb e f gb g ab a bb b
 --
 flats :: Spelling
 flats = go
