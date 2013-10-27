@@ -35,12 +35,6 @@ module Music.Pitch.Common.Number (
         thirteenth,
         fourteenth,
         fifteenth,
-        
-        -- * Inspecting
-        isConsonance,
-        isPerfectConsonance,
-        isImperfectConsonance,
-        isDissonance,
   ) where
 
 -- |
@@ -75,22 +69,56 @@ duodecim    :: Number
 thirteenth  :: Number
 fourteenth  :: Number
 fifteenth   :: Number
+
+-- | A synonym for @1@.
 unison      = 1
+
+-- | A synonym for @2@.
 prime       = 1
+
+-- | A synonym for @3@.
 second      = 2
+
+-- | A synonym for @4@.
 third       = 3
-fourth      = 4
+
+-- | A synonym for @5@.
+fourth      = 4     
+
+-- | A synonym for @6@.
 fifth       = 5
+
+-- | A synonym for @7@.
 sixth       = 6
+
+-- | A synonym for @8@.
 seventh     = 7
+
+-- | A synonym for @9@.
 octave      = 8
+
+-- | A synonym for @10@.
 ninth       = 9
+
+-- | A synonym for @11@.
 tenth       = 10
+
+-- | A synonym for @12@.
 eleventh    = 11
+
+-- | A synonym for @13@.
 twelfth     = 12
+
+-- | A synonym for @14@.
 duodecim    = 12
+
+-- | A synonym for @15@.
 thirteenth  = 13
+
+-- | A synonym for @16@.
 fourteenth  = 14
+
+-- | A synonym for @17@.
 fifteenth   = 15
 
 class HasNumber a where
@@ -103,21 +131,3 @@ class HasNumber a where
     --
     number :: a -> Number
 
-isConsonance :: HasNumber a => a -> Bool
-isConsonance a = isPerfectConsonance a || isImperfectConsonance a
-
-isPerfectConsonance :: HasNumber a => a -> Bool
-isPerfectConsonance a = case number a of
-    1 -> True
-    4 -> True
-    5 -> True
-
-isImperfectConsonance :: HasNumber a => a -> Bool
-isImperfectConsonance a = case number a of
-    3 -> True
-    6 -> True
-
-isDissonance :: HasNumber a => a -> Bool
-isDissonance a = case number a of
-    2 -> True
-    7 -> True

@@ -72,6 +72,7 @@ class HasOctaves a where
     octaves :: a -> Octaves
 
 
+
 -- |
 -- An interval represented as a number of steps in the range /0 ≤ x < 12/.
 --
@@ -98,6 +99,8 @@ class HasSteps a where
     -- > octaves (-m7)             =  -1
     --
     steps :: a -> Steps
+
+
 
 -- |
 -- An interval represented as a number of semitones, including negative
@@ -139,24 +142,33 @@ class HasSemitones a where
     semitones :: a -> Semitones
 
 
+
 semitone, tone, ditone, tritone :: Semitones
 
 -- | Precisely one semitone.
 semitone = 1
+
 -- | Precisely one whole tone, or two semitones.
 tone     = 2
+
 -- | Precisely two whole tones, or four semitones.
 ditone   = 4
+
 -- | Precisely three whole tones, or six semitones.
 tritone  = 6
 
+
 isTone, isSemitone, isTritone :: HasSemitones a => a -> Bool
+
 -- | Returns true iff the given interval spans one semitone.
 isSemitone  = (== semitone) . abs . semitones
+
 -- | Returns true iff the given interval spans one whole tone (two semitones).
 isTone      = (== tone)     . abs . semitones
+
 -- | Returns true iff the given interval spans three whole tones (six semitones).
 isTritone   = (== tritone)  . abs . semitones
+
 
 
 infix 4 =:=

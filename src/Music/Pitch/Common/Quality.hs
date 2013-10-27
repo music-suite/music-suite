@@ -31,6 +31,7 @@ module Music.Pitch.Common.Quality (
         qualityToDiff,
   ) where
 
+import Music.Pitch.Augmentable
 
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
@@ -49,26 +50,38 @@ data Quality
     | Diminished Integer
     deriving (Eq, Ord, Show)
 
--- instance Show Quality where
-    -- show Major            = "_M"
-    -- show Minor            = "m"
-    -- show Perfect          = "_P"
-    -- show (Augmented n)    = "_" ++ replicate' n 'A'
-    -- show (Diminished n)   = replicate' n 'd'
-
 instance HasQuality Quality where
     quality = id
 
--- TODO this instance should not be used
+-- There is no instance for (Augmentable Quality) as we can not distinguish 
+-- between m/M and P in cases like (augment $ Diminished 1) or 
+-- (diminish $ Augmented 1).
+
 -- instance Augmentable Quality where
 --     augment = go
 --         where
---             go (Diminished 0)   = Augmented n    -- not unique!
---             go (Diminished n)   = Augmented n
+--             go (Diminished 0)   = error "Diminished 0"
+--             go (Diminished 1)   = Minor -- Or perfect
+--             go (Diminished n)   = Diminished (n - 1)
+-- 
 --             go Minor            = Major
---             go Major            = Augmented 1
 --             go Perfect          = Augmented 1
---             go (Augmented n)    = Diminished (n)
+--             go Major            = Augmented 1
+-- 
+--             go (Augmented 0)    = error "Augmented 0"
+--             go (Augmented n)    = Augmented (n + 1)
+--     diminish = go
+--         where
+--             go (Diminished 0)   = error "Diminished 0"
+--             go (Diminished n)   = Diminished (n + 1)
+-- 
+--             go Major            = Minor
+--             go Perfect          = Diminished 1
+--             go Minor            = Diminished 1
+-- 
+--             go (Augmented 0)    = error "Augmented 0"
+--             go (Augmented 1)    = Major -- or Perfect (?)
+--             go (Augmented n)    = Augmented (n - 1)
 
 class HasQuality a where
     quality :: a -> Quality

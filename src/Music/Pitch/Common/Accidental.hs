@@ -34,6 +34,15 @@ module Music.Pitch.Common.Accidental (
 import Music.Pitch.Literal
 import Music.Pitch.Alterable
 
+-- |
+-- An accidental is either flat, natural or sharp.
+--
+-- This representation allows for an arbitrary number of flats or sharps rather than just
+-- single (the ♯ and ♭ symbols) and double (i.e. the /x/ and ♭♭ symbols).
+--
+-- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones, 
+-- i.e. a double flat is @-2@, natural @0@ and so on.
+--
 newtype Accidental = Accidental { getAccidental :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
     
@@ -77,10 +86,19 @@ flat        = -1
 doubleFlat  = -2
 
 isNatural, isSharpened, isFlattened :: Accidental -> Bool
+
+-- | Returns whether this is a natural accidental.
 isNatural   = (== 0)
+
+-- | Returns whether this is a sharp, double sharp etc.
 isSharpened = (> 0)
+
+-- | Returns whether this is a flat, double flat etc.
 isFlattened = (< 0)
 
+
+-- | Returns whether this is a standard accidental, i.e.
+--   either a double flat, flat, natural, sharp or doubl sharp.
 isStandard :: Accidental -> Bool
 isStandard a = abs a < 2
 
