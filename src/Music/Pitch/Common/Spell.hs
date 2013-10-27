@@ -39,6 +39,8 @@ import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Enharmonic
 
+-- | 
+-- 
 type Spelling = Semitones -> Number
 
 spell :: (Num a, HasSemitones p, p ~ Diff a, AffineSpace a) => Spelling -> a -> Pitch

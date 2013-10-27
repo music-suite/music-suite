@@ -188,19 +188,6 @@ import Music.Pitch.Common.Harmony
         A Scale is a function (Number -> Interval)
         A Scale is a function (Number -> Semitones)
 
-    Tonal
-        isConsonance :: HasNumber a => a -> Bool
-        isPerfectConsonance :: HasNumber a => a -> Bool
-        isImperfectConsonance :: HasNumber a => a -> Bool
-        isDissonance :: HasNumber a => a -> Bool
-
-        isStep :: Interval -> Bool
-        isLeap :: Interval -> Bool
-
-
-        isHemitonic :: HasSemitones a => [a] -> Bool
-        isTritonic :: HasSemitones a => [a] -> Bool
-        
         -- TODO simplify etc
         isMelodicDissonance :: Interval -> Bool
 
