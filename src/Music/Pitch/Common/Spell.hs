@@ -17,8 +17,15 @@
 
 module Music.Pitch.Common.Spell (
         -- ** Spelling
+        -- * About
+        -- $semitonesAndSpellings
+
+        -- * Spelling type
         Spelling,
         spell,
+        spellAs,
+        
+        -- ** Standard spellings
         modal,
         sharps,
         flats,
@@ -38,7 +45,10 @@ import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Enharmonic
 
--- | 
+-- $semitonesAndSpellings
+--
+-- TODO document better
+--
 -- The `semitones` function retrieves the number of Semitones in a pitch, for example
 -- 
 -- > semitones :: Interval -> Semitones
@@ -49,19 +59,45 @@ import Music.Pitch.Common.Enharmonic
 -- > spellings :: Semitones -> [Interval]
 -- > spellings 4 = [majorThird, diminishedFourth]
 --
--- Law
+-- /Law/
 -- 
 -- > map semitones (spellings a) = replicate n a    for all n > 0
 --
--- Lemma
+-- /Lemma/
 -- 
 -- > map semitones (spellings a)
+
+-- | 
+-- A spelling provide a way of notating a semitone interval such as 'tritone'.
+--
+-- Examples:
+--
+-- > spell (const 4) tritone == _A4
+-- > spell (const 5) tritone == d5
+-- > spell (const 2) 1       == m2
 --
 type Spelling = Semitones -> Number
 
+-- FIXME does not handle compound intervals
 spell :: HasSemitones a => Spelling -> a -> Interval
-spell = undefined
--- spellInterval z = (\s -> Interval (fromIntegral $ s `div` 12, fromIntegral $ z s, fromIntegral s)) .  semitones
+spell spelling x = let
+    semi = semitones x
+    num  = fromIntegral (spelling semi)
+    diff = fromIntegral semi - fromIntegral (diatonicToChromatic num)
+    in interval' diff (num + 1)
+    where
+        diatonicToChromatic = go
+            where
+                go 0 = 0
+                go 1 = 2
+                go 2 = 4
+                go 3 = 5
+                go 4 = 7
+                go 5 = 9
+                go 6 = 11
+        
+spellAs :: Interval -> Spelling -> Interval
+spellAs = flip spell
 
 -- |
 -- Spell using the most the most common accidentals. Double sharps and flats are not

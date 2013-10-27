@@ -32,6 +32,7 @@ library
         unix,
         time,
         random,
+        containers,
         semigroups,
         semigroupoids,
         music-pitch-literal,
