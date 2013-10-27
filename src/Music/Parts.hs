@@ -1,6 +1,11 @@
 
-module Music.Parts -- ()
-where
+module Music.Parts (
+        Division,
+        Subpart,
+        Part,
+        Instrument,
+        divide,
+  ) where
 
 -- |
 -- A division represents a subset of a finite group of performers.
@@ -10,11 +15,24 @@ where
 --
 newtype Division = Division { getDivision :: (Int, Int) }
 
+
+divide :: Int -> Part -> [Part]
+divide = undefined
+
 -- |
 -- A subpart is a potentially infinite sequence of divisions, each typically
 -- designated using a new index type, i.e. @I.1.2@.
 -- 
 type Subpart = [Division]
+
+
+-- | TODO
+type Instrument = String
+
+-- | A part is a subdivided group of instruments of a given type.
+--
+-- TODO interaction between similar instruments, i.e. a trombone chorus of TTTB.
+type Part = (Instrument, Subpart)
 
 
 data Section
