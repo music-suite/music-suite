@@ -16,15 +16,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common.Enharmonic (
-        -- * Octaves
+        -- * Types
+        -- ** Octaves
         Octaves,
         HasOctaves(..),
 
-        -- * Steps
+        -- ** Steps
         Steps,
         HasSteps(..),
 
-        -- * Semitones
+        -- ** Semitones
         Semitones,
         HasSemitones(..),
         semitone,
@@ -35,7 +36,7 @@ module Music.Pitch.Common.Enharmonic (
         isTone,
         isTritone,
         
-        -- ** Enharmonic equivalence
+        -- * Enharmonic equivalence
         (=:=),
         (/:=),
   ) where

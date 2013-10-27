@@ -23,6 +23,7 @@ module Music.Pitch.Common.Pitch (
         name,
         accidental,
         asPitch,
+        middleC,
   ) where
 
 import Data.Maybe
@@ -140,7 +141,10 @@ pitch name acc = Pitch $ interval' (fromIntegral acc) (fromEnum name + 1)
 -- |
 -- Returns the name of a pitch.
 --
--- See also 'octaves', and 'steps' and 'semitones'.
+-- To convert a pitch to a numeric type, use 'octaves', 'steps' or 'semitones'
+-- on the relevant interval type, for example:
+--
+-- @ semitones (a' .-. 'middleC') @
 --
 name :: Pitch -> Name
 name = toEnum . fromIntegral . pred . number . simple . getPitch
@@ -162,6 +166,10 @@ accidental = fromIntegral . intervalDiff . simple . getPitch
 -- instance HasSteps Pitch where
 --     steps = steps . getPitch
 
+-- | The same as 'c', but fixed to 'Pitch'. This is useful if you want
+--   to treat 'Pitch' as an affine space around middle C, that is /C4/ in Scientific Pitch Notation.
+middleC :: Pitch
+middleC = c
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) =

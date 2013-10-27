@@ -18,14 +18,95 @@ module Music.Pitch.Common (
     module Music.Pitch.Common.Enharmonic,
 
     -- * Pitches
-    module Music.Pitch.Common.Name,
-    module Music.Pitch.Common.Accidental,
-    module Music.Pitch.Common.Pitch,
+    -- ** Name type
+    Name,
+
+    -- ** Accidental  type
+    Accidental,
+    doubleFlat, 
+    flat, 
+    natural, 
+    sharp, 
+    doubleSharp,
+
+    -- *** Inspecting accidentals
+    isNatural,
+    isSharpened,
+    isFlattened,
+    isStandard,
+
+    -- ** Pitch type
+    Pitch,    
+    pitch,
+    name,
+    accidental,
+    asPitch,
+
+    -- module Music.Pitch.Common.Name,
+    -- module Music.Pitch.Common.Accidental,
+    -- module Music.Pitch.Common.Pitch,
 
     -- * Intervals
-    module Music.Pitch.Common.Number,
-    module Music.Pitch.Common.Quality,
-    module Music.Pitch.Common.Interval,
+    -- ** Number type
+    Number,
+    HasNumber(..),   
+    unison,
+    prime,
+    second,
+    third,
+    fourth,
+    fifth,
+    sixth,
+    seventh,
+    octave,
+    ninth,
+    tenth,
+    twelfth, 
+    duodecim,
+    thirteenth,
+    fourteenth,
+    fifteenth,
+
+    -- ** Quality type
+    Quality(..),    
+    HasQuality(..),
+    invertQuality,
+    isPerfect,
+    isMajor,
+    isMinor,
+    isAugmented,
+    isDiminished,
+
+    -- ** Interval type
+    Interval,
+
+    -- *** Creating intervals
+    interval,
+    perfect,
+    major,
+    minor,
+    augmented,
+    diminished,
+    doublyAugmented,
+    doublyDiminished,
+
+    -- *** Inspecting intervals
+    -- isPerfectUnison,
+    isPositive,
+    isNegative,
+
+    -- *** Simple and compound intervals
+    isSimple,
+    isCompound,
+    separate,
+    simple,
+
+    -- *** Inversion
+    invert,
+
+    -- module Music.Pitch.Common.Number,
+    -- module Music.Pitch.Common.Quality,
+    -- module Music.Pitch.Common.Interval,
 
     -- * Miscellaneous
     module Music.Pitch.Common.Spell,
