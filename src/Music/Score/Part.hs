@@ -48,7 +48,8 @@ import Music.Time
 -- |
 -- Class of types with an associated part.
 --
--- The part type can be any type that is orddered.
+-- The part type can be any ordered type. A 'Show' instance is also
+-- required from printing the name of the part in output.
 --
 class HasPart a where
 
