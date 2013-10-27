@@ -31,6 +31,7 @@ module Music.Pitch.Common.Spell (
         flats,
   ) where
 
+import Data.VectorSpace
 import Data.AffineSpace
 
 import Music.Pitch.Absolute
@@ -82,14 +83,13 @@ type Spelling = Semitones -> Number
 -- |
 -- Spell an interval using the given 'Spelling'.
 --
--- FIXME does not handle compound intervals
---
 spell :: HasSemitones a => Spelling -> a -> Interval
 spell spelling x = let
-    semi = semitones x
-    num  = fromIntegral (spelling semi)
-    diff = fromIntegral semi - fromIntegral (diatonicToChromatic num)
-    in interval' diff (num + 1)
+    -- TODO use Steps etc to remove fromIntegral
+    (octaves, steps) = semitones x `divMod` 12
+    num  = fromIntegral (spelling steps)
+    diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
+    in interval' diff (num + 1) ^+^ _P8^*(fromIntegral octaves)
     where
         diatonicToChromatic = go
             where
