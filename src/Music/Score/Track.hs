@@ -26,6 +26,7 @@ module Music.Score.Track (
 import Data.Semigroup
 import Control.Applicative
 import Control.Monad            (ap, join, MonadPlus(..))
+import Control.Arrow
 
 import Data.Typeable
 import Data.Foldable            (Foldable(..), foldMap)
@@ -41,6 +42,7 @@ import Test.QuickCheck          (Arbitrary(..), Gen(..))
 import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
+import Music.Score.Util
 
 import qualified Data.List as List
 
@@ -130,18 +132,4 @@ instance Arbitrary a => Arbitrary (Track a) where
         t <- fmap realToFrac (arbitrary::Gen Double)
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
-
-
-
--------------------------------------------------------------------------------------
-
-list z f [] = z
-list z f xs = f xs
-
-first f (x,y)  = (f x, y)
-second f (x,y) = (x, f y)
-
-
-mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
-mergeBy f as bs = List.sortBy f $ as <> bs
 

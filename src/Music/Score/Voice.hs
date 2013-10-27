@@ -25,7 +25,8 @@ module Music.Score.Voice (
 
 import Data.Semigroup
 import Control.Applicative
-import Control.Monad            (ap, join, MonadPlus(..))
+import Control.Monad
+import Control.Arrow
 
 import Data.Typeable
 import Data.Foldable            (Foldable(..), foldMap)
@@ -106,13 +107,4 @@ instance IsPitch a => IsPitch (Voice a) where
 
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
-
-    
--------------------------------------------------------------------------------------
-
-list z f [] = z
-list z f xs = f xs
-
-first f (x,y)  = (f x, y)
-second f (x,y) = (x, f y)
 

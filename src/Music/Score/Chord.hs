@@ -80,15 +80,17 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 -- The ChordT instances (of other transformer classes) transforms structure *below* the chord representation
 --      For example, it allow us to use functions such as up, down, legato etc on chords.
 
+
+
 -- |
 -- Render all chords of a given score into singular notes composed in parallel.
 --
 -- renderChord :: (MonadPlus m, HasChord a) => m a -> m (Note a)
-renderChord = join . fmap return . mscatter . fmap getChord
+-- renderChord = join . fmap return . mscatter . fmap getChord
 
 
 -- playChord :: m a -> m (Note a)
-playChord f = join . join . fmap return . fmap f . fmap getChord
+-- playChord f = join . join . fmap return . fmap f . fmap getChord
 
 
 -- |
@@ -113,6 +115,9 @@ simultaneous' sc = compose vs
         es  = List.nub $ eras sc
         evs = fmap (`events` sc) es
         vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
+
+
+-- TODO move these to Music.Time
 
 eras :: Score a -> [Era]
 eras sc = fmap getEra . perform $ sc

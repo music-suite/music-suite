@@ -392,13 +392,9 @@ snapshotWithSingle g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 --
 onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
-    -- Note: filterOnce is more lazy than mfilter but depends on the events being sorted
+-- We could also have used mfilter. filterOnce is more lazy, 
+-- but depends on the events being sorted
 
-
-
---------------------------------------------------------------------------------
-
-delay' t = delay (t .-. zeroV)
 
 fst3 (t, d, x) = t
 trd3 (a,b,c) = c
