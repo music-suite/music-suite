@@ -15,7 +15,28 @@
 
 module Music.Pitch.Common (
     -- * Enharmonic representation
-    module Music.Pitch.Common.Enharmonic,
+    -- ** Octaves
+    Octaves,
+    HasOctaves(..),
+
+    -- ** Steps
+    Steps,
+    HasSteps(..),
+
+    -- ** Semitones
+    Semitones,
+    HasSemitones(..),
+    semitone,
+    tone,
+    ditone,
+    tritone,
+    isSemitone,
+    isTone,
+    isTritone,
+    
+    -- * Enharmonic equivalence
+    (=:=),
+    (/:=),
 
     -- * Pitches
     -- ** Name type
@@ -89,11 +110,13 @@ module Music.Pitch.Common (
     diminished,
     doublyAugmented,
     doublyDiminished,
+    asInterval,
 
     -- *** Inspecting intervals
-    -- isPerfectUnison,
-    isPositive,
     isNegative,
+    isPositive,
+    isNonNegative,
+    isPerfectUnison,
 
     -- *** Simple and compound intervals
     isSimple,

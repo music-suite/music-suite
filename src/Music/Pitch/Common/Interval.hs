@@ -31,9 +31,10 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
-        -- isPerfectUnison,
-        isPositive,
         isNegative,
+        isPositive,
+        isNonNegative,
+        isPerfectUnison,
 
         -- *** Simple and compound intervals
         isSimple,
@@ -82,12 +83,11 @@ import Music.Pitch.Common.Number
 -- > m3 ^+^ _M3 = _P5
 -- > d5 ^+^ _M6 = m10
 --
--- The scalar type of intervals are 'Integer', using '^*' to stack intervals
--- of a certain type on top of each other. For example @_P5 ^* 2@ is a stack
--- of 2 perfect fifths. The 'Num' instance works as expected for '+', 'negate'
--- and 'abs', and arbitrarily uses minor seconds for multiplication. If you
--- find yourself '*', or 'signum' on intervals, consider switching to '*^' or
--- 'normalized'.
+-- The scalar type of 'Interval' is 'Integer', using '^*' to stack intervals of a certain
+-- type on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a
+-- major ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
+-- (arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
+-- 'signum' on intervals, consider switching to '*^' or 'normalized'.
 --
 -- Intervals are generally described in terms of 'Quality' and 'Number'. To
 -- construct an interval, use the 'interval' constructor, the utility
@@ -175,9 +175,9 @@ asInterval = id
 -- |
 -- Creates an interval from a quality and number.
 --
--- If given 'Perfect' with an imperfect number (such as 3 or 7) a major interval is
--- returned. If given 'Major' or 'Minor' with a perfect number (such as 5), constructs
--- a perfect or diminished interval respectively.
+-- Given 'Perfect' with an number not indicating a perfect consonant, 'interval' returns a
+-- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
+-- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
 interval :: Quality -> Number -> Interval
 interval quality number = interval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
@@ -256,14 +256,13 @@ separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
 simple :: Interval -> Interval
 simple = snd . separate
 
-
 -- |
 -- Returns whether the given interval is simple.
 --
 -- A simple interval is an positive interval spanning less than one octave.
 --
 isSimple :: Interval -> Bool
-isSimple = (== 0) . octaves
+isSimple x = octaves x == 0
 
 -- |
 -- Returns whether the given interval is compound.
@@ -272,22 +271,34 @@ isSimple = (== 0) . octaves
 -- more than octave.
 --
 isCompound :: Interval -> Bool
-isCompound = (/= 0) . octaves
-
-isPerfectUnison :: Interval -> Bool
-isPerfectUnison = (== perfect unison)
-
--- |
--- Returns whether the given interval is positive.
---
-isPositive :: Interval -> Bool
-isPositive (Interval (oa, _, _)) = oa > 0
+isCompound x = octaves x /= 0
 
 -- |
 -- Returns whether the given interval is negative.
 --
 isNegative :: Interval -> Bool
-isNegative (Interval (oa, _, _)) = oa < 0
+isNegative x = octaves x < 0
+
+-- |
+-- Returns whether the given interval is positive.
+--
+isPositive :: Interval -> Bool
+isPositive x = octaves x >= 0 && not (isPerfectUnison x)
+
+-- |
+-- Returns whether the given interval is non-negative.
+--
+-- That is, whether it is either positive or a perfect unison.
+--
+isNonNegative :: Interval -> Bool
+isNonNegative x = octaves x >= 0
+
+-- |
+-- Returns whether the given interval a perfect unison.
+--
+isPerfectUnison :: Interval -> Bool
+isPerfectUnison = (== perfect unison)
+
 
 
 -- |
