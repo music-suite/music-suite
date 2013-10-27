@@ -34,7 +34,7 @@ module Music.Pitch.Common (
     isTone,
     isTritone,
     
-    -- * Enharmonic equivalence
+    -- ** Enharmonic equivalence
     (=:=),
     (/:=),
 
