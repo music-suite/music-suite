@@ -37,6 +37,7 @@ import Control.Applicative
 
 -- | 
 -- Absolute frequency in Hertz.    
+-- 
 newtype Hertz = Hertz { getHertz :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
@@ -46,6 +47,7 @@ newtype Hertz = Hertz { getHertz :: Double }
 -- Octaves are a logarithmic representation of frequency such that
 --
 -- > f * (2/1) = frequency (octaves f + 1)    
+-- 
 newtype Octaves = Octaves { getOctaves :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
@@ -55,6 +57,7 @@ newtype Octaves = Octaves { getOctaves :: Hertz }
 -- Cents are a logarithmic representation of frequency such that
 --
 -- > f * (2/1) = frequency (cents f + 1200)    
+-- 
 newtype Cents = Cents { getCents :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
@@ -64,6 +67,7 @@ newtype Cents = Cents { getCents :: Hertz }
 -- Fifths are a logarithmic representation of frequency.
 --
 -- > f * (3/2) = frequency (fifths f + 1)    
+-- 
 newtype Fifths = Fifths { getFifths :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
