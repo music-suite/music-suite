@@ -374,7 +374,6 @@ snapshotSingle = snapshotWithSingle (,)
 snapshotWithSingle :: (a -> Score b -> c) -> Score a -> Score b -> Score c
 snapshotWithSingle g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 
-
 -- |
 -- Filter out events that has its onset in the given time interval (inclusive start).
 -- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
@@ -383,6 +382,8 @@ onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 -- We could also have used mfilter. filterOnce is more lazy, 
 -- but depends on the events being sorted
+
+-------------------------------------------------------------------------------------
 
 
 fst3 (t, d, x) = t
