@@ -1,9 +1,11 @@
 
 module Music.Pitch.Common.Harmony (
+        isDissonance,
         isConsonance,
         isPerfectConsonance,
         isImperfectConsonance,
-        isDissonance,
+        isMelodicDissonance,
+        isMelodicConsonance,
   ) where
 
 import Music.Pitch.Common.Number
