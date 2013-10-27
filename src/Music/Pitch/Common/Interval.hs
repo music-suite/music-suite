@@ -35,6 +35,8 @@ module Music.Pitch.Common.Interval (
         isPositive,
         isNonNegative,
         isPerfectUnison,
+        isStep,
+        isLeap,
 
         -- *** Simple and compound intervals
         isSimple,
@@ -299,6 +301,25 @@ isNonNegative x = octaves x >= 0
 isPerfectUnison :: Interval -> Bool
 isPerfectUnison = (== perfect unison)
 
+-- |
+-- Returns whether the given interval is a step (a second or smaller).
+--
+-- Only the number portion is taken into account, so @_A2@ is considered
+-- a step and @m3@ a leap, even though they have the same number of
+-- semitones.
+--
+isStep :: Interval -> Bool
+isStep x = isSimple (abs x) && number (abs x) <= 2
+
+-- |
+-- Returns whether the given interval is a leap (larger than a secon).
+--
+-- Only the number portion is taken into account, so @_A2@ is considered
+-- a step and @m3@ a leap, even though they have the same number of
+-- semitones.
+--
+isLeap :: Interval -> Bool
+isLeap x = isCompound (abs x) || number (abs x) > 2
 
 
 -- |

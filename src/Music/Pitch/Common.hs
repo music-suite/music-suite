@@ -117,6 +117,8 @@ module Music.Pitch.Common (
     isPositive,
     isNonNegative,
     isPerfectUnison,
+    isStep,
+    isLeap,
 
     -- *** Simple and compound intervals
     isSimple,
@@ -160,27 +162,6 @@ import Music.Pitch.Common.Harmony
 
 
 {-  
-    Some terminology:                                           
-        
-        newtype Pitch = (PitchClass, Semitones)
-            For example (E, Natural)
-            We write [c,cs,db..] for [(C, Natural), (C, Sharp), (D, Flat)..]
-        
-        newtype Interval = (Number, Semitones)
-            For example (Augmented, IV)
-        
-        Interval is the relative representation of pitch 
-        
-        Pitch is an affine space with Interval as the difference type
-            c           .+^ major third = e
-            major third ^+^ major third = augmentedFifth
-        
-
-        Pitch addition and enhamonic equivalence:
-
-
-
-        
         Semitones is the smallest musical unit (Semitones in Western music)
         
         The `semitones` function retrieves the number of Semitones in a pitch, for example
