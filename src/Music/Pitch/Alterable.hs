@@ -38,6 +38,11 @@ class Alterable a where
     -- 
     flatten :: a -> a
 
+
+instance Alterable a => Alterable (b -> a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
 instance Alterable Double where
     sharpen = (+ 1)
     flatten = (subtract 1)

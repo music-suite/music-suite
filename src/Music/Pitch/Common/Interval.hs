@@ -275,7 +275,7 @@ isCompound :: Interval -> Bool
 isCompound = (/= 0) . octaves
 
 isPerfectUnison :: Interval -> Bool
-isPerfectUnison a = a == perfect unison
+isPerfectUnison = (== perfect unison)
 
 -- |
 -- Returns whether the given interval is positive.

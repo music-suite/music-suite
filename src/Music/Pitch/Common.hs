@@ -19,7 +19,7 @@ module Music.Pitch.Common (
 
     -- * Pitches
     -- ** Name type
-    Name,
+    Name(..),
 
     -- ** Accidental  type
     Accidental,

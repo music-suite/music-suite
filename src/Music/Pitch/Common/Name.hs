@@ -20,6 +20,9 @@ module Music.Pitch.Common.Name (
         Name(..),
   ) where
 
+-- |
+-- A pitch name.
+--
 data Name = C | D | E | F | G | A | B
     deriving (Eq, Ord, Show, Enum)
 

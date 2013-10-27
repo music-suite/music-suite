@@ -64,9 +64,8 @@ instance Alterable Accidental where
 -- Requires @FlexibleInstances@.
 --
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
-    fromPitch l acc
-        | acc == sharp  = sharpen (fromPitch l)
-        | acc == flat   = flatten (fromPitch l)
+    fromPitch l 1       = sharpen (fromPitch l)
+    fromPitch l (-1)    = flatten (fromPitch l)
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 
