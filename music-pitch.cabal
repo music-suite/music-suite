@@ -44,7 +44,6 @@ library
         Music.Pitch.Absolute
         Music.Pitch.Alterable
         Music.Pitch.Augmentable
-        Music.Pitch.Octaves
         Music.Pitch.Common
         Music.Pitch.Common.Name
         Music.Pitch.Common.Accidental
