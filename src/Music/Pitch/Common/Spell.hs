@@ -23,7 +23,7 @@ module Music.Pitch.Common.Spell (
         -- * Spelling type
         Spelling,
         spell,
-        spellAs,
+        spelledWith,
         
         -- ** Standard spellings
         modal,
@@ -72,9 +72,9 @@ import Music.Pitch.Common.Enharmonic
 --
 -- Examples:
 --
--- > spell (const 4) tritone == _A4
--- > spell (const 5) tritone == d5
--- > spell (const 2) 1       == m2
+-- > spell sharps tritone   == _A4
+-- > spell flats  tritone   == d5
+-- > spell modal  tone      == _M2
 --
 type Spelling = Semitones -> Number
 
@@ -104,10 +104,10 @@ spell spelling x = let
 -- |
 -- Flipped version of 'spell'. To be used infix, as in:
 --
--- > d5 `spellAs` sharps
+-- > d5 `spelledWith` sharps
 --        
-spellAs :: HasSemitones a => a -> Spelling -> Interval
-spellAs = flip spell
+spelledWith :: HasSemitones a => a -> Spelling -> Interval
+spelledWith = flip spell
 
 -- |
 -- Spell using the most the most common accidentals. Double sharps and flats are not

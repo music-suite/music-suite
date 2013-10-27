@@ -25,19 +25,19 @@ module Music.Pitch (
 
         -- * Pitch representation
         
-        -- | Augmentation and diminishing, generalized to work on all interval types.
+        -- -- | Augmentation and diminishing, generalized to work on all interval types.
         module Music.Pitch.Augmentable,
 
-        -- | Alteration, sharps and flats, generalized to work on all pitch types.
+        -- -- | Alteration, sharps and flats, generalized to work on all pitch types.
         module Music.Pitch.Alterable,
 
-        -- | Frequency, cents and other absolute measurements of pitch.
+        -- -- | Frequency, cents and other absolute measurements of pitch.
         module Music.Pitch.Absolute,
 
-        -- | Pitch and intervals, as defined in Common Music Theory (CMT).
-        --
-        --   Includes representation of common practice pitches and intervalssuch as /c sharp/, 
-        --   /diminished second/ and so on.
+        -- -- | Pitch and intervals, as defined in Common Music Theory (CMT).
+        -- --
+        -- --   Includes representation of common practice pitches and intervalssuch as /c sharp/, 
+        -- --   /diminished second/ and so on.
         module Music.Pitch.Common,
         
         -- * Pitch literals
