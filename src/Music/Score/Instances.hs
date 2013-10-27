@@ -54,6 +54,7 @@ import Music.Score.Chord
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
+import Music.Score.Util
 
 -------------------------------------------------------------------------------------
 
@@ -232,7 +233,7 @@ instance HasSlide a => HasSlide (ChordT a) where
     setEndGliss   n (ChordT as)                     = ChordT (fmap (setEndGliss n) as)
     setEndSlide   n (ChordT as)                     = ChordT (fmap (setEndSlide n) as)
 instance HasText a => HasText (ChordT a) where
-    addText      s (ChordT as)                      = ChordT (mapFirstL (addText s) as)
+    addText      s (ChordT as)                      = ChordT (mapF (addText s) as)
 
 
 -- TieT
@@ -716,19 +717,3 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
 
-
-
-
--- TODO consolidate
-
-mapFirstL f = mapFirstMiddleLast f id id
-
-mapFirstMiddleLast :: (a -> b) -> (a -> b) -> (a -> b) -> [a] -> [b]
-mapFirstMiddleLast f g h = go
-    where
-        go []    = []
-        go [a]   = [f a]
-        go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++
-                   map g (tail $ init xs) ++
-                   [h $ last xs]

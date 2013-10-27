@@ -40,6 +40,7 @@ import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
 import Music.Score.Pitch
+import Music.Score.Util
 
 import qualified Data.List as List
 
@@ -185,15 +186,10 @@ instance Reversible a => Reversible (Score a) where
 
 fst3 (a,b,c) = a
 
-list z f [] = z
-list z f xs = f xs
-
-first f (x,y)  = (f x, y)
-second f (x,y) = (x, f y)
-
 first3 f (a,b,c) = (f a,b,c)
 second3 f (a,b,c) = (a,f b,c)
 
+{-
 mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
 mergeBy f [] ys = ys
 mergeBy f xs [] = xs
@@ -201,3 +197,4 @@ mergeBy f xs'@(x:xs) ys'@(y:ys)
     | x `f` y == LT   =   x : mergeBy f xs ys'
     | x `f` y /= LT   =   y : mergeBy f xs' ys
 
+-}

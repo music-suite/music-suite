@@ -85,7 +85,7 @@ import Music.Score.Part
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
-import Music.Score.Instances
+import Music.Score.Instances ()
 import Music.Score.Export.Midi
 import Music.Score.Export.Lilypond
 import Music.Score.Export.MusicXml
