@@ -37,7 +37,7 @@ import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Enharmonic
 
 type Spelling = Semitones -> Number
 

@@ -64,7 +64,7 @@ import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Literal
 import Music.Pitch.Common.Quality
-import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Enharmonic
 import Music.Pitch.Common.Number
 
 -- |

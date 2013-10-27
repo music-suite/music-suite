@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Common.Semitones (
+module Music.Pitch.Common.Enharmonic (
         -- * Octaves
         Octaves,
         HasOctaves(..),

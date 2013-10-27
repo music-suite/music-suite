@@ -14,6 +14,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common (
+    -- * Enharmonic representation
+    module Music.Pitch.Common.Enharmonic,
+
     -- * Pitches
     module Music.Pitch.Common.Name,
     module Music.Pitch.Common.Accidental,
@@ -24,8 +27,7 @@ module Music.Pitch.Common (
     module Music.Pitch.Common.Quality,
     module Music.Pitch.Common.Interval,
 
-    -- * Semitones and enharmonics
-    module Music.Pitch.Common.Semitones,
+    -- * Miscellaneous
     module Music.Pitch.Common.Spell,
     module Music.Pitch.Common.Harmony,
 )
@@ -48,7 +50,7 @@ import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Semitones
+import Music.Pitch.Common.Enharmonic
 import Music.Pitch.Common.Spell
 import Music.Pitch.Common.Harmony
 

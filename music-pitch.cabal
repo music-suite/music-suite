@@ -54,7 +54,7 @@ library
         Music.Pitch.Common.Accidental
         Music.Pitch.Common.Pitch
 
-        Music.Pitch.Common.Semitones
+        Music.Pitch.Common.Enharmonic
         Music.Pitch.Common.Spell
         Music.Pitch.Common.Harmony
 
