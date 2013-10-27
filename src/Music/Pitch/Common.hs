@@ -14,14 +14,20 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common (
+    -- * Pitches
     module Music.Pitch.Common.Name,
     module Music.Pitch.Common.Accidental,
-    module Music.Pitch.Common.Quality,
-    module Music.Pitch.Common.Number,
     module Music.Pitch.Common.Pitch,
+
+    -- * Intervals
+    module Music.Pitch.Common.Number,
+    module Music.Pitch.Common.Quality,
     module Music.Pitch.Common.Interval,
+
+    -- * Semitones and enharmonics
     module Music.Pitch.Common.Semitones,
     module Music.Pitch.Common.Spell,
+    module Music.Pitch.Common.Harmony,
 )
 where
 
@@ -44,6 +50,7 @@ import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Spell
+import Music.Pitch.Common.Harmony
 
 
 {-  
