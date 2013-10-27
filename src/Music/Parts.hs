@@ -1,5 +1,58 @@
 
-module Music.Parts where
+module Music.Parts -- ()
+where
+
+-- |
+-- A division represents a subset of a finite group of performers.
+--
+-- For example a group may be divided into three equal divisions,
+-- designated @(0, 3)@, @(1, 3)@ and @(2, 3)@ respectively.
+--
+newtype Division = Division { getDivision :: (Int, Int) }
+
+-- |
+-- A subpart is a potentially infinite sequence of divisions, each typically
+-- designated using a new index type, i.e. @I.1.2@.
+-- 
+type Subpart = [Division]
+
+
+data Section
+    = Woodwind
+    | Brass
+    | Percussion
+    | Keyboard
+    | Voices
+    | Strings
+
+data VoicePart
+    = Soprano
+    | MezzoSoprano
+    | Alto
+    | Tenor
+    | Baritone
+    | Bass
+
+
+data GMInstrumentType
+    = GMPiano
+    | GMChromaticPercussion
+    | GMOrgan
+    | GMGuitar
+    | GMBass
+    | GMStrings
+    | GMEnsemble
+    | GMBrass
+    | GMReed
+    | GMPipe
+    | GMSynthLead
+    | GMSynthPad
+    | GMSynthEffects
+    | GMEthnic
+    | GMPercussive
+    | GMSoundEffects
+
+
     
 {-
     ## Terminology: Voice vs Part
