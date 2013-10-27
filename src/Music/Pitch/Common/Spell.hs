@@ -78,7 +78,12 @@ import Music.Pitch.Common.Enharmonic
 --
 type Spelling = Semitones -> Number
 
+
+-- |
+-- Spell an interval using the given 'Spelling'.
+--
 -- FIXME does not handle compound intervals
+--
 spell :: HasSemitones a => Spelling -> a -> Interval
 spell spelling x = let
     semi = semitones x
@@ -95,8 +100,13 @@ spell spelling x = let
                 go 4 = 7
                 go 5 = 9
                 go 6 = 11
-        
-spellAs :: Interval -> Spelling -> Interval
+
+-- |
+-- Flipped version of 'spell'. To be used infix, as in:
+--
+-- > d5 `spellAs` sharps
+--        
+spellAs :: HasSemitones a => a -> Spelling -> Interval
 spellAs = flip spell
 
 -- |
