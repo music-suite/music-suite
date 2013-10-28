@@ -1,3 +1,6 @@
 dist
 .shelly
 .hackette
+*.ly
+*.pdf
+*.xml
