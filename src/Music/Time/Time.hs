@@ -56,3 +56,13 @@ instance VectorSpace Duration where
 --
 type Time = Point Duration
 
+type Span = (Time, Duration)
+-- TODO instances
+
+type TFun a = Time -> a
+type BoundTFun a = (Span, TFun a)
+type LinTFun a = (Span, (a, a))
+type Event x = (Span, x)
+
+
+
