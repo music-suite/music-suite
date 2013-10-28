@@ -4,3 +4,5 @@
 *.sib
 *.DS_Store
 dist
+*.ly
+*.pdf
