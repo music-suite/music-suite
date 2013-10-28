@@ -13,13 +13,18 @@
 --
 -- Absolute representation of loudness, or dynamics.
 --
--- The canonical loudness representation is amplitude in dB. For conversion, see 'HasAmplitude'.
+-- The canonical loudness representation is 'Amplitude'. For conversion, see 'HasAmplitude'.
 --
 -------------------------------------------------------------------------------------
 
-module Music.Dynamics.Absolute -- (
--- )
-where
+module Music.Dynamics.Absolute (
+        Amplitude(..),
+        Decibel,
+        Bel,
+        HasAmplitude(..),
+        decibel,
+        bel,
+) where
 
 import Data.Maybe
 import Data.Either
@@ -34,7 +39,7 @@ newtype Amplitude = Amplitude { getAmplitude :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
--- A logarithmic representation of frequency such that
+-- A logarithmic representation of amplitude such that
 --
 -- >
 -- > x * 10 = amplitude (bel x + 1)
@@ -43,7 +48,7 @@ newtype Bel = Bel { getBel :: Amplitude }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
--- A logarithmic representation of frequency such that
+-- A logarithmic representation of amplitude such that
 --
 -- >
 -- > x * 10 = amplitude (decibel x + 10)
