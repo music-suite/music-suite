@@ -35,6 +35,6 @@ library
     exposed-modules:
         Music.Dynamics
         Music.Dynamics.Absolute
-        Music.Dynamics.Relative
+        Music.Dynamics.Common
         Music.Dynamics.Balance
     

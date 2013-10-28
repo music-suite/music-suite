@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Dynamics.Relative -- (
+module Music.Dynamics.Common -- (
 -- )
 where
 
