@@ -30,6 +30,7 @@ module Music.Score.Instances (
 
 import Control.Monad
 import Data.Semigroup
+import Data.Default
 import Data.Ratio
 import Data.Maybe
 import Data.Foldable
@@ -163,11 +164,11 @@ instance HasArticulation a => HasArticulation (Maybe a) where
     setStaccLevel n (Just x)                        = Just (setStaccLevel n x)
     setStaccLevel n Nothing                         = Nothing
 instance HasPart a => HasPart (Maybe a) where
-    type Part (Maybe a)                             = Maybe (Part a)
-    getPart Nothing                                 = Nothing
-    getPart (Just a)                                = Just (getPart a)
+    type Part (Maybe a)                             = Part a
+    getPart Nothing                                 = def
+    getPart (Just a)                                = getPart a
     modifyPart f Nothing                            = Nothing
-    modifyPart f (Just a)                           = Just (modifyPart (fromMaybe (getPart a) . f . Just) a) 
+    modifyPart f (Just a)                           = Just (modifyPart f a) 
     -- TODO use cofunctor
 instance HasPitch a => HasPitch (Maybe a) where
     type Pitch (Maybe a)                             = Pitch a

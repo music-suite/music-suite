@@ -35,6 +35,7 @@ module Music.Score.Part (
   ) where
 
 import Control.Monad.Plus
+import Data.Default
 import Data.Ord (comparing)
 import Data.Semigroup
 import Data.Ratio
@@ -57,7 +58,7 @@ class HasPart a where
     type Part a :: *
 
     -- | Get the voice of the given note.
-    getPart :: a -> Part a
+    getPart :: Default (Part a) => a -> Part a
 
     -- | Set the voice of the given note.
     setPart :: Part a -> a -> a
@@ -71,12 +72,12 @@ class HasPart a where
 newtype PartT n a = PartT { getPartT :: (n, a) }
     deriving (Eq, Ord, Show, Functor, Typeable)
 
-instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = 0 }
-instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = 0 }
-instance HasPart Float                      where { type Part Float      = Integer ; getPart _ = 0 }
-instance HasPart Int                        where { type Part Int        = Integer ; getPart _ = 0 }
-instance HasPart Integer                    where { type Part Integer    = Integer ; getPart _ = 0 }
-instance Integral a => HasPart (Ratio a)    where { type Part (Ratio a)  = Integer ; getPart _ = 0 }
+instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = def }
+instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = def }
+instance HasPart Float                      where { type Part Float      = Integer ; getPart _ = def }
+instance HasPart Int                        where { type Part Int        = Integer ; getPart _ = def }
+instance HasPart Integer                    where { type Part Integer    = Integer ; getPart _ = def }
+instance Integral a => HasPart (Ratio a)    where { type Part (Ratio a)  = Integer ; getPart _ = def }
 
 instance HasPart (PartT n a) where
     type Part (PartT n a)       = n
@@ -87,7 +88,7 @@ instance HasPart (PartT n a) where
 -- Like 'HasPart', but enforces the part to be ordered.
 -- This is usually required for part separation and traversal.
 --
-type HasPart' a = (Ord (Part a), HasPart a)
+type HasPart' a = (Ord (Part a), Default (Part a), HasPart a)
 
 -- |
 -- Get all parts in the given score. Returns a list of parts.
