@@ -261,7 +261,7 @@ simple = snd . separate
 -- |
 -- Returns whether the given interval is simple.
 --
--- A simple interval is an positive interval spanning less than one octave.
+-- A simple interval is a non-negative interval spanning less than one octave.
 --
 isSimple :: Interval -> Bool
 isSimple x = octaves x == 0
