@@ -25,6 +25,7 @@ module Music.Time.Time (
         unit,
 
         Span,
+        inSpan,
         between,
         spanning,
         unitSpan,
@@ -32,6 +33,7 @@ module Music.Time.Time (
         getSpanRel,
         mapSpanAbs,
         mapSpanRel,
+        invertSpan,
   ) where
 
 import Control.Arrow
@@ -144,7 +146,8 @@ mapSpanRel f = inSpan (uncurry f)
 mapSpanAbs :: (Time -> Time -> (Time, Time)) -> Span -> Span
 mapSpanAbs f = uncurry between . uncurry f . getSpanAbs
 
-invSpan (Span (t,d)) = Span (mirror t, recip d)
+invertSpan :: Span -> Span
+invertSpan (Span (t,d)) = Span (mirror t, recip d)
 
 revSpan = inSpan g
     where
