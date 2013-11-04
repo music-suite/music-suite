@@ -78,11 +78,11 @@ import qualified Data.List as List
 --
 --
 data Score a  = Score [(Time, Duration, a)]
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
 
-getScore (Score x) = x
-instance Delayable (Score a) where delay = undefined
-instance Stretchable (Score a) where stretch = undefined
+-- getScore (Score x) = x
+-- instance Delayable (Score a) where delay = undefined
+-- instance Stretchable (Score a) where stretch = undefined
 
 -- type instance Duration (Score a)  = DurationT
 type instance Container (Score a) = Score
