@@ -172,13 +172,19 @@ beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
     RState tm ts _ <- getState
     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
-        d - ts > 0
-        &&
-        isDivisibleBy 2 (d / tm - ts)) -- Or is it ((d - ts) / tm)?
+        d - ts > 0  &&  isDivisibleBy 2 (d / tm - ts))
 
 -- | Matches a dotted rhythm
 dotted :: Tiable a => RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ [1..2]               -- max 2 dots
+
+-- | Matches a bound rhythm
+bound :: Tiable a => RhythmParser a (Rhythm a)
+bound = bound' (1/2)
+
+-- | Matches a tuplet
+tuplet :: Tiable a => RhythmParser a (Rhythm a)
+tuplet = msum . fmap tuplet' $ tupletMods
 
 dotted' :: Tiable a => Int -> RhythmParser a (Rhythm a)
 dotted' n = do
@@ -186,12 +192,6 @@ dotted' n = do
     a <- beat
     modifyState $ modifyTimeMod (/ dotMod n)
     return (Dotted n a)
-
-
--- | Matches a bound rhythm
-bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = bound' (1/2)
-
 
 bound' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 bound' d = do
@@ -201,10 +201,6 @@ bound' d = do
     let (b,c) = toTied $ getBeatValue a
     return $ Group [Beat (getBeatDuration a) b, Beat (1/2) c]
     -- FIXME doesn't know order
-
--- | Matches a tuplet
-tuplet :: Tiable a => RhythmParser a (Rhythm a)
-tuplet = msum . fmap tuplet' $ tupletMods
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
