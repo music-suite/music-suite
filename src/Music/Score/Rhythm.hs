@@ -105,10 +105,10 @@ konstNumDotsAllowed :: [Int]
 konstNumDotsAllowed = [1..2]
 
 konstBounds :: [Duration]
-konstBounds = [1/2]
+konstBounds = [1/2, 1/4]
 
 konstTuplets :: [Duration]
-konstTuplets = [2/3, 4/5, {-4/6,-} 4/7, 8/9, 8/11, 8/13, 16/17]
+konstTuplets = [ 2/3, 4/5, 4/7, 8/9, 8/11, 8/13, 8/15, 16/17, 16/18, 16/19, 16/21, 16/23 ]
 
 konstMaxTupletNest :: Int
 konstMaxTupletNest = 1
