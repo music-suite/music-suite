@@ -108,7 +108,7 @@ konstBounds :: [Duration]
 konstBounds = [1/2]
 
 konstTuplets :: [Duration]
-konstTuplets = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
+konstTuplets = [2/3, 4/5, {-4/6,-} 4/7, 8/9, 8/11, 8/13, 16/17]
 
 konstMaxTupletNest :: Int
 konstMaxTupletNest = 1
