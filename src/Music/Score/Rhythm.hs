@@ -52,7 +52,7 @@ data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
     | Group      [Rhythm a]                    -- normal note sequence
     | Dotted     Int (Rhythm a)                -- n > 0.
-    | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'tupletMods'.
+    | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
     deriving (Eq, Show, Functor, Foldable)
     -- RInvTuplet  Duration (Rhythm a)
 
@@ -97,54 +97,64 @@ instance HasDuration (Rhythm a) where
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quantize = quantize' (atEnd rhythm)
 
-
--- Internal...
-
 testQuantize :: [Duration] -> Either String (Rhythm ())
 testQuantize = quantize' (atEnd rhythm) . fmap (\x->(x,()))
 
-dotMod :: Int -> Duration
-dotMod n = dotMods !! (n-1)
 
--- [3/2, 7/4, 15/8, 31/16 ..]
-dotMods :: [Duration]
-dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
-    where
-        times2 = iterate (*2) 1
+konstNumDotsAllowed :: [Int]
+konstNumDotsAllowed = [1..2]
 
-tupletMods :: [Duration]
-tupletMods = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
+konstBounds :: [Duration]
+konstBounds = [1/2]
+
+konstTuplets :: [Duration]
+konstTuplets = [2/3, 4/5, {-4/6,-} 4/7, 8/9]
+
+konstMaxTupletNest :: Int
+konstMaxTupletNest = 1
 
 
--- 3/2 for dots
--- 2/3, 4/5, 4/6, 4/7, 8/9, 8/10, 8/11  for ordinary tuplets
--- 3/2,      6/4                        for inverted tuplets
+data RhythmContext = RhythmContext {
 
-data RState = RState {
-        timeMod :: Duration, -- time modification; notatedDur * timeMod = actualDur
-        timeSub :: Duration, -- time subtraction (in bound note)
+        -- Time scaling of the current note (from dots and tuplets).
+        timeMod :: Duration, 
+
+        -- Time subtracted from the current rhythm (from ties).
+        timeSub :: Duration, 
+
+        -- Number of tuplets above the current note (default 0).
         tupleDepth :: Int
     }
 
-instance Monoid RState where
-    mempty = RState { timeMod = 1, timeSub = 0, tupleDepth = 0 }
+instance Monoid RhythmContext where
+    mempty = RhythmContext { timeMod = 1, timeSub = 0, tupleDepth = 0 }
     a `mappend` _ = a
 
-modifyTimeMod :: (Duration -> Duration) -> RState -> RState
-modifyTimeMod f (RState tm ts td) = RState (f tm) ts td
+modifyTimeMod :: (Duration -> Duration) -> RhythmContext -> RhythmContext
+modifyTimeMod f (RhythmContext tm ts td) = RhythmContext (f tm) ts td
 
-modifyTimeSub :: (Duration -> Duration) -> RState -> RState
-modifyTimeSub f (RState tm ts td) = RState tm (f ts) td
+modifyTimeSub :: (Duration -> Duration) -> RhythmContext -> RhythmContext
+modifyTimeSub f (RhythmContext tm ts td) = RhythmContext tm (f ts) td
 
-modifyTupleDepth :: (Int -> Int) -> RState -> RState
-modifyTupleDepth f (RState tm ts td) = RState tm ts (f td)
+modifyTupleDepth :: (Int -> Int) -> RhythmContext -> RhythmContext
+modifyTupleDepth f (RhythmContext tm ts td) = RhythmContext tm ts (f td)
+
+
+
+
+
 
 -- |
 -- A @RhytmParser a b@ converts (Voice a) to b.
-type RhythmParser a b = Parsec [(Duration, a)] RState b
+type RhythmParser a b = Parsec [(Duration, a)] RhythmContext b
 
 quantize' :: Tiable a => RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p mempty ""
+
+
+
+
+
 
 rhythm :: Tiable a => RhythmParser a (Rhythm a)
 rhythm = Group <$> many1 (rhythm' <|> bound)
@@ -161,13 +171,13 @@ rhythm' = mzero
 -- Matches a beat divisible by 2 (notated)
 -- beat :: Tiable a => RhythmParser a (Rhythm a)
 -- beat = do
---     RState tm ts _ <- getState
+--     RhythmContext tm ts _ <- getState
 --     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
 --         d - ts > 0  &&  isDivisibleBy 2 (d / tm - ts))
 
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
-    RState tm ts _ <- getState
+    RhythmContext tm ts _ <- getState
     match' $ \d x ->
         let d2 = d / tm - ts
         in (d2, x) `assuming` (d - ts > 0 && isDivisibleBy 2 d2)
@@ -175,15 +185,19 @@ beat = do
 
 -- | Matches a dotted rhythm
 dotted :: Tiable a => RhythmParser a (Rhythm a)
-dotted = msum . fmap dotted' $ [1..2]               -- max 2 dots
+dotted = msum . fmap dotted' $ konstNumDotsAllowed               -- max 2 dots
 
 -- | Matches a bound rhythm
 bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = bound' (1/2)
+bound = msum . fmap bound' $ konstBounds
 
 -- | Matches a tuplet
 tuplet :: Tiable a => RhythmParser a (Rhythm a)
-tuplet = msum . fmap tuplet' $ tupletMods
+tuplet = msum . fmap tuplet' $ konstTuplets
+
+
+
+
 
 dotted' :: Tiable a => Int -> RhythmParser a (Rhythm a)
 dotted' n = do
@@ -192,20 +206,30 @@ dotted' n = do
     modifyState $ modifyTimeMod (/ dotMod n)
     return (Dotted n a)
 
+dotMod :: Int -> Duration
+dotMod n = dotMods !! (n-1)
+
+-- [3/2, 7/4, 15/8, 31/16 ..]
+dotMods :: [Duration]
+dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
+    where
+        times2 = iterate (*2) 1
+
 bound' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 bound' d = do
     modifyState $ modifyTimeSub (+ d)
     a <- beat
     modifyState $ modifyTimeSub (subtract d)
     let (b,c) = toTied $ getBeatValue a
-    return $ Group [Beat (getBeatDuration a) b, Beat (1/2) c]
+
     -- FIXME doesn't know order
+    return $ Group [Beat (getBeatDuration a) b, Beat d c]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
-    RState _ _ depth <- getState
-    onlyIf (depth < 1) $ do                         -- max 1 nested tuplets
+    RhythmContext _ _ depth <- getState
+    onlyIf (depth < konstMaxTupletNest) $ do
         modifyState $ modifyTimeMod (* d)
                     . modifyTupleDepth succ
         a <- rhythmNoBound
