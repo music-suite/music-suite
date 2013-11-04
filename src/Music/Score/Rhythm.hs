@@ -185,7 +185,7 @@ beat = do
 
 -- | Matches a dotted rhythm
 dotted :: Tiable a => RhythmParser a (Rhythm a)
-dotted = msum . fmap dotted' $ konstNumDotsAllowed               -- max 2 dots
+dotted = msum . fmap dotted' $ konstNumDotsAllowed
 
 -- | Matches a bound rhythm
 bound :: Tiable a => RhythmParser a (Rhythm a)

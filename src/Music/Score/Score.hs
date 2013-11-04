@@ -77,10 +77,11 @@ import qualified Data.List as List
 -- >                    (3, 6, 'b') ]}
 --
 --
-data Score a  = Score [(Time, Duration, a)]
+-- data Score a  = Score [(Time, Duration, a)]
+newtype Score a  = Score [(Time, Duration, a)]
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
 
--- getScore (Score x) = x
+getScore (Score x) = x
 -- instance Delayable (Score a) where delay = undefined
 -- instance Stretchable (Score a) where stretch = undefined
 
