@@ -29,12 +29,15 @@ module Music.Time.Stretchable (
         compress,
   ) where
 
+import Control.Arrow
+
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
 import Music.Time.Time
+import Music.Time.Relative
 
 -- |
 -- Stretchable values. 
@@ -48,24 +51,26 @@ class Stretchable a where
     -- 
     stretch :: Duration -> a -> a
 
+instance Stretchable Duration where
+    stretch n = (n*^)
+
+instance Stretchable Time where
+    stretch n = (n*.)
+
+instance Stretchable Span where
+    stretch n = mapSpan $ curry $ (n*.) *** (n*^)
+    
 instance Stretchable a => Stretchable [a] where
     stretch n = fmap (stretch n)
 
--- instance (d ~ Scalar d, t ~ Point d, VectorSpace d) => Stretchable (t, d, a) where
---     stretch n (t, d, a) = (n*.t, n*^d, a)
 instance Stretchable (Time, Duration, a) where
     stretch n (t, d, a) = (n*.t, n*^d, a)
 
 instance Stretchable (Duration -> a) where
-    -- stretch n = flip (.) (^/ n)
     stretch n f = f . (^/ n)
 
 instance Stretchable (Time -> a) where
     stretch n f = f . relative origin (^/ n)
-
-relative :: AffineSpace p => p -> (Diff p -> Diff p) -> p -> p
-relative p f = (p .+^) . f . (.-. p)
--- TODO Move. Perhaps this could be added to vector-space?
 
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.

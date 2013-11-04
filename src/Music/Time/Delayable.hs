@@ -32,6 +32,7 @@ module Music.Time.Delayable (
         delayTime,
   ) where
 
+import Control.Arrow
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
@@ -51,14 +52,18 @@ class Delayable a where
     -- 
     delay :: Duration -> a -> a
 
+instance Delayable Duration where
+    delay = (^+^)
+
+instance Delayable Time where
+    delay = flip (.+^)
+
+instance Delayable Span where
+    delay n = mapSpan $ curry $ delay n *** id
+    
 instance Delayable a => Delayable [a] where
     delay n = fmap (delay n)
 
--- instance AffineSpace t => Delayable (t, a) where
-    -- delay n (t, a) = (t .+^ n, a)
-
--- instance (AffineSpace t, d ~ Diff t) => Delayable (t, d, a) where
---     delay n (t, d, a) = (t .+^ n, d, a)
 instance Delayable (Time, Duration, a) where
     delay n (t, d, a) = (t .+^ n, d, a)
 
