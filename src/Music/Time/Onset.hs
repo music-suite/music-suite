@@ -46,7 +46,7 @@ module Music.Time.Onset (
         offsetDefault,
 
         -- ** Wrappers
-        AddOffset(..),
+        -- AddOffset(..),
   ) where
 
 import Data.Semigroup

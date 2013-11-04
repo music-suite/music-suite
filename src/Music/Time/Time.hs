@@ -24,7 +24,8 @@ module Music.Time.Time (
         unit,
 
         Span,
-        newSpan,
+        between,
+        spanning,
         getSpan,
         mapSpan,
         
@@ -82,7 +83,9 @@ start = origin
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
-newSpan = curry Span
+spanning = curry Span
+between t u = t `spanning` (u .-. t)
+
 getSpan (Span x)     = x
 mapSpan f = inSpan (uncurry f)
 

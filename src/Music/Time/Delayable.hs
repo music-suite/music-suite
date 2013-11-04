@@ -52,23 +52,24 @@ class Delayable a where
     -- 
     delay :: Duration -> a -> a
 
-instance Delayable Duration where
-    delay = (^+^)
-
 instance Delayable Time where
-    delay = flip (.+^)
+    delay n = (.+^ n)
 
 instance Delayable Span where
     delay n = mapSpan $ curry $ delay n *** id
     
+instance Delayable (Time -> a) where
+    delay n = (. delay (negateV n))
+
 instance Delayable a => Delayable [a] where
     delay n = fmap (delay n)
+
+instance Delayable (Time, a) where
+    delay n (t, a) = (t .+^ n, a)
 
 instance Delayable (Time, Duration, a) where
     delay n (t, d, a) = (t .+^ n, d, a)
 
-instance Delayable (Time -> a) where
-    delay n = flip (.) (.-^ n)
 
 -- |
 -- Move a score forward in time. Equivalent to 'delayTime.

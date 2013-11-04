@@ -63,14 +63,20 @@ instance Stretchable Span where
 instance Stretchable a => Stretchable [a] where
     stretch n = fmap (stretch n)
 
+instance Stretchable (Time, a) where
+    stretch n (t, a) = (stretch n t, a)
+
+instance Stretchable (Duration, a) where
+    stretch n (d, a) = (stretch n d, a)
+
 instance Stretchable (Time, Duration, a) where
-    stretch n (t, d, a) = (n*.t, n*^d, a)
+    stretch n (t, d, a) = (stretch n t, stretch n d, a)
 
 instance Stretchable (Duration -> a) where
-    stretch n f = f . (^/ n)
+    stretch n = (. (^/ n))
 
 instance Stretchable (Time -> a) where
-    stretch n f = f . relative origin (^/ n)
+    stretch n = (. relative origin (^/ n))
 
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.
