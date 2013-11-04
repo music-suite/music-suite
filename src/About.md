@@ -6,7 +6,7 @@
 > *Please note:* The API and docs are not particularly stable at the moment. An official release note will appear in due time.
 -->
 
-The Music Suite is a language for creating, processing or analyzing music. It is based on [Haskell][Haskell], the world's greatest functional programming language^[In fact it is a so-called embedded domain-specific language, see http://www.haskell.org/haskellwiki/Embedded_domain_specific_language].
+The Music Suite is a language based on [Haskell][Haskell] for creating, processing or analyzing music. It can be used on its own or as a Haskell library.
 
 The Music Suite is designed to:
 

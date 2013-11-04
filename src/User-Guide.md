@@ -112,7 +112,7 @@ c^*(9/8) |> d^*(7/8)
 ```
 
 ```music+haskell
-stretch (2/3) (scat [c,d,e]) |> f^*(3/2)
+stretch (2/3) (scat [c,d,e]) |> f^*2
 ```
 
 The `^*` and `^/` operators can be used as shorthands for `delay` and `compress`.
@@ -179,6 +179,8 @@ pcat [c,e..g]^/2
 
 ## Pitch
 
+### Pitch names
+
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*. 
 
 To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type `IsPitch a => a`.
@@ -214,7 +216,7 @@ octavesUp (-1) c
 octavesDown 2 c
 ```
 
-Shorter syntax for other octaves:
+There is also a shorthand for other octaves:
 
 ```music+haskell
 c__ |> c_ |> c |> c' |> c''
@@ -235,7 +237,7 @@ sharpen c
 (sharpen . sharpen) c
 ```
 
-Shorter syntax for sharp and flat notes:
+As you might expect, there is also a shorthand for sharp and flat notes:
 
 ```music+haskell
 (cs |> ds |> es)    -- sharp
@@ -252,7 +254,13 @@ flatten d             == d flat        == ds
 (flatten . flatten) d == d doubleFlat  == dss
 ```
 
-Note that there is no guarantee that your pitch representation use enharmonic equivalence, so `cs == db` may or may not hold.
+Note that `cs == db` may or may not hold depending on which pitch representation you use.
+
+### Intervals
+
+TODO
+
+### Qualified pitch and interval names
 
 There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified if you want to avoid bringing the single-letter pitch names into scope.
 
