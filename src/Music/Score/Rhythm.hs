@@ -146,15 +146,6 @@ type RhythmParser a b = Parsec [(Duration, a)] RState b
 quantize' :: Tiable a => RhythmParser a b -> [(Duration, a)] -> Either String b
 quantize' p = left show . runParser p mempty ""
 
--- Matches a (duration, value) pair iff the predicate matches, returns beat
-match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
-match p = tokenPrim show next test
-    where
-        show x        = ""
-        next pos _ _  = updatePosChar pos 'x'
-        test (d,x)    = if p d x then Just (Beat d x) else Nothing
-
--- Matches any rhythm
 rhythm :: Tiable a => RhythmParser a (Rhythm a)
 rhythm = Group <$> many1 (rhythm' <|> bound)
 
@@ -168,11 +159,19 @@ rhythm' = mzero
     <|> tuplet
 
 -- Matches a beat divisible by 2 (notated)
+-- beat :: Tiable a => RhythmParser a (Rhythm a)
+-- beat = do
+--     RState tm ts _ <- getState
+--     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
+--         d - ts > 0  &&  isDivisibleBy 2 (d / tm - ts))
+
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
     RState tm ts _ <- getState
-    (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
-        d - ts > 0  &&  isDivisibleBy 2 (d / tm - ts))
+    match' $ \d x ->
+        let d2 = d / tm - ts
+        in (d2, x) `assuming` (d - ts > 0 && isDivisibleBy 2 d2)
+
 
 -- | Matches a dotted rhythm
 dotted :: Tiable a => RhythmParser a (Rhythm a)
@@ -225,6 +224,24 @@ tuplet' d = do
 -- many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
 -- many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
 
+-- Matches a (duration, value) pair iff the predicate matches, returns beat
+match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
+match p = tokenPrim show next test
+    where
+        show x        = ""
+        next pos _ _  = updatePosChar pos 'x'
+        test (d,x)    = if p d x then Just (Beat d x) else Nothing
+
+-- Matches a (duration, value) pair iff the predicate matches, returns beat
+match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
+match' f = tokenPrim show next test
+    where
+        show x        = ""
+        next pos _ _  = updatePosChar pos 'x'
+        test (d,x)    = case f d x of
+            Nothing     -> Nothing
+            Just (d,x)  -> Just $ Beat d x
+
 -- |
 -- Succeed only if the entire input is consumed.
 --
@@ -240,6 +257,10 @@ atEnd p = do
 onlyIf :: MonadPlus m => Bool -> m b -> m b
 onlyIf b p = if b then p else mzero
 
+-- | Just x or Nothing
+assuming :: a -> Bool -> Maybe a
+assuming x b = if b then Just x else Nothing
+
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
 logBaseR k n
     | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
@@ -247,7 +268,12 @@ logBaseR k n
     | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n                         = logBase (fromRational k) (fromRational n)
 
--- As it sounds
+
+divides     = isDivisibleBy
+divisibleBy = flip isDivisibleBy
+
+-- As it sounds, do NOT use infix
+-- Only works for simple n such as 2 or 3, TODO determine
 isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
