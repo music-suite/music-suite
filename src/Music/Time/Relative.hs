@@ -1,4 +1,9 @@
 
+-- |
+-- Utilities for working with time values.
+--
+-- TODO Move. Perhaps these could be added to vector-space-point?
+--
 module Music.Time.Relative where
 
 import Data.Semigroup
@@ -11,4 +16,9 @@ import Data.AffineSpace.Point
 -- 
 relative :: AffineSpace p => p -> (Diff p -> Diff p) -> p -> p
 relative p f = (p .+^) . f . (.-. p)
--- TODO Move. Perhaps this could be added to vector-space?
+
+-- |
+-- Mirror a point around 'origin'.
+--
+mirror :: AdditiveGroup v => Point v -> Point v
+mirror = relative origin negateV

@@ -18,19 +18,23 @@
 module Music.Time.Time (
         -- * Time and duration types
         Time(..),
-        start,
-
         Duration,
+        -- $convert
+        start,
+        stop,
         unit,
 
         Span,
         between,
         spanning,
-        getSpan,
-        mapSpan,
-        
+        unitSpan,
+        getSpanAbs,
+        getSpanRel,
+        mapSpanAbs,
+        mapSpanRel,
   ) where
 
+import Control.Arrow
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
@@ -54,13 +58,15 @@ instance VectorSpace Duration where
     type Scalar Duration = Duration
     (Duration x) *^ (Duration y) = Duration (x *^ y)
 
+-- |
+-- The unit duration.
+--
 unit :: Duration
 unit = 1
 
 -- |
--- This type represents absolute time in seconds since the start time. Note
--- that time can be negative, representing events occuring before the start time.
--- The start time is usually the the beginning of the musical performance.
+-- This type represents absolute time in seconds since 'start'. Note that time can be
+-- negative, representing events occuring before the start time.
 --
 -- Time forms an affine space with durations as the underlying vector space,
 -- that is, we can add a time to a duration to get a new time using '.+^',
@@ -68,12 +74,28 @@ unit = 1
 --
 type Time = Point Duration
 
+-- |
+-- The global start time, which usually means the the beginning of the musical performance.
+--
+-- This is a synonym for 'origin'.
+--
 start :: Time
 start = origin
 
+-- |
+-- The global end time, defined as @start .+^ unit@.
+--
+stop :: Time
+stop = origin .+^ unit
 
--- A span represents two points in time or, equivalently, a time and a duration.
+
+-- |
+-- A 'Span' represents two points in time referred to as its onset and offset respectively.
+-- Equivalently, 'Span' a time and a duration, referred to as its onset and duration.
 -- 
+-- A third way of looking at 'Span' is that it represents a time transformation where
+-- onset is translation and duration is scaling.
+--
 -- Instances:
 --
 --   * Semigroup: @(t1,d1) <> (t2,d2) = (t1+d1*t2,d1*d2)@
@@ -83,31 +105,54 @@ start = origin
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
-spanning = curry Span
-between t u = t `spanning` (u .-. t)
-
-getSpan (Span x)     = x
-mapSpan f = inSpan (uncurry f)
-
-invSpan (Span (t,d)) = Span (negateP t, recip d)
-inSpan f             = Span . f . getSpan 
-
-negateP = relative origin negateV
-
-revSpan = inSpan g
-    where
-        g (t,d) = (mirrorP (t .+^ d), d)
-        mirrorP = relative origin negateV
-
--- TODO add "individual scaling" component, i.e. scale just duration not both time and duration
--- Useful for implementing separation in articulation etc
-
 instance Semigroup Span where
     Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
 
 instance Monoid Span where
-    mappend = (<>)
     mempty = Span (origin, unit)
+    mappend = (<>)
+
+inSpan f = Span . f . getSpanRel 
+
+-- |
+-- The default span, i.e. 'between' 'start' 'stop'.
+-- 
+unitSpan :: Span
+unitSpan = mempty
+
+-- | @between t u@ represents the span between @t@ and @u@.
+between :: Time -> Time -> Span
+between t u = t `spanning` (u .-. t)
+
+-- | @spanning t d@ represents the span between @t@ and @t .+^ d@.
+spanning :: Time -> Duration -> Span
+spanning = curry Span
+
+-- | Render a span as a time and duration.
+getSpanRel :: Span -> (Time, Duration)
+getSpanRel (Span x)     = x
+
+-- | Render a span as a time pair.
+getSpanAbs :: Span -> (Time, Time)
+getSpanAbs = second (start .+^) . getSpanRel
+
+-- | Map over the span as a time and duration.
+mapSpanRel :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
+mapSpanRel f = inSpan (uncurry f)
+
+-- | Map over the span as a time pair.
+mapSpanAbs :: (Time -> Time -> (Time, Time)) -> Span -> Span
+mapSpanAbs f = uncurry between . uncurry f . getSpanAbs
+
+invSpan (Span (t,d)) = Span (mirror t, recip d)
+
+revSpan = inSpan g
+    where
+        g (t, d) = (mirror (t .+^ d), d)
+
+-- TODO add "individual scaling" component, i.e. scale just duration not both time and duration
+-- Useful for implementing separation in articulation etc
+
 
 
 {-
