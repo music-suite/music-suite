@@ -669,6 +669,47 @@ let
 in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
 
+### Duo
+
+```music+haskell
+let
+    toLydian = modifyPitches (\p -> if p == c then cs else p)
+
+    subj1 = (^/2) $
+        legato (b_ |> c) |> legato (c |> b_^*2)
+            |> legato (scat [b_, c, d])
+            |> b_ |> c |> b_^*2
+        |> legato (scat [e, d, b_, c]) |> b_^*2
+        |> scat [d, e, b_] |> c^*2 |> b_
+
+    pres1 = subj1^*(2/2)
+    pres2 = subj1^*(2/2) </> delay 2 (subj1^*(3/2))
+
+    part1 = pres1 |> pres2
+    part2 = pres1 |> pres2
+
+in part1 |> toLydian part2  
+```
+
+### Schubert
+
+```music+haskell
+let
+    motive = (legato $ stretchTo 2 $ scat [g,a,bb,c',d',eb']) |> staccato (scat [d', bb, g])
+    bar    = rest^*4
+
+    song    = mempty
+    left    = times 4 (times 4 $ removeRests $ triplet g)
+    right   = removeRests $ times 2 (delay 4 motive |> rest^*3)
+
+    triplet = group 3
+
+    a `x` b = a^*(3/4) |> b^*(1/4)
+    a `l` b = (a |> b)^/2
+
+in  stretch (1/4) $ song </> left </> down _P8 right      
+```
+
 
 # Design overview
 
