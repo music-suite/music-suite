@@ -65,6 +65,7 @@ instance Stretchable (Time -> a) where
 
 relative :: AffineSpace p => p -> (Diff p -> Diff p) -> p -> p
 relative p f = (p .+^) . f . (.-. p)
+-- TODO Move. Perhaps this could be added to vector-space?
 
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.
