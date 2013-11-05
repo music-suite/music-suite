@@ -55,9 +55,6 @@ class Delayable a where
 instance Delayable Time where
     delay n = (.+^ n)
 
-instance Delayable Span where
-    delay n = mapSpanRel $ curry $ delay n *** id
-    
 instance Delayable (Time -> a) where
     delay n = (. delay (negateV n))
 

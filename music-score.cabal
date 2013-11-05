@@ -53,6 +53,7 @@ library
     default-language: Haskell2010
     exposed-modules:
         Music.Time
+        Music.Time.Relative
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable
@@ -60,6 +61,7 @@ library
         Music.Time.Juxtapose
         Music.Time.Reverse
         Music.Time.Time
+        Music.Time.Span
 
         Music.Score.Rhythm
         

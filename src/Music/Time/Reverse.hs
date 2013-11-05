@@ -39,6 +39,7 @@ import Data.AffineSpace.Point
 
 import Music.Time.Relative
 import Music.Time.Time
+import Music.Time.Span
 import Music.Time.Onset
 
 -- |

@@ -57,9 +57,6 @@ instance Stretchable Duration where
 instance Stretchable Time where
     stretch n = (n*.)
 
-instance Stretchable Span where
-    stretch n = mapSpanRel $ curry $ (n*.) *** (n*^)
-    
 instance Stretchable a => Stretchable [a] where
     stretch n = fmap (stretch n)
 
