@@ -24,7 +24,7 @@
 
 module Music.Time.Span (
         Span,
-        inSpan,
+        -- inSpan,
         between,
         spanning,
         unitSpan,

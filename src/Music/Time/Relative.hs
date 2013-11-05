@@ -12,10 +12,19 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 
 -- | 
--- Apply a transformation around the given point.
+-- Apply a transformation relative to the given point.
 -- 
 relative :: AffineSpace p => p -> (Diff p -> Diff p) -> p -> p
 relative p f = (p .+^) . f . (.-. p)
+
+-- | 
+-- Apply a transformation relative to the given point.
+-- 
+relative2 :: AffineSpace p => p -> (Diff p -> Diff p -> Diff p) -> p -> p -> p
+relative2 p f x y = out $ f (in' x) (in' y)
+    where
+        in' = (.-. p)
+        out = (p .+^)
 
 -- |
 -- Mirror a point around 'origin'.

@@ -1,6 +1,7 @@
 
 {-# LANGUAGE
     TypeFamilies,
+    FlexibleInstances,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -63,6 +64,14 @@ unit = 1
 -- take the difference of two times to get a duration using '.-.'.
 --
 type Time = Point Duration
+
+instance Num Time where
+    (+)         = relative2 origin (+)
+    (*)         = relative2 origin (*)
+    negate      = mirror
+    abs         = relative origin abs
+    signum      = relative origin signum
+    fromInteger = (origin .+^) . fromInteger
 
 -- |
 -- The global start time, which usually means the the beginning of the musical performance.
