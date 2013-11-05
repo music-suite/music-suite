@@ -114,7 +114,7 @@ instance MonadPlus Track where
     mplus = mappend
 
 instance HasOnset (Track a) where
-    onset (Track a) = list origin (on . head) a where on (t,x) = t
+    onset (Track a) = list origin (onset . head) a
 
 instance IsPitch a => IsPitch (Track a) where
     fromPitch = pure . fromPitch

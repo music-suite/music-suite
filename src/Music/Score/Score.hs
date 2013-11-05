@@ -98,10 +98,6 @@ instance Monoid (Score a) where
         where
             m = mergeBy (comparing fst3)
 
--- (onset b) above makes this diverge
-loop :: Score a -> Score a
-loop a = a <> loop a
-
 instance Monad Score where
     return x = Score [(origin, 1, x)]
     a >>= k = (join' . fmap k) a
@@ -109,6 +105,7 @@ instance Monad Score where
             join' sc = fold $ mapTime (\t d -> delayTime t . stretch d) sc
             mapTime f = Score . fmap (mapEvent f) . getScore
             mapEvent f (t, d, x) = (t, d, f t d x)
+
             
 instance Pointed Score where
     point = return
@@ -130,13 +127,13 @@ instance HasDuration (Score a) where
     duration x = offset x .-. onset x
 
 instance HasOnset (Score a) where
-    -- onset (Score a) = list origin (minimum . map on) a where on (t,d,x) = t
+    -- onset (Score a) = list origin (minimum . map onset) a
+    onset (Score a) = list origin (onset . head) a
     -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
-    onset (Score a) = list origin (on . head) a where on (t,d,x) = t
 
 instance HasOffset (Score a) where
     -- offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
-    offset (Score a) = list origin (off . last) a where off (t,d,x) = t .+^ d
+    offset (Score a) = list origin (offset . last) a
 
 instance Performable (Score a) where
     perform (Score a) = a
@@ -144,16 +141,39 @@ instance Performable (Score a) where
 instance Composable (Score a) where
     compose = Score . List.sortBy (comparing fst3)
 
+
+
+
+instance HasPitch a => HasPitch (Score a) where
+    type Pitch (Score a) = Pitch a
+    getPitches as    = foldMap getPitches as
+    modifyPitch f    = fmap (modifyPitch f)
+
+instance Reversible a => Reversible (Score a) where
+    rev = fmap rev . withSameOnset (mapAll $ fmap g)
+        where
+            g (t,d,x) = (negateP (t .+^ d), d, x)
+            negateP a = origin .-^ (a .-. origin)
+            mapAll f = compose . f . perform
+
+
+
+
+
+
+-- These instances allow us to write expressions like [c..g]
+
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
 
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
--- This instance is just to be able to write expressions like [c..g]
 instance Enum a => Enum (Score a) where
     toEnum = return . toEnum
     fromEnum = list 0 (fromEnum . head) . toList
+
+-- Bogus VectorSpace instance, so we can use c^*2 etc.
 
 instance AdditiveGroup (Score a) where
     zeroV   = error "Not impl"
@@ -170,18 +190,6 @@ instance Arbitrary a => Arbitrary (Score a) where
         t <- fmap realToFrac (arbitrary::Gen Double)
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
-
-instance HasPitch a => HasPitch (Score a) where
-    type Pitch (Score a) = Pitch a
-    getPitches as    = foldMap getPitches as
-    modifyPitch f    = fmap (modifyPitch f)
-
-instance Reversible a => Reversible (Score a) where
-    rev = fmap rev . withSameOnset (mapAll $ fmap g)
-        where
-            g (t,d,x) = (negateP (t .+^ d), d, x)
-            negateP a = origin .-^ (a .-. origin)
-            mapAll f = compose . f . perform
 
 
 -------------------------------------------------------------------------------------

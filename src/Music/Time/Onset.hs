@@ -144,10 +144,17 @@ withSameOffset f a = stopAt (offset a) $ f a
 
 instance HasOnset (Time, a) where
     onset = fst
+
 instance HasDuration (Duration, a) where
     duration = fst
+
+
 instance HasOnset (Time, Duration, a) where
     onset (t,d,x) = t
+
+instance HasOffset (Time, Duration, a) where
+    offset (t,d,x) = t .+^ d
+
 instance HasDuration (Time, Duration, a) where
     duration (t,d,x) = d
 
