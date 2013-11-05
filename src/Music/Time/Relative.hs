@@ -21,10 +21,19 @@ relative p f = (p .+^) . f . (.-. p)
 -- Apply a transformation relative to the given point.
 -- 
 relative2 :: AffineSpace p => p -> (Diff p -> Diff p -> Diff p) -> p -> p -> p
-relative2 p f x y = out $ f (in' x) (in' y)
+relative2 p f x y = proj $ f (inj x) (inj y)
     where
-        in' = (.-. p)
-        out = (p .+^)
+        inj = (.-. p)
+        proj = (p .+^)
+
+-- | 
+-- Apply a transformation relative to the given point.
+-- 
+relative3 :: AffineSpace p => p -> (Diff p -> Diff p -> Diff p -> Diff p) -> p -> p -> p -> p
+relative3 p f x y z = proj $ f (inj x) (inj y) (inj z)
+    where
+        inj = (.-. p)
+        proj = (p .+^)
 
 -- |
 -- Mirror a point around 'origin'.

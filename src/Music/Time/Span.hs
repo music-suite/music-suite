@@ -25,14 +25,22 @@
 module Music.Time.Span (
         Span,
         -- inSpan,
-        between,
-        spanning,
-        unitSpan,
-        getSpanAbs,
-        getSpanRel,
-        mapSpanAbs,
-        mapSpanRel,
-        invertSpan,
+
+        -- ** Constructing spans
+        (<->),
+        (-->),
+        
+        -- ** Span as transformation
+        sunit,
+        sapp,
+        sunder,
+        sinvert,
+
+        -- ** Deconstructing spans
+        range,
+        delta,
+        mapRange,
+        mapDelta,
   ) where
 
 import Control.Arrow
@@ -49,39 +57,34 @@ import Music.Time.Stretchable
 import Music.Time.Onset
 
 -- |
--- A 'Span' represents two points in time referred to as its onset and offset respectively.
--- Equivalently, 'Span' a time and a duration, referred to as its onset and duration.
+-- A 'Span' represents two points in time @u@ and @v@ where @t <= u@ or, equivalently, 
+-- a time @t@ and a duration @d@ where @d >= 0@.
 -- 
 -- A third way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
---
--- Instances:
---
---   * Semigroup: @(t1,d1) <> (t2,d2) = (t1+d1*t2,d1*d2)@
---
---   * Monoid: @mempty = (0,1)@
 --
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
 instance Delayable Span where
-    delay n = mapSpanRel $ curry $ delay n *** id
+    delay n = mapDelta $ curry $ delay n *** id
 
 instance Stretchable Span where
-    stretch n = mapSpanRel $ curry $ stretch n *** stretch n
-        
+    stretch n = mapDelta $ curry $ stretch n *** stretch n
+
+-- FIXME violates first Reversible law        
 instance Reversible Span where
     rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
-    -- rev (getSpanAbs -> (x, y)) = mirror y `between` mirror x
+    -- rev (range -> (x, y)) = mirror y <-> mirror x
 
 instance HasOnset Span where
-    onset = fst . getSpanAbs
+    onset = fst . range
 
 instance HasOffset Span where
-    offset = snd . getSpanAbs
+    offset = snd . range
 
 instance HasDuration Span where
-    duration = snd . getSpanRel
+    duration = snd . delta
 
 instance Semigroup Span where
     -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
@@ -91,40 +94,54 @@ instance Monoid Span where
     mempty = Span (origin, unit)
     mappend = (<>)
 
-inSpan f = Span . f . getSpanRel 
+inSpan f = Span . f . delta 
 
 -- |
--- The default span, i.e. 'between' 'start' 'stop'.
+-- The default span, i.e. 'start' '<->' 'stop'.
 -- 
-unitSpan :: Span
-unitSpan = mempty
+sunit :: Span
+sunit = mempty
 
--- | @between t u@ represents the span between @t@ and @u@.
-between :: Time -> Time -> Span
-between t u = t `spanning` (u .-. t)
+-- | @t \<-\> u@ represents the span between @t@ and @u@.
+(<->) :: Time -> Time -> Span
+(<->) t u = t --> (u .-. t)
 
--- | @spanning t d@ represents the span between @t@ and @t .+^ d@.
-spanning :: Time -> Duration -> Span
-spanning = curry Span
+-- | @t --> d@ represents the span between @t@ and @t .+^ d@.
+(-->) :: Time -> Duration -> Span
+(-->) = curry Span
+
 
 -- | Render a span as a time and duration.
-getSpanRel :: Span -> (Time, Duration)
-getSpanRel (Span x)     = x
+delta :: Span -> (Time, Duration)
+delta (Span x) = x
 
--- | Render a span as a time pair.
-getSpanAbs :: Span -> (Time, Time)
-getSpanAbs = second (start .+^) . getSpanRel
+-- | Render a span as onset and offset.
+range :: Span -> (Time, Time)
+range = second (start .+^) . delta
 
--- | Map over the span as a time and duration.
-mapSpanRel :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
-mapSpanRel f = inSpan (uncurry f)
+-- | Map over the span as onset and duration.
+mapDelta :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
+mapDelta f = inSpan (uncurry f)
 
 -- | Map over the span as a time pair.
-mapSpanAbs :: (Time -> Time -> (Time, Time)) -> Span -> Span
-mapSpanAbs f = uncurry between . uncurry f . getSpanAbs
+mapRange :: (Time -> Time -> (Time, Time)) -> Span -> Span
+mapRange f = uncurry (<->) . uncurry f . range
 
-invertSpan :: Span -> Span
-invertSpan (Span (t,d)) = Span (mirror t, recip d)
+-- | Apply a span transformation.
+sapp :: (Delayable a, Stretchable a) => Span -> a -> a
+sapp (delta -> (t,d)) = delayTime t . stretch d
+
+-- | Apply a function under a span transformation.
+sunder :: (Delayable a, Stretchable a) => Span -> (a -> a) -> a -> a
+sunder s f = sapp (sinvert s) . f . sapp s
+
+-- | The inversion of a span.
+--                                    
+-- > sinvert (sinvert s) = s
+-- > sapp (sinvert s) . sapp s = id
+--
+sinvert :: Span -> Span
+sinvert (Span (t,d)) = Span (mirror t, recip d)
 
 -- TODO add "individual scaling" component, i.e. scale just duration not both time and duration
 -- Useful for implementing separation in articulation etc
