@@ -1,6 +1,8 @@
 
 {-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
-    DeriveTraversable, GeneralizedNewtypeDeriving #-}
+    DeriveTraversable, GeneralizedNewtypeDeriving, 
+    FlexibleInstances,
+    MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -24,6 +26,7 @@ module Music.Score.Track (
   ) where
 
 import Data.Semigroup
+import Control.Newtype
 import Control.Applicative
 import Control.Monad            (ap, join, MonadPlus(..))
 import Control.Arrow
@@ -34,14 +37,22 @@ import Data.Traversable         (Traversable(..))
 import Data.Pointed
 import Data.Ord                 (comparing)
 import Data.Function            (on)
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Test.QuickCheck          (Arbitrary(..), Gen(..))
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import qualified Data.List as List
+
+import Data.PairMonad ()
 
 import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
+import Music.Score.Pitch
 import Music.Score.Util
 
 import qualified Data.List as List
@@ -70,35 +81,66 @@ import qualified Data.List as List
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Track a = Track { getTrack' :: [(Time, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
+newtype Occ a = Occ (Sum Time, a)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+
+occ t x = Occ (Sum t, x)
+getOcc (Occ (Sum t, x)) = (t, x)
+
+instance Delayable (Occ a) where
+    delay n (Occ (s,x)) = Occ (delay n s, x)
+instance Stretchable (Occ a) where
+    stretch n (Occ (s,x)) = Occ (stretch n s, x)
+instance HasOnset (Occ a) where
+    onset (Occ (s,x)) = onset s
+
+
+-- TODO move
+instance Delayable a => Delayable (Sum a) where
+    delay n (Sum x) = Sum (delay n x)
+instance Stretchable a => Stretchable (Sum a) where
+    stretch n (Sum x) = Sum (stretch n x)
+instance HasOnset a => HasOnset (Sum a) where
+    onset (Sum x) = onset x
+instance HasOnset Time where
+    onset = id
+
+                                       
+newtype Track a = Track { getTrack' :: [Occ a] }
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Monoid, Semigroup, Delayable, Stretchable)
 
 inTrack f = Track . f . getTrack'
 
 type instance Event (Track a) = a
 
 track :: Real d => [(Point d, a)] -> Track a
-track = Track . fmap (first $ fmap realToFrac)
+track = Track . fmap (uncurry occ . first (fmap realToFrac))
 
 getTrack :: Fractional d => Track a -> [(Point d, a)]
-getTrack = fmap (first $ fmap realToFrac) . getTrack'
+getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
 
+{-
 instance Semigroup (Track a) where
     (<>) = mappend
+-}
 
+{-
 -- Equivalent to the derived Monoid, except for the sorted invariant.
 instance Monoid (Track a) where
     mempty = Track []
     Track as `mappend` Track bs = Track (as `m` bs)
         where
             m = mergeBy (comparing fst)
+-}
 
 -- TODO mcompose
+instance Newtype (Track a) [Occ a] where
+    pack = Track
+    unpack = getTrack'
+
 instance Monad Track where
-    return a = Track [(origin, a)]
-    a >>= k = (join' . fmap k) a
-        where
-            join' (Track ts) = foldMap (uncurry delayTime) ts
+    return = pack . return . return
+    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
 
 instance Applicative Track where
     pure  = return
@@ -128,4 +170,18 @@ instance Arbitrary a => Arbitrary (Track a) where
         t <- fmap realToFrac (arbitrary::Gen Double)
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
+
+instance HasPitch a => HasPitch (Track a) where
+    type Pitch (Track a) = Pitch a
+    getPitches as    = F.foldMap getPitches as
+    modifyPitch f    = fmap (modifyPitch f)
+
+
+
+mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
+mjoin = fmap join . join . fmap T.sequence
+
+mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
+mbind = (join .) . fmap . (fmap join .) . T.mapM
+
 

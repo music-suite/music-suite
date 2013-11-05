@@ -30,6 +30,7 @@ module Music.Score.Convert (
         voiceToScore,
         voiceToScore',
         scoreToVoice,
+        trackToScore,
   ) where
 
 import Control.Monad
@@ -88,6 +89,12 @@ voiceToScore = scat . fmap g . getVoice
 --
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
+
+-- |
+-- Convert a track into a score where each event is given a fixed duration.
+--
+trackToScore :: Duration -> Track a -> Score a
+trackToScore d = compose . fmap (\(t,x) -> (t,d,x)) . getTrack
 
 -- There must be a better place for this instance
 instance Performable (Voice a) where
