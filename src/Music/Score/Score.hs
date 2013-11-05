@@ -63,7 +63,6 @@ import Music.Score.Note
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
 
-
 newtype Score a = Score { getScore :: (MScore, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
@@ -142,21 +141,22 @@ meta = fst . getScore
 -- 
 newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
     deriving (Functor, Foldable, Semigroup, Monoid, Traversable, Delayable, Stretchable, HasOnset, HasOffset)
+
 instance Newtype (NScore a) [Note a] where
     pack = NScore
     unpack = getNScore
+
 instance Monad NScore where
     return = pack . return . return
     xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+
 instance Applicative NScore where
     pure = return
     (<*>) = ap
+
 instance MonadPlus NScore where
     mzero = mempty
     mplus = mappend
-    -- Functor
-    -- MonadPlus
-    -- Traversable
 
 
 -- The following instances allow us to write expressions like [c..g]
