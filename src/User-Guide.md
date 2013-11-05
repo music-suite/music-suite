@@ -398,7 +398,7 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 ```music+haskell
 let
     melody = legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
-in melody |> rev melody
+in melody |> melody
 ```
 
 @[times]
@@ -490,6 +490,43 @@ TODO
 @[Track]
 @[Delayable]
 @[Stretchable]
+
+
+## Notes
+
+TODO
+
+## Voice
+
+```music+haskell
+let
+    x, y :: Voice Note
+    x = mempty
+        <> stretch 1 c
+        <> stretch 1 d
+        <> stretch 2 e
+    y = mempty
+        <> stretch 1 x
+        <> stretch 1.5 (up _P5 x)
+        <> stretch 2   (up _P8 x)
+in voiceToScore y
+```
+
+## Tracks
+
+```music+haskell
+let
+    x, y :: Track Note
+    x = mempty
+        <> delay 0 c
+        <> delay 1 d
+        <> delay 2 e
+    y = mempty
+        <> delay 0 x
+        <> delay 1.5  (up _P5 x)
+        <> delay 3.25 (up _P8 x)
+in trackToScore (1/8) y
+```
 
 
 # Meta-information
