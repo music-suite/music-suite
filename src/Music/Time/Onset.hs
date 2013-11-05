@@ -155,10 +155,10 @@ instance HasOffset a => HasOffset [a] where
     offset = list origin (maximum . fmap offset)
 
 instance HasOnset a => HasOnset (Set a) where
-    onset = list origin (onset . head) . Set.toList
+    onset = list origin (onset . head) . Set.toAscList
 
 instance HasOffset a => HasOffset (Set a) where
-    offset = list origin (offset . last) . Set.toList
+    offset = list origin (offset . last) . Set.toAscList
 
 instance HasOnset k => HasOnset (Map k a) where
     onset = list origin (onset . head) . Map.keys
