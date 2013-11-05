@@ -68,17 +68,6 @@ instance Stretchable (Ev a) where
 instance HasDuration (Ev a) where
     duration (Ev (s,x)) = duration s
 
--- TODO move
-instance Delayable a => Delayable (Product a) where
-    delay n (Product x) = Product (delay n x)
-instance Stretchable a => Stretchable (Product a) where
-    stretch n (Product x) = Product (stretch n x)
-instance HasDuration a => HasDuration (Product a) where
-    duration (Product x) = duration x
-instance HasDuration Duration where
-    duration = id
-
-
 -- |
 -- A voice is a list of events with explicit duration. Events can not overlap.
 --

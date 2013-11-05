@@ -32,7 +32,7 @@ module Music.Time.Stretchable (
 import Control.Arrow
 
 import Data.Semigroup
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
@@ -74,6 +74,13 @@ instance Stretchable (Duration -> a) where
 
 instance Stretchable a => Stretchable [a] where
     stretch n = fmap (stretch n)
+
+instance Stretchable a => Stretchable (Product a) where
+    stretch n (Product x) = Product (stretch n x)
+
+instance Stretchable a => Stretchable (Sum a) where
+    stretch n (Sum x) = Sum (stretch n x)
+
 
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.

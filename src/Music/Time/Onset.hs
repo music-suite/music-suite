@@ -44,7 +44,7 @@ module Music.Time.Onset (
 
 
 import Data.Semigroup
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Set (Set)
@@ -67,6 +67,22 @@ import Music.Time.Stretchable
 --
 class HasDuration a where
     duration :: a -> Duration
+
+instance HasDuration Duration where
+    duration = id
+
+instance HasDuration (Duration, a) where
+    duration = fst
+
+instance HasDuration (Time, Duration, a) where
+    duration (t,d,x) = d
+
+instance HasDuration a => HasDuration (Product a) where
+    duration (Product x) = duration x
+
+-- Works for monophonic containers but not in general
+-- instance HasDuration a => HasDuration [a] where
+    -- duration = getSum . F.foldMap (Sum . duration)
 
 -- |
 -- Stretch a score to fit into the given duration.
@@ -97,6 +113,40 @@ class HasOffset a where
     -- Get the offset of the given value.
     --
     offset :: a -> Time
+
+instance HasOnset Time where
+    onset = id
+
+instance HasOnset (Time, a) where
+    onset = fst
+
+instance HasOnset (Time, Duration, a) where
+    onset (t,d,x) = t
+
+instance HasOffset (Time, Duration, a) where
+    offset (t,d,x) = t .+^ d
+
+instance HasOnset a => HasOnset [a] where
+    onset = list origin (minimum . fmap onset)
+
+instance HasOffset a => HasOffset [a] where
+    offset = list origin (maximum . fmap offset)
+
+instance HasOnset a => HasOnset (Set a) where
+    onset = list origin (onset . head) . Set.toAscList
+
+instance HasOffset a => HasOffset (Set a) where
+    offset = list origin (offset . last) . Set.toAscList
+
+instance HasOnset k => HasOnset (Map k a) where
+    onset = list origin (onset . head) . Map.keys
+
+instance HasOffset k => HasOffset (Map k a) where
+    offset = list origin (offset . last) . Map.keys
+
+instance HasOnset a => HasOnset (Sum a) where
+    onset (Sum x) = onset x
+
                               
 -- |
 -- Move a score so that its onset is at the specific time.
@@ -132,43 +182,6 @@ withSameOffset :: (Delayable a, HasOffset a, HasOffset b) => (b -> a) -> b -> a
 
 withSameOnset f a  = startAt (onset a) $ f a
 withSameOffset f a = stopAt (offset a) $ f a
-
-instance HasOnset (Time, a) where
-    onset = fst
-
-instance HasDuration (Duration, a) where
-    duration = fst
-
-instance HasOnset (Time, Duration, a) where
-    onset (t,d,x) = t
-
-instance HasOffset (Time, Duration, a) where
-    offset (t,d,x) = t .+^ d
-
-instance HasDuration (Time, Duration, a) where
-    duration (t,d,x) = d
-
-instance HasOnset a => HasOnset [a] where
-    onset = list origin (minimum . fmap onset)
-
-instance HasOffset a => HasOffset [a] where
-    offset = list origin (maximum . fmap offset)
-
-instance HasOnset a => HasOnset (Set a) where
-    onset = list origin (onset . head) . Set.toAscList
-
-instance HasOffset a => HasOffset (Set a) where
-    offset = list origin (offset . last) . Set.toAscList
-
-instance HasOnset k => HasOnset (Map k a) where
-    onset = list origin (onset . head) . Map.keys
-
-instance HasOffset k => HasOffset (Map k a) where
-    offset = list origin (offset . last) . Map.keys
-
--- Works for monophonic containers but not in general
--- instance HasDuration a => HasDuration [a] where
-    -- duration = getSum . F.foldMap (Sum . duration)
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
 durationDefault :: (AdditiveGroup (Duration), HasOffset a, HasOnset a) => a -> Duration

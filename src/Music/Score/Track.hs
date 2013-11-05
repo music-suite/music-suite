@@ -71,15 +71,6 @@ instance Stretchable (Occ a) where
 instance HasOnset (Occ a) where
     onset (Occ (s,x)) = onset s
 
--- TODO move
-instance Delayable a => Delayable (Sum a) where
-    delay n (Sum x) = Sum (delay n x)
-instance Stretchable a => Stretchable (Sum a) where
-    stretch n (Sum x) = Sum (stretch n x)
-instance HasOnset a => HasOnset (Sum a) where
-    onset (Sum x) = onset x
-instance HasOnset Time where
-    onset = id
                                 
 -- |
 -- A track is a list of events with explicit onset. 

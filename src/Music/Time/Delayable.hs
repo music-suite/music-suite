@@ -34,7 +34,7 @@ module Music.Time.Delayable (
 
 import Control.Arrow
 import Data.Semigroup
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
@@ -66,6 +66,13 @@ instance Delayable (Time, a) where
 
 instance Delayable (Time, Duration, a) where
     delay n (t, d, a) = (n `delay` t, d, a)
+
+instance Delayable a => Delayable (Sum a) where
+    delay n (Sum x) = Sum (delay n x)
+
+instance Delayable a => Delayable (Product a) where
+    delay n (Product x) = Product (delay n x)
+
 
 
 -- |
