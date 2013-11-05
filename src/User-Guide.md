@@ -262,14 +262,23 @@ Interval names are overloaded in a manner similar to pitches, and are consequent
 Here and elsewhere in the Music Suite, the convention is to follow standard theoretical
 notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
 and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
-overloaded upper-case values, so we have to adopt a nasty underscore prefix:
+overloaded upper-case values, so we have to adopt an underscore prefix:
 
 ```haskell
-minor third         ==  m3
-major third         ==  _M3
-perfect fifth       ==  _P5
-diminished fifth    ==  d5
-minor ninth         ==  m9
+minor third      ==  m3
+major third      ==  _M3
+perfect fifth    ==  _P5
+diminished fifth ==  d5
+minor ninth      ==  m9
+```
+
+Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used
+to alter the size of an interval. For example:
+
+```music+haskell
+let
+    intervals = [diminish (perfect fifth), (diminish . diminish) (perfect fifth)]
+in scat $ fmap (`up` c) intervals
 ```
 
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
@@ -533,7 +542,7 @@ let
         <> stretch 1 x
         <> stretch 1.5 (up _P5 x)
         <> stretch 2   (up _P8 x)
-in voiceToScore y
+in stretch (1/8) $ voiceToScore y
 ```
 
 ## Tracks
