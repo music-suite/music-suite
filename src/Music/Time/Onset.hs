@@ -34,26 +34,25 @@ module Music.Time.Onset (
         stopAt,
         withSameOnset,
         withSameOffset,
-        
-        -- HasPreOnset(..),
-        -- HasPostOnset(..),
-        -- HasPostOffset(..),
-
 
         -- * Utility
         -- ** Default implementations
         durationDefault,
         onsetDefault,
         offsetDefault,
-
-        -- ** Wrappers
-        -- AddOffset(..),
   ) where
+
 
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
+import Data.Set (Set)
+import Data.Map (Map)
+import qualified Data.Set as Set
+import qualified Data.Map as Map
 
+import Music.Score.Util
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
@@ -74,9 +73,7 @@ class HasDuration a where
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo       :: (Stretchable a, HasDuration a) =>
-                Duration -> a -> a
-
+stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
 
 -- |
 -- Class of types with a position in time.
@@ -106,16 +103,14 @@ class HasOffset a where
 --
 -- > Time -> Score a -> Score a
 --
-startAt         :: (HasOnset a, Delayable a) =>
-                Time ->  a -> a
+startAt :: (HasOnset a, Delayable a) => Time ->  a -> a
 
 -- |
 -- Move a score so that its offset is at the specific time.
 --
 -- > Time -> Score a -> Score a
 --
-stopAt          :: (HasOffset a, Delayable a) =>
-                Time -> a -> a
+stopAt :: (HasOffset a, Delayable a) => Time -> a -> a
 
 t `stretchTo` x = (t / duration x) `stretch` x
 t `startAt` x   = (t .-. onset x) `delay` x
@@ -126,28 +121,23 @@ t `stopAt`  x   = (t .-. offset x) `delay` x
 --
 -- > Time -> Score a -> Score a
 --
-withSameOnset      :: (Delayable a, HasOnset a, HasOnset b) =>
-                    (b -> a) -> b -> a
+withSameOnset :: (Delayable a, HasOnset a, HasOnset b) => (b -> a) -> b -> a
 
 -- |
 -- Transform a score without affecting its offset.
 --
 -- > Time -> Score a -> Score a
 --
-withSameOffset      :: (Delayable a, HasOffset a, HasOffset b) =>
-
-                    (b -> a) -> b -> a
+withSameOffset :: (Delayable a, HasOffset a, HasOffset b) => (b -> a) -> b -> a
 
 withSameOnset f a  = startAt (onset a) $ f a
 withSameOffset f a = stopAt (offset a) $ f a
-
 
 instance HasOnset (Time, a) where
     onset = fst
 
 instance HasDuration (Duration, a) where
     duration = fst
-
 
 instance HasOnset (Time, Duration, a) where
     onset (t,d,x) = t
@@ -158,16 +148,27 @@ instance HasOffset (Time, Duration, a) where
 instance HasDuration (Time, Duration, a) where
     duration (t,d,x) = d
 
-{-
-class HasPreOnset s where
-    preOnset :: s a -> Time s
+instance HasOnset a => HasOnset [a] where
+    onset = list origin (minimum . fmap onset)
 
-class HasPostOnset s where
-    postOnset :: s a -> Time s
+instance HasOffset a => HasOffset [a] where
+    offset = list origin (maximum . fmap offset)
 
-class HasPostOffset s where
-    postOffset :: s a -> Time s
--}
+instance HasOnset a => HasOnset (Set a) where
+    onset = list origin (onset . head) . Set.toList
+
+instance HasOffset a => HasOffset (Set a) where
+    offset = list origin (offset . last) . Set.toList
+
+instance HasOnset k => HasOnset (Map k a) where
+    onset = list origin (onset . head) . Map.keys
+
+instance HasOffset k => HasOffset (Map k a) where
+    offset = list origin (offset . last) . Map.keys
+
+-- Works for monophonic containers but not in general
+-- instance HasDuration a => HasDuration [a] where
+    -- duration = getSum . F.foldMap (Sum . duration)
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
 durationDefault :: (AdditiveGroup (Duration), HasOffset a, HasOnset a) => a -> Duration
@@ -181,17 +182,3 @@ onsetDefault x = offset x .-^ duration x
 offsetDefault :: (AdditiveGroup (Duration), HasOnset a, HasDuration a) => a -> Time
 offsetDefault x = onset x .+^ duration x
                                                  
-newtype AddOffset t a = AddOffset (t, a)
-
-instance (Delayable a, Time ~ t) => Delayable (AddOffset t a) where
-    delay d (AddOffset (t, a)) = AddOffset (t, delay d a)
-
-instance (Stretchable a, t ~ Time) => Stretchable (AddOffset t a) where
-    stretch d (AddOffset (t, a)) = AddOffset (t, stretch d a)
-
-instance (HasOnset a, t ~ Time) => HasOnset (AddOffset t a) where
-    onset (AddOffset (t,a)) = onset a
-
--- instance HasOffset (AddOffset t s) where
---     offset (AddOffset (t, _)) = t
-
