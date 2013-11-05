@@ -52,6 +52,7 @@ module Music.Score.Articulation (
 
   ) where
 
+import Data.Pointed
 import Data.Foldable
 import Data.Typeable
 import Data.Semigroup
@@ -59,6 +60,8 @@ import Data.Semigroup
 import Music.Score.Score
 import Music.Score.Part
 import Music.Score.Combinators
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 
 class HasArticulation a where
     setBeginSlur :: Bool -> a -> a
@@ -69,6 +72,23 @@ class HasArticulation a where
 
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+
+instance Pointed ArticulationT where
+    point x = ArticulationT (False,False,0,0,x,False)
+
+instance Semigroup a => Semigroup (ArticulationT a) where
+    ArticulationT (es,us,al,sl,a,bs) <> ArticulationT (_,_,_,_,b,_) = ArticulationT (es,us,al,sl,a <> b,bs)
+
+instance (Semigroup a, Monoid a) => Monoid (ArticulationT a) where
+    mempty = point mempty
+    mappend = (<>)
+
+instance IsPitch a => IsPitch (ArticulationT a) where
+    fromPitch l = point (fromPitch l)
+
+instance IsDynamics a => IsDynamics (ArticulationT a) where
+    fromDynamics l = point (fromDynamics l)
+
 
 instance HasArticulation (ArticulationT a) where
     setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)

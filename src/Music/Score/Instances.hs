@@ -80,11 +80,6 @@ instance IsPitch a => IsPitch (DynamicT a) where
 instance IsDynamics a => IsDynamics (DynamicT a) where
     fromDynamics l                                  = DynamicT (False,False,Nothing,fromDynamics l,False,False)
 
-instance IsPitch a => IsPitch (ArticulationT a) where
-    fromPitch l                                     = ArticulationT (False,False,0,0,fromPitch l,False)
-instance IsDynamics a => IsDynamics (ArticulationT a) where
-    fromDynamics l                                  = ArticulationT (False,False,0,0,fromDynamics l,False)
-
 instance IsPitch a => IsPitch (TremoloT a) where
     fromPitch l                                     = TremoloT (0, fromPitch l)
 instance IsDynamics a => IsDynamics (TremoloT a) where
@@ -137,8 +132,6 @@ instance Semigroup a => Semigroup (TieT a) where
     TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 || b2, x1 <> x2, e1 || e2)
 instance Semigroup a => Semigroup (HarmonicT a) where
     HarmonicT (n1,x1) <> HarmonicT (n2,x2) = HarmonicT (n1, x1 <> x2)
-instance Semigroup a => Semigroup (ArticulationT a) where
-    ArticulationT (es,us,al,sl,a,bs) <> ArticulationT (_,_,_,_,b,_) = ArticulationT (es,us,al,sl,a <> b,bs)
 instance Semigroup a => Semigroup (TextT a) where
     TextT (t1,x1) <> TextT (t2,x2) = TextT (t1 <> t2, x1 <> x2)
 instance Semigroup a => Semigroup (TremoloT a) where
