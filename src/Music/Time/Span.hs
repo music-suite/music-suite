@@ -1,4 +1,27 @@
 
+{-# LANGUAGE
+    TypeFamilies,
+    DeriveFunctor,
+    DeriveFoldable,
+    FlexibleContexts,
+    ConstraintKinds,
+    ViewPatterns,
+    GeneralizedNewtypeDeriving #-} 
+
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Provides time spans.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Time.Span (
         Span,
         inSpan,
@@ -20,6 +43,7 @@ import Data.AffineSpace.Point
 
 import Music.Time.Relative
 import Music.Time.Time
+import Music.Time.Reverse
 import Music.Time.Delayable
 import Music.Time.Stretchable
 
@@ -45,6 +69,10 @@ instance Delayable Span where
 instance Stretchable Span where
     stretch n = mapSpanRel $ curry $ stretch n *** stretch n
         
+instance Reversible Span where
+    rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
+    -- rev (getSpanAbs -> (x, y)) = mirror y `between` mirror x
+
 instance Semigroup Span where
     -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
     Span (t1, d1) <> Span (t2, d2) = Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
@@ -87,10 +115,6 @@ mapSpanAbs f = uncurry between . uncurry f . getSpanAbs
 
 invertSpan :: Span -> Span
 invertSpan (Span (t,d)) = Span (mirror t, recip d)
-
-revSpan = inSpan g
-    where
-        g (t, d) = (mirror (t .+^ d), d)
 
 -- TODO add "individual scaling" component, i.e. scale just duration not both time and duration
 -- Useful for implementing separation in articulation etc

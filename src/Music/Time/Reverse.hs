@@ -39,7 +39,6 @@ import Data.AffineSpace.Point
 
 import Music.Time.Relative
 import Music.Time.Time
-import Music.Time.Span
 import Music.Time.Onset
 
 -- |
@@ -63,10 +62,6 @@ class Reversible a where
 
 -- instance Reversible Time where
 --     rev t = mirror t
-
-instance Reversible Span where
-    -- rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
-    rev (getSpanAbs -> (x, y)) = mirror y `between` mirror x
 
 instance Reversible a => Reversible [a] where
     rev = fmap rev
