@@ -29,6 +29,7 @@ import Data.Semigroup
 import Control.Newtype
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Compose
 import Control.Arrow
 
 import Data.Typeable
@@ -145,10 +146,3 @@ instance HasPitch a => HasPitch (Voice a) where
     getPitches as    = F.foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
 
-
-
-mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
-mjoin = fmap join . join . fmap T.sequence
-
-mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
-mbind = (join .) . fmap . (fmap join .) . T.mapM

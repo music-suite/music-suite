@@ -39,6 +39,7 @@ import Data.Semigroup
 import Data.Dynamic
 import Data.Pointed
 import Control.Monad
+import Control.Monad.Compose
 import Control.Applicative
 
 import Data.VectorSpace
@@ -195,19 +196,4 @@ instance HasPitch a => HasPitch (Score a) where
     type Pitch (Score a) = Pitch a
     getPitches as    = F.foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
-
-
--- TODO move these
-
--- | Intution:
--- Starts off with                      m (n (m (n a)))
--- Sequences inner structure to get     m (m (n (n a)))
--- Folds outer level to get             m (n (n a))
--- Folds inner level to get             m (n a)
-mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
-mjoin = fmap join . join . fmap T.sequence
-
-mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
-mbind = (join .) . fmap . (fmap join .) . T.mapM
-
 
