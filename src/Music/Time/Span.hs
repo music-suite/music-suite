@@ -91,7 +91,7 @@ instance Semigroup Span where
     Span (t1, d1) <> Span (t2, d2) = Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
 
 instance Monoid Span where
-    mempty = Span (origin, unit)
+    mempty  = start <-> stop
     mappend = (<>)
 
 inSpan f = Span . f . delta 
