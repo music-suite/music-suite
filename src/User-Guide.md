@@ -161,21 +161,20 @@ let
 in up _P8 scale </> (triad c)^/2 |> (triad g_)^/2
 ```
 
-As a shorthand for `x |> y |> z ..`, we can write `scat [x, y, z]`.
-@[scat] (this is short for *sequential concatenation*).
+As a shorthand for `x |> y |> z ..`, we can write @[scat] `[x, y, z]` (short for *sequential concatenation*).
 
 ```music+haskell
 scat [c,e..g]^/4
 ```
 
-For `x <> y <> z ..`, we can write `pcat [x, y, z]`.
-@[pcat] (short for *parallel concatenation*).
+For `x <> y <> z ..`, we can write @[pcat] `[x, y, z]` (short for *parallel concatenation*).
 
 ```music+haskell
 pcat [c,e..g]^/2
 ```
 
-
+Actually, @[scat] and @[pcat] used to be called `melody` and `chord` back in the days, but
+I figured out that these are names that you actually want to use in your own code.
 
 ## Pitch
 
@@ -256,16 +255,37 @@ flatten d             == d flat        == ds
 
 Note that `cs == db` may or may not hold depending on which pitch representation you use.
 
-### Intervals
+### Interval names
 
-TODO
+Interval names are overloaded in a manner similar to pitches, and are consequently referred to as *interval literals*. The corresponding class is called @[IsInterval].
+
+Here and elsewhere in the Music Suite, the convention is to follow standard theoretical
+notation, so *minor* and *diminished* intervals are written in lower-case, while *major*
+and *perfect* intervals are written in upper-case. Unfortunately, Haskell does not support
+overloaded upper-case values, so we have to adopt a nasty underscore prefix:
+
+```haskell
+minor third         ==  m3
+major third         ==  _M3
+perfect fifth       ==  _P5
+diminished fifth    ==  d5
+minor ninth         ==  m9
+```
+
+You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
+operators, think of pitches and points `.` and intervals as vectors `^`.
+
+```music+haskell
+setPitch (c .+^ m3) $ return c_
+```
+
 
 ### Qualified pitch and interval names
 
 There is nothing special about the pitch and interval literals, they are simply values exported by the `Music.Pitch.Literal` module. While this module is reexported by the standard music preludes, you can also import it qualified if you want to avoid bringing the single-letter pitch names into scope.
 
 ```haskell
-Pitch.c |> Pitch.d
+Pitch.c |> Pitch.d .+^ Interval.m3
 ```
 
 TODO overloading, explain why the following works:
@@ -334,7 +354,11 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 ## Parts
 
+TODO
+
 ## Space
+
+TODO
 
 ## Tremolo
 

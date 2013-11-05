@@ -53,6 +53,11 @@ The Music Suite works well with the following input and output formats:
 
 For a complete reference, see the [reference documentation](/docs/api).
 
+### Note on the versioning
+
+The Music Suite consists of a group of packages released concurrently under a common [semantic version number](http://semver.org/). The library was deliberately released *prematurely* in order to encourage its creator to work on it more. As of version *1.3.2*, it is already useful, but we expect the first stable version to be *2.0*.
+
+
 <!--
 For an introduction, see [User Guide](User-Guide).
 -->
