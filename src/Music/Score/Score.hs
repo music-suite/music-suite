@@ -1,6 +1,19 @@
 
-{-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
-    DeriveTraversable, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE
+
+    GeneralizedNewtypeDeriving,
+    DeriveFunctor,
+    DeriveFoldable,
+    DeriveTraversable,
+    DeriveDataTypeable,
+    StandaloneDeriving,
+
+    ViewPatterns,
+    TypeFamilies, -- Debug
+
+    MultiParamTypeClasses,
+    FlexibleInstances       -- for Newtype
+    #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -22,140 +35,143 @@ module Music.Score.Score (
   ) where
 
 import Data.Semigroup
-import Control.Applicative
-import Control.Monad            (ap, join, MonadPlus(..))
-
-import Data.Typeable
-import Data.Foldable            (Foldable(..), foldMap, toList)
-import Data.Traversable         (Traversable(..))
+import Control.Newtype                
+import Data.Dynamic
 import Data.Pointed
-import Data.Ord                 (comparing)
-import Data.Function            (on)
+import Control.Monad
+import Control.Applicative
+import Data.AffineSpace.Point
+import Data.Set (Set)
+import Data.Map (Map)
+import Data.Typeable
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+
+import Music.Score.Pitch
+import Music.Score.Util
+import Music.Time
+import Music.Score.Note
+
+import Music.Pitch.Literal
+import Music.Dynamics.Literal   
+
+
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Test.QuickCheck          (Arbitrary(..), Gen(..))
 
-import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
-import Music.Score.Pitch
-import Music.Score.Util
+asScore :: Score a -> Score a
+asScore x = x
 
-import qualified Data.List as List
+perform' :: Score a -> [Note a]
+perform' = getNScore . snd . getScore
 
--- |
--- A score is a list of events, i.e. time-duration-value triplets. Semantically
---
--- > type Score a = [(Time, Duration, a)]
---
--- There is no explicit representation for rests. However you can use `Score (Maybe a)` to
--- represent a score with rests. Such rests are only useful when composing scores. They
--- may be removed with 'removeRests'.
---
--- Score is a 'Monoid' under parallel composition. 'mempty' is a score of no parts.
--- For sequential composition of scores, use '|>'.
---
---
--- Score is a 'Monad'. 'return' creates a score containing a single note at /(0, 1)/.
---
--- @s@ '>>=' @k@ maps each note to a new score, which is then scaled and delayed by the onset and
--- duration of the original note. That is, @k@ returns a score @t@ such that /0 < onset t < offset t < 1/,
--- the resulting events will not cross the boundaries of the original note.
---
--- 'join' scales and offsets each inner score to fit into the note containing it, then
--- removes the intermediate structure.
---
--- > let s = compose [(0,1,0), (1,2,1)]
--- >
--- > s >>= \x -> compose [ (0,1,toEnum $ x+65),
--- >                       (1,3,toEnum $ x+97) ] :: Score Char
--- >
--- >     ===> compose [ (1, 1, 'A'),
--- >                    (1, 3, 'a'),
--- >                    (1, 2, 'B'),
--- >                    (3, 6, 'b') ]}
---
---
--- data Score a  = Score [(Time, Duration, a)]
-newtype Score a  = Score [(Time, Duration, a)]
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
+instance Performable (Score a) where
+    perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
 
-getScore (Score x) = x
+instance Composable (Score a) where
+
+-- FIXME Reversible instance
+
+-- TODO convert to something more friendly
+meta :: Score a -> MScore 
+meta = fst . getScore
+
+-- Possible implementations for Score
+newtype Score a = Score { getScore :: (MScore, NScore a) }
+    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
-instance Semigroup (Score a) where
-    (<>) = mappend
-
--- Equivalent to the derived Monoid, except for the sorted invariant.
-instance Monoid (Score a) where
-    mempty = Score []
-    a@(Score as) `mappend` b@(Score bs)
-        | offset a <= onset b   =  Score (as <> bs)
-        | otherwise             =  Score (as `m` bs)
-        where
-            m = mergeBy (comparing fst3)
-
+instance Newtype (Score a) (MScore, NScore a) where
+    pack = Score
+    unpack = getScore
 instance Monad Score where
-    return x = Score [(origin, 1, x)]
-    a >>= k = (join' . fmap k) a
-        where
-            join' sc = fold $ mapTime (\t d -> delayTime t . stretch d) sc
-            mapTime f = Score . fmap (mapEvent f) . getScore
-            mapEvent f (t, d, x) = (t, d, f t d x)
-
-            
+    return = pack . return . return
+    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
 instance Pointed Score where
     point = return
-
 instance Applicative Score where
-    pure  = return
+    pure = return
     (<*>) = ap
-
-instance Alternative Score where
-    empty = mempty
-    (<|>) = mappend
-
--- Satisfies left distribution
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
 
-instance HasDuration (Score a) where
-    duration x = offset x .-. onset x
-
 instance HasOnset (Score a) where
-    -- onset (Score a) = list origin (minimum . fmap onset) a
-    onset (Score a) = list origin (onset . head) a
-    -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
-
+    onset (Score (m,x)) = onset x
 instance HasOffset (Score a) where
-    -- offset (Score a) = list origin (maximum . fmap offset) a
-    offset (Score a) = list origin (offset . last) a
+    offset (Score (m,x)) = offset x
+instance Delayable (Score a) where
+    delay n (Score (m,x)) = Score (delay n m, delay n x)
+instance Stretchable (Score a) where
+    stretch n (Score (m,x)) = Score (stretch n m, stretch n x)
 
-instance Performable (Score a) where
-    perform (Score a) = a
+instance HasDuration (Score a) where
+    duration = durationDefault
 
-instance Composable (Score a) where
-    compose = Score . List.sortBy (comparing fst3)
+-- etc
+
+-- instance Delayable
+-- instance Stretchable
+-- instance HasOnset
+-- instance HasOffset
+-- instance HasDuration
+-- instance Traversable
+-- instance MonadPlus
+
+    
+type MScore = NScore Dynamic -- or similar
+-- instance Delayable
+-- instance Stretchable
+-- instance HasOnset
+-- instance HasOffset
+-- instance HasDuration
+-- instance Monoid -- !!!!
+
+{-
+    TODO how to extract meta-events
+    Meta-events give us the possibility to annotate spans in the score with various attributes
+    Each overlapping region composes type-wise using the relevant monoid
+    
+    Some examples:
+        (First TimeSignature) uses the outermost time signature, and mempty if none applies
+        (Last (Option Clef)) uses the innermost clef type, and the default if none applies
+        [String] concatenates strings (useful for names)
+
+        Extract is as a (Map Span Dynamic)
+-}
 
 
-
-
-instance HasPitch a => HasPitch (Score a) where
-    type Pitch (Score a) = Pitch a
-    getPitches as    = foldMap getPitches as
-    modifyPitch f    = fmap (modifyPitch f)
-
-instance Reversible a => Reversible (Score a) where
-    rev = fmap rev . withSameOnset (mapAll $ fmap g)
-        where
-            g (t,d,x) = (negateP (t .+^ d), d, x)
-            negateP a = origin .-^ (a .-. origin)
-            mapAll f = compose . f . perform
-
+-- |
+-- Score without meta-events.
+--
+-- Semantics: a list of 'Note'. The semantics of each instances follow the instances of
+-- the semantics.
+-- 
+newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
+    deriving (Functor, Foldable, Semigroup, Monoid, Traversable, Delayable, Stretchable, HasOnset, HasOffset)
+instance Newtype (NScore a) [Note a] where
+    pack = NScore
+    unpack = getNScore
+instance Monad NScore where
+    return = pack . return . return
+    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+instance Applicative NScore where
+    pure = return
+    (<*>) = ap
+instance MonadPlus NScore where
+    mzero = mempty
+    mplus = mappend
+    -- Functor
+    -- MonadPlus
+    -- Traversable
 
 
 
@@ -171,7 +187,7 @@ instance IsDynamics a => IsDynamics (Score a) where
 
 instance Enum a => Enum (Score a) where
     toEnum = return . toEnum
-    fromEnum = list 0 (fromEnum . head) . toList
+    fromEnum = list 0 (fromEnum . head) . F.toList
 
 -- Bogus VectorSpace instance, so we can use c^*2 etc.
 
@@ -191,20 +207,23 @@ instance Arbitrary a => Arbitrary (Score a) where
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
 
+instance HasPitch a => HasPitch (Score a) where
+    type Pitch (Score a) = Pitch a
+    getPitches as    = F.foldMap getPitches as
+    modifyPitch f    = fmap (modifyPitch f)
 
--------------------------------------------------------------------------------------
 
-fst3 (a,b,c) = a
+-- TODO move
 
-first3 f (a,b,c) = (f a,b,c)
-second3 f (a,b,c) = (a,f b,c)
+-- | Intution:
+-- Starts off with                      m (n (m (n a)))
+-- Sequences inner structure to get     m (m (n (n a)))
+-- Folds outer level to get             m (n (n a))
+-- Folds inner level to get             m (n a)
+mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
+mjoin = fmap join . join . fmap T.sequence
 
-{-
-mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
-mergeBy f [] ys = ys
-mergeBy f xs [] = xs
-mergeBy f xs'@(x:xs) ys'@(y:ys)
-    | x `f` y == LT   =   x : mergeBy f xs ys'
-    | x `f` y /= LT   =   y : mergeBy f xs' ys
+mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
+mbind = (join .) . fmap . (fmap join .) . T.mapM
 
--}
+
