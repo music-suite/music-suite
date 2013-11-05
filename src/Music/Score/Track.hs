@@ -71,9 +71,10 @@ import qualified Data.List as List
 -- and time scaling as scalar multiplication.
 --
 newtype Track a = Track { getTrack' :: [(Time, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Delayable, Stretchable)
 
--- type instance Duration (Track a) = DurationT
+inTrack f = Track . f . getTrack'
+
 type instance Event (Track a) = a
 
 track :: Real d => [(Point d, a)] -> Track a
@@ -92,6 +93,7 @@ instance Monoid (Track a) where
         where
             m = mergeBy (comparing fst)
 
+-- TODO mcompose
 instance Monad Track where
     return a = Track [(origin, a)]
     a >>= k = (join' . fmap k) a
@@ -113,12 +115,6 @@ instance MonadPlus Track where
 
 instance HasOnset (Track a) where
     onset (Track a) = list origin (on . head) a where on (t,x) = t
-
-instance Delayable (Track a) where
-    d `delay` Track a = Track $ first (.+^ d) `fmap` a
-
-instance Stretchable (Track a) where
-    d `stretch` Track a = Track $ first (d*.) `fmap` a
 
 instance IsPitch a => IsPitch (Track a) where
     fromPitch = pure . fromPitch

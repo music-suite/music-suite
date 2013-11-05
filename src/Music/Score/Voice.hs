@@ -69,7 +69,7 @@ import Music.Dynamics.Literal
 -- as scalar multiplication.
 --
 newtype Voice a = Voice { getVoice' :: [(Duration, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable)
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable, Stretchable)
 
 voice :: Real d => [(d, a)] -> Voice a
 voice = Voice . fmap (first realToFrac)
@@ -77,14 +77,16 @@ voice = Voice . fmap (first realToFrac)
 getVoice :: Fractional d => Voice a -> [(d, a)]
 getVoice = fmap (first realToFrac) . getVoice'
 
--- type instance Duration (Voice a) = DurationT
+inVoice f = Voice . f . getVoice'
+
 type instance Event (Voice a) = a
 
 instance Semigroup (Voice a) where
     (<>) = mappend
 
+-- TODO rewrite in terms of mcompose
 instance Monad Voice where
-    return a = Voice [(1, a)]
+    return a = Voice [(unit, a)]
     a >>= k = (join' . fmap k) a
         where
             join' (Voice ps) = foldMap (uncurry stretch) ps
@@ -96,11 +98,8 @@ instance Applicative Voice where
     pure  = return
     (<*>) = ap
 
-instance Stretchable (Voice a) where
-    n `stretch` Voice as = Voice (fmap (first (n*^)) as)
-
 instance HasDuration (Voice a) where
-    duration (Voice as) = sum (fmap fst as)
+    duration = sum . fmap duration . getVoice'
 
 instance IsPitch a => IsPitch (Voice a) where
     fromPitch = pure . fromPitch

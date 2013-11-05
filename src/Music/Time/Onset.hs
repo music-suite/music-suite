@@ -4,6 +4,7 @@
     DeriveFunctor,
     DeriveFoldable,
     FlexibleContexts,
+    FlexibleInstances,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -140,6 +141,15 @@ withSameOffset      :: (Delayable a, HasOffset a, HasOffset b) =>
 withSameOnset f a  = startAt (onset a) $ f a
 withSameOffset f a = stopAt (offset a) $ f a
 
+
+instance HasOnset (Time, a) where
+    onset = fst
+instance HasDuration (Duration, a) where
+    duration = fst
+instance HasOnset (Time, Duration, a) where
+    onset (t,d,x) = t
+instance HasDuration (Time, Duration, a) where
+    duration (t,d,x) = d
 
 {-
 class HasPreOnset s where
