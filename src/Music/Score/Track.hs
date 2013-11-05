@@ -57,6 +57,29 @@ import Music.Score.Util
 
 import qualified Data.List as List
 
+newtype Occ a = Occ (Sum Time, a)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+
+occ t x = Occ (Sum t, x)
+getOcc (Occ (Sum t, x)) = (t, x)
+
+instance Delayable (Occ a) where
+    delay n (Occ (s,x)) = Occ (delay n s, x)
+instance Stretchable (Occ a) where
+    stretch n (Occ (s,x)) = Occ (stretch n s, x)
+instance HasOnset (Occ a) where
+    onset (Occ (s,x)) = onset s
+
+-- TODO move
+instance Delayable a => Delayable (Sum a) where
+    delay n (Sum x) = Sum (delay n x)
+instance Stretchable a => Stretchable (Sum a) where
+    stretch n (Sum x) = Sum (stretch n x)
+instance HasOnset a => HasOnset (Sum a) where
+    onset (Sum x) = onset x
+instance HasOnset Time where
+    onset = id
+                                
 -- |
 -- A track is a list of events with explicit onset. 
 --
@@ -81,31 +104,6 @@ import qualified Data.List as List
 -- Track is an instance of 'VectorSpace' using parallel composition as addition,
 -- and time scaling as scalar multiplication.
 --
-newtype Occ a = Occ (Sum Time, a)
-    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
-
-occ t x = Occ (Sum t, x)
-getOcc (Occ (Sum t, x)) = (t, x)
-
-instance Delayable (Occ a) where
-    delay n (Occ (s,x)) = Occ (delay n s, x)
-instance Stretchable (Occ a) where
-    stretch n (Occ (s,x)) = Occ (stretch n s, x)
-instance HasOnset (Occ a) where
-    onset (Occ (s,x)) = onset s
-
-
--- TODO move
-instance Delayable a => Delayable (Sum a) where
-    delay n (Sum x) = Sum (delay n x)
-instance Stretchable a => Stretchable (Sum a) where
-    stretch n (Sum x) = Sum (stretch n x)
-instance HasOnset a => HasOnset (Sum a) where
-    onset (Sum x) = onset x
-instance HasOnset Time where
-    onset = id
-
-                                       
 newtype Track a = Track { getTrack' :: [Occ a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Monoid, Semigroup, Delayable, Stretchable)
 
@@ -133,7 +131,6 @@ instance Monoid (Track a) where
             m = mergeBy (comparing fst)
 -}
 
--- TODO mcompose
 instance Newtype (Track a) [Occ a] where
     pack = Track
     unpack = getTrack'

@@ -1,6 +1,8 @@
 
 {-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
-    DeriveTraversable, GeneralizedNewtypeDeriving #-}
+    DeriveTraversable, GeneralizedNewtypeDeriving, 
+    FlexibleInstances,
+    MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -24,6 +26,7 @@ module Music.Score.Voice (
   ) where
 
 import Data.Semigroup
+import Control.Newtype
 import Control.Applicative
 import Control.Monad
 import Control.Arrow
@@ -34,14 +37,46 @@ import Data.Traversable         (Traversable(..))
 import Data.Pointed
 import Data.Ord                 (comparing)
 import Data.Function            (on)
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Test.QuickCheck          (Arbitrary(..), Gen(..))
+import qualified Data.Foldable as F
+import qualified Data.Traversable as T
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import qualified Data.List as List
+
+import Data.PairMonad ()
 
 import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
+import Music.Score.Pitch
+import Music.Score.Util
+
+
+newtype Ev a = Ev (Product Duration, a)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+
+ev t x = Ev (Product t, x)
+getEv (Ev (Product t, x)) = (t, x)
+
+instance Stretchable (Ev a) where
+    stretch n (Ev (s,x)) = Ev (stretch n s, x)
+instance HasDuration (Ev a) where
+    duration (Ev (s,x)) = duration s
+
+-- TODO move
+instance Delayable a => Delayable (Product a) where
+    delay n (Product x) = Product (delay n x)
+instance Stretchable a => Stretchable (Product a) where
+    stretch n (Product x) = Product (stretch n x)
+instance HasDuration a => HasDuration (Product a) where
+    duration (Product x) = duration x
+instance HasDuration Duration where
+    duration = id
+
 
 -- |
 -- A voice is a list of events with explicit duration. Events can not overlap.
@@ -68,28 +103,26 @@ import Music.Dynamics.Literal
 -- Voice is a 'VectorSpace' using sequential composition as addition, and time scaling
 -- as scalar multiplication.
 --
-newtype Voice a = Voice { getVoice' :: [(Duration, a)] }
-    deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Typeable, Traversable, Stretchable)
-
-voice :: Real d => [(d, a)] -> Voice a
-voice = Voice . fmap (first realToFrac)
-
-getVoice :: Fractional d => Voice a -> [(d, a)]
-getVoice = fmap (first realToFrac) . getVoice'
+newtype Voice a = Voice { getVoice' :: [Ev a] }
+    deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Semigroup, Typeable, Traversable, Stretchable)
 
 inVoice f = Voice . f . getVoice'
 
+voice :: Real d => [(d, a)] -> Voice a
+voice = Voice . fmap (uncurry ev . first realToFrac)
+
+getVoice :: Fractional d => Voice a -> [(d, a)]
+getVoice = fmap (first realToFrac . getEv) . getVoice'
+
 type instance Event (Voice a) = a
 
-instance Semigroup (Voice a) where
-    (<>) = mappend
+instance Newtype (Voice a) [Ev a] where
+    pack = Voice
+    unpack = getVoice'
 
--- TODO rewrite in terms of mcompose
 instance Monad Voice where
-    return a = Voice [(unit, a)]
-    a >>= k = (join' . fmap k) a
-        where
-            join' (Voice ps) = foldMap (uncurry stretch) ps
+    return = pack . return . return
+    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
 
 instance Pointed Voice where
     point = return
@@ -107,3 +140,15 @@ instance IsPitch a => IsPitch (Voice a) where
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
+instance HasPitch a => HasPitch (Voice a) where
+    type Pitch (Voice a) = Pitch a
+    getPitches as    = F.foldMap getPitches as
+    modifyPitch f    = fmap (modifyPitch f)
+
+
+
+mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
+mjoin = fmap join . join . fmap T.sequence
+
+mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
+mbind = (join .) . fmap . (fmap join .) . T.mapM
