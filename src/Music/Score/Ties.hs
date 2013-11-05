@@ -129,7 +129,7 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
             where
                 (_, barTime) = properFraction t
                 remBarTime   = 1 - barTime
-                occs = splitDur remBarTime 1 (d,x)
+                occs         = splitDur remBarTime 1 (d,x)
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
@@ -150,8 +150,9 @@ splitDur s t x = case splitDur' s x of
 -- > splitDur s (d,a)
 --
 splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
-splitDur' s (d,a) | d <= s     =  ((d,a), Nothing)
-                  | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
+splitDur' s (d,a) 
+    | d <= s     =  ((d,a), Nothing)
+    | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
 
 
 

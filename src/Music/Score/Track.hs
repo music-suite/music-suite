@@ -1,6 +1,11 @@
 
-{-# LANGUAGE TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveDataTypeable, 
-    DeriveTraversable, GeneralizedNewtypeDeriving, 
+{-# LANGUAGE 
+    TypeFamilies, 
+    DeriveFunctor, 
+    DeriveFoldable, 
+    DeriveDataTypeable, 
+    DeriveTraversable, 
+    GeneralizedNewtypeDeriving, 
     FlexibleInstances,
     MultiParamTypeClasses #-}
 

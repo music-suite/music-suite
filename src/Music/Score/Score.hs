@@ -33,38 +33,34 @@ module Music.Score.Score (
         Score,
   ) where
 
+import Data.Dynamic
 import Control.Newtype                
 import Data.Ord
 import Data.Semigroup
-import Data.Dynamic
 import Data.Pointed
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
-import Control.Applicative
 
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..), Gen(..))
 
-import Data.Set (Set)
-import Data.Map (Map)
 import Data.Typeable
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
-import qualified Data.Set as Set
-import qualified Data.Map as Map
 import qualified Data.List as List
 
-import Music.Score.Pitch
-import Music.Score.Util
 import Music.Time
-import Music.Score.Note
-
 import Music.Pitch.Literal
 import Music.Dynamics.Literal   
+import Music.Score.Note
+import Music.Score.Pitch
+import Music.Score.Util
+
 
 newtype Score a = Score { getScore :: (MScore, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
