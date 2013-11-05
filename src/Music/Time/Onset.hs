@@ -63,7 +63,7 @@ import Music.Time.Stretchable
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
 -- 
--- > duration a = offset a .-- onset a
+-- > duration a = offset a .-. onset a
 --
 class HasDuration a where
     duration :: a -> Duration
@@ -73,8 +73,8 @@ class HasDuration a where
 --
 -- > Duration -> Score a -> Score a
 --
-stretchTo       :: (Stretchable a, HasDuration a, Fractional d, d ~ Duration) =>
-                d -> a -> a
+stretchTo       :: (Stretchable a, HasDuration a) =>
+                Duration -> a -> a
 
 
 -- |
@@ -105,16 +105,16 @@ class HasOffset a where
 --
 -- > Time -> Score a -> Score a
 --
-startAt         :: (HasOnset a, Delayable a, AffineSpace t, t ~ Time) =>
-                t ->  a -> a
+startAt         :: (HasOnset a, Delayable a) =>
+                Time ->  a -> a
 
 -- |
 -- Move a score so that its offset is at the specific time.
 --
 -- > Time -> Score a -> Score a
 --
-stopAt          :: (HasOffset a, Delayable a, AffineSpace t, t ~ Time) =>
-                t -> a -> a
+stopAt          :: (HasOffset a, Delayable a) =>
+                Time -> a -> a
 
 t `stretchTo` x = (t / duration x) `stretch` x
 t `startAt` x   = (t .-. onset x) `delay` x
@@ -125,9 +125,7 @@ t `stopAt`  x   = (t .-. offset x) `delay` x
 --
 -- > Time -> Score a -> Score a
 --
-withSameOnset      :: (Delayable a, HasOnset a, HasOnset b, 
-                        d ~ Duration, d ~ Duration, AdditiveGroup d) =>
-
+withSameOnset      :: (Delayable a, HasOnset a, HasOnset b) =>
                     (b -> a) -> b -> a
 
 -- |
@@ -135,8 +133,7 @@ withSameOnset      :: (Delayable a, HasOnset a, HasOnset b,
 --
 -- > Time -> Score a -> Score a
 --
-withSameOffset      :: (Delayable a, HasOffset a, HasOffset b, 
-                        d ~ Duration, d ~ Duration, AdditiveGroup d) =>
+withSameOffset      :: (Delayable a, HasOffset a, HasOffset b) =>
 
                     (b -> a) -> b -> a
 

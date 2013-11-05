@@ -46,6 +46,7 @@ import Music.Time.Time
 import Music.Time.Reverse
 import Music.Time.Delayable
 import Music.Time.Stretchable
+import Music.Time.Onset
 
 -- |
 -- A 'Span' represents two points in time referred to as its onset and offset respectively.
@@ -72,6 +73,15 @@ instance Stretchable Span where
 instance Reversible Span where
     rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
     -- rev (getSpanAbs -> (x, y)) = mirror y `between` mirror x
+
+instance HasOnset Span where
+    onset = fst . getSpanAbs
+
+instance HasOffset Span where
+    offset = snd . getSpanAbs
+
+instance HasDuration Span where
+    duration = snd . getSpanRel
 
 instance Semigroup Span where
     -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)

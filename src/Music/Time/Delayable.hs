@@ -62,10 +62,10 @@ instance Delayable a => Delayable [a] where
     delay n = fmap (delay n)
 
 instance Delayable (Time, a) where
-    delay n (t, a) = (t .+^ n, a)
+    delay n (t, a) = (n `delay` t, a)
 
 instance Delayable (Time, Duration, a) where
-    delay n (t, d, a) = (t .+^ n, d, a)
+    delay n (t, d, a) = (n `delay` t, d, a)
 
 
 -- |

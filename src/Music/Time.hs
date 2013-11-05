@@ -15,6 +15,7 @@
 
 module Music.Time (
         module Music.Time.Time,
+        module Music.Time.Span,
         module Music.Time.Delayable,
         module Music.Time.Stretchable,
         module Music.Time.Onset,
@@ -24,6 +25,7 @@ module Music.Time (
   ) where
 
 import Music.Time.Time
+import Music.Time.Span
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Onset
