@@ -28,27 +28,21 @@ module Music.Score.Track (
 import Data.Semigroup
 import Control.Newtype
 import Control.Applicative
-import Control.Monad            (ap, join, MonadPlus(..))
+import Control.Monad
 import Control.Monad.Compose
 import Control.Arrow
 
+import Data.PairMonad ()
 import Data.Typeable
-import Data.Foldable            (Foldable(..), foldMap)
-import Data.Traversable         (Traversable(..))
+import Data.Foldable (Foldable(..), foldMap)
+import Data.Traversable (Traversable(..))
 import Data.Pointed
-import Data.Ord                 (comparing)
-import Data.Function            (on)
 import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
 import Data.AffineSpace.Point
-import Test.QuickCheck          (Arbitrary(..), Gen(..))
+import Test.QuickCheck (Arbitrary(..), Gen(..))
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
-import qualified Data.Set as Set
-import qualified Data.Map as Map
 import qualified Data.List as List
-
-import Data.PairMonad ()
 
 import Music.Time
 import Music.Pitch.Literal
@@ -56,20 +50,6 @@ import Music.Dynamics.Literal
 import Music.Score.Pitch
 import Music.Score.Util
 
-import qualified Data.List as List
-
-newtype Occ a = Occ (Sum Time, a)
-    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
-
-occ t x = Occ (Sum t, x)
-getOcc (Occ (Sum t, x)) = (t, x)
-
-instance Delayable (Occ a) where
-    delay n (Occ (s,x)) = Occ (delay n s, x)
-instance Stretchable (Occ a) where
-    stretch n (Occ (s,x)) = Occ (stretch n s, x)
-instance HasOnset (Occ a) where
-    onset (Occ (s,x)) = onset s
 
                                 
 -- |
@@ -164,4 +144,19 @@ instance HasPitch a => HasPitch (Track a) where
     type Pitch (Track a) = Pitch a
     getPitches as    = F.foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
+
+
+
+newtype Occ a = Occ (Sum Time, a)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+
+occ t x = Occ (Sum t, x)
+getOcc (Occ (Sum t, x)) = (t, x)
+
+instance Delayable (Occ a) where
+    delay n (Occ (s,x)) = Occ (delay n s, x)
+instance Stretchable (Occ a) where
+    stretch n (Occ (s,x)) = Occ (stretch n s, x)
+instance HasOnset (Occ a) where
+    onset (Occ (s,x)) = onset s
 

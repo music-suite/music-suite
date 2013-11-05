@@ -32,23 +32,16 @@ import Control.Monad
 import Control.Monad.Compose
 import Control.Arrow
 
+import Data.PairMonad ()
 import Data.Typeable
-import Data.Foldable            (Foldable(..), foldMap)
-import Data.Traversable         (Traversable(..))
+import Data.Foldable (Foldable(..), foldMap)
+import Data.Traversable (Traversable(..))
 import Data.Pointed
-import Data.Ord                 (comparing)
-import Data.Function            (on)
 import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Test.QuickCheck          (Arbitrary(..), Gen(..))
+import Test.QuickCheck (Arbitrary(..), Gen(..))
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
-import qualified Data.Set as Set
-import qualified Data.Map as Map
 import qualified Data.List as List
-
-import Data.PairMonad ()
 
 import Music.Time
 import Music.Pitch.Literal
@@ -56,17 +49,6 @@ import Music.Dynamics.Literal
 import Music.Score.Pitch
 import Music.Score.Util
 
-
-newtype Ev a = Ev (Product Duration, a)
-    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
-
-ev t x = Ev (Product t, x)
-getEv (Ev (Product t, x)) = (t, x)
-
-instance Stretchable (Ev a) where
-    stretch n (Ev (s,x)) = Ev (stretch n s, x)
-instance HasDuration (Ev a) where
-    duration (Ev (s,x)) = duration s
 
 -- |
 -- A voice is a list of events with explicit duration. Events can not overlap.
@@ -134,4 +116,19 @@ instance HasPitch a => HasPitch (Voice a) where
     type Pitch (Voice a) = Pitch a
     getPitches as    = F.foldMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
+
+
+
+newtype Ev a = Ev (Product Duration, a)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+
+ev t x = Ev (Product t, x)
+getEv (Ev (Product t, x)) = (t, x)
+
+instance Stretchable (Ev a) where
+    stretch n (Ev (s,x)) = Ev (stretch n s, x)
+
+instance HasDuration (Ev a) where
+    duration (Ev (s,x)) = duration s
+
 
