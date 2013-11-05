@@ -127,12 +127,12 @@ instance HasDuration (Score a) where
     duration x = offset x .-. onset x
 
 instance HasOnset (Score a) where
-    -- onset (Score a) = list origin (minimum . map onset) a
+    -- onset (Score a) = list origin (minimum . fmap onset) a
     onset (Score a) = list origin (onset . head) a
     -- Note: this version of onset is lazier, but depends on the invariant that the list is sorted
 
 instance HasOffset (Score a) where
-    -- offset (Score a) = list origin (maximum . map off) a where off (t,d,x) = t .+^ d
+    -- offset (Score a) = list origin (maximum . fmap offset) a
     offset (Score a) = list origin (offset . last) a
 
 instance Performable (Score a) where
