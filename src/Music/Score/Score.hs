@@ -34,6 +34,7 @@ module Music.Score.Score (
   ) where
 
 import Control.Newtype                
+import Data.Ord
 import Data.Semigroup
 import Data.Dynamic
 import Data.Pointed
@@ -54,6 +55,7 @@ import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import qualified Data.List as List
 
 import Music.Score.Pitch
 import Music.Score.Util
@@ -104,7 +106,7 @@ instance HasDuration (Score a) where
     duration = durationDefault
 
 perform' :: Score a -> [Note a]
-perform' = getNScore . snd . getScore
+perform' = List.sortBy (comparing $ fst . getNote) . getNScore . snd . getScore
 
 instance Performable (Score a) where
     perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
