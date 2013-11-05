@@ -118,7 +118,7 @@ delta (Span x) = x
 -- | Render a span as onset and offset.
 range :: Span -> (Time, Time)
 range x = let (t, d) = delta x
-    in (t,t .+^ d)
+    in (t, t .+^ d)
 
 -- | Map over the span as onset and duration.
 mapDelta :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
