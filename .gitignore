@@ -4,3 +4,5 @@ build
 *.pdf
 .ackoptions
 .shelly
+*.ly
+*.xml
