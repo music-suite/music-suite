@@ -7,6 +7,18 @@ module Music.Parts (
         divide,
   ) where
 
+{-
+    For each part we want to know:
+        - Classification:
+            - Type: (i.e. woodwind)
+            - Family: (i.e. saxophone)
+            - Range: (i.e. tenor)            
+        - Range (i.e. [c_:e'])
+        - Transposition:
+            sounding = written .+^ transp 
+        - Suggested clefs
+-}
+
 -- |
 -- A division represents a subset of a finite group of performers.
 --
