@@ -1,6 +1,5 @@
 
 {-# LANGUAGE
-
     GeneralizedNewtypeDeriving,
     DeriveFunctor,
     DeriveFoldable,
@@ -9,11 +8,11 @@
     StandaloneDeriving,
 
     ViewPatterns,
-    TypeFamilies, -- Debug
+    TypeFamilies,
 
+    -- For Newtype
     MultiParamTypeClasses,
-    FlexibleInstances       -- for Newtype
-    #-}
+    FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -34,13 +33,18 @@ module Music.Score.Score (
         Score,
   ) where
 
-import Data.Semigroup
 import Control.Newtype                
+import Data.Semigroup
 import Data.Dynamic
 import Data.Pointed
 import Control.Monad
 import Control.Applicative
+
+import Data.VectorSpace
+import Data.AffineSpace
 import Data.AffineSpace.Point
+import Test.QuickCheck (Arbitrary(..), Gen(..))
+
 import Data.Set (Set)
 import Data.Map (Map)
 import Data.Typeable
@@ -60,29 +64,6 @@ import Music.Pitch.Literal
 import Music.Dynamics.Literal   
 
 
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Test.QuickCheck          (Arbitrary(..), Gen(..))
-
-asScore :: Score a -> Score a
-asScore x = x
-
-perform' :: Score a -> [Note a]
-perform' = getNScore . snd . getScore
-
-instance Performable (Score a) where
-    perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
-
-instance Composable (Score a) where
-
--- FIXME Reversible instance
-
--- TODO convert to something more friendly
-meta :: Score a -> MScore 
-meta = fst . getScore
-
--- Possible implementations for Score
 newtype Score a = Score { getScore :: (MScore, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
@@ -92,49 +73,47 @@ type instance Event (Score a)     = a
 instance Newtype (Score a) (MScore, NScore a) where
     pack = Score
     unpack = getScore
+
 instance Monad Score where
     return = pack . return . return
     xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+
 instance Pointed Score where
     point = return
+
 instance Applicative Score where
     pure = return
     (<*>) = ap
+
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
 
 instance HasOnset (Score a) where
     onset (Score (m,x)) = onset x
+
 instance HasOffset (Score a) where
     offset (Score (m,x)) = offset x
+
 instance Delayable (Score a) where
     delay n (Score (m,x)) = Score (delay n m, delay n x)
+
 instance Stretchable (Score a) where
     stretch n (Score (m,x)) = Score (stretch n m, stretch n x)
 
 instance HasDuration (Score a) where
     duration = durationDefault
 
--- etc
+perform' :: Score a -> [Note a]
+perform' = getNScore . snd . getScore
 
--- instance Delayable
--- instance Stretchable
--- instance HasOnset
--- instance HasOffset
--- instance HasDuration
--- instance Traversable
--- instance MonadPlus
+instance Performable (Score a) where
+    perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
+instance Composable (Score a) where
+
+-- FIXME Reversible instance
 
     
-type MScore = NScore Dynamic -- or similar
--- instance Delayable
--- instance Stretchable
--- instance HasOnset
--- instance HasOffset
--- instance HasDuration
--- instance Monoid -- !!!!
-
 {-
     TODO how to extract meta-events
     Meta-events give us the possibility to annotate spans in the score with various attributes
@@ -147,6 +126,12 @@ type MScore = NScore Dynamic -- or similar
 
         Extract is as a (Map Span Dynamic)
 -}
+
+type MScore = NScore Dynamic -- or similar
+
+-- TODO convert to something more friendly
+meta :: Score a -> MScore 
+meta = fst . getScore
 
 
 -- |
@@ -174,10 +159,7 @@ instance MonadPlus NScore where
     -- Traversable
 
 
-
-
-
--- These instances allow us to write expressions like [c..g]
+-- The following instances allow us to write expressions like [c..g]
 
 instance IsPitch a => IsPitch (Score a) where
     fromPitch = pure . fromPitch
@@ -213,7 +195,7 @@ instance HasPitch a => HasPitch (Score a) where
     modifyPitch f    = fmap (modifyPitch f)
 
 
--- TODO move
+-- TODO move these
 
 -- | Intution:
 -- Starts off with                      m (n (m (n a)))

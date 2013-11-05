@@ -148,7 +148,6 @@ sinvert (Span (t,d)) = Span (mirror t, recip d)
 -- Useful for implementing separation in articulation etc
 
 
-
 {-
 type TFun a = Time -> a
 type BoundTFun a = (Span, TFun a)
