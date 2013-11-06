@@ -536,14 +536,11 @@ TODO
 ```music+haskell
 let
     x, y :: Voice Note
-    x = mempty
-        <> stretch 1 c
-        <> stretch 1 d
-        <> stretch 2 e
+    x = c <> d <> f <> e
     y = mempty
         <> stretch 1 x
-        <> stretch 1.5 (up _P5 x)
-        <> stretch 2   (up _P8 x)
+        <> stretch 0.5 (up _P5 x)
+        <> stretch 4   (up _P8 x)
 in stretch (1/8) $ voiceToScore y
 ```
 
@@ -565,6 +562,18 @@ in trackToScore (1/8) y
 
 
 # Meta-information
+
+It is often desirable to annotate music with extraneous information, such as title, creator, time signature and so on. In the Music Suite these are grouped together under the common label *meta-information*.
+
+The distinction between ordinary musical data and meta-data is not always clear cut. For example, while a clef is clearly a presentation detail, a key signature might be considered both a presentation aspect and a fundamental aspect of the musical syntax.
+
+TODO while we only consider notes as non-meta etc
+
+TODO attributes (same as in Diagrams)
+
+Each attribute value may apply either to a *whole* score (i.e. from beginning to end), or to a *section* of the score.
+
+
 
 ## Time signatures          
 
@@ -588,8 +597,7 @@ All standard representations support MIDI input and output. The MIDI representat
 You can read and write MIDI files using the functions @[readMidi] and @[writeMidi]. To play MIDI back in real-time, use @[playMidi] or @[playMidiIO], which uses [reenact](http://hackage.haskell.org/package/reenact).
 -->
 
-Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need a proper quantization software such as [
-ScoreCleaner](http://scorecleaner.com) to convert raw MIDI input to quantized input.
+Beware that MIDI input may contain time and pitch values that yield a non-readable notation, you need an sophisticated piece of analysis software to convert raw MIDI input to quantized input.
 
 ## Lilypond
 
@@ -600,7 +608,7 @@ Lilypond input is not available yet but will hopefully be added soon.
 An example:
 
 ```haskell
-putStrLn $ toLyString $ asScore $ scat [c,d,e]
+toLyString $ asScore $ scat [c,d,e]
 ```
 
     <<
@@ -613,7 +621,7 @@ putStrLn $ toLyString $ asScore $ scat [c,d,e]
 All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for 
 parsing and pretty printing. 
 
-The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support import in the near future.
+The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support input in the near future.
 
 Beware of the extreme verboseness of XML, for example:
 
