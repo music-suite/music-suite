@@ -72,6 +72,9 @@ instance Num Time where
     abs         = relative origin abs
     signum      = relative origin signum
     fromInteger = (origin .+^) . fromInteger
+instance Fractional Time where
+    recip        = relative origin recip
+    fromRational = (origin .+^) . fromRational
 
 -- |
 -- The global start time, which usually means the the beginning of the musical performance.
