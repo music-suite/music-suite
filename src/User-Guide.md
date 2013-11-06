@@ -2,7 +2,7 @@
 
 # Getting Started
 
-## Installation
+## Installing the Suite
 
 The Music Suite depends on the [Haskell platform][HaskellPlatform].
 
@@ -54,8 +54,8 @@ Alternatively, you can create a file called `test.hs` (or similar) with the foll
 ```haskell
 import Music.Prelude.Basic
 
-music = c |> d |> e
 main = defaultMain music
+music = c |> d |> e
 ```
 
 Then either execute it using:
@@ -67,15 +67,12 @@ or compile and run it with
     $ ghc --make test
     $ ./test
 
-However, `music.hs` can also be loaded into a Haskell interpreter or compiled.
 In this case the resulting program will generate and open a file called
 `test.pdf` containing the output seen above.
 
-In fact, the `music2pdf` program is a simple utility that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
+Music files and Haskell files using `defaultMain` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
 
-
-
-## Notes, time and duration
+## Time and duration
 
 A single note can be entered by its name. This will render a note in the middle octave with a duration of one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
 
@@ -115,6 +112,8 @@ c^*(9/8) |> d^*(7/8)
 stretch (2/3) (scat [c,d,e]) |> f^*2
 ```
 
+As you can see, note values, tuplets and ties are added automatically
+
 The `^*` and `^/` operators can be used as shorthands for `delay` and `compress`.
 
 ```music+haskell
@@ -130,7 +129,7 @@ up (perfect octave) . compress 2 . delay 3 $ c
 ```
 
 
-## Composing
+## Composition
 
 Music expressions can be composed @[<>]:
 
@@ -265,11 +264,11 @@ and *perfect* intervals are written in upper-case. Unfortunately, Haskell does n
 overloaded upper-case values, so we have to adopt an underscore prefix:
 
 ```haskell
-minor third      ==  m3
-major third      ==  _M3
-perfect fifth    ==  _P5
-diminished fifth ==  d5
-minor ninth      ==  m9
+minor third      == m3
+major third      == _M3
+perfect fifth    == _P5
+diminished fifth == d5
+minor ninth      == m9
 ```
 
 Similar to @[sharpen] and @[flatten], the @[augment] and @[diminish] functions can be used
@@ -407,6 +406,9 @@ Use the @[harmonic] function:
 ```music+haskell
 text "pizz." $ c^/2
 ```
+## Chords
+
+TODO
 
 ## Rests
 
@@ -611,12 +613,12 @@ putStrLn $ toLyString $ asScore $ scat [c,d,e]
 All standard representations support MusicXML output. The [musicxml2](http://hackage.haskell.org/package/musicxml2) package is used for 
 parsing and pretty printing. 
 
-The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support MusicXML import in the near future.
+The output is fairly complete, with some limitations ([reports][issue-tracker] welcome). There are no plans to support import in the near future.
 
 Beware of the extreme verboseness of XML, for example:
 
 ```haskell
-putStrLn $ toXmlString $ asScore $ scat [c,d,e]
+toXmlString $ asScore $ scat [c,d,e]
 ```
 
     <?xml version='1.0' ?>
