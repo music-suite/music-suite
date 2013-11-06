@@ -28,6 +28,12 @@ import qualified Data.Set as Set
 import Music.Score.Track
 import Data.TotalMap
 
+{-
+    Semantics:
+        R a = ([Time], Time -> a)
+        Informally, R is a time-varying value in which we know all the updates.
+-}
+
 
 -- Function impl
 
