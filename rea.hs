@@ -37,23 +37,24 @@ import Data.TotalMap
 
 -- Function impl
 
-newtype R a = R { getR :: ([Time], Time -> a) }
+newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)
-instance Newtype (R a) ([Time], Time -> a) where
-    pack = R
-    unpack = getR
-instance Applicative R where
+instance Newtype (Reactive a) ([Time], Time -> a) where
+    pack = Reactive
+    unpack = getReactive
+instance Applicative Reactive where
     pure    = pack . pure . pure
     (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)
 
-occs :: R a -> [Time]
+occs :: Reactive a -> [Time]
 occs = fst . unpack
 
-at :: R a -> Time -> a
-at = ($) . snd . unpack
+(?) :: Reactive a -> Time -> a
+(?) = ($) . snd . unpack
 
-switch :: Time -> R a -> R a -> R a
-switch t (R (tx, rx)) (R (ty, ry)) = R (
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+switch :: Time -> Reactive a -> Reactive a -> Reactive a
+switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
     filter (< t) tx <> [t] <> filter (> t) ty,
     \u -> if u < t then rx u else ry u
     )
@@ -61,27 +62,27 @@ switch t (R (tx, rx)) (R (ty, ry)) = R (
 
 -- TMap impl
 
--- newtype R a = R { getR :: ([Time], TMap Time a) }
+-- newtype Reactive a = Reactive { getReactive :: ([Time], TMap Time a) }
 --     deriving (Functor, Monoid)
--- instance Monoid a => Semigroup (R a) where
+-- instance Monoid a => Semigroup (Reactive a) where
 --     (<>) = mappend
--- instance Newtype (R a) ([Time], TMap Time a) where
---     pack = R
---     unpack = getR
--- instance Applicative R where
+-- instance Newtype (Reactive a) ([Time], TMap Time a) where
+--     pack = Reactive
+--     unpack = getReactive
+-- instance Applicative Reactive where
 --     pure    = pack . pure . pure
 --     (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)
 -- 
--- occs :: R a -> [Time]
+-- occs :: Reactive a -> [Time]
 -- occs = fst . unpack
 -- 
--- at :: R a -> Time -> a
--- at = (!) . snd . unpack
+-- (?) :: Reactive a -> Time -> a
+-- (?) = (!) . snd . unpack
 -- 
--- switch :: Time -> R a -> R a -> R a
--- switch t x@(R (tx, rx)) (R (ty, ry)) = R (
+-- switch :: Time -> Reactive a -> Reactive a -> Reactive a
+-- switch t x@(Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
 --     ks,
---     tabulate (defa x) (Set.fromList ks) $ \u -> if u < t then rx ! u else ry ! u
+--     tabulate (initial x) (Set.fromList ks) $ \u -> if u < t then rx ! u else ry ! u
 --     )
 --     where
 --         ks = filter (< t) tx <> [t] <> filter (> t) ty
@@ -89,28 +90,28 @@ switch t (R (tx, rx)) (R (ty, ry)) = R (
 
 -- API
 
-after :: Time -> a -> R a -> R a
+after :: Time -> a -> Reactive a -> Reactive a
 after t x r = switch t r (pure x) 
--- after t x (R (tx, rx)) = R (tx <> [t], \u -> if u < t then rx u else x)
 
-until :: Span -> a -> R a -> R a
-until (range -> (t,t2)) x = ((after t2 id $ after t (const x) $ pure id) <*>)
+initial :: Reactive a -> a
+initial r = r ? minB (occs r)
+    where
+        -- If there are no updates, just use value at time 0
+        -- Otherwise pick an arbitrary time /before/ the first value
+        -- It looks strange but it works
+        minB []    = 0
+        minB (x:_) = x - 1
 
+updates :: Reactive a -> [(Time, a)]
+updates r = (\t -> (t, r ? t)) <$> occs r
 
+renderR :: Reactive a -> (a, [(Time, a)])
+renderR r = (initial r, updates r)
+
+printR :: Show a => Reactive a -> IO ()
 printR r = let (x, xs) = renderR r in do
     print x
     mapM_ print xs
 
-defa :: R a -> a
-defa r = r `at` minB (occs r)
-    where
-        minB []    = 0
-        minB (x:_) = x - 1 -- strange but it works
-
-rest :: R a -> [(Time, a)]
-rest r = (\t -> (t, r `at` t)) <$> occs r
-
-renderR :: R a -> (a, [(Time, a)])
-renderR r = (defa r, rest r)
 
 
