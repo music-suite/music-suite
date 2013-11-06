@@ -89,6 +89,28 @@ instance IsPitch a => IsPitch (ArticulationT a) where
 instance IsDynamics a => IsDynamics (ArticulationT a) where
     fromDynamics l = point (fromDynamics l)
 
+instance Num a => Num (ArticulationT a) where
+    ArticulationT (p,q,r,s,a,t) + ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a+b,t)
+    ArticulationT (p,q,r,s,a,t) * ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a*b,t)
+    ArticulationT (p,q,r,s,a,t) - ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a-b,t)
+    abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
+    signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
+    fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
+
+instance Enum a => Enum (ArticulationT a) where
+    toEnum = point . toEnum
+    fromEnum = fromEnum . get1 
+
+instance Bounded a => Bounded (ArticulationT a) where
+    minBound = point minBound
+    maxBound = point maxBound
+
+instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
+    ArticulationT (p,q,r,s,a,t) `quotRem` ArticulationT (_,_,_,_,b,_) = (ArticulationT (p,q,r,s,q',t), ArticulationT (p,q,r,s,r',t)) where (q',r') = a `quotRem` b
+    toInteger = toInteger . get1
 
 instance HasArticulation (ArticulationT a) where
     setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
@@ -141,4 +163,8 @@ spiccato    = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2)
 resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
 
+
+
+-- Safe for tuple-like types
+get1 = head . toList
 

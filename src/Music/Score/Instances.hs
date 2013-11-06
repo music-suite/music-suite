@@ -582,32 +582,6 @@ instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
     toInteger (DynamicT (_,_,_,a,_,_)) = toInteger a
 
 
--- ArticulationT
-
-instance Num a => Num (ArticulationT a) where
-    ArticulationT (p,q,r,s,a,t) + ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a+b,t)
-    ArticulationT (p,q,r,s,a,t) * ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a*b,t)
-    ArticulationT (p,q,r,s,a,t) - ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a-b,t)
-    abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
-    signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
-    fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
-
-instance Enum a => Enum (ArticulationT a) where
-    toEnum a                               = ArticulationT (False,False,0,0,toEnum a,False)
-    fromEnum (ArticulationT (_,_,_,_,a,_)) = fromEnum a
-
-instance Bounded a => Bounded (ArticulationT a) where
-    minBound = ArticulationT (False,False,0,0,minBound,False)
-    maxBound = ArticulationT (False,False,0,0,maxBound,False)
-
-instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
-    toRational (ArticulationT (_,_,_,_,a,_)) = toRational a
-
-instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
-    ArticulationT (p,q,r,s,a,t) `quotRem` ArticulationT (_,_,_,_,b,_) = (ArticulationT (p,q,r,s,q',t), ArticulationT (p,q,r,s,r',t)) where (q',r') = a `quotRem` b
-    toInteger (ArticulationT (_,_,_,_,a,_)) = toInteger a
-
-
 -- TremoloT
 
 instance Num a => Num (TremoloT a) where
