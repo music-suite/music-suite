@@ -1,18 +1,23 @@
 
+
 {-# LANGUAGE
+    ScopedTypeVariables,
     GeneralizedNewtypeDeriving,
     DeriveFunctor,
     DeriveFoldable,
     DeriveTraversable,
     DeriveDataTypeable,
     StandaloneDeriving,
-
+    ConstraintKinds,
+    GADTs,
+    
     ViewPatterns,
     TypeFamilies,
 
     -- For Newtype
     MultiParamTypeClasses,
-    FlexibleInstances #-}
+    FlexibleInstances 
+    #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -35,9 +40,11 @@ module Music.Score.Score (
 
 import Data.Dynamic
 import Control.Newtype                
+import Data.Maybe
 import Data.Ord
 import Data.Semigroup
 import Data.Pointed
+import Control.Arrow
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
@@ -48,11 +55,15 @@ import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..), Gen(..))
 
 import Data.Typeable
+import Data.Set (Set)
+import Data.Map (Map)
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 import qualified Data.List as List
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 import Music.Time
 import Music.Pitch.Literal
@@ -62,13 +73,13 @@ import Music.Score.Pitch
 import Music.Score.Util
 
 
-newtype Score a = Score { getScore :: (MScore, NScore a) }
+newtype Score a = Score { getScore :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
-instance Newtype (Score a) (MScore, NScore a) where
+instance Newtype (Score a) (Meta, NScore a) where
     pack = Score
     unpack = getScore
 
@@ -131,23 +142,209 @@ instance Composable (Score a) where
 
         API something like:
 
-            addMeta :: (Typeable a, Semigroup a) => Span -> Maybe (Part b) -> a -> Score b -> Score b
-            addMeta = addMetaWith (<>)
-            
-            addMetaWith :: Typeable a => (a -> a -> a) -> Span -> Maybe (Part b) -> a -> Score b -> Score b
+            addMeta :: (Typeable a, Semigroup a) => 
+                Maybe (Part b) -> Note a -> Score b -> Score b
             
             getMeta :: Typeable a => a -> Maybe (Part a) -> Score b -> Reactive a
             getMeta whitness score = ...
 -}
+type AttributeClass a = (Typeable a, Semigroup a)
+
+-- | An existential wrapper type to hold attributes.
+data Attribute :: * where
+    Attribute  :: AttributeClass a => a -> Attribute
+    -- TAttribute  :: (Transformable a, AttributeClass a) => a -> Attribute
+
+-- | Wrap up an attribute.
+wrapAttr :: AttributeClass a => a -> Attribute
+wrapAttr = Attribute
+
+unwrapAttr :: AttributeClass a => Attribute -> Maybe a
+unwrapAttr (Attribute a)  = cast a
+
+-- | Attributes form a semigroup, where the semigroup operation simply
+--   returns the right-hand attribute when the types do not match, and
+--   otherwise uses the semigroup operation specific to the (matching)
+--   types.
+instance Semigroup Attribute where
+  (Attribute a1) <> a2 =
+    case unwrapAttr a2 of
+      Nothing  -> a2
+      Just a2' -> Attribute (a1 <> a2')
+  -- (TAttribute a1) <> a2 =
+  --   case unwrapAttr a2 of
+  --     Nothing  -> a2
+  --     Just a2' -> TAttribute (a1 <> a2') 
+
+instance Delayable Attribute where
+  delay _ (Attribute  a) = Attribute a
+  -- delay t (TAttribute a) = TAttribute (delay t a)
+instance Stretchable Attribute where
+  stretch _ (Attribute  a) = Attribute a
+  -- stretch t (TAttribute a) = TAttribute (stretch t a)
 
 
 
 
-type MScore = NScore Dynamic -- or similar
+
+
+-- TODO is Transformable right w.r.t. join?
+newtype Meta = Meta (Map String (Reactive Attribute))
+    deriving (Delayable, Stretchable)
+inMeta f (Meta s) = Meta (f s)
+
+-- addM :: forall a b . (AttributeClass a, Monoid a, HasMeta b) => Note a -> b -> b
+addM :: forall a b . (AttributeClass a, Monoid a) => Note a -> Score b -> Score b
+addM x = applyMeta $ addMeta $ noteToReact x
+
+-- TODO more generic
+getM :: forall a b . (Monoid a, AttributeClass a) => Score b -> Reactive a
+getM (Score (m,_)) = getMeta m 
+
+addMeta :: forall a . AttributeClass a => Reactive a -> Meta
+addMeta a = Meta $ Map.singleton ty $ fmap wrapAttr a
+    where
+        ty = show $ typeOf (undefined :: a)
+                                                 
+
+getMeta :: forall a . (Monoid a, AttributeClass a) => Meta -> Reactive a
+getMeta = fromMaybe mempty . getMeta'
+
+getMeta' :: forall a . AttributeClass a => Meta -> Maybe (Reactive a) 
+getMeta' (Meta s) = fmap (fmap (fromJust . unwrapAttr)) $ Map.lookup ty s
+    where
+        ty = show . typeOf $ (undefined :: a)
+-- unwrapAttr should never fail
+
+
+
+instance Semigroup Meta where
+    Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
+
+-- | The empty style contains no attributes; composition of styles is
+--   a union of attributes; if the two styles have attributes of the
+--   same type they are combined according to their semigroup
+--   structure.
+instance Monoid Meta where
+    mempty = Meta Map.empty
+    mappend = (<>)
+
+
+
+
+-- | Type class for things which have a style.
+class HasMeta a where
+    -- | /Apply/ a style by combining it (on the left) with the
+    --   existing style.
+    applyMeta :: Meta -> a -> a
+
+instance HasMeta Meta where
+    applyMeta = mappend
+
+instance HasMeta (Score a) where
+    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
+
+instance (HasMeta a, HasMeta b) => HasMeta (a,b) where
+    applyMeta s = applyMeta s *** applyMeta s
+
+instance HasMeta a => HasMeta [a] where
+    applyMeta = fmap . applyMeta
+
+instance HasMeta b => HasMeta (a -> b) where
+    applyMeta = fmap . applyMeta
+
+instance HasMeta a => HasMeta (Map k a) where
+    applyMeta = fmap . applyMeta
+
+instance (HasMeta a, Ord a) => HasMeta (Set a) where
+    applyMeta = Set.map . applyMeta
+
+
+-- TODO wrong Monoid for map
+-- We want it to be be lifted, not left-biased
+
+-- instance Semigroup Meta where
+--     (<>) = mappend
+-- instance Monoid Meta where
+--     mempty = Meta mempty
+--     Meta x `mappend` Meta y = Meta (x `mappend` y)
+-- instance Delayable Meta where
+--     delay n (Meta x) = Meta (delay n x)
+-- instance Stretchable Meta where
+--     stretch n (Meta x) = Meta (stretch n x)
 
 -- TODO convert to something more friendly
-meta :: Score a -> MScore 
+meta :: Score a -> Meta 
 meta = fst . getScore
+
+instance Delayable a => Delayable (Map k a) where
+    delay n = fmap (delay n)
+instance Stretchable a => Stretchable (Map k a) where
+    stretch n = fmap (stretch n)
+
+
+
+newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
+    deriving (Functor, Semigroup, Monoid)
+
+instance Delayable a => Delayable (Reactive a) where
+    delay n (Reactive (t,r)) = Reactive (delay n t, delay n r)
+instance Stretchable a => Stretchable (Reactive a) where
+    stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
+
+instance Newtype (Reactive a) ([Time], Time -> a) where
+    pack = Reactive
+    unpack = getReactive
+instance Applicative Reactive where
+    pure    = pack . pure . pure
+    (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)
+
+occs :: Reactive a -> [Time]
+occs = fst . unpack
+
+(?) :: Reactive a -> Time -> a
+(?) = ($) . snd . unpack
+
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+switch :: Time -> Reactive a -> Reactive a -> Reactive a
+switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
+    filter (< t) tx <> [t] <> filter (> t) ty,
+    \u -> if u < t then rx u else ry u
+    )
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (Note (range -> (start,stop),x)) y = switch start y (switch stop x y)
+
+noteToReact :: Monoid a => Note a -> Reactive a
+noteToReact n = (pure <$> n) `activate` pure mempty
+
+
+initial :: Reactive a -> a
+initial r = r ? minB (occs r)
+    where
+        -- If there are no updates, just use value at time 0
+        -- Otherwise pick an arbitrary time /before/ the first value
+        -- It looks strange but it works
+        minB []    = 0
+        minB (x:_) = x - 1
+
+updates :: Reactive a -> [(Time, a)]
+updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
+
+renderR :: Reactive a -> (a, [(Time, a)])
+renderR r = (initial r, updates r)
+
+printR :: Show a => Reactive a -> IO ()
+printR r = let (x, xs) = renderR r in do
+    print x
+    mapM_ print xs
+
+
+
+-- TODO move
+(=:) :: Span -> a -> Note a
+s =: x  =  Note (s,x)
+
 
 
 -- |
