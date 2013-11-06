@@ -85,10 +85,12 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
 
 inVoice f = Voice . f . getVoice'
 
-voice :: Real d => [(d, a)] -> Voice a
+-- voice :: Real d => [(d, a)] -> Voice a
+voice :: [(Duration, a)] -> Voice a
 voice = Voice . fmap (uncurry ev . first realToFrac)
 
-getVoice :: Fractional d => Voice a -> [(d, a)]
+-- getVoice :: Fractional d => Voice a -> [(d, a)]
+getVoice :: Voice a -> [(Duration, a)]
 getVoice = fmap (first realToFrac . getEv) . getVoice'
 
 type instance Event (Voice a) = a

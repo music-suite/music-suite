@@ -88,10 +88,12 @@ inTrack f = Track . f . getTrack'
 
 type instance Event (Track a) = a
 
-track :: Real d => [(Point d, a)] -> Track a
+-- track :: Real d => [(Point d, a)] -> Track a
+track :: [(Time, a)] -> Track a
 track = Track . fmap (uncurry occ . first (fmap realToFrac))
 
-getTrack :: Fractional d => Track a -> [(Point d, a)]
+-- getTrack :: Fractional d => Track a -> [(Point d, a)]
+getTrack :: Track a -> [(Time, a)]
 getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
 
 {-
