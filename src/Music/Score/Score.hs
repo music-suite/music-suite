@@ -115,14 +115,29 @@ instance Composable (Score a) where
 {-
     TODO how to extract meta-events
     Meta-events give us the possibility to annotate spans in the score with various attributes
-    Each overlapping region composes type-wise using the relevant monoid
-    
-    Some examples:
-        (First TimeSignature) uses the outermost time signature, and mempty if none applies
-        (Last (Option Clef)) uses the innermost clef type, and the default if none applies
-        [String] concatenates strings (useful for names)
 
-        Extract is as a (Map Span Dynamic)
+    Basically, for each score there is always a "initial" value valid from -Inifinity
+    There may be any number of "updates" which last until the next update and so on
+    
+    More formally, for each attribute type there is a function
+
+        getMeta :: Score b -> (a, [(Time, a)]) -- This is essentially a Reactive
+
+    Note that when using join, the meta-events of each note merge with all simultaneous notes and
+    the default value (XXX does this mean that the merge op must be commutative?). Compare the
+    (lifted) Monoid instance for Reactive.
+
+    TODO optionally attack to part (use Maybe (Part b))
+
+        API something like:
+
+            addMeta :: (Typeable a, Semigroup a) => Span -> Maybe (Part b) -> a -> Score b -> Score b
+            addMeta = addMetaWith (<>)
+            
+            addMetaWith :: Typeable a => (a -> a -> a) -> Span -> Maybe (Part b) -> a -> Score b -> Score b
+            
+            getMeta :: Typeable a => a -> Maybe (Part a) -> Score b -> Reactive a
+            getMeta whitness score = ...
 -}
 
 type MScore = NScore Dynamic -- or similar
