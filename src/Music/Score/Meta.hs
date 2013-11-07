@@ -22,33 +22,44 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- 
+-- Provides meta-information.
+--
+-- Each score supports an unlimited number of 'Reactive' meta-values.
+--
+-- This is more or less based on Diagrams styles, which is in turn based
+-- on XMonad.
 --
 -------------------------------------------------------------------------------------
 
 
 module Music.Score.Meta (
+        -- * Attributes
         IsAttribute,
         Attribute,
         wrapAttr,
         unwrapAttr,
-        Meta,
+
+        -- * Meta-values
+        Meta,  
+        addMeta,
+        addMetaNote,
         runMeta,
         HasMeta(..),
 
-        TimeSignature,
-        KeySignature,
-        Tempo,
+        -- * Specific meta-values
         Clef(..),
         setClef,
         setClefDuring,
 
+        TimeSignature,
         setTimeSignature,
         setTimeSignatureDuring,
 
+        KeySignature,
         setKeySignature,
         setKeySignatureDuring,
 
+        Tempo,
         setTempo,
         setTempoDuring,
   ) where
@@ -93,15 +104,14 @@ unwrapAttr :: IsAttribute a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
 
 instance Semigroup Attribute where
-  (Attribute a1) <> a2 =
-    case unwrapAttr a2 of
-      Nothing  -> a2
-      Just a2' -> Attribute (a1 <> a2')
+    (Attribute a1) <> a2 = case unwrapAttr a2 of
+        Nothing  -> a2
+        Just a2' -> Attribute (a1 <> a2')
 
 instance Delayable Attribute where
-  delay _ (Attribute  a) = Attribute a
+    delay _ (Attribute  a) = Attribute a
 instance Stretchable Attribute where
-  stretch _ (Attribute  a) = Attribute a
+    stretch _ (Attribute  a) = Attribute a
 
 
 -- TODO is Transformable right w.r.t. join?
@@ -111,8 +121,8 @@ newtype Meta = Meta (Map String (Reactive Attribute))
 inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
 inMeta f (Meta s) = Meta (f s)
 
-addM :: forall a b . (IsAttribute a, Monoid a, HasMeta b) => Note a -> b -> b
-addM x = applyMeta $ addMeta $ noteToReact x
+addMetaNote :: forall a b . (IsAttribute a, Monoid a, HasMeta b) => Note a -> b -> b
+addMetaNote x = applyMeta $ addMeta $ noteToReactive x
 
 addMeta :: forall a . IsAttribute a => Reactive a -> Meta
 addMeta a = Meta $ Map.singleton ty $ fmap wrapAttr a
@@ -172,7 +182,7 @@ setClef :: (HasMeta a, HasOnset a, HasOffset a) => Clef -> a -> a
 setClef c x = setClefDuring (onset x <-> offset x) c x
 
 setClefDuring :: HasMeta a => Span -> Clef -> a -> a
-setClefDuring s c = addM (s =: (Option $ Just $ Last c))
+setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
@@ -182,7 +192,7 @@ setTimeSignature :: (HasMeta a, HasOnset a, HasOffset a) => TimeSignature -> a -
 setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
 
 setTimeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
-setTimeSignatureDuring s c = addM (s =: (Option $ Just $ Last c))
+setTimeSignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
 newtype KeySignature = KeySignature (Integer, Bool)
     deriving (Eq, Ord, Show, Typeable)
@@ -191,7 +201,7 @@ setKeySignature :: (HasMeta a, HasOnset a, HasOffset a) => KeySignature -> a -> 
 setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
 
 setKeySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
-setKeySignatureDuring s c = addM (s =: (Option $ Just $ Last c))
+setKeySignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
 newtype Tempo = Tempo Duration
     deriving (Eq, Ord, Show, Typeable)
@@ -200,5 +210,5 @@ setTempo :: (HasMeta a, HasOnset a, HasOffset a) => Tempo -> a -> a
 setTempo c x = setTempoDuring (onset x <-> offset x) c x
 
 setTempoDuring :: HasMeta a => Span -> Tempo -> a -> a
-setTempoDuring s c = addM (s =: (Option $ Just $ Last c))
+setTempoDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 

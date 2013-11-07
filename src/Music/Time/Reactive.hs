@@ -33,7 +33,7 @@ module Music.Time.Reactive (
         (?),
         switch,
         activate,
-        noteToReact,
+        noteToReactive,
         initial,
         updates,
         -- renderR,
@@ -99,8 +99,8 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (Note (range -> (start,stop),x)) y = switch start y (switch stop x y)
 
-noteToReact :: Monoid a => Note a -> Reactive a
-noteToReact n = (pure <$> n) `activate` pure mempty
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
 
 
 initial :: Reactive a -> a
