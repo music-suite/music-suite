@@ -45,6 +45,7 @@ import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Convert
 import Music.Score.Combinators
 import Music.Score.Pitch
 import Music.Score.Ties
@@ -79,7 +80,7 @@ voiceToBars = separateBars . splitTiesVoice
 separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
 separateBars =
     fmap (removeTime . fmap discardBarNumber) .
-        splitAtTimeZero . fmap separateTime . perform
+        splitAtTimeZero . fmap separateTime . perform . voiceToScore
     where
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (t .-. origin)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt

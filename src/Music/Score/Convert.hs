@@ -96,6 +96,3 @@ voiceToScore' = mcatMaybes . voiceToScore
 trackToScore :: Duration -> Track a -> Score a
 trackToScore d = compose . fmap (\(t,x) -> (t,d,x)) . getTrack
 
--- There must be a better place for this instance
-instance Performable (Voice a) where
-    perform = perform . voiceToScore
