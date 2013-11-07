@@ -37,7 +37,8 @@ module Music.Score.Score (
         Score,
 
         AttributeClass(..),
-        getM,
+        getScoreMeta,
+        setScoreMeta,
   ) where
 
 import Data.Dynamic
@@ -126,9 +127,15 @@ instance Composable (Score a) where
 
 -- FIXME Reversible instance
 
--- TODO more generic
-getM :: forall a b . (Monoid a, AttributeClass a) => Score b -> Reactive a
-getM (Score (m,_)) = runMeta m 
+-- | Get the meta information of a score.
+-- TODO more generic version
+setScoreMeta :: Meta -> Score a -> Score a
+setScoreMeta m (Score (_,a)) = Score (m,a)
+
+-- | Get the meta information of a score.
+-- TODO more generic version
+getScoreMeta :: Score a -> Meta
+getScoreMeta (Score (m,_)) = m
 
 instance HasMeta (Score a) where
     applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
