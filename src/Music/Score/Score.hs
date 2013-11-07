@@ -127,31 +127,11 @@ instance Composable (Score a) where
 -- FIXME Reversible instance
 
     
-{-
-    TODO how to extract meta-events
-    Meta-events give us the possibility to annotate spans in the score with various attributes
 
-    Basically, for each score there is always a "initial" value valid from -Inifinity
-    There may be any number of "updates" which last until the next update and so on
-    
-    More formally, for each attribute type there is a function
 
-        getMeta :: Score b -> (a, [(Time, a)]) -- This is essentially a Reactive
 
-    Note that when using join, the meta-events of each note merge with all simultaneous notes and
-    the default value (XXX does this mean that the merge op must be commutative?). Compare the
-    (lifted) Monoid instance for Reactive.
 
-    TODO optionally attack to part (use Maybe (Part b))
 
-        API something like:
-
-            addMeta :: (Typeable a, Semigroup a) => 
-                Maybe (Part b) -> Note a -> Score b -> Score b
-            
-            getMeta :: Typeable a => a -> Maybe (Part a) -> Score b -> Reactive a
-            getMeta whitness score = ...
--}
 type AttributeClass a = (Typeable a, Semigroup a)
 
 -- | An existential wrapper type to hold attributes.
@@ -215,12 +195,10 @@ getMeta :: forall a . (Monoid a, AttributeClass a) => Meta -> Reactive a
 getMeta = fromMaybe mempty . getMeta'
 
 getMeta' :: forall a . AttributeClass a => Meta -> Maybe (Reactive a) 
-getMeta' (Meta s) = fmap (fmap (fromJust . unwrapAttr)) $ Map.lookup ty s
+getMeta' (Meta s) = fmap (fmap (fromMaybe (error "getMeta'") . unwrapAttr)) $ Map.lookup ty s
+-- Note: unwrapAttr should never fail
     where
         ty = show . typeOf $ (undefined :: a)
--- unwrapAttr should never fail
-
-
 
 instance Semigroup Meta where
     Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
