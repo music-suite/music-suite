@@ -205,21 +205,21 @@ addClefT :: a -> ClefT a
 addClefT = point
 
 class HasClef a where
-    setClef :: Clef -> a -> a
-    setClefOption :: Option Clef -> a -> a
-    setClefOption c = case getOption c of
+    applyClef :: Clef -> a -> a
+    applyClefOption :: Option Clef -> a -> a
+    applyClefOption c = case getOption c of
         Nothing -> id
-        Just c  -> setClef c
-    setClefMaybe :: Maybe Clef -> a -> a
-    setClefMaybe c = case c of
+        Just c  -> applyClef c
+    applyClefMaybe :: Maybe Clef -> a -> a
+    applyClefMaybe c = case c of
         Nothing -> id
-        Just c  -> setClef c
+        Just c  -> applyClef c
 instance HasClef (ClefT a) where
-    setClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
+    applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
 instance HasClef a => HasClef (b,a) where
-    setClef c = fmap (setClef c)
+    applyClef c = fmap (applyClef c)
 instance (HasPart' a, HasClef a) => HasClef (Score a) where
-    setClef c = mapFirst (setClef c) id
+    applyClef c = mapFirst (applyClef c) id
 
 
 pcatLy :: [Lilypond] -> Lilypond
@@ -290,7 +290,7 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
 
         -- Option (Last Clef)
         -- TODO replace Nothing with default clef
-        setCl = withMeta $ \x -> setClefOption (fmap getLast x)
+        setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
 
 
 {-
@@ -310,7 +310,7 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
 -}
             
         -- Extract (Option (Last Clef))
-        -- setCl = withMeta $ \clef -> setClefMaybe (fmap getLast (getOption clef))
+        -- setCl = withMeta $ \clef -> applyClefMaybe (fmap getLast (getOption clef))
 
 
 

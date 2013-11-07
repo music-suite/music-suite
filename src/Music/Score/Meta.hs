@@ -31,8 +31,8 @@ module Music.Score.Meta (
         KeySignature,
         Tempo,
         Clef(..),
-        addClef,
-        addClefDuring,
+        setClef,
+        setClefDuring,
         withMeta
   ) where
 
@@ -60,17 +60,38 @@ import Music.Score.Util
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
-addClef :: Clef -> Score a -> Score a
-addClef c x = addClefDuring (onset x <-> offset x) c x
+setClef :: Clef -> Score a -> Score a
+setClef c x = setClefDuring (onset x <-> offset x) c x
 
-addClefDuring :: Span -> Clef -> Score a -> Score a
-addClefDuring s c = addM (s =: (Option $ Just $ Last c))
+setClefDuring :: Span -> Clef -> Score a -> Score a
+setClefDuring s c = addM (s =: (Option $ Just $ Last c))
 
-type TimeSignature = ([Integer], Integer)
 
-type KeySignature = (Integer, Bool)
+newtype TimeSignature = TimeSignature ([Integer], Integer)
 
-type Tempo = Duration
+setTimeSignature :: TimeSignature -> Score a -> Score a
+setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
+
+setTimeSignatureDuring :: Span -> TimeSignature -> Score a -> Score a
+setTimeSignatureDuring s c = addM (s =: (Option $ Just $ Last c))
+
+newtype KeySignature = KeySignature (Integer, Bool)
+
+setKeySignature :: KeySignature -> Score a -> Score a
+setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
+
+setKeySignatureDuring :: Span -> KeySignature -> Score a -> Score a
+setKeySignatureDuring s c = addM (s =: (Option $ Just $ Last c))
+
+newtype Tempo = Tempo Duration
+
+setTempo :: Tempo -> Score a -> Score a
+setTempo c x = setTempoDuring (onset x <-> offset x) c x
+
+setTempoDuring :: Span -> Tempo -> Score a -> Score a
+setTempoDuring s c = addM (s =: (Option $ Just $ Last c))
+
+
 
 withSpan :: Score a -> Score (Span, a)
 withSpan = mapEvents (\t d x -> (t-->d,x))
