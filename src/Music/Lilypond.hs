@@ -231,7 +231,7 @@ instance Pretty Music where
 
     pretty (Clef c) = "\\clef" <+> pretty c
 
-    pretty (Key p m) = "\\clef" <+> pretty p <+> pretty m
+    pretty (Key p m) = "\\key" <+> pretty p <+> pretty m
     
     pretty (Time n) = "\\time" <+> pretty n
     
