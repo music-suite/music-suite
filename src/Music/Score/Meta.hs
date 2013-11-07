@@ -29,7 +29,9 @@
 module Music.Score.Meta (
         TimeSignature,
         KeySignature,
-        Tempo
+        Tempo,
+        Clef(..),
+        withMeta
   ) where
 
 import Data.Void
@@ -49,6 +51,9 @@ import Music.Score.Score
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Combinators
+
+-- TODO
+data Clef = GClef | CClef | FClef
 
 type TimeSignature = ([Integer], Integer)
 

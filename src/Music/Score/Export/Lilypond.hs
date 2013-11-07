@@ -40,6 +40,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 import Data.Semigroup
 import Data.Ratio
 import Data.String
+import Data.Pointed
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
@@ -66,6 +67,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Convert
+import Music.Score.Meta
 import Music.Score.Chord
 import Music.Score.Pitch
 import Music.Score.Ties
@@ -176,6 +178,28 @@ instance HasLilypond a => HasLilypond (SlideT a) where
         where          
             notate = if bg || bs then Lilypond.beginGlissando else id
 
+-- TODO move
+-- Put the given clef in front of the note
+newtype ClefT a = ClefT { getClefT :: (Maybe Clef, a) }
+    deriving (Functor)
+instance Pointed ClefT where
+    point x = ClefT (Nothing, x)
+instance Tiable a => Tiable (ClefT a) where
+    beginTie = fmap beginTie
+    endTie = fmap endTie
+instance HasLilypond a => HasLilypond (ClefT a) where
+    getLilypond d (ClefT (c, a)) = notate $ getLilypond d a
+        where
+            notate = case c of
+                Nothing -> id
+                Just GClef -> \x -> scatLy [Lilypond.Clef Lilypond.Treble, x]
+                Just CClef -> \x -> scatLy [Lilypond.Clef Lilypond.Alto, x]
+                Just FClef -> \x -> scatLy [Lilypond.Clef Lilypond.Bass, x]
+
+addClefT :: a -> ClefT a
+addClefT = point
+
+
 pcatLy :: [Lilypond] -> Lilypond
 pcatLy = pcatLy' False
 
@@ -235,7 +259,7 @@ toLyString = show . Pretty.pretty . toLy
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice . simultaneous)) . extractParts' $ sc
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . fmap (fmap addClefT) . scoreToVoice . simultaneous)) . extractParts' $ sc
     where
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
