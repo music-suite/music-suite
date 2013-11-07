@@ -66,11 +66,16 @@ import Music.Time.Reverse
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
+normalizeSpan :: Span -> Span
+normalizeSpan (Span (t,d))
+    | d >= 0  =  t <-> (t .+^ d)
+    | d <  0  =  (t .+^ d) <-> t
+
 instance Delayable Span where
     delay n = mapDelta $ curry $ first (delay n)
 
 instance Stretchable Span where
-    stretch n = mapDelta $ curry $ stretch n *** stretch n
+    stretch n = normalizeSpan . (mapDelta $ curry $ stretch n *** stretch n)
 
 -- FIXME violates first Reversible law        
 instance Reversible Span where
@@ -88,7 +93,7 @@ instance HasDuration Span where
 
 instance Semigroup Span where
     -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
-    Span (t1, d1) <> Span (t2, d2) = Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
+    Span (t1, d1) <> Span (t2, d2) = normalizeSpan $ Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
 
 instance Monoid Span where
     mempty  = start <-> stop

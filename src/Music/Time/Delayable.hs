@@ -62,6 +62,9 @@ instance Delayable (Time -> a) where
 instance Delayable a => Delayable [a] where
     delay n = fmap (delay n)
 
+instance (Ord a, Delayable a) => Delayable (Set a) where
+    delay n = Set.map (delay n)
+
 instance Delayable a => Delayable (Map k a) where
     delay n = fmap (delay n)
 

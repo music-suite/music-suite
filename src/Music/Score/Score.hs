@@ -118,7 +118,8 @@ instance Performable (Score a) where
     perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
 instance Composable (Score a) where
 
--- FIXME Reversible instance
+instance Reversible a => Reversible (Score a) where
+    rev = fmap rev . withSameOnset (stretch (-1))
 
 instance HasMeta (Score a) where
     applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
