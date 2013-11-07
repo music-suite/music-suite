@@ -31,8 +31,6 @@ module Music.Score.Chord (
         ChordT(..),      
         
         -- * Chord transformations
-        -- renderChord,
-        -- playChord,
         simultaneous,
         simultaneous',
   ) where
@@ -68,9 +66,6 @@ instance HasChord (ChordT a) where
 newtype ChordT a = ChordT { getChordT :: [a] }
     deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
 
--- instance HasChord 
-
--- Score a -> Score (ChordT a)
 
 -- Note:                                                    
 --
@@ -82,21 +77,12 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 
 
 
--- |
--- Render all chords of a given score into singular notes composed in parallel.
---
--- renderChord :: (MonadPlus m, HasChord a) => m a -> m (Note a)
--- renderChord = join . fmap return . mscatter . fmap getChord
-
-
 -- playChord :: m a -> m (Note a)
 -- playChord f = join . join . fmap return . fmap f . fmap getChord
 
 
 -- |
--- Merge simultaneous events.
---
--- Two events are considered simultaneous iff their onset and offset are the same.
+-- Group and merge simultaneous events.
 --
 simultaneous :: Semigroup a => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
@@ -104,7 +90,9 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- |
 -- Group simultaneous events.
 --
--- Two events are considered simultaneous iff their onset and offset are the same.
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same span, i.e.
+--
+-- > onset a == onset b && offset a == offset b
 --
 simultaneous' :: Score a -> Score [a]
 simultaneous' sc = compose vs

@@ -1,6 +1,7 @@
 
 {-# LANGUAGE
     TypeFamilies,
+    ViewPatterns,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
@@ -27,10 +28,12 @@
 
 module Music.Score.Convert (
         -- * Conversion
+        noteToVoice,
+        noteToScore,
         voiceToScore,
-        voiceToScore',
-        scoreToVoice,
+        voicesToScore,
         trackToScore,
+        scoreToVoice,
   ) where
 
 import Control.Monad
@@ -46,9 +49,11 @@ import Data.Ratio
 import Data.Pointed
 import Data.Ord
 
+import Music.Score.Note
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Part
 import Music.Time
 
 import qualified Data.List as List
@@ -59,10 +64,16 @@ import qualified Data.Foldable as Foldable
 -- Conversion
 --------------------------------------------------------------------------------
 
+-- | Convert a note to a voice.
+noteToVoice :: Note a -> Voice a
+noteToVoice (unnote -> (s,x)) = stretchTo (duration s) $ return x
+
+-- | Convert a note to a score.
+noteToScore :: Note a -> Score a
+noteToScore (unnote -> (s,x)) = s `sapp` return x
+
 -- |
--- Convert a score into a voice.
---
--- This function fails if the score contain overlapping events.
+-- Convert a score to a voice. Fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
 scoreToVoice = voice . fmap throwTime . addRests . perform
@@ -77,21 +88,25 @@ scoreToVoice = voice . fmap throwTime . addRests . perform
        
 
 -- |
--- Convert a voice into a score.
+-- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
 voiceToScore = scat . fmap g . getVoice
     where
         g (d,x) = stretch d (return x)
 
+-- | Join voices in a given part into a score.
+voicesToScore :: HasPart a => [(Part a, Voice a)] -> Score a
+voicesToScore = pcat . fmap (voiceToScore . uncurry setParts)
+
 -- |
--- Convert a voice which may contain rests into a score.
+-- Convert a voice which may contain rests to a score.
 --
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
 -- |
--- Convert a track into a score where each event is given a fixed duration.
+-- Convert a track to a score where each event is given a fixed duration.
 --
 trackToScore :: Duration -> Track a -> Score a
 trackToScore d = compose . fmap (\(t,x) -> (t,d,x)) . getTrack

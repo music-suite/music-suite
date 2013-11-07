@@ -116,7 +116,7 @@ splitTies = mapParts splitTiesSingle
 -- Fails if the score contains overlapping events.
 --
 splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = voiceToScore' . splitTiesVoice . scoreToVoice
+splitTiesSingle = removeRests . voiceToScore . splitTiesVoice . scoreToVoice
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.

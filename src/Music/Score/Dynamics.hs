@@ -122,7 +122,7 @@ dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
 -- Apply a dynamic level over a voice.
 --
 dynamicVoice :: HasDynamic a => Score (Level Double) -> Voice (Maybe a) -> Voice (Maybe a)
-dynamicVoice d = scoreToVoice . dynamicSingle d . voiceToScore'
+dynamicVoice d = scoreToVoice . dynamicSingle d . removeRests . voiceToScore
 
 
 dynamics' :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
