@@ -101,8 +101,8 @@ type HasPart' a = (Ord (Part a), Default (Part a), HasPart a)
 --
 -- > Score a -> [Part]
 --    
-getParts :: (Performable a, HasPart' e, e ~ Event a) => a -> [Part e]
-getParts = List.sort . List.nub . fmap getPart . performValues
+getParts :: (Foldable t, HasPart' a) => t a -> [Part a]
+getParts = List.sort . List.nub . fmap getPart . toList
 
 -- |
 -- Set all parts in the given score.
