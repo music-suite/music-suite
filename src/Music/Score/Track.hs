@@ -30,13 +30,12 @@ module Music.Score.Track (
         getTrack,
   ) where
 
-import Data.Semigroup
 import Control.Newtype
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
 import Control.Arrow
-
+import Data.Semigroup
 import Data.PairMonad ()
 import Data.Typeable
 import Data.Foldable (Foldable(..), foldMap)
@@ -54,8 +53,6 @@ import Music.Pitch.Literal
 import Music.Dynamics.Literal   
 import Music.Score.Pitch
 import Music.Score.Util
-
-
                                 
 -- |
 -- A track is a list of events with explicit onset. 
