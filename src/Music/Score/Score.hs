@@ -175,6 +175,7 @@ instance Enum a => Enum (Score a) where
 
 
 -- Bogus VectorSpace instance, so we can use c^*2 etc.
+-- If you hate this instance, please open an issue.
 
 instance AdditiveGroup (Score a) where
     zeroV   = error "Not impl"
@@ -184,6 +185,8 @@ instance AdditiveGroup (Score a) where
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     d *^ s = d `stretch` s
+
+
 
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
