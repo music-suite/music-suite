@@ -35,8 +35,6 @@
 module Music.Score.Score (
         -- * Score type
         Score,
-
-        AttributeClass(..),
         getScoreMeta,
         setScoreMeta,
   ) where

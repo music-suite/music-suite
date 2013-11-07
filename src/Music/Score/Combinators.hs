@@ -440,7 +440,7 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately 
 -- FIXME don't kill the meta-track...
-withMeta :: (Monoid a, AttributeClass a) => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta :: (Monoid a, IsAttribute a) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = let
     m = getScoreMeta x
     r = runMeta m

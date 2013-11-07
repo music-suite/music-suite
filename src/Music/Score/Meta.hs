@@ -34,8 +34,10 @@
 
 
 module Music.Score.Meta (
-
-        AttributeClass,
+        IsAttribute,
+        Attribute,
+        wrapAttr,
+        unwrapAttr,
         Meta,
         runMeta,
         HasMeta(..),
@@ -87,68 +89,51 @@ import Music.Score.Pitch
 import Music.Score.Util
 
 
-
-
-
-
-type AttributeClass a = (Typeable a, Semigroup a)
+type IsAttribute a = (Typeable a, Semigroup a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
-    Attribute  :: AttributeClass a => a -> Attribute
-    -- TAttribute  :: (Transformable a, AttributeClass a) => a -> Attribute
+    Attribute  :: IsAttribute a => a -> Attribute
+    -- TAttribute  :: (Transformable a, IsAttribute a) => a -> Attribute
 
 -- | Wrap up an attribute.
-wrapAttr :: AttributeClass a => a -> Attribute
+wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
-unwrapAttr :: AttributeClass a => Attribute -> Maybe a
+unwrapAttr :: IsAttribute a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
 
--- | Attributes form a semigroup, where the semigroup operation simply
---   returns the right-hand attribute when the types do not match, and
---   otherwise uses the semigroup operation specific to the (matching)
---   types.
 instance Semigroup Attribute where
   (Attribute a1) <> a2 =
     case unwrapAttr a2 of
       Nothing  -> a2
       Just a2' -> Attribute (a1 <> a2')
-  -- (TAttribute a1) <> a2 =
-  --   case unwrapAttr a2 of
-  --     Nothing  -> a2
-  --     Just a2' -> TAttribute (a1 <> a2') 
 
 instance Delayable Attribute where
   delay _ (Attribute  a) = Attribute a
-  -- delay t (TAttribute a) = TAttribute (delay t a)
 instance Stretchable Attribute where
   stretch _ (Attribute  a) = Attribute a
-  -- stretch t (TAttribute a) = TAttribute (stretch t a)
-
-
-
-
 
 
 -- TODO is Transformable right w.r.t. join?
 newtype Meta = Meta (Map String (Reactive Attribute))
     deriving (Delayable, Stretchable)
+
+inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
 inMeta f (Meta s) = Meta (f s)
 
-addM :: forall a b . (AttributeClass a, Monoid a, HasMeta b) => Note a -> b -> b
+addM :: forall a b . (IsAttribute a, Monoid a, HasMeta b) => Note a -> b -> b
 addM x = applyMeta $ addMeta $ noteToReact x
 
-addMeta :: forall a . AttributeClass a => Reactive a -> Meta
+addMeta :: forall a . IsAttribute a => Reactive a -> Meta
 addMeta a = Meta $ Map.singleton ty $ fmap wrapAttr a
     where
         ty = show $ typeOf (undefined :: a)
-                                                 
 
-runMeta :: forall a . (Monoid a, AttributeClass a) => Meta -> Reactive a
+runMeta :: forall a . (Monoid a, IsAttribute a) => Meta -> Reactive a
 runMeta = fromMaybe mempty . runMeta'
 
-runMeta' :: forall a . AttributeClass a => Meta -> Maybe (Reactive a) 
+runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
 runMeta' (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup ty s
 -- Note: unwrapAttr should never fail
     where
@@ -157,21 +142,18 @@ runMeta' (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Ma
 instance Semigroup Meta where
     Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
 
--- | The empty style contains no attributes; composition of styles is
---   a union of attributes; if the two styles have attributes of the
+-- | The empty meta contains no attributes; composition of metas is
+--   a union of attributes; if the two metas have attributes of the
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
     mempty = Meta Map.empty
     mappend = (<>)
 
-
-
-
--- | Type class for things which have a style.
+-- | Type class for things which have meta-information.
 class HasMeta a where
-    -- | /Apply/ a style by combining it (on the left) with the
-    --   existing style.
+    -- | Apply meta-information by combining it (on the left) with the
+    --   existing meta-information.
     applyMeta :: Meta -> a -> a
 
 instance HasMeta Meta where
@@ -194,9 +176,6 @@ instance (HasMeta a, Ord a) => HasMeta (Set a) where
 
 
 
-
-
--- TODO
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
