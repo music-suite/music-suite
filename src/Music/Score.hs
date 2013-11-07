@@ -26,6 +26,7 @@ module Music.Score (
         module Music.Time,
 
         -- * Musical container types
+        module Music.Score.Note,
         module Music.Score.Track,
         module Music.Score.Voice,
         module Music.Score.Score,
@@ -73,6 +74,7 @@ import Music.Time
 
 import Music.Score.Rhythm
 import Music.Score.Track
+import Music.Score.Note
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Combinators

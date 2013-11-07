@@ -51,16 +51,16 @@ import Music.Score.Part
 import Music.Score.Combinators
 
 class HasChord a where
-    type Note a :: *
-    getChord :: a -> [Note a]
-    -- modifyChord :: (Note a -> Note a) -> a -> a
+    type ChordNote a :: *
+    getChord :: a -> [ChordNote a]
+    -- modifyChord :: (ChordNote a -> ChordNote a) -> a -> a
 
 instance HasChord [a] where
-    type Note [a] = a
+    type ChordNote [a] = a
     getChord = id
 
 instance HasChord (ChordT a) where
-    type Note (ChordT a) = a
+    type ChordNote (ChordT a) = a
     getChord (ChordT as)      = as
 
 -- Actually we should use NonEmpty here

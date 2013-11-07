@@ -66,6 +66,7 @@ library
         Music.Time.Reverse
         Music.Time.Time
         Music.Time.Span
+        Music.Time.Reactive
 
         Music.Score.Rhythm
         

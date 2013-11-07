@@ -53,6 +53,7 @@ import Music.Score.Score
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Combinators
+import Music.Score.Util
 
 -- TODO
 data Clef = GClef | CClef | FClef
@@ -68,13 +69,7 @@ type KeySignature = (Integer, Bool)
 type Tempo = Duration
 
 
--- Same as updates, but adding the initial value at 0 (unless there is an update at 0)
--- updatesZero :: Reactive a -> [(Time, a)]
--- updatesZero r = case updates r of
---     []         -> [(0, initial r)]
---     x@(t,_):xs -> if t > 0 then (0,initial r) : x : xs else x : xs
-
--- Split a reactive into notes, as well as the values before and after the first/last update
+-- | Split a reactive into notes, as well as the values before and after the first/last update
 splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left $ initial r
@@ -83,6 +78,7 @@ splitReactive r = case updates r of
 
     where
         note' (t,u,x) = t <-> u =: x
+
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
         res rs = let (ts,xs) = unzip rs
@@ -119,31 +115,6 @@ withMeta f x = let
     r = getM x
     in case splitReactive r of
         Left  a -> f a x
-        Right ((a1,t1),as,(t2,a2)) -> mapBefore t1 (f a1) . comp (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
+        Right ((a1,t1),as,(t2,a2)) -> mapBefore t1 (f a1) . composed (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
 
-{-
-    Right (
-        (Option {getOption = Nothing},
-            P (Duration {getDuration = 0 % 1}))
-        ,[Note {getNote = (Span (P (Duration {getDuration = 0 % 1}),Duration {getDuration = 1 % 1}),
-            Option {getOption = Just (Last {getLast = FClef})})}],
-        (P (Duration {getDuration = 1 % 1}),
-            Option {getOption = Nothing}))
-
-    Right 
-        ((Option {getOption = Nothing},
-            P (Duration {getDuration = 1 % 1})),
-        [Note {getNote = (Span (P (Duration {getDuration  1 % 1}),Duration {getDuration = 1 % 1}),
-            Option {getOption = Just (Last {getLast = FClef})})}],
-        (P (Duration {getDuration = 2 % 1}),
-            Option {getOption = Nothing}))
-
--}
-    
-    -- Get out the meta :: Reactive a
-    -- Iter through events to get span (not just start)
-    -- Split it the score into sections
-
-
-comp = Prelude.foldr (.) id
 
