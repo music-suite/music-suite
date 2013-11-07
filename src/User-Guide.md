@@ -527,36 +527,58 @@ TODO
 @[Stretchable]
 
 
+## Time and duration
+
+TODO
+
+## Spans
+
+TODO
+
 ## Notes
 
 TODO
 
 ## Voice
 
+A @[Voice] represents a single voice of music. It consists of a sequence of values with duration, but no time. 
+
+It can be converted into a score by stretching each element and composing in sequence.
+
 ```music+haskell
 let
     x, y :: Voice Note
-    x = c <> d <> f <> e
-    y = mempty
-        <> stretch 1 x
-        <> stretch 0.5 (up _P5 x)
-        <> stretch 4   (up _P8 x)
-in stretch (1/8) $ voiceToScore y
+
+    x = voice [ (1, c),
+                (1, d),
+                (1, f),
+                (1, e) ]
+
+    y = join $ voice [ (1, x), 
+                       (0.5, up _P5 x), 
+                       (4, up _P8 x) ]
+
+in stretch (1/8) $ voiceToScore $ y
 ```
 
 ## Tracks
 
+A @[Track] is similar to a score, except that it events have no offset or duration. It is useful for representing point-wise occurrences such as samples, cues or percussion notes.
+
+It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
+
 ```music+haskell
 let
     x, y :: Track Note
-    x = mempty
-        <> delay 0 c
-        <> delay 1 d
-        <> delay 2 e
-    y = mempty
-        <> delay 0 x
-        <> delay 1.5  (up _P5 x)
-        <> delay 3.25 (up _P8 x)
+
+    x = track [ (0, c), 
+                (1, d), 
+                (2, e) ]
+
+    y = join $ track [ (0, x), 
+                       (1.5,  up _P5 x), 
+                       (3.25, up _P8 x) ]
+
 in trackToScore (1/8) y
 ```
 
@@ -572,6 +594,19 @@ TODO while we only consider notes as non-meta etc
 TODO attributes (same as in Diagrams)
 
 Each attribute value may apply either to a *whole* score (i.e. from beginning to end), or to a *section* of the score.
+
+
+## Clefs
+
+```music+haskell
+addClefDuring (0.25 <-> 0.5) CClef $ addClefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
+```
+
+Meta-events are affected by time transformations:
+
+```music+haskell
+delay 1 $ stretch 2 $ addClefDuring (0.25 <-> 0.5) FClef $ compress 8 $ scat [c_..c]
+```
 
 
 
