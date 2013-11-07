@@ -36,6 +36,15 @@
 module Music.Score.Score (
         -- * Score type
         Score,
+
+        AttributeClass(..),
+        Reactive(..),
+        addM,
+        getM,
+        initial,
+        updates,
+        renderR,
+        printR,
   ) where
 
 import Data.Dynamic
@@ -274,8 +283,6 @@ instance (HasMeta a, Ord a) => HasMeta (Set a) where
 --     stretch n (Meta x) = Meta (stretch n x)
 
 -- TODO convert to something more friendly
-meta :: Score a -> Meta 
-meta = fst . getScore
 
 instance Delayable a => Delayable (Map k a) where
     delay n = fmap (delay n)
