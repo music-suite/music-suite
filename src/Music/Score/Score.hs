@@ -38,13 +38,8 @@ module Music.Score.Score (
         Score,
 
         AttributeClass(..),
-        Reactive(..),
         addM,
         getM,
-        initial,
-        updates,
-        renderR,
-        printR,
   ) where
 
 import Data.Dynamic

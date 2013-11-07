@@ -45,5 +45,12 @@ instance HasOffset (Note a) where
 unnote :: Note a -> (Span, a)
 unnote (Note x) = x
 
+-- | Construct a note from a span and value.
+-- 
+-- Typically used with the span constructors as in:
+--
+-- > 0 <-> 2 =: c
+-- > 0 --> 1 =: d
+--
 (=:) :: Span -> a -> Note a
 s =: x  =  Note (s,x)

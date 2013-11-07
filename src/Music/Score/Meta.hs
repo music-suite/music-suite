@@ -32,7 +32,7 @@ module Music.Score.Meta (
         Tempo,
         Clef(..),
         addClef,
-        splitReactive,
+        addClefDuring,
         withMeta
   ) where
 
@@ -47,6 +47,7 @@ import qualified Data.List          as List
 import qualified Data.List.NonEmpty as NonEmpty
 
 import Music.Time
+import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Voice
 import Music.Score.Score
@@ -59,40 +60,17 @@ import Music.Score.Util
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
-addClef :: Span -> Clef -> Score a -> Score a
-addClef s c = addM (s =: (Option $ Just $ Last c))
+addClef :: Clef -> Score a -> Score a
+addClef c x = addClefDuring (onset x <-> offset x) c x
+
+addClefDuring :: Span -> Clef -> Score a -> Score a
+addClefDuring s c = addM (s =: (Option $ Just $ Last c))
 
 type TimeSignature = ([Integer], Integer)
 
 type KeySignature = (Integer, Bool)
 
 type Tempo = Duration
-
-
--- | Split a reactive into notes, as well as the values before and after the first/last update
-splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
-splitReactive r = case updates r of
-    []          -> Left $ initial r
-    (t,x):[]    -> Right $ ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right $ ((initial r, t), fmap note' $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
-
-    where
-        note' (t,u,x) = t <-> u =: x
-
-        -- Always returns a 0 or more Right followed by one left
-        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
-        res rs = let (ts,xs) = unzip rs
-            in (flip fmap) (withNext ts `zip` xs) $ \((t, mu), x) -> case mu of
-                Nothing -> Left (t, x)
-                Just u  -> Right (t, u, x)
-
-        -- lenght xs == length (withNext xs)
-        withNext :: [a] -> [(a, Maybe a)]
-        withNext = go
-            where
-                go []       = []
-                go [x]      = [(x, Nothing)]
-                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
 
 withSpan :: Score a -> Score (Span, a)
 withSpan = mapEvents (\t d x -> (t-->d,x))
