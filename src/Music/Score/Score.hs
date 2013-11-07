@@ -66,8 +66,8 @@ import Data.Traversable (Traversable)
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 import qualified Data.List as List
-import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Map as Map
 
 import Music.Time
 import Music.Time.Reactive
@@ -279,10 +279,9 @@ instance (HasMeta a, Ord a) => HasMeta (Set a) where
 
 -- TODO convert to something more friendly
 
-instance Delayable a => Delayable (Map k a) where
-    delay n = fmap (delay n)
-instance Stretchable a => Stretchable (Map k a) where
-    stretch n = fmap (stretch n)
+
+
+
 
 -- |
 -- Score without meta-events.

@@ -37,6 +37,10 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.Set (Set)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 import Music.Time.Time
 
@@ -59,6 +63,9 @@ instance Delayable (Time -> a) where
     delay n = (. delay (negateV n))
 
 instance Delayable a => Delayable [a] where
+    delay n = fmap (delay n)
+
+instance Delayable a => Delayable (Map k a) where
     delay n = fmap (delay n)
 
 instance Delayable (Time, a) where

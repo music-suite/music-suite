@@ -35,6 +35,10 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.Set (Set)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.Set as Set
 
 import Music.Time.Time
 import Music.Time.Relative
@@ -73,6 +77,9 @@ instance Stretchable (Duration -> a) where
     stretch n = (. (^/ n))
 
 instance Stretchable a => Stretchable [a] where
+    stretch n = fmap (stretch n)
+
+instance Stretchable a => Stretchable (Map k a) where
     stretch n = fmap (stretch n)
 
 instance Stretchable a => Stretchable (Product a) where

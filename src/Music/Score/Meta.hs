@@ -68,6 +68,7 @@ setClefDuring s c = addM (s =: (Option $ Just $ Last c))
 
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
+    deriving (Eq, Ord, Show, Typeable)
 
 setTimeSignature :: TimeSignature -> Score a -> Score a
 setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
@@ -76,6 +77,7 @@ setTimeSignatureDuring :: Span -> TimeSignature -> Score a -> Score a
 setTimeSignatureDuring s c = addM (s =: (Option $ Just $ Last c))
 
 newtype KeySignature = KeySignature (Integer, Bool)
+    deriving (Eq, Ord, Show, Typeable)
 
 setKeySignature :: KeySignature -> Score a -> Score a
 setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
@@ -84,6 +86,7 @@ setKeySignatureDuring :: Span -> KeySignature -> Score a -> Score a
 setKeySignatureDuring s c = addM (s =: (Option $ Just $ Last c))
 
 newtype Tempo = Tempo Duration
+    deriving (Eq, Ord, Show, Typeable)
 
 setTempo :: Tempo -> Score a -> Score a
 setTempo c x = setTempoDuring (onset x <-> offset x) c x
