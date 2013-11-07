@@ -67,7 +67,7 @@ newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
 instance Delayable Span where
-    delay n = mapDelta $ curry $ delay n *** id
+    delay n = mapDelta $ curry $ first (delay n)
 
 instance Stretchable Span where
     stretch n = mapDelta $ curry $ stretch n *** stretch n

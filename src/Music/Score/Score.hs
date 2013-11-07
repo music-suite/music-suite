@@ -1,22 +1,17 @@
 
-{-# LANGUAGE
-    ScopedTypeVariables,
+{-# LANGUAGE 
+    ScopedTypeVariables, 
     GeneralizedNewtypeDeriving,
-    DeriveFunctor,
-    DeriveFoldable,
+    DeriveFunctor, 
+    DeriveFoldable, 
     DeriveTraversable,
-    DeriveDataTypeable,
-    StandaloneDeriving,
-    ConstraintKinds,
-    GADTs,
-    
+    DeriveDataTypeable, 
+    ConstraintKinds, 
+    GADTs, 
     ViewPatterns,
-    TypeFamilies,
-
-    -- For Newtype
-    MultiParamTypeClasses,
-    FlexibleInstances 
-    #-}
+    TypeFamilies, 
+    MultiParamTypeClasses, 
+    FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -125,7 +120,10 @@ instance Composable (Score a) where
 
 -- FIXME Reversible instance
 
--- | Get the meta information of a score.
+instance HasMeta (Score a) where
+    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
+
+-- | Set the meta information of a score.
 -- TODO more generic version
 setScoreMeta :: Meta -> Score a -> Score a
 setScoreMeta m (Score (_,a)) = Score (m,a)
@@ -134,15 +132,6 @@ setScoreMeta m (Score (_,a)) = Score (m,a)
 -- TODO more generic version
 getScoreMeta :: Score a -> Meta
 getScoreMeta (Score (m,_)) = m
-
-instance HasMeta (Score a) where
-    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
-
-
-
-
-
-
 
 
 -- |
@@ -203,6 +192,5 @@ instance Arbitrary a => Arbitrary (Score a) where
 
 instance HasPitch a => HasPitch (Score a) where
     type Pitch (Score a) = Pitch a
-    getPitches as    = F.foldMap getPitches as
-    modifyPitch f    = fmap (modifyPitch f)
-
+    getPitches      = F.foldMap getPitches
+    modifyPitch f   = fmap (modifyPitch f)

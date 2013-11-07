@@ -1,17 +1,12 @@
 
 {-# LANGUAGE
-
-    GeneralizedNewtypeDeriving,
+    GeneralizedNewtypeDeriving, 
     DeriveFunctor,
     DeriveFoldable,
     DeriveTraversable,
-    StandaloneDeriving,
-
-    TypeFamilies, -- Debug
-
+    TypeFamilies,
     MultiParamTypeClasses,
-    FlexibleInstances       -- for Newtype
-    #-}
+    FlexibleInstances #-}
 
 module Music.Score.Note (
         Note(..),

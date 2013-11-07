@@ -83,8 +83,9 @@ separateBars =
     where
         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (t .-. origin)
         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
-        discardBarNumber ((bn,bt),d,x)  = (realToFrac bt / 1, d, x)
+        discardBarNumber ((bn,bt),d,x)  = (realToFrac bt / kDur, d, x)
         removeTime                      = fmap g where g (t,d,x) = (d,x)
+        kDur = 1
 
 -- |
 -- Convert absolute to relative durations.

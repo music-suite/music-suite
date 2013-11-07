@@ -1,22 +1,16 @@
 
-{-# LANGUAGE
-    ScopedTypeVariables,
+{-# LANGUAGE 
+    ScopedTypeVariables, 
     GeneralizedNewtypeDeriving,
-    DeriveFunctor,
-    DeriveFoldable,
+    DeriveFunctor, 
+    DeriveFoldable, 
     DeriveTraversable,
-    DeriveDataTypeable,
-    StandaloneDeriving,
-    ConstraintKinds,
-    GADTs,
-    
-    ViewPatterns,
+    DeriveDataTypeable, 
+    ConstraintKinds, 
+    GADTs, 
     TypeFamilies,
-
-    -- For Newtype
-    MultiParamTypeClasses,
-    FlexibleInstances 
-    #-}
+    MultiParamTypeClasses, 
+    FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -61,13 +55,9 @@ module Music.Score.Meta (
 
 import Data.Void
 import Data.Maybe
-import Data.Foldable
-import Data.Typeable
 import Data.Semigroup
 import Control.Arrow
 import Control.Monad.Plus       
-import qualified Data.List          as List
-import qualified Data.List.NonEmpty as NonEmpty
 
 import Data.Typeable
 import Data.Set (Set)

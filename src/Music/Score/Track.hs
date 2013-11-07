@@ -149,8 +149,8 @@ instance Arbitrary a => Arbitrary (Track a) where
 
 instance HasPitch a => HasPitch (Track a) where
     type Pitch (Track a) = Pitch a
-    getPitches as    = F.foldMap getPitches as
-    modifyPitch f    = fmap (modifyPitch f)
+    getPitches      = F.foldMap getPitches
+    modifyPitch f   = fmap (modifyPitch f)
 
 
 

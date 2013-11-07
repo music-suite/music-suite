@@ -121,8 +121,8 @@ instance IsDynamics a => IsDynamics (Voice a) where
 
 instance HasPitch a => HasPitch (Voice a) where
     type Pitch (Voice a) = Pitch a
-    getPitches as    = F.foldMap getPitches as
-    modifyPitch f    = fmap (modifyPitch f)
+    getPitches      = F.foldMap getPitches
+    modifyPitch f   = fmap (modifyPitch f)
 
 
 

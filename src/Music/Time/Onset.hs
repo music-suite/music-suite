@@ -184,14 +184,14 @@ withSameOnset f a  = startAt (onset a) $ f a
 withSameOffset f a = stopAt (offset a) $ f a
 
 -- | Given 'HasOnset' and 'HasOffset' instances, this function implements 'duration'.
-durationDefault :: (AdditiveGroup (Duration), HasOffset a, HasOnset a) => a -> Duration
+durationDefault :: (HasOffset a, HasOnset a) => a -> Duration
 durationDefault x = offset x .-. onset x
 
 -- | Given 'HasDuration' and 'HasOffset' instances, this function implements 'onset'.
-onsetDefault :: (AdditiveGroup (Duration), HasOffset a, HasDuration a) => a -> Time
+onsetDefault :: (HasOffset a, HasDuration a) => a -> Time
 onsetDefault x = offset x .-^ duration x
 
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
-offsetDefault :: (AdditiveGroup (Duration), HasOnset a, HasDuration a) => a -> Time
+offsetDefault :: (HasOnset a, HasDuration a) => a -> Time
 offsetDefault x = onset x .+^ duration x
                                                  

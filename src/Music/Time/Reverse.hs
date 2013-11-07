@@ -1,13 +1,4 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleContexts,
-    ConstraintKinds,
-    ViewPatterns,
-    GeneralizedNewtypeDeriving #-} 
-
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
