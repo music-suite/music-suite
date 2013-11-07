@@ -31,8 +31,8 @@ module Music.Score.Pitch (
         HasPitch',
         PitchT(..),
         -- getPitches,
-        setPitches,
-        modifyPitches,
+        -- setPitches,
+        -- modifyPitches,
 
         -- * Pitch transformations
         -- ** Transposition
@@ -60,17 +60,17 @@ class HasPitch a where
     type Pitch a :: *
 
     -- |
-    -- Get the pitches of the given note (TODO should be set?)getPitches
+    -- Get the pitches of the given value.
     --
     getPitches :: a -> [Pitch a]
 
     -- |
-    -- Set the pitch of the given note.
+    -- Set the pitch of the given value.
     --
     setPitch :: Pitch a -> a -> a
 
     -- |
-    -- Modify the pitch of the given note.
+    -- Modify the pitch of the given value.
     --
     modifyPitch :: (Pitch a -> Pitch a) -> a -> a
 
@@ -112,28 +112,12 @@ instance HasPitch a => HasPitch [a] where
     modifyPitch f    = fmap (modifyPitch f)
     
 -- |
--- Set all pitches in the given score.
---
--- > Pitch -> Score a -> Score a
---
-setPitches :: (HasPitch a, p ~ Pitch a) => p -> a -> a
-setPitches n = setPitch n
-
--- |
--- Modify all pitches in the given score.
---
--- > (Pitch -> Pitch) -> Score a -> Score a
---
-modifyPitches :: (HasPitch a, p ~ Pitch a) => (p -> p) -> a -> a
-modifyPitches f = modifyPitch f
-
--- |
 -- Transpose up.
 --
 -- > Interval -> Score a -> Score a
 --
 up :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-up a = modifyPitches (.+^ a)
+up a = modifyPitch (.+^ a)
 
 -- |
 -- Transpose down.
@@ -141,7 +125,7 @@ up a = modifyPitches (.+^ a)
 -- > Interval -> Score a -> Score a
 --
 down :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-down a = modifyPitches (.-^ a)
+down a = modifyPitch (.-^ a)
 
 -- |
 -- Invert around the given pitch.
@@ -149,7 +133,7 @@ down a = modifyPitches (.-^ a)
 -- > Pitch -> Score a -> Score a
 --
 invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround basePitch a = modifyPitches ((basePitch .+^) . negateV . (.-. basePitch)) a
+invertAround basePitch a = modifyPitch ((basePitch .+^) . negateV . (.-. basePitch)) a
 
 -- |
 -- Transpose up by the given number of octaves.
