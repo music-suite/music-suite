@@ -49,12 +49,12 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
-import Music.Time.Relative
 import Music.Time.Time
-import Music.Time.Reverse
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Onset
+import Music.Time.Relative
+import Music.Time.Reverse
 
 -- |
 -- A 'Span' represents two points in time @u@ and @v@ where @t <= u@ or, equivalently, 

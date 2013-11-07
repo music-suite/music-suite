@@ -86,7 +86,6 @@ class Tiable a where
 newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
 
--- These are note really tiable..., but Tiable a => (Bool,a,Bool) would be
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }
 instance Tiable Int         where { beginTie = id ; endTie = id }

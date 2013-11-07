@@ -35,14 +35,13 @@ import Data.Ratio
 import Data.Maybe
 import Data.Foldable
 import Data.Typeable
-import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
+import qualified Data.List as List
 
 import Music.Time
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
-
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice

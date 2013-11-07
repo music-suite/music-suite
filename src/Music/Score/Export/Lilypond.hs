@@ -179,19 +179,24 @@ instance HasLilypond a => HasLilypond (SlideT a) where
         where          
             notate = if bg || bs then Lilypond.beginGlissando else id
 
+
 -- TODO move
 -- Put the given clef in front of the note
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
+
 instance HasPart a => HasPart (ClefT a) where
     type Part (ClefT a) = Part a
     getPart (ClefT (_,a)) = getPart a
     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
+
 instance Pointed ClefT where
     point x = ClefT (mempty, x)
+
 instance Tiable a => Tiable (ClefT a) where
     beginTie = fmap beginTie
     endTie = fmap endTie
+
 instance HasLilypond a => HasLilypond (ClefT a) where
     getLilypond d (ClefT (c, a)) = notate $ getLilypond d a
         where
@@ -234,7 +239,6 @@ scatLy :: [Lilypond] -> Lilypond
 scatLy = foldr Lilypond.sequential e
     where
         e = Lilypond.Sequential []
-
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
@@ -292,33 +296,6 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
         -- TODO replace Nothing with default clef
         setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
 
-
-{-
-    Simultaneous False [
-        New "Staff" Nothing (
-            Sequential [
-                Set "Staff.instrumentName" "",
-                Clef Bass,
-                Chord [NotePitch (Pitch {getPitch = (C,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (D,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (E,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (F,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (G,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (A,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (B,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
-                Chord [NotePitch (Pitch {getPitch = (C,0,6)}) Nothing] (Just (Duration {getDuration = 1 % 8})) []])]
--}
-            
-        -- Extract (Option (Last Clef))
-        -- setCl = withMeta $ \clef -> applyClefMaybe (fmap getLast (getOption clef))
-
-
-
-
-        -- setCl = withMeta $ \c -> case getOption (fmap getLast (c :: Option (Last Clef))) of
-        --     Nothing -> id
-        --     Just _  -> id
-        
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
 

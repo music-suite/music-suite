@@ -52,10 +52,10 @@ import Data.Map (Map)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
-import Music.Score.Util
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
+import Music.Score.Util
 
 -- |
 -- Class of types with a duration.

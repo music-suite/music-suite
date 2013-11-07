@@ -53,12 +53,11 @@ module Music.Score.Meta (
         setTempoDuring,
   ) where
 
+import Control.Arrow
+import Control.Monad.Plus       
 import Data.Void
 import Data.Maybe
 import Data.Semigroup
-import Control.Arrow
-import Control.Monad.Plus       
-
 import Data.Typeable
 import Data.Set (Set)
 import Data.Map (Map)

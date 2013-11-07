@@ -32,7 +32,6 @@ module Music.Time.Delayable (
         delayTime,
   ) where
 
-import Control.Arrow
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace

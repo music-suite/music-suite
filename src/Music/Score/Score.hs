@@ -172,6 +172,7 @@ instance Enum a => Enum (Score a) where
     toEnum = return . toEnum
     fromEnum = list 0 (fromEnum . head) . F.toList
 
+
 -- Bogus VectorSpace instance, so we can use c^*2 etc.
 
 instance AdditiveGroup (Score a) where

@@ -29,24 +29,16 @@
 
 module Music.Time.Reactive where
 
-import Data.Dynamic
 import Control.Newtype                
-import Data.Maybe
-import Data.Ord
-import Data.Semigroup
-import Data.Pointed
-import Control.Arrow
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Plus       
 import Control.Monad.Compose
-
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import Test.QuickCheck (Arbitrary(..), Gen(..))
-
 import Data.Typeable
+import Data.Semigroup
 import Data.Set (Set)
 import Data.Map (Map)
 import Data.Foldable (Foldable)
@@ -58,11 +50,11 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
 import Music.Score.Note
 import Music.Score.Pitch
 import Music.Score.Util
+import Music.Pitch.Literal
+import Music.Dynamics.Literal   
 
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)

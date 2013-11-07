@@ -47,13 +47,13 @@ module Music.Time.Performable (
         foldMapDefault
   ) where
 
-import Data.Foldable (Foldable(..))
-
 import Data.Pointed
+import Data.Foldable (Foldable(..))
 import Data.Semigroup
 import Data.Monoid.WithSemigroup
 import Data.AffineSpace
 import Data.AffineSpace.Point
+
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable

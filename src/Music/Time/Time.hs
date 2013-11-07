@@ -30,6 +30,7 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
+
 import Music.Time.Relative
 
 -- $convert
@@ -89,7 +90,4 @@ start = origin
 --
 stop :: Time
 stop = origin .+^ unit
-
-
-
 
