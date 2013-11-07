@@ -82,47 +82,50 @@ body > pre {
         overflow:               auto;
         
 }
-div#TOC {       
-        position:               fixed;
-        overflow-y:             auto;
-        top:                    0px;
-        left:                   0px;
-        width:                  310px;
+
+@media screen {
+        div#TOC {       
+                position:               fixed;
+                overflow-y:             auto;
+                top:                    0px;
+                left:                   0px;
+                width:                  310px;
         
-        border-right:           1px solid LightGrey;
+                border-right:           1px solid LightGrey;
            
-/*        background-color:       #3050a7;*/
-	height:                 100%;
+        /*        background-color:       #3050a7;*/
+        	height:                 100%;
   
-/*        font-family: Arial, sans-serif; */
-        font-family: Palatino;
-        font-size:              14px;
-        padding :               5px;
-        padding-bottom :        15px;
-        line-height:            170%;
+        /*        font-family: Arial, sans-serif; */
+                font-family: Palatino;
+                font-size:              14px;
+                padding :               5px;
+                padding-bottom :        15px;
+                line-height:            170%;
 
-        background-color:       #feffff;
-}
+                background-color:       #feffff;
+        }
 
-div#TOC > ul {
-        margin-top:             40px;
+        div#TOC > ul {
+                margin-top:             40px;
         
-}
-div#TOC > ul > li {
-        margin-top:             10px;        
-}
+        }
+        div#TOC > ul > li {
+                margin-top:             10px;        
+        }
 
-div#TOC > ul, div > ul > li > ul {
-        list-style-type: none;
-        margin-left:     -10px;
-}
+        div#TOC > ul, div > ul > li > ul {
+                list-style-type: none;
+                margin-left:     -10px;
+        }
 
-div#TOC a {
-        color: #222;
-        text-shadow: 0px 0px 1px #ccc;
-        text-decoration:none;
-}
+        div#TOC a {
+                color: #222;
+                text-shadow: 0px 0px 1px #ccc;
+                text-decoration:none;
+        }
 
+}
 
 
 
