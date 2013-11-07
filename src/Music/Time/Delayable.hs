@@ -51,8 +51,6 @@ class Delayable a where
     -- |
     -- Delay a value.
     -- 
-    -- > Duration -> Score a -> Score a
-    -- 
     delay :: Duration -> a -> a
 
 instance Delayable Time where
@@ -82,30 +80,21 @@ instance Delayable a => Delayable (Product a) where
 
 
 -- |
--- Move a score forward in time. Equivalent to 'delayTime.
+-- Move a score forward in time. Equivalent to 'delay'.
 --
--- > Duration -> Score a -> Score a
---
-move            :: (Delayable a) =>
-                Duration -> a -> a
+move :: Delayable a => Duration -> a -> a
 
 -- |
--- Move a score backward in time. Negated verison of 'delayTime
+-- Move a score backward in time. Negated verison of 'delay'.
 --
--- > Duration -> Score a -> Score a
---
-moveBack        :: Delayable a =>
-                Duration -> a -> a
+moveBack :: Delayable a => Duration -> a -> a
 
 -- |
 -- Delay relative to 'origin'. Provided for situations when you have a value that
 -- should forward based on the distance between some time @t@ and the origin, but
 -- it does not necessarily have a start time.
 --
--- > Time -> Score a -> Score a
---
-delayTime       :: Delayable a => 
-                Time   -> a -> a
+delayTime :: Delayable a => Time   -> a -> a
 
 move            = delay
 moveBack t      = delay (negateV t)

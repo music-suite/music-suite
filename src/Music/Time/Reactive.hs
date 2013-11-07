@@ -27,7 +27,19 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Reactive where
+module Music.Time.Reactive (
+        Reactive,
+        occs,
+        (?),
+        switch,
+        activate,
+        noteToReact,
+        initial,
+        updates,
+        -- renderR,
+        -- printR,
+        splitReactive,
+  ) where
 
 import Control.Newtype                
 import Control.Applicative

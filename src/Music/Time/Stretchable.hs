@@ -51,8 +51,6 @@ class Stretchable a where
     -- |
     -- Stretch (augment) a value by the given factor.
     -- 
-    -- > Duration -> Score a -> Score a
-    -- 
     stretch :: Duration -> a -> a
 
 instance Stretchable Time where
@@ -92,10 +90,6 @@ instance Stretchable a => Stretchable (Sum a) where
 -- |
 -- Compress (diminish) a score. Flipped version of 'stretch'.
 --
--- > Duration -> Score a -> Score a
---
-compress        :: (Stretchable a, Fractional d, d ~ Duration) =>
-                d -> a -> a
-
-compress x      = stretch (recip x)
+compress :: Stretchable a => Duration -> a -> a
+compress x = stretch (recip x)
 

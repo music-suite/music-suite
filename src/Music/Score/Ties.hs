@@ -31,8 +31,8 @@ module Music.Score.Ties (
         
         -- * Splitting tied notes in scores
         splitTies,
-        splitTiesSingle,
         splitTiesVoice,
+        -- splitTiesSingle,
   ) where
 
 import Control.Monad
