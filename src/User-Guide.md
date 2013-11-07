@@ -810,7 +810,7 @@ in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 
 ```music+haskell
 let
-    toLydian = modifyPitches (\p -> if p == c then cs else p)
+    toLydian = modifyPitch (\p -> if p == c then cs else p)
 
     subj1 = (^/2) $
         legato (b_ |> c) |> legato (c |> b_^*2)
