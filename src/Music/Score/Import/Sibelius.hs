@@ -57,7 +57,7 @@ fromSibChord (SibChord pos dur voice ar strem dtrem acci appo notes) =
 fromSibNote :: IsSibelius a => SibNote -> Score a
 fromSibNote (SibNote pitch di acc tied style) =
     (if tied then fmap beginTie else id)
-    $ modifyPitches (+ (fromIntegral pitch - 60)) def
+    $ modifyPitch (+ (fromIntegral pitch - 60)) def
     where
         def = Pitch.c
 
