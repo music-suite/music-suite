@@ -181,7 +181,7 @@ I figured out that these are names that you actually want to use in your own cod
 
 To facilitate the use of non-standard pitch, the standard pitch names are provided as overloaded values, referred to as *pitch literals*. 
 
-To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type `IsPitch a => a`.
+To understand how this works, think about the type of numeric literal. The values $0, 1, 2$ etc. have type `Num a => a`, similarly, the pitch literals $c, d, e, f ...$ have type @[IsPitch] `a => a`.
 
 For Western-style pitch types, the standard pitch names can be used:
 
@@ -777,6 +777,14 @@ Some more involved examples:
 
 ## Counterpoint
 
+
+```music+haskell
+let                      
+    subj = asScore $ scat [ c,       d,        f,          e           ]
+    cs1  = asScore $ scat [ g,f,e,g, f,a,g,d', c',b,c',d', e',g',f',e' ]
+in compress 4 cs1 </> subj
+```
+
 TODO about
 
 ```music+haskell
@@ -817,12 +825,13 @@ let
     part1 = pres1 |> pres2
     part2 = pres1 |> pres2
 
-in part1 |> toLydian part2  
+in dynamics pp $ compress 2 $ part1 |> setClef CClef (toLydian part2)  
 ```
 
+<!--
 ### Schubert
 
-```music+haskell
+```music+haskellx
 let
     motive = (legato $ stretchTo 2 $ scat [g,a,bb,c',d',eb']) |> staccato (scat [d', bb, g])
     bar    = rest^*4
@@ -838,6 +847,7 @@ let
 
 in  stretch (1/4) $ song </> left </> down _P8 right      
 ```
+-->
 
 
 # Design overview
