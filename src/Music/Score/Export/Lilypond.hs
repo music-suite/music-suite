@@ -209,15 +209,18 @@ instance HasLilypond a => HasLilypond (ClefT a) where
 addClefT :: a -> ClefT a
 addClefT = point
 
+-- TODO
+kDefClef = GClef
+
 class HasClef a where
     applyClef :: Clef -> a -> a
     applyClefOption :: Option Clef -> a -> a
     applyClefOption c = case getOption c of
-        Nothing -> id
+        Nothing -> applyClef kDefClef
         Just c  -> applyClef c
     applyClefMaybe :: Maybe Clef -> a -> a
     applyClefMaybe c = case c of
-        Nothing -> id
+        Nothing -> applyClef kDefClef
         Just c  -> applyClef c
 instance HasClef (ClefT a) where
     applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
