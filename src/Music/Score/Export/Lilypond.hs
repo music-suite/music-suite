@@ -6,6 +6,7 @@
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
     FlexibleContexts,
+    UndecidableInstances, -- for Clef
     ConstraintKinds,
     TypeOperators,
     OverloadedStrings,
@@ -180,24 +181,45 @@ instance HasLilypond a => HasLilypond (SlideT a) where
 
 -- TODO move
 -- Put the given clef in front of the note
-newtype ClefT a = ClefT { getClefT :: (Maybe Clef, a) }
-    deriving (Functor)
+newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
+    deriving (Functor, Semigroup, Monoid)
+instance HasPart a => HasPart (ClefT a) where
+    type Part (ClefT a) = Part a
+    getPart (ClefT (_,a)) = getPart a
+    modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
 instance Pointed ClefT where
-    point x = ClefT (Nothing, x)
+    point x = ClefT (mempty, x)
 instance Tiable a => Tiable (ClefT a) where
     beginTie = fmap beginTie
     endTie = fmap endTie
 instance HasLilypond a => HasLilypond (ClefT a) where
     getLilypond d (ClefT (c, a)) = notate $ getLilypond d a
         where
-            notate = case c of
+            notate = case fmap getLast $ getOption c of
                 Nothing -> id
-                Just GClef -> \x -> scatLy [Lilypond.Clef Lilypond.Treble, x]
-                Just CClef -> \x -> scatLy [Lilypond.Clef Lilypond.Alto, x]
-                Just FClef -> \x -> scatLy [Lilypond.Clef Lilypond.Bass, x]
+                Just GClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Treble, x]
+                Just CClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
+                Just FClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Bass, x]
 
 addClefT :: a -> ClefT a
 addClefT = point
+
+class HasClef a where
+    setClef :: Clef -> a -> a
+    setClefOption :: Option Clef -> a -> a
+    setClefOption c = case getOption c of
+        Nothing -> id
+        Just c  -> setClef c
+    setClefMaybe :: Maybe Clef -> a -> a
+    setClefMaybe c = case c of
+        Nothing -> id
+        Just c  -> setClef c
+instance HasClef (ClefT a) where
+    setClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
+instance HasClef a => HasClef (b,a) where
+    setClef c = fmap (setClef c)
+instance (HasPart' a, HasClef a) => HasClef (Score a) where
+    setClef c = mapFirst (setClef c) id
 
 
 pcatLy :: [Lilypond] -> Lilypond
@@ -259,8 +281,44 @@ toLyString = show . Pretty.pretty . toLy
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . fmap (fmap addClefT) . scoreToVoice . simultaneous)) . extractParts' $ sc
-    where
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice . simultaneous)) . extractParts' $ addClefs sc
+    where                 
+        -- FIXME somthing to the left of addClef is killing the meta-events                                                                            
+        -- I think simultaneous is guilty
+        -- No withMeta is killing it *itself*
+        addClefs = setCl . fmap addClefT
+
+        -- Option (Last Clef)
+        -- TODO replace Nothing with default clef
+        setCl = withMeta $ \x -> setClefOption (fmap getLast x)
+
+
+{-
+    Simultaneous False [
+        New "Staff" Nothing (
+            Sequential [
+                Set "Staff.instrumentName" "",
+                Clef Bass,
+                Chord [NotePitch (Pitch {getPitch = (C,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (D,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (E,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (F,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (G,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (A,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (B,0,5)}) Nothing] (Just (Duration {getDuration = 1 % 8})) [],
+                Chord [NotePitch (Pitch {getPitch = (C,0,6)}) Nothing] (Just (Duration {getDuration = 1 % 8})) []])]
+-}
+            
+        -- Extract (Option (Last Clef))
+        -- setCl = withMeta $ \clef -> setClefMaybe (fmap getLast (getOption clef))
+
+
+
+
+        -- setCl = withMeta $ \c -> case getOption (fmap getLast (c :: Option (Last Clef))) of
+        --     Nothing -> id
+        --     Just _  -> id
+        
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
 

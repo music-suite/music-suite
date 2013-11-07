@@ -84,6 +84,12 @@ instance HasPart (PartT n a) where
     getPart (PartT (v,_))       = v
     modifyPart f (PartT (v,x))  = PartT (f v, x)
 
+instance HasPart b => HasPart (a,b) where
+    type Part (a,b)    = Part b
+    getPart (a,b)      = getPart b
+    modifyPart f (a,b) = (a, modifyPart f b)
+
+
 -- |
 -- Like 'HasPart', but enforces the part to be ordered.
 -- This is usually required for part separation and traversal.

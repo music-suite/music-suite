@@ -15,6 +15,8 @@
 
 module Music.Score.Note (
         Note(..),
+        unnote,
+        (=:),
   ) where
 
 import Control.Monad
@@ -39,3 +41,9 @@ instance HasOnset (Note a) where
     onset (Note (s,x)) = onset s
 instance HasOffset (Note a) where
     offset (Note (s,x)) = offset s
+
+unnote :: Note a -> (Span, a)
+unnote (Note x) = x
+
+(=:) :: Span -> a -> Note a
+s =: x  =  Note (s,x)

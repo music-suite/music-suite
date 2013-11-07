@@ -31,6 +31,8 @@ module Music.Score.Meta (
         KeySignature,
         Tempo,
         Clef(..),
+        addClef,
+        splitReactive,
         withMeta
   ) where
 
@@ -54,6 +56,10 @@ import Music.Score.Combinators
 
 -- TODO
 data Clef = GClef | CClef | FClef
+    deriving (Eq, Ord, Show, Typeable)
+
+addClef :: Span -> Clef -> Score a -> Score a
+addClef s c = addM (s =: (Option $ Just $ Last c))
 
 type TimeSignature = ([Integer], Integer)
 
@@ -105,12 +111,34 @@ mapBefore t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t
 mapDuring s f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t,x) -> t `inSpan` s) (withTime x) in (f y <> n)
 mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 >= t) (withTime x) in (f y <> n)
 
+-- Transform the score with the current value of some meta-information
+-- Each "update chunk" of the meta-info is processed separately 
+-- FIXME don't kill the meta-track...
 withMeta :: (Monoid a, AttributeClass a) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = let
-    r = (getM x)
+    r = getM x
     in case splitReactive r of
         Left  a -> f a x
         Right ((a1,t1),as,(t2,a2)) -> mapBefore t1 (f a1) . comp (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
+
+{-
+    Right (
+        (Option {getOption = Nothing},
+            P (Duration {getDuration = 0 % 1}))
+        ,[Note {getNote = (Span (P (Duration {getDuration = 0 % 1}),Duration {getDuration = 1 % 1}),
+            Option {getOption = Just (Last {getLast = FClef})})}],
+        (P (Duration {getDuration = 1 % 1}),
+            Option {getOption = Nothing}))
+
+    Right 
+        ((Option {getOption = Nothing},
+            P (Duration {getDuration = 1 % 1})),
+        [Note {getNote = (Span (P (Duration {getDuration  1 % 1}),Duration {getDuration = 1 % 1}),
+            Option {getOption = Just (Last {getLast = FClef})})}],
+        (P (Duration {getDuration = 2 % 1}),
+            Option {getOption = Nothing}))
+
+-}
     
     -- Get out the meta :: Reactive a
     -- Iter through events to get span (not just start)
@@ -119,8 +147,3 @@ withMeta f x = let
 
 comp = Prelude.foldr (.) id
 
-unnote :: Note a -> (Span, a)
-unnote (Note x) = x
-
-(=:) :: Span -> a -> Note a
-s =: x  =  Note (s,x)
