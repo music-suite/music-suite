@@ -598,14 +598,20 @@ Each attribute value may apply either to a *whole* score (i.e. from beginning to
 
 ## Clefs
 
+To set the clef for a whole passage, use @[setClef]. The clef is used by most notation backends and ignored by audio backends.
+
 ```music+haskell
-addClefDuring (0.25 <-> 0.5) CClef $ addClefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
+let
+    part1 = setClef FClef $ staccato $ scat [c_,g_,c,g_]
+    part2 = setClef CClef $ staccato $ scat [ab_,eb,d,a]
+    part3 = setClef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
+in compress 8 $ part1 |> part2 |> part3
 ```
 
-Meta-events are affected by time transformations:
+To set the clef for a preexisting passage in an existing score, use @[setClefDuring].
 
 ```music+haskell
-delay 1 $ stretch 2 $ addClefDuring (0.25 <-> 0.5) FClef $ compress 8 $ scat [c_..c]
+setClefDuring (0.25 <-> 0.5) CClef $ setClefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
 ```
 
 
