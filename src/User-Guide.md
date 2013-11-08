@@ -432,8 +432,8 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ```music+haskell
 let
-    melody = legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
-in melody |> melody
+    melody = accent $ legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
+in melody |> rev melody
 ```
 
 @[times]
@@ -542,6 +542,15 @@ TODO
 ## Voice
 
 A @[Voice] represents a single voice of music. It consists of a sequence of values with duration, but no time. 
+
+```music+haskell
+stretch (1/4) $ scat [c..a]^/2 |> b |> c'^*4
+```
+
+```music+haskell
+stretch (1/2) $ scat [c..e]^/3 |> f |> g^*2
+```
+
 
 It can be converted into a score by stretching each element and composing in sequence.
 
@@ -825,7 +834,7 @@ let
 in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
 
-### Duo
+## Viola duo
 
 ```music+haskell
 let
