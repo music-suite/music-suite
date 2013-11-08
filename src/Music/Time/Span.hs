@@ -29,6 +29,7 @@ module Music.Time.Span (
         -- ** Constructing spans
         (<->),
         (-->),
+        era,
         
         -- ** Span as transformation
         sunit,
@@ -115,6 +116,9 @@ sunit = mempty
 (-->) :: Time -> Duration -> Span
 (-->) = curry Span
 
+-- | Get the era (onset to offset) of a given value.
+era :: (HasOnset a, HasOffset a) => a -> Span
+era x = onset x <-> offset x
 
 -- | Render a span as a time and duration.
 delta :: Span -> (Time, Duration)

@@ -147,7 +147,6 @@ instance HasOffset k => HasOffset (Map k a) where
 instance HasOnset a => HasOnset (Sum a) where
     onset (Sum x) = onset x
 
-                              
 -- |
 -- Move a score so that its onset is at the specific time.
 --

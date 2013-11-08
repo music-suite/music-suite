@@ -75,11 +75,7 @@ newtype ChordT a = ChordT { getChordT :: [a] }
 -- The ChordT instances (of other transformer classes) transforms structure *below* the chord representation
 --      For example, it allow us to use functions such as up, down, legato etc on chords.
 
-
-
--- playChord :: m a -> m (Note a)
--- playChord f = join . join . fmap return . fmap f . fmap getChord
-
+-- TODO rewrite, generalize?
 
 -- |
 -- Group and merge simultaneous events.

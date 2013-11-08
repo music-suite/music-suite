@@ -54,7 +54,9 @@ import Music.Score.Part
 import Music.Time
 
 -- |
--- Class of types that can be tied.
+-- Class of types that can be tied. Ties are added to a score by splitting a single note
+-- into two and annotating them with a /begin tie/ and /end tie/ mark respectively.
+-- 
 --
 -- Minimal definition: 'toTied', or both 'beginTie' and 'endTie'.
 --
