@@ -52,6 +52,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.Ratio
 
+import Music.Time.Relative
 import Music.Pitch.Literal
 
 class HasPitch a where
@@ -133,7 +134,7 @@ down a = modifyPitch (.-^ a)
 -- > Pitch -> Score a -> Score a
 --
 invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround basePitch a = modifyPitch ((basePitch .+^) . negateV . (.-. basePitch)) a
+invertAround p = modifyPitch (relative p negateV)
 
 -- |
 -- Transpose up by the given number of octaves.
