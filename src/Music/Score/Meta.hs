@@ -73,6 +73,7 @@ import Data.Void
 import Data.Maybe
 import Data.Semigroup
 import Data.Typeable
+import Data.String
 import Data.Set (Set)
 import Data.Map (Map)
 import Data.Foldable (Foldable)

@@ -41,6 +41,7 @@ module Music.Score (
         module Music.Score.Ties,
         module Music.Score.Chord,
         module Music.Score.Meta,
+        module Music.Score.Annotations,
 
         -- ** Musical elements
         module Music.Score.Pitch,
@@ -81,6 +82,7 @@ import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Chord
 import Music.Score.Meta
+import Music.Score.Annotations
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
