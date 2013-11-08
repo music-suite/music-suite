@@ -595,6 +595,17 @@ TODO attributes (same as in Diagrams)
 
 Each attribute value may apply either to a *whole* score (i.e. from beginning to end), or to a *section* of the score.
 
+## Title
+
+TODO
+
+## Attribution
+
+TODO
+
+## Movement title and number
+
+TODO
 
 ## Clefs
 
@@ -614,15 +625,23 @@ To set the clef for a preexisting passage in an existing score, use @[setClefDur
 setClefDuring (0.25 <-> 0.5) CClef $ setClefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
 ```
 
-
-
 ## Time signatures          
+
+TODO
 
 ## Key signatures
 
+```music+haskell
+setKeySignature (key cs True) c |> setKeySignature (key ab False) c
+```
+
 ## Rehearsal marks
 
+TODO
+
 ## Miscellaneous
+
+TODO
 
 # Import and export
 
@@ -813,7 +832,7 @@ let
     toLydian = modifyPitch (\p -> if p == c then cs else p)
 
     subj1 = (^/2) $
-        legato (b_ |> c) |> legato (c |> b_^*2)
+        (legato.accent) (b_ |> c) |> (legato.accent) (c |> b_^*2)
             |> legato (scat [b_, c, d])
             |> b_ |> c |> b_^*2
         |> legato (scat [e, d, b_, c]) |> b_^*2
@@ -825,7 +844,7 @@ let
     part1 = pres1 |> pres2
     part2 = pres1 |> pres2
 
-in dynamics pp $ compress 2 $ part1 |> setClef CClef (toLydian part2)  
+in setClef CClef $ dynamics pp $ compress 2 $ part1 |> toLydian part2
 ```
 
 <!--
