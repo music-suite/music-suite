@@ -14,6 +14,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
+        module Music.Time.Relative,
         module Music.Time.Time,
         module Music.Time.Span,
 
@@ -25,6 +26,8 @@ module Music.Time (
         module Music.Time.Reverse,
         module Music.Time.Performable,
   ) where
+
+import Music.Time.Relative
 
 import Music.Time.Time
 import Music.Time.Span
