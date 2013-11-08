@@ -8,6 +8,7 @@
     DeriveDataTypeable, 
     ConstraintKinds, 
     GADTs, 
+    ViewPatterns,
     TypeFamilies,
     MultiParamTypeClasses, 
     FlexibleInstances #-}
@@ -55,7 +56,9 @@ module Music.Score.Meta (
         setTimeSignature,
         setTimeSignatureDuring,
 
+        Fifths,
         KeySignature,
+        key,
         setKeySignature,
         setKeySignatureDuring,
 
@@ -87,6 +90,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Util
+import Music.Pitch.Literal
 
 
 type IsAttribute a = (Typeable a, Semigroup a)
@@ -194,8 +198,47 @@ setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
 setTimeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 setTimeSignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
-newtype KeySignature = KeySignature (Integer, Bool)
-    deriving (Eq, Ord, Show, Typeable)
+
+newtype Fifths = Fifths Integer
+    deriving (Eq, Ord, Num, Enum, Integral, Real)
+
+instance IsPitch Fifths where
+    fromPitch (PitchL (d, fromMaybe 0 -> c, _)) = case (d,c) of
+        (0,-1) -> (-7)
+        (0, 0) -> 0
+        (0, 1) -> 7
+        
+        (1,-1) -> (-5)
+        (1, 0) -> 2
+        (1, 1) -> 9
+        
+        (2,-1) -> (-3)
+        (2, 0) -> 4
+        (2, 1) -> 11
+        
+        (3,-1) -> (-8)
+        (3, 0) -> (-1)
+        (3, 1) -> 6
+        
+        (4,-1) -> (-6)
+        (4, 0) -> 1
+        (4, 1) -> 8
+        
+        (5,-1) -> (-4)
+        (5, 0) -> 3
+        (5, 1) -> 10
+
+        (6,-1) -> (-2)
+        (6, 0) -> 5
+        (6, 1) -> 12
+
+        _      -> error "Strange number of Fifths"
+
+newtype KeySignature = KeySignature (Fifths, Bool)
+    deriving (Eq, Ord, Typeable)
+
+key :: Fifths -> Bool -> KeySignature
+key fifths mode = KeySignature (fifths, mode)
 
 setKeySignature :: (HasMeta a, HasOnset a, HasOffset a) => KeySignature -> a -> a
 setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
@@ -203,8 +246,20 @@ setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
 setKeySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
 setKeySignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
-newtype Tempo = Tempo Duration
+-- Tempo _ t means that
+--  stretch t notation = sounding
+--  1   -> whole = 1   sec (1/1 = 60)
+--  0.5 -> whole = 0.5 sec (1/1 = 120)
+--  2   -> whole = 2   sec (1/4 = 120)
+data Tempo = Tempo (Maybe String) Duration
     deriving (Eq, Ord, Show, Typeable)
+
+-- beats +, tempo -, duration +
+-- bpm +,   tempo +  duration -
+
+
+metronome :: Duration -> Duration -> Tempo
+metronome noteVal bpm = Tempo Nothing $ (noteVal * 60) / bpm
 
 setTempo :: (HasMeta a, HasOnset a, HasOffset a) => Tempo -> a -> a
 setTempo c x = setTempoDuring (onset x <-> offset x) c x
