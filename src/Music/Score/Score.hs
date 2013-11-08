@@ -160,6 +160,9 @@ instance MonadPlus NScore where
     mzero = mempty
     mplus = mappend
 
+instance HasDuration (Note a) where
+    duration = durationDefault
+
 
 -- The following instances allow us to write expressions like [c..g]
 
