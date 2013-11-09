@@ -94,7 +94,7 @@ instance HasPart b => HasPart (a,b) where
 -- Like 'HasPart', but enforces the part to be ordered.
 -- This is usually required for part separation and traversal.
 --
-type HasPart' a = (Ord (Part a), Default (Part a), HasPart a)
+type HasPart' a = (Show (Part a), Ord (Part a), Default (Part a), HasPart a)
 
 -- |
 -- Get all parts in the given score. Returns a list of parts.

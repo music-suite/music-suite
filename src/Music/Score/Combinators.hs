@@ -435,7 +435,7 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 withMeta :: (Monoid a, IsAttribute a) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = let
     m = getScoreMeta x
-    r = runMeta m
+    r = runMeta (Nothing::Maybe Int) m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x

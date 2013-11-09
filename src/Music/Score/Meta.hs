@@ -6,7 +6,8 @@
     DeriveFoldable, 
     DeriveTraversable,
     DeriveDataTypeable, 
-    ConstraintKinds, 
+    ConstraintKinds,
+    FlexibleContexts, 
     GADTs, 
     ViewPatterns,
     TypeFamilies,
@@ -128,26 +129,27 @@ inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -
 inMeta f (Meta s) = Meta (f s)
 
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addMetaNote x = applyMeta $ addMeta $ noteToReactive x
+addMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
 
-runMeta :: forall a . IsAttribute a => Meta -> Reactive a
-runMeta = fromMaybe mempty . runMeta'
+runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
+runMeta p = fromMaybe mempty . runMeta' p
 
 
-addMeta :: forall a . IsAttribute a => Reactive a -> Meta
-addMeta a = Meta $ Map.singleton key $ fmap wrapAttr a
+addMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
+addMeta part a = Meta $ Map.singleton key $ fmap wrapAttr a
     where                   
         key = ty ++ pt
-        pt = ""
-        ty = show $ typeOf (undefined :: a)
+        pt = show $ fmap getPart part
+        ty = show $ typeOf (undefined :: b)
 
-runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
-runMeta' (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
+-- runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
+runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b) 
+runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt
-        pt = ""
-        ty = show . typeOf $ (undefined :: a)
+        pt = show $ fmap getPart part
+        ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
     Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
