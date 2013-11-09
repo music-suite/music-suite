@@ -29,7 +29,7 @@ import qualified Data.Traversable as T
 import Music.Time
 
 newtype Note a = Note { getNote :: (Span, a) }
-    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)
+    deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 unnote :: Note a -> (Span, a)
 unnote (Note x) = x
@@ -41,21 +41,6 @@ getNoteSpan = fst . unnote
 -- | Get the value of the note.
 getNoteValue :: Note a -> a
 getNoteValue = snd . unnote 
-
-instance Comonad Note where
-    {-
-        extract . duplicate      = id
-            \(Note (s,x) -> x . \(Note (s,x)) -> Note (s,(Note (s,x))) = id
-            \(Note (s,x)) -> (\(Note (s,x) -> x) Note (s,(Note (s,x))) = id
-            (Note (s,x)) = (\(Note (s,x) -> x) Note (s,(Note (s,x)))
-            (Note (s,x)) = (Note (s,x)
-        fmap extract . duplicate = id
-            TODO
-        duplicate . duplicate    = fmap duplicate . duplicate
-            TODO
-    -}
-    extract = getNoteValue
-    duplicate (Note (s,x)) = Note (s,(Note (s,x)))
 
 instance Delayable (Note a) where
     delay n (Note (s,x)) = Note (delay n s, x)
