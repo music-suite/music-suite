@@ -23,7 +23,11 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides reactive values.
+-- Reactive values.
+--
+-- Based on Conal's semantifcs as per <http://conal.net/blog/posts/reactive-normal-form>.
+--
+-- TODO integrate better in the library
 --
 -------------------------------------------------------------------------------------
 
@@ -73,12 +77,14 @@ newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
 
 instance Delayable a => Delayable (Reactive a) where
     delay n (Reactive (t,r)) = Reactive (delay n t, delay n r)
+
 instance Stretchable a => Stretchable (Reactive a) where
     stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
 
 instance Newtype (Reactive a) ([Time], Time -> a) where
     pack = Reactive
     unpack = getReactive
+
 instance Applicative Reactive where
     pure    = pack . pure . pure
     (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)

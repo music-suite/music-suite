@@ -32,6 +32,10 @@ library
         data-default,           
         containers,       
         comonad,
+        
+        -- XXX Really?
+        comonads-fd,
+        
         transformers,
         monadplus,
         void,
