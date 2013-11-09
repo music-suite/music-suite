@@ -32,7 +32,10 @@
 module Music.Score.Annotations (
         Annotation,
         annotate,
+        annotateSpan,
         showAnnotations,
+        showAnnotations',
+        withAnnotations,
   ) where
 
 import Control.Arrow
@@ -62,12 +65,30 @@ import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 import Music.Score.Util
 
+-- | 
+--   An annotation is a simple textual values attached to parts of a score.
+--   They are ignored by default, but can be collected with 'withAnnotations'.
+--
 newtype Annotation = Annotation { getAnnotation :: [String] }
     deriving (Semigroup, Monoid, Typeable)
 instance IsString Annotation where fromString = Annotation . return
 
+-- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
-annotate str x = addMetaNote (stretch (duration x) $ return $ Annotation [str]) x
+annotate str x = annotateSpan (start --> duration x) str x
 
+-- | Annotate the whole score.
+annotateSpan :: Span -> String -> Score a -> Score a
+annotateSpan span str x = addMetaNote (sapp span $ return $ Annotation [str]) x
+
+-- | Add the annotations to the score as text.
 showAnnotations :: (HasPart' a, HasText a) => Score a -> Score a
-showAnnotations = withMeta (\x s -> foldr (text . (":"++)) s $ getAnnotation x)
+showAnnotations = showAnnotations' ":"
+
+-- | Add the annotations to the score as text.
+showAnnotations' :: (HasPart' a, HasText a) => String -> Score a -> Score a
+showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
+
+-- | Handle the annotations in a score.
+withAnnotations :: (HasPart' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a
+withAnnotations f = withMeta (f . getAnnotation)
