@@ -44,8 +44,8 @@ module Music.Score.Meta (
         -- * Meta-values
         Meta,  
         -- addMeta,
-        addMetaNoteNP,
         addMetaNote,
+        addMetaNoteNP,
         runMeta,
         HasMeta(..),
 
@@ -125,6 +125,8 @@ instance Stretchable Attribute where
 -- TODO is Transformable right w.r.t. join?
 newtype Meta = Meta (Map String (Reactive Attribute))
     deriving (Delayable, Stretchable)
+
+-- instance HasPart Meta where
 
 inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
 inMeta f (Meta s) = Meta (f s)
