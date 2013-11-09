@@ -91,8 +91,9 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- > onset a == onset b && offset a == offset b
 --
 simultaneous' :: Score a -> Score [a]
-simultaneous' sc = compose vs
-    where
+simultaneous' sc = setScoreMeta m $ compose vs
+    where     
+        m = getScoreMeta sc
         -- es :: [Era]
         -- evs :: [[a]]
         -- vs :: [(Time, Duration, [a])]
