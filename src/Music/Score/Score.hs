@@ -86,7 +86,17 @@ inScore f = Score . f . getScore
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = inScore (second $ mapNScore f)
 
--- | Reify the associated time span.
+-- | Group each occurence with its associated time span.
+-- 
+-- Note: This may or may not be what you expect. Each note is /not/ repositioned
+-- to start at 'sunit', so this holds
+--
+-- > fmap extract . reifyScore = id
+--
+-- while
+--
+-- > join . fmap (noteToScore) . reifyScore /= id
+--
 reifyScore :: Score a -> Score (Note a)
 reifyScore = inScore (second reifyNScore)
 
