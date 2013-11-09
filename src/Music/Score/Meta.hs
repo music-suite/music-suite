@@ -42,7 +42,7 @@ module Music.Score.Meta (
 
         -- * Meta-values
         Meta,  
-        addMeta,
+        -- addMeta,
         addMetaNote,
         runMeta,
         HasMeta(..),
@@ -72,6 +72,7 @@ import Control.Monad.Plus
 import Data.Void
 import Data.Maybe
 import Data.Semigroup
+import Data.Monoid.WithSemigroup
 import Data.Typeable
 import Data.String
 import Data.Set (Set)
@@ -94,7 +95,7 @@ import Music.Score.Util
 import Music.Pitch.Literal
 
 
-type IsAttribute a = (Typeable a, Semigroup a)
+type IsAttribute a = (Typeable a, Monoid' a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
@@ -126,7 +127,7 @@ newtype Meta = Meta (Map String (Reactive Attribute))
 inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
 inMeta f (Meta s) = Meta (f s)
 
-addMetaNote :: forall a b . (IsAttribute a, Monoid a, HasMeta b) => Note a -> b -> b
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addMetaNote x = applyMeta $ addMeta $ noteToReactive x
 
 addMeta :: forall a . IsAttribute a => Reactive a -> Meta
@@ -134,7 +135,7 @@ addMeta a = Meta $ Map.singleton ty $ fmap wrapAttr a
     where
         ty = show $ typeOf (undefined :: a)
 
-runMeta :: forall a . (Monoid a, IsAttribute a) => Meta -> Reactive a
+runMeta :: forall a . IsAttribute a => Meta -> Reactive a
 runMeta = fromMaybe mempty . runMeta'
 
 runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
