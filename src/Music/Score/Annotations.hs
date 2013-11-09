@@ -60,7 +60,7 @@ import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Score
 import Music.Score.Part
-import Music.Score.Combinators (withMeta)
+import Music.Score.Combinators (withMetaNP)
 import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 import Music.Score.Util
@@ -93,4 +93,4 @@ showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix +
 
 -- | Handle the annotations in a score.
 withAnnotations :: (HasPart' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a
-withAnnotations f = withMeta (f . getAnnotation)
+withAnnotations f = withMetaNP (f . getAnnotation)

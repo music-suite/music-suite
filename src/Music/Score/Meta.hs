@@ -204,7 +204,7 @@ setClef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
 setClef c x = setClefDuring (onset x <-> offset x) c x
 
 setClefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
-setClefDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 -- XXX
 
 

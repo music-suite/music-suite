@@ -31,6 +31,7 @@ module Music.Score.Combinators (
 
         -- * Maps and filters
         withMeta,
+        withMetaNP,
 
         -- ** Events
         mapEvents,
@@ -431,10 +432,17 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately 
-withMeta :: (Monoid a, IsAttribute a) => (a -> Score b -> Score b) -> Score b -> Score b
-withMeta f x = let
+
+withMetaNP :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaNP = withMeta' (Nothing :: Maybe Int)
+
+withMeta :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta f x = withMeta' (Just x) f x
+
+withMeta' :: (HasPart' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
+withMeta' part f x = let
     m = getScoreMeta x
-    r = runMeta (Nothing::Maybe Int) m
+    r = runMeta part m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x

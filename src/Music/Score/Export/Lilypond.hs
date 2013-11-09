@@ -288,16 +288,13 @@ toLyString = show . Pretty.pretty . toLy
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice . addClefs . simultaneous)) . extractParts' $ sc
+toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice) . uncurry addClefs . second simultaneous) . extractParts' $ sc
     where                 
-        -- FIXME somthing to the left of addClef is killing the meta-events                                                                            
-        -- I think simultaneous is guilty
-        -- No withMeta is killing it *itself*
-        addClefs = setCl . fmap addClefT
+        addClefs p = ((,) p) . setCl p . fmap addClefT
 
         -- Option (Last Clef)
         -- TODO replace Nothing with default clef
-        setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
+        setCl p = withMeta $ \x -> applyClefOption (fmap getLast x)
 
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
