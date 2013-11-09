@@ -79,7 +79,9 @@ annotate str x = annotateSpan (start --> duration x) str x
 
 -- | Annotate the whole score.
 annotateSpan :: Span -> String -> Score a -> Score a
-annotateSpan span str x = addMetaNote (sapp span $ return $ Annotation [str]) x
+annotateSpan span str x = addMetaNoteNP (sapp span $ return $ Annotation [str]) x
+-- TODO partwise
+-- XXX more sensible way of finding the part of a score
 
 -- | Add the annotations to the score as text.
 showAnnotations :: (HasPart' a, HasText a) => Score a -> Score a

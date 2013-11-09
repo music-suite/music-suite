@@ -51,6 +51,7 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..), Gen(..))
 
+import Data.Default
 import Data.Typeable
 import Data.Set (Set)
 import Data.Map (Map)
@@ -69,6 +70,7 @@ import Music.Dynamics.Literal
 import Music.Score.Note
 import Music.Score.Meta
 import Music.Score.Pitch
+import Music.Score.Part
 import Music.Score.Util
 
 newtype Score a = Score { getScore :: (Meta, NScore a) }
@@ -202,3 +204,9 @@ instance HasPitch a => HasPitch (Score a) where
     type Pitch (Score a) = Pitch a
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
+
+instance HasPart a => HasPart (Score a) where
+    type Part (Score a) = Part a
+    -- FIXME strange
+    getPart         = fromMaybe def . fmap getPart . listToMaybe . F.toList
+    modifyPart f    = fmap (modifyPart f)

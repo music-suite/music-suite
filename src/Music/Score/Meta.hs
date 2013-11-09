@@ -44,6 +44,7 @@ module Music.Score.Meta (
         -- * Meta-values
         Meta,  
         -- addMeta,
+        addMetaNoteNP,
         addMetaNote,
         runMeta,
         HasMeta(..),
@@ -128,15 +129,20 @@ newtype Meta = Meta (Map String (Reactive Attribute))
 inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
 inMeta f (Meta s) = Meta (f s)
 
-addMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
+
+addMetaNoteNP :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
+addMetaNoteNP x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
+
+-- XXX
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
+addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
-runMeta p = fromMaybe mempty . runMeta' p
+runMeta part = fromMaybe mempty . runMeta' part
 
 
-addMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
-addMeta part a = Meta $ Map.singleton key $ fmap wrapAttr a
+addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
+addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
     where                   
         key = ty ++ pt
         pt = show $ fmap getPart part
@@ -194,21 +200,22 @@ instance (HasMeta a, Ord a) => HasMeta (Set a) where
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
-setClef :: (HasMeta a, HasOnset a, HasOffset a) => Clef -> a -> a
+setClef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
 setClef c x = setClefDuring (onset x <-> offset x) c x
 
-setClefDuring :: HasMeta a => Span -> Clef -> a -> a
-setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+setClefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
+setClefDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+-- XXX
 
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Show, Typeable)
 
-setTimeSignature :: (HasMeta a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
+setTimeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
 setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
 
-setTimeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
-setTimeSignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+setTimeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
+setTimeSignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 
 newtype Fifths = Fifths Integer
@@ -252,11 +259,11 @@ newtype KeySignature = KeySignature (Fifths, Bool)
 key :: Fifths -> Bool -> KeySignature
 key fifths mode = KeySignature (fifths, mode)
 
-setKeySignature :: (HasMeta a, HasOnset a, HasOffset a) => KeySignature -> a -> a
+setKeySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
 setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
 
-setKeySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
-setKeySignatureDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+setKeySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
+setKeySignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 -- Tempo _ t means that
 --  stretch t notation = sounding
@@ -273,9 +280,9 @@ data Tempo = Tempo (Maybe String) Duration
 metronome :: Duration -> Duration -> Tempo
 metronome noteVal bpm = Tempo Nothing $ (noteVal * 60) / bpm
 
-setTempo :: (HasMeta a, HasOnset a, HasOffset a) => Tempo -> a -> a
+setTempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
 setTempo c x = setTempoDuring (onset x <-> offset x) c x
 
-setTempoDuring :: HasMeta a => Span -> Tempo -> a -> a
-setTempoDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+setTempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
+setTempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
