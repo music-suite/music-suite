@@ -18,6 +18,7 @@ module Music.Score.Note (
 
 import Control.Monad
 import Control.Comonad
+import Control.Comonad.Env
 import Control.Applicative
 
 import Data.PairMonad ()
@@ -34,13 +35,20 @@ newtype Note a = Note { getNote :: (Span, a) }
 unnote :: Note a -> (Span, a)
 unnote (Note x) = x
 
--- | Get the span of the note. Same as 'era'.
+-- | Get the span of the note. Same as 'era' and 'ask'.
 getNoteSpan :: Note a -> Span
 getNoteSpan = fst . unnote
 
--- | Get the value of the note.
+-- | Get the value of the note. Same as 'extract'.
 getNoteValue :: Note a -> a
 getNoteValue = snd . unnote 
+
+-- Note that 
+-- extract = getNoteValue
+-- ask = getNoteSpan
+
+instance ComonadEnv Span Note where
+    ask = getNoteSpan
 
 instance Delayable (Note a) where
     delay n (Note (s,x)) = Note (delay n s, x)

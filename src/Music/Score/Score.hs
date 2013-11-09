@@ -158,6 +158,11 @@ newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
 
 inNScore f = NScore . f . getNScore
 
+-- | Map with the associated span.
+mapNScore :: (Note a -> b) -> NScore a -> NScore b
+mapNScore f = inNScore (fmap $ extend f)
+
+-- | Reify the associated span. Use with 'Traversable' to get a fold.
 reifyNScore :: NScore a -> NScore (Note a)
 reifyNScore = inNScore $ fmap duplicate
 
