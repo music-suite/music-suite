@@ -141,7 +141,12 @@ instance HasDuration (Score a) where
     duration = durationDefault
 
 instance Performable (Score a) where
-    perform = F.toList . fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . reifyScore
+    perform = 
+        fmap (\(delta -> (t,d),x) -> (t,d,x)) . 
+        List.sortBy (comparing fst) .
+        F.toList . 
+        fmap getNote . 
+        reifyScore
 
 instance Composable (Score a) where
 
@@ -163,11 +168,11 @@ newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
 
 inNScore f = NScore . f . getNScore
 
--- | Map with the associated span.
+-- | Map with the associated span.
 mapNScore :: (Note a -> b) -> NScore a -> NScore b
 mapNScore f = inNScore (fmap $ extend f)
 
--- | Reify the associated span. Use with 'Traversable' to get a fold.
+-- | Reify the associated span. Use with 'Traversable' to get a fold.
 reifyNScore :: NScore a -> NScore (Note a)
 reifyNScore = inNScore $ fmap duplicate
 
