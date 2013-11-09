@@ -168,16 +168,18 @@ mapAll f = compose . f . perform
 
 
 -- |
--- Return a score containing only the notes whose offset falls before the given duration.
+-- Return a score containing only the notes whose /offset/ occurs no later than the given
+-- time.
 --
 before :: Time -> Score a -> Score a
-before b = filterEvents (\t d _ -> t .+^ d <= b) 
+before u = filterEvents (\t d _ -> t .+^ d <= u) 
 
 -- |
--- Return a score containing only the notes whose onset falls after given duration.
+-- Return a score containing only the notes whose /onset/ occurs no earlier given
+-- duration.
 --
 after :: Time -> Score a -> Score a
-after a = filterEvents (\t d _ -> a <= t)
+after u = filterEvents (\t d _ -> u <= t)
 
 -- |
 -- Return a score containing only the notes whose onset and offset falls between the given durations.
