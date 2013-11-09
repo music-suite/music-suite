@@ -130,18 +130,23 @@ inMeta f (Meta s) = Meta (f s)
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addMetaNote x = applyMeta $ addMeta $ noteToReactive x
 
-addMeta :: forall a . IsAttribute a => Reactive a -> Meta
-addMeta a = Meta $ Map.singleton ty $ fmap wrapAttr a
-    where
-        ty = show $ typeOf (undefined :: a)
-
 runMeta :: forall a . IsAttribute a => Meta -> Reactive a
 runMeta = fromMaybe mempty . runMeta'
 
+
+addMeta :: forall a . IsAttribute a => Reactive a -> Meta
+addMeta a = Meta $ Map.singleton key $ fmap wrapAttr a
+    where                   
+        key = ty ++ pt
+        pt = ""
+        ty = show $ typeOf (undefined :: a)
+
 runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
-runMeta' (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup ty s
+runMeta' (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
+        key = ty ++ pt
+        pt = ""
         ty = show . typeOf $ (undefined :: a)
 
 instance Semigroup Meta where
@@ -178,6 +183,9 @@ instance HasMeta a => HasMeta (Map k a) where
 
 instance (HasMeta a, Ord a) => HasMeta (Set a) where
     applyMeta = Set.map . applyMeta
+
+
+
 
 
 
