@@ -579,15 +579,8 @@ It can be converted into a score by delaying each element and composing in paral
 ```music+haskell
 let
     x, y :: Track Note
-
-    x = track [ (0, c), 
-                (1, d), 
-                (2, e) ]
-
-    y = join $ track [ (0, x), 
-                       (1.5,  up _P5 x), 
-                       (3.25, up _P8 x) ]
-
+    x = track [ (0, c), (1, d), (2, e) ]
+    y = join $ track [ (0, x), (1.5,  up _P5 x), (3.25, up _P8 x) ]
 in trackToScore (1/8) y
 ```
 
