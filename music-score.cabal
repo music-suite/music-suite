@@ -31,13 +31,9 @@ library
         process,
         data-default,           
         containers,       
-        parsec,
+        comonad,
         transformers,
         monadplus,
-        prettify,
-        HCodecs,
-        musicxml2,
-        lilypond,
         void,
         semigroups,
         monoid-extras,
@@ -48,6 +44,11 @@ library
         vector-space-points,
         music-pitch-literal,
         music-dynamics-literal,
+        parsec,
+        prettify,
+        HCodecs,
+        musicxml2,
+        lilypond,
         reenact
 
     hs-source-dirs: src

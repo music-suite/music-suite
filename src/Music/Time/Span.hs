@@ -114,7 +114,9 @@ sunit = mempty
 
 -- | @t --> d@ represents the span between @t@ and @t .+^ d@.
 (-->) :: Time -> Duration -> Span
-(-->) = curry Span
+t --> d
+    | d > 0     = Span (t,d)
+    | otherwise = error "Invalid span"
 
 -- | Get the era (onset to offset) of a given value.
 era :: (HasOnset a, HasOffset a) => a -> Span

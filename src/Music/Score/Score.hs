@@ -30,6 +30,7 @@
 module Music.Score.Score (
         -- * Score type
         Score,
+        renderScore,
         getScoreMeta,
         setScoreMeta,
   ) where
@@ -42,6 +43,7 @@ import Data.Semigroup
 import Data.Pointed
 import Control.Arrow
 import Control.Applicative
+import Control.Comonad
 import Control.Monad
 import Control.Monad.Plus
 import Control.Monad.Compose
@@ -75,6 +77,11 @@ import Music.Score.Util
 
 newtype Score a = Score { getScore :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
+
+inScore f = Score . f . getScore
+
+renderScore :: Score a -> Score (Note a)
+renderScore = inScore (second (renderNScore))
 
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
@@ -113,11 +120,15 @@ instance Stretchable (Score a) where
 instance HasDuration (Score a) where
     duration = durationDefault
 
-perform' :: Score a -> [Note a]
-perform' = List.sortBy (comparing $ fst . getNote) . getNScore . snd . getScore
+renderScore' :: Score a -> [Note a]
+renderScore' = renderNScore' . snd . getScore
+
+
+renderNScore' :: NScore a -> [Note a]
+renderNScore' = List.sortBy (comparing $ getNoteSpan) . getNScore
 
 instance Performable (Score a) where
-    perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . perform'
+    perform = fmap ((\(delta -> (t,d),x) -> (t,d,x)) . getNote) . renderScore'
 instance Composable (Score a) where
 
 instance Reversible a => Reversible (Score a) where
@@ -145,6 +156,11 @@ getScoreMeta (Score (m,_)) = m
 -- 
 newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
     deriving (Functor, Foldable, Semigroup, Monoid, Traversable, Delayable, Stretchable, HasOnset, HasOffset)
+
+inNScore f = NScore . f . getNScore
+
+renderNScore :: NScore a -> NScore (Note a)
+renderNScore = inNScore $ fmap duplicate
 
 instance Newtype (NScore a) [Note a] where
     pack = NScore
