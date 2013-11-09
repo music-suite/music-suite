@@ -142,28 +142,23 @@ removeRests     = mcatMaybes
 -- Mapping
 --------------------------------------------------------------------------------
 
--- type Mappable a b = (Performable a, Composable b)
-
 -- |
 -- Map over the events in a score.
 --
-mapEvents      :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f                 = mapAll $ fmap (third' f)
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapEvents f = mapScore ((uncurry . uncurry) f . first delta . unnote)
 
 -- |
 -- Filter the events in a score.
 --
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f              = mapFilterEvents (partial3 f)
+filterEvents f = mapFilterEvents (partial3 f)
 
 -- |
 -- Efficient combination of 'mapEvents' and 'filterEvents'.
 --
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = mapAll $ mcatMaybes . fmap (unM . third' f)
-    where
-        unM (a,b,Nothing) = Nothing
-        unM (a,b,Just c)  = Just (a,b,c)
+mapFilterEvents f = mcatMaybes . mapEvents f
 
 -- |
 -- Map over all events in a score.
@@ -175,21 +170,20 @@ mapAll f = compose . f . perform
 -- |
 -- Return a score containing only the notes whose offset falls before the given duration.
 --
-before          :: Time -> Score a -> Score a
+before :: Time -> Score a -> Score a
 before b = filterEvents (\t d _ -> t .+^ d <= b) 
 
 -- |
 -- Return a score containing only the notes whose onset falls after given duration.
 --
-after           :: Time -> Score a -> Score a
+after :: Time -> Score a -> Score a
 after a = filterEvents (\t d _ -> a <= t)
 
 -- |
 -- Return a score containing only the notes whose onset and offset falls between the given durations.
 --
-slice           :: Time -> Time -> Score a -> Score a
+slice :: Time -> Time -> Score a -> Score a
 slice a b = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
-
 
 split :: Time -> Score a -> (Score a, Score a)
 split t a = (before t a, after t a)
@@ -203,7 +197,7 @@ splice t d a = tripr (before t a, split (t .+^ d) a)
 -- If a part has only one notes, the first function is applied.
 -- If a part has no notes, it is returned unchanged.
 --
-mapFirst    :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
+mapFirst :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 mapFirst f g = mapPhrase f g g
 
 -- |
@@ -212,7 +206,7 @@ mapFirst f g = mapPhrase f g g
 -- If a part has only one notes, the first function is applied.
 -- If a part has no notes, it is returned unchanged.
 --
-mapLast     :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
+mapLast :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
 mapLast f g = mapPhrase g g f
 
 -- |
@@ -221,7 +215,7 @@ mapLast f g = mapPhrase g g f
 -- If a part has fewer than three notes the first takes precedence over the last,
 -- and last takes precedence over the middle.
 --
-mapPhrase       :: HasPart' a => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapPhrase :: HasPart' a => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapPhrase f g h = mapAllParts (fmap $ mapPhraseSingle f g h)
 
 -- |

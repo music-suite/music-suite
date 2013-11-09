@@ -30,6 +30,7 @@
 module Music.Score.Score (
         -- * Score type
         Score,
+        mapScore,
         reifyScore,
         getScoreMeta,
         setScoreMeta,
@@ -81,13 +82,27 @@ newtype Score a = Score { getScore :: (Meta, NScore a) }
 inScore f = Score . f . getScore
 
 
--- FIXME
--- This doesn't "reify" the time structure, but duplicates it
--- Rename to make this more clear?
--- Then use combinator like (Score (Note a) -> Score (Note a)) -> Score a -> Score a
-reifyScore :: Score a -> Score (Note a)
-reifyScore = inScore (second (reifyNScore))
+-- | Map with the associated time span.
+mapScore :: (Note a -> b) -> Score a -> Score b
+mapScore f = inScore (second $ mapNScore f)
 
+-- | Reify the associated time span.
+reifyScore :: Score a -> Score (Note a)
+reifyScore = inScore (second reifyNScore)
+
+
+-- TODO more generic versions of these two:
+
+-- | Set the meta information of a score.
+setScoreMeta :: Meta -> Score a -> Score a
+setScoreMeta m (Score (_,a)) = Score (m,a)
+
+-- | Get the meta information of a score.
+getScoreMeta :: Score a -> Meta
+getScoreMeta (Score (m,_)) = m
+
+
+-- TODO remove these, see #97
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
@@ -135,16 +150,6 @@ instance Reversible a => Reversible (Score a) where
 
 instance HasMeta (Score a) where
     applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
-
--- | Set the meta information of a score.
--- TODO more generic version
-setScoreMeta :: Meta -> Score a -> Score a
-setScoreMeta m (Score (_,a)) = Score (m,a)
-
--- | Get the meta information of a score.
--- TODO more generic version
-getScoreMeta :: Score a -> Meta
-getScoreMeta (Score (m,_)) = m
 
 
 -- |
