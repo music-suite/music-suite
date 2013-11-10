@@ -378,3 +378,15 @@ composerDuring s c = addMetaNoteNP (s =: attribution1 "composer" c)
 
 
 
+
+newtype RehearsalMark = RehearsalMark ()
+    deriving (Typeable, Monoid, Semigroup)
+
+
+
+
+
+
+
+
+
