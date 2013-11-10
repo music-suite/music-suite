@@ -163,6 +163,7 @@ slice u v = filterEvents (\t d _ -> u <= t && t .+^ d <= v)
 split :: Time -> Score a -> (Score a, Score a)
 split t a = (before t a, after t a)
 
+-- | Split a score into three parts
 splice :: Time -> Duration -> Score a -> (Score a, Score a, Score a)
 splice t d a = tripr (before t a, split (t .+^ d) a)
 
@@ -269,6 +270,12 @@ mapParts        :: HasPart' a => (Score a -> Score b) -> Score a -> Score b
 --
 mapAllParts     :: HasPart' a => ([Score a] -> [Score b]) -> Score a -> Score b
 
+{-# DEPRECATED mapParts "" #-}
+{-# DEPRECATED mapAllParts "" #-}
+{-# DEPRECATED filterPart "" #-}
+{-# DEPRECATED extractParts "" #-}
+{-# DEPRECATED extractParts' "" #-}
+
 
 mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 mapParts f      = mapAllParts (fmap f)
@@ -330,6 +337,7 @@ applySingle fs = notJoin . fmap (uncurry ($)) . sample fs
     where
         notJoin   = mconcat . Foldable.toList
         sample fs = snapshotSingle (voiceToScore fs)
+{-# DEPRECATED applySingle "" #-}
 
 -- |
 -- Get all notes that start during a given note.
