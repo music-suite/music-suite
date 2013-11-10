@@ -77,6 +77,14 @@ module Music.Score.Meta (
         titleDuring,
         subtitle,
         subtitleDuring,
+        
+        Attribution,
+        getAttribution,
+        attribution,
+        attribution1,
+        composer,
+        composerDuring,
+        
   ) where
 
 import Control.Arrow
@@ -338,6 +346,35 @@ subtitle t x = subtitleDuring (era x) t x
 
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addMetaNoteNP (s =: denoteTitle t)
+
+
+
+
+
+
+
+
+newtype Attribution = Attribution (Map String (Option (Last String)))
+    deriving (Typeable, Monoid, Semigroup)
+
+instance Show Attribution where
+    show (Attribution a) = "attribution " ++ show (Map.toList (fmap (fmap getLast . getOption) $ a))
+
+attribution :: [(String, String)] -> Attribution
+attribution = Attribution . fmap (Option . Just . Last) . Map.fromList
+
+attribution1 :: String -> String -> Attribution
+attribution1 k v = Attribution . fmap (Option . Just . Last) $ Map.singleton k v
+
+getAttribution :: Attribution -> String -> Maybe String
+getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . getOption) $ a)
+
+
+composer :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
+composer t x = composerDuring (era x) t x
+
+composerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
+composerDuring s c = addMetaNoteNP (s =: attribution1 "composer" c)
 
 
 

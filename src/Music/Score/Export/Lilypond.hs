@@ -251,8 +251,8 @@ scatLy = foldr Lilypond.sequential e
 writeLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
 writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
     where 
-        -- TODO generate \header block after this
         title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         
         lyFilePrefix = mempty                                          ++
             "\\include \"lilypond-book-preamble.ly\"\n"                ++
@@ -268,7 +268,7 @@ writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toL
             "\\header {\n"                                             ++
 
             "  title = \"" ++ title ++ "\"\n" ++
-            -- "  composer = C\n" ++
+            "  composer = \"" ++ composer ++ "\"\n" ++
             -- "  poet = P\n" ++
             
             "}\n"                                                      ++
