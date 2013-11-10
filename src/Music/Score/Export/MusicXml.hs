@@ -47,6 +47,7 @@ import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
 import Control.Arrow
+import Data.Pointed
 import Data.Maybe
 import Data.Either
 import Data.Foldable
@@ -68,6 +69,7 @@ import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Meta
+import Music.Score.Clef
 import Music.Score.Chord
 import Music.Score.Combinators
 import Music.Score.Convert
@@ -186,6 +188,19 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
             nbg    = if bg then Xml.beginGliss else id
             nbs    = if bs then Xml.beginSlide else id
 
+instance HasMusicXml a => HasMusicXml (ClefT a) where
+    getMusicXml d (ClefT (c, a)) = notate $ getMusicXml d a
+        where
+            notate = case fmap getLast $ getOption c of
+                Nothing -> id
+                Just GClef -> (Xml.trebleClef <>)
+                Just CClef -> (Xml.altoClef <>)
+                Just FClef -> (Xml.bassClef <>)
+            --     Just GClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Treble, x]
+            --     Just CClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
+            --     Just FClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Bass, x]
+
+
 -- |
 -- Convert a score to MusicXML and write to a file.
 --
@@ -226,8 +241,14 @@ toXmlString = Xml.showXml . toXml
 -- Convert a score to a MusicXML representation.
 --
 toXml :: forall a . (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
-toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . simultaneous) . extractParts $ sc
+toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . simultaneous . addClefs) . extractParts $ sc
     where
+        addClefT :: a -> ClefT a
+        addClefT = point
+        
+        addClefs = setCl . fmap addClefT
+        setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
+
         title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
 

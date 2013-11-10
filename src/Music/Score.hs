@@ -43,6 +43,7 @@ module Music.Score (
         -- ** Meta-information
         module Music.Score.Meta,
         module Music.Score.Annotations,
+        module Music.Score.Clef,
 
         -- ** Musical elements
         module Music.Score.Part,
@@ -85,6 +86,7 @@ import Music.Score.Convert
 import Music.Score.Chord
 import Music.Score.Meta
 import Music.Score.Annotations
+import Music.Score.Clef
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
