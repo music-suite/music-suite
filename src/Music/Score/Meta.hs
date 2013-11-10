@@ -69,9 +69,14 @@ module Music.Score.Meta (
         setTempoDuring,
 
         Title,
-        titleAtLevel,
-        setTitle,
-        setTitleDuring,
+        mkTitle,
+        denoteTitle,
+        getTitle,
+        getTitleAt,
+        title,
+        titleDuring,
+        subtitle,
+        subtitleDuring,
   ) where
 
 import Control.Arrow
@@ -303,21 +308,36 @@ instance IsString Title where
     fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
 
 instance Show Title where
-    show (Title t) = List.intercalate " " . untilFail . fmap (fmap getLast . getOption) $ fmap t [0..]
-        where
-            untilFail = fmap fromJust . takeWhile isJust
+    show = List.intercalate " " . getTitle
 
-titleAtLevel :: Title -> Int -> Maybe String
-titleAtLevel (Title t) n = fmap getLast . getOption $ t n
+mkTitle :: String -> Title
+mkTitle = fromString
+
+denoteTitle :: Title -> Title
+denoteTitle (Title t) = Title (t . subtract 1)
+
+getTitle :: Title -> [String]
+getTitle t = untilFail . fmap (getTitleAt t) $ [0..]
+    where
+        untilFail = fmap fromJust . takeWhile isJust
+
+getTitleAt :: Title -> Int -> Maybe String
+getTitleAt (Title t) n = fmap getLast . getOption . t $ n
 
 -- withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
 -- withTitle = withMeta
 
-setTitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
-setTitle t x = setTitleDuring (era x) t x
+title :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
+title t x = titleDuring (era x) t x
 
-setTitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-setTitleDuring s t = addMetaNoteNP (s =: t)
+titleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
+titleDuring s t = addMetaNoteNP (s =: t)
+
+subtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
+subtitle t x = subtitleDuring (era x) t x
+
+subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
+subtitleDuring s t = addMetaNoteNP (s =: denoteTitle t)
 
 
 

@@ -228,7 +228,7 @@ toXmlString = Xml.showXml . toXml
 toXml :: forall a . (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
 toXml sc = Xml.fromParts title "Composer" pl . fmap (toXmlVoice' . scoreToVoice . simultaneous) . extractParts $ sc
     where
-        title = fromMaybe "" $ flip titleAtLevel 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         pl = Xml.partList (fmap show $ getParts sc)
         -- asScore a = (a :: Score a)
 
