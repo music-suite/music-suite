@@ -214,8 +214,9 @@ mapPhraseSingle f g h = mapAll (mapFTL (third f) (third g) (third h))
 -- Map over all events in a score.
 --
 mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
-mapAll f = compose . f . perform
-
+mapAll f = saveMeta $ compose . f . perform
+    where
+        saveMeta f x = setScoreMeta (getScoreMeta x) $ f x
 
 
 
