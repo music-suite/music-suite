@@ -51,25 +51,25 @@ module Music.Score.Combinators (
         extractParts',
         
         -- ** Map over parts
-        mapPart,
+        -- mapPart,
         mapParts,
         mapAllParts,
-        modifyParts,
+        -- modifyParts,
 
         -- ** Part composition
         (</>),
-        moveParts,
-        moveToPart,
+        -- moveParts,
+        -- moveToPart,
 
         -- * Zippers
-        apply,
-        snapshot,
-        snapshotWith,
+        -- apply,
+        -- snapshot,
+        -- snapshotWith,
 
         -- ** Single-part versions
         applySingle,
-        snapshotSingle,
-        snapshotWithSingle,
+        -- snapshotSingle,
+        -- snapshotWithSingle,
   ) where
 
 import Control.Monad
@@ -167,26 +167,19 @@ mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
 mapAll f = compose . f . perform
 
 
--- |
--- Return a score containing only the notes whose /offset/ occurs no later than the given
--- time.
---
+-- | Retain only the notes whose /offset/ does not fall after the given time.
 before :: Time -> Score a -> Score a
 before u = filterEvents (\t d _ -> t .+^ d <= u) 
 
--- |
--- Return a score containing only the notes whose /onset/ occurs no earlier given
--- duration.
---
+-- | Retain only the notes whose /onset/ does not fall before the given time.
 after :: Time -> Score a -> Score a
 after u = filterEvents (\t d _ -> u <= t)
 
--- |
--- Return a score containing only the notes whose onset and offset falls between the given durations.
---
+-- | Returns notes whose /onset/ and /offset/ fall between the given times.
 slice :: Time -> Time -> Score a -> Score a
-slice a b = filterEvents (\t d _ -> a <= t && t .+^ d <= b)
+slice u v = filterEvents (\t d _ -> u <= t && t .+^ d <= v)
 
+-- | Split a score into events whose onsets
 split :: Time -> Score a -> (Score a, Score a)
 split t a = (before t a, after t a)
 
