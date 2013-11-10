@@ -37,13 +37,15 @@ module Music.Score (
         module Music.Score.Combinators,
 
         -- ** Structure
-        module Music.Score.Part,
         module Music.Score.Ties,
         module Music.Score.Chord,
+
+        -- ** Meta-information
         module Music.Score.Meta,
         module Music.Score.Annotations,
 
         -- ** Musical elements
+        module Music.Score.Part,
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
