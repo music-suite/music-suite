@@ -125,7 +125,7 @@ removeRests = mcatMaybes
 
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . unnote)
+mapWithSpan f = mapScore (uncurry f . getNote)
 
 -- | Filter the events in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
@@ -421,6 +421,6 @@ withMeta' part f x = let
     r = runMeta part m
     in case splitReactive r of
         Left  a -> f a x
-        Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(unnote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
+        Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(getNote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
 
 

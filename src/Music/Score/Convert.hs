@@ -66,11 +66,11 @@ import qualified Data.Foldable as Foldable
 
 -- | Convert a note to a voice.
 noteToVoice :: Note a -> Voice a
-noteToVoice (unnote -> (s,x)) = stretchTo (duration s) $ return x
+noteToVoice (getNote -> (s,x)) = stretchTo (duration s) $ return x
 
 -- | Convert a note to a score.
 noteToScore :: Note a -> Score a
-noteToScore (unnote -> (s,x)) = s `sapp` return x
+noteToScore (getNote -> (s,x)) = s `sapp` return x
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.

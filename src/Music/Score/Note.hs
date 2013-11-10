@@ -10,7 +10,7 @@
 
 module Music.Score.Note (
         Note(..),
-        unnote,
+        getNote,
         getNoteSpan,
         getNoteValue,
         (=:),
@@ -29,19 +29,19 @@ import qualified Data.Traversable as T
 
 import Music.Time
 
-newtype Note a = Note { getNote :: (Span, a) }
+newtype Note a = Note { getNote_ :: (Span, a) }
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
-unnote :: Note a -> (Span, a)
-unnote (Note x) = x
+getNote :: Note a -> (Span, a)
+getNote (Note x) = x
 
 -- | Get the span of the note. Same as 'era' and 'ask'.
 getNoteSpan :: Note a -> Span
-getNoteSpan = fst . unnote
+getNoteSpan = fst . getNote
 
 -- | Get the value of the note. Same as 'extract'.
 getNoteValue :: Note a -> a
-getNoteValue = snd . unnote 
+getNoteValue = snd . getNote 
 
 -- Note that 
 -- extract = getNoteValue
