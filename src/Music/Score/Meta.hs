@@ -298,6 +298,7 @@ setTempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 newtype Title = Title (Int -> Option (Last String))
     deriving (Typeable, Monoid, Semigroup)
+
 instance IsString Title where
     fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
 
@@ -317,3 +318,6 @@ setTitle t x = setTitleDuring (era x) t x
 
 setTitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 setTitleDuring s t = addMetaNoteNP (s =: t)
+
+
+
