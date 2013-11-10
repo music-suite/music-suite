@@ -72,6 +72,9 @@ instance HasTremolo (TremoloT a) where
 instance HasTremolo b => HasTremolo (a, b) where
     setTrem n = fmap (setTrem n)
 
+instance HasTremolo a => HasTremolo (Score a) where
+    setTrem n = fmap (setTrem n)
+
 
 
 
@@ -85,6 +88,11 @@ newtype TextT a = TextT { getTextT :: ([String], a) }
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
 
+instance HasText a => HasText (b, a) where
+    addText       s                                 = fmap (addText s)
+
+instance HasText a => HasText (Score a) where
+    addText       s                                 = fmap (addText s)
 
 
 
@@ -101,13 +109,10 @@ instance HasHarmonic (HarmonicT a) where
 
 instance HasHarmonic a => HasHarmonic (b, a) where
     setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (b, a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (b, a) where
-    addText       s                                 = fmap (addText s)
+
+instance HasHarmonic a => HasHarmonic (Score a) where
+    setHarmonic n = fmap (setHarmonic n)
+
 
 
 class HasSlide a where
@@ -125,12 +130,23 @@ instance HasSlide (SlideT a) where
     setEndGliss   eg (SlideT (_,es,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
     setEndSlide   es (SlideT (eg,_,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
 
+instance HasSlide a => HasSlide (b, a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
+
+instance HasSlide a => HasSlide (Score a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
 --
-tremolo :: (Functor s, HasTremolo b) => Int -> s b -> s b
-tremolo n = fmap (setTrem n)
+tremolo :: HasTremolo a => Int -> a -> a
+tremolo = setTrem
 
 -- |
 -- Attach the given text to the first note in the score.
@@ -154,13 +170,13 @@ glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-harmonic :: (Functor s, HasHarmonic a) => Int -> s a -> s a
-harmonic n = fmap (setHarmonic n)
+harmonic :: HasHarmonic a => Int -> a -> a
+harmonic = setHarmonic
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
-artificial :: (Functor s, HasHarmonic a) => s a -> s a
-artificial = fmap f where f = setHarmonic (-4)
+artificial :: HasHarmonic a => a -> a
+artificial = setHarmonic (-4)
 
