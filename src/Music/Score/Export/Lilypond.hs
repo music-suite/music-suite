@@ -247,9 +247,10 @@ scatLy = foldr Lilypond.sequential e
 -- Convert a score to a Lilypond representation and write to a file.
 --
 writeLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
-writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
-    where
-        header = mempty                                                ++
+writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
+    where 
+        -- TODO generate \header block after this
+        lyFilePrefix = mempty                                          ++
             "\\include \"lilypond-book-preamble.ly\"\n"                ++
             "\\paper {\n"                                              ++
             "  #(define dump-extents #t)\n"                            ++
