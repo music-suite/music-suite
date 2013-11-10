@@ -5,6 +5,7 @@
     DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
+    ScopedTypeVariables,
     FlexibleContexts,
     UndecidableInstances, -- for Clef
     ConstraintKinds,
@@ -60,6 +61,7 @@ import Data.Basis
 import System.Process
 
 import Music.Time
+import Music.Time.Reactive (initial, (?))
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm
@@ -246,10 +248,12 @@ scatLy = foldr Lilypond.sequential e
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
+writeLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
 writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
     where 
         -- TODO generate \header block after this
+        title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        
         lyFilePrefix = mempty                                          ++
             "\\include \"lilypond-book-preamble.ly\"\n"                ++
             "\\paper {\n"                                              ++
@@ -260,6 +264,13 @@ writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toL
             "  ragged-right = ##t\n"                                   ++
             "  force-assignment = #\"\"\n"                             ++
             "  line-width = #(- line-width (* mm  3.000000))\n"        ++
+            "}\n"                                                      ++
+            "\\header {\n"                                             ++
+
+            "  title = \"" ++ title ++ "\"\n" ++
+            -- "  composer = C\n" ++
+            -- "  poet = P\n" ++
+            
             "}\n"                                                      ++
             "\\layout {\n"                                             ++
             "}\n\n"
