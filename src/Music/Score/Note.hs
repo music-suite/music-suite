@@ -75,7 +75,7 @@ instance HasOffset (Note a) where
 -- Typically used with the span constructors as in:
 --
 -- > 0 <-> 2 =: c
--- > 0 --> 1 =: d
+-- > 0 >-> 1 =: d
 --
 (=:) :: Span -> a -> Note a
 s =: x  =  Note (s,x)

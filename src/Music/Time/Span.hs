@@ -28,7 +28,7 @@ module Music.Time.Span (
 
         -- ** Constructing spans
         (<->),
-        (-->),
+        (>->),
         era,
         
         -- ** Span as transformation
@@ -110,11 +110,11 @@ sunit = mempty
 
 -- | @t \<-\> u@ represents the span between @t@ and @u@.
 (<->) :: Time -> Time -> Span
-(<->) t u = t --> (u .-. t)
+(<->) t u = t >-> (u .-. t)
 
--- | @t --> d@ represents the span between @t@ and @t .+^ d@.
-(-->) :: Time -> Duration -> Span
-t --> d
+-- | @t >-> d@ represents the span between @t@ and @t .+^ d@.
+(>->) :: Time -> Duration -> Span
+t >-> d
     | d > 0     = Span (t,d)
     | otherwise = error "Invalid span"
 

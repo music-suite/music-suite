@@ -75,7 +75,7 @@ instance IsString Annotation where fromString = Annotation . return
 
 -- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
-annotate str x = annotateSpan (start --> duration x) str x
+annotate str x = annotateSpan (start >-> duration x) str x
 
 -- | Annotate the whole score.
 annotateSpan :: Span -> String -> Score a -> Score a

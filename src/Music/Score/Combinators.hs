@@ -394,8 +394,8 @@ minimum' z = option z getMin . foldMap (Option . Just . Min)
 
 
 withSpan :: Score a -> Score (Span, a)
-withSpan = mapEvents (\t d x -> (t-->d,x))
-withTime = mapEvents (\t d x -> (t,x))
+withSpan = mapEvents (\t d x -> (t >-> d,x))
+withTime = mapEvents (\t d x -> (t, x))
 
 inSpan t' (range -> (t,u)) = t <= t' && t' < u
 

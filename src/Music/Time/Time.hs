@@ -17,13 +17,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Time (
-        -- * Time and duration types
-        Time(..),
-        Duration,
         -- $convert
+        
+        -- * Duration type
+        Duration,
+        unit,
+
+        -- * Time type
+        Time(..),
         start,
         stop,
-        unit,
   ) where
 
 import Data.Semigroup
