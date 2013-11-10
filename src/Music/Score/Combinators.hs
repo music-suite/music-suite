@@ -16,28 +16,35 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Combinators (
-        -- * Rests
+        -- * Basic
         note,
         rest,
         noteRest,
         removeRests,
 
+        -- * Mapping over events
+        mapEvents,
+
+        -- * Filtering events 
+
         -- ** Editing
+        filterEvents,
+        mapFilterEvents,
+
+        -- * Editing
         before,
         after,
-        slice,
         split,
+        slice,
         splice,
 
-        -- * Maps and filters
+        -- * Meta-events
         withMeta,
         withMetaNP,
 
-        -- ** Events
-        mapEvents,
-        filterEvents,
-        mapFilterEvents,
-        
+
+
+
         -- ** Map over phrases
         mapFirst,
         mapLast,
@@ -100,72 +107,45 @@ import Music.Score.Util
 import qualified Data.List as List
 import qualified Data.Foldable as Foldable
 
--------------------------------------------------------------------------------------
--- Constructors
--------------------------------------------------------------------------------------
+-- | Create a score containing a note at time zero and duration one. This is an alias for 'return'.
+note :: Monad m => a -> m a
+note = return
 
--- |
--- Create a score containing a note at time zero and duration one. This is an alias for 'return'.
---
--- > a -> Score a
---
-note            :: a -> Score a
+-- | Create a score containing a rest at time zero and duration one. This is an alias for @'return' 'Nothing'@.
+rest :: MonadPlus m => m (Maybe a)
+rest = return Nothing
 
--- |
--- Create a score containing a rest at time zero and duration one. This is an alias for @'return' 'Nothing'@.
---
--- > Score (Maybe a)
---
-rest            :: Score (Maybe a)
+-- | Create a note or a rest at time zero and duration one. This is an alias for 'mfromMaybe'.
+noteRest :: MonadPlus m => Maybe a -> m a
+noteRest = mfromMaybe
 
--- |
--- Create a note or a rest at time zero and duration one. This is an alias for 'mfromMaybe'.
---
--- > Maybe a -> Score a
---
-noteRest        :: Maybe a -> Score a
+-- | Remove all rests from a score. This is an alias for 'mcatMaybes'.
+removeRests :: MonadPlus m => m (Maybe a) -> m a
+removeRests = mcatMaybes
 
--- |
--- Remove all rests from a score. This is an alias for 'mcatMaybes'.
---
--- > Score (Maybe a) -> Score a
---
-removeRests     :: Score (Maybe a) -> Score a
+-- | Map over the events in a score.
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+mapWithSpan f = mapScore (uncurry f . unnote)
 
-note            = return
-rest            = return Nothing
-noteRest        = mfromMaybe
-removeRests     = mcatMaybes
+-- | Filter the events in a score.
+filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
+filterWithSpan f = mapFilterWithSpan (partial2 f)
 
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
+mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
---------------------------------------------------------------------------------
--- Mapping
---------------------------------------------------------------------------------
-
--- |
--- Map over the events in a score.
---
+-- | Map over the events in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapScore ((uncurry . uncurry) f . first delta . unnote)
+mapEvents f = mapWithSpan (uncurry f . delta)
 
--- |
--- Filter the events in a score.
---
+-- | Filter the events in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
 filterEvents f = mapFilterEvents (partial3 f)
 
--- |
--- Efficient combination of 'mapEvents' and 'filterEvents'.
---
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
-
--- |
--- Map over all events in a score.
---
-mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
-mapAll f = compose . f . perform
-
 
 -- | Retain only the notes whose /offset/ does not fall after the given time.
 before :: Time -> Score a -> Score a
@@ -185,6 +165,10 @@ split t a = (before t a, after t a)
 
 splice :: Time -> Duration -> Score a -> (Score a, Score a, Score a)
 splice t d a = tripr (before t a, split (t .+^ d) a)
+
+
+
+
 
 -- |
 -- Map over the first, and remaining notes in each part.
@@ -222,6 +206,14 @@ mapPhrase f g h = mapAllParts (fmap $ mapPhraseSingle f g h)
 --
 mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapPhraseSingle f g h = mapAll (mapFTL (third f) (third g) (third h))
+
+
+
+-- |
+-- Map over all events in a score.
+--
+mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
+mapAll f = compose . f . perform
 
 
 
