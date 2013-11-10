@@ -261,7 +261,7 @@ writeLy path sc = writeFile path ((header ++) $ show $ Pretty.pretty $ toLy sc)
             "  line-width = #(- line-width (* mm  3.000000))\n"        ++
             "}\n"                                                      ++
             "\\layout {\n"                                             ++
-            "}\n"
+            "}\n\n"
 
 -- |
 -- Typeset a score using Lilypond and open it.
