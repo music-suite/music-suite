@@ -97,7 +97,7 @@ voiceToScore = scat . fmap g . getVoice
 
 -- | Join voices in a given part into a score.
 voicesToScore :: HasPart a => [(Part a, Voice a)] -> Score a
-voicesToScore = pcat . fmap (voiceToScore . uncurry setParts)
+voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
 
 -- |
 -- Convert a voice which may contain rests to a score.

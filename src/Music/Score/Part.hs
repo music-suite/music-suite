@@ -31,7 +31,6 @@ module Music.Score.Part (
         HasPart',
         PartT(..),
         getParts,
-        setParts,
   ) where
 
 import Control.Monad.Plus
@@ -96,6 +95,8 @@ instance HasPart b => HasPart (a,b) where
 --
 type HasPart' a = (Show (Part a), Ord (Part a), Default (Part a), HasPart a)
 
+-- TODO unify with class above as in Pitch?
+
 -- |
 -- Get all parts in the given score. Returns a list of parts.
 --
@@ -103,14 +104,4 @@ type HasPart' a = (Show (Part a), Ord (Part a), Default (Part a), HasPart a)
 --    
 getParts :: (Foldable t, HasPart' a) => t a -> [Part a]
 getParts = List.sort . List.nub . fmap getPart . toList
-
--- |
--- Set all parts in the given score.
---
--- > Part -> Score a -> Score a
---
-setParts :: (HasPart a, Functor s) => Part a -> s a -> s a
-setParts n = fmap (setPart n)
-
-
 
