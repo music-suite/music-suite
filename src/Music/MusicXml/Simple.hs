@@ -198,6 +198,14 @@ module Music.MusicXml.Simple (
         segno,
         coda,
 
+        -----------------------------------------------------------------------------
+        -- * Folds and maps
+        -----------------------------------------------------------------------------
+        
+        mapNote,
+        mapMusic,
+        foldMusic,
+
   ) 
 where
 
@@ -643,16 +651,19 @@ endDim          = Music $ [MusicDirection $ Diminuendo Stop]
 dynamic :: Dynamics -> Music
 dynamic level   = Music $ [MusicDirection $ Dynamics level]
 
-
--- FIXME should scale duration by inverse, see #1
 tuplet :: Int -> Int -> Music -> Music
-tuplet m n (Music [])   = Music []
-tuplet m n (Music [xs]) = Music [xs]
-tuplet m n (Music xs)   = setTimeMod m n $ (as <> bs <> cs)
-    where
+tuplet m n (Music [])   = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ Music []
+tuplet m n (Music [xs]) = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ Music [xs]
+tuplet m n (Music xs)   = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ setTimeMod m n $ (as <> bs <> cs)
+    where                                 
         as  = beginTuplet $ Music [head xs]
         bs  = Music $ init (tail xs)
         cs  = endTuplet $ Music [last (tail xs)]
+
+scaleDur x = mapMusic id (mapNote 
+    (\f d t p -> (f,round $ fromIntegral d*x,t,p)) 
+    (\f d p -> (f,round $ fromIntegral d*x,p)) 
+    (\f t p -> (f,t,p))) id
 
 beam :: Music -> Music
 beam (Music [])   = Music []
@@ -716,6 +727,28 @@ segno, coda :: Music
 segno = Music . single . MusicDirection $ Segno
 coda  = Music . single . MusicDirection $ Coda
 
+-- ----------------------------------------------------------------------------------
+
+mapNote fn fc fg = go
+    where 
+            go (Note f d t p)    = let (f',d',t',p') = fn f d t p   in Note f' d' t' p'
+            go (CueNote f d p)   = let (f',d',p')    = fc f d p     in CueNote f' d' p'
+            go (GraceNote f t p) = let (f',t',p')    = fg f t p     in GraceNote f' t' p'
+
+mapMusic :: (Attributes -> Attributes) -> (Note -> Note) -> (Direction -> Direction) -> Music -> Music
+mapMusic fa fn fd = foldMusic (MusicAttributes . fa) (MusicNote . fn) (MusicDirection . fd) (Music . return)
+
+foldMusic :: Monoid m => (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> (r -> m) -> Music -> m
+foldMusic fa fn fd f = mconcat . fmap f . (foldMusic' $ fmap (foldMusicElem fa fn fd))
+
+foldMusic' :: ([MusicElem] -> r) -> Music -> r
+foldMusic' f (Music x) = f x
+
+foldMusicElem :: (Attributes -> r) -> (Note -> r) -> (Direction -> r) -> MusicElem -> r
+foldMusicElem = go
+    where go fa fn fd (MusicAttributes x) = fa x
+          go fa fn fd (MusicNote x)       = fn x
+          go fa fn fd (MusicDirection x)  = fd x
 
 -- ----------------------------------------------------------------------------------
 
@@ -768,3 +801,5 @@ isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n)
 
 single x = [x]
 equalTo  = (==)
+
+
