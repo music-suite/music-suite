@@ -89,6 +89,7 @@ library
         Music.Score.Part
         Music.Score.Chord
         Music.Score.Meta
+        Music.Score.Clef
         Music.Score.Pitch
         Music.Score.Articulation
         Music.Score.Dynamics
