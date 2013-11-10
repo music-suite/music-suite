@@ -122,11 +122,23 @@ t --> d
 era :: (HasOnset a, HasOffset a) => a -> Span
 era x = onset x <-> offset x
 
--- | Render a span as a time and duration.
+-- | 
+-- Deconstruct a span as a time and duration.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (delta -> (t,d)) = ...
+--
 delta :: Span -> (Time, Duration)
 delta (Span x) = x
 
--- | Render a span as onset and offset.
+-- | 
+-- Deconstruct a span as onset and offset.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (range -> (u,v)) = ...
+--
 range :: Span -> (Time, Time)
 range x = let (t, d) = delta x
     in (t, t .+^ d)

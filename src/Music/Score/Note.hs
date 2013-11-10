@@ -9,7 +9,7 @@
     FlexibleInstances #-}
 
 module Music.Score.Note (
-        Note(..),
+        Note,
         getNote,
         getNoteSpan,
         getNoteValue,
@@ -32,6 +32,13 @@ import Music.Time
 newtype Note a = Note { getNote_ :: (Span, a) }
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
+-- | 
+-- Deconstruct a note.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (getNote -> (s,x)) = ...
+--
 getNote :: Note a -> (Span, a)
 getNote (Note x) = x
 

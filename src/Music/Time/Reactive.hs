@@ -103,7 +103,7 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
     )
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (Note (range -> (start,stop),x)) y = switch start y (switch stop x y)
+activate (getNote -> (range -> (start,stop), x)) y = switch start y (switch stop x y)
 
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
