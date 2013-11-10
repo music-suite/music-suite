@@ -36,7 +36,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Music.Time.Relative
+import Data.AffineSpace.Relative
 import Music.Time.Time
 import Music.Time.Onset
 import Music.Time.Juxtapose -- for Transformable

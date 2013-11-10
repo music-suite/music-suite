@@ -50,9 +50,9 @@ import Data.Traversable
 import qualified Data.List as List
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Relative
 import Data.Ratio
 
-import Music.Time.Relative
 import Music.Pitch.Literal
 
 class HasPitch a where

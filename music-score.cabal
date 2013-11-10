@@ -62,7 +62,7 @@ library
         Control.Monad.Compose
         
         Music.Time
-        Music.Time.Relative
+        Data.AffineSpace.Relative
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable

@@ -4,7 +4,7 @@
 --
 -- TODO Move. Perhaps these could be added to vector-space-point?
 --
-module Music.Time.Relative where
+module Data.AffineSpace.Relative where
 
 import Data.Semigroup
 import Data.VectorSpace

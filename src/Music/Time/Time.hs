@@ -31,7 +31,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 
-import Music.Time.Relative
+import Data.AffineSpace.Relative
 
 -- $convert
 --

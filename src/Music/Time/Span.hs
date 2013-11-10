@@ -54,7 +54,7 @@ import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable
 import Music.Time.Onset
-import Music.Time.Relative
+import Data.AffineSpace.Relative
 import Music.Time.Reverse
 
 -- |

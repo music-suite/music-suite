@@ -41,7 +41,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 import Music.Time.Time
-import Music.Time.Relative
+import Data.AffineSpace.Relative
 
 -- |
 -- Stretchable values. 
