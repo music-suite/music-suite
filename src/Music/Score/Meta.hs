@@ -67,6 +67,11 @@ module Music.Score.Meta (
         Tempo,
         setTempo,
         setTempoDuring,
+
+        Title,
+        titleAtLevel,
+        setTitle,
+        setTitleDuring,
   ) where
 
 import Control.Arrow
@@ -207,7 +212,6 @@ setClef c x = setClefDuring (onset x <-> offset x) c x
 
 setClefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
 setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
--- XXX
 
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
@@ -288,3 +292,28 @@ setTempo c x = setTempoDuring (onset x <-> offset x) c x
 setTempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 setTempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
+
+
+
+
+newtype Title = Title (Int -> Option (Last String))
+    deriving (Typeable, Monoid, Semigroup)
+instance IsString Title where
+    fromString x = Title $ \n -> if n == 0 then Option (Just (Last x)) else Option Nothing
+
+instance Show Title where
+    show (Title t) = List.intercalate " " . untilFail . fmap (fmap getLast . getOption) $ fmap t [0..]
+        where
+            untilFail = fmap fromJust . takeWhile isJust
+
+titleAtLevel :: Title -> Int -> Maybe String
+titleAtLevel (Title t) n = fmap getLast . getOption $ t n
+
+-- withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
+-- withTitle = withMeta
+
+setTitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
+setTitle t x = setTitleDuring (onset x <-> offset x) t x
+
+setTitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
+setTitleDuring s t = addMetaNoteNP (s =: t)

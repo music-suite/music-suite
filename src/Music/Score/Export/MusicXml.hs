@@ -5,6 +5,7 @@
     DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
+    ScopedTypeVariables,
     FlexibleContexts,
     ConstraintKinds,
     TypeOperators,
@@ -59,12 +60,14 @@ import Data.AffineSpace.Point
 import Data.Basis
 
 import Music.Time
+import Music.Time.Reactive (initial, (?))
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm
 import Music.Score.Track
 import Music.Score.Voice
 import Music.Score.Score
+import Music.Score.Meta
 import Music.Score.Chord
 import Music.Score.Combinators
 import Music.Score.Convert
@@ -222,9 +225,10 @@ toXmlString = Xml.showXml . toXml
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
-toXml sc = Xml.fromParts "Title" "Composer" pl . fmap (toXmlVoice' . scoreToVoice . simultaneous) . extractParts $ sc
-    where
+toXml :: forall a . (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
+toXml sc = Xml.fromParts title "Composer" pl . fmap (toXmlVoice' . scoreToVoice . simultaneous) . extractParts $ sc
+    where                      
+        title = fromMaybe "" $ flip titleAtLevel 0 $ (? 0) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         pl = Xml.partList (fmap show $ getParts sc)
         -- asScore a = (a :: Score a)
 
@@ -288,5 +292,8 @@ spellXml p = (
 
 
 
+-- TODO move
+withTitle :: HasPart' a => (Title -> Score a -> Score a) -> Score a -> Score a
+withTitle = withMeta
 
 
