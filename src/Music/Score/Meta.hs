@@ -208,7 +208,7 @@ data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
 setClef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
-setClef c x = setClefDuring (onset x <-> offset x) c x
+setClef c x = setClefDuring (era x) c x
 
 setClefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
 setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
@@ -218,7 +218,7 @@ newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Show, Typeable)
 
 setTimeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
-setTimeSignature c x = setTimeSignatureDuring (onset x <-> offset x) c x
+setTimeSignature c x = setTimeSignatureDuring (era x) c x
 
 setTimeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 setTimeSignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
@@ -266,7 +266,7 @@ key :: Fifths -> Bool -> KeySignature
 key fifths mode = KeySignature (fifths, mode)
 
 setKeySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
-setKeySignature c x = setKeySignatureDuring (onset x <-> offset x) c x
+setKeySignature c x = setKeySignatureDuring (era x) c x
 
 setKeySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
 setKeySignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
@@ -287,7 +287,7 @@ metronome :: Duration -> Duration -> Tempo
 metronome noteVal bpm = Tempo Nothing $ (noteVal * 60) / bpm
 
 setTempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
-setTempo c x = setTempoDuring (onset x <-> offset x) c x
+setTempo c x = setTempoDuring (era x) c x
 
 setTempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 setTempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
@@ -313,7 +313,7 @@ titleAtLevel (Title t) n = fmap getLast . getOption $ t n
 -- withTitle = withMeta
 
 setTitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
-setTitle t x = setTitleDuring (onset x <-> offset x) t x
+setTitle t x = setTitleDuring (era x) t x
 
 setTitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 setTitleDuring s t = addMetaNoteNP (s =: t)
