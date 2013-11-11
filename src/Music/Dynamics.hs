@@ -16,7 +16,10 @@
 module Music.Dynamics (
         module Music.Dynamics.Absolute,
         module Music.Dynamics.Common,
-        module Music.Dynamics.Balance,      
+        module Music.Dynamics.Balance,
+
+        -- * Dynamic literals
+        module Music.Dynamics.Literal,      
   ) where
 
 import Data.Maybe
@@ -28,6 +31,7 @@ import Control.Applicative
 import Music.Dynamics.Absolute
 import Music.Dynamics.Common
 import Music.Dynamics.Balance
+import Music.Dynamics.Literal
 
 {-
     ppp -42    -36
