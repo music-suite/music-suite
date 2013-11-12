@@ -30,7 +30,8 @@ module Music.Parts (
         Subpart,
 
         -- * Instruments
-        Instrument,
+        Instrument(..),
+        -- TODO hide impl
 
         -- * Parts
         Solo(..),
