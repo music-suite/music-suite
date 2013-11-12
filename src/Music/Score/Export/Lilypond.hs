@@ -302,7 +302,9 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
         setCl p = withMeta $ \x -> applyClefOption (fmap getLast x)
 
         addStaff = Lilypond.New "Staff" Nothing
-        prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) : x
+        prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) 
+            : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show v) 
+            : x
 
 -- |
 -- Convert a voice score to a list of bars.
