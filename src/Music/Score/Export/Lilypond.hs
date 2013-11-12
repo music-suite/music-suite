@@ -30,6 +30,7 @@ module Music.Score.Export.Lilypond (
         toLy,
         toLyString,
         writeLy,
+        writeLy',
         openLy,
         -- toLySingle,
         -- writeLySingle,
@@ -207,12 +208,26 @@ scatLy = foldr Lilypond.sequential e
 -- Convert a score to a Lilypond representation and write to a file.
 --
 writeLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
-writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
+writeLy = writeLy' Inline
+
+data LyOptions
+    = Inline
+    | Score
+
+-- |
+-- Convert a score to a Lilypond representation and write to a file.
+--
+writeLy' :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> FilePath -> Score a -> IO ()
+writeLy' options path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
     where 
         title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+
+        lyFilePrefix = case options of
+            Inline -> lyInlinePrefix
+            Score  -> lyScorePrefix
         
-        lyFilePrefix = mempty                                          ++
+        lyInlinePrefix = mempty                                        ++
             "\\include \"lilypond-book-preamble.ly\"\n"                ++
             "\\paper {\n"                                              ++
             "  #(define dump-extents #t)\n"                            ++
@@ -224,14 +239,26 @@ writeLy path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toL
             "  line-width = #(- line-width (* mm  3.000000))\n"        ++
             "}\n"                                                      ++
             "\\header {\n"                                             ++
-
-            "  title = \"" ++ title ++ "\"\n" ++
-            "  composer = \"" ++ composer ++ "\"\n" ++
-            -- "  poet = P\n" ++
-            
+            "  title = \"" ++ title ++ "\"\n"                          ++
+            "  composer = \"" ++ composer ++ "\"\n"                    ++
             "}\n"                                                      ++
             "\\layout {\n"                                             ++
-            "}\n\n"
+            "}"                                                        ++
+            "\n\n"
+            
+        lyScorePrefix = mempty                                         ++
+            "\\paper {"                                                ++
+            "  indent = 0\\mm"                                         ++
+            "  line-width = 210\\mm - 2.0 * 0.4\\in"                   ++
+            "}"                                                        ++
+            "\\header {\n"                                             ++
+            "  title = \"" ++ title ++ "\"\n"                          ++
+            "  composer = \"" ++ composer ++ "\"\n"                    ++
+            "}\n"                                                      ++
+            "\\layout {"                                               ++
+            "}" ++
+            "\n\n"
+
 
 -- |
 -- Typeset a score using Lilypond and open it.
