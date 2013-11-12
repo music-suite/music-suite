@@ -8,6 +8,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    ScopedTypeVariables,
     TypeOperators,
     OverloadedStrings,
     NoMonomorphismRestriction #-}
@@ -162,23 +163,27 @@ instance HasMidi a => HasMidi (SlideT a) where
 -- |
 -- Convert a score to a MIDI file representation.
 --
-toMidi :: (HasPart' a, HasMidiProgram (Part a), HasMidi a) => Score a -> Midi.Midi
-toMidi score = Midi.Midi fileType divisions' [controlTrack, eventTrack]
+toMidi :: forall a . (HasPart' a, HasMidiProgram (Part a), HasMidi a) => Score a -> Midi.Midi
+toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
     where
-        endPos          = 10000 -- arbitrary ?
+        -- Each track needs TrackEnd
+        -- We place it long after last event just in case (necessary?) 
+        endDelta        = 10000
         fileType        = Midi.MultiTrack
         divisions       = 1024
         divisions'      = Midi.TicksPerBeat divisions
-        controlTrack    = [(0, Midi.TempoChange 1000000), (endPos, Midi.TrackEnd)]
-        eventTrack      = events <> [(endPos, Midi.TrackEnd)]
+        controlTrack    = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+        eventTracks     = (fmap (<> [(endDelta, Midi.TrackEnd)]) $ fmap (uncurry setProgramChannel . second scoreToMTrack) $ extractParts' score)
 
-        events :: [(Midi.Ticks, Midi.Message)]
-        events          = (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) <$> performance
+        setProgramChannel :: Part a -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+        setProgramChannel p = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setChannel ch))
+            where
+                ch = getMidiChannel p
+                prg = getMidiProgram p
 
-        performance :: [(Time, Duration, Midi.Message)]
-        performance     = (toRelative . perform) (getMidiScore score)
+        scoreToMTrack :: Score a -> Midi.Track Midi.Ticks
+        scoreToMTrack = fmap (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) . toRelative . perform . getMidiScore
 
-        -- FIXME arbitrary endTime (files won't work without this...)
         -- TODO render voices separately
 
 -- |
@@ -209,4 +214,19 @@ playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ delay 0.2 x
 --
 playMidiIO :: HasMidi a => String -> Score a -> IO ()
 playMidiIO dest = runLoop . playMidi dest
+
+
+
+setChannel :: Midi.Channel -> Midi.Message -> Midi.Message
+setChannel c = go
+    where
+        go (NoteOff _ k v)       = NoteOff c k v
+        go (NoteOn _ k v)        = NoteOn c k v
+        go (KeyPressure _ k v)   = KeyPressure c k v
+        go (ControlChange _ n v) = ControlChange c n v
+        go (ProgramChange _ p)   = ProgramChange c p
+        go (ChannelPressure _ p) = ChannelPressure c p
+        go (PitchWheel _ w)      = PitchWheel c w
+        go (ChannelPrefix _)     = ChannelPrefix c
+        
 
