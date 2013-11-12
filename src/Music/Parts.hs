@@ -21,6 +21,7 @@
 module Music.Parts (
         -- * Terminology
         -- $terminology
+
         
         -- * Subparts
         Division,
@@ -35,21 +36,37 @@ module Music.Parts (
         Solo(..),
         Part(..),
         divide,
-        subPart,
+        containsPart,
+        containsSubpart,
+        solo,
+        tutti,
         
+        -- ** Instruments etc
+        violin,
+        viola,
+        cello,
+        bass,
+        tubularBells,
+
+        -- ** Default values
         defaultClef,
         defaultMidiProgram,
         defaultMidiChannel,
         defaultMidiNote,
 
+
         -- * Basic
+        -- TODO move
         BasicPart,
 
   ) where
 
 import Data.Default
+import Data.Semigroup
 import Data.Typeable
 import Data.Maybe
+import Text.Numeral.Roman (toRoman)
+import qualified Data.List
 
 {- $terminology
 
@@ -94,14 +111,19 @@ newtype Division = Division { getDivision :: (Int, Int) }
 instance Default Division where
     def = Division (0,1)
 
+showDivisionR :: Division -> String
+showDivisionR = toRoman . succ . fst . getDivision
+
+showDivision :: Division -> String
+showDivision  = show . succ . fst . getDivision
+
 -- | Get all possible divisions for a given divisor in ascending order.
 divisions :: Int -> [Division]
 divisions n = [Division (x,n) | x <- [0..n-1]]
 
 -- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]
-divide = undefined
--- divide n = [Division (x,n) | x <- [0..n]]
+divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [x])) $ divisions n
 
 -- |
 -- A subpart is a potentially infinite sequence of divisions, each typically
@@ -110,14 +132,24 @@ divide = undefined
 -- The empty subpart (also known as 'def') represents all the players of the group,
 -- or in the context of 'Part', all players of the given instrument.
 -- 
-type Subpart = [Division]
+newtype Subpart = Subpart [Division]
+    deriving (Eq, Ord, Default, Semigroup, Monoid)
 
+instance Show Subpart where
+    show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
+        where
+            mapFR f g []     = []
+            mapFR f g (x:xs) = f x : fmap g xs
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument 
     = StdInstrument Int
     | OtherInstrument String
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance Show Instrument where      
+    show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
+    show (OtherInstrument str) = str
 instance Enum Instrument where
     toEnum = StdInstrument
     fromEnum (StdInstrument x) = x
@@ -139,21 +171,45 @@ instance Default Solo where
 -- | A part is a subdivided group of instruments of a given type.
 --
 data Part = Part Solo Instrument Subpart
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance Show Part where
+    show (Part Solo instr subp) = "Solo " ++ show instr ++ addS (show subp)
+        where
+            addS "" = ""
+            addS x = " " ++ x
+    show (Part _ instr subp)    = show instr ++ addS (show subp)
+        where
+            addS "" = ""
+            addS x = " " ++ x
 
 -- FIXME bad instance (?)
 instance Enum Part where
-    toEnum x = Part Tutti (toEnum x) []
+    toEnum x = Part Tutti (toEnum x) def
     fromEnum (Part solo instr subp) = fromEnum instr
 
 instance Default Part where
     def = Part def def def
 
 -- | 
--- @a \`subPart\` b@ holds if the set of players represented by a is an improper subset of the 
+-- @a \`containsPart\` b@ holds if the set of players represented by a is an improper subset of the 
 -- set of players represented by b.
-subPart :: Part -> Part -> Bool
-subPart = undefined
+containsPart :: Part -> Part -> Bool
+Part solo1 instr1 subp1 `containsPart` Part solo2 instr2 subp2 = 
+        solo1 == solo2 
+        && instr1 == instr2
+        && subp1 `containsSubpart` subp2
+
+containsSubpart :: Subpart -> Subpart -> Bool
+Subpart x `containsSubpart` Subpart y = y `Data.List.isPrefixOf` x
+
+solo instr = Part Solo instr def
+tutti instr = Part Tutti instr def
+violin = StdInstrument 40
+viola = StdInstrument 41
+cello = StdInstrument 42
+bass = StdInstrument 43
+tubularBells = StdInstrument 14
 
 defaultClef :: Part -> Int
 defaultMidiProgram :: Part -> Int
@@ -165,6 +221,9 @@ defaultMidiChannel = undefined
 defaultMidiNote = undefined
 
 -- instance Show Instrument where
+
+gmInstrName :: Int -> Maybe String
+gmInstrName = (`lookup` gmInstrs)
 
 gmInstrs :: [(Int, String)]
 gmInstrs = [
@@ -215,7 +274,8 @@ gmInstrs = [
 
     (40, "Violin"),
     (41, "Viola"),
-    (42, "Cello"),
+    -- (42, "Cello"),
+    (42, "Violoncello"),
     (43, "Contrabass"),
     (44, "Tremolo Strings"),
     (45, "Pizzicato Strings"),
