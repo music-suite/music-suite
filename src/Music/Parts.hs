@@ -146,7 +146,7 @@ instance Show Subpart where
 data Instrument 
     = StdInstrument Int
     | OtherInstrument String
-    deriving (Eq, Ord)
+    deriving (Eq)
 
 instance Show Instrument where      
     show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
@@ -156,6 +156,9 @@ instance Enum Instrument where
     fromEnum (StdInstrument x) = x
     fromEnum (OtherInstrument _) = error "Instrument.fromEnum used on unknown instrument"
 
+instance Ord Instrument where
+    StdInstrument x `compare` StdInstrument y = gmScoreOrder x `compare` gmScoreOrder y
+
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
     def = StdInstrument 0
@@ -163,7 +166,7 @@ instance Default Instrument where
 data Solo
     = Solo
     | Tutti
-    deriving (Eq, Ord, Show, Enum)
+    deriving (Eq, Show, Ord, Enum)
 
 instance Default Solo where
     def = Tutti 
@@ -213,165 +216,204 @@ bass = StdInstrument 43
 tubularBells = StdInstrument 14
 
 defaultClef :: Part -> Int
+defaultMidiNote :: Part -> Int
 defaultMidiProgram :: Part -> Int
 defaultMidiChannel :: Part -> Int
-defaultMidiNote :: Part -> Int
-defaultClef = undefined
-defaultMidiProgram = undefined
-defaultMidiChannel = undefined
-defaultMidiNote = undefined
+defaultScoreOrder :: Part -> Double
 
--- instance Show Instrument where
+defaultMidiNote _ = 0
+
+defaultMidiProgram (Part _ (StdInstrument x) _) = x
+
+defaultMidiChannel = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
+    where get (x,_,_,_) = x
+
+defaultScoreOrder = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
+    where get (_,x,_,_) = x
+
+defaultClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
+    where get (_,_,x,_) = x
+
+
+
+gmClef :: Int -> Int
+gmMidiChannel :: Int -> Int
+gmScoreOrder :: Int -> Double
+
+gmMidiChannel = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
+    where get (x,_,_,_) = x
+
+gmScoreOrder = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
+    where get (_,x,_,_) = x
+
+gmClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
+    where get (_,_,x,_) = x
+
 
 gmInstrName :: Int -> Maybe String
-gmInstrName = (`lookup` gmInstrs)
+gmInstrName = fmap get . (`lookup` gmInstrs)
+    where get (_,_,_,x) = x
 
-gmInstrs :: [(Int, String)]
+-- (midi program, (def midi ch, score order, def clef 0=g/1=c/2=f, name))
+{-
+    Score order:
+        Woodwonds:      1
+        Brass:          2 
+        Timpani:        3 
+        Percussion:     4
+        Keyboard/Harp   5
+        Singers         6
+        Strings:        7
+        Bass:           8
+-}
+gmInstrs :: [(Int, (Int, Double, Int, String))]
 gmInstrs = [
-    (0, "Acoustic Grand Piano"),
-    (1, "Bright Acoustic Piano"),
-    (2, "Electric Grand Piano"),
-    (3, "Honky-tonk Piano"),
-    (4, "Electric Piano 1"),
-    (5, "Electric Piano 2"),
-    (6, "Harpsichord"),
-    (7, "Clavinet"),
+    (0, (0,  5.0, 0,  "Acoustic Grand Piano")),
+    (1, (0,  5.0, 0,  "Bright Acoustic Piano")),
+    (2, (0,  5.0, 0,  "Electric Grand Piano")),
+    (3, (0,  5.0, 0,  "Honky-tonk Piano")),
+    (4, (0,  5.0, 0,  "Electric Piano 1")),
+    (5, (0,  5.0, 0,  "Electric Piano 2")),
+    (6, (0,  5.0, 0,  "Harpsichord")),
+    (7, (0,  5.0, 0,  "Clavinet")),
 
-    (8, "Celesta"),
-    (9, "Glockenspiel"),
-    (10,  "Music Box"),
-    (11, "Vibraphone"),
-    (12, "Marimba"),
-    (13, "Xylophone"),
-    (14, "Tubular Bells"),
-    (15, "Dulcimer"),
+    (8, (0,  5.0, 0,  "Celesta")),
+    (9, (0,  5.0, 0,  "Glockenspiel")),
+    (9, (0,  5.0, 0,  "Music Box")),
+    (11, (0,  4.0, 0,  "Vibraphone")),
+    (12, (0,  4.0, 0,  "Marimba")),
+    (13, (0,  4.0, 0,  "Xylophone")),
+    (14, (0,  4.0, 0,  "Tubular Bells")),
+    (15, (0,  4.0, 0,  "Dulcimer")),
 
-    (16, "Drawbar Organ"),
-    (17, "Percussive Organ"),
-    (18, "Rock Organ"),
-    (19, "Church Organ"),
-    (20, "Reed Organ"),
-    (21, "Accordion"),
-    (22, "Harmonica"),
-    (23, "Tango Accordion"),
+    (16, (0,  5.0, 0,  "Drawbar Organ")),
+    (17, (0,  5.0, 0,  "Percussive Organ")),
+    (18, (0,  5.0, 0,  "Rock Organ")),
+    (19, (0,  5.0, 0,  "Church Organ")),
+    (20, (0,  5.0, 0,  "Reed Organ")),
+    (21, (0,  5.0, 0,  "Accordion")),
+    (22, (0,  5.0, 0,  "Harmonica")),
+    (23, (0,  5.0, 0,  "Tango Accordion")),
 
-    (24, "Acoustic Guitar (nylon)"),
-    (25, "Acoustic Guitar (steel)"),
-    (26, "Electric Guitar (jazz)"),
-    (27, "Electric Guitar (clean)"),
-    (28, "Electric Guitar (muted)"),
-    (29, "Overdriven Guitar"),
-    (30, "Distortion Guitar"),
-    (31, "Guitar Harmonics"),
+    (24, (0,  5.0, 0,  "Acoustic Guitar (nylon)")),
+    (25, (0,  5.0, 0,  "Acoustic Guitar (steel)")),
+    (26, (0,  5.0, 0,  "Electric Guitar (jazz)")),
+    (27, (0,  5.0, 0,  "Electric Guitar (clean)")),
+    (28, (0,  5.0, 0,  "Electric Guitar (muted)")),
+    (29, (0,  5.0, 0,  "Overdriven Guitar")),
+    (30, (0,  5.0, 0,  "Distortion Guitar")),
+    (31, (0,  5.0, 0,  "Guitar Harmonics")),
 
-    (32, "Acoustic Bass"),
-    (33, "Electric Bass (finger)"),
-    (34, "Electric Bass (pick)"),
-    (35, "Fretless Bass"),
-    (36, "Slap Bass 1"),
-    (37, "Slap Bass 2"),
-    (38, "Synth Bass 1"),
-    (39, "Synth Bass 2"),
+    (32, (0,  8.0, 0,  "Acoustic Bass")),
+    (33, (0,  8.0, 0,  "Electric Bass (finger)")),
+    (34, (0,  8.0, 0,  "Electric Bass (pick)")),
+    (35, (0,  8.0, 0,  "Fretless Bass")),
+    (36, (0,  8.0, 0,  "Slap Bass 1")),
+    (37, (0,  8.0, 0,  "Slap Bass 2")),
+    (38, (0,  8.0, 0,  "Synth Bass 1")),
+    (39, (0,  8.0, 0,  "Synth Bass 2")),
 
-    (40, "Violin"),
-    (41, "Viola"),
-    -- (42, "Cello"),
-    (42, "Violoncello"),
-    (43, "Contrabass"),
-    (44, "Tremolo Strings"),
-    (45, "Pizzicato Strings"),
-    (46, "Orchestral Harp"),
-    (47, "Timpani"),
+    (40, (12,  7.1, 0,  "Violin")),
+    (41, (13,  7.2, 1,  "Viola")),
+    -- (42, (0,  1.0, 0,  "Cello")),
+    (42, (14,  7.3, 0,  "Violoncello")),
+    (43, (15,  7.4, 0,  "Contrabass")),
+    (44, (0,  7.0, 0,  "Tremolo Strings")),
+    (45, (0,  7.0, 0,  "Pizzicato Strings")),
+    (46, (11,  5.9, 0,  "Orchestral Harp")),
 
-    (48, "String Ensemble 1"),
-    (49, "String Ensemble 2"),
-    (50, "Synth Strings 1"),
-    (51, "Synth Strings 2"),
-    (52, "Choir Aahs"),
-    (53, "Voice Oohs"),
-    (54, "Synth Choir"),
-    (55, "Orchestra Hit"),
+    (47, (9,  2.5, 0,  "Timpani")),
 
-    (56, "Trumpet"),
-    (57, "Trombone"),
-    (58, "Tuba"),
-    (59, "Muted Trumpet"),
-    (60, "French Horn"),
-    (61, "Brass Section"),
-    (62, "Synth Brass 1"),
-    (63, "Synth Brass 2"),
+    (48, (0,  7.0, 0,  "String Ensemble 1")),
+    (49, (0,  7.0, 0,  "String Ensemble 2")),
+    (50, (0,  7.0, 0,  "Synth Strings 1")),
+    (51, (0,  7.0, 0,  "Synth Strings 2")),
 
-    (64, "Soprano Sax"),
-    (65, "Alto Sax"),
-    (66, "Tenor Sax"),
-    (67, "Baritone Sax"),
-    (68, "Oboe"),
-    (69, "English Horn"),
-    (70, "Bassoon"),
-    (71, "Clarinet"),
+    (52, (0,  1.0, 0,  "Choir Aahs")),
+    (53, (0,  1.0, 0,  "Voice Oohs")),
+    (54, (0,  1.0, 0,  "Synth Choir")),
+    (55, (0,  1.0, 0,  "Orchestra Hit")),
 
-    (72, "Piccolo"),
-    (73, "Flute"),
-    (74, "Recorder"),
-    (75, "Pan Flute"),
-    (76, "Blown bottle"),
-    (77, "Shakuhachi"),
-    (78, "Whistle"),
-    (79, "Ocarina"),
+    (56, (5,  2.2, 0,  "Trumpet")),
+    (57, (6,  2.3, 0,  "Trombone")),
+    (58, (7,  2.4, 0,  "Tuba")),
+    (59, (0,  2.2, 0,  "Muted Trumpet")),
+    (60, (4,  2.1, 0,  "French Horn")),
+    (61, (0,  2.0, 0,  "Brass Section")),
+    (62, (0,  2.0, 0,  "Synth Brass 1")),
+    (63, (0,  2.0, 0,  "Synth Brass 2")),
 
-    (80, "Lead 1 (square)"),
-    (81, "Lead 2 (sawtooth)"),
-    (82, "Lead 3 (calliope)"),
-    (83, "Lead 4 (chiff)"),
-    (84, "Lead 5 (charang)"),
-    (85, "Lead 6 (voice)"),
-    (86, "Lead 7 (fifths)"),
-    (87, "Lead 8 (bass + lead)"),
+    (64, (0,  1.51, 0,  "Soprano Sax")),
+    (65, (0,  1.52, 0,  "Alto Sax")),
+    (66, (0,  1.53, 0,  "Tenor Sax")),
+    (67, (0,  1.54, 0,  "Baritone Sax")),
+    (68, (1,  1.3, 0,  "Oboe")),
+    (69, (1,  1.4, 0,  "English Horn")),
+    (70, (3,  1.7, 0,  "Bassoon")),
+    (71, (2,  1.6, 0,  "Clarinet")),
 
-    (88, "Pad 1 (new age)"),
-    (89, "Pad 2 (warm)"),
-    (90, "Pad 3 (polysynth)"),
-    (91, "Pad 4 (choir)"),
-    (92, "Pad 5 (bowed)"),
-    (93, "Pad 6 (metallic)"),
-    (94, "Pad 7 (halo)"),
-    (95, "Pad 8 (sweep)"),
+    (72, (0,  1.1, 0,  "Piccolo")),
+    (73, (0,  1.2, 0,  "Flute")),
+    (74, (0,  1.0, 0,  "Recorder")),
+    (75, (0,  1.0, 0,  "Pan Flute")),
+    (76, (0,  1.0, 0,  "Blown bottle")),
+    (77, (0,  1.0, 0,  "Shakuhachi")),
+    (78, (0,  1.0, 0,  "Whistle")),
+    (79, (0,  1.0, 0,  "Ocarina")),
 
-    (96, "FX 1 (rain)"),
-    (97, "FX 2 (soundtrack)"),
-    (98, "FX 3 (crystal)"),
-    (99, "FX 4 (atmosphere)"),
-    (100, "FX 5 (brightness)"),
-    (101, "FX 6 (goblins)"),
-    (102, "FX 7 (echoes)"),
-    (103, "FX 8 (sci-fi)"),
+    (80, (0,  1.0, 0,  "Lead 1 (square)")),
+    (81, (0,  1.0, 0,  "Lead 2 (sawtooth)")),
+    (82, (0,  1.0, 0,  "Lead 3 (calliope)")),
+    (83, (0,  1.0, 0,  "Lead 4 (chiff)")),
+    (84, (0,  1.0, 0,  "Lead 5 (charang)")),
+    (85, (0,  1.0, 0,  "Lead 6 (voice)")),
+    (86, (0,  1.0, 0,  "Lead 7 (fifths)")),
+    (87, (0,  1.0, 0,  "Lead 8 (bass + lead)")),
 
-    (104, "Sitar"),
-    (105, "Banjo"),
-    (106, "Shamisen"),
-    (107, "Koto"),
-    (108, "Kalimba"),
-    (109, "Bagpipe"),
-    (110, "Fiddle"),
-    (111, "Shanai"),
+    (88, (0,  1.0, 0,  "Pad 1 (new age)")),
+    (89, (0,  1.0, 0,  "Pad 2 (warm)")),
+    (90, (0,  1.0, 0,  "Pad 3 (polysynth)")),
+    (91, (0,  1.0, 0,  "Pad 4 (choir)")),
+    (92, (0,  1.0, 0,  "Pad 5 (bowed)")),
+    (93, (0,  1.0, 0,  "Pad 6 (metallic)")),
+    (94, (0,  1.0, 0,  "Pad 7 (halo)")),
+    (95, (0,  1.0, 0,  "Pad 8 (sweep)")),
 
-    (112, "Tinkle Bell"),
-    (113, "Agogo"),
-    (114, "Steel Drums"),
-    (115, "Woodblock"),
-    (116, "Taiko Drum"),
-    (117, "Melodic Tom"),
-    (118, "Synth Drum"),
-    (119, "Reverse Cymbal"),
+    (96, (0,  1.0, 0,  "FX 1 (rain)")),
+    (97, (0,  1.0, 0,  "FX 2 (soundtrack)")),
+    (98, (0,  1.0, 0,  "FX 3 (crystal)")),
+    (99, (0,  1.0, 0,  "FX 4 (atmosphere)")),
+    (100, (0,  1.0, 0,  "FX 5 (brightness)")),
+    (101, (0,  1.0, 0,  "FX 6 (goblins)")),
+    (102, (0,  1.0, 0,  "FX 7 (echoes)")),
+    (103, (0,  1.0, 0,  "FX 8 (sci-fi)")),
 
-    (120, "Guitar Fret Noise"),
-    (121, "Breath Noise"),
-    (122, "Seashore"),
-    (123, "Bird Tweet"),
-    (124, "Telephone Ring"),
-    (125, "Helicopter"),
-    (126, "Applause"),
-    (127, "Gunshot")
+    (104, (0,  1.0, 0,  "Sitar")),
+    (105, (0,  1.0, 0,  "Banjo")),
+    (106, (0,  1.0, 0,  "Shamisen")),
+    (107, (0,  1.0, 0,  "Koto")),
+    (108, (0,  1.0, 0,  "Kalimba")),
+    (109, (0,  1.0, 0,  "Bagpipe")),
+    (110, (0,  1.0, 0,  "Fiddle")),
+    (111, (0,  1.0, 0,  "Shanai")),
+
+    (112, (0,  1.0, 0,  "Tinkle Bell")),
+    (113, (0,  1.0, 0,  "Agogo")),
+    (114, (0,  1.0, 0,  "Steel Drums")),
+    (115, (0,  1.0, 0,  "Woodblock")),
+    (116, (0,  1.0, 0,  "Taiko Drum")),
+    (117, (0,  1.0, 0,  "Melodic Tom")),
+    (118, (0,  1.0, 0,  "Synth Drum")),
+    (119, (0,  1.0, 0,  "Reverse Cymbal")),
+
+    (120, (0,  1.0, 0,  "Guitar Fret Noise")),
+    (121, (0,  1.0, 0,  "Breath Noise")),
+    (122, (0,  1.0, 0,  "Seashore")),
+    (123, (0,  1.0, 0,  "Bird Tweet")),
+    (124, (0,  1.0, 0,  "Telephone Ring")),
+    (125, (0,  1.0, 0,  "Helicopter")),
+    (126, (0,  1.0, 0,  "Applause")),
+    (127, (0,  1.0, 0,  "Gunshot"))
     ]
 
 gmPerc :: [(Int, String)]
