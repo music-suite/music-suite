@@ -29,9 +29,11 @@ module Music.Score.Export.Lilypond (
         HasLilypond(..),
         toLy,
         toLyString,
-        writeLy,
+        writeLy, 
+        LyOptions(..),
         writeLy',
         openLy,
+        openLy',
         -- toLySingle,
         -- writeLySingle,
         -- openLySingle,
@@ -41,6 +43,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 
 import Data.Semigroup
 import Data.Ratio
+import Data.Default
 import Data.String
 import Data.Pointed
 import Control.Applicative
@@ -208,11 +211,13 @@ scatLy = foldr Lilypond.sequential e
 -- Convert a score to a Lilypond representation and write to a file.
 --
 writeLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
-writeLy = writeLy' Inline
+writeLy = writeLy' def
 
 data LyOptions
     = Inline
     | Score
+instance Default LyOptions where
+    def = Inline
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
@@ -264,15 +269,18 @@ writeLy' options path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pre
 -- Typeset a score using Lilypond and open it.
 --
 openLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
-openLy sc = do
-    writeLy "test.ly" sc
+openLy = openLy' def
+
+openLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> Score a -> IO ()
+openLy' options sc = do
+    writeLy' options "test.ly" sc
     runLy
     cleanLy
-    openLy'
+    openLy''
 
 runLy   = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
 cleanLy = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-openLy' = void $ runCommand "open test.pdf"
+openLy'' = void $ runCommand "open test.pdf"
     -- FIXME hardcoded
 
 -- |
