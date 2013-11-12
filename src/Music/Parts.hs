@@ -316,13 +316,13 @@ gmInstrs = [
     (40, (12,  7.1, 0,  "Violin")),
     (41, (13,  7.2, 1,  "Viola")),
     -- (42, (0,  1.0, 0,  "Cello")),
-    (42, (14,  7.3, 0,  "Violoncello")),
-    (43, (15,  7.4, 0,  "Contrabass")),
+    (42, (14,  7.3, 2,  "Violoncello")),
+    (43, (15,  7.4, 2,  "Contrabass")),
     (44, (0,  7.0, 0,  "Tremolo Strings")),
     (45, (0,  7.0, 0,  "Pizzicato Strings")),
     (46, (11,  5.9, 0,  "Orchestral Harp")),
 
-    (47, (9,  2.5, 0,  "Timpani")),
+    (47, (8,  2.5, 2,  "Timpani")),
 
     (48, (0,  7.0, 0,  "String Ensemble 1")),
     (49, (0,  7.0, 0,  "String Ensemble 2")),
@@ -335,8 +335,8 @@ gmInstrs = [
     (55, (0,  1.0, 0,  "Orchestra Hit")),
 
     (56, (5,  2.2, 0,  "Trumpet")),
-    (57, (6,  2.3, 0,  "Trombone")),
-    (58, (7,  2.4, 0,  "Tuba")),
+    (57, (6,  2.3, 2,  "Trombone")),
+    (58, (7,  2.4, 2,  "Tuba")),
     (59, (0,  2.2, 0,  "Muted Trumpet")),
     -- (60, (4,  2.1, 0,  "French Horn")),
     (60, (4,  2.1, 0,  "Horn")),
@@ -350,7 +350,7 @@ gmInstrs = [
     (67, (0,  1.54, 0,  "Baritone Sax")),
     (68, (1,  1.3, 0,  "Oboe")),
     (69, (1,  1.4, 0,  "English Horn")),
-    (70, (3,  1.7, 0,  "Bassoon")),
+    (70, (3,  1.7, 2,  "Bassoon")),
     (71, (2,  1.6, 0,  "Clarinet")),
 
     (72, (0,  1.1, 0,  "Piccolo")),
