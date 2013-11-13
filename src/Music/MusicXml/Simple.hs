@@ -425,7 +425,9 @@ rest :: NoteVal -> Music
 rest dur = case dots of
     0 -> rest' dur'
     1 -> rest' dur' <> rest' (dur' / 2)
-    _ -> error "Music.MusicXml.Simple.rest: to many dots"
+    2 -> rest' dur' <> rest' (dur' / 2) <> rest' (dur' / 4)
+    3 -> rest' dur' <> rest' (dur' / 2) <> rest' (dur' / 4) <> rest' (dur' / 8)
+    _ -> error "Music.MusicXml.Simple.rest: too many dots"
     where
         (dur', dots) = separateDots dur
 
