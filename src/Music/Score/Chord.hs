@@ -7,6 +7,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    ViewPatterns,
     GeneralizedNewtypeDeriving,
     NoMonomorphismRestriction #-}
 
@@ -98,24 +99,22 @@ simultaneous' sc = setScoreMeta m $ compose vs
         -- vs :: [(Time, Duration, [a])]
         es  = List.nub $ eras sc
         evs = fmap (`events` sc) es
-        vs  = zipWith (\(t,d) a -> (t,d,a)) es evs
+        vs  = zipWith (\(delta -> (t,d)) a -> (t,d,a)) es evs
 
 
--- TODO move these to Music.Time
+-- TODO move these
 
-eras :: Score a -> [Era]
-eras sc = fmap getEra . perform $ sc
+eras :: Score a -> [Span]
+eras sc = fmap getSpan . perform $ sc
 
-events :: Era -> Score a -> [a]
-events era sc = fmap getValue . filter (\ev -> getEra ev == era) . perform $ sc
+events :: Span -> Score a -> [a]
+events era sc = fmap getValue . filter (\ev -> getSpan ev == era) . perform $ sc
 
 getValue :: (Time, Duration, a) -> a
 getValue (t,d,a) = a
 
-getEra :: (Time, Duration, a) -> Era
-getEra (t,d,a) = (t,d)        
-
-type Era = (Time, Duration)
+getSpan :: (Time, Duration, a) -> Span
+getSpan (t,d,a) = t >-> d        
         
         
      
