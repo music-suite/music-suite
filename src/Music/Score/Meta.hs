@@ -69,7 +69,7 @@ module Music.Score.Meta (
         setTempoDuring,
 
         Title,
-        mkTitle,
+        titleFromString,
         denoteTitle,
         getTitle,
         getTitleAt,
@@ -318,32 +318,40 @@ instance IsString Title where
 instance Show Title where
     show = List.intercalate " " . getTitle
 
-mkTitle :: String -> Title
-mkTitle = fromString
+-- | Create a title from a string. See also 'fromString'.
+titleFromString :: String -> Title
+titleFromString = fromString
 
+-- | Denote a title to a lower level, i.e title becomes subtitle, subtitle becomes subsubtitle etc.
 denoteTitle :: Title -> Title
 denoteTitle (Title t) = Title (t . subtract 1)
 
+-- | Extract the title as a descending list of title levels (i.e. title, subtitle, subsubtitle...).
 getTitle :: Title -> [String]
 getTitle t = untilFail . fmap (getTitleAt t) $ [0..]
     where
         untilFail = fmap fromJust . takeWhile isJust
 
+-- | Extract the title of the given level. Semantic function.
 getTitleAt :: Title -> Int -> Maybe String
 getTitleAt (Title t) n = fmap getLast . getOption . t $ n
 
 -- withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
 -- withTitle = withMeta
 
+-- | Set title of the given score.
 title :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
 title t x = titleDuring (era x) t x
 
+-- | Set title of the given part of a score.
 titleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 titleDuring s t = addMetaNoteNP (s =: t)
 
+-- | Set subtitle of the given score.
 subtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
 subtitle t x = subtitleDuring (era x) t x
 
+-- | Set subtitle of the given part of a score.
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addMetaNoteNP (s =: denoteTitle t)
 
@@ -351,28 +359,33 @@ subtitleDuring s t = addMetaNoteNP (s =: denoteTitle t)
 
 
 
-
-
-
+-- | 
+-- An attribution is a simple key-value store used to gather information such
+-- as composer, lycicist, orchestrator, performer, etc.
+-- 
 newtype Attribution = Attribution (Map String (Option (Last String)))
     deriving (Typeable, Monoid, Semigroup)
 
 instance Show Attribution where
     show (Attribution a) = "attribution " ++ show (Map.toList (fmap (fmap getLast . getOption) $ a))
 
+-- | Make an 'Attribution' from keys and values.
 attribution :: [(String, String)] -> Attribution
 attribution = Attribution . fmap (Option . Just . Last) . Map.fromList
 
+-- | Make an 'Attribution' a single key and value.
 attribution1 :: String -> String -> Attribution
 attribution1 k v = Attribution . fmap (Option . Just . Last) $ Map.singleton k v
 
+-- | Extract an the given attribution value. Semantic function.
 getAttribution :: Attribution -> String -> Maybe String
 getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . getOption) $ a)
 
-
+-- | Set composer of the given score.
 composer :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
 composer t x = composerDuring (era x) t x
 
+-- | Set composer of the given part of a score.
 composerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
 composerDuring s c = addMetaNoteNP (s =: attribution1 "composer" c)
 
