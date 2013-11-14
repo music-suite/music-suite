@@ -313,7 +313,7 @@ toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
 toLyVoice' = fmap barToLy . voiceToBars
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
-barToLy bar = case quantize bar of
+barToLy bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToLy: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLy rh
 

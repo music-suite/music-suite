@@ -284,7 +284,7 @@ toXmlVoice' =
 
 
 barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
-barToXml bar = case quantize bar of
+barToXml bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
 
