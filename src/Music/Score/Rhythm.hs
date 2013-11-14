@@ -46,7 +46,13 @@ import Text.Parsec.Pos
 
 import Music.Time
 import Music.Score.Ties
+import Music.Score.Voice
 
+{-
+
+
+
+-}
 
 data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
@@ -64,6 +70,11 @@ getBeatDuration :: Rhythm a -> Duration
 getBeatDuration (Beat d a) = d
 getBeatDuration _          = error "getBeatValue: Not a beat"
 
+realize :: Rhythm a -> [(Duration, a)]
+realize (Beat d a)      = [(d, a)]
+realize (Group rs)      = rs >>= realize
+realize (Dotted n r)    = dotMod n `stretch` realize r
+realize (Tuplet n r)    = n `stretch` realize r 
 
 instance Semigroup (Rhythm a) where
     (<>) = mappend
@@ -85,6 +96,26 @@ instance VectorSpace (Rhythm a) where
     a *^ Beat d x = Beat (a*d) x
 
 Beat d x `subDur` d' = Beat (d-d') x
+
+
+{-
+    Rhythm rewrite laws (all up to realization equality)
+    
+    Note: Just sketching, needs more formal treatment.
+
+
+    Group [Group xs ...] = Group [xs ...]
+        [JoinGroup]
+
+    Tuplet m (Tuplet n x) = Tuplet (m * n) x
+        [NestTuplet]
+
+    Tuplet m (Group [a,b ...]) = Group [Tuplet m a, Tuplet m b ...]
+        [DistributeTuplet]
+    
+-}
+
+
 
 {-
 instance HasDuration (Rhythm a) where
@@ -117,10 +148,10 @@ konstMaxTupletNest = 1
 data RhythmContext = RhythmContext {
 
         -- Time scaling of the current note (from dots and tuplets).
-        timeMod :: Duration, 
+        timeMod :: Duration,
 
         -- Time subtracted from the current rhythm (from ties).
-        timeSub :: Duration, 
+        timeSub :: Duration,
 
         -- Number of tuplets above the current note (default 0).
         tupleDepth :: Int
