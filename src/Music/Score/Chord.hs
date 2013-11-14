@@ -86,9 +86,8 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- |
 -- Group simultaneous events.
 --
--- Two events /a/ and /b/ are considered simultaneous if and only if they have the same era, i.e.
---
--- > 'era' a == 'era' b
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
 --
 simultaneous' :: Score a -> Score [a]
 simultaneous' sc = setScoreMeta m $ compose vs
