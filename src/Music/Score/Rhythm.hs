@@ -3,6 +3,7 @@
     TypeFamilies,
     DeriveFunctor,
     DeriveFoldable,
+    ViewPatterns,
     GeneralizedNewtypeDeriving,
     ScopedTypeVariables #-}
 
@@ -154,15 +155,25 @@ Beat d x `subDur` d' = Beat (d-d') x
 
 rewrite :: Rhythm a -> Rhythm a
 
-rewrite1 = splitTuplet
+rewrite = rewriteR . rewrite1
 
--- rewrite :: (Rhythm a -> Rhythm a) -> Rhythm a -> Rhythm a
-rewrite = go where
+rewriteR = go where
     go (Beat d a)     = Beat d a
-    go (Group rs)     = Group (fmap (rewrite . rewrite1) rs)
-    go (Dotted n r)   = Dotted n ((rewrite . rewrite1) r)
-    go (Tuplet n r)   = Tuplet n ((rewrite . rewrite1) r)
+    go (Group rs)     = Group (fmap (rewriteR . rewrite1) rs)
+    go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
+    go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
+
+rewrite1 = splitTuplet . tupletDot . singleGroup
     
+
+singleGroup :: Rhythm a -> Rhythm a
+singleGroup orig@(Group [x]) = x
+singleGroup orig             = orig
+
+-- | Removes dotted notes in 2/3 tuplets.
+tupletDot :: Rhythm a -> Rhythm a
+tupletDot orig@(Tuplet (unratio -> (2,3)) (Dotted 1 x)) = x
+tupletDot orig                                          = orig
 
 -- | Splits a tuplet iff it contans a group which can be split into two halves of exactly the same size.
 splitTuplet :: Rhythm a -> Rhythm a
@@ -397,3 +408,5 @@ isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . to
 
 left f (Left x)  = Left (f x)
 left f (Right y) = Right y
+
+unratio x = (numerator $ realToFrac x, denominator $ realToFrac x)

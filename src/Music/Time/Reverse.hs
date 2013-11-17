@@ -94,7 +94,7 @@ instance Reversible a => Reversible (Map k a) where
     rev = fmap rev
 
 newtype NoRev a = NoRev { getNoRev :: a }
-    deriving (Eq, Ord, Enum, Show, Semigroup, Monoid)
+    deriving (Eq, Ord, Enum, Show, Semigroup, Delayable)
 
 instance Reversible (NoRev a) where
     rev = id
