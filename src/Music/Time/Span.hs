@@ -80,9 +80,8 @@ instance Stretchable Span where
     stretch n = normalizeSpan . (mapDelta $ curry $ stretch n *** stretch n)
 
 -- FIXME violates first Reversible law        
-instance Reversible Span where
-    rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
-    -- rev (range -> (x, y)) = mirror y <-> mirror x
+-- instance Reversible Span where
+    -- rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
 
 instance HasOnset Span where
     onset = fst . range
