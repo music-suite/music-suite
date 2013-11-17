@@ -334,12 +334,12 @@ gmInstrs = [
     (54, (0,  1.0, 0,  "Synth Choir")),
     (55, (0,  1.0, 0,  "Orchestra Hit")),
 
-    (56, (5,  2.2, 0,  "Trumpet")),
+    (56, (5,  2.2, 0,  "Trumpet in Bb")),
     (57, (6,  2.3, 2,  "Trombone")),
     (58, (7,  2.4, 2,  "Tuba")),
     (59, (0,  2.2, 0,  "Muted Trumpet")),
     -- (60, (4,  2.1, 0,  "French Horn")),
-    (60, (4,  2.1, 0,  "Horn")),
+    (60, (4,  2.1, 0,  "Horn in F")),
     (61, (0,  2.0, 0,  "Brass Section")),
     (62, (0,  2.0, 0,  "Synth Brass 1")),
     (63, (0,  2.0, 0,  "Synth Brass 2")),
@@ -351,7 +351,7 @@ gmInstrs = [
     (68, (1,  1.3, 0,  "Oboe")),
     (69, (1,  1.4, 0,  "English Horn")),
     (70, (3,  1.7, 2,  "Bassoon")),
-    (71, (2,  1.6, 0,  "Clarinet")),
+    (71, (2,  1.6, 0,  "Clarinet in Bb")),
 
     (72, (0,  1.1, 0,  "Piccolo")),
     (73, (0,  1.2, 0,  "Flute")),
