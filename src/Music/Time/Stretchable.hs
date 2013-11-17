@@ -27,6 +27,9 @@ module Music.Time.Stretchable (
         -- * Stretchable class
         Stretchable(..),
         compress,
+        
+        -- ** Utility
+        NoStretch(..),
   ) where
 
 import Control.Arrow
@@ -93,3 +96,10 @@ instance Stretchable a => Stretchable (Sum a) where
 compress :: Stretchable a => Duration -> a -> a
 compress x = stretch (recip x)
 
+
+newtype NoStretch a = NoStretch { getNoStretch :: a }
+    deriving (Eq, Ord, Enum, Show, Semigroup, Monoid
+        {-Delayable, HasOnset, HasOffset, HasDuration-})
+
+instance Stretchable (NoStretch a) where
+    stretch _ = id

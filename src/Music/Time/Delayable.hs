@@ -28,8 +28,9 @@ module Music.Time.Delayable (
         move,
         moveBack,     
         
-        -- ** Utility functions
+        -- ** Utility
         delayTime,
+        NoDelay(..),
   ) where
 
 import Data.Semigroup
@@ -103,3 +104,9 @@ move            = delay
 moveBack t      = delay (negateV t)
 delayTime t     = delay (t .-. origin)
 
+newtype NoDelay a = NoDelay { getNoDelay :: a }
+    deriving (Eq, Ord, Enum, Show, Semigroup, Monoid
+        {-Delayable, HasOnset, HasOffset, HasDuration-})
+
+instance Delayable (NoDelay a) where
+    delay _ = id

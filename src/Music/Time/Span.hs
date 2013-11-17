@@ -6,6 +6,7 @@
     FlexibleContexts,
     ConstraintKinds,
     ViewPatterns,
+    StandaloneDeriving,
     GeneralizedNewtypeDeriving #-} 
 
 -------------------------------------------------------------------------------------
@@ -178,4 +179,15 @@ type LinTFun a = (Span, (a, a))
 type Event x = (Span, x)
 -}
 
-                           
+-- TODO move
+deriving instance Delayable a => Delayable (NoStretch a)
+deriving instance HasOnset a => HasOnset (NoStretch a)
+deriving instance HasOffset a => HasOffset (NoStretch a)
+deriving instance HasDuration a => HasDuration (NoStretch a)
+
+deriving instance Stretchable a => Stretchable (NoDelay a)
+deriving instance HasOnset a => HasOnset (NoDelay a)
+deriving instance HasOffset a => HasOffset (NoDelay a)
+deriving instance HasDuration a => HasDuration (NoDelay a)
+
+
