@@ -38,6 +38,8 @@ import qualified Data.Set as Set
 
 import Data.AffineSpace.Relative
 import Music.Time.Time
+import Music.Time.Delayable
+import Music.Time.Stretchable
 import Music.Time.Onset
 import Music.Time.Juxtapose -- for Transformable
 
@@ -94,7 +96,8 @@ instance Reversible a => Reversible (Map k a) where
     rev = fmap rev
 
 newtype NoRev a = NoRev { getNoRev :: a }
-    deriving (Eq, Ord, Enum, Show, Semigroup, Delayable)
+    deriving (Eq, Ord, Enum, Show, Semigroup, Monoid,
+        Delayable, Stretchable, HasOnset, HasOffset, HasDuration)
 
 instance Reversible (NoRev a) where
     rev = id
