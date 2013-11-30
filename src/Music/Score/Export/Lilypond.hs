@@ -80,7 +80,7 @@ import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
 import Music.Score.Instances
-import Music.Score.Export.Util
+import Music.Score.Export.Common
 
 import qualified Codec.Midi as Midi
 import qualified Music.MusicXml.Simple as Xml

@@ -16,7 +16,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.Util -- (
+module Music.Score.Export.Common -- (
 --  )
 where
 

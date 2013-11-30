@@ -98,11 +98,12 @@ library
         Music.Score.Export.Midi
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
+
+        -- Need to expose these to allow GHCI development
         Music.Score.Util
+        Music.Score.Export.Common
     other-modules:
-        -- Music.Score.Util
         Music.Score.Instances
-        Music.Score.Export.Util
         
 -- executable "music-score-tests"
 --     hs-source-dirs: src test
