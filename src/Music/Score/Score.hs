@@ -9,7 +9,8 @@
     ConstraintKinds, 
     GADTs, 
     ViewPatterns,
-    TypeFamilies, 
+    TypeFamilies,
+    FlexibleContexts, 
     MultiParamTypeClasses, 
     FlexibleInstances #-}
 
@@ -34,6 +35,9 @@ module Music.Score.Score (
         reifyScore,
         getScoreMeta,
         setScoreMeta,
+        runScoreMeta,
+        metaAt,
+        metaAtStart,
   ) where
 
 import Data.Dynamic
@@ -110,6 +114,12 @@ setScoreMeta m (Score (_,a)) = Score (m,a)
 -- | Get the meta information of a score.
 getScoreMeta :: Score a -> Meta
 getScoreMeta (Score (m,_)) = m
+
+runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
+runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
+
+metaAt x = (? x) . runScoreMeta
+metaAtStart x = onset x `metaAt` x
 
 
 -- TODO remove these, see #97

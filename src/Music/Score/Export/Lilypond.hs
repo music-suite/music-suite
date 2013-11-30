@@ -225,8 +225,8 @@ instance Default LyOptions where
 writeLy' :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> FilePath -> Score a -> IO ()
 writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString $ sc
     where 
-        title    = fromMaybe "" $ flip getTitleAt 0                  $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
-        composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
+        composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
 
         lyFilePrefix = case options of
             Inline -> lyInlinePrefix
@@ -297,8 +297,8 @@ toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . 
         addClefT :: a -> ClefT a
         addClefT = point
         
-        addClefs p = ((,) p) . setCl p . fmap addClefT
-        setCl p = withMeta $ \x -> applyClefOption (fmap getLast x)
+        addClefs p = ((,) p) . setClef p . fmap addClefT
+        setClef p  = withMeta $ \x -> applyClefOption (fmap getLast x)
 
         addStaff = Lilypond.New "Staff" Nothing
         prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) 

@@ -45,6 +45,7 @@ import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Arrow
 import Data.Semigroup
+import Data.Monoid.WithSemigroup
 import Data.Ratio
 import Data.String
 import Data.Pointed
@@ -53,7 +54,7 @@ import Data.Function (on)
 import Data.Ord (comparing)
 
 import Music.Time
-import Music.Time.Reactive (initial, (?))
+import Music.Time.Reactive (Reactive, initial, (?))
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm
@@ -236,11 +237,11 @@ toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . 
         addClefT :: a -> ClefT a
         addClefT = point
         
-        addClefs = setCl . fmap addClefT
-        setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
+        addClefs = setClef . fmap addClefT
+        setClef  = withMeta $ \x -> applyClefOption (fmap getLast x)
 
-        title = fromMaybe "" $ flip getTitleAt 0                     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
-        composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
+        composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
         pl = Xml.partList (fmap show $ getParts sc)
         -- asScore a = (a :: Score a)
