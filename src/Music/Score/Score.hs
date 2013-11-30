@@ -232,7 +232,6 @@ instance VectorSpace (Score a) where
     d *^ s = d `stretch` s
 
 
-
 instance Arbitrary a => Arbitrary (Score a) where
     arbitrary = do
         x <- arbitrary
