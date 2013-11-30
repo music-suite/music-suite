@@ -51,37 +51,38 @@ module Music.Score.Meta (
 
         -- * Specific meta-values
         Clef(..),
-        setClef,
-        setClefDuring,
+        clef,
+        clefDuring,
 
         TimeSignature,
-        setTimeSignature,
-        setTimeSignatureDuring,
+        timeSignature,
+        timeSignatureDuring,
 
         Fifths,
         KeySignature,
         key,
-        setKeySignature,
-        setKeySignatureDuring,
+        keySignature,
+        keySignatureDuring,
 
         Tempo,
-        setTempo,
-        setTempoDuring,
+        tempo,
+        tempoDuring,
 
         Title,
         titleFromString,
         denoteTitle,
         getTitle,
-        getTitleAt,
+        getTitleAt,    
+        
         title,
         titleDuring,
         subtitle,
         subtitleDuring,
         
         Attribution,
-        getAttribution,
-        attribution,
+        -- attribution,
         attribution1,
+        getAttribution,
         composer,
         composerDuring,
         
@@ -220,21 +221,21 @@ instance (HasMeta a, Ord a) => HasMeta (Set a) where
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
-setClef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
-setClef c x = setClefDuring (era x) c x
+clef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
+clef c x = clefDuring (era x) c x
 
-setClefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
-setClefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+clefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
+clefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Show, Typeable)
 
-setTimeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
-setTimeSignature c x = setTimeSignatureDuring (era x) c x
+timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
+timeSignature c x = timeSignatureDuring (era x) c x
 
-setTimeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
-setTimeSignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
+timeSignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 
 newtype Fifths = Fifths Integer
@@ -278,11 +279,11 @@ newtype KeySignature = KeySignature (Fifths, Bool)
 key :: Fifths -> Bool -> KeySignature
 key fifths mode = KeySignature (fifths, mode)
 
-setKeySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
-setKeySignature c x = setKeySignatureDuring (era x) c x
+keySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
+keySignature c x = keySignatureDuring (era x) c x
 
-setKeySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
-setKeySignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+keySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
+keySignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 -- Tempo _ t means that
 --  stretch t notation = sounding
@@ -299,11 +300,11 @@ data Tempo = Tempo (Maybe String) Duration
 metronome :: Duration -> Duration -> Tempo
 metronome noteVal bpm = Tempo Nothing $ (noteVal * 60) / bpm
 
-setTempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
-setTempo c x = setTempoDuring (era x) c x
+tempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
+tempo c x = tempoDuring (era x) c x
 
-setTempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
-setTempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
+tempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
 
 
 
