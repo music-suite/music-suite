@@ -203,7 +203,6 @@ openXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a ->
 openXml sc = do
     writeXml "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-    -- FIXME hardcoded
 
 -- |
 -- Convert a score to MusicXML and write to a file.
@@ -218,7 +217,6 @@ openXmlSingle :: HasMusicXml a => Score a -> IO ()
 openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
-    -- FIXME hardcoded
 
 showXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 showXml = putStrLn . toXmlString
@@ -291,11 +289,9 @@ noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
--- FIXME only works for single-voice parts
 setDefaultVoice :: Xml.Music -> Xml.Music
 setDefaultVoice = Xml.setVoice 1
 
--- FIXME arbitrary spelling, please modularize...
 spellXml :: Integer -> Xml.Pitch
 spellXml p = (
     toEnum $ fromIntegral pc,

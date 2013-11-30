@@ -175,7 +175,7 @@ instance HasLilypond a => HasLilypond (HarmonicT a) where
     getLilypond d (HarmonicT (n,x)) = notate $ getLilypond d x
         where
             notate = id
-            -- FIXME
+            -- FIXME notate harmonics
 
 instance HasLilypond a => HasLilypond (SlideT a) where
     getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a

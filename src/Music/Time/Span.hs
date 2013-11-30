@@ -79,7 +79,7 @@ instance Delayable Span where
 instance Stretchable Span where
     stretch n = normalizeSpan . (mapDelta $ curry $ stretch n *** stretch n)
 
--- FIXME violates first Reversible law        
+-- This instance would violate the first Reversible law
 -- instance Reversible Span where
     -- rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
 

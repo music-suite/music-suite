@@ -247,6 +247,5 @@ instance HasPitch a => HasPitch (Score a) where
 
 instance HasPart a => HasPart (Score a) where
     type Part (Score a) = Part a
-    -- FIXME strange
     getPart         = fromMaybe def . fmap getPart . listToMaybe . F.toList
     modifyPart f    = fmap (modifyPart f)
