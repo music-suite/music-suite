@@ -28,6 +28,10 @@ module Music.Score.Voice (
         Voice,
         voice,
         getVoice,
+        
+        zipVoice,
+        zipVoiceWith,
+        dzipVoiceWith,
   ) where
 
 import Data.Semigroup
@@ -84,6 +88,16 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Semigroup, Typeable, Traversable, Stretchable)
 
 inVoice f = Voice . f . getVoice'
+
+zipVoice :: Voice a -> Voice b -> Voice (a, b)
+zipVoice = zipVoiceWith (,)
+
+zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (dx,vx)) (Ev (dy,vy)) -> Ev (dx <> dy, f vx vy)) a b
+
+dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
+dzipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (Product dx,vx)) (Ev (Product dy,vy)) -> Ev (first Product $ f dx dy vx vy)) a b
+
 
 -- voice :: Real d => [(d, a)] -> Voice a
 voice :: [(Duration, a)] -> Voice a
