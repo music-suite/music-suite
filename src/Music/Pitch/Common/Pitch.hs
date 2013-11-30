@@ -17,6 +17,23 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common.Pitch (
+        -- * Accidentals
+        Accidental,
+        doubleFlat, 
+        flat, 
+        natural, 
+        sharp, 
+        doubleSharp,
+
+        -- ** Inspecting accidentals
+        isNatural,
+        isSharpened,
+        isFlattened,
+        isStandard,
+
+        -- ** Name
+        Name(..),
+
         -- * Pitch
         Pitch,    
         pitch,

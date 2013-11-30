@@ -17,6 +17,36 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common.Interval (
+        -- * Quality
+        Quality(..),    
+        HasQuality(..),
+        invertQuality,
+        isPerfect,
+        isMajor,
+        isMinor,
+        isAugmented,
+        isDiminished,
+
+        -- ** Number
+        Number,
+        HasNumber(..),   
+        unison,
+        prime,
+        second,
+        third,
+        fourth,
+        fifth,
+        sixth,
+        seventh,
+        octave,
+        ninth,
+        tenth,
+        twelfth, 
+        duodecim,
+        thirteenth,
+        fourteenth,
+        fifteenth,  
+        
         -- ** Intervals
         Interval,
 
