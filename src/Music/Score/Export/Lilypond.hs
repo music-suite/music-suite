@@ -209,7 +209,7 @@ scatLy = foldr Lilypond.sequential e
         e = Lilypond.Sequential []
 
 showLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
-showLy = putStrLn . show . Pretty.pretty . toLy
+showLy = putStrLn . toLyString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
@@ -227,7 +227,7 @@ instance Default LyOptions where
 -- Convert a score to a Lilypond representation and write to a file.
 --
 writeLy' :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> FilePath -> Score a -> IO ()
-writeLy' options path sc = writeFile path ((lyFilePrefix ++) $ show $ Pretty.pretty $ toLy sc)
+writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString $ sc
     where 
         title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
