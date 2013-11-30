@@ -41,25 +41,16 @@ module Music.Score.Export.MusicXml (
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
+import Control.Applicative
+import Control.Monad hiding (mapM)
+import Control.Arrow
 import Data.Semigroup
 import Data.Ratio
 import Data.String
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Control.Monad.Plus
-import Control.Arrow
 import Data.Pointed
 import Data.Maybe
-import Data.Either
-import Data.Foldable
-import Data.Typeable
-import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Basis
 
 import Music.Time
 import Music.Time.Reactive (initial, (?))
@@ -197,9 +188,6 @@ instance HasMusicXml a => HasMusicXml (ClefT a) where
                 Just GClef -> (Xml.trebleClef <>)
                 Just CClef -> (Xml.altoClef <>)
                 Just FClef -> (Xml.bassClef <>)
-            --     Just GClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Treble, x]
-            --     Just CClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
-            --     Just FClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Bass, x]
 
 
 -- |

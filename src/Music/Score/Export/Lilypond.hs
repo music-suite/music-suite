@@ -42,17 +42,15 @@ module Music.Score.Export.Lilypond (
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
+import Control.Applicative
+import Control.Monad hiding (mapM)
+import Control.Arrow
 import Data.Semigroup
 import Data.Ratio
 import Data.Default
 import Data.String
 import Data.Pointed
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Control.Monad.Plus
-import Control.Arrow
-import Data.Maybe
-import Data.Either
+import Data.Maybe (fromMaybe)
 import Data.Foldable
 import Data.Typeable
 import Data.Traversable
@@ -60,8 +58,6 @@ import Data.Function (on)
 import Data.Ord (comparing)
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Basis
 import System.Process
 
 import Music.Time
@@ -285,7 +281,6 @@ openLy' options sc = do
 runLy   = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
 cleanLy = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
 openLy'' = void $ runCommand "open test.pdf"
-    -- FIXME hardcoded
 
 -- |
 -- Convert a score to a Lilypond string.
