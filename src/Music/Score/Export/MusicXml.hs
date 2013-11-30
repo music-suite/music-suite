@@ -253,7 +253,7 @@ toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . 
         addClefs = setCl . fmap addClefT
         setCl = withMeta $ \x -> applyClefOption (fmap getLast x)
 
-        title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        title = fromMaybe "" $ flip getTitleAt 0                     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
 
         pl = Xml.partList (fmap show $ getParts sc)
@@ -315,12 +315,5 @@ spellXml p = (
     fromIntegral oct
     )
     where (pc,alt,oct) = spellPitch p
-
-
-
-
--- TODO move
-withTitle :: HasPart' a => (Title -> Score a -> Score a) -> Score a -> Score a
-withTitle = withMeta
 
 

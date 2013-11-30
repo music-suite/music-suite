@@ -229,7 +229,7 @@ instance Default LyOptions where
 writeLy' :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> FilePath -> Score a -> IO ()
 writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString $ sc
     where 
-        title = fromMaybe "" $ flip getTitleAt 0 $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
+        title    = fromMaybe "" $ flip getTitleAt 0                  $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ (? onset sc) $ runMeta (Nothing :: Maybe a) $ getScoreMeta sc
 
         lyFilePrefix = case options of
