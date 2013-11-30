@@ -29,6 +29,7 @@ module Music.Score.Export.Lilypond (
         HasLilypond(..),
         toLy,
         toLyString,
+        showLy,
         writeLy, 
         LyOptions(..),
         writeLy',
@@ -206,6 +207,9 @@ scatLy :: [Lilypond] -> Lilypond
 scatLy = foldr Lilypond.sequential e
     where
         e = Lilypond.Sequential []
+
+showLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+showLy = putStrLn . show . Pretty.pretty . toLy
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.

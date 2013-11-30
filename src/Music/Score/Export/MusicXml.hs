@@ -30,8 +30,9 @@ module Music.Score.Export.MusicXml (
         HasMusicXml(..),
         toXml,
         toXmlString,
-        writeXml,
+        showXml,
         openXml,
+        writeXml,
         -- toXmlVoice,
         -- toXmlSingle,
         -- writeXmlSingle,
@@ -230,6 +231,9 @@ openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
     execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
     -- FIXME hardcoded
+
+showXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+showXml = putStrLn . toXmlString
 
 -- |
 -- Convert a score to a MusicXML string.
