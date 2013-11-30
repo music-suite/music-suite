@@ -278,8 +278,8 @@ openLy' options sc = do
     cleanLy
     openLy''
 
-runLy   = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
-cleanLy = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
+runLy    = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
+cleanLy  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
 openLy'' = void $ runCommand "open test.pdf"
 
 -- |

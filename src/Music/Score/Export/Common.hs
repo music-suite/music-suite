@@ -16,9 +16,13 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.Common -- (
---  )
-where
+module Music.Score.Export.Common (
+        voiceToBars,
+        separateBars,
+        spellPitch,
+        toRelative,
+        unRatio,
+  ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
@@ -61,7 +65,7 @@ import qualified Text.Pretty as Pretty
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-import System.Posix
+import System.Process
 import System.IO.Unsafe
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -116,10 +120,5 @@ spellPitch p = (
             where
                 add a x = (a + x, a + x)
         major = scaleFromSteps [0,2,2,1,2,2,2,1]
-
-execute :: FilePath -> [String] -> IO ()
-execute program args = do
-    forkProcess $ executeFile program True args Nothing
-    return ()
 
 unRatio x = (numerator x, denominator x)

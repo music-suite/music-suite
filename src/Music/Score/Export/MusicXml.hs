@@ -52,6 +52,7 @@ import Data.Pointed
 import Data.Maybe
 import Data.Function (on)
 import Data.Ord (comparing)
+import System.Process
 
 import Music.Time
 import Music.Time.Reactive (Reactive, initial, (?))
@@ -203,7 +204,7 @@ writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 openXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
-    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
 -- |
 -- Convert a score to MusicXML and write to a file.
@@ -217,7 +218,7 @@ writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
 openXmlSingle :: HasMusicXml a => Score a -> IO ()
 openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
-    execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
 showXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 showXml = putStrLn . toXmlString
