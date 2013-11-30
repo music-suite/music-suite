@@ -601,13 +601,21 @@ Each attribute value may apply either to a *whole* score (i.e. from beginning to
 
 TODO
 
-## Attribution
-
-TODO
+```haskell
+title "Frere Jaques" $ scat [c,d,e,c]
+```
 
 ## Movement title and number
 
 TODO
+
+## Attribution
+
+TODO
+
+```haskell
+composer "Anonymous" $ scat [c,d,e,c]
+```
 
 ## Clefs
 
