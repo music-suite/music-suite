@@ -30,6 +30,8 @@ module Music.Score.Chord (
         -- * Chord representation
         HasChord(..),
         ChordT(..),      
+
+        separateVoices,
         
         -- * Chord transformations
         simultaneous,
@@ -38,6 +40,7 @@ module Music.Score.Chord (
 
 import Prelude hiding (any, mapM_)
 
+import Data.Ord
 import Data.Pointed
 import Data.Foldable
 import Data.Typeable
@@ -137,9 +140,13 @@ pushNote n t = if n `notOverlapsHead` middle t then pushMiddle n t else
 pushMiddle :: a -> Tower [a] -> Tower [a]
 pushMiddle x (Tower as a sa) = Tower as (x:a) sa
     
-separateVoices :: Ord a => Score a -> [Score a]
-separateVoices = fmap notesToScore . (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower []) . scoreToNotes
+separateVoices :: Ord a => Score a -> [Score ( a)]
+separateVoices = {-fmap scoreToVoice . -}fmap notesToScore . (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower []) 
+    . List.sortBy (comparing getNoteSpan) . scoreToNotes
 
+-- DEBUG
+instance Num a => Num (Score a) where
+    fromInteger = return . fromInteger
 
 -- Note:                                                    
 --
