@@ -1,5 +1,6 @@
 
-{-# LANGUAGE TypeFamilies, ViewPatterns, FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE TypeFamilies, ViewPatterns, FlexibleContexts, ConstraintKinds, 
+    NoMonomorphismRestriction #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -80,6 +81,7 @@ module Music.Score.Combinators (
   ) where
 
 import Control.Monad
+import Control.Applicative
 import Control.Arrow
 import Control.Monad.Plus
 import Data.Semigroup
@@ -230,26 +232,24 @@ mapAll f = saveMeta $ compose . f . perform
 filterPart :: HasPart' a => (Part a -> Bool) -> Score a -> Score a
 filterPart p = mfilter (p . getPart)
 
+filterPartIs :: HasPart' a => Part a -> Score a -> Score a
+filterPartIs = filterPart <$> (==)
+
 -- |
 -- Extract parts from the a score.
 --
 -- The parts are returned in the order defined the associated 'Ord' instance part type.
--- You can recompose the score with 'mconcat', i.e.
---
--- > mconcat . extractParts = id
 --
 extractParts :: HasPart' a => Score a -> [Score a]
-extractParts a = fmap (\p -> filterPart (== p) a) (getParts a)
+extractParts x = filterPartIs <$> getParts x <*> return x
         
 -- |
 -- Extract parts from the a score and include the part name.
 --
 -- The parts are returned in the order defined the associated 'Ord' instance part type.
 --
--- Simple type
---
 extractParts' :: HasPart' a => Score a -> [(Part a, Score a)]
-extractParts' a = fmap (\p -> (p, filterPart (== p) a)) (getParts a)
+extractParts' x = getParts x `zip` extractParts x
 
 
 -- |

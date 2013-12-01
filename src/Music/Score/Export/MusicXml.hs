@@ -5,7 +5,6 @@
     DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
-    ScopedTypeVariables,
     FlexibleContexts,
     ConstraintKinds,
     TypeOperators,
@@ -28,15 +27,13 @@ module Music.Score.Export.MusicXml (
         XmlScore,
         XmlMusic,
         HasMusicXml(..),
+
         toXml,
         toXmlString,
+
         showXml,
         openXml,
         writeXml,
-        -- toXmlVoice,
-        -- toXmlSingle,
-        -- writeXmlSingle,
-        -- openXmlSingle,
 ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -220,6 +217,9 @@ openXmlSingle sc = do
     writeXmlSingle "test.xml" sc
     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
+-- |
+-- Convert a score to MusicXML and print it on the standard output.
+--
 showXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 showXml = putStrLn . toXmlString
 
@@ -232,8 +232,8 @@ toXmlString = Xml.showXml . toXml
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toXml :: forall a . (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
-toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . simultaneous . addClefs) . extractParts $ sc
+toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
+toXml sc = Xml.fromParts title composer pl . fmap (voiceToXml' . scoreToVoice . simultaneous . addClefs) . extractParts $ sc
     where
         addClefT :: a -> ClefT a
         addClefT = point
@@ -245,25 +245,24 @@ toXml sc = Xml.fromParts title composer pl . fmap (toXmlVoice' . scoreToVoice . 
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
         pl = Xml.partList (fmap show $ getParts sc)
-        -- asScore a = (a :: Score a)
 
 -- |
 -- Convert a single-voice score to a MusicXML representation.
 --
 toXmlSingle :: HasMusicXml a => Score a -> XmlScore
-toXmlSingle = toXmlVoice . scoreToVoice
+toXmlSingle = voiceToXml . scoreToVoice
 
 -- |
 -- Convert a single-voice score to a MusicXML representation.
 --
-toXmlVoice :: HasMusicXml a => Voice (Maybe a) -> XmlScore
-toXmlVoice = Xml.fromPart "Title" "Composer" "Voice" . toXmlVoice'
+voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
+voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
 
 -- |
 -- Convert a voice score to a list of bars.
 --
-toXmlVoice' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
-toXmlVoice' =
+voiceToXml' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
+voiceToXml' =
     addDefaultSignatures . fmap barToXml . voiceToBars
     where
         addDefaultSignatures []     = []
@@ -275,23 +274,23 @@ toXmlVoice' =
             <> Xml.commonTime
 
 
-barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> Xml.Music
+barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> XmlMusic
 barToXml bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToXml rh
 
-rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> Xml.Music
+rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> XmlMusic
 rhythmToXml (Beat d x)            = noteRestToXml d x
 rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
 rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
 rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> Xml.Music
+noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> XmlMusic
 noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
 noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
-setDefaultVoice :: Xml.Music -> Xml.Music
+setDefaultVoice :: XmlMusic -> XmlMusic
 setDefaultVoice = Xml.setVoice 1
 
 spellXml :: Integer -> Xml.Pitch

@@ -133,11 +133,11 @@ instance HasMidi (Integer, Integer) where
 
 instance HasMidi Midi.Message               where   getMidi = return
 instance HasMidi Int                        where   getMidi = getMidi . toInteger
-instance HasMidi Integer                    where   getMidi = \x -> getMidi (x,100::Integer)
 instance HasMidi Float                      where   getMidi = getMidi . toInteger . round
 instance HasMidi Double                     where   getMidi = getMidi . toInteger . round
 instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toInteger . round
 instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfromMaybe
+instance HasMidi Integer                    where   getMidi x = getMidi (x,100::Integer)
 
 instance HasMidi a => HasMidi (PartT n a) where
     getMidi (PartT (_,a))                           = getMidi a
@@ -173,7 +173,8 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
         divisions       = 1024
         divisions'      = Midi.TicksPerBeat divisions
         controlTrack    = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
-        eventTracks     = (fmap (<> [(endDelta, Midi.TrackEnd)]) $ fmap (uncurry setProgramChannel . second scoreToMTrack) $ extractParts' score)
+        eventTracks     = fmap ((<> [(endDelta, Midi.TrackEnd)]) . uncurry setProgramChannel . second scoreToMTrack) 
+                                $ extractParts' score
 
         setProgramChannel :: Part a -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
         setProgramChannel p = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setChannel ch))

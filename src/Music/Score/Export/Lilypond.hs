@@ -5,7 +5,6 @@
     DeriveFoldable,
     DeriveDataTypeable,
     GeneralizedNewtypeDeriving,
-    ScopedTypeVariables,
     FlexibleContexts,
     ConstraintKinds,
     TypeOperators,
@@ -27,17 +26,18 @@
 module Music.Score.Export.Lilypond (
         Lilypond,
         HasLilypond(..),
+
         toLy,
         toLyString,
+
         showLy,
-        writeLy, 
-        LyOptions(..),
-        writeLy',
         openLy,
+        writeLy, 
+
+        -- * Options
+        LilypondOptions(..),
+        writeLy',
         openLy',
-        -- toLySingle,
-        -- writeLySingle,
-        -- openLySingle,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -204,26 +204,30 @@ scatLy = foldr Lilypond.sequential e
     where
         e = Lilypond.Sequential []
 
-showLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+
+-- |
+-- Convert a score to a Lilypond representaiton and print it on the standard output.
+--
+showLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 showLy = putStrLn . toLyString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
+writeLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
 writeLy = writeLy' def
 
-data LyOptions
+data LilypondOptions
     = Inline
     | Score
-instance Default LyOptions where
+instance Default LilypondOptions where
     def = Inline
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy' :: forall a . (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> FilePath -> Score a -> IO ()
-writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString $ sc
+writeLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString sc
     where 
         title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
@@ -271,7 +275,7 @@ writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString $ sc
 openLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
 openLy = openLy' def
 
-openLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LyOptions -> Score a -> IO ()
+openLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LilypondOptions -> Score a -> IO ()
 openLy' options sc = do
     writeLy' options "test.ly" sc
     runLy
@@ -294,7 +298,7 @@ toLyString = show . Pretty.pretty . toLy
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
 toLy sc = pcatLy . fmap (addStaff 
                 . scatLy . prependName 
-                . second (toLyVoice' . scoreToVoice . simultaneous) 
+                . second (voiceToLy . scoreToVoice . simultaneous) 
                 . uncurry addClefs
                 ) 
         . extractParts' $ sc
@@ -302,7 +306,7 @@ toLy sc = pcatLy . fmap (addStaff
         addClefT :: a -> ClefT a
         addClefT = point
         
-        addClefs p = ((,) p) . setClef p . fmap addClefT
+        addClefs p = (,) p . setClef p . fmap addClefT
         setClef p  = withMeta $ \x -> applyClefOption (fmap getLast x)
 
         addStaff = Lilypond.New "Staff" Nothing
@@ -313,8 +317,8 @@ toLy sc = pcatLy . fmap (addStaff
 -- |
 -- Convert a voice score to a list of bars.
 --
-toLyVoice' :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
-toLyVoice' = fmap barToLy . voiceToBars
+voiceToLy :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
+voiceToLy = fmap barToLy . voiceToBars
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
 barToLy bar = case (fmap rewrite . quantize) bar of
