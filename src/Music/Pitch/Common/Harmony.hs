@@ -8,8 +8,6 @@ module Music.Pitch.Common.Harmony (
         isMelodicConsonance,
   ) where
 
-import Music.Pitch.Common.Number
-import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Interval
 import Music.Pitch.Literal      
 

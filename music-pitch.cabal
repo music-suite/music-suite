@@ -52,7 +52,3 @@ library
         Music.Pitch.Common.Harmony
         Music.Pitch.Intonation
     other-modules:
-        Music.Pitch.Common.Quality
-        Music.Pitch.Common.Number
-        Music.Pitch.Common.Name
-        Music.Pitch.Common.Accidental
