@@ -47,10 +47,9 @@ library
         Music.Pitch.Common
         Music.Pitch.Common.Interval
         Music.Pitch.Common.Pitch
-        Music.Pitch.Common.Enharmonic
+        Music.Pitch.Common.Semitones
         Music.Pitch.Common.Spell
         Music.Pitch.Common.Harmony
-
         Music.Pitch.Intonation
     other-modules:
         Music.Pitch.Common.Quality

@@ -44,7 +44,7 @@ import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Enharmonic
+import Music.Pitch.Common.Semitones
 
 -- $semitonesAndSpellings
 --

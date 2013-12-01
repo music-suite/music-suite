@@ -15,7 +15,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Common.Enharmonic (
+module Music.Pitch.Common.Semitones (
         -- * Types
         -- ** Octaves
         Octaves,
