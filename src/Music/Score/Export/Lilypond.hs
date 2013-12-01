@@ -292,7 +292,12 @@ toLyString = show . Pretty.pretty . toLy
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff . scatLy . prependName . second (toLyVoice' . scoreToVoice . simultaneous) . uncurry addClefs) . extractParts' $ sc
+toLy sc = pcatLy . fmap (addStaff 
+                . scatLy . prependName 
+                . second (toLyVoice' . scoreToVoice . simultaneous) 
+                . uncurry addClefs
+                ) 
+        . extractParts' $ sc
     where                 
         addClefT :: a -> ClefT a
         addClefT = point
