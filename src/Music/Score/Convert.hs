@@ -64,9 +64,9 @@ import qualified Data.Foldable as Foldable
 -- Conversion
 --------------------------------------------------------------------------------
 
--- | Convert a note to a voice.
-noteToVoice :: Note a -> Voice a
-noteToVoice (getNote -> (s,x)) = stretchTo (duration s) $ return x
+-- | Convert a note to an onset and a voice.
+noteToVoice :: Note a -> (Time, Voice a)
+noteToVoice (getNote -> (s,x)) = (onset s, stretchTo (duration s) $ return x)
 
 -- | Convert a note to a score.
 noteToScore :: Note a -> Score a
