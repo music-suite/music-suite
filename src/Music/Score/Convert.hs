@@ -21,7 +21,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides conversion betwen 'Score', 'Voice' and 'Track'.
+-- Provides conversion betwen temporal container types.
 --
 -------------------------------------------------------------------------------------
 
@@ -59,10 +59,6 @@ import Music.Time
 import qualified Data.List as List
 import qualified Data.Foldable as Foldable
 
-
---------------------------------------------------------------------------------
--- Conversion
---------------------------------------------------------------------------------
 
 -- | Convert a note to an onset and a voice.
 noteToVoice :: Note a -> (Time, Voice a)
