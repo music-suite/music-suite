@@ -42,6 +42,8 @@ module Music.Score.Combinators (
         -- * Meta-events
         withMeta,
         withGlobalMeta,
+        withMetaAtStart,
+        withGlobalMetaAtStart,
 
 
 
@@ -432,4 +434,15 @@ withMeta' part f x = let
         Left  a -> f a x
         Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(getNote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
 
+withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
+withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
+
+withMetaAtStart :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart f x = withMetaAtStart' (Just x) f x
+
+withMetaAtStart' part f x = let
+    m = getScoreMeta x
+    in f (runMeta part m ? onset x) x
+    
+-- withAttribution x = (flip getAttribution "composer" $ metaAtStart x) x
 

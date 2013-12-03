@@ -118,7 +118,10 @@ getScoreMeta (Score (m,_)) = m
 runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
 runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
 
+metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
 metaAt x = (? x) . runScoreMeta
+
+metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
 metaAtStart x = onset x `metaAt` x
 
 
