@@ -161,7 +161,6 @@ addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
 runMeta part = fromMaybe mempty . runMeta' part
 
-
 addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
 addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
     where                   
