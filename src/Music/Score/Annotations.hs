@@ -50,7 +50,7 @@ import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Score
 import Music.Score.Part
-import Music.Score.Combinators (withMetaNP)
+import Music.Score.Combinators (withGlobalMeta)
 import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 
@@ -68,7 +68,7 @@ annotate str x = annotateSpan (start >-> duration x) str x
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a
-annotateSpan span str x = addMetaNoteNP (sapp span $ return $ Annotation [str]) x
+annotateSpan span str x = addGlobalMetaNote (sapp span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
 showAnnotations :: (HasPart' a, HasText a) => Score a -> Score a
@@ -80,5 +80,5 @@ showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix +
 
 -- | Handle the annotations in a score.
 withAnnotations :: (HasPart' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a
-withAnnotations f = withMetaNP (f . getAnnotation)
+withAnnotations f = withGlobalMeta (f . getAnnotation)
 

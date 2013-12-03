@@ -41,7 +41,7 @@ module Music.Score.Combinators (
 
         -- * Meta-events
         withMeta,
-        withMetaNP,
+        withGlobalMeta,
 
 
 
@@ -418,8 +418,8 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately 
 
-withMetaNP :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
-withMetaNP = withMeta' (Nothing :: Maybe Int)
+withGlobalMeta :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
+withGlobalMeta = withMeta' (Nothing :: Maybe Int)
 
 withMeta :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = withMeta' (Just x) f x

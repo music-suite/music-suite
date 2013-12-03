@@ -58,7 +58,7 @@ import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Score
 import Music.Score.Part
-import Music.Score.Combinators (withMetaNP, mapFirst)
+import Music.Score.Combinators (withGlobalMeta, mapFirst)
 import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 import Music.Score.Ties

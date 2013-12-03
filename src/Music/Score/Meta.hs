@@ -45,7 +45,7 @@ module Music.Score.Meta (
         Meta,  
         -- addMeta,
         addMetaNote,
-        addMetaNoteNP,
+        addGlobalMetaNote,
         runMeta,
         HasMeta(..),
 
@@ -151,8 +151,8 @@ inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -
 inMeta f (Meta s) = Meta (f s)
 
 
-addMetaNoteNP :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addMetaNoteNP x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
+addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
+addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
 
 -- XXX
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
@@ -234,7 +234,7 @@ timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignatu
 timeSignature c x = timeSignatureDuring (era x) c x
 
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+timeSignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
 
 newtype Fifths = Fifths Integer
@@ -282,7 +282,7 @@ keySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature
 keySignature c x = keySignatureDuring (era x) c x
 
 keySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
-keySignatureDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+keySignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
 -- Tempo _ t means that
 --  stretch t notation = sounding
@@ -303,7 +303,7 @@ tempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
 tempo c x = tempoDuring (era x) c x
 
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
-tempoDuring s c = addMetaNoteNP (s =: (Option $ Just $ Last c))
+tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
 
 
@@ -345,7 +345,7 @@ title t x = titleDuring (era x) t x
 
 -- | Set title of the given part of a score.
 titleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-titleDuring s t = addMetaNoteNP (s =: t)
+titleDuring s t = addGlobalMetaNote (s =: t)
 
 -- | Set subtitle of the given score.
 subtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
@@ -353,7 +353,7 @@ subtitle t x = subtitleDuring (era x) t x
 
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-subtitleDuring s t = addMetaNoteNP (s =: denoteTitle t)
+subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
 
 
 
@@ -387,7 +387,7 @@ composer t x = composerDuring (era x) t x
 
 -- | Set composer of the given part of a score.
 composerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
-composerDuring s c = addMetaNoteNP (s =: attribution1 "composer" c)
+composerDuring s c = addGlobalMetaNote (s =: attribution1 "composer" c)
 
 
 
