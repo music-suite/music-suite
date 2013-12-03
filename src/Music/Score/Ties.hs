@@ -97,13 +97,13 @@ instance Tiable (Ratio a)   where { beginTie = id ; endTie = id }
 
 instance Tiable a => Tiable (Maybe a) where
     beginTie = fmap beginTie
-    endTie = fmap endTie
-    toTied Nothing  = (Nothing, Nothing)
-    toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
+    endTie   = fmap endTie
+    -- toTied Nothing  = (Nothing, Nothing)
+    -- toTied (Just a) = (Just b, Just c) where (b,c) = toTied a
 
 instance Tiable a => Tiable (TieT a) where
-    beginTie (TieT (prevTie, a, nextTie)) = TieT (prevTie, a, True)
-    endTie   (TieT (prevTie, a, nextTie)) = TieT (True, a, nextTie)
+    -- beginTie (TieT (prevTie, a, nextTie)) = TieT (prevTie, a, True)
+    -- endTie   (TieT (prevTie, a, nextTie)) = TieT (True, a, nextTie)
     toTied (TieT (prevTie, a, nextTie))   = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 

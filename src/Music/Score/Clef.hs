@@ -80,7 +80,7 @@ instance Pointed ClefT where
 
 instance Tiable a => Tiable (ClefT a) where
     beginTie = fmap beginTie
-    endTie = fmap endTie
+    endTie   = fmap endTie
 
 
 -- TODO
