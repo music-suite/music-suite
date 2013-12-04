@@ -39,7 +39,7 @@ module Music.MusicXml.Simple (
         bar,
 
         -- -- ** Others
-        -- partIds,
+        -- standardPartAttributes,
         -- header,
         -- setHeader,
         -- setTitle,
@@ -267,13 +267,13 @@ fromParts title composer partList music
 -- Create a part list from instrument names.
 --
 partList :: [String] -> PartList
-partList = PartList . zipWith (\partId name -> Part partId name Nothing) partIds
+partList = PartList . zipWith (\partId name -> Part partId name Nothing) standardPartAttributes
 
 -- | 
 -- Create a part list from instrument names and abbreviations.
 --
 partListAbbr :: [(String, String)] -> PartList
-partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) partIds
+partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) standardPartAttributes
 
 -- | 
 -- Enclose the given parts in a bracket.
@@ -331,14 +331,14 @@ setTitle         title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader 
 setMovementTitle mvmTitle (ScoreHeader title _ ident partList)    = ScoreHeader title (Just mvmTitle) ident partList
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
-partIds :: [String]
-partIds = [ "P" ++ show n | n <- [1..] ]
+standardPartAttributes :: [String]
+standardPartAttributes = [ "P" ++ show n | n <- [1..] ]
 
 -- | Given a partwise score (list of parts, which are lists of measures), add part and measure attributes (numbers).
 addPartwiseAttributes :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
-addPartwiseAttributes = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
+addPartwiseAttributes = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds
     where
-        partIds' = partIds
+        partIds = standardPartAttributes
         barIds   = [1..]
                         
 
