@@ -105,5 +105,8 @@ voiceToScore' = mcatMaybes . voiceToScore
 -- Convert a track to a score where each event is given a fixed duration.
 --
 trackToScore :: Duration -> Track a -> Score a
-trackToScore d = compose . fmap (\(t,x) -> (t,d,x)) . getTrack
+trackToScore x = trackToScore' (const x)
+
+trackToScore' :: (a -> Duration) -> Track a -> Score a
+trackToScore' f = compose . fmap (\(t,x) -> (t,f x,x)) . getTrack
 
