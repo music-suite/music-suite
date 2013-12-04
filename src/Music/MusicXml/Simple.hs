@@ -209,7 +209,7 @@ module Music.MusicXml.Simple (
         -- * Folds and maps
         -----------------------------------------------------------------------------
         
-        mapNote,
+        -- mapNote,
         mapMusic,
         foldMusic,
 
