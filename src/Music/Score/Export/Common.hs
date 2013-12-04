@@ -101,7 +101,9 @@ toRelative = snd . mapAccumL g origin
         g now (t,d,x) = (t, (origin .+^ (t .-. now),d,x))
 
 
--- FIXME arbitrary spelling, please modularize...
+-- | 
+-- Basic spelling for integral types.
+-- 
 spellPitch :: Integral a => a -> (a, a, a)
 spellPitch p = (
     pitchClass,
