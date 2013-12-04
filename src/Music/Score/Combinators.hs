@@ -68,6 +68,7 @@ module Music.Score.Combinators (
 
         -- ** Part composition
         (</>),
+        rcat,
         -- moveParts,
         -- moveToPart,
 
@@ -308,6 +309,12 @@ a </> b = a <> moveParts offset b
     where
         -- max voice in a + 1
         offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
+
+-- | 
+-- Concatenate parts.
+--
+rcat :: (HasPart' a, Enum (Part a)) => [Score a] -> Score a
+rcat = List.foldr (</>) mempty
 
 -- |
 -- Move down one voice (all parts).
