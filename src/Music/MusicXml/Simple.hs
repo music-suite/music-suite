@@ -261,7 +261,7 @@ fromParts title composer partList music
     = Partwise 
         (def)
         (header title composer partList)
-        (parts music)  
+        (addPartAndMeasureAttrs music)  
 
 
 partIds :: [String]
@@ -335,8 +335,8 @@ setTitle    title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader title
 setMvmTitle mvmTitle (ScoreHeader title _ ident partList) = ScoreHeader title (Just mvmTitle) ident partList
 -- addIdent    ident    (ScoreHeader title mvmTitle idents partList) = ScoreHeader title mvmTitle (ident:idents) partList
 
-parts :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
-parts = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
+addPartAndMeasureAttrs :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
+addPartAndMeasureAttrs = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
     where
         partIds' = partIds
         barIds   = [1..]
