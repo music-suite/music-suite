@@ -33,6 +33,7 @@ module Music.Score.Convert (
         voiceToScore,
         voicesToScore,
         trackToScore,
+        trackToScore',
         scoreToVoice,
   ) where
 
@@ -107,6 +108,9 @@ voiceToScore' = mcatMaybes . voiceToScore
 trackToScore :: Duration -> Track a -> Score a
 trackToScore x = trackToScore' (const x)
 
+-- |
+-- Convert a track to a score, using durations determined by the values.
+--
 trackToScore' :: (a -> Duration) -> Track a -> Score a
 trackToScore' f = compose . fmap (\(t,x) -> (t,f x,x)) . getTrack
 
