@@ -71,6 +71,9 @@ import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Meta
+import Music.Score.Meta.Clef
+import Music.Score.Meta.Attribution
+import Music.Score.Meta.Title
 import Music.Score.Clef
 import Music.Score.Chord
 import Music.Score.Pitch

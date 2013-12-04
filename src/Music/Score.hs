@@ -85,6 +85,12 @@ import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Chord
 import Music.Score.Meta
+import Music.Score.Meta.Clef
+import Music.Score.Meta.Time
+import Music.Score.Meta.Key
+import Music.Score.Meta.Tempo
+import Music.Score.Meta.Title
+import Music.Score.Meta.Attribution
 import Music.Score.Annotations
 import Music.Score.Clef
 import Music.Score.Pitch
