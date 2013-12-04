@@ -219,6 +219,7 @@ where
 import Data.Default
 import Data.Ratio
 import Data.Monoid
+import Control.Arrow
 
 import Music.MusicXml
 import Music.MusicXml.Score
@@ -340,11 +341,13 @@ standardPartAttributes = [ "P" ++ show n | n <- [1..] ]
 
 -- | Given a partwise score (list of parts, which are lists of measures), add part and measure attributes (numbers).
 addPartwiseAttributes :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
-addPartwiseAttributes = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds
+addPartwiseAttributes = deepZip partIds barIds
     where
-        partIds = standardPartAttributes
-        barIds   = [1..]
-                        
+        partIds = fmap PartAttrs standardPartAttributes
+        barIds  = fmap MeasureAttrs [1..]
+
+        deepZip :: [a] -> [b] -> [[c]] -> [(a, [(b, c)])]                        
+        deepZip xs ys = zipWith (curry $ second (zip ys)) xs
 
 -- ----------------------------------------------------------------------------------
 -- Top-level attributes
