@@ -417,6 +417,7 @@ withTime = mapEvents (\t d x -> (t, x))
 
 inSpan t' (range -> (t,u)) = t <= t' && t' < u
 
+-- TODO clean
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
 mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a                            
@@ -439,7 +440,12 @@ withMeta' part f x = let
     r = runMeta part m
     in case splitReactive r of
         Left  a -> f a x
-        Right ((a1,t1),as,(t2,a2)) -> setScoreMeta m $ mapBefore t1 (f a1) . composed (fmap (\(getNote -> (s,a)) -> mapDuring s (f a)) as) . mapAfter t2 (f a2) $ x
+        Right ((a, t), bs, (u, c)) -> 
+            setScoreMeta m 
+                $ mapBefore t (f a) 
+                $ (composed $ fmap (\(getNote -> (s, a)) -> mapDuring s $ f a) $ bs) 
+                $ mapAfter u (f c) 
+                $ x
 
 withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
