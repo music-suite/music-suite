@@ -28,16 +28,19 @@
 
 module Music.Score.Meta.Tempo (
         Tempo,
+        Bpm,
         metronome,
         tempo,
         tempoDuring,
-        
+        tempoToDur,
+        renderTempo,
         withTempo,       
   ) where
 
 
 import Control.Arrow
 import Control.Monad.Plus       
+import Data.Default
 import Data.Void
 import Data.Maybe
 import Data.Semigroup
@@ -66,20 +69,22 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
--- Tempo _ t means that
---  stretch t notation = sounding
---  1   -> whole = 1   sec (1/1 = 60)
---  0.5 -> whole = 0.5 sec (1/1 = 120)
---  2   -> whole = 2   sec (1/4 = 120)
-data Tempo = Tempo (Maybe String) Duration
-    deriving (Eq, Ord, Show, Typeable)
+type Bpm = Duration
 
--- beats +, tempo -, duration +
--- bpm +,   tempo +  duration -
+data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
+    deriving (Eq, Ord, Typeable)
 
+instance Show Tempo where
+    show (tempoToFrac -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
+        where
+            showR (realToFrac -> (unRatio -> (x, 1))) = show x
+            showR (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
-metronome :: Duration -> Duration -> Tempo
-metronome noteVal bpm = Tempo Nothing $ (noteVal * 60) / bpm
+instance Default Tempo where
+    def = metronome (1/1) 60
+
+metronome :: Duration -> Bpm -> Tempo
+metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 tempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
 tempo c x = tempoDuring (era x) c x
@@ -87,5 +92,17 @@ tempo c x = tempoDuring (era x) c x
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
-withTempo :: (Option (Last Tempo) -> Score a -> Score a) -> Score a -> Score a
-withTempo = withGlobalMetaAtStart
+tempoToFrac :: Tempo -> (Duration, Bpm)
+tempoToFrac (Tempo _ Nothing x)   = ((1/4), x * 60 / (1/4))
+tempoToFrac (Tempo _ (Just nv) x) = (nv, (60 * recip x) / nv)
+
+-- stretch (tempoToDur t) notation = sounding
+tempoToDur :: Tempo -> Duration
+tempoToDur (Tempo _ _ x) = x
+
+renderTempo :: Score a -> Score a
+renderTempo = withTempo (stretch . tempoToDur)
+
+withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
+withTempo f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
+

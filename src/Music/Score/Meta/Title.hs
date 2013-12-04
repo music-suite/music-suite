@@ -117,6 +117,6 @@ subtitle t x = subtitleDuring (era x) t x
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
 
-withTitle :: (Option (Last Title) -> Score a -> Score a) -> Score a -> Score a
+withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
 withTitle = withGlobalMetaAtStart
 

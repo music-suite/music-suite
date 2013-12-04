@@ -114,6 +114,6 @@ keySignature c x = keySignatureDuring (era x) c x
 keySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
 keySignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
-withKeySignature :: (Option (Last KeySignature) -> Score a -> Score a) -> Score a -> Score a
-withKeySignature = withGlobalMetaAtStart
+withKeySignature :: KeySignature -> (KeySignature -> Score a -> Score a) -> Score a -> Score a
+withKeySignature def f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
 

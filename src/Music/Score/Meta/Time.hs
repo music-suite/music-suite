@@ -29,6 +29,9 @@
 module Music.Score.Meta.Time (
         
         TimeSignature,
+        time,
+        compoundTime,
+
         timeSignature,
         timeSignatureDuring,
 
@@ -66,7 +69,16 @@ import Music.Score.Util
 import Music.Pitch.Literal
 
 newtype TimeSignature = TimeSignature ([Integer], Integer)
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Typeable)
+
+instance Show TimeSignature where
+    show (TimeSignature (xs, x)) = List.intercalate "+" (fmap show xs) ++ "/" ++ show x
+
+time :: Integer -> Integer -> TimeSignature
+time x y = TimeSignature ([x], y)
+
+compoundTime :: [Integer] -> Integer -> TimeSignature
+compoundTime = curry TimeSignature
 
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (era x) c x
@@ -74,6 +86,6 @@ timeSignature c x = timeSignatureDuring (era x) c x
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
-withTimeSignature :: (Option (Last TimeSignature) -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature = withGlobalMetaAtStart
+withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
+withTimeSignature def f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
 
