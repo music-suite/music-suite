@@ -322,6 +322,10 @@ toLy sc =
             : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show v) 
             : x
 
+mergeBars :: [Lilypond] -> Lilypond
+mergeBars [x] = x
+mergeBars _   = error "mergeBars: Not supported"
+
 -- |
 -- Convert a voice score to a list of bars.
 --

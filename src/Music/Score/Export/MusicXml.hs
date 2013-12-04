@@ -270,6 +270,10 @@ toXml sc =
 
         pl = Xml.partList (fmap show $ getParts sc)
 
+mergeBars :: [XmlMusic] -> XmlMusic
+mergeBars [x] = x
+mergeBars _   = error "mergeBars: Not supported"
+
 -- |
 -- Convert a voice score to a list of bars.
 --
