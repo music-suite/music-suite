@@ -1,6 +1,17 @@
 
-{-# LANGUAGE TypeFamilies, ViewPatterns, FlexibleContexts, ConstraintKinds, 
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE 
+    ScopedTypeVariables, 
+    GeneralizedNewtypeDeriving,
+    DeriveFunctor, 
+    DeriveFoldable, 
+    DeriveTraversable,
+    DeriveDataTypeable, 
+    ConstraintKinds, 
+    ViewPatterns,
+    TypeFamilies,
+    FlexibleContexts, 
+    MultiParamTypeClasses, 
+    FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -40,6 +51,8 @@ module Music.Score.Combinators (
         splice,
 
         -- * Meta-events
+        metaAt,
+        metaAtStart,
         withMeta,
         withGlobalMeta,
         withMetaAtStart,
@@ -427,6 +440,15 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately 
+
+runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
+runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
+
+metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
+metaAt x = (? x) . runScoreMeta
+
+metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
+metaAtStart x = onset x `metaAt` x
 
 withGlobalMeta :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMeta = withMeta' (Nothing :: Maybe Int)

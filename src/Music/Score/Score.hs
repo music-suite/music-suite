@@ -7,7 +7,6 @@
     DeriveTraversable,
     DeriveDataTypeable, 
     ConstraintKinds, 
-    GADTs, 
     ViewPatterns,
     TypeFamilies,
     FlexibleContexts, 
@@ -35,9 +34,6 @@ module Music.Score.Score (
         reifyScore,
         getScoreMeta,
         setScoreMeta,
-        runScoreMeta,
-        metaAt,
-        metaAtStart,
   ) where
 
 import Data.Dynamic
@@ -105,6 +101,7 @@ reifyScore :: Score a -> Score (Note a)
 reifyScore = inScore (second reifyNScore)
 
 
+
 -- TODO more generic versions of these two:
 
 -- | Set the meta information of a score.
@@ -114,15 +111,6 @@ setScoreMeta m (Score (_,a)) = Score (m,a)
 -- | Get the meta information of a score.
 getScoreMeta :: Score a -> Meta
 getScoreMeta (Score (m,_)) = m
-
-runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
-runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
-
-metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
-metaAt x = (? x) . runScoreMeta
-
-metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
-metaAtStart x = onset x `metaAt` x
 
 
 -- TODO remove these, see #97
