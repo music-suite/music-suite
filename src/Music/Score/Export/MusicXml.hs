@@ -230,10 +230,25 @@ toXmlString :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score 
 toXmlString = Xml.showXml . toXml
 
 -- |
+-- Convert a single-voice score to a MusicXML representation.
+--
+toXmlSingle :: HasMusicXml a => Score a -> XmlScore
+toXmlSingle = voiceToXml . scoreToVoice
+
+-- |
+-- Convert a single-voice score to a MusicXML representation.
+--
+voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
+voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
+
+-- |
 -- Convert a score to a MusicXML representation.
 --
 toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
-toXml sc = Xml.fromParts title composer pl . fmap (voiceToXml' . scoreToVoice . simultaneous . addClefs) . extractParts $ sc
+toXml sc = Xml.fromParts title composer pl 
+            . fmap (voiceToXml' . scoreToVoice . simultaneous 
+            . addClefs) 
+        . extractParts $ sc
     where
         addClefT :: a -> ClefT a
         addClefT = point
@@ -245,18 +260,6 @@ toXml sc = Xml.fromParts title composer pl . fmap (voiceToXml' . scoreToVoice . 
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
         pl = Xml.partList (fmap show $ getParts sc)
-
--- |
--- Convert a single-voice score to a MusicXML representation.
---
-toXmlSingle :: HasMusicXml a => Score a -> XmlScore
-toXmlSingle = voiceToXml . scoreToVoice
-
--- |
--- Convert a single-voice score to a MusicXML representation.
---
-voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
-voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
 
 -- |
 -- Convert a voice score to a list of bars.
