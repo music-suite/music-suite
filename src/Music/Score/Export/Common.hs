@@ -21,7 +21,6 @@ module Music.Score.Export.Common (
         separateBars,
         spellPitch,
         toRelative,
-        unRatio,
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -123,4 +122,3 @@ spellPitch p = (
                 add a x = (a + x, a + x)
         major = scaleFromSteps [0,2,2,1,2,2,2,1]
 
-unRatio x = (numerator x, denominator x)

@@ -76,6 +76,7 @@ import Music.Score.Chord
 import Music.Score.Pitch
 import Music.Score.Ties
 import Music.Score.Part
+import Music.Score.Util
 import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
