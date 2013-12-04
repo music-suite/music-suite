@@ -43,7 +43,7 @@ module Music.MusicXml.Simple (
         -- header,
         -- setHeader,
         -- setTitle,
-        -- setMvmTitle,
+        -- setMovementTitle,
 
         -----------------------------------------------------------------------------
         -- * Top-level attributes
@@ -261,11 +261,7 @@ fromParts title composer partList music
     = Partwise 
         (def)
         (header title composer partList)
-        (addPartAndMeasureAttrs music)  
-
-
-partIds :: [String]
-partIds = [ "P" ++ show n | n <- [1..] ]
+        (addPartwiseAttributes music)  
 
 -- | 
 -- Create a part list from instrument names.
@@ -331,12 +327,16 @@ header title composer partList = ScoreHeader Nothing (Just title) (Just (Identif
 setHeader header (Partwise attrs _ music) = Partwise attrs header music
 setHeader header (Timewise attrs _ music) = Timewise attrs header music
 
-setTitle    title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader title mvmTitle ident partList
-setMvmTitle mvmTitle (ScoreHeader title _ ident partList) = ScoreHeader title (Just mvmTitle) ident partList
--- addIdent    ident    (ScoreHeader title mvmTitle idents partList) = ScoreHeader title mvmTitle (ident:idents) partList
+setTitle         title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader title mvmTitle ident partList
+setMovementTitle mvmTitle (ScoreHeader title _ ident partList)    = ScoreHeader title (Just mvmTitle) ident partList
 
-addPartAndMeasureAttrs :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
-addPartAndMeasureAttrs = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
+-- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
+partIds :: [String]
+partIds = [ "P" ++ show n | n <- [1..] ]
+
+-- | Given a partwise score (list of parts, which are lists of measures), add part and measure attributes (numbers).
+addPartwiseAttributes :: [[Music]] -> [(PartAttrs, [(MeasureAttrs, Music)])]
+addPartwiseAttributes = zipWith (\ids mus -> (PartAttrs ids, zipWith (\ids mus -> (MeasureAttrs ids, mus)) barIds mus)) partIds'
     where
         partIds' = partIds
         barIds   = [1..]
@@ -783,20 +783,6 @@ instance Default FullNote where
 
 instance Default NoteProps where
     def = NoteProps Nothing Nothing (Just (1/4, Nothing)) 0 Nothing Nothing Nothing Nothing Nothing Nothing Nothing [] []
-
-
--- class HasDyn a where
---     mapLevel :: (Level -> Level) -> (a -> a)
--- 
--- class HasPitch a where
---     mapPitch :: (Pitch -> Pitch) -> (a -> a)
--- 
--- class HasPitch a => HasAcc a where
---     flatten :: a -> a
---     sharpen :: a -> a
---     mapAcc  :: (Semitones -> Semitones) -> a -> a
---     flatten = mapAcc pred
---     sharpen = mapAcc succ
 
 
 
