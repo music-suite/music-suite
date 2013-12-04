@@ -479,5 +479,4 @@ withMetaAtStart' part f x = let
     m = getScoreMeta x
     in f (runMeta part m ? onset x) x
     
--- withAttribution x = (flip getAttribution "composer" $ metaAtStart x) x
 

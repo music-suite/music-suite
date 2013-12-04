@@ -40,6 +40,8 @@ module Music.Score.Meta.Attribution (
         arranger,
         arrangerDuring,
 
+        withAttribution,
+        withAttribution',
   ) where
 
 import Control.Arrow
@@ -67,6 +69,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -119,3 +122,8 @@ arranger t x = arrangerDuring (era x) t x
 arrangerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
 arrangerDuring s c = addGlobalMetaNote (s =: attribution "arranger" c)
 
+withAttribution :: String -> (String -> Score a -> Score a) -> Score a -> Score a
+withAttribution name f = withAttribution' (fromMaybe id . fmap f . flip getAttribution name)
+
+withAttribution' :: (Attribution -> Score a -> Score a) -> Score a -> Score a
+withAttribution' = withGlobalMetaAtStart
