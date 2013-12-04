@@ -254,8 +254,10 @@ newtype Music = Music { getMusic :: [MusicElem] }
 data MusicElem
     = MusicAttributes
         Attributes
-    | MusicBackup                       -- TODO
-    | MusicForward                      -- TODO
+    | MusicBackup
+        Duration
+    | MusicForward
+        Duration
     | MusicNote
         Note
     | MusicDirection

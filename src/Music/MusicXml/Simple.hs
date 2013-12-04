@@ -71,6 +71,13 @@ module Music.MusicXml.Simple (
         metronome',
         
         -----------------------------------------------------------------------------
+        -- * Backup and forward
+        -----------------------------------------------------------------------------
+
+        backup,
+        forward,
+
+        -----------------------------------------------------------------------------
         -- * Notes
         -----------------------------------------------------------------------------
         
@@ -408,6 +415,11 @@ metronome' nv dot tempo = Music . single $ MusicDirection (Metronome nv dot temp
 
 -- TODO #15 tempo
 
+backup :: Duration -> Music
+backup d = Music . single $ MusicBackup d
+
+forward :: Duration -> Music
+forward d = Music . single $ MusicForward d
 
 -- ----------------------------------------------------------------------------------
 -- Notes
