@@ -30,6 +30,8 @@ module Music.Score.Convert (
         -- * Conversion
         noteToVoice,
         noteToScore,
+        scoreToNotes,
+        notesToScore,
         voiceToScore,
         voicesToScore,
         trackToScore,
@@ -68,6 +70,13 @@ noteToVoice (getNote -> (s,x)) = (onset s, stretchTo (duration s) $ return x)
 -- | Convert a note to a score.
 noteToScore :: Note a -> Score a
 noteToScore (getNote -> (s,x)) = s `sapp` return x
+
+scoreToNotes :: Score a -> [Note a]
+scoreToNotes = Foldable.toList . reifyScore
+
+notesToScore :: [Note a] -> Score a
+notesToScore = pcat . fmap noteToScore
+
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.

@@ -86,12 +86,6 @@ overlapsAny x = any (overlaps x)
 notOverlaps :: (HasOnset a, HasOnset b, HasOffset a, HasOffset b) => a -> b -> Bool
 x `notOverlaps` y = not (x `overlaps` y)
 
-scoreToNotes :: Score a -> [Music.Score.Note.Note a]
-scoreToNotes = toList . reifyScore
-
-notesToScore :: [Music.Score.Note.Note a] -> Score a
-notesToScore = pcat . fmap noteToScore
-
 hasOverlapping :: Score a -> Bool
 hasOverlapping x = let ns = scoreToNotes x in not $ null [(x,y) | x <- ns, y <- ns, x `overlaps` y, era x /= era y]
 
