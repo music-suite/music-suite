@@ -42,6 +42,12 @@ module Music.Score (
 
         -- ** Meta-information
         module Music.Score.Meta,
+        module Music.Score.Meta.Clef,
+        module Music.Score.Meta.Time,
+        module Music.Score.Meta.Key,
+        module Music.Score.Meta.Tempo,
+        module Music.Score.Meta.Title,
+        module Music.Score.Meta.Attribution,
         module Music.Score.Annotations,
         module Music.Score.Clef,
 
