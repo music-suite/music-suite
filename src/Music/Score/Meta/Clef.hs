@@ -30,6 +30,7 @@ module Music.Score.Meta.Clef (
         Clef(..),
         clef,
         clefDuring,
+        withClef,
   ) where
 
 import Control.Arrow
