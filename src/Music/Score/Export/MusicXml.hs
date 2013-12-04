@@ -245,10 +245,19 @@ voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
 -- Convert a score to a MusicXML representation.
 --
 toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
-toXml sc = Xml.fromParts title composer pl 
-            . fmap (voiceToXml' . scoreToVoice . simultaneous 
-            . addClefs) 
+toXml sc = 
+           -- Score structure
+           Xml.fromParts title composer pl
+
+                -- Main notation pipeline
+                . fmap (voiceToXml' . scoreToVoice . simultaneous 
+
+                -- Meta-event expansion
+                . addClefs
+                )
+
         . extractParts $ sc
+
     where
         addClefT :: a -> ClefT a
         addClefT = point
@@ -267,6 +276,12 @@ toXml sc = Xml.fromParts title composer pl
 voiceToXml' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
 voiceToXml' =
     addDefaultSignatures . fmap barToXml . voiceToBars
+--
+-- This is where notation of a single voice takes place
+--      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
+--      * barToXml is specific: it handles quantization and notation
+--      * addDefaultSignatures: ???
+--
     where
         addDefaultSignatures []     = []
         addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs

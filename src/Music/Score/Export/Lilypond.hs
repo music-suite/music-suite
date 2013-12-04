@@ -296,12 +296,20 @@ toLyString = show . Pretty.pretty . toLy
 -- Convert a score to a Lilypond representation.
 --
 toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
-toLy sc = pcatLy . fmap (addStaff 
-                . scatLy . prependName 
+toLy sc = 
+          -- Score structure
+          pcatLy . fmap (
+                addStaff . scatLy . prependName 
+
+                -- Main notation pipeline
                 . second (voiceToLy . scoreToVoice . simultaneous) 
+
+                -- Meta-event expansion
                 . uncurry addClefs
                 ) 
+
         . extractParts' $ sc
+
     where                 
         addClefT :: a -> ClefT a
         addClefT = point
@@ -319,6 +327,12 @@ toLy sc = pcatLy . fmap (addStaff
 --
 voiceToLy :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
 voiceToLy = fmap barToLy . voiceToBars
+--
+-- This is where notation of a single voice takes place
+--      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
+--      * barToLy is specific: it handles quantization and notation
+--
+
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
 barToLy bar = case (fmap rewrite . quantize) bar of
