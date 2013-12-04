@@ -32,6 +32,7 @@ module Music.Score.Chord (
         ChordT(..),      
 
         separateVoices,
+        mergePossible,
         
         -- * Chord transformations
         simultaneous,
@@ -82,13 +83,31 @@ overlaps t u = not $ offset t <= onset u || offset u <= onset t
 overlapsAny :: (Foldable t, HasOnset a, HasOffset a, HasOnset b, HasOffset b) => a -> t b -> Bool
 overlapsAny x = any (overlaps x) 
 
+notOverlaps :: (HasOnset a, HasOnset b, HasOffset a, HasOffset b) => a -> b -> Bool
+x `notOverlaps` y = not (x `overlaps` y)
+
 scoreToNotes :: Score a -> [Music.Score.Note.Note a]
 scoreToNotes = toList . reifyScore
 
 notesToScore :: [Music.Score.Note.Note a] -> Score a
 notesToScore = pcat . fmap noteToScore
 
-x `notOverlaps` y = not (x `overlaps` y)
+hasOverlapping :: Score a -> Bool
+hasOverlapping x = let ns = scoreToNotes x in not $ null [(x,y) | x <- ns, y <- ns, x `overlaps` y, era x /= era y]
+
+-- | Heuristically merge voices if possible
+mergePossible :: [Score a] -> [Score a]
+mergePossible []  = []
+mergePossible (x:xs) = let
+    pick = x
+    (res, rest) = List.foldr mergeMaybe' (x, []) xs
+    in res : mergePossible rest 
+
+mergeMaybe' x (y,rest) = if hasOverlapping (x <> y) then (x, y:rest) else (x <> y, rest)    
+
+mergeMaybe x y = if hasOverlapping (x <> y) then (x, Just y) else (x <> y, Nothing)    
+
+
 
 notOverlapsHead :: (HasOnset a, HasOnset b, HasOffset a, HasOffset b) => a -> [b] -> Bool
 x `notOverlapsHead` [] = True
