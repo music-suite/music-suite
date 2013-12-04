@@ -83,8 +83,13 @@ module Music.Score.Meta (
         -- attributions,
         attribution,
         getAttribution,
+
         composer,
         composerDuring,
+        lyricist,
+        lyricistDuring,
+        arranger,
+        arrangerDuring,
         
   ) where
 
@@ -389,6 +394,22 @@ composer t x = composerDuring (era x) t x
 -- | Set composer of the given part of a score.
 composerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
 composerDuring s c = addGlobalMetaNote (s =: attribution "composer" c)
+
+-- | Set lyricist of the given score.
+lyricist :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
+lyricist t x = lyricistDuring (era x) t x
+
+-- | Set lyricist of the given part of a score.
+lyricistDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
+lyricistDuring s c = addGlobalMetaNote (s =: attribution "lyricist" c)
+
+-- | Set arranger of the given score.
+arranger :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
+arranger t x = arrangerDuring (era x) t x
+
+-- | Set arranger of the given part of a score.
+arrangerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
+arrangerDuring s c = addGlobalMetaNote (s =: attribution "arranger" c)
 
 
 
