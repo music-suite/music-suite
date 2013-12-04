@@ -25,7 +25,10 @@
 --
 -- Reactive values.
 --
--- Based on Conal's semantifcs as per <http://conal.net/blog/posts/reactive-normal-form>.
+-- Similar to Conal's definition in <http://conal.net/blog/posts/reactive-normal-form>,
+-- but defined in negative time as well. Its semantics function is either 'occs' @&&&@ '?'
+-- /or/ 'initial' @&&&@ 'updates', where 'intial' is the value from negative infinity
+-- to the first update.
 --
 -- TODO integrate better in the library
 --
