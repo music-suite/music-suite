@@ -37,6 +37,8 @@ module Music.Score.Meta.Title (
         titleDuring,
         subtitle,
         subtitleDuring,        
+        
+        withTitle,        
   ) where
 
 import Control.Arrow
@@ -64,6 +66,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -114,4 +117,6 @@ subtitle t x = subtitleDuring (era x) t x
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
 
+withTitle :: (Option (Last Title) -> Score a -> Score a) -> Score a -> Score a
+withTitle = withGlobalMetaAtStart
 

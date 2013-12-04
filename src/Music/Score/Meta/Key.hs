@@ -34,6 +34,7 @@ module Music.Score.Meta.Key (
         keySignature,
         keySignatureDuring,
 
+        withKeySignature,
   ) where
 
 import Control.Arrow
@@ -61,6 +62,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -110,4 +112,8 @@ keySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature
 keySignature c x = keySignatureDuring (era x) c x
 
 keySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
-keySignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))       
+keySignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
+
+withKeySignature :: (Option (Last KeySignature) -> Score a -> Score a) -> Score a -> Score a
+withKeySignature = withGlobalMetaAtStart
+

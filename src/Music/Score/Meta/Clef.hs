@@ -57,6 +57,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -70,4 +71,5 @@ clef c x = clefDuring (era x) c x
 clefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
-
+withClef :: (Option (Last Clef) -> Score a -> Score a) -> Score a -> Score a
+withClef = withGlobalMetaAtStart

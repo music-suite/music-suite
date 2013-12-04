@@ -32,6 +32,7 @@ module Music.Score.Meta.Time (
         timeSignature,
         timeSignatureDuring,
 
+        withTimeSignature,
   ) where
 
 import Control.Arrow
@@ -59,6 +60,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -72,4 +74,6 @@ timeSignature c x = timeSignatureDuring (era x) c x
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
+withTimeSignature :: (Option (Last TimeSignature) -> Score a -> Score a) -> Score a -> Score a
+withTimeSignature = withGlobalMetaAtStart
 

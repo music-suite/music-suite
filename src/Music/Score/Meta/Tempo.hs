@@ -30,7 +30,9 @@ module Music.Score.Meta.Tempo (
         Tempo,
         metronome,
         tempo,
-        tempoDuring,        
+        tempoDuring,
+        
+        withTempo,       
   ) where
 
 
@@ -59,6 +61,7 @@ import Music.Score.Voice
 import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
+import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -84,4 +87,5 @@ tempo c x = tempoDuring (era x) c x
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
-
+withTempo :: (Option (Last Tempo) -> Score a -> Score a) -> Score a -> Score a
+withTempo = withGlobalMetaAtStart
