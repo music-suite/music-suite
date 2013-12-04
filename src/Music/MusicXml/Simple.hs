@@ -324,10 +324,14 @@ bar = measure
 header :: String -> String -> PartList -> ScoreHeader
 header title composer partList = ScoreHeader Nothing (Just title) (Just (Identification [Creator "composer" composer])) partList
 
+setHeader :: ScoreHeader -> Score -> Score
 setHeader header (Partwise attrs _ music) = Partwise attrs header music
 setHeader header (Timewise attrs _ music) = Timewise attrs header music
 
-setTitle         title    (ScoreHeader _ mvmTitle ident partList) = ScoreHeader title mvmTitle ident partList
+setTitle :: String -> ScoreHeader -> ScoreHeader
+setTitle title (ScoreHeader _ mvmTitle ident partList) = ScoreHeader (Just title) mvmTitle ident partList
+
+setMovementTitle :: String -> ScoreHeader -> ScoreHeader
 setMovementTitle mvmTitle (ScoreHeader title _ ident partList)    = ScoreHeader title (Just mvmTitle) ident partList
 
 -- | The values P1, P2... which are conventionally used to identify parts in MusicXML.
