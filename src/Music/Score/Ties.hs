@@ -30,9 +30,9 @@ module Music.Score.Ties (
         TieT(..),        
         
         -- * Splitting tied notes in scores
-        splitTies,
-        splitTiesVoice,
+        -- splitTies,
         -- splitTiesSingle,
+        splitTiesVoice,
   ) where
 
 import Control.Monad
@@ -103,18 +103,20 @@ instance Tiable a => Tiable (TieT a) where
     toTied (TieT (prevTie, a, nextTie))   = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 
--- |
--- Split all notes that cross a barlines into a pair of tied notes.
---
-splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
-splitTies = mapParts splitTiesSingle
+-- -- |
+-- -- Split all notes that cross a barlines into a pair of tied notes.
+-- --
+-- splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
+-- splitTies = mapParts splitTiesSingle
+-- 
+-- -- |
+-- -- Equivalent to `splitTies` for single-voice scores.
+-- -- Fails if the score contains overlapping events.
+-- --
+-- splitTiesSingle :: Tiable a => Score a -> Score a
+-- splitTiesSingle = removeRests . voiceToScore . splitTiesVoice . scoreToVoice
 
--- |
--- Equivalent to `splitTies` for single-voice scores.
--- Fails if the score contains overlapping events.
---
-splitTiesSingle :: Tiable a => Score a -> Score a
-splitTiesSingle = removeRests . voiceToScore . splitTiesVoice . scoreToVoice
+
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -126,7 +128,7 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
             where
                 (_, barTime) = properFraction t
                 remBarTime   = 1 - barTime
-                occs         = splitDur remBarTime 1 (d,x)
+                occs         = splitDurThen remBarTime 1 (d,x)
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
@@ -135,19 +137,19 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
 --
 -- > sum $ fmap fst $ splitDur s (x,a) = x
 --
-splitDur :: Tiable a => Duration -> Duration -> (Duration, a) -> [(Duration, a)]
-splitDur s t x = case splitDur' s x of
+splitDurThen :: Tiable a => Duration -> Duration -> (Duration, a) -> [(Duration, a)]
+splitDurThen s t x = case splitDur s x of
     (a, Nothing) -> [a]
-    (a, Just b)  -> a : splitDur t t b
+    (a, Just b)  -> a : splitDurThen t t b
 
 -- |
 -- Extract the the first part of a given duration. If the note is shorter than the given duration,
 -- return it and @Nothing@. Otherwise return the extracted part, and the rest.
 --
--- > splitDur s (d,a)
+-- > splitDurThen s (d,a)
 --
-splitDur' :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
-splitDur' s (d,a) 
+splitDur :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
+splitDur s (d,a) 
     | d <= s     =  ((d,a), Nothing)
     | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
 
