@@ -36,6 +36,8 @@ import Data.AffineSpace.Point
 
 import Data.AffineSpace.Relative
 
+import Music.Score.Util (showRatio)
+
 -- $convert
 --
 -- Note that you should use '.-.' and '.+^' to convert between time and
@@ -47,8 +49,11 @@ import Data.AffineSpace.Relative
 -- This type represents relative time in seconds.
 --
 newtype Duration = Duration { getDuration :: Rational }
-    deriving (Eq, Ord, Show, Num, Enum, Fractional, Real, RealFrac, AdditiveGroup)
+    deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, AdditiveGroup)
 
+instance Show Duration where
+    show = showRatio . getDuration
+    
 instance VectorSpace Duration where
     type Scalar Duration = Duration
     (Duration x) *^ (Duration y) = Duration (x *^ y)
