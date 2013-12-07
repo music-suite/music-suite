@@ -111,10 +111,6 @@ instance Fractional a => IsDynamics (Level a) where
 dynamics :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
 dynamics d a = (duration a `stretchTo` d) `dynamics'` a
 
--- |
--- Equivalent to `splitTies` for single-voice scores.
--- Fails if the score contains overlapping events.
---
 dynamicSingle :: HasDynamic a => Score (Level Double) -> Score a -> Score a
 dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
 
