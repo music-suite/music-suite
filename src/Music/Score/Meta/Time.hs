@@ -36,10 +36,12 @@ module Music.Score.Meta.Time (
         timeSignatureDuring,
 
         withTimeSignature,
+        getTimeSignature
   ) where
 
 import Control.Arrow
 import Control.Monad.Plus       
+import Data.Ratio ((%))
 import Data.Void
 import Data.Maybe
 import Data.Semigroup
@@ -71,6 +73,22 @@ import Music.Pitch.Literal
 newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Typeable)
 
+-- TODO move
+liftRational f = fromRational . f . toRational
+liftRational2 f x y = fromRational $ toRational x `f` toRational y
+
+instance Num TimeSignature where
+    (+) = liftRational2 (+)
+    (*) = liftRational2 (+)
+    negate  = liftRational negate
+    abs     = liftRational abs
+    signum  = liftRational signum
+    fromInteger x = TimeSignature ([x], 1)
+instance Fractional TimeSignature where
+    fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
+instance Real TimeSignature where
+    toRational (TimeSignature (xs, x)) = sum xs % x
+
 instance Show TimeSignature where
     show (TimeSignature (xs, x)) = List.intercalate "+" (fmap show xs) ++ "/" ++ show x
 
@@ -84,8 +102,14 @@ timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignatu
 timeSignature c x = timeSignatureDuring (era x) c x
 
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
+timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
+
+getTimeSignature :: Score a -> [(Time, TimeSignature)]
+getTimeSignature = activeUpdates . fmap unOptionLast . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
+withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
 
+activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
+optionLast = Option . Just . Last
+unOptionLast = fmap getLast . getOption

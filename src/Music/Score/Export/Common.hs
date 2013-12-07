@@ -18,7 +18,7 @@
 
 module Music.Score.Export.Common (
         voiceToBars,
-        separateBars,
+        -- separateBars,
         spellPitch,
         toRelative,
   ) where
@@ -74,22 +74,24 @@ import Music.Dynamics.Literal
 -- Convert a single-voice score to a list of bars.
 --
 voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars = separateBars . splitTiesVoice
+voiceToBars = fmap getVoice . splitTiesVoiceAt (repeat 1)
 
--- |
--- Given a set of absolute-time occurences, separate at each zero-time occurence.
--- Note that this require every bar to start with a zero-time occurence.
---
-separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
-separateBars =
-    fmap (removeTime . fmap discardBarNumber) .
-        splitAtTimeZero . fmap separateTime . perform . voiceToScore
-    where
-        separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (t .-. origin)
-        splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
-        discardBarNumber ((bn,bt),d,x)  = (realToFrac bt / kDur, d, x)
-        removeTime                      = fmap g where g (t,d,x) = (d,x)
-        kDur = 1
+-- voiceToBars = separateBars . splitTiesVoice
+
+-- -- |
+-- -- Given a set of absolute-time occurences, separate at each zero-time occurence.
+-- -- Note that this require every bar to start with a zero-time occurence.
+-- --
+-- separateBars :: Voice (Maybe a) -> [[(Duration, Maybe a)]]
+-- separateBars =
+--     fmap (removeTime . fmap discardBarNumber) .
+--         splitAtTimeZero . fmap separateTime . perform . voiceToScore
+--     where
+--         separateTime (t,d,x)            = ((bn,bt),d,x) where (bn,bt) = properFraction (t .-. origin)
+--         splitAtTimeZero                 = splitWhile ((== 0) . getBarTime) where getBarTime ((bn,bt),_,_) = bt
+--         discardBarNumber ((bn,bt),d,x)  = (realToFrac bt / kDur, d, x)
+--         removeTime                      = fmap g where g (t,d,x) = (d,x)
+--         kDur = 1      
 
 -- |
 -- Convert absolute to relative durations.
