@@ -33,8 +33,10 @@ module Music.Score.Ties (
         -- splitTies,
         -- splitTiesSingle,
         splitTiesVoice,
+        splitTiesVoiceAt,
   ) where
 
+import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus
 import Data.Default
@@ -130,6 +132,19 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
                 remBarTime   = 1 - barTime
                 occs         = splitDurThen remBarTime 1 (d,x)
 
+splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+splitTiesVoiceAt barDurs x = fmap voice $ splitTiesVoiceAt' barDurs (getVoice x)
+
+splitTiesVoiceAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
+splitTiesVoiceAt' []  _  =  []
+splitTiesVoiceAt' _  []  =  []
+splitTiesVoiceAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
+    (barOccs, [])       -> barOccs : []
+    (barOccs, restOccs) -> barOccs : splitTiesVoiceAt' rbarDur restOccs
+
+tsplitTiesVoiceAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
+tsplitTiesVoiceAt barDurs = fmap getVoice . splitTiesVoiceAt barDurs . voice . fmap (\x -> (x,'_'))
+
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
 --
@@ -142,16 +157,45 @@ splitDurThen s t x = case splitDur s x of
     (a, Nothing) -> [a]
     (a, Just b)  -> a : splitDurThen t t b
 
--- |
--- Extract the the first part of a given duration. If the note is shorter than the given duration,
--- return it and @Nothing@. Otherwise return the extracted part, and the rest.
+
+-- | 
+-- Extract as many notes or parts of notes as possible in the given positive duration, and
+-- return it with remaining notes.
 --
--- > splitDurThen s (d,a)
+-- The extracted notes always fit into the given duration, i.e.
+--
+-- > sum $ fmap duration $ fst $ splitDurFor maxDur xs <= maxDur
+--
+-- If there are remaining notes, they always fit exactly, i.e.
+--
+-- > sum $ fmap duration $ fst $ splitDurFor maxDur xs == maxDur  iff  (not $ null $ snd $ splitDurFor maxDur xs)
+--
+splitDurFor :: Tiable a => Duration -> [(Duration, a)] -> ([(Duration, a)], [(Duration, a)])
+splitDurFor remDur []       = ([], [])
+splitDurFor remDur (x : xs) = case splitDur remDur x of
+    (x@(d,_), Nothing)   -> 
+        if d < remDur then
+            first (x:) $ splitDurFor (remDur - d) xs
+        else -- d == remDur
+            ([x], xs)
+    (x@(d,_), Just rest) -> ([x], rest : xs)
+
+tsplitDurFor :: Duration -> [Duration] -> ([(Duration,Char)], [(Duration,Char)])
+tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x,'_')) xs
+instance Tiable Char where
+    toTied _ = ('(',')')
+
+-- |
+-- Split a note if it is longer than the given duration. Returns the first part of the
+-- note (which always <= s) and the rest.
+--
+-- > splitDur maxDur (d,a)
 --
 splitDur :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
-splitDur s (d,a) 
-    | d <= s     =  ((d,a), Nothing)
-    | otherwise  =  ((s,b), Just (d-s, c)) where (b,c) = toTied a
+splitDur maxDur (d,a)
+    | maxDur <= 0 = error "splitDur: maxDur must be > 0"
+    | d <= maxDur =  ((d, a), Nothing)
+    | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
 
 
 
