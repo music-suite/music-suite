@@ -95,6 +95,8 @@ library
         Music.Score.Meta.Tempo
         Music.Score.Meta.Title
         Music.Score.Meta.Attribution
+        Music.Score.Meta.Fermata
+        Music.Score.Meta.RehearsalMark
         
         Music.Score.Clef
         Music.Score.Pitch
