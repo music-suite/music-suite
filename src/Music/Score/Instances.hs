@@ -181,8 +181,6 @@ instance HasPitch a => HasPitch (PartT n a) where
     getPitches (PartT (v,a))                        = getPitches a
     modifyPitch f                                   = fmap (modifyPitch f)
 instance Tiable a => Tiable (PartT n a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 deriving instance HasDynamic a => HasDynamic (PartT n a)
 deriving instance HasArticulation a => HasArticulation (PartT n a)
@@ -195,8 +193,6 @@ deriving instance HasText a => HasText (PartT n a)
 -- ChordT
 
 instance Tiable a => Tiable (ChordT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
 -- No HasPart instance, PartT must be outside ChordT
 -- This restriction assures all chord notes are in the same part
@@ -273,8 +269,6 @@ instance HasText a => HasText (TieT a) where
 -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
 
 instance Tiable a => Tiable (DynamicT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
                                                        DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
 instance HasPart a => HasPart (DynamicT a) where
@@ -315,8 +309,6 @@ instance HasText a => HasText (DynamicT a) where
 
 
 instance Tiable a => Tiable (ArticulationT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
                                                            ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
 instance HasPart a => HasPart (ArticulationT a) where
@@ -356,8 +348,6 @@ instance HasText a => HasText (ArticulationT a) where
 
 
 instance Tiable a => Tiable (TremoloT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 instance HasPart a => HasPart (TremoloT a) where
     type Part (TremoloT a)                          = Part a
@@ -383,8 +373,6 @@ deriving instance HasText a => HasText (TremoloT a)
 -- newtype TextT a = TextT { getTextT :: (Int, a) }
 
 instance Tiable a => Tiable (TextT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
 instance HasPart a => HasPart (TextT a) where
     type Part (TextT a)                             = Part a
@@ -408,8 +396,6 @@ deriving instance HasSlide a => HasSlide (TextT a)
 -- HarmonicT
 
 instance Tiable a => Tiable (HarmonicT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
 instance HasPart a => HasPart (HarmonicT a) where
     type Part (HarmonicT a)                         = Part a
@@ -434,8 +420,6 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 
 instance Tiable a => Tiable (SlideT a) where
-    -- beginTie = fmap beginTie
-    -- endTie   = fmap endTie
     toTied (SlideT (eg,es,a,bg,bs))                = (SlideT (eg,   es,   b,False,False),
                                                       SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
 instance HasPart a => HasPart (SlideT a) where
