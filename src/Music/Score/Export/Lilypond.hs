@@ -7,6 +7,7 @@
     GeneralizedNewtypeDeriving,
     FlexibleContexts,
     ConstraintKinds,
+    ViewPatterns,
     TypeOperators,
     OverloadedStrings,
     NoMonomorphismRestriction #-}
@@ -72,6 +73,7 @@ import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Meta
 import Music.Score.Meta.Clef
+import Music.Score.Meta.Time
 import Music.Score.Meta.Attribution
 import Music.Score.Meta.Title
 import Music.Score.Clef
@@ -306,7 +308,7 @@ toLy sc =
                 addStaff . scatLy . uncurry addPartName
 
                 -- Main notation pipeline
-                . second (voiceToLy . scoreToVoice . simultaneous) 
+                . second (voiceToLy barTimeSigs barDurations . scoreToVoice . simultaneous) 
 
                 -- Meta-event expansion
                 . uncurry addClefs
@@ -321,6 +323,10 @@ toLy sc =
         addClefs p = (,) p . setClef . fmap addClefT
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
+        timeSigs = getTimeSignature (time 4 4) sc -- 4/4 is default
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
+        barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
+
         addStaff = Lilypond.New "Staff" Nothing
         addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName) 
             : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show partName) 
@@ -333,14 +339,18 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToLy :: HasLilypond a => Voice (Maybe a) -> [Lilypond]
-voiceToLy = fmap barToLy . voiceToBars
+voiceToLy :: HasLilypond a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLy barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLy . voiceToBars' barDurations
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
 --      * barToLy is specific: it handles quantization and notation
 --
-
+    where
+        -- FIXME compounds                      
+        setBarTimeSig Nothing x = x
+        setBarTimeSig (Just (unTime -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
+        
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
 barToLy bar = case (fmap rewrite . quantize) bar of
@@ -369,3 +379,5 @@ spellLy' p = Lilypond.Pitch (
     )
     where (pc,alt,oct) = spellPitch p
 
+-- FIXME consolidate
+swap (x,y) = (y,x)
