@@ -233,7 +233,7 @@ instance Pretty Music where
 
     pretty (Key p m) = "\\key" <+> pretty p <+> pretty m
     
-    pretty (Time m n) = "\\time" <+> pretty m <+> "/" <+> pretty n
+    pretty (Time m n) = "\\time" <+> (pretty m <> "/" <> pretty n)
     
     pretty (Breathe Nothing) = "\\breathe"
     pretty (Breathe a)       = notImpl "Non-standard breath marks"
