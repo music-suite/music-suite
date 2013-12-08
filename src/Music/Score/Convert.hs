@@ -58,6 +58,7 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Part
 import Music.Time
+import Music.Time.Reactive
 
 import qualified Data.List as List
 import qualified Data.Foldable as Foldable
@@ -77,6 +78,11 @@ scoreToNotes = Foldable.toList . reifyScore
 notesToScore :: [Note a] -> Score a
 notesToScore = pcat . fmap noteToScore
 
+reactiveToVoice :: Duration -> Reactive a -> Voice a
+reactiveToVoice d r = voice $ durs `zip` (fmap (r ?) times)
+    where
+        times = origin : filter (\t -> origin < t && t < origin .+^ d) (occs r)
+        durs  = toRelN' (origin .+^ d) times
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.
@@ -122,4 +128,25 @@ trackToScore x = trackToScore' (const x)
 --
 trackToScore' :: (a -> Duration) -> Track a -> Score a
 trackToScore' f = compose . fmap (\(t,x) -> (t,f x,x)) . getTrack
+
+
+-- Convert to delta (time to wait before this note)
+toRel :: [Time] -> [Duration]
+toRel = snd . mapAccumL g origin where g prev t = (t, t .-. prev)
+
+-- Convert to delta (time to wait before next note)
+toRelN :: [Time] -> [Duration]                
+toRelN [] = []
+toRelN xs = snd $ mapAccumR g (last xs) xs where g prev t = (t, prev .-. t)
+
+-- Convert to delta (time to wait before next note)
+toRelN' :: Time -> [Time] -> [Duration]                
+toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
+
+-- 0 x,1 x,1 x,1 x
+  -- x 1,x 1,x 1,x 0
+
+-- Convert from delta (time to wait before this note)
+toAbs :: [Duration] -> [Time]
+toAbs = snd . mapAccumL g origin where g now d = (now .+^ d, now .+^ d)
 
