@@ -35,8 +35,9 @@ module Music.Score.Meta.Time (
         timeSignature,
         timeSignatureDuring,
 
-        withTimeSignature,
+        getTimeSignature,
         getTimeSignatureChanges,
+        withTimeSignature,
         
         -- * TODO move?
         getBarDurations,
@@ -113,11 +114,14 @@ timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
 
-getTimeSignatureChanges :: Score a -> [(Time, TimeSignature)]
-getTimeSignatureChanges = activeUpdates . fmap unOptionLast . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignature :: TimeSignature -> Score a -> Reactive TimeSignature
+getTimeSignature def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
+
+getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
+getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 
-activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
+-- activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
 optionLast = Option . Just . Last
 unOptionLast = fmap getLast . getOption
 
