@@ -207,19 +207,19 @@ openXml sc = do
     writeXml "test.xml" sc
     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
--- |
--- Convert a score to MusicXML and write to a file.
---
-writeXmlSingle :: HasMusicXml a => FilePath -> Score a -> IO ()
-writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
+-- -- |
+-- -- Convert a score to MusicXML and write to a file.
+-- --
+-- writeXmlSingle :: HasMusicXml a => FilePath -> Score a -> IO ()
+-- writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
 
--- |
--- Convert a score to MusicXML and open it.
---
-openXmlSingle :: HasMusicXml a => Score a -> IO ()
-openXmlSingle sc = do
-    writeXmlSingle "test.xml" sc
-    void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+-- -- |
+-- -- Convert a score to MusicXML and open it.
+-- --
+-- openXmlSingle :: HasMusicXml a => Score a -> IO ()
+-- openXmlSingle sc = do
+--     writeXmlSingle "test.xml" sc
+--     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
 
 -- |
 -- Convert a score to MusicXML and print it on the standard output.
@@ -233,17 +233,17 @@ showXml = putStrLn . toXmlString
 toXmlString :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> String
 toXmlString = Xml.showXml . toXml
 
--- |
--- Convert a single-voice score to a MusicXML representation.
---
-toXmlSingle :: HasMusicXml a => Score a -> XmlScore
-toXmlSingle = voiceToXml . scoreToVoice
-
--- |
--- Convert a single-voice score to a MusicXML representation.
---
-voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
-voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
+-- -- |
+-- -- Convert a single-voice score to a MusicXML representation.
+-- --
+-- toXmlSingle :: HasMusicXml a => Score a -> XmlScore
+-- toXmlSingle = voiceToXml . scoreToVoice
+-- 
+-- -- |
+-- -- Convert a single-voice score to a MusicXML representation.
+-- --
+-- voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
+-- voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
 
 -- |
 -- Convert a score to a MusicXML representation.
@@ -282,8 +282,7 @@ mergeBars _   = error "mergeBars: Not supported"
 -- Convert a voice score to a list of bars.
 --
 voiceToXml' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
-voiceToXml' =
-    addDefaultSignatures . fmap barToXml . voiceToBars
+voiceToXml' = addDefaultSignatures . fmap barToXml . voiceToBars
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
@@ -297,7 +296,8 @@ voiceToXml' =
             <> Xml.defaultKey
             <> Xml.defaultDivisions
             <> Xml.metronome (1/4) 60
-            <> Xml.commonTime
+            -- <> Xml.commonTime
+            -- TODO explicit time sig
 
 
 barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> XmlMusic
