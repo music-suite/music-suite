@@ -110,7 +110,10 @@ unTime :: TimeSignature -> ([Integer], Integer)
 unTime (TimeSignature x) = x
 
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
-timeSignature c x = timeSignatureDuring (era x) c x
+timeSignature c x = timeSignatureDuring (start <-> offset x) c x
+
+-- use (onset x <-> offset x) instead of (start <-> offset x)
+timeSignature' c x = timeSignatureDuring (era x) c x
 
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
