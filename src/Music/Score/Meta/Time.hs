@@ -31,6 +31,7 @@ module Music.Score.Meta.Time (
         TimeSignature,
         time,
         compoundTime,
+        unTime,
 
         timeSignature,
         timeSignatureDuring,
@@ -105,6 +106,9 @@ time x y = TimeSignature ([x], y)
 compoundTime :: [Integer] -> Integer -> TimeSignature
 compoundTime = curry TimeSignature
 
+unTime :: TimeSignature -> ([Integer], Integer)
+unTime (TimeSignature x) = x
+
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (era x) c x
 
@@ -114,6 +118,7 @@ timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
 
+-- TODO rename this
 getTimeSignature :: TimeSignature -> Score a -> Reactive TimeSignature
 getTimeSignature def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 

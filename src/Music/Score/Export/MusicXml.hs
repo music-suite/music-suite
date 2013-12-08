@@ -7,6 +7,7 @@
     GeneralizedNewtypeDeriving,
     FlexibleContexts,
     ConstraintKinds,
+    ViewPatterns,
     TypeOperators,
     OverloadedStrings,
     NoMonomorphismRestriction #-}
@@ -256,7 +257,7 @@ toXml sc =
            Xml.fromParts title composer pl
 
                 -- Main notation pipeline
-                . fmap (voiceToXml' barDurations . scoreToVoice . simultaneous 
+                . fmap (voiceToXml' barTimeSigs barDurations . scoreToVoice . simultaneous 
 
                 -- Meta-event expansion
                 . addClefs
@@ -272,6 +273,7 @@ toXml sc =
         setClef  = withMeta $ \x -> applyClefOption (fmap getLast x)
 
         timeSigs = getTimeSignature (4/4) sc -- 4/4 is default
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
         barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
 
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
@@ -286,18 +288,23 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToXml' :: HasMusicXml a => [Duration] -> Voice (Maybe a) -> [XmlMusic]
-voiceToXml' barDurations = addDefaultSignatures . fmap barToXml . voiceToBars' barDurations
+voiceToXml' :: HasMusicXml a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
+voiceToXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToXml . voiceToBars' barDurations
+-- TODO attach key signatures in each bar (basically zip)
+
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
 --      * barToXml is specific: it handles quantization and notation
---      * addDefaultSignatures: ???
 --
-    where
-        addDefaultSignatures []     = []
-        addDefaultSignatures (x:xs) = (defaultSignatures <> x):xs
-        defaultSignatures = mempty
+    where                          
+        -- FIXME compounds                      
+        setBarTimeSig Nothing x = x
+        setBarTimeSig (Just (unTime -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
+
+        addStartInfo []     = []
+        addStartInfo (x:xs) = (startInfo <> x):xs
+        startInfo = mempty
             <> Xml.defaultKey
             <> Xml.defaultDivisions
             <> Xml.metronome (1/4) 60
@@ -331,6 +338,7 @@ spellXml p = (
     fromIntegral oct
     )
     where (pc,alt,oct) = spellPitch p
+
 
 
 swap (x,y) = (y,x)
