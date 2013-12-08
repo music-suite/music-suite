@@ -58,7 +58,7 @@ import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Score
 import Music.Score.Part
-import Music.Score.Combinators (withGlobalMeta, mapFirst)
+import Music.Score.Combinators (mapFirst)
 import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 import Music.Score.Meta.Clef
@@ -66,7 +66,6 @@ import Music.Score.Ties
 import Music.Score.Util
 
 
--- TODO move
 -- Put the given clef in front of the note
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
@@ -80,25 +79,10 @@ instance Pointed ClefT where
     point x = ClefT (mempty, x)
 
 instance Tiable a => Tiable (ClefT a) where
-    beginTie = fmap beginTie
-    endTie   = fmap endTie
-
-
--- TODO
-kDefClef = GClef
+    toTied (ClefT (clef,a)) = (ClefT (clef,b), ClefT (mempty,c)) where (b,c) = toTied a
 
 class HasClef a where
     applyClef :: Clef -> a -> a
-
-    applyClefOption :: Option Clef -> a -> a
-    applyClefOption c = case getOption c of
-        Nothing -> applyClef kDefClef
-        Just c  -> applyClef c
-
-    applyClefMaybe :: Maybe Clef -> a -> a
-    applyClefMaybe c = case c of
-        Nothing -> applyClef kDefClef
-        Just c  -> applyClef c
 
 instance HasClef (ClefT a) where
     applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)

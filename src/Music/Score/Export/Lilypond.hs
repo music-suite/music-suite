@@ -303,7 +303,7 @@ toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Li
 toLy sc = 
           -- Score structure
           pcatLy . fmap (
-                addStaff . scatLy . prependName 
+                addStaff . scatLy . uncurry addPartName
 
                 -- Main notation pipeline
                 . second (voiceToLy . scoreToVoice . simultaneous) 
@@ -318,12 +318,12 @@ toLy sc =
         addClefT :: a -> ClefT a
         addClefT = point
         
-        addClefs p = (,) p . setClef p . fmap addClefT
-        setClef p  = withMeta $ \x -> applyClefOption (fmap getLast x)
+        addClefs p = (,) p . setClef . fmap addClefT
+        setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         addStaff = Lilypond.New "Staff" Nothing
-        prependName (v,x) = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show v) 
-            : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show v) 
+        addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName) 
+            : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show partName) 
             : x
 
 mergeBars :: [Lilypond] -> Lilypond
@@ -349,8 +349,8 @@ barToLy bar = case (fmap rewrite . quantize) bar of
 
 rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
 rhythmToLy (Beat d x)            = noteRestToLy d x
-rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
 rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
+rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
 rhythmToLy (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLy r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 

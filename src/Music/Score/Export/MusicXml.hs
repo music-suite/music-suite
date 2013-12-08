@@ -270,7 +270,7 @@ toXml sc =
         addClefT = point
         
         addClefs = setClef . fmap addClefT
-        setClef  = withMeta $ \x -> applyClefOption (fmap getLast x)
+        setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignature (time 4 4) sc -- 4/4 is default
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
