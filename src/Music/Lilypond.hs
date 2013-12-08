@@ -187,7 +187,7 @@ data Music
     | Relative Pitch Music                          -- ^ Use relative octave (octave).
     | Clef Clef                                     -- ^ Clef.
     | Key Pitch Mode                                -- ^ Key signature.
-    | Time Rational                                 -- ^ Time signature.
+    | Time Integer Integer                          -- ^ Time signature.
     | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
     | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
     | New String (Maybe String) Music               -- ^ New expression.
@@ -233,7 +233,7 @@ instance Pretty Music where
 
     pretty (Key p m) = "\\key" <+> pretty p <+> pretty m
     
-    pretty (Time n) = "\\time" <+> pretty n
+    pretty (Time m n) = "\\time" <+> pretty m <+> "/" <+> pretty n
     
     pretty (Breathe Nothing) = "\\breathe"
     pretty (Breathe a)       = notImpl "Non-standard breath marks"
