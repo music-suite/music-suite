@@ -61,11 +61,13 @@ import Music.Score.Voice
 import Music.Score.Score
 import Music.Score.Meta
 import Music.Score.Meta.Clef
+import Music.Score.Meta.Time
 import Music.Score.Meta.Attribution
 import Music.Score.Meta.Title
 import Music.Score.Clef
 import Music.Score.Chord
 import Music.Score.Combinators
+import Music.Score.Convert
 import Music.Score.Convert
 import Music.Score.Pitch
 import Music.Score.Ties
@@ -254,7 +256,7 @@ toXml sc =
            Xml.fromParts title composer pl
 
                 -- Main notation pipeline
-                . fmap (voiceToXml' . scoreToVoice . simultaneous 
+                . fmap (voiceToXml' barDurations . scoreToVoice . simultaneous 
 
                 -- Meta-event expansion
                 . addClefs
@@ -269,6 +271,9 @@ toXml sc =
         addClefs = setClef . fmap addClefT
         setClef  = withMeta $ \x -> applyClefOption (fmap getLast x)
 
+        timeSigs = getTimeSignature (4/4) sc -- 4/4 is default
+        barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
+
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
@@ -281,8 +286,8 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToXml' :: HasMusicXml a => Voice (Maybe a) -> [XmlMusic]
-voiceToXml' = addDefaultSignatures . fmap barToXml . voiceToBars
+voiceToXml' :: HasMusicXml a => [Duration] -> Voice (Maybe a) -> [XmlMusic]
+voiceToXml' barDurations = addDefaultSignatures . fmap barToXml . voiceToBars' barDurations
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
@@ -328,3 +333,4 @@ spellXml p = (
     where (pc,alt,oct) = spellPitch p
 
 
+swap (x,y) = (y,x)

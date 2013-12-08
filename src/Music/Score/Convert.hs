@@ -37,6 +37,7 @@ module Music.Score.Convert (
         trackToScore,
         trackToScore',
         scoreToVoice,
+        reactiveToVoice,
   ) where
 
 import Control.Monad
