@@ -72,5 +72,5 @@ clef c x = clefDuring (era x) c x
 clefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
-withClef :: Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
-withClef def f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
+withClef :: HasPart' a => Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
+withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)

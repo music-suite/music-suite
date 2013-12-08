@@ -89,18 +89,23 @@ kDefClef = GClef
 
 class HasClef a where
     applyClef :: Clef -> a -> a
+
     applyClefOption :: Option Clef -> a -> a
     applyClefOption c = case getOption c of
         Nothing -> applyClef kDefClef
         Just c  -> applyClef c
+
     applyClefMaybe :: Maybe Clef -> a -> a
     applyClefMaybe c = case c of
         Nothing -> applyClef kDefClef
         Just c  -> applyClef c
+
 instance HasClef (ClefT a) where
     applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
+
 instance HasClef a => HasClef (b,a) where
     applyClef c = fmap (applyClef c)
+
 instance (HasPart' a, HasClef a) => HasClef (Score a) where
     applyClef c = mapFirst (applyClef c) id
                                            
