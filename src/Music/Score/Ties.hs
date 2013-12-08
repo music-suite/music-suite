@@ -132,6 +132,12 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
                 remBarTime   = 1 - barTime
                 occs         = splitDurThen remBarTime 1 (d,x)
 
+-- |
+-- Split all voice into bars, using the given bar durations. Music that does not
+-- fit into the given durations is discarded.
+--
+-- Notes that cross a barlines are split into tied notes.
+--
 splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
 splitTiesVoiceAt barDurs x = fmap voice $ splitTiesVoiceAt' barDurs (getVoice x)
 

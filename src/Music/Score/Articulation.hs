@@ -132,38 +132,60 @@ instance HasArticulation b => HasArticulation (a,b) where
 
 -- Accents
 
+-- | Add a normal accent at the beginning of each phrase in each part in the given score.
 accent      :: (HasPart' a, HasArticulation a) => Score a -> Score a
-marcato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
-accentAll   :: (HasPart' a, HasArticulation a) => Score a -> Score a
-marcatoAll  :: (HasPart' a, HasArticulation a) => Score a -> Score a
-accentLast  :: (HasPart' a, HasArticulation a) => Score a -> Score a
-marcatoLast :: (HasPart' a, HasArticulation a) => Score a -> Score a
 accent      = mapPhrase (setAccLevel 1) id id
+
+-- | Add a marcato accent at the beginning of each phrase in each part in the given score.
+marcato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
 marcato     = mapPhrase (setAccLevel 2) id id
+
+-- | Add a normal accent to all notes in the given score.
+accentAll   :: (HasPart' a, HasArticulation a) => Score a -> Score a
 accentAll   = mapPhrase (setAccLevel 1) (setAccLevel 1) (setAccLevel 1)
+
+-- | Add a marcato accent to all notes in the given score.
+marcatoAll  :: (HasPart' a, HasArticulation a) => Score a -> Score a
 marcatoAll  = mapPhrase (setAccLevel 2) (setAccLevel 2) (setAccLevel 2)
+
+-- | Add a normal accent at the end of each phrase in each part in the given score.
+accentLast  :: (HasPart' a, HasArticulation a) => Score a -> Score a
 accentLast  = mapPhrase id id (setAccLevel 1)
+
+-- | Add a marcato accent at the end of each phrase in each part in the given score.
+marcatoLast :: (HasPart' a, HasArticulation a) => Score a -> Score a
 marcatoLast = mapPhrase id id (setAccLevel 2)
+
 
 -- Phrasing
 
+-- | Add tenuto marks to each phrase in each part in the given score.
 tenuto      :: (HasPart' a, HasArticulation a) => Score a -> Score a
-separated   :: (HasPart' a, HasArticulation a) => Score a -> Score a
-staccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
-portato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
-legato      :: (HasPart' a, HasArticulation a) => Score a -> Score a
-spiccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
 tenuto      = mapPhrase (setStaccLevel (-2)) (setStaccLevel (-2)) (setStaccLevel (-2))
+
+-- | Add combined staccato and tenuto marks to each phrase in each part in the given score.
+separated   :: (HasPart' a, HasArticulation a) => Score a -> Score a
 separated   = mapPhrase (setStaccLevel (-1)) (setStaccLevel (-1)) (setStaccLevel (-1))
+
+-- | Add staccato marks to each phrase in each part in the given score.
+staccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
 staccato    = mapPhrase (setStaccLevel 1) (setStaccLevel 1) (setStaccLevel 1)
+
+-- | Add portato marks to each phrase in each part in the given score.
+portato     :: (HasPart' a, HasArticulation a) => Score a -> Score a
 portato     = staccato . legato
+
+-- | Add legato marks to each phrase in each part in the given score.
+legato      :: (HasPart' a, HasArticulation a) => Score a -> Score a
 legato      = mapPhrase (setBeginSlur True) id (setEndSlur True)
+
+-- | Add spiccatto marks to the given score.
+spiccato    :: (HasPart' a, HasArticulation a) => Score a -> Score a
 spiccato    = mapPhrase (setStaccLevel 2) (setStaccLevel 2) (setStaccLevel 2)
 
+-- | Remove all articulation from the given note or notes.
 resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
-
-
 
 -- Safe for tuple-like types
 get1 = head . toList

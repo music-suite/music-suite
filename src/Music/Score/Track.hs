@@ -85,11 +85,15 @@ inTrack f = Track . f . getTrack'
 
 type instance Event (Track a) = a
 
--- track :: Real d => [(Point d, a)] -> Track a
+-- |
+-- Create a voice from a list of occurences.
+-- 
 track :: [(Time, a)] -> Track a
 track = Track . fmap (uncurry occ . first (fmap realToFrac))
 
--- getTrack :: Fractional d => Track a -> [(Point d, a)]
+-- |
+-- Extract the occurences of a voice. Semantic function.
+-- 
 getTrack :: Track a -> [(Time, a)]
 getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
 

@@ -89,21 +89,15 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
 
 inVoice f = Voice . f . getVoice'
 
-zipVoice :: Voice a -> Voice b -> Voice (a, b)
-zipVoice = zipVoiceWith (,)
-
-zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (dx,vx)) (Ev (dy,vy)) -> Ev (dx <> dy, f vx vy)) a b
-
-dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
-dzipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (Product dx,vx)) (Ev (Product dy,vy)) -> Ev (first Product $ f dx dy vx vy)) a b
-
-
--- voice :: Real d => [(d, a)] -> Voice a
+-- |
+-- Create a voice from a list of events.
+-- 
 voice :: [(Duration, a)] -> Voice a
 voice = Voice . fmap (uncurry ev . first realToFrac)
 
--- getVoice :: Fractional d => Voice a -> [(d, a)]
+-- |
+-- Extract the occurences of a events. Semantic function.
+-- 
 getVoice :: Voice a -> [(Duration, a)]
 getVoice = fmap (first realToFrac . getEv) . getVoice'
 
@@ -137,6 +131,25 @@ instance HasPitch a => HasPitch (Voice a) where
     type Pitch (Voice a) = Pitch a
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
+
+-- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice :: Voice a -> Voice b -> Voice (a, b)
+zipVoice = zipVoiceWith (,)
+
+-- |
+-- Join the given voices by multiplying durations and combining values using the given function.
+--
+zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (dx,vx)) (Ev (dy,vy)) -> Ev (dx <> dy, f vx vy)) a b
+
+-- |
+-- Join the given voices by combining durations and values using the given function.
+--
+dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
+dzipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (Product dx,vx)) (Ev (Product dy,vy)) -> Ev (first Product $ f dx dy vx vy)) a b
+
 
 
 
