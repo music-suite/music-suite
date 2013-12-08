@@ -38,11 +38,11 @@ module Music.Time.Reactive (
         Reactive,
         occs,
         (?),
+        initial,
+        updates,
         switch,
         activate,
         noteToReactive,
-        initial,
-        updates,
         -- renderR,
         -- printR,
         splitReactive,
@@ -70,6 +70,7 @@ import qualified Data.Set as Set
 
 import Music.Time
 import Music.Score.Note
+import Music.Score.Track
 import Music.Score.Pitch
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -98,20 +99,6 @@ occs = fst . unpack
 (?) :: Reactive a -> Time -> a
 (?) = snd . unpack
 
--- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
-switch :: Time -> Reactive a -> Reactive a -> Reactive a
-switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
-    filter (< t) tx <> [t] <> filter (> t) ty,
-    \u -> if u < t then rx u else ry u
-    )
-
-activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (range -> (start,stop), x)) y = switch start y (switch stop x y)
-
-noteToReactive :: Monoid a => Note a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
-
-
 initial :: Reactive a -> a
 initial r = r ? minB (occs r)
     where
@@ -123,6 +110,25 @@ initial r = r ? minB (occs r)
 
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
+
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+switch :: Time -> Reactive a -> Reactive a -> Reactive a
+switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
+    filter (< t) tx <> [t] <> filter (> t) ty,
+    \u -> if u < t then rx u else ry u
+    )
+
+
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (getNote -> (range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+    where
+        turnOn  = switch start
+        turnOff = switch stop
+
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
 
 renderR :: Reactive a -> (a, [(Time, a)])
 renderR r = (initial r, updates r)
