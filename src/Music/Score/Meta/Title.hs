@@ -27,17 +27,23 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Title (
-        Title,
-        titleFromString,
+
+        -- * Title type
+        Title,   
+        
+        -- ** Creating and modifying
+        -- titleFromString,
         denoteTitle,
         getTitle,
         getTitleAt,    
 
+        -- ** Adding titles to scores
         title,
         titleDuring,
         subtitle,
         subtitleDuring,        
         
+        -- ** Extracting titles
         withTitle,        
   ) where
 
@@ -117,6 +123,13 @@ subtitle t x = subtitleDuring (era x) t x
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
 
+-- |
+-- Extract the title in from the given score.
+--
+-- The given function is called once for each title change, containing the fragment
+-- of the score to which the given title change is to be applied. This is mostly
+-- used by notation backends to emit the title at the beginning of each fragment. 
+--
 withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
 withTitle = withGlobalMetaAtStart
 

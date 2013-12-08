@@ -27,20 +27,23 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Time (
-        
+
+        -- * Time signature type
         TimeSignature,
         time,
         compoundTime,
-        unTime,
+        getTime,
 
+        -- ** Adding time signature to scores
         timeSignature,
         timeSignatureDuring,
 
+        -- ** Extracting time signatures
         getTimeSignature,
         getTimeSignatureChanges,
         withTimeSignature,
         
-        -- * TODO move?
+        -- * Utility
         getBarDurations,
         getBarTimeSignatures,
         standardTimeSignature,
@@ -100,33 +103,45 @@ instance Real TimeSignature where
 instance Show TimeSignature where
     show (TimeSignature (xs, x)) = List.intercalate "+" (fmap show xs) ++ "/" ++ show x
 
+-- | Create a simple time signature.
 time :: Integer -> Integer -> TimeSignature
 time x y = TimeSignature ([x], y)
 
+-- | Create a compound time signature.
 compoundTime :: [Integer] -> Integer -> TimeSignature
 compoundTime = curry TimeSignature
 
-unTime :: TimeSignature -> ([Integer], Integer)
-unTime (TimeSignature x) = x
+-- | Extract the components of a time signature. Semantic function.
+getTime :: TimeSignature -> ([Integer], Integer)
+getTime (TimeSignature x) = x
 
+-- | Set the sime signature of the given score.
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (start <-> offset x) c x
 
 -- use (onset x <-> offset x) instead of (start <-> offset x)
-timeSignature' c x = timeSignatureDuring (era x) c x
+-- timeSignature' c x = timeSignatureDuring (era x) c x
 
+-- | Set the sime signature of the given part of a  score.
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 
-withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
-
--- TODO rename this
 getTimeSignature :: TimeSignature -> Score a -> Reactive TimeSignature
 getTimeSignature def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
+
+-- |
+-- Extract the time signature in from the given score, using the given default time signature.
+--
+-- The given function is called once for each time signature change, containing the fragment
+-- of the score to which the given time signature change is to be applied. This is mostly
+-- used by notation backends to emit a time signature mark at the beginning of each fragment. 
+--
+withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
+withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
+
 
 
 -- activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates

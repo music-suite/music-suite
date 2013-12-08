@@ -27,9 +27,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Clef (
+        -- * Clef type
         Clef(..),
+
+        -- ** Adding clefs to scores
         clef,
         clefDuring,
+        
+        -- ** Extracting clefs
         withClef,
   ) where
 
@@ -66,11 +71,20 @@ import Music.Pitch.Literal
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
+-- | Set clef of the given score.
 clef :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Clef -> a -> a
 clef c x = clefDuring (era x) c x
 
+-- | Set clef of the given part of a score.
 clefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
 
+-- |
+-- Extract the clef in from the given score, using the given default clef.
+--
+-- The given function is called once for each clef change, containing the fragment
+-- of the score to which the given clef change is to be applied. This is mostly
+-- used by notation backends to emit a clef mark at the beginning of each fragment. 
+--
 withClef :: HasPart' a => Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
 withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)

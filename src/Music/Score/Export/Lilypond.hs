@@ -349,7 +349,7 @@ voiceToLy barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap ba
     where
         -- FIXME compounds                      
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (unTime -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
+        setBarTimeSig (Just (getTime -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
         
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond

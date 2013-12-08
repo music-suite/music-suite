@@ -300,7 +300,7 @@ voiceToXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barT
     where                          
         -- FIXME compounds                      
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (unTime -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
+        setBarTimeSig (Just (getTime -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
 
         addStartInfo []     = []
         addStartInfo (x:xs) = (startInfo <> x):xs

@@ -28,11 +28,13 @@
 
 module Music.Score.Meta.Attribution (
         
+        -- * Attribution type
         Attribution,
         -- attributions,
         attribution,
         getAttribution,
 
+        -- ** Adding attribution to scores
         composer,
         composerDuring,
         lyricist,
@@ -40,6 +42,7 @@ module Music.Score.Meta.Attribution (
         arranger,
         arrangerDuring,
 
+        -- ** Extracting attribution
         withAttribution,
         withAttribution',
   ) where
