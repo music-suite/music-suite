@@ -36,7 +36,12 @@ module Music.Score.Meta.Time (
         timeSignatureDuring,
 
         withTimeSignature,
-        getTimeSignature
+        getTimeSignatureChanges,
+        
+        -- * TODO move?
+        getBarDurations,
+        getBarTimeSignatures,
+        standardTimeSignature,
   ) where
 
 import Control.Arrow
@@ -86,6 +91,7 @@ instance Num TimeSignature where
     fromInteger x = TimeSignature ([x], 1)
 instance Fractional TimeSignature where
     fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
+    (/) = liftRational2 (/)
 instance Real TimeSignature where
     toRational (TimeSignature (xs, x)) = sum xs % x
 
@@ -104,12 +110,61 @@ timeSignature c x = timeSignatureDuring (era x) c x
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 
-getTimeSignature :: Score a -> [(Time, TimeSignature)]
-getTimeSignature = activeUpdates . fmap unOptionLast . runMeta (Nothing::Maybe Int) . getScoreMeta
-
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
+
+getTimeSignatureChanges :: Score a -> [(Time, TimeSignature)]
+getTimeSignatureChanges = activeUpdates . fmap unOptionLast . runMeta (Nothing::Maybe Int) . getScoreMeta
+
 
 activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
 optionLast = Option . Just . Last
 unOptionLast = fmap getLast . getOption
+
+
+
+
+getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
+getBarDurations = fmap realToFrac . getBarTimeSignatures
+
+getBarTimeSignatures :: [(TimeSignature, Duration)] -> [TimeSignature]
+getBarTimeSignatures = concatMap (\(ts,d) -> let (n,r) = numWholeBars ts d in replicate' n ts ++ if r > 0 then [standardTimeSignature r] else [])
+
+-- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
+numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
+numWholeBars ts dur = second (* barDur) $ properFraction (dur / barDur) where barDur = realToFrac ts
+
+-- | Time signature typically used for the given duration.
+standardTimeSignature :: Duration -> TimeSignature
+standardTimeSignature x = case unRatio (toRational x) of
+    -- (1,2) -> time 1 2
+    (2,2) -> time 2 2
+    (3,2) -> time 3 2
+    (2,1) -> time 4 2
+    (5,2) -> time 5 2
+    (3,1) -> time 6 2
+    (7,2) -> time 7 2
+
+    (1,4) -> time 1 4
+    (1,2) -> time 2 4
+    (3,4) -> time 3 4
+    (1,1) -> time 4 4
+    (5,4) -> time 5 4
+    -- (3,2) -> time 6 4
+    (7,4) -> time 7 4
+
+    (1,8) -> time 1 8
+    -- (1,4) -> time 2 8
+    (3,8) -> time 3 8
+    -- (1,2) -> time 4 8
+    (5,8) -> time 5 8
+    -- (3,4) -> time 6 8
+    (7,8) -> time 7 8
+
+    -- TODO check divisible by 8 etc
+    _     -> error "standardTimeSignature: Stange value"
+
+
+
+replicate' n = replicate (fromIntegral n)
+
