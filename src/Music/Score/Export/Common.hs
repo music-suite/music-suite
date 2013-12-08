@@ -18,6 +18,7 @@
 
 module Music.Score.Export.Common (
         voiceToBars,
+        voiceToBars',
         -- separateBars,
         spellPitch,
         toRelative,
@@ -74,7 +75,10 @@ import Music.Dynamics.Literal
 -- Convert a single-voice score to a list of bars.
 --
 voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars = fmap getVoice . splitTiesVoiceAt (repeat 1)
+voiceToBars = voiceToBars' (repeat 1)
+
+voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
+voiceToBars' barDurs = fmap getVoice . splitTiesVoiceAt barDurs
 
 -- voiceToBars = separateBars . splitTiesVoice
 
