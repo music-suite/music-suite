@@ -128,6 +128,9 @@ module Music.Lilypond (
         addSegno,
         addCoda,
         addVarCoda,
+
+        -- * Utility
+        removeSingleChords,
     )
 where
 
@@ -768,6 +771,13 @@ addCoda = addArticulation Coda
 addVarCoda :: Music -> Music
 addVarCoda = addArticulation VarCoda
 
+
+
+
+
+removeSingleChords :: Music -> Music
+removeSingleChords (Chord [n] d p) = Note n d p
+removeSingleChords x               = x
 
 
 
