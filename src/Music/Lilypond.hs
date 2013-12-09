@@ -135,7 +135,7 @@ module Music.Lilypond (
     )
 where
 
-import Control.Arrow ((***))
+import Control.Arrow ((<<<), (***))
 import Data.Ratio
 import Data.String
 import Data.Default
@@ -182,7 +182,7 @@ data ScoreBlock
 data Music    
     = Rest (Maybe Duration) [PostEvent]             -- ^ Single rest.
     | Note Note (Maybe Duration) [PostEvent]        -- ^ Single note.
-    | Chord [Note] (Maybe Duration) [PostEvent]     -- ^ Single chord.
+    | Chord [(Note, [ChordPostEvent])] (Maybe Duration) [PostEvent]     -- ^ Single chord.
     | Sequential   [Music]                          -- ^ Sequential composition.
     | Simultaneous Bool [Music]                     -- ^ Parallel composition (split voices?).
     | Repeat Bool Int Music (Maybe (Music, Music))  -- ^ Repetition (unfold?, times, music, alternative).
@@ -205,7 +205,7 @@ instance Pretty Music where
 
     pretty (Note n d p)     = pretty n <> pretty d <> prettyList p
 
-    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' 
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ fmap (uncurry (<>) <<< pretty *** pretty) ns) <> char '>' 
                                   <> pretty d <> prettyList p
 
     pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
@@ -332,6 +332,9 @@ data BreathingSign
 data ChordPostEvent
     = Harmonic
     deriving (Eq, Show)
+
+instance Pretty ChordPostEvent where
+    pretty Harmonic = "\\harmonic"
     
 data PostEvent
     = Articulation Direction Articulation
@@ -576,7 +579,7 @@ note n = Note n (Just $ 1/4) []
 --   Use the 'VectorSpace' methods to change duration.
 --   
 chord :: [Note] -> Music
-chord ns = Chord ns (Just $ 1/4) []
+chord ns = Chord (fmap (\x -> (x,[])) ns) (Just $ 1/4) []
 
 
 sequential :: Music -> Music -> Music
@@ -796,8 +799,8 @@ foldMusic f = go
 removeSingleChords :: Music -> Music
 removeSingleChords = foldMusic go
     where
-        go (Chord [n] d p) = Note n d p
-        go x               = x
+        go (Chord [(n,_)] d p) = Note n d p
+        go x                   = x
 
 
 
