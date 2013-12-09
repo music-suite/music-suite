@@ -134,7 +134,7 @@ down a = modifyPitch (.-^ a)
 -- > Pitch -> Score a -> Score a
 --
 invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround p = modifyPitch (relative p negateV)
+invertAround p = modifyPitch (reflectAround p)
 
 -- |
 -- Transpose up by the given number of octaves.
