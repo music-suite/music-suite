@@ -6,3 +6,4 @@ dist
 *.count
 *.tex
 *.texi
+.shelly
