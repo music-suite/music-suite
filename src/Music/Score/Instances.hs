@@ -30,6 +30,7 @@ module Music.Score.Instances (
 
 import Control.Monad
 import Data.Semigroup
+import Data.Pointed
 import Data.Default
 import Data.Ratio
 import Data.Maybe
@@ -90,9 +91,9 @@ instance IsDynamics a => IsDynamics (TextT a) where
     fromDynamics l                                  = TextT (mempty, fromDynamics l)
 
 instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch l                                     = HarmonicT (0, fromPitch l)
+    fromPitch = point . fromPitch
 instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics l                                  = HarmonicT (0, fromDynamics l)
+    fromDynamics = point . fromDynamics
 
 instance IsPitch a => IsPitch (SlideT a) where
     fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
@@ -215,6 +216,7 @@ instance HasArticulation a => HasArticulation (ChordT a) where
 instance HasTremolo a => HasTremolo (ChordT a) where
     setTrem      n (ChordT as)                      = ChordT (fmap (setTrem n) as)
 instance HasHarmonic a => HasHarmonic (ChordT a) where
+    setNatural    n (ChordT as)                     = ChordT (fmap (setNatural n) as)
     setHarmonic   n (ChordT as)                     = ChordT (fmap (setHarmonic n) as)
 instance HasSlide a => HasSlide (ChordT a) where
     setBeginGliss n (ChordT as)                     = ChordT (fmap (setBeginGliss n) as)
@@ -253,6 +255,7 @@ instance HasArticulation a => HasArticulation (TieT a) where
 instance HasTremolo a => HasTremolo (TieT a) where
     setTrem       n                                 = fmap (setTrem n)
 instance HasHarmonic a => HasHarmonic (TieT a) where
+    setNatural    n                                 = fmap (setNatural n)
     setHarmonic   n                                 = fmap (setHarmonic n)
 instance HasSlide a => HasSlide (TieT a) where
     setBeginGliss n                                 = fmap (setBeginGliss n)
@@ -292,6 +295,7 @@ instance HasArticulation a => HasArticulation (DynamicT a) where
 instance HasTremolo a => HasTremolo (DynamicT a) where
     setTrem       n                                 = fmap (setTrem n)
 instance HasHarmonic a => HasHarmonic (DynamicT a) where
+    setNatural    n                                 = fmap (setNatural n)
     setHarmonic   n                                 = fmap (setHarmonic n)
 instance HasSlide a => HasSlide (DynamicT a) where
     setBeginGliss n                                 = fmap (setBeginGliss n)
@@ -332,6 +336,7 @@ instance HasDynamic a => HasDynamic (ArticulationT a) where
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem       n                                     = fmap (setTrem n)
 instance HasHarmonic a => HasHarmonic (ArticulationT a) where
+    setNatural    n                                     = fmap (setNatural n)
     setHarmonic   n                                     = fmap (setHarmonic n)
 instance HasSlide a => HasSlide (ArticulationT a) where
     setBeginGliss n                                     = fmap (setBeginGliss n)
@@ -448,6 +453,7 @@ instance HasArticulation a => HasArticulation (SlideT a) where
 instance HasTremolo a => HasTremolo (SlideT a) where
     setTrem       n                                = fmap (setTrem n)
 instance HasHarmonic a => HasHarmonic (SlideT a) where
+    setNatural    n                                = fmap (setNatural n)
     setHarmonic   n                                = fmap (setHarmonic n)
 -- instance HasSlide (SlideT a) where
 instance HasText a => HasText (SlideT a) where
@@ -625,15 +631,15 @@ instance Num a => Num (HarmonicT a) where
     HarmonicT (v,a) - HarmonicT (_,b) = HarmonicT (v,a-b)
     abs (HarmonicT (v,a))          = HarmonicT (v,abs a)
     signum (HarmonicT (v,a))       = HarmonicT (v,signum a)
-    fromInteger a               = HarmonicT (toEnum 0,fromInteger a)
+    fromInteger = point . fromInteger
 
 instance Enum a => Enum (HarmonicT a) where
-    toEnum a = HarmonicT (0, toEnum a) -- TODO use def, mempty or minBound?
-    fromEnum (HarmonicT (v,a)) = fromEnum a
+    toEnum = point . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (HarmonicT a) where
-    minBound = HarmonicT (0, minBound)
-    maxBound = HarmonicT (0, maxBound)
+    minBound = point minBound
+    maxBound = point maxBound
 
 instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
     toRational (HarmonicT (v,a)) = toRational a
@@ -668,3 +674,6 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
 
+
+-- Safe for tuple-like types
+get1 = head . toList

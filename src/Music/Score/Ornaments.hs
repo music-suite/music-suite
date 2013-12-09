@@ -50,6 +50,7 @@ module Music.Score.Ornaments (
   ) where
 
 import Data.Ratio
+import Data.Pointed
 import Data.Foldable
 import Data.Semigroup
 import Data.Typeable
@@ -99,18 +100,26 @@ instance HasText a => HasText (Score a) where
 
 -- 0 for none, positive for natural, negative for artificial
 class HasHarmonic a where
+    setNatural :: Bool -> a -> a
     setHarmonic :: Int -> a -> a
 
-newtype HarmonicT a = HarmonicT { getHarmonicT :: (Int, a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+-- (isNatural, overtone series index where 0 is fundamental)
+newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Bool, Int), a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+
+instance Pointed HarmonicT where
+    point x = HarmonicT ((False, 0), x)
 
 instance HasHarmonic (HarmonicT a) where
-    setHarmonic   n (HarmonicT (_,x))               = HarmonicT (n,x)
+    setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((b,n),x)
+    setHarmonic n (HarmonicT ((nat,_),x)) = HarmonicT ((nat,n),x)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
-    setHarmonic   n                                 = fmap (setHarmonic n)
+    setNatural b = fmap (setNatural b)
+    setHarmonic n = fmap (setHarmonic n)
 
 instance HasHarmonic a => HasHarmonic (Score a) where
+    setNatural b = fmap (setNatural b)
     setHarmonic n = fmap (setHarmonic n)
 
 
@@ -178,5 +187,5 @@ harmonic = setHarmonic
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 artificial :: HasHarmonic a => a -> a
-artificial = setHarmonic (-4)
+artificial = setHarmonic 3 . setNatural False
 
