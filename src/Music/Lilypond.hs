@@ -58,6 +58,8 @@ module Music.Lilypond (
         rest,
         note,
         chord,
+        chordHarm,
+        chordWithPost,
         
         -- ** Composition
         sequential,
@@ -135,7 +137,7 @@ module Music.Lilypond (
     )
 where
 
-import Control.Arrow ((<<<), (***))
+import Control.Arrow ((<<<), (***), first, second)
 import Data.Ratio
 import Data.String
 import Data.Default
@@ -580,6 +582,12 @@ note n = Note n (Just $ 1/4) []
 --   
 chord :: [Note] -> Music
 chord ns = Chord (fmap (\x -> (x,[])) ns) (Just $ 1/4) []
+
+chordHarm :: [(Note, Bool)] -> Music
+chordHarm = chordWithPost . fmap (second $ \x -> if x then [Harmonic] else [])
+
+chordWithPost :: [(Note, [ChordPostEvent])] -> Music
+chordWithPost ns = Chord ns (Just $ 1/4) []
 
 
 sequential :: Music -> Music -> Music
