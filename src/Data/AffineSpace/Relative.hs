@@ -35,8 +35,17 @@ relative3 p f x y z = proj $ f (inj x) (inj y) (inj z)
         inj = (.-. p)
         proj = (p .+^)
 
+
+-- |
+-- Mirror a point around a given point.
+--
+-- > fmap (reflectAround origin) points
+--
+reflectAround :: AffineSpace p => p -> p -> p
+reflectAround o = relative o negateV
+
 -- |
 -- Mirror a point around 'origin'.
 --
 mirror :: AdditiveGroup v => Point v -> Point v
-mirror = relative origin negateV
+mirror = reflectAround origin
