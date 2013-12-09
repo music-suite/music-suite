@@ -130,10 +130,12 @@ module Music.Lilypond (
         addVarCoda,
 
         -- * Utility
+        foldMusic,
         removeSingleChords,
     )
 where
 
+import Control.Arrow ((***))
 import Data.Ratio
 import Data.String
 import Data.Default
@@ -327,6 +329,10 @@ data BreathingSign
     | CurvedCaesura
     deriving (Eq, Show)
 
+data ChordPostEvent
+    = Harmonic
+    deriving (Eq, Show)
+    
 data PostEvent
     = Articulation Direction Articulation
     | Dynamics Direction Dynamics
@@ -773,11 +779,25 @@ addVarCoda = addArticulation VarCoda
 
 
 
-
+foldMusic :: (Music -> Music) -> Music -> Music
+foldMusic f = go
+    where
+        go (Sequential ms)      = Sequential (fmap go ms)                          
+        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)                     
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)  
+        go (Tremolo n m)        = Tremolo n (go m)                             
+        go (Times r m)          = Times r (go m)                          
+        go (Transpose p p2 m)   = Transpose p p2 (go m)                   
+        go (Relative p m)       = Relative p (go m)                          
+        go (New s v m)          = New s v (go m)               
+        go (Context s v m)      = Context s v (go m)
+        go x = f x
 
 removeSingleChords :: Music -> Music
-removeSingleChords (Chord [n] d p) = Note n d p
-removeSingleChords x               = x
+removeSingleChords = foldMusic go
+    where
+        go (Chord [n] d p) = Note n d p
+        go x               = x
 
 
 
