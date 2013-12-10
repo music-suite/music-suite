@@ -142,6 +142,15 @@ module Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
         -- * Articulation
         -----------------------------------------------------------------------------
+
+        addTechnical,
+        addArticulation,
+        
+        -- ** Technical
+        upbow,
+        downbow,
+        harmonic,
+        openString,
         
         -- ** Slurs
         slur,
@@ -624,13 +633,36 @@ caesura         = addNotation (Articulations [Caesura])
 
 -- ----------------------------------------------------------------------------------
 
+addTechnical :: Technical -> Music -> Music
+addTechnical x = addNotation (Technical [x])
+
+addArticulation :: Articulation -> Music -> Music
+addArticulation x = addNotation (Articulations [x])
+
+upbow       = addTechnical UpBow
+downbow     = addTechnical DownBow
+harmonic    = addTechnical Harmonic
+openString  = addTechnical OpenString
+
+
 beginSlur       :: Music -> Music
 endSlur         :: Music -> Music
 beginSlur       = addNotation (Slur 1 Start)
 endSlur         = addNotation (Slur 1 Stop)
 
+accent          :: Music -> Music
+strongAccent    :: Music -> Music
 staccato        :: Music -> Music
 tenuto          :: Music -> Music
+detachedLegato  :: Music -> Music
+staccatissimo   :: Music -> Music
+spiccato        :: Music -> Music
+scoop           :: Music -> Music
+plop            :: Music -> Music
+doit            :: Music -> Music
+falloff         :: Music -> Music
+stress          :: Music -> Music
+unstress        :: Music -> Music
 accent          = addNotation (Articulations [Accent])	 
 strongAccent    = addNotation (Articulations [StrongAccent])	 
 staccato        = addNotation (Articulations [Staccato])	 
