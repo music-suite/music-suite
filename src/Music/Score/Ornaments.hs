@@ -180,12 +180,13 @@ glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 harmonic :: HasHarmonic a => Int -> a -> a
-harmonic = setHarmonic
+harmonic n = setNatural True . setHarmonic n
+-- TODO verify this can actually be played
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
 -- Sounding pitch is unaffected, but notated output is transposed automatically.
 --
 artificial :: HasHarmonic a => a -> a
-artificial = setHarmonic 3 . setNatural False
+artificial =  setNatural False . setHarmonic 3
 

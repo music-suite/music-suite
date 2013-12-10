@@ -171,10 +171,21 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
             notate ts a = mconcat (fmap Xml.text ts) <> a
 
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
-    getMusicXml d (HarmonicT ((isNat,n),x))                 = notate $ getMusicXml d x
-        where
-            notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
-                   | otherwise  = id
+    getMusicXml d (HarmonicT ((isNat,n),x)) = notate isNat n $ getMusicXml d x
+        where                 
+            notate _     0 = id
+            notate True  n = notateNatural n
+            notate False n = notateArtificial n
+
+            -- notateNatural n = Xml.harmonic -- openString?
+            notateNatural n = Xml.setNoteHead Xml.DiamondNoteHead
+            -- Most programs do not recognize the harmonic tag
+            -- We set a single diamond notehead instead, which can be manually replaced
+            
+            notateArtificial n = id -- TODO
+
+
+            -- notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
     -- TODO adjust pitch etc
 
 instance HasMusicXml a => HasMusicXml (SlideT a) where

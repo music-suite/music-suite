@@ -178,10 +178,15 @@ instance HasLilypond a => HasLilypond (TextT a) where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
-    getLilypond d (HarmonicT (n,x)) = notate $ getLilypond d x
-        where
-            notate = id
-            -- FIXME notate harmonics
+    getLilypond d (HarmonicT ((isNat,n),x)) = notate isNat n $ getLilypond d x
+        where                 
+            notate _     0 = id
+            notate True  n = notateNatural n
+            notate False n = notateArtificial n
+
+            notateNatural n = Lilypond.addFlageolet -- addOpen?
+            
+            notateArtificial n = id -- TODO
 
 instance HasLilypond a => HasLilypond (SlideT a) where
     getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a
@@ -366,7 +371,7 @@ rhythmToLy (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLy r)
 
 noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond
 noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)
-noteRestToLy d (Just p) = getLilypond d p
+noteRestToLy d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
 
 spellLy :: Integer -> Lilypond.Note
 spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
