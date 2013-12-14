@@ -30,11 +30,13 @@ module Music.Score.Meta.Attribution (
         
         -- * Attribution type
         Attribution,
-        -- attributions,
         attribution,
+        attributions,
         getAttribution,
 
         -- ** Adding attribution to scores
+        attribute,
+        attributeDuring,
         composer,
         composerDuring,
         lyricist,
@@ -80,19 +82,38 @@ import Music.Pitch.Literal
 
 -- | 
 -- An attributions is a simple key-value store used to gather information such
--- as composer, lycicist, orchestrator, performer, etc.
+-- as composer, lyricist, orchestrator, performer, etc. The keys are referred to
+-- as categories.
+--
+-- Attribution is a 'Semigroup', which compose by choosing the leftmost value in 
+-- each category. For example
+-- 
+-- > attribution "composer" "H" <> attribution "composer" "S" <> attribution "lyricist" "S"
+-- >     ===> attributions [("composer","H"),("lyricist","S")]
+--
+-- Any kind of attribution can be added, and backends may recognize or ignore categories as they 
+-- see fit. The following are normally recognized categories:
+--
+-- > composer
+-- > lyricist
+-- > arranger
+-- > performer
+-- > dedication
+-- > year
+-- > copyright
+-- > information
 -- 
 newtype Attribution = Attribution (Map String (Option (Last String)))
     deriving (Typeable, Monoid, Semigroup)
 
 instance Show Attribution where
-    show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fmap getLast . getOption) $ a))
+    show (Attribution a) = "attributions " ++ show (Map.toList (fmap (fromJust . fmap getLast . getOption) $ a))
 
--- | Make an 'Attribution' from keys and values.
+-- | Make an 'Attribution' from keys and values.
 attributions :: [(String, String)] -> Attribution
 attributions = Attribution . fmap (Option . Just . Last) . Map.fromList
 
--- | Make an 'Attribution' a single key and value.
+-- | Make an 'Attribution' a single key and value.
 attribution :: String -> String -> Attribution
 attribution k v = Attribution . fmap (Option . Just . Last) $ Map.singleton k v
 
@@ -101,13 +122,21 @@ getAttribution :: Attribution -> String -> Maybe String
 getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . getOption) $ a)
 
 
+-- | Set the given attribution in the given score.
+attribute :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Attribution -> a -> a
+attribute a x = attributeDuring (era x) a x
+
+-- | Set the given attribution in the given part of a score.
+attributeDuring :: (HasMeta a, HasPart' a) => Span -> Attribution -> a -> a
+attributeDuring s a = addGlobalMetaNote (s =: a)
+
 -- | Set composer of the given score.
 composer :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
 composer t x = composerDuring (era x) t x
 
 -- | Set composer of the given part of a score.
 composerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
-composerDuring s c = addGlobalMetaNote (s =: attribution "composer" c)
+composerDuring s x = attributeDuring s ("composer" `attribution` x)
 
 -- | Set lyricist of the given score.
 lyricist :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
@@ -115,7 +144,7 @@ lyricist t x = lyricistDuring (era x) t x
 
 -- | Set lyricist of the given part of a score.
 lyricistDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
-lyricistDuring s c = addGlobalMetaNote (s =: attribution "lyricist" c)
+lyricistDuring s x = attributeDuring s ("lyricist" `attribution` x)
 
 -- | Set arranger of the given score.
 arranger :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => String -> a -> a
@@ -123,7 +152,7 @@ arranger t x = arrangerDuring (era x) t x
 
 -- | Set arranger of the given part of a score.
 arrangerDuring :: (HasMeta a, HasPart' a) => Span -> String -> a -> a
-arrangerDuring s c = addGlobalMetaNote (s =: attribution "arranger" c)
+arrangerDuring s x = attributeDuring s ("arranger" `attribution` x)
 
 withAttribution :: String -> (String -> Score a -> Score a) -> Score a -> Score a
 withAttribution name f = withAttribution' (fromMaybe id . fmap f . flip getAttribution name)
