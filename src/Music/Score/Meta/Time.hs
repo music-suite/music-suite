@@ -83,19 +83,32 @@ import Music.Pitch.Literal
 newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Typeable)
 
+mapNums   f (TimeSignature (m,n)) = TimeSignature (f m, n)
+mapDenoms f (TimeSignature (m,n)) = TimeSignature (m, f n)
+
 -- TODO move
 liftRational f = fromRational . f . toRational
 liftRational2 f x y = fromRational $ toRational x `f` toRational y
 
 instance Num TimeSignature where
-    (+) = liftRational2 (+)
+    x + y | x `haveSameDenominator` y   = concatFrac x y
+          | otherwise                   = addFrac x y
+        where
+            TimeSignature (_,n1) `haveSameDenominator` TimeSignature (_,n2) = n1 == n2
+            TimeSignature (m1,n) `concatFrac` TimeSignature (m2,_) = TimeSignature (m1 <> m2, n)
+            addFrac = liftRational2 (+)
+    
+    -- TODO if second element is simple, use mapNums instead
     (*) = liftRational2 (+)
+
     negate  = liftRational negate
     abs     = liftRational abs
     signum  = liftRational signum
     fromInteger x = TimeSignature ([x], 1)
 instance Fractional TimeSignature where
     fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
+
+    -- TODO if second element is simple, use mapNums instead
     (/) = liftRational2 (/)
 instance Real TimeSignature where
     toRational (TimeSignature (xs, x)) = sum xs % x
