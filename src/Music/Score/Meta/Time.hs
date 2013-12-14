@@ -114,7 +114,8 @@ instance Real TimeSignature where
     toRational (TimeSignature (xs, x)) = sum xs % x
 
 instance Show TimeSignature where
-    show (TimeSignature (xs, x)) = List.intercalate "+" (fmap show xs) ++ "/" ++ show x
+    show (TimeSignature ([m], n)) = show m ++ "/" ++ show n
+    show (TimeSignature (xs,  n)) = "(" ++ List.intercalate "+" (fmap show xs) ++ ")/" ++ show n
 
 -- | Create a simple time signature.
 time :: Integer -> Integer -> TimeSignature
