@@ -77,6 +77,23 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
+-- |
+-- A title is a sequence of 'String' values, representing the name of a work or part of a work.
+-- An arbitrary depth of title sections can be used.
+--
+-- Title is an instance of 'IsString' and can be used with the 'OverloadedStrings' extension as
+-- follows:
+--
+-- > title  "Le Nozze di Figaro"
+-- >
+-- > subtitle "Atto primo" 
+-- > subsubtitle "Scena I"
+-- > subsubtitle "Scena II"
+-- > ...
+-- >
+-- > subtitle "Atto secundo" 
+-- > ...
+--
 newtype Title = Title (Int -> Option (Last String))
     deriving (Typeable, Monoid, Semigroup)
 
@@ -122,6 +139,14 @@ subtitle t x = subtitleDuring (era x) t x
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
 subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
+
+-- | Set subsubtitle of the given score.
+subsubtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
+subsubtitle t x = subsubtitleDuring (era x) t x
+
+-- | Set subsubtitle of the given part of a score.
+subsubtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
+subsubtitleDuring s t = addGlobalMetaNote (s =: denoteTitle (denoteTitle t))
 
 -- |
 -- Extract the title in from the given score.

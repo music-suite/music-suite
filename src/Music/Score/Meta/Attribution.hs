@@ -81,18 +81,17 @@ import Music.Pitch.Literal
 
 
 -- | 
--- An attributions is a simple key-value store used to gather information such
--- as composer, lyricist, orchestrator, performer, etc. The keys are referred to
--- as categories.
+-- An attributions is a simple map form keys to values used to gather information such as
+-- composer, lyricist, orchestrator, performer, etc.
 --
--- Attribution is a 'Semigroup', which compose by choosing the leftmost value in 
--- each category. For example
+-- Attribution is a 'Semigroup', and compose by choosing the leftmost value in each
+-- category. For example
 -- 
 -- > attribution "composer" "H" <> attribution "composer" "S" <> attribution "lyricist" "S"
 -- >     ===> attributions [("composer","H"),("lyricist","S")]
 --
 -- Any kind of attribution can be added, and backends may recognize or ignore categories as they 
--- see fit. The following are normally recognized categories:
+-- see fit. The following categories are normally recognized:
 --
 -- > composer
 -- > lyricist
