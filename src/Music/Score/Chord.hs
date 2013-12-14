@@ -31,10 +31,16 @@ module Music.Score.Chord (
         HasChord(..),
         ChordT(..),      
 
+        -- * Voice separation
         separateVoices,
         mergePossible,
         
         -- * Chord transformations
+        takeNoteInChord,
+        dropNoteInChord,
+        takeNotesInChord,
+        dropNotesInChord,
+        mapSimultaneous,
         simultaneous,
         simultaneous',
   ) where
@@ -75,7 +81,6 @@ instance HasChord (ChordT a) where
 -- Empty chords will cause error with HasPitch, among others
 newtype ChordT a = ChordT { getChordT :: [a] }
     deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
-
 
 overlaps :: (HasOnset a, HasOffset a, HasOnset b, HasOffset b) => a -> b -> Bool
 overlaps t u = not $ offset t <= onset u || offset u <= onset t
@@ -171,17 +176,40 @@ instance Num a => Num (Score a) where
 
 -- TODO rewrite, generalize?
 
+takeNotesInChord n = mapSimultaneous (fmap $ take n)
+dropNotesInChord n = mapSimultaneous (fmap $ drop n)
+
+takeNoteInChord n = mapSimultaneous $ (fmap $ take 1) . (fmap $ drop (n - 1))
+dropNoteInChord n = mapSimultaneous $ (fmap $ drop1 n)
+
+drop1 n xs = take (n - 1) xs <> drop n xs
+
+
+-- | 
+-- Process all simultaneous events.
+-- 
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
+-- 
+mapSimultaneous :: (Score [a] -> Score [b]) -> Score a -> Score b
+mapSimultaneous f = mscatter . f . simultaneous'
+
 -- |
--- Group and merge simultaneous events.
+-- Merge all simultaneous events using their 'Semigroup' instance.
+--
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
 --
 simultaneous :: Semigroup a => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 
 -- |
--- Group simultaneous events.
+-- Group simultaneous events as lists.
 --
 -- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
 -- era, that is if @`era` a == `era` b@
+--
+-- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
 --
 simultaneous' :: Score a -> Score [a]
 simultaneous' sc = setScoreMeta m $ compose vs
@@ -195,7 +223,7 @@ simultaneous' sc = setScoreMeta m $ compose vs
         vs  = zipWith (\(delta -> (t,d)) a -> (t,d,a)) es evs
 
 
--- TODO move these
+-- TODO (re)move these
 
 eras :: Score a -> [Span]
 eras sc = fmap getSpan . perform $ sc
