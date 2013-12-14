@@ -71,8 +71,12 @@ import Music.Pitch.Literal
 
 type Bpm = Duration
 
+-- | 
+-- Represents musical tempo as a metronome mark with an optional string name.
+--
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
     deriving (Eq, Ord, Typeable)
+-- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
 
 instance Show Tempo where
     show (tempoToFrac -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm

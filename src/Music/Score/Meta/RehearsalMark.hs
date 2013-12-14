@@ -27,7 +27,11 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.RehearsalMark (
-        -- rehearsal mark       
+        -- rehearsal mark
+        RehearsalMark,
+        rehearsalMark,
+        rehearsalMarkDuring,
+        withRehearsalMark,       
   ) where
 
 
@@ -61,4 +65,37 @@ import Music.Score.Score
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
+
+-- | 
+-- Represents 
+--
+data RehearsalMark = RehearsalMark (Maybe String) Int
+    deriving (Eq, Ord, Typeable)
+-- name level(0=standard)
+
+instance Default RehearsalMark where
+    def = RehearsalMark Nothing 0
+
+instance Semigroup RehearsalMark where
+    RehearsalMark n1 l1 <> RehearsalMark n2 l2 = RehearsalMark (n1 <> n2) (l1 `max` l2)
+
+instance Monoid RehearsalMark where
+    mempty  = def
+    mappend = (<>)
+
+instance Show RehearsalMark where
+    show (RehearsalMark name level) = "A" -- TODo
+
+
+-- metronome :: Duration -> Bpm -> Tempo
+-- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
+
+rehearsalMark :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => RehearsalMark -> a -> a
+rehearsalMark c x = rehearsalMarkDuring (era x) c x
+
+rehearsalMarkDuring :: (HasMeta a, HasPart' a) => Span -> RehearsalMark -> a -> a
+rehearsalMarkDuring s x = addGlobalMetaNote (s =: x)
+
+withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
+withRehearsalMark = withGlobalMeta
 

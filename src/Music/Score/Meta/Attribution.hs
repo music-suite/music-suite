@@ -81,7 +81,7 @@ import Music.Pitch.Literal
 
 
 -- | 
--- An attributions is a simple map form keys to values used to gather information such as
+-- An attributions is a simple map from keys to values used to gather information such as
 -- composer, lyricist, orchestrator, performer, etc.
 --
 -- Attribution is a 'Semigroup', and compose by choosing the leftmost value in each
