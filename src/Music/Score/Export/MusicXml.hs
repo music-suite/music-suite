@@ -210,13 +210,13 @@ instance HasMusicXml a => HasMusicXml (ClefT a) where
 -- |
 -- Convert a score to MusicXML and write to a file.
 --
-writeXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
+writeXml :: (HasMusicXml a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
 writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it.
 --
-openXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+openXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -238,31 +238,19 @@ openXml sc = do
 -- |
 -- Convert a score to MusicXML and print it on the standard output.
 --
-showXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+showXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
 showXml = putStrLn . toXmlString
 
 -- |
 -- Convert a score to a MusicXML string.
 --
-toXmlString :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> String
+toXmlString :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> String
 toXmlString = Xml.showXml . toXml
-
--- -- |
--- -- Convert a single-voice score to a MusicXML representation.
--- --
--- toXmlSingle :: HasMusicXml a => Score a -> XmlScore
--- toXmlSingle = voiceToXml . scoreToVoice
--- 
--- -- |
--- -- Convert a single-voice score to a MusicXML representation.
--- --
--- voiceToXml :: HasMusicXml a => Voice (Maybe a) -> XmlScore
--- voiceToXml = Xml.fromPart "Title" "Composer" "Voice" . voiceToXml'
 
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toXml :: (HasMusicXml a, HasPart' a, Show (Part a), Semigroup a) => Score a -> XmlScore
+toXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> XmlScore
 toXml sc = 
            -- Score structure
            Xml.fromParts title composer pl

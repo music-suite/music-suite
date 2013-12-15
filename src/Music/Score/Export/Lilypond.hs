@@ -219,13 +219,13 @@ scatLy = foldr Lilypond.sequential e
 -- |
 -- Convert a score to a Lilypond representaiton and print it on the standard output.
 --
-showLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+showLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
 showLy = putStrLn . toLyString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => FilePath -> Score a -> IO ()
+writeLy :: (HasLilypond a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
 writeLy = writeLy' def
 
 data LilypondOptions
@@ -237,7 +237,7 @@ instance Default LilypondOptions where
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLy' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
 writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString sc
     where 
         title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
@@ -283,10 +283,10 @@ writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString sc
 -- |
 -- Typeset a score using Lilypond and open it.
 --
-openLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> IO ()
+openLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
 openLy = openLy' def
 
-openLy' :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => LilypondOptions -> Score a -> IO ()
+openLy' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> Score a -> IO ()
 openLy' options sc = do
     writeLy' options "test.ly" sc
     runLy
@@ -300,13 +300,13 @@ openLy'' = void $ runCommand "open test.pdf"
 -- |
 -- Convert a score to a Lilypond string.
 --
-toLyString :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> String
+toLyString :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> String
 toLyString = show . Pretty.pretty . toLy
 
 -- |
 -- Convert a score to a Lilypond representation.
 --
-toLy :: (HasLilypond a, HasPart' a, Show (Part a), Semigroup a) => Score a -> Lilypond
+toLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> Lilypond
 toLy sc = 
           -- Score structure
           pcatLy . fmap (
