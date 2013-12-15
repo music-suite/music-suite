@@ -27,8 +27,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Barlines (
-        -- single, double etc
-        -- repeats?
+        -- * Barline type
+        BarlineType(..),
+        Barline,
+
+        -- ** Adding barlines to scores
+        barline,
+        barlineDuring,
+        
+        -- ** Extracting barlines
+        withBarline,
   ) where
 
 
@@ -63,3 +71,23 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
+-- | Represents a barline.
+--
+-- TODO repeats
+data Barline = Barline BarlineType
+    deriving (Eq, Ord, Show, Typeable)
+
+data BarlineType = StandardBarline | DoubleBarline
+    deriving (Eq, Ord, Show, Typeable)
+
+-- | Add a barline over the whole score.
+barline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
+barline c x = barlineDuring (era x) c x
+
+-- | Add a barline to the given score.
+barlineDuring :: (HasMeta a, HasPart' a) => Span -> Barline -> a -> a
+barlineDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+
+-- | Extract barlines in from the given score, using the given default barline.
+withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a
+withBarline f = withGlobalMeta (maybe id f . fmap getLast . getOption)

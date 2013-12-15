@@ -70,9 +70,9 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
--- | 
--- Represents 
+-- | Represents a rehearsal mark. 
 --
+-- TODO this needs zero-duration spans to work properly.
 data RehearsalMark = RehearsalMark (Maybe String) Int
     deriving (Eq, Ord, Typeable)
 -- name level(0=standard)
