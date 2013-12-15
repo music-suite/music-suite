@@ -634,33 +634,38 @@ in trackToScore (1/8) y
 
 
 
+
 # Meta-information
 
-It is often desirable to annotate music with extraneous information, such as title, creator, time signature and so on. In the Music Suite these are grouped together under the common label *meta-information*.
+It is often desirable to annotate music with extraneous information, such as title, creator or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*. 
 
-The distinction between ordinary musical data and meta-data is not always clear cut. For example, while a clef is clearly a presentation detail, a key signature might be considered both a presentation aspect and a fundamental aspect of the musical syntax.
+Each type of meta-information is stored separately and can be extracted and transformed depending on its type. Each type of meta-information has a default value which is implicitly chosen if no meta-information of the given type has been entered (for example the default title is empty, the default key signature is C major and so on).
 
-TODO while we only consider notes as non-meta etc
-
-TODO attributes (same as in Diagrams)
-
-Each attribute value may apply either to a *whole* score (i.e. from beginning to end), or to a *section* of the score.
+The distinction between ordinary musical data and meta-data is not always clear cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
 
 ## Title
 
-TODO
+@[title]
+
+@[subtitle]
+
+@[subsubtitle]
 
 ```music+haskell
 title "Frere Jaques" $ scat [c,d,e,c]
 ```
 
-## Movement title and number
-
-TODO
-
 ## Attribution
 
-TODO
+@[composer]
+
+@[lyricist]
+
+@[arranger]
+
+@[attribution]
+
+@[attributions]
 
 ```music+haskell
 composer "Anonymous" $ scat [c,d,e,c]
@@ -669,8 +674,6 @@ composer "Anonymous" $ scat [c,d,e,c]
 ```music+haskell
 composer "Rodgers" $ lyricist "Hammerstein" $ arranger "Bennet" $ scat [c,d,e,c]
 ```
-
-
 
 
 ## Clefs
@@ -725,18 +728,13 @@ clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ 
 
 @[renderTempo]
 
-## Fermatas
+## Fermatas, caesuras and breathing marks
 
 TODO
 
 ## Ritardando and accellerando
 
 TODO
-
-## Caesuras and separators
-
-TODO
-
 
 ## Rehearsal marks
 
@@ -748,7 +746,7 @@ TODO
 
 @[withRehearsalMark]
 
-## Bars
+## Barlines and repeats
 
 There is generally no need to enter bars explicitly, as this information can be inferred from other meta-information. Generally, the following meta-events (in any part), will force a change of bar:
 
