@@ -362,7 +362,16 @@ in (accent . legato) (p1 </> p2 </> p3)
 
 ## Parts
 
-TODO
+@[Division]
+
+@[Subpart]
+
+@[Part]
+
+@[Instrument]
+
+@[Solo]
+
 
 ## Space
 
@@ -375,6 +384,8 @@ TODO
 ```music+haskell
 tremolo 2 $ times 2 $ (c |> d)^/2
 ```
+
+TODO chord tremolo
 
 ## Slides and glissando
 
@@ -396,19 +407,29 @@ Use the @[harmonic] function:
     </>
 (harmonic 3 $ c^/2)
 ```
+
+TODO artificial harmonics
+
 @[artificial]
 
 
 ## Text
+
+TODO
 
 @[text]
 
 ```music+haskell
 text "pizz." $ c^/2
 ```
+
 ## Chords
 
 TODO
+
+```music+haskell
+compress 4 $ scat [c,d,e,c] <> scat [e,f,g,e]
+```
 
 ## Rests
 
@@ -485,11 +506,19 @@ in compress 4 $ melody </> pedal
 
 ## Pitches and intervals
 
+TODO
+
 ## Name and accidental
+
+TODO
 
 ## Spelling
 
+TODO
+
 ## Quality and number
+
+TODO
 
 
 ## Intonation
@@ -498,13 +527,23 @@ TODO
 
 ## Inspecting dissonant intervals
 
+TODO
+
 ## Semitones and enharmonic equivalence
+
+TODO
 
 ## Spelling
 
+TODO
+
 ## Scales
 
+TODO
+
 ## Chords
+
+TODO
 
 
 
@@ -517,27 +556,32 @@ TODO
 ## Part composition
 
 
-
 # Time-based structures
 
-@[Score]
-@[Voice]
-@[Track]
 @[Delayable]
+
 @[Stretchable]
+
+@[HasOnset]
+
+@[HasOffset]
+
+@[HasDuration]
 
 
 ## Time and duration
 
-TODO
+@[Time]
+
+@[Duration]
 
 ## Spans
 
-TODO
+@[Span]
 
 ## Notes
 
-TODO
+@[Note]
 
 ## Voice
 
@@ -584,6 +628,11 @@ let
 in trackToScore (1/8) y
 ```
 
+## Scores
+
+@[Score]
+
+
 
 # Meta-information
 
@@ -601,7 +650,7 @@ Each attribute value may apply either to a *whole* score (i.e. from beginning to
 
 TODO
 
-```haskell
+```music+haskell
 title "Frere Jaques" $ scat [c,d,e,c]
 ```
 
@@ -613,51 +662,159 @@ TODO
 
 TODO
 
-```haskell
+```music+haskell
 composer "Anonymous" $ scat [c,d,e,c]
 ```
 
+```music+haskell
+composer "Rodgers" $ lyricist "Hammerstein" $ arranger "Bennet" $ scat [c,d,e,c]
+```
+
+
+
+
 ## Clefs
 
-To set the clef for a whole passage, use @[setClef]. The clef is used by most notation backends and ignored by audio backends.
+To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
 
 ```music+haskell
 let
-    part1 = setClef FClef $ staccato $ scat [c_,g_,c,g_]
-    part2 = setClef CClef $ staccato $ scat [ab_,eb,d,a]
-    part3 = setClef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
+    part1 = clef FClef $ staccato $ scat [c_,g_,c,g_]
+    part2 = clef CClef $ staccato $ scat [ab_,eb,d,a]
+    part3 = clef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
 in compress 8 $ part1 |> part2 |> part3
 ```
 
-To set the clef for a preexisting passage in an existing score, use @[setClefDuring].
+To set the clef for a preexisting passage in an existing score, use @[clefDuring].
 
 ```music+haskell
-setClefDuring (0.25 <-> 0.5) CClef $ setClefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
+clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
 ```
 
 ## Time signatures          
 
-TODO
+@[time]
+
+@[compoundTime]
+
+@[timeSignature]
+
+@[timeSignatureDuring]
+
+@[withTimeSignature]
 
 ## Key signatures
 
-```music+haskell
-setKeySignature (key cs True) c |> setKeySignature (key ab False) c
-```
+@[key]
+
+@[keySignature]
+
+@[keySignatureDuring]
+
+@[withKeySignature]
+
+## Tempo
+
+@[metronome]
+
+@[tempo]
+
+@[tempoDuring]
+
+@[withTempo]
+
+@[renderTempo]
+
+## Fermatas
+
+TODO
+
+## Ritardando and accellerando
+
+TODO
+
+## Caesuras and separators
+
+TODO
+
 
 ## Rehearsal marks
 
 TODO
 
-## Miscellaneous
+@[rehearsalMark]
 
-TODO
+@[rehearsalMarkDuring]
+
+@[withRehearsalMark]
+
+## Bars
+
+There is generally no need to enter bars explicitly, as this information can be inferred from other meta-information. Generally, the following meta-events (in any part), will force a change of bar:
+
+* Key signature changes
+* Time signature changes
+* Tempo changes
+* Rehearsal marks
+
+However, the user may also enter explicit bar lines using the following functions:
+
+@[barline]
+
+@[doubleBarline]
+
+@[finalBarline]
+
+Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted as in:
+
+```music+haskell
+compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,e,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
+```
+
+TODO adapt getBarDurations and getBarTimeSignatures to actually do this
+
+TODO repeats
+
+
+## Annotations
+
+Annotations are simply textual values attached to a specific section of the score. In contrast to other types of meta-information annotations always apply to the whole score, not to a single part. To annotate a score use @[annotate], to annotate a specific span, use @[annotateSpan].
+
+Annotations are invisible by default. To show annotations in the generated output, use
+@[showAnnotations].
+
+```music+haskell
+showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
+```
+
+## Custom meta-information
+
+Meta-information is not restricted to the types described above. In fact, the user can add meta-information of any type that satisfies the `IsAttribute` constraint, including user-defined types. Each type of meta-information is stored separately from other types, and is invisible to the user by default. You might think of each score as having one an infinite set of associated meta-scores, each containing both part-specific and global meta information.
+
+Meta-information is required to implement `Monoid`. The `mempty` value is used as a default value for the type, while the `mappend` function is used to combine the default value and all values added by the user.
+
+@[addMetaNote]
+
+@[addGlobalMetaNote]
+
+@[withMeta]
+
+@[withGlobalMeta]
+
+@[withMetaAtStart]
+
+@[withGlobalMetaAtStart]
+
+Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
+
+TODO unexpected results with filter and recompose, solve by using a good Monoid, see issue 103
+
 
 # Import and export
 
 The standard distribution (installed as part of `music-preludes`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
 
-The conventions for input or output formats is similar to the convention for properties (TODO ref above): for any type `a` and format `T a`, input formats are defined by a class or constraint `IsT`, and output by a format `HasT a`. For example, types that can be exported to Lilypond are defined by the constraint `HasLilypond a`, while types that can be imported from MIDI are defined by the constraint `IsMidi a`.
+The conventions for input or output formats is similar to the convention for properties (TODO ref above): for any type `a` and format `T a`, input formats are defined by an *is* constraint, and output format by a *has* constraint. For example, types that can be exported to Lilypond are defined by the constraint `HasLilypond a`, while types that can be imported from MIDI are defined by the constraint `IsMidi a`.
 
 ## MIDI
 
@@ -854,7 +1011,7 @@ let
     part1 = pres1 |> pres2
     part2 = pres1 |> pres2
 
-in setClef CClef $ dynamics pp $ compress 2 $ part1 |> toLydian part2
+in clef CClef $ dynamics pp $ compress 2 $ part1 |> toLydian part2
 ```
 
 <!--
