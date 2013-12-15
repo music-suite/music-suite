@@ -37,11 +37,11 @@ module Music.Score.Meta.Time (
         toSimpleTime,
         getTimeSignature,
 
-        -- ** Adding time signature to scores
+        -- * Adding time signature to scores
         timeSignature,
         timeSignatureDuring,
 
-        -- ** Extracting time signatures
+        -- * Extracting time signatures
         withTimeSignature,
         getTimeSignatures,
         getTimeSignatureChanges,
@@ -147,17 +147,22 @@ toSimpleTime :: TimeSignature -> TimeSignature
 toSimpleTime = fromRational . toRational
 
 -- | Extract the components of a time signature. Semantic function.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (getTimeSignature -> (beats, noteValue)) = ...
+--
 getTimeSignature :: TimeSignature -> ([Integer], Integer)
 getTimeSignature (TimeSignature x) = x
 
--- | Set the sime signature of the given score.
+-- | Set the time signature of the given score.
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (start <-> offset x) c x
 
 -- use (onset x <-> offset x) instead of (start <-> offset x)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
 
--- | Set the sime signature of the given part of a  score.
+-- | Set the time signature of the given part of a  score.
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 
@@ -167,18 +172,14 @@ getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
--- | Extract the time signature in from the given score, using the given default time signature.
+-- | Extract the time signature from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
-
 
 
 -- activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
 optionLast = Option . Just . Last
 unOptionLast = fmap getLast . getOption
-
-
-
 
 getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
 getBarDurations = fmap realToFrac . getBarTimeSignatures

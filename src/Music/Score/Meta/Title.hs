@@ -37,7 +37,7 @@ module Music.Score.Meta.Title (
         getTitle,
         getTitleAt,    
 
-        -- ** Adding titles to scores
+        -- * Adding titles to scores
         title,
         titleDuring,
         subtitle,
@@ -45,7 +45,7 @@ module Music.Score.Meta.Title (
         subsubtitle,
         subsubtitleDuring,        
         
-        -- ** Extracting titles
+        -- * Extracting titles
         withTitle,        
   ) where
 

@@ -27,14 +27,23 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Tempo (
-        Tempo,
+        -- * Tempo type
         Bpm,
+        NoteValue,
+        Tempo,
         metronome,
+        tempoNoteValue,
+        tempoBeatsPerMinute,
+        getTempo,
+
+        -- * Adding tempo to scores
         tempo,
         tempoDuring,
-        tempoToDur,
-        renderTempo,
         withTempo,       
+
+        -- * Utility
+        tempoToDuration,
+        -- renderTempo,
   ) where
 
 
@@ -69,17 +78,16 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
-type Bpm = Duration
+type Bpm       = Duration
+type NoteValue = Duration
 
--- | 
--- Represents musical tempo as a metronome mark with an optional string name.
---
+-- | Represents musical tempo as a metronome mark with an optional string name.
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
     deriving (Eq, Ord, Typeable)
 -- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
 
 instance Show Tempo where
-    show (tempoToFrac -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
+    show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
         where
             showR (realToFrac -> (unRatio -> (x, 1))) = show x
             showR (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
@@ -87,26 +95,52 @@ instance Show Tempo where
 instance Default Tempo where
     def = metronome (1/1) 60
 
+-- | Create a tempo from a duration and a number of beats per minute.
+--   
+--   For example @metronome (1/2) 48@ means 48 half notes per minute.
 metronome :: Duration -> Bpm -> Tempo
 metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
+-- | Get the note value indicated by a tempo.
+tempoNoteValue :: Tempo -> Maybe NoteValue
+tempoNoteValue (Tempo n nv d) = nv
+
+-- | Get the number of beats per minute indicated by a tempo.
+tempoBeatsPerMinute :: Tempo -> Bpm
+tempoBeatsPerMinute = snd . getTempo
+
+-- | Get the note value and number of beats per minute indicated by a tempo.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (getTempo -> (nv, bpm)) = ...
+--
+getTempo :: Tempo -> (NoteValue, Bpm)
+getTempo (Tempo _ Nothing x)   = ((1/4), x * 60 / (1/4))
+getTempo (Tempo _ (Just nv) x) = (nv, (60 * recip x) / nv)
+
+-- | Convert a tempo to a duration suitable for converting written to sounding durations.
+-- 
+-- > stretch (tempoToDuration t) notation = sounding
+-- > compress (tempoToDuration t) sounding = notation
+-- 
+tempoToDuration :: Tempo -> Duration
+tempoToDuration (Tempo _ _ x) = x
+
+-- | Set the tempo of the given score.
 tempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
 tempo c x = tempoDuring (era x) c x
 
+-- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
-tempoToFrac :: Tempo -> (Duration, Bpm)
-tempoToFrac (Tempo _ Nothing x)   = ((1/4), x * 60 / (1/4))
-tempoToFrac (Tempo _ (Just nv) x) = (nv, (60 * recip x) / nv)
-
--- stretch (tempoToDur t) notation = sounding
-tempoToDur :: Tempo -> Duration
-tempoToDur (Tempo _ _ x) = x
-
-renderTempo :: Score a -> Score a
-renderTempo = withTempo (stretch . tempoToDur)
-
+-- | Extract the tempo from the given score, using the given default time signature. 
 withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
 withTempo f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
+
+-- TODO must scale and move
+renderTempo :: Score a -> Score a
+renderTempo = withTempo (stretch . tempoToDuration)
+
 
