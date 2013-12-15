@@ -782,7 +782,7 @@ in compress 8 $ part1 |> part2 |> part3
 To set the clef for a preexisting passage in an existing score, use @[clefDuring].
 
 ```music+haskell
-clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
+clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
 ```
 
 ## Annotations
