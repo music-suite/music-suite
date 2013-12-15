@@ -26,8 +26,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Export.Midi (
-        HasMidiProgram(..),
         HasMidi(..),
+        HasMidiPart,
+        HasMidiProgram(..),
         toMidi,
         toMidiTrack,
         writeMidi,
@@ -84,9 +85,11 @@ import qualified Text.Pretty as Pretty
 import qualified Data.Map as Map
 import qualified Data.List as List
 
--- |
--- Class of part types with an associated MIDI program number.
---
+
+-- | Class of types with MIDI-compatible parts.
+type HasMidiPart a = (HasPart' a, HasMidiProgram (Part a))
+
+-- | Class of part types with an associated MIDI program number.
 class HasMidiProgram a where
     getMidiChannel :: a -> Midi.Channel
     getMidiProgram :: a -> Midi.Preset
@@ -159,11 +162,10 @@ instance HasMidi a => HasMidi (SlideT a) where
     getMidi (SlideT (_,_,a,_,_))                    = getMidi a
 
 
-
 -- |
 -- Convert a score to a MIDI file representation.
 --
-toMidi :: forall a . (HasPart' a, HasMidiProgram (Part a), HasMidi a) => Score a -> Midi.Midi
+toMidi :: forall a . (HasMidiPart a, HasMidi a) => Score a -> Midi.Midi
 toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
     where
         -- Each track needs TrackEnd
@@ -196,7 +198,7 @@ toMidiTrack = track . fmap (\(t,_,m) -> (t, m)) . perform . getMidiScore
 -- |
 -- Convert a score MIDI and write to a file.
 --
-writeMidi :: (HasPart' a, HasMidiProgram (Part a), HasMidi a) => FilePath -> Score a -> IO ()
+writeMidi :: (HasMidiPart a, HasMidi a) => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
 -- |
