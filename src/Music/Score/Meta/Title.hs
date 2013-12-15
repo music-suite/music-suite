@@ -42,6 +42,8 @@ module Music.Score.Meta.Title (
         titleDuring,
         subtitle,
         subtitleDuring,        
+        subsubtitle,
+        subsubtitleDuring,        
         
         -- ** Extracting titles
         withTitle,        
