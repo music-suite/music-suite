@@ -328,7 +328,7 @@ toLy sc =
         addClefs p = (,) p . setClef . fmap addClefT
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
-        timeSigs = getTimeSignature (time 4 4) sc -- 4/4 is default
+        timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
         barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
 
@@ -354,7 +354,7 @@ voiceToLy barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap ba
     where
         -- FIXME compounds                      
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTime -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
         
 
 barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond

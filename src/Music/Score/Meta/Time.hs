@@ -35,14 +35,14 @@ module Music.Score.Meta.Time (
         isSimpleTime,
         isCompoundTime,
         toSimpleTime,
-        getTime,
+        getTimeSignature,
 
         -- ** Adding time signature to scores
         timeSignature,
         timeSignatureDuring,
 
         -- ** Extracting time signatures
-        getTimeSignature,
+        getTimeSignatures,
         getTimeSignatureChanges,
         withTimeSignature,
         
@@ -147,8 +147,8 @@ toSimpleTime :: TimeSignature -> TimeSignature
 toSimpleTime = fromRational . toRational
 
 -- | Extract the components of a time signature. Semantic function.
-getTime :: TimeSignature -> ([Integer], Integer)
-getTime (TimeSignature x) = x
+getTimeSignature :: TimeSignature -> ([Integer], Integer)
+getTimeSignature (TimeSignature x) = x
 
 -- | Set the sime signature of the given score.
 timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
@@ -161,8 +161,8 @@ timeSignature c x = timeSignatureDuring (start <-> offset x) c x
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 
-getTimeSignature :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignature def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
+getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta

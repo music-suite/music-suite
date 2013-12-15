@@ -283,7 +283,7 @@ toXml sc =
         addClefs = setClef . fmap addClefT
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
-        timeSigs = getTimeSignature (time 4 4) sc -- 4/4 is default
+        timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
         barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
 
@@ -311,7 +311,7 @@ voiceToXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barT
     where                          
         -- FIXME compounds                      
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTime -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
 
         addStartInfo []     = []
         addStartInfo (x:xs) = (startInfo <> x):xs
