@@ -32,6 +32,9 @@ module Music.Score.Meta.Time (
         TimeSignature,
         time,
         compoundTime,
+        isSimpleTime,
+        isCompoundTime,
+        toSimpleTime,
         getTime,
 
         -- ** Adding time signature to scores
@@ -84,7 +87,10 @@ newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Typeable)
 
 mapNums   f (TimeSignature (m,n)) = TimeSignature (f m, n)
-mapDenoms f (TimeSignature (m,n)) = TimeSignature (m, f n)
+mapDenom  f (TimeSignature (m,n)) = TimeSignature (m, f n)
+isSimple    (TimeSignature ([_],_)) = True
+isSimple    _                       = False
+getSimple   (TimeSignature ([m],n)) = m `div` n
 
 -- TODO move
 liftRational f = fromRational . f . toRational
@@ -92,24 +98,25 @@ liftRational2 f x y = fromRational $ toRational x `f` toRational y
 
 instance Num TimeSignature where
     x + y | x `haveSameDenominator` y   = concatFrac x y
-          | otherwise                   = addFrac x y
+          | otherwise                   = liftRational2 (+) x y
         where
             TimeSignature (_,n1) `haveSameDenominator` TimeSignature (_,n2) = n1 == n2
             TimeSignature (m1,n) `concatFrac` TimeSignature (m2,_) = TimeSignature (m1 <> m2, n)
-            addFrac = liftRational2 (+)
     
-    -- TODO if second element is simple, use mapNums instead
-    (*) = liftRational2 (+)
+    x * y | isSimple y = mapNums (fmap (* (getSimple y))) x
+          | otherwise  = liftRational2 (*) x y
 
     negate  = liftRational negate
     abs     = liftRational abs
     signum  = liftRational signum
     fromInteger x = TimeSignature ([x], 1)
+
 instance Fractional TimeSignature where
     fromRational (unRatio -> (m, n)) = TimeSignature ([m], n)
 
-    -- TODO if second element is simple, use mapNums instead
-    (/) = liftRational2 (/)
+    x / y | isSimple y = mapDenom (* (getSimple y)) x
+          | otherwise  = liftRational2 (/) x y
+
 instance Real TimeSignature where
     toRational (TimeSignature (xs, x)) = sum xs % x
 
@@ -124,6 +131,20 @@ time x y = TimeSignature ([x], y)
 -- | Create a compound time signature.
 compoundTime :: [Integer] -> Integer -> TimeSignature
 compoundTime = curry TimeSignature
+
+-- | Whether this is a simple time signature.
+isSimpleTime :: TimeSignature -> Bool
+isSimpleTime (TimeSignature ([_],_)) = True
+isSimpleTime _                       = False
+
+-- | Whether this is a compound time signature.
+isCompoundTime :: TimeSignature -> Bool
+isCompoundTime = not . isSimpleTime
+
+-- | Convert to a simple time signature by adding all numerators.
+--   If given a simple time signature, returns it.
+toSimpleTime :: TimeSignature -> TimeSignature
+toSimpleTime = fromRational . toRational
 
 -- | Extract the components of a time signature. Semantic function.
 getTime :: TimeSignature -> ([Integer], Integer)
