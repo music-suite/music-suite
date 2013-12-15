@@ -31,6 +31,8 @@ module Music.Score.Meta.Key (
         Fifths,
         KeySignature,
         key,
+        isMajorKey,
+        isMinorKey,
 
         -- * Adding key signatures to scores
         keySignature,
@@ -105,12 +107,19 @@ instance IsPitch Fifths where
 
         _      -> error "Strange number of Fifths"
 
+-- | A key signature, represented by number of fifths from C and mode.
 newtype KeySignature = KeySignature (Fifths, Bool)
     deriving (Eq, Ord, Typeable)
 
--- | Create a key signature.
+-- | Create a major or minor signature.
 key :: Fifths -> Bool -> KeySignature
 key fifths mode = KeySignature (fifths, mode)
+
+isMajorKey :: KeySignature -> Bool
+isMajorKey (KeySignature (_,x)) = x
+
+isMinorKey :: KeySignature -> Bool
+isMinorKey = not . isMajorKey
 
 -- | Set the key signature of the given score.
 keySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
