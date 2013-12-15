@@ -27,10 +27,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.RehearsalMark (
-        -- rehearsal mark
+        -- * Rehearsal mark type
         RehearsalMark,
+        
+        -- * Adding rehearsal marks to scores
         rehearsalMark,
         rehearsalMarkDuring,
+
+        -- * Extracting rehearsal marks
         withRehearsalMark,       
   ) where
 

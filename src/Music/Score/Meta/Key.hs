@@ -27,13 +27,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Key (
-        
+        -- * Key signature type
         Fifths,
         KeySignature,
         key,
+
+        -- * Adding key signatures to scores
         keySignature,
         keySignatureDuring,
-
+        
+        -- * Extracting key signatures
         withKeySignature,
   ) where
 
@@ -105,15 +108,19 @@ instance IsPitch Fifths where
 newtype KeySignature = KeySignature (Fifths, Bool)
     deriving (Eq, Ord, Typeable)
 
+-- | Create a key signature.
 key :: Fifths -> Bool -> KeySignature
 key fifths mode = KeySignature (fifths, mode)
 
+-- | Set the key signature of the given score.
 keySignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => KeySignature -> a -> a
 keySignature c x = keySignatureDuring (era x) c x
 
+-- | Set the key signature of the given part of a score.
 keySignatureDuring :: (HasMeta a, HasPart' a) => Span -> KeySignature -> a -> a
 keySignatureDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
+-- | Extract all key signatures from the given score, using the given default key signature. 
 withKeySignature :: KeySignature -> (KeySignature -> Score a -> Score a) -> Score a -> Score a
 withKeySignature def f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
 

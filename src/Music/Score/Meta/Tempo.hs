@@ -39,6 +39,8 @@ module Music.Score.Meta.Tempo (
         -- * Adding tempo to scores
         tempo,
         tempoDuring,
+        
+        -- * Extracting tempo
         withTempo,       
 
         -- * Utility
@@ -135,7 +137,7 @@ tempo c x = tempoDuring (era x) c x
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
 tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ Last c))
 
--- | Extract the tempo from the given score, using the given default time signature. 
+-- | Extract all tempi from the given score, using the given default tempo. 
 withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
 withTempo f = withGlobalMeta (f . fromMaybe def . fmap getLast . getOption)
 

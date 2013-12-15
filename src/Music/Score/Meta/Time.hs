@@ -83,6 +83,17 @@ import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
 
+-- |
+-- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the
+-- form @(a1+a2...)/b@). For simple time signatures just one beat number is used.
+--
+-- TimeSignature is an instance of 'Fractional' and can be used as
+-- follows:
+--
+-- > timeSignature (4/4)
+-- > timeSignature (6/8)
+-- > timeSignature ((3+2)/4)
+--
 newtype TimeSignature = TimeSignature ([Integer], Integer)
     deriving (Eq, Ord, Typeable)
 
@@ -162,7 +173,7 @@ timeSignature c x = timeSignatureDuring (start <-> offset x) c x
 -- use (onset x <-> offset x) instead of (start <-> offset x)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
 
--- | Set the time signature of the given part of a  score.
+-- | Set the time signature of the given part of a score.
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
 
