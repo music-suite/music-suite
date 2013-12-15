@@ -425,18 +425,31 @@ text "pizz." $ c^/2
 
 ## Chords
 
-TODO
+Note with the same onset and offset are rendered as chords by default. If you want to prevent this you must put them in separate parts.
 
 ```music+haskell
-compress 4 $ scat [c,d,e,c] <> scat [e,f,g,e]
+scat [c,d,e,c] <> scat [e,f,g,e] <> scat [g,a,b,g]
 ```
+
+Or, equivalently:
+
+```music+haskell
+pcat [c,e,g] |> pcat [d,f,a] |> pcat [e,g,b] |> pcat [c,e,g]
+```
+
+TODO how part separation works w.r.t. division etc
+
+@[simultaneous]
+
+@[mapSimultaneous]
 
 ## Rests
 
-Sometimes it is useful to work with scores that have a duration but no events.
-This kind of score is represented by `rest` and has the type `Score (Maybe
-Note)`. We use @[removeRests] to convert a `Score (Maybe a)`
-into a `Score a`.
+Similar to chords, there is usually no need to handle rests explicitly.
+
+TODO add explicit rests etc
+
+@[removeRests] 
 
 ```music+haskell
 removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
@@ -675,24 +688,15 @@ composer "Anonymous" $ scat [c,d,e,c]
 composer "Rodgers" $ lyricist "Hammerstein" $ arranger "Bennet" $ scat [c,d,e,c]
 ```
 
+## Key signatures
 
-## Clefs
+@[key]
 
-To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
+@[keySignature]
 
-```music+haskell
-let
-    part1 = clef FClef $ staccato $ scat [c_,g_,c,g_]
-    part2 = clef CClef $ staccato $ scat [ab_,eb,d,a]
-    part3 = clef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
-in compress 8 $ part1 |> part2 |> part3
-```
+@[keySignatureDuring]
 
-To set the clef for a preexisting passage in an existing score, use @[clefDuring].
-
-```music+haskell
-clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
-```
+@[withKeySignature]
 
 ## Time signatures          
 
@@ -705,16 +709,6 @@ clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ 
 @[timeSignatureDuring]
 
 @[withTimeSignature]
-
-## Key signatures
-
-@[key]
-
-@[keySignature]
-
-@[keySignatureDuring]
-
-@[withKeySignature]
 
 ## Tempo
 
@@ -766,13 +760,30 @@ However, the user may also enter explicit bar lines using the following function
 Whenever a bar line is created as a result of a meta-event, an shorted time signature may need to be inserted as in:
 
 ```music+haskell
-compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,e,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
+compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
 ```
 
 TODO adapt getBarDurations and getBarTimeSignatures to actually do this
 
 TODO repeats
 
+## Clefs
+
+To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
+
+```music+haskell
+let
+    part1 = clef FClef $ staccato $ scat [c_,g_,c,g_]
+    part2 = clef CClef $ staccato $ scat [ab_,eb,d,a]
+    part3 = clef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
+in compress 8 $ part1 |> part2 |> part3
+```
+
+To set the clef for a preexisting passage in an existing score, use @[clefDuring].
+
+```music+haskell
+clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
+```
 
 ## Annotations
 
