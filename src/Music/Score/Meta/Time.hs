@@ -42,9 +42,9 @@ module Music.Score.Meta.Time (
         timeSignatureDuring,
 
         -- ** Extracting time signatures
+        withTimeSignature,
         getTimeSignatures,
         getTimeSignatureChanges,
-        withTimeSignature,
         
         -- * Utility
         getBarDurations,
@@ -167,13 +167,7 @@ getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
--- |
--- Extract the time signature in from the given score, using the given default time signature.
---
--- The given function is called once for each time signature change, containing the fragment
--- of the score to which the given time signature change is to be applied. This is mostly
--- used by notation backends to emit a time signature mark at the beginning of each fragment. 
---
+-- | Extract the time signature in from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
 
