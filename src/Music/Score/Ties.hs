@@ -105,21 +105,6 @@ instance Tiable a => Tiable (TieT a) where
     toTied (TieT (prevTie, a, nextTie))   = (TieT (prevTie, b, True), TieT (True, c, nextTie))
          where (b,c) = toTied a
 
--- -- |
--- -- Split all notes that cross a barlines into a pair of tied notes.
--- --
--- splitTies :: (HasPart' a, Tiable a) => Score a -> Score a
--- splitTies = mapParts splitTiesSingle
--- 
--- -- |
--- -- Equivalent to `splitTies` for single-voice scores.
--- -- Fails if the score contains overlapping events.
--- --
--- splitTiesSingle :: Tiable a => Score a -> Score a
--- splitTiesSingle = removeRests . voiceToScore . splitTiesVoice . scoreToVoice
-
-
-
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
 --

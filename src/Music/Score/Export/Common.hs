@@ -73,7 +73,7 @@ import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
 -- |
--- Convert a single-voice score to a list of bars.
+-- Convert a voice to a list of bars.
 --
 voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
 voiceToBars = voiceToBars' (repeat 1)

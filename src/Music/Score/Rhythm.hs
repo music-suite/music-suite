@@ -310,6 +310,7 @@ dotted' n = do
     modifyState $ modifyTimeMod (/ dotMod n)
     return (Dotted n a)
 
+-- | Return the scaling applied to a note with the given number of dots (i.e. 3/2, 7/4 etc).
 dotMod :: Int -> Duration
 dotMod n = dotMods !! (n-1)
 
