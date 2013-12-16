@@ -11,6 +11,7 @@
     FlexibleContexts, 
     GADTs, 
     ViewPatterns,
+    TypeOperators,
     TypeFamilies,
     MultiParamTypeClasses, 
     FlexibleInstances #-}
@@ -37,6 +38,7 @@ module Music.Score.Clef (
 
 import Control.Arrow
 import Control.Monad.Plus       
+import Data.Substitute
 import Data.Pointed
 import Data.Void
 import Data.Maybe
@@ -69,6 +71,8 @@ import Music.Score.Util
 -- Put the given clef in front of the note
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
+
+type instance ClefT a /~ g = ClefT (a /~ g)
 
 instance HasPart a => HasPart (ClefT a) where
     type Part (ClefT a) = Part a

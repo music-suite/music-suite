@@ -7,6 +7,8 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    TypeOperators,
+    TypeFamilies,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -43,6 +45,7 @@ module Music.Score.Dynamics (
   ) where
 
 import Control.Monad
+import Data.Substitute
 import Data.Semigroup
 import Data.Ratio
 import Data.Foldable
@@ -70,6 +73,8 @@ class HasDynamic a where
 -- end cresc/dim, level, begin cresc/dim
 newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+
+type instance DynamicT a /~ g = DynamicT (a /~ g)
 
 instance HasDynamic (DynamicT a) where
     setBeginCresc bc (DynamicT (ec,ed,l,a,_ ,bd))   = DynamicT (ec,ed,l,a,bc,bd)

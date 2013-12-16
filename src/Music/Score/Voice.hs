@@ -7,6 +7,8 @@
     DeriveTraversable, 
     GeneralizedNewtypeDeriving, 
     FlexibleInstances,
+    TypeOperators,
+    TypeFamilies,
     MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
@@ -41,6 +43,7 @@ import Control.Monad
 import Control.Monad.Compose
 import Control.Arrow
 
+import Data.Substitute
 import Data.PairMonad ()
 import Data.Typeable
 import Data.Foldable (Foldable(..), foldMap)
@@ -89,6 +92,10 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
 
 inVoice f = Voice . f . getVoice'
 
+type instance (Voice a) /~ g = Voice (a /~ g)
+type instance Event (Voice a) = a
+
+
 -- |
 -- Create a voice from a list of events.
 -- 
@@ -100,8 +107,6 @@ voice = Voice . fmap (uncurry ev . first realToFrac)
 -- 
 getVoice :: Voice a -> [(Duration, a)]
 getVoice = fmap (first realToFrac . getEv) . getVoice'
-
-type instance Event (Voice a) = a
 
 instance Newtype (Voice a) [Ev a] where
     pack = Voice
@@ -131,6 +136,7 @@ instance HasPitch a => HasPitch (Voice a) where
     type Pitch (Voice a) = Pitch a
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
+    modifyPitch' f   = fmap (modifyPitch' f)
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.

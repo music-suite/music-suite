@@ -7,6 +7,8 @@
     DeriveTraversable, 
     GeneralizedNewtypeDeriving, 
     FlexibleInstances,
+    TypeOperators,
+    TypeFamilies,
     MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
@@ -35,6 +37,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
 import Control.Arrow
+import Data.Substitute
 import Data.Semigroup
 import Data.PairMonad ()
 import Data.Typeable
@@ -82,6 +85,8 @@ newtype Track a = Track { getTrack' :: [Occ a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Monoid, Semigroup, Delayable, Stretchable)
 
 inTrack f = Track . f . getTrack'
+
+type instance (Track a) /~ g = Track (a /~ g)
 
 type instance Event (Track a) = a
 
@@ -152,6 +157,7 @@ instance HasPitch a => HasPitch (Track a) where
     type Pitch (Track a) = Pitch a
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
+    modifyPitch' f   = fmap (modifyPitch' f)
 
 
 

@@ -7,6 +7,8 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    TypeOperators,
+    TypeFamilies,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -39,6 +41,7 @@ module Music.Score.Ties (
 import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus
+import Data.Substitute
 import Data.Default
 import Data.Maybe
 import Data.Ratio
@@ -89,6 +92,8 @@ class Tiable a where
 
 newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
+
+type instance TieT a /~ g = TieT (a /~ g)
 
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }

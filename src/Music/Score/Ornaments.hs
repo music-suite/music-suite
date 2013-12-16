@@ -7,6 +7,8 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    TypeOperators,
+    TypeFamilies,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -49,6 +51,7 @@ module Music.Score.Ornaments (
         glissando,
   ) where
 
+import Data.Substitute
 import Data.Ratio
 import Data.Pointed
 import Data.Foldable
@@ -66,6 +69,8 @@ class HasTremolo a where
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+type instance TremoloT a /~ g = TremoloT (a /~ g)
 
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
@@ -85,6 +90,8 @@ class HasText a where
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+type instance TextT a /~ g = TextT (a /~ g)
 
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
@@ -106,6 +113,8 @@ class HasHarmonic a where
 -- (isNatural, overtone series index where 0 is fundamental)
 newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Bool, Int), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+
+type instance HarmonicT a /~ g = HarmonicT (a /~ g)
 
 instance Pointed HarmonicT where
     point x = HarmonicT ((False, 0), x)
@@ -132,6 +141,8 @@ class HasSlide a where
 
 newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
     deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+
+type instance SlideT a /~ g = SlideT (a /~ g)
 
 instance HasSlide (SlideT a) where
     setBeginGliss bg (SlideT (eg,es,a,_,bs))       = SlideT (eg,es,a,bg,bs)

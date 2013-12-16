@@ -7,6 +7,8 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    TypeFamilies,
+    TypeOperators,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -44,6 +46,7 @@ module Music.Score.Pitch (
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
+import Data.Substitute
 import Data.String
 import Data.Typeable
 import Data.Traversable
@@ -52,6 +55,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Relative
 import Data.Ratio
+import Unsafe.Coerce
 
 import Music.Pitch.Literal
 
@@ -68,15 +72,18 @@ class HasPitch a where
     -- |
     -- Set the pitch of the given value.
     --
-    setPitch :: Pitch a -> a -> a
+    setPitch :: (b ~ (a /~ Pitch b)) => Pitch b -> a -> b
 
     -- |
     -- Modify the pitch of the given value.
     --
-    modifyPitch :: (Pitch a -> Pitch a) -> a -> a
+    modifyPitch :: (b ~ (a /~ Pitch b)) => (Pitch a -> Pitch b) -> a -> b
 
+    modifyPitch' :: (Pitch a -> Pitch a) -> a -> a
+    
     setPitch n = modifyPitch (const n)
-    modifyPitch f x = x
+    -- modifyPitch f x = x
+
 
 type Interval a = Diff (Pitch a)
 
@@ -89,28 +96,31 @@ type HasPitch' a = (
 newtype PitchT p a = PitchT { getPitchT :: (p, a) }
     deriving (Eq, Ord, Show, Functor)
 
+type instance (PitchT f a) /~ g = PitchT g a
+
 instance HasPitch (PitchT p a) where
     type Pitch (PitchT p a) = p
     getPitches (PitchT (v,_))    = [v]
     modifyPitch f (PitchT (v,x)) = PitchT (f v, x)
 
-instance HasPitch ()                        where { type Pitch ()         = ()        ; getPitches = return; modifyPitch = id }
-instance HasPitch Double                    where { type Pitch Double     = Double    ; getPitches = return; modifyPitch = id }
-instance HasPitch Float                     where { type Pitch Float      = Float     ; getPitches = return; modifyPitch = id }
-instance HasPitch Int                       where { type Pitch Int        = Int       ; getPitches = return; modifyPitch = id }
-instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; getPitches = return; modifyPitch = id }
-instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id }
+instance HasPitch ()                        where { type Pitch ()         = ()        ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Double                    where { type Pitch Double     = Double    ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Float                     where { type Pitch Float      = Float     ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Int                       where { type Pitch Int        = Int       ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id; modifyPitch' = id }
 
-instance HasPitch a => HasPitch (a,b) where
-    type Pitch (a,b)  = Pitch a
-    getPitches (a,b)    = getPitches a
-    modifyPitch f (a,b) = (modifyPitch f a,b)
+-- instance HasPitch a => HasPitch (a, b) where
+--     type Pitch (a,b)  = Pitch a
+--     getPitches (a,b)    = getPitches a
+--     modifyPitch f (a,b) = (modifyPitch f a, b)
 
 instance HasPitch a => HasPitch [a] where
     type Pitch [a] = Pitch a
     getPitches []    = error "getPitch: Empty list"
     getPitches as    = concatMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)
+    modifyPitch' f    = fmap (modifyPitch' f)
     
 -- |
 -- Transpose up.
@@ -118,7 +128,7 @@ instance HasPitch a => HasPitch [a] where
 -- > Interval -> Score a -> Score a
 --
 up :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-up a = modifyPitch (.+^ a)
+up a = modifyPitch' (.+^ a)
 
 -- |
 -- Transpose down.
@@ -126,7 +136,7 @@ up a = modifyPitch (.+^ a)
 -- > Interval -> Score a -> Score a
 --
 down :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-down a = modifyPitch (.-^ a)
+down a = modifyPitch' (.-^ a)
 
 -- |
 -- Invert around the given pitch.
@@ -134,7 +144,7 @@ down a = modifyPitch (.-^ a)
 -- > Pitch -> Score a -> Score a
 --
 invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround p = modifyPitch (reflectAround p)
+invertAround p = modifyPitch' (reflectAround p)
 
 -- |
 -- Transpose up by the given number of octaves.

@@ -9,6 +9,7 @@
     ConstraintKinds, 
     ViewPatterns,
     TypeFamilies,
+    TypeOperators,
     FlexibleContexts, 
     MultiParamTypeClasses, 
     FlexibleInstances #-}
@@ -48,6 +49,7 @@ import Control.Comonad
 import Control.Monad
 import Control.Monad.Plus
 import Control.Monad.Compose
+import Data.Substitute
 
 import Data.VectorSpace
 import Data.AffineSpace
@@ -80,6 +82,8 @@ newtype Score a = Score { getScore :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
 inScore f = Score . f . getScore
+
+type instance (Score a) /~ g = Score (a /~ g)
 
 
 -- | Map with the associated time span.
@@ -244,6 +248,7 @@ instance HasPitch a => HasPitch (Score a) where
     type Pitch (Score a) = Pitch a
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
+    modifyPitch' f   = fmap (modifyPitch' f)
 
 instance HasPart a => HasPart (Score a) where
     type Part (Score a) = Part a
