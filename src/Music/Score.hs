@@ -42,12 +42,15 @@ module Music.Score (
 
         -- ** Meta-information
         module Music.Score.Meta,
-        module Music.Score.Meta.Clef,
-        module Music.Score.Meta.Time,
-        module Music.Score.Meta.Key,
-        module Music.Score.Meta.Tempo,
         module Music.Score.Meta.Title,
         module Music.Score.Meta.Attribution,
+        module Music.Score.Meta.RehearsalMark,
+        module Music.Score.Meta.Barline,
+        module Music.Score.Meta.Clef,
+        module Music.Score.Meta.Fermata,
+        module Music.Score.Meta.Key,
+        module Music.Score.Meta.Time,
+        module Music.Score.Meta.Tempo,
         module Music.Score.Annotations,
         module Music.Score.Clef,
 
@@ -91,12 +94,15 @@ import Music.Score.Combinators
 import Music.Score.Convert
 import Music.Score.Chord
 import Music.Score.Meta
-import Music.Score.Meta.Clef
-import Music.Score.Meta.Time
-import Music.Score.Meta.Key
-import Music.Score.Meta.Tempo
 import Music.Score.Meta.Title
 import Music.Score.Meta.Attribution
+import Music.Score.Meta.RehearsalMark
+import Music.Score.Meta.Barline
+import Music.Score.Meta.Clef
+import Music.Score.Meta.Fermata
+import Music.Score.Meta.Key
+import Music.Score.Meta.Time
+import Music.Score.Meta.Tempo
 import Music.Score.Annotations
 import Music.Score.Clef
 import Music.Score.Pitch

@@ -26,13 +26,15 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Meta.Barlines (
+module Music.Score.Meta.Barline (
         -- * Barline type
         BarlineType(..),
         Barline,
 
         -- ** Adding barlines to scores
         barline,
+        doubleBarline,
+        finalBarline,
         barlineDuring,
         
         -- ** Extracting barlines
@@ -77,12 +79,15 @@ import Music.Pitch.Literal
 data Barline = Barline BarlineType
     deriving (Eq, Ord, Show, Typeable)
 
-data BarlineType = StandardBarline | DoubleBarline
+data BarlineType = StandardBarline | DoubleBarline | FinalBarline
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
 barline c x = barlineDuring (era x) c x
+
+doubleBarline = undefined
+finalBarline = undefined
 
 -- | Add a barline to the given score.
 barlineDuring :: (HasMeta a, HasPart' a) => Span -> Barline -> a -> a
