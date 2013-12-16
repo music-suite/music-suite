@@ -17,6 +17,12 @@ class HasFoo a where
     setFoo    :: (b ~ (UnFoo a (Foo b))) => Foo b -> a -> b
     modifyFoo :: (b ~ (UnFoo a (Foo b))) => (Foo a -> Foo b) -> a -> b
 
+-- modifyFoo' :: (HasFoo a, a ~ b, Foo a ~ Foo b) => (Foo a -> Foo b) -> a -> b
+-- modifyFoo' f x = setFoo (getFoo x) x
+
+-- modifyFoo' :: (HasFoo a, Foo (UnFoo a fooB) ~ fooB) => (Foo a -> fooB) -> a -> UnFoo a fooB
+-- modifyFoo' = modifyFoo
+
 class HasBar a where
     type Bar a
     type UnBar a b
