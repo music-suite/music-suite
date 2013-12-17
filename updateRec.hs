@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 import Data.Set(Set)
 import Data.Map(Map)
@@ -91,6 +90,12 @@ instance HasFoo a => HasFoo (BarT b a) where
     type SetFoo c (BarT b a) = BarT b (SetFoo c a)
     getFoo (BarT _ x) = getFoo x
     setFoo f (BarT b x) = BarT b (setFoo f x)
+
+instance HasBar a => HasBar (FooT b a) where
+    type Bar (FooT b a) = Bar a
+    type SetBar c (FooT b a) = FooT b (SetBar c a)
+    getBar (FooT _ x) = getBar x
+    setBar f (FooT b x) = FooT b (setBar f x)
 
 
         
