@@ -29,7 +29,7 @@ modifyFoo :: (HasFoo a, b ~ SetFoo (Foo b) a) => (Foo a -> Foo b) -> a -> b
 modifyFoo f x = setFoo (f $ getFoo x) x
 
 modifyFoo' :: HasFoo a => (Foo a -> Foo a) -> a -> a
-modifyFoo' f x = setFoo' (f $ getFoo x) x
+modifyFoo' = modifyFoo
 
 data FooT f a = FooT f a
 
