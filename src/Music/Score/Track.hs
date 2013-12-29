@@ -157,8 +157,8 @@ instance HasPitch a => HasPitch (Track a) where
     type Pitch      (Track a) = Pitch a
     type SetPitch g (Track a) = Track (SetPitch g a)
     getPitches      = F.foldMap getPitches
-    modifyPitch f   = fmap (modifyPitch f)
-    modifyPitch' f   = fmap (modifyPitch' f)
+    mapPitch f   = fmap (mapPitch f)
+    mapPitch' f   = fmap (mapPitch' f)
 
 
 

@@ -136,8 +136,8 @@ instance HasPitch a => HasPitch (Voice a) where
     type Pitch (Voice a) = Pitch a
     type SetPitch g (Voice a) = Voice (SetPitch g a)
     getPitches      = F.foldMap getPitches
-    modifyPitch f   = fmap (modifyPitch f)
-    modifyPitch' f   = fmap (modifyPitch' f)
+    mapPitch f   = fmap (mapPitch f)
+    mapPitch' f   = fmap (mapPitch' f)
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
