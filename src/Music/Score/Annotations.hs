@@ -44,6 +44,7 @@ import Data.Void
 import Data.Semigroup
 import Data.Typeable
 import Data.String
+import qualified Data.List
 
 import Music.Time
 import Music.Time.Reactive
@@ -55,12 +56,15 @@ import Music.Score.Ornaments (HasText, text)
 import Music.Score.Meta
 
 -- | 
---   An annotation is a simple textual values attached to parts of a score.
+--   An annotation is a unique textual value attached to parts of a score.
 --   They are ignored by default, but can be collected with 'withAnnotations'.
 --
-newtype Annotation = Annotation { getAnnotation :: [String] }
+newtype Annotation = Annotation { getAnnotation_ :: [String] }
     deriving (Semigroup, Monoid, Typeable)
 instance IsString Annotation where fromString = Annotation . return
+
+getAnnotation :: Annotation -> [String]
+getAnnotation = Data.List.nub . getAnnotation_
 
 -- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
