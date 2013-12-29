@@ -29,6 +29,9 @@
 module Music.Score.Pitch (     
         -- * Pitch representation
         HasPitch(..),
+        modifyPitch',
+        modifyPitch,
+        
         Interval,  
         HasPitch',
         PitchT(..),
@@ -59,30 +62,24 @@ import Unsafe.Coerce
 
 import Music.Pitch.Literal
 
-class HasPitch a where
+class (SetPitch (Pitch a) a ~ a) => HasPitch a where
 
     -- | Associated pitch type. Should normally implement 'Ord', 'Show' and 'AffineSpace'.
-    type Pitch a :: *
+    type Pitch    s
+    type SetPitch b s
 
-    -- |
-    -- Get the pitches of the given value.
-    --
+
     getPitches :: a -> [Pitch a]
 
-    -- |
-    -- Set the pitch of the given value.
-    --
-    setPitch :: (b ~ (a /~ Pitch b)) => Pitch b -> a -> b
+    setPitch' :: Pitch a -> a -> a
+    setPitch :: (b ~ SetPitch (Pitch b) a) => Pitch b -> a -> b
+    setPitch' = setPitch
 
-    -- |
-    -- Modify the pitch of the given value.
-    --
-    modifyPitch :: (b ~ (a /~ Pitch b)) => (Pitch a -> Pitch b) -> a -> b
+    modifyPitch :: (HasPitch a, b ~ SetPitch (Pitch b) a) => (Pitch a -> Pitch b) -> a -> b
+    modifyPitch f x = setPitch (f $ head $ getPitches x) x -- TODO
 
-    modifyPitch' :: (Pitch a -> Pitch a) -> a -> a
-    
-    setPitch n = modifyPitch (const n)
-    -- modifyPitch f x = x
+    modifyPitch' :: HasPitch a => (Pitch a -> Pitch a) -> a -> a
+    modifyPitch' = modifyPitch
 
 
 type Interval a = Diff (Pitch a)
@@ -96,19 +93,18 @@ type HasPitch' a = (
 newtype PitchT p a = PitchT { getPitchT :: (p, a) }
     deriving (Eq, Ord, Show, Functor)
 
-type instance (PitchT f a) /~ g = PitchT g a
-
 instance HasPitch (PitchT p a) where
-    type Pitch (PitchT p a) = p
+    type Pitch      (PitchT f a) = f
+    type SetPitch g (PitchT f a) = PitchT g a 
     getPitches (PitchT (v,_))    = [v]
     modifyPitch f (PitchT (v,x)) = PitchT (f v, x)
 
-instance HasPitch ()                        where { type Pitch ()         = ()        ; getPitches = return; modifyPitch = id; modifyPitch' = id }
-instance HasPitch Double                    where { type Pitch Double     = Double    ; getPitches = return; modifyPitch = id; modifyPitch' = id }
-instance HasPitch Float                     where { type Pitch Float      = Float     ; getPitches = return; modifyPitch = id; modifyPitch' = id }
-instance HasPitch Int                       where { type Pitch Int        = Int       ; getPitches = return; modifyPitch = id; modifyPitch' = id }
-instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; getPitches = return; modifyPitch = id; modifyPitch' = id }
-instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch ()                        where { type Pitch ()         = ()        ; type SetPitch b () = () ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Double                    where { type Pitch Double     = Double    ; type SetPitch b Double = Double ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Float                     where { type Pitch Float      = Float     ; type SetPitch b Float = Float ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Int                       where { type Pitch Int        = Int       ; type SetPitch b Int = Int ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; type SetPitch b Integer = Integer ; getPitches = return; modifyPitch = id; modifyPitch' = id }
+instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; type SetPitch b (Ratio a) = (Ratio a) ; getPitches = return; modifyPitch = id; modifyPitch' = id }
 
 -- instance HasPitch a => HasPitch (a, b) where
 --     type Pitch (a,b)  = Pitch a
@@ -117,6 +113,7 @@ instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Rat
 
 instance HasPitch a => HasPitch [a] where
     type Pitch [a] = Pitch a
+    type SetPitch g [a] = [SetPitch g a]
     getPitches []    = error "getPitch: Empty list"
     getPitches as    = concatMap getPitches as
     modifyPitch f    = fmap (modifyPitch f)

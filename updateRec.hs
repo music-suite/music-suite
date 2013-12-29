@@ -24,11 +24,11 @@ class (SetFoo (Foo a) a ~ a) => HasFoo a where
     setFoo :: (b ~ SetFoo (Foo b) a) => Foo b -> a -> b
     setFoo' = setFoo
 
-modifyFoo :: (HasFoo a, b ~ SetFoo (Foo b) a) => (Foo a -> Foo b) -> a -> b
-modifyFoo f x = setFoo (f $ getFoo x) x
+    modifyFoo :: (HasFoo a, b ~ SetFoo (Foo b) a) => (Foo a -> Foo b) -> a -> b
+    modifyFoo f x = setFoo (f $ getFoo x) x
 
-modifyFoo' :: HasFoo a => (Foo a -> Foo a) -> a -> a
-modifyFoo' = modifyFoo
+    modifyFoo' :: HasFoo a => (Foo a -> Foo a) -> a -> a
+    modifyFoo' = modifyFoo
 
 data FooT f a = FooT f a
 

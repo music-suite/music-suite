@@ -154,7 +154,8 @@ instance Arbitrary a => Arbitrary (Track a) where
         return $ delay t $ stretch d $ return x
 
 instance HasPitch a => HasPitch (Track a) where
-    type Pitch (Track a) = Pitch a
+    type Pitch      (Track a) = Pitch a
+    type SetPitch g (Track a) = Track (SetPitch g a)
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
     modifyPitch' f   = fmap (modifyPitch' f)

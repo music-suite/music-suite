@@ -246,6 +246,7 @@ instance Arbitrary a => Arbitrary (Score a) where
 
 instance HasPitch a => HasPitch (Score a) where
     type Pitch (Score a) = Pitch a
+    type SetPitch g (Score a) = Score (SetPitch g a)
     getPitches      = F.foldMap getPitches
     modifyPitch f   = fmap (modifyPitch f)
     modifyPitch' f   = fmap (modifyPitch' f)
