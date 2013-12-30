@@ -86,8 +86,10 @@ class (SetPitch (Pitch a) a ~ a) => HasPitch a where
 
 
     getPitch = head . getPitches
+    
+    -- mapPitch f x = setPitch (f $ head $ getPitches x) x -- TODO
+    setPitch x = mapPitch (const x)
     setPitch' = setPitch
-    mapPitch f x = setPitch (f $ head $ getPitches x) x -- TODO
     mapPitch' = mapPitch
 
 modifyPitch = mapPitch
@@ -100,22 +102,15 @@ modifyPitch' = mapPitch'
 -- > pitch :: HasPitch a => Lens' a (Pitch a)
 -- > pitch :: (b ~ SetPitch (Pitch b) a, HasPitch a, HasPitch b) => Lens a b (Pitch a) (Pitch b)
 pitch :: (Functor f, HasPitch a, b ~ (SetPitch (Pitch b) a)) => (Pitch a -> f (Pitch b)) -> a -> f b
-pitch f x =
-    let a1 = getPitch x -- :: Pitch a
-        a2 = f a1       -- :: f (Pitch b)
-        a3 = fmap (\thePitch -> setPitch thePitch x) a2 -- :: f b
-    in a3
+pitch f x = fmap (`setPitch` x) $ f (getPitch x)
+
 -- |
 -- Traversal all pitches in the given value.
 --
 -- > pitches :: HasPitch a => Traversal' a (Pitch a)
 -- > pitches :: (b ~ SetPitch (Pitch b) a, HasPitch a, HasPitch b) => Traversal a b (Pitch a) (Pitch b)
 pitches :: (Applicative f, HasPitch a, b ~ (SetPitch (Pitch b) a)) => (Pitch a -> f (Pitch b)) -> a -> f b
-pitches f x = 
-    let a1 = getPitches x  -- :: [Pitch a]
-        a2 = traverse f a1 -- :: f [Pitch b]
-        a3 = fmap (\xs -> setPitch (head xs) x) a2 -- :: f b
-    in a3
+pitches f x = fmap ((flip setPitch x) . head) $ traverse f (getPitches x)
 
 
 type Interval a = Diff (Pitch a)
