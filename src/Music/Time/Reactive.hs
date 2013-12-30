@@ -79,10 +79,10 @@ import Music.Dynamics.Literal
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)
 
-instance Delayable a => Delayable (Reactive a) where
+instance Delayable (Reactive a) where
     delay n (Reactive (t,r)) = Reactive (delay n t, delay n r)
 
-instance Stretchable a => Stretchable (Reactive a) where
+instance Stretchable (Reactive a) where
     stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
 
 instance Newtype (Reactive a) ([Time], Time -> a) where
