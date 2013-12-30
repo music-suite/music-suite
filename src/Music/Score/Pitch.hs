@@ -2,6 +2,7 @@
 {-# LANGUAGE
     CPP,
     TypeFamilies,
+    BangPatterns,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
@@ -38,6 +39,9 @@ module Music.Score.Pitch (
         mapPitch',
         pitch,
         pitches,
+        highestPitch,
+        lowestPitch,
+        meanPitch,
 
         -- * Pitch transformer
         PitchT(..),
@@ -204,3 +208,11 @@ octavesDown     :: (HasPitch' a, IsInterval (Interval a)) =>
 octavesUp a     = up (_P8^*a)
 octavesDown a   = down (_P8^*a)
 
+
+highestPitch = maximum . getPitches
+lowestPitch = maximum . getPitches
+meanPitch = mean . getPitches
+
+
+mean :: Floating a => [a] -> a
+mean x = fst $ foldl (\(!m, !n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
