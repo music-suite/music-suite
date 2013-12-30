@@ -246,7 +246,6 @@ instance HasPitch a => HasPitch (Score a) where
     type SetPitch g (Score a) = Score (SetPitch g a)
     getPitches      = F.foldMap getPitches
     mapPitch f   = fmap (mapPitch f)
-    mapPitch' f   = fmap (mapPitch' f)
 
 instance HasPart a => HasPart (Score a) where
     type Part (Score a) = Part a
