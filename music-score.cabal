@@ -74,6 +74,7 @@ library
         Music.Time.Time
         Music.Time.Span
         Music.Time.Reactive
+        Music.Time.Behavior
 
         Music.Score.Rhythm
         

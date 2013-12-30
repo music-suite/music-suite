@@ -43,13 +43,19 @@ module Music.Time.Reactive (
         switch,
         activate,
         noteToReactive,
+        during,
+        since,
+        until,
         -- renderR,
         -- printR,
         splitReactive,
   ) where
 
+import Prelude hiding (until)
+
 import Control.Newtype                
 import Control.Applicative
+import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus       
 import Control.Monad.Compose
@@ -120,18 +126,31 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
 
 
 
+-- TODO rename during
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
+
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (getNote -> (range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
         turnOn  = switch start
         turnOff = switch stop
 
-noteToReactive :: Monoid a => Note a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
+during :: Monoid a => Note a -> Reactive a
+during = noteToReactive
 
+since :: Monoid a => Time -> Reactive a -> Reactive a
+since start x = switch start mempty x
+
+until :: Monoid a => Time -> Reactive a -> Reactive a
+until stop x = switch stop x mempty
 
 renderR :: Reactive a -> (a, [(Time, a)])
-renderR r = (initial r, updates r)
+renderR = initial &&& updates
+
+renderR2 :: Reactive a -> ([Time], Time -> a)
+renderR2 = occs &&& (?)
 
 printR :: Show a => Reactive a -> IO ()
 printR r = let (x, xs) = renderR r in do
