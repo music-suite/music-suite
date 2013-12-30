@@ -61,7 +61,6 @@ library
     default-language: Haskell2010
     exposed-modules:
         Data.PairMonad
-        Data.Substitute
         Control.Monad.Compose
         
         Music.Time

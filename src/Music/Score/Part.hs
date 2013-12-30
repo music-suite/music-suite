@@ -36,7 +36,6 @@ module Music.Score.Part (
   ) where
 
 import Control.Monad.Plus
-import Data.Substitute
 import Data.Default
 import Data.Ord (comparing)
 import Data.Semigroup
@@ -73,8 +72,6 @@ class HasPart a where
 
 newtype PartT n a = PartT { getPartT :: (n, a) }
     deriving (Eq, Ord, Show, Functor, Typeable)
-
-type instance PartT p a /~ g = PartT p (a /~ g)
 
 instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = def }
 instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = def }

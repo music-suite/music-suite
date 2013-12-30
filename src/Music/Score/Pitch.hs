@@ -55,7 +55,6 @@ import Control.Applicative
 import Control.Lens
 #endif __HAS_LENS__
 
-import Data.Substitute
 import Data.String
 import Data.Typeable
 import Data.Traversable

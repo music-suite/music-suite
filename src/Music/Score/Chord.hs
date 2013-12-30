@@ -49,7 +49,6 @@ module Music.Score.Chord (
 
 import Prelude hiding (any, mapM_)
 
-import Data.Substitute
 import Data.Ord
 import Data.Pointed
 import Data.Foldable
@@ -84,8 +83,6 @@ instance HasChord (ChordT a) where
 -- Empty chords will cause error with HasPitch, among others
 newtype ChordT a = ChordT { getChordT :: [a] }
     deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
-
-type instance ChordT a /~ g = ChordT (a /~ g)
 
 overlaps :: (HasOnset a, HasOffset a, HasOnset b, HasOffset b) => a -> b -> Bool
 overlaps t u = not $ offset t <= onset u || offset u <= onset t

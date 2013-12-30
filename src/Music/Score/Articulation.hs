@@ -54,7 +54,6 @@ module Music.Score.Articulation (
 
   ) where
 
-import Data.Substitute
 import Data.Pointed
 import Data.Foldable
 import Data.Typeable
@@ -75,8 +74,6 @@ class HasArticulation a where
 
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
-
-type instance ArticulationT a /~ g = ArticulationT (a /~ g)
 
 instance Pointed ArticulationT where
     point x = ArticulationT (False,False,0,0,x,False)
