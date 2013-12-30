@@ -76,17 +76,13 @@ class (SetPitch (Pitch a) a ~ a) => HasPitch a where
     type Pitch    s
     type SetPitch b s
 
-    getPitch :: a -> Pitch a
+    getPitch   :: a -> Pitch a
     getPitches :: a -> [Pitch a]
-
-    setPitch :: (b ~ SetPitch (Pitch b) a) => Pitch b -> a -> b
-    mapPitch :: (HasPitch a, b ~ SetPitch (Pitch b) a) => (Pitch a -> Pitch b) -> a -> b
-
-
+    setPitch   :: (b ~ SetPitch (Pitch b) a) => Pitch b -> a -> b
+    mapPitch   :: (HasPitch a, b ~ SetPitch (Pitch b) a) => (Pitch a -> Pitch b) -> a -> b
     getPitch = head . getPitches
-    
-    -- mapPitch f x = setPitch (f $ head $ getPitches x) x -- TODO
-    setPitch x = mapPitch (const x)
+    mapPitch f x = setPitch (f $ head $ getPitches x) x
+    setPitch x   = mapPitch (const x)
 
 setPitch' :: HasPitch a => Pitch a -> a -> a
 mapPitch' :: HasPitch a => (Pitch a -> Pitch a) -> a -> a
