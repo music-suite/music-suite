@@ -33,6 +33,7 @@ module Music.Score.Pitch (
         Interval,  
         HasPitch(..),
         HasPitch',
+        getPitch,
         setPitch',
         mapPitch',
         pitch,
@@ -76,21 +77,22 @@ class (SetPitch (Pitch a) a ~ a) => HasPitch a where
     type Pitch    s
     type SetPitch b s
 
-    getPitch   :: a -> Pitch a
     getPitches :: a -> [Pitch a]
     setPitch   :: (b ~ SetPitch (Pitch b) a) => Pitch b -> a -> b
     mapPitch   :: (HasPitch a, b ~ SetPitch (Pitch b) a) => (Pitch a -> Pitch b) -> a -> b
-    getPitch = head . getPitches
+
     mapPitch f x = setPitch (f $ head $ getPitches x) x
     setPitch x   = mapPitch (const x)
 
+getPitch :: HasPitch a => a -> Pitch a
+getPitch = head . getPitches
+
 setPitch' :: HasPitch a => Pitch a -> a -> a
-mapPitch' :: HasPitch a => (Pitch a -> Pitch a) -> a -> a
 setPitch' = setPitch
+
+mapPitch' :: HasPitch a => (Pitch a -> Pitch a) -> a -> a
 mapPitch' = mapPitch
 
-modifyPitch = mapPitch
-modifyPitch' = mapPitch'
 
 
 -- |
@@ -127,23 +129,36 @@ instance HasPitch (PitchT p a) where
     getPitches (PitchT (v,_))    = [v]
     mapPitch f (PitchT (v,x)) = PitchT (f v, x)
 
-instance HasPitch ()                        where { type Pitch ()         = ()        ; type SetPitch b () = () ; getPitches = return; mapPitch = id }
-instance HasPitch Double                    where { type Pitch Double     = Double    ; type SetPitch b Double = Double ; getPitches = return; mapPitch = id }
-instance HasPitch Float                     where { type Pitch Float      = Float     ; type SetPitch b Float = Float ; getPitches = return; mapPitch = id }
-instance HasPitch Int                       where { type Pitch Int        = Int       ; type SetPitch b Int = Int ; getPitches = return; mapPitch = id }
-instance HasPitch Integer                   where { type Pitch Integer    = Integer   ; type SetPitch b Integer = Integer ; getPitches = return; mapPitch = id }
-instance Integral a => HasPitch (Ratio a)   where { type Pitch (Ratio a)  = (Ratio a) ; type SetPitch b (Ratio a) = (Ratio a) ; getPitches = return; mapPitch = id }
+#define HAS_PITCH_PRIM(T)   \
+instance HasPitch T where { \
+    type Pitch T = T;       \
+    type SetPitch b T = T;  \
+    getPitches = return;    \
+    mapPitch   = id; }
 
--- instance HasPitch a => HasPitch (a, b) where
---     type Pitch (a,b)  = Pitch a
---     getPitches (a,b)    = getPitches a
---     mapPitch f (a,b) = (mapPitch f a, b)
+HAS_PITCH_PRIM(())
+HAS_PITCH_PRIM(Double)
+HAS_PITCH_PRIM(Float)
+HAS_PITCH_PRIM(Int)
+HAS_PITCH_PRIM(Integer)
+
+instance Integral a => HasPitch (Ratio a) where
+    type Pitch (Ratio a) = (Ratio a)
+    type SetPitch b (Ratio a) = (Ratio a)
+    getPitches = return
+    mapPitch = id
+
+instance HasPitch b => HasPitch (a, b) where
+    type Pitch (a,b)      = Pitch b
+    type SetPitch g (a,b) = (a, SetPitch g b)
+    getPitches = getPitches . snd
+    mapPitch f = fmap (mapPitch f)
 
 instance HasPitch a => HasPitch [a] where
     type Pitch [a] = Pitch a
     type SetPitch g [a] = [SetPitch g a]
-    getPitches []    = error "getPitch: Empty list"
-    getPitches as    = concatMap getPitches as
+    getPitches [] = error "getPitch: Empty list"
+    getPitches as = concatMap getPitches as
     mapPitch f    = fmap (mapPitch f)
     
 -- |
