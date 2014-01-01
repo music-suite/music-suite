@@ -7,11 +7,13 @@ EXAMPLE=test.sib
 
 install-plugin:
 	iconv -f UTF-8 -t UTF-16LE <ExportJSON.plgx >ExportJSON.plgy
+
+	pushd util && runhaskell MakeBOM.hs && popd
 	cat util/LE.bom ExportJSON.plgy >ExportJSON.plg
+
 	rm ExportJSON.plgy
 	mv ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
 
-	killall "Sibelius 6"
-	open -a /Applications/Sibelius\ 6.app $(EXAMPLE)
+	killall "Sibelius 6" || open -a "Sibelius 6" #$(EXAMPLE)
 
 

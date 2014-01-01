@@ -1,5 +1,12 @@
 {
     Initialize "(){
+        //
+        // This Sibelius plugin writes a Sibelius score as a JSON file
+        //
+        // It basically copies the internal object model in Sibelius to
+        // a JSON approximation. There is *no* specification, but it
+        // should be relatively easy to see what this file does.
+        //
         AddToPluginsMenu('Export JSON','Run');
     }"
     
@@ -11,7 +18,7 @@
         score = Sibelius.ActiveScore;
         
         if (DEBUG) {
-            path = '/Users/hans/Documents/Kod/manuscript/JSON/test.json';
+            path = '/Users/hans/Desktop/test.sib_json';
             WriteScoreToPath(score, path);
         } else {
             file = Sibelius.SelectFileToSave(
