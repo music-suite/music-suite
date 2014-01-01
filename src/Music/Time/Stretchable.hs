@@ -27,6 +27,7 @@ module Music.Time.Stretchable (
         -- * Stretchable class
         Stretchable(..),
         compress,
+        stretching,
         
         -- ** Utility
         NoStretch(..),
@@ -55,6 +56,7 @@ class Stretchable a where
     -- Stretch (augment) a value by the given factor.
     -- 
     stretch :: Duration -> a -> a
+    stretch _ = id
 
 instance Stretchable Time where
     stretch n = (n*.)
@@ -95,6 +97,11 @@ instance Stretchable a => Stretchable (Sum a) where
 --
 compress :: Stretchable a => Duration -> a -> a
 compress x = stretch (recip x)
+
+-- | Apply a function under stretch.
+--   See also 'sunder'.
+stretching :: (Stretchable a, Stretchable b) => Duration -> (a -> b) -> a -> b
+stretching t f = compress t . f . stretch t
 
 
 newtype NoStretch a = NoStretch { getNoStretch :: a }

@@ -156,7 +156,7 @@ sapp :: (Delayable a, Stretchable a) => Span -> a -> a
 sapp (delta -> (t,d)) = delayTime t . stretch d
 
 -- | Apply a function under a span transformation.
-sunder :: (Delayable a, Stretchable a) => Span -> (a -> a) -> a -> a
+sunder :: (Delayable a, Stretchable a, Delayable b, Stretchable b) => Span -> (a -> b) -> a -> b
 sunder s f = sapp (sinvert s) . f . sapp s
 
 -- | The inversion of a span.

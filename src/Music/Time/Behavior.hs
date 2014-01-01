@@ -31,8 +31,11 @@
 
 module Music.Time.Behavior (
         Behavior,
+        (??),
         constant,
+        behavior,
         varying,
+        varyingIn,
         time,
         switchB,
         sinceB,
@@ -51,6 +54,7 @@ import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Typeable
 import Data.Semigroup
+import Data.Profunctor
 import Data.Set (Set)
 import Data.Map (Map)
 import Data.Foldable (Foldable)
@@ -75,10 +79,10 @@ newtype Behavior a = Behavior { getBehavior :: Reactive (Time -> a) }
     deriving (Functor, Semigroup, Monoid)
 
 instance Delayable (Behavior a) where
-    delay n (Behavior x) = Behavior (delay n x)
+    delay n (Behavior x) = Behavior (fmap (delay n) $ delay n x)
 
 instance Stretchable (Behavior a) where
-    stretch n (Behavior x) = Behavior (stretch n x)
+    stretch n (Behavior x) = Behavior (fmap (stretch n) $ stretch n x)
 
 instance Newtype (Behavior a) (Reactive (Time -> a)) where
     pack = Behavior
@@ -88,14 +92,38 @@ instance Applicative Behavior where
     pure    = pack . pure . pure
     (unpack -> f) <*> (unpack -> x) = pack $ liftA2 (<*>) f x
 
+-- | A constant (non-varying) behavior.
+--   
+--   Identical to @behavior . const@ but creates more efficient behaviors.
 constant :: a -> Behavior a
 constant = pack . pure . pure
 
-varying :: (Time -> a) -> Behavior a
-varying = pack . pure
+-- | Create a behavior from function of (absolute) time.
+--   
+--   You should pass a function defined for the whole range, including negative time.
+behavior :: (Time -> a) -> Behavior a
+behavior = pack . pure
+
+-- | Create a behaviour from a function of (relative) duration focused on 'sunit'.
+--   
+--   You should pass a function defined for the whole range, including negative durations.
+varying :: (Duration -> a) -> Behavior a
+varying = varyingIn sunit
+
+-- | Create a behaviour from a function of (relative) duration focused on the given span.
+--   
+--   You should pass a function defined for the whole range, including negative durations.
+varyingIn :: Span -> (Duration -> a) -> Behavior a
+varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)
+-- TODO or invert s
+
+-- | @b ?? t@ returns the value of the behavior at time @t@.
+--  Semantic function.
+(??) :: Behavior a -> Time -> a
+b ?? t = (unpack b ? t) t
 
 time :: Behavior Time
-time = varying id
+time = behavior id
 
 sinceB :: Monoid a => Time -> Behavior a -> Behavior a
 sinceB t = over Behavior (since t)

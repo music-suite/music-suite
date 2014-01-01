@@ -25,8 +25,10 @@
 module Music.Time.Delayable (
         -- * Delayable class
         Delayable(..),
+        undelay,
+        delaying,     
         move,
-        moveBack,     
+        moveBack,
         
         -- ** Utility
         delayTime,
@@ -53,6 +55,7 @@ class Delayable a where
     -- Delay a value.
     -- 
     delay :: Duration -> a -> a
+    delay _ = id
 
 instance Delayable Time where
     delay n = (.+^ n)
@@ -100,9 +103,16 @@ moveBack :: Delayable a => Duration -> a -> a
 --
 delayTime :: Delayable a => Time   -> a -> a
 
+undelay t       = delay (negateV t)
 move            = delay
 moveBack t      = delay (negateV t)
 delayTime t     = delay (t .-. origin)
+
+
+-- | Apply a function under delay.
+--   See also 'sunder'.
+delaying :: (Delayable a, Delayable b) => Duration -> (a -> b) -> a -> b
+delaying t f = undelay t . f . delay t
 
 newtype NoDelay a = NoDelay { getNoDelay :: a }
     deriving (Eq, Ord, Enum, Show, Semigroup, Monoid

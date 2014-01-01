@@ -36,10 +36,10 @@
 
 module Music.Time.Reactive (
         Reactive,
-        occs,
-        (?),
         initial,
         updates,
+        occs,
+        (?),
         switch,
         activate,
         noteToReactive,
@@ -102,6 +102,8 @@ instance Applicative Reactive where
 occs :: Reactive a -> [Time]
 occs = fst . unpack
 
+-- | @b ?? t@ returns the value of the reactive at time @t@.
+--  Semantic function.
 (?) :: Reactive a -> Time -> a
 (?) = snd . unpack
 
