@@ -37,7 +37,8 @@ library
         
         -- XXX Really?
         comonads-fd,
-        
+
+        profunctors,
         transformers,
         monadplus,
         void,
