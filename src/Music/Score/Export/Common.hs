@@ -72,13 +72,10 @@ import Music.Score.Util
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 
--- | Convert a voice to a list of bars.
-voiceToBars :: Tiable a => Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars = voiceToBars' (repeat 1)
-
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
 voiceToBars' barDurs = fmap getVoice . splitTiesVoiceAt barDurs
+-- TODO remove prime from name
 
 -- | Convert absolute to relative durations.
 toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
