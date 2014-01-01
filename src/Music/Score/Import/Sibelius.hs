@@ -34,29 +34,34 @@ fromSibStaff (SibStaff bars name shortName) =
 
 fromSibBar :: IsSibelius a => SibBar -> Score (Maybe a)
 fromSibBar (SibBar elems) = 
-    fmap Just (pcat $ fmap fromSibElem elems) <> return Nothing^*1
+    fmap Just (pcat $ fmap fromSibChordElem chords) <> return Nothing^*1
+    where
+        chords   = filter isChord elems
+        tuplets  = filter isTuplet elems -- TODO use these
+        floating = filter isFloating elems
 
-fromSibElem :: IsSibelius a => SibBarObject -> Score a
-fromSibElem = go where
-    go (SibBarObjectText _) = mempty -- TODO
-    go (SibBarObjectClef _) = mempty -- TODO
-    go (SibBarObjectSlur _) = mempty -- TODO
-
-    go (SibBarObjectCrescendoLine _) = mempty -- TODO
-    go (SibBarObjectDiminuendoLine _) = mempty -- TODO
-    go (SibBarObjectTimeSignature _) = mempty -- TODO
-    go (SibBarObjectKeySignature _) = mempty -- TODO
-    go (SibBarObjectTuplet _) = mempty -- TODO
-
+fromSibChordElem :: IsSibelius a => SibBarObject -> Score a
+fromSibChordElem = go where
     go (SibBarObjectChord chord) = fromSibChord chord
-    -- TODO tuplet, key/time signature, line and text support
+    go _                         = error "fromSibChordElem: Expected chord"
+
+-- handleFloatingElem :: IsSibelius a => SibBarObject -> [Score a] -> [Score a]
+
+isChord (SibBarObjectChord _) = True
+isChord _                     = False
+
+isTuplet (SibBarObjectTuplet _) = True
+isTuplet _                      = False
+
+isFloating x = not (isChord x) && not (isTuplet x) 
+    
 
 fromSibChord :: IsSibelius a => SibChord -> Score a
 fromSibChord (SibChord pos dur voice ar strem dtrem acci appo notes) = 
     setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromSibNote notes
     where
-        setTime = delay (fromIntegral pos / 1024)
-        setDur  = stretch (fromIntegral dur / 1024)
+        setTime = delay (fromIntegral pos / kTicksPerWholeNote)
+        setDur  = stretch (fromIntegral dur / kTicksPerWholeNote)
         setArt Marcato         = marcato
         setArt Accent          = accent
         setArt Tenuto          = tenuto
@@ -115,5 +120,5 @@ type IsSibelius a = (
 every :: (a -> b -> b) -> [a] -> b -> b
 every f = flip (foldr f)
 
-
+kTicksPerWholeNote = 1024 -- Always in Sibelius
 
