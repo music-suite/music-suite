@@ -49,6 +49,7 @@ module Music.Score.Meta (
         HasMeta(..),
   ) where
 
+import Control.Applicative
 import Control.Arrow
 import Control.Monad.Plus       
 import Data.Void
@@ -118,6 +119,12 @@ addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactiv
 -- XXX
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
 addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
+
+-- Switch at time t to the given value (switch is valid until the end of the music).
+-- TODO might not work as we think
+addMetaChange :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Time -> a -> b -> b
+addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switch t mempty (pure x)) y
+
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
 runMeta part = fromMaybe mempty . runMeta' part

@@ -175,22 +175,22 @@ timeSignature c x = timeSignatureDuring (start <-> offset x) c x
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addGlobalMetaNote (s =: optionLast c)
+timeSignatureDuring s c = addGlobalMetaNote (s =: optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
-getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionLast) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 -- | Extract the time signature from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionLast)
+withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionFirst)
 
 
 -- activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
-optionLast = Option . Just . Last
-unOptionLast = fmap getLast . getOption
+optionFirst = Option . Just . First
+unOptionFirst = fmap getFirst . getOption
 
 getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
 getBarDurations = fmap realToFrac . getBarTimeSignatures
@@ -230,7 +230,8 @@ standardTimeSignature x = case unRatio (toRational x) of
     (7,8) -> time 7 8
 
     -- TODO check divisible by 8 etc
-    _     -> error "standardTimeSignature: Stange value"
+    _        -> time 4 4
+    -- _     -> error "standardTimeSignature: Stange value"
 
 
 
