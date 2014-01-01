@@ -205,7 +205,7 @@ writeMidi path sc = Midi.exportFile path (toMidi sc)
 -- Convert a score to a MIDI event.
 --
 playMidi :: HasMidi a => String -> Score a -> R.Event MidiMessage
-playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ delay 0.2 x)
+playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ startAt 0.2 x)
     where
         -- trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)
         trig        = time
