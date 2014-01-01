@@ -72,7 +72,7 @@ instance FromJSON SibScore where
         <*> v .: "staffHeight"
         <*> v .: "transposing"
         <*> v .: "staves"          
-        -- TODO
+        -- TODO system staff
         <*> return ()
 
 
@@ -110,65 +110,84 @@ data SibBarObject
 instance FromJSON SibBarObject where
     parseJSON x@(Object v) = case HashMap.lookup "type" v of    
         -- TODO
-        Just "text"      -> error "JsElementText"
-        Just "clef"      -> error "SibBarObjectClef"
-        Just "slur"      -> error "SibBarObjectSlur"
-        Just "cresc"     -> error "SibBarObjectCrescendoLine"
-        Just "dim"       -> error "SibBarObjectDiminuendoLine"
-        Just "time"      -> error "SibBarObjectTimeSignature"
-        Just "key"       -> error "SibBarObjectKeySignature"
-        Just "tuplet"    -> error "SibBarObjectTuplet"
+        Just "text"      -> SibBarObjectText <$> parseJSON x
+        Just "clef"      -> SibBarObjectClef <$> parseJSON x
+        Just "slur"      -> SibBarObjectSlur <$> parseJSON x
+        Just "cresc"     -> SibBarObjectCrescendoLine <$> parseJSON x
+        Just "dim"       -> SibBarObjectDiminuendoLine <$> parseJSON x
+        Just "time"      -> SibBarObjectTimeSignature <$> parseJSON x
+        Just "key"       -> SibBarObjectKeySignature <$> parseJSON x
+        Just "tuplet"    -> SibBarObjectTuplet <$> parseJSON x
         Just "chord"     -> SibBarObjectChord <$> parseJSON x
-        _                -> mempty
+        _                -> mempty -- failure
 
 data SibText = SibText {
             textVoice               :: Int,
             textPosition            :: Int,
             textText                :: String,
-            textStyle               :: Int
+            textStyle               :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibText where
-    parseJSON = error "Not implemented (instance FromJSON SibText)"
+    parseJSON (Object v) = SibText
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "text"
+        <*> v .: "style"
      
 data SibClef = SibClef {
             clefVoice               :: Int,
             clefPosition            :: Int,
-            clefStyle               :: Int
+            clefStyle               :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibClef where
-    parseJSON = error "Not implemented (instance FromJSON SibClef)"
+    parseJSON (Object v) = SibClef
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "style"
 
 data SibSlur = SibSlur {
             slurVoice               :: Int,
             slurPosition            :: Int,
             slurDuration            :: Int,
-            slurStyle               :: Int
+            slurStyle               :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibSlur where
-    parseJSON = error "Not implemented (instance FromJSON SibSlur)"
+    parseJSON (Object v) = SibSlur
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "duration"
+        <*> v .: "style"
 
 data SibCrescendoLine = SibCrescendoLine {  
             crescVoice               :: Int,
             crescPosition            :: Int,
             crescDuration            :: Int,
-            crescStyle               :: Int
+            crescStyle               :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibCrescendoLine where
-    parseJSON = error "Not implemented (instance FromJSON SibCrescendoLine)"
+    parseJSON (Object v) = SibCrescendoLine
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "duration"
+        <*> v .: "style"
 
 data SibDiminuendoLine = SibDiminuendoLine {
             dimVoice               :: Int,
             dimPosition            :: Int,
             dimDuration            :: Int,
-            dimStyle               :: Int
+            dimStyle               :: String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibDiminuendoLine where
-    parseJSON = error "Not implemented (instance FromJSON SibDiminuendoLine)"
+    parseJSON (Object v) = SibDiminuendoLine
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "duration"
+        <*> v .: "style"
 
 data SibTimeSignature = SibTimeSignature {
             timeVoice               :: Int,
@@ -179,7 +198,12 @@ data SibTimeSignature = SibTimeSignature {
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibTimeSignature where
-    parseJSON = error "Not implemented (instance FromJSON SibTimeSignature)"
+    parseJSON (Object v) = SibTimeSignature
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> fmap (\[x,y] -> (x::Rational) / (y::Rational)) (v .: "value")
+        <*> v .: "common"
+        <*> v .: "allaBreve"
 
 data SibKeySignature = SibKeySignature {
             keyVoice               :: Int,
@@ -190,7 +214,12 @@ data SibKeySignature = SibKeySignature {
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibKeySignature where
-    parseJSON = error "Not implemented (instance FromJSON SibKeySignature)"
+    parseJSON (Object v) = SibKeySignature
+        <$> v .: "voice" 
+        <*> v .: "position"
+        <*> v .: "major"
+        <*> v .: "sharps"
+        <*> v .: "isOpen"
 
 data SibTuplet = SibTuplet {
             tupletVoice               :: Int,
@@ -266,7 +295,7 @@ data SibNote = SibNote {
             noteDiatonicPitch       :: Int,
             noteAccidental          :: Int,
             noteTied                :: Bool,
-            noteStyle               :: Int
+            noteStyle               :: Int -- not String?
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibNote where

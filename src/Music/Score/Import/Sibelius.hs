@@ -38,6 +38,16 @@ fromSibBar (SibBar elems) =
 
 fromSibElem :: IsSibelius a => SibBarObject -> Score a
 fromSibElem = go where
+    go (SibBarObjectText _) = mempty -- TODO
+    go (SibBarObjectClef _) = mempty -- TODO
+    go (SibBarObjectSlur _) = mempty -- TODO
+
+    go (SibBarObjectCrescendoLine _) = mempty -- TODO
+    go (SibBarObjectDiminuendoLine _) = mempty -- TODO
+    go (SibBarObjectTimeSignature _) = mempty -- TODO
+    go (SibBarObjectKeySignature _) = mempty -- TODO
+    go (SibBarObjectTuplet _) = mempty -- TODO
+
     go (SibBarObjectChord chord) = fromSibChord chord
     -- TODO tuplet, key/time signature, line and text support
 
@@ -55,18 +65,19 @@ fromSibChord (SibChord pos dur voice ar strem dtrem acci appo notes) =
     -- TODO tremolo and appogiatura/acciaccatura support
 
 fromSibNote :: IsSibelius a => SibNote -> Score a
-fromSibNote (SibNote pitch di acc tied style) =
+fromSibNote (SibNote pitch diatonicPitch acc tied style) =
     (if tied then fmap beginTie else id)
-    $ modifyPitch (+ (fromIntegral pitch - 60)) def
+    $ up' (fromIntegral pitch - 60) Pitch.c
+    -- TODO spell correctly if this is Common.Pitch (how to distinguish)
     where
-        def = Pitch.c
+        up' x = mapPitch' (+ x)
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
 -- error occurs.
 -- 
 readSib :: IsSibelius a => FilePath -> IO (Score a)
-readSib path = fmap (either (\x -> error $ "Could not read score" ++ x) id) $ readSibEither path
+readSib path = fmap (either (\x -> error $ "Could not read score " ++ x) id) $ readSibEither path
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read, and returns
