@@ -129,7 +129,10 @@ instance Semigroup a => Semigroup (DynamicT a) where
 instance Semigroup a => Semigroup (SlideT a) where
     SlideT (eg,es,a,bg,bs) <> SlideT (_,_,b,_,_) = SlideT (eg,es,a <> b,bg,bs)
 instance Semigroup a => Semigroup (TieT a) where
-    TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 || b2, x1 <> x2, e1 || e2)
+    TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 && b2, x1 <> x2, e1 && e2)
+    -- This instance is suspect: in general chord notes are not required to share ties,
+    -- so this instance may be removed (provided that TieT is moved inside ChordT for
+    -- all Preludes). See #134
 instance Semigroup a => Semigroup (HarmonicT a) where
     HarmonicT (n1,x1) <> HarmonicT (n2,x2) = HarmonicT (n1, x1 <> x2)
 instance Semigroup a => Semigroup (TextT a) where
