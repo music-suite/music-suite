@@ -2,6 +2,9 @@
 {-# LANGUAGE
     MultiParamTypeClasses,
     TypeFamilies,
+    DeriveFunctor,
+    DeriveFoldable,
+    DeriveTraversable,
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
@@ -10,36 +13,43 @@
 
 -- Copied from https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan
 -- Simplified to capture a single type
-
+import Control.Applicative
+import Data.Semigroup
+import Data.Foldable
+import Data.Traversable
 
 class HasPitch s where
   type Pitch             (s :: *) :: *
   getPitch :: (a ~ Pitch s) => s -> a
 
+
+-- > set l (view l whole) whole == whole
+-- > view l (set l part whole) == part
+-- > set l part2 (set l part1) whole = set l part2 whole
+
+-- SetPitch (Pitch s) s
+
 class (HasPitch s, s ~ SetPitch (Pitch s) s) => UpdatePitch (b :: *) (s :: *) where
   type SetPitch (b :: *) (s :: *) :: *
   setPitch :: (b ~ Pitch t, t ~ SetPitch b s) => b -> s -> t
 
-mapPitch :: (UpdatePitch b s, SetPitch b s ~ t, a ~ Pitch s, b ~ Pitch t) => (a -> b) -> s -> t
+-- TODO always require this constraint, or make it a class for better type sigs
+type UpdatePitch' s t a b = (UpdatePitch (Pitch t) s, SetPitch (Pitch t) s ~ t, a ~ Pitch s, b ~ Pitch t)
+type UpdatePitch'' s a = UpdatePitch' s s a a
+
+mapPitch :: (UpdatePitch' s t a b) => (a -> b) -> s -> t
 mapPitch f x = setPitch p x where p = f (getPitch x)
 
-
-
-
-data Wrap a = Wrap { getWrap :: a }
-
-instance HasPitch (Wrap a) where 
-  type Pitch   (Wrap a) = a
-  getPitch     (Wrap a) = a
-
-instance UpdatePitch b (Wrap a)  where
-  type SetPitch b (Wrap a) = Wrap b
-  setPitch      b (Wrap a) = Wrap b
-                                  
+incPitch :: (UpdatePitch'' s a, Enum a) => s -> s
+incPitch = mapPitch succ
 
 
 data PitchT f a = PitchT f a
-    deriving (Show)
+    deriving (Show, Functor, Foldable, Traversable)
+
+instance (Semigroup p, Monoid p) => Applicative (PitchT p) where
+    pure = PitchT mempty
+    PitchT pf vf <*> PitchT px vx = PitchT (pf <> px) (vf $ vx)
 
 instance HasPitch (PitchT f a) where
     type Pitch      (PitchT f a) = f
@@ -58,7 +68,6 @@ instance (UpdatePitch b a) => UpdatePitch b [a] where
   type SetPitch b [a] = [SetPitch b a]
   setPitch b = fmap (setPitch b)
 
-
 instance HasPitch a => HasPitch (c,a) where
     type Pitch (c,a) = Pitch a
     getPitch (c,a) = getPitch a
@@ -72,8 +81,9 @@ instance (UpdatePitch b a) => UpdatePitch b (c,a) where
 
 
 
-(xs,int2float) = undefined
+(x,int2float) = (PitchT 3 (True, 0), fromIntegral)
 int2float :: Int -> Float
-xs :: Wrap Int
-ys :: Wrap Float
-ys = mapPitch (int2float) xs
+x :: PitchT Int (Bool, Int)
+y :: PitchT Float (Int, Bool)
+y = fmap swap $ mapPitch (int2float) x
+swap (x,y) = (y,x)
