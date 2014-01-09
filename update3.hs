@@ -5,31 +5,75 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    UndecidableInstances,
     GeneralizedNewtypeDeriving #-}
 
 -- Copied from https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan
 -- Simplified to capture a single type
 
-type family Wrapped             (s :: *) :: *
-type family SetWrapped (a :: *) (s :: *) :: *
 
-class HasWrapped s where
-  getWrapped :: (a ~ Wrapped s) => s -> a
+class HasPitch s where
+  type Pitch             (s :: *) :: *
+  getPitch :: (a ~ Pitch s) => s -> a
 
-class (HasWrapped s, s ~ SetWrapped (Wrapped s) s) => UpdateWrapped (b :: *) (s :: *) where
-  setWrapped :: (b ~ Wrapped t, t ~ SetWrapped b s) => b -> s -> t
+class (HasPitch s, s ~ SetPitch (Pitch s) s) => UpdatePitch (b :: *) (s :: *) where
+  type SetPitch (b :: *) (s :: *) :: *
+  setPitch :: (b ~ Pitch t, t ~ SetPitch b s) => b -> s -> t
+
+mapPitch :: (UpdatePitch b s, SetPitch b s ~ t, a ~ Pitch s, b ~ Pitch t) => (a -> b) -> s -> t
+mapPitch f x = setPitch p x where p = f (getPitch x)
 
 
 
-data Wrap a = Wrap { getWrap :: [a] }
-type instance Wrapped   (Wrap a)         = [a]
-type instance SetWrapped [b] (Wrap nope) = Wrap b
 
-instance HasWrapped (Wrap a) where 
-  getWrapped (Wrap x) = x
+data Wrap a = Wrap { getWrap :: a }
 
-instance UpdateWrapped [b] (Wrap a)  where
-  setWrapped x (Wrap _) = Wrap x
+instance HasPitch (Wrap a) where 
+  type Pitch   (Wrap a) = a
+  getPitch     (Wrap a) = a
 
-mapWrapped :: (a ~ Wrapped s, b ~ Wrapped t, UpdateWrapped b s, SetWrapped b s ~ t) => (a -> b) -> s -> t
-mapWrapped f x = (flip setWrapped x . f . getWrapped) x
+instance UpdatePitch b (Wrap a)  where
+  type SetPitch b (Wrap a) = Wrap b
+  setPitch      b (Wrap a) = Wrap b
+                                  
+
+
+data PitchT f a = PitchT f a
+    deriving (Show)
+
+instance HasPitch (PitchT f a) where
+    type Pitch      (PitchT f a) = f
+    getPitch        (PitchT f a) = f
+
+instance UpdatePitch g (PitchT f a)  where
+    type SetPitch g (PitchT f a) = PitchT g a 
+    setPitch      g (PitchT f a) = PitchT g a
+
+instance HasPitch a => HasPitch [a] where
+    type Pitch [a] = Pitch a
+    getPitch [x] = getPitch x
+
+-- Undecidable
+instance (UpdatePitch b a) => UpdatePitch b [a] where
+  type SetPitch b [a] = [SetPitch b a]
+  setPitch b = fmap (setPitch b)
+
+
+instance HasPitch a => HasPitch (c,a) where
+    type Pitch (c,a) = Pitch a
+    getPitch (c,a) = getPitch a
+-- 
+-- Undecidable ??
+instance (UpdatePitch b a) => UpdatePitch b (c,a) where
+  type SetPitch b (c,a) = (c,SetPitch b a)
+  setPitch b = fmap (setPitch b)
+
+
+
+
+
+(xs,int2float) = undefined
+int2float :: Int -> Float
+xs :: Wrap Int
+ys :: Wrap Float
+ys = mapPitch (int2float) xs
