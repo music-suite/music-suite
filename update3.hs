@@ -23,13 +23,14 @@ class HasPitch s where
   getPitch :: (a ~ Pitch s) => s -> a
 
 
--- > set l (view l whole) whole == whole
--- > view l (set l part whole) == part
--- > set l part2 (set l part1) whole = set l part2 whole
+-- Constraint versions of the lens laws
+type GetPut s     = (s ~ SetPitch (Pitch s) s)
+type PutGet s a   = (a ~ Pitch (SetPitch a s))
+type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
 
 -- SetPitch (Pitch s) s
 
-class (HasPitch s, s ~ SetPitch (Pitch s) s) => UpdatePitch (b :: *) (s :: *) where
+class HasPitch s => UpdatePitch (b :: *) (s :: *) where
   type SetPitch (b :: *) (s :: *) :: *
   setPitch :: (b ~ Pitch t, t ~ SetPitch b s) => b -> s -> t
 
@@ -40,8 +41,11 @@ type UpdatePitch'' s a = UpdatePitch' s s a a
 mapPitch :: (UpdatePitch' s t a b) => (a -> b) -> s -> t
 mapPitch f x = setPitch p x where p = f (getPitch x)
 
+mapPitch' :: (UpdatePitch'' s a) => (a -> a) -> s -> s
+mapPitch' = mapPitch
+
 incPitch :: (UpdatePitch'' s a, Enum a) => s -> s
-incPitch = mapPitch succ
+incPitch = mapPitch' succ
 
 
 data PitchT f a = PitchT f a
