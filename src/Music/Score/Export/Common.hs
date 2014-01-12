@@ -18,7 +18,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Export.Common (
-        voiceToBars,
         voiceToBars',
         -- separateBars,
         spellPitch,

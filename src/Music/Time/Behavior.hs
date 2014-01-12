@@ -92,6 +92,12 @@ instance Applicative Behavior where
     pure    = pack . pure . pure
     (unpack -> f) <*> (unpack -> x) = pack $ liftA2 (<*>) f x
 
+instance HasPitch (Behavior a) where
+    type Pitch (Behavior a) = Behavior a
+    type SetPitch g (Behavior a) = g
+    getPitches = return
+    mapPitch = id
+
 -- | A constant (non-varying) behavior.
 --   
 --   Identical to @behavior . const@ but creates more efficient behaviors.

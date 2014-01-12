@@ -28,6 +28,7 @@ import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 
 import Music.Time
+import Music.Score.Pitch
 
 newtype Note a = Note { getNote_ :: (Span, a) }
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
@@ -68,6 +69,12 @@ instance HasOnset (Note a) where
 
 instance HasOffset (Note a) where
     offset (Note (s,x)) = offset s
+
+instance HasPitch a => HasPitch (Note a) where
+    type Pitch (Note a) = Pitch a
+    type SetPitch g (Note a) = Note (SetPitch g a)
+    getPitches   = F.foldMap getPitches
+    mapPitch f   = fmap (mapPitch f)
 
 
 -- | Construct a note from a span and value.

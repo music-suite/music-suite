@@ -1,6 +1,9 @@
 
 {-# LANGUAGE 
-    ScopedTypeVariables, 
+    UndecidableInstances #-}
+{-# LANGUAGE 
+    ScopedTypeVariables,
+    Rank2Types, 
     GeneralizedNewtypeDeriving,
     DeriveFunctor, 
     DeriveFoldable, 
@@ -241,11 +244,17 @@ instance Arbitrary a => Arbitrary (Score a) where
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
 
-instance HasPitch a => HasPitch (Score a) where
-    type Pitch (Score a) = Pitch a
+instance (HasPitch a) => HasPitch (Score a) where
+    type Pitch (Score a)      = Pitch a
     type SetPitch g (Score a) = Score (SetPitch g a)
-    getPitches      = F.foldMap getPitches
-    mapPitch f   = fmap (mapPitch f)
+    getPitches   = F.foldMap getPitches
+
+    -- FIXME this is wrong, need to behave like mapPitch'
+    -- mapPitch f   = fmap (mapPitch f)
+
+    mapPitch f  = mapWithSpan (\s -> mapPitch $ sunder s f)
+      where
+        mapWithSpan f = mapScore (uncurry f . getNote)
 
 instance HasPart a => HasPart (Score a) where
     type Part (Score a) = Part a
