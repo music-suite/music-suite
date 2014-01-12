@@ -18,3 +18,5 @@ newtyp/
 haddock2
 .hackette
 src/Music/Score/Util.hs
+*-docs
+
