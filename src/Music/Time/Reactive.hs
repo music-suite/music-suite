@@ -121,10 +121,9 @@ updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switch :: Time -> Reactive a -> Reactive a -> Reactive a
-switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive (
-    filter (< t) tx <> [t] <> filter (> t) ty,
-    \u -> if u < t then rx u else ry u
-    )
+switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
+    (filter (< t) tx <> [t] <> filter (> t) ty)
+    (\u -> if u < t then rx u else ry u)
 
 
 
@@ -164,17 +163,19 @@ splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note' $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
-        note' (t,u,x) = t <-> u =: x
+
+        note (t,u,x) = t <-> u =: x
 
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
-        res rs = let (ts,xs) = unzip rs
-            in flip fmap (withNext ts `zip` xs) $ \((t, mu), x) -> case mu of
-                Nothing -> Left (t, x)
-                Just u  -> Right (t, u, x)
+        res rs = let (ts,xs) = unzip rs in 
+            flip fmap (withNext ts `zip` xs) $ 
+                \ ((t, mu), x) -> case mu of
+                    Nothing -> Left (t, x)
+                    Just u  -> Right (t, u, x)
 
         -- lenght xs == length (withNext xs)
         withNext :: [a] -> [(a, Maybe a)]
