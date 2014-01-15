@@ -12,7 +12,7 @@ tested-with:        GHC
 build-type:         Custom
 
 description: 
-    Musical score and part representation.
+    Musical time struture, voices, tracks and scores.
     
     This library is part of the Music Suite, see <http://musicsuite.github.com>.
 
@@ -25,6 +25,7 @@ library
         base >= 4 && < 5,
         QuickCheck >= 1.2 && < 1.3,
         newtype,
+        lens,
         time,
         random,
         process,
@@ -47,25 +48,25 @@ library
         nats,          
         pointed,
         semigroupoids,
+        parsec,
+        prettify,
+        musicxml2,
+        lilypond,
+        HCodecs,
         vector-space,
         vector-space-points,
         music-pitch-literal,
         music-dynamics-literal,
-        parsec,
-        prettify,
-        HCodecs,
-        musicxml2,
-        lilypond,
         reenact
 
     hs-source-dirs: src
     default-language: Haskell2010
     exposed-modules:
         Data.PairMonad
+        Data.AffineSpace.Relative
         Control.Monad.Compose
         
         Music.Time
-        Data.AffineSpace.Relative
         Music.Time.Delayable
         Music.Time.Stretchable
         Music.Time.Performable
@@ -109,9 +110,12 @@ library
         Music.Score.Dynamics
         Music.Score.Ornaments
 
-        Music.Score.Export.Midi
+        Music.Score.Export.Abc
         Music.Score.Export.Lilypond
         Music.Score.Export.MusicXml
+        Music.Score.Export.Midi
+        Music.Score.Import.Abc
+        Music.Score.Import.Lilypond
         Music.Score.Import.Midi
 
         -- Need to expose these to allow GHCI development
