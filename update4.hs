@@ -12,11 +12,12 @@
     UndecidableInstances,
     GeneralizedNewtypeDeriving #-}
 
-module Update3 where
+module Update4 where
     
 -- Copied from https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan
 -- Simplified to capture a single type
 import Control.Applicative
+import Control.Lens
 import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
@@ -29,30 +30,32 @@ class HasPitch s where
 
 
 -- Constraint versions of the lens laws
-type GetPut s     = (s ~ SetPitch (Pitch s) s)
-type PutGet s a   = (a ~ Pitch (SetPitch a s))
-type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
+-- type GetPut s     = (s ~ SetPitch (Pitch s) s)
+-- type PutGet s a   = (a ~ Pitch (SetPitch a s))
+-- type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
 
 -- SetPitch (Pitch s) s
 
-class (HasPitch s, GetPut s, PutGet s b) => UpdatePitch (b :: *) (s :: *) where
+class (HasPitch s, SetPitch (Pitch t) s ~ t) => HasMutablePitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
-  setPitch :: (b ~ Pitch t, t ~ SetPitch b s) => b -> s -> t
 
--- TODO always require this constraint, or make it a class for better type sigs
-type HasMutablePitch s t = (UpdatePitch (Pitch t) s, SetPitch (Pitch t) s ~ t)
+  setPitch :: Pitch t -> s -> t
+  setPitch x = mapPitch (const x)
+  
+  mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  mapPitch f x = setPitch p x where p = f (getPitch x)
+  
+pitch :: HasMutablePitch s t => Lens s t (Pitch s) (Pitch t)
+pitch = lens getPitch (flip setPitch)
 
+pitch' :: HasMutablePitch s s => Lens' s (Pitch s)
+pitch' = pitch
 
+setPitch' :: HasMutablePitch s s => Pitch s -> s -> s
+setPitch' = setPitch
 
-mapPitch :: (HasMutablePitch s t) => (Pitch s -> Pitch t) -> s -> t
-mapPitch f x = setPitch p x where p = f (getPitch x)
-
-mapPitch' :: (HasMutablePitch s s) => (Pitch s -> Pitch s) -> s -> s
+mapPitch' :: HasMutablePitch s s => (Pitch s -> Pitch s) -> s -> s
 mapPitch' = mapPitch
-
-incPitch :: (HasMutablePitch s s, Enum (Pitch s)) => s -> s
-incPitch = mapPitch' succ
-
 
 data PitchT f a = PitchT f a
     deriving (Show, Functor, Foldable, Traversable)
@@ -65,7 +68,7 @@ instance HasPitch (PitchT f a) where
     type Pitch      (PitchT f a) = f
     getPitch        (PitchT f a) = f
 
-instance UpdatePitch g (PitchT f a)  where
+instance HasMutablePitch (PitchT f a) (PitchT g a)  where
     type SetPitch g (PitchT f a) = PitchT g a 
     setPitch      g (PitchT f a) = PitchT g a
 
@@ -75,16 +78,16 @@ instance HasPitch a => HasPitch [a] where
     -- TODO crashes when updating longer lists etc
 
 -- Undecidable
-instance (UpdatePitch b a) => UpdatePitch b [a] where
+instance (HasMutablePitch a b) => HasMutablePitch [a] [b] where
   type SetPitch b [a] = [SetPitch b a]
   setPitch b = fmap (setPitch b)
 
 instance HasPitch a => HasPitch (c,a) where
     type Pitch (c,a) = Pitch a
     getPitch (c,a) = getPitch a
--- 
+
 -- Undecidable ??
-instance (UpdatePitch b a) => UpdatePitch b (c,a) where
+instance (HasMutablePitch a b) => HasMutablePitch (c,a) (c,b) where
   type SetPitch b (c,a) = (c,SetPitch b a)
   setPitch b = fmap (setPitch b)
 
@@ -93,7 +96,7 @@ instance (UpdatePitch b a) => UpdatePitch b (c,a) where
 instance HasPitch M.Pitch where
     type Pitch M.Pitch = M.Pitch
     getPitch = id
-instance UpdatePitch M.Pitch M.Pitch where
+instance HasMutablePitch M.Pitch M.Pitch where
     type SetPitch M.Pitch M.Pitch = M.Pitch
     setPitch = const
 
@@ -101,9 +104,8 @@ instance UpdatePitch M.Pitch M.Pitch where
 
 type Interval a = Diff (Pitch a)
 
-up :: (UpdatePitch (Pitch t) t, AffineSpace (Pitch t)) => Interval t -> t -> t
+up :: (HasMutablePitch a a, AffineSpace (Pitch a)) => Interval a -> a -> a
 up x = mapPitch (.+^ x)
-
 
 (x,int2float) = (PitchT 3 (True, 0), fromIntegral)
 int2float :: Int -> Float
@@ -111,3 +113,4 @@ x :: PitchT Int (Bool, Int)
 y :: PitchT Float (Int, Bool)
 y = fmap swap $ mapPitch (int2float) x
 swap (x,y) = (y,x)
+--                         
