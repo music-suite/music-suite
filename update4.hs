@@ -28,14 +28,6 @@ class HasPitch s where
   type Pitch             (s :: *) :: *
   getPitch :: (a ~ Pitch s) => s -> a
 
-
--- Constraint versions of the lens laws
--- type GetPut s     = (s ~ SetPitch (Pitch s) s)
--- type PutGet s a   = (a ~ Pitch (SetPitch a s))
--- type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
-
--- SetPitch (Pitch s) s
-
 class (HasPitch s, SetPitch (Pitch t) s ~ t) => HasMutablePitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
 
