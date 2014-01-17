@@ -26,27 +26,26 @@ import Data.AffineSpace -- tests
 import Data.AffineSpace.Relative -- tests
 import qualified Music.Pitch as M
 
-class HasPitch s where
+class HasGetPitch s where
   type Pitch             (s :: *) :: *
-  _pitch :: (a ~ Pitch s) => s -> a
+  getPitch :: (a ~ Pitch s) => s -> a
 
-class (HasPitch s, SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
+class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
-
   setPitch :: Pitch t -> s -> t
-  setPitch x = mapPitch (const x)
   
-  mapPitch :: (Pitch s -> Pitch t) -> s -> t
-  mapPitch f x = setPitch p x where p = f (_pitch x)
+type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
 
-type HasPitch' a    = HasSetPitch a a
-type HasSetPitch' a = HasSetPitch a a
+mapPitch :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
+mapPitch f x = setPitch p x where p = f (getPitch x)
+
+type HasPitch' a = HasPitch a a
   
 pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
-pitch :: HasSetPitch a b => Lens a b (Pitch a) (Pitch b)
-pitch = lens _pitch (flip setPitch)
+pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
+pitch = lens getPitch (flip setPitch)
 
 -- setPitch' :: HasSetPitch s s => Pitch s -> s -> s
 -- setPitch' = setPitch
@@ -61,17 +60,17 @@ instance (Semigroup p, Monoid p) => Applicative (PitchT p) where
     pure = PitchT mempty
     PitchT pf vf <*> PitchT px vx = PitchT (pf <> px) (vf $ vx)
 
-instance HasPitch (PitchT f a) where
+instance HasGetPitch (PitchT f a) where
     type Pitch      (PitchT f a) = f
-    _pitch        (PitchT f a) = f
+    getPitch        (PitchT f a) = f
 
 instance HasSetPitch (PitchT f a) (PitchT g a)  where
     type SetPitch g (PitchT f a) = PitchT g a 
     setPitch      g (PitchT f a) = PitchT g a
 
--- instance HasPitch a => HasPitch [a] where
+-- instance HasGetPitch a => HasGetPitch [a] where
 --     type Pitch [a] = Pitch a
---     _pitch [x] = _pitch x
+--     getPitch [x] = getPitch x
 --     -- TODO crashes when updating longer lists etc
 -- 
 -- -- Undecidable
@@ -79,9 +78,9 @@ instance HasSetPitch (PitchT f a) (PitchT g a)  where
 --   type SetPitch b [a] = [SetPitch b a]
 --   setPitch b = fmap (setPitch b)      
 
-instance HasPitch a => HasPitch (c,a) where
+instance HasGetPitch a => HasGetPitch (c,a) where
     type Pitch (c,a) = Pitch a
-    _pitch (c,a) = _pitch a
+    getPitch (c,a) = getPitch a
 
 -- Undecidable ??
 instance HasSetPitch a b => HasSetPitch (c,a) (c,b) where
@@ -90,30 +89,30 @@ instance HasSetPitch a b => HasSetPitch (c,a) (c,b) where
 
 
 
--- instance HasPitch M.Pitch where
+-- instance HasGetPitch M.Pitch where
 --     type Pitch M.Pitch = M.Pitch
---     _pitch = id
+--     getPitch = id
 -- instance HasSetPitch M.Pitch a where
 --     type SetPitch a M.Pitch = a
 --     setPitch = const
 
-instance HasPitch Int where
+instance HasGetPitch Int where
     type Pitch Int = Int
-    _pitch = id
+    getPitch = id
 instance (a ~ Pitch a) => HasSetPitch Int a where
     type SetPitch a Int = a
     setPitch = const
 
-instance HasPitch Bool where
+instance HasGetPitch Bool where
     type Pitch Bool = Bool
-    _pitch = id
+    getPitch = id
 instance (a ~ Pitch a) => HasSetPitch Bool a where
     type SetPitch a Bool = a
     setPitch = const
 
-instance HasPitch M.Pitch where
+instance HasGetPitch M.Pitch where
     type Pitch M.Pitch = M.Pitch
-    _pitch = id
+    getPitch = id
 instance (a ~ Pitch a) => HasSetPitch M.Pitch a where
     type SetPitch a M.Pitch = a
     setPitch = const
