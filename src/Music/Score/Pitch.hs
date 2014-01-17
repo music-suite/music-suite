@@ -65,12 +65,12 @@ import Control.Lens
 import Data.String
 import Data.Typeable
 import Data.Traversable
-import qualified Data.List as List
+import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Relative
-import Data.Ratio
-import Unsafe.Coerce
+import Data.AffineSpace.Point.Relative
+import qualified Data.List as List
 
 import Music.Time
 import Music.Pitch.Literal
@@ -212,7 +212,7 @@ down a = mapPitch' (.-^ a)
 -- > Pitch -> Score a -> Score a
 --
 invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround p = mapPitch' (reflectAround p)
+invertAround p = mapPitch' (reflectThrough p)
 
 -- |
 -- Transpose up by the given number of octaves.

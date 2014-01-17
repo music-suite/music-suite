@@ -4,12 +4,16 @@
 --
 -- TODO Move. Perhaps these could be added to vector-space-point?
 --
-module Data.AffineSpace.Relative where
+module Data.AffineSpace.Relative (
+        relative,
+        relative2,
+        relative3,
+        reflectThrough
+  ) where
 
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.AffineSpace.Point
 
 -- | 
 -- Apply a transformation relative to the given point.
@@ -37,15 +41,8 @@ relative3 p f x y z = proj $ f (inj x) (inj y) (inj z)
 
 
 -- |
--- Mirror a point around a given point.
+-- Mirror a point through a given point.
 --
--- > fmap (reflectAround origin) points
---
-reflectAround :: AffineSpace p => p -> p -> p
-reflectAround o = relative o negateV
+reflectThrough :: AffineSpace p => p -> p -> p
+reflectThrough o = relative o negateV
 
--- |
--- Mirror a point around 'origin'.
---
-mirror :: AdditiveGroup v => Point v -> Point v
-mirror = reflectAround origin

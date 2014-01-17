@@ -50,6 +50,7 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.AffineSpace.Point.Relative
 
 import Music.Time.Time
 import Music.Time.Delayable
