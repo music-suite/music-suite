@@ -70,11 +70,12 @@ instance HasOnset (Note a) where
 instance HasOffset (Note a) where
     offset (Note (s,x)) = offset s
 
-instance HasPitch a => HasPitch (Note a) where
-    type Pitch (Note a) = Pitch a
+type instance Pitch (Note a) = Pitch a
+instance HasGetPitch a => HasGetPitch (Note a) where
+    getPitch  = getPitch . getNoteValue
+instance HasSetPitch a b => HasSetPitch (Note a) (Note b) where
     type SetPitch g (Note a) = Note (SetPitch g a)
-    getPitches   = F.foldMap getPitches
-    mapPitch f   = fmap (mapPitch f)
+    mapPitch f = fmap (mapPitch f)
 
 
 -- | Construct a note from a span and value.

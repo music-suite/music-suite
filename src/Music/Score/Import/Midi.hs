@@ -53,7 +53,7 @@ type IsMidi a = (
     IsPitch a, 
     HasPart' a, 
     Enum (Part a), 
-    HasPitch a, 
+    -- HasPitch a, 
     Num (Pitch a), 
     HasTremolo a, 
     HasArticulation a,

@@ -2,6 +2,7 @@
 {-# LANGUAGE
     CPP,
     DeriveFunctor,
+    DefaultSignatures,
     DeriveFoldable,
     DeriveDataTypeable,
     FlexibleInstances,
@@ -9,7 +10,9 @@
     ConstraintKinds,
     TypeFamilies,
     TypeOperators,
+    MultiParamTypeClasses,
     NoMonomorphismRestriction,
+    UndecidableInstances,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -29,19 +32,18 @@
 
 module Music.Score.Pitch (     
         -- * Pitch representation
+        Pitch,
         Interval,
-        Repl,
-        Same,  
+        HasPitch'(..),
         HasPitch(..),
-        HasPitch',
-        getPitch,
-        setPitch',
-        mapPitch',
+        pitch',
         pitch,
-        pitches,
-        highestPitch,
-        lowestPitch,
-        meanPitch,
+        HasGetPitch(..),
+        HasSetPitch(..),
+        HasSetPitch'(..),
+        -- highestPitch,
+        -- lowestPitch,
+        -- meanPitch,
 
         -- * Pitch transformer
         PitchT(..),
@@ -50,6 +52,8 @@ module Music.Score.Pitch (
         -- ** Transposition
         up,
         down,
+        up',
+        down',
         invertAround,
         octavesUp,
         octavesDown,
@@ -57,14 +61,12 @@ module Music.Score.Pitch (
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Control.Applicative
-
-#ifdef __HAS_LENS__
 import Control.Lens
-#endif __HAS_LENS__
-
+import Data.Semigroup
 import Data.String
 import Data.Typeable
-import Data.Traversable
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
@@ -75,73 +77,62 @@ import qualified Data.List as List
 import Music.Time
 import Music.Pitch.Literal
 
-transformPitch :: Span -> Pitch a -> Pitch b
-transformPitch = undefined
-
-type Repl (f :: * -> * -> *) g a b = f (g b) a ~ b
-type Same f g a = Repl f g a a
-
-class (Transformable (Pitch a), SetPitch (Pitch a) a ~ a) => HasPitch a where
-
-    -- | Get the pitch type.
-    type Pitch    s     :: *
-
-    -- | Update the pitch type.
-    type SetPitch (b :: *) (s :: *) :: *
-
-    getPitches :: a -> [Pitch a]
-    setPitch   :: (Transformable (Pitch b), Repl SetPitch Pitch a b) => Pitch b -> a -> b
-    mapPitch   :: (Transformable (Pitch b), Repl SetPitch Pitch a b) => (Pitch a -> Pitch b) -> a -> b
-    setPitch x   = mapPitch (const x)
-    -- mapPitch f x = setPitch (f $ head $ getPitches x) x
-
--- TODO move these out of class (so no one accidentally implements them wrongly)
-    
-    getPitch :: HasPitch a => a -> Pitch a
-    getPitch = head . getPitches
-
-    setPitch' :: HasPitch a => Pitch a -> a -> a
-    setPitch' = setPitch
-
-    mapPitch' :: HasPitch a => (Pitch a -> Pitch a) -> a -> a
-    mapPitch' = mapPitch
-
-
-
 -- |
--- A lens to the first pitch in the given value.
+-- 
+-- For any type that is a Functor and a Comonad, you can:
 --
--- > pitch :: HasPitch a => Lens' a (Pitch a)
--- > pitch :: (b ~ SetPitch (Pitch b) a, HasPitch a, HasPitch b) => Lens a b (Pitch a) (Pitch b)
-pitch :: (Functor f, HasPitch a, b ~ (SetPitch (Pitch b) a), Transformable (Pitch b)) => (Pitch a -> f (Pitch b)) -> a -> f b
-pitch f x = fmap (`setPitch` x) $ f (getPitch x)
-
--- |
--- Traversal all pitches in the given value.
+-- > type instance Pitch (T a) = Pitch a
+-- > instance HasGetPitch a => HasGetPitch (T a) where
+-- >     getPitch = getPitch . extract
+-- > instance HasSetPitch a b => HasSetPitch (T a) (T b) where
+-- >     type SetPitch g (T a) = T (SetPitch g a)
+-- >     mapPitch f = fmap (mapPitch f)
 --
--- > pitches :: HasPitch a => Traversal' a (Pitch a)
--- > pitches :: (b ~ SetPitch (Pitch b) a, HasPitch a, HasPitch b) => Traversal a b (Pitch a) (Pitch b)
-pitches :: (Applicative f, HasPitch a, b ~ (SetPitch (Pitch b) a), Transformable (Pitch b)) => (Pitch a -> f (Pitch b)) -> a -> f b
-pitches f x = fmap ((flip setPitch x) . head) $ traverse f (getPitches x)
+type family Pitch (s :: *) :: *
 
+class HasGetPitch s where
+  getPitch :: (a ~ Pitch s) => s -> a
+
+class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
+  type SetPitch (b :: *) (s :: *) :: *
+  setPitch :: Pitch t -> s -> t
+  setPitch x = mapPitch (const x)
+  
+  mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  default mapPitch :: HasGetPitch s => (Pitch s -> Pitch t) -> s -> t
+  mapPitch f x = setPitch p x where p = f (getPitch x)
+  
+type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
+
+-- TODO use default sigs here
+mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
+mapPitchDefault f x = setPitch p x where p = f (getPitch x)
+
+type HasPitch' a = HasPitch a a
+type HasSetPitch' a = HasSetPitch a a
+  
+pitch' :: HasPitch' a => Lens' a (Pitch a)
+pitch' = pitch
+
+pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
+pitch = lens getPitch (flip setPitch)
 
 type Interval a = Diff (Pitch a)
 
-type HasPitch' a = (
-    HasPitch a, 
+type HasPitchConstr a = (
+    HasPitch' a, 
     VectorSpace (Interval a), Integer ~ Scalar (Interval a),
     AffineSpace (Pitch a)
     )
 
 newtype PitchT p a = PitchT { getPitchT :: (p, a) }
-    deriving (Eq, Ord, Show, Functor)
+    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
-instance (Stretchable p, Delayable p) => HasPitch (PitchT p a) where
-    type Pitch      (PitchT f a) = f
-    type SetPitch g (PitchT f a) = PitchT g a 
-    getPitches (PitchT (v,_))    = [v]
-    mapPitch f (PitchT (v,x)) = PitchT (f v, x)
+instance (Semigroup p, Monoid p) => Applicative (PitchT p) where
+    pure x = PitchT (mempty,x)
+    PitchT (pf,vf) <*> PitchT (px,vx) = PitchT (pf <> px, vf $ vx)
 
+-- TODO move these
 instance Stretchable ()
 instance Stretchable Double
 instance Stretchable Float
@@ -156,88 +147,95 @@ instance Delayable Int
 instance Delayable Integer
 instance Integral a => Delayable (Ratio a)
 
+type instance Pitch (c,a) = Pitch a
+instance HasGetPitch a => HasGetPitch (c,a) where
+    getPitch (c,a) = getPitch a
+
+-- Undecidable ??
+instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
+  type SetPitch b (c,a) = (c,SetPitch b a)
+  setPitch b = fmap (setPitch b)
+
 #define HAS_PITCH_PRIM(T)   \
-instance HasPitch T where { \
-    type Pitch T = T;       \
-    type SetPitch b T = b;  \
-    getPitches = return;    \
-    mapPitch   = id; }
+type instance Pitch T = T; \
+instance HasGetPitch T where { \
+    getPitch = id }
+    
+#define HAS_SET_PITCH_PRIM(T)   \
+instance (a ~ Pitch a) => HasSetPitch T a where { \
+    type SetPitch a T = a; \
+    mapPitch = id }
 
 HAS_PITCH_PRIM(())
+HAS_PITCH_PRIM(Bool)
 HAS_PITCH_PRIM(Double)
 HAS_PITCH_PRIM(Float)
 HAS_PITCH_PRIM(Int)
 HAS_PITCH_PRIM(Integer)
 
-instance Integral a => HasPitch (Ratio a) where
-    type Pitch (Ratio a) = (Ratio a)
-    type SetPitch b (Ratio a) = b
-    getPitches = return
-    mapPitch = id
+HAS_SET_PITCH_PRIM(())
+HAS_SET_PITCH_PRIM(Bool)
+HAS_SET_PITCH_PRIM(Double)
+HAS_SET_PITCH_PRIM(Float)
+HAS_SET_PITCH_PRIM(Int)
+HAS_SET_PITCH_PRIM(Integer)
 
-instance HasPitch b => HasPitch (a, b) where
-    type Pitch (a,b)      = Pitch b
-    type SetPitch g (a,b) = (a, SetPitch g b)
-    getPitches = getPitches . snd
-    mapPitch f = fmap (mapPitch f)
-
-instance HasPitch a => HasPitch [a] where
-    type Pitch [a] = Pitch a
-    type SetPitch g [a] = [SetPitch g a]
-    getPitches [] = error "getPitch: Empty list"
-    getPitches as = concatMap getPitches as
-    mapPitch f    = fmap (mapPitch f)
-
-
-    
 -- |
 -- Transpose up.
 --
 -- > Interval -> Score a -> Score a
 --
-up :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-up a = mapPitch' (.+^ a)
+up :: (HasSetPitch a b, AffineSpace p, p ~ Pitch a, p ~ Pitch b) => Interval a -> a -> b
+up a = {-pitch %~-}mapPitch (.+^ a)
+
+up' :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
+up' a = {-pitch %~-}mapPitch (.+^ a)
 
 -- |
 -- Transpose down.
 --
 -- > Interval -> Score a -> Score a
 --
-down :: (HasPitch a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-down a = mapPitch' (.-^ a)
+down :: (HasSetPitch a b, AffineSpace p, p ~ Pitch a, p ~ Pitch b) => Interval a -> a -> b
+down a = {-pitch %~-}mapPitch (.-^ a)
+
+down' :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
+down' a = {-pitch %~-}mapPitch (.-^ a)
 
 -- |
 -- Invert around the given pitch.
 --
 -- > Pitch -> Score a -> Score a
 --
-invertAround :: (AffineSpace (Pitch a), HasPitch a) => Pitch a -> a -> a
-invertAround p = mapPitch' (reflectThrough p)
+invertAround :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
+invertAround p = pitch' %~ (reflectThrough p)
 
 -- |
 -- Transpose up by the given number of octaves.
 --
 -- > Integer -> Score a -> Score a
 --
-octavesUp       :: (HasPitch' a, IsInterval (Interval a)) => 
-                Integer -> a -> a
+-- octavesUp       :: (HasPitchConstr a, IsInterval (Interval a)) => 
+                -- Integer -> a -> a
 
 -- |
 -- Transpose down by the given number of octaves.
 --
 -- > Integer -> Score a -> Score a
 --
-octavesDown     :: (HasPitch' a, IsInterval (Interval a)) => 
-                Integer -> a -> a
+-- octavesDown     :: (HasPitchConstr a, IsInterval (Interval a)) => 
+                -- Integer -> a -> a
 
 octavesUp a     = up (_P8^*a)
 octavesDown a   = down (_P8^*a)
 
-
+{-}
 highestPitch = maximum . getPitches
 lowestPitch = maximum . getPitches
 meanPitch = mean . getPitches
 
 
 mean :: Floating a => [a] -> a
-mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
+mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x 
+
+-}

@@ -244,14 +244,11 @@ instance Arbitrary a => Arbitrary (Score a) where
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
 
-instance (HasPitch a) => HasPitch (Score a) where
-    type Pitch (Score a)      = Pitch a
+type instance Pitch (Score a) = Pitch a
+instance (HasSetPitch a b, Transformable (Pitch (Score a)), Transformable (Pitch (Score b))) => HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
-    getPitches   = F.foldMap getPitches
-
     -- FIXME this is wrong, need to behave like mapPitch'
     -- mapPitch f   = fmap (mapPitch f)
-
     mapPitch f  = mapWithSpan (\s -> mapPitch $ sunder s f)
       where
         mapWithSpan f = mapScore (uncurry f . getNote)

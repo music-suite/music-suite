@@ -9,9 +9,9 @@ module Data.PairMonad where
 
 import Control.Applicative
 
-#ifdef __HAS_LENS__
+-- #ifdef __HAS_LENS__
 import Control.Lens()
-#endif __HAS_LENS__
+-- #endif __HAS_LENS__
 
 import Data.Monoid
 import Data.Foldable
@@ -22,7 +22,7 @@ instance Monoid o => Monad ((,) o) where
   return      = pure
   (o,a) >>= f = (o `mappend` o', a') where (o',a') = f a
 
-#ifndef __HAS_LENS__
-deriving instance Foldable ((,) o)
-deriving instance Traversable ((,) o)
-#endif __HAS_LENS__
+-- #ifndef __HAS_LENS__
+-- deriving instance Foldable ((,) o)
+-- deriving instance Traversable ((,) o)
+-- #endif __HAS_LENS__

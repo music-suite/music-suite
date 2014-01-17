@@ -67,7 +67,7 @@ class HasTremolo a where
     setTrem :: Int -> a -> a
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
@@ -86,7 +86,7 @@ class HasText a where
     addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
@@ -133,7 +133,7 @@ class HasSlide a where
     setEndSlide   :: Bool -> a -> a
 
 newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
-    deriving (Eq, Show, Ord, Functor{-, Foldable-}, Typeable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
 instance HasSlide (SlideT a) where
     setBeginGliss bg (SlideT (eg,es,a,_,bs))       = SlideT (eg,es,a,bg,bs)

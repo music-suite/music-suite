@@ -150,11 +150,12 @@ instance Arbitrary a => Arbitrary (Track a) where
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
 
-instance HasPitch a => HasPitch (Track a) where
-    type Pitch      (Track a) = Pitch a
-    type SetPitch g (Track a) = Track (SetPitch g a)
-    getPitches  = F.foldMap getPitches
-    mapPitch f  = fmap (mapPitch f)
+-- instance HasPitch a => HasPitch (Track a) where
+--     type Pitch (Track a) = Pitch a
+--     getPitch = getPitch . head . F.toList -- TODO
+-- instance HasSetPitch a => HasSetPitch (Track a) (Track b) where
+--     type SetPitch g (Track a) = Track (SetPitch g a)
+--     mapPitch f = fmap (mapPitch f)
 
 
 

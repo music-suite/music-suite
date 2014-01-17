@@ -35,6 +35,7 @@ module Music.Score.Part (
         getParts,
   ) where
 
+import Control.Comonad
 import Control.Monad.Plus
 import Data.Default
 import Data.Ord (comparing)
@@ -71,7 +72,7 @@ class HasPart a where
     modifyPart f x = x
 
 newtype PartT n a = PartT { getPartT :: (n, a) }
-    deriving (Eq, Ord, Show, Functor, Typeable)
+    deriving (Eq, Ord, Show, Functor, Comonad, Typeable)
 
 instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = def }
 instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = def }

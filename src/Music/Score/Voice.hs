@@ -130,11 +130,11 @@ instance IsPitch a => IsPitch (Voice a) where
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
-instance HasPitch a => HasPitch (Voice a) where
-    type Pitch (Voice a) = Pitch a
-    type SetPitch g (Voice a) = Voice (SetPitch g a)
-    getPitches  = F.foldMap getPitches
-    mapPitch f  = fmap (mapPitch f)
+-- instance HasPitch a => HasPitch (Voice a) where
+    -- type Pitch (Voice a) = Pitch a
+    -- type SetPitch g (Voice a) = Voice (SetPitch g a)
+    -- getPitches  = F.foldMap getPitches
+    -- mapPitch f  = fmap (mapPitch f)
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.

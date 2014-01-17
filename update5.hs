@@ -11,6 +11,7 @@
     NoMonomorphismRestriction,
     UndecidableInstances,
     RankNTypes,
+    DefaultSignatures,
     GeneralizedNewtypeDeriving #-}
 
 module Update5 where
@@ -33,14 +34,18 @@ class HasGetPitch s where
 class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
   setPitch :: Pitch t -> s -> t
+  mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  default mapPitch :: HasGetPitch s => (Pitch s -> Pitch t) -> s -> t
+  mapPitch f x = setPitch p x where p = f (getPitch x)
   
 type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
 
-mapPitch :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
-mapPitch f x = setPitch p x where p = f (getPitch x)
+-- TODO use default sigs here
+mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
+mapPitchDefault f x = setPitch p x where p = f (getPitch x)
 
 type HasPitch' a = HasPitch a a
-  
+
 pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
@@ -83,7 +88,7 @@ instance HasGetPitch a => HasGetPitch (c,a) where
     getPitch (c,a) = getPitch a
 
 -- Undecidable ??
-instance HasSetPitch a b => HasSetPitch (c,a) (c,b) where
+instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
   type SetPitch b (c,a) = (c,SetPitch b a)
   setPitch b = fmap (setPitch b)
 

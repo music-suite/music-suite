@@ -1,6 +1,7 @@
 
 {-# LANGUAGE
     TypeFamilies,
+    NoMonomorphismRestriction,
     DeriveFunctor,
     DeriveFoldable,
     DeriveDataTypeable,
@@ -8,6 +9,7 @@
     FlexibleInstances,
     FlexibleContexts,
     ConstraintKinds,
+    MultiParamTypeClasses,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -29,6 +31,7 @@ module Music.Score.Instances (
   ) where
 
 import Control.Monad
+import Control.Comonad
 import Data.Semigroup
 import Data.Pointed
 import Data.Default
@@ -166,11 +169,9 @@ instance HasPart a => HasPart (Maybe a) where
     modifyPart f Nothing                            = Nothing
     modifyPart f (Just a)                           = Just (modifyPart f a) 
     -- TODO use cofunctor
-instance HasPitch a => HasPitch (Maybe a) where
-    type Pitch (Maybe a)                             = Pitch a
-    type SetPitch g (Maybe a)                        = Maybe (SetPitch g a)
-    getPitches Nothing                               = []
-    getPitches (Just a)                              = getPitches a
+type instance Pitch (Maybe a) = Pitch a
+instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
+    type SetPitch g (Maybe a) = Maybe (SetPitch g a)
     mapPitch f (Nothing)                          = Nothing
     mapPitch f (Just a)                           = Just (mapPitch f a)
 
@@ -181,11 +182,14 @@ instance HasPitch a => HasPitch (Maybe a) where
 instance HasChord a => HasChord (PartT n a) where
     type ChordNote (PartT n a)                           = PartT n (ChordNote a)
     getChord (PartT (v,x))                          = fmap (\x -> PartT (v,x)) (getChord x)
-instance HasPitch a => HasPitch (PartT n a) where
-    type Pitch (PartT n a)                          = Pitch a
-    type SetPitch g (PartT n a)                     = PartT n (SetPitch g a)
-    getPitches (PartT (v,a))                        = getPitches a
-    mapPitch f                                   = fmap (mapPitch f)
+
+type instance Pitch (PartT n a) = Pitch a
+instance HasGetPitch a => HasGetPitch (PartT n a) where
+    getPitch = getPitch . extract
+instance HasSetPitch a b => HasSetPitch (PartT n a) (PartT n b) where
+    type SetPitch g (PartT n a) = PartT n (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
 instance Tiable a => Tiable (PartT n a) where
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 deriving instance HasDynamic a => HasDynamic (PartT n a)
@@ -202,11 +206,14 @@ instance Tiable a => Tiable (ChordT a) where
     toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
 -- No HasPart instance, PartT must be outside ChordT
 -- This restriction assures all chord notes are in the same part
-instance HasPitch a => HasPitch (ChordT a) where
-    type Pitch (ChordT a)                         = Pitch a
-    type SetPitch g (ChordT a)                      = ChordT (SetPitch g a)
-    getPitches (ChordT as)                          = getPitches as
-    mapPitch f (ChordT as)                       = ChordT (mapPitch f as)
+
+type instance Pitch (ChordT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (ChordT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
+    type SetPitch g (ChordT a) = ChordT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
 instance HasDynamic a => HasDynamic (ChordT a) where
     setBeginCresc n (ChordT as)                     = ChordT (fmap (setBeginCresc n) as)
     setEndCresc   n (ChordT as)                     = ChordT (fmap (setEndCresc n) as)
@@ -242,11 +249,15 @@ instance HasPart a => HasPart (TieT a) where
 instance HasChord a => HasChord (TieT a) where
     type ChordNote (TieT a)                              = TieT (ChordNote a)
     getChord (TieT (b,x,e))                         = fmap (\x -> TieT (b,x,e)) (getChord x)
-instance HasPitch a => HasPitch (TieT a) where
-    type Pitch (TieT a)                           = Pitch a
-    type SetPitch g (TieT a)                        = TieT (SetPitch g a)
-    getPitches (TieT (_,x,_))                       = getPitches x
-    mapPitch f (TieT (b,x,e))                    = TieT (b,mapPitch f x,e)
+
+type instance Pitch (TieT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (TieT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (TieT a) (TieT b) where
+    type SetPitch g (TieT a) = TieT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
+
 instance HasDynamic a => HasDynamic (TieT a) where
     setBeginCresc n                                 = fmap (setBeginCresc n)
     setEndCresc   n                                 = fmap (setEndCresc n)
@@ -288,12 +299,15 @@ instance HasPart a => HasPart (DynamicT a) where
 instance HasChord a => HasChord (DynamicT a) where
     type ChordNote (DynamicT a)                          = DynamicT (ChordNote a)
     getChord (DynamicT (ec,ed,l,a,bc,bd))           = fmap (\x -> DynamicT (ec,ed,l,x,bc,bd)) (getChord a)
-instance HasPitch a => HasPitch (DynamicT a) where
-    type Pitch (DynamicT a)                       = Pitch a
-    type SetPitch g (DynamicT a)                    = DynamicT (SetPitch g a)
-    getPitches (DynamicT (ec,ed,l,a,bc,bd))         = getPitches a
-    mapPitch f                                   = fmap (mapPitch f)
--- HasDynamic (DynamicT a)
+
+type instance Pitch (DynamicT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (DynamicT a) where
+    getPitch (DynamicT (ec,ed,l,a,bc,bd)) = getPitch a
+instance HasSetPitch a b => HasSetPitch (DynamicT a) (DynamicT b) where
+    type SetPitch g (DynamicT a) = DynamicT (SetPitch g a)
+    mapPitch f (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,mapPitch f a,bc,bd)
+
+
 instance HasArticulation a => HasArticulation (DynamicT a) where
     setEndSlur    n                                 = fmap (setEndSlur n)
     setContSlur   n                                 = fmap (setContSlur n)
@@ -330,11 +344,14 @@ instance HasPart a => HasPart (ArticulationT a) where
 instance HasChord a => HasChord (ArticulationT a) where
     type ChordNote (ArticulationT a)                         = ArticulationT (ChordNote a)
     getChord (ArticulationT (es,us,al,sl,a,bs))         = fmap (\x -> ArticulationT (es,us,al,sl,x,bs)) (getChord a)
-instance HasPitch a => HasPitch (ArticulationT a) where
-    type Pitch (ArticulationT a)                      = Pitch a
-    type SetPitch g (ArticulationT a)                    = ArticulationT (SetPitch g a)
-    getPitches (ArticulationT (es,us,al,sl,a,bs))       = getPitches a
-    mapPitch   f                                     = fmap (mapPitch f)
+
+type instance Pitch (ArticulationT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (ArticulationT a) where
+    getPitch (ArticulationT (es,us,al,sl,a,bs)) = getPitch a
+instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) where
+    type SetPitch g (ArticulationT a) = ArticulationT (SetPitch g a)
+    mapPitch f (ArticulationT (es,us,al,sl,a,bs)) = (ArticulationT (es,us,al,sl,mapPitch f a,bs))
+
 instance HasDynamic a => HasDynamic (ArticulationT a) where
     setBeginCresc n                                     = fmap (setBeginCresc n)
     setEndCresc   n                                     = fmap (setEndCresc n)
@@ -370,11 +387,14 @@ instance HasPart a => HasPart (TremoloT a) where
 instance HasChord a => HasChord (TremoloT a) where
     type ChordNote (TremoloT a)                          = TremoloT (ChordNote a)
     getChord (TremoloT (n,x))                       = fmap (\x -> TremoloT (n,x)) (getChord x)
-instance HasPitch a => HasPitch (TremoloT a) where
-    type Pitch (TremoloT a)                       = Pitch a
-    type SetPitch g (TremoloT a)                    = TremoloT (SetPitch g a)
-    getPitches (TremoloT (_,a))                     = getPitches a
-    mapPitch f (TremoloT (n,x))                  = TremoloT (n, mapPitch f x)
+
+type instance Pitch (TremoloT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (TremoloT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (TremoloT a) (TremoloT b) where
+    type SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
 deriving instance HasDynamic a => HasDynamic (TremoloT a)
 deriving instance HasArticulation a => HasArticulation (TremoloT a)
 -- instance HasTremolo (TremoloT a) where
@@ -396,11 +416,15 @@ instance HasPart a => HasPart (TextT a) where
 instance HasChord a => HasChord (TextT a) where
     type ChordNote (TextT a)                             = TextT (ChordNote a)
     getChord (TextT (n,x))                          = fmap (\x -> TextT (n,x)) (getChord x)
-instance HasPitch a => HasPitch (TextT a) where
-    type Pitch (TextT a)                          = Pitch a
-    type SetPitch g (TextT a)                    = TextT (SetPitch g a)
-    getPitches (TextT (_,a))                        = getPitches a
-    mapPitch f (TextT (n,x))                     = TextT (n, mapPitch f x)
+
+type instance Pitch (TextT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (TextT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (TextT a) (TextT b) where
+    type SetPitch g (TextT a) = TextT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
+
 deriving instance HasDynamic a => HasDynamic (TextT a)
 deriving instance HasArticulation a => HasArticulation (TextT a)
 deriving instance HasTremolo a => HasTremolo (TextT a)
@@ -420,11 +444,14 @@ instance HasPart a => HasPart (HarmonicT a) where
 instance HasChord a => HasChord (HarmonicT a) where
     type ChordNote (HarmonicT a)                         = HarmonicT (ChordNote a)
     getChord (HarmonicT (n,x))                      = fmap (\x -> HarmonicT (n,x)) (getChord x)
-instance HasPitch a => HasPitch (HarmonicT a) where
-    type Pitch (HarmonicT a)                      = Pitch a
-    type SetPitch g (HarmonicT a)                    = HarmonicT (SetPitch g a)
-    getPitches (HarmonicT (_,a))                    = getPitches a
-    mapPitch f (HarmonicT (n,x))                 = HarmonicT (n, mapPitch f x)
+
+type instance Pitch (HarmonicT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (HarmonicT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (HarmonicT a) (HarmonicT b) where
+    type SetPitch g (HarmonicT a) = HarmonicT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
 deriving instance HasDynamic a => HasDynamic (HarmonicT a)
 deriving instance HasArticulation a => HasArticulation (HarmonicT a)
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
@@ -446,11 +473,14 @@ instance HasPart a => HasPart (SlideT a) where
 instance HasChord a => HasChord (SlideT a) where
     type ChordNote (SlideT a)                           = SlideT (ChordNote a)
     getChord (SlideT (eg,es,a,bg,bs))              = fmap (\x -> SlideT (eg,es,x,bg,bs)) (getChord a)
-instance HasPitch a => HasPitch (SlideT a) where
-    type Pitch (SlideT a)                        = Pitch a
-    type SetPitch g (SlideT a)                    = SlideT (SetPitch g a)
-    getPitches (SlideT (eg,es,a,bg,bs))            = getPitches a
-    mapPitch f (SlideT (eg,es,a,bg,bs))         = SlideT (eg,es,mapPitch f a,bg,bs)
+
+type instance Pitch (SlideT a) = Pitch a
+instance HasGetPitch a => HasGetPitch (SlideT a) where
+    getPitch = getPitch . get1
+instance HasSetPitch a b => HasSetPitch (SlideT a) (SlideT b) where
+    type SetPitch g (SlideT a) = SlideT (SetPitch g a)
+    mapPitch f = fmap (mapPitch f)
+
 instance HasDynamic a => HasDynamic (SlideT a) where
     setBeginCresc n                                = fmap (setBeginCresc n)
     setEndCresc   n                                = fmap (setEndCresc n)
@@ -690,3 +720,5 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 
 -- Safe for tuple-like types
 get1 = head . toList
+-- TODO replace with extract
+

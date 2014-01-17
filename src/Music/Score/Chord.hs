@@ -68,8 +68,8 @@ import Music.Score.Combinators
 
 class HasChord a where
     type ChordNote a :: *
+    -- TODO use NonEmpty
     getChord :: a -> [ChordNote a]
-    -- modifyChord :: (ChordNote a -> ChordNote a) -> a -> a
 
 instance HasChord [a] where
     type ChordNote [a] = a
@@ -79,8 +79,7 @@ instance HasChord (ChordT a) where
     type ChordNote (ChordT a) = a
     getChord (ChordT as)      = as
 
--- Actually we should use NonEmpty here
--- Empty chords will cause error with HasPitch, among others
+-- TODO Use NonEmpty
 newtype ChordT a = ChordT { getChordT :: [a] }
     deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
 
