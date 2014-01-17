@@ -13,6 +13,7 @@ module Music.Score.Import.Midi (
 import Music.Score
 import Music.Pitch.Literal (IsPitch)
 
+import Control.Applicative
 import Control.Reactive hiding (Event)
 import Control.Reactive.Midi
 import qualified Control.Reactive as R
@@ -45,10 +46,38 @@ import qualified Music.Pitch.Literal as Pitch
 -- import qualified Data.ByteString.Lazy as ByteString
 
 -- |
+-- This constraint includes all note types that can be constructed from a Midi representation.
+--
+type IsMidi a = (
+    -- TODO
+    IsPitch a, 
+    HasPart' a, 
+    Enum (Part a), 
+    HasPitch a, 
+    Num (Pitch a), 
+    HasTremolo a, 
+    HasArticulation a,
+    Tiable a
+    )
+
+
+-- |
 -- Convert a score from a Midi representation.
 --
 fromMidi :: IsMidi a => Midi -> Score a
 fromMidi = undefined
+    -- Map each track to a part (scanning for ProgramChange, name etc)
+    -- Subdivide parts based on channels
+    -- Set channel 10 tracks to "percussion"
+
+    -- Remove all non-used messages (KeyPressure, ChannelPressure, ProgramChange)
+    -- Create reactives from variable values
+    -- Create notes
+    -- Superimpose variable values
+
+    -- Compose
+    -- Add meta-information
+
 -- TODO
 
 -- |
@@ -70,24 +99,8 @@ readMidiMaybe path = fmap (either (const Nothing) Just) $ readMidiEither path
 -- @Left m@ if a parsing error occurs.
 -- 
 readMidiEither :: IsMidi a => FilePath -> IO (Either String (Score a))
-readMidiEither path = undefined
--- TODO
--- use fromMidi here
-
--- |
--- This constraint includes all note types that can be constructed from a Midi representation.
---
-type IsMidi a = (
-    IsPitch a, 
-    HasPart' a, 
-    Enum (Part a), 
-    HasPitch a, 
-    Num (Pitch a), 
-    HasTremolo a, 
-    HasArticulation a,
-    Tiable a
-    )
-
+readMidiEither path = fmap (fmap fromMidi) $ importFile path
+    
 
 -- Util
 

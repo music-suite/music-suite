@@ -219,7 +219,8 @@ writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
 openXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
 openXml sc = do
     writeXml "test.xml" sc
-    void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+    -- FIXME find out which program to use...
+    void $ rawSystem "open" ["-a", "Sibelius 7", "test.xml"]
 
 -- -- |
 -- -- Convert a score to MusicXML and write to a file.
