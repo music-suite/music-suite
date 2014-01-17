@@ -30,28 +30,29 @@ class HasPitch s where
   type Pitch             (s :: *) :: *
   _pitch :: (a ~ Pitch s) => s -> a
 
-class (HasPitch s, SetPitch (Pitch t) s ~ t) => HasPitch2 (s :: *) (t :: *) where
+class (HasPitch s, SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
 
-  _setPitch :: Pitch t -> s -> t
-  _setPitch x = _mapPitch (const x)
+  setPitch :: Pitch t -> s -> t
+  setPitch x = mapPitch (const x)
   
-  _mapPitch :: (Pitch s -> Pitch t) -> s -> t
-  _mapPitch f x = _setPitch p x where p = f (_pitch x)
+  mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  mapPitch f x = setPitch p x where p = f (_pitch x)
 
-type HasPitch' a = HasPitch2 a a
+type HasPitch' a    = HasSetPitch a a
+type HasSetPitch' a = HasSetPitch a a
   
-pitch :: HasPitch2 s t => Lens s t (Pitch s) (Pitch t)
-pitch = lens _pitch (flip _setPitch)
-
-pitch' :: HasPitch2 s s => Lens' s (Pitch s)
+pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
-_setPitch' :: HasPitch2 s s => Pitch s -> s -> s
-_setPitch' = _setPitch
+pitch :: HasSetPitch a b => Lens a b (Pitch a) (Pitch b)
+pitch = lens _pitch (flip setPitch)
 
-_mapPitch' :: HasPitch2 s s => (Pitch s -> Pitch s) -> s -> s
-_mapPitch' = _mapPitch
+-- setPitch' :: HasSetPitch s s => Pitch s -> s -> s
+-- setPitch' = setPitch
+
+-- mapPitch' :: HasSetPitch s s => (Pitch s -> Pitch s) -> s -> s
+-- mapPitch' = mapPitch
 
 data PitchT f a = PitchT f a
     deriving (Show, Functor, Foldable, Traversable)
@@ -64,9 +65,9 @@ instance HasPitch (PitchT f a) where
     type Pitch      (PitchT f a) = f
     _pitch        (PitchT f a) = f
 
-instance HasPitch2 (PitchT f a) (PitchT g a)  where
+instance HasSetPitch (PitchT f a) (PitchT g a)  where
     type SetPitch g (PitchT f a) = PitchT g a 
-    _setPitch      g (PitchT f a) = PitchT g a
+    setPitch      g (PitchT f a) = PitchT g a
 
 -- instance HasPitch a => HasPitch [a] where
 --     type Pitch [a] = Pitch a
@@ -74,48 +75,48 @@ instance HasPitch2 (PitchT f a) (PitchT g a)  where
 --     -- TODO crashes when updating longer lists etc
 -- 
 -- -- Undecidable
--- instance (HasPitch2 a b) => HasPitch2 [a] [b] where
+-- instance (HasSetPitch a b) => HasSetPitch [a] [b] where
 --   type SetPitch b [a] = [SetPitch b a]
---   _setPitch b = fmap (_setPitch b)      
+--   setPitch b = fmap (setPitch b)      
 
 instance HasPitch a => HasPitch (c,a) where
     type Pitch (c,a) = Pitch a
     _pitch (c,a) = _pitch a
 
 -- Undecidable ??
-instance (HasPitch2 a b) => HasPitch2 (c,a) (c,b) where
+instance HasSetPitch a b => HasSetPitch (c,a) (c,b) where
   type SetPitch b (c,a) = (c,SetPitch b a)
-  _setPitch b = fmap (_setPitch b)
+  setPitch b = fmap (setPitch b)
 
 
 
 -- instance HasPitch M.Pitch where
 --     type Pitch M.Pitch = M.Pitch
 --     _pitch = id
--- instance HasPitch2 M.Pitch a where
+-- instance HasSetPitch M.Pitch a where
 --     type SetPitch a M.Pitch = a
---     _setPitch = const
+--     setPitch = const
 
 instance HasPitch Int where
     type Pitch Int = Int
     _pitch = id
-instance (a ~ Pitch a) => HasPitch2 Int a where
+instance (a ~ Pitch a) => HasSetPitch Int a where
     type SetPitch a Int = a
-    _setPitch = const
+    setPitch = const
 
 instance HasPitch Bool where
     type Pitch Bool = Bool
     _pitch = id
-instance (a ~ Pitch a) => HasPitch2 Bool a where
+instance (a ~ Pitch a) => HasSetPitch Bool a where
     type SetPitch a Bool = a
-    _setPitch = const
+    setPitch = const
 
 instance HasPitch M.Pitch where
     type Pitch M.Pitch = M.Pitch
     _pitch = id
-instance (a ~ Pitch a) => HasPitch2 M.Pitch a where
+instance (a ~ Pitch a) => HasSetPitch M.Pitch a where
     type SetPitch a M.Pitch = a
-    _setPitch = const
+    setPitch = const
 
 
 
@@ -137,11 +138,14 @@ up a = pitch %~ (.+^ a)
 down :: (HasPitch' a, AffineSpace (Pitch a)) => Interval a -> a -> a
 down a = pitch %~ (.-^ a)
 
--- interval :: (HasPitch' a) => a -> a -> Interval a
--- interval x y = x^.pitch `distance` y^.pitch
+
+type HasInterval a = (Floating (Interval a), M.InnerSpace (Interval a), M.Scalar (Interval a) ~ (Interval a))
+
+interval :: (HasPitch' a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Interval a
+interval x y = (x^.pitch) `distance` (y^.pitch)
 
 invert :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
-invert p = pitch %~ (reflectAround p)
+invert p = pitch %~ reflectAround p
 
 
 --                         

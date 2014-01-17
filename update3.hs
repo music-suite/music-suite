@@ -17,41 +17,36 @@ module Update3 where
 -- Copied from https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan
 -- Simplified to capture a single type
 import Control.Applicative
+import Control.Lens
 import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
 import Data.AffineSpace -- tests
 import qualified Music.Pitch as M
 
+-- Constraint versions of the lens laws
+-- type GetPut s     = (s ~ SetPitch (Pitch s) s)
+-- type PutGet s a   = (a ~ Pitch (SetPitch a s))
+-- type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
+
 class HasPitch s where
   type Pitch             (s :: *) :: *
   getPitch :: (a ~ Pitch s) => s -> a
 
-
--- Constraint versions of the lens laws
-type GetPut s     = (s ~ SetPitch (Pitch s) s)
-type PutGet s a   = (a ~ Pitch (SetPitch a s))
-type PutPut s a b = (b ~ SetPitch b (SetPitch a s))
-
--- SetPitch (Pitch s) s
-
-class (HasPitch s, GetPut s, PutGet s b) => UpdatePitch (b :: *) (s :: *) where
+class (HasPitch s, s ~ SetPitch (Pitch s) s) => UpdatePitch (b :: *) (s :: *) where
   type SetPitch (b :: *) (s :: *) :: *
   setPitch :: (b ~ Pitch t, t ~ SetPitch b s) => b -> s -> t
 
--- TODO always require this constraint, or make it a class for better type sigs
-type HasMutablePitch s t = (UpdatePitch (Pitch t) s, SetPitch (Pitch t) s ~ t)
+type HasPitch2 s t = (UpdatePitch (Pitch t) s, SetPitch (Pitch t) s ~ t)
+type HasPitch' s = HasPitch2 s s
 
 
-
-mapPitch :: (HasMutablePitch s t) => (Pitch s -> Pitch t) -> s -> t
+mapPitch :: (HasPitch2 s t) => (Pitch s -> Pitch t) -> s -> t
 mapPitch f x = setPitch p x where p = f (getPitch x)
 
-mapPitch' :: (HasMutablePitch s s) => (Pitch s -> Pitch s) -> s -> s
+mapPitch' :: (HasPitch' s) => (Pitch s -> Pitch s) -> s -> s
 mapPitch' = mapPitch
 
-incPitch :: (HasMutablePitch s s, Enum (Pitch s)) => s -> s
-incPitch = mapPitch' succ
 
 
 data PitchT f a = PitchT f a
