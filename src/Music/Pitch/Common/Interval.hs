@@ -357,8 +357,8 @@ class HasNumber a where
 --
 newtype Interval = Interval { getInterval :: (
             Int,        -- octaves, may be negative
-            Int,        -- diatonic semitone [0..6]
-            Int         -- chromatic semitone [0..11]
+            Int,        -- diatonic remainder (positive) [0..6]
+            Int         -- chromatic remainder (positive) [0..11]
     ) }
     deriving (Eq, Ord, Typeable)
 
@@ -369,8 +369,27 @@ instance Num Interval where
     a * b         = fromIntegral (semitones a) `stackInterval` b
     signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
     fromInteger 0 = _P1
-    fromInteger n = n `stackInterval` m2
 
+    -- fromInteger n = n `stackInterval` m2
+    fromInteger n = case fromInteger n `divMod` 12 of
+        (octave, chromatic) -> Interval (octave, sharpSpelling chromatic, chromatic)
+        where
+            -- Copied from Spellings (TODO factor out these)
+            sharpSpelling = go
+                where
+                    go 0  = 0
+                    go 1  = 0
+                    go 2  = 1
+                    go 3  = 1
+                    go 4  = 2
+                    go 5  = 3
+                    go 6  = 3
+                    go 7  = 4
+                    go 8  = 4
+                    go 9  = 5
+                    go 10 = 5
+                    go 11 = 6
+        
 instance Show Interval where
     show a | isNegative a = "-" ++ showQuality (quality a) ++ show (abs $ number a)
            | otherwise    =        showQuality (quality a) ++ show (abs $ number a)
