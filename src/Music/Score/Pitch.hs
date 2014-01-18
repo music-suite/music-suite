@@ -38,6 +38,7 @@ module Music.Score.Pitch (
         HasPitch(..),
         pitch',
         pitch,
+        pitch_,
         HasGetPitch(..),
         HasSetPitch(..),
         HasSetPitch'(..),
@@ -52,11 +53,9 @@ module Music.Score.Pitch (
         -- ** Transposition
         up,
         down,
-        up',
-        down',
-        invertAround,
         octavesUp,
         octavesDown,
+        invertAround,
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -119,6 +118,9 @@ pitch' = pitch
 
 pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
 pitch = lens getPitch (flip setPitch)
+
+pitch_ :: HasSetPitch a b => Setter a b (Pitch a) (Pitch b)
+pitch_ = sets mapPitch
 
 type Interval a = Diff (Pitch a)
 
@@ -188,22 +190,16 @@ HAS_SET_PITCH_PRIM(Integer)
 --
 -- > Interval -> Score a -> Score a
 --
-up :: (HasSetPitch a b, AffineSpace p, p ~ Pitch a, p ~ Pitch b) => Interval a -> a -> b
+up :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
 up a = {-pitch %~-}mapPitch (.+^ a)
-
-up' :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-up' a = {-pitch %~-}mapPitch (.+^ a)
 
 -- |
 -- Transpose down.
 --
 -- > Interval -> Score a -> Score a
 --
-down :: (HasSetPitch a b, AffineSpace p, p ~ Pitch a, p ~ Pitch b) => Interval a -> a -> b
+down :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
 down a = {-pitch %~-}mapPitch (.-^ a)
-
-down' :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-down' a = {-pitch %~-}mapPitch (.-^ a)
 
 -- |
 -- Invert around the given pitch.
@@ -218,19 +214,21 @@ invertAround p = pitch' %~ (reflectThrough p)
 --
 -- > Integer -> Score a -> Score a
 --
--- octavesUp       :: (HasPitchConstr a, IsInterval (Interval a)) => 
-                -- Integer -> a -> a
+octavesUp :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+octavesUp = octavesUp_
 
 -- |
 -- Transpose down by the given number of octaves.
 --
 -- > Integer -> Score a -> Score a
 --
--- octavesDown     :: (HasPitchConstr a, IsInterval (Interval a)) => 
-                -- Integer -> a -> a
+octavesDown :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+octavesDown = octavesDown_
 
-octavesUp a     = up (_P8^*a)
-octavesDown a   = down (_P8^*a)
+octavesUp_ a     = up (_P8^*a)
+octavesDown_ a   = down (_P8^*a)
+
+
 
 {-}
 highestPitch = maximum . getPitches
