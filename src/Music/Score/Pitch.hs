@@ -88,6 +88,9 @@ import Music.Pitch.Literal
 -- >     type SetPitch g (T a) = T (SetPitch g a)
 -- >     mapPitch f = fmap (mapPitch f)
 --
+
+-- This is outside HasGetPitch etc because HasSetPitch needs it
+-- (and it allow us to derive more instances, see #95)
 type family Pitch (s :: *) :: *
 
 class HasGetPitch s where
