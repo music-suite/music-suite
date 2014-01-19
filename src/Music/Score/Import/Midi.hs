@@ -10,7 +10,7 @@ module Music.Score.Import.Midi (
         readMidiEither
   ) where
 
-import Music.Score
+import Music.Score.Score
 import Music.Pitch.Literal (IsPitch)
 
 import Control.Applicative

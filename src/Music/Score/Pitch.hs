@@ -43,9 +43,9 @@ module Music.Score.Pitch (
         -- * Accessors
         pitch',
         pitch,
-        pitch_,
-        pitches,
+        -- pitch_,
         pitches',
+        pitches,
 
         -- * Transformations
         up,

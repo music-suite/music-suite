@@ -61,7 +61,12 @@ module Music.Score (
         module Music.Score.Articulation,
         module Music.Score.Ornaments,
 
-        -- * Export
+        -- * Import and export
+        module Music.Score.Import.Abc,
+        module Music.Score.Import.Lilypond,
+        module Music.Score.Import.Midi,
+        
+        module Music.Score.Export.Abc,
         module Music.Score.Export.Midi,
         module Music.Score.Export.Lilypond,
         module Music.Score.Export.MusicXml,
@@ -112,7 +117,11 @@ import Music.Score.Articulation
 import Music.Score.Dynamics
 import Music.Score.Ornaments
 import Music.Score.Instances ()
-import Music.Score.Export.Midi
+import Music.Score.Import.Abc
+import Music.Score.Import.Lilypond
+import Music.Score.Import.Midi
+import Music.Score.Export.Abc
 import Music.Score.Export.Lilypond
+import Music.Score.Export.Midi
 import Music.Score.Export.MusicXml
 
