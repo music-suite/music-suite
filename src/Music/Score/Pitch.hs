@@ -53,9 +53,13 @@ module Music.Score.Pitch (
         -- ** Transposition
         up,
         down,
+        above,
+        below,
+        inv,
         octavesUp,
         octavesDown,
-        invertAround,
+        octavesAbove,
+        octavesBelow
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -191,7 +195,7 @@ HAS_SET_PITCH_PRIM(Integer)
 -- > Interval -> Score a -> Score a
 --
 up :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-up a = {-pitch %~-}mapPitch (.+^ a)
+up a = pitch_ %~ (.+^ a)
 
 -- |
 -- Transpose down.
@@ -199,15 +203,29 @@ up a = {-pitch %~-}mapPitch (.+^ a)
 -- > Interval -> Score a -> Score a
 --
 down :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
-down a = {-pitch %~-}mapPitch (.-^ a)
+down a = pitch_ %~ (.-^ a)
 
 -- |
--- Invert around the given pitch.
+-- Add the given interval above.
+--
+-- > Interval -> Score a -> Score a
+--
+above a x = x <> up a x
+
+-- |
+-- Add the given interval below.
+--
+-- > Interval -> Score a -> Score a
+--
+below a x = x <> up a x
+
+-- |
+-- Invert pitches.
 --
 -- > Pitch -> Score a -> Score a
 --
-invertAround :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
-invertAround p = pitch' %~ (reflectThrough p)
+inv :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
+inv p = pitch' %~ (reflectThrough p)
 
 -- |
 -- Transpose up by the given number of octaves.
@@ -228,6 +246,10 @@ octavesDown = octavesDown_
 octavesUp_ a     = up (_P8^*a)
 octavesDown_ a   = down (_P8^*a)
 
+octavesAbove :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+octavesBelow :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+octavesAbove n x = x <> octavesUp n x
+octavesBelow n x = x <> octavesUp n x
 
 
 {-}
