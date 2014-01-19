@@ -208,8 +208,8 @@ instance Tiable a => Tiable (ChordT a) where
 -- This restriction assures all chord notes are in the same part
 
 type instance Pitch (ChordT a) = Pitch a
-instance HasGetPitch a => HasGetPitch (ChordT a) where
-    getPitch = getPitch . get1
+-- instance HasGetPitch a => HasGetPitch (ChordT a) where
+    -- getPitch = getPitch . get1
 instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
     type SetPitch g (ChordT a) = ChordT (SetPitch g a)
     mapPitch f = fmap (mapPitch f)
