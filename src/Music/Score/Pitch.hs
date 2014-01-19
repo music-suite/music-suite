@@ -34,23 +34,20 @@ module Music.Score.Pitch (
         -- * Pitch representation
         Pitch,
         Interval,
+        HasGetPitch(..),
+        HasSetPitch(..),
         HasPitch'(..),
         HasPitch(..),
+        HasSetPitch'(..),
+
+        -- * Accessors
         pitch',
         pitch,
         pitch_,
-        HasGetPitch(..),
-        HasSetPitch(..),
-        HasSetPitch'(..),
-        -- highestPitch,
-        -- lowestPitch,
-        -- meanPitch,
+        pitches,
+        pitches',
 
-        -- * Pitch transformer
-        PitchT(..),
-
-        -- * Pitch transformations
-        -- ** Transposition
+        -- * Transformations
         up,
         down,
         above,
@@ -80,21 +77,11 @@ import qualified Data.List as List
 import Music.Time
 import Music.Pitch.Literal
 
--- |
--- 
--- For any type that is a Functor and a Comonad, you can:
---
--- > type instance Pitch (T a) = Pitch a
--- > instance HasGetPitch a => HasGetPitch (T a) where
--- >     getPitch = getPitch . extract
--- > instance HasSetPitch a b => HasSetPitch (T a) (T b) where
--- >     type SetPitch g (T a) = T (SetPitch g a)
--- >     mapPitch f = fmap (mapPitch f)
---
-
 -- This is outside HasGetPitch etc because HasSetPitch needs it
 -- (and it allow us to derive more instances, see #95)
-type family Pitch (s :: *) :: *
+type family Pitch a
+
+type Interval a = Diff (Pitch a)
 
 class HasGetPitch s where
   getPitch :: (a ~ Pitch s) => s -> a
@@ -116,17 +103,27 @@ mapPitchDefault f x = setPitch p x where p = f (getPitch x)
 
 type HasPitch' a = HasPitch a a
 type HasSetPitch' a = HasSetPitch a a
-  
+
+-- | A lens to the pitch in a note, score or other structure.  
 pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
+-- | A lens to the pitch in a note, score or other structure.  
 pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
 pitch = lens getPitch (flip setPitch)
 
+-- | A setter to the pitch in a note, score or other structure.  
 pitch_ :: HasSetPitch a b => Setter a b (Pitch a) (Pitch b)
 pitch_ = sets mapPitch
 
-type Interval a = Diff (Pitch a)
+-- | Traverses all pitches in structure.  
+pitches' :: (Traversable t, HasPitch' a) => Traversal' (t a) (Pitch a) 
+pitches' = traverse . pitch'
+
+-- | Traverses all pitches in structure.  
+pitches :: (Traversable t, HasPitch a b) => Traversal (t a) (t b) (Pitch a) (Pitch b) 
+pitches = traverse . pitch
+
 
 type HasPitchConstr a = (
     HasPitch' a, 
@@ -246,9 +243,20 @@ octavesDown = octavesDown_
 octavesUp_ a     = up (_P8^*a)
 octavesDown_ a   = down (_P8^*a)
 
+-- |
+-- Add the given interval below.
+--
+-- > Interval -> Score a -> Score a
+--
 octavesAbove :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
-octavesBelow :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesAbove n x = x <> octavesUp n x
+
+-- |
+-- Add the given interval below.
+--
+-- > Interval -> Score a -> Score a
+--
+octavesBelow :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesBelow n x = x <> octavesUp n x
 
 
