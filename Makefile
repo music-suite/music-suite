@@ -61,9 +61,9 @@ transform-pdf:
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		$(TRANSFORM_PDF) <../$(SRC)/About.md 	>About.md  && \
-		$(TRANSFORM_PDF) <../$(SRC)/Usage.md 	>Usage.md   && \
-		$(TRANSFORM_PDF) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/About.md 	>About.md  && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/Usage.md 	>Usage.md   && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM_PDF) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		rm -f *.eps	 && \
 		rm -f *.count	 && \
 		rm -f *.tex	 && \
