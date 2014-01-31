@@ -506,14 +506,14 @@ in compress 4 $ melody </> pedal
 
 ## Pitch
 
-@[invertAround]
+@[inv]
 
 ```music+haskell
 (scat [c..g]^*(2/5))
     </>
-(invertAround c $ scat [c..g]^*(2/5))
+(inv c $ scat [c..g]^*(2/5))
     </>
-(invertAround e $ scat [c..g]^*(2/5))
+(inv e $ scat [c..g]^*(2/5))
 ```
 
 
@@ -665,7 +665,7 @@ The distinction between ordinary musical data and meta-data is not always clear 
 @[subsubtitle]
 
 ```music+haskell
-title "Frere Jaques" $ scat [c,d,e,c]
+title "Frere Jaques" $ scat [c,d,e,c]^/4
 ```
 
 ## Attribution
@@ -685,7 +685,7 @@ composer "Anonymous" $ scat [c,d,e,c]
 ```
 
 ```music+haskell
-composer "Rodgers" $ lyricist "Hammerstein" $ arranger "Bennet" $ scat [c,d,e,c]
+composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]^/4
 ```
 
 ## Key signatures
