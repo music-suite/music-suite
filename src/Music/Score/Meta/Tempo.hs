@@ -84,6 +84,12 @@ type Bpm       = Duration
 type NoteValue = Duration
 
 -- | Represents musical tempo as a metronome mark with an optional string name.
+--
+-- TODO tempo is both scaling factor and beat duration
+--
+-- > tempoToDuration (metronome (1/4) 120) == tempoToDuration (metronome (1/2) 60)
+-- > metronome (1/4) 120                   /=                  metronome (1/2) 60
+
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
     deriving (Eq, Ord, Typeable)
 -- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor

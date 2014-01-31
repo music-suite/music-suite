@@ -105,22 +105,37 @@ type HasPitch' a = HasPitch a a
 type HasSetPitch' a = HasSetPitch a a
 
 -- | A lens to the pitch in a note, score or other structure.  
+--
+-- > Score a -> Lens (Pitch a)
+--
 pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
 -- | A lens to the pitch in a note, score or other structure.  
+--
+-- > Score a -> Lens (Pitch a)
+--
 pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
 pitch = lens getPitch (flip setPitch)
 
 -- | A setter to the pitch in a note, score or other structure.  
+--
+-- > Score a -> Lens (Pitch a)
+--
 pitch_ :: HasSetPitch a b => Setter a b (Pitch a) (Pitch b)
 pitch_ = sets mapPitch
 
 -- | Traverses all pitches in structure.  
+--
+-- > Score a -> Lens (Pitch a)
+--
 pitches' :: (Traversable t, HasPitch' a) => Traversal' (t a) (Pitch a) 
 pitches' = traverse . pitch'
 
 -- | Traverses all pitches in structure.  
+--
+-- > Score a -> Lens (Pitch a)
+--
 pitches :: (Traversable t, HasPitch a b) => Traversal (t a) (t b) (Pitch a) (Pitch b) 
 pitches = traverse . pitch
 
