@@ -9,6 +9,9 @@
     FlexibleInstances,
     TypeOperators,
     TypeFamilies,
+    ConstraintKinds,
+    FlexibleContexts,
+    UndecidableInstances,
     MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
@@ -150,12 +153,11 @@ instance Arbitrary a => Arbitrary (Track a) where
         d <- fmap realToFrac (arbitrary::Gen Double)
         return $ delay t $ stretch d $ return x
 
--- instance HasPitch a => HasPitch (Track a) where
---     type Pitch (Track a) = Pitch a
---     getPitch = getPitch . head . F.toList -- TODO
--- instance HasSetPitch a => HasSetPitch (Track a) (Track b) where
---     type SetPitch g (Track a) = Track (SetPitch g a)
---     mapPitch f = fmap (mapPitch f)
+type instance Pitch (Track a) = Pitch a
+instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch (Track b))) => HasSetPitch (Track a) (Track b) where
+    type SetPitch g (Track a) = Track (SetPitch g a)
+    -- FIXME this is wrong, need to behave like mapPitch'
+    mapPitch f   = fmap (mapPitch f)
 
 
 

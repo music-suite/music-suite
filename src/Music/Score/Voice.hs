@@ -9,6 +9,9 @@
     FlexibleInstances,
     TypeOperators,
     TypeFamilies,
+    ConstraintKinds,
+    FlexibleContexts,
+    UndecidableInstances,
     MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------------
@@ -129,6 +132,12 @@ instance IsPitch a => IsPitch (Voice a) where
 
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
+
+type instance Pitch (Voice a) = Pitch a
+instance (HasSetPitch a b, Transformable (Pitch (Voice a)), Transformable (Pitch (Voice b))) => HasSetPitch (Voice a) (Voice b) where
+    type SetPitch g (Voice a) = Voice (SetPitch g a)
+    -- FIXME this is wrong, need to behave like mapPitch'
+    mapPitch f   = fmap (mapPitch f)
 
 -- instance HasPitch a => HasPitch (Voice a) where
     -- type Pitch (Voice a) = Pitch a
