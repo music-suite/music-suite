@@ -236,8 +236,8 @@ below a x = x <> up a x
 --
 -- > Pitch -> Score a -> Score a
 --
-inv :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
-inv p = pitch' %~ (reflectThrough p)
+inv :: (HasSetPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
+inv p = pitch_ %~ (reflectThrough p)
 
 -- |
 -- Transpose up by the given number of octaves.
