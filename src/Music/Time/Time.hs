@@ -33,8 +33,6 @@ import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import Data.AffineSpace.Relative
-import Data.AffineSpace.Point.Relative
 
 import Music.Score.Util (showRatio)
 

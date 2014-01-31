@@ -36,7 +36,6 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Data.AffineSpace.Relative
 import Music.Time.Time
 import Music.Time.Delayable
 import Music.Time.Stretchable

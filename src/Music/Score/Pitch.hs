@@ -70,8 +70,7 @@ import Data.Traversable (Traversable)
 import Data.Ratio
 import Data.VectorSpace
 import Data.AffineSpace
-import Data.AffineSpace.Relative
-import Data.AffineSpace.Point.Relative
+import Data.AffineSpace.Point
 import qualified Data.List as List
 
 import Music.Time
