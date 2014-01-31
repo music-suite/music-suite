@@ -283,7 +283,7 @@ in scat $ fmap (`up` c) intervals
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
-```music+haskell
+```music+haskellx
 setPitch (c .+^ m3) $ return c_
 ```
 
@@ -816,7 +816,9 @@ Meta-information is required to implement `Monoid`. The `mempty` value is used a
 
 Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
 
-TODO unexpected results with filter and recompose, solve by using a good Monoid, see issue 103
+TODO unexpected results with filter and recompose, solve by using a good Monoid
+Acceptable Monoids are Maybe and Set/Map, but not lists (ordered sets/unique lists OK)
+See issue 103
 
 
 # Import and export
@@ -1003,9 +1005,10 @@ in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 
 ## Viola duo
 
-```music+haskell
+<!--
+```music+haskellx
 let
-    toLydian = modifyPitch (\p -> if p == c then cs else p)
+    toLydian = mapPitch' (\p -> if p == c then cs else p)
 
     subj1 = (^/2) $
         (legato.accent) (b_ |> c) |> (legato.accent) (c |> b_^*2)
@@ -1022,6 +1025,7 @@ let
 
 in clef CClef $ dynamics pp $ compress 2 $ part1 |> toLydian part2
 ```
+-->
 
 <!--
 ### Schubert

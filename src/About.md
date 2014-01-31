@@ -51,7 +51,7 @@ Other formats are being added in the near future, see [Import and export](#impor
 
 ### A note on the versioning
 
-The Music Suite consists of a group of packages released concurrently under a common [semantic version number](http://semver.org/). The library was deliberately released *prematurely* in order to encourage its developers to work on it more.
+The Music Suite consists of a group of packages released concurrently under a common [optimistic version number](http://optver.hanshoglund.org/). The library was deliberately released *prematurely* in order to encourage its developers to work on it more.
 
 ### More information
 
