@@ -41,6 +41,7 @@ module Music.Score.Score (
   ) where
 
 import Data.Dynamic
+import Control.Lens
 import Control.Newtype                
 import Data.Maybe
 import Data.Ord
@@ -157,7 +158,7 @@ instance HasDuration (Score a) where
 
 instance Performable (Score a) where
     perform = 
-        fmap (\(delta -> (t,d),x) -> (t,d,x)) . 
+        fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
         List.sortBy (comparing fst) .
         F.toList . 
         fmap getNote . 

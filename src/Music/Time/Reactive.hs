@@ -53,6 +53,7 @@ module Music.Time.Reactive (
 
 import Prelude hiding (until)
 
+import Control.Lens
 import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
@@ -133,7 +134,7 @@ noteToReactive n = (pure <$> n) `activate` pure mempty
 
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
         turnOn  = switch start
         turnOff = switch stop

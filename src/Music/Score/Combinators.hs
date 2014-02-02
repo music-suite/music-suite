@@ -97,6 +97,7 @@ module Music.Score.Combinators (
   ) where
 
 import Control.Monad
+import Control.Lens hiding (perform)
 import Control.Applicative
 import Control.Arrow
 import Control.Monad.Plus
@@ -155,7 +156,7 @@ mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
 -- | Map over the events in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapWithSpan (uncurry f . delta)
+mapEvents f = mapWithSpan (uncurry f . view delta)
 
 -- | Filter the events in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
@@ -428,7 +429,7 @@ withSpan :: Score a -> Score (Span, a)
 withSpan = mapEvents (\t d x -> (t >-> d,x))
 withTime = mapEvents (\t d x -> (t, x))
 
-inSpan t' (range -> (t,u)) = t <= t' && t' < u
+inSpan t' (view range -> (t,u)) = t <= t' && t' < u
 
 -- TODO clean
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a

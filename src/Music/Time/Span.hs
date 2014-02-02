@@ -39,6 +39,8 @@ module Music.Time.Span (
         sinvert,
 
         -- ** Deconstructing spans
+        -- _range,
+        -- _delta,
         range,
         delta,
         mapRange,
@@ -46,6 +48,7 @@ module Music.Time.Span (
   ) where
 
 import Control.Arrow
+import Control.Lens
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
@@ -83,13 +86,13 @@ instance Stretchable Span where
     -- rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
 
 instance HasOnset Span where
-    onset = fst . range
+    onset = fst . _range
 
 instance HasOffset Span where
-    offset = snd . range
+    offset = snd . _range
 
 instance HasDuration Span where
-    duration = snd . delta
+    duration = snd . _delta
 
 instance Semigroup Span where
     -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
@@ -99,7 +102,7 @@ instance Monoid Span where
     mempty  = start <-> stop
     mappend = (<>)
 
-inSpan f = Span . f . delta 
+inSpan f = Span . f . _delta 
 
 -- |
 -- The default span, i.e. 'start' '<->' 'stop'.
@@ -121,38 +124,44 @@ t >-> d
 era :: (HasOnset a, HasOffset a) => a -> Span
 era x = onset x <-> offset x
 
--- | 
--- Deconstruct a span as a time and duration.
---
--- Typically used with the @ViewPatterns@ extension, as in
---
--- > foo (delta -> (t,d)) = ...
---
-delta :: Span -> (Time, Duration)
-delta (Span x) = x
+_delta :: Span -> (Time, Duration)
+_delta (Span x) = x
 
--- | 
--- Deconstruct a span as onset and offset.
---
--- Typically used with the @ViewPatterns@ extension, as in
---
--- > foo (range -> (u,v)) = ...
---
-range :: Span -> (Time, Time)
-range x = let (t, d) = delta x
+_range :: Span -> (Time, Time)
+_range x = let (t, d) = _delta x
     in (t, t .+^ d)
 
 -- | Map over the span as onset and duration.
 mapDelta :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
-mapDelta f = inSpan (uncurry f)
+mapDelta f = delta %~ uncurry f
 
 -- | Map over the span as a time pair.
 mapRange :: (Time -> Time -> (Time, Time)) -> Span -> Span
-mapRange f = uncurry (<->) . uncurry f . range
+mapRange f = range %~ uncurry f
+
+-- | 
+-- View a span as onset and offset.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (view range -> (u,v)) = ...
+--
+range :: Iso' Span (Time, Time)
+range = iso _range $ uncurry (<->)
+
+-- | 
+-- View a span as a time and duration.
+--
+-- Typically used with the @ViewPatterns@ extension, as in
+--
+-- > foo (view delta -> (t,d)) = ...
+--
+delta :: Iso' Span (Time, Duration)
+delta = iso _delta $ uncurry (>->)
 
 -- | Apply a span transformation.
 sapp :: (Delayable a, Stretchable a) => Span -> a -> a
-sapp (delta -> (t,d)) = delayTime t . stretch d
+sapp (_delta -> (t,d)) = delayTime t . stretch d
 
 -- | Apply a function under a span transformation.
 sunder :: (Delayable a, Stretchable a, Delayable b, Stretchable b) => Span -> (a -> b) -> a -> b

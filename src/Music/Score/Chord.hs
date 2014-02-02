@@ -49,6 +49,7 @@ module Music.Score.Chord (
 
 import Prelude hiding (any, mapM_)
 
+import Control.Lens hiding (perform)
 import Data.Ord
 import Data.Pointed
 import Data.Foldable
@@ -221,7 +222,7 @@ simultaneous' sc = setScoreMeta m $ compose vs
         -- vs :: [(Time, Duration, [a])]
         es  = List.nub $ eras sc
         evs = fmap (`events` sc) es
-        vs  = zipWith (\(delta -> (t,d)) a -> (t,d,a)) es evs
+        vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
 
 
 -- TODO (re)move these
