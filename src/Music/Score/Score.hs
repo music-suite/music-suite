@@ -38,6 +38,14 @@ module Music.Score.Score (
         reifyScore,
         getScoreMeta,
         setScoreMeta,
+        
+        mapWithSpan,
+        filterWithSpan,
+        mapFilterWithSpan,
+        mapEvents,
+        filterEvents,
+        mapFilterEvents,
+
   ) where
 
 import Data.Dynamic
@@ -47,6 +55,7 @@ import Data.Maybe
 import Data.Ord
 import Data.Semigroup
 import Data.Pointed
+import Data.Foldable (foldMap)
 import Control.Arrow
 import Control.Applicative
 import Control.Comonad
@@ -118,6 +127,32 @@ getScoreMeta :: Score a -> Meta
 getScoreMeta (Score (m,_)) = m
 
 
+-- | Map over the events in a score.
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+mapWithSpan f = mapScore (uncurry f . getNote)
+
+-- | Filter the events in a score.
+filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
+filterWithSpan f = mapFilterWithSpan (partial2 f)
+
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
+mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithSpan f = mcatMaybes . mapWithSpan f
+
+-- | Map over the events in a score.
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapEvents f = mapWithSpan (uncurry f . view delta)
+
+-- | Filter the events in a score.
+filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterEvents f = mapFilterEvents (partial3 f)
+
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
+mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterEvents f = mcatMaybes . mapEvents f
+
+
+
 -- TODO remove these, see #97
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
@@ -129,9 +164,6 @@ instance Newtype (Score a) (Meta, NScore a) where
 instance Monad Score where
     return = pack . return . return
     xs >>= f = pack $ mbind (unpack . f) (unpack xs)
-
-instance Pointed Score where
-    point = return
 
 instance Applicative Score where
     pure = return
@@ -156,6 +188,18 @@ instance Stretchable (Score a) where
 instance HasDuration (Score a) where
     duration = durationDefault
 
+instance Reversible a => Reversible (Score a) where
+    rev = fmap rev . withSameOnset (stretch (-1))
+
+instance HasMeta (Score a) where
+    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
+
+
+
+
+instance Pointed Score where
+    point = return
+
 instance Performable (Score a) where
     perform = 
         fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
@@ -166,11 +210,6 @@ instance Performable (Score a) where
 
 instance Composable (Score a) where
 
-instance Reversible a => Reversible (Score a) where
-    rev = fmap rev . withSameOnset (stretch (-1))
-
-instance HasMeta (Score a) where
-    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
 
 
 -- |
@@ -246,15 +285,46 @@ instance Arbitrary a => Arbitrary (Score a) where
         return $ delay t $ stretch d $ return x
 
 type instance Pitch (Score a) = Pitch a
-instance (HasSetPitch a b, Transformable (Pitch (Score a)), Transformable (Pitch (Score b))) => HasSetPitch (Score a) (Score b) where
+instance (HasSetPitch a b, 
+            Transformable (Pitch a), 
+            Transformable (Pitch b)) => 
+                HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
-    -- FIXME this is wrong, need to behave like mapPitch'
-    -- mapPitch f   = fmap (mapPitch f)
     mapPitch f  = mapWithSpan (\s -> mapPitch $ sunder s f)
-      where
-        mapWithSpan f = mapScore (uncurry f . getNote)
 
 instance HasPart a => HasPart (Score a) where
     type Part (Score a) = Part a
     getPart         = fromMaybe def . fmap getPart . listToMaybe . F.toList
     modifyPart f    = fmap (modifyPart f)
+
+
+
+fst3 (t, d, x) = t
+trd3 (a,b,c) = c
+
+third f (a,b,c) = (a,b,f c)
+third' f (a,b,c) = (a,b,f a b c)
+
+partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
+partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+partial2 f = curry  (fmap snd  . partial (uncurry f))
+partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
+
+iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
+iterating f g n
+    | n <  0 = f . iterating f g (n + 1)
+    | n == 0 = id
+    | n >  0 = g . iterating f g (n - 1)
+
+successor :: (Integral b, Enum a) => b -> a -> a
+successor n = iterating pred succ (fromIntegral n)
+
+maximum' :: (Ord a, Foldable t) => a -> t a -> a
+maximum' z = option z getMax . foldMap (Option . Just . Max)
+
+minimum' :: (Ord a, Foldable t) => a -> t a -> a
+minimum' z = option z getMin . foldMap (Option . Just . Min)
+
+
+
+

@@ -142,30 +142,6 @@ noteRest = mfromMaybe
 removeRests :: MonadPlus m => m (Maybe a) -> m a
 removeRests = mcatMaybes
 
--- | Map over the events in a score.
-mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . getNote)
-
--- | Filter the events in a score.
-filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = mapFilterWithSpan (partial2 f)
-
--- | Efficient combination of 'mapEvents' and 'filterEvents'.
-mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = mcatMaybes . mapWithSpan f
-
--- | Map over the events in a score.
-mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapWithSpan (uncurry f . view delta)
-
--- | Filter the events in a score.
-filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = mapFilterEvents (partial3 f)
-
--- | Efficient combination of 'mapEvents' and 'filterEvents'.
-mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = mcatMaybes . mapEvents f
-
 -- | Retain only the notes whose /offset/ does not fall after the given time.
 before :: Time -> Score a -> Score a
 before u = filterEvents (\t d _ -> t .+^ d <= u) 

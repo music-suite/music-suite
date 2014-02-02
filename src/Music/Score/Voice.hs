@@ -134,7 +134,7 @@ instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
 type instance Pitch (Voice a) = Pitch a
-instance (HasSetPitch a b, Transformable (Pitch (Voice a)), Transformable (Pitch (Voice b))) => HasSetPitch (Voice a) (Voice b) where
+instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasSetPitch (Voice a) (Voice b) where
     type SetPitch g (Voice a) = Voice (SetPitch g a)
     -- FIXME this is wrong, need to behave like mapPitch'
     mapPitch f   = fmap (mapPitch f)
