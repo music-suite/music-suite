@@ -43,7 +43,7 @@ module Music.Score.Pitch (
         -- * Accessors
         pitch',
         pitch,
-        -- pitch_,
+        pitch_,
         pitches',
         pitches,
 
@@ -82,11 +82,31 @@ type family Pitch a
 
 type Interval a = Diff (Pitch a)
 
+-- |
+-- Class of types with readable pitch.
+--
 class HasGetPitch s where
   getPitch :: (a ~ Pitch s) => s -> a
 
+-- |
+-- Class of types with mutable pitch.
+--
+-- Either 'setPitch' or 'mapPitch' can be implemented. If both are implemented,
+-- the following laws should be satisfied:
+--
+-- > setPitch x = mapPitch (const x)
+-- > mapPitch f x = setPitch p x where p = f (getPitch x)
+--
+-- For types that are 'Functors', the following instance can be used
+--
+-- > type instance Pitch (T a) = Pitch a
+-- > instance HasSetPitch a b => HasSetPitch (T a) (T b) where
+-- >     type SetPitch g (T a) = T (SetPitch g a)
+-- >     mapPitch = fmap . mapPitch
+--
 class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
+
   setPitch :: Pitch t -> s -> t
   setPitch x = mapPitch (const x)
   
