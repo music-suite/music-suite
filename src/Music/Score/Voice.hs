@@ -41,6 +41,7 @@ module Music.Score.Voice (
 
 import Data.Semigroup
 import Control.Newtype
+import Control.Lens
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
@@ -112,6 +113,9 @@ getVoice = fmap (first realToFrac . getEv) . getVoice'
 instance Newtype (Voice a) [Ev a] where
     pack = Voice
     unpack = getVoice'
+
+instance Wrapped [Ev a] [Ev a] (Voice a) (Voice a) where
+    wrapped = iso Voice getVoice'
 
 instance Monad Voice where
     return = pack . return . return

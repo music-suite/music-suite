@@ -36,6 +36,7 @@ module Music.Score.Track (
   ) where
 
 import Control.Newtype
+import Control.Lens
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Compose
@@ -119,6 +120,9 @@ instance Monoid (Track a) where
 instance Newtype (Track a) [Occ a] where
     pack = Track
     unpack = getTrack'
+
+instance Wrapped [Occ a] [Occ a] (Track a) (Track a) where
+    wrapped = iso Track getTrack'
 
 instance Monad Track where
     return = pack . return . return

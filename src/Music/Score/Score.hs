@@ -161,6 +161,9 @@ instance Newtype (Score a) (Meta, NScore a) where
     pack = Score
     unpack = getScore
 
+instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
+    wrapped = iso Score getScore
+
 instance Monad Score where
     return = pack . return . return
     xs >>= f = pack $ mbind (unpack . f) (unpack xs)

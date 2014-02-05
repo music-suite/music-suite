@@ -43,6 +43,7 @@ module Music.Time.Behavior (
 
 import Prelude hiding (until)
 
+import Control.Lens hiding (over, (??)) -- TODO
 import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
@@ -87,6 +88,10 @@ instance Stretchable (Behavior a) where
 instance Newtype (Behavior a) (Reactive (Time -> a)) where
     pack = Behavior
     unpack = getBehavior
+
+instance Wrapped (Reactive (Time -> a)) (Reactive (Time -> a)) (Behavior a) (Behavior a) where
+    wrapped = iso Behavior getBehavior
+
 
 instance Applicative Behavior where
     pure    = pack . pure . pure

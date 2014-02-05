@@ -96,6 +96,9 @@ instance Newtype (Reactive a) ([Time], Time -> a) where
     pack = Reactive
     unpack = getReactive
 
+instance Wrapped ([Time], Time -> a) ([Time], Time -> a) (Reactive a) (Reactive a) where
+    wrapped = iso Reactive getReactive
+
 instance Applicative Reactive where
     pure    = pack . pure . pure
     (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)
@@ -126,7 +129,9 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
 
-
+-- TODO proper ISOs here
+asOccs   = occs &&& (?)
+asInitUp = initial &&& updates
 
 -- TODO rename during
 noteToReactive :: Monoid a => Note a -> Reactive a
