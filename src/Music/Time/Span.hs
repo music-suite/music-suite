@@ -32,19 +32,19 @@ module Music.Time.Span (
         (>->),
         era,
         
-        -- ** Span as transformation
-        sunit,
-        sapp,
-        sunder,
-        sinvert,
-
         -- ** Deconstructing spans
         -- _range,
         -- _delta,
         range,
         delta,
-        mapRange,
-        mapDelta,
+        -- mapRange,
+        -- mapDelta,
+
+        -- ** Span as transformation
+        sunit,
+        sapp,
+        sunder,
+        sinvert,
   ) where
 
 import Control.Arrow
