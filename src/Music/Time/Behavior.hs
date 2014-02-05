@@ -43,8 +43,8 @@ module Music.Time.Behavior (
 
 import Prelude hiding (until)
 
-import Control.Lens hiding (over, (??)) -- TODO
-import Control.Newtype                
+import Control.Lens hiding ((??)) -- TODO
+-- import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
@@ -85,17 +85,13 @@ instance Delayable (Behavior a) where
 instance Stretchable (Behavior a) where
     stretch n (Behavior x) = Behavior (fmap (stretch n) $ stretch n x)
 
-instance Newtype (Behavior a) (Reactive (Time -> a)) where
-    pack = Behavior
-    unpack = getBehavior
-
 instance Wrapped (Reactive (Time -> a)) (Reactive (Time -> a)) (Behavior a) (Behavior a) where
     wrapped = iso Behavior getBehavior
 
 
 instance Applicative Behavior where
-    pure    = pack . pure . pure
-    (unpack -> f) <*> (unpack -> x) = pack $ liftA2 (<*>) f x
+    pure    = (^. wrapped) . pure . pure
+    ((^. unwrapped) -> f) <*> ((^. unwrapped) -> x) = (^. wrapped) $ liftA2 (<*>) f x
 
 -- instance HasPitch (Behavior a) where
     -- type Pitch (Behavior a) = Behavior a
@@ -107,13 +103,13 @@ instance Applicative Behavior where
 --   
 --   Identical to @behavior . const@ but creates more efficient behaviors.
 constant :: a -> Behavior a
-constant = pack . pure . pure
+constant = (^. wrapped) . pure . pure
 
 -- | Create a behavior from function of (absolute) time.
 --   
 --   You should pass a function defined for the whole range, including negative time.
 behavior :: (Time -> a) -> Behavior a
-behavior = pack . pure
+behavior = (^. wrapped) . pure
 
 -- | Create a behaviour from a function of (relative) duration focused on 'sunit'.
 --   
@@ -131,16 +127,16 @@ varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)
 -- | @b ?? t@ returns the value of the behavior at time @t@.
 --  Semantic function.
 (??) :: Behavior a -> Time -> a
-b ?? t = (unpack b ? t) t
+b ?? t = ((^. unwrapped) b ? t) t
 
 time :: Behavior Time
 time = behavior id
 
 sinceB :: Monoid a => Time -> Behavior a -> Behavior a
-sinceB t = over Behavior (since t)
+sinceB t = unwrapping Behavior %~ since t
 
 switchB :: Time -> Behavior a -> Behavior a -> Behavior a
-switchB t (unpack -> x) (unpack -> y) = pack $ switch t x y
+switchB t ((^. unwrapped) -> x) ((^. unwrapped) -> y) = (^. wrapped) $ switch t x y
 
 
 

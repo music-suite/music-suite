@@ -54,7 +54,7 @@ module Music.Time.Reactive (
 import Prelude hiding (until)
 
 import Control.Lens
-import Control.Newtype                
+-- import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
@@ -92,24 +92,24 @@ instance Delayable (Reactive a) where
 instance Stretchable (Reactive a) where
     stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
 
-instance Newtype (Reactive a) ([Time], Time -> a) where
-    pack = Reactive
-    unpack = getReactive
+-- instance Newtype (Reactive a) ([Time], Time -> a) where
+    -- (^. wrapped) = Reactive
+    -- un(^. wrapped) = getReactive
 
 instance Wrapped ([Time], Time -> a) ([Time], Time -> a) (Reactive a) (Reactive a) where
     wrapped = iso Reactive getReactive
 
 instance Applicative Reactive where
-    pure    = pack . pure . pure
-    (unpack -> (tf, rf)) <*> (unpack -> (tx, rx)) = pack (tf <> tx, rf <*> rx)
+    pure    = (^. wrapped) . pure . pure
+    ((^. unwrapped) -> (tf, rf)) <*> ((^. unwrapped) -> (tx, rx)) = (^. wrapped) (tf <> tx, rf <*> rx)
 
 occs :: Reactive a -> [Time]
-occs = fst . unpack
+occs = fst . (^. unwrapped)
 
 -- | @b ?? t@ returns the value of the reactive at time @t@.
 --  Semantic function.
 (?) :: Reactive a -> Time -> a
-(?) = snd . unpack
+(?) = snd . (^. unwrapped)
 
 initial :: Reactive a -> a
 initial r = r ? minB (occs r)

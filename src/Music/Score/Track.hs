@@ -35,7 +35,7 @@ module Music.Score.Track (
         getTrack,
   ) where
 
-import Control.Newtype
+-- import Control.Newtype
 import Control.Lens
 import Control.Applicative
 import Control.Monad
@@ -117,16 +117,12 @@ instance Monoid (Track a) where
             m = mergeBy (comparing fst)
 -}
 
-instance Newtype (Track a) [Occ a] where
-    pack = Track
-    unpack = getTrack'
-
 instance Wrapped [Occ a] [Occ a] (Track a) (Track a) where
     wrapped = iso Track getTrack'
 
 instance Monad Track where
-    return = pack . return . return
-    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance Applicative Track where
     pure  = return

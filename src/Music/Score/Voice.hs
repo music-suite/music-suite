@@ -40,7 +40,7 @@ module Music.Score.Voice (
   ) where
 
 import Data.Semigroup
-import Control.Newtype
+-- import Control.Newtype
 import Control.Lens
 import Control.Applicative
 import Control.Monad
@@ -110,16 +110,12 @@ voice = Voice . fmap (uncurry ev . first realToFrac)
 getVoice :: Voice a -> [(Duration, a)]
 getVoice = fmap (first realToFrac . getEv) . getVoice'
 
-instance Newtype (Voice a) [Ev a] where
-    pack = Voice
-    unpack = getVoice'
-
 instance Wrapped [Ev a] [Ev a] (Voice a) (Voice a) where
     wrapped = iso Voice getVoice'
 
 instance Monad Voice where
-    return = pack . return . return
-    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance Pointed Voice where
     point = return

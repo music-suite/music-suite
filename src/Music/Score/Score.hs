@@ -50,7 +50,7 @@ module Music.Score.Score (
 
 import Data.Dynamic
 import Control.Lens
-import Control.Newtype                
+-- import Control.Newtype                
 import Data.Maybe
 import Data.Ord
 import Data.Semigroup
@@ -157,16 +157,12 @@ mapFilterEvents f = mcatMaybes . mapEvents f
 type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
-instance Newtype (Score a) (Meta, NScore a) where
-    pack = Score
-    unpack = getScore
-
 instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
     wrapped = iso Score getScore
 
 instance Monad Score where
-    return = pack . return . return
-    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance Applicative Score where
     pure = return
@@ -234,13 +230,16 @@ mapNScore f = inNScore (fmap $ extend f)
 reifyNScore :: NScore a -> NScore (Note a)
 reifyNScore = inNScore $ fmap duplicate
 
-instance Newtype (NScore a) [Note a] where
-    pack = NScore
-    unpack = getNScore
+-- instance Newtype (NScore a) [Note a] where
+--     pack = NScore
+--     unpack = getNScore
+
+instance Wrapped [Note a] [Note a] (NScore a) (NScore a) where
+    wrapped = iso NScore getNScore
 
 instance Monad NScore where
-    return = pack . return . return
-    xs >>= f = pack $ mbind (unpack . f) (unpack xs)
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance Applicative NScore where
     pure = return
