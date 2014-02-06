@@ -146,12 +146,12 @@ instance IsPitch a => IsPitch (Track a) where
 instance IsDynamics a => IsDynamics (Track a) where
     fromDynamics = pure . fromDynamics
 
-instance Arbitrary a => Arbitrary (Track a) where
-    arbitrary = do
-        x <- arbitrary
-        t <- fmap realToFrac (arbitrary::Gen Double)
-        d <- fmap realToFrac (arbitrary::Gen Double)
-        return $ delay t $ stretch d $ return x
+-- instance Arbitrary a => Arbitrary (Track a) where
+    -- arbitrary = do
+        -- x <- arbitrary
+        -- t <- fmap realToFrac (arbitrary::Gen Double)
+        -- d <- fmap realToFrac (arbitrary::Gen Double)
+        -- return $ delay t $ stretch d $ return x
 
 type instance Pitch (Track a) = Pitch a
 instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch (Track b))) => HasSetPitch (Track a) (Track b) where

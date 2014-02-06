@@ -34,6 +34,8 @@
 module Music.Score.Score (
         -- * Score type
         Score,
+        score,
+        getScore,
         mapScore,
         reifyScore,
         getScoreMeta,
@@ -90,11 +92,16 @@ import Music.Score.Pitch
 import Music.Score.Part
 import Music.Score.Util
 
-newtype Score a = Score { getScore :: (Meta, NScore a) }
+newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
-inScore f = Score . f . getScore
+inScore f = Score . f . getScore'
 
+score :: [(Time, Duration, a)] -> Score a
+score = undefined
+
+getScore :: Score a -> [(Time, Duration, a)]
+getScore = undefined
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
@@ -158,7 +165,7 @@ type instance Container (Score a) = Score
 type instance Event (Score a)     = a
 
 instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
-    wrapped = iso Score getScore
+    wrapped = iso Score getScore'
 
 instance Monad Score where
     return = (^. wrapped) . return . return
