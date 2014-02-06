@@ -98,10 +98,18 @@ newtype Score a = Score { getScore' :: (Meta, NScore a) }
 inScore f = Score . f . getScore'
 
 mkScore :: [(Time, Duration, a)] -> Score a
-mkScore = undefined
+mkScore = mconcat . fmap (uncurry3 event)
+    where
+        event t d x   = (delay (t .-. origin) . stretch d) (point x)
+
 
 getScore :: Score a -> [(Time, Duration, a)]
-getScore = undefined
+getScore = 
+    fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
+    List.sortBy (comparing fst) .
+    F.toList . 
+    fmap getNote . 
+    reifyScore
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
