@@ -28,17 +28,17 @@ module Music.Score.Export.Lilypond (
         Lilypond,
         HasLilypond(..),
 
-        toLy,
-        toLyString,
+        toLilypond,
+        toLilypondString,
 
-        showLy,
-        openLy,
-        writeLy, 
+        showLilypond,
+        openLilypond,
+        writeLilypond, 
 
         -- * Options
         LilypondOptions(..),
-        writeLy',
-        openLy',
+        writeLilypond',
+        openLilypond',
   ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -109,7 +109,7 @@ class Tiable a => HasLilypond a where
     getLilypond      :: Duration -> a -> Lilypond
 
     getLilypondChord :: Duration -> [a] -> Lilypond
-    getLilypondChord d = pcatLy . fmap (getLilypond d)
+    getLilypondChord d = pcatLilypond . fmap (getLilypond d)
 
 instance HasLilypond Int                        where   getLilypond d = getLilypond d . toInteger
 instance HasLilypond Float                      where   getLilypond d = getLilypond d . toInteger . round
@@ -117,8 +117,8 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLy . (+ 12)
-    getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap (spellLy . (+ 12))
+    getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond . (+ 12)
+    getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap (spellLilypond . (+ 12))
 
 instance HasLilypond a => HasLilypond (ChordT a) where
     getLilypond d = getLilypondChord d . getChordT
@@ -202,16 +202,16 @@ instance HasLilypond a => HasLilypond (ClefT a) where
                 Just CClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
                 Just FClef -> \x -> Lilypond.Sequential [Lilypond.Clef Lilypond.Bass, x]
 
-pcatLy :: [Lilypond] -> Lilypond
-pcatLy = pcatLy' False
+pcatLilypond :: [Lilypond] -> Lilypond
+pcatLilypond = pcatLilypond' False
 
-pcatLy' :: Bool -> [Lilypond] -> Lilypond
-pcatLy' p = foldr Lilypond.simultaneous e
+pcatLilypond' :: Bool -> [Lilypond] -> Lilypond
+pcatLilypond' p = foldr Lilypond.simultaneous e
     where
         e = Lilypond.Simultaneous p []
 
-scatLy :: [Lilypond] -> Lilypond
-scatLy = foldr Lilypond.sequential e
+scatLilypond :: [Lilypond] -> Lilypond
+scatLilypond = foldr Lilypond.sequential e
     where
         e = Lilypond.Sequential []
 
@@ -219,14 +219,14 @@ scatLy = foldr Lilypond.sequential e
 -- |
 -- Convert a score to a Lilypond representaiton and print it on the standard output.
 --
-showLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
-showLy = putStrLn . toLyString
+showLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
+showLilypond = putStrLn . toLilypondString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy :: (HasLilypond a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
-writeLy = writeLy' def
+writeLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
+writeLilypond = writeLilypond' def
 
 data LilypondOptions
     = Inline
@@ -237,8 +237,8 @@ instance Default LilypondOptions where
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLy' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
-writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString sc
+writeLilypond' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypondString sc
     where 
         title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
@@ -283,37 +283,37 @@ writeLy' options path sc = writeFile path $ (lyFilePrefix ++) $ toLyString sc
 -- |
 -- Typeset a score using Lilypond and open it.
 --
-openLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
-openLy = openLy' def
+openLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
+openLilypond = openLilypond' def
 
-openLy' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> Score a -> IO ()
-openLy' options sc = do
-    writeLy' options "test.ly" sc
-    runLy
-    cleanLy
-    openLy''
+openLilypond' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> Score a -> IO ()
+openLilypond' options sc = do
+    writeLilypond' options "test.ly" sc
+    runLilypond
+    cleanLilypond
+    openLilypond''
 
-runLy    = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
-cleanLy  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-openLy'' = void $ runCommand "open test.pdf"
+runLilypond    = void $ runCommand "lilypond -f pdf test.ly" >>= waitForProcess
+cleanLilypond  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
+openLilypond'' = void $ runCommand "open test.pdf"
 
 -- |
 -- Convert a score to a Lilypond string.
 --
-toLyString :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> String
-toLyString = show . Pretty.pretty . toLy
+toLilypondString :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> String
+toLilypondString = show . Pretty.pretty . toLilypond
 
 -- |
 -- Convert a score to a Lilypond representation.
 --
-toLy :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> Lilypond
-toLy sc = 
+toLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> Lilypond
+toLilypond sc = 
           -- Score structure
-          pcatLy . fmap (
-                addStaff . scatLy . uncurry addPartName
+          pcatLilypond . fmap (
+                addStaff . scatLilypond . uncurry addPartName
 
                 -- Main notation pipeline
-                . second (voiceToLy barTimeSigs barDurations . scoreToVoice . simultaneous) 
+                . second (voiceToLilypond barTimeSigs barDurations . scoreToVoice . simultaneous) 
 
                 -- Meta-event expansion
                 . uncurry addClefs
@@ -344,40 +344,40 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToLy :: HasLilypond a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
-voiceToLy barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLy . voiceToBars' barDurations
+voiceToLilypond :: HasLilypond a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
---      * barToLy is specific: it handles quantization and notation
+--      * barToLilypond is specific: it handles quantization and notation
 --
     where
         -- FIXME compounds                      
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
         
 
-barToLy :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
-barToLy bar = case (fmap rewrite . quantize) bar of
-    Left e   -> error $ "barToLy: Could not quantize this bar: " ++ show e
-    Right rh -> rhythmToLy rh
+barToLilypond :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
+barToLilypond bar = case (fmap rewrite . quantize) bar of
+    Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToLilypond rh
 
-rhythmToLy :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
-rhythmToLy (Beat d x)            = noteRestToLy d x
-rhythmToLy (Dotted n (Beat d x)) = noteRestToLy (dotMod n * d) x
-rhythmToLy (Group rs)            = scatLy $ map rhythmToLy rs
-rhythmToLy (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLy r)
+rhythmToLilypond :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
+rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
+rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
+rhythmToLilypond (Group rs)            = scatLilypond $ map rhythmToLilypond rs
+rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLy :: HasLilypond a => Duration -> Maybe a -> Lilypond
-noteRestToLy d Nothing  = Lilypond.rest^*(realToFrac d*4)
-noteRestToLy d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
+noteRestToLilypond :: HasLilypond a => Duration -> Maybe a -> Lilypond
+noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
+noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
 
-spellLy :: Integer -> Lilypond.Note
-spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
+spellLilypond :: Integer -> Lilypond.Note
+spellLilypond a = Lilypond.NotePitch (spellLilypond' a) Nothing
 
-spellLy' :: Integer -> Lilypond.Pitch
-spellLy' p = Lilypond.Pitch (
+spellLilypond' :: Integer -> Lilypond.Pitch
+spellLilypond' p = Lilypond.Pitch (
     toEnum $ fromIntegral pc,
     fromIntegral alt,
     fromIntegral oct
