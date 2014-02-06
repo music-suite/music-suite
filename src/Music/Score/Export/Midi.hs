@@ -186,7 +186,7 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
                 prg = getMidiProgram p
 
         scoreToMTrack :: Score a -> Midi.Track Midi.Ticks
-        scoreToMTrack = fmap (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) . toRelative . (^. scoreL) . getMidiScore
+        scoreToMTrack = fmap (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) . toRelative . (^. events) . getMidiScore
 
         -- TODO render voices separately
 
@@ -194,7 +194,7 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
 -- Convert a score to a track of MIDI messages.
 --
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack = track . fmap (\(t,_,m) -> (t, m)) . (^. scoreL) . getMidiScore
+toMidiTrack = track . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.
@@ -210,7 +210,7 @@ playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ startAt 0.2
     where
         -- trig        = accumR 0 ((+ 0.005) <$ pulse 0.005)
         trig        = time
-        toTrack     = fmap (\(t,_,m) -> (t .-. origin, m)) . (^. scoreL) . getMidiScore
+        toTrack     = fmap (\(t,_,m) -> (t .-. origin, m)) . (^. events) . getMidiScore
         midiDest    = fromJust $ unsafeGetReactive (findDestination  $ pure dest)
 
 -- |

@@ -86,7 +86,12 @@ data BarlineType = StandardBarline | DoubleBarline | FinalBarline
 barline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
 barline c x = barlineDuring (era x) c x
 
+-- | Add a barline over the whole score.
+doubleBarline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
 doubleBarline = undefined
+
+-- | Add a barline over the whole score.
+finalBarline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
 finalBarline = undefined
 
 -- | Add a barline to the given score.

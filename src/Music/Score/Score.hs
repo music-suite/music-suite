@@ -34,7 +34,8 @@
 module Music.Score.Score (
         -- * Score type
         Score,
-        scoreL,
+        notes,
+        events,
         -- mkScore,
         -- getScore,
         mapScore,
@@ -96,8 +97,15 @@ import Music.Score.Util
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
 
-scoreL :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-scoreL = iso getScore mkScore
+-- | TODO not a real iso, must be lens (meta)
+notes :: Iso (Score a) (Score b) [Note a] [Note b]
+notes = iso (getNScore . snd . getScore') (Score . return . NScore)
+
+-- | TODO not a real iso, must be lens (meta)
+events :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+events = iso getScore mkScore
+
+
 
 inScore f = Score . f . getScore'
 
@@ -106,7 +114,6 @@ mkScore = mconcat . fmap (uncurry3 event)
     where
         event t d x   = (delay (t .-. origin) . stretch d) (return x)
 
-
 getScore :: Score a -> [(Time, Duration, a)]
 getScore = 
     fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
@@ -114,6 +121,9 @@ getScore =
     F.toList . 
     fmap getNote . 
     reifyScore
+
+
+
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b

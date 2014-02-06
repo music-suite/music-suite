@@ -214,24 +214,24 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
 --
 simultaneous' :: Score a -> Score [a]
-simultaneous' sc = setScoreMeta m $ (^. from scoreL) vs
+simultaneous' sc = setScoreMeta m $ (^. from events) vs
     where     
         m = getScoreMeta sc
         -- es :: [Era]
         -- evs :: [[a]]
         -- vs :: [(Time, Duration, [a])]
         es  = List.nub $ eras sc
-        evs = fmap (`events` sc) es
+        evs = fmap (`chordEvents` sc) es
         vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
 
 
 -- TODO (re)move these
 
 eras :: Score a -> [Span]
-eras sc = fmap getSpan . (^. scoreL) $ sc
+eras sc = fmap getSpan . (^. events) $ sc
 
-events :: Span -> Score a -> [a]
-events era sc = fmap getValue . filter (\ev -> getSpan ev == era) . (^. scoreL) $ sc
+chordEvents :: Span -> Score a -> [a]
+chordEvents era sc = fmap getValue . filter (\ev -> getSpan ev == era) . (^. events) $ sc
 
 getValue :: (Time, Duration, a) -> a
 getValue (t,d,a) = a
