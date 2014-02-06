@@ -36,19 +36,25 @@
 
 module Music.Time.Reactive (
         Reactive,
+        
+        -- * Create, isos etc (TODO)
+        renderR,
+        renderR',
         initial,
         updates,
         occs,
         (?),
+        splitReactive,
+        noteToReactive,
+
+        -- * Combinators
         switch,
         activate,
-        noteToReactive,
         during,
         since,
         until,
-        -- renderR,
+
         -- printR,
-        splitReactive,
   ) where
 
 import Prelude hiding (until)
@@ -129,10 +135,6 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
 
--- TODO proper ISOs here
-asOccs   = occs &&& (?)
-asInitUp = initial &&& updates
-
 -- TODO rename during
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
@@ -153,11 +155,14 @@ since start x = switch start mempty x
 until :: Monoid a => Time -> Reactive a -> Reactive a
 until stop x = switch stop x mempty
 
+-- | Semantic function. 
 renderR :: Reactive a -> (a, [(Time, a)])
 renderR = initial &&& updates
 
-renderR2 :: Reactive a -> ([Time], Time -> a)
-renderR2 = occs &&& (?)
+-- | Semantic function. 
+renderR' :: Reactive a -> ([Time], Time -> a)
+renderR' = occs &&& (?)
+
 
 printR :: Show a => Reactive a -> IO ()
 printR r = let (x, xs) = renderR r in do
