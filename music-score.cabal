@@ -68,7 +68,6 @@ library
         Music.Time
         Music.Time.Delayable
         Music.Time.Stretchable
-        Music.Time.Performable
         Music.Time.Onset
         Music.Time.Juxtapose
         Music.Time.Reverse
