@@ -94,7 +94,7 @@ notOverlaps :: (HasOnset a, HasOnset b, HasOffset a, HasOffset b) => a -> b -> B
 x `notOverlaps` y = not (x `overlaps` y)
 
 hasOverlapping :: Score a -> Bool
-hasOverlapping x = let ns = scoreToNotes x in not $ null [(x,y) | x <- ns, y <- ns, x `overlaps` y, era x /= era y]
+hasOverlapping x = let ns = (^. notes) x in not $ null [(x,y) | x <- ns, y <- ns, x `overlaps` y, era x /= era y]
 
 -- | Heuristically merge voices if possible
 mergePossible :: [Score a] -> [Score a]
@@ -161,8 +161,8 @@ pushMiddle :: a -> Tower [a] -> Tower [a]
 pushMiddle x (Tower as a sa) = Tower as (x:a) sa
     
 separateVoices :: Ord a => Score a -> [Score ( a)]
-separateVoices = {-fmap scoreToVoice . -}fmap notesToScore . (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower []) 
-    . List.sortBy (comparing getNoteSpan) . scoreToNotes
+separateVoices = {-fmap scoreToVoice . -}fmap (^. from notes) . (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower []) 
+    . List.sortBy (comparing getNoteSpan) . (^. notes)
 
 -- DEBUG
 instance Num a => Num (Score a) where
