@@ -34,7 +34,7 @@
 module Music.Score.Score (
         -- * Score type
         Score,
-        score,
+        mkScore,
         getScore,
         mapScore,
         reifyScore,
@@ -97,8 +97,8 @@ newtype Score a = Score { getScore' :: (Meta, NScore a) }
 
 inScore f = Score . f . getScore'
 
-score :: [(Time, Duration, a)] -> Score a
-score = undefined
+mkScore :: [(Time, Duration, a)] -> Score a
+mkScore = undefined
 
 getScore :: Score a -> [(Time, Duration, a)]
 getScore = undefined
