@@ -19,14 +19,19 @@
 module Music.Time.Time (
         -- $convert
         
-        -- * Duration type
-        Duration,
-        unit,
-
         -- * Time type
         Time(..),
+
+        -- * Duration type
+        Duration,
+
+        -- ** Identities
         start,
         stop,
+        unit,
+
+        -- ** Combinators
+        -- TODO
   ) where
 
 import Data.Semigroup
