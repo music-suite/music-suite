@@ -29,12 +29,12 @@ module Music.Score.Export.MusicXml (
         XmlMusic,
         HasMusicXml(..),
 
-        toXml,
-        toXmlString,
+        toMusicXml,
+        toMusicXmlString,
 
-        showXml,
-        openXml,
-        writeXml,
+        showMusicXml,
+        openMusicXml,
+        writeMusicXml,
 ) where
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
@@ -112,8 +112,8 @@ instance HasMusicXml Double                     where   getMusicXml d = getMusic
 instance Integral a => HasMusicXml (Ratio a)    where   getMusicXml d = getMusicXml d . toInteger . round
 
 instance HasMusicXml Integer where
-    getMusicXml      d = (`Xml.note` realToFrac d)  . spellXml . fromIntegral
-    getMusicXmlChord d = (`Xml.chord` realToFrac d) . fmap (spellXml . fromIntegral)
+    getMusicXml      d = (`Xml.note` realToFrac d)  . spellMusicXml . fromIntegral
+    getMusicXmlChord d = (`Xml.chord` realToFrac d) . fmap (spellMusicXml . fromIntegral)
 
 instance HasMusicXml a => HasMusicXml (ChordT a) where
     getMusicXml d = getMusicXmlChord d . getChordT
@@ -210,15 +210,15 @@ instance HasMusicXml a => HasMusicXml (ClefT a) where
 -- |
 -- Convert a score to MusicXML and write to a file.
 --
-writeXml :: (HasMusicXml a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
-writeXml path sc = writeFile path (Xml.showXml $ toXml sc)
+writeMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
+writeMusicXml path sc = writeFile path (Xml.showXml $ toMusicXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it.
 --
-openXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
-openXml sc = do
-    writeXml "test.xml" sc
+openMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
+openMusicXml sc = do
+    writeMusicXml "test.xml" sc
     -- FIXME find out which program to use...
     void $ rawSystem "open" ["-a", "Sibelius 7", "test.xml"]
 
@@ -239,25 +239,25 @@ openXml sc = do
 -- |
 -- Convert a score to MusicXML and print it on the standard output.
 --
-showXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
-showXml = putStrLn . toXmlString
+showMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
+showMusicXml = putStrLn . toMusicXmlString
 
 -- |
 -- Convert a score to a MusicXML string.
 --
-toXmlString :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> String
-toXmlString = Xml.showXml . toXml
+toMusicXmlString :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> String
+toMusicXmlString = Xml.showXml . toMusicXml
 
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> XmlScore
-toXml sc = 
+toMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> XmlScore
+toMusicXml sc = 
            -- Score structure
            Xml.fromParts title composer pl
 
                 -- Main notation pipeline
-                . fmap (voiceToXml' barTimeSigs barDurations . scoreToVoice . simultaneous 
+                . fmap (voiceToMusicXml' barTimeSigs barDurations . scoreToVoice . simultaneous 
 
                 -- Meta-event expansion
                 . addClefs
@@ -288,14 +288,14 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToXml' :: HasMusicXml a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
-voiceToXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToXml . voiceToBars' barDurations
+voiceToMusicXml' :: HasMusicXml a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
+voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToMusicXml . voiceToBars' barDurations
 -- TODO attach key signatures in each bar (basically zip)
 
 --
 -- This is where notation of a single voice takes place
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
---      * barToXml is specific: it handles quantization and notation
+--      * barToMusicXml is specific: it handles quantization and notation
 --
     where                          
         -- FIXME compounds                      
@@ -312,27 +312,27 @@ voiceToXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barT
             -- TODO explicit time sig
 
 
-barToXml :: HasMusicXml a => [(Duration, Maybe a)] -> XmlMusic
-barToXml bar = case (fmap rewrite . quantize) bar of
-    Left e   -> error $ "barToXml: Could not quantize this bar: " ++ show e
-    Right rh -> rhythmToXml rh
+barToMusicXml :: HasMusicXml a => [(Duration, Maybe a)] -> XmlMusic
+barToMusicXml bar = case (fmap rewrite . quantize) bar of
+    Left e   -> error $ "barToMusicXml: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToMusicXml rh
 
-rhythmToXml :: HasMusicXml a => Rhythm (Maybe a) -> XmlMusic
-rhythmToXml (Beat d x)            = noteRestToXml d x
-rhythmToXml (Group rs)            = mconcat $ map rhythmToXml rs
-rhythmToXml (Dotted n (Beat d x)) = noteRestToXml (dotMod n * d) x
-rhythmToXml (Tuplet m r)          = Xml.tuplet b a (rhythmToXml r)
+rhythmToMusicXml :: HasMusicXml a => Rhythm (Maybe a) -> XmlMusic
+rhythmToMusicXml (Beat d x)            = noteRestToMusicXml d x
+rhythmToMusicXml (Group rs)            = mconcat $ map rhythmToMusicXml rs
+rhythmToMusicXml (Dotted n (Beat d x)) = noteRestToMusicXml (dotMod n * d) x
+rhythmToMusicXml (Tuplet m r)          = Xml.tuplet b a (rhythmToMusicXml r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToXml :: HasMusicXml a => Duration -> Maybe a -> XmlMusic
-noteRestToXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
-noteRestToXml d (Just p) = setDefaultVoice $ getMusicXml d p
+noteRestToMusicXml :: HasMusicXml a => Duration -> Maybe a -> XmlMusic
+noteRestToMusicXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
+noteRestToMusicXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
 setDefaultVoice :: XmlMusic -> XmlMusic
 setDefaultVoice = Xml.setVoice 1
 
-spellXml :: Integer -> Xml.Pitch
-spellXml p = (
+spellMusicXml :: Integer -> Xml.Pitch
+spellMusicXml p = (
     toEnum $ fromIntegral pc,
     if alt == 0 then Nothing else Just (fromIntegral alt),
     fromIntegral oct
