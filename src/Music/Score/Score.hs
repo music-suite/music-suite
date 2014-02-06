@@ -100,7 +100,7 @@ inScore f = Score . f . getScore'
 mkScore :: [(Time, Duration, a)] -> Score a
 mkScore = mconcat . fmap (uncurry3 event)
     where
-        event t d x   = (delay (t .-. origin) . stretch d) (point x)
+        event t d x   = (delay (t .-. origin) . stretch d) (return x)
 
 
 getScore :: Score a -> [(Time, Duration, a)]
@@ -169,8 +169,8 @@ mapFilterEvents f = mcatMaybes . mapEvents f
 
 
 -- TODO remove these, see #97
-type instance Container (Score a) = Score
-type instance Event (Score a)     = a
+-- type instance Container (Score a) = Score
+-- type instance Event (Score a)     = a
 
 instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
     wrapped = iso Score getScore'
@@ -211,19 +211,19 @@ instance HasMeta (Score a) where
 
 
 
-instance Pointed Score where
-    point = return
+-- instance Pointed Score where
+    -- point = return
 
-instance Performable (Score a) where
-    perform = 
-        fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
-        List.sortBy (comparing fst) .
-        F.toList . 
-        fmap getNote . 
-        reifyScore
-
-instance Composable (Score a) where
-
+-- instance Performable (Score a) where
+--     perform = 
+--         fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
+--         List.sortBy (comparing fst) .
+--         F.toList . 
+--         fmap getNote . 
+--         reifyScore
+-- 
+-- instance Composable (Score a) where
+--                                      
 
 
 -- |

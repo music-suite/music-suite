@@ -95,7 +95,7 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
 
 inVoice f = Voice . f . getVoice'
 
-type instance Event (Voice a) = a
+-- type instance Event (Voice a) = a
 
 
 -- |

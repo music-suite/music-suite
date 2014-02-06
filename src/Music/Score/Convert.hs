@@ -89,7 +89,7 @@ reactiveToVoice d r = voice $ durs `zip` (fmap (r ?) times)
 -- Convert a score to a voice. Fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = voice . fmap throwTime . addRests . perform
+scoreToVoice = voice . fmap throwTime . addRests . getScore
     where
        throwTime (t,d,x) = (d,x)
        addRests = concat . snd . mapAccumL g origin
@@ -128,7 +128,7 @@ trackToScore x = trackToScore' (const x)
 -- Convert a track to a score, using durations determined by the values.
 --
 trackToScore' :: (a -> Duration) -> Track a -> Score a
-trackToScore' f = compose . fmap (\(t,x) -> (t,f x,x)) . getTrack
+trackToScore' f = mkScore . fmap (\(t,x) -> (t,f x,x)) . getTrack
 
 
 -- Convert to delta (time to wait before this note)

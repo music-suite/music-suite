@@ -89,7 +89,7 @@ newtype Track a = Track { getTrack' :: [Occ a] }
 
 inTrack f = Track . f . getTrack'
 
-type instance Event (Track a) = a
+-- type instance Event (Track a) = a
 
 -- |
 -- Create a voice from a list of occurences.
