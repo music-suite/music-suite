@@ -214,7 +214,7 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
 --
 simultaneous' :: Score a -> Score [a]
-simultaneous' sc = setScoreMeta m $ mkScore vs
+simultaneous' sc = setScoreMeta m $ (^. from scoreL) vs
     where     
         m = getScoreMeta sc
         -- es :: [Era]
@@ -228,10 +228,10 @@ simultaneous' sc = setScoreMeta m $ mkScore vs
 -- TODO (re)move these
 
 eras :: Score a -> [Span]
-eras sc = fmap getSpan . getScore $ sc
+eras sc = fmap getSpan . (^. scoreL) $ sc
 
 events :: Span -> Score a -> [a]
-events era sc = fmap getValue . filter (\ev -> getSpan ev == era) . getScore $ sc
+events era sc = fmap getValue . filter (\ev -> getSpan ev == era) . (^. scoreL) $ sc
 
 getValue :: (Time, Duration, a) -> a
 getValue (t,d,a) = a

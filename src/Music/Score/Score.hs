@@ -34,8 +34,9 @@
 module Music.Score.Score (
         -- * Score type
         Score,
-        mkScore,
-        getScore,
+        scoreL,
+        -- mkScore,
+        -- getScore,
         mapScore,
         reifyScore,
         getScoreMeta,
@@ -94,6 +95,9 @@ import Music.Score.Util
 
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
+
+scoreL :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+scoreL = iso getScore mkScore
 
 inScore f = Score . f . getScore'
 
