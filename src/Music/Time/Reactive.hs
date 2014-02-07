@@ -43,7 +43,6 @@ module Music.Time.Reactive (
         initial,
         updates,
         occs,
-        (?),
         splitReactive,
         noteToReactive,
 
@@ -109,13 +108,16 @@ instance Applicative Reactive where
     pure    = (^. wrapped) . pure . pure
     ((^. unwrapped) -> (tf, rf)) <*> ((^. unwrapped) -> (tx, rx)) = (^. wrapped) (tf <> tx, rf <*> rx)
 
+instance HasBehavior Reactive where
+    (?) = atTime
+
 occs :: Reactive a -> [Time]
 occs = fst . (^. unwrapped)
 
 -- | @b ?? t@ returns the value of the reactive at time @t@.
 --  Semantic function.
-(?) :: Reactive a -> Time -> a
-(?) = snd . (^. unwrapped)
+atTime :: Reactive a -> Time -> a
+atTime = snd . (^. unwrapped)
 
 initial :: Reactive a -> a
 initial r = r ? minB (occs r)

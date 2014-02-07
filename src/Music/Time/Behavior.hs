@@ -31,7 +31,7 @@
 
 module Music.Time.Behavior (
         Behavior,
-        (??),
+        -- (??),
         constant,
         behavior,
         varying,
@@ -88,11 +88,13 @@ instance Stretchable (Behavior a) where
 instance Wrapped (Reactive (Time -> a)) (Reactive (Time -> a)) (Behavior a) (Behavior a) where
     wrapped = iso Behavior getBehavior
 
-
 instance Applicative Behavior where
     pure    = (^. wrapped) . pure . pure
     ((^. unwrapped) -> f) <*> ((^. unwrapped) -> x) = (^. wrapped) $ liftA2 (<*>) f x
 
+instance HasBehavior Behavior where
+    (?) = (??)
+    
 -- instance HasPitch (Behavior a) where
     -- type Pitch (Behavior a) = Behavior a
     -- type SetPitch g (Behavior a) = g

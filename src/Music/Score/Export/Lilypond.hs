@@ -62,7 +62,7 @@ import Data.AffineSpace
 import System.Process
 
 import Music.Time
-import Music.Time.Reactive (initial, (?))
+import Music.Time.Reactive (initial)
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm

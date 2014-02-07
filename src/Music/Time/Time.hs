@@ -25,6 +25,9 @@ module Music.Time.Time (
         -- * Duration type
         Duration,
 
+        -- * Behavior class
+        HasBehavior(..),
+
         -- ** Identities
         start,
         stop,
@@ -101,4 +104,11 @@ start = origin
 --
 stop :: Time
 stop = origin .+^ unit
+
+
+class HasBehavior f where
+    (?) :: f a -> Time -> a
+
+instance HasBehavior ((->) Time) where
+    (?) = id
 

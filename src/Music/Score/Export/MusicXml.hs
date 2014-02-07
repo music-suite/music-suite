@@ -53,7 +53,7 @@ import Data.Ord (comparing)
 import System.Process
 
 import Music.Time
-import Music.Time.Reactive (Reactive, initial, (?))
+import Music.Time.Reactive (Reactive, initial)
 import Music.Pitch.Literal
 import Music.Dynamics.Literal
 import Music.Score.Rhythm
