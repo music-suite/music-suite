@@ -162,8 +162,8 @@ instance HasArticulation a => HasArticulation (Maybe a) where
     setAccLevel   n Nothing                         = Nothing
     setStaccLevel n (Just x)                        = Just (setStaccLevel n x)
     setStaccLevel n Nothing                         = Nothing
+type instance Part (Maybe a)                             = Part a
 instance HasPart a => HasPart (Maybe a) where
-    type Part (Maybe a)                             = Part a
     getPart Nothing                                 = def
     getPart (Just a)                                = getPart a
     modifyPart f Nothing                            = Nothing
@@ -242,8 +242,8 @@ instance HasText a => HasText (ChordT a) where
 
 -- TieT
 
+type instance Part (TieT a)                              = Part a
 instance HasPart a => HasPart (TieT a) where
-    type Part (TieT a)                              = Part a
     getPart (TieT (_,x,_))                          = getPart x
     modifyPart f (TieT (b,x,e))                     = TieT (b,modifyPart f x,e)
 instance HasChord a => HasChord (TieT a) where
@@ -292,8 +292,8 @@ instance HasText a => HasText (TieT a) where
 instance Tiable a => Tiable (DynamicT a) where
     toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
                                                        DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
+type instance Part (DynamicT a)                          = Part a
 instance HasPart a => HasPart (DynamicT a) where
-    type Part (DynamicT a)                          = Part a
     getPart (DynamicT (ec,ed,l,a,bc,bd))            = getPart a
     modifyPart f                                    = fmap (modifyPart f)
 instance HasChord a => HasChord (DynamicT a) where
@@ -337,8 +337,8 @@ instance HasText a => HasText (DynamicT a) where
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
                                                            ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
+type instance Part (ArticulationT a)                         = Part a
 instance HasPart a => HasPart (ArticulationT a) where
-    type Part (ArticulationT a)                         = Part a
     getPart (ArticulationT (es,us,al,sl,a,bs))          = getPart a
     modifyPart   f                                      = fmap (modifyPart f)
 instance HasChord a => HasChord (ArticulationT a) where
@@ -380,8 +380,8 @@ instance HasText a => HasText (ArticulationT a) where
 
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+type instance Part (TremoloT a)                          = Part a
 instance HasPart a => HasPart (TremoloT a) where
-    type Part (TremoloT a)                          = Part a
     getPart (TremoloT (_,a))                        = getPart a
     modifyPart f (TremoloT (n,x))                   = TremoloT (n, modifyPart f x)
 instance HasChord a => HasChord (TremoloT a) where
@@ -409,8 +409,8 @@ deriving instance HasText a => HasText (TremoloT a)
 
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
+type instance Part (TextT a)                             = Part a
 instance HasPart a => HasPart (TextT a) where
-    type Part (TextT a)                             = Part a
     getPart (TextT (_,a))                           = getPart a
     modifyPart f (TextT (n,x))                      = TextT (n, modifyPart f x)
 instance HasChord a => HasChord (TextT a) where
@@ -437,8 +437,8 @@ deriving instance HasSlide a => HasSlide (TextT a)
 
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
+type instance Part (HarmonicT a)                         = Part a
 instance HasPart a => HasPart (HarmonicT a) where
-    type Part (HarmonicT a)                         = Part a
     getPart (HarmonicT (_,a))                       = getPart a
     modifyPart f (HarmonicT (n,x))                  = HarmonicT (n, modifyPart f x)
 instance HasChord a => HasChord (HarmonicT a) where
@@ -466,8 +466,8 @@ deriving instance HasText a => HasText (HarmonicT a)
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (eg,es,a,bg,bs))                = (SlideT (eg,   es,   b,False,False),
                                                       SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
+type instance Part (SlideT a)                           = Part a
 instance HasPart a => HasPart (SlideT a) where
-    type Part (SlideT a)                           = Part a
     getPart (SlideT (eg,es,a,bg,bs))               = getPart a
     modifyPart f (SlideT (eg,es,a,bg,bs))          = SlideT (eg,es,modifyPart f a,bg,bs)
 instance HasChord a => HasChord (SlideT a) where

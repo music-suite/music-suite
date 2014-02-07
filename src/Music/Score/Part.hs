@@ -29,6 +29,7 @@
 
 module Music.Score.Part (
         -- * Part representation
+        Part,
         HasPart(..),
         HasPart',
         PartT(..),
@@ -50,6 +51,10 @@ import qualified Data.List as List
 
 import Music.Time
 
+-- | Associated part type. Should normally implement 'Ord' and 'Show'.
+type family Part a :: *
+
+
 -- |
 -- Class of types with an associated part.
 --
@@ -57,10 +62,6 @@ import Music.Time
 -- required from printing the name of the part in output.
 --
 class HasPart a where
-
-    -- | Associated part type. Should normally implement 'Ord' and 'Show'.
-    type Part a :: *
-
     -- | Get the voice of the given note.
     getPart :: Default (Part a) => a -> Part a
 
@@ -76,20 +77,27 @@ class HasPart a where
 newtype PartT n a = PartT { getPartT :: (n, a) }
     deriving (Eq, Ord, Show, Functor, Applicative, Comonad, Monad, Typeable)
 
-instance HasPart ()                         where { type Part ()         = Integer ; getPart _ = def }
-instance HasPart Double                     where { type Part Double     = Integer ; getPart _ = def }
-instance HasPart Float                      where { type Part Float      = Integer ; getPart _ = def }
-instance HasPart Int                        where { type Part Int        = Integer ; getPart _ = def }
-instance HasPart Integer                    where { type Part Integer    = Integer ; getPart _ = def }
-instance Integral a => HasPart (Ratio a)    where { type Part (Ratio a)  = Integer ; getPart _ = def }
+type instance Part () = Integer
+type instance Part Double = Integer
+type instance Part Float = Integer
+type instance Part Int = Integer
+type instance Part Integer = Integer
+type instance Part (Ratio a) = Integer
 
+instance HasPart ()                         where { getPart _ = def }
+instance HasPart Double                     where { getPart _ = def }
+instance HasPart Float                      where { getPart _ = def }
+instance HasPart Int                        where { getPart _ = def }
+instance HasPart Integer                    where { getPart _ = def }
+instance Integral a => HasPart (Ratio a)    where { getPart _ = def }
+
+type instance Part (PartT n a)       = n
 instance HasPart (PartT n a) where
-    type Part (PartT n a)       = n
     getPart (PartT (v,_))       = v
     modifyPart f (PartT (v,x))  = PartT (f v, x)
 
+type instance Part (a,b)    = Part b
 instance HasPart b => HasPart (a,b) where
-    type Part (a,b)    = Part b
     getPart (a,b)      = getPart b
     modifyPart f (a,b) = (a, modifyPart f b)
 

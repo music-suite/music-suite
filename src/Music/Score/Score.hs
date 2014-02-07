@@ -323,8 +323,8 @@ instance (HasSetPitch a b,
     type SetPitch g (Score a) = Score (SetPitch g a)
     mapPitch f  = mapWithSpan (\s -> mapPitch $ sunder s f)
 
+type instance Part (Score a) = Part a
 instance HasPart a => HasPart (Score a) where
-    type Part (Score a) = Part a
     getPart         = fromMaybe def . fmap getPart . listToMaybe . F.toList
     modifyPart f    = fmap (modifyPart f)
 

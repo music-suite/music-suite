@@ -71,8 +71,8 @@ import Music.Score.Util
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
 
+type instance Part (ClefT a) = Part a
 instance HasPart a => HasPart (ClefT a) where
-    type Part (ClefT a) = Part a
     getPart (ClefT (_,a)) = getPart a
     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
 
