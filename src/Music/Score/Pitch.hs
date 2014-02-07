@@ -125,35 +125,25 @@ type HasSetPitch' a = HasSetPitch a a
 
 -- | A lens to the pitch in a note, score or other structure.  
 --
--- > Score a -> Lens (Pitch a)
---
 pitch' :: HasPitch' a => Lens' a (Pitch a)
 pitch' = pitch
 
 -- | A lens to the pitch in a note, score or other structure.  
---
--- > Score a -> Lens (Pitch a)
 --
 pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
 pitch = lens getPitch (flip setPitch)
 
 -- | A setter to the pitch in a note, score or other structure.  
 --
--- > Score a -> Lens (Pitch a)
---
 pitch_ :: HasSetPitch a b => Setter a b (Pitch a) (Pitch b)
 pitch_ = sets mapPitch
 
 -- | Traverses all pitches in structure.  
 --
--- > Score a -> Lens (Pitch a)
---
 pitches' :: (Traversable t, HasPitch' a) => Traversal' (t a) (Pitch a) 
 pitches' = traverse . pitch'
 
 -- | Traverses all pitches in structure.  
---
--- > Score a -> Lens (Pitch a)
 --
 pitches :: (Traversable t, HasPitch a b) => Traversal (t a) (t b) (Pitch a) (Pitch b) 
 pitches = traverse . pitch
@@ -223,15 +213,11 @@ HAS_SET_PITCH_PRIM(Integer)
 -- |
 -- Transpose up.
 --
--- > Interval -> Score a -> Score a
---
 up :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
 up a = pitch_ %~ (.+^ a)
 
 -- |
 -- Transpose down.
---
--- > Interval -> Score a -> Score a
 --
 down :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
 down a = pitch_ %~ (.-^ a)
@@ -239,21 +225,15 @@ down a = pitch_ %~ (.-^ a)
 -- |
 -- Add the given interval above.
 --
--- > Interval -> Score a -> Score a
---
 above a x = x <> up a x
 
 -- |
 -- Add the given interval below.
 --
--- > Interval -> Score a -> Score a
---
 below a x = x <> up a x
 
 -- |
 -- Invert pitches.
---
--- > Pitch -> Score a -> Score a
 --
 inv :: (HasSetPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
 inv p = pitch_ %~ (reflectThrough p)
@@ -261,15 +241,11 @@ inv p = pitch_ %~ (reflectThrough p)
 -- |
 -- Transpose up by the given number of octaves.
 --
--- > Integer -> Score a -> Score a
---
 octavesUp :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesUp = octavesUp_
 
 -- |
 -- Transpose down by the given number of octaves.
---
--- > Integer -> Score a -> Score a
 --
 octavesDown :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesDown = octavesDown_
@@ -280,15 +256,11 @@ octavesDown_ a   = down (_P8^*a)
 -- |
 -- Add the given interval below.
 --
--- > Interval -> Score a -> Score a
---
 octavesAbove :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesAbove n x = x <> octavesUp n x
 
 -- |
 -- Add the given interval below.
---
--- > Interval -> Score a -> Score a
 --
 octavesBelow :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
 octavesBelow n x = x <> octavesUp n x
