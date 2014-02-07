@@ -273,8 +273,8 @@ toMusicXml sc =
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
-        barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice' (start <-> offset sc) timeSigs        
+        barDurations = getBarDurations $ fmap swap $ getVoice $                      reactiveToVoice' (start <-> offset sc) timeSigs
 
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc

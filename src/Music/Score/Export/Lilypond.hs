@@ -345,8 +345,8 @@ toLilypond sc =
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs        
-        barDurations = getBarDurations $ fmap swap $ getVoice $ reactiveToVoice (duration sc) timeSigs
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice' (start <-> offset sc) timeSigs        
+        barDurations = getBarDurations $ fmap swap $ getVoice $                      reactiveToVoice' (start <-> offset sc) timeSigs
 
         addStaff = Lilypond.New "Staff" Nothing
         addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName) 

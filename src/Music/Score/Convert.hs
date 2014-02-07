@@ -38,6 +38,7 @@ module Music.Score.Convert (
         trackToScore',
         scoreToVoice,
         reactiveToVoice,
+        reactiveToVoice',
   ) where
 
 import Control.Lens
@@ -85,6 +86,12 @@ reactiveToVoice d r = voice $ durs `zip` (fmap (r ?) times)
     where
         times = origin : filter (\t -> origin < t && t < origin .+^ d) (occs r)
         durs  = toRelN' (origin .+^ d) times
+
+reactiveToVoice' :: Span -> Reactive a -> Voice a
+reactiveToVoice' (view range -> (u,v)) r = voice $ durs `zip` (fmap (r ?) times)
+    where
+        times = origin : filter (\t -> u < t && t < v) (occs r)
+        durs  = toRelN' v times
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.
