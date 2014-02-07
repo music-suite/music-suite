@@ -36,7 +36,7 @@ module Music.Time.Behavior (
         behavior,
         varying,
         varyingIn,
-        time,
+        -- time,
         switchB,
         sinceB,
   ) where
@@ -66,14 +66,18 @@ import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Music.Time
+import Music.Time.Time
+import Music.Time.Delayable
+import Music.Time.Stretchable
+import Music.Time.Span
+import Music.Time.Time
 import Music.Time.Reactive
-import Music.Score.Note
-import Music.Score.Track
-import Music.Score.Pitch
-import Music.Score.Util
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
+-- import Music.Score.Note
+-- import Music.Score.Track
+-- import Music.Score.Pitch
+-- import Music.Score.Util
+-- import Music.Pitch.Literal
+-- import Music.Dynamics.Literal   
 
 -- Inner TFun is always defined on [0..1]
 newtype Behavior a = Behavior { getBehavior :: Reactive (Time -> a) }

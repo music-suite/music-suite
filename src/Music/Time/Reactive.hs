@@ -43,13 +43,11 @@ module Music.Time.Reactive (
         initial,
         updates,
         occs,
-        splitReactive,
-        noteToReactive,
+        -- splitReactive,
+        -- noteToReactive,
 
         -- * Combinators
         switch,
-        activate,
-        during,
         since,
         until,
 
@@ -80,13 +78,17 @@ import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Music.Time
-import Music.Score.Note
-import Music.Score.Track
-import Music.Score.Pitch
-import Music.Score.Util
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
+import Music.Time.Time
+import Music.Time.Delayable
+import Music.Time.Stretchable
+import Music.Time.Span
+import Music.Time.Time
+-- import Music.Score.Note
+-- import Music.Score.Track
+-- import Music.Score.Pitch
+-- import Music.Score.Util
+-- import Music.Pitch.Literal
+-- import Music.Dynamics.Literal   
 
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)
@@ -137,20 +139,6 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
 
--- TODO rename during
-noteToReactive :: Monoid a => Note a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
-
-
-activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
-    where
-        turnOn  = switch start
-        turnOff = switch stop
-
-during :: Monoid a => Note a -> Reactive a
-during = noteToReactive
-
 since :: Monoid a => Time -> Reactive a -> Reactive a
 since start x = switch start mempty x
 
@@ -170,31 +158,4 @@ printR :: Show a => Reactive a -> IO ()
 printR r = let (x, xs) = renderR r in do
     print x
     mapM_ print xs
-
--- | Split a reactive into notes, as well as the values before and after the first/last update
-splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
-splitReactive r = case updates r of
-    []          -> Left  (initial r)
-    (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
-
-    where
-
-        note (t,u,x) = t <-> u =: x
-
-        -- Always returns a 0 or more Right followed by one left
-        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
-        res rs = let (ts,xs) = unzip rs in 
-            flip fmap (withNext ts `zip` xs) $ 
-                \ ((t, mu), x) -> case mu of
-                    Nothing -> Left (t, x)
-                    Just u  -> Right (t, u, x)
-
-        -- lenght xs == length (withNext xs)
-        withNext :: [a] -> [(a, Maybe a)]
-        withNext = go
-            where
-                go []       = []
-                go [x]      = [(x, Nothing)]
-                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
 

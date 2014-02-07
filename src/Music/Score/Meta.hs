@@ -50,6 +50,7 @@ module Music.Score.Meta (
   ) where
 
 import Control.Applicative
+import Control.Lens
 import Control.Arrow
 import Control.Monad.Plus       
 import Data.Void
@@ -69,7 +70,6 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 
 import Music.Time
-import Music.Time.Reactive
 import Music.Score.Note
 import Music.Score.Voice
 import Music.Score.Part
@@ -199,4 +199,43 @@ newtype RehearsalMark = RehearsalMark ()
 
 
 
+
+
+
+-- TODO rename during
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
+-- | Split a reactive into notes, as well as the values before and after the first/last update
+splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+splitReactive r = case updates r of
+    []          -> Left  (initial r)
+    (t,x):[]    -> Right ((initial r, t), [], (t, x))
+    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+
+    where
+
+        note (t,u,x) = t <-> u =: x
+
+        -- Always returns a 0 or more Right followed by one left
+        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
+        res rs = let (ts,xs) = unzip rs in 
+            flip fmap (withNext ts `zip` xs) $ 
+                \ ((t, mu), x) -> case mu of
+                    Nothing -> Left (t, x)
+                    Just u  -> Right (t, u, x)
+
+        -- lenght xs == length (withNext xs)
+        withNext :: [a] -> [(a, Maybe a)]
+        withNext = go
+            where
+                go []       = []
+                go [x]      = [(x, Nothing)]
+                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+    where
+        turnOn  = switch start
+        turnOff = switch stop
 

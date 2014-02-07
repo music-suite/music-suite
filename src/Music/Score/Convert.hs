@@ -39,8 +39,12 @@ module Music.Score.Convert (
         scoreToVoice,
         reactiveToVoice,
         reactiveToVoice',
+        noteToReactive,
+        splitReactive,
+        activate,
   ) where
 
+import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Control.Monad.Plus
@@ -158,4 +162,42 @@ toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
 -- Convert from delta (time to wait before this note)
 toAbs :: [Duration] -> [Time]
 toAbs = snd . mapAccumL g origin where g now d = (now .+^ d, now .+^ d)
+
+
+-- TODO rename during
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
+-- | Split a reactive into notes, as well as the values before and after the first/last update
+splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+splitReactive r = case updates r of
+    []          -> Left  (initial r)
+    (t,x):[]    -> Right ((initial r, t), [], (t, x))
+    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+
+    where
+
+        note (t,u,x) = t <-> u =: x
+
+        -- Always returns a 0 or more Right followed by one left
+        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
+        res rs = let (ts,xs) = unzip rs in 
+            flip fmap (withNext ts `zip` xs) $ 
+                \ ((t, mu), x) -> case mu of
+                    Nothing -> Left (t, x)
+                    Just u  -> Right (t, u, x)
+
+        -- lenght xs == length (withNext xs)
+        withNext :: [a] -> [(a, Maybe a)]
+        withNext = go
+            where
+                go []       = []
+                go [x]      = [(x, Nothing)]
+                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+    where
+        turnOn  = switch start
+        turnOff = switch stop
 

@@ -23,7 +23,8 @@ module Music.Time (
 
         module Music.Time.Juxtapose,
         module Music.Time.Reverse,
-        -- module Music.Time.Performable,
+        module Music.Time.Reactive,
+        module Music.Time.Behavior
   ) where
 
 import Music.Time.Time
@@ -35,4 +36,5 @@ import Music.Time.Onset
 
 import Music.Time.Juxtapose
 import Music.Time.Reverse
--- import Music.Time.Performable
+import Music.Time.Reactive
+import Music.Time.Behavior
