@@ -74,11 +74,11 @@ noteToVoice (getNote -> (s,x)) = (onset s, stretchTo (duration s) $ return x)
 noteToScore :: Note a -> Score a
 noteToScore (getNote -> (s,x)) = s `sapp` return x
 
-scoreToNotes :: Score a -> [Note a]
-scoreToNotes = Foldable.toList . reifyScore
+-- scoreToNotes :: Score a -> [Note a]
+-- scoreToNotes = Foldable.toList . reifyScore
 
-notesToScore :: [Note a] -> Score a
-notesToScore = pcat . fmap noteToScore
+-- notesToScore :: [Note a] -> Score a
+-- notesToScore = pcat . fmap noteToScore
 
 reactiveToVoice :: Duration -> Reactive a -> Voice a
 reactiveToVoice d r = voice $ durs `zip` (fmap (r ?) times)
