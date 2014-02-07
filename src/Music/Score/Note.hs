@@ -72,10 +72,10 @@ instance HasOffset (Note a) where
 
 type instance Pitch (Note a) = Pitch a
 instance HasGetPitch a => HasGetPitch (Note a) where
-    getPitch  = getPitch . getNoteValue
+    __getPitch  = __getPitch . getNoteValue
 instance HasSetPitch a b => HasSetPitch (Note a) (Note b) where
     type SetPitch g (Note a) = Note (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 
 -- | Construct a note from a span and value.

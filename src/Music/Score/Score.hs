@@ -321,7 +321,7 @@ instance (HasSetPitch a b,
             Transformable (Pitch b)) => 
                 HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
-    mapPitch f  = mapWithSpan (\s -> mapPitch $ sunder s f)
+    __mapPitch f  = mapWithSpan (\s -> __mapPitch $ sunder s f)
 
 type instance Part (Score a) = Part a
 instance HasPart a => HasPart (Score a) where

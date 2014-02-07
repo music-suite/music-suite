@@ -13,6 +13,8 @@
     MultiParamTypeClasses,
     NoMonomorphismRestriction,
     UndecidableInstances,
+    RankNTypes,
+    ScopedTypeVariables,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -39,6 +41,7 @@ module Music.Score.Pitch (
         HasPitch'(..),
         HasPitch(..),
         HasSetPitch'(..),
+        Transposable,
 
         -- * Accessors
         pitch',
@@ -48,15 +51,25 @@ module Music.Score.Pitch (
         -- pitches,
 
         -- * Transformations
+        -- ** Transformations
+        inv,
+
+        -- ** Transformations
         up,
         down,
-        above,
-        below,
-        inv,
+        fifthsUp,
+        fifthsDown,
         octavesUp,
         octavesDown,
+
+        -- ** Transformations
+        above,
+        below,
+        fifthsAbove,
+        fifthsBelow,
         octavesAbove,
         octavesBelow
+
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
@@ -86,7 +99,7 @@ type Interval a = Diff (Pitch a)
 -- Class of types with readable pitch.
 --
 class HasGetPitch s where
-  getPitch :: (a ~ Pitch s) => s -> a
+  __getPitch :: (a ~ Pitch s) => s -> a
 
 -- |
 -- Class of types with mutable pitch.
@@ -95,7 +108,7 @@ class HasGetPitch s where
 -- the following laws should be satisfied:
 --
 -- > setPitch x = mapPitch (const x)
--- > mapPitch f x = setPitch p x where p = f (getPitch x)
+-- > mapPitch f x = setPitch p x where p = f (__getPitch x)
 --
 -- For types that are 'Functors', the following instance can be used
 --
@@ -107,18 +120,18 @@ class HasGetPitch s where
 class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
 
-  setPitch :: Pitch t -> s -> t
-  setPitch x = mapPitch (const x)
+  __setPitch :: Pitch t -> s -> t
+  __setPitch x = __mapPitch (const x)
   
-  mapPitch :: (Pitch s -> Pitch t) -> s -> t
-  default mapPitch :: HasGetPitch s => (Pitch s -> Pitch t) -> s -> t
-  mapPitch f x = setPitch p x where p = f (getPitch x)
+  __mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  default __mapPitch :: HasGetPitch s => (Pitch s -> Pitch t) -> s -> t
+  __mapPitch f x = __setPitch p x where p = f (__getPitch x)
   
 type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
 
 -- TODO use default sigs here
-mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
-mapPitchDefault f x = setPitch p x where p = f (getPitch x)
+__mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
+__mapPitchDefault f x = __setPitch p x where p = f (__getPitch x)
 
 type HasPitch' a = HasPitch a a
 type HasSetPitch' a = HasSetPitch a a
@@ -131,12 +144,12 @@ pitch' = pitch
 -- | A lens to the pitch in a note, score or other structure.  
 --
 pitch :: HasPitch a b => Lens a b (Pitch a) (Pitch b)
-pitch = lens getPitch (flip setPitch)
+pitch = lens __getPitch (flip __setPitch)
 
 -- | A setter to the pitch in a note, score or other structure.  
 --
 pitch_ :: HasSetPitch a b => Setter a b (Pitch a) (Pitch b)
-pitch_ = sets mapPitch
+pitch_ = sets __mapPitch
 
 -- | Traverses all pitches in structure.  
 --
@@ -155,7 +168,7 @@ type HasPitchConstr a = (
     AffineSpace (Pitch a)
     )
 
-newtype PitchT p a = PitchT { getPitchT :: (p, a) }
+newtype PitchT p a = PitchT { __getPitchT :: (p, a) }
     deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 instance (Semigroup p, Monoid p) => Applicative (PitchT p) where
@@ -179,22 +192,22 @@ instance Integral a => Delayable (Ratio a)
 
 type instance Pitch (c,a) = Pitch a
 instance HasGetPitch a => HasGetPitch (c,a) where
-    getPitch (c,a) = getPitch a
+    __getPitch (c,a) = __getPitch a
 
 -- Undecidable ??
 instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
   type SetPitch b (c,a) = (c,SetPitch b a)
-  setPitch b = fmap (setPitch b)
+  __setPitch b = fmap (__setPitch b)
 
 #define HAS_PITCH_PRIM(T)   \
 type instance Pitch T = T; \
 instance HasGetPitch T where { \
-    getPitch = id }
+    __getPitch = id }
     
 #define HAS_SET_PITCH_PRIM(T)   \
 instance (a ~ Pitch a) => HasSetPitch T a where { \
     type SetPitch a T = a; \
-    mapPitch = id }
+    __mapPitch = id }
 
 HAS_PITCH_PRIM(())
 HAS_PITCH_PRIM(Bool)
@@ -210,66 +223,109 @@ HAS_SET_PITCH_PRIM(Float)
 HAS_SET_PITCH_PRIM(Int)
 HAS_SET_PITCH_PRIM(Integer)
 
+-- type Transposable p i = (Diff p ~ i, AffineSpace p, VectorSpace i, IsPitch p, IsInterval i)
+type Transposable a = 
+        (
+            HasSetPitch' a, 
+            Diff (Pitch a) ~ Interval a,
+            TP1 a,
+            TP2 a
+        )
+type TP1 a =
+    (
+            AffineSpace (Pitch a), 
+            VectorSpace (Interval a)    
+    )
+type TP2 a =
+    (    
+            IsPitch (Pitch a), 
+            IsInterval (Interval a)
+    )
+    
+
 -- |
 -- Transpose up.
 --
-up :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
+up :: Transposable a => Interval a -> a -> a
 up a = pitch_ %~ (.+^ a)
 
 -- |
 -- Transpose down.
 --
-down :: (HasSetPitch' a, AffineSpace p, p ~ Pitch a) => Interval a -> a -> a
+down :: Transposable a => Interval a -> a -> a
 down a = pitch_ %~ (.-^ a)
 
 -- |
 -- Add the given interval above.
 --
+above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above a x = x <> up a x
 
 -- |
 -- Add the given interval below.
 --
-below a x = x <> up a x
+below :: (Semigroup a, Transposable a) => Interval a -> a -> a
+below a x = x <> down a x
 
 -- |
 -- Invert pitches.
 --
-inv :: (HasSetPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
+inv :: Transposable a => Pitch a -> a -> a
 inv p = pitch_ %~ (reflectThrough p)
 
 -- |
 -- Transpose up by the given number of octaves.
 --
-octavesUp :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
-octavesUp = octavesUp_
+octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
+octavesUp a     = up (_P8^*a)
 
 -- |
 -- Transpose down by the given number of octaves.
 --
-octavesDown :: (HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
-octavesDown = octavesDown_
-
-octavesUp_ a     = up (_P8^*a)
-octavesDown_ a   = down (_P8^*a)
+octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
+octavesDown a   = down (_P8^*a)
 
 -- |
 -- Add the given interval below.
 --
-octavesAbove :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+fifthsUp :: Transposable a => Scalar (Interval a) -> a -> a
+fifthsUp a     = up (_P8^*a)
+
+-- |
+-- Add the given interval below.
+--
+fifthsDown :: Transposable a => Scalar (Interval a) -> a -> a
+fifthsDown a   = down (_P8^*a)
+
+
+-- |
+-- Add the given interval below.
+--
+octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 octavesAbove n x = x <> octavesUp n x
 
 -- |
 -- Add the given interval below.
 --
-octavesBelow :: (Semigroup a, HasSetPitch' a, p ~ Pitch a, i ~ Interval a, AffineSpace p, VectorSpace i, IsInterval i) => Scalar (Interval a) -> a -> a
+octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 octavesBelow n x = x <> octavesUp n x
 
+-- |
+-- Add the given interval below.
+--
+fifthsAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+fifthsAbove n x = x <> fifthsUp n x
+
+-- |
+-- Add the given interval below.
+--
+fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+fifthsBelow n x = x <> fifthsUp n x
 
 {-}
-highestPitch = maximum . getPitches
-lowestPitch = maximum . getPitches
-meanPitch = mean . getPitches
+highestPitch = maximum . __getPitches
+lowestPitch = maximum . __getPitches
+meanPitch = mean . __getPitches
 
 
 mean :: Floating a => [a] -> a

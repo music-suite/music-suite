@@ -156,8 +156,8 @@ instance IsDynamics a => IsDynamics (Track a) where
 type instance Pitch (Track a) = Pitch a
 instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch (Track b))) => HasSetPitch (Track a) (Track b) where
     type SetPitch g (Track a) = Track (SetPitch g a)
-    -- FIXME this is wrong, need to behave like mapPitch'
-    mapPitch f   = fmap (mapPitch f)
+    -- FIXME this is wrong, need to behave like __mapPitch'
+    __mapPitch f   = fmap (__mapPitch f)
 
 
 

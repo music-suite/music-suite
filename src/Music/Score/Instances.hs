@@ -172,8 +172,8 @@ instance HasPart a => HasPart (Maybe a) where
 type instance Pitch (Maybe a) = Pitch a
 instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
     type SetPitch g (Maybe a) = Maybe (SetPitch g a)
-    mapPitch f (Nothing)                          = Nothing
-    mapPitch f (Just a)                           = Just (mapPitch f a)
+    __mapPitch f (Nothing)                          = Nothing
+    __mapPitch f (Just a)                           = Just (__mapPitch f a)
 
 
 -- PartT
@@ -185,10 +185,10 @@ instance HasChord a => HasChord (PartT n a) where
 
 type instance Pitch (PartT n a) = Pitch a
 instance HasGetPitch a => HasGetPitch (PartT n a) where
-    getPitch = getPitch . extract
+    __getPitch = __getPitch . extract
 instance HasSetPitch a b => HasSetPitch (PartT n a) (PartT n b) where
     type SetPitch g (PartT n a) = PartT n (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 instance Tiable a => Tiable (PartT n a) where
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
@@ -209,10 +209,10 @@ instance Tiable a => Tiable (ChordT a) where
 
 type instance Pitch (ChordT a) = Pitch a
 -- instance HasGetPitch a => HasGetPitch (ChordT a) where
-    -- getPitch = getPitch . get1
+    -- __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
     type SetPitch g (ChordT a) = ChordT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 instance HasDynamic a => HasDynamic (ChordT a) where
     setBeginCresc n (ChordT as)                     = ChordT (fmap (setBeginCresc n) as)
@@ -252,10 +252,10 @@ instance HasChord a => HasChord (TieT a) where
 
 type instance Pitch (TieT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (TieT a) where
-    getPitch = getPitch . get1
+    __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (TieT a) (TieT b) where
     type SetPitch g (TieT a) = TieT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 
 instance HasDynamic a => HasDynamic (TieT a) where
@@ -302,10 +302,10 @@ instance HasChord a => HasChord (DynamicT a) where
 
 type instance Pitch (DynamicT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (DynamicT a) where
-    getPitch (DynamicT (ec,ed,l,a,bc,bd)) = getPitch a
+    __getPitch (DynamicT (ec,ed,l,a,bc,bd)) = __getPitch a
 instance HasSetPitch a b => HasSetPitch (DynamicT a) (DynamicT b) where
     type SetPitch g (DynamicT a) = DynamicT (SetPitch g a)
-    mapPitch f (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,mapPitch f a,bc,bd)
+    __mapPitch f (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,__mapPitch f a,bc,bd)
 
 
 instance HasArticulation a => HasArticulation (DynamicT a) where
@@ -347,10 +347,10 @@ instance HasChord a => HasChord (ArticulationT a) where
 
 type instance Pitch (ArticulationT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (ArticulationT a) where
-    getPitch (ArticulationT (es,us,al,sl,a,bs)) = getPitch a
+    __getPitch (ArticulationT (es,us,al,sl,a,bs)) = __getPitch a
 instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) where
     type SetPitch g (ArticulationT a) = ArticulationT (SetPitch g a)
-    mapPitch f (ArticulationT (es,us,al,sl,a,bs)) = (ArticulationT (es,us,al,sl,mapPitch f a,bs))
+    __mapPitch f (ArticulationT (es,us,al,sl,a,bs)) = (ArticulationT (es,us,al,sl,__mapPitch f a,bs))
 
 instance HasDynamic a => HasDynamic (ArticulationT a) where
     setBeginCresc n                                     = fmap (setBeginCresc n)
@@ -390,10 +390,10 @@ instance HasChord a => HasChord (TremoloT a) where
 
 type instance Pitch (TremoloT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (TremoloT a) where
-    getPitch = getPitch . get1
+    __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (TremoloT a) (TremoloT b) where
     type SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 deriving instance HasDynamic a => HasDynamic (TremoloT a)
 deriving instance HasArticulation a => HasArticulation (TremoloT a)
@@ -419,10 +419,10 @@ instance HasChord a => HasChord (TextT a) where
 
 type instance Pitch (TextT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (TextT a) where
-    getPitch = getPitch . get1
+    __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (TextT a) (TextT b) where
     type SetPitch g (TextT a) = TextT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 
 deriving instance HasDynamic a => HasDynamic (TextT a)
@@ -447,10 +447,10 @@ instance HasChord a => HasChord (HarmonicT a) where
 
 type instance Pitch (HarmonicT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (HarmonicT a) where
-    getPitch = getPitch . get1
+    __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (HarmonicT a) (HarmonicT b) where
     type SetPitch g (HarmonicT a) = HarmonicT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 deriving instance HasDynamic a => HasDynamic (HarmonicT a)
 deriving instance HasArticulation a => HasArticulation (HarmonicT a)
@@ -476,10 +476,10 @@ instance HasChord a => HasChord (SlideT a) where
 
 type instance Pitch (SlideT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (SlideT a) where
-    getPitch = getPitch . get1
+    __getPitch = __getPitch . get1
 instance HasSetPitch a b => HasSetPitch (SlideT a) (SlideT b) where
     type SetPitch g (SlideT a) = SlideT (SetPitch g a)
-    mapPitch f = fmap (mapPitch f)
+    __mapPitch f = fmap (__mapPitch f)
 
 instance HasDynamic a => HasDynamic (SlideT a) where
     setBeginCresc n                                = fmap (setBeginCresc n)
