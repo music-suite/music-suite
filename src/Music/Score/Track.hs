@@ -46,7 +46,6 @@ import Data.PairMonad ()
 import Data.Typeable
 import Data.Foldable (Foldable(..), foldMap)
 import Data.Traversable (Traversable(..))
-import Data.Pointed
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace.Point
 import Test.QuickCheck (Arbitrary(..), Gen(..))
@@ -120,19 +119,18 @@ instance Monoid (Track a) where
 instance Wrapped [Occ a] [Occ a] (Track a) (Track a) where
     wrapped = iso Track getTrack'
 
-instance Monad Track where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
-
 instance Applicative Track where
     pure  = return
     (<*>) = ap
+
+instance Monad Track where
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance Alternative Track where
     empty = mempty
     (<|>) = mappend
 
--- Satisfies left distribution
 instance MonadPlus Track where
     mzero = mempty
     mplus = mappend
@@ -145,13 +143,6 @@ instance IsPitch a => IsPitch (Track a) where
 
 instance IsDynamics a => IsDynamics (Track a) where
     fromDynamics = pure . fromDynamics
-
--- instance Arbitrary a => Arbitrary (Track a) where
-    -- arbitrary = do
-        -- x <- arbitrary
-        -- t <- fmap realToFrac (arbitrary::Gen Double)
-        -- d <- fmap realToFrac (arbitrary::Gen Double)
-        -- return $ delay t $ stretch d $ return x
 
 type instance Pitch (Track a) = Pitch a
 instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch (Track b))) => HasSetPitch (Track a) (Track b) where

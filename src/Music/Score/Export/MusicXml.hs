@@ -46,7 +46,6 @@ import Data.Semigroup
 import Data.Monoid.WithSemigroup
 import Data.Ratio
 import Data.String
-import Data.Pointed
 import Data.Maybe
 import Data.Function (on)
 import Data.Ord (comparing)
@@ -267,7 +266,7 @@ toMusicXml sc =
 
     where
         addClefT :: a -> ClefT a
-        addClefT = point
+        addClefT = return
         
         addClefs = setClef . fmap addClefT
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default

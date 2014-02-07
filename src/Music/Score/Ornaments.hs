@@ -52,7 +52,6 @@ module Music.Score.Ornaments (
   ) where
 
 import Data.Ratio
-import Data.Pointed
 import Data.Foldable
 import Data.Semigroup
 import Data.Typeable
@@ -109,8 +108,9 @@ class HasHarmonic a where
 newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Bool, Int), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
-instance Pointed HarmonicT where
-    point x = HarmonicT ((False, 0), x)
+instance Monad HarmonicT where
+    return x = HarmonicT ((False, 0), x)
+    (>>=) = error "No HarmonicT.(>>=)"
 
 instance HasHarmonic (HarmonicT a) where
     setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((b,n),x)

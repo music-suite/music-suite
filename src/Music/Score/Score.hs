@@ -58,7 +58,6 @@ import Control.Lens
 import Data.Maybe
 import Data.Ord
 import Data.Semigroup
-import Data.Pointed
 import Data.Foldable (foldMap)
 import Control.Arrow
 import Control.Applicative
@@ -189,13 +188,13 @@ mapFilterEvents f = mcatMaybes . mapEvents f
 instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
     wrapped = iso Score getScore'
 
-instance Monad Score where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
-
 instance Applicative Score where
     pure = return
     (<*>) = ap
+
+instance Monad Score where
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance MonadPlus Score where
     mzero = mempty
@@ -225,21 +224,6 @@ instance HasMeta (Score a) where
 
 
 
--- instance Pointed Score where
-    -- point = return
-
--- instance Performable (Score a) where
---     perform = 
---         fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
---         List.sortBy (comparing fst) .
---         F.toList . 
---         fmap getNote . 
---         reifyScore
--- 
--- instance Composable (Score a) where
---                                      
-
-
 -- |
 -- Score without meta-events.
 --
@@ -266,13 +250,13 @@ reifyNScore = inNScore $ fmap duplicate
 instance Wrapped [Note a] [Note a] (NScore a) (NScore a) where
     wrapped = iso NScore getNScore
 
-instance Monad NScore where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
-
 instance Applicative NScore where
     pure = return
     (<*>) = ap
+
+instance Monad NScore where
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance MonadPlus NScore where
     mzero = mempty
@@ -280,7 +264,6 @@ instance MonadPlus NScore where
 
 instance HasDuration (Note a) where
     duration = durationDefault
-
 
 -- The following instances allow us to write expressions like [c..g]
 
@@ -306,14 +289,6 @@ instance AdditiveGroup (Score a) where
 instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     d *^ s = d `stretch` s
-
-
-instance Arbitrary a => Arbitrary (Score a) where
-    arbitrary = do
-        x <- arbitrary
-        t <- fmap realToFrac (arbitrary::Gen Double)
-        d <- fmap realToFrac (arbitrary::Gen Double)
-        return $ delay t $ stretch d $ return x
 
 type instance Pitch (Score a) = Pitch a
 instance (HasSetPitch a b, 

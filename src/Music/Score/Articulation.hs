@@ -54,7 +54,6 @@ module Music.Score.Articulation (
 
   ) where
 
-import Data.Pointed
 import Data.Foldable
 import Data.Typeable
 import Data.Semigroup
@@ -75,21 +74,22 @@ class HasArticulation a where
 newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
-instance Pointed ArticulationT where
-    point x = ArticulationT (False,False,0,0,x,False)
+instance Monad ArticulationT where
+    return x = ArticulationT (False,False,0,0,x,False)
+    (>>=) = error "No ArticulationT.(>>=)"
 
 instance Semigroup a => Semigroup (ArticulationT a) where
     ArticulationT (es,us,al,sl,a,bs) <> ArticulationT (_,_,_,_,b,_) = ArticulationT (es,us,al,sl,a <> b,bs)
 
 instance (Semigroup a, Monoid a) => Monoid (ArticulationT a) where
-    mempty = point mempty
+    mempty = return mempty
     mappend = (<>)
 
 instance IsPitch a => IsPitch (ArticulationT a) where
-    fromPitch l = point (fromPitch l)
+    fromPitch l = return (fromPitch l)
 
 instance IsDynamics a => IsDynamics (ArticulationT a) where
-    fromDynamics l = point (fromDynamics l)
+    fromDynamics l = return (fromDynamics l)
 
 instance Num a => Num (ArticulationT a) where
     ArticulationT (p,q,r,s,a,t) + ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a+b,t)
@@ -100,12 +100,12 @@ instance Num a => Num (ArticulationT a) where
     fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
 
 instance Enum a => Enum (ArticulationT a) where
-    toEnum = point . toEnum
+    toEnum = return . toEnum
     fromEnum = fromEnum . get1 
 
 instance Bounded a => Bounded (ArticulationT a) where
-    minBound = point minBound
-    maxBound = point maxBound
+    minBound = return minBound
+    maxBound = return maxBound
 
 instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
     toRational = toRational . get1

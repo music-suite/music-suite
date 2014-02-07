@@ -33,7 +33,6 @@ module Music.Score.Instances (
 import Control.Monad
 import Control.Comonad
 import Data.Semigroup
-import Data.Pointed
 import Data.Default
 import Data.Ratio
 import Data.Maybe
@@ -94,9 +93,9 @@ instance IsDynamics a => IsDynamics (TextT a) where
     fromDynamics l                                  = TextT (mempty, fromDynamics l)
 
 instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch = point . fromPitch
+    fromPitch = return . fromPitch
 instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics = point . fromDynamics
+    fromDynamics = return . fromDynamics
 
 instance IsPitch a => IsPitch (SlideT a) where
     fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
@@ -674,15 +673,15 @@ instance Num a => Num (HarmonicT a) where
     HarmonicT (v,a) - HarmonicT (_,b) = HarmonicT (v,a-b)
     abs (HarmonicT (v,a))          = HarmonicT (v,abs a)
     signum (HarmonicT (v,a))       = HarmonicT (v,signum a)
-    fromInteger = point . fromInteger
+    fromInteger = return . fromInteger
 
 instance Enum a => Enum (HarmonicT a) where
-    toEnum = point . toEnum
+    toEnum = return . toEnum
     fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (HarmonicT a) where
-    minBound = point minBound
-    maxBound = point maxBound
+    minBound = return minBound
+    maxBound = return maxBound
 
 instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
     toRational (HarmonicT (v,a)) = toRational a

@@ -50,7 +50,6 @@ import Data.Semigroup
 import Data.Ratio
 import Data.Default
 import Data.String
-import Data.Pointed
 import Data.Maybe (fromMaybe)
 import Data.Foldable
 import Data.Typeable
@@ -339,7 +338,7 @@ toLilypond sc =
 
     where                 
         addClefT :: a -> ClefT a
-        addClefT = point
+        addClefT = return
         
         addClefs p = (,) p . setClef . fmap addClefT
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default

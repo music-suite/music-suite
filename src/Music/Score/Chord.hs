@@ -51,7 +51,6 @@ import Prelude hiding (any, mapM_)
 
 import Control.Lens hiding (perform)
 import Data.Ord
-import Data.Pointed
 import Data.Foldable
 import Data.Typeable
 import Data.Semigroup

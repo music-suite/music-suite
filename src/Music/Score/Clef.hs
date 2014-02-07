@@ -38,7 +38,6 @@ module Music.Score.Clef (
 
 import Control.Arrow
 import Control.Monad.Plus       
-import Data.Pointed
 import Data.Void
 import Data.Maybe
 import Data.Semigroup
@@ -76,8 +75,10 @@ instance HasPart a => HasPart (ClefT a) where
     getPart (ClefT (_,a)) = getPart a
     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
 
-instance Pointed ClefT where
-    point x = ClefT (mempty, x)
+instance Monad ClefT where
+    return x = ClefT (mempty, x)
+    (>>=) = error "No ClefT.(>>=)"
+
 
 instance Tiable a => Tiable (ClefT a) where
     toTied (ClefT (clef,a)) = (ClefT (clef,b), ClefT (mempty,c)) where (b,c) = toTied a

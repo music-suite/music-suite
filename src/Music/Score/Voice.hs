@@ -51,7 +51,6 @@ import Data.PairMonad ()
 import Data.Typeable
 import Data.Foldable (Foldable(..), foldMap)
 import Data.Traversable (Traversable(..))
-import Data.Pointed
 import Data.VectorSpace hiding (Sum)
 import Test.QuickCheck (Arbitrary(..), Gen(..))
 import qualified Data.Foldable as F
@@ -113,16 +112,13 @@ getVoice = fmap (first realToFrac . getEv) . getVoice'
 instance Wrapped [Ev a] [Ev a] (Voice a) (Voice a) where
     wrapped = iso Voice getVoice'
 
-instance Monad Voice where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
-
-instance Pointed Voice where
-    point = return
-
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
+
+instance Monad Voice where
+    return = (^. wrapped) . return . return
+    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
 instance HasDuration (Voice a) where
     duration = sum . fmap duration . getVoice'

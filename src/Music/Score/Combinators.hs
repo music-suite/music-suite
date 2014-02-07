@@ -109,7 +109,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
 import Data.Ratio
-import Data.Pointed
 import Data.Ord
 
 import Music.Time
