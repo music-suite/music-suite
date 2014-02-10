@@ -70,16 +70,16 @@ import Music.Time.Reverse
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
 
-normalizeSpan :: Span -> Span
-normalizeSpan (Span (t,d))
-    | d >= 0  =  t <-> (t .+^ d)
-    | d <  0  =  (t .+^ d) <-> t
+-- normalizeSpan :: Span -> Span
+-- normalizeSpan (Span (t,d))
+    --  | d >= 0  =  t <-> (t .+^ d)
+    --  | d <  0  =  (t .+^ d) <-> t
 
 instance Delayable Span where
     delay n = delta %~ first (delay n)
 
 instance Stretchable Span where
-    stretch n = normalizeSpan . (delta %~ (stretch n *** stretch n))
+    stretch n = delta %~ (stretch n *** stretch n)
 
 instance HasOnset Span where
     onset = fst . _range
@@ -91,7 +91,9 @@ instance HasDuration Span where
     duration = snd . _delta
 
 instance Semigroup Span where
-    Span (t1, d1) <> Span (t2, d2) = normalizeSpan $ Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
+    -- Span (t1, d1) <> Span (t2, d2) = Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
+    (<>) = sapp
+
 
 instance Monoid Span where
     mempty  = start <-> stop
@@ -111,9 +113,9 @@ sunit = mempty
 
 -- | @t >-> d@ represents the span between @t@ and @t .+^ d@.
 (>->) :: Time -> Duration -> Span
-t >-> d
-    | d > 0     = Span (t,d)
-    | otherwise = error "Invalid span"
+t >-> d = Span (t,d)
+    --  | d > 0     = Span (t,d)
+    --  | otherwise = error "Invalid span"
 
 -- | Get the era (onset to offset) of a given value.
 era :: (HasOnset a, HasOffset a) => a -> Span
