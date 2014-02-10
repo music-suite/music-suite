@@ -134,21 +134,14 @@ instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch
     __mapPitch f   = fmap (__mapPitch f)
 
 
-track :: Iso [(Time, a)] [(Time, b)] (Track a) (Track b)
-track = iso mkTrack getTrack
-
 -- |
 -- Create a voice from a list of occurences.
 -- 
-mkTrack :: [(Time, a)] -> Track a
-mkTrack = Track . fmap (uncurry occ . first (fmap realToFrac))
-
--- |
--- Extract the occurences of a voice. Semantic function.
--- 
-getTrack :: Track a -> [(Time, a)]
-getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
-
+track :: Iso [(Time, a)] [(Time, b)] (Track a) (Track b)
+track = iso mkTrack getTrack
+    where
+        mkTrack = Track . fmap (uncurry occ . first (fmap realToFrac))
+        getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
 
 
 

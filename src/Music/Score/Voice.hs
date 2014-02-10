@@ -120,20 +120,14 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
     __mapPitch f   = fmap (__mapPitch f)
 
 
-voice :: Iso [(Duration, a)] [(Duration, b)] (Voice a) (Voice b)
-voice = iso mkVoice getVoice
-
 -- |
 -- Create a voice from a list of events.
 -- 
-mkVoice :: [(Duration, a)] -> Voice a
-mkVoice = Voice . fmap (uncurry ev . first realToFrac)
-
--- |
--- Extract the occurences of a events. Semantic function.
--- 
-getVoice :: Voice a -> [(Duration, a)]
-getVoice = fmap (first realToFrac . getEv) . getVoice'
+voice :: Iso [(Duration, a)] [(Duration, b)] (Voice a) (Voice b)
+voice = iso mkVoice getVoice
+    where
+        mkVoice = Voice . fmap (uncurry ev . first realToFrac)
+        getVoice = fmap (first realToFrac . getEv) . getVoice'
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
