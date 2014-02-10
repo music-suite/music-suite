@@ -27,8 +27,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Instances (
-  ) where
+module Music.Score.Instances () where
 
 import Control.Monad
 import Control.Comonad
