@@ -76,14 +76,10 @@ normalizeSpan (Span (t,d))
     | d <  0  =  (t .+^ d) <-> t
 
 instance Delayable Span where
-    delay n = mapDelta $ curry $ first (delay n)
+    delay n = delta %~ first (delay n)
 
 instance Stretchable Span where
-    stretch n = normalizeSpan . (mapDelta $ curry $ stretch n *** stretch n)
-
--- This instance would violate the first Reversible law
--- instance Reversible Span where
-    -- rev = inSpan g where g (t, d) = (mirror (t .+^ d), d)
+    stretch n = normalizeSpan . (delta %~ (stretch n *** stretch n))
 
 instance HasOnset Span where
     onset = fst . _range
