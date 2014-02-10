@@ -52,7 +52,6 @@ import Data.Typeable
 import Data.Foldable (Foldable(..), foldMap)
 import Data.Traversable (Traversable(..))
 import Data.VectorSpace hiding (Sum)
-import Test.QuickCheck (Arbitrary(..), Gen(..))
 import qualified Data.Foldable as F
 import qualified Data.Traversable as T
 import qualified Data.List as List
@@ -92,22 +91,6 @@ import Music.Score.Util
 newtype Voice a = Voice { getVoice' :: [Ev a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Semigroup, Typeable, Traversable, Stretchable)
 
-inVoice f = Voice . f . getVoice'
-
--- type instance Event (Voice a) = a
-
-
--- |
--- Create a voice from a list of events.
--- 
-voice :: [(Duration, a)] -> Voice a
-voice = Voice . fmap (uncurry ev . first realToFrac)
-
--- |
--- Extract the occurences of a events. Semantic function.
--- 
-getVoice :: Voice a -> [(Duration, a)]
-getVoice = fmap (first realToFrac . getEv) . getVoice'
 
 instance Wrapped [Ev a] [Ev a] (Voice a) (Voice a) where
     wrapped = iso Voice getVoice'
@@ -118,7 +101,7 @@ instance Applicative Voice where
 
 instance Monad Voice where
     return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
+    xs >>= f = (^. wrapped) $ ((^. unwrapped) . f) `mbind` ((^. unwrapped) xs)
 
 instance HasDuration (Voice a) where
     duration = sum . fmap duration . getVoice'
@@ -134,6 +117,19 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
     type SetPitch g (Voice a) = Voice (SetPitch g a)
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
+
+
+-- |
+-- Create a voice from a list of events.
+-- 
+voice :: [(Duration, a)] -> Voice a
+voice = Voice . fmap (uncurry ev . first realToFrac)
+
+-- |
+-- Extract the occurences of a events. Semantic function.
+-- 
+getVoice :: Voice a -> [(Duration, a)]
+getVoice = fmap (first realToFrac . getEv) . getVoice'
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.

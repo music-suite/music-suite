@@ -86,20 +86,6 @@ import Music.Score.Util
 newtype Track a = Track { getTrack' :: [Occ a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Traversable, Monoid, Semigroup, Delayable, Stretchable)
 
-inTrack f = Track . f . getTrack'
-
--- |
--- Create a voice from a list of occurences.
--- 
-track :: [(Time, a)] -> Track a
-track = Track . fmap (uncurry occ . first (fmap realToFrac))
-
--- |
--- Extract the occurences of a voice. Semantic function.
--- 
-getTrack :: Track a -> [(Time, a)]
-getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
-
 {-
 instance Semigroup (Track a) where
     (<>) = mappend
@@ -145,6 +131,19 @@ instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch
     type SetPitch g (Track a) = Track (SetPitch g a)
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
+
+-- |
+-- Create a voice from a list of occurences.
+-- 
+track :: [(Time, a)] -> Track a
+track = Track . fmap (uncurry occ . first (fmap realToFrac))
+
+-- |
+-- Extract the occurences of a voice. Semantic function.
+-- 
+getTrack :: Track a -> [(Time, a)]
+getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
+
 
 
 
