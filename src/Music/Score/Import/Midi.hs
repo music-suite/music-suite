@@ -13,6 +13,7 @@ module Music.Score.Import.Midi (
 import Music.Score.Score
 import Music.Pitch.Literal (IsPitch)
 
+import Control.Lens
 import Control.Applicative
 import Control.Reactive hiding (Event)
 import Control.Reactive.Midi

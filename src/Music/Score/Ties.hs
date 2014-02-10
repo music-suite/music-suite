@@ -38,6 +38,7 @@ module Music.Score.Ties (
         splitTiesVoiceAt,
   ) where
 
+import Control.Lens
 import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus
@@ -111,7 +112,7 @@ instance Tiable a => Tiable (TieT a) where
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTiesVoice :: Tiable a => Voice a -> Voice a
-splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
+splitTiesVoice = (^. voice) . concat . snd . List.mapAccumL g 0 . (^. from voice)
     where
         g t (d, x) = (t + d, occs)
             where
@@ -126,7 +127,7 @@ splitTiesVoice = voice . concat . snd . List.mapAccumL g 0 . getVoice
 -- Notes that cross a barlines are split into tied notes.
 --
 splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
-splitTiesVoiceAt barDurs x = fmap voice $ splitTiesVoiceAt' barDurs (getVoice x)
+splitTiesVoiceAt barDurs x = fmap (^. voice) $ splitTiesVoiceAt' barDurs ((^. from voice) x)
 
 splitTiesVoiceAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
 splitTiesVoiceAt' []  _  =  []
@@ -136,7 +137,7 @@ splitTiesVoiceAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
     (barOccs, restOccs) -> barOccs : splitTiesVoiceAt' rbarDur restOccs
 
 tsplitTiesVoiceAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesVoiceAt barDurs = fmap getVoice . splitTiesVoiceAt barDurs . voice . fmap (\x -> (x,'_'))
+tsplitTiesVoiceAt barDurs = fmap (^. from voice) . splitTiesVoiceAt barDurs . (^. voice) . fmap (\x -> (x,'_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.

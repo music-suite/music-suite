@@ -194,7 +194,7 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
 -- Convert a score to a track of MIDI messages.
 --
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack = track . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScore
+toMidiTrack = (^. track) . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.

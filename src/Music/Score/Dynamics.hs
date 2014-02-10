@@ -44,6 +44,7 @@ module Music.Score.Dynamics (
         resetDynamics,
   ) where
 
+import Control.Lens hiding (Level)
 import Control.Monad
 import Data.Semigroup
 import Data.Ratio
@@ -165,7 +166,7 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
 
 
 mapValuesVoice :: ([a] -> [b]) -> Voice a -> Voice b
-mapValuesVoice f = voice . uncurry zip . second f . unzip . getVoice
+mapValuesVoice f = (^. voice) . uncurry zip . second f . unzip . (^. from voice)
 
 
 

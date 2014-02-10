@@ -39,6 +39,7 @@ module Music.Score.Export.MusicXml (
 
 import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
 
+import Control.Lens hiding (rewrite)
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Arrow
@@ -272,8 +273,8 @@ toMusicXml sc =
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ getVoice $ reactiveToVoice' (start <-> offset sc) timeSigs        
-        barDurations = getBarDurations $ fmap swap $ getVoice $                      reactiveToVoice' (start <-> offset sc) timeSigs
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ (^. from voice) $ reactiveToVoice' (start <-> offset sc) timeSigs        
+        barDurations = getBarDurations $ fmap swap $ (^. from voice) $                      reactiveToVoice' (start <-> offset sc) timeSigs
 
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc

@@ -32,7 +32,8 @@ module Music.Score.Voice (
         -- * Voice type
         Voice,
         voice,
-        getVoice,
+        -- mkVoice,
+        -- getVoice,
         
         zipVoice,
         zipVoiceWith,
@@ -119,11 +120,14 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
     __mapPitch f   = fmap (__mapPitch f)
 
 
+voice :: Iso [(Duration, a)] [(Duration, b)] (Voice a) (Voice b)
+voice = iso mkVoice getVoice
+
 -- |
 -- Create a voice from a list of events.
 -- 
-voice :: [(Duration, a)] -> Voice a
-voice = Voice . fmap (uncurry ev . first realToFrac)
+mkVoice :: [(Duration, a)] -> Voice a
+mkVoice = Voice . fmap (uncurry ev . first realToFrac)
 
 -- |
 -- Extract the occurences of a events. Semantic function.

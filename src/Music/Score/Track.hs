@@ -32,7 +32,8 @@ module Music.Score.Track (
         -- * Track type
         Track,
         track,
-        getTrack,
+        -- mkTrack,
+        -- getTrack,
   ) where
 
 -- import Control.Newtype
@@ -132,11 +133,15 @@ instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
 
+
+track :: Iso [(Time, a)] [(Time, b)] (Track a) (Track b)
+track = iso mkTrack getTrack
+
 -- |
 -- Create a voice from a list of occurences.
 -- 
-track :: [(Time, a)] -> Track a
-track = Track . fmap (uncurry occ . first (fmap realToFrac))
+mkTrack :: [(Time, a)] -> Track a
+mkTrack = Track . fmap (uncurry occ . first (fmap realToFrac))
 
 -- |
 -- Extract the occurences of a voice. Semantic function.

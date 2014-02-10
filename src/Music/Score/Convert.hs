@@ -85,13 +85,13 @@ noteToScore (getNote -> (s,x)) = s `sapp` return x
 -- notesToScore = pcat . fmap noteToScore
 
 reactiveToVoice :: Duration -> Reactive a -> Voice a
-reactiveToVoice d r = voice $ durs `zip` (fmap (r ?) times)
+reactiveToVoice d r = (^. voice) $ durs `zip` (fmap (r ?) times)
     where
         times = origin : filter (\t -> origin < t && t < origin .+^ d) (occs r)
         durs  = toRelN' (origin .+^ d) times
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = voice $ durs `zip` (fmap (r ?) times)
+reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ durs `zip` (fmap (r ?) times)
     where
         times = origin : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelN' v times
@@ -100,7 +100,7 @@ reactiveToVoice' (view range -> (u,v)) r = voice $ durs `zip` (fmap (r ?) times
 -- Convert a score to a voice. Fails if the score contain overlapping events.
 --
 scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = voice . fmap throwTime . addRests . (^. events)
+scoreToVoice = (^. voice) . fmap throwTime . addRests . (^. events)
     where
        throwTime (t,d,x) = (d,x)
        addRests = concat . snd . mapAccumL g origin
@@ -115,7 +115,7 @@ scoreToVoice = voice . fmap throwTime . addRests . (^. events)
 -- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . getVoice
+voiceToScore = scat . fmap g . (^. from voice)
     where
         g (d,x) = stretch d (return x)
 
@@ -139,7 +139,7 @@ trackToScore x = trackToScore' (const x)
 -- Convert a track to a score, using durations determined by the values.
 --
 trackToScore' :: (a -> Duration) -> Track a -> Score a
-trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . getTrack
+trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . (^. from track)
 
 
 -- Convert to delta (time to wait before this note)

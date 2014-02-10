@@ -29,6 +29,7 @@ import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, mini
 import Data.Semigroup
 import Data.Ratio
 import Data.String
+import Control.Lens
 import Control.Applicative
 import Control.Monad hiding (mapM)
 import Control.Monad.Plus
@@ -73,7 +74,7 @@ import Music.Dynamics.Literal
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars' barDurs = fmap getVoice . splitTiesVoiceAt barDurs
+voiceToBars' barDurs = fmap (^. from voice) . splitTiesVoiceAt barDurs
 -- TODO remove prime from name
 
 -- | Convert absolute to relative durations.
