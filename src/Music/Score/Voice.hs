@@ -135,12 +135,6 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
 
--- instance HasPitch a => HasPitch (Voice a) where
-    -- type Pitch (Voice a) = Pitch a
-    -- type SetPitch g (Voice a) = Voice (SetPitch g a)
-    -- getPitches  = F.foldMap getPitches
-    -- __mapPitch f  = fmap (__mapPitch f)
-
 -- |
 -- Join the given voices by multiplying durations and pairing values.
 --

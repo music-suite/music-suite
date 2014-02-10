@@ -322,13 +322,11 @@ fifthsAbove n x = x <> fifthsUp n x
 fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsBelow n x = x <> fifthsUp n x
 
-{-}
+{-
+
 highestPitch = maximum . __getPitches
 lowestPitch = maximum . __getPitches
 meanPitch = mean . __getPitches
-
-
-mean :: Floating a => [a] -> a
 mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x 
 
 -}

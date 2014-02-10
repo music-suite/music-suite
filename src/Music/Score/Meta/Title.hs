@@ -123,9 +123,6 @@ getTitle t = untilFail . fmap (getTitleAt t) $ [0..]
 getTitleAt :: Title -> Int -> Maybe String
 getTitleAt (Title t) n = fmap getLast . getOption . t $ n
 
--- withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
--- withTitle = withMeta
-
 -- | Set title of the given score.
 title :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
 title t x = titleDuring (era x) t x

@@ -53,12 +53,6 @@ import Music.Time
 import Music.Score.Ties
 import Music.Score.Voice
 
-{-
-
-
-
--}
-
 data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
     | Group      [Rhythm a]                    -- 

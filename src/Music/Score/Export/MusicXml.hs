@@ -338,6 +338,5 @@ spellMusicXml p = (
     )
     where (pc,alt,oct) = spellPitch p
 
-
-
 swap (x,y) = (y,x)
+

@@ -88,8 +88,6 @@ newtype Track a = Track { getTrack' :: [Occ a] }
 
 inTrack f = Track . f . getTrack'
 
--- type instance Event (Track a) = a
-
 -- |
 -- Create a voice from a list of occurences.
 -- 
@@ -105,9 +103,7 @@ getTrack = fmap (first (fmap realToFrac) . getOcc) . getTrack'
 {-
 instance Semigroup (Track a) where
     (<>) = mappend
--}
 
-{-
 -- Equivalent to the derived Monoid, except for the sorted invariant.
 instance Monoid (Track a) where
     mempty = Track []
