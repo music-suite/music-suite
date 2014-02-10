@@ -91,7 +91,6 @@ instance HasDuration Span where
     duration = snd . _delta
 
 instance Semigroup Span where
-    -- Span (t1, d1) <> Span (t2, d2) = Span (t1 .+^ (d1 *^ (t2.-.origin)), d1*^d2)
     Span (t1, d1) <> Span (t2, d2) = normalizeSpan $ Span (t1 `delayTime` (d1 `stretch` t2), d1 `stretch` d2)
 
 instance Monoid Span where
