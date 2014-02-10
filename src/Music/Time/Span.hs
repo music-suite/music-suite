@@ -173,15 +173,6 @@ sinvert (Span (t,d)) = Span (mirror t, recip d)
 -- TODO add "individual scaling" component, i.e. scale just duration not both time and duration
 -- Useful for implementing separation in articulation etc
 
-
-{-
-type TFun a = Time -> a
-type BoundTFun a = (Span, TFun a)
-type LinTFun a = (Span, (a, a))
-type Event x = (Span, x)
--}
-
--- TODO move
 deriving instance Delayable a => Delayable (NoStretch a)
 deriving instance HasOnset a => HasOnset (NoStretch a)
 deriving instance HasOffset a => HasOffset (NoStretch a)
