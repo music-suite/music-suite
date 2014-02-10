@@ -200,7 +200,7 @@ mapPhrase f g h = mapAllParts (fmap $ mapPhraseSingle f g h)
 -- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 --
 mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapPhraseSingle f g h = mapAll (mapFTL (third f) (third g) (third h))
+mapPhraseSingle f g h = mapAll (mapFTL (_3 %~ f) (_3 %~ g) (_3 %~ h))
 
 
 
@@ -368,16 +368,10 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 -------------------------------------------------------------------------------------
 
 
-fst3 (t, d, x) = t
-trd3 (a,b,c) = c
-
-third f (a,b,c) = (a,b,f c)
-third' f (a,b,c) = (a,b,f a b c)
-
-partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
-partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
-partial2 f = curry  (fmap snd  . partial (uncurry f))
-partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
+-- partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
+-- partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+-- partial2 f = curry  (fmap snd  . partial (uncurry f))
+-- partial3 f = curry3 (fmap (^. _3) . partial (uncurry3 f))
 
 iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
 iterating f g n
@@ -451,6 +445,8 @@ withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
 withMetaAtStart :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
+withMetaAtStart' :: (IsAttribute b, HasPart' p) => 
+    Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' part f x = let
     m = getScoreMeta x
     in f (runMeta part m ? onset x) x
