@@ -1,7 +1,5 @@
 
 {-# LANGUAGE 
-    UndecidableInstances #-}
-{-# LANGUAGE 
     ScopedTypeVariables,
     Rank2Types, 
     GeneralizedNewtypeDeriving,
@@ -15,7 +13,8 @@
     TypeOperators,
     FlexibleContexts, 
     MultiParamTypeClasses, 
-    FlexibleInstances #-}
+    FlexibleInstances,
+    UndecidableInstances #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -104,8 +103,6 @@ notes = iso (getNScore . snd . getScore') (Score . return . NScore)
 events :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = iso getScore mkScore
 
-
-
 inScore f = Score . f . getScore'
 
 mkScore :: [(Time, Duration, a)] -> Score a
@@ -121,12 +118,9 @@ getScore =
     fmap getNote . 
     reifyScore
 
-
-
-
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
-mapScore f = inScore (second $ mapNScore f)
+mapScore f = over unwrapped (second $ mapNScore f)
 
 -- | Group each occurence with its associated time span.
 -- 
@@ -140,11 +134,7 @@ mapScore f = inScore (second $ mapNScore f)
 -- > join . fmap (noteToScore) . reifyScore /= id
 --
 reifyScore :: Score a -> Score (Note a)
-reifyScore = inScore (second reifyNScore)
-
-
-
--- TODO more generic versions of these two:
+reifyScore = over unwrapped (second reifyNScore)
 
 -- | Set the meta information of a score.
 setScoreMeta :: Meta -> Score a -> Score a
@@ -153,7 +143,6 @@ setScoreMeta m (Score (_,a)) = Score (m,a)
 -- | Get the meta information of a score.
 getScoreMeta :: Score a -> Meta
 getScoreMeta (Score (m,_)) = m
-
 
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -180,12 +169,7 @@ mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
 
-
--- TODO remove these, see #97
--- type instance Container (Score a) = Score
--- type instance Event (Score a)     = a
-
-instance Wrapped (Meta, NScore a) (Meta, NScore a) (Score a) (Score a) where
+instance Wrapped (Meta, NScore a) (Meta, NScore b) (Score a) (Score b) where
     wrapped = iso Score getScore'
 
 instance Applicative Score where
@@ -242,10 +226,6 @@ mapNScore f = inNScore (fmap $ extend f)
 -- | Reify the associated span. Use with 'Traversable' to get a fold.
 reifyNScore :: NScore a -> NScore (Note a)
 reifyNScore = inNScore $ fmap duplicate
-
--- instance Newtype (NScore a) [Note a] where
---     pack = NScore
---     unpack = getNScore
 
 instance Wrapped [Note a] [Note a] (NScore a) (NScore a) where
     wrapped = iso NScore getNScore
