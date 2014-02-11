@@ -32,8 +32,6 @@ module Music.Score.Ties (
         TieT(..),        
         
         -- * Splitting tied notes in scores
-        -- splitTies,
-        -- splitTiesSingle,
         splitTiesVoice,
         splitTiesVoiceAt,
   ) where

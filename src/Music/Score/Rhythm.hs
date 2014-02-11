@@ -52,6 +52,7 @@ import Text.Parsec.Pos
 import Music.Time
 import Music.Score.Ties
 import Music.Score.Voice
+import Music.Score.Util
 
 data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
@@ -166,8 +167,8 @@ singleGroup orig             = orig
 
 -- | Removes dotted notes in 2/3 tuplets.
 tupletDot :: Rhythm a -> Rhythm a
-tupletDot orig@(Tuplet (unratio -> (2,3)) (Dotted 1 x)) = x
-tupletDot orig                                          = orig
+tupletDot orig@(Tuplet ((unRatio.realToFrac) -> (2,3)) (Dotted 1 x)) = x
+tupletDot orig                                                       = orig
 
 -- | Splits a tuplet iff it contans a group which can be split into two halves of exactly the same size.
 splitTuplet :: Rhythm a -> Rhythm a
@@ -403,5 +404,3 @@ isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . to
 
 left f (Left x)  = Left (f x)
 left f (Right y) = Right y
-
-unratio x = (numerator $ realToFrac x, denominator $ realToFrac x)
