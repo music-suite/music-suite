@@ -103,10 +103,3 @@ readMidiEither :: IsMidi a => FilePath -> IO (Either String (Score a))
 readMidiEither path = fmap (fmap fromMidi) $ importFile path
     
 
--- Util
-
-every :: (a -> b -> b) -> [a] -> b -> b
-every f = flip (foldr f)
-
-
-

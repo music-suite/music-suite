@@ -423,6 +423,3 @@ spellLilypond' p = Lilypond.Pitch (
     )
     where (pc,alt,oct) = spellPitch p
 
--- FIXME consolidate
-swap (x,y) = (y,x)
-

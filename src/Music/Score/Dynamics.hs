@@ -46,8 +46,10 @@ module Music.Score.Dynamics (
 
 import Control.Lens hiding (Level)
 import Control.Monad
+import Control.Arrow
 import Data.Semigroup
 import Data.Ratio
+import Data.Maybe
 import Data.Foldable
 import Data.Typeable
 import Data.VectorSpace
@@ -103,8 +105,8 @@ data Level a
     deriving (Eq, Show)
 
 instance Fractional a => IsDynamics (Level a) where
-    fromDynamics (DynamicsL (Just a, Nothing)) = Level (toFrac a)
-    fromDynamics (DynamicsL (Just a, Just b)) = Change (toFrac a) (toFrac b)
+    fromDynamics (DynamicsL (Just a, Nothing)) = Level (realToFrac a)
+    fromDynamics (DynamicsL (Just a, Just b)) = Change (realToFrac a) (realToFrac b)
     fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " ++ show x
 
 
@@ -180,16 +182,4 @@ dim a b = fromDynamics $ DynamicsL (Just a, Just b)
 
 resetDynamics :: HasDynamic c => c -> c
 resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
-
-
--------------------------------------------------------------------------------------
-
-second :: (a -> b) -> (c,a) -> (c,b)
-second f (a,b) = (a,f b)
-
-toFrac :: (Real a, Fractional b) => a -> b
-toFrac = fromRational . toRational
-
-fromJust (Just x) = x
-
 

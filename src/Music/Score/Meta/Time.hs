@@ -196,7 +196,7 @@ getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
 getBarDurations = fmap realToFrac . getBarTimeSignatures
 
 getBarTimeSignatures :: [(TimeSignature, Duration)] -> [TimeSignature]
-getBarTimeSignatures = concatMap (\(ts,d) -> let (n,r) = numWholeBars ts d in replicate' n ts ++ if r > 0 then [standardTimeSignature r] else [])
+getBarTimeSignatures = concatMap (\(ts,d) -> let (n,r) = numWholeBars ts d in replic n ts ++ if r > 0 then [standardTimeSignature r] else [])
 
 -- | Return the number of whole bars needed to notate the given duration, as well as the remainder duration.
 numWholeBars :: TimeSignature -> Duration -> (Integer, Duration)
@@ -232,8 +232,4 @@ standardTimeSignature x = case unRatio (toRational x) of
     -- TODO check divisible by 8 etc
     _        -> time 4 4
     -- _     -> error "standardTimeSignature: Stange value"
-
-
-
-replicate' n = replicate (fromIntegral n)
 
