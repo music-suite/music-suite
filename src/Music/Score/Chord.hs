@@ -160,8 +160,9 @@ pushMiddle :: a -> Tower [a] -> Tower [a]
 pushMiddle x (Tower as a sa) = Tower as (x:a) sa
     
 separateVoices :: Ord a => Score a -> [Score ( a)]
-separateVoices = fmap (^. from notes) . (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower []) 
-    . List.sortBy (comparing getNoteSpan) . (^. notes)
+separateVoices = fmap (^. from notes) . f . (^. notes)
+    where
+        f = (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower [])  . List.sortBy (comparing getNoteSpan)
 
 -- DEBUG
 instance Num a => Num (Score a) where
