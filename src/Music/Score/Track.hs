@@ -31,6 +31,7 @@
 module Music.Score.Track (
         -- * Track type
         Track,
+        track',
         track,
         -- mkTrack,
         -- getTrack,
@@ -133,6 +134,12 @@ instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
 
+
+-- |
+-- Create a voice from a list of occurences.
+-- 
+track' :: Iso' [(Time, a)] (Track a)
+track' = track
 
 -- |
 -- Create a voice from a list of occurences.

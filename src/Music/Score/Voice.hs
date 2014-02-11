@@ -31,9 +31,8 @@
 module Music.Score.Voice (
         -- * Voice type
         Voice,
+        voice',
         voice,
-        -- mkVoice,
-        -- getVoice,
         
         zipVoice,
         zipVoiceWith,
@@ -119,6 +118,11 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
     -- FIXME this is wrong, need to behave like __mapPitch'
     __mapPitch f   = fmap (__mapPitch f)
 
+-- |
+-- Create a voice from a list of events.
+-- 
+voice' :: Iso' [(Duration, a)] (Voice a)
+voice' = voice
 
 -- |
 -- Create a voice from a list of events.

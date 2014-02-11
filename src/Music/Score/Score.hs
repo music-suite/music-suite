@@ -304,33 +304,8 @@ instance HasPart a => HasPart (Score a) where
     modifyPart f    = fmap (modifyPart f)
 
 
-
-fst3 (t, d, x) = t
-trd3 (a,b,c) = c
-
-third f (a,b,c) = (a,b,f c)
-third' f (a,b,c) = (a,b,f a b c)
-
-partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
+-- TODO mo
+partial2 :: (a -> b      -> Bool) -> a -> b      -> Maybe b
 partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
 partial2 f = curry  (fmap snd  . partial (uncurry f))
-partial3 f = curry3 (fmap trd3 . partial (uncurry3 f))
-
-iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
-iterating f g n
-    | n <  0 = f . iterating f g (n + 1)
-    | n == 0 = id
-    | n >  0 = g . iterating f g (n - 1)
-
-successor :: (Integral b, Enum a) => b -> a -> a
-successor n = iterating pred succ (fromIntegral n)
-
-maximum' :: (Ord a, Foldable t) => a -> t a -> a
-maximum' z = option z getMax . foldMap (Option . Just . Max)
-
-minimum' :: (Ord a, Foldable t) => a -> t a -> a
-minimum' z = option z getMin . foldMap (Option . Just . Min)
-
-
-
-
+partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
