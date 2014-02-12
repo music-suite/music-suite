@@ -53,7 +53,6 @@ module Music.Score.Score (
 
 import Data.Dynamic
 import Control.Lens
--- import Control.Newtype                
 import Data.Maybe
 import Data.Ord
 import Data.Semigroup

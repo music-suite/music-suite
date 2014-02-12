@@ -57,7 +57,6 @@ module Music.Time.Reactive (
 import Prelude hiding (until)
 
 import Control.Lens
--- import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
 import Control.Monad

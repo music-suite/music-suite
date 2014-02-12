@@ -40,7 +40,6 @@ module Music.Score.Voice (
   ) where
 
 import Data.Semigroup
--- import Control.Newtype
 import Control.Lens
 import Control.Applicative
 import Control.Monad

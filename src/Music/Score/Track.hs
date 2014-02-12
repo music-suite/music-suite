@@ -37,7 +37,6 @@ module Music.Score.Track (
         -- getTrack,
   ) where
 
--- import Control.Newtype
 import Control.Lens
 import Control.Applicative
 import Control.Monad

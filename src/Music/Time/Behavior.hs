@@ -44,7 +44,6 @@ module Music.Time.Behavior (
 import Prelude hiding (until)
 
 import Control.Lens hiding ((??)) -- TODO
--- import Control.Newtype                
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
