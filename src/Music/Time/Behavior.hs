@@ -31,7 +31,6 @@
 
 module Music.Time.Behavior (
         Behavior,
-        -- (??),
         constant,
         behavior,
         varying,
@@ -43,7 +42,7 @@ module Music.Time.Behavior (
 
 import Prelude hiding (until)
 
-import Control.Lens hiding ((??)) -- TODO
+import Control.Lens
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
@@ -96,7 +95,7 @@ instance Applicative Behavior where
     ((^. unwrapped) -> f) <*> ((^. unwrapped) -> x) = (^. wrapped) $ liftA2 (<*>) f x
 
 instance HasBehavior Behavior where
-    (?) = (??)
+    (?) = behAt
     
 -- instance HasPitch (Behavior a) where
     -- type Pitch (Behavior a) = Behavior a
@@ -131,8 +130,8 @@ varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)
 
 -- | @b ?? t@ returns the value of the behavior at time @t@.
 --  Semantic function.
-(??) :: Behavior a -> Time -> a
-b ?? t = ((^. unwrapped) b ? t) t
+behAt :: Behavior a -> Time -> a
+b `behAt` t = ((^. unwrapped) b ? t) t
 
 time :: Behavior Time
 time = behavior id
