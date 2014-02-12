@@ -62,6 +62,7 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus       
 import Control.Monad.Compose
+import Data.String
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
@@ -112,6 +113,77 @@ instance Applicative Reactive where
 instance HasBehavior Reactive where
     (?) = atTime
 
+instance IsString a => IsString (Reactive a) where
+    fromString = pure . fromString
+
+instance Eq (Reactive b) where
+    (==) = error "(==)"
+    (/=) = error "(/=)"
+
+instance Ord b => Ord (Reactive b) where
+    min = liftA2 min
+    max = liftA2 max
+
+instance Enum a => Enum (Reactive a) where
+    succ           = fmap succ
+    pred           = fmap pred
+    toEnum         = pure . toEnum
+    fromEnum       = error "fromEnum"
+    enumFrom       = error "enumFrom"
+    enumFromThen   = error "enumFromThen"
+    enumFromTo     = error "enumFromTo"
+    enumFromThenTo = error "enumFromThenTo"
+
+instance Num a => Num (Reactive a) where
+    (+)         = liftA2 (+)
+    (*)         = liftA2 (*)
+    (-)         = liftA2 (-)
+    abs         = fmap abs
+    signum      = fmap signum
+    fromInteger = pure . fromInteger
+
+instance (Num a, Ord a) => Real (Reactive a) where
+  toRational = error "toRational"
+
+instance Integral a => Integral (Reactive a) where
+    quot      = liftA2 quot
+    rem       = liftA2 rem
+    div       = liftA2 div
+    mod       = liftA2 mod
+    quotRem   = (fmap.fmap) unzip' (liftA2 quotRem)
+    divMod    = (fmap.fmap) unzip' (liftA2 divMod)
+    toInteger = error "toInteger"
+
+instance Fractional b => Fractional (Reactive b) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating b => Floating (Reactive b) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acosh
+
+instance AdditiveGroup v => AdditiveGroup (Reactive v) where
+    zeroV   = pure   zeroV
+    (^+^)   = liftA2 (^+^)
+    negateV = liftA   negateV
+
+instance VectorSpace v => VectorSpace (Reactive v) where
+    type Scalar (Reactive v) = Scalar v
+    (*^) s = fmap (s *^)
+
+
 occs :: Reactive a -> [Time]
 occs = fst . (^. unwrapped)
 
@@ -158,3 +230,5 @@ printR r = let (x, xs) = renderR r in do
     print x
     mapM_ print xs
 
+unzip' :: Functor f => f (a, b) -> (f a, f b)
+unzip' r = (fst <$> r, snd <$> r)
