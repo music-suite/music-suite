@@ -187,11 +187,6 @@ getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . r
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
 withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionFirst)
 
-
--- activeUpdates = fmap (second fromJust) . filter (isJust . snd) . updates
-optionFirst = Option . Just . First
-unOptionFirst = fmap getFirst . getOption
-
 getBarDurations :: [(TimeSignature, Duration)] -> [Duration]
 getBarDurations = fmap realToFrac . getBarTimeSignatures
 
@@ -232,4 +227,10 @@ standardTimeSignature x = case unRatio (toRational x) of
     -- TODO check divisible by 8 etc
     _        -> time 4 4
     -- _     -> error "standardTimeSignature: Stange value"
+
+-- TODO consolidate
+optionFirst = Option . Just . First
+unOptionFirst = fmap getFirst . getOption
+
+
 
