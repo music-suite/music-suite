@@ -83,9 +83,14 @@ import Music.Pitch.Literal
 type Bpm       = Duration
 type NoteValue = Duration
 
--- | Represents musical tempo as a metronome mark with an optional string name.
+-- | Represents musical tempo as a scaling factor with an optional name and/or beat duration.
 --
--- TODO tempo is both scaling factor and beat duration
+-- 'tempoToDuration' provides a scaling factor such that
+-- 
+-- > stretch (tempoToDuration t) notation = sounding
+-- > compress (tempoToDuration t) sounding = notation
+--
+-- You can construct a tempo in various ways
 --
 -- > tempoToDuration (metronome (1/4) 120) == tempoToDuration (metronome (1/2) 60)
 -- > metronome (1/4) 120                   /=                  metronome (1/2) 60
@@ -157,15 +162,40 @@ tempo c x = tempoDuring (era x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
-tempoDuring s c = addGlobalMetaNote (s =: (Option $ Just $ First c))
+tempoDuring s c = addGlobalMetaNote (s =: (optionFirst c))
 
 
+-- TODO move
+inSpan :: Span -> Time -> Bool
+inSpan (view range -> (t,u)) x = t <= x && x <= u
 
+-- TODO move
+final :: Reactive a -> a
+final (renderR -> (i,[])) = i
+final (renderR -> (i,xs)) = snd $ last xs
+
+-- TODO move
+trim :: Monoid a => Span -> Reactive a -> Reactive a
+trim (view range -> (t,u)) = since t . Music.Time.Reactive.until u
 
 
 -- | Split a reactive into notes, as well as the values before and after the first/last update
+-- TODO fails if not positive
+-- TODO same as reactiveToVoice
 reactiveIn :: Span -> Reactive a -> [Note a]
-reactiveIn s r = undefined
+reactiveIn s r 
+    | duration s <= 0 = error "reactiveIn: Needs positive duration"
+    | otherwise       = let r2 = trim s (fmap optionFirst r)
+    in fmap (fmap $ fromJust . unOptionFirst) $ case updates r2 of
+        -- We have at least 2 value because of trim
+        (frl -> ((t,x),[],(u,_))) -> [t <-> u =: x] -- one note
+        (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
+            times  = [t0] ++ tn
+            spans  = mapWithNextWith (\t mu -> t <-> fromMaybe tl mu) times
+            values = [x0] ++ xn
+            in zipWith (=:) spans values
+
+
 
 
 
@@ -175,11 +205,15 @@ reactiveIn s r = undefined
 
 renderTempo :: Score a -> Score a
 renderTempo sc = 
-    flip composed sc $ fmap renderTempoScore $ tempoRegions (era sc) $ tempoRegions0 (era sc) (getTempoChanges defTempo sc)
+    flip composed sc
+        $ fmap renderTempoScore 
+        $ tempoRegions (era sc) 
+        $ tempoRegions0 (era sc) 
+        $ getTempoChanges defTempo sc
     where         
         -- | Standard tempo
         --
-        -- > tempoToDuration (metronome (1/1) 60) == 1
+        -- > tempoToDuration defTempo == 1
         defTempo :: Tempo
         defTempo = metronome (1/1) 60 
 
@@ -194,17 +228,18 @@ renderTempo sc =
                 f (getNote -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
 
         tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
-        tempoRegions = undefined
-        -- tempoRegions off = snd . List.mapAccumL f (off,off)
-        --     where
-        --         f (nt,st) (TempoRegion0 _ d x) = (t .+^ d, TempoRegion t (t .+^ d) )
+        tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
+            where
+                f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)), 
+                    TempoRegion nt (nt .+^ d) st x
+                    )
 
         -- | Return the sounding position of the given notated position, given its tempo region.
-        --   Fails if the given point is outside the given region.
+        --   Does nothing if the given point is outside the given region.
         renderTempoTime :: TempoRegion -> Time -> Time
-        renderTempoTime (TempoRegion notRegOn notRegOff soRegOn _ str) t 
-            | notRegOn <= t && t <= notRegOff = let relOn = t .-. notRegOn in soRegOn .+^ (relOn ^* relOn)
-            | otherwise = error "renderTempoTime: Outside region"
+        renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t 
+            | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
+            | otherwise                      = t
 
         renderTempoSpan :: TempoRegion -> Span -> Span
         renderTempoSpan tr = over range (\(t,u) -> (renderTempoTime tr t, renderTempoTime tr u))
@@ -224,11 +259,10 @@ data TempoRegion0 =
 
 data TempoRegion = 
     TempoRegion {
-        notatedOnset :: Time,
-        notatedOffset :: Time,
-        soundingOnset :: Time,
-        soundingOffset :: Time,
-        stretching :: Duration
+        notatedOnset :: Time,           -- same
+        notatedOffset :: Time,          -- notOns + notDur
+        soundingOnset :: Time,          -- sum of previous sounding durations
+        stretching :: Duration          -- same
     } 
 
 -- TODO add to Music.Score.Note
@@ -262,3 +296,21 @@ note_ = iso getNote (uncurry (=:))
 optionFirst = Option . Just . First
 unOptionFirst = fmap getFirst . getOption
 
+-- TODO move
+frl []  = error "frl: No value"
+frl [x] = error "frl: Just one value"
+frl xs  = (head xs, (tail.init) xs, last xs)
+
+
+mapWithNextWith :: (a -> Maybe a -> b) -> [a] -> [b]
+mapWithNextWith f = fmap (uncurry f) . mapWithNext
+  
+-- lenght xs == length (mapWithNext xs)
+mapWithNext :: [a] -> [(a, Maybe a)]
+mapWithNext = go
+    where
+        go []       = []
+        go [x]      = [(x, Nothing)]
+        go (x:y:rs) = (x, Just y) : mapWithNext (y : rs)
+
+    
