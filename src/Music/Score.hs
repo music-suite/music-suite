@@ -51,7 +51,7 @@ module Music.Score (
         module Music.Score.Meta.Key,
         module Music.Score.Meta.Time,
         module Music.Score.Meta.Tempo,
-        module Music.Score.Annotations,
+        module Music.Score.Meta.Annotations,
         module Music.Score.Clef,
 
         -- ** Musical elements
@@ -108,7 +108,7 @@ import Music.Score.Meta.Fermata
 import Music.Score.Meta.Key
 import Music.Score.Meta.Time
 import Music.Score.Meta.Tempo
-import Music.Score.Annotations
+import Music.Score.Meta.Annotations
 import Music.Score.Clef
 import Music.Score.Pitch
 import Music.Score.Ties

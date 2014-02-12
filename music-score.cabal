@@ -79,7 +79,6 @@ library
         Music.Score.Voice
         Music.Score.Score
 
-        Music.Score.Annotations
         Music.Score.Combinators
         Music.Score.Convert
         Music.Score.Ties
@@ -87,6 +86,7 @@ library
         Music.Score.Chord
         
         Music.Score.Meta
+        Music.Score.Meta.Annotations
         Music.Score.Meta.Attribution
         Music.Score.Meta.Barline
         Music.Score.Meta.Clef

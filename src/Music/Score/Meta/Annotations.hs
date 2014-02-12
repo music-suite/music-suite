@@ -29,7 +29,7 @@
 -------------------------------------------------------------------------------------
 
 
-module Music.Score.Annotations (
+module Music.Score.Meta.Annotations (
         Annotation,
         annotate,
         annotateSpan,
