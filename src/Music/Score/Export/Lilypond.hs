@@ -345,8 +345,15 @@ toLilypond sc =
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ fmap swap $ (^. from voice) $ reactiveToVoice' (start <-> offset sc) timeSigs        
-        barDurations = getBarDurations $ fmap swap $ (^. from voice) $                      reactiveToVoice' (start <-> offset sc) timeSigs
+        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
+
+        -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
+        barDurations =                 getBarDurations      $ timeSigsV
+
+
+        -- getTimeSignatures def       =           fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
+        -- getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
         addStaff = Lilypond.New "Staff" Nothing
         addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName) 
