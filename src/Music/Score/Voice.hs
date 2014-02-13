@@ -37,6 +37,7 @@ module Music.Score.Voice (
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
+        mergeEqual,
   ) where
 
 import Data.Semigroup
@@ -111,6 +112,10 @@ instance IsPitch a => IsPitch (Voice a) where
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
+-- TODO
+instance Num a => Num (Voice a) where
+    fromInteger = pure . fromInteger
+
 type instance Pitch (Voice a) = Pitch a
 instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasSetPitch (Voice a) (Voice b) where
     type SetPitch g (Voice a) = Voice (SetPitch g a)
@@ -150,8 +155,16 @@ zipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (dx,vx)) (Ev (dy,vy))
 dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
 dzipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (Product dx,vx)) (Ev (Product dy,vy)) -> Ev (first Product $ f dx dy vx vy)) a b
 
+-- |
+-- Merge consecutive equal note.
+--
+mergeEqual :: Eq a => Voice a -> Voice a
+mergeEqual = over (from voice) $ fmap f . List.groupBy (inspecting snd)
+    where
+        f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
 
-
+inspecting :: Eq a => (b -> a) -> b -> b -> Bool
+inspecting p x y = p x == p y
 
 newtype Ev a = Ev (Product Duration, a)
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Foldable, Traversable)

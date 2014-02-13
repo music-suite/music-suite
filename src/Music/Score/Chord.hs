@@ -164,10 +164,6 @@ separateVoices = fmap (^. from notes) . f . (^. notes)
     where
         f = (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower [])  . List.sortBy (comparing getNoteSpan)
 
--- DEBUG
-instance Num a => Num (Score a) where
-    fromInteger = return . fromInteger
-
 -- Note:                                                    
 --
 -- The HasChord instance (for other transformer types) takes care to transform strucuture *above* the chord representation
