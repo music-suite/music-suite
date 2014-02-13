@@ -38,14 +38,10 @@ module Music.Time.Reactive (
         Reactive,
         
         -- * Create, isos etc (TODO)
-        renderR,
-        renderR',
         initial,
         final,
         updates,
         occs,
-        -- splitReactive,
-        -- noteToReactive,
 
         -- * Combinators
         step,
@@ -54,6 +50,9 @@ module Music.Time.Reactive (
         trimBefore,
         trimAfter,
 
+        -- * Semantics
+        -- renderR,
+        -- renderR',
         -- printR,
   ) where
 

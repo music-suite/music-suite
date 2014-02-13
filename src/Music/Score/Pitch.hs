@@ -33,16 +33,6 @@
 
 
 module Music.Score.Pitch (     
-        -- * Pitch representation
-        Pitch,
-        Interval,
-        HasGetPitch(..),
-        HasSetPitch(..),
-        HasPitch'(..),
-        HasPitch(..),
-        HasSetPitch'(..),
-        Transposable,
-
         -- * Accessors
         pitch',
         pitch,
@@ -68,7 +58,17 @@ module Music.Score.Pitch (
         fifthsAbove,
         fifthsBelow,
         octavesAbove,
-        octavesBelow
+        octavesBelow,
+
+        -- * Pitch representation
+        Pitch,
+        Interval,
+        HasGetPitch(..),
+        HasSetPitch(..),
+        HasPitch'(..),
+        HasPitch(..),
+        HasSetPitch'(..),
+        Transposable,
 
   ) where
 
