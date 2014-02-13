@@ -40,9 +40,16 @@ module Music.Time.Reactive (
         -- * Create, isos etc (TODO)
         initial,
         final,
+        Future,
+        Past,
         updates,
+        resets,
         occs,
 
+        -- * Predicates
+        isConstant,
+        isVariable,
+        
         -- * Combinators
         step,
         switch,
@@ -209,7 +216,7 @@ final (renderR -> (i,[])) = i
 final (renderR -> (i,xs)) = snd $ last xs
 
 -- | Get the time of all updates and the value switched to at this point.
-updates :: Reactive a -> [(Time, a)]
+updates :: Reactive a -> [Future a]
 updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
@@ -218,7 +225,17 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
 
+
+
+-- TODO separate these with newtype
+type Future a = (Time, a)
+type Past   a = (Time, a)
+
 isConstant = null . occs
+isVariable = not . isConstant
+
+resets :: Reactive a -> [Past a]
+resets = error "resets: Not impl"
 
 -- | The unit step function, which goes from 0 to 1 at 'start'.
 step :: (AdditiveGroup a, Fractional a) => Reactive a
