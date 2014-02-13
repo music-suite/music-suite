@@ -76,6 +76,7 @@ import Music.Score.Part
 import Music.Score.Pitch
 import Music.Score.Meta
 import Music.Score.Score
+import Music.Score.Convert
 import Music.Score.Combinators
 import Music.Score.Util
 import Music.Pitch.Literal
@@ -98,6 +99,10 @@ type NoteValue = Duration
 data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
     deriving (Eq, Ord, Typeable)
 -- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
+
+-- TODO
+instance Num Tempo where
+    fromInteger = Tempo Nothing Nothing . fromInteger
 
 instance Show Tempo where
     show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
@@ -171,16 +176,6 @@ inSpan (view range -> (t,u)) x = t <= x && x <= u
 
 inSpan' (view range -> (t,u)) x = t <= x && x < u
 
--- TODO move
-final :: Reactive a -> a
-final (renderR -> (i,[])) = i
-final (renderR -> (i,xs)) = snd $ last xs
-
--- TODO move
-trim :: Monoid a => Span -> Reactive a -> Reactive a
-trim (view range -> (t,u)) = since t . Music.Time.Reactive.until u
-
-
 -- | Split a reactive into notes, as well as the values before and after the first/last update
 -- TODO fails if not positive
 -- TODO same as reactiveToVoice
@@ -195,8 +190,7 @@ reactiveIn s r
             times  = [t0] ++ tn
             spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
             values = [x0] ++ xn
-            in zipWith (=:) spans values
-
+            in zipWith (=:) spans values         
 
 
 
@@ -207,12 +201,18 @@ reactiveIn s r
 
 renderTempo :: Score a -> Score a
 renderTempo sc = 
-    flip composed sc
-        $ fmap renderTempoScore 
+    flip composed sc $ fmap renderTempoScore 
         $ tempoRegions (era sc) 
         $ tempoRegions0 (era sc) 
         $ getTempoChanges defTempo sc
-    where         
+
+renderTempoTest :: Score a -> [TempoRegion]
+renderTempoTest sc = id
+    $ tempoRegions (era sc) 
+    $ tempoRegions0 (era sc) 
+    $ getTempoChanges defTempo sc
+
+
 -- | Standard tempo
 --
 -- > tempoToDuration defTempo == 1
@@ -235,6 +235,10 @@ tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
         f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)), 
             TempoRegion nt (nt .+^ d) st x
             )
+
+
+
+
 
 -- | Return the sounding position of the given notated position, given its tempo region.
 --   Does nothing if the given point is outside the given region.
@@ -262,7 +266,7 @@ data TempoRegion0 =
         notatedDuration0 :: Duration,
         stretching0 :: Duration
     } 
-
+    deriving (Eq, Ord, Show)
 
 data TempoRegion = 
     TempoRegion {
@@ -271,6 +275,8 @@ data TempoRegion =
         soundingOnset :: Time,          -- sum of previous sounding durations
         stretching :: Duration          -- same
     } 
+    deriving (Eq, Ord, Show)
+
 tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 -- TODO add to Music.Score.Note

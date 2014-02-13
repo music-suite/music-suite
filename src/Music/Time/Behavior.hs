@@ -37,10 +37,10 @@ module Music.Time.Behavior (
         varyingIn,
         -- time,
         switchB,
-        sinceB,
+        trimBeforeB,
   ) where
 
-import Prelude hiding (until)
+import Prelude hiding (trimAfter)
 
 import Control.Lens
 import Control.Applicative
@@ -136,8 +136,8 @@ b `behAt` t = ((^. unwrapped) b ? t) t
 time :: Behavior Time
 time = behavior id
 
-sinceB :: Monoid a => Time -> Behavior a -> Behavior a
-sinceB t = unwrapping Behavior %~ since t
+trimBeforeB :: Monoid a => Time -> Behavior a -> Behavior a
+trimBeforeB t = unwrapping Behavior %~ trimBefore t
 
 switchB :: Time -> Behavior a -> Behavior a -> Behavior a
 switchB t ((^. unwrapped) -> x) ((^. unwrapped) -> y) = (^. wrapped) $ switch t x y

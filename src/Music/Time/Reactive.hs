@@ -41,6 +41,7 @@ module Music.Time.Reactive (
         renderR,
         renderR',
         initial,
+        final,
         updates,
         occs,
         -- splitReactive,
@@ -48,13 +49,12 @@ module Music.Time.Reactive (
 
         -- * Combinators
         switch,
-        since,
-        until,
+        trim,
+        trimBefore,
+        trimAfter,
 
         -- printR,
   ) where
-
-import Prelude hiding (until)
 
 import Control.Lens
 import Control.Applicative
@@ -184,6 +184,7 @@ instance VectorSpace v => VectorSpace (Reactive v) where
     (*^) s = fmap (s *^)
 
 
+-- | Get the time of all updates.
 occs :: Reactive a -> [Time]
 occs = fst . (^. unwrapped)
 
@@ -192,6 +193,7 @@ occs = fst . (^. unwrapped)
 atTime :: Reactive a -> Time -> a
 atTime = snd . (^. unwrapped)
 
+-- | Get the initial value.
 initial :: Reactive a -> a
 initial r = r ? minB (occs r)
     where
@@ -201,6 +203,12 @@ initial r = r ? minB (occs r)
         minB []    = 0
         minB (x:_) = x - 1
 
+-- | Get the final value.
+final :: Reactive a -> a
+final (renderR -> (i,[])) = i
+final (renderR -> (i,xs)) = snd $ last xs
+
+-- | Get the time of all updates and the value switched to at this point.
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
 
@@ -210,11 +218,17 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
 
-since :: Monoid a => Time -> Reactive a -> Reactive a
-since start x = switch start mempty x
+-- | Replace everthing outside the given span by `mempty`.
+trim :: Monoid a => Span -> Reactive a -> Reactive a
+trim (view range -> (t,u)) = trimBefore t . trimAfter u
 
-until :: Monoid a => Time -> Reactive a -> Reactive a
-until stop x = switch stop x mempty
+-- | Replace everthing before the given time by `mempty`.
+trimBefore :: Monoid a => Time -> Reactive a -> Reactive a
+trimBefore start x = switch start mempty x
+
+-- | Replace everthing after the given time by `mempty`.
+trimAfter :: Monoid a => Time -> Reactive a -> Reactive a
+trimAfter stop x = switch stop x mempty
 
 -- | Semantic function. 
 renderR :: Reactive a -> (a, [(Time, a)])
