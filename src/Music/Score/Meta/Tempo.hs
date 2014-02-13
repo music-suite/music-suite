@@ -169,6 +169,8 @@ tempoDuring s c = addGlobalMetaNote (s =: (optionFirst c))
 inSpan :: Span -> Time -> Bool
 inSpan (view range -> (t,u)) x = t <= x && x <= u
 
+inSpan' (view range -> (t,u)) x = t <= x && x < u
+
 -- TODO move
 final :: Reactive a -> a
 final (renderR -> (i,[])) = i
@@ -211,42 +213,47 @@ renderTempo sc =
         $ tempoRegions0 (era sc) 
         $ getTempoChanges defTempo sc
     where         
-        -- | Standard tempo
-        --
-        -- > tempoToDuration defTempo == 1
-        defTempo :: Tempo
-        defTempo = metronome (1/1) 60 
+-- | Standard tempo
+--
+-- > tempoToDuration defTempo == 1
+defTempo :: Tempo
+defTempo = metronome (1/1) 60 
 
-        getTempoChanges :: Tempo -> Score a -> Reactive Tempo
-        getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTempoChanges :: Tempo -> Score a -> Reactive Tempo
+getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 
-        -- | Get all tempo regions for the given span.
-        tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
-        tempoRegions0 s r = fmap f $ s `reactiveIn` r
-            where
-                f (getNote -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
+-- | Get all tempo regions for the given span.
+tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
+tempoRegions0 s r = fmap f $ s `reactiveIn` r
+    where
+        f (getNote -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
 
-        tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
-        tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
-            where
-                f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)), 
-                    TempoRegion nt (nt .+^ d) st x
-                    )
+tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
+tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
+    where
+        f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)), 
+            TempoRegion nt (nt .+^ d) st x
+            )
 
-        -- | Return the sounding position of the given notated position, given its tempo region.
-        --   Does nothing if the given point is outside the given region.
-        renderTempoTime :: TempoRegion -> Time -> Time
-        renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t 
-            | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
-            | otherwise                      = t
+-- | Return the sounding position of the given notated position, given its tempo region.
+--   Does nothing if the given point is outside the given region.
+renderTempoTime :: TempoRegion -> Time -> Time
+renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t 
+    | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
+    | otherwise                      = t
 
-        renderTempoSpan :: TempoRegion -> Span -> Span
-        renderTempoSpan tr = over range (\(t,u) -> (renderTempoTime tr t, renderTempoTime tr u))
+renderTempoTime' (TempoRegion notRegOn notRegOff soRegOn str) t  = soRegOn .+^ ((t .-. notRegOn) ^* str)
 
-        -- TODO use lens
-        renderTempoScore :: TempoRegion -> Score a -> Score a
-        renderTempoScore tr = over notes $ fmap $ over (note_ . _1) $ renderTempoSpan tr 
+renderTempoSpan :: TempoRegion -> Span -> Span
+renderTempoSpan tr = over range $ \(t,u) -> 
+    if inSpan' (tempoRegionNotated tr) t
+        then (renderTempoTime' tr t, renderTempoTime' tr u)
+        else (t, u)
+
+-- TODO use lens
+renderTempoScore :: TempoRegion -> Score a -> Score a
+renderTempoScore tr = over notes $ fmap $ over (note_ . _1) $ renderTempoSpan tr 
                                             
 
 data TempoRegion0 = 
@@ -264,6 +271,7 @@ data TempoRegion =
         soundingOnset :: Time,          -- sum of previous sounding durations
         stretching :: Duration          -- same
     } 
+tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 -- TODO add to Music.Score.Note
 note_ :: Iso (Note a) (Note b) (Span, a) (Span, b)
