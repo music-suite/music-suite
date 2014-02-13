@@ -193,7 +193,7 @@ reactiveIn s r
         (frl -> ((t,x),[],(u,_))) -> [t <-> u =: x] -- one note
         (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
             times  = [t0] ++ tn
-            spans  = mapWithNextWith (\t mu -> t <-> fromMaybe tl mu) times
+            spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
             values = [x0] ++ xn
             in zipWith (=:) spans values
 
@@ -308,17 +308,3 @@ unOptionFirst = fmap getFirst . getOption
 frl []  = error "frl: No value"
 frl [x] = error "frl: Just one value"
 frl xs  = (head xs, (tail.init) xs, last xs)
-
-
-mapWithNextWith :: (a -> Maybe a -> b) -> [a] -> [b]
-mapWithNextWith f = fmap (uncurry f) . mapWithNext
-  
--- lenght xs == length (mapWithNext xs)
-mapWithNext :: [a] -> [(a, Maybe a)]
-mapWithNext = go
-    where
-        go []       = []
-        go [x]      = [(x, Nothing)]
-        go (x:y:rs) = (x, Just y) : mapWithNext (y : rs)
-
-    
