@@ -181,7 +181,7 @@ getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
 getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
-getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignatureChanges def = updates . getTimeSignatures def
 
 -- | Extract the time signature from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
