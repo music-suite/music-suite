@@ -24,8 +24,9 @@ module Music.Time.Juxtapose (
         Transformable(..),
 
         -- ** Juxtaposing values
-        follow,
-        precede,
+        following,
+        preceding,
+        during,
 
         -- * Composing values
         (|>),
@@ -68,23 +69,22 @@ type Transformable a   =  (Stretchable a, Delayable a)
 -------------------------------------------------------------------------------------
 
 -- |
--- @a \`follow\` b@ moves score /b/ so that its onset is at the offset of score
+-- @a \`following\` b@ moves score /b/ so that its onset is at the offset of score
 -- /a/ and returns the moved score.
 -- 
-follow           :: (HasOnset a, HasOffset a, Delayable a) =>
-                a -> a -> a
+following :: (HasOffset a, Delayable b, HasOnset b) => a -> b -> b
+a `following` b =  startAt (offset a) b
 
 -- |
--- @a \`precede\` b@ moves score /a/ so that its offset is at the onset of score
+-- @a \`preceding\` b@ moves score /a/ so that its offset is at the onset of score
 -- /b/ and returns the moved score.
 -- 
-precede          :: (HasOnset a, HasOffset a, Delayable a) =>
-                a -> a -> a
+preceding :: (Delayable a, HasOffset a, HasOnset b) => a -> b -> a
+a `preceding` b =  stopAt (onset b) a
 
-a `follow` b =  startAt (offset a) b
-
-a `precede` b =  stopAt (onset b) a
-
+-- | @a \`during\` b@ places /a/ at the same era as /b/ and returns the moved score.
+during :: (Delayable a, Stretchable a, HasOnset a, HasDuration a, HasOnset b, HasDuration b) => a -> b -> a
+a `during` b = startAt (onset b) $ stretchTo (duration b) a
 
 -------------------------------------------------------------------------------------
 -- Composition
@@ -97,7 +97,7 @@ infixr 6 <|
 -- |
 -- Compose in sequence.
 --
--- @a |> b@ moves score /b/ as per 'follow' and then composes the resulting scores with '<>'.
+-- @a |> b@ moves score /b/ as per 'following' and then composes the resulting scores with '<>'.
 --
 -- > Score a -> Score a -> Score a
 --
@@ -106,7 +106,7 @@ infixr 6 <|
 -- |
 -- Compose in sequence.
 --
--- @a >| b@ moves score /a/ as per 'precede' and then composes the resulting scores with '<>'.
+-- @a >| b@ moves score /a/ as per 'preceding' and then composes the resulting scores with '<>'.
 --
 -- > Score a -> Score a -> Score a
 --
@@ -123,8 +123,8 @@ infixr 6 <|
 (<|)            :: (Semigroup a, HasOnset a, HasOffset a, Delayable a) =>
                 a -> a -> a
 
-a |> b =  a <> (a `follow` b)
-a >| b =  (a `precede` b) <> b
+a |> b =  a <> (a `following` b)
+a >| b =  (a `preceding` b) <> b
 a <| b =  b |> a
 
 -- |

@@ -68,7 +68,7 @@ instance VectorSpace Duration where
 -- The unit duration.
 --
 unit :: Duration
-unit = 1
+unit = 1 -- TODO some overloaded unit value
 
 -- |
 -- This type represents absolute time in seconds since 'start'. Note that time can be

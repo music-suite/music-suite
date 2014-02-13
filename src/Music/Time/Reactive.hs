@@ -23,7 +23,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Reactive values.
+-- Reactive values, or piecewise functions of time.
 --
 -- Similar to Conal's definition in <http://conal.net/blog/posts/reactive-normal-form>,
 -- but defined in negative time as well. Its semantics function is either 'occs' @&&&@ '?'
@@ -48,6 +48,7 @@ module Music.Time.Reactive (
         -- noteToReactive,
 
         -- * Combinators
+        step,
         switch,
         trim,
         trimBefore,
@@ -184,7 +185,7 @@ instance VectorSpace v => VectorSpace (Reactive v) where
     (*^) s = fmap (s *^)
 
 
--- | Get the time of all updates.
+-- | Get the time of all updatese.
 occs :: Reactive a -> [Time]
 occs = fst . (^. unwrapped)
 
@@ -217,6 +218,12 @@ switch :: Time -> Reactive a -> Reactive a -> Reactive a
 switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
     (\u -> if u < t then rx u else ry u)
+
+isConstant = null . occs
+
+-- | The unit step function, which goes from 0 to 1 at 'start'.
+step :: (AdditiveGroup a, Fractional a) => Reactive a
+step = switch start zeroV 1.0 -- TODO some overloaded unit
 
 -- | Replace everthing outside the given span by `mempty`.
 trim :: Monoid a => Span -> Reactive a -> Reactive a
