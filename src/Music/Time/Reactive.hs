@@ -210,14 +210,14 @@ initial r = r ? minB (occs r)
         minB []    = 0
         minB (x:_) = x - 1
 
+-- | Get the time of all updates and the value switched to at this point.
+updates :: Reactive a -> [Future a]
+updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
+
 -- | Get the final value.
 final :: Reactive a -> a
 final (renderR -> (i,[])) = i
 final (renderR -> (i,xs)) = snd $ last xs
-
--- | Get the time of all updates and the value switched to at this point.
-updates :: Reactive a -> [Future a]
-updates r = (\t -> (t, r ? t)) <$> (List.sort . List.nub) (occs r)
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switch :: Time -> Reactive a -> Reactive a -> Reactive a
@@ -231,7 +231,10 @@ switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
 type Future a = (Time, a)
 type Past   a = (Time, a)
 
+isConstant :: Reactive a -> Bool
 isConstant = null . occs
+
+isVariable :: Reactive a -> Bool
 isVariable = not . isConstant
 
 resets :: Reactive a -> [Past a]
