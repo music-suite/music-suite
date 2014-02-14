@@ -70,14 +70,8 @@ import Music.Time.Stretchable
 import Music.Time.Span
 import Music.Time.Time
 import Music.Time.Reactive
--- import Music.Score.Note
--- import Music.Score.Track
--- import Music.Score.Pitch
--- import Music.Score.Util
--- import Music.Pitch.Literal
--- import Music.Dynamics.Literal   
 
--- Inner TFun is always defined on [0..1]
+-- Inner TFun focuses on [0..1]
 newtype Behavior a = Behavior { getBehavior :: Reactive (Time -> a) }
     deriving (Functor, Semigroup, Monoid)
 
@@ -126,7 +120,6 @@ varying = varyingIn sunit
 --   You should pass a function defined for the whole range, including negative durations.
 varyingIn :: Span -> (Duration -> a) -> Behavior a
 varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)
--- TODO or invert s
 
 -- | @b ?? t@ returns the value of the behavior at time @t@.
 --  Semantic function.

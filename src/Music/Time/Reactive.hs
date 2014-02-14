@@ -106,10 +106,6 @@ instance Delayable (Reactive a) where
 instance Stretchable (Reactive a) where
     stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
 
--- instance Newtype (Reactive a) ([Time], Time -> a) where
-    -- (^. wrapped) = Reactive
-    -- un(^. wrapped) = getReactive
-
 instance Wrapped ([Time], Time -> a) ([Time], Time -> a) (Reactive a) (Reactive a) where
     wrapped = iso Reactive getReactive
 
