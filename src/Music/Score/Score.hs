@@ -179,6 +179,10 @@ instance Monad Score where
     return = (^. wrapped) . return . return
     xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
 
+instance Alternative Score where
+    empty = mempty
+    (<|>) = mappend
+
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
