@@ -167,7 +167,6 @@ filterEvents f = mapFilterEvents (partial3 f)
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
-
 instance Wrapped (Meta, NScore a) (Meta, NScore b) (Score a) (Score b) where
     wrapped = iso Score getScore'
 
@@ -285,6 +284,7 @@ instance (HasSetPitch a b,
                 HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
     __mapPitch f  = mapWithSpan (\s -> __mapPitch $ sunder s f)
+    
 
 type instance Part (Score a) = Part a
 instance HasPart a => HasPart (Score a) where

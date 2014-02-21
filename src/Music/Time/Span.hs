@@ -158,11 +158,14 @@ delta = iso _delta $ uncurry (>->)
 
 -- | Apply a span transformation.
 sapp :: (Delayable a, Stretchable a) => Span -> a -> a
-sapp (_delta -> (t,d)) = delayTime t . stretch d
+sapp (view delta -> (t,d)) = delayTime t . stretch d
 
 -- | Apply a function under a span transformation.
 sunder :: (Delayable a, Stretchable a, Delayable b, Stretchable b) => Span -> (a -> b) -> a -> b
-sunder s f = sapp (sinvert s) . f . sapp s
+-- sunder s f = sapp (sinvert s) . f . sapp s
+
+sunder s f = sappInv s . f . sapp s
+sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (mirror t)
 
 -- | The inversion of a span.
 --                                    

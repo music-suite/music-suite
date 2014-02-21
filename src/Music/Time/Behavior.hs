@@ -7,6 +7,7 @@
     DeriveTraversable,
     DeriveDataTypeable, 
     ConstraintKinds, 
+    StandaloneDeriving,
     GADTs, 
     ViewPatterns,
     TypeFamilies, 
@@ -51,6 +52,7 @@ import Control.Monad.Compose
 import Data.VectorSpace
 import Data.AffineSpace
 import Data.AffineSpace.Point
+import Data.NumInstances()
 import Data.Typeable
 import Data.Semigroup
 import Data.Profunctor
@@ -90,6 +92,10 @@ instance Applicative Behavior where
 
 instance HasBehavior Behavior where
     (?) = behAt
+
+deriving instance Num a => Num (Behavior a)
+deriving instance Fractional a => Fractional (Behavior a)
+deriving instance Floating a => Floating (Behavior a)
     
 -- instance HasPitch (Behavior a) where
     -- type Pitch (Behavior a) = Behavior a
