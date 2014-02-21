@@ -228,16 +228,12 @@ type Transposable a =
         (
             HasSetPitch' a, 
             Diff (Pitch a) ~ Interval a,
-            TP1 a,
-            TP2 a
+            Transposable1 a
         )
-type TP1 a =
+type Transposable1 a =
     (
             AffineSpace (Pitch a), 
-            VectorSpace (Interval a)    
-    )
-type TP2 a =
-    (    
+            VectorSpace (Interval a),
             IsPitch (Pitch a), 
             IsInterval (Interval a)
     )
