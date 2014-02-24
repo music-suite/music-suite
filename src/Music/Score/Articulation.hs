@@ -9,6 +9,7 @@
     ConstraintKinds,
     TypeOperators,
     TypeFamilies,
+    ViewPatterns,
     GeneralizedNewtypeDeriving,
     NoMonomorphismRestriction #-}
 
@@ -54,6 +55,7 @@ module Music.Score.Articulation (
 
   ) where
 
+import Control.Applicative
 import Data.Foldable
 import Data.Typeable
 import Data.Semigroup
@@ -71,16 +73,16 @@ class HasArticulation a where
     setAccLevel :: Int -> a -> a
     setStaccLevel :: Int -> a -> a
 
-newtype ArticulationT a = ArticulationT { getArticulationT :: (Any, Any, Sum Int, Sum Int, a, Any) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+newtype ArticulationT a = ArticulationT { getArticulationT :: (((Any, Any, Any), (Sum Int, Sum Int)), a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
-instance Monad ArticulationT where             
-    return = undefined
+-- instance Monad ArticulationT where             
+    -- return = undefined
     -- return x = ArticulationT (Any False,Any False,0,0,x,False)
-    (>>=) = error "No ArticulationT.(>>=)"
+    -- (>>=) = error "No ArticulationT.(>>=)"
 
 instance Semigroup a => Semigroup (ArticulationT a) where
-    ArticulationT (es,us,al,sl,a,bs) <> ArticulationT (_,_,_,_,b,_) = ArticulationT (es,us,al,sl,a <> b,bs)
+    ArticulationT (((es,us,bs),(al,sl)),a) <> ArticulationT (_,b) = ArticulationT (((es,us,bs),(al,sl)), a <> b)
 
 instance (Semigroup a, Monoid a) => Monoid (ArticulationT a) where
     mempty = return mempty
@@ -92,36 +94,12 @@ instance IsPitch a => IsPitch (ArticulationT a) where
 instance IsDynamics a => IsDynamics (ArticulationT a) where
     fromDynamics l = return (fromDynamics l)
 
-instance Num a => Num (ArticulationT a) where
-    ArticulationT (p,q,r,s,a,t) + ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a+b,t)
-    ArticulationT (p,q,r,s,a,t) * ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a*b,t)
-    ArticulationT (p,q,r,s,a,t) - ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a-b,t)
-    abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
-    signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
-    -- fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
-    
-
-instance Enum a => Enum (ArticulationT a) where
-    toEnum = return . toEnum
-    fromEnum = fromEnum . get1 
-
-instance Bounded a => Bounded (ArticulationT a) where
-    minBound = return minBound
-    maxBound = return maxBound
-
-instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
-    toRational = toRational . get1
-
-instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
-    ArticulationT (p,q,r,s,a,t) `quotRem` ArticulationT (_,_,_,_,b,_) = (ArticulationT (p,q,r,s,q',t), ArticulationT (p,q,r,s,r',t)) where (q',r') = a `quotRem` b
-    toInteger = toInteger . get1
-
 instance HasArticulation (ArticulationT a) where
-    -- setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    -- setContSlur   us (ArticulationT (es,_ ,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    -- setBeginSlur  bs (ArticulationT (es,us,al,sl,a,_ )) = ArticulationT (es,us,al,sl,a,bs)
-    -- setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    -- setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    setEndSlur    (Any -> es) (ArticulationT (((_ ,us,bs),(al,sl)),a)) = ArticulationT (((es,us,bs),(al,sl)),a)
+    setContSlur   (Any -> us) (ArticulationT (((es,_ ,bs),(al,sl)),a)) = ArticulationT (((es,us,bs),(al,sl)),a)
+    setBeginSlur  (Any -> bs) (ArticulationT (((es,us,_ ),(al,sl)),a)) = ArticulationT (((es,us,bs),(al,sl)),a)
+    setAccLevel   (Sum -> al) (ArticulationT (((es,us,bs),(_ ,sl)),a)) = ArticulationT (((es,us,bs),(al,sl)),a)
+    setStaccLevel (Sum -> sl) (ArticulationT (((es,us,bs),(al,_ )),a)) = ArticulationT (((es,us,bs),(al,sl)),a)
 
 instance HasArticulation b => HasArticulation (a,b) where
     setEndSlur    n = fmap (setEndSlur n)

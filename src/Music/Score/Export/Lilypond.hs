@@ -153,7 +153,7 @@ instance HasLilypond a => HasLilypond (DynamicT a) where
                 Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasLilypond a => HasLilypond (ArticulationT a) where
-    getLilypond d (ArticulationT (Any es, Any us, Sum al, Sum sl,a, Any bs))    = notate $ getLilypond d a
+    getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
         where
             notate = nes . nal . nsl . nbs
             nes    = if es then Lilypond.endSlur else id

@@ -135,7 +135,7 @@ instance Reversible a => Reversible (TieT a) where
 instance Reversible a => Reversible (HarmonicT a) where
     rev = fmap rev
 instance Reversible a => Reversible (ArticulationT a) where
-    rev (ArticulationT (es,us,al,sl,a,bs)) = ArticulationT (bs,us,al,sl,rev a,es)
+    rev = fmap rev
 instance Reversible a => Reversible (TextT a) where
     rev = fmap rev
 instance Reversible a => Reversible (TremoloT a) where
@@ -358,18 +358,18 @@ instance Tiable a => Tiable (ArticulationT a) where
 
 type instance Part (ArticulationT a)                         = Part a
 instance HasPart a => HasPart (ArticulationT a) where
-    getPart (ArticulationT (es,us,al,sl,a,bs))          = getPart a
+    getPart = getPart . get1
     modifyPart   f                                      = fmap (modifyPart f)
 instance HasChord a => HasChord (ArticulationT a) where
     type ChordNote (ArticulationT a)                         = ArticulationT (ChordNote a)
-    getChord (ArticulationT (es,us,al,sl,a,bs))         = fmap (\x -> ArticulationT (es,us,al,sl,x,bs)) (getChord a)
+    getChord (ArticulationT (v,x))                          = fmap (\x -> ArticulationT (v,x)) (getChord x)
 
 type instance Pitch (ArticulationT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (ArticulationT a) where
-    __getPitch (ArticulationT (es,us,al,sl,a,bs)) = __getPitch a
+    __getPitch (ArticulationT (_,a)) = __getPitch a
 instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) where
     type SetPitch g (ArticulationT a) = ArticulationT (SetPitch g a)
-    __mapPitch f (ArticulationT (es,us,al,sl,a,bs)) = (ArticulationT (es,us,al,sl,__mapPitch f a,bs))
+    __mapPitch f (ArticulationT (v,x)) = (ArticulationT (v,__mapPitch f x))
 
 instance HasDynamic a => HasDynamic (ArticulationT a) where
     setBeginCresc n                                     = fmap (setBeginCresc n)

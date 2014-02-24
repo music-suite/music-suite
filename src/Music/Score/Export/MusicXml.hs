@@ -142,7 +142,7 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
                 Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasMusicXml a => HasMusicXml (ArticulationT a) where
-    getMusicXml d (ArticulationT (Any es,Any us,Sum al,Sum sl,a,Any bs))    = notate $ getMusicXml d a
+    getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
         where
             notate = nes . nal . nsl . nbs
             nes    = if es then Xml.endSlur else id
