@@ -43,6 +43,18 @@ module Music.Parts (
         tutti,
         
         -- ** Instruments etc
+        flute,
+        oboe,
+        corAnglais,
+        clarinet,
+        bassoon,
+        frenchHorn,
+        trumpet,
+        trombone,
+        tuba,
+        timpani,
+        piano,
+        
         violin,
         viola,
         cello,
@@ -209,10 +221,24 @@ Subpart x `containsSubpart` Subpart y = y `Data.List.isPrefixOf` x
 
 solo instr = Part Solo instr def
 tutti instr = Part Tutti instr def
+
+flute = StdInstrument 73
+oboe = StdInstrument 68
+corAnglais = StdInstrument 69
+clarinet = StdInstrument 71
+bassoon = StdInstrument 70
+frenchHorn = StdInstrument 60
+trumpet = StdInstrument 56
+trombone = StdInstrument 57
+tuba = StdInstrument 58
+timpani = StdInstrument 47
+piano = StdInstrument 0
+
 violin = StdInstrument 40
 viola = StdInstrument 41
 cello = StdInstrument 42
 bass = StdInstrument 43
+
 tubularBells = StdInstrument 14
 
 defaultClef :: Part -> Int
