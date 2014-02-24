@@ -291,7 +291,7 @@ instance (HasSetPitch a b,
 
 type instance Part (Score a) = Part a
 instance HasPart a => HasPart (Score a) where
-    getPart         = fromMaybe def . fmap getPart . listToMaybe . F.toList
+    getPart = error "No Score.getPart"
     modifyPart f    = fmap (modifyPart f)
 
 

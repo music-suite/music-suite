@@ -68,9 +68,9 @@ import Music.Score.Util
         ChordT
     TODO
         PartT
-        DynamicT
         
     DONE
+        DynamicT
         TieT
         ArticulationT
         TremoloT
@@ -178,7 +178,7 @@ instance HasArticulation a => HasArticulation (Maybe a) where
     setStaccLevel n = fmap (setStaccLevel n) 
 type instance Part (Maybe a)                             = Part a
 instance HasPart a => HasPart (Maybe a) where
-    getPart Nothing                                 = def
+    getPart Nothing                                 = error "Nothing: no part"
     getPart (Just a)                                = getPart a
     modifyPart f = fmap (modifyPart f) 
 type instance Pitch (Maybe a) = Pitch a

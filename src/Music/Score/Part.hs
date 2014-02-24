@@ -63,7 +63,7 @@ type family Part a :: *
 --
 class HasPart a where
     -- | Get the voice of the given note.
-    getPart :: Default (Part a) => a -> Part a
+    getPart :: a -> Part a
 
     -- | Set the voice of the given note.
     setPart :: Part a -> a -> a
