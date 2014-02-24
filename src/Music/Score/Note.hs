@@ -1,12 +1,11 @@
 
-{-# LANGUAGE
-    GeneralizedNewtypeDeriving, 
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveTraversable,
-    TypeFamilies,
-    MultiParamTypeClasses,
-    FlexibleInstances #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module Music.Score.Note (
         Note,
@@ -16,26 +15,26 @@ module Music.Score.Note (
         (=:),
   ) where
 
-import Control.Monad
-import Control.Comonad
-import Control.Comonad.Env
-import Control.Applicative
+import           Control.Applicative
+import           Control.Comonad
+import           Control.Comonad.Env
+import           Control.Monad
 
-import Data.PairMonad ()
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as F
+import           Data.PairMonad         ()
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
 
-import Music.Time
-import Music.Score.Pitch
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Pitch
+import           Music.Time
 
 newtype Note a = Note { getNote_ :: (Span, a) }
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
--- | 
+-- |
 -- Deconstruct a note.
 --
 -- Typically used with the @ViewPatterns@ extension, as in
@@ -51,9 +50,9 @@ getNoteSpan = fst . getNote
 
 -- | Get the value of the note. Same as 'extract'.
 getNoteValue :: Note a -> a
-getNoteValue = snd . getNote 
+getNoteValue = snd . getNote
 
--- Note that 
+-- Note that
 -- extract = getNoteValue
 -- ask = getNoteSpan
 
@@ -89,8 +88,8 @@ instance HasSetPitch a b => HasSetPitch (Note a) (Note b) where
     __mapPitch f = fmap (__mapPitch f)
 
 
--- | Construct a note from a span and value.
--- 
+-- | Construct a note from a span and value.
+--
 -- Typically used with the span constructors as in:
 --
 -- > 0 <-> 2 =: c

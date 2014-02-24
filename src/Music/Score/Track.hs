@@ -1,18 +1,16 @@
 
-{-# LANGUAGE 
-    TypeFamilies, 
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveDataTypeable, 
-    DeriveTraversable, 
-    GeneralizedNewtypeDeriving, 
-    FlexibleInstances,
-    TypeOperators,
-    TypeFamilies,
-    ConstraintKinds,
-    FlexibleContexts,
-    UndecidableInstances,
-    MultiParamTypeClasses #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -37,31 +35,31 @@ module Music.Score.Track (
         -- getTrack,
   ) where
 
-import Control.Lens
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Compose
-import Control.Arrow
-import Data.Semigroup
-import Data.PairMonad ()
-import Data.Typeable
-import Data.Foldable (Foldable(..), foldMap)
-import Data.Traversable (Traversable(..))
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace.Point
-import Test.QuickCheck (Arbitrary(..), Gen(..))
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Compose
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable (..), foldMap)
+import qualified Data.Foldable          as F
+import qualified Data.List              as List
+import           Data.PairMonad         ()
+import           Data.Semigroup
+import           Data.Traversable       (Traversable (..))
+import qualified Data.Traversable       as T
+import           Data.Typeable
+import           Data.VectorSpace       hiding (Sum)
+import           Test.QuickCheck        (Arbitrary (..), Gen (..))
 
-import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
-import Music.Score.Pitch
-import Music.Score.Util
-                                
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Pitch
+import           Music.Score.Util
+import           Music.Time
+
 -- |
--- A track is a list of events with explicit onset. 
+-- A track is a list of events with explicit onset.
 --
 -- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track
 -- and 'mappend' interleaves values.
@@ -139,13 +137,13 @@ instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch
 
 -- |
 -- Create a voice from a list of occurences.
--- 
+--
 track' :: Iso' [(Time, a)] (Track a)
 track' = track
 
 -- |
 -- Create a voice from a list of occurences.
--- 
+--
 track :: Iso [(Time, a)] [(Time, b)] (Track a) (Track b)
 track = iso mkTrack getTrack
     where

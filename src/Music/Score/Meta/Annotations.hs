@@ -1,18 +1,16 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds,
-    FlexibleContexts, 
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies,
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -38,24 +36,24 @@ module Music.Score.Meta.Annotations (
         withAnnotations,
   ) where
 
-import Control.Arrow
-import Control.Monad.Plus       
-import Data.Void
-import Data.Semigroup
-import Data.Typeable
-import Data.String
+import           Control.Arrow
+import           Control.Monad.Plus
 import qualified Data.List
+import           Data.Semigroup
+import           Data.String
+import           Data.Typeable
+import           Data.Void
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Score.Note
-import Music.Score.Score
-import Music.Score.Part
-import Music.Score.Combinators (withGlobalMeta)
-import Music.Score.Ornaments (HasText, text)
-import Music.Score.Meta
+import           Music.Score.Combinators (withGlobalMeta)
+import           Music.Score.Meta
+import           Music.Score.Note
+import           Music.Score.Ornaments   (HasText, text)
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Time
+import           Music.Time.Reactive
 
--- | 
+-- |
 --   An annotation is a unique textual value attached to parts of a score.
 --   They are ignored by default, but can be collected with 'withAnnotations'.
 --
@@ -80,7 +78,7 @@ showAnnotations = showAnnotations' ":"
 
 -- | Show all annotations in the score using the given prefix.
 showAnnotations' :: (HasPart' a, HasText a) => String -> Score a -> Score a
-showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
+showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
 
 -- | Handle the annotations in a score.
 withAnnotations :: (HasPart' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a

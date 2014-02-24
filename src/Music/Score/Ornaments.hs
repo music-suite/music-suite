@@ -1,16 +1,14 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,
-    TypeFamilies,
-    MultiParamTypeClasses,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -52,19 +50,19 @@ module Music.Score.Ornaments (
         glissando,
   ) where
 
-import Control.Applicative
-import Control.Lens
-import Data.Foldable
-import Data.Ratio
-import Data.Foldable
-import Data.Semigroup
-import Data.Typeable
+import           Control.Applicative
+import           Control.Lens
+import           Data.Foldable
+import           Data.Foldable
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Typeable
 
-import Music.Time
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Part
-import Music.Score.Combinators
+import           Music.Score.Combinators
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Voice
+import           Music.Time
 
 class HasTremolo a where
     setTrem :: Int -> a -> a
@@ -136,11 +134,11 @@ class HasSlide a where
 newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
-instance Wrapped 
+instance Wrapped
     (((Any, Any), (Any, Any)), a)
     (((Any, Any), (Any, Any)), a)
-    (SlideT a) 
-    (SlideT a) 
+    (SlideT a)
+    (SlideT a)
     where
     wrapped = iso SlideT getSlideT
 

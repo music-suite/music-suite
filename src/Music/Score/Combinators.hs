@@ -1,17 +1,16 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds, 
-    ViewPatterns,
-    TypeFamilies,
-    FlexibleContexts, 
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -37,7 +36,7 @@ module Music.Score.Combinators (
         -- * Mapping over events
         mapEvents,
 
-        -- * Filtering events 
+        -- * Filtering events
 
         -- ** Editing
         filterEvents,
@@ -72,7 +71,7 @@ module Music.Score.Combinators (
         filterPart,
         extractParts,
         extractParts',
-        
+
         -- ** Map over parts
         -- mapPart,
         mapParts,
@@ -96,34 +95,34 @@ module Music.Score.Combinators (
         -- snapshotWithSingle,
   ) where
 
-import Control.Monad
-import Control.Lens hiding (perform)
-import Control.Applicative
-import Control.Arrow
-import Control.Monad.Plus
-import Data.Semigroup
-import Data.String
-import Data.Foldable (Foldable(..))
-import Data.Traversable
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Ratio
-import Data.Ord
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens           hiding (perform)
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable (..))
+import           Data.Ord
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.String
+import           Data.Traversable
+import           Data.VectorSpace
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Score.Track
-import Music.Score.Voice
-import Music.Score.Note
-import Music.Score.Score
-import Music.Score.Meta
-import Music.Score.Part
-import Music.Score.Convert
-import Music.Score.Util
+import           Music.Score.Convert
+import           Music.Score.Meta
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Track
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive
 
-import qualified Data.List as List
-import qualified Data.Foldable as Foldable
+import qualified Data.Foldable          as Foldable
+import qualified Data.List              as List
 
 -- | Create a score containing a note at time zero and duration one. This is an alias for 'return'.
 note :: Monad m => a -> m a
@@ -143,7 +142,7 @@ removeRests = mcatMaybes
 
 -- | Retain only the notes whose /offset/ does not fall after the given time.
 before :: Time -> Score a -> Score a
-before u = filterEvents (\t d _ -> t .+^ d <= u) 
+before u = filterEvents (\t d _ -> t .+^ d <= u)
 
 -- | Retain only the notes whose /onset/ does not fall before the given time.
 after :: Time -> Score a -> Score a
@@ -153,11 +152,11 @@ after u = filterEvents (\t d _ -> u <= t)
 slice :: Time -> Time -> Score a -> Score a
 slice u v = filterEvents (\t d _ -> u <= t && t .+^ d <= v)
 
--- | Split a score into events whose onsets
+-- | Split a score into events whose onsets
 split :: Time -> Score a -> (Score a, Score a)
 split t a = (before t a, after t a)
 
--- | Split a score into three parts
+-- | Split a score into three parts
 splice :: Time -> Duration -> Score a -> (Score a, Score a, Score a)
 splice t d a = tripr (before t a, split (t .+^ d) a)
 
@@ -234,7 +233,7 @@ filterPartIs = filterPart <$> (==)
 --
 extractParts :: HasPart' a => Score a -> [Score a]
 extractParts x = filterPartIs <$> getParts x <*> return x
-        
+
 -- |
 -- Extract parts from the a score and include the part name.
 --
@@ -299,7 +298,7 @@ a </> b = a <> moveParts offset b
         -- max voice in a + 1
         offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
 
--- | 
+-- |
 -- Concatenate parts.
 --
 rcat :: (HasPart' a, Enum (Part a)) => [Score a] -> Score a
@@ -318,7 +317,7 @@ moveToPart :: (Enum b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
 
 
-                                                                 
+
 -------------------------------------------------------------------------------------
 -- Zippers
 
@@ -362,7 +361,7 @@ snapshotWithSingle g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
 --
 onsetIn :: Time -> Duration -> Score a -> Score a
 onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
--- We could also have used mfilter. filterOnce is more lazy, 
+-- We could also have used mfilter. filterOnce is more lazy,
 -- but depends on the events being sorted
 
 
@@ -380,20 +379,20 @@ inSpan t' (view range -> (t,u)) = t <= t' && t' < u
 -- TODO clean
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
-mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a                            
+mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapBefore t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 < t) (withTime x) in (f y <> n)
 mapDuring s f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t,x) -> t `inSpan` s) (withTime x) in (f y <> n)
 mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 >= t) (withTime x) in (f y <> n)
 
 
 -- Transform the score with the current value of some meta-information
--- Each "update chunk" of the meta-info is processed separately 
+-- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
 runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
 
 metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
-metaAt x = (? x) . runScoreMeta
+metaAt x = (? x) . runScoreMeta
 
 metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
 metaAtStart x = onset x `metaAt` x
@@ -410,11 +409,11 @@ withMeta' part f x = let
     r = runMeta part m
     in case splitReactive r of
         Left  a -> f a x
-        Right ((a, t), bs, (u, c)) -> 
-            setScoreMeta m 
-                $ mapBefore t (f a) 
-                $ (composed $ fmap (\(getNote -> (s, a)) -> mapDuring s $ f a) $ bs) 
-                $ mapAfter u (f c) 
+        Right ((a, t), bs, (u, c)) ->
+            setScoreMeta m
+                $ mapBefore t (f a)
+                $ (composed $ fmap (\(getNote -> (s, a)) -> mapDuring s $ f a) $ bs)
+                $ mapAfter u (f c)
                 $ x
 
 withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
@@ -423,12 +422,12 @@ withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
 withMetaAtStart :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
-withMetaAtStart' :: (IsAttribute b, HasPart' p) => 
+withMetaAtStart' :: (IsAttribute b, HasPart' p) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' part f x = let
     m = getScoreMeta x
     in f (runMeta part m ? onset x) x
-    
+
 
 
 
@@ -443,8 +442,8 @@ withMetaAtStart' part f x = let
 
 iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
 iterating f g n
-    | n <  0 = f . iterating f g (n + 1)
-    | n == 0 = id
+    | n <  0 = f . iterating f g (n + 1)
+    | n == 0 = id
     | n >  0 = g . iterating f g (n - 1)
 
 successor :: (Integral b, Enum a) => b -> a -> a

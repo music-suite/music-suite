@@ -1,11 +1,10 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    ViewPatterns,
-    GeneralizedNewtypeDeriving,
-    ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,34 +28,35 @@ module Music.Score.Rhythm (
         dotMod,
   ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
+import           Prelude             hiding (concat, concatMap, foldl, foldr,
+                                      mapM, maximum, minimum, sum)
 
-import Data.Semigroup
-import Control.Applicative
-import Control.Monad (ap, join, MonadPlus(..))
-import Control.Arrow hiding (left)
-import qualified Data.List as List
-import Data.Tree
-import Data.Maybe
-import Data.Either
-import Data.Foldable
-import Data.Traversable
-import Data.Function (on)
-import Data.Ord (comparing)
-import Data.Ratio
-import Data.VectorSpace
+import           Control.Applicative
+import           Control.Arrow       hiding (left)
+import           Control.Monad       (MonadPlus (..), ap, join)
+import           Data.Either
+import           Data.Foldable
+import           Data.Function       (on)
+import qualified Data.List           as List
+import           Data.Maybe
+import           Data.Ord            (comparing)
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Traversable
+import           Data.Tree
+import           Data.VectorSpace
 
-import Text.Parsec hiding ((<|>))
-import Text.Parsec.Pos
+import           Text.Parsec         hiding ((<|>))
+import           Text.Parsec.Pos
 
-import Music.Time
-import Music.Score.Ties
-import Music.Score.Voice
-import Music.Score.Util
+import           Music.Score.Ties
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
 
 data Rhythm a
     = Beat       Duration a                    -- d is divisible by 2
-    | Group      [Rhythm a]                    -- 
+    | Group      [Rhythm a]                    --
     | Dotted     Int (Rhythm a)                -- n > 0.
     | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
     deriving (Eq, Show, Functor, Foldable)
@@ -74,7 +74,7 @@ realize :: Rhythm a -> [(Duration, a)]
 realize (Beat d a)      = [(d, a)]
 realize (Group rs)      = rs >>= realize
 realize (Dotted n r)    = dotMod n `stretch` realize r
-realize (Tuplet n r)    = n `stretch` realize r 
+realize (Tuplet n r)    = n `stretch` realize r
 
 -- rhythmToTree :: Rhythm a -> Tree (String, Maybe a)
 -- rhythmToTree = go
@@ -84,7 +84,7 @@ realize (Tuplet n r)    = n `stretch` realize r
 --         go (Dotted n r)   = Node ("dotted " ++ show n, Nothing) [rhythmToTree r]
 --         go (Tuplet n r)   = Node ("tuplet " ++ showD n, Nothing) [rhythmToTree r]
 --         showD = show . toRational
--- 
+--
 -- drawRhythm :: Show a => Rhythm a -> String
 -- drawRhythm = drawTree . fmap (uncurry (++) <<< (++ " ") *** show) . rhythmToTree
 
@@ -132,7 +132,7 @@ Beat d x `subDur` d' = Beat (d-d') x
 
 {-
     Rhythm rewrite laws (all up to realization equality)
-    
+
     Note: Just sketching, needs more formal treatment.
 
 
@@ -145,7 +145,7 @@ Beat d x `subDur` d' = Beat (d-d') x
     Tuplet m (Group [a,b ...]) = Group [Tuplet m a, Tuplet m b ...]
         [DistributeTuplet]
         This is only OK in certain contexts! Which?
-    
+
 -}
 
 rewrite :: Rhythm a -> Rhythm a
@@ -159,7 +159,7 @@ rewriteR = go where
     go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
 
 rewrite1 = splitTuplet . tupletDot . singleGroup
-    
+
 
 singleGroup :: Rhythm a -> Rhythm a
 singleGroup orig@(Group [x]) = x
@@ -183,10 +183,10 @@ instance HasDuration a => HasDuration [a] where
 
 trySplit :: [Rhythm a] -> Maybe ([Rhythm a], [Rhythm a])
 trySplit = firstJust . fmap g . splits
-    where           
+    where
         g (part1, part2)
             | duration part1 == duration part2 = Just (part1, part2)
-            | otherwise                        = Nothing
+            | otherwise                        = Nothing
         splits xs = List.inits xs `zip` List.tails xs
         firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
 
@@ -216,10 +216,10 @@ konstMaxTupletNest = 1
 data RhythmContext = RhythmContext {
 
         -- Time scaling of the current note (from dots and tuplets).
-        timeMod :: Duration,
+        timeMod    :: Duration,
 
         -- Time subtracted from the current rhythm (from ties).
-        timeSub :: Duration,
+        timeSub    :: Duration,
 
         -- Number of tuplets above the current note (default 0).
         tupleDepth :: Int

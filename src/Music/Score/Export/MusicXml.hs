@@ -1,16 +1,15 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    GeneralizedNewtypeDeriving,
-    FlexibleContexts,
-    ConstraintKinds,
-    ViewPatterns,
-    TypeOperators,
-    OverloadedStrings,
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -37,55 +36,57 @@ module Music.Score.Export.MusicXml (
         writeMusicXml,
 ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
+import           Prelude                      hiding (concat, concatMap, foldl,
+                                               foldr, mapM, maximum, minimum,
+                                               sum)
 
-import Control.Lens hiding (rewrite)
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Control.Arrow
-import Data.Semigroup
-import Data.Monoid.WithSemigroup
-import Data.Ratio
-import Data.String
-import Data.Maybe
-import Data.Function (on)
-import Data.Ord (comparing)
-import System.Process
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens                 hiding (rewrite)
+import           Control.Monad                hiding (mapM)
+import           Data.Function                (on)
+import           Data.Maybe
+import           Data.Monoid.WithSemigroup
+import           Data.Ord                     (comparing)
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.String
+import           System.Process
 
-import Music.Time
-import Music.Time.Reactive (Reactive, initial)
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-import Music.Score.Rhythm
-import Music.Score.Track
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Meta
-import Music.Score.Meta.Clef
-import Music.Score.Meta.Time
-import Music.Score.Meta.Attribution
-import Music.Score.Meta.Title
-import Music.Score.Clef
-import Music.Score.Chord
-import Music.Score.Combinators
-import Music.Score.Convert
-import Music.Score.Convert
-import Music.Score.Pitch
-import Music.Score.Ties
-import Music.Score.Part
-import Music.Score.Util
-import Music.Score.Articulation
-import Music.Score.Dynamics
-import Music.Score.Ornaments
-import Music.Score.Instances
-import Music.Score.Export.Common
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Articulation
+import           Music.Score.Chord
+import           Music.Score.Clef
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Convert
+import           Music.Score.Dynamics
+import           Music.Score.Export.Common
+import           Music.Score.Instances
+import           Music.Score.Meta
+import           Music.Score.Meta.Attribution
+import           Music.Score.Meta.Clef
+import           Music.Score.Meta.Time
+import           Music.Score.Meta.Title
+import           Music.Score.Ornaments
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Rhythm
+import           Music.Score.Score
+import           Music.Score.Ties
+import           Music.Score.Track
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive          (Reactive, initial)
 
-import qualified Codec.Midi as Midi
-import qualified Music.MusicXml.Simple as Xml
-import qualified Music.Lilypond as Lilypond
-import qualified Text.Pretty as Pretty
-import qualified Data.Map as Map
-import qualified Data.List as List
+import qualified Codec.Midi                   as Midi
+import qualified Data.List                    as List
+import qualified Data.Map                     as Map
+import qualified Music.Lilypond               as Lilypond
+import qualified Music.MusicXml.Simple        as Xml
+import qualified Text.Pretty                  as Pretty
 
 
 type XmlScore = Xml.Score
@@ -142,7 +143,7 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
                 Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasMusicXml a => HasMusicXml (ArticulationT a) where
-    getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
+    getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
         where
             notate = nes . nal . nsl . nbs
             nes    = if es then Xml.endSlur else id
@@ -172,7 +173,7 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
 
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
     getMusicXml d (HarmonicT ((view unwrapped -> isNat, view unwrapped -> n),x)) = notate isNat n $ getMusicXml d x
-        where                 
+        where
             notate _     0 = id
             notate True  n = notateNatural n
             notate False n = notateArtificial n
@@ -181,7 +182,7 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
             notateNatural n = Xml.setNoteHead Xml.DiamondNoteHead
             -- Most programs do not recognize the harmonic tag
             -- We set a single diamond notehead instead, which can be manually replaced
-            
+
             notateArtificial n = id -- TODO
 
 
@@ -189,7 +190,7 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
     -- TODO adjust pitch etc
 
 instance HasMusicXml a => HasMusicXml (SlideT a) where
-    getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
+    getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
         where
             notate = neg . nes . nbg . nbs
             neg    = if view unwrapped eg then Xml.endGliss else id
@@ -198,9 +199,9 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
             nbs    = if view unwrapped bs then Xml.beginSlide else id
 
 instance HasMusicXml a => HasMusicXml (ClefT a) where
-    getMusicXml d (ClefT (c, a)) = notate $ getMusicXml d a
+    getMusicXml d (ClefT (c, a)) = notate $ getMusicXml d a
         where
-            notate = case fmap getLast $ getOption c of
+            notate = case fmap getLast $ getOption c of
                 Nothing -> id
                 Just GClef -> (Xml.trebleClef <>)
                 Just CClef -> (Xml.altoClef <>)
@@ -255,12 +256,12 @@ toMusicXmlString = Xml.showXml . toMusicXml
 -- Convert a score to a MusicXML representation.
 --
 toMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> XmlScore
-toMusicXml sc = 
+toMusicXml sc =
            -- Score structure
            Xml.fromParts title composer pl
 
                 -- Main notation pipeline
-                . fmap (voiceToMusicXml' barTimeSigs barDurations . scoreToVoice . simultaneous 
+                . fmap (voiceToMusicXml' barTimeSigs barDurations . scoreToVoice . simultaneous
 
                 -- Meta-event expansion
                 . addClefs
@@ -271,12 +272,12 @@ toMusicXml sc =
     where
         addClefT :: a -> ClefT a
         addClefT = return
-        
+
         addClefs = setClef . fmap addClefT
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
+        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
 
         -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
@@ -303,8 +304,8 @@ voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig
 --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
 --      * barToMusicXml is specific: it handles quantization and notation
 --
-    where                          
-        -- FIXME compounds                      
+    where
+        -- FIXME compounds
         setBarTimeSig Nothing x = x
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
 

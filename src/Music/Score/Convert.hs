@@ -1,15 +1,14 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    ViewPatterns,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    GeneralizedNewtypeDeriving,
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -44,30 +43,30 @@ module Music.Score.Convert (
         activate,
   ) where
 
-import Control.Applicative
-import Control.Lens
-import Control.Monad
-import Control.Monad.Plus
-import Data.Semigroup
-import Data.String
-import Data.Foldable (Foldable(..))
-import Data.Traversable
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Ratio
-import Data.Ord
+import           Control.Applicative
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable (..))
+import           Data.Ord
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.String
+import           Data.Traversable
+import           Data.VectorSpace
 
-import Music.Score.Note
-import Music.Score.Track
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Part
-import Music.Time
-import Music.Time.Reactive
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Track
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive
 
-import qualified Data.List as List
-import qualified Data.Foldable as Foldable
+import qualified Data.Foldable          as Foldable
+import qualified Data.List              as List
 
 
 -- | Convert a note to an onset and a voice.
@@ -85,13 +84,13 @@ noteToScore (getNote -> (s,x)) = s `sapp` return x
 -- notesToScore = pcat . fmap noteToScore
 
 reactiveToVoice :: Duration -> Reactive a -> Voice a
-reactiveToVoice d r = (^. voice) $ durs `zip` (fmap (r ?) times)
+reactiveToVoice d r = (^. voice) $ durs `zip` (fmap (r ?) times)
     where
         times = origin : filter (\t -> origin < t && t < origin .+^ d) (occs r)
         durs  = toRelN' (origin .+^ d) times
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ durs `zip` (fmap (r ?) times)
+reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ durs `zip` (fmap (r ?) times)
     where
         times = origin : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelN' v times
@@ -109,7 +108,7 @@ scoreToVoice = (^. voice) . fmap throwTime . addRests . (^. events)
                    | u == t    = (t .+^ d, [(t, d, Just x)])
                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
                    | otherwise = error "addRests: Strange prevTime"
-       
+
 
 -- |
 -- Convert a voice to a score.
@@ -147,12 +146,12 @@ toRel :: [Time] -> [Duration]
 toRel = snd . mapAccumL g origin where g prev t = (t, t .-. prev)
 
 -- Convert to delta (time to wait before next note)
-toRelN :: [Time] -> [Duration]                
+toRelN :: [Time] -> [Duration]
 toRelN [] = []
 toRelN xs = snd $ mapAccumR g (last xs) xs where g prev t = (t, prev .-. t)
 
 -- Convert to delta (time to wait before next note)
-toRelN' :: Time -> [Time] -> [Duration]                
+toRelN' :: Time -> [Time] -> [Duration]
 toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
 
 -- 0 x,1 x,1 x,1 x
@@ -172,16 +171,16 @@ splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
         note (t,u,x) = t <-> u =: x
 
         -- Always returns a 0 or more Right followed by one left
-        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
-        res rs = let (ts,xs) = unzip rs in 
-            flip fmap (withNext ts `zip` xs) $ 
+        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
+        res rs = let (ts,xs) = unzip rs in
+            flip fmap (withNext ts `zip` xs) $
                 \ ((t, mu), x) -> case mu of
                     Nothing -> Left (t, x)
                     Just u  -> Right (t, u, x)
@@ -192,7 +191,7 @@ splitReactive r = case updates r of
             where
                 go []       = []
                 go [x]      = [(x, Nothing)]
-                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
+                go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)

@@ -1,17 +1,15 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    ViewPatterns,
-    TypeOperators,
-    TypeFamilies,
-    GeneralizedNewtypeDeriving,
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -31,12 +29,12 @@
 module Music.Score.Chord (
         -- * Chord representation
         HasChord(..),
-        ChordT(..),      
+        ChordT(..),
 
         -- * Voice separation
         separateVoices,
         mergePossible,
-        
+
         -- * Chord transformations
         takeNoteInChord,
         dropNoteInChord,
@@ -47,24 +45,24 @@ module Music.Score.Chord (
         simultaneous',
   ) where
 
-import Prelude hiding (any, mapM_)
+import           Prelude                 hiding (any, mapM_)
 
-import Control.Lens hiding (perform)
-import Data.Ord
-import Data.Foldable
-import Data.Typeable
-import Data.Semigroup
-import Control.Monad.Plus hiding (mapM_)       
-import qualified Data.List          as List
-import qualified Data.List.NonEmpty as NonEmpty
+import           Control.Lens            hiding (perform)
+import           Control.Monad.Plus      hiding (mapM_)
+import           Data.Foldable
+import qualified Data.List               as List
+import qualified Data.List.NonEmpty      as NonEmpty
+import           Data.Ord
+import           Data.Semigroup
+import           Data.Typeable
 
-import Music.Time
-import Music.Score.Convert
-import Music.Score.Note
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Part
-import Music.Score.Combinators
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Voice
+import           Music.Time
 
 class HasChord a where
     type ChordNote a :: *
@@ -84,10 +82,10 @@ newtype ChordT a = ChordT { getChordT :: [a] }
     deriving (Eq, Show, Ord, Monad, Functor, Monoid, Semigroup, Foldable, Typeable)
 
 overlaps :: (HasOnset a, HasOffset a, HasOnset b, HasOffset b) => a -> b -> Bool
-overlaps t u = not $ offset t <= onset u || offset u <= onset t
+overlaps t u = not $ offset t <= onset u || offset u <= onset t
 
 overlapsAny :: (Foldable t, HasOnset a, HasOffset a, HasOnset b, HasOffset b) => a -> t b -> Bool
-overlapsAny x = any (overlaps x) 
+overlapsAny x = any (overlaps x)
 
 notOverlaps :: (HasOnset a, HasOnset b, HasOffset a, HasOffset b) => a -> b -> Bool
 x `notOverlaps` y = not (x `overlaps` y)
@@ -101,11 +99,11 @@ mergePossible []  = []
 mergePossible (x:xs) = let
     pick = x
     (res, rest) = List.foldr mergeMaybe' (x, []) xs
-    in res : mergePossible rest 
+    in res : mergePossible rest
 
-mergeMaybe' x (y,rest) = if hasOverlapping (x <> y) then (x, y:rest) else (x <> y, rest)    
+mergeMaybe' x (y,rest) = if hasOverlapping (x <> y) then (x, y:rest) else (x <> y, rest)
 
-mergeMaybe x y = if hasOverlapping (x <> y) then (x, Just y) else (x <> y, Nothing)    
+mergeMaybe x y = if hasOverlapping (x <> y) then (x, Just y) else (x <> y, Nothing)
 
 
 
@@ -158,16 +156,16 @@ pushNote n t = if n `notOverlapsHead` middle t then pushMiddle n t else
 
 pushMiddle :: a -> Tower [a] -> Tower [a]
 pushMiddle x (Tower as a sa) = Tower as (x:a) sa
-    
+
 separateVoices :: Ord a => Score a -> [Score ( a)]
 separateVoices = fmap (^. from notes) . f . (^. notes)
     where
         f = (\(as,x,bs) -> as++[x]++bs) . floors . List.foldr pushNote (tower [])  . List.sortBy (comparing getNoteSpan)
 
--- Note:                                                    
+-- Note:
 --
 -- The HasChord instance (for other transformer types) takes care to transform strucuture *above* the chord representation
---      In particular, getChord will extract the chord from below and transform each note (or only the first etc) 
+--      In particular, getChord will extract the chord from below and transform each note (or only the first etc)
 --      as appropriate for the given type.
 -- The ChordT instances (of other transformer classes) transforms structure *below* the chord representation
 --      For example, it allow us to use functions such as up, down, legato etc on chords.
@@ -177,18 +175,18 @@ separateVoices = fmap (^. from notes) . f . (^. notes)
 takeNotesInChord n = mapSimultaneous (fmap $ take n)
 dropNotesInChord n = mapSimultaneous (fmap $ drop n)
 
-takeNoteInChord n = mapSimultaneous $ (fmap $ take 1) . (fmap $ drop (n - 1))
-dropNoteInChord n = mapSimultaneous $ (fmap $ drop1 n)
+takeNoteInChord n = mapSimultaneous $ (fmap $ take 1) . (fmap $ drop (n - 1))
+dropNoteInChord n = mapSimultaneous $ (fmap $ drop1 n)
 
 drop1 n xs = take (n - 1) xs <> drop n xs
 
 
--- | 
+-- |
 -- Process all simultaneous events.
--- 
+--
 -- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
 -- era, that is if @`era` a == `era` b@
--- 
+--
 mapSimultaneous :: (Score [a] -> Score [b]) -> Score a -> Score b
 mapSimultaneous f = mscatter . f . simultaneous'
 
@@ -211,7 +209,7 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 --
 simultaneous' :: Score a -> Score [a]
 simultaneous' sc = setScoreMeta m $ (^. from events) vs
-    where     
+    where
         m = getScoreMeta sc
         -- es :: [Era]
         -- evs :: [[a]]
@@ -233,9 +231,9 @@ getValue :: (Time, Duration, a) -> a
 getValue (t,d,a) = a
 
 getSpan :: (Time, Duration, a) -> Span
-getSpan (t,d,a) = t >-> d        
-        
-        
-     
+getSpan (t,d,a) = t >-> d
+
+
+
 
 

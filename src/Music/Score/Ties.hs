@@ -1,15 +1,13 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,
-    TypeFamilies,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,56 +27,56 @@
 module Music.Score.Ties (
         -- * Tiable class
         Tiable(..),
-        TieT(..),        
-        
+        TieT(..),
+
         -- * Splitting tied notes in scores
         splitTiesVoice,
         splitTiesVoiceAt,
   ) where
 
-import Control.Lens
-import Control.Applicative
-import Control.Arrow
-import Control.Monad
-import Control.Monad.Plus
-import Data.Default
-import Data.Semigroup
-import Data.Maybe
-import Data.Ratio
-import Data.Foldable hiding (concat)
-import Data.Typeable
-import qualified Data.List as List
-import Data.VectorSpace
-import Data.AffineSpace
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.Default
+import           Data.Foldable           hiding (concat)
+import qualified Data.List               as List
+import           Data.Maybe
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Combinators
-import Music.Score.Convert
-import Music.Score.Part
-import Music.Time
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Voice
+import           Music.Time
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note
 -- into two and annotating them with a /begin tie/ and /end tie/ mark respectively.
--- 
+--
 --
 -- Minimal definition: 'toTied', or both 'beginTie' and 'endTie'.
 --
 class Tiable a where
     -- |
     -- Modify a note to be the first note in a tied note pair.
-    -- 
+    --
     beginTie :: a -> a
     beginTie = fst . toTied
 
     -- |
     -- Modify a note to be the second note in a tied note pair.
-    -- 
+    --
     endTie :: a -> a
     endTie = snd . toTied
 
-    -- | 
+    -- |
     -- Split a single note into a pair of tied notes.
     --
     -- The first returned element should have the original 'onset' and the second
@@ -152,7 +150,7 @@ splitDurThen s t x = case splitDur s x of
     (a, Just b)  -> a : splitDurThen t t b
 
 
--- | 
+-- |
 -- Extract as many notes or parts of notes as possible in the given positive duration, and
 -- return it with remaining notes.
 --
@@ -167,7 +165,7 @@ splitDurThen s t x = case splitDur s x of
 splitDurFor :: Tiable a => Duration -> [(Duration, a)] -> ([(Duration, a)], [(Duration, a)])
 splitDurFor remDur []       = ([], [])
 splitDurFor remDur (x : xs) = case splitDur remDur x of
-    (x@(d,_), Nothing)   -> 
+    (x@(d,_), Nothing)   ->
         if d < remDur then
             first (x:) $ splitDurFor (remDur - d) xs
         else -- d == remDur

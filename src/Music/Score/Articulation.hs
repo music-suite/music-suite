@@ -1,17 +1,15 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,
-    TypeFamilies,
-    ViewPatterns,
-    GeneralizedNewtypeDeriving,
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -55,16 +53,16 @@ module Music.Score.Articulation (
 
   ) where
 
-import Control.Applicative
-import Data.Foldable
-import Data.Typeable
-import Data.Semigroup
+import           Control.Applicative
+import           Data.Foldable
+import           Data.Semigroup
+import           Data.Typeable
 
-import Music.Score.Score
-import Music.Score.Part
-import Music.Score.Combinators
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Combinators
+import           Music.Score.Part
+import           Music.Score.Score
 
 class HasArticulation a where
     setBeginSlur :: Bool -> a -> a
@@ -76,7 +74,7 @@ class HasArticulation a where
 newtype ArticulationT a = ArticulationT { getArticulationT :: (((Any, Any, Any), (Sum Int, Sum Int)), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
--- instance Monad ArticulationT where             
+-- instance Monad ArticulationT where
     -- return = undefined
     -- return x = ArticulationT (Any False,Any False,0,0,x,False)
     -- (>>=) = error "No ArticulationT.(>>=)"

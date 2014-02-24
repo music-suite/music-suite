@@ -1,20 +1,19 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables,
-    Rank2Types, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds, 
-    ViewPatterns,
-    TypeFamilies,
-    TypeOperators,
-    FlexibleContexts, 
-    MultiParamTypeClasses, 
-    FlexibleInstances,
-    UndecidableInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE Rank2Types                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -41,7 +40,7 @@ module Music.Score.Score (
         reifyScore,
         getScoreMeta,
         setScoreMeta,
-        
+
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -51,45 +50,45 @@ module Music.Score.Score (
 
   ) where
 
-import Data.Dynamic
-import Control.Lens
-import Data.Maybe
-import Data.Ord
-import Data.Semigroup
-import Data.Foldable (foldMap)
-import Control.Arrow
-import Control.Applicative
-import Control.Comonad
-import Control.Monad
-import Control.Monad.Plus
-import Control.Monad.Compose
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Comonad
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Compose
+import           Control.Monad.Plus
+import           Data.Dynamic
+import           Data.Foldable          (foldMap)
+import           Data.Maybe
+import           Data.Ord
+import           Data.Semigroup
 
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Test.QuickCheck (Arbitrary(..), Gen(..))
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.VectorSpace
+import           Test.QuickCheck        (Arbitrary (..), Gen (..))
 
-import Data.Default
-import Data.Typeable
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Data.Default
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as F
+import qualified Data.List              as List
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
+import           Data.Typeable
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
-import Music.Score.Note
-import Music.Score.Meta
-import Music.Score.Pitch
-import Music.Score.Part
-import Music.Score.Util
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Meta
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Util
+import           Music.Time
+import           Music.Time.Reactive
 
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable)
@@ -110,19 +109,19 @@ mkScore = mconcat . fmap (uncurry3 event)
         event t d x   = (delay (t .-. origin) . stretch d) (return x)
 
 getScore :: Score a -> [(Time, Duration, a)]
-getScore = 
-    fmap (\(view delta -> (t,d),x) -> (t,d,x)) . 
+getScore =
+    fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
     List.sortBy (comparing fst) .
-    F.toList . 
-    fmap getNote . 
+    F.toList .
+    fmap getNote .
     reifyScore
 
--- | Map with the associated time span.
+-- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = over unwrapped (second $ mapNScore f)
 
--- | Group each occurence with its associated time span.
--- 
+-- | Group each occurence with its associated time span.
+--
 -- Note: This may or may not be what you expect. Each note is /not/ repositioned
 -- to start at 'sunit', so this holds
 --
@@ -215,7 +214,7 @@ instance HasMeta (Score a) where
 --
 -- Semantics: a list of 'Note'. The semantics of each instances follow the instances of
 -- the semantics.
--- 
+--
 newtype NScore a = NScore { getNScore :: [Note a] } -- sorted
     deriving (Functor, Foldable, Semigroup, Monoid, Traversable, Delayable, Stretchable, HasOnset, HasOffset)
 
@@ -227,7 +226,7 @@ mapNScore f = inNScore (fmap $ extend f)
 
 -- | Reify the associated span. Use with 'Traversable' to get a fold.
 reifyNScore :: NScore a -> NScore (Note a)
-reifyNScore = inNScore $ fmap duplicate
+reifyNScore = inNScore $ fmap duplicate
 
 instance Wrapped [Note a] [Note a] (NScore a) (NScore a) where
     wrapped = iso NScore getNScore
@@ -281,13 +280,13 @@ instance VectorSpace (Score a) where
     d *^ s = d `stretch` s
 
 type instance Pitch (Score a) = Pitch a
-instance (HasSetPitch a b, 
-            Transformable (Pitch a), 
-            Transformable (Pitch b)) => 
+instance (HasSetPitch a b,
+            Transformable (Pitch a),
+            Transformable (Pitch b)) =>
                 HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
     __mapPitch f  = mapWithSpan (\s -> __mapPitch $ sunder s f)
-    
+
 
 type instance Part (Score a) = Part a
 instance HasPart a => HasPart (Score a) where

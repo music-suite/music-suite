@@ -1,16 +1,14 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeOperators,
-    TypeFamilies,
-    ViewPatterns,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -45,27 +43,27 @@ module Music.Score.Dynamics (
         resetDynamics,
   ) where
 
-import Control.Lens hiding (Level)
-import Control.Applicative
-import Control.Monad
-import Control.Arrow
-import Data.Semigroup
-import Data.Ratio
-import Data.Maybe
-import Data.Foldable
-import Data.Typeable
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens            hiding (Level)
+import           Control.Monad
+import           Data.AffineSpace
+import           Data.Foldable
+import qualified Data.List               as List
+import           Data.Maybe
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Typeable
+import           Data.VectorSpace        hiding (Sum)
 
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Time
-import Music.Score.Part
-import Music.Score.Combinators
-import Music.Score.Convert
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Voice
+import           Music.Time
 
-import Music.Dynamics.Literal
+import           Music.Dynamics.Literal
 
 class HasDynamic a where
     setBeginCresc   :: Bool -> a -> a
@@ -161,11 +159,11 @@ dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
         g (Nothing, False, False) (Change b c)  = ((Just b,  b < c, b > c), (False, False, Just b,  b < c, b > c))
 
         g (Just a , cr, dm) (Level b)
-            | a == b                            = ((Just b,  False, False), (cr,    dm,    Nothing, False, False))
-            | a /= b                            = ((Just b,  False, False), (cr,    dm,    Just b,  False, False))
+            | a == b                            = ((Just b,  False, False), (cr,    dm,    Nothing, False, False))
+            | a /= b                            = ((Just b,  False, False), (cr,    dm,    Just b,  False, False))
         g (Just a , cr, dm) (Change b c)
-            | a == b                            = ((Just b,  b < c, b > c), (cr,    dm,    Nothing, b < c, b > c))
-            | a /= b                            = ((Just b,  b < c, b > c), (cr,    dm,    Just b,  b < c, b > c))
+            | a == b                            = ((Just b,  b < c, b > c), (cr,    dm,    Nothing, b < c, b > c))
+            | a /= b                            = ((Just b,  b < c, b > c), (cr,    dm,    Just b,  b < c, b > c))
 
 
 

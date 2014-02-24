@@ -1,16 +1,15 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    NoMonomorphismRestriction,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    StandaloneDeriving,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    MultiParamTypeClasses,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,35 +28,35 @@
 
 module Music.Score.Instances () where
 
-import Control.Applicative
-import Control.Monad
-import Control.Comonad
-import Data.Semigroup
-import Data.Default
-import Data.Ratio
-import Data.Maybe
-import Data.Foldable
-import Data.Typeable
-import Data.VectorSpace
-import Data.AffineSpace
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Comonad
+import           Control.Monad
+import           Data.AffineSpace
+import           Data.Default
+import           Data.Foldable
+import qualified Data.List                as List
+import           Data.Maybe
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-import Music.Score.Rhythm
-import Music.Score.Track
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Combinators
-import Music.Score.Pitch
-import Music.Score.Ties
-import Music.Score.Part
-import Music.Score.Chord
-import Music.Score.Articulation
-import Music.Score.Dynamics
-import Music.Score.Ornaments
-import Music.Score.Util
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Articulation
+import           Music.Score.Chord
+import           Music.Score.Combinators
+import           Music.Score.Dynamics
+import           Music.Score.Ornaments
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Rhythm
+import           Music.Score.Score
+import           Music.Score.Ties
+import           Music.Score.Track
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
 
 -------------------------------------------------------------------------------------
 
@@ -68,7 +67,7 @@ import Music.Score.Util
         ChordT
     TODO
         PartT
-        
+
     DONE
         DynamicT
         TieT
@@ -77,8 +76,8 @@ import Music.Score.Util
         HarmonicT
         TextT
         SlideT
-    
-    
+
+
 -}
 
 
@@ -171,16 +170,16 @@ instance Semigroup a => Semigroup (PartT n a) where
 
 -- TODO this instance may be problematic with mapPhrase
 instance HasArticulation a => HasArticulation (Maybe a) where
-    setEndSlur    n = fmap (setEndSlur n) 
-    setContSlur   n = fmap (setContSlur n) 
-    setBeginSlur  n = fmap (setBeginSlur n) 
-    setAccLevel   n = fmap (setAccLevel n) 
-    setStaccLevel n = fmap (setStaccLevel n) 
+    setEndSlur    n = fmap (setEndSlur n)
+    setContSlur   n = fmap (setContSlur n)
+    setBeginSlur  n = fmap (setBeginSlur n)
+    setAccLevel   n = fmap (setAccLevel n)
+    setStaccLevel n = fmap (setStaccLevel n)
 type instance Part (Maybe a)                             = Part a
 instance HasPart a => HasPart (Maybe a) where
     getPart Nothing                                 = error "Nothing: no part"
     getPart (Just a)                                = getPart a
-    modifyPart f = fmap (modifyPart f) 
+    modifyPart f = fmap (modifyPart f)
 type instance Pitch (Maybe a) = Pitch a
 instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
     type SetPitch g (Maybe a) = Maybe (SetPitch g a)
@@ -847,7 +846,7 @@ instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (Behavior a) (Behavior 
     __mapPitch f a = liftA2 (__setPitch) (f $ (__getPitch) <$> a) a
 
 instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
-                                        
+
 
 
 -- Safe for tuple-like types

@@ -1,18 +1,17 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds,
-    FlexibleContexts, 
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies,
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -41,7 +40,7 @@ module Music.Score.Meta (
         unwrapAttr,
 
         -- * Meta-values
-        Meta,  
+        Meta,
         -- addMeta,
         addMetaNote,
         addGlobalMetaNote,
@@ -49,33 +48,33 @@ module Music.Score.Meta (
         HasMeta(..),
   ) where
 
-import Control.Applicative
-import Control.Lens
-import Control.Arrow
-import Control.Monad.Plus       
-import Data.Void
-import Data.Maybe
-import Data.Semigroup
-import Data.Monoid.WithSemigroup
-import Data.Typeable
-import Data.String
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad.Plus
+import           Data.Foldable             (Foldable)
+import qualified Data.Foldable             as F
+import qualified Data.List                 as List
+import           Data.Map                  (Map)
+import qualified Data.Map                  as Map
+import           Data.Maybe
+import           Data.Monoid.WithSemigroup
+import           Data.Semigroup
+import           Data.Set                  (Set)
+import qualified Data.Set                  as Set
+import           Data.String
+import           Data.Traversable          (Traversable)
+import qualified Data.Traversable          as T
+import           Data.Typeable
+import           Data.Void
 
-import Music.Time
-import Music.Score.Note
-import Music.Score.Voice
-import Music.Score.Part
-import Music.Score.Pitch
-import Music.Score.Util
-import Music.Pitch.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
 
 
 type IsAttribute a = (Typeable a, Monoid' a)
@@ -114,16 +113,16 @@ inMeta f (Meta s) = Meta (f s)
 
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
+addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
 
 -- XXX
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
+addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 
 -- Switch at time t to the given value (switch is valid until the end of the music).
 -- TODO might not work as we think
 addMetaChange :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Time -> a -> b -> b
-addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switch t mempty (pure x)) y
+addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switch t mempty (pure x)) y
 
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
@@ -131,13 +130,13 @@ runMeta part = fromMaybe mempty . runMeta' part
 
 addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
 addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
-    where                   
+    where
         key = ty ++ pt
         pt = show $ fmap getPart part
         ty = show $ typeOf (undefined :: b)
 
--- runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a) 
-runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b) 
+-- runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a)
+runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b)
 runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
@@ -211,16 +210,16 @@ splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
         note (t,u,x) = t <-> u =: x
 
         -- Always returns a 0 or more Right followed by one left
-        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]    
-        res rs = let (ts,xs) = unzip rs in 
-            flip fmap (withNext ts `zip` xs) $ 
+        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
+        res rs = let (ts,xs) = unzip rs in
+            flip fmap (withNext ts `zip` xs) $
                 \ ((t, mu), x) -> case mu of
                     Nothing -> Left (t, x)
                     Just u  -> Right (t, u, x)
@@ -231,7 +230,7 @@ splitReactive r = case updates r of
             where
                 go []       = []
                 go [x]      = [(x, Nothing)]
-                go (x:y:rs) = (x, Just y) : withNext (y : rs)      
+                go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)

@@ -1,18 +1,17 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds,
-    FlexibleContexts, 
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies,
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -40,46 +39,46 @@ module Music.Score.Meta.Tempo (
         -- * Adding tempo to scores
         tempo,
         tempoDuring,
-        
+
         -- * Extracting tempo
         renderTempo,
   ) where
 
 
-import Control.Lens
-import Control.Arrow
-import Control.Monad.Plus       
-import Data.Default
-import Data.Void
-import Data.Maybe
-import Data.Semigroup
-import Data.Monoid.WithSemigroup
-import Data.Typeable
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.String
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.Default
+import           Data.Foldable             (Foldable)
+import qualified Data.Foldable             as F
+import qualified Data.List                 as List
+import           Data.Map                  (Map)
+import qualified Data.Map                  as Map
+import           Data.Maybe
+import           Data.Monoid.WithSemigroup
+import           Data.Semigroup
+import           Data.Set                  (Set)
+import qualified Data.Set                  as Set
+import           Data.String
+import           Data.Traversable          (Traversable)
+import qualified Data.Traversable          as T
+import           Data.Typeable
+import           Data.VectorSpace
+import           Data.Void
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Score.Note
-import Music.Score.Voice
-import Music.Score.Part
-import Music.Score.Pitch
-import Music.Score.Meta
-import Music.Score.Score
-import Music.Score.Convert
-import Music.Score.Combinators
-import Music.Score.Util
-import Music.Pitch.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Meta
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Score
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive
 
 type Bpm       = Duration
 type NoteValue = Duration
@@ -87,7 +86,7 @@ type NoteValue = Duration
 -- | Represents musical tempo as a scaling factor with an optional name and/or beat duration.
 --
 -- 'tempoToDuration' provides a scaling factor such that
--- 
+--
 -- > stretch (tempoToDuration t) notation = sounding
 -- > compress (tempoToDuration t) sounding = notation
 --
@@ -114,7 +113,7 @@ instance Default Tempo where
     def = metronome (1/1) 60
 
 -- | Create a tempo from a duration and a number of beats per minute.
---   
+--
 --   For example @metronome (1/2) 48@ means 48 half notes per minute.
 metronome :: Duration -> Bpm -> Tempo
 metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
@@ -154,10 +153,10 @@ getTempo (Tempo _ Nothing x)   = (1, (60 * recip x) / 1) -- assume whole note
 getTempo (Tempo _ (Just nv) x) = (nv, (60 * recip x) / nv)
 
 -- | Convert a tempo to a duration suitable for converting written to sounding durations.
--- 
+--
 -- > stretch (tempoToDuration t) notation = sounding
 -- > compress (tempoToDuration t) sounding = notation
--- 
+--
 tempoToDuration :: Tempo -> Duration
 tempoToDuration (Tempo _ _ x) = x
 
@@ -180,7 +179,7 @@ inSpan' (view range -> (t,u)) x = t <= x && x < u
 -- TODO fails if not positive
 -- TODO same as reactiveToVoice
 reactiveIn :: Span -> Reactive a -> [Note a]
-reactiveIn s r 
+reactiveIn s r
     | duration s <= 0 = error "reactiveIn: Needs positive duration"
     | otherwise       = let r2 = trim s (fmap optionFirst r)
     in fmap (fmap $ fromJust . unOptionFirst) $ case updates r2 of
@@ -190,26 +189,26 @@ reactiveIn s r
             times  = [t0] ++ tn
             spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
             values = [x0] ++ xn
-            in zipWith (=:) spans values         
+            in zipWith (=:) spans values
 
 
 
 
--- | Extract all tempi from the given score, using the given default tempo. 
+-- | Extract all tempi from the given score, using the given default tempo.
 -- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
 -- withTempo f = withGlobalMeta (f . fromMaybe def . fmap getFirst . getOption)
 
 renderTempo :: Score a -> Score a
-renderTempo sc = 
-    flip composed sc $ fmap renderTempoScore 
-        $ tempoRegions (era sc) 
-        $ tempoRegions0 (era sc) 
+renderTempo sc =
+    flip composed sc $ fmap renderTempoScore
+        $ tempoRegions (era sc)
+        $ tempoRegions0 (era sc)
         $ getTempoChanges defTempo sc
 
 renderTempoTest :: Score a -> [TempoRegion]
 renderTempoTest sc = id
-    $ tempoRegions (era sc) 
-    $ tempoRegions0 (era sc) 
+    $ tempoRegions (era sc)
+    $ tempoRegions0 (era sc)
     $ getTempoChanges defTempo sc
 
 
@@ -217,7 +216,7 @@ renderTempoTest sc = id
 --
 -- > tempoToDuration defTempo == 1
 defTempo :: Tempo
-defTempo = metronome (1/1) 60 
+defTempo = metronome (1/1) 60
 
 getTempoChanges :: Tempo -> Score a -> Reactive Tempo
 getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
@@ -232,7 +231,7 @@ tempoRegions0 s r = fmap f $ s `reactiveIn` r
 tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
 tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
     where
-        f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)), 
+        f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
             TempoRegion nt (nt .+^ d) st x
             )
 
@@ -243,38 +242,38 @@ tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
 -- | Return the sounding position of the given notated position, given its tempo region.
 --   Does nothing if the given point is outside the given region.
 renderTempoTime :: TempoRegion -> Time -> Time
-renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t 
+renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t
     | notRegOn <= t && t < notRegOff = soRegOn .+^ (t .-. notRegOn) ^* str
     | otherwise                      = t
 
 renderTempoTime' (TempoRegion notRegOn notRegOff soRegOn str) t  = soRegOn .+^ ((t .-. notRegOn) ^* str)
 
 renderTempoSpan :: TempoRegion -> Span -> Span
-renderTempoSpan tr = over range $ \(t,u) -> 
+renderTempoSpan tr = over range $ \(t,u) ->
     if inSpan' (tempoRegionNotated tr) t
         then (renderTempoTime' tr t, renderTempoTime' tr u)
         else (t, u)
 
 -- TODO use lens
 renderTempoScore :: TempoRegion -> Score a -> Score a
-renderTempoScore tr = over notes $ fmap $ over (note_ . _1) $ renderTempoSpan tr 
-                                            
+renderTempoScore tr = over notes $ fmap $ over (note_ . _1) $ renderTempoSpan tr
 
-data TempoRegion0 = 
+
+data TempoRegion0 =
     TempoRegion0 {
-        notatedOnset0 :: Time,
+        notatedOnset0    :: Time,
         notatedDuration0 :: Duration,
-        stretching0 :: Duration
-    } 
+        stretching0      :: Duration
+    }
     deriving (Eq, Ord, Show)
 
-data TempoRegion = 
+data TempoRegion =
     TempoRegion {
-        notatedOnset :: Time,           -- same
+        notatedOnset  :: Time,           -- same
         notatedOffset :: Time,          -- notOns + notDur
         soundingOnset :: Time,          -- sum of previous sounding durations
-        stretching :: Duration          -- same
-    } 
+        stretching    :: Duration          -- same
+    }
     deriving (Eq, Ord, Show)
 
 tempoRegionNotated (TempoRegion t u _ _) = t <-> u
@@ -299,10 +298,10 @@ note_ = iso getNote (uncurry (=:))
     To "render tempo" for a span:
         - Its onset and offset are rendered separately
         - Its duration is (offset - onset) as per the duration law
-        
-    
-    
-    
+
+
+
+
 -}
 
 

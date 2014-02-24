@@ -1,18 +1,16 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds,
-    FlexibleContexts, 
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies,
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -36,42 +34,42 @@ module Music.Score.Meta.Barline (
         doubleBarline,
         finalBarline,
         barlineDuring,
-        
+
         -- ** Extracting barlines
         withBarline,
   ) where
 
 
-import Control.Arrow
-import Control.Monad.Plus       
-import Data.Default
-import Data.Void
-import Data.Maybe
-import Data.Semigroup
-import Data.Monoid.WithSemigroup
-import Data.Typeable
-import Data.String
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Control.Arrow
+import           Control.Monad.Plus
+import           Data.Default
+import           Data.Foldable             (Foldable)
+import qualified Data.Foldable             as F
+import qualified Data.List                 as List
+import           Data.Map                  (Map)
+import qualified Data.Map                  as Map
+import           Data.Maybe
+import           Data.Monoid.WithSemigroup
+import           Data.Semigroup
+import           Data.Set                  (Set)
+import qualified Data.Set                  as Set
+import           Data.String
+import           Data.Traversable          (Traversable)
+import qualified Data.Traversable          as T
+import           Data.Typeable
+import           Data.Void
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Score.Note
-import Music.Score.Voice
-import Music.Score.Part
-import Music.Score.Pitch
-import Music.Score.Meta
-import Music.Score.Score
-import Music.Score.Combinators
-import Music.Score.Util
-import Music.Pitch.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Combinators
+import           Music.Score.Meta
+import           Music.Score.Note
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Score
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive
 
 -- | Represents a barline.
 --
@@ -79,7 +77,7 @@ import Music.Pitch.Literal
 data Barline = Barline BarlineType
     deriving (Eq, Ord, Show, Typeable)
 
-data BarlineType = StandardBarline | DoubleBarline | FinalBarline
+data BarlineType = StandardBarline | DoubleBarline | FinalBarline
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.

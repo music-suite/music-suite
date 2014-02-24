@@ -1,16 +1,15 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    GeneralizedNewtypeDeriving,
-    FlexibleContexts,
-    ConstraintKinds,
-    ViewPatterns,
-    TypeOperators,
-    OverloadedStrings,
-    NoMonomorphismRestriction #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -33,7 +32,7 @@ module Music.Score.Export.Lilypond (
 
         showLilypond,
         openLilypond,
-        writeLilypond, 
+        writeLilypond,
 
         -- * Options
         LilypondOptions(..),
@@ -41,59 +40,61 @@ module Music.Score.Export.Lilypond (
         openLilypond',
   ) where
 
-import Prelude hiding (foldr, concat, foldl, mapM, concatMap, maximum, sum, minimum)
+import           Prelude                      hiding (concat, concatMap, foldl,
+                                               foldr, mapM, maximum, minimum,
+                                               sum)
 
-import Control.Lens hiding (rewrite)
-import Control.Applicative
-import Control.Monad hiding (mapM)
-import Control.Arrow
-import Data.Semigroup
-import Data.Ratio
-import Data.Default
-import Data.String
-import Data.Maybe (fromMaybe)
-import Data.Foldable
-import Data.Typeable
-import Data.Traversable
-import Data.Function (on)
-import Data.Ord (comparing)
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import System.Process
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens                 hiding (rewrite)
+import           Control.Monad                hiding (mapM)
+import           Data.AffineSpace
+import           Data.Default
+import           Data.Foldable
+import           Data.Function                (on)
+import           Data.Maybe                   (fromMaybe)
+import           Data.Ord                     (comparing)
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.String
+import           Data.Traversable
+import           Data.Typeable
+import           Data.VectorSpace             hiding (Sum)
+import           System.Process
 
-import Music.Time
-import Music.Time.Reactive (initial)
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
-import Music.Score.Rhythm
-import Music.Score.Track
-import Music.Score.Voice
-import Music.Score.Score
-import Music.Score.Combinators
-import Music.Score.Convert
-import Music.Score.Meta
-import Music.Score.Meta.Clef
-import Music.Score.Meta.Time
-import Music.Score.Meta.Attribution
-import Music.Score.Meta.Title
-import Music.Score.Clef
-import Music.Score.Chord
-import Music.Score.Pitch
-import Music.Score.Ties
-import Music.Score.Part
-import Music.Score.Util
-import Music.Score.Articulation
-import Music.Score.Dynamics
-import Music.Score.Ornaments
-import Music.Score.Instances
-import Music.Score.Export.Common
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Articulation
+import           Music.Score.Chord
+import           Music.Score.Clef
+import           Music.Score.Combinators
+import           Music.Score.Convert
+import           Music.Score.Dynamics
+import           Music.Score.Export.Common
+import           Music.Score.Instances
+import           Music.Score.Meta
+import           Music.Score.Meta.Attribution
+import           Music.Score.Meta.Clef
+import           Music.Score.Meta.Time
+import           Music.Score.Meta.Title
+import           Music.Score.Ornaments
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Rhythm
+import           Music.Score.Score
+import           Music.Score.Ties
+import           Music.Score.Track
+import           Music.Score.Util
+import           Music.Score.Voice
+import           Music.Time
+import           Music.Time.Reactive          (initial)
 
-import qualified Codec.Midi as Midi
-import qualified Music.MusicXml.Simple as Xml
-import qualified Music.Lilypond as Lilypond
-import qualified Text.Pretty as Pretty
-import qualified Data.Map as Map
-import qualified Data.List as List
+import qualified Codec.Midi                   as Midi
+import qualified Data.List                    as List
+import qualified Data.Map                     as Map
+import qualified Music.Lilypond               as Lilypond
+import qualified Music.MusicXml.Simple        as Xml
+import qualified Text.Pretty                  as Pretty
 
 
 type Lilypond = Lilypond.Music
@@ -153,7 +154,7 @@ instance HasLilypond a => HasLilypond (DynamicT a) where
                 Just (First lvl) -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasLilypond a => HasLilypond (ArticulationT a) where
-    getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
+    getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
         where
             notate = nes . nal . nsl . nbs
             nes    = if es then Lilypond.endSlur else id
@@ -172,10 +173,10 @@ instance HasLilypond a => HasLilypond (ArticulationT a) where
 instance HasLilypond a => HasLilypond (TremoloT a) where
     getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
     getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
-        where            
-            scale   = 2^n                    
+        where
+            scale   = 2^n
             newDur  = (d `min` (1/4)) / scale
-            repeats = d / newDur                                
+            repeats = d / newDur
             notate = Lilypond.Tremolo (round repeats)
 
 instance HasLilypond a => HasLilypond (TextT a) where
@@ -185,30 +186,30 @@ instance HasLilypond a => HasLilypond (TextT a) where
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
     getLilypond d (HarmonicT ((view unwrapped -> isNat, view unwrapped -> n),x)) = notate isNat n $ getLilypond d x
-        where                 
+        where
             notate _     0 = id
             notate True  n = notateNatural n
             notate False n = notateArtificial n
 
             notateNatural n = Lilypond.addFlageolet -- addOpen?
-            
+
             notateArtificial n = id -- TODO
 
 instance HasLilypond a => HasLilypond (SlideT a) where
-    getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
+    getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
         where
-            notate = if view unwrapped bg || view unwrapped bs then Lilypond.beginGlissando else id
+            notate = if view unwrapped bg || view unwrapped bs then Lilypond.beginGlissando else id
 
 instance HasLilypond a => HasLilypond (ClefT a) where
     -- TODO consolidate
     getLilypondWithPrefix d (ClefT (c, a)) = (notate c, getLilypond d a)
         where
-            notate c = case fmap getLast $ getOption c of
+            notate c = case fmap getLast $ getOption c of
                 Nothing -> id
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
-    getLilypond d           (ClefT (c, a)) = notate c $ getLilypond d a
+    getLilypond d           (ClefT (c, a)) = notate c $ getLilypond d a
         where
-            notate c = case fmap getLast $ getOption c of
+            notate c = case fmap getLast $ getOption c of
                 Nothing -> id
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
 
@@ -220,7 +221,7 @@ instance HasLilypond a => HasLilypond (Behavior a) where
 addClef GClef = Lilypond.Clef Lilypond.Treble
 addClef CClef = Lilypond.Clef Lilypond.Alto
 addClef FClef = Lilypond.Clef Lilypond.Bass
-            
+
 
 pcatLilypond :: [Lilypond] -> Lilypond
 pcatLilypond = pcatLilypond' False
@@ -259,14 +260,14 @@ instance Default LilypondOptions where
 --
 writeLilypond' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
 writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypondString sc
-    where 
+    where
         title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
 
         lyFilePrefix = case options of
             Inline -> lyInlinePrefix
             Score  -> lyScorePrefix
-        
+
         lyInlinePrefix = mempty                                        ++
             "\\include \"lilypond-book-preamble.ly\"\n"                ++
             "\\paper {\n"                                              ++
@@ -285,7 +286,7 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
             "\\layout {\n"                                             ++
             "}"                                                        ++
             "\n\n"
-            
+
         lyScorePrefix = mempty                                         ++
             "\\paper {"                                                ++
             "  indent = 0\\mm"                                         ++
@@ -327,29 +328,29 @@ toLilypondString = show . Pretty.pretty . toLilypond
 -- Convert a score to a Lilypond representation.
 --
 toLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> Lilypond
-toLilypond sc = 
+toLilypond sc =
           -- Score structure
           pcatLilypond . fmap (
                 addStaff . scatLilypond . uncurry addPartName
 
                 -- Main notation pipeline
-                . second (voiceToLilypond barTimeSigs barDurations . scoreToVoice . simultaneous) 
+                . second (voiceToLilypond barTimeSigs barDurations . scoreToVoice . simultaneous)
 
                 -- Meta-event expansion
                 . uncurry addClefs
-                ) 
+                )
 
         . extractParts' $ sc
 
-    where                 
+    where
         addClefT :: a -> ClefT a
         addClefT = return
-        
+
         addClefs p = (,) p . setClef . fmap addClefT
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
+        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
 
         -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
@@ -360,8 +361,8 @@ toLilypond sc =
         -- getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
 
         addStaff = Lilypond.New "Staff" Nothing
-        addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName) 
-            : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show partName) 
+        addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName)
+            : Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ show partName)
             : x
 
 mergeBars :: [Lilypond] -> Lilypond
@@ -379,10 +380,10 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
 --      * barToLilypond is specific: it handles quantization and notation
 --
     where
-        -- FIXME compounds                      
+        -- FIXME compounds
         setBarTimeSig Nothing x = x
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
-        
+
 
 barToLilypond :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
 barToLilypond bar = case (fmap rewrite . quantize) bar of
@@ -397,7 +398,7 @@ rhythmToLilypond = uncurry ($) . rhythmToLilypond2
 -- rhythmToLilypond (Group rs)            = scatLilypond $ map rhythmToLilypond rs
 -- rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
 --     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
--- 
+--
 -- noteRestToLilypond :: HasLilypond a => Duration -> Maybe a -> Lilypond
 -- noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
 -- noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ getLilypond d p

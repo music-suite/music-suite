@@ -1,16 +1,14 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    OverloadedStrings,
-    TypeOperators,
-    TypeFamilies,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -36,20 +34,20 @@ module Music.Score.Part (
         getParts,
   ) where
 
-import Control.Applicative
-import Control.Comonad
-import Control.Monad.Plus
-import Data.Default
-import Data.PairMonad
-import Data.Ord (comparing)
-import Data.Semigroup
-import Data.Ratio
-import Data.Foldable
-import Data.Traversable
-import Data.Typeable
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Comonad
+import           Control.Monad.Plus
+import           Data.Default
+import           Data.Foldable
+import qualified Data.List           as List
+import           Data.Ord            (comparing)
+import           Data.PairMonad
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Traversable
+import           Data.Typeable
 
-import Music.Time
+import           Music.Time
 
 -- | Associated part type. Should normally implement 'Ord' and 'Show'.
 type family Part a :: *
@@ -113,7 +111,7 @@ type HasPart' a = (Show (Part a), Ord (Part a), Default (Part a), HasPart a)
 -- Get all parts in the given score. Returns a list of parts.
 --
 -- > Score a -> [Part]
---    
+--
 getParts :: (Foldable t, HasPart' a) => t a -> [Part a]
 getParts = List.sort . List.nub . fmap getPart . toList
 

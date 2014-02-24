@@ -1,20 +1,18 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds,
-    UndecidableInstances,
-    FlexibleContexts, 
-    GADTs, 
-    ViewPatterns,
-    TypeOperators,
-    TypeFamilies,
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -36,34 +34,34 @@ module Music.Score.Clef (
         HasClef(..),
   ) where
 
-import Control.Arrow
-import Control.Monad.Plus       
-import Data.Void
-import Data.Maybe
-import Data.Semigroup
-import Data.Typeable
-import Data.String
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Control.Arrow
+import           Control.Monad.Plus
+import           Data.Foldable           (Foldable)
+import qualified Data.Foldable           as F
+import qualified Data.List               as List
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.Set                (Set)
+import qualified Data.Set                as Set
+import           Data.String
+import           Data.Traversable        (Traversable)
+import qualified Data.Traversable        as T
+import           Data.Typeable
+import           Data.Void
 
-import Music.Time
-import Music.Time.Reactive
-import Music.Score.Note
-import Music.Score.Score
-import Music.Score.Part
-import Music.Score.Combinators (mapFirst)
-import Music.Score.Ornaments (HasText, text)
-import Music.Score.Meta
-import Music.Score.Meta.Clef
-import Music.Score.Ties
-import Music.Score.Util
+import           Music.Score.Combinators (mapFirst)
+import           Music.Score.Meta
+import           Music.Score.Meta.Clef
+import           Music.Score.Note
+import           Music.Score.Ornaments   (HasText, text)
+import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Ties
+import           Music.Score.Util
+import           Music.Time
+import           Music.Time.Reactive
 
 
 -- Put the given clef in front of the note
@@ -87,11 +85,11 @@ class HasClef a where
     applyClef :: Clef -> a -> a
 
 instance HasClef (ClefT a) where
-    applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
+    applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
 
 instance HasClef a => HasClef (b,a) where
     applyClef c = fmap (applyClef c)
 
 instance (HasPart' a, HasClef a) => HasClef (Score a) where
     applyClef c = mapFirst (applyClef c) id
-                                           
+
