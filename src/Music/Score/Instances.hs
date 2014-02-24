@@ -368,8 +368,7 @@ instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) wher
     __mapPitch f (ArticulationT (v,x)) = (ArticulationT (v,__mapPitch f x))
 
 deriving instance HasDynamic a => HasDynamic (ArticulationT a)
-instance HasTremolo a => HasTremolo (ArticulationT a) where
-    setTrem       n                                     = fmap (setTrem n)
+deriving instance HasTremolo a => HasTremolo (ArticulationT a)
 deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
 deriving instance HasSlide a => HasSlide (ArticulationT a)
 deriving instance HasText a => HasText (ArticulationT a)
