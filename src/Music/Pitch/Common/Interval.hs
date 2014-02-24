@@ -562,9 +562,7 @@ isPositive :: Interval -> Bool
 isPositive x = octaves x >= 0 && not (isPerfectUnison x)
 
 -- |
--- Returns whether the given interval is non-negative.
---
--- That is, whether it is either positive or a perfect unison.
+-- Returns whether the given interval is non-negative. This implies that it is either positive or a perfect unison.
 --
 isNonNegative :: Interval -> Bool
 isNonNegative x = octaves x >= 0
@@ -578,7 +576,7 @@ isPerfectUnison = (== perfect unison)
 -- |
 -- Returns whether the given interval is a step (a second or smaller).
 --
--- Only the number portion is taken into account, so @_A2@ is considered
+-- Only diatonic 'number' is taken into account, so @_A2@ is considered
 -- a step and @m3@ a leap, even though they have the same number of
 -- semitones.
 --
@@ -586,9 +584,9 @@ isStep :: Interval -> Bool
 isStep x = isSimple (abs x) && number (abs x) <= 2
 
 -- |
--- Returns whether the given interval is a leap (larger than a secon).
+-- Returns whether the given interval is a leap (larger than a second).
 --
--- Only the number portion is taken into account, so @_A2@ is considered
+-- Only the diatonic 'number' is taken into account, so @_A2@ is considered
 -- a step and @m3@ a leap, even though they have the same number of
 -- semitones.
 --
