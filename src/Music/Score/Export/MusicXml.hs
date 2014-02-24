@@ -122,7 +122,7 @@ instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
 
 instance HasMusicXml a => HasMusicXml (TieT a) where
-    getMusicXml d (TieT (ta,x,tb))                  = addTies $ getMusicXml d x
+    getMusicXml d (TieT ((Any ta,Any tb),x)) = addTies $ getMusicXml d x
         where
             addTies | ta && tb                      = Xml.endTie . Xml.beginTie
                     | tb                            = Xml.beginTie

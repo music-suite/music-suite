@@ -66,12 +66,12 @@ import Music.Score.Util
 
     CANNOT DO
         ChordT
-        TieT
     TODO
         PartT
         DynamicT
         
     DONE
+        TieT
         ArticulationT
         TremoloT
         HarmonicT
@@ -93,9 +93,9 @@ instance IsDynamics a => IsDynamics (ChordT a) where
     fromDynamics = return . fromDynamics
 
 instance IsPitch a => IsPitch (TieT a) where
-    fromPitch l                                     = TieT (False, fromPitch l, False)
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (TieT a) where
-    fromDynamics l                                  = TieT (False, fromDynamics l, False)
+    fromDynamics = return . fromDynamics
 
 instance IsPitch a => IsPitch (DynamicT a) where
     fromPitch l                                     = DynamicT (False,False,Nothing,fromPitch l,False,False)
@@ -131,7 +131,7 @@ instance Reversible a => Reversible (DynamicT a) where
 instance Reversible a => Reversible (SlideT a) where
     rev = fmap rev
 instance Reversible a => Reversible (TieT a) where
-    rev (TieT (b,x,e)) = TieT (e,rev x,b)
+    rev = fmap rev
 instance Reversible a => Reversible (HarmonicT a) where
     rev = fmap rev
 instance Reversible a => Reversible (ArticulationT a) where
@@ -151,7 +151,7 @@ instance Semigroup a => Semigroup (DynamicT a) where
 instance Semigroup a => Semigroup (SlideT a) where
     (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TieT a) where
-    TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 && b2, x1 <> x2, e1 && e2)
+    TieT (t1, x1) <> TieT (t2, x2) = TieT (t1 <> t2, x1 <> x2)
     -- This instance is suspect: in general chord notes are not required to share ties,
     -- so this instance may be removed (provided that TieT is moved inside ChordT for
     -- all Preludes). See #134
@@ -252,13 +252,13 @@ instance HasText a => HasText (ChordT a) where
 
 -- TieT
 
-type instance Part (TieT a)                              = Part a
+type instance Part (TieT a) = Part a
 instance HasPart a => HasPart (TieT a) where
-    getPart (TieT (_,x,_))                          = getPart x
-    modifyPart f (TieT (b,x,e))                     = TieT (b,modifyPart f x,e)
+    getPart (TieT (_,x)) = getPart x
+    modifyPart f = fmap (modifyPart f)
 instance HasChord a => HasChord (TieT a) where
-    type ChordNote (TieT a)                              = TieT (ChordNote a)
-    getChord (TieT (b,x,e))                         = fmap (\x -> TieT (b,x,e)) (getChord x)
+    type ChordNote (TieT a) = TieT (ChordNote a)
+    getChord (TieT (t,x))   = fmap (\x -> TieT (t,x)) (getChord x)
 
 type instance Pitch (TieT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (TieT a) where
@@ -553,27 +553,48 @@ instance Bounded a => Bounded (ChordT a) where
 -- TieT
 
 instance Num a => Num (TieT a) where
-    TieT (et,a,bt) + TieT (_,b,_) = TieT (et,a+b,bt)
-    TieT (et,a,bt) * TieT (_,b,_) = TieT (et,a*b,bt)
-    TieT (et,a,bt) - TieT (_,b,_) = TieT (et,a-b,bt)
-    abs (TieT (et,a,bt))          = TieT (et,abs a,bt)
-    signum (TieT (et,a,bt))       = TieT (et,signum a,bt)
-    fromInteger a               = TieT (False,fromInteger a,False)
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TieT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TieT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (TieT a) where
-    toEnum a                = TieT (False,toEnum a,False)
-    fromEnum (TieT (_,a,_)) = fromEnum a
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (TieT a) where
-    minBound = TieT (False,minBound,False)
-    maxBound = TieT (False,maxBound,False)
+    minBound = pure minBound
+    maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (TieT a) where
-    toRational (TieT (_,a,_)) = toRational a
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (TieT a) where
-    TieT (et,a,bt) `quotRem` TieT (_,b,_) = (TieT (et,q,bt), TieT (et,r,bt)) where (q,r) = a `quotRem` b
-    toInteger (TieT (_,a,_)) = toInteger a
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 
 -- DynamicT

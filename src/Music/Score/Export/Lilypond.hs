@@ -133,7 +133,7 @@ instance HasLilypond a => HasLilypond (PartT n a) where
     getLilypond d (PartT (_,x))                     = getLilypond d x
 
 instance HasLilypond a => HasLilypond (TieT a) where
-    getLilypond d (TieT (ta,x,tb))                  = addTies $ getLilypond d x
+    getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
         where
             addTies | ta && tb                      = id . Lilypond.beginTie
                     | tb                            = Lilypond.beginTie

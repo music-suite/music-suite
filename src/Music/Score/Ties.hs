@@ -37,10 +37,12 @@ module Music.Score.Ties (
   ) where
 
 import Control.Lens
+import Control.Applicative
 import Control.Arrow
 import Control.Monad
 import Control.Monad.Plus
 import Data.Default
+import Data.Semigroup
 import Data.Maybe
 import Data.Ratio
 import Data.Foldable hiding (concat)
@@ -88,8 +90,8 @@ class Tiable a where
     toTied    :: a -> (a, a)
     toTied a = (beginTie a, endTie a)
 
-newtype TieT a = TieT { getTieT :: (Bool, a, Bool) }
-    deriving (Eq, Ord, Show, Functor, Foldable, Typeable)
+newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
+    deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad)
 
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }
@@ -103,7 +105,7 @@ instance Tiable a => Tiable (Maybe a) where
     endTie   = fmap endTie
 
 instance Tiable a => Tiable (TieT a) where
-    toTied (TieT (prevTie, a, nextTie))   = (TieT (prevTie, b, True), TieT (True, c, nextTie))
+    toTied (TieT ((prevTie, nextTie), a))   = (TieT ((prevTie, Any True), b), TieT ((Any True, nextTie), c))
          where (b,c) = toTied a
 
 -- |
