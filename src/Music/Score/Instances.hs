@@ -70,10 +70,10 @@ import Music.Score.Util
     TODO
         PartT
         DynamicT
-        TremoloT
         ArticulationT
         
     DONE
+        TremoloT
         HarmonicT
         TextT
         SlideT
@@ -103,9 +103,9 @@ instance IsDynamics a => IsDynamics (DynamicT a) where
     fromDynamics l                                  = DynamicT (False,False,Nothing,fromDynamics l,False,False)
 
 instance IsPitch a => IsPitch (TremoloT a) where
-    fromPitch l                                     = TremoloT (0, fromPitch l)
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (TremoloT a) where
-    fromDynamics l                                  = TremoloT (0, fromDynamics l)
+    fromDynamics = pure . fromDynamics
 
 instance IsPitch a => IsPitch (TextT a) where
     fromPitch = pure . fromPitch
@@ -635,28 +635,48 @@ instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
 -- TremoloT
 
 instance Num a => Num (TremoloT a) where
-    TremoloT (v,a) + TremoloT (_,b) = TremoloT (v,a+b)
-    TremoloT (v,a) * TremoloT (_,b) = TremoloT (v,a*b)
-    TremoloT (v,a) - TremoloT (_,b) = TremoloT (v,a-b)
-    abs (TremoloT (v,a))          = TremoloT (v,abs a)
-    signum (TremoloT (v,a))       = TremoloT (v,signum a)
-    fromInteger a               = TremoloT (toEnum 0,fromInteger a)
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TremoloT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TremoloT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (TremoloT a) where
-    toEnum a = TremoloT (0, toEnum a) -- TODO use def, mempty or minBound?
-    fromEnum (TremoloT (v,a)) = fromEnum a
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (TremoloT a) where
-    minBound = TremoloT (0, minBound)
-    maxBound = TremoloT (0, maxBound)
+    minBound = pure minBound
+    maxBound = pure maxBound
 
-instance (Num a, Real a) => Real (TremoloT a) where
-    toRational (TremoloT (_,a)) = toRational a
+instance (Num a, Ord a, Real a) => Real (TremoloT a) where
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
-    TremoloT (v,a) `quotRem` TremoloT (_,b) = (TremoloT (v,q), TremoloT   (v,r)) where (q,r) = a `quotRem` b
-    toInteger (TremoloT (_,a)) = toInteger a
-
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 -- TextT
 

@@ -57,7 +57,7 @@ import Data.Typeable
 import Data.Traversable
 import Data.Function (on)
 import Data.Ord (comparing)
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import System.Process
 
@@ -170,8 +170,8 @@ instance HasLilypond a => HasLilypond (ArticulationT a) where
             nbs    = if bs then Lilypond.beginSlur else id
 
 instance HasLilypond a => HasLilypond (TremoloT a) where
-    getLilypond d (TremoloT (0, x)) = getLilypond d x
-    getLilypond d (TremoloT (n, x)) = notate $ getLilypond newDur x
+    getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
+    getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
         where            
             scale   = 2^n                    
             newDur  = (d `min` (1/4)) / scale

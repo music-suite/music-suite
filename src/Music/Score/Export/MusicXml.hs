@@ -159,7 +159,7 @@ instance HasMusicXml a => HasMusicXml (ArticulationT a) where
             nbs    = if bs then Xml.beginSlur else id
 
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (n,x))      = notate $ getMusicXml d x
+    getMusicXml d (TremoloT (Sum n,x))      = notate $ getMusicXml d x
         where
             notate = case n of
                 0 -> id

@@ -69,11 +69,11 @@ import Music.Score.Combinators
 class HasTremolo a where
     setTrem :: Int -> a -> a
 
-newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+newtype TremoloT a = TremoloT { getTremoloT :: (Sum Int, a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
 instance HasTremolo (TremoloT a) where
-    setTrem      n (TremoloT (_,x))                 = TremoloT (n,x)
+    setTrem      n (TremoloT (_,x))                 = TremoloT (Sum n,x)
 
 instance HasTremolo b => HasTremolo (a, b) where
     setTrem n = fmap (setTrem n)
