@@ -160,7 +160,7 @@ instance Semigroup a => Semigroup (HarmonicT a) where
 instance Semigroup a => Semigroup (TextT a) where
     (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TremoloT a) where
-    TremoloT (n1,x1) <> TremoloT (n2,x2) = TremoloT (n1 `max` n2, x1 <> x2)
+    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (PartT n a) where
     PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
 
@@ -171,22 +171,16 @@ instance Semigroup a => Semigroup (PartT n a) where
 
 -- TODO this instance may be problematic with mapPhrase
 instance HasArticulation a => HasArticulation (Maybe a) where
-    setEndSlur    n (Just x)                        = Just (setEndSlur n x)
-    setEndSlur    n Nothing                         = Nothing
-    setContSlur   n (Just x)                        = Just (setContSlur n x)
-    setContSlur   n Nothing                         = Nothing
-    setBeginSlur  n (Just x)                        = Just (setBeginSlur n x)
-    setBeginSlur  n Nothing                         = Nothing
-    setAccLevel   n (Just x)                        = Just (setAccLevel n x)
-    setAccLevel   n Nothing                         = Nothing
-    setStaccLevel n (Just x)                        = Just (setStaccLevel n x)
-    setStaccLevel n Nothing                         = Nothing
+    setEndSlur    n = fmap (setEndSlur n) 
+    setContSlur    n = fmap (setContSlur n) 
+    setBeginSlur    n = fmap (setBeginSlur n) 
+    setAccLevel    n = fmap (setAccLevel n) 
+    setStaccLevel    n = fmap (setStaccLevel n) 
 type instance Part (Maybe a)                             = Part a
 instance HasPart a => HasPart (Maybe a) where
     getPart Nothing                                 = def
     getPart (Just a)                                = getPart a
-    modifyPart f Nothing                            = Nothing
-    modifyPart f (Just a)                           = Just (modifyPart f a) 
+    modifyPart f = fmap (modifyPart f) 
     -- TODO use cofunctor
 type instance Pitch (Maybe a) = Pitch a
 instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
@@ -233,29 +227,29 @@ instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
     __mapPitch f = fmap (__mapPitch f)
 
 instance HasDynamic a => HasDynamic (ChordT a) where
-    setBeginCresc n (ChordT as)                     = ChordT (fmap (setBeginCresc n) as)
-    setEndCresc   n (ChordT as)                     = ChordT (fmap (setEndCresc n) as)
-    setBeginDim   n (ChordT as)                     = ChordT (fmap (setBeginDim n) as)
-    setEndDim     n (ChordT as)                     = ChordT (fmap (setEndDim n) as)
-    setLevel      n (ChordT as)                     = ChordT (fmap (setLevel n) as)
+    setBeginCresc n as = fmap (setBeginCresc n) as
+    setEndCresc   n as = fmap (setEndCresc n) as
+    setBeginDim   n as = fmap (setBeginDim n) as
+    setEndDim     n as = fmap (setEndDim n) as
+    setLevel      n as = fmap (setLevel n) as
 instance HasArticulation a => HasArticulation (ChordT a) where
-    setEndSlur    n (ChordT as)                     = ChordT (fmap (setEndSlur n) as)
-    setContSlur   n (ChordT as)                     = ChordT (fmap (setContSlur n) as)
-    setBeginSlur  n (ChordT as)                     = ChordT (fmap (setBeginSlur n) as)
-    setAccLevel   n (ChordT as)                     = ChordT (fmap (setAccLevel n) as)
-    setStaccLevel n (ChordT as)                     = ChordT (fmap (setStaccLevel n) as)
+    setEndSlur    n as = fmap (setEndSlur n) as
+    setContSlur   n as = fmap (setContSlur n) as
+    setBeginSlur  n as = fmap (setBeginSlur n) as
+    setAccLevel   n as = fmap (setAccLevel n) as
+    setStaccLevel n as = fmap (setStaccLevel n) as
 instance HasTremolo a => HasTremolo (ChordT a) where
-    setTrem      n (ChordT as)                      = ChordT (fmap (setTrem n) as)
+    setTrem       n as = fmap (setTrem n) as
 instance HasHarmonic a => HasHarmonic (ChordT a) where
-    setNatural    n (ChordT as)                     = ChordT (fmap (setNatural n) as)
-    setHarmonic   n (ChordT as)                     = ChordT (fmap (setHarmonic n) as)
+    setNatural    n as = fmap (setNatural n) as
+    setHarmonic   n as = fmap (setHarmonic n) as
 instance HasSlide a => HasSlide (ChordT a) where
-    setBeginGliss n (ChordT as)                     = ChordT (fmap (setBeginGliss n) as)
-    setBeginSlide n (ChordT as)                     = ChordT (fmap (setBeginSlide n) as)
-    setEndGliss   n (ChordT as)                     = ChordT (fmap (setEndGliss n) as)
-    setEndSlide   n (ChordT as)                     = ChordT (fmap (setEndSlide n) as)
+    setBeginGliss n as = fmap (setBeginGliss n) as
+    setBeginSlide n as = fmap (setBeginSlide n) as
+    setEndGliss   n as = fmap (setEndGliss n) as
+    setEndSlide   n as = fmap (setEndSlide n) as
 instance HasText a => HasText (ChordT a) where
-    addText      s (ChordT as)                      = ChordT (mapF (addText s) as)
+    addText       s (ChordT as)                      = ChordT (mapF (addText s) as)
 
 
 -- TieT
@@ -371,26 +365,12 @@ instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) wher
     type SetPitch g (ArticulationT a) = ArticulationT (SetPitch g a)
     __mapPitch f (ArticulationT (v,x)) = (ArticulationT (v,__mapPitch f x))
 
-instance HasDynamic a => HasDynamic (ArticulationT a) where
-    setBeginCresc n                                     = fmap (setBeginCresc n)
-    setEndCresc   n                                     = fmap (setEndCresc n)
-    setBeginDim   n                                     = fmap (setBeginDim n)
-    setEndDim     n                                     = fmap (setEndDim n)
-    setLevel      n                                     = fmap (setLevel n)
--- instance HasArticulation (ArticulationT a) where
+deriving instance HasDynamic a => HasDynamic (ArticulationT a)
 instance HasTremolo a => HasTremolo (ArticulationT a) where
     setTrem       n                                     = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (ArticulationT a) where
-    setNatural    n                                     = fmap (setNatural n)
-    setHarmonic   n                                     = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (ArticulationT a) where
-    setBeginGliss n                                     = fmap (setBeginGliss n)
-    setBeginSlide n                                     = fmap (setBeginSlide n)
-    setEndGliss   n                                     = fmap (setEndGliss n)
-    setEndSlide   n                                     = fmap (setEndSlide n)
-instance HasText a => HasText (ArticulationT a) where
-    addText       s                                     = fmap (addText s)
-
+deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
+deriving instance HasSlide a => HasSlide (ArticulationT a)
+deriving instance HasText a => HasText (ArticulationT a)
 
 -- TremoloT
 
@@ -500,27 +480,11 @@ instance HasSetPitch a b => HasSetPitch (SlideT a) (SlideT b) where
     type SetPitch g (SlideT a) = SlideT (SetPitch g a)
     __mapPitch f = fmap (__mapPitch f)
 
-instance HasDynamic a => HasDynamic (SlideT a) where
-    setBeginCresc n                                = fmap (setBeginCresc n)
-    setEndCresc   n                                = fmap (setEndCresc n)
-    setBeginDim   n                                = fmap (setBeginDim n)
-    setEndDim     n                                = fmap (setEndDim n)
-    setLevel      n                                = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (SlideT a) where
-    setEndSlur    n                                = fmap (setEndSlur n)
-    setContSlur   n                                = fmap (setContSlur n)
-    setBeginSlur  n                                = fmap (setBeginSlur n)
-    setAccLevel   n                                = fmap (setAccLevel n)
-    setStaccLevel n                                = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (SlideT a) where
-    setTrem       n                                = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (SlideT a) where
-    setNatural    n                                = fmap (setNatural n)
-    setHarmonic   n                                = fmap (setHarmonic n)
--- instance HasSlide (SlideT a) where
-instance HasText a => HasText (SlideT a) where
-    addText       s                                = fmap (addText s)
-
+deriving instance HasDynamic a => HasDynamic (SlideT a)
+deriving instance HasArticulation a => HasArticulation (SlideT a)
+deriving instance HasTremolo a => HasTremolo (SlideT a)
+deriving instance HasHarmonic a => HasHarmonic (SlideT a)
+deriving instance HasText a => HasText (SlideT a)
 
 -------------------------------------------------------------------------------------
 -- Num, Integral, Enum and Bounded
