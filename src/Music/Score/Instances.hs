@@ -61,6 +61,26 @@ import Music.Score.Util
 
 -------------------------------------------------------------------------------------
 
+{-
+    Rewrite pairs:
+
+    CANNOT DO
+        ChordT
+        TieT
+    TODO
+        PartT
+        DynamicT
+        TremoloT
+        ArticulationT
+        SlideT
+        
+    DONE
+        HarmonicT
+        TextT
+    
+    
+-}
+
 
 instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
     fromPitch l                                     = PartT (toEnum 0, fromPitch l)
@@ -88,14 +108,14 @@ instance IsDynamics a => IsDynamics (TremoloT a) where
     fromDynamics l                                  = TremoloT (0, fromDynamics l)
 
 instance IsPitch a => IsPitch (TextT a) where
-    fromPitch l                                     = TextT (mempty, fromPitch l)
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (TextT a) where
-    fromDynamics l                                  = TextT (mempty, fromDynamics l)
+    fromDynamics = pure . fromDynamics
 
 instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch = return . fromPitch
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics = return . fromDynamics
+    fromDynamics = pure . fromDynamics
 
 instance IsPitch a => IsPitch (SlideT a) where
     fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
@@ -136,9 +156,9 @@ instance Semigroup a => Semigroup (TieT a) where
     -- so this instance may be removed (provided that TieT is moved inside ChordT for
     -- all Preludes). See #134
 instance Semigroup a => Semigroup (HarmonicT a) where
-    HarmonicT (n1,x1) <> HarmonicT (n2,x2) = HarmonicT (n1, x1 <> x2)
+    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TextT a) where
-    TextT (t1,x1) <> TextT (t2,x2) = TextT (t1 <> t2, x1 <> x2)
+    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TremoloT a) where
     TremoloT (n1,x1) <> TremoloT (n2,x2) = TremoloT (n1 `max` n2, x1 <> x2)
 instance Semigroup a => Semigroup (PartT n a) where
@@ -411,7 +431,7 @@ instance Tiable a => Tiable (TextT a) where
 type instance Part (TextT a)                             = Part a
 instance HasPart a => HasPart (TextT a) where
     getPart (TextT (_,a))                           = getPart a
-    modifyPart f (TextT (n,x))                      = TextT (n, modifyPart f x)
+    modifyPart f = fmap (modifyPart f)
 instance HasChord a => HasChord (TextT a) where
     type ChordNote (TextT a)                             = TextT (ChordNote a)
     getChord (TextT (n,x))                          = fmap (\x -> TextT (n,x)) (getChord x)
@@ -422,7 +442,6 @@ instance HasGetPitch a => HasGetPitch (TextT a) where
 instance HasSetPitch a b => HasSetPitch (TextT a) (TextT b) where
     type SetPitch g (TextT a) = TextT (SetPitch g a)
     __mapPitch f = fmap (__mapPitch f)
-
 
 deriving instance HasDynamic a => HasDynamic (TextT a)
 deriving instance HasArticulation a => HasArticulation (TextT a)
@@ -642,54 +661,95 @@ instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
 -- TextT
 
 instance Num a => Num (TextT a) where
-    TextT (v,a) + TextT (_,b) = TextT (v,a+b)
-    TextT (v,a) * TextT (_,b) = TextT (v,a*b)
-    TextT (v,a) - TextT (_,b) = TextT (v,a-b)
-    abs (TextT (v,a))          = TextT (v,abs a)
-    signum (TextT (v,a))       = TextT (v,signum a)
-    fromInteger a               = TextT (mempty,fromInteger a)
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TextT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TextT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (TextT a) where
-    toEnum a = TextT (mempty, toEnum a) -- TODO use def, mempty or minBound?
-    fromEnum (TextT (v,a)) = fromEnum a
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (TextT a) where
-    minBound = TextT (mempty, minBound)
-    maxBound = TextT (mempty, maxBound)
+    minBound = pure minBound
+    maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (TextT a) where
-    toRational (TextT (v,a)) = toRational a
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (TextT a) where
-    TextT (v,a) `quotRem` TextT (_,b) = (TextT (v,q), TextT   (v,r)) where (q,r) = a `quotRem` b
-    toInteger (TextT (v,a)) = toInteger a
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 
 -- HarmonicT
 
 instance Num a => Num (HarmonicT a) where
-    HarmonicT (v,a) + HarmonicT (_,b) = HarmonicT (v,a+b)
-    HarmonicT (v,a) * HarmonicT (_,b) = HarmonicT (v,a*b)
-    HarmonicT (v,a) - HarmonicT (_,b) = HarmonicT (v,a-b)
-    abs (HarmonicT (v,a))          = HarmonicT (v,abs a)
-    signum (HarmonicT (v,a))       = HarmonicT (v,signum a)
-    fromInteger = return . fromInteger
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (HarmonicT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (HarmonicT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (HarmonicT a) where
-    toEnum = return . toEnum
+    toEnum = pure . toEnum
     fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (HarmonicT a) where
-    minBound = return minBound
-    maxBound = return maxBound
+    minBound = pure minBound
+    maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
-    toRational (HarmonicT (v,a)) = toRational a
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
-    HarmonicT (v,a) `quotRem` HarmonicT (_,b) = (HarmonicT (v,q), HarmonicT   (v,r)) where (q,r) = a `quotRem` b
-    toInteger (HarmonicT (v,a)) = toInteger a
-
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 -- SlideT
 

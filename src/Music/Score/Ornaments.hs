@@ -51,6 +51,8 @@ module Music.Score.Ornaments (
         glissando,
   ) where
 
+import Control.Applicative
+import Data.Foldable
 import Data.Ratio
 import Data.Foldable
 import Data.Semigroup
@@ -85,7 +87,7 @@ class HasText a where
     addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
@@ -105,16 +107,12 @@ class HasHarmonic a where
     setHarmonic :: Int -> a -> a
 
 -- (isNatural, overtone series index where 0 is fundamental)
-newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Bool, Int), a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
-
-instance Monad HarmonicT where
-    return x = HarmonicT ((False, 0), x)
-    (>>=) = error "No HarmonicT.(>>=)"
+newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Any, Sum Int), a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
 instance HasHarmonic (HarmonicT a) where
-    setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((b,n),x)
-    setHarmonic n (HarmonicT ((nat,_),x)) = HarmonicT ((nat,n),x)
+    setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((Any b,n),x)
+    setHarmonic n (HarmonicT ((nat,_),x)) = HarmonicT ((nat,Sum n),x)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
     setNatural b = fmap (setNatural b)
