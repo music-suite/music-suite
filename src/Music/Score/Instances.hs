@@ -347,6 +347,8 @@ instance HasText a => HasText (DynamicT a) where
 
 
 instance Tiable a => Tiable (ArticulationT a) where
+    toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
+
     -- toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
                                                            -- ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
 
@@ -462,7 +464,8 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 
 instance Tiable a => Tiable (SlideT a) where
-    toTied = fmaps toTied
+    toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
+    -- toTied = fmaps toTied
     -- TODO avoid splitting ties
 
 type instance Part (SlideT a) = Part a
