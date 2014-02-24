@@ -1,7 +1,7 @@
 
 {-# LANGUAGE OverlappingInstances, FlexibleInstances, TypeFamilies #-}
 
-module Overlap where
+module RemoveRests where
 import Control.Monad.Plus    
     
 class Rests a where
@@ -18,7 +18,7 @@ instance Rests (Maybe a) where
     type NoRests (Maybe a) = a
     removeRests = mcatMaybes
 
--- Everything else is just idenitites
+-- Everything else is just identities
 
 instance Rests Double where
     type NoRests Double = Double

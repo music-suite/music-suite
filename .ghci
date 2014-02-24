@@ -1,0 +1,23 @@
+-- :load src/Music/Score/Meta/Tempo.hs
+
+
+:m + Control.Lens
+:m + Music.Score.Part
+:m + Music.Score.Score
+:m + Music.Score.Meta.Time
+:m + Music.Score.Export.Midi
+:m + Music.Score.Export.Lilypond 
+:m + Music.Score.Ties
+:m + Music.Score.Chord 
+:set prompt "> "
+
+-- -- TODO
+-- instance Monad TieT where return x = TieT (False,x,False)
+-- 
+-- let open x = mapM_ print (view notes x)
+-- 
+--     --  = openLilypond x
+--     -- playMidiIO "" x
+-- 
+-- let openWithTempo x = open $ renderTempo $ fmap (\x->return (return (return x)) :: PartT () (TieT (ChordT Double))) $ x
+-- -- tempoDuring (4 <-> 100) (metronome (4/4) 120) $ scat [c..g]
