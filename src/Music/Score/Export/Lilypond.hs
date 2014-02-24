@@ -212,6 +212,10 @@ instance HasLilypond a => HasLilypond (ClefT a) where
                 Nothing -> id
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
 
+instance HasLilypond a => HasLilypond (Behavior a) where
+    getLilypond d = getLilypond d . (? 0)
+
+
 -- TODO
 addClef GClef = Lilypond.Clef Lilypond.Treble
 addClef CClef = Lilypond.Clef Lilypond.Alto

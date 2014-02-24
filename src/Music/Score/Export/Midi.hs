@@ -162,6 +162,9 @@ instance HasMidi a => HasMidi (HarmonicT a) where
 instance HasMidi a => HasMidi (SlideT a) where
     getMidi (SlideT (_,_,a,_,_))                    = getMidi a
 
+instance HasMidi a => HasMidi (Behavior a) where
+    getMidi = getMidi . (? 0)
+
 
 -- |
 -- Convert a score to a MIDI file representation.

@@ -206,6 +206,9 @@ instance HasMusicXml a => HasMusicXml (ClefT a) where
                 Just CClef -> (Xml.altoClef <>)
                 Just FClef -> (Xml.bassClef <>)
 
+instance HasMusicXml a => HasMusicXml (Behavior a) where
+    getMusicXml d = getMusicXml d . (? 0)
+
 
 -- |
 -- Convert a score to MusicXML and write to a file.

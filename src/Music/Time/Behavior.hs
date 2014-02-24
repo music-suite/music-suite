@@ -72,6 +72,8 @@ import Music.Time.Stretchable
 import Music.Time.Span
 import Music.Time.Time
 import Music.Time.Reactive
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 
 -- Inner TFun focuses on [0..1]
 newtype Behavior a = Behavior { getBehavior :: Reactive (Time -> a) }
@@ -96,12 +98,24 @@ instance HasBehavior Behavior where
 deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
-    
--- instance HasPitch (Behavior a) where
-    -- type Pitch (Behavior a) = Behavior a
-    -- type SetPitch g (Behavior a) = g
-    -- getPitches = return
-    -- mapPitch = id
+
+instance IsPitch a => IsPitch (Behavior a) where
+    fromPitch = pure . fromPitch
+instance IsInterval a => IsInterval (Behavior a) where
+    fromInterval = pure . fromInterval
+instance IsDynamics a => IsDynamics (Behavior a) where
+    fromDynamics = pure . fromDynamics
+instance AdditiveGroup a => AdditiveGroup (Behavior a) where
+    zeroV = pure zeroV
+    negateV = fmap negateV
+    (^+^) = liftA2 (^+^)
+instance AffineSpace a => AffineSpace (Behavior a) where
+    type Diff (Behavior a) = Behavior (Diff a)
+    (.+^) = liftA2 (.+^)
+    (.-.) = liftA2 (.-.)
+
+
+                                                                          
 
 -- | A constant (non-varying) behavior.
 --   

@@ -29,6 +29,7 @@
 
 module Music.Score.Instances () where
 
+import Control.Applicative
 import Control.Monad
 import Control.Comonad
 import Data.Semigroup
@@ -714,6 +715,18 @@ instance (Num a, Ord a, Real a) => Real (SlideT a) where
 instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
     toInteger (SlideT (_,_,a,_,_)) = toInteger a
+
+
+
+type instance Pitch (Behavior a) = Behavior (Pitch a)
+
+-- TODO undecidable
+instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (Behavior a) (Behavior b) where
+    type SetPitch (Behavior p) (Behavior a) = Behavior (SetPitch p a)
+    __mapPitch f a = liftA2 (__setPitch) (f $ (__getPitch) <$> a) a
+
+instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
+                                        
 
 
 -- Safe for tuple-like types
