@@ -283,7 +283,7 @@ gmInstrName = fmap get . (`lookup` gmInstrs)
 -- (midi program, (def midi ch, score order, def clef 0=g/1=c/2=f, name))
 {-
     Score order:
-        Woodwonds:      1
+        Woodwinds:      1
         Brass:          2 
         Timpani:        3 
         Percussion:     4
