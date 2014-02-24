@@ -42,6 +42,10 @@ module Music.Pitch.Literal.Pitch (
 
   ) where
 
+import Data.Semigroup
+import Data.Semigroup.Applicative ()
+import Control.Applicative
+
 -- Pitch literal, defined as @(class, alteration, octave)@, where
 --
 --     * @class@      is a pitch class number in @[0..6]@, starting from C.
@@ -64,7 +68,13 @@ instance IsPitch PitchL where
     fromPitch = id
 
 instance IsPitch a => IsPitch (Maybe a) where
-    fromPitch = Just . fromPitch
+    fromPitch = pure . fromPitch
+
+instance IsPitch a => IsPitch (First a) where
+    fromPitch = pure . fromPitch
+
+instance IsPitch a => IsPitch (Last a) where
+    fromPitch = pure . fromPitch
 
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + (oct+1) * 12

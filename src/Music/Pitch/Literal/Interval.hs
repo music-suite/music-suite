@@ -40,6 +40,10 @@ module Music.Pitch.Literal.Interval (
 
   ) where
 
+import Data.Semigroup
+import Data.Semigroup.Applicative ()
+import Control.Applicative
+
 newtype IntervalL = IntervalL (Integer, Integer, Integer)
 -- (octaves, diatonic steps, chromatic steps)
 
@@ -50,7 +54,13 @@ instance IsInterval IntervalL where
     fromInterval = id
 
 instance IsInterval a => IsInterval (Maybe a) where
-    fromInterval = Just . fromInterval
+    fromInterval = pure . fromInterval
+
+instance IsInterval a => IsInterval (First a) where
+    fromInterval = pure . fromInterval
+
+instance IsInterval a => IsInterval (Last a) where
+    fromInterval = pure . fromInterval
 
 instance IsInterval Double where
     fromInterval = fromIntegral . asInteger . fromInterval
