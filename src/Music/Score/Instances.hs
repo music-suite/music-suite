@@ -225,9 +225,6 @@ instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
     __mapPitch f = fmap (__mapPitch f)
 
 instance HasDynamic a => HasDynamic (ChordT a) where
-    setBeginCresc n = fmap (setBeginCresc n)
-    setEndCresc   n = fmap (setEndCresc n)
-    setBeginDim   n = fmap (setBeginDim n)
     setEndDim     n = fmap (setEndDim n)
     setLevel      n = fmap (setLevel n)
 instance HasArticulation a => HasArticulation (ChordT a) where
@@ -268,30 +265,12 @@ instance HasSetPitch a b => HasSetPitch (TieT a) (TieT b) where
     __mapPitch f = fmap (__mapPitch f)
 
 
-instance HasDynamic a => HasDynamic (TieT a) where
-    setBeginCresc n                                 = fmap (setBeginCresc n)
-    setEndCresc   n                                 = fmap (setEndCresc n)
-    setBeginDim   n                                 = fmap (setBeginDim n)
-    setEndDim     n                                 = fmap (setEndDim n)
-    setLevel      n                                 = fmap (setLevel n)
-instance HasArticulation a => HasArticulation (TieT a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (TieT a) where
-    setTrem       n                                 = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (TieT a) where
-    setNatural    n                                 = fmap (setNatural n)
-    setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (TieT a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (TieT a) where
-    addText       s                                 = fmap (addText s)
+deriving instance HasDynamic a => HasDynamic (TieT a)
+deriving instance HasArticulation a => HasArticulation (TieT a)
+deriving instance HasTremolo a => HasTremolo (TieT a)
+deriving instance HasHarmonic a => HasHarmonic (TieT a)
+deriving instance HasSlide a => HasSlide (TieT a)
+deriving instance HasText a => HasText (TieT a)
 
 
 -- DynamicT
@@ -318,24 +297,11 @@ instance HasSetPitch a b => HasSetPitch (DynamicT a) (DynamicT b) where
     __mapPitch f = fmap (__mapPitch f)
 
 
-instance HasArticulation a => HasArticulation (DynamicT a) where
-    setEndSlur    n                                 = fmap (setEndSlur n)
-    setContSlur   n                                 = fmap (setContSlur n)
-    setBeginSlur  n                                 = fmap (setBeginSlur n)
-    setAccLevel   n                                 = fmap (setAccLevel n)
-    setStaccLevel n                                 = fmap (setStaccLevel n)
-instance HasTremolo a => HasTremolo (DynamicT a) where
-    setTrem       n                                 = fmap (setTrem n)
-instance HasHarmonic a => HasHarmonic (DynamicT a) where
-    setNatural    n                                 = fmap (setNatural n)
-    setHarmonic   n                                 = fmap (setHarmonic n)
-instance HasSlide a => HasSlide (DynamicT a) where
-    setBeginGliss n                                 = fmap (setBeginGliss n)
-    setBeginSlide n                                 = fmap (setBeginSlide n)
-    setEndGliss   n                                 = fmap (setEndGliss n)
-    setEndSlide   n                                 = fmap (setEndSlide n)
-instance HasText a => HasText (DynamicT a) where
-    addText       s                                 = fmap (addText s)
+deriving instance HasArticulation a => HasArticulation (DynamicT a)
+deriving instance HasTremolo a => HasTremolo (DynamicT a)
+deriving instance HasHarmonic a => HasHarmonic (DynamicT a)
+deriving instance HasSlide a => HasSlide (DynamicT a)
+deriving instance HasText a => HasText (DynamicT a)
 
 
 -- ArticulationT
@@ -494,9 +460,6 @@ deriving instance HasText a => HasText (SlideT a)
 -------------------------------------------------------------------------------------
 -- Num, Integral, Enum and Bounded
 -------------------------------------------------------------------------------------
-
--- TODO are these instances sane?
--- Enum and bounded seems harmless, but what about num/real/integral
 
 -- PartT
 
