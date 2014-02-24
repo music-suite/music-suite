@@ -72,11 +72,11 @@ import Music.Score.Util
         DynamicT
         TremoloT
         ArticulationT
-        SlideT
         
     DONE
         HarmonicT
         TextT
+        SlideT
     
     
 -}
@@ -118,9 +118,9 @@ instance IsDynamics a => IsDynamics (HarmonicT a) where
     fromDynamics = pure . fromDynamics
 
 instance IsPitch a => IsPitch (SlideT a) where
-    fromPitch l                                     = SlideT (False,False,fromPitch l,False,False)
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (SlideT a) where
-    fromDynamics l                                  = SlideT (False,False,fromDynamics l,False,False)
+    fromDynamics = pure . fromDynamics
 
 -------------------------------------------------------------------------------------
 
@@ -129,7 +129,7 @@ instance Reversible (ChordT a) where
 instance Reversible a => Reversible (DynamicT a) where
     rev = fmap rev
 instance Reversible a => Reversible (SlideT a) where
-    rev (SlideT (eg,es,a,bg,bs)) = SlideT (bg,bs,rev a,eg,es)
+    rev = fmap rev
 instance Reversible a => Reversible (TieT a) where
     rev (TieT (b,x,e)) = TieT (e,rev x,b)
 instance Reversible a => Reversible (HarmonicT a) where
@@ -149,7 +149,7 @@ instance Reversible a => Reversible (PartT p a) where
 instance Semigroup a => Semigroup (DynamicT a) where
     DynamicT (ec,ed,l,a,bc,bd) <> DynamicT (_,_,_,b,_,_) = DynamicT (ec,ed,l,a <> b,bc,bd)
 instance Semigroup a => Semigroup (SlideT a) where
-    SlideT (eg,es,a,bg,bs) <> SlideT (_,_,b,_,_) = SlideT (eg,es,a <> b,bg,bs)
+    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TieT a) where
     TieT (b1,x1,e1) <> TieT (b2,x2,e2) = TieT (b1 && b2, x1 <> x2, e1 && e2)
     -- This instance is suspect: in general chord notes are not required to share ties,
@@ -196,7 +196,6 @@ instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
 
 
 -- PartT
-
 
 instance HasChord a => HasChord (PartT n a) where
     type ChordNote (PartT n a)                           = PartT n (ChordNote a)
@@ -482,15 +481,16 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 
 instance Tiable a => Tiable (SlideT a) where
-    toTied (SlideT (eg,es,a,bg,bs))                = (SlideT (eg,   es,   b,False,False),
-                                                      SlideT (False,False,c,bg,   bs)) where (b,c) = toTied a
-type instance Part (SlideT a)                           = Part a
+    toTied = fmaps toTied
+    -- TODO avoid splitting ties
+
+type instance Part (SlideT a) = Part a
 instance HasPart a => HasPart (SlideT a) where
-    getPart (SlideT (eg,es,a,bg,bs))               = getPart a
-    modifyPart f (SlideT (eg,es,a,bg,bs))          = SlideT (eg,es,modifyPart f a,bg,bs)
+    getPart = getPart . get1
+    modifyPart f = fmap (modifyPart f)
 instance HasChord a => HasChord (SlideT a) where
-    type ChordNote (SlideT a)                           = SlideT (ChordNote a)
-    getChord (SlideT (eg,es,a,bg,bs))              = fmap (\x -> SlideT (eg,es,x,bg,bs)) (getChord a)
+    type ChordNote (SlideT a) = SlideT (ChordNote a)
+    getChord (SlideT (x,as)) = fmap (\a -> SlideT (x,a)) (getChord as)
 
 type instance Pitch (SlideT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (SlideT a) where
@@ -754,28 +754,48 @@ instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
 -- SlideT
 
 instance Num a => Num (SlideT a) where
-    SlideT (eg,es,a,bg,bs) + SlideT (_,_,b,_,_) = SlideT (eg,es,a+b,bg,bs)
-    SlideT (eg,es,a,bg,bs) * SlideT (_,_,b,_,_) = SlideT (eg,es,a*b,bg,bs)
-    SlideT (eg,es,a,bg,bs) - SlideT (_,_,b,_,_) = SlideT (eg,es,a-b,bg,bs)
-    abs (SlideT (eg,es,a,bg,bs))                = SlideT (eg,es,abs a,bg,bs)
-    signum (SlideT (eg,es,a,bg,bs))             = SlideT (eg,es,signum a,bg,bs)
-    fromInteger a                               = SlideT (False,False,fromInteger a,False,False)
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (SlideT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (SlideT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (SlideT a) where
-    toEnum a                        = SlideT (False,False,toEnum a,False,False)
-    fromEnum (SlideT (_,_,a,_,_))   = fromEnum a
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (SlideT a) where
-    minBound = SlideT (False,False,minBound,False,False)
-    maxBound = SlideT (False,False,maxBound,False,False)
+    minBound = pure minBound
+    maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (SlideT a) where
-    toRational (SlideT (_,_,a,_,_)) = toRational a
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
-    SlideT (eg,es,a,bg,bs) `quotRem` SlideT (_,_,b,_,_) = (SlideT (eg,es,q',bg,bs), SlideT (eg,es,r',bg,bs)) where (q',r') = a `quotRem` b
-    toInteger (SlideT (_,_,a,_,_)) = toInteger a
-
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 
 type instance Pitch (Behavior a) = Behavior (Pitch a)
@@ -793,3 +813,8 @@ instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
 get1 = head . toList
 -- TODO replace with extract
 
+fmaps :: Functor f => (a -> (b, c)) -> f a -> (f b, f c)
+fmaps f x = ((fst . f) <$> x, (snd . f) <$> x)
+
+liftsA2 :: Applicative f => (a -> b -> (c, d)) -> f a -> f b -> (f a, f b)
+liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))

@@ -160,7 +160,7 @@ instance HasMidi a => HasMidi (TextT a) where
 instance HasMidi a => HasMidi (HarmonicT a) where
     getMidi (HarmonicT (_,a))                       = getMidi a
 instance HasMidi a => HasMidi (SlideT a) where
-    getMidi (SlideT (_,_,a,_,_))                    = getMidi a
+    getMidi (SlideT (_,a))                          = getMidi a
 
 instance HasMidi a => HasMidi (Behavior a) where
     getMidi = getMidi . (? 0)

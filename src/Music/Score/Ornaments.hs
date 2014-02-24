@@ -9,6 +9,7 @@
     ConstraintKinds,
     TypeOperators,
     TypeFamilies,
+    MultiParamTypeClasses,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ module Music.Score.Ornaments (
   ) where
 
 import Control.Applicative
+import Control.Lens
 import Data.Foldable
 import Data.Ratio
 import Data.Foldable
@@ -130,14 +132,29 @@ class HasSlide a where
     setEndGliss   :: Bool -> a -> a
     setEndSlide   :: Bool -> a -> a
 
-newtype SlideT a = SlideT { getSlideT :: (Bool, Bool, a, Bool, Bool) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+-- (eg,es,a,bg,bs)
+newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+
+instance Wrapped 
+    (((Any, Any), (Any, Any)), a)
+    (((Any, Any), (Any, Any)), a)
+    (SlideT a) 
+    (SlideT a) 
+    where
+    wrapped = iso SlideT getSlideT
+
+bg, bs, eg, es :: Lens' (SlideT a) Any
+bg = unwrapped . _1 . _2 . _1
+bs = unwrapped . _1 . _2 . _2
+eg = unwrapped . _1 . _1 . _1
+es = unwrapped . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
-    setBeginGliss bg (SlideT (eg,es,a,_,bs))       = SlideT (eg,es,a,bg,bs)
-    setBeginSlide bs (SlideT (eg,es,a,bg,_))       = SlideT (eg,es,a,bg,bs)
-    setEndGliss   eg (SlideT (_,es,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
-    setEndSlide   es (SlideT (eg,_,a,bg,bs))       = SlideT (eg,es,a,bg,bs)
+    setBeginGliss x = bg .~ Any x
+    setBeginSlide x = bs .~ Any x
+    setEndGliss   x = eg .~ Any x
+    setEndSlide   x = es .~ Any x
 
 instance HasSlide a => HasSlide (b, a) where
     setBeginGliss n = fmap (setBeginGliss n)

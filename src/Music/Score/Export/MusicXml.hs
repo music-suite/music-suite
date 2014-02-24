@@ -189,13 +189,13 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
     -- TODO adjust pitch etc
 
 instance HasMusicXml a => HasMusicXml (SlideT a) where
-    getMusicXml d (SlideT (eg,es,a,bg,bs))    = notate $ getMusicXml d a
+    getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
         where
             notate = neg . nes . nbg . nbs
-            neg    = if eg then Xml.endGliss else id
-            nes    = if es then Xml.endSlide else id
-            nbg    = if bg then Xml.beginGliss else id
-            nbs    = if bs then Xml.beginSlide else id
+            neg    = if view unwrapped eg then Xml.endGliss else id
+            nes    = if view unwrapped es then Xml.endSlide else id
+            nbg    = if view unwrapped bg then Xml.beginGliss else id
+            nbs    = if view unwrapped bs then Xml.beginSlide else id
 
 instance HasMusicXml a => HasMusicXml (ClefT a) where
     getMusicXml d (ClefT (c, a)) = notate $ getMusicXml d a

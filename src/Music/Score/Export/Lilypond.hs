@@ -195,9 +195,9 @@ instance HasLilypond a => HasLilypond (HarmonicT a) where
             notateArtificial n = id -- TODO
 
 instance HasLilypond a => HasLilypond (SlideT a) where
-    getLilypond d (SlideT (eg,es,a,bg,bs)) = notate $ getLilypond d a
-        where          
-            notate = if bg || bs then Lilypond.beginGlissando else id
+    getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
+        where
+            notate = if view unwrapped bg || view unwrapped bs then Lilypond.beginGlissando else id
 
 instance HasLilypond a => HasLilypond (ClefT a) where
     -- TODO consolidate
