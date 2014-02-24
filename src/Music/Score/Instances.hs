@@ -98,9 +98,9 @@ instance IsDynamics a => IsDynamics (TieT a) where
     fromDynamics = return . fromDynamics
 
 instance IsPitch a => IsPitch (DynamicT a) where
-    fromPitch l                                     = DynamicT (False,False,Nothing,fromPitch l,False,False)
+    fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (DynamicT a) where
-    fromDynamics l                                  = DynamicT (False,False,Nothing,fromDynamics l,False,False)
+    fromDynamics = return . fromDynamics
 
 instance IsPitch a => IsPitch (TremoloT a) where
     fromPitch = pure . fromPitch
@@ -147,7 +147,7 @@ instance Reversible a => Reversible (PartT p a) where
 -------------------------------------------------------------------------------------
 
 instance Semigroup a => Semigroup (DynamicT a) where
-    DynamicT (ec,ed,l,a,bc,bd) <> DynamicT (_,_,_,b,_,_) = DynamicT (ec,ed,l,a <> b,bc,bd)
+    DynamicT (d1, x1) <> DynamicT (d2, x2) = DynamicT (d1 <> d2, x1 <> x2)
 instance Semigroup a => Semigroup (SlideT a) where
     (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TieT a) where
@@ -300,22 +300,22 @@ instance HasText a => HasText (TieT a) where
 -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
 
 instance Tiable a => Tiable (DynamicT a) where
-    toTied (DynamicT (ec,ed,l,a,bc,bd))             = (DynamicT (ec,ed,l,b,bc,bd),
-                                                       DynamicT (False,False,Nothing,c,False,False)) where (b,c) = toTied a
-type instance Part (DynamicT a)                          = Part a
+    toTied (DynamicT (l, a)) = (DynamicT (l, b), DynamicT (mempty, c)) where (b,c) = toTied a
+
+type instance Part (DynamicT a) = Part a
 instance HasPart a => HasPart (DynamicT a) where
-    getPart (DynamicT (ec,ed,l,a,bc,bd))            = getPart a
-    modifyPart f                                    = fmap (modifyPart f)
+    getPart (DynamicT (_,x)) = getPart x
+    modifyPart f = fmap (modifyPart f)
 instance HasChord a => HasChord (DynamicT a) where
-    type ChordNote (DynamicT a)                          = DynamicT (ChordNote a)
-    getChord (DynamicT (ec,ed,l,a,bc,bd))           = fmap (\x -> DynamicT (ec,ed,l,x,bc,bd)) (getChord a)
+    type ChordNote (DynamicT a) = DynamicT (ChordNote a)
+    getChord (DynamicT (d,as)) = fmap (\x -> DynamicT (d,x)) (getChord as)
 
 type instance Pitch (DynamicT a) = Pitch a
 instance HasGetPitch a => HasGetPitch (DynamicT a) where
-    __getPitch (DynamicT (ec,ed,l,a,bc,bd)) = __getPitch a
+    __getPitch (DynamicT (_,x)) = __getPitch x
 instance HasSetPitch a b => HasSetPitch (DynamicT a) (DynamicT b) where
     type SetPitch g (DynamicT a) = DynamicT (SetPitch g a)
-    __mapPitch f (DynamicT (ec,ed,l,a,bc,bd)) = DynamicT (ec,ed,l,__mapPitch f a,bc,bd)
+    __mapPitch f = fmap (__mapPitch f)
 
 
 instance HasArticulation a => HasArticulation (DynamicT a) where
@@ -600,27 +600,48 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
 -- DynamicT
 
 instance Num a => Num (DynamicT a) where
-    DynamicT (p,q,r,a,s,t) + DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a+b,s,t)
-    DynamicT (p,q,r,a,s,t) * DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a*b,s,t)
-    DynamicT (p,q,r,a,s,t) - DynamicT (_,_,_,b,_,_) = DynamicT (p,q,r,a-b,s,t)
-    abs (DynamicT (p,q,r,a,s,t))                    = DynamicT (p,q,r,abs a,s,t)
-    signum (DynamicT (p,q,r,a,s,t))                 = DynamicT (p,q,r,signum a,s,t)
-    fromInteger a                                   = DynamicT (False,False,Nothing,fromInteger a,False,False)
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (DynamicT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (DynamicT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
 
 instance Enum a => Enum (DynamicT a) where
-    toEnum a                         = DynamicT (False,False,Nothing,toEnum a,False,False)
-    fromEnum (DynamicT (_,_,_,a,_,_)) = fromEnum a
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
 
 instance Bounded a => Bounded (DynamicT a) where
-    minBound = DynamicT (False,False,Nothing,minBound,False,False)
-    maxBound = DynamicT (False,False,Nothing,maxBound,False,False)
+    minBound = pure minBound
+    maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (DynamicT a) where
-    toRational (DynamicT (_,_,_,a,_,_)) = toRational a
+    toRational = toRational . get1
 
 instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
-    DynamicT (p,q,r,a,s,t) `quotRem` DynamicT (_,_,_,b,_,_) = (DynamicT (p,q,r,q',s,t), DynamicT (p,q,r,r',s,t)) where (q',r') = a `quotRem` b
-    toInteger (DynamicT (_,_,_,a,_,_)) = toInteger a
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 
 -- ArticulationT

@@ -130,7 +130,7 @@ instance HasMusicXml a => HasMusicXml (TieT a) where
                     | otherwise                     = id
 
 instance HasMusicXml a => HasMusicXml (DynamicT a) where
-    getMusicXml d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getMusicXml d a
+    getMusicXml d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getMusicXml d a
         where
             notate x = nec <> ned <> nl <> nbc <> nbd <> x
             nec    = if ec then Xml.endCresc    else mempty
@@ -138,8 +138,8 @@ instance HasMusicXml a => HasMusicXml (DynamicT a) where
             nbc    = if bc then Xml.beginCresc  else mempty
             nbd    = if bd then Xml.beginDim    else mempty
             nl     = case l of
-                Nothing  -> mempty
-                Just lvl -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+                Nothing          -> mempty
+                Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasMusicXml a => HasMusicXml (ArticulationT a) where
     getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a

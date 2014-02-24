@@ -9,6 +9,7 @@
     ConstraintKinds,
     TypeOperators,
     TypeFamilies,
+    ViewPatterns,
     GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
@@ -45,6 +46,7 @@ module Music.Score.Dynamics (
   ) where
 
 import Control.Lens hiding (Level)
+import Control.Applicative
 import Control.Monad
 import Control.Arrow
 import Data.Semigroup
@@ -52,7 +54,7 @@ import Data.Ratio
 import Data.Maybe
 import Data.Foldable
 import Data.Typeable
-import Data.VectorSpace
+import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
 import qualified Data.List as List
 
@@ -73,15 +75,15 @@ class HasDynamic a where
     setLevel        :: Double -> a -> a
 
 -- end cresc/dim, level, begin cresc/dim
-newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
+newtype DynamicT a = DynamicT { getDynamicT :: (((Any, Any), Option (First Double), (Any, Any)), a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
 instance HasDynamic (DynamicT a) where
-    setBeginCresc bc (DynamicT (ec,ed,l,a,_ ,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setEndCresc   ec (DynamicT (_ ,ed,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setBeginDim   bd (DynamicT (ec,ed,l,a,bc,_ ))   = DynamicT (ec,ed,l,a,bc,bd)
-    setEndDim     ed (DynamicT (ec,_ ,l,a,bc,bd))   = DynamicT (ec,ed,l,a,bc,bd)
-    setLevel      l  (DynamicT (ec,ed,_,a,bc,bd))   = DynamicT (ec,ed,Just l,a,bc,bd)
+    setBeginCresc (Any -> bc) (DynamicT (((ec,ed),l,(_ ,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
+    setEndCresc   (Any -> ec) (DynamicT (((_ ,ed),l,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
+    setBeginDim   (Any -> bd) (DynamicT (((ec,ed),l,(bc,_ )),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
+    setEndDim     (Any -> ed) (DynamicT (((ec,_ ),l,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
+    setLevel      ((Option . Just . First) -> l ) (DynamicT (((ec,ed),_,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
 
 instance HasDynamic b => HasDynamic (a, b) where
     setBeginCresc n = fmap (setBeginCresc n)

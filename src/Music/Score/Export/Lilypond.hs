@@ -141,7 +141,7 @@ instance HasLilypond a => HasLilypond (TieT a) where
                     | otherwise                     = id
 
 instance HasLilypond a => HasLilypond (DynamicT a) where
-    getLilypond d (DynamicT (ec,ed,l,a,bc,bd))  = notate $ getLilypond d a
+    getLilypond d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getLilypond d a
         where
             notate x = nec . ned . nl . nbc . nbd $ x
             nec    = if ec then Lilypond.endCresc    else id
@@ -149,8 +149,8 @@ instance HasLilypond a => HasLilypond (DynamicT a) where
             nbc    = if bc then Lilypond.beginCresc  else id
             nbd    = if bd then Lilypond.beginDim    else id
             nl     = case l of
-                Nothing  -> id
-                Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
+                Nothing          -> id
+                Just (First lvl) -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 
 instance HasLilypond a => HasLilypond (ArticulationT a) where
     getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
