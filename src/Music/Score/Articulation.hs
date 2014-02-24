@@ -71,11 +71,12 @@ class HasArticulation a where
     setAccLevel :: Int -> a -> a
     setStaccLevel :: Int -> a -> a
 
-newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
+newtype ArticulationT a = ArticulationT { getArticulationT :: (Any, Any, Sum Int, Sum Int, a, Any) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable)
 
-instance Monad ArticulationT where
-    return x = ArticulationT (False,False,0,0,x,False)
+instance Monad ArticulationT where             
+    return = undefined
+    -- return x = ArticulationT (Any False,Any False,0,0,x,False)
     (>>=) = error "No ArticulationT.(>>=)"
 
 instance Semigroup a => Semigroup (ArticulationT a) where
@@ -97,7 +98,8 @@ instance Num a => Num (ArticulationT a) where
     ArticulationT (p,q,r,s,a,t) - ArticulationT (_,_,_,_,b,_) = ArticulationT (p,q,r,s,a-b,t)
     abs (ArticulationT (p,q,r,s,a,t))                         = ArticulationT (p,q,r,s,abs a,t)
     signum (ArticulationT (p,q,r,s,a,t))                      = ArticulationT (p,q,r,s,signum a,t)
-    fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
+    -- fromInteger a                                             = ArticulationT (False,False,0,0,fromInteger a,False)
+    
 
 instance Enum a => Enum (ArticulationT a) where
     toEnum = return . toEnum
@@ -115,11 +117,11 @@ instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
     toInteger = toInteger . get1
 
 instance HasArticulation (ArticulationT a) where
-    setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setContSlur   us (ArticulationT (es,_ ,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setBeginSlur  bs (ArticulationT (es,us,al,sl,a,_ )) = ArticulationT (es,us,al,sl,a,bs)
-    setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
-    setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    -- setEndSlur    es (ArticulationT (_ ,us,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    -- setContSlur   us (ArticulationT (es,_ ,al,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    -- setBeginSlur  bs (ArticulationT (es,us,al,sl,a,_ )) = ArticulationT (es,us,al,sl,a,bs)
+    -- setAccLevel   al (ArticulationT (es,us,_ ,sl,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
+    -- setStaccLevel sl (ArticulationT (es,us,al,_ ,a,bs)) = ArticulationT (es,us,al,sl,a,bs)
 
 instance HasArticulation b => HasArticulation (a,b) where
     setEndSlur    n = fmap (setEndSlur n)

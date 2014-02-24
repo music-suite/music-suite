@@ -353,8 +353,9 @@ instance HasText a => HasText (DynamicT a) where
 
 
 instance Tiable a => Tiable (ArticulationT a) where
-    toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
-                                                           ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
+    -- toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
+                                                           -- ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
+
 type instance Part (ArticulationT a)                         = Part a
 instance HasPart a => HasPart (ArticulationT a) where
     getPart (ArticulationT (es,us,al,sl,a,bs))          = getPart a
