@@ -70,9 +70,9 @@ import Music.Score.Util
     TODO
         PartT
         DynamicT
-        ArticulationT
         
     DONE
+        ArticulationT
         TremoloT
         HarmonicT
         TextT
@@ -632,6 +632,52 @@ instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
     DynamicT (p,q,r,a,s,t) `quotRem` DynamicT (_,_,_,b,_,_) = (DynamicT (p,q,r,q',s,t), DynamicT (p,q,r,r',s,t)) where (q',r') = a `quotRem` b
     toInteger (DynamicT (_,_,_,a,_,_)) = toInteger a
 
+
+-- ArticulationT
+
+instance Num a => Num (ArticulationT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (ArticulationT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (ArticulationT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (ArticulationT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (ArticulationT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 -- TremoloT
 
