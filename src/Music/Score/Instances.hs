@@ -172,16 +172,15 @@ instance Semigroup a => Semigroup (PartT n a) where
 -- TODO this instance may be problematic with mapPhrase
 instance HasArticulation a => HasArticulation (Maybe a) where
     setEndSlur    n = fmap (setEndSlur n) 
-    setContSlur    n = fmap (setContSlur n) 
-    setBeginSlur    n = fmap (setBeginSlur n) 
-    setAccLevel    n = fmap (setAccLevel n) 
-    setStaccLevel    n = fmap (setStaccLevel n) 
+    setContSlur   n = fmap (setContSlur n) 
+    setBeginSlur  n = fmap (setBeginSlur n) 
+    setAccLevel   n = fmap (setAccLevel n) 
+    setStaccLevel n = fmap (setStaccLevel n) 
 type instance Part (Maybe a)                             = Part a
 instance HasPart a => HasPart (Maybe a) where
     getPart Nothing                                 = def
     getPart (Just a)                                = getPart a
     modifyPart f = fmap (modifyPart f) 
-    -- TODO use cofunctor
 type instance Pitch (Maybe a) = Pitch a
 instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
     type SetPitch g (Maybe a) = Maybe (SetPitch g a)
@@ -216,40 +215,39 @@ deriving instance HasText a => HasText (PartT n a)
 
 instance Tiable a => Tiable (ChordT a) where
     toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
--- No HasPart instance, PartT must be outside ChordT
+-- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
 -- This restriction assures all chord notes are in the same part
 
 type instance Pitch (ChordT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (ChordT a) where
-    -- __getPitch = __getPitch . get1
+
 instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
     type SetPitch g (ChordT a) = ChordT (SetPitch g a)
     __mapPitch f = fmap (__mapPitch f)
 
 instance HasDynamic a => HasDynamic (ChordT a) where
-    setBeginCresc n as = fmap (setBeginCresc n) as
-    setEndCresc   n as = fmap (setEndCresc n) as
-    setBeginDim   n as = fmap (setBeginDim n) as
-    setEndDim     n as = fmap (setEndDim n) as
-    setLevel      n as = fmap (setLevel n) as
+    setBeginCresc n = fmap (setBeginCresc n)
+    setEndCresc   n = fmap (setEndCresc n)
+    setBeginDim   n = fmap (setBeginDim n)
+    setEndDim     n = fmap (setEndDim n)
+    setLevel      n = fmap (setLevel n)
 instance HasArticulation a => HasArticulation (ChordT a) where
-    setEndSlur    n as = fmap (setEndSlur n) as
-    setContSlur   n as = fmap (setContSlur n) as
-    setBeginSlur  n as = fmap (setBeginSlur n) as
-    setAccLevel   n as = fmap (setAccLevel n) as
-    setStaccLevel n as = fmap (setStaccLevel n) as
+    setEndSlur    n = fmap (setEndSlur n)
+    setContSlur   n = fmap (setContSlur n)
+    setBeginSlur  n = fmap (setBeginSlur n)
+    setAccLevel   n = fmap (setAccLevel n)
+    setStaccLevel n = fmap (setStaccLevel n)
 instance HasTremolo a => HasTremolo (ChordT a) where
-    setTrem       n as = fmap (setTrem n) as
+    setTrem       n = fmap (setTrem n)
 instance HasHarmonic a => HasHarmonic (ChordT a) where
-    setNatural    n as = fmap (setNatural n) as
-    setHarmonic   n as = fmap (setHarmonic n) as
+    setNatural    n = fmap (setNatural n)
+    setHarmonic   n = fmap (setHarmonic n)
 instance HasSlide a => HasSlide (ChordT a) where
-    setBeginGliss n as = fmap (setBeginGliss n) as
-    setBeginSlide n as = fmap (setBeginSlide n) as
-    setEndGliss   n as = fmap (setEndGliss n) as
-    setEndSlide   n as = fmap (setEndSlide n) as
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
 instance HasText a => HasText (ChordT a) where
-    addText       s (ChordT as)                      = ChordT (mapF (addText s) as)
+    addText       s (ChordT as) = ChordT (mapF (addText s) as)
 
 
 -- TieT
@@ -349,9 +347,6 @@ instance HasText a => HasText (DynamicT a) where
 instance Tiable a => Tiable (ArticulationT a) where
     toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
 
-    -- toTied (ArticulationT (es,us,al,sl,a,bs))           = (ArticulationT (False,us || es , al,sl,b,bs),
-                                                           -- ArticulationT (es,   us || bs , 0, 0, c,False)) where (b,c) = toTied a
-
 type instance Part (ArticulationT a)                         = Part a
 instance HasPart a => HasPart (ArticulationT a) where
     getPart = getPart . get1
@@ -375,9 +370,6 @@ deriving instance HasText a => HasText (ArticulationT a)
 
 -- TremoloT
 
--- newtype TremoloT a = TremoloT { getTremoloT :: (Int, a) }
-
-
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 type instance Part (TremoloT a)                          = Part a
@@ -397,15 +389,12 @@ instance HasSetPitch a b => HasSetPitch (TremoloT a) (TremoloT b) where
 
 deriving instance HasDynamic a => HasDynamic (TremoloT a)
 deriving instance HasArticulation a => HasArticulation (TremoloT a)
--- instance HasTremolo (TremoloT a) where
 deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
 deriving instance HasSlide a => HasSlide (TremoloT a)
 deriving instance HasText a => HasText (TremoloT a)
 
 
 -- TextT
-
--- newtype TextT a = TextT { getTextT :: (Int, a) }
 
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
@@ -429,7 +418,6 @@ deriving instance HasArticulation a => HasArticulation (TextT a)
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
 deriving instance HasSlide a => HasSlide (TextT a)
--- instance HasText (TextT a) where
 
 
 -- HarmonicT
@@ -454,7 +442,6 @@ instance HasSetPitch a b => HasSetPitch (HarmonicT a) (HarmonicT b) where
 deriving instance HasDynamic a => HasDynamic (HarmonicT a)
 deriving instance HasArticulation a => HasArticulation (HarmonicT a)
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
--- instance HasHarmonic (HarmonicT a) where
 deriving instance HasSlide a => HasSlide (HarmonicT a)
 deriving instance HasText a => HasText (HarmonicT a)
 
@@ -464,8 +451,6 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
-    -- toTied = fmaps toTied
-    -- TODO avoid splitting ties
 
 type instance Part (SlideT a) = Part a
 instance HasPart a => HasPart (SlideT a) where
@@ -487,6 +472,24 @@ deriving instance HasArticulation a => HasArticulation (SlideT a)
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -------------------------------------------------------------------------------------
 -- Num, Integral, Enum and Bounded
