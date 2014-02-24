@@ -69,6 +69,7 @@ module Music.Score.Pitch (
         HasPitch(..),
         HasSetPitch'(..),
         Transposable,
+        Transposable1,
 
   ) where
 
@@ -227,11 +228,11 @@ HAS_SET_PITCH_PRIM(Integer)
 type Transposable a = 
         (
             HasSetPitch' a, 
-            Diff (Pitch a) ~ Interval a,
             Transposable1 a
         )
 type Transposable1 a =
     (
+            Diff (Pitch a) ~ Interval a,
             AffineSpace (Pitch a), 
             VectorSpace (Interval a),
             IsPitch (Pitch a), 
