@@ -255,6 +255,9 @@ instance IsPitch a => IsPitch (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
     fromDynamics = pure . fromDynamics
 
+instance IsInterval a => IsInterval (Score a) where
+    fromInterval = pure . fromInterval
+
 instance Enum a => Enum (Score a) where
     toEnum = return . toEnum
     fromEnum = list 0 (fromEnum . head) . F.toList

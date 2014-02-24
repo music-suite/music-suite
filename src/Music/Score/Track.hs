@@ -127,6 +127,9 @@ instance IsPitch a => IsPitch (Track a) where
 instance IsDynamics a => IsDynamics (Track a) where
     fromDynamics = pure . fromDynamics
 
+instance IsInterval a => IsInterval (Track a) where
+    fromInterval = pure . fromInterval
+
 type instance Pitch (Track a) = Pitch a
 instance (HasSetPitch a b, Transformable (Pitch (Track a)), Transformable (Pitch (Track b))) => HasSetPitch (Track a) (Track b) where
     type SetPitch g (Track a) = Track (SetPitch g a)

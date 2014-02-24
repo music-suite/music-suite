@@ -112,6 +112,9 @@ instance IsPitch a => IsPitch (Voice a) where
 instance IsDynamics a => IsDynamics (Voice a) where
     fromDynamics = pure . fromDynamics
 
+instance IsInterval a => IsInterval (Voice a) where
+    fromInterval = pure . fromInterval
+
 -- TODO
 instance Num a => Num (Voice a) where
     fromInteger = pure . fromInteger

@@ -29,6 +29,8 @@ import qualified Data.Traversable as T
 
 import Music.Time
 import Music.Score.Pitch
+import Music.Pitch.Literal
+import Music.Dynamics.Literal
 
 newtype Note a = Note { getNote_ :: (Span, a) }
     deriving (Eq, Ord, Show, {-Read, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
@@ -69,6 +71,15 @@ instance HasOnset (Note a) where
 
 instance HasOffset (Note a) where
     offset (Note (s,x)) = offset s
+
+instance IsPitch a => IsPitch (Note a) where
+    fromPitch = pure . fromPitch
+
+instance IsDynamics a => IsDynamics (Note a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsInterval a => IsInterval (Note a) where
+    fromInterval = pure . fromInterval
 
 type instance Pitch (Note a) = Pitch a
 instance HasGetPitch a => HasGetPitch (Note a) where
