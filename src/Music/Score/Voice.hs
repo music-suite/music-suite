@@ -1,18 +1,16 @@
 
-{-# LANGUAGE 
-    TypeFamilies, 
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveDataTypeable, 
-    DeriveTraversable, 
-    GeneralizedNewtypeDeriving, 
-    FlexibleInstances,
-    TypeOperators,
-    TypeFamilies,
-    ConstraintKinds,
-    FlexibleContexts,
-    UndecidableInstances,
-    MultiParamTypeClasses #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -33,34 +31,34 @@ module Music.Score.Voice (
         Voice,
         voice',
         voice,
-        
+
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
         mergeEqual,
   ) where
 
-import Data.Semigroup
-import Control.Lens
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Compose
-import Control.Arrow
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Compose
+import           Data.Semigroup
 
-import Data.PairMonad ()
-import Data.Typeable
-import Data.Foldable (Foldable(..), foldMap)
-import Data.Traversable (Traversable(..))
-import Data.VectorSpace hiding (Sum)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
+import           Data.Foldable          (Foldable (..), foldMap)
+import qualified Data.Foldable          as F
+import qualified Data.List              as List
+import           Data.PairMonad         ()
+import           Data.Traversable       (Traversable (..))
+import qualified Data.Traversable       as T
+import           Data.Typeable
+import           Data.VectorSpace       hiding (Sum)
 
-import Music.Time
-import Music.Pitch.Literal
-import Music.Dynamics.Literal   
-import Music.Score.Pitch
-import Music.Score.Util
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Pitch
+import           Music.Score.Util
+import           Music.Time
 
 
 -- |
@@ -77,7 +75,7 @@ import Music.Score.Util
 --
 -- > let p = Voice [(1, Just 0), (2, Just 1)] :: Voice Int
 -- >
--- > p >>= \x -> Voice [ (1, Just $ toEnum $ x+65),
+-- > p >>= \x -> Voice [ (1, Just $ toEnum $ x+65),
 -- >                    (3, Just $ toEnum $ x+97) ] :: Voice Char
 -- >
 -- >     ===> Voice {getVoice = [ (1 % 1,Just 'A'),
@@ -127,13 +125,13 @@ instance (HasSetPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
 
 -- |
 -- Create a voice from a list of events.
--- 
+--
 voice' :: Iso' [(Duration, a)] (Voice a)
 voice' = voice
 
 -- |
 -- Create a voice from a list of events.
--- 
+--
 voice :: Iso [(Duration, a)] [(Duration, b)] (Voice a) (Voice b)
 voice = iso mkVoice getVoice
     where
@@ -162,7 +160,7 @@ dzipVoiceWith f (Voice a) (Voice b) = Voice $ zipWith (\(Ev (Product dx,vx)) (Ev
 -- Merge consecutive equal note.
 --
 mergeEqual :: Eq a => Voice a -> Voice a
-mergeEqual = over (from voice) $ fmap f . List.groupBy (inspecting snd)
+mergeEqual = over (from voice) $ fmap f . List.groupBy (inspecting snd)
     where
         f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
 
