@@ -1,17 +1,16 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds, 
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies, 
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -36,7 +35,7 @@
 
 module Music.Time.Reactive (
         Reactive,
-        
+
         -- * Create, isos etc (TODO)
         initial,
         final,
@@ -49,7 +48,7 @@ module Music.Time.Reactive (
         -- * Predicates
         isConstant,
         isVariable,
-        
+
         -- * Combinators
         step,
         switch,
@@ -63,39 +62,39 @@ module Music.Time.Reactive (
         -- printR,
   ) where
 
-import Control.Lens
-import Control.Applicative
-import Control.Arrow
-import Control.Monad
-import Control.Monad.Plus       
-import Control.Monad.Compose
-import Data.String
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Typeable
-import Data.Semigroup
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Compose
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as F
+import qualified Data.List              as List
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.String
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Span
-import Music.Time.Time
+import           Music.Time.Delayable
+import           Music.Time.Span
+import           Music.Time.Stretchable
+import           Music.Time.Time
+import           Music.Time.Time
 -- import Music.Score.Note
 -- import Music.Score.Track
 -- import Music.Score.Pitch
 -- import Music.Score.Util
 -- import Music.Pitch.Literal
--- import Music.Dynamics.Literal   
+-- import Music.Dynamics.Literal
 
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)
@@ -215,7 +214,7 @@ final :: Reactive a -> a
 final (renderR -> (i,[])) = i
 final (renderR -> (i,xs)) = snd $ last xs
 
--- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switch :: Time -> Reactive a -> Reactive a -> Reactive a
 switch t (Reactive (tx, rx)) (Reactive (ty, ry)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty)
@@ -252,11 +251,11 @@ trimBefore start x = switch start mempty x
 trimAfter :: Monoid a => Time -> Reactive a -> Reactive a
 trimAfter stop x = switch stop x mempty
 
--- | Semantic function. 
+-- | Semantic function.
 renderR :: Reactive a -> (a, [(Time, a)])
 renderR = initial &&& updates
 
--- | Semantic function. 
+-- | Semantic function.
 renderR' :: Reactive a -> ([Time], Time -> a)
 renderR' = occs &&& (?)
 

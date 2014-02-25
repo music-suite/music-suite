@@ -1,18 +1,17 @@
 
-{-# LANGUAGE 
-    ScopedTypeVariables, 
-    GeneralizedNewtypeDeriving,
-    DeriveFunctor, 
-    DeriveFoldable, 
-    DeriveTraversable,
-    DeriveDataTypeable, 
-    ConstraintKinds, 
-    StandaloneDeriving,
-    GADTs, 
-    ViewPatterns,
-    TypeFamilies, 
-    MultiParamTypeClasses, 
-    FlexibleInstances #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -41,46 +40,46 @@ module Music.Time.Behavior (
         trimBeforeB,
   ) where
 
-import Prelude hiding (trimAfter)
+import           Prelude                hiding (trimAfter)
 
-import Control.Lens
-import Control.Applicative
-import Control.Arrow
-import Control.Monad
-import Control.Monad.Plus       
-import Control.Monad.Compose
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.NumInstances()
-import Data.Typeable
-import Data.Semigroup
-import Data.Profunctor
-import Data.Set (Set)
-import Data.Map (Map)
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import qualified Data.Foldable as F
-import qualified Data.Traversable as T
-import qualified Data.List as List
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Compose
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as F
+import qualified Data.List              as List
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.NumInstances      ()
+import           Data.Profunctor
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Span
-import Music.Time.Time
-import Music.Time.Reactive
-import Music.Pitch.Literal
-import Music.Dynamics.Literal
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Time.Delayable
+import           Music.Time.Reactive
+import           Music.Time.Span
+import           Music.Time.Stretchable
+import           Music.Time.Time
+import           Music.Time.Time
 
 -- Inner TFun focuses on [0..1]
 newtype Behavior a = Behavior { getBehavior :: Reactive (Time -> a) }
     deriving (Functor, Semigroup, Monoid)
 
 instance Delayable (Behavior a) where
-    delay n (Behavior x) = Behavior (fmap (delay n) $ delay n x)
+    delay n (Behavior x) = Behavior (fmap (delay n) $ delay n x)
 
 instance Stretchable (Behavior a) where
     stretch n (Behavior x) = Behavior (fmap (stretch n) $ stretch n x)
@@ -115,28 +114,28 @@ instance AffineSpace a => AffineSpace (Behavior a) where
     (.-.) = liftA2 (.-.)
 
 
-                                                                          
+
 
 -- | A constant (non-varying) behavior.
---   
+--
 --   Identical to @behavior . const@ but creates more efficient behaviors.
 constant :: a -> Behavior a
 constant = (^. wrapped) . pure . pure
 
 -- | Create a behavior from function of (absolute) time.
---   
+--
 --   You should pass a function defined for the whole range, including negative time.
 behavior :: (Time -> a) -> Behavior a
 behavior = (^. wrapped) . pure
 
 -- | Create a behaviour from a function of (relative) duration focused on 'sunit'.
---   
+--
 --   You should pass a function defined for the whole range, including negative durations.
 varying :: (Duration -> a) -> Behavior a
 varying = varyingIn sunit
 
 -- | Create a behaviour from a function of (relative) duration focused on the given span.
---   
+--
 --   You should pass a function defined for the whole range, including negative durations.
 varyingIn :: Span -> (Duration -> a) -> Behavior a
 varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)

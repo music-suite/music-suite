@@ -1,13 +1,12 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleContexts,
-    FlexibleInstances,
-    ConstraintKinds,
-    UndecidableInstances,
-    GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -28,32 +27,32 @@ module Music.Time.Stretchable (
         Stretchable(..),
         compress,
         stretching,
-        
+
         -- ** Utility
         NoStretch(..),
   ) where
 
-import Control.Arrow
+import           Control.Arrow
 
-import Data.Semigroup
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Set (Set)
-import Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.VectorSpace       hiding (Sum)
 
-import Music.Time.Time
+import           Music.Time.Time
 
 -- |
--- Stretchable values. 
--- 
+-- Stretchable values.
+--
 class Stretchable a where
 
     -- |
     -- Stretch (augment) a value by the given factor.
-    -- 
+    --
     stretch :: Duration -> a -> a
     stretch _ = id
 

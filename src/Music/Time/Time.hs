@@ -1,8 +1,7 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    FlexibleInstances,
-    GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -18,7 +17,7 @@
 
 module Music.Time.Time (
         -- $convert
-        
+
         -- * Time type
         Time(..),
 
@@ -37,12 +36,12 @@ module Music.Time.Time (
         -- TODO
   ) where
 
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Semigroup
+import           Data.VectorSpace
 
-import Music.Score.Util (showRatio)
+import           Music.Score.Util       (showRatio)
 
 -- $convert
 --
@@ -59,7 +58,7 @@ newtype Duration = Duration { getDuration :: Rational }
 
 instance Show Duration where
     show = showRatio . getDuration
-    
+
 instance VectorSpace Duration where
     type Scalar Duration = Duration
     (Duration x) *^ (Duration y) = Duration (x *^ y)

@@ -1,12 +1,11 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -26,34 +25,34 @@ module Music.Time.Delayable (
         -- * Delayable class
         Delayable(..),
         undelay,
-        delaying,     
+        delaying,
         move,
         moveBack,
-        
+
         -- ** Utility
         delayTime,
         NoDelay(..),
   ) where
 
-import Data.Semigroup
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Set (Set)
-import Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.VectorSpace       hiding (Sum)
 
-import Music.Time.Time
+import           Music.Time.Time
 
 -- |
--- Delayable values. 
--- 
+-- Delayable values.
+--
 class Delayable a where
 
     -- |
     -- Delay a value.
-    -- 
+    --
     delay :: Duration -> a -> a
     delay _ = id
 

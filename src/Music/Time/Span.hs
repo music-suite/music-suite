@@ -1,13 +1,12 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleContexts,
-    ConstraintKinds,
-    ViewPatterns,
-    StandaloneDeriving,
-    GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -31,7 +30,7 @@ module Music.Time.Span (
         (<->),
         (>->),
         era,
-        
+
         -- ** Deconstructing spans
         -- _range,
         -- _delta,
@@ -47,23 +46,23 @@ module Music.Time.Span (
         sinvert,
   ) where
 
-import Control.Arrow
-import Control.Lens
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
+import           Control.Arrow
+import           Control.Lens
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Semigroup
+import           Data.VectorSpace
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Onset
-import Music.Time.Reverse
+import           Music.Time.Delayable
+import           Music.Time.Onset
+import           Music.Time.Reverse
+import           Music.Time.Stretchable
+import           Music.Time.Time
 
 -- |
--- A 'Span' represents two points in time @u@ and @v@ where @t <= u@ or, equivalently, 
+-- A 'Span' represents two points in time @u@ and @v@ where @t <= u@ or, equivalently,
 -- a time @t@ and a duration @d@ where @d >= 0@.
--- 
+--
 -- A third way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
 --
@@ -73,7 +72,7 @@ newtype Span = Span (Time, Duration)
 -- normalizeSpan :: Span -> Span
 -- normalizeSpan (Span (t,d))
     --  | d >= 0  =  t <-> (t .+^ d)
-    --  | d <  0  =  (t .+^ d) <-> t
+    --  | d <  0  =  (t .+^ d) <-> t
 
 instance Delayable Span where
     delay n = delta %~ first (delay n)
@@ -99,11 +98,11 @@ instance Monoid Span where
     mempty  = start <-> stop
     mappend = (<>)
 
-inSpan f = Span . f . _delta 
+inSpan f = Span . f . _delta
 
 -- |
 -- The default span, i.e. 'start' '<->' 'stop'.
--- 
+--
 sunit :: Span
 sunit = mempty
 
@@ -115,9 +114,9 @@ sunit = mempty
 (>->) :: Time -> Duration -> Span
 t >-> d = Span (t,d)
     --  | d > 0     = Span (t,d)
-    --  | otherwise = error "Invalid span"
+    --  | otherwise = error "Invalid span"
 
--- | Get the era (onset to offset) of a given value.
+-- | Get the era (onset to offset) of a given value.
 era :: (HasOnset a, HasOffset a) => a -> Span
 era x = onset x <-> offset x
 
@@ -136,7 +135,7 @@ mapDelta f = delta %~ uncurry f
 mapRange :: (Time -> Time -> (Time, Time)) -> Span -> Span
 mapRange f = range %~ uncurry f
 
--- | 
+-- |
 -- View a span as onset and offset.
 --
 -- Typically used with the @ViewPatterns@ extension, as in
@@ -146,7 +145,7 @@ mapRange f = range %~ uncurry f
 range :: Iso' Span (Time, Time)
 range = iso _range $ uncurry (<->)
 
--- | 
+-- |
 -- View a span as a time and duration.
 --
 -- Typically used with the @ViewPatterns@ extension, as in
@@ -156,7 +155,7 @@ range = iso _range $ uncurry (<->)
 delta :: Iso' Span (Time, Duration)
 delta = iso _delta $ uncurry (>->)
 
--- | Apply a span transformation.
+-- | Apply a span transformation.
 sapp :: (Delayable a, Stretchable a) => Span -> a -> a
 sapp (view delta -> (t,d)) = delayTime t . stretch d
 
@@ -168,7 +167,7 @@ sunder s f = sappInv s . f . sapp s
 sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (mirror t)
 
 -- | The inversion of a span.
---                                    
+--
 -- > sinvert (sinvert s) = s
 -- > sapp (sinvert s) . sapp s = id
 --

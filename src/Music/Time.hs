@@ -27,14 +27,14 @@ module Music.Time (
         module Music.Time.Behavior
   ) where
 
-import Music.Time.Time
-import Music.Time.Span
+import           Music.Time.Span
+import           Music.Time.Time
 
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Onset
+import           Music.Time.Delayable
+import           Music.Time.Onset
+import           Music.Time.Stretchable
 
-import Music.Time.Juxtapose
-import Music.Time.Reverse
-import Music.Time.Reactive
-import Music.Time.Behavior
+import           Music.Time.Behavior
+import           Music.Time.Juxtapose
+import           Music.Time.Reactive
+import           Music.Time.Reverse

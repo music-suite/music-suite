@@ -18,7 +18,7 @@
 module Music.Time.Reverse (
         -- * Reversible class
         Reversible(..),
-       
+
         -- ** Utility
         NoRev(..),
         WithRev(..),
@@ -26,21 +26,21 @@ module Music.Time.Reverse (
         fromWithRev,
   ) where
 
-import Data.Ratio
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Set (Set)
-import Data.Map (Map)
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.VectorSpace
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Onset
-import Music.Time.Juxtapose -- for Transformable
+import           Music.Time.Delayable
+import           Music.Time.Juxtapose
+import           Music.Time.Onset
+import           Music.Time.Stretchable
+import           Music.Time.Time
 
 -- |
 -- Reversible values.
@@ -54,7 +54,7 @@ import Music.Time.Juxtapose -- for Transformable
 -- the 'Score' instance. 'rev' is id by default, so for a trivial type @T@ it
 -- suffices to write
 --
--- > instance Reversible T 
+-- > instance Reversible T
 --
 -- For instances 'U' of 'HasOnset' and 'Transformable', a suitable instance
 -- is

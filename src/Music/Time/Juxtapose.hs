@@ -1,11 +1,10 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleContexts,
-    ConstraintKinds,
-    GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -46,16 +45,16 @@ module Music.Time.Juxtapose (
   ) where
 
 
-import Data.Semigroup
-import Data.Monoid.WithSemigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Monoid.WithSemigroup
+import           Data.Semigroup
+import           Data.VectorSpace
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Time.Onset
+import           Music.Time.Delayable
+import           Music.Time.Onset
+import           Music.Time.Stretchable
+import           Music.Time.Time
 
 -- |
 -- This pseudo-class gathers the restrictions needed to implement position a value at
@@ -71,20 +70,20 @@ type Transformable a   =  (Stretchable a, Delayable a)
 -- |
 -- @a \`following\` b@ moves score /b/ so that its onset is at the offset of score
 -- /a/ and returns the moved score.
--- 
+--
 following :: (HasOffset a, Delayable b, HasOnset b) => a -> b -> b
 a `following` b =  startAt (offset a) b
 
 -- |
 -- @a \`preceding\` b@ moves score /a/ so that its offset is at the onset of score
 -- /b/ and returns the moved score.
--- 
+--
 preceding :: (Delayable a, HasOffset a, HasOnset b) => a -> b -> a
 a `preceding` b =  stopAt (onset b) a
 
 -- | @a \`during\` b@ places /a/ at the same era as /b/ and returns the moved score.
 during :: (Delayable a, Stretchable a, HasOnset a, HasDuration a, HasOnset b, HasDuration b) => a -> b -> a
-a `during` b = startAt (onset b) $ stretchTo (duration b) a
+a `during` b = startAt (onset b) $ stretchTo (duration b) a
 
 -------------------------------------------------------------------------------------
 -- Composition

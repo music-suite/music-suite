@@ -1,11 +1,10 @@
 
-{-# LANGUAGE
-    TypeFamilies,
-    DeriveFunctor,
-    DeriveFoldable,
-    FlexibleContexts,
-    FlexibleInstances,
-    GeneralizedNewtypeDeriving #-} 
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -43,26 +42,26 @@ module Music.Time.Onset (
   ) where
 
 
-import Data.Semigroup
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Set (Set)
-import Data.Map (Map)
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.VectorSpace       hiding (Sum)
 
-import Music.Time.Time
-import Music.Time.Delayable
-import Music.Time.Stretchable
-import Music.Score.Util
+import           Music.Score.Util
+import           Music.Time.Delayable
+import           Music.Time.Stretchable
+import           Music.Time.Time
 
 -- |
 -- Class of types with a duration.
 --
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
--- 
+--
 -- > duration a = offset a .-. onset a
 --
 class HasDuration a where
@@ -99,17 +98,17 @@ stretchTo :: (Stretchable a, HasDuration a) => Duration -> a -> a
 --
 -- If a type has an instance for both 'HasOnset' and 'HasDuration', the following laws
 -- should hold:
--- 
+--
 -- > duration a = offset a .-- onset a
 --
 class HasOnset a where
-    -- | 
+    -- |
     -- Get the onset of the given value.
     --
     onset  :: a -> Time
 
 class HasOffset a where
-    -- | 
+    -- |
     -- Get the offset of the given value.
     --
     offset :: a -> Time
@@ -164,7 +163,7 @@ stopAt :: (HasOffset a, Delayable a) => Time -> a -> a
 t `stretchTo` x = (t / duration x) `stretch` x
 t `startAt` x   = (t .-. onset x) `delay` x
 t `stopAt`  x   = (t .-. offset x) `delay` x
-                                             
+
 -- |
 -- Transform a score without affecting its onset.
 --
@@ -193,4 +192,4 @@ onsetDefault x = offset x .-^ duration x
 -- | Given 'HasOnset' and 'HasOnset' instances, this function implements 'offset'.
 offsetDefault :: (HasOnset a, HasDuration a) => a -> Time
 offsetDefault x = onset x .+^ duration x
-                                                 
+
