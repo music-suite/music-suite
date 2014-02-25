@@ -130,10 +130,6 @@ class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   
 type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
 
--- TODO use default sigs here
-__mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
-__mapPitchDefault f x = __setPitch p x where p = f (__getPitch x)
-
 type HasPitch' a = HasPitch a a
 type HasSetPitch' a = HasSetPitch a a
 
