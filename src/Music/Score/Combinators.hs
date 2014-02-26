@@ -209,7 +209,7 @@ mapPhraseSingle f g h = mapAll (mapFTL (_3 %~ f) (_3 %~ g) (_3 %~ h))
 mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
 mapAll f = saveMeta $ over events f
     where
-        saveMeta f x = setScoreMeta (getScoreMeta x) $ f x
+        saveMeta f x = (meta .~) ((view meta) x) $ f x
 
 
 
@@ -389,7 +389,7 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
-runScoreMeta = runMeta (Nothing :: Maybe a) . getScoreMeta
+runScoreMeta = runMeta (Nothing :: Maybe a) . (view meta)
 
 metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
 metaAt x = (? x) . runScoreMeta
@@ -405,12 +405,12 @@ withMeta f x = withMeta' (Just x) f x
 
 withMeta' :: (HasPart' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
-    m = getScoreMeta x
+    m = (view meta) x
     r = runMeta part m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a, t), bs, (u, c)) ->
-            setScoreMeta m
+            (meta .~) m
                 $ mapBefore t (f a)
                 $ (composed $ fmap (\(getNote -> (s, a)) -> mapDuring s $ f a) $ bs)
                 $ mapAfter u (f c)
@@ -425,7 +425,7 @@ withMetaAtStart f x = withMetaAtStart' (Just x) f x
 withMetaAtStart' :: (IsAttribute b, HasPart' p) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' part f x = let
-    m = getScoreMeta x
+    m = (view meta) x
     in f (runMeta part m ? onset x) x
 
 

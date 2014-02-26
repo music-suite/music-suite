@@ -53,6 +53,7 @@ module Music.Score.Meta.Time (
 
 import           Control.Arrow
 import           Control.Monad.Plus
+import Control.Lens (view)
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -177,7 +178,7 @@ timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> 
 timeSignatureDuring s c = addGlobalMetaNote (s =: optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
+getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . (view meta)
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . getTimeSignatures def

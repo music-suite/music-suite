@@ -38,8 +38,6 @@ module Music.Score.Score (
         -- getScore,
         mapScore,
         reifyScore,
-        getScoreMeta,
-        setScoreMeta,
 
         mapWithSpan,
         filterWithSpan,
@@ -134,14 +132,6 @@ mapScore f = over unwrapped (second $ mapNScore f)
 reifyScore :: Score a -> Score (Note a)
 reifyScore = over unwrapped (second reifyNScore)
 
--- | Set the meta information of a score.
-setScoreMeta :: Meta -> Score a -> Score a
-setScoreMeta m (Score (_,a)) = Score (m,a)
-
--- | Get the meta information of a score.
-getScoreMeta :: Score a -> Meta
-getScoreMeta (Score (m,_)) = m
-
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
 mapWithSpan f = mapScore (uncurry f . getNote)
@@ -204,7 +194,7 @@ instance Reversible a => Reversible (Score a) where
     rev = fmap rev . withSameOnset (stretch (-1))
 
 instance HasMeta (Score a) where
-    applyMeta n (Score (m,x)) = Score (applyMeta n m,x)
+    meta = unwrapped . _1
 
 
 

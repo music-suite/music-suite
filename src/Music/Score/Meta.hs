@@ -159,26 +159,29 @@ instance Monoid Meta where
 class HasMeta a where
     -- | Apply meta-information by combining it (on the left) with the
     --   existing meta-information.
-    applyMeta :: Meta -> a -> a
+    meta :: Lens' a Meta
 
 instance HasMeta Meta where
-    applyMeta = mappend
+    meta = ($)
+    
+applyMeta :: HasMeta a => Meta -> a -> a
+applyMeta m = (meta <>~ m)
 
-instance (HasMeta a, HasMeta b) => HasMeta (a,b) where
-    applyMeta s = applyMeta s *** applyMeta s
-
-instance HasMeta a => HasMeta [a] where
-    applyMeta = fmap . applyMeta
-
-instance HasMeta b => HasMeta (a -> b) where
-    applyMeta = fmap . applyMeta
-
-instance HasMeta a => HasMeta (Map k a) where
-    applyMeta = fmap . applyMeta
-
-instance (HasMeta a, Ord a) => HasMeta (Set a) where
-    applyMeta = Set.map . applyMeta
-
+-- instance (HasMeta a, HasMeta b) => HasMeta (a,b) where
+--     applyMeta s = applyMeta s *** applyMeta s
+-- 
+-- instance HasMeta a => HasMeta [a] where
+--     applyMeta = fmap . applyMeta
+-- 
+-- instance HasMeta b => HasMeta (a -> b) where
+--     applyMeta = fmap . applyMeta
+-- 
+-- instance HasMeta a => HasMeta (Map k a) where
+--     applyMeta = fmap . applyMeta
+-- 
+-- instance (HasMeta a, Ord a) => HasMeta (Set a) where
+--     applyMeta = Set.map . applyMeta
+-- 
 
 
 

@@ -62,6 +62,7 @@ import           Music.Score.Note
 import           Music.Score.Part
 import           Music.Score.Score
 import           Music.Score.Voice
+import           Music.Score.Meta
 import           Music.Time
 
 class HasChord a where
@@ -208,9 +209,9 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
 --
 simultaneous' :: Score a -> Score [a]
-simultaneous' sc = setScoreMeta m $ (^. from events) vs
+simultaneous' sc = (meta .~) m $ (^. from events) vs
     where
-        m = getScoreMeta sc
+        m = (view meta) sc
         -- es :: [Era]
         -- evs :: [[a]]
         -- vs :: [(Time, Duration, [a])]
