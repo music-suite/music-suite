@@ -16,33 +16,44 @@
 
 module Update5 where
     
--- Copied from https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan
--- Simplified to capture a single type
+{-
+This design is based on the Overloaded record fields proposal,
+but simplified to capture a single class for each type (we are only interested
+in four anyway)
+
+ See <https://ghc.haskell.org/trac/ghc/wiki/Records/OverloadedRecordFields/Plan>
+
+One thing I like about this definition is how the type and value-level functions
+correspond directly. There are some problems:
+
+    - The canonical names pitch and pitch' requre a full lens, while in reality
+      some types provides Traversals (i.e. Setter and Fold but no Getter), while other
+      provide full lenses (Getter and Setter but no Fold).
+
+-}
+
 import Control.Applicative
 import Control.Lens
 import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
-import Data.AffineSpace -- tests
-import Data.AffineSpace.Relative -- tests
+import Data.AffineSpace
+import Data.AffineSpace.Point
 import qualified Music.Pitch as M
 
+type family Pitch (s :: *) :: *
 class HasGetPitch s where
-  type Pitch             (s :: *) :: *
   getPitch :: (a ~ Pitch s) => s -> a
 
 class (SetPitch (Pitch t) s ~ t) => HasSetPitch (s :: *) (t :: *) where
   type SetPitch (b :: *) (s :: *) :: *
   setPitch :: Pitch t -> s -> t
   mapPitch :: (Pitch s -> Pitch t) -> s -> t
+  setPitch x = mapPitch (const x)
   default mapPitch :: HasGetPitch s => (Pitch s -> Pitch t) -> s -> t
   mapPitch f x = setPitch p x where p = f (getPitch x)
   
 type HasPitch s t = (HasGetPitch s, HasSetPitch s t)
-
--- TODO use default sigs here
-mapPitchDefault :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
-mapPitchDefault f x = setPitch p x where p = f (getPitch x)
 
 type HasPitch' a = HasPitch a a
 
@@ -65,32 +76,27 @@ instance (Semigroup p, Monoid p) => Applicative (PitchT p) where
     pure = PitchT mempty
     PitchT pf vf <*> PitchT px vx = PitchT (pf <> px) (vf $ vx)
 
+type instance Pitch (PitchT f a) = f
 instance HasGetPitch (PitchT f a) where
-    type Pitch      (PitchT f a) = f
     getPitch        (PitchT f a) = f
 
 instance HasSetPitch (PitchT f a) (PitchT g a)  where
     type SetPitch g (PitchT f a) = PitchT g a 
     setPitch      g (PitchT f a) = PitchT g a
 
--- instance HasGetPitch a => HasGetPitch [a] where
---     type Pitch [a] = Pitch a
---     getPitch [x] = getPitch x
---     -- TODO crashes when updating longer lists etc
--- 
--- -- Undecidable
--- instance (HasSetPitch a b) => HasSetPitch [a] [b] where
---   type SetPitch b [a] = [SetPitch b a]
---   setPitch b = fmap (setPitch b)      
+type instance Pitch [a] = Pitch a
+instance (HasSetPitch a b) => HasSetPitch [a] [b] where
+    type SetPitch b [a] = [SetPitch b a]
+    mapPitch f = fmap (mapPitch f)      
 
+type instance Pitch (c,a) = Pitch a
 instance HasGetPitch a => HasGetPitch (c,a) where
-    type Pitch (c,a) = Pitch a
     getPitch (c,a) = getPitch a
 
 -- Undecidable ??
 instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
-  type SetPitch b (c,a) = (c,SetPitch b a)
-  setPitch b = fmap (setPitch b)
+    type SetPitch b (c,a) = (c,SetPitch b a)
+    mapPitch f = fmap (mapPitch f)      
 
 
 
@@ -101,22 +107,22 @@ instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
 --     type SetPitch a M.Pitch = a
 --     setPitch = const
 
+type instance Pitch Int = Int
 instance HasGetPitch Int where
-    type Pitch Int = Int
     getPitch = id
 instance (a ~ Pitch a) => HasSetPitch Int a where
     type SetPitch a Int = a
     setPitch = const
 
+type instance Pitch Bool = Bool
 instance HasGetPitch Bool where
-    type Pitch Bool = Bool
     getPitch = id
 instance (a ~ Pitch a) => HasSetPitch Bool a where
     type SetPitch a Bool = a
     setPitch = const
 
+type instance Pitch M.Pitch = M.Pitch
 instance HasGetPitch M.Pitch where
-    type Pitch M.Pitch = M.Pitch
     getPitch = id
 instance (a ~ Pitch a) => HasSetPitch M.Pitch a where
     type SetPitch a M.Pitch = a
@@ -149,7 +155,7 @@ interval :: (HasPitch' a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Int
 interval x y = (x^.pitch) `distance` (y^.pitch)
 
 invert :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
-invert p = pitch %~ reflectAround p
+invert p = pitch %~ reflectThrough p
 
 
 --                         
