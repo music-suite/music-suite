@@ -254,12 +254,13 @@ image (view delta -> (t,d)) = delaying (t .-. start) ^.^ stretching d
 -- era :: (HasOnset a, HasOffset a) => a -> T2
 -- era x = onset x <-> offset x
 
+class (:=) a b where
 
-
-type Event  a = (D, a)
-type Future a = (T, a)
-type Past   a = (a, T)
-type Note   a = (T2, a)
+data Event a
+instance (DurT a) := (D, a)
+instance Future a  := (T, a)
+instance Past   a  := (a, T)
+instance Note   a  := (T2, a)
 
 type Score a  = [Note a]
 type Track a  = [Future a]
