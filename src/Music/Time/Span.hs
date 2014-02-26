@@ -74,11 +74,19 @@ newtype Span = Span (Time, Duration)
     --  | d >= 0  =  t <-> (t .+^ d)
     --  | d <  0  =  (t .+^ d) <-> t
 
+{-
+    "Applying a transformation t to a Located a results in the transformation being
+    applied to the location, and the linear portion of t being applied to the value of
+    type a (i.e. it is not translated)."
+
+        -- Diagrams Haddocks
+-}
 instance Delayable Span where
     delay n = delta %~ first (delay n)
 
 instance Stretchable Span where
     stretch n = delta %~ (stretch n *** stretch n)
+
 
 instance HasOnset Span where
     onset = fst . _range
