@@ -26,8 +26,8 @@ library
         QuickCheck >= 1.2 && < 1.3,
 
         lens,
-        time,
-        random,
+        -- time,
+        -- random,
         process,
         data-default,           
         containers,       
