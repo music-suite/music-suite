@@ -2,6 +2,7 @@
 {-# LANGUAGE
     MultiParamTypeClasses,
     TypeFamilies,
+    TupleSections,
     DeriveFunctor,
     DeriveFoldable,
     DeriveTraversable,
@@ -141,3 +142,59 @@ invert p = pitch %~ reflectThrough p
 
 
 --                         
+
+type Span = ()
+class Transformable a where
+sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+sunder = undefined
+sapp :: Transformable a => Span -> a -> a
+sapp = undefined
+
+newtype Score a = Score [(Span, a)]
+instance Wrapped [(Span, a)] [(Span, b)] (Score a) (Score b)
+instance Functor Score where
+instance Foldable Score where
+instance Traversable Score where
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+mapWithSpan f (Score x) = Score $ fmap (\(s,x) -> (s, f s x)) x
+
+
+type instance Pitch (Score a) = Pitch a
+type instance SetPitch g (Score a) = Score (SetPitch g a)
+type instance Pitch (Score a) = Pitch a
+instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where         
+    pitches = unwrapped . traverse . pl
+
+
+pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => 
+    Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
+pl f (s,a) = (s,) <$> (pitches $ fmap (sapp s) . f . sapp s) a
+
+pl2 :: (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
+    Lens (Span, a) (Span, b) (Pitch a) (Pitch b)
+-- pl2 f (s,a) = (s,) <$> (pitch $ fmap (sapp s) . f . sapp s) a
+
+pl2 = pl3 (sapp . fst) (sapp . fst) pitch
+
+pl3 :: Functor f => (s -> b -> b') -> (s -> a' -> a)
+    -> ((a' -> f b') -> s -> t)
+    -> (a -> f b) -> s -> t
+pl3 sbb saa sl f s = (sl $ fmap (sbb s) . f . saa s) s
+
+
+
+
+-- pl3
+--   :: 
+--     -- (Functor f, Functor g) =>
+--         (x -> a' -> a)
+--      -> (x -> b -> b')
+--      -> forall f g . (Functor f) =>
+--        ((a' -> f b') -> s -> f t)
+--      -> (a -> f b) -> (x, s) -> f (x, t)
+-- pl3 bef aft subL f (s,a) = (s,) <$> (subL $ fmap (aft s) . f . bef s) a
+-- 
+
+
+
+

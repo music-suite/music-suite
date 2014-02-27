@@ -54,11 +54,29 @@ type Transformation v = (v :-: v, v)
 
 Transformable a
     -- How to transform only time, only space etc?
+    -- This function actyally "lenses" into the appropriate V and then uses apply or papply
 	transform :: Transformation (V a) -> a -> a
+
+-- fromT :: T -> (T,R2)
+-- fromT t   = (t, r2 0 0)
+-- fromR2 xy = (0, xy)
+-- 
+-- coT :: Transformation T -> Transformation R2 -> Transformation (T,R2)
+-- coT t1 t2 = _
+
 HasDuration a
 	duration :: a -> D a
+
+durationDefault :: HasPosition a -> a -> D a
+durationDefault x = (offset x .-. onset x)^+. origin
+
 HasPosition a
 	position :: a -> Scalar (D a) -> Option (T a) -- compare alerp and enveloped
+    onset, offset :: a -> Option (T a)
+    onset = (`position` 0)
+    offset = (`position` 1)
+    position = alerp onset offset
+    
 Reversible
     reverse :: a -> a
 Splittable a
