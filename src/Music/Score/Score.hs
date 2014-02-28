@@ -275,7 +275,9 @@ instance (HasSetPitch a b,
             Transformable (Pitch b)) =>
                 HasSetPitch (Score a) (Score b) where
     type SetPitch g (Score a) = Score (SetPitch g a)
-    __mapPitch f  = mapWithSpan (\s -> __mapPitch $ sunder s f)
+    -- TODO really similar to indexed maps
+    -- compare lens, category-extras
+    __mapPitch f = mapWithSpan (__mapPitch . (`sunder` f))
 
 
 type instance Part (Score a) = Part a
