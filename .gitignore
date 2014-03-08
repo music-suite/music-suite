@@ -1,7 +1,7 @@
 *.wiki
 .DS_Store
 build
-*.pdf
+test.pdf
 .ackoptions
 .shelly
 *.ly
