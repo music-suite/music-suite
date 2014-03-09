@@ -18,9 +18,10 @@ import           Music.Score.Score
 
 import           Control.Applicative
 import           Control.Lens
-import           Control.Reactive          hiding (Event)
-import qualified Control.Reactive          as R
-import           Control.Reactive.Midi
+import Codec.Midi hiding (Track)
+-- import           Control.Reactive          hiding (Event)
+-- import qualified Control.Reactive          as R
+-- import           Control.Reactive.Midi
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal

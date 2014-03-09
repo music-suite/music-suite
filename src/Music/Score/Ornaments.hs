@@ -134,19 +134,15 @@ class HasSlide a where
 newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
-instance Wrapped
-    (((Any, Any), (Any, Any)), a)
-    (((Any, Any), (Any, Any)), a)
-    (SlideT a)
-    (SlideT a)
-    where
-    wrapped = iso SlideT getSlideT
+instance Wrapped (SlideT a) where
+    type Unwrapped (SlideT a) = (((Any, Any), (Any, Any)), a)
+    _Wrapped' = iso getSlideT SlideT 
 
 bg, bs, eg, es :: Lens' (SlideT a) Any
-bg = unwrapped . _1 . _2 . _1
-bs = unwrapped . _1 . _2 . _2
-eg = unwrapped . _1 . _1 . _1
-es = unwrapped . _1 . _1 . _2
+bg = _Wrapped' . _1 . _2 . _1
+bs = _Wrapped' . _1 . _2 . _2
+eg = _Wrapped' . _1 . _1 . _1
+es = _Wrapped' . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
     setBeginGliss x = bg .~ Any x

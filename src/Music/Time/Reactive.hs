@@ -6,10 +6,12 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
@@ -105,12 +107,13 @@ instance Delayable (Reactive a) where
 instance Stretchable (Reactive a) where
     stretch n (Reactive (t,r)) = Reactive (stretch n t, stretch n r)
 
-instance Wrapped ([Time], Time -> a) ([Time], Time -> a) (Reactive a) (Reactive a) where
-    wrapped = iso Reactive getReactive
+instance Wrapped (Reactive a) where
+    type Unwrapped (Reactive a) = ([Time], Time -> a)
+    _Wrapped' = iso getReactive Reactive
 
 instance Applicative Reactive where
-    pure    = (^. wrapped) . pure . pure
-    ((^. unwrapped) -> (tf, rf)) <*> ((^. unwrapped) -> (tx, rx)) = (^. wrapped) (tf <> tx, rf <*> rx)
+    pure    = (^. _Unwrapped') . pure . pure
+    ((^. _Wrapped') -> (tf, rf)) <*> ((^. _Wrapped') -> (tx, rx)) = (^. _Unwrapped') (tf <> tx, rf <*> rx)
 
 instance HasBehavior Reactive where
     (?) = atTime
@@ -188,12 +191,12 @@ instance VectorSpace v => VectorSpace (Reactive v) where
 
 -- | Get the time of all updatese.
 occs :: Reactive a -> [Time]
-occs = fst . (^. unwrapped)
+occs = fst . (^. _Wrapped')
 
 -- | @b ?? t@ returns the value of the reactive at time @t@.
 --  Semantic function.
 atTime :: Reactive a -> Time -> a
-atTime = snd . (^. unwrapped)
+atTime = snd . (^. _Wrapped')
 
 -- | Get the initial value.
 initial :: Reactive a -> a

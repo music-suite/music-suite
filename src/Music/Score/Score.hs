@@ -116,7 +116,7 @@ getScore =
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
-mapScore f = over unwrapped (second $ mapNScore f)
+mapScore f = over _Wrapped (second $ mapNScore f)
 
 -- | Group each occurence with its associated time span.
 --
@@ -130,7 +130,7 @@ mapScore f = over unwrapped (second $ mapNScore f)
 -- > join . fmap (noteToScore) . reifyScore /= id
 --
 reifyScore :: Score a -> Score (Note a)
-reifyScore = over unwrapped (second reifyNScore)
+reifyScore = over _Wrapped (second reifyNScore)
 
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -156,16 +156,18 @@ filterEvents f = mapFilterEvents (partial3 f)
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
-instance Wrapped (Meta, NScore a) (Meta, NScore b) (Score a) (Score b) where
-    wrapped = iso Score getScore'
+instance Wrapped (Score a) where
+    type Unwrapped (Score a) = (Meta, NScore a)
+    _Wrapped' = iso getScore' Score
+instance Rewrapped (Score a) (Score b) where
 
 instance Applicative Score where
     pure = return
     (<*>) = ap
 
 instance Monad Score where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
+    return = (^. _Unwrapped') . return . return
+    xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Score where
     empty = mempty
@@ -194,7 +196,7 @@ instance Reversible a => Reversible (Score a) where
     rev = fmap rev . withSameOnset (stretch (-1))
 
 instance HasMeta (Score a) where
-    meta = unwrapped . _1
+    meta = _Wrapped' . _1
 
 
 
@@ -218,16 +220,17 @@ mapNScore f = inNScore (fmap $ extend f)
 reifyNScore :: NScore a -> NScore (Note a)
 reifyNScore = inNScore $ fmap duplicate
 
-instance Wrapped [Note a] [Note a] (NScore a) (NScore a) where
-    wrapped = iso NScore getNScore
+instance Wrapped (NScore a) where
+    type Unwrapped (NScore a) = [Note a]
+    _Wrapped' = iso getNScore NScore 
 
 instance Applicative NScore where
     pure = return
     (<*>) = ap
 
 instance Monad NScore where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
+    return = (^. _Unwrapped') . return . return
+    xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance MonadPlus NScore where
     mzero = mempty

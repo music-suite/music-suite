@@ -53,8 +53,8 @@ module Music.Score.Pitch (
         octavesDown,
 
         -- ** Transformations
-        above,
-        below,
+        -- above,
+        -- below,
         fifthsAbove,
         fifthsBelow,
         octavesAbove,

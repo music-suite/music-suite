@@ -172,7 +172,7 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
             notate ts a = mconcat (fmap Xml.text ts) <> a
 
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
-    getMusicXml d (HarmonicT ((view unwrapped -> isNat, view unwrapped -> n),x)) = notate isNat n $ getMusicXml d x
+    getMusicXml d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getMusicXml d x
         where
             notate _     0 = id
             notate True  n = notateNatural n
@@ -193,10 +193,10 @@ instance HasMusicXml a => HasMusicXml (SlideT a) where
     getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
         where
             notate = neg . nes . nbg . nbs
-            neg    = if view unwrapped eg then Xml.endGliss else id
-            nes    = if view unwrapped es then Xml.endSlide else id
-            nbg    = if view unwrapped bg then Xml.beginGliss else id
-            nbs    = if view unwrapped bs then Xml.beginSlide else id
+            neg    = if view _Wrapped' eg then Xml.endGliss else id
+            nes    = if view _Wrapped' es then Xml.endSlide else id
+            nbg    = if view _Wrapped' bg then Xml.beginGliss else id
+            nbs    = if view _Wrapped' bs then Xml.beginSlide else id
 
 instance HasMusicXml a => HasMusicXml (ClefT a) where
     getMusicXml d (ClefT (c, a)) = notate $ getMusicXml d a

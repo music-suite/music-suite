@@ -90,16 +90,17 @@ newtype Voice a = Voice { getVoice' :: [Ev a] }
     deriving (Eq, Ord, Show, Functor, Foldable, Monoid, Semigroup, Typeable, Traversable, Stretchable)
 
 
-instance Wrapped [Ev a] [Ev a] (Voice a) (Voice a) where
-    wrapped = iso Voice getVoice'
+instance Wrapped (Voice a) where
+    type Unwrapped (Voice a) = [Ev a]
+    _Wrapped' = iso getVoice' Voice
 
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
 
 instance Monad Voice where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ ((^. unwrapped) . f) `mbind` ((^. unwrapped) xs)
+    return = (^. _Unwrapped') . return . return
+    xs >>= f = (^. _Unwrapped') $ ((^. _Wrapped') . f) `mbind` ((^. _Wrapped') xs)
 
 instance HasDuration (Voice a) where
     duration = sum . fmap duration . getVoice'

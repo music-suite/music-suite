@@ -185,7 +185,7 @@ instance HasLilypond a => HasLilypond (TextT a) where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
-    getLilypond d (HarmonicT ((view unwrapped -> isNat, view unwrapped -> n),x)) = notate isNat n $ getLilypond d x
+    getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
         where
             notate _     0 = id
             notate True  n = notateNatural n
@@ -198,7 +198,7 @@ instance HasLilypond a => HasLilypond (HarmonicT a) where
 instance HasLilypond a => HasLilypond (SlideT a) where
     getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
         where
-            notate = if view unwrapped bg || view unwrapped bs then Lilypond.beginGlissando else id
+            notate = if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
 
 instance HasLilypond a => HasLilypond (ClefT a) where
     -- TODO consolidate

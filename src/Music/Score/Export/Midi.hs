@@ -31,7 +31,7 @@ module Music.Score.Export.Midi (
         toMidi,
         toMidiTrack,
         writeMidi,
-        playMidi,
+        -- playMidi,
         playMidiIO,
   ) where
 
@@ -58,9 +58,10 @@ import           Data.Traversable
 import           Data.Typeable
 import           Data.VectorSpace
 
-import           Control.Reactive          hiding (Event)
-import qualified Control.Reactive          as R
-import           Control.Reactive.Midi
+import Codec.Midi hiding (Track)
+-- import           Control.Reactive          hiding (Event)
+-- import qualified Control.Reactive          as R
+-- import           Control.Reactive.Midi
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -205,6 +206,10 @@ toMidiTrack = (^. track) . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScor
 writeMidi :: (HasMidiPart a, HasMidi a) => FilePath -> Score a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
+playMidiIO :: HasMidi a => String -> Score a -> IO ()
+playMidiIO = error "playMidiIO: Not implemented"
+
+{-
 -- |
 -- Convert a score to a MIDI event.
 --
@@ -221,6 +226,7 @@ playMidi dest x = midiOut midiDest $ playback trig (pure $ toTrack $ startAt 0.2
 --
 playMidiIO :: HasMidi a => String -> Score a -> IO ()
 playMidiIO dest = runLoop . playMidi dest
+-}
 
 
 

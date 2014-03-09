@@ -84,12 +84,13 @@ instance Delayable (Behavior a) where
 instance Stretchable (Behavior a) where
     stretch n (Behavior x) = Behavior (fmap (stretch n) $ stretch n x)
 
-instance Wrapped (Reactive (Time -> a)) (Reactive (Time -> a)) (Behavior a) (Behavior a) where
-    wrapped = iso Behavior getBehavior
+instance Wrapped (Behavior a) where
+    type Unwrapped (Behavior a) = (Reactive (Time -> a))
+    _Wrapped' = iso getBehavior Behavior
 
 instance Applicative Behavior where
-    pure    = (^. wrapped) . pure . pure
-    ((^. unwrapped) -> f) <*> ((^. unwrapped) -> x) = (^. wrapped) $ liftA2 (<*>) f x
+    pure    = (^. _Unwrapped') . pure . pure
+    ((^. _Wrapped') -> f) <*> ((^. _Wrapped') -> x) = (^. _Unwrapped') $ liftA2 (<*>) f x
 
 instance HasBehavior Behavior where
     (?) = behAt
@@ -120,13 +121,13 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 --
 --   Identical to @behavior . const@ but creates more efficient behaviors.
 constant :: a -> Behavior a
-constant = (^. wrapped) . pure . pure
+constant = (^. _Unwrapped') . pure . pure
 
 -- | Create a behavior from function of (absolute) time.
 --
 --   You should pass a function defined for the whole range, including negative time.
 behavior :: (Time -> a) -> Behavior a
-behavior = (^. wrapped) . pure
+behavior = (^. _Unwrapped') . pure
 
 -- | Create a behaviour from a function of (relative) duration focused on 'sunit'.
 --
@@ -143,16 +144,16 @@ varyingIn s f = behavior $ sapp (sinvert s) (lmap (.-. start) f)
 -- | @b ?? t@ returns the value of the behavior at time @t@.
 --  Semantic function.
 behAt :: Behavior a -> Time -> a
-b `behAt` t = ((^. unwrapped) b ? t) t
+b `behAt` t = ((^. _Wrapped') b ? t) t
 
 time :: Behavior Time
 time = behavior id
 
 trimBeforeB :: Monoid a => Time -> Behavior a -> Behavior a
-trimBeforeB t = unwrapping Behavior %~ trimBefore t
+trimBeforeB t = _Wrapping' Behavior %~ trimBefore t
 
 switchB :: Time -> Behavior a -> Behavior a -> Behavior a
-switchB t ((^. unwrapped) -> x) ((^. unwrapped) -> y) = (^. wrapped) $ switch t x y
+switchB t ((^. _Wrapped') -> x) ((^. _Wrapped') -> y) = (^. _Unwrapped') $ switch t x y
 
 
 

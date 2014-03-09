@@ -97,16 +97,17 @@ instance Monoid (Track a) where
             m = mergeBy (comparing fst)
 -}
 
-instance Wrapped [Occ a] [Occ a] (Track a) (Track a) where
-    wrapped = iso Track getTrack'
+instance Wrapped (Track a) where
+    type Unwrapped (Track a) = [Occ a]
+    _Wrapped' = iso getTrack' Track
 
 instance Applicative Track where
     pure  = return
     (<*>) = ap
 
 instance Monad Track where
-    return = (^. wrapped) . return . return
-    xs >>= f = (^. wrapped) $ mbind ((^. unwrapped) . f) ((^. unwrapped) xs)
+    return = (^. _Unwrapped') . return . return
+    xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Track where
     empty = mempty
