@@ -3,7 +3,7 @@
 
 Abstract representation of musical articulation (staccato, legato etc).
 
-This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+This library is part of the Haskell Music Suite, see <http://music-suite.github.io>.
 
 ## Requirements
 
