@@ -58,6 +58,8 @@ module Music.Lilypond (
         rest,
         note,
         chord,
+        chordHarm,
+        chordWithPost,
         
         -- ** Composition
         sequential,
@@ -128,9 +130,14 @@ module Music.Lilypond (
         addSegno,
         addCoda,
         addVarCoda,
+
+        -- * Utility
+        foldMusic,
+        removeSingleChords,
     )
 where
 
+import Control.Arrow ((<<<), (***), first, second)
 import Data.Ratio
 import Data.String
 import Data.Default
@@ -177,7 +184,7 @@ data ScoreBlock
 data Music    
     = Rest (Maybe Duration) [PostEvent]             -- ^ Single rest.
     | Note Note (Maybe Duration) [PostEvent]        -- ^ Single note.
-    | Chord [Note] (Maybe Duration) [PostEvent]     -- ^ Single chord.
+    | Chord [(Note, [ChordPostEvent])] (Maybe Duration) [PostEvent]     -- ^ Single chord.
     | Sequential   [Music]                          -- ^ Sequential composition.
     | Simultaneous Bool [Music]                     -- ^ Parallel composition (split voices?).
     | Repeat Bool Int Music (Maybe (Music, Music))  -- ^ Repetition (unfold?, times, music, alternative).
@@ -187,7 +194,7 @@ data Music
     | Relative Pitch Music                          -- ^ Use relative octave (octave).
     | Clef Clef                                     -- ^ Clef.
     | Key Pitch Mode                                -- ^ Key signature.
-    | Time Rational                                 -- ^ Time signature.
+    | Time Integer Integer                          -- ^ Time signature.
     | Breathe (Maybe BreathingSign)                 -- ^ Breath mark (caesura)
     | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
     | New String (Maybe String) Music               -- ^ New expression.
@@ -200,7 +207,7 @@ instance Pretty Music where
 
     pretty (Note n d p)     = pretty n <> pretty d <> prettyList p
 
-    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ map pretty ns) <> char '>' 
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ fmap (uncurry (<>) <<< pretty *** pretty) ns) <> char '>' 
                                   <> pretty d <> prettyList p
 
     pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
@@ -233,7 +240,7 @@ instance Pretty Music where
 
     pretty (Key p m) = "\\key" <+> pretty p <+> pretty m
     
-    pretty (Time n) = "\\time" <+> pretty n
+    pretty (Time m n) = "\\time" <+> (pretty m <> "/" <> pretty n)
     
     pretty (Breathe Nothing) = "\\breathe"
     pretty (Breathe a)       = notImpl "Non-standard breath marks"
@@ -324,6 +331,13 @@ data BreathingSign
     | CurvedCaesura
     deriving (Eq, Show)
 
+data ChordPostEvent
+    = Harmonic
+    deriving (Eq, Show)
+
+instance Pretty ChordPostEvent where
+    pretty Harmonic = "\\harmonic"
+    
 data PostEvent
     = Articulation Direction Articulation
     | Dynamics Direction Dynamics
@@ -567,7 +581,13 @@ note n = Note n (Just $ 1/4) []
 --   Use the 'VectorSpace' methods to change duration.
 --   
 chord :: [Note] -> Music
-chord ns = Chord ns (Just $ 1/4) []
+chord ns = Chord (fmap (\x -> (x,[])) ns) (Just $ 1/4) []
+
+chordHarm :: [(Note, Bool)] -> Music
+chordHarm = chordWithPost . fmap (second $ \x -> if x then [Harmonic] else [])
+
+chordWithPost :: [(Note, [ChordPostEvent])] -> Music
+chordWithPost ns = Chord ns (Just $ 1/4) []
 
 
 sequential :: Music -> Music -> Music
@@ -768,6 +788,27 @@ addCoda = addArticulation Coda
 addVarCoda :: Music -> Music
 addVarCoda = addArticulation VarCoda
 
+
+
+foldMusic :: (Music -> Music) -> Music -> Music
+foldMusic f = go
+    where
+        go (Sequential ms)      = Sequential (fmap go ms)                          
+        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)                     
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)  
+        go (Tremolo n m)        = Tremolo n (go m)                             
+        go (Times r m)          = Times r (go m)                          
+        go (Transpose p p2 m)   = Transpose p p2 (go m)                   
+        go (Relative p m)       = Relative p (go m)                          
+        go (New s v m)          = New s v (go m)               
+        go (Context s v m)      = Context s v (go m)
+        go x = f x
+
+removeSingleChords :: Music -> Music
+removeSingleChords = foldMusic go
+    where
+        go (Chord [(n,_)] d p) = Note n d p
+        go x                   = x
 
 
 
