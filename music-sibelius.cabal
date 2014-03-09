@@ -27,9 +27,9 @@ library
         monadplus,
         unordered-containers,
         bytestring,
-        music-score,
-        music-pitch-literal,
-        music-preludes,
+        music-score              == 1.3.2,
+        music-pitch-literal      == 1.3.2,
+        music-preludes           == 1.3.2,
         aeson
     hs-source-dirs: src
     default-language: Haskell2010
