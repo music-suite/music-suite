@@ -20,7 +20,7 @@ description:
     both packages through @music-preludes@.
     .
     This library is part of the Music Suite, see
-    <http://musicsuite.github.com>.
+    <http://music-suite.github.io>.
 
 source-repository head
   type:             git
