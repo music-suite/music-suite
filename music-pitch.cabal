@@ -34,7 +34,7 @@ library
         containers,
         semigroups,
         semigroupoids,
-        music-pitch-literal,
+        music-pitch-literal == 1.3.2,
         vector-space
 
     hs-source-dirs: src
