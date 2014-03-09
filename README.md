@@ -5,7 +5,7 @@ Exporting of Sibelius scores to a compatible music representations. This export 
 
 This functionality is still experimental: you need to manually install the Sibelius plugin (see below), and run it as *Plugins > JSON > Export JSON*.
 
-This library an exterimental addition to the Music Suite, see <http://musicsuite.github.com>.
+This library an exterimental addition to the Music Suite, see <http://music-suite.github.io>.
 
 ## Requirements
 
