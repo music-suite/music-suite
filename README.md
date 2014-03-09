@@ -8,7 +8,7 @@ overloaded on result type. This works exactly like overloaded numbers and string
 
 This is a separate package so that container types can declare lifted instances without depending on `music-pitch`.
 
-This library is part of the Haskell Music Suite, see <http://musicsuite.github.com>.
+This library is part of the Haskell Music Suite, see <http://music-suite.github.io>.
 
 
 ## Requirements
