@@ -23,8 +23,8 @@ library
         base >= 4 && < 5,
         semigroups, nats, data-default, type-unary, reverse-apply,
         xml,
-        music-pitch-literal,
-        music-dynamics-literal
+        music-pitch-literal == 1.3.2,
+        music-dynamics-literal == 1.3.2
 
     hs-source-dirs: src
     exposed-modules:
