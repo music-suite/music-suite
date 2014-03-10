@@ -1,5 +1,7 @@
 
-PLUGIN_PATH=~/appsupport/sibelius/Plugins
+# PLUGIN_PATH=~/appsupport/sibelius/Plugins
+PLUGIN_PATH=~/appsupport/sibelius7/Plugins
+APP_NAME="Sibelius 7"
 
 # EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
 #EXAMPLE=~/Documents/Musik/Etyder/Kontrapunkt/Fuga\ 106.sib
@@ -12,8 +14,10 @@ install-plugin:
 	cat util/LE.bom ExportJSON.plgy >ExportJSON.plg
 
 	rm ExportJSON.plgy
+	mkdir -p $(PLUGIN_PATH)/JSON/
 	mv ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
 
-	killall "Sibelius 6" || open -a "Sibelius 6" #$(EXAMPLE)
+	killall $(APP_NAME)
+	open -a $(APP_NAME) #$(EXAMPLE)
 
 
