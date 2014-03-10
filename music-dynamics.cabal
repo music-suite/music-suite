@@ -1,6 +1,6 @@
 
 name:               music-dynamics
-version:            1.3.2
+version:            1.6
 cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
@@ -18,17 +18,17 @@ description:
 
 source-repository head
   type:             git
-  location:         git://github.com/hanshoglund/music-dynamics.git
+  location:         git://github.com/music-suite/music-dynamics.git
   
 
 library                    
     build-depends: 
-        base >= 4 && < 5,
+        base                    >= 4 && < 5,
         time,
         random,
         semigroups,
         semigroupoids,
-        music-dynamics-literal == 1.3.2
+        music-dynamics-literal  == 1.6
 
     hs-source-dirs: src
     default-language: Haskell2010
