@@ -1,6 +1,6 @@
 
 name:               lilypond
-version:            1.3.2
+version:            1.6
 cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund <hans@hanshoglund.se>
@@ -18,19 +18,19 @@ description:
 
 source-repository head
     type:               git
-    location:           git://github.com/hanshoglund/lilypond.git
+    location:           git://github.com/music-suite/lilypond.git
 
 
 library
     build-depends:
-        base            >= 4 && < 5,
+        base                    >= 4 && < 5,
         semigroups,
         prettify,
         vector-space,
         process,
         data-default,
-        music-pitch-literal == 1.3.2,
-        music-dynamics-literal == 1.3.2
+        music-pitch-literal     == 1.6,
+        music-dynamics-literal  == 1.6
     hs-source-dirs: src
     default-language:   Haskell2010
     exposed-modules:
