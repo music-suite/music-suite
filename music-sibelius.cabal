@@ -1,6 +1,6 @@
 
 name:               music-sibelius
-version:            1.3.2
+version:            1.6
 cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund <hans@hanshoglund.se>
@@ -18,18 +18,18 @@ description:
 
 source-repository head
   type:             git
-  location:         git://github.com/hanshoglund/music-sibelius.git
+  location:         git://github.com/music-suite/music-sibelius.git
   
 library                    
     build-depends: 
-        base >= 4 && < 5,
+        base                     >= 4 && < 5,
         semigroups,
         monadplus,
         unordered-containers,
         bytestring,
-        music-score              == 1.3.2,
-        music-pitch-literal      == 1.3.2,
-        music-preludes           == 1.3.2,
+        music-score              == 1.6,
+        music-pitch-literal      == 1.6,
+        music-preludes           == 1.6,
         aeson
     hs-source-dirs: src
     default-language: Haskell2010
