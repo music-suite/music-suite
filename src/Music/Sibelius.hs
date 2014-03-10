@@ -5,32 +5,32 @@
 module Music.Sibelius (
 
         -- * Scores and staves
-        SibScore(..),
-        SibStaff(..),
-        SibBar(..),
+        SibeliusScore(..),
+        SibeliusStaff(..),
+        SibeliusBar(..),
         
         -- * Bar objects
-        SibBarObject(..),
+        SibeliusBarObject(..),
 
         -- ** Notes
-        SibChord(..),
-        SibNote(..),
+        SibeliusChord(..),
+        SibeliusNote(..),
 
         -- ** Lines
-        SibSlur(..),
-        SibCrescendoLine(..),
-        SibDiminuendoLine(..),
+        SibeliusSlur(..),
+        SibeliusCrescendoLine(..),
+        SibeliusDiminuendoLine(..),
 
         -- ** Tuplets
-        SibTuplet(..),
-        SibArticulation(..),
-        readSibArticulation,
+        SibeliusTuplet(..),
+        SibeliusArticulation(..),
+        readSibeliusArticulation,
 
         -- ** Miscellaneous
-        SibClef(..),
-        SibKeySignature(..),
-        SibTimeSignature(..),
-        SibText(..),
+        SibeliusClef(..),
+        SibeliusKeySignature(..),
+        SibeliusTimeSignature(..),
+        SibeliusText(..),
 
   ) where
 
@@ -54,18 +54,18 @@ setMeta _ _ = id
 -}
 
 
-data SibScore = SibScore {
+data SibeliusScore = SibeliusScore {
             scoreTitle             :: String,
             scoreComposer          :: String,
             scoreInformation       :: String,
             scoreStaffHeight       :: Double,
             scoreTransposing       :: Bool,
-            scoreStaves            :: [SibStaff],
+            scoreStaves            :: [SibeliusStaff],
             scoreSystemStaff       :: ()
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibScore where
-    parseJSON (Object v) = SibScore
+instance FromJSON SibeliusScore where
+    parseJSON (Object v) = SibeliusScore
         <$> v .: "title" 
         <*> v .: "composer"
         <*> v .: "information"
@@ -76,120 +76,122 @@ instance FromJSON SibScore where
         <*> return ()
 
 
-data SibStaff = SibStaff {
-            staffBars                :: [SibBar],
+data SibeliusStaff = SibeliusStaff {
+            staffBars                :: [SibeliusBar],
             staffName                :: String,
             staffShortName           :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibStaff where
-    parseJSON (Object v) = SibStaff
+instance FromJSON SibeliusStaff where
+    parseJSON (Object v) = SibeliusStaff
         <$> v .: "bars"
         <*> v .: "name"
         <*> v .: "shortName"
 
-data SibBar = SibBar {
-            barElements            :: [SibBarObject]
+data SibeliusBar = SibeliusBar {
+            barElements            :: [SibeliusBarObject]
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibBar where
-    parseJSON (Object v) = SibBar
+instance FromJSON SibeliusBar where
+    parseJSON (Object v) = SibeliusBar
         <$> v .: "elements"
 
-data SibBarObject 
-    = SibBarObjectText SibText
-    | SibBarObjectClef SibClef
-    | SibBarObjectSlur SibSlur
-    | SibBarObjectCrescendoLine SibCrescendoLine
-    | SibBarObjectDiminuendoLine SibDiminuendoLine
-    | SibBarObjectTimeSignature SibTimeSignature
-    | SibBarObjectKeySignature SibKeySignature
-    | SibBarObjectTuplet SibTuplet
-    | SibBarObjectChord SibChord
+data SibeliusBarObject 
+    = SibeliusBarObjectText SibeliusText
+    | SibeliusBarObjectClef SibeliusClef
+    | SibeliusBarObjectSlur SibeliusSlur
+    | SibeliusBarObjectCrescendoLine SibeliusCrescendoLine
+    | SibeliusBarObjectDiminuendoLine SibeliusDiminuendoLine
+    | SibeliusBarObjectTimeSignature SibeliusTimeSignature
+    | SibeliusBarObjectKeySignature SibeliusKeySignature
+    | SibeliusBarObjectTuplet SibeliusTuplet
+    | SibeliusBarObjectChord SibeliusChord
     deriving (Eq, Ord, Show)
-instance FromJSON SibBarObject where
+-- TODO highlights, lyric, barlines, comment, other lines and symbols
+
+instance FromJSON SibeliusBarObject where
     parseJSON x@(Object v) = case HashMap.lookup "type" v of    
         -- TODO
-        Just "text"      -> SibBarObjectText <$> parseJSON x
-        Just "clef"      -> SibBarObjectClef <$> parseJSON x
-        Just "slur"      -> SibBarObjectSlur <$> parseJSON x
-        Just "cresc"     -> SibBarObjectCrescendoLine <$> parseJSON x
-        Just "dim"       -> SibBarObjectDiminuendoLine <$> parseJSON x
-        Just "time"      -> SibBarObjectTimeSignature <$> parseJSON x
-        Just "key"       -> SibBarObjectKeySignature <$> parseJSON x
-        Just "tuplet"    -> SibBarObjectTuplet <$> parseJSON x
-        Just "chord"     -> SibBarObjectChord <$> parseJSON x
+        Just "text"      -> SibeliusBarObjectText <$> parseJSON x
+        Just "clef"      -> SibeliusBarObjectClef <$> parseJSON x
+        Just "slur"      -> SibeliusBarObjectSlur <$> parseJSON x
+        Just "cresc"     -> SibeliusBarObjectCrescendoLine <$> parseJSON x
+        Just "dim"       -> SibeliusBarObjectDiminuendoLine <$> parseJSON x
+        Just "time"      -> SibeliusBarObjectTimeSignature <$> parseJSON x
+        Just "key"       -> SibeliusBarObjectKeySignature <$> parseJSON x
+        Just "tuplet"    -> SibeliusBarObjectTuplet <$> parseJSON x
+        Just "chord"     -> SibeliusBarObjectChord <$> parseJSON x
         _                -> mempty -- failure
 
-data SibText = SibText {
+data SibeliusText = SibeliusText {
             textVoice               :: Int,
             textPosition            :: Int,
             textText                :: String,
             textStyle               :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibText where
-    parseJSON (Object v) = SibText
+instance FromJSON SibeliusText where
+    parseJSON (Object v) = SibeliusText
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "text"
         <*> v .: "style"
      
-data SibClef = SibClef {
+data SibeliusClef = SibeliusClef {
             clefVoice               :: Int,
             clefPosition            :: Int,
             clefStyle               :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibClef where
-    parseJSON (Object v) = SibClef
+instance FromJSON SibeliusClef where
+    parseJSON (Object v) = SibeliusClef
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "style"
 
-data SibSlur = SibSlur {
+data SibeliusSlur = SibeliusSlur {
             slurVoice               :: Int,
             slurPosition            :: Int,
             slurDuration            :: Int,
             slurStyle               :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibSlur where
-    parseJSON (Object v) = SibSlur
+instance FromJSON SibeliusSlur where
+    parseJSON (Object v) = SibeliusSlur
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "style"
 
-data SibCrescendoLine = SibCrescendoLine {  
+data SibeliusCrescendoLine = SibeliusCrescendoLine {  
             crescVoice               :: Int,
             crescPosition            :: Int,
             crescDuration            :: Int,
             crescStyle               :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibCrescendoLine where
-    parseJSON (Object v) = SibCrescendoLine
+instance FromJSON SibeliusCrescendoLine where
+    parseJSON (Object v) = SibeliusCrescendoLine
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "style"
 
-data SibDiminuendoLine = SibDiminuendoLine {
+data SibeliusDiminuendoLine = SibeliusDiminuendoLine {
             dimVoice               :: Int,
             dimPosition            :: Int,
             dimDuration            :: Int,
             dimStyle               :: String
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibDiminuendoLine where
-    parseJSON (Object v) = SibDiminuendoLine
+instance FromJSON SibeliusDiminuendoLine where
+    parseJSON (Object v) = SibeliusDiminuendoLine
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "style"
 
-data SibTimeSignature = SibTimeSignature {
+data SibeliusTimeSignature = SibeliusTimeSignature {
             timeVoice               :: Int,
             timePosition            :: Int,
             timeValue               :: Rational,
@@ -197,15 +199,15 @@ data SibTimeSignature = SibTimeSignature {
             timeIsAllaBreve         :: Bool
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibTimeSignature where
-    parseJSON (Object v) = SibTimeSignature
+instance FromJSON SibeliusTimeSignature where
+    parseJSON (Object v) = SibeliusTimeSignature
         <$> v .: "voice" 
         <*> v .: "position"
         <*> fmap (\[x,y] -> (x::Rational) / (y::Rational)) (v .: "value")
         <*> v .: "common"
         <*> v .: "allaBreve"
 
-data SibKeySignature = SibKeySignature {
+data SibeliusKeySignature = SibeliusKeySignature {
             keyVoice               :: Int,
             keyPosition            :: Int,
             keyMajor               :: Bool,
@@ -213,15 +215,15 @@ data SibKeySignature = SibKeySignature {
             keyIsOpen              :: Bool
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibKeySignature where
-    parseJSON (Object v) = SibKeySignature
+instance FromJSON SibeliusKeySignature where
+    parseJSON (Object v) = SibeliusKeySignature
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "major"
         <*> v .: "sharps"
         <*> v .: "isOpen"
 
-data SibTuplet = SibTuplet {
+data SibeliusTuplet = SibeliusTuplet {
             tupletVoice               :: Int,
             tupletPosition            :: Int,
             tupletDuration            :: Int,
@@ -229,15 +231,15 @@ data SibTuplet = SibTuplet {
             tupletValue               :: Rational
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibTuplet where
-    parseJSON (Object v) = SibTuplet 
+instance FromJSON SibeliusTuplet where
+    parseJSON (Object v) = SibeliusTuplet 
         <$> v .: "voice" 
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "playedDuration"
         <*> (v .: "value" >>= \[x,y] -> return $ x / y) -- TODO unsafe
 
-data SibArticulation
+data SibeliusArticulation
     = UpBow
     | DownBow
     | Plus
@@ -250,8 +252,8 @@ data SibArticulation
     | Staccato
     deriving (Eq, Ord, Show, Enum)
 
-readSibArticulation :: String -> Maybe SibArticulation
-readSibArticulation = go
+readSibeliusArticulation :: String -> Maybe SibeliusArticulation
+readSibeliusArticulation = go
     where
         go "upbow"          = Just UpBow
         go "downBow"        = Just DownBow
@@ -265,32 +267,32 @@ readSibArticulation = go
         go "staccato"       = Just Staccato
         go _                = Nothing
     
-data SibChord = SibChord { 
+data SibeliusChord = SibeliusChord { 
             chordPosition            :: Int,
             chordDuration            :: Int,
             chordVoice               :: Int,
-            chordArticulations       :: [SibArticulation], -- TODO
+            chordArticulations       :: [SibeliusArticulation], -- TODO
             chordSingleTremolos      :: Int,
             chordDoubleTremolos      :: Int,
             chordAcciaccatura        :: Bool,
             chordAppoggiatura        :: Bool,
-            chordNotes               :: [SibNote]
+            chordNotes               :: [SibeliusNote]
     }
     deriving (Eq, Ord, Show)
 
-instance FromJSON SibChord where
-    parseJSON (Object v) = SibChord 
+instance FromJSON SibeliusChord where
+    parseJSON (Object v) = SibeliusChord 
         <$> v .: "position" 
         <*> v .: "duration"
         <*> v .: "voice"
-        <*> fmap (mmapMaybe readSibArticulation) (v .: "articulations")
+        <*> fmap (mmapMaybe readSibeliusArticulation) (v .: "articulations")
         <*> v .: "singleTremolos"
         <*> v .: "doubleTremolos"
         <*> v .: "acciaccatura"
         <*> v .: "appoggiatura"
         <*> v .: "notes"
 
-data SibNote = SibNote {
+data SibeliusNote = SibeliusNote {
             notePitch               :: Int,
             noteDiatonicPitch       :: Int,
             noteAccidental          :: Int,
@@ -298,8 +300,8 @@ data SibNote = SibNote {
             noteStyle               :: Int -- not String?
     }
     deriving (Eq, Ord, Show)
-instance FromJSON SibNote where
-    parseJSON (Object v) = SibNote 
+instance FromJSON SibeliusNote where
+    parseJSON (Object v) = SibeliusNote 
         <$> v .: "pitch" 
         <*> v .: "diatonicPitch"
         <*> v .: "accidental"

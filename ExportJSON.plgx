@@ -95,11 +95,11 @@
         score2['transposing']               = ToJSONBool(score.TransposingScore);
         score2['staffHeight']               = score.StaffHeight;
 
-        score2['systemStaff']               = CreateJSONArray();
-        score2['staves']                    = CreateJSONArray();;
+        temp = CreateJSONArray();
+        ExportSystemStaff(temp, score.SystemStaff, progress);
+        score2['systemStaff']               = temp[0];
 
-        ExportSystemStaff(score2.systemStaff, score, progress);
-
+        score2['staves']                    = CreateJSONArray();
         for each staff in score {
             ExportStaff(score2.staves, staff, progress);
         }
@@ -107,12 +107,21 @@
         return score2;
     }"
 
-    ExportSystemStaff "(score2, staff, progress) {
+    ExportSystemStaff "(dest, staff, progress) {
         // JSONScore -> Staff -> ()
         // Converts and sets the system staff in the given score
 
-        ;
-        // TODO
+        staff2 = CreateJSONObject();
+        staff2['bars']                      = CreateJSONArray();
+
+        for each bar in staff {
+            // trace('    Exporting bar' & bar.BarNumber & ' out of ' & staff.BarCount & ' in ' & staff.InstrumentName);
+            if (progress != null) {
+                progress.Apply('System staff', bar.BarNumber, staff.BarCount);
+            }
+            ExportBar(staff2.bars, bar);
+        }
+        PushJSONArray(dest, staff2);
     }"
 
     ExportStaff "(dest, staff, progress) {
