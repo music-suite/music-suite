@@ -466,6 +466,7 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ```music+haskell
 let
+    rev = id -- TODO
     melody = accent $ legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
 in melody |> rev melody
 ```
@@ -613,16 +614,14 @@ It can be converted into a score by stretching each element and composing in seq
 
 ```music+haskell
 let
-    x, y :: Voice Note
+    x = [ (1, c),
+          (1, d),
+          (1, f),
+          (1, e) ]^.voice
 
-    x = voice [ (1, c),
-                (1, d),
-                (1, f),
-                (1, e) ]
-
-    y = join $ voice [ (1, x), 
-                       (0.5, up _P5 x), 
-                       (4, up _P8 x) ]
+    y = join $ [ (1, x), 
+                 (0.5, up _P5 x), 
+                 (4, up _P8 x) ]^.voice
 
 in stretch (1/8) $ voiceToScore $ y
 ```
@@ -635,7 +634,6 @@ It can be converted into a score by delaying each element and composing in paral
 
 ```music+haskell
 let
-    x, y :: Track Note
     x = track [ (0, c), (1, d), (2, e) ]
     y = join $ track [ (0, x), (1.5,  up _P5 x), (3.25, up _P8 x) ]
 in trackToScore (1/8) y
