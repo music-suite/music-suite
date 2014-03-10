@@ -1,6 +1,6 @@
 
 name:               music-score
-version:            1.3.2
+version:            1.6
 cabal-version:      >= 1.10
 author:             Hans Hoglund
 maintainer:         Hans Hoglund
@@ -18,14 +18,14 @@ description:
 
 source-repository head
   type:             git
-  location:         git://github.com/hanshoglund/music-score.git
+  location:         git://github.com/music-suite/music-score.git
   
 library                    
     build-depends: 
-        base >= 4 && < 5,
-        QuickCheck >= 1.2 && < 1.3,
+        base                    >= 4 && < 5,
+        QuickCheck              >= 1.2 && < 1.3,
 
-        lens >= 4.0 && < 4.1,
+        lens                    >= 4.0 && < 4.1,
         -- time,
         -- random,
         process,
@@ -42,13 +42,13 @@ library
         monoid-extras,
         nats,          
         semigroupoids,
-        musicxml2 == 1.4.1,
-        lilypond == 1.3.2,
+        musicxml2 == 1.6,
+        lilypond == 1.6,
         HCodecs,
         vector-space,
-        vector-space-points         == 0.1.3,
-        music-pitch-literal         == 1.3.2,
-        music-dynamics-literal      == 1.3.2,
+        vector-space-points     == 0.1.3,
+        music-pitch-literal     == 1.6,
+        music-dynamics-literal  == 1.6,
         prettify,
         parsec
         -- reenact
