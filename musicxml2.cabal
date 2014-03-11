@@ -11,19 +11,19 @@ tested-with:            GHC
 build-type:             Simple
 cabal-version:          >= 1.10
 
-description: 
+description:
     A representation of the MusicXML format.
 
 source-repository head
   type:                 git
   location:             git://github.com/music-suite/musicxml2.git
-  
+
 library
     build-depends:      base                    >= 4 && < 5,
-                        semigroups, 
-                        nats, 
-                        data-default, 
-                        type-unary, 
+                        semigroups,
+                        nats,
+                        data-default,
+                        type-unary,
                         reverse-apply,
                         xml,
                         music-pitch-literal     == 1.6,
