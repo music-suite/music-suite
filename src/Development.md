@@ -46,9 +46,11 @@ The concepts and abstractions used in the suite overlap with some fundamental co
 
 The music-X packages cover a musical aspect (i.e. pitch, dynamics etc)
 The music-X-literal packages provide overloaded vocabulary (pitches, intervals, dynamics etc) etc
+
 The music-score package provides time structures (spans, voices, behaviors, scores), a meta-data API and translations to external representations (MusicXML, Lilypond etc).
 The music-preludes package provides prelude-style modules, each of which defines a ready-to-go music representation. This is also the place for examples, regression tests etc.
-You can find the whole dependency graph here https://raw.github.com/hanshoglund/music-docs/master/music-suite-deps.png.
+
+![](https://raw.github.com/hanshoglund/music-docs/master/music-suite-deps.png).
 
 The most important thing to notice here is that each musical aspects is independent of the representation of each other aspect, and furthermore that all aspects are independent of the time representation and vice versa.
 
