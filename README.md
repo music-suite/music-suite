@@ -1,5 +1,5 @@
 
-[![Build Status](https://travis-ci.org/hanshoglund/music-pitch-literal.png?branch=master)](https://travis-ci.org/hanshoglund/music-pitch-literal)
+[![Build Status](https://travis-ci.org/diagrams/monoid-extras.png?branch=master)](https://travis-ci.org/diagrams/monoid-extras)
 
 # music-pitch-literal
 
