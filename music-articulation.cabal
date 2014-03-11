@@ -1,34 +1,31 @@
 
-name:               music-articulation
-version:            1.6
-cabal-version:      >= 1.10
-author:             Hans Hoglund
-maintainer:         Hans Hoglund
-license:            BSD3
-license-file:       COPYING
-synopsis:           Abstract representation of musical articulation.
-category:           Music
-tested-with:        GHC
-build-type:         Simple
+name:                   music-articulation
+version:                1.6
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund
+license:                BSD3
+license-file:           COPYING
+synopsis:               Abstract representation of musical articulation.
+category:               Music
+tested-with:            GHC
+build-type:             Simple
+cabal-version:          >= 1.10
 
-description: 
+description:
     Abstract representation of musical articulation (staccato, legato etc).
-    
+
     This library is part of the Music Suite, see <http://music-suite.github.io>.
 
 source-repository head
   type:             git
   location:         git://github.com/music-suite/music-articulation.git
-  
-library                    
-    build-depends: 
-        base                    >= 4 && < 5,
-        time,
-        random,
-        semigroups,
-        semigroupoids
 
-    hs-source-dirs: src
-    default-language: Haskell2010
-    exposed-modules:
-        Music.Articulation
+library
+    build-depends:      base                    >= 4 && < 5,
+                        time,
+                        random,
+                        semigroups,
+                        semigroupoids
+    exposed-modules:    Music.Articulation
+    hs-source-dirs:     src
+    default-language:   Haskell2010
