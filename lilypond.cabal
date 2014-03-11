@@ -1,15 +1,15 @@
 
-name:               lilypond
-version:            1.6
-cabal-version:      >= 1.10
-author:             Hans Hoglund
-maintainer:         Hans Hoglund <hans@hanshoglund.se>
-license:            BSD3
-license-file:       COPYING
-synopsis:           Bindings to Lilypond
-category:           Music
-tested-with:        GHC
-build-type:         Simple
+name:                   lilypond
+version:                1.6
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund <hans@hanshoglund.se>
+    license:            BSD3
+license-file:           COPYING
+synopsis:               Bindings to Lilypond
+category:               Music
+tested-with:            GHC
+build-type:             Simple
+cabal-version:          >= 1.10
 
 description:
     This package contains a terse Haskell representation of (a subset of) Lilypond
@@ -22,20 +22,18 @@ source-repository head
 
 
 library
-    build-depends:
-        base                    >= 4 && < 5,
-        semigroups,
-        prettify,
-        vector-space,
-        process,
-        data-default,
-        music-pitch-literal     == 1.6,
-        music-dynamics-literal  == 1.6
-    hs-source-dirs: src
+    build-depends:      base                >= 4 && < 5,
+                        semigroups,
+                        prettify,
+                        vector-space,
+                        process,
+                        data-default,
+                        music-pitch-literal     == 1.6,
+                        music-dynamics-literal  == 1.6
+    exposed-modules:    Music.Lilypond
+                        Music.Lilypond.Pitch
+                        Music.Lilypond.Dynamics
+                        Music.Lilypond.Value
+                        Music.Lilypond.IO
+    hs-source-dirs:     src
     default-language:   Haskell2010
-    exposed-modules:
-        Music.Lilypond
-        Music.Lilypond.Pitch
-        Music.Lilypond.Dynamics
-        Music.Lilypond.Value
-        Music.Lilypond.IO
