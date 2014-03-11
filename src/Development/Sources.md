@@ -15,7 +15,7 @@ You should be able to pull from all packages using `music-util foreach git pull`
 
 To push to a repo you need to make a fork. For example with the `music-pitch` package you would do it as follows:
 
-- Go to [https://github.com/music-suite/music-pitch]()
+- Go to [https://github.com/music-suite/music-pitch](https://github.com/music-suite/music-pitch)
 
 - Press the Fork button
 
