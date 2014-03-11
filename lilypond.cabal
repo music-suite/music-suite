@@ -24,10 +24,10 @@ source-repository head
 library
     build-depends:      base                >= 4 && < 5,
                         semigroups,
-                        prettify,
                         vector-space,
                         process,
                         data-default,
+                        prettify,
                         music-pitch-literal     == 1.6,
                         music-dynamics-literal  == 1.6
     exposed-modules:    Music.Lilypond
