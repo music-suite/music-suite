@@ -1,2 +1,0 @@
-curl https://raw.github.com/hybridgroup/GitHub-Wikifier/master/pre-commit > .git/hooks/pre-commit;
-chmod +x .git/hooks/pre-commit;
