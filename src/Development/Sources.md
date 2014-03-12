@@ -1,4 +1,8 @@
 
+# Managing sources and builds
+
+Unfortunately, developing a large cross-package system in Cabal is a sligthly cubersome task. There is a utility program (`music-util`)[https://github.com/music-suite/music-util] 
+
 ## Setup
 
 - Install the utility program: `cabal update && cabal install music-util`
