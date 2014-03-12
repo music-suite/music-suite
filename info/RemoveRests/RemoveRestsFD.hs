@@ -2,6 +2,10 @@
 {-# LANGUAGE OverlappingInstances, FlexibleInstances, UndecidableInstances, MultiParamTypeClasses, FunctionalDependencies #-}
 
 module RemoveRests where
+
+import Test.Tasty
+import Test.Tasty.HUnit
+
 import Music.Score hiding (removeRests)
 import Music.Pitch
 import Control.Monad.Plus    
@@ -28,18 +32,19 @@ instance Rests a a => Rests (b, a) (b, a) where
 
 -- etc
 
-{-
-    removeRests [Nothing, Just 1, Just 2]
-        ==> [1,2]
 
-    removeRests [[Nothing, Just 1, Just 2], [Just 3]]
-        ==> [[1,2],[3]]
-        
-    removeRests [[("h",1),("h",2::Int)]]
-        ==> [[("h",1),("h",2)]]
+main = defaultMain $ testGroup ""
+    [ 
+    testCase "" $ 
+        removeRests [Nothing, Just 1, Just 2] @?= [1,2],
 
-    removeRests [Just [1, 2, 3], Just [], Nothing]
-        ==> [[1,2,3],[]]
+    -- testCase "" $ 
+        -- removeRests [[Nothing, Just 1, Just 2], [Just 3]] @?= [[1,2],[3]],
 
-    etc
--}
+    -- testCase "" $ 
+        -- removeRests [[("h",1),("h",2::Int)]] @?= [[("h",1),("h",2)]],
+
+    testCase "" $ 
+        removeRests [Just [1, 2, 3], Just [], Nothing] @?= [[1,2,3],[]]
+    ]
+  

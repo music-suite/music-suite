@@ -2,48 +2,57 @@
 {-# LANGUAGE OverlappingInstances, FlexibleInstances, TypeFamilies #-}
 
 module RemoveRests where
-import Control.Monad.Plus    
+
+import Test.Tasty
+import Test.Tasty.HUnit
+
+import Control.Arrow (second)
+import Control.Monad.Plus
+import Control.Monad.SearchTree
     
 class Rests a where
-    type NoRests a
-    removeRests :: (Functor m, MonadPlus m) => m a -> m (NoRests a)
+    type RemoveRests a
+    removeRests :: (Functor m, MonadPlus m) => m a -> m (RemoveRests a)
 
 type Score = []
 
 instance Rests a => Rests (Score a) where
-    type NoRests (Score a) = Score (NoRests a)
+    type RemoveRests (Score a) = Score (RemoveRests a)
+    removeRests = fmap removeRests
+
+instance Rests a => Rests (SearchTree a) where
+    type RemoveRests (SearchTree a) = SearchTree (RemoveRests a)
     removeRests = fmap removeRests
 
 instance Rests (Maybe a) where
-    type NoRests (Maybe a) = a
+    type RemoveRests (Maybe a) = a
     removeRests = mcatMaybes
 
 -- Everything else is just identities
 
 instance Rests Double where
-    type NoRests Double = Double
+    type RemoveRests Double = Double
     removeRests = id
 instance Rests Int where
-    type NoRests Int = Int
+    type RemoveRests Int = Int
     removeRests = id
 instance Rests a => Rests (b, a) where
-    type NoRests (b,a) = (b,a)
+    type RemoveRests (b,a) = (b,a)
     removeRests = id
 
 -- etc
 
-{-
-    removeRests [Nothing, Just 1, Just 2]
-        ==> [1,2]
+main = defaultMain $ testGroup "" $ fmap (testCase "")
+    [ 
+        removeRests [Nothing, Just 1, Just 2]
+            @?=     [1,2],
 
-    removeRests [[Nothing, Just 1, Just 2], [Just 3]]
-        ==> [[1,2],[3]]
-        
-    removeRests [[("h",1),("h",2::Int)]]
-        ==> [[("h",1),("h",2)]]
+        removeRests [[Nothing, Just 1, Just 2], [Just 3]]
+            @?=     [[1,2],[3]],
 
-    removeRests [Just [1, 2, 3], Just [], Nothing]
-        ==> [[1,2,3],[]]
+        removeRests [[("h",1),("h",2::Int)]] 
+            @?=     [[("h",1),("h",2)]],
 
-    etc
--}
+        removeRests [Just [1, 2, 3], Just [], Nothing] 
+            @?=     [[1,2,3],[]]
+    ]
