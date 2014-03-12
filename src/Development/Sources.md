@@ -1,7 +1,6 @@
-
 # Managing sources and builds
 
-Unfortunately, developing a large cross-package system in Cabal is a sligthly cubersome task. There is a utility program (`music-util`)[https://github.com/music-suite/music-util] 
+Unfortunately, developing a large cross-package system in Cabal is a sligthly cubersome task. There is a utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks. The names and internal dependencies of the music-suite packages are hardcoded into this program.
 
 ## Setup
 
