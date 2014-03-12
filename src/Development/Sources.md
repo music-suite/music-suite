@@ -2,7 +2,14 @@
 
 Unfortunately, developing a large cross-package system in Cabal is a sligthly cubersome task. There is a utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks. The names and internal dependencies of the music-suite packages are hardcoded into this program.
 
-## Setup
+It is *highly* recommended to upgrade `cabal-install` to a version supporting sandboxes (1.18 or later).
+
+    cabal install cabal-install
+
+
+## Clone and setup source directories
+
+To obtain the source code via git:
 
 - Install the utility program: `cabal update && cabal install music-util`
 
@@ -10,9 +17,19 @@ Unfortunately, developing a large cross-package system in Cabal is a sligthly cu
 
 - `cd $MUSIC_SUITE_DIR && music-util setup`
 
+This will clone all repositories and setup a local sandbox (if your Cabal version supports it).
+
+## Status
+
+To check git status etc
+
+    music-util foreach git status 
+
 ## Pull
 
-You should be able to pull from all packages using `music-util foreach git pull`. 
+You should be able to pull from all packages using
+
+    music-util foreach git pull 
 
 ## Push
 
@@ -29,11 +46,8 @@ To push to a repo you need to make a fork. For example with the `music-pitch` pa
 
 You can then push using `git push fork master`. Note that you can [set up different repositories for push and pull](http://sleepycoders.blogspot.se/2012/05/different-git-push-pullfetch-urls.html).
 
-## Installing and testing
 
-It is *highly* recommended to upgrade `cabal-install` to a version supporting sandboxes (1.18 or later).
-
-    cabal install cabal-install
+## Building and testing
 
 ### Without sandboxes
 
