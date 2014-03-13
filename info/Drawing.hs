@@ -9,6 +9,8 @@ import qualified Diagrams.Backend.SVG as SVG
 import Music.Prelude.Basic hiding (pitch)
 import qualified Music.Pitch as P
 import qualified Music.Score as S
+import qualified Diagrams.Prelude as D
+
 
 import Data.Default
 import Data.VectorSpace
@@ -18,6 +20,12 @@ import System.Process (system)
 import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 import qualified Data.ByteString.Lazy as ByteString
 
+instance Eq a => Eq (Behavior a) where
+    (==) = error "No (==)"
+instance Ord a => Ord (Behavior a) where
+    (<) = error "No (<)"
+    min = liftA2 min
+    max = liftA2 max
 
 -- TODO
 type instance S.Pitch (ChordT a) = S.Pitch a
@@ -37,7 +45,7 @@ showOr = (<> (fc red $ circle 0.5))
 
 
 
-main = openG $ showOr $ (<> bh) $ (<> gridY) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
+main2 = openG $ showOr $ (<> bh) $ (<> gridY) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
     where                           
         bh = drawBehavior (fmap (sin.(*(tau/5)).realToFrac) $ varying id)
         toSemi = (semitones.(.-. c).__getPitch)
@@ -50,6 +58,24 @@ score1 = compress 4 $ rcat [
     ]
     where
         motive n = legato $ {-pitches %~ id $-} times (n+1) (scat [c..d]) |> times n (scat [d,f,e,ds])
+
+
+
+foo, bar :: Behavior Double
+foo = varying $ sin . (/ 4) . (* tau) . realToFrac
+-- bar = varying $ sin . (/ 10) . (* tau) . realToFrac
+bar = delay 5 $ switchB 1 (varying realToFrac) 1
+
+main = openG $ (<> grid) $ 
+    translateY (5)  (D.text "foo" <> drawBehavior' 10 foo & lc red)
+    <>
+    translateY (0)  (D.text "bar" <> drawBehavior' 10 bar & lc green)
+    <>
+    translateY (-5) (D.text "foo `max` bar" <> drawBehavior' 10 (foo `max` bar) & lc blue)
+
+
+
+
 
 
 grid = grid'   20
@@ -69,7 +95,8 @@ drawBehavior = drawBehavior' 10
 
 drawBehavior' count b = cubicSpline False points & lw 0.1
     where
-        points = take (10*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/10..]
+        points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/samplesPerCell..]
+        samplesPerCell = 10
 
 drawScore :: (Renderable (Path R2) b, Real a) =>        [Score a] -> Diagram b R2
 drawScore = vcat' (def & sep .~ 2) . fmap drawPart
