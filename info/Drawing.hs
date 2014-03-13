@@ -62,16 +62,16 @@ score1 = compress 4 $ rcat [
 
 
 foo, bar :: Behavior Double
-foo = varying $ sin . (/ 4) . (* tau) . realToFrac
+foo = varying $ sin . (/ 2) . (* tau) . realToFrac
 -- bar = varying $ sin . (/ 10) . (* tau) . realToFrac
-bar = delay 5 $ switchB 1 (varying realToFrac) 1
+bar = delay 5 $ switchB 0 0 1
 
 main = openG $ (<> grid) $ 
     translateY (5)  (D.text "foo" <> drawBehavior' 10 foo & lc red)
     <>
     translateY (0)  (D.text "bar" <> drawBehavior' 10 bar & lc green)
     <>
-    translateY (-5) (D.text "foo `max` bar" <> drawBehavior' 10 (foo `max` bar) & lc blue)
+    translateY (-5) (D.text "foo*bar" <> drawBehavior' 10 (foo*bar) & lc blue)
 
 
 

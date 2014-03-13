@@ -46,6 +46,21 @@ instance Monoid b => Monad ((,) b) where
 
 -- Types etc
 
+{-
+    LAWS Semigroup
+        a <> (b <> c)    = (a <> b) <> c
+        a      <> mempty = a
+        mempty <> a      = a
+
+    LAWS AdditiveGroup
+        a ^+^ (b ^+^ c)    = (a ^+^ b) ^+^ c
+        a      ^+^ zeroV   = a
+        zeroV  ^+^ a       = a
+        a      ^+^ negateV a = zeroV
+        negateV a ^+^ a      = zeroV
+        a ^+^ b              = b ^+^ a
+-}
+
 newtype Duration = Duration { getDuration :: Rational }
 instance Show Duration where
     show = showRatio . getDuration
@@ -91,6 +106,11 @@ instance Monoid Time where
 
 newtype Span = Span (Time, Duration)
     deriving (Eq, Ord, Show)
+
+(<->) :: Time -> Time -> Span
+(>->) :: Time -> Duration -> Span
+(<->) = undefined
+(>->) = undefined
 
 -- newtype Time -- Semigroup, Monoid (sum)
 -- newtype Span -- Semigroup, Monoid, AdditiveGroup (composition)
@@ -168,10 +188,6 @@ class Reverse a where
 class Transformable a where
     sapp :: Span -> a -> a
 
-(<->) :: Time -> Time -> Span
-(>->) :: Time -> Duration -> Span
-(<->) = undefined
-(>->) = undefined
 delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
 delay   = sapp . delaying
