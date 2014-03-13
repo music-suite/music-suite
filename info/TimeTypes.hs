@@ -188,7 +188,7 @@ stopAt t  x   = (t .-. offset x) `delay` x
 -- > alignAt 0 == startAt
 -- > alignAt 1 == stopAt
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-alignAt j t x   = (t .-. x `position` j) `delay` x
+alignAt p t x   = (t .-. x `position` p) `delay` x
 
 
 -- a `lead`   b  moves a so that (offset a' == onset b)
