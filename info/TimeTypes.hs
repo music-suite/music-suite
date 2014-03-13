@@ -1,5 +1,7 @@
 
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -8,10 +10,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module TimeTypes where
+import Data.Typeable
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.AffineSpace.Point
 import Data.Semigroup
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
@@ -19,6 +24,12 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Plus
 import Control.Lens()
+
+import Test.Tasty
+import Test.Tasty.SmallCheck
+import Test.SmallCheck.Series
+import Data.Int
+
 import qualified Data.Ratio as Util_Ratio
 
 
@@ -64,6 +75,7 @@ instance Monoid b => Monad ((,) b) where
 newtype Duration = Duration { getDuration :: Rational }
 instance Show Duration where
     show = showRatio . getDuration
+deriving instance Typeable Duration
 deriving instance Eq Duration
 deriving instance Ord Duration
 deriving instance Num Duration
@@ -84,6 +96,7 @@ instance Monoid Duration where
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
     show = showRatio . getTime
+deriving instance Typeable Time
 deriving instance Eq Time
 deriving instance Ord Time
 deriving instance Num Time
@@ -99,7 +112,7 @@ instance AffineSpace Time where
 instance Semigroup Time where
     (<>) = (^+^)
 instance Monoid Time where
-    mempty  = 1
+    mempty  = zeroV
     mappend = (^+^)
     mconcat = sumV
 
@@ -265,3 +278,94 @@ showRatio (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y +
 
 unRatio :: Integral a => Util_Ratio.Ratio a -> (a, a)
 unRatio x = (Util_Ratio.numerator x, Util_Ratio.denominator x)
+
+-- Same as @flip const@, useful to fix the type of the first argument.
+assuming :: a -> b -> b
+assuming = flip const
+
+sameType :: a -> a -> ()
+sameType = undefined
+
+instance Reverse () where
+    rev () = ()
+instance Reverse [a] where
+    rev = reverse
+
+
+-- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
+-- sc_semigroup x = testGroup ("Semigroup " ++ show (typeOf x)) [
+    -- testProperty "mempty <> a == a" $ \a -> mempty <> a == (a :: a)
+    -- ]
+    
+newtype BadMonoid a = BadMonoid [a]
+    deriving (Eq, Ord, Show, Typeable)
+instance Monoid (BadMonoid a) where
+    BadMonoid x `mappend` BadMonoid y = BadMonoid (y `mappend` reverse x)
+    mempty = BadMonoid []
+instance Functor BadMonoid where
+    fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs)
+
+data BadFunctor a = BF1 | BF2
+    deriving (Eq, Ord, Show, Typeable)
+
+instance Functor BadFunctor where
+    fmap f BF1 = BF2
+    fmap f BF2 = BF2
+
+instance Serial IO a => Serial IO (BadFunctor a) where
+    series = cons0 BF1 \/ cons0 BF2
+instance Serial IO a => Serial IO (BadMonoid a) where
+    series = newtypeCons BadMonoid
+instance Serial IO Int8 where
+    series = msum $ fmap return [0..2]
+instance Serial IO Time where
+    series = msum $ fmap return [0..10]
+instance Serial IO Duration where
+    series = msum $ fmap return [0..10]
+
+monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
+monoid typ = let (<>) = mappend in testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
+    testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x) x <> (y <> z) == (x <> y) <> z,
+    testProperty "mempty <> x == x"               $ \x     -> assuming (sameType typ x) mempty <> x == x,
+    testProperty "x <> mempty == x"               $ \x     -> assuming (sameType typ x) (x <> mempty == x)
+    ]
+
+functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
+functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
+    testProperty "fmap id = id" $ \x -> assuming (sameType typ x) (fmap id x == id x)
+    ]
+
+-- applicative :: (Applicative f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
+-- applicative typ = testGroup ("instance Applicative " ++ show (typeOf typ)) $ [
+-- 
+--     testProperty "pure id <*> v = v" $ \x -> assuming (sameType typ x) ((pure id <*> x) == x),
+-- 
+--     testProperty "pure (.) <*> u <*> v <*> w = u <*> (v <*> w)" 
+--         $ \u v w -> assuming (sameType typ w) 
+--             ((pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w)))
+-- 
+--     ]
+
+
+
+main = defaultMain $ testGroup "" $ [
+    testProperty "rev . rev == id" $ \(x :: ())    -> rev (rev x) == x,
+    testProperty "rev . rev == id" $ \(x :: [Int]) -> rev (rev x) == x,
+
+    monoid (undefined :: ()),
+    monoid (undefined :: Maybe ()),
+    monoid (undefined :: [()]),
+    monoid (undefined :: BadMonoid Int8),
+    
+    monoid (undefined :: Time),
+    monoid (undefined :: Duration),
+    
+    functor (undefined :: BadFunctor Int8),
+    functor (undefined :: BadMonoid Int8)
+
+    ]
+
+
+
+
+
