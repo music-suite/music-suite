@@ -40,10 +40,12 @@ drawBeh b = cubicSpline False points
         points = take 200 $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,0.1..]
 
 drawPart :: (Renderable (Path R2) b, Real a) => Score a -> Diagram b R2
-drawPart = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
+drawPart = drawPart' . (^. events)
+
+drawPart' :: (Renderable (Path R2) b, Real a) => [(Time, Duration, a)] -> Diagram b R2
+drawPart' = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
     fmap drawScoreNote . 
-    fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac) . 
-    (^. events)
+    fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac)
     where
         map1 f (a,b,c) = (f a,b,c)
         map2 f (a,b,c) = (a,f b,c)
