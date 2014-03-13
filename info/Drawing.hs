@@ -1,6 +1,6 @@
 
 
-{-# LANGUAGE NoMonomorphismRestriction, TypeFamilies, FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE CPP, NoMonomorphismRestriction, TypeFamilies, FlexibleContexts, ConstraintKinds #-}
 
 import Diagrams.Prelude hiding (Time, Duration, (|>), stretch)
 import qualified Diagrams.Backend.SVG as SVG
@@ -60,18 +60,25 @@ score1 = compress 4 $ rcat [
         motive n = legato $ {-pitches %~ id $-} times (n+1) (scat [c..d]) |> times n (scat [d,f,e,ds])
 
 
+timeB = varying $ realToFrac
+sine fq = varying $ sin . (* fq) . (* tau) . realToFrac
+fadeOut t = ((1-timeB/t) `max` 0) `min` 1
+fadeIn t = ((timeB/t) `min` 1) `max` 0
 
-foo, bar :: Behavior Double
-foo = varying $ sin . (/ 2) . (* tau) . realToFrac
+foo, bar :: Behavior Double                 
+foo = delay 2 $ fadeIn 2*delay 3 (fadeOut 2) * sine (1/5)*sine(3)*delay 1 (sine 2)
+
 -- bar = varying $ sin . (/ 10) . (* tau) . realToFrac
-bar = delay 5 $ switchB 0 0 1
+bar = delay 1 $ switchB 0 0 1
 
 main = openG $ (<> grid) $ 
     translateY (5)  (D.text "foo" <> drawBehavior' 10 foo & lc red)
     <>
     translateY (0)  (D.text "bar" <> drawBehavior' 10 bar & lc green)
     <>
-    translateY (-5) (D.text "foo*bar" <> drawBehavior' 10 (foo*bar) & lc blue)
+#define LAST(EXPR) translateY (-5) (D.text "EXPR" <> drawBehavior' 10 (EXPR) & lc blue)
+    LAST(delay 1 $ stretch 2 bar)
+
 
 
 
@@ -82,7 +89,7 @@ grid = grid'   20
 gridX = gridX' 20
 gridY = gridY' 20
 
-grid' ds = showOr $ moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
+grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
 
 gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
 gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
@@ -90,10 +97,12 @@ gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realTo
 gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
 gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
 
+
+
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 10 
 
-drawBehavior' count b = cubicSpline False points & lw 0.1
+drawBehavior' count b = cubicSpline False points & lw 0.05
     where
         points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/samplesPerCell..]
         samplesPerCell = 10
