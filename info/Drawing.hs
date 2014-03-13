@@ -37,7 +37,7 @@ showOr = (<> (fc red $ circle 0.5))
 
 
 
-main = openGraphic $ showOr $ (<> bh) $ (<> grid) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
+main = openG $ showOr $ (<> bh) $ (<> gridY) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
     where                           
         bh = drawBehavior (fmap (sin.(*(tau/5)).realToFrac) $ varying id)
         toSemi = (semitones.(.-. c).__getPitch)
@@ -52,15 +52,24 @@ score1 = compress 4 $ rcat [
         motive n = legato $ {-pitches %~ id $-} times (n+1) (scat [c..d]) |> times n (scat [d,f,e,ds])
 
 
+grid = grid'   20
+gridX = gridX' 20
+gridY = gridY' 20
 
+grid' ds = showOr $ moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
 
-grid :: (Renderable (Path R2) b) => Diagram b R2
-grid = alignTL $ hcat' (def & sep .~ 1) $ replicate 50 $ vrule 50
+gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
+
+gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
-drawBehavior b = cubicSpline False points
+drawBehavior = drawBehavior' 10 
+
+drawBehavior' count b = cubicSpline False points & lw 0.1
     where
-        points = take 200 $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,0.1..]
+        points = take (10*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/10..]
 
 drawScore :: (Renderable (Path R2) b, Real a) =>        [Score a] -> Diagram b R2
 drawScore = vcat' (def & sep .~ 2) . fmap drawPart
@@ -82,15 +91,15 @@ drawPart' = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL 
         drawScoreNote (t,d,x) = translateY x $ translateX (t.+^(d^/2)) $ scaleX d $ noteShape
         noteShape = lcA transparent $ fcA (blue `withOpacity` 0.5) $ square 1
 
-writeGraphic :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
-writeGraphic path dia = do
+writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
+writeG path dia = do
     let svg = renderDia SVG.SVG (SVG.SVGOptions (Height 300) Nothing) dia
     let bs  = renderSvg svg
     ByteString.writeFile path bs
         
-openGraphic :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
-openGraphic dia = do
-    writeGraphic "test.svg" $ dia -- 
+openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
+openG dia = do
+    writeG "test.svg" $ dia -- 
     -- FIXME find best reader
     system "echo '<img src=\"test.svg\"></img>' > test.html"
     -- system "open -a 'Firefox' test.html"
