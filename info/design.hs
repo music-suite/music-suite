@@ -32,8 +32,8 @@ durationToDouble = realToFrac
 pitchToDouble :: P.Pitch -> Double
 pitchToDouble = realToFrac . semitones . (.-. c)
 
--- showOr = (<> (fc red $ circle 2))
-showOr = id
+showOr = (<> (fc red $ circle 0.5))
+-- showOr = id
 
 drawBeh :: (Renderable (Path R2) b, Real a) => Behavior a -> Diagram b R2
 drawBeh b = cubicSpline False points
@@ -41,7 +41,7 @@ drawBeh b = cubicSpline False points
         points = take 200 $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,0.1..]
 
 drawPart :: (Renderable (Path R2) b, Real a) => Score a -> Diagram b R2
-drawPart = (<> alignL (hrule 20)) . showOr . alignTL . scaleX 1{-TODO-} . mconcat . 
+drawPart = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
     fmap drawScoreNote . 
     fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac) . 
     (^. events)
@@ -54,8 +54,8 @@ drawPart = (<> alignL (hrule 20)) . showOr . alignTL . scaleX 1{-TODO-} . mconca
 
 
 
-grid = alignTL $ hcat' (def & sep +~ 1) $ replicate 20 $ vrule 50
-main = openGraphic $ (<> drawBeh (fmap (sin.(*(tau/10)).realToFrac) $ varying id)) $ (<> grid) $ vcat' (def & sep +~ 8) . fmap (drawPart . fmap toSemi) . extractParts $ score1
+grid = alignTL $ hcat' (def & sep +~ 1) $ replicate 50 $ vrule 50
+main = openGraphic $ showOr $ (<> drawBeh (fmap (sin.(*(tau/5)).realToFrac) $ varying id)) $ (<> grid) $ vcat' (def & sep +~ 2) . fmap (drawPart . fmap toSemi) . extractParts $ score1
     where
         toSemi = (semitones.(.-. c).__getPitch)
 
@@ -66,7 +66,7 @@ score1 = compress 4 $ rcat [
     up _P1 $ stretch 4 $ scat $ fmap motive $ [1..3]
     ]
     where
-        motive n = legato $ {-pitches %~ id $-} times (n+1) (scat [c..e]) |> times n (scat [d..f])
+        motive n = legato $ {-pitches %~ id $-} times (n+1) (scat [c..d]) |> times n (scat [d,f,e,ds])
 
 
 
@@ -84,5 +84,6 @@ openGraphic dia = do
     writeGraphic "test.svg" $ dia -- 
     -- FIXME find best reader
     system "echo '<img src=\"test.svg\"></img>' > test.html"
-    system "open -a 'Firefox' test.html"
+    -- system "open -a 'Firefox' test.html"
+    system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
     return ()
