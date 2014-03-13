@@ -13,9 +13,8 @@ import qualified Music.Score as S
 import Data.Default
 import Data.VectorSpace
 import Data.AffineSpace
--- import Data.Semigroup
 import Control.Lens hiding ((|>))
-import System.Process
+import System.Process (system)
 import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 import qualified Data.ByteString.Lazy as ByteString
 
@@ -54,8 +53,8 @@ drawPart = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL .
 
 
 
-grid = alignTL $ hcat' (def & sep +~ 1) $ replicate 50 $ vrule 50
-main = openGraphic $ showOr $ (<> drawBeh (fmap (sin.(*(tau/5)).realToFrac) $ varying id)) $ (<> grid) $ vcat' (def & sep +~ 2) . fmap (drawPart . fmap toSemi) . extractParts $ score1
+grid = alignTL $ hcat' (def & sep .~ 1) $ replicate 50 $ vrule 50
+main = openGraphic $ showOr $ (<> drawBeh (fmap (sin.(*(tau/5)).realToFrac) $ varying id)) $ (<> grid) $ vcat' (def & sep .~ 2) . fmap (drawPart . fmap toSemi) . extractParts $ score1
     where
         toSemi = (semitones.(.-. c).__getPitch)
 
