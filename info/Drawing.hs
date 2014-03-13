@@ -34,30 +34,12 @@ pitchToDouble = realToFrac . semitones . (.-. c)
 showOr = (<> (fc red $ circle 0.5))
 -- showOr = id
 
-drawBeh :: (Renderable (Path R2) b, Real a) => Behavior a -> Diagram b R2
-drawBeh b = cubicSpline False points
-    where
-        points = take 200 $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,0.1..]
-
-drawPart :: (Renderable (Path R2) b, Real a) => Score a -> Diagram b R2
-drawPart = drawPart' . (^. events)
-
-drawPart' :: (Renderable (Path R2) b, Real a) => [(Time, Duration, a)] -> Diagram b R2
-drawPart' = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
-    fmap drawScoreNote . 
-    fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac)
-    where
-        map1 f (a,b,c) = (f a,b,c)
-        map2 f (a,b,c) = (a,f b,c)
-        map3 f (a,b,c) = (a,b,f c)
-        drawScoreNote (t,d,x) = translateY x $ translateX (t.+^(d^/2)) $ scaleX d $ noteShape
-        noteShape = lcA transparent $ fcA (blue `withOpacity` 0.5) $ square 1
 
 
 
-grid = alignTL $ hcat' (def & sep .~ 1) $ replicate 50 $ vrule 50
-main = openGraphic $ showOr $ (<> drawBeh (fmap (sin.(*(tau/5)).realToFrac) $ varying id)) $ (<> grid) $ vcat' (def & sep .~ 2) . fmap (drawPart . fmap toSemi) . extractParts $ score1
-    where
+main = openGraphic $ showOr $ (<> bh) $ (<> grid) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
+    where                           
+        bh = drawBehavior (fmap (sin.(*(tau/5)).realToFrac) $ varying id)
         toSemi = (semitones.(.-. c).__getPitch)
 
 score1 :: Score BasicNote
@@ -72,15 +54,41 @@ score1 = compress 4 $ rcat [
 
 
 
+grid :: (Renderable (Path R2) b) => Diagram b R2
+grid = alignTL $ hcat' (def & sep .~ 1) $ replicate 50 $ vrule 50
 
+drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
+drawBehavior b = cubicSpline False points
+    where
+        points = take 200 $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,0.1..]
 
+drawScore :: (Renderable (Path R2) b, Real a) =>        [Score a] -> Diagram b R2
+drawScore = vcat' (def & sep .~ 2) . fmap drawPart
 
-writeGraphic :: (Renderable (Path R2) b, b ~ SVG.SVG) => FilePath -> Diagram b R2 -> IO ()
+drawPart :: (Renderable (Path R2) b, Real a) =>         Score a -> Diagram b R2
+drawPart = drawPart' . (^. events)
+
+drawScore' :: (Renderable (Path R2) b, Real a) =>       [[(Time, Duration, a)]] -> Diagram b R2
+drawScore' = vcat' (def & sep .~ 2) . fmap drawPart'
+
+drawPart' :: (Renderable (Path R2) b, Real a) =>        [(Time, Duration, a)] -> Diagram b R2
+drawPart' = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
+    fmap drawScoreNote . 
+    fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac)
+    where
+        map1 f (a,b,c) = (f a,b,c)
+        map2 f (a,b,c) = (a,f b,c)
+        map3 f (a,b,c) = (a,b,f c)
+        drawScoreNote (t,d,x) = translateY x $ translateX (t.+^(d^/2)) $ scaleX d $ noteShape
+        noteShape = lcA transparent $ fcA (blue `withOpacity` 0.5) $ square 1
+
+writeGraphic :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
 writeGraphic path dia = do
     let svg = renderDia SVG.SVG (SVG.SVGOptions (Height 300) Nothing) dia
     let bs  = renderSvg svg
     ByteString.writeFile path bs
         
+openGraphic :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
 openGraphic dia = do
     writeGraphic "test.svg" $ dia -- 
     -- FIXME find best reader
@@ -88,3 +96,4 @@ openGraphic dia = do
     -- system "open -a 'Firefox' test.html"
     system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
     return ()
+
