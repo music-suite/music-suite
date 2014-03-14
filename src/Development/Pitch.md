@@ -2,7 +2,7 @@
 
 There are some basic design choices particular to music-pitch which I would like to retain:
 
-- We allow intervals to be negative. This is necessary for the VectorSpace/AffineSpace instances to behave, and also makes intervals more mathemically tractable. (To make pitches a proper AffineSpace we must be able to pick any frequency as the origin.)
+- We allow intervals to be negative. This is necessary for the VectorSpace/AffineSpace instances to behave, and also makes intervals more mathematically tractable. (To make pitches a proper AffineSpace we must be able to pick any frequency as the origin.)
 
 - All "literals", i.e. (c, cs, m3, _M3 etc) should be overloaded using the classes from 'music-pitch-literal'. This is because programs and musical compositions written using the suite should not be forced to use a particular representation. Thanks to the strength of type classes all such values can be overloaded.
 
