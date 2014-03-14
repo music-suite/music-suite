@@ -15,6 +15,7 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module TimeTypes (
+        -- * Types
         Duration,
         Time,
         Span,
@@ -96,8 +97,7 @@ import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable              (Foldable)
-import           Data.Functor.Representable
-import           Data.Key
+-- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
 import           Data.Traversable           (Traversable)
 import           Data.Typeable
@@ -353,11 +353,15 @@ renderStretched = uncurry stretch . unwr
 -- instance HasPosition (Note a) where position n
 
 
+-- TODO Compare Diagram's Trail and Located (and see the conal blog post)
+
 newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
 -- Defined 0-1
 
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
+
+
 
 -- newinstance Functor Behavior
 -- -- Distributive?
@@ -537,18 +541,23 @@ pcat = mconcat
 x `sustain` y     = x <> duration x `stretchTo` y
 times n     = scat . replicate n
 
--- Splitting and reversing things
-
+-- | Splitting and reversing things
+--
+--
 -- Works for both positioned and unpositioned things
 -- For positioned types, splits relative onset
 -- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
 -- XXX what about Behavior (infinite span)
+--
+-- LAW
+--
+-- > let (a, b) = split x in duration a + duration b = duration x
+--
 class HasDuration a => Segmented a where
     split  :: Duration -> a -> (a, a)
-    before :: Duration -> a -> a
-    after  :: Duration -> a -> a
-    before d = fst . split d
-    after d = snd . split d
+
+before d = fst . split d
+after d = snd . split d
 
 
 
