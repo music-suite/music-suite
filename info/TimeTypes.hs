@@ -16,7 +16,7 @@
 
 module TimeTypes where
 import           Control.Applicative
-import           Control.Arrow          ((***))
+import           Control.Arrow          ((***), first, second)
 import           Control.Lens           hiding ((|>), under, transform)
 import           Control.Comonad
 import           Control.Monad
@@ -231,9 +231,17 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 --
 --
-newtype Note a      = Note      (Span, a)      deriving (Functor, Applicative, Monad, Comonad)
-newtype Delayed a   = Delayed   (Time, a)      deriving (Functor, Applicative, Monad, Comonad)
-newtype Stretched a = Stretched (Duration, a)  deriving (Functor, Applicative, Monad, Comonad)
+newtype Note a      = Note      { getNote      :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
+newtype Delayed a   = Delayed   { getDelayed   :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
+newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
+
+instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
+instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
+instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
+
+instance Transformable (Note a) where transform t = unwrapped $ first (transform t)
+instance Transformable (Delayed a) where transform t = unwrapped $ first (transform t)
+instance Transformable (Stretched a) where transform t = unwrapped $ first (transform t)
 
 newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
 -- Defined 0-1
@@ -495,6 +503,15 @@ assuming = flip const
 sameType :: a -> a -> ()
 sameType = undefined
 
+-- TODO must be a better way to do this
+unwrapped f = wr . f . unwr
+wr   = (^. _Unwrapped')
+unwr = (^. _Wrapped')
+
+
+
+
+-- Tests
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
 -- sc_semigroup x = testGroup ("Semigroup " ++ show (typeOf x)) [
