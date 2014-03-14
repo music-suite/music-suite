@@ -37,15 +37,19 @@ module TimeTypes (
         Segment,
         Behavior,
 
+        -- * Score, Voice
+        Score,
+        Voice,
+
         -- * Transformations
         Transformable(..),
-        delayTime,
         delaying,       -- :: Duration -> Span
-        rushing,
+        undelaying,
         stretching,     -- :: Duration -> Span
         compressing,
         delay,          -- :: Transformable a => Duration -> a -> a
-        rush,
+        delay',
+        undelay,
         stretch,        -- :: Transformable a => Duration -> a -> a
         compress,
 
@@ -302,9 +306,18 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 --
 --
-newtype Note a      = Note      { getNote      :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
-newtype Delayed a   = Delayed   { getDelayed   :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
-newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
+newtype Note a      = Note      { getNote      :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Delayed a   = Delayed   { getDelayed   :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+
+newtype Score a     = Score      { getScore    :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+instance Applicative Score where
+instance Monad Score where
+
+newtype Voice a     = Voice      { getVoice    :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+instance Applicative Voice where
+instance Monad Voice where
+    
 
 -- XXX Compare with Located in diagrams
 
@@ -329,7 +342,7 @@ renderNote :: Transformable a => Note a -> a
 renderNote = uncurry transform . unwr
 
 renderDelayed :: Transformable a => Delayed a -> a
-renderDelayed = uncurry delayTime . unwr
+renderDelayed = uncurry delay' . unwr
 
 renderStretched :: Transformable a => Stretched a -> a
 renderStretched = uncurry stretch . unwr
@@ -369,6 +382,7 @@ newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, M
 -- instance Monad Reactive
 -- instance Monoid a => Monoid (Reactive a)
 
+{-
 
 -- Fre monad of ?
 {-
@@ -400,6 +414,7 @@ type Tree a = Free MaybePair a
 
 -- CPS-version of Tree
 newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
+   -}
 
 
 
@@ -416,7 +431,11 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 -- translation vs linear etc
 
 -- |
--- Law
+-- LAW
+--
+-- > transform s . transform t = transform (s <> t)
+--
+-- LAW
 --
 -- > onset (delay n a) = n + onset a
 -- > offset (delay n a) = n + offset a
@@ -430,18 +449,19 @@ class Transformable a where
 
 
 -- FIXME strange
--- transformInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
+-- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
 
 -- FIXME get rid of this
-delayTime t     = delay (t .-. 0)
+delay' :: Transformable a => Time -> a -> a
+delay' t     = delay (t .-. 0)
 
 
 delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
-rushing x = delaying (negate x)
+undelaying x = delaying (negate x)
 compressing x = stretching (recip x)
 delay    = transform . delaying
-rush     = transform . rushing
+undelay  = transform . undelaying
 stretch  = transform . stretching
 compress = transform . compressing
 
