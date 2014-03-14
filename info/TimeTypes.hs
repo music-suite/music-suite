@@ -1,40 +1,40 @@
 
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 module TimeTypes where
-import Data.Typeable
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import Data.Semigroup
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import Control.Arrow ((***))
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Free
-import Control.Monad.Plus
-import Control.Lens hiding ((|>))
+import           Control.Applicative
+import           Control.Arrow          ((***))
+import           Control.Lens           hiding ((|>))
+import           Control.Monad
+import           Control.Monad.Free
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable          (Foldable)
+import           Data.Semigroup
+import           Data.Traversable       (Traversable)
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Test.Tasty
-import Test.Tasty.SmallCheck
-import Test.SmallCheck.Series
-import Data.Int
+import           Data.Int
+import           Test.SmallCheck.Series
+import           Test.Tasty
+import           Test.Tasty.SmallCheck
 
-import qualified Data.Ratio as Util_Ratio
+import qualified Data.Ratio             as Util_Ratio
 
 
 -- Misc instances
@@ -42,7 +42,7 @@ import qualified Data.Ratio as Util_Ratio
 instance Monoid b => Monad ((,) b) where
   return = pure
   (>>=) = flip (=<<)
-    where 
+    where
       (=<<) = (join .) . fmap
       join (b, (b', a)) = (b `mappend` b', a)
 
@@ -139,10 +139,10 @@ range :: Iso' Span (Time, Time)
 range = iso _range $ uncurry (<->)
     where
         _range x = let (t, d) = _delta x in (t, t .+^ d)
-        
+
 delta :: Iso' Span (Time, Duration)
 delta = iso _delta $ uncurry (>->)
-        
+
 instance Transformable Span where
     -- FIXME loops
     sapp = (<>)
@@ -412,16 +412,16 @@ instance Reverse [a] where
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
 -- sc_semigroup x = testGroup ("Semigroup " ++ show (typeOf x)) [
-    -- testProperty "mempty <> a == a" $ \a -> mempty <> a == (a :: a)
+    -- testProperty "mempty <> a == a" $ \a -> mempty <> a == (a :: a)
     -- ]
-    
+
 newtype BadMonoid a = BadMonoid [a]
     deriving (Eq, Ord, Show, Typeable)
 instance Monoid (BadMonoid a) where
     BadMonoid x `mappend` BadMonoid y = BadMonoid (y `mappend` reverse x) -- lawless
     mempty = BadMonoid []
 instance Functor BadMonoid where
-    fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs) -- lawless
+    fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs) -- lawless
 
 data BadFunctor a = BF1 | BF2
     deriving (Eq, Ord, Show, Typeable)
@@ -443,13 +443,13 @@ instance Serial IO Duration where
 
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
-    testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x) 
+    testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
                   x <> (y <> z) == (x <> y) <> z,
 
-    testProperty "mempty <> x == x"               $ \x     -> assuming (sameType typ x) 
+    testProperty "mempty <> x == x"               $ \x     -> assuming (sameType typ x)
                   mempty <> x == x,
 
-    testProperty "x <> mempty == x"               $ \x     -> assuming (sameType typ x) 
+    testProperty "x <> mempty == x"               $ \x     -> assuming (sameType typ x)
                  (x <> mempty == x)
     ]
     where
@@ -457,19 +457,19 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
 
 functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
 functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
-    testProperty "fmap id = id" $ \x -> assuming (sameType typ x) 
+    testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
                  (fmap id x == id x)
     ]
 
 -- applicative :: (Applicative f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
 -- applicative typ = testGroup ("instance Applicative " ++ show (typeOf typ)) $ [
--- 
+--
 --     testProperty "pure id <*> v = v" $ \x -> assuming (sameType typ x) ((pure id <*> x) == x),
--- 
---     testProperty "pure (.) <*> u <*> v <*> w = u <*> (v <*> w)" 
---         $ \u v w -> assuming (sameType typ w) 
+--
+--     testProperty "pure (.) <*> u <*> v <*> w = u <*> (v <*> w)"
+--         $ \u v w -> assuming (sameType typ w)
 --             ((pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w)))
--- 
+--
 --     ]
 
 
@@ -483,10 +483,10 @@ main = defaultMain $ testGroup "" $ [
     monoid (undefined :: Maybe ()),
     monoid (undefined :: [()]),
     monoid (undefined :: BadMonoid Int8),
-    
+
     monoid (undefined :: Time),
     monoid (undefined :: Duration),
-    
+
     functor (undefined :: BadFunctor Int8),
     functor (undefined :: BadMonoid Int8)
 
