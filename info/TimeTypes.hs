@@ -22,11 +22,12 @@ import Data.AffineSpace.Point
 import Data.Semigroup
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
+import Control.Arrow ((***))
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Free
 import Control.Monad.Plus
-import Control.Lens()
+import Control.Lens hiding ((|>))
 
 import Test.Tasty
 import Test.Tasty.SmallCheck
@@ -73,6 +74,11 @@ instance Monoid b => Monad ((,) b) where
         a      ^+^ negateV a = zeroV
         negateV a ^+^ a      = zeroV
         a ^+^ b              = b ^+^ a
+
+    LAWS Functor
+    LAWS Eq
+    LAWS Ord
+    LAWS
 -}
 
 newtype Duration = Duration { getDuration :: Rational }
@@ -120,13 +126,53 @@ instance Monoid Time where
     mconcat = sumV
 
 
-newtype Span = Span (Time, Duration)
+newtype Span = Span { _delta :: (Time, Duration) }
     deriving (Eq, Ord, Show)
 
 (<->) :: Time -> Time -> Span
 (>->) :: Time -> Duration -> Span
 t <-> u = t >-> (u .-. t)
 t >-> d = Span (t, d)
+
+
+range :: Iso' Span (Time, Time)
+range = iso _range $ uncurry (<->)
+    where
+        _range x = let (t, d) = _delta x in (t, t .+^ d)
+        
+delta :: Iso' Span (Time, Duration)
+delta = iso _delta $ uncurry (>->)
+        
+instance Transformable Span where
+    -- FIXME loops
+    sapp = (<>)
+    -- sapp (view delta -> (t,d)) = delayTime t . stretch d
+
+instance HasPosition Span where
+    -- onset  = fst . _range
+    -- offset = snd . _range
+
+instance HasDuration Span where
+    duration = snd . _delta
+
+instance Semigroup Span where
+    Span (t,d) <> Span (t',d') = Span (t <> t', d <> d')
+instance Monoid Span where
+    mempty  = 0 <-> 1
+    mappend = (<>)
+instance AdditiveGroup Span where
+    zeroV   = mempty
+    (^+^)   = (<>)
+    negateV = sinvert
+
+-- > sinvert (sinvert s) = s
+-- > sapp (sinvert s) . sapp s = id
+sinvert :: Span -> Span
+sinvert = delta %~ (reflectThrough 0 *** recip)
+-- sinvert (Span (t,d)) = Span (mirror t, recip d)
+
+
+
 
 
 
@@ -244,8 +290,24 @@ class Split a where
     split :: Time -> a -> (a, a)
 class Reverse a where
     rev :: a -> a
+
+-- FIXME compare with diagrams variant
+-- translation vs linear etc
 class Transformable a where
     sapp :: Span -> a -> a
+
+sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+sunder s f = sappInv s . f . sapp s
+
+sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
+
+
+
+
+
+-- FIXME get rid of this
+delayTime t     = delay (t .-. 0)
+
 
 delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
@@ -304,6 +366,17 @@ alignAt p t x   = (t .-. x `position` p) `delay` x
 -- lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 -- follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 --
+
+
+
+
+
+
+
+
+
+
+
 
 
 
