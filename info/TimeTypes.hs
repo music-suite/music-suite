@@ -86,27 +86,30 @@ module TimeTypes (
 
   ) where
 import           Control.Applicative
-import           Control.Arrow          ((***), first, second)
-import           Control.Lens           hiding ((|>), under, transform)
+import           Control.Arrow              (first, second, (***))
 import           Control.Comonad
 import           Control.Comonad.Env
+import           Control.Lens               hiding (transform, under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Foldable          (Foldable)
+import           Data.Foldable              (Foldable)
+import           Data.Functor.Representable
+import           Data.Key
 import           Data.Semigroup
-import           Data.Traversable       (Traversable)
+import           Data.Traversable           (Traversable)
 import           Data.Typeable
 import           Data.VectorSpace
 
 import           Data.Int
-import           Test.SmallCheck.Series (Serial(..), (\/), newtypeCons, cons0, series)
+import           Test.SmallCheck.Series     (Serial (..), cons0, newtypeCons,
+                                             series, (\/))
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
 
-import qualified Data.Ratio             as Util_Ratio
+import qualified Data.Ratio                 as Util_Ratio
 
 
 -- Misc instances
@@ -125,7 +128,7 @@ instance Monoid b => Monad ((,) b) where
 
 {-
     TODO
-    
+
     - Use graphing and verify that timed fmap (i.e. reactive's apply) works.
 
     - New representations for Score, Voice and Reactive
@@ -260,7 +263,7 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 
 {-
-    (\x -> (transl x, matrixRep x)) ((inv $ translation 2 <> scaling 2) :: Transformation Double)
+    (\x -> (transl x, matrixRep x)) ((inv $ translation 2 <> scaling 2) :: Transformation Double)
 -}
 
 {-
@@ -306,18 +309,18 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 --
 --
-newtype Note a      = Note      { getNote      :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
-newtype Delayed a   = Delayed   { getDelayed   :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Note a      = Note      { getNote :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
-newtype Score a     = Score      { getScore    :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+newtype Score a     = Score      { getScore :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 instance Applicative Score where
 instance Monad Score where
 
-newtype Voice a     = Voice      { getVoice    :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 instance Applicative Voice where
 instance Monad Voice where
-    
+
 
 -- XXX Compare with Located in diagrams
 
