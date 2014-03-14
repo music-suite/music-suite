@@ -18,6 +18,7 @@ module TimeTypes where
 import           Control.Applicative
 import           Control.Arrow          ((***))
 import           Control.Lens           hiding ((|>))
+import           Control.Comonad
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -30,7 +31,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Data.Int
-import           Test.SmallCheck.Series
+import           Test.SmallCheck.Series (Serial(..), (\/), newtypeCons, cons0, series)
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
 
@@ -114,6 +115,9 @@ deriving instance Fractional Time
 deriving instance Real Time
 deriving instance RealFrac Time
 deriving instance AdditiveGroup Time
+instance VectorSpace Time where
+    type Scalar Time = Duration
+    Duration x *^ Time y = Time (x * y)
 instance AffineSpace Time where
     type Diff Time = Duration
     Time x .-. Time y     = Duration (x - y)
@@ -126,49 +130,83 @@ instance Monoid Time where
     mconcat = sumV
 
 
-newtype Span = Span { _delta :: (Time, Duration) }
-    deriving (Eq, Ord, Show)
+-- Inverse semigroup:
+--
+--  negateV x <> x = zeroV
+--  OR
+--  x         = x         <> negateV x <> x
+--  negateV x = negateV x <> x         <> negateV x
+--
+newtype Span = Span { getDelta :: (Time, Duration) }
+    deriving (Eq, Ord, Show, Typeable)
 
 (<->) :: Time -> Time -> Span
 (>->) :: Time -> Duration -> Span
 t <-> u = t >-> (u .-. t)
 t >-> d = Span (t, d)
 
-
 range :: Iso' Span (Time, Time)
-range = iso _range $ uncurry (<->)
-    where
-        _range x = let (t, d) = _delta x in (t, t .+^ d)
+range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 delta :: Iso' Span (Time, Duration)
-delta = iso _delta $ uncurry (>->)
+delta = iso getDelta $ uncurry (>->)
 
+-- XXX Transformable Time/Duration
+-- Duration should be translation invariant
 instance Transformable Span where
-    -- FIXME loops
     sapp = (<>)
-    -- sapp (view delta -> (t,d)) = delayTime t . stretch d
 
 instance HasPosition Span where
-    -- onset  = fst . _range
-    -- offset = snd . _range
+    position (view range -> (t1, t2)) = alerp t1 t2
 
 instance HasDuration Span where
-    duration = snd . _delta
-
+    duration = snd . view delta
+    
 instance Semigroup Span where
-    Span (t,d) <> Span (t',d') = Span (t <> t', d <> d')
+    (<>) = (^+^)
 instance Monoid Span where
-    mempty  = 0 <-> 1
-    mappend = (<>)
+    mempty  = zeroV
+    mappend = (^+^)
 instance AdditiveGroup Span where
-    zeroV   = mempty
-    (^+^)   = (<>)
-    negateV = sinvert
+    zeroV   = 0 <-> 1
+    Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
+    negateV (Span (t, d)) = Span (-t ^/ d, recip d)
+
+-- > forall s . sunder s id = id
+sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+sunder s f = sapp (sinvert s) . f . sapp s
+
+
+{-
+    (\x -> (transl x, matrixRep x)) ((inv $ translation 2 <> scaling 2) :: Transformation Double)
+-}
+
+{-
+    -- | Invert a transformation.
+    inv :: HasLinearMap v => Transformation v -> Transformation v
+    inv (Transformation t t' v) = Transformation (linv t) (linv t')
+                                                 (negateV (lapp (linv t) v))
+
+    -- | Get the transpose of a transformation (ignoring the translation
+    --   component).
+    transp :: Transformation v -> (v :-: v)
+    transp (Transformation _ t' _) = t'
+
+    -- | Get the translational component of a transformation.
+    transl :: Transformation v -> v
+    transl (Transformation _ _ v) = v
+
+    -- | Transformations are closed under composition; @t1 <> t2@ is the
+    --   transformation which performs first @t2@, then @t1@.
+    instance HasLinearMap v => Semigroup (Transformation v) where
+      Transformation t1 t1' v1 <> Transformation t2 t2' v2
+        = Transformation (t1 <> t2) (t2' <> t1') (v1 ^+^ lapp t1 v2)
+-}
 
 -- > sinvert (sinvert s) = s
 -- > sapp (sinvert s) . sapp s = id
 sinvert :: Span -> Span
-sinvert = delta %~ (reflectThrough 0 *** recip)
+sinvert = negateV
 -- sinvert (Span (t,d)) = Span (mirror t, recip d)
 
 
@@ -197,14 +235,14 @@ sinvert = delta %~ (reflectThrough 0 *** recip)
 --
 --
 --
-newtype Note a      = Note      (Span, a)
-newtype Delayed a   = Delayed   (Time, a)
-newtype Stretched a = Stretched (Duration, a)
+newtype Note a      = Note      (Span, a)      deriving (Functor, Applicative, Monad, Comonad)
+newtype Delayed a   = Delayed   (Time, a)      deriving (Functor, Applicative, Monad, Comonad)
+newtype Stretched a = Stretched (Duration, a)  deriving (Functor, Applicative, Monad, Comonad)
 
-newtype Segment a = Segment (Duration -> a)
+newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
 -- Defined 0-1
 
-newtype Behavior a  = Behavior (Time -> a)
+newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
 
 -- newinstance Functor Behavior
@@ -273,8 +311,51 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
+
+-- Moving and scaling things
+
+-- FIXME compare with diagrams variant
+-- translation vs linear etc
+
+-- LAW onset (delay n a) = n + onset a
+-- LAW offset (delay n a) = n + offset a
+-- LAW duration (stretch n a) = n * (duration a)
+-- LEMMA duration a = duration (delay n a)
+class Transformable a where
+    sapp :: Span -> a -> a
+
+
+-- FIXME strange
+-- sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
+
+-- FIXME get rid of this
+delayTime t     = delay (t .-. 0)
+
+
+delaying x   = (0 .+^ x) >-> 1
+stretching x = 0         >-> x
+delay   = sapp . delaying
+stretch = sapp . stretching
+
+
+
+-- Fitting things
+
+-- Things with a duration
+
+-- LAW Duration
+--  duration x = (offset x .-. onset x)
+-- LEMMA
 class HasDuration a where
     duration :: a -> Duration
+
+stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
+stretchTo d x = (d ^/ duration x) `stretch` x
+
+
+
+-- Placing things
+
 class HasPosition a where
     position :: a -> {-Scalar-} Duration -> Time
 
@@ -286,54 +367,41 @@ postOnset   = (`position` 0.5)
 offset      = (`position` 1.0)
 postOffset  = (`position` 1.5)
 
-class Split a where
-    split :: Time -> a -> (a, a)
-class Reverse a where
-    rev :: a -> a
-
--- FIXME compare with diagrams variant
--- translation vs linear etc
-class Transformable a where
-    sapp :: Span -> a -> a
-
-sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-sunder s f = sappInv s . f . sapp s
-
-sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
-
-
-
-
-
--- FIXME get rid of this
-delayTime t     = delay (t .-. 0)
-
-
-delaying x   = (0 .+^ x) >-> 1
-stretching x = 0         >-> x
-delay   = sapp . delaying
-stretch = sapp . stretching
-
-stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretchTo t x = (t / duration x) `stretch` x
-
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
 stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
 startAt t x   = (t .-. onset x) `delay` x
 stopAt t  x   = (t .-. offset x) `delay` x
 
+-- alignAt p t places the given thing so that its position p is at time t
 -- > alignAt 0 == startAt
 -- > alignAt 1 == stopAt
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-alignAt p t x   = (t .-. x `position` p) `delay` x
+alignAt p t x = (t .-. x `position` p) `delay` x
 
 
 -- a `lead`   b  moves a so that (offset a' == onset b)
 -- a `follow` b  moves b so that (offset a  == onset b')
--- lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
--- follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
--- a `lead` b   = stopAt (onset b) a
--- a `follow` b = startAt (offset a) b
+lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+a `lead` b   = alignAt 1 (b `position` 0) a
+a `follow` b = alignAt 0 (a `position` 1) b
+
+
+-- Mnemonics:
+--   > is at the side of the element being moved
+--   >| >| etc indicates offset/onset
+(|>) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+(>|) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a |> b =  a <> (a `follow` b)
+a >| b =  (a `lead` b) <> b
+
+
+-- Splitting and reversing things
+
+class Split a where
+    split :: Time -> a -> (a, a)
+class Reverse a where
+    rev :: a -> a
 
 
 
@@ -430,6 +498,8 @@ instance Functor BadFunctor where
     fmap f BF1 = BF2 -- lawless
     fmap f BF2 = BF2
 
+instance Serial IO Span where
+    series = newtypeCons Span
 instance Serial IO a => Serial IO (BadFunctor a) where
     series = cons0 BF1 \/ cons0 BF2
 instance Serial IO a => Serial IO (BadMonoid a) where
@@ -437,9 +507,9 @@ instance Serial IO a => Serial IO (BadMonoid a) where
 instance Serial IO Int8 where
     series = msum $ fmap return [0..2]
 instance Serial IO Time where
-    series = msum $ fmap return [0..10]
+    series = msum $ fmap return [1..2]
 instance Serial IO Duration where
-    series = msum $ fmap return [0..10]
+    series = msum $ fmap return [0..2]
 
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
@@ -455,11 +525,11 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
     where
         (<>) = mappend
 
-functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
-functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
-    testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
-                 (fmap id x == id x)
-    ]
+-- functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
+-- functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
+--     testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
+--                  (fmap id x == id x)
+--     ]
 
 -- applicative :: (Applicative f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
 -- applicative typ = testGroup ("instance Applicative " ++ show (typeOf typ)) $ [
@@ -486,9 +556,10 @@ main = defaultMain $ testGroup "" $ [
 
     monoid (undefined :: Time),
     monoid (undefined :: Duration),
+    monoid (undefined :: Span)
 
-    functor (undefined :: BadFunctor Int8),
-    functor (undefined :: BadMonoid Int8)
+    -- functor (undefined :: BadFunctor Int8),
+    -- functor (undefined :: BadMonoid Int8)
 
     ]
 
