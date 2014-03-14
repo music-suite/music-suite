@@ -1,8 +1,8 @@
 
 
-{-# LANGUAGE CPP, NoMonomorphismRestriction, TypeFamilies, FlexibleContexts, ConstraintKinds #-}
+{-# LANGUAGE CPP, NoMonomorphismRestriction, TypeFamilies, FlexibleContexts, ConstraintKinds, ViewPatterns #-}
 
-import Diagrams.Prelude hiding (Time, Duration, (|>), stretch)
+import Diagrams.Prelude hiding (Time, Duration, (|>), (<->), stretch)
 import qualified Diagrams.Backend.SVG as SVG
 
 -- test       
@@ -39,16 +39,17 @@ durationToDouble = realToFrac
 pitchToDouble :: P.Pitch -> Double
 pitchToDouble = realToFrac . semitones . (.-. c)
 
-showOr = (<> (fc red $ circle 0.5))
+showOr = (<> (setEnvelope mempty $ fc red $ circle 0.05))
 -- showOr = id
 
 
 
 
-main2 = openG $ showOr $ (<> bh) $ (<> gridY) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
+main2 = openG $ {- showOr $ -} (<> bh) $ (<> gridY) $ drawScore . fmap (fmap toSemi) . extractParts $ score1
     where                           
         bh = drawBehavior (fmap (sin.(*(tau/5)).realToFrac) $ varying id)
-        toSemi = (semitones.(.-. c).__getPitch)
+
+toSemi = (semitones.(.-. c).__getPitch)
 
 score1 :: Score BasicNote
 score1 = compress 4 $ rcat [
@@ -66,18 +67,21 @@ fadeOut t = ((1-timeB/t) `max` 0) `min` 1
 fadeIn t = ((timeB/t) `min` 1) `max` 0
 
 foo, bar :: Behavior Double                 
-foo = delay 2 $ fadeIn 2*delay 3 (fadeOut 2) * sine (1/5)*sine(3)*delay 1 (sine 2)
+foo = sapp (2 <-> 5) $ compress 5 $ fadeIn 2*delay 3 (fadeOut 2) * sine (1/5)*sine(3)*delay 1 (sine 2)
 
 -- bar = varying $ sin . (/ 10) . (* tau) . realToFrac
-bar = delay 1 $ switchB 0 0 1
+-- bar = delay 1 $ switchB 0 0 1
+bar = sapp (4 <-> 6) $ compress 5 $ fadeIn 2*delay 3 (fadeOut 2) * sine (1/5)*sine(3)*delay 1 (sine 2)
 
 main = openG $ (<> grid) $ 
+    drawPart (fmap toSemi $ asScore $ scat [c,d,e^*2] |> scat [c,d,e^*2] |> scat [d,d,d,d,c^*2,c^*2])
+    <>
     translateY (5)  (D.text "foo" <> drawBehavior' 10 foo & lc red)
     <>
     translateY (0)  (D.text "bar" <> drawBehavior' 10 bar & lc green)
     <>
 #define LAST(EXPR) translateY (-5) (D.text "EXPR" <> drawBehavior' 10 (EXPR) & lc blue)
-    LAST(delay 1 $ stretch 2 bar)
+    LAST(foo+bar)
 
 
 
@@ -105,7 +109,7 @@ drawBehavior = drawBehavior' 10
 drawBehavior' count b = cubicSpline False points & lw 0.05
     where
         points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/samplesPerCell..]
-        samplesPerCell = 10
+        samplesPerCell = 40
 
 drawScore :: (Renderable (Path R2) b, Real a) =>        [Score a] -> Diagram b R2
 drawScore = vcat' (def & sep .~ 2) . fmap drawPart
@@ -117,15 +121,12 @@ drawScore' :: (Renderable (Path R2) b, Real a) =>       [[(Time, Duration, a)]] 
 drawScore' = vcat' (def & sep .~ 2) . fmap drawPart'
 
 drawPart' :: (Renderable (Path R2) b, Real a) =>        [(Time, Duration, a)] -> Diagram b R2
-drawPart' = (<> alignL (hrule 20)) . alignTL . (<> alignL (hrule 20)) . alignBL . scaleX 1{-TODO-} . mconcat . 
-    fmap drawScoreNote . 
-    fmap (map1 timeToDouble . map2 durationToDouble . map3 realToFrac)
+drawPart' = mconcat . fmap drawNote'
+
+drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
+drawNote' (timeToDouble -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
     where
-        map1 f (a,b,c) = (f a,b,c)
-        map2 f (a,b,c) = (a,f b,c)
-        map3 f (a,b,c) = (a,b,f c)
-        drawScoreNote (t,d,x) = translateY x $ translateX (t.+^(d^/2)) $ scaleX d $ noteShape
-        noteShape = lcA transparent $ fcA (blue `withOpacity` 0.5) $ square 1
+    noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
 
 writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
 writeG path dia = do
