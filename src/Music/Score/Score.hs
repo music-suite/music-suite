@@ -37,7 +37,7 @@ module Music.Score.Score (
         -- mkScore,
         -- getScore,
         mapScore,
-        reifyScore,
+        -- reifyScore,
 
         mapWithSpan,
         filterWithSpan,

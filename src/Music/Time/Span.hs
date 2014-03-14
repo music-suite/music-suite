@@ -135,14 +135,6 @@ _range :: Span -> (Time, Time)
 _range x = let (t, d) = _delta x
     in (t, t .+^ d)
 
--- | Map over the span as onset and duration.
-mapDelta :: (Time -> Duration -> (Time, Duration)) -> Span -> Span
-mapDelta f = delta %~ uncurry f
-
--- | Map over the span as a time pair.
-mapRange :: (Time -> Time -> (Time, Time)) -> Span -> Span
-mapRange f = range %~ uncurry f
-
 -- |
 -- View a span as onset and offset.
 --
