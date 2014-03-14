@@ -24,20 +24,32 @@ module TimeTypes (
         delta,
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         conjugate,  -- :: Span -> Span -> Span
+
+        -- * Note, delayed, stretched
         Note,
         Delayed,
         Stretched,
+        renderNote,
+        renderDelayed,
+        renderStretched,
+
+        -- * Segment and behavior
         Segment,
         Behavior,
 
+        -- * Transformations
         Transformable(..),
         delayTime,
         delaying,       -- :: Duration -> Span
         stretching,     -- :: Duration -> Span
         delay,          -- :: Transformable a => Duration -> a -> a
         stretch,        -- :: Transformable a => Duration -> a -> a
+
+        -- * Duration
         HasDuration(..),
         stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
+
+        -- * Position
         HasPosition(..),
         preOnset,       -- :: HasPosition a => a -> Time
         onset,          -- :: HasPosition a => a -> Time
@@ -52,7 +64,11 @@ module TimeTypes (
         (|>),
         (>|),
         retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+
+        -- * Segmented
         Segmented(..),
+
+        -- * Reversing
         Reversible(..)
 
   ) where
@@ -60,6 +76,7 @@ import           Control.Applicative
 import           Control.Arrow          ((***), first, second)
 import           Control.Lens           hiding ((|>), under, transform)
 import           Control.Comonad
+import           Control.Comonad.Env
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -150,6 +167,8 @@ instance Monoid Duration where
     mappend = (*^)
 instance Transformable Duration where
     Span (_, d1) `transform` d2 = d1 * d2
+instance HasDuration Duration where
+    duration = id
 
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
@@ -178,6 +197,8 @@ instance Monoid Time where
     mconcat = sumV
 instance Transformable Time where
     Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
+instance HasPosition Time where
+    position = const
 
 
 -- Inverse semigroup:
@@ -281,10 +302,31 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, 
 instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
 instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
 instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
+instance Rewrapped (Note a) (Note b)
+instance Rewrapped (Delayed a) (Delayed b)
+instance Rewrapped (Stretched a) (Stretched b)
 
 instance Transformable (Note a) where transform t = unwrapped $ first (transform t)
 instance Transformable (Delayed a) where transform t = unwrapped $ first (transform t)
 instance Transformable (Stretched a) where transform t = unwrapped $ first (transform t)
+
+instance HasDuration (Note a) where duration = duration . ask . unwr
+instance HasDuration (Stretched a) where duration = duration . ask . unwr
+
+instance HasPosition (Note a) where x `position` p = ask (unwr x) `position` p
+instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
+
+renderNote :: Transformable a => Note a -> a
+renderNote = uncurry transform . unwr
+
+renderDelayed :: Transformable a => Delayed a -> a
+renderDelayed = uncurry delayTime . unwr
+
+renderStretched :: Transformable a => Stretched a -> a
+renderStretched = uncurry stretch . unwr
+
+-- instance HasPosition (Note a) where position n
+
 
 newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
 -- Defined 0-1
@@ -364,10 +406,16 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 -- FIXME compare with diagrams variant
 -- translation vs linear etc
 
--- LAW onset (delay n a) = n + onset a
--- LAW offset (delay n a) = n + offset a
--- LAW duration (stretch n a) = n * (duration a)
--- LEMMA duration a = duration (delay n a)
+-- |
+-- Law
+--
+-- > onset (delay n a) = n + onset a
+-- > offset (delay n a) = n + offset a
+-- > duration (stretch n a) = n * (duration a)
+--
+-- LEMMA
+--
+-- > duration a = duration (delay n a)
 class Transformable a where
     transform :: Span -> a -> a
 
@@ -390,9 +438,11 @@ stretch = transform . stretching
 
 -- Things with a duration
 
+-- |
 -- LAW Duration
---  duration x = (offset x .-. onset x)
--- LEMMA
+--
+-- > duration x = (offset x .-. onset x)
+--
 class HasDuration a where
     duration :: a -> Duration
 
