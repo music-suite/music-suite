@@ -1,10 +1,12 @@
 
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -22,6 +24,7 @@ import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Free
 import Control.Monad.Plus
 import Control.Lens()
 
@@ -122,8 +125,22 @@ newtype Span = Span (Time, Duration)
 
 (<->) :: Time -> Time -> Span
 (>->) :: Time -> Duration -> Span
-(<->) = undefined
-(>->) = undefined
+t <-> u = t >-> (u .-. t)
+t >-> d = Span (t, d)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- newtype Time -- Semigroup, Monoid (sum)
 -- newtype Span -- Semigroup, Monoid, AdditiveGroup (composition)
@@ -169,18 +186,47 @@ newtype Behavior a  = Behavior (Time -> a)
 -- instance Applicative Reactive
 -- instance Monad Reactive
 -- instance Monoid a => Monoid (Reactive a)
---
---
---
---
---
---
---
---
---
---
---
---
+
+
+-- Fre monad of ?
+{-
+data Score s a
+    = SOne a
+    | SPlus s [Score a]
+-}
+newtype Trans s a = Trans (s, [a]) deriving (Functor)
+instance Monoid s => Monad (Trans s) where
+    return = Trans . return . return
+    -- TODO the usual >>=
+
+type Score s a = Free (Trans s) a
+
+renderScore :: Monoid s => Score s a -> [(s, a)]
+renderScore x = case retract x of
+    Trans (s,as) -> zip (repeat s) as
+
+
+-- Free monad of (a,a)
+{-
+data Tree a
+    = One a
+    | Plus (Tree a) (Tree a)
+-}
+data Pair a = Pair a a deriving (Functor)
+newtype MaybePair a = MaybePair (Maybe (Pair a)) deriving (Functor) -- Use compose
+type Tree a = Free MaybePair a
+
+-- CPS-version of Tree
+newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
+
+
+
+
+
+
+
+
+
 class HasDuration a where
     duration :: a -> Duration
 class HasPosition a where
@@ -247,7 +293,6 @@ alignAt p t x   = (t .-. x `position` p) `delay` x
 -- position
 --     onset
 --     offset
---
 -- transform
 --     delay
 --     stretch
@@ -300,16 +345,16 @@ instance Reverse [a] where
 newtype BadMonoid a = BadMonoid [a]
     deriving (Eq, Ord, Show, Typeable)
 instance Monoid (BadMonoid a) where
-    BadMonoid x `mappend` BadMonoid y = BadMonoid (y `mappend` reverse x)
+    BadMonoid x `mappend` BadMonoid y = BadMonoid (y `mappend` reverse x) -- lawless
     mempty = BadMonoid []
 instance Functor BadMonoid where
-    fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs)
+    fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs) -- lawless
 
 data BadFunctor a = BF1 | BF2
     deriving (Eq, Ord, Show, Typeable)
 
 instance Functor BadFunctor where
-    fmap f BF1 = BF2
+    fmap f BF1 = BF2 -- lawless
     fmap f BF2 = BF2
 
 instance Serial IO a => Serial IO (BadFunctor a) where
@@ -324,15 +369,23 @@ instance Serial IO Duration where
     series = msum $ fmap return [0..10]
 
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
-monoid typ = let (<>) = mappend in testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
-    testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x) x <> (y <> z) == (x <> y) <> z,
-    testProperty "mempty <> x == x"               $ \x     -> assuming (sameType typ x) mempty <> x == x,
-    testProperty "x <> mempty == x"               $ \x     -> assuming (sameType typ x) (x <> mempty == x)
+monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
+    testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x) 
+                  x <> (y <> z) == (x <> y) <> z,
+
+    testProperty "mempty <> x == x"               $ \x     -> assuming (sameType typ x) 
+                  mempty <> x == x,
+
+    testProperty "x <> mempty == x"               $ \x     -> assuming (sameType typ x) 
+                 (x <> mempty == x)
     ]
+    where
+        (<>) = mappend
 
 functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
 functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
-    testProperty "fmap id = id" $ \x -> assuming (sameType typ x) (fmap id x == id x)
+    testProperty "fmap id = id" $ \x -> assuming (sameType typ x) 
+                 (fmap id x == id x)
     ]
 
 -- applicative :: (Applicative f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
@@ -347,6 +400,7 @@ functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
 --     ]
 
 
+ap2 u v w = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
 
 main = defaultMain $ testGroup "" $ [
     testProperty "rev . rev == id" $ \(x :: ())    -> rev (rev x) == x,
