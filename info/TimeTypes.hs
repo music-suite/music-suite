@@ -41,9 +41,13 @@ module TimeTypes (
         Transformable(..),
         delayTime,
         delaying,       -- :: Duration -> Span
+        rushing,
         stretching,     -- :: Duration -> Span
+        compressing,
         delay,          -- :: Transformable a => Duration -> a -> a
+        rush,
         stretch,        -- :: Transformable a => Duration -> a -> a
+        compress,
 
         -- * Duration
         HasDuration(..),
@@ -51,6 +55,7 @@ module TimeTypes (
 
         -- * Position
         HasPosition(..),
+        era,
         preOnset,       -- :: HasPosition a => a -> Time
         onset,          -- :: HasPosition a => a -> Time
         postOnset,      -- :: HasPosition a => a -> Time
@@ -64,6 +69,10 @@ module TimeTypes (
         (|>),
         (>|),
         retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+        scat,
+        pcat,
+        sustain,
+        times,
 
         -- * Segmented
         Segmented(..),
@@ -429,10 +438,12 @@ delayTime t     = delay (t .-. 0)
 
 delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
-delay   = transform . delaying
-stretch = transform . stretching
-
-
+rushing x = delaying (negate x)
+compressing x = stretching (recip x)
+delay    = transform . delaying
+rush     = transform . rushing
+stretch  = transform . stretching
+compress = transform . compressing
 
 -- Fitting things
 
@@ -456,8 +467,10 @@ stretchTo d x = (d ^/ duration x) `stretch` x
 class HasPosition a where
     position :: a -> {-Scalar-} Duration -> Time
 
+era :: HasPosition a => a -> Span
 onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+era x = onset x <-> offset x
 preOnset    = (`position` (-0.5))
 onset       = (`position` 0)
 postOnset   = (`position` 0.5)
@@ -495,11 +508,18 @@ a >| b =  (a `lead` b) <> b
 retainOnset :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 retainOnset f x = startAt (onset x) (f x)
 
+scat = Prelude.foldr (|>) mempty
+pcat = mconcat
+
+x `sustain` y     = x <> duration x `stretchTo` y
+times n     = scat . replicate n
+
 -- Splitting and reversing things
 
 -- Works for both positioned and unpositioned things
 -- For positioned types, splits relative onset
 -- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
+-- XXX what about Behavior (infinite span)
 class HasDuration a => Segmented a where
     split  :: Duration -> a -> (a, a)
     before :: Duration -> a -> a
