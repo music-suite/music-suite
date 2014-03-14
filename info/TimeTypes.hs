@@ -52,10 +52,15 @@ instance Monoid b => Monad ((,) b) where
 -- deriving instance Traversable ((,) o)
 
 
+{-
+    TODO
+    
+    - Use graphing and verify that timed fmap (i.e. reactive's apply) works.
+
+    - New representations for Score, Voice and Reactive
 
 
-
-
+-}
 
 
 
@@ -102,6 +107,8 @@ instance Semigroup Duration where
 instance Monoid Duration where
     mempty  = 1 -- TODO use some notion of norm
     mappend = (*^)
+instance Transformable Duration where
+    Span (_, d1) `sapp` d2 = d1 * d2
 
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
@@ -128,6 +135,8 @@ instance Monoid Time where
     mempty  = zeroV
     mappend = (^+^)
     mconcat = sumV
+instance Transformable Time where
+    Span (t1, d1) `sapp` t2 = t1 ^+^ d1 *^ t2
 
 
 -- Inverse semigroup:
@@ -151,17 +160,12 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
 
--- XXX Transformable Time/Duration
--- Duration should be translation invariant
-instance Transformable Span where
-    sapp = (<>)
-
 instance HasPosition Span where
     position (view range -> (t1, t2)) = alerp t1 t2
-
 instance HasDuration Span where
     duration = snd . view delta
-    
+instance Transformable Span where
+    sapp = (<>)
 instance Semigroup Span where
     (<>) = (^+^)
 instance Monoid Span where
@@ -174,7 +178,15 @@ instance AdditiveGroup Span where
 
 -- > forall s . sunder s id = id
 sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-sunder s f = sapp (sinvert s) . f . sapp s
+s `sunder` f = sapp (sinvert s) . f . sapp s
+
+{-
+-- | Conjugate one transformation by another. @conjugate t1 t2@ is the
+--   transformation which performs first @t1@, then @t2@, then the
+--   inverse of @t1@.
+conjugate :: HasLinearMap v => Transformation v -> Transformation v -> Transformation v
+conjugate t1 t2  = inv t1 <> t2 <> t1
+-}
 
 
 {-
@@ -395,13 +407,40 @@ a `follow` b = alignAt 0 (a `position` 1) b
 a |> b =  a <> (a `follow` b)
 a >| b =  (a `lead` b) <> b
 
+retainOnset :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+retainOnset f x = startAt (onset x) (f x)
 
 -- Splitting and reversing things
 
-class Split a where
-    split :: Time -> a -> (a, a)
-class Reverse a where
+-- Works for both positioned and unpositioned things
+-- For positioned types, splits relative onset
+class HasDuration a => Segmented a where
+    split :: Duration -> a -> (a, a)
+    take' :: Duration -> a -> a
+    drop' :: Duration -> a -> a
+
+    take' d = fst . split d
+    drop' d = snd . split d
+
+
+
+class Reversible a where
     rev :: a -> a
+instance Reversible () where
+    rev = id
+instance Reversible Int where
+    rev = id
+instance Reversible Double where
+    rev = id
+instance Reversible Integer where
+    rev = id
+instance Reversible a => Reversible [a] where
+    rev = reverse . fmap rev
+instance Reversible Time where
+    rev = stretch (-1)
+instance Reversible Span where
+    rev = stretch (-1)
+
 
 
 
@@ -471,11 +510,6 @@ assuming = flip const
 
 sameType :: a -> a -> ()
 sameType = undefined
-
-instance Reverse () where
-    rev () = ()
-instance Reverse [a] where
-    rev = reverse
 
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
