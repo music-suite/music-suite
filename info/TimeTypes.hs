@@ -428,6 +428,8 @@ instance Reversible Integer where
     rev = id
 instance Reversible a => Reversible [a] where
     rev = reverse . fmap rev
+instance Reversible Duration where
+    rev = stretch (-1)
 instance Reversible Time where
     rev = stretch (-1)
 instance Reversible Span where
