@@ -14,7 +14,48 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 
-module TimeTypes where
+module TimeTypes (
+        Duration,
+        Time,
+        Span,
+        (<->),
+        (>->),
+        range,
+        delta,
+        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+        conjugate,  -- :: Span -> Span -> Span
+        Note,
+        Delayed,
+        Stretched,
+        Segment,
+        Behavior,
+
+        Transformable(..),
+        delayTime,
+        delaying,       -- :: Duration -> Span
+        stretching,     -- :: Duration -> Span
+        delay,          -- :: Transformable a => Duration -> a -> a
+        stretch,        -- :: Transformable a => Duration -> a -> a
+        HasDuration(..),
+        stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
+        HasPosition(..),
+        preOnset,       -- :: HasPosition a => a -> Time
+        onset,          -- :: HasPosition a => a -> Time
+        postOnset,      -- :: HasPosition a => a -> Time
+        offset,         -- :: HasPosition a => a -> Time
+        postOffset,     -- :: HasPosition a => a -> Time
+        startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
+        stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
+        alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+        lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+        follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+        (|>),
+        (>|),
+        retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+        Segmented(..),
+        Reversible(..)
+
+  ) where
 import           Control.Applicative
 import           Control.Arrow          ((***), first, second)
 import           Control.Lens           hiding ((|>), under, transform)
@@ -235,6 +276,8 @@ newtype Note a      = Note      { getNote      :: (Span, a)     } deriving (Eq, 
 newtype Delayed a   = Delayed   { getDelayed   :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad)
 
+-- XXX Compare with Located in diagrams
+
 instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
 instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
 instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
@@ -406,13 +449,13 @@ retainOnset f x = startAt (onset x) (f x)
 
 -- Works for both positioned and unpositioned things
 -- For positioned types, splits relative onset
+-- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
 class HasDuration a => Segmented a where
-    split :: Duration -> a -> (a, a)
-    take' :: Duration -> a -> a
-    drop' :: Duration -> a -> a
-
-    take' d = fst . split d
-    drop' d = snd . split d
+    split  :: Duration -> a -> (a, a)
+    before :: Duration -> a -> a
+    after  :: Duration -> a -> a
+    before d = fst . split d
+    after d = snd . split d
 
 
 
