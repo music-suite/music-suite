@@ -17,7 +17,7 @@
 module TimeTypes where
 import           Control.Applicative
 import           Control.Arrow          ((***))
-import           Control.Lens           hiding ((|>))
+import           Control.Lens           hiding ((|>), under, transform)
 import           Control.Comonad
 import           Control.Monad
 import           Control.Monad.Free
@@ -108,7 +108,7 @@ instance Monoid Duration where
     mempty  = 1 -- TODO use some notion of norm
     mappend = (*^)
 instance Transformable Duration where
-    Span (_, d1) `sapp` d2 = d1 * d2
+    Span (_, d1) `transform` d2 = d1 * d2
 
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
@@ -136,7 +136,7 @@ instance Monoid Time where
     mappend = (^+^)
     mconcat = sumV
 instance Transformable Time where
-    Span (t1, d1) `sapp` t2 = t1 ^+^ d1 *^ t2
+    Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
 
 
 -- Inverse semigroup:
@@ -165,7 +165,7 @@ instance HasPosition Span where
 instance HasDuration Span where
     duration = snd . view delta
 instance Transformable Span where
-    sapp = (<>)
+    transform = (<>)
 instance Semigroup Span where
     (<>) = (^+^)
 instance Monoid Span where
@@ -176,17 +176,12 @@ instance AdditiveGroup Span where
     Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
     negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
--- > forall s . sunder s id = id
-sunder :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-s `sunder` f = sapp (sinvert s) . f . sapp s
+-- > forall s . id `sunder` s = id
+under :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+s `under` f = transform (negateV s) . f . transform s
 
-{-
--- | Conjugate one transformation by another. @conjugate t1 t2@ is the
---   transformation which performs first @t1@, then @t2@, then the
---   inverse of @t1@.
-conjugate :: HasLinearMap v => Transformation v -> Transformation v -> Transformation v
-conjugate t1 t2  = inv t1 <> t2 <> t1
--}
+conjugate :: Span -> Span -> Span
+conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 
 {-
@@ -214,17 +209,6 @@ conjugate t1 t2  = inv t1 <> t2 <> t1
       Transformation t1 t1' v1 <> Transformation t2 t2' v2
         = Transformation (t1 <> t2) (t2' <> t1') (v1 ^+^ lapp t1 v2)
 -}
-
--- > sinvert (sinvert s) = s
--- > sapp (sinvert s) . sapp s = id
-sinvert :: Span -> Span
-sinvert = negateV
--- sinvert (Span (t,d)) = Span (mirror t, recip d)
-
-
-
-
-
 
 
 
@@ -334,11 +318,11 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 -- LAW duration (stretch n a) = n * (duration a)
 -- LEMMA duration a = duration (delay n a)
 class Transformable a where
-    sapp :: Span -> a -> a
+    transform :: Span -> a -> a
 
 
 -- FIXME strange
--- sappInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
+-- transformInv (view delta -> (t,d)) = stretch (recip d) . delayTime (reflectThrough 0 t)
 
 -- FIXME get rid of this
 delayTime t     = delay (t .-. 0)
@@ -346,8 +330,8 @@ delayTime t     = delay (t .-. 0)
 
 delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
-delay   = sapp . delaying
-stretch = sapp . stretching
+delay   = transform . delaying
+stretch = transform . stretching
 
 
 
