@@ -15,7 +15,15 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module TimeTypes (
-        
+
+        -- * Data.Value
+        HasSingleValue(..),
+        left3,
+        right3,
+        left4,
+        right4,
+        valueDefault,
+
         -- * Music.Time.Transform
         Transformable(..),
         delaying,       -- :: Duration -> Span
@@ -44,11 +52,13 @@ module TimeTypes (
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+        retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+
+        -- * Music.Time.Combinators
         lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
         follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
         (|>),
         (>|),
-        retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
         scat,
         pcat,
         sustain,
@@ -74,17 +84,20 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        renderNote,
+        noteEra,
+        noteValue,
+        mapNote,
+        runNote,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
-        renderDelayed,
+        runDelayed,
 
         -- * Music.Time.Stretched
         Stretched,
         stretched,
-        renderStretched,
+        runStretched,
 
         -- * Music.Time.Segment
         Segment,
@@ -110,30 +123,32 @@ module TimeTypes (
 
   ) where
 import           Control.Applicative
-import           Control.Arrow              (first, second, (***))
+import           Control.Arrow          (first, second, (***))
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens               hiding (transform, under, (|>))
+import           Control.Lens           hiding (transform, under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Foldable              (Foldable)
+import           Data.Foldable          (Foldable)
 -- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
-import           Data.Traversable           (Traversable)
-import qualified Data.Traversable as T
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Sequence(Seq)
+import qualified Data.Sequence as Seq
 
 import           Data.Int
-import           Test.SmallCheck.Series     (Serial (..), cons0, newtypeCons,
-                                             series, (\/))
+import           Test.SmallCheck.Series (Serial (..), cons0, newtypeCons,
+                                         series, (\/))
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
 
-import qualified Data.Ratio                 as Util_Ratio
+import qualified Data.Ratio             as Util_Ratio
 
 
 -- Misc instances
@@ -186,7 +201,7 @@ instance Monoid b => Monad ((,) b) where
 -}
 
 -- |
--- Durations, represented as rational numbers. 
+-- Durations, represented as rational numbers.
 -- Corresponds to note values in standardnotation, i.e. @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
 -- Duration is a one-dimensional vector space, and is the associated vector space of time points.
@@ -356,6 +371,13 @@ newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
+instance HasSingleValue Note where
+    value = valueDefault
+instance HasSingleValue Delayed where
+    value = valueDefault
+instance HasSingleValue Stretched where
+    value = valueDefault
+
 instance Reversible (Note a) where
     rev = stretch (-1)
 instance Splittable a => Splittable (Note a) where
@@ -387,19 +409,30 @@ instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 
 note :: Iso' (Note a) (Span, a)
 note = _Wrapped'
+
+noteValue :: Lens' (Note a) a
+noteValue = value
+
+noteEra :: Lens' (Note a) Span
+noteEra = lens era undefined
+
 delayed :: Iso' (Delayed a) (Time, a)
 delayed = _Wrapped'
 stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
 
-renderNote :: Transformable a => Note a -> a
-renderNote = uncurry transform . unwr
+mapNote :: (Transformable a, Transformable b) => (a -> b) -> Note a -> Note b
+mapNote f (Note (s,x)) = Note (s, under s f x)
+-- TODO use unwr
 
-renderDelayed :: Transformable a => Delayed a -> a
-renderDelayed = uncurry delay' . unwr
+runNote :: Transformable a => Note a -> a
+runNote = uncurry transform . unwr
 
-renderStretched :: Transformable a => Stretched a -> a
-renderStretched = uncurry stretch . unwr
+runDelayed :: Transformable a => Delayed a -> a
+runDelayed = uncurry delay' . unwr
+
+runStretched :: Transformable a => Stretched a -> a
+runStretched = uncurry stretch . unwr
 
 -- instance HasPosition (Note a) where position n
 
@@ -421,8 +454,8 @@ instance Monoid a => Monoid (Behavior a) where
 
 
 
-newtype Score a     = Score      { getScore :: [Note a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
-instance Wrapped (Score a) where { type Unwrapped (Score a) = [Note a] ; _Wrapped' = iso getScore Score }
+newtype Score a     = Score      { getScore :: Seq (Note a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+instance Wrapped (Score a) where { type Unwrapped (Score a) = Seq (Note a) ; _Wrapped' = iso getScore Score }
 instance Rewrapped (Score a) (Score b)
 instance Applicative Score where
     pure  = return
@@ -444,12 +477,12 @@ instance HasPosition (Score a) where
 instance HasDuration (Score a) where
 instance Splittable a => Splittable (Score a) where
 
--- | XXX indexed traversal?
+-- | XXX indexed traversal?
 score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
 score = undefined
 
 
-newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+newtype Voice a     = Voice      { getVoice :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
@@ -460,12 +493,12 @@ instance Reversible a => Reversible (Voice a) where
 instance HasDuration (Voice a) where
 instance Splittable a => Splittable (Voice a) where
 
--- | XXX indexed traversal?
+-- | XXX indexed traversal?
 voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
 voice = undefined
 
 
-newtype VoiceMap a     = VoiceMap      { getVoiceMap :: [Stretched a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+newtype VoiceMap a     = VoiceMap      { getVoiceMap :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative VoiceMap where
     pure  = return
     (<*>) = ap
@@ -525,8 +558,8 @@ instance Monoid s => Monad (Trans s) where
 
 type Score s a = Free (Trans s) a
 
-renderScore :: Monoid s => Score s a -> [(s, a)]
-renderScore x = case retract x of
+viewScore :: Monoid s => Score s a -> [(s, a)]
+viewScore x = case retract x of
     Trans (s,as) -> zip (repeat s) as
 
 
@@ -550,7 +583,51 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
+-- |
+-- Functors with a single readable and writable value.
+--
+-- XXX Always isomorphic to pairs?
+--
+-- For any @'Comonad' f@ , you can simply define:
+--
+-- > instance HasSingleValue f where
+-- >     value = valueDefault
+--
+class Functor f => HasSingleValue f where
+    value' :: Lens' (f a) a
+    value  :: Lens  (f a) (f a) a a
+    value = value'
 
+instance HasSingleValue ((,) a) where
+    value = valueDefault
+
+left3 :: Iso ((a1, b1), c1) ((a2, b2), c2) (a1, b1, c1) (a2, b2, c2)
+left3 = iso f g where f ((x,y), z) = (x, y, z); g (x, y,  z) = ((x, y), z)
+
+right3 :: Iso (a1, (b1, c1)) (a2, (b2, c2)) (a1, b1, c1) (a2, b2, c2)
+right3 = iso f g where f (x, (y,z)) = (x, y, z); g (x, y,  z) = (x, (y,z))
+
+-- TODO run 3 version over this
+left4 = iso f g where f ((x,y,z), a) = (x, y, z, a); g (x, y, z, a) = ((x, y, z), z)
+right4 = iso f g where f (x, (y,z,a)) = (x, y, z, a); g (x, y, z, a) = (x, (y, z, a))
+
+
+-- Why is this not in base?
+instance Functor ((,,) a b) where
+    fmap f = from left3 %~ fmap f
+
+instance HasSingleValue ((,,) a b) where
+    value = from left3 . valueDefault
+
+-- | XXX suspect setter (uses const)
+instance Monoid a => HasSingleValue ((->) a) where
+    value = valueDefault
+
+
+-- Iso (g a) (g b) (c, a) (c, b)
+
+valueDefault :: Comonad g => Lens (g a) (g b) a b
+valueDefault = lens extract (\s b -> fmap (const b) s)
 
 
 -- Moving and scaling things
@@ -609,7 +686,7 @@ stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ duration x) `stretch` x
 
 stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
-stretchNorm x = stretchTo (normalized $ duration x) x
+stretchNorm x = stretchTo (normalized $ duration x) x
 
 
 -- Placing things
@@ -617,7 +694,9 @@ stretchNorm x = stretchTo (normalized $ duration x) x
 class HasPosition a where
     position :: a -> {-Scalar-} Duration -> Time
 
+-- |  XXX make into lens for any positionable thing
 era :: HasPosition a => a -> Span
+
 onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 era x = onset x <-> offset x
@@ -650,6 +729,8 @@ a `follow` b = alignAt 0 (a `position` 1) b
 -- Mnemonics:
 --   > is at the side of the element being moved
 --   >| >| etc indicates offset/onset
+
+-- | XXX More generic version of sequential catenation (which can only be used for voices etc)
 (|>) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 (>|) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a |> b =  a <> (a `follow` b)
