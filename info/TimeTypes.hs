@@ -15,41 +15,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module TimeTypes (
-        -- * Types
-        Duration,
-        Time,
-        Span,
-        (<->),
-        (>->),
-        range,
-        delta,
-        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-        -- conjugate,  -- :: Span -> Span -> Span
-
-        -- * Note, delayed, stretched
-        Note,
-        Delayed,
-        Stretched,
-        note,
-        delayed,
-        stretched,
-        renderNote,
-        renderDelayed,
-        renderStretched,
-
-        -- * Segment and behavior
-        Segment,
-        Behavior,
-
-        -- * Score, Voice
-        Score,
-        Voice,
-        voice,
-        VoiceMap,
-        voiceMap,
-        Reactive,
-
-        -- * Transformations
+        
+        -- * Music.Time.Transform
         Transformable(..),
         delaying,       -- :: Duration -> Span
         undelaying,
@@ -61,12 +28,12 @@ module TimeTypes (
         stretch,        -- :: Transformable a => Duration -> a -> a
         compress,
 
-        -- * Duration
+        -- * Music.Time.Duration
         HasDuration(..),
         stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
         stretchNorm,
 
-        -- * Position
+        -- * Music.Time.Position
         HasPosition(..),
         era,
         -- preOnset,       -- :: HasPosition a => a -> Time
@@ -87,11 +54,58 @@ module TimeTypes (
         sustain,
         times,
 
-        -- * Reversing
+        -- * Music.Time.Reverse
         Reversible(..),
 
-        -- * Splittable
+        -- * Music.Time.Split
         Splittable(..),
+
+        -- * Music.Time.Types
+        Duration,
+        Time,
+        Span,
+        (<->),
+        (>->),
+        range,
+        delta,
+        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+        -- conjugate,  -- :: Span -> Span -> Span
+
+        -- * Music.Time.Note
+        Note,
+        note,
+        renderNote,
+
+        -- * Music.Time.Delayed
+        Delayed,
+        delayed,
+        renderDelayed,
+
+        -- * Music.Time.Stretched
+        Stretched,
+        stretched,
+        renderStretched,
+
+        -- * Music.Time.Segment
+        Segment,
+
+        -- * Music.Time.Behavior
+        Behavior,
+
+        -- * Music.Time.Voice
+        Voice,
+        voice,
+
+        -- * Music.Time.VoiceMap
+        VoiceMap,
+        voiceMap,
+
+        -- * Music.Time.Reactive
+        Reactive,
+
+        -- * Music.Time.Score
+        Score,
+
 
 
   ) where
@@ -435,7 +449,6 @@ score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
 score = undefined
 
 
-
 newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative Voice where
     pure  = return
@@ -464,7 +477,7 @@ instance HasDuration (VoiceMap a) where
 instance Splittable a => Splittable (VoiceMap a) where
 
 -- | XXX
-voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Either (Stretched a) (VoiceMap a)) (Either (Stretched b) (VoiceMap b))
+voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Stretched (Either a (VoiceMap a))) (Stretched (Either a (VoiceMap a)))
 voiceMap = undefined
 
 -- | XXX only defined positively
