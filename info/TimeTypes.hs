@@ -24,12 +24,15 @@ module TimeTypes (
         range,
         delta,
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-        conjugate,  -- :: Span -> Span -> Span
+        -- conjugate,  -- :: Span -> Span -> Span
 
         -- * Note, delayed, stretched
         Note,
         Delayed,
         Stretched,
+        note,
+        delayed,
+        stretched,
         renderNote,
         renderDelayed,
         renderStretched,
@@ -41,6 +44,10 @@ module TimeTypes (
         -- * Score, Voice
         Score,
         Voice,
+        voice,
+        VoiceMap,
+        voiceMap,
+        Reactive,
 
         -- * Transformations
         Transformable(..),
@@ -49,7 +56,7 @@ module TimeTypes (
         stretching,     -- :: Duration -> Span
         compressing,
         delay,          -- :: Transformable a => Duration -> a -> a
-        delay',
+        -- delay',
         undelay,
         stretch,        -- :: Transformable a => Duration -> a -> a
         compress,
@@ -57,6 +64,7 @@ module TimeTypes (
         -- * Duration
         HasDuration(..),
         stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
+        stretchNorm,
 
         -- * Position
         HasPosition(..),
@@ -79,11 +87,12 @@ module TimeTypes (
         sustain,
         times,
 
-        -- * Segmented
-        Segmented(..),
-
         -- * Reversing
-        Reversible(..)
+        Reversible(..),
+
+        -- * Splittable
+        Splittable(..),
+
 
   ) where
 import           Control.Applicative
@@ -162,6 +171,14 @@ instance Monoid b => Monad ((,) b) where
     LAWS
 -}
 
+-- |
+-- Durations, represented as rational numbers. 
+-- Corresponds to note values in standardnotation, i.e. @1\/2@ for half note @1\/4@ for a quarter note and so on.
+--
+-- Duration is a one-dimensional vector space, and is the associated vector space of time points.
+--
+-- Durations is a 'Semigroup' and 'Monoid' under addition.
+--
 newtype Duration = Duration { getDuration :: Rational }
 instance Show Duration where
     show = showRatio . getDuration
@@ -177,6 +194,8 @@ deriving instance AdditiveGroup Duration
 instance VectorSpace Duration where
     type Scalar Duration = Duration
     (*^) = (*)
+instance Floating Duration
+instance InnerSpace Duration
 instance Semigroup Duration where
     (<>) = (*^)
 instance Monoid Duration where
@@ -187,6 +206,13 @@ instance Transformable Duration where
 instance HasDuration Duration where
     duration = id
 
+-- |
+-- Time points, representing duration since some known reference time, typically the start of the music.
+--
+-- Duration is a one-dimensional vector space, and is the associated vector space of time points.
+--
+-- Durations is a 'Semigroup' and 'Monoid' under addition.
+--
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
     show = showRatio . getTime
@@ -245,6 +271,8 @@ instance HasDuration Span where
     duration = snd . view delta
 instance Transformable Span where
     transform = (<>)
+instance Splittable Span where
+    -- XXX
 instance Semigroup Span where
     (<>) = (^+^)
 instance Monoid Span where
@@ -310,12 +338,19 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 --
 --
-newtype Note a      = Note      { getNote :: (Span, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
-newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
-instance Reversible a => Reversible (Note a) where
-    rev = fmap rev . stretch (-1)
+instance Reversible (Note a) where
+    rev = stretch (-1)
+instance Splittable a => Splittable (Note a) where
+
+instance Reversible (Delayed a) where
+
+instance Reversible (Stretched a) where
+    rev = stretch (-1)
+instance Splittable a => Splittable (Stretched a) where
 
 -- XXX Compare with Located in diagrams
 
@@ -336,6 +371,13 @@ instance HasDuration (Stretched a) where duration = duration . ask . unwr
 instance HasPosition (Note a) where x `position` p = ask (unwr x) `position` p
 instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 
+note :: Iso' (Note a) (Span, a)
+note = _Wrapped'
+delayed :: Iso' (Delayed a) (Time, a)
+delayed = _Wrapped'
+stretched :: Iso' (Stretched a) (Duration, a)
+stretched = _Wrapped'
+
 renderNote :: Transformable a => Note a -> a
 renderNote = uncurry transform . unwr
 
@@ -352,14 +394,20 @@ renderStretched = uncurry stretch . unwr
 
 newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
 -- Defined 0-1
+instance Semigroup a => Semigroup (Segment a) where
+    (<>) = undefined
+instance Monoid a => Monoid (Segment a) where
 
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
+instance Semigroup a => Semigroup (Behavior a) where
+    (<>) = undefined
+instance Monoid a => Monoid (Behavior a) where
 
 
 
 
-newtype Score a     = Score      { getScore :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Monoid)
+newtype Score a     = Score      { getScore :: [Note a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Wrapped (Score a) where { type Unwrapped (Score a) = [Note a] ; _Wrapped' = iso getScore Score }
 instance Rewrapped (Score a) (Score b)
 instance Applicative Score where
@@ -378,15 +426,50 @@ instance Transformable (Score a) where
     transform t (Score xs) = Score (fmap (transform t) xs)
 instance Reversible a => Reversible (Score a) where
     rev (Score xs) = Score (fmap rev xs)
+instance HasPosition (Score a) where
+instance HasDuration (Score a) where
+instance Splittable a => Splittable (Score a) where
 
-newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Monoid)
+-- | XXX indexed traversal?
+score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
+score = undefined
+
+
+
+newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
 instance Monad Voice where
     -- TODO
+instance Transformable (Voice a) where
+instance Reversible a => Reversible (Voice a) where
+instance HasDuration (Voice a) where
+instance Splittable a => Splittable (Voice a) where
+
+-- | XXX indexed traversal?
+voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
+voice = undefined
 
 
+newtype VoiceMap a     = VoiceMap      { getVoiceMap :: [Stretched a]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+instance Applicative VoiceMap where
+    pure  = return
+    (<*>) = ap
+instance Monad VoiceMap where
+    -- TODO
+instance Transformable (VoiceMap a) where
+instance Reversible a => Reversible (VoiceMap a) where
+instance HasDuration (VoiceMap a) where
+instance Splittable a => Splittable (VoiceMap a) where
+
+-- | XXX
+voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Either (Stretched a) (VoiceMap a)) (Either (Stretched b) (VoiceMap b))
+voiceMap = undefined
+
+-- | XXX only defined positively
+-- Need to use alternative to voice similar to a zipper etc
+type Reactive a = Voice (Segment a)
 
 -- newinstance Functor Behavior
 -- -- Distributive?
@@ -512,6 +595,8 @@ class HasDuration a where
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ duration x) `stretch` x
 
+stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
+stretchNorm x = stretchTo (normalized $ duration x) x
 
 
 -- Placing things
@@ -578,7 +663,7 @@ times n     = scat . replicate n
 --
 -- > let (a, b) = split x in duration a + duration b = duration x
 --
-class HasDuration a => Segmented a where
+class HasDuration a => Splittable a where
     split  :: Duration -> a -> (a, a)
 
 before d = fst . split d
