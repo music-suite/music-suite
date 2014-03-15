@@ -16,6 +16,10 @@
 
 module TimeTypes (
 
+        -- * Data.Normalized
+        Normalized(..),
+        normalize,
+        
         -- * Data.Value
         HasSingleValue(..),
         left3,
@@ -84,6 +88,7 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
+        -- mkNote,
         noteEra,
         noteValue,
         mapNote,
@@ -110,8 +115,11 @@ module TimeTypes (
         voice,
 
         -- * Music.Time.VoiceMap
+        VoiceList,
+        voiceList,
         VoiceMap,
         voiceMap,
+        concatSubVoices,
 
         -- * Music.Time.Reactive
         Reactive,
@@ -131,6 +139,8 @@ import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
+import           Data.List.NonEmpty (NonEmpty)
+import           Data.Maybe
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable)
 -- import           Data.Key (or use Control.Lens.Indexed?)
@@ -200,13 +210,29 @@ instance Monoid b => Monad ((,) b) where
     LAWS
 -}
 
+-- | A value in the unit interval /(0,1)/.
+newtype Normalized a = Normalized { getNormalized :: a }
+    deriving (Eq, Ord, Show, Functor)
+
+zipNormalizedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Normalized a -> Normalized b -> Maybe (Normalized c)
+zipNormalizedWith f a b = ((a^.unnormalize) `f` (b^.unnormalize))^? normalize
+
+normalize' = Normalized
+addLim = zipNormalizedWith (+)    
+    
+normalize :: (Num a, Ord a) => Prism' a (Normalized a)
+normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalized x) else Left x)
+
+unnormalize :: (Num a, Ord a) => Getter (Normalized a) a
+unnormalize = re normalize
+
 -- |
--- Durations, represented as rational numbers.
--- Corresponds to note values in standardnotation, i.e. @1\/2@ for half note @1\/4@ for a quarter note and so on.
+-- Duration, corresponding to note values in standard notation.
 --
--- Duration is a one-dimensional vector space, and is the associated vector space of time points.
+-- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
--- Durations is a 'Semigroup' and 'Monoid' under addition.
+-- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
+-- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
 --
 newtype Duration = Duration { getDuration :: Rational }
 instance Show Duration where
@@ -238,9 +264,7 @@ instance HasDuration Duration where
 -- |
 -- Time points, representing duration since some known reference time, typically the start of the music.
 --
--- Duration is a one-dimensional vector space, and is the associated vector space of time points.
---
--- Durations is a 'Semigroup' and 'Monoid' under addition.
+-- 'Time' forms an 'AffineSpace' with 'Duration' as difference space.
 --
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
@@ -288,9 +312,15 @@ newtype Span = Span { getDelta :: (Time, Duration) }
 t <-> u = t >-> (u .-. t)
 t >-> d = Span (t, d)
 
+-- |
+-- > 1 <-> 2 == (1,2)^.from range
+--
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
+-- |
+-- > 1 >-> 2 == (1,2)^.from delta
+--
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
 
@@ -367,8 +397,50 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 --
 --
+
+-- |
+-- A 'Note' is a value with a known 'position' and 'duration'.
+--
+-- One way of looking at 'Note' is as a pair of a 'Span' and a value of some type @a@.
+--
+-- > x^.note = (x^.era, x^.value)
+--
+-- Another way is to view it as a suspended application of a time transformation.
+--
+-- > runNote . transform s = transform s . runNote
+--
+-- Note is a 'Monad', similar to 'Writer'.
+--
+--  - @'return'@ places a note at the unit span.
+--
+--  - @'join'@ composes time transformations.
+--
 newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+
+-- |
+-- A 'Delayed' value has a known 'position', but no duration.
+--
+-- One way of looking at 'Delayed' is as a pair of a 'Span' and a value of some type @a@.
+--
+-- > runDelayed x = delay (x^.onset) (x^.value)
+--
+-- Another way is to view it as a suspended application of a time transformation.
+--
+-- > runDelayed . delay s = delay s . runDelayed
+--
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+
+-- |
+-- A 'Stretched' value has a known 'position', but no duration.
+--
+-- One way of looking at 'Stretched' is as a pair of a 'Span' and a value of some type @a@.
+--
+-- > runStretched x = stretch (x^.duration) (x^.value)
+--
+-- Another way is to view it as a suspended application of a time transformation.
+--
+-- > runStretched . stretch s = stretch s . runStreched
+--
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 instance HasSingleValue Note where
@@ -416,6 +488,9 @@ noteValue = value
 noteEra :: Lens' (Note a) Span
 noteEra = lens era undefined
 
+mkNote :: Time -> Duration -> a -> Note a
+mkNote t d v = t >-> d `transform` return v
+
 delayed :: Iso' (Delayed a) (Time, a)
 delayed = _Wrapped'
 stretched :: Iso' (Stretched a) (Duration, a)
@@ -439,12 +514,36 @@ runStretched = uncurry stretch . unwr
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
 
-newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad, Comonad)
+-- |
+--
+-- A 'Segment' is a function of 'Normalized' 'Duration'. Intuitively, it is a value varying over some unknown duration.
+--
+-- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
+--
+-- > pure s ! t == s
+--
+-- > fs <*> xs ! t == (fs ! t) (xs ! t)
+--
+-- > join s ! t == (s ! t) ! t
+--
+newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 instance Semigroup a => Semigroup (Segment a) where
     (<>) = undefined
 instance Monoid a => Monoid (Segment a) where
 
+-- |
+--
+-- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying in time.
+--
+-- Behavior is a 'Monad' and 'Applicative' functor, similar to the function instance:
+--
+-- > pure s ! t == s
+--
+-- > fs <*> xs ! t == (fs ! t) (xs ! t)
+--
+-- > join s ! t == (s ! t) ! t
+--
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
 instance Semigroup a => Semigroup (Behavior a) where
@@ -482,6 +581,9 @@ score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
 score = undefined
 
 
+-- |
+-- A 'Voice' is a sequence of stretched values.
+--
 newtype Voice a     = Voice      { getVoice :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative Voice where
     pure  = return
@@ -497,6 +599,22 @@ instance Splittable a => Splittable (Voice a) where
 voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
 voice = undefined
 
+-- |
+-- The 'VoiceList' and 'VoiceMap' types represent a sequence of voices and sub-voices with possibly infinite division.
+--
+newtype VoiceList a = VoiceList (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
+instance Applicative VoiceList where
+    pure  = return
+    (<*>) = ap
+instance Monad VoiceList where
+    -- TODO
+instance Transformable (VoiceList a) where
+instance Reversible a => Reversible (VoiceList a) where
+instance HasDuration (VoiceList a) where
+instance Splittable a => Splittable (VoiceList a) where
+
+voiceList :: Iso' (VoiceList a) (NonEmpty (VoiceMap a))
+voiceList = undefined
 
 newtype VoiceMap a     = VoiceMap      { getVoiceMap :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
 instance Applicative VoiceMap where
@@ -510,8 +628,11 @@ instance HasDuration (VoiceMap a) where
 instance Splittable a => Splittable (VoiceMap a) where
 
 -- | XXX
-voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Stretched (Either a (VoiceMap a))) (Stretched (Either a (VoiceMap a)))
+voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Stretched (Either a (VoiceList a))) (Stretched (Either a (VoiceList a)))
 voiceMap = undefined
+
+concatSubVoices :: Monoid a => VoiceMap a -> Voice a
+concatSubVoices = undefined
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
