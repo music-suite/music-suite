@@ -13,20 +13,13 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE FlexibleInstances          #-}
 
 module TimeTypes (
 
         -- * Data.Normalized
         Normalized(..),
         normalize,
-        
-        -- * Data.Value
-        -- Single(..),
-        -- left3,
-        -- right3,
-        -- left4,
-        -- right4,
-        -- valueDefault,
 
         -- * Music.Time.Transform
         Transformable(..),
@@ -61,8 +54,10 @@ module TimeTypes (
         -- * Music.Time.Combinators
         lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
         follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-        (|>),
-        (>|),
+        after,
+        before,
+        -- (|>),
+        -- (>|),
         scat,
         pcat,
         sustain,
@@ -145,6 +140,7 @@ import           Data.List.NonEmpty (NonEmpty)
 import           Data.Maybe
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable)
+import qualified Data.Foldable as Foldable
 -- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
 import           Data.Traversable       (Traversable)
@@ -425,14 +421,7 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, 
 -- A 'Stretched' value has a known 'position', but no duration.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
-
--- instance Single Note where
---     value = valueDefault
--- instance Single Delayed where
---     value = valueDefault
--- instance Single Stretched where
---     value = valueDefault
-
+    
 instance Reversible (Note a) where
     rev = stretch (-1)
 instance Splittable a => Splittable (Note a) where
@@ -527,7 +516,7 @@ instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
 -- |
 --
 -- A 'Segment' is a function of 'Duration'. Intuitively, it is a value varying over some unknown time span.
--- To place a segment in a particular time span, we use 'Note' 'Segment'.
+-- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
 -- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
 --
@@ -597,7 +586,8 @@ score = undefined
 -- |
 -- A 'Voice' is a sequence of stretched values.
 --
-newtype Voice a     = Voice      { getVoice :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+newtype Voice a     = Voice      { getVoice :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}
+    Functor, Foldable, Traversable, Semigroup, Monoid)
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
@@ -607,6 +597,16 @@ instance Transformable (Voice a) where
 instance Reversible a => Reversible (Voice a) where
 instance HasDuration (Voice a) where
 instance Splittable a => Splittable (Voice a) where
+instance Wrapped (Voice a) where { type Unwrapped (Voice a) = (Seq (Stretched a)) ; _Wrapped' = iso getVoice Voice }
+instance Rewrapped (Voice a) (Voice b)
+
+instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
+    _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
+        Just (x,xs) -> Right (x,wr xs)
+        Nothing     -> Left mempty
+
+stretchedToVoice :: Stretched a -> Voice a
+stretchedToVoice x = Voice (return x)
 
 -- | XXX indexed traversal?
 voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
@@ -865,15 +865,15 @@ a `follow` b = alignAt 0 (a `position` 1) b
 --   >| >| etc indicates offset/onset
 
 -- | XXX More generic version of sequential catenation (which can only be used for voices etc)
-(|>) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-(>|) :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-a |> b =  a <> (a `follow` b)
-a >| b =  (a `lead` b) <> b
+after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `after` b =  a <> (a `follow` b)
+a `before` b =  (a `lead` b) <> b
 
 retainOnset :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 retainOnset f x = startAt (onset x) (f x)
 
-scat = Prelude.foldr (|>) mempty
+scat = Prelude.foldr after mempty
 pcat = mconcat
 
 x `sustain` y     = x <> duration x `stretchTo` y
@@ -894,8 +894,6 @@ times n     = scat . replicate n
 class HasDuration a => Splittable a where
     split  :: Duration -> a -> (a, a)
 
-before d = fst . split d
-after d = snd . split d
 
 
 
