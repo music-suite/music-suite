@@ -61,11 +61,11 @@ module TimeTypes (
         -- * Position
         HasPosition(..),
         era,
-        preOnset,       -- :: HasPosition a => a -> Time
+        -- preOnset,       -- :: HasPosition a => a -> Time
         onset,          -- :: HasPosition a => a -> Time
-        postOnset,      -- :: HasPosition a => a -> Time
+        -- postOnset,      -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
-        postOffset,     -- :: HasPosition a => a -> Time
+        -- postOffset,     -- :: HasPosition a => a -> Time
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
@@ -100,6 +100,7 @@ import           Data.Foldable              (Foldable)
 -- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
 import           Data.Traversable           (Traversable)
+import qualified Data.Traversable as T
 import           Data.Typeable
 import           Data.VectorSpace
 
@@ -313,14 +314,8 @@ newtype Note a      = Note      { getNote :: (Span, a)     } deriving (Eq, Ord, 
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving (Eq, Ord, Show, Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
-newtype Score a     = Score      { getScore :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
-instance Applicative Score where
-instance Monad Score where
-
-newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
-instance Applicative Voice where
-instance Monad Voice where
-
+instance Reversible a => Reversible (Note a) where
+    rev = fmap rev . stretch (-1)
 
 -- XXX Compare with Located in diagrams
 
@@ -360,6 +355,36 @@ newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, M
 
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
+
+
+
+
+newtype Score a     = Score      { getScore :: [Note a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Monoid)
+instance Wrapped (Score a) where { type Unwrapped (Score a) = [Note a] ; _Wrapped' = iso getScore Score }
+instance Rewrapped (Score a) (Score b)
+instance Applicative Score where
+    pure  = return
+    (<*>) = ap
+instance Monad Score where
+    return = (^. _Unwrapped') . return . return
+    xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+instance Alternative Score where
+    empty = mempty
+    (<|>) = mappend
+instance MonadPlus Score where
+    mzero = mempty
+    mplus = mappend
+instance Transformable (Score a) where
+    transform t (Score xs) = Score (fmap (transform t) xs)
+instance Reversible a => Reversible (Score a) where
+    rev (Score xs) = Score (fmap rev xs)
+
+newtype Voice a     = Voice      { getVoice :: [Stretched a]     } deriving (Eq, Ord, Show, Functor, Foldable, Traversable, Monoid)
+instance Applicative Voice where
+    pure  = return
+    (<*>) = ap
+instance Monad Voice where
+    -- TODO
 
 
 
@@ -642,6 +667,12 @@ showRatio (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y +
 
 unRatio :: Integral a => Util_Ratio.Ratio a -> (a, a)
 unRatio x = (Util_Ratio.numerator x, Util_Ratio.denominator x)
+
+mjoin :: (Monad m, Monad n, Functor m, Traversable n) => m (n (m (n a))) -> m (n a)
+mjoin = fmap join . join . fmap T.sequence
+
+mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
+mbind = (join .) . fmap . (fmap join .) . T.mapM
 
 -- Same as @flip const@, useful to fix the type of the first argument.
 assuming :: a -> b -> b
