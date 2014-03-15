@@ -21,12 +21,12 @@ module TimeTypes (
         normalize,
         
         -- * Data.Value
-        HasSingleValue(..),
-        left3,
-        right3,
-        left4,
-        right4,
-        valueDefault,
+        -- Single(..),
+        -- left3,
+        -- right3,
+        -- left4,
+        -- right4,
+        -- valueDefault,
 
         -- * Music.Time.Transform
         Transformable(..),
@@ -85,24 +85,26 @@ module TimeTypes (
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         -- conjugate,  -- :: Span -> Span -> Span
 
-        -- * Music.Time.Note
-        Note,
-        note,
-        -- mkNote,
-        noteEra,
-        noteValue,
-        mapNote,
-        runNote,
+        -- * Music.Time.Stretched
+        Stretched,
+        stretched,
+        runStretched,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
         runDelayed,
 
-        -- * Music.Time.Stretched
-        Stretched,
-        stretched,
-        runStretched,
+        -- * Music.Time.Note
+        Note,
+        note,
+        mapNote,
+        runNote,
+
+        -- * Music.Time.Bounds
+        Bounds,
+        bounds,
+        trim,
 
         -- * Music.Time.Segment
         Segment,
@@ -400,55 +402,36 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 -- |
 -- A 'Note' is a value with a known 'position' and 'duration'.
+-- Notes are isomorphic pairs of spans and values, as whitnessed by 'note'.
 --
--- One way of looking at 'Note' is as a pair of a 'Span' and a value of some type @a@.
+-- Another way is to view a note is that it is a suspended application of a time
+-- transformation, with 'runNote' extracting the transformed value:
 --
--- > x^.note = (x^.era, x^.value)
---
--- Another way is to view it as a suspended application of a time transformation.
+-- There is a morphism from 'runNote' to 'transform':
 --
 -- > runNote . transform s = transform s . runNote
 --
--- Note is a 'Monad', similar to 'Writer'.
---
---  - @'return'@ places a note at the unit span.
---
---  - @'join'@ composes time transformations.
+-- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
+-- at the default span 'mempty' and 'join' composing time transformations.
 --
 newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 -- |
 -- A 'Delayed' value has a known 'position', but no duration.
 --
--- One way of looking at 'Delayed' is as a pair of a 'Span' and a value of some type @a@.
---
--- > runDelayed x = delay (x^.onset) (x^.value)
---
--- Another way is to view it as a suspended application of a time transformation.
---
--- > runDelayed . delay s = delay s . runDelayed
---
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
 --
--- One way of looking at 'Stretched' is as a pair of a 'Span' and a value of some type @a@.
---
--- > runStretched x = stretch (x^.duration) (x^.value)
---
--- Another way is to view it as a suspended application of a time transformation.
---
--- > runStretched . stretch s = stretch s . runStreched
---
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
-instance HasSingleValue Note where
-    value = valueDefault
-instance HasSingleValue Delayed where
-    value = valueDefault
-instance HasSingleValue Stretched where
-    value = valueDefault
+-- instance Single Note where
+--     value = valueDefault
+-- instance Single Delayed where
+--     value = valueDefault
+-- instance Single Stretched where
+--     value = valueDefault
 
 instance Reversible (Note a) where
     rev = stretch (-1)
@@ -482,8 +465,8 @@ instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 note :: Iso' (Note a) (Span, a)
 note = _Wrapped'
 
-noteValue :: Lens' (Note a) a
-noteValue = value
+-- noteValue :: Lens' (Note a) a
+-- noteValue = value
 
 noteEra :: Lens' (Note a) Span
 noteEra = lens era undefined
@@ -512,11 +495,39 @@ runStretched = uncurry stretch . unwr
 -- instance HasPosition (Note a) where position n
 
 
+
+
+
+
+
+-- |
+-- 'Bounds' restricts the start and stop time of a value.
+--
+newtype Bounds a      = Bounds      { getBounds :: (Span, a)     } 
+    deriving (Functor, Foldable, Traversable)
+
+bounds :: Time -> a -> Time -> Bounds a
+bounds t x u = Bounds (t <-> u, x)
+
+-- | XXX 
+trim :: Monoid a => Bounds a -> Bounds a
+trim = undefined
+
+instance Reversible (Bounds a) where
+    rev = stretch (-1)
+instance Splittable a => Splittable (Bounds a) where
+instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
+instance Rewrapped (Bounds a) (Bounds b)
+instance Transformable (Bounds a) where transform t = unwrapped $ first (transform t)
+instance HasDuration (Bounds a) where duration = duration . ask . unwr
+instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
+
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
 
 -- |
 --
--- A 'Segment' is a function of 'Normalized' 'Duration'. Intuitively, it is a value varying over some unknown duration.
+-- A 'Segment' is a function of 'Duration'. Intuitively, it is a value varying over some unknown time span.
+-- To place a segment in a particular time span, we use 'Note' 'Segment'.
 --
 -- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
 --
@@ -534,7 +545,9 @@ instance Monoid a => Monoid (Segment a) where
 
 -- |
 --
--- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying in time.
+-- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
+-- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it inside
+-- 'Bounds'.
 --
 -- Behavior is a 'Monad' and 'Applicative' functor, similar to the function instance:
 --
@@ -711,15 +724,15 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 --
 -- For any @'Comonad' f@ , you can simply define:
 --
--- > instance HasSingleValue f where
+-- > instance Single f where
 -- >     value = valueDefault
 --
-class Functor f => HasSingleValue f where
+class Functor f => Single f where
     value' :: Lens' (f a) a
     value  :: Lens  (f a) (f a) a a
     value = value'
 
-instance HasSingleValue ((,) a) where
+instance Single ((,) a) where
     value = valueDefault
 
 left3 :: Iso ((a1, b1), c1) ((a2, b2), c2) (a1, b1, c1) (a2, b2, c2)
@@ -737,11 +750,11 @@ right4 = iso f g where f (x, (y,z,a)) = (x, y, z, a); g (x, y, z, a) = (x, (y, z
 instance Functor ((,,) a b) where
     fmap f = from left3 %~ fmap f
 
-instance HasSingleValue ((,,) a b) where
+instance Single ((,,) a b) where
     value = from left3 . valueDefault
 
 -- | XXX suspect setter (uses const)
-instance Monoid a => HasSingleValue ((->) a) where
+instance Monoid a => Single ((->) a) where
     value = valueDefault
 
 
