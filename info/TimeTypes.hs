@@ -18,8 +18,8 @@
 module TimeTypes (
 
         -- * Data.Normalized
-        Normalized(..),
-        normalize,
+        -- Normalized(..),
+        -- normalize,
 
         -- * Music.Time.Transform
         Transformable(..),
@@ -49,19 +49,7 @@ module TimeTypes (
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-        pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
-
-        -- * Music.Time.Combinators
-        lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-        follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-        after,
-        before,
-        -- (|>),
-        -- (>|),
-        scat,
-        pcat,
-        sustain,
-        times,
+        -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
         Reversible(..),
@@ -74,6 +62,18 @@ module TimeTypes (
 
         -- * Music.Time.Parallel
         Parallel(..),
+
+        -- * Music.Time.Combinators
+        lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+        follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+        after,
+        before,
+        -- (|>),
+        -- (>|),
+        sustain,
+        scat,
+        pcat,
+        times,
 
         -- * Music.Time.Types
         Duration,
@@ -122,7 +122,7 @@ module TimeTypes (
         mergeEqualNotes,
 
         -- * Music.Time.Voices
-        Subvoices,
+        Divide,
         voiceList,
         Voices,
         voiceMap,
@@ -204,12 +204,12 @@ instance Monoid b => Monad ((,) b) where
 -- Types etc
 
 {-
-    LAWS Semigroup
+    Law Semigroup
         a <> (b <> c)    = (a <> b) <> c
         a      <> mempty = a
         mempty <> a      = a
 
-    LAWS AdditiveGroup
+    Law AdditiveGroup
         a ^+^ (b ^+^ c)    = (a ^+^ b) ^+^ c
         a      ^+^ zeroV   = a
         zeroV  ^+^ a       = a
@@ -217,10 +217,10 @@ instance Monoid b => Monad ((,) b) where
         negateV a ^+^ a      = zeroV
         a ^+^ b              = b ^+^ a
 
-    LAWS Functor
-    LAWS Eq
-    LAWS Ord
-    LAWS
+    Law Functor
+    Law Eq
+    Law Ord
+    Law
 -}
 
 -- | A value in the unit interval /(0,1)/.
@@ -688,20 +688,20 @@ voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
 voice = undefined
 
 -- |
--- The 'Subvoices' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
+-- The 'Divide' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
 --
-newtype Subvoices a = Subvoices (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
-instance Applicative Subvoices where
+newtype Divide a = Divide (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
+instance Applicative Divide where
     pure  = return
     (<*>) = ap
-instance Monad Subvoices where
+instance Monad Divide where
     -- TODO
-instance Transformable (Subvoices a) where
-instance Reversible a => Reversible (Subvoices a) where
-instance HasDuration (Subvoices a) where
-instance Splittable a => Splittable (Subvoices a) where
+instance Transformable (Divide a) where
+instance Reversible a => Reversible (Divide a) where
+instance HasDuration (Divide a) where
+instance Splittable a => Splittable (Divide a) where
 
-voiceList :: Iso' (Subvoices a) (NonEmpty (Voices a))
+voiceList :: Iso' (Divide a) (NonEmpty (Voices a))
 voiceList = undefined
 
 newtype Voices a     = Voices      { getVoices :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
@@ -716,7 +716,7 @@ instance HasDuration (Voices a) where
 instance Splittable a => Splittable (Voices a) where
 
 -- | XXX
-voiceMap :: Traversal (Voices a) (Voices b) (Stretched (Either a (Subvoices a))) (Stretched (Either a (Subvoices a)))
+voiceMap :: Traversal (Voices a) (Voices b) (Stretched (Either a (Divide a))) (Stretched (Either a (Divide a)))
 voiceMap = undefined
 
 concatSubVoices :: Monoid a => Voices a -> Voice a
@@ -845,17 +845,17 @@ valueDefault = lens extract (\s b -> fmap (const b) s)
 -- translation vs linear etc
 
 -- |
--- LAW
+-- Law
 --
 -- > transform s . transform t = transform (s <> t)
 --
--- LAW
+-- Law
 --
 -- > onset (delay n a) = n + onset a
 -- > offset (delay n a) = n + offset a
 -- > duration (stretch n a) = n * (duration a)
 --
--- LEMMA
+-- Lemma
 --
 -- > duration a = duration (delay n a)
 class Transformable a where
@@ -870,9 +870,24 @@ delay' :: Transformable a => Time -> a -> a
 delay' t     = delay (t .-. 0)
 
 
+-- |
+-- Move a value forward in time.
+--
 delaying x   = (0 .+^ x) >-> 1
+
+-- |
+-- Move a value forward in time.
+--
 stretching x = 0         >-> x
+
+-- |
+-- Move a value forward in time.
+--
 undelaying x = delaying (negate x)
+
+-- |
+-- Move a value forward in time.
+--
 compressing x = stretching (recip x)
 
 -- |
@@ -900,7 +915,7 @@ compress = transform . compressing
 -- Things with a duration
 
 -- |
--- LAW Duration
+-- Law Duration
 --
 -- > duration x = (offset x .-. onset x)
 --
@@ -939,9 +954,16 @@ preOnset    = (`position` (-0.5))
 postOnset   = (`position` 0.5)
 postOffset  = (`position` 1.5)
 
+-- |
+-- Move a value forward in time.
+--
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
 startAt t x   = (t .-. onset x) `delay` x
+
+-- |
+-- Move a value forward in time.
+--
+stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
 stopAt t  x   = (t .-. offset x) `delay` x
 
 -- |
@@ -997,7 +1019,7 @@ times n     = scat . replicate n
 -- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
 -- XXX what about Behavior (infinite span)
 --
--- LAW
+-- Law
 --
 -- > let (a, b) = split x in duration a + duration b = duration x
 --
@@ -1042,7 +1064,7 @@ instance Sequential (Score a) where
 
 class Parallel a where
     (><) :: a -> a -> a
--- instance Parallel (Subvoices a) where
+-- instance Parallel (Divide a) where
     -- (><) = (<>)
 instance Parallel (Score a) where
     (><) = (<>)
