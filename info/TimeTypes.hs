@@ -429,23 +429,23 @@ pitches' = pitches
 
 type instance Pitch Bool = Bool
 type instance SetPitch a Bool = a
-instance (a ~ Pitch a) => HasPitch Bool a where
+instance HasPitch Bool Bool where
     pitch = ($)
-instance (a ~ Pitch a) => HasPitches Bool a where
+instance HasPitches Bool Bool where
     pitches = ($)
     
 type instance Pitch Int = Int
 type instance SetPitch a Int = a
-instance (a ~ Pitch a) => HasPitch Int a where
+instance HasPitch Int Int where
     pitch = ($)
-instance (a ~ Pitch a) => HasPitches Int a where
+instance HasPitches Int Int where
     pitches = ($)
 
 type instance Pitch Float = Float
 type instance SetPitch a Float = a
-instance (a ~ Pitch a) => HasPitch Float a where
+instance HasPitch Float Float where
     pitch = ($)
-instance (a ~ Pitch a) => HasPitches Float a where
+instance HasPitches Float Float where
     pitches = ($)
 
 type instance Pitch (c,a) = Pitch a
@@ -466,9 +466,11 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where         
     pitch = _Wrapped . pl
         where
-            pl :: (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
-                Lens (Span, a) (Span, b) (Pitch a) (Pitch b)
             pl f (s,a) = (s,) <$> (pitch $ fmap (transform s) . f . transform s) a
+instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where         
+    pitches = _Wrapped . pl
+        where
+            pl f (s,a) = (s,) <$> (pitches $ fmap (transform s) . f . transform s) a
 
 
 type instance Pitch (Score a) = Pitch a
