@@ -592,6 +592,7 @@ instance Applicative Voice where
     pure  = return
     (<*>) = ap
 instance Monad Voice where
+    return = (^. _Unwrapped') . return . return
     -- TODO
 instance Transformable (Voice a) where
 instance Reversible a => Reversible (Voice a) where
@@ -604,6 +605,11 @@ instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
     _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
         Just (x,xs) -> Right (x,wr xs)
         Nothing     -> Left mempty
+
+type instance Index (Voice a) = Int
+type instance IxValue (Voice a) = Stretched a
+instance Ixed (Voice a) where
+    ix n = _Wrapped' . ix n
 
 stretchedToVoice :: Stretched a -> Voice a
 stretchedToVoice x = Voice (return x)
