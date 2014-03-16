@@ -89,27 +89,9 @@ main = openG $ (<> grid) $
 
 
 
-grid = grid'   20
-gridX = gridX' 20
-gridY = gridY' 20
-
-grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
-
-gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
-gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
-
-gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
-gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
 
 
 
-drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
-drawBehavior = drawBehavior' 10 
-
-drawBehavior' count b = cubicSpline False points & lw 0.05
-    where
-        points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/samplesPerCell..]
-        samplesPerCell = 40
 
 drawScore :: (Renderable (Path R2) b, Real a) =>        [Score a] -> Diagram b R2
 drawScore = vcat' (def & sep .~ 2) . fmap drawPart
@@ -127,6 +109,26 @@ drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram 
 drawNote' (timeToDouble -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
     where
     noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
+
+drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
+drawBehavior = drawBehavior' 10 
+
+drawBehavior' count b = cubicSpline False points & lw 0.05
+    where
+        points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ? realToFrac x)) [0,1/samplesPerCell..]
+        samplesPerCell = 40
+
+grid = grid'   20
+gridX = gridX' 20
+gridY = gridY' 20
+
+grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
+
+gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
+
+gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
 
 writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
 writeG path dia = do
