@@ -116,11 +116,15 @@ module TimeTypes (
         -- * Music.Time.Voice
         Voice,
         voice,
+        zipVoice,
+        zipVoiceWith,
+        dzipVoiceWith,
+        mergeEqualNotes,
 
-        -- * Music.Time.VoiceMap
-        VoiceList,
+        -- * Music.Time.Voices
+        Subvoices,
         voiceList,
-        VoiceMap,
+        Voices,
         voiceMap,
         concatSubVoices,
 
@@ -639,6 +643,31 @@ instance Splittable a => Splittable (Voice a) where
 instance Wrapped (Voice a) where { type Unwrapped (Voice a) = (Seq (Stretched a)) ; _Wrapped' = iso getVoice Voice }
 instance Rewrapped (Voice a) (Voice b)
 
+-- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice :: Voice a -> Voice b -> Voice (a, b)
+zipVoice = zipVoiceWith (,)
+
+-- |
+-- Join the given voices by multiplying durations and combining values using the given function.
+--
+zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith  = undefined
+
+-- |
+-- Join the given voices by combining durations and values using the given function.
+--
+dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
+dzipVoiceWith = undefined
+
+-- |
+-- Merge consecutive equal note.
+--
+mergeEqualNotes :: Eq a => Voice a -> Voice a
+mergeEqualNotes = undefined
+
+
 {-
 instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
     _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
@@ -659,38 +688,38 @@ voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
 voice = undefined
 
 -- |
--- The 'VoiceList' and 'VoiceMap' types represent a sequence of voices and sub-voices with possibly infinite division.
+-- The 'Subvoices' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
 --
-newtype VoiceList a = VoiceList (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
-instance Applicative VoiceList where
+newtype Subvoices a = Subvoices (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
+instance Applicative Subvoices where
     pure  = return
     (<*>) = ap
-instance Monad VoiceList where
+instance Monad Subvoices where
     -- TODO
-instance Transformable (VoiceList a) where
-instance Reversible a => Reversible (VoiceList a) where
-instance HasDuration (VoiceList a) where
-instance Splittable a => Splittable (VoiceList a) where
+instance Transformable (Subvoices a) where
+instance Reversible a => Reversible (Subvoices a) where
+instance HasDuration (Subvoices a) where
+instance Splittable a => Splittable (Subvoices a) where
 
-voiceList :: Iso' (VoiceList a) (NonEmpty (VoiceMap a))
+voiceList :: Iso' (Subvoices a) (NonEmpty (Voices a))
 voiceList = undefined
 
-newtype VoiceMap a     = VoiceMap      { getVoiceMap :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
-instance Applicative VoiceMap where
+newtype Voices a     = Voices      { getVoices :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+instance Applicative Voices where
     pure  = return
     (<*>) = ap
-instance Monad VoiceMap where
+instance Monad Voices where
     -- TODO
-instance Transformable (VoiceMap a) where
-instance Reversible a => Reversible (VoiceMap a) where
-instance HasDuration (VoiceMap a) where
-instance Splittable a => Splittable (VoiceMap a) where
+instance Transformable (Voices a) where
+instance Reversible a => Reversible (Voices a) where
+instance HasDuration (Voices a) where
+instance Splittable a => Splittable (Voices a) where
 
 -- | XXX
-voiceMap :: Traversal (VoiceMap a) (VoiceMap b) (Stretched (Either a (VoiceList a))) (Stretched (Either a (VoiceList a)))
+voiceMap :: Traversal (Voices a) (Voices b) (Stretched (Either a (Subvoices a))) (Stretched (Either a (Subvoices a)))
 voiceMap = undefined
 
-concatSubVoices :: Monoid a => VoiceMap a -> Voice a
+concatSubVoices :: Monoid a => Voices a -> Voice a
 concatSubVoices = undefined
 
 -- | XXX only defined positively
@@ -894,9 +923,15 @@ class HasPosition a where
 era :: HasPosition a => a -> Span
 era x = onset x <-> offset x
 
+-- |
+-- Return the onset of the given value.
+--
 onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 onset       = (`position` 0)
 
+-- |
+-- Return the offset of the given value.
+--
 offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset      = (`position` 1.0)
 
@@ -909,29 +944,40 @@ stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
 startAt t x   = (t .-. onset x) `delay` x
 stopAt t  x   = (t .-. offset x) `delay` x
 
--- alignAt p t places the given thing so that its position p is at time t
+-- |
+-- Align a value to a given position.
+--
+-- @alignAt p t@ places the given thing so that its position p is at time t
+--
 -- > alignAt 0 == startAt
 -- > alignAt 1 == stopAt
+--
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 alignAt p t x = (t .-. x `position` p) `delay` x
 
 
+-- | 
 -- a `lead`   b  moves a so that (offset a' == onset b)
--- a `follow` b  moves b so that (offset a  == onset b')
+-- 
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `lead` b   = alignAt 1 (b `position` 0) a
+
+-- |
+-- a `follow` b  moves b so that (offset a  == onset b')
+-- 
+follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = alignAt 0 (a `position` 1) b
 
-
--- Mnemonics:
---   > is at the side of the element being moved
---   >| >| etc indicates offset/onset
-
--- | XXX More generic version of sequential catenation (which can only be used for voices etc)
+-- | 
+-- a `lead`   b  moves a so that (offset a' == onset b)
+-- 
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
+
+-- | 
+-- a `lead`   b  moves a so that (offset a' == onset b)
+-- 
+before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
 pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
@@ -987,7 +1033,7 @@ class Sequential a where
 instance Sequential (Voice a) where
     (//) = (<>)
     (\\) = flip (<>)
-instance Sequential (VoiceMap a) where
+instance Sequential (Voices a) where
     (//) = (<>)
     (\\) = flip (<>)
 instance Sequential (Score a) where
@@ -996,7 +1042,7 @@ instance Sequential (Score a) where
 
 class Parallel a where
     (><) :: a -> a -> a
--- instance Parallel (VoiceList a) where
+-- instance Parallel (Subvoices a) where
     -- (><) = (<>)
 instance Parallel (Score a) where
     (><) = (<>)
