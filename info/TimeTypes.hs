@@ -49,7 +49,7 @@ module TimeTypes (
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-        retainOnset,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+        pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Combinators
         lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
@@ -68,6 +68,12 @@ module TimeTypes (
 
         -- * Music.Time.Split
         Splittable(..),
+
+        -- * Music.Time.Sequential
+        Sequential(..),
+
+        -- * Music.Time.Parallel
+        Parallel(..),
 
         -- * Music.Time.Types
         Duration,
@@ -123,7 +129,12 @@ module TimeTypes (
 
         -- * Music.Time.Score
         Score,
-
+        mapWithSpan,
+        filterWithSpan,
+        mapFilterWithSpan,
+        mapEvents,
+        filterEvents,
+        mapFilterEvents,
 
 
   ) where
@@ -260,9 +271,14 @@ instance HasDuration Duration where
     duration = id
 
 -- |
--- Time points, representing duration since some known reference time, typically the start of the music.
+-- Time points, representing duration since some known reference time, typically the start
+-- of the music. Note that time can be negative, representing events occuring before the
+-- start time.
 --
--- 'Time' forms an 'AffineSpace' with 'Duration' as difference space.
+-- Time forms an affine space with durations as the underlying vector space, that is, we
+-- can add a time to a duration to get a new time using '.+^', take the difference of two
+-- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
+-- difference space.
 --
 newtype Time = Time { getTime :: Rational }
 instance Show Time where
@@ -295,12 +311,10 @@ instance HasPosition Time where
     position = const
 
 
--- Inverse semigroup:
+-- | 
+-- > 1 >-> 2 == (1,2)^.from delta
 --
---  negateV x <> x = zeroV
---  OR
---  x         = x         <> negateV x <> x
---  negateV x = negateV x <> x         <> negateV x
+-- > 1 <-> 2 == (1,2)^.from range
 --
 newtype Span = Span { getDelta :: (Time, Duration) }
     deriving (Eq, Ord, Show, Typeable)
@@ -311,13 +325,11 @@ t <-> u = t >-> (u .-. t)
 t >-> d = Span (t, d)
 
 -- |
--- > 1 <-> 2 == (1,2)^.from range
 --
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- |
--- > 1 >-> 2 == (1,2)^.from delta
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
@@ -407,10 +419,11 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 --
 -- > runNote . transform s = transform s . runNote
 --
--- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
--- at the default span 'mempty' and 'join' composing time transformations.
---
-newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
+
+-- | Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
+--   at the default span 'mempty' and 'join' composing time transformations.
+deriving instance Monad Note
 
 -- |
 -- A 'Delayed' value has a known 'position', but no duration.
@@ -465,6 +478,7 @@ mkNote t d v = t >-> d `transform` return v
 
 delayed :: Iso' (Delayed a) (Time, a)
 delayed = _Wrapped'
+
 stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
 
@@ -526,7 +540,7 @@ instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
 --
 -- > join s ! t == (s ! t) ! t
 --
-newtype Segment a = Segment (Duration -> a)    deriving (Functor, Applicative, Monad{-, Comonad-})
+newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 instance Semigroup a => Semigroup (Segment a) where
     (<>) = undefined
@@ -555,7 +569,7 @@ instance Monoid a => Monoid (Behavior a) where
 
 
 
-newtype Score a     = Score      { getScore :: Seq (Note a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+newtype Score a     = Score      { getScore :: Seq (Note a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 instance Wrapped (Score a) where { type Unwrapped (Score a) = Seq (Note a) ; _Wrapped' = iso getScore Score }
 instance Rewrapped (Score a) (Score b)
 instance Applicative Score where
@@ -582,6 +596,30 @@ instance Splittable a => Splittable (Score a) where
 score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
 score = undefined
 
+-- | Map over the events in a score.
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+mapWithSpan f = undefined
+
+-- | Filter the events in a score.
+filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
+filterWithSpan f = undefined
+
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
+mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithSpan f = undefined
+
+-- | Map over the events in a score.
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapEvents f = mapWithSpan (uncurry f . view delta)
+
+-- | Filter the events in a score.
+filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterEvents f = undefined
+
+-- | Efficient combination of 'mapEvents' and 'filterEvents'.
+mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterEvents f = undefined
+
 
 -- |
 -- A 'Voice' is a sequence of stretched values.
@@ -601,6 +639,7 @@ instance Splittable a => Splittable (Voice a) where
 instance Wrapped (Voice a) where { type Unwrapped (Voice a) = (Seq (Stretched a)) ; _Wrapped' = iso getVoice Voice }
 instance Rewrapped (Voice a) (Voice b)
 
+{-
 instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
     _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
         Just (x,xs) -> Right (x,wr xs)
@@ -610,6 +649,7 @@ type instance Index (Voice a) = Int
 type instance IxValue (Voice a) = Stretched a
 instance Ixed (Voice a) where
     ix n = _Wrapped' . ix n
+-}
 
 stretchedToVoice :: Stretched a -> Voice a
 stretchedToVoice x = Voice (return x)
@@ -635,7 +675,7 @@ instance Splittable a => Splittable (VoiceList a) where
 voiceList :: Iso' (VoiceList a) (NonEmpty (VoiceMap a))
 voiceList = undefined
 
-newtype VoiceMap a     = VoiceMap      { getVoiceMap :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Monoid)
+newtype VoiceMap a     = VoiceMap      { getVoiceMap :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 instance Applicative VoiceMap where
     pure  = return
     (<*>) = ap
@@ -805,9 +845,25 @@ delaying x   = (0 .+^ x) >-> 1
 stretching x = 0         >-> x
 undelaying x = delaying (negate x)
 compressing x = stretching (recip x)
+
+-- |
+-- Move a value forward in time.
+--
 delay    = transform . delaying
+
+-- |
+-- Move a value backward in time. Equivalent to @'delay' . 'negate'@.
+--
 undelay  = transform . undelaying
+
+-- |
+-- Stretch (augment) a value by the given factor.
+--
 stretch  = transform . stretching
+
+-- |
+-- Compress (diminish) a score. Equivalent to @'stretch' . 'recip'@.
+--
 compress = transform . compressing
 
 -- Fitting things
@@ -836,14 +892,16 @@ class HasPosition a where
 
 -- |  XXX make into lens for any positionable thing
 era :: HasPosition a => a -> Span
+era x = onset x <-> offset x
 
 onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-era x = onset x <-> offset x
-preOnset    = (`position` (-0.5))
 onset       = (`position` 0)
-postOnset   = (`position` 0.5)
+
+offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset      = (`position` 1.0)
+
+preOnset    = (`position` (-0.5))
+postOnset   = (`position` 0.5)
 postOffset  = (`position` 1.5)
 
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
@@ -876,11 +934,11 @@ before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 a `before` b =  (a `lead` b) <> b
 
-retainOnset :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
-retainOnset f x = startAt (onset x) (f x)
+pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
+pinned f x = startAt (onset x) (f x)
 
-scat = Prelude.foldr after mempty
-pcat = mconcat
+scat = Prelude.foldr (//) mempty
+pcat = Prelude.foldr (><) mempty
 
 x `sustain` y     = x <> duration x `stretchTo` y
 times n     = scat . replicate n
@@ -923,7 +981,25 @@ instance Reversible Span where
     rev = stretch (-1)
 
 
+class Sequential a where
+    (//) :: a -> a -> a
+    (\\) :: a -> a -> a
+instance Sequential (Voice a) where
+    (//) = (<>)
+    (\\) = flip (<>)
+instance Sequential (VoiceMap a) where
+    (//) = (<>)
+    (\\) = flip (<>)
+instance Sequential (Score a) where
+    (//) = after
+    (\\) = before
 
+class Parallel a where
+    (><) :: a -> a -> a
+-- instance Parallel (VoiceList a) where
+    -- (><) = (<>)
+instance Parallel (Score a) where
+    (><) = (<>)
 
 
 -- -- Monoid/Semigroup
@@ -1028,17 +1104,17 @@ instance Functor BadFunctor where
     fmap f BF1 = BF2 -- lawless
     fmap f BF2 = BF2
 
-instance Serial IO Span where
+instance Monad m => Serial m Time where
+    series = msum $ fmap return [1..2]
+instance Monad m => Serial m Duration where
+    series = msum $ fmap return [0..2]
+instance Monad m => Serial m Span where
     series = newtypeCons Span
 instance Serial IO a => Serial IO (BadFunctor a) where
     series = cons0 BF1 \/ cons0 BF2
 instance Serial IO a => Serial IO (BadMonoid a) where
     series = newtypeCons BadMonoid
 instance Serial IO Int8 where
-    series = msum $ fmap return [0..2]
-instance Serial IO Time where
-    series = msum $ fmap return [1..2]
-instance Serial IO Duration where
     series = msum $ fmap return [0..2]
 
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
