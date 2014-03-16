@@ -150,8 +150,11 @@ sunder = undefined
 sapp :: Transformable a => Span -> a -> a
 sapp = undefined
 
-newtype Score a = Score [(Span, a)]
-instance Wrapped [(Span, a)] [(Span, b)] (Score a) (Score b)
+newtype Score a = Score { getScore :: [(Span, a)] }
+instance Wrapped (Score a) where
+    type Unwrapped (Score a) = [(Span, a)]
+    _Wrapped' = iso getScore Score
+instance Rewrapped (Score a) (Score b)
 instance Functor Score where
 instance Foldable Score where
 instance Traversable Score where
@@ -163,7 +166,7 @@ type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 type instance Pitch (Score a) = Pitch a
 instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where         
-    pitches = unwrapped . traverse . pl
+    pitches = _Wrapped . traverse . pl
 
 
 pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => 
