@@ -149,15 +149,26 @@ module TimeTypes (
         HasPitches(..),
 
   ) where
+
+import Diagrams.Prelude hiding (Transformable, trim, view, transform, Segment, duration, position, era, under, stretchTo, offset, after, Time, Duration, (|>), (<->), stretch)
+import qualified Diagrams.Backend.SVG as SVG
+import Data.Default
+import System.Process (system)
+import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
+import qualified Data.ByteString.Lazy as ByteString
+
+
 import           Control.Applicative
 import           Control.Arrow          (first, second, (***))
 import           Control.Comonad
+import           Data.NumInstances
 import           Control.Comonad.Env
-import           Control.Lens           hiding (transform, under, (|>))
+import           Control.Lens           hiding (Indexable, transform, under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
+import           Data.Key
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Maybe
 import           Data.AffineSpace.Point
@@ -572,6 +583,7 @@ deriving instance Show a => Show (Note a)
 instance Transformable Int where
     transform _ = id
 instance Transformable (Behavior a) where
+    transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f        
 instance Transformable (Segment a) where
 
 
@@ -737,6 +749,13 @@ instance Semigroup a => Semigroup (Segment a) where
     (<>) = undefined
 instance Monoid a => Monoid (Segment a) where
 
+type instance Key Segment = Duration
+
+instance Lookup Segment where
+    t `lookup` Segment b = b <$> t ^? normalize
+instance Indexable Segment where
+    Segment b `index` t = b $ t ^?! normalize
+
 -- |
 --
 -- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
@@ -753,9 +772,45 @@ instance Monoid a => Monoid (Segment a) where
 --
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
-instance Semigroup a => Semigroup (Behavior a) where
-    (<>) = undefined
-instance Monoid a => Monoid (Behavior a) where
+deriving instance Semigroup a => Semigroup (Behavior a)
+deriving instance Monoid a => Monoid (Behavior a)
+deriving instance Num a => Num (Behavior a)
+deriving instance Fractional a => Fractional (Behavior a)
+deriving instance Floating a => Floating (Behavior a)
+
+type instance Key Behavior = Time
+
+instance Lookup Behavior where
+    lookup = lookupDefault
+instance Indexable Behavior where
+    Behavior b `index` t = b t
+
+time :: Fractional a => Behavior a
+time = Behavior realToFrac
+
+a :: Behavior Float
+a = time
+
+-- Use infix
+isIn :: Time -> Span -> Bool
+isIn x (view range -> (t, u)) = t <= x && x <= u
+
+-- TODO compose segments etc
+adsr :: Behavior Duration
+adsr = time <&> \t -> 
+    if t `isIn` (0    <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+    if t `isIn` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+    if t `isIn` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else 
+    if t `isIn` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else 
+    0
+
+toFloat :: Real a => a -> Float
+toFloat = realToFrac
+
+modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
+modulate = (\t x -> x * sin (t*2*pi)) <$> time
+
+
 
 
 
@@ -1438,3 +1493,51 @@ main = defaultMain $ testGroup "" $ [
 
 
 
+
+
+
+drawScore' :: (Renderable (Path R2) b, Real a) =>       [[(Time, Duration, a)]] -> Diagram b R2
+drawScore' = vcat' (def & sep .~ 2) . fmap drawPart'
+
+drawPart' :: (Renderable (Path R2) b, Real a) =>        [(Time, Duration, a)] -> Diagram b R2
+drawPart' = mconcat . fmap drawNote'
+
+drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
+drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
+    where
+    noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
+
+drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
+drawBehavior = drawBehavior' 50
+
+drawBehavior' count b = cubicSpline False points & lw 0.05
+    where
+        points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ! realToFrac x)) [0,1/samplesPerCell..]
+        samplesPerCell = 40
+
+grid = grid'   20
+gridX = gridX' 20
+gridY = gridY' 20
+
+grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
+
+gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
+
+gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
+gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
+
+writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
+writeG path dia = do
+    let svg = renderDia SVG.SVG (SVG.SVGOptions (Height 300) Nothing) dia
+    let bs  = renderSvg svg
+    ByteString.writeFile path bs
+        
+openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
+openG dia = do
+    writeG "test.svg" $ dia -- 
+    -- FIXME find best reader
+    system "echo '<img src=\"test.svg\"></img>' > test.html"
+    -- system "open -a 'Firefox' test.html"
+    system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
+    return ()    
