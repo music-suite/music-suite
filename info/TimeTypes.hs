@@ -502,30 +502,12 @@ type instance SetPitch (Segment g) (Segment a) = Segment (SetPitch g a)
         Applicative f => Lens a a pa pa -> Lens a b pb pb -> Lens (f a) (f b) (f pa) (f pb)
 -}
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
-    pitch = lensing pitch pitch
+    pitch = through pitch pitch
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
-    pitch = lensing pitch pitch
+    pitch = through pitch pitch
 
-lensBP :: (Applicative f, HasPitch a a, HasPitch a b) => Lens (f a) (f b) (f (Pitch a)) (f (Pitch b))
-lensBP = lens getBP (flip setBP)
-    where
-        mapBP :: (HasPitch a a, HasPitch a b, Applicative f) => (f (Pitch a) -> f (Pitch b)) -> f a -> f b
-        mapBP f a = liftA2 (pitch .~) (f $ (^. pitch) <$> a) a
-
-        getBP :: (Functor f, HasPitch a a) => f a -> f (Pitch a)
-        getBP a = (^. pitch) <$> a
-
-        setBP :: (Applicative f, HasPitch b c) => f (Pitch c) -> f b -> f c
-        setBP x a = liftA2 (pitch .~) x a
-
--- lensing :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
--- lensing lens1 lens2 = lens getBP (flip setBP)
---     where
---         getBP a = (^. lens1) <$> a
---         setBP x a = liftA2 (lens2 .~) x a
-
-lensing :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
-lensing lens1 lens2 = 
+through :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
+through lens1 lens2 = 
     -- lens getBP (flip setBP)
     -- (\sa sbt afb s -> sbt s <$> afb (sa s)) getBP (flip setBP)
     -- (\sbt afb s -> sbt s <$> afb (getBP s)) (flip setBP)
@@ -555,26 +537,10 @@ lensing lens1 lens2 =
     -- \f s -> liftA2 ( \a b -> runIdentity (lens2 (const (Identity b)) a) ) s <$> (f ((getConst . lens1 Const) <$> s))
     -- \f s -> liftA2 ( \a -> runIdentity . flip lens2 a . const . Identity ) s <$> (f ((getConst . lens1 Const) <$> s))
     \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
-
-
-
     where
         -- getBP a = (^. lens1) <$> a
         -- setBP x a = liftA2 (lens2 .~) x a
 
-flx :: ((b1 -> a) -> b -> c) -> b -> a -> c
-flx l x = 
-    -- flip l x . const
-    -- (\f a b -> f b a) l x . const
-    -- (\b -> l b x) . const
-    -- (\b -> l b x) . (\x y -> x)
-    -- (\f g x -> f (g x)) (\b -> l b x) (\x y -> x)
-    -- (\f g x2 -> f (g x2)) (\b -> l b x) (\x3 y -> x3)
-    -- (\x2 -> (\b -> l b x)  ((\x3 y -> x3) x2))
-    -- (\x2 -> (\b -> l b x)  (\y -> x2))
-    -- (\x2 -> (l (\y -> x2) x))
-    (\x2 -> l (\_ -> x2) x)
- 
 deriving instance Show a => Show (Note a)
 instance Transformable Int where
     transform _ = id
@@ -1066,51 +1032,7 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
--- |
--- Functors with a single readable and writable value.
---
--- XXX Always isomorphic to pairs?
---
--- For any @'Comonad' f@ , you can simply define:
---
--- > instance Single f where
--- >     value = valueDefault
---
-class Functor f => Single f where
-    value' :: Lens' (f a) a
-    value  :: Lens  (f a) (f a) a a
-    value = value'
 
-instance Single ((,) a) where
-    value = valueDefault
-
-left3 :: Iso ((a1, b1), c1) ((a2, b2), c2) (a1, b1, c1) (a2, b2, c2)
-left3 = iso f g where f ((x,y), z) = (x, y, z); g (x, y,  z) = ((x, y), z)
-
-right3 :: Iso (a1, (b1, c1)) (a2, (b2, c2)) (a1, b1, c1) (a2, b2, c2)
-right3 = iso f g where f (x, (y,z)) = (x, y, z); g (x, y,  z) = (x, (y,z))
-
--- TODO run 3 version over this
-left4 = iso f g where f ((x,y,z), a) = (x, y, z, a); g (x, y, z, a) = ((x, y, z), z)
-right4 = iso f g where f (x, (y,z,a)) = (x, y, z, a); g (x, y, z, a) = (x, (y, z, a))
-
-
--- Why is this not in base?
-instance Functor ((,,) a b) where
-    fmap f = from left3 %~ fmap f
-
-instance Single ((,,) a b) where
-    value = from left3 . valueDefault
-
--- | XXX suspect setter (uses const)
-instance Monoid a => Single ((->) a) where
-    value = valueDefault
-
-
--- Iso (g a) (g b) (c, a) (c, b)
-
-valueDefault :: Comonad g => Lens (g a) (g b) a b
-valueDefault = lens extract (\s b -> fmap (const b) s)
 
 
 -- Moving and scaling things
