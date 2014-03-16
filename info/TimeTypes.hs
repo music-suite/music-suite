@@ -1,5 +1,6 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -14,6 +15,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module TimeTypes (
 
@@ -140,6 +142,11 @@ module TimeTypes (
         filterEvents,
         mapFilterEvents,
 
+        -- * Music.Score.Pitch
+        Pitch,
+        SetPitch,
+        HasPitch(..),
+        HasPitches(..),
 
   ) where
 import           Control.Applicative
@@ -390,6 +397,80 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
         = Transformation (t1 <> t2) (t2' <> t1') (v1 ^+^ lapp t1 v2)
 -}
 
+type family Pitch             (s :: *) :: * -- Pitch s   = a
+type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
+
+-- class Has s t a b | 
+--     s -> a, 
+--     -- t -> b, 
+--     s b -> t, 
+--     -- t a -> s
+
+-- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
+-- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+class (SetPitch (Pitch t) s ~ t) => HasPitch s t where
+    pitch :: Lens s t (Pitch s) (Pitch t)
+
+    pitch' :: (s ~ t) => Lens' s (Pitch s)
+    pitch' = pitch
+
+class (SetPitch (Pitch t) s ~ t) => HasPitches s t where
+    pitches :: Traversal s t (Pitch s) (Pitch t)
+
+    pitches' :: (s ~ t) => Traversal' s (Pitch s)
+    pitches' = pitches
+
+type instance Pitch Bool = Bool
+type instance SetPitch a Bool = a
+instance (a ~ Pitch a) => HasPitch Bool a where
+    pitch = ($)
+instance (a ~ Pitch a) => HasPitches Bool a where
+    pitches = ($)
+    
+type instance Pitch Int = Int
+type instance SetPitch a Int = a
+instance (a ~ Pitch a) => HasPitch Int a where
+    pitch = ($)
+instance (a ~ Pitch a) => HasPitches Int a where
+    pitches = ($)
+
+type instance Pitch Float = Float
+type instance SetPitch a Float = a
+instance (a ~ Pitch a) => HasPitch Float a where
+    pitch = ($)
+instance (a ~ Pitch a) => HasPitches Float a where
+    pitches = ($)
+
+type instance Pitch (c,a) = Pitch a
+type instance SetPitch b (c,a) = (c,SetPitch b a)
+instance HasPitch a b => HasPitch (c, a) (c, b) where
+    pitch = _2 . pitch
+instance HasPitches a b => HasPitches (c, a) (c, b) where
+    pitches = traverse . pitches
+
+type instance Pitch [a] = Pitch a
+type instance SetPitch b [a] = [SetPitch b a]
+instance HasPitches a b => HasPitches [a] [b] where
+    pitches = traverse . pitches
+
+type instance Pitch (Score a) = Pitch a
+type instance SetPitch g (Score a) = Score (SetPitch g a)
+type instance Pitch (Score a) = Pitch a
+instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where         
+    pitches = _Wrapped . traverse . pl
+        where
+            pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => 
+                Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
+            pl f (s,a) = (s,) <$> (pitches $ fmap (transform s) . f . transform s) a
+
+
+
+
+
+
+
+
 
 
 
@@ -573,8 +654,8 @@ instance Monoid a => Monoid (Behavior a) where
 
 
 
-newtype Score a     = Score      { getScore :: Seq (Note a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
-instance Wrapped (Score a) where { type Unwrapped (Score a) = Seq (Note a) ; _Wrapped' = iso getScore Score }
+newtype Score a     = Score      { getScore :: [(Span, a)]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+instance Wrapped (Score a) where { type Unwrapped (Score a) = [(Span, a)] ; _Wrapped' = iso getScore Score }
 instance Rewrapped (Score a) (Score b)
 instance Applicative Score where
     pure  = return
@@ -595,6 +676,12 @@ instance Reversible a => Reversible (Score a) where
 instance HasPosition (Score a) where
 instance HasDuration (Score a) where
 instance Splittable a => Splittable (Score a) where
+
+
+
+
+
+
 
 -- | XXX indexed traversal?
 score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
@@ -861,6 +948,8 @@ valueDefault = lens extract (\s b -> fmap (const b) s)
 class Transformable a where
     transform :: Span -> a -> a
 
+instance Transformable a => Transformable (a, b) where
+    transform t (s,a) = (transform t s, a)
 
 -- FIXME strange
 -- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
@@ -1047,6 +1136,8 @@ instance Reversible Time where
     rev = stretch (-1)
 instance Reversible Span where
     rev = stretch (-1)
+instance Reversible a => Reversible (a, b) where
+    rev (s,a) = (rev s, a)
 
 
 class Sequential a where
