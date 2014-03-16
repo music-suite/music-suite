@@ -19,10 +19,6 @@
 
 module TimeTypes (
 
-        -- * Data.Normalized
-        -- Normalized(..),
-        -- normalize,
-
         -- * Music.Time.Transform
         Transformable(..),
         delaying,       -- :: Duration -> Span
@@ -150,7 +146,7 @@ module TimeTypes (
 
   ) where
 
-import Diagrams.Prelude hiding (Transformable, trim, view, transform, Segment, duration, position, era, under, stretchTo, offset, after, Time, Duration, (|>), (<->), stretch)
+import Diagrams.Prelude hiding (Transformable, value, trim, view, transform, Segment, duration, position, era, under, stretchTo, offset, after, Time, Duration, (|>), (<->), stretch)
 import qualified Diagrams.Backend.SVG as SVG
 import Data.Default
 import System.Process (system)
@@ -477,11 +473,11 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where         
     pitch = _Wrapped . pl
         where
-            pl f (s,a) = (s,) <$> (pitch $ fmap (transform s) . f . transform s) a
+            pl f (s,a) = (s,) <$> (pitch $ fmap (transform (negateV s)) . f . transform s) a
 instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where         
     pitches = _Wrapped . pl
         where
-            pl f (s,a) = (s,) <$> (pitches $ fmap (transform s) . f . transform s) a
+            pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
 
 
 type instance Pitch (Score a) = Pitch a
@@ -492,7 +488,7 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
         where
             pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => 
                 Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
-            pl f (s,a) = (s,) <$> (pitches $ fmap (transform s) . f . transform s) a
+            pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
 
 
 -- TODO debug/move
@@ -785,11 +781,16 @@ instance Lookup Behavior where
 instance Indexable Behavior where
     Behavior b `index` t = b t
 
+
+
 time :: Fractional a => Behavior a
 time = Behavior realToFrac
 
 a :: Behavior Float
 a = time
+
+
+-- TODO these are examples...
 
 -- Use infix
 isIn :: Time -> Span -> Bool
@@ -811,6 +812,31 @@ modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
 modulate = (\t x -> x * sin (t*2*pi)) <$> time
 
 
+
+test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
+    where
+        -- c = 1
+c = (sin (time/20*2*pi))
+
+c2 :: Behavior Float -> Behavior Float
+c2  = liftA2 (*) c
+
+nc :: Note (Behavior (Int, Float))
+nc = transform (4.5 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+
+r :: Behavior Float
+r  = fmap snd $ runNote (nc & pitch %~ c2)
+
+drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
+drawNote n = let
+    (t,d) = view delta $ era n
+    a = n ^?! traverse
+    in drawNote' (t,d,a)
+
+instance Eq a => Eq (Behavior a) where
+instance Ord a => Ord (Behavior a) where
+instance Real a => Real (Behavior a) where
+    toRational = toRational . (! 0)
 
 
 
