@@ -788,7 +788,7 @@ c2 :: Behavior Float -> Behavior Float
 c2  = liftA2 (*) c
 
 nc :: Note (Behavior (Int, Float))
-nc = transform (4.5 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
 
 r :: Behavior Float
 r  = fmap snd $ runNote (nc & pitch %~ c2)
@@ -1458,6 +1458,9 @@ drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ t
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 50
 
+drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
+drawSegment = drawBehavior' 50
+
 drawBehavior' count b = cubicSpline False points & lw 0.05
     where
         points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ! realToFrac x)) [0,1/samplesPerCell..]
@@ -1467,7 +1470,7 @@ grid = grid'   20
 gridX = gridX' 20
 gridY = gridY' 20
 
-grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds/2,-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
+grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds*(1/20),-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
 
 gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
 gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
