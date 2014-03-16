@@ -409,17 +409,23 @@ type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 -- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
 -- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
 
+-- |
+-- Class of types that provide a single pitch.
+--
 class (SetPitch (Pitch t) s ~ t) => HasPitch s t where
     pitch :: Lens s t (Pitch s) (Pitch t)
 
-    pitch' :: (s ~ t) => Lens' s (Pitch s)
-    pitch' = pitch
+pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
+pitch' = pitch
 
+-- |
+-- Class of types that provide a pitch traversal.
+--
 class (SetPitch (Pitch t) s ~ t) => HasPitches s t where
     pitches :: Traversal s t (Pitch s) (Pitch t)
 
-    pitches' :: (s ~ t) => Traversal' s (Pitch s)
-    pitches' = pitches
+pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
+pitches' = pitches
 
 type instance Pitch Bool = Bool
 type instance SetPitch a Bool = a
@@ -454,6 +460,17 @@ type instance SetPitch b [a] = [SetPitch b a]
 instance HasPitches a b => HasPitches [a] [b] where
     pitches = traverse . pitches
 
+type instance Pitch (Note a) = Pitch a
+type instance SetPitch g (Note a) = Note (SetPitch g a)
+type instance Pitch (Note a) = Pitch a
+instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where         
+    pitch = _Wrapped . pl
+        where
+            pl :: (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => 
+                Lens (Span, a) (Span, b) (Pitch a) (Pitch b)
+            pl f (s,a) = (s,) <$> (pitch $ fmap (transform s) . f . transform s) a
+
+
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 type instance Pitch (Score a) = Pitch a
@@ -465,8 +482,95 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
             pl f (s,a) = (s,) <$> (pitches $ fmap (transform s) . f . transform s) a
 
 
+-- TODO debug/move
+type instance Pitch                 (Behavior a) = Behavior (Pitch a)
+type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
+type instance Pitch                 (Segment a) = Segment (Pitch a)
+type instance SetPitch (Segment g) (Segment a) = Segment (SetPitch g a)
+
+{-
+    Is there a generic
+        Applicative f => Lens a a pa pa -> Lens a b pb pb -> Lens (f a) (f b) (f pa) (f pb)
+-}
+instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
+    pitch = lensing pitch pitch
+instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
+    pitch = lensing pitch pitch
+
+lensBP :: (Applicative f, HasPitch a a, HasPitch a b) => Lens (f a) (f b) (f (Pitch a)) (f (Pitch b))
+lensBP = lens getBP (flip setBP)
+    where
+        mapBP :: (HasPitch a a, HasPitch a b, Applicative f) => (f (Pitch a) -> f (Pitch b)) -> f a -> f b
+        mapBP f a = liftA2 (pitch .~) (f $ (^. pitch) <$> a) a
+
+        getBP :: (Functor f, HasPitch a a) => f a -> f (Pitch a)
+        getBP a = (^. pitch) <$> a
+
+        setBP :: (Applicative f, HasPitch b c) => f (Pitch c) -> f b -> f c
+        setBP x a = liftA2 (pitch .~) x a
+
+-- lensing :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
+-- lensing lens1 lens2 = lens getBP (flip setBP)
+--     where
+--         getBP a = (^. lens1) <$> a
+--         setBP x a = liftA2 (lens2 .~) x a
+
+lensing :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
+lensing lens1 lens2 = 
+    -- lens getBP (flip setBP)
+    -- (\sa sbt afb s -> sbt s <$> afb (sa s)) getBP (flip setBP)
+    -- (\sbt afb s -> sbt s <$> afb (getBP s)) (flip setBP)
+    -- (\afb s -> (flip setBP) s <$> afb (getBP s))
+    -- \afb s -> (flip setBP) s <$> afb (getBP s)
+    -- \afb s -> (flip $ \x a -> liftA2 (lens2 .~) x a) s <$> afb (getBP s)
+    -- \afb s -> (\a x -> liftA2 (lens2 .~) x a) s <$> afb (getBP s)
+    -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb (getBP s)
+    -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((^. lens1) <$> s)
+    -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> s ^. lens1) <$> s)
+    -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
+    -- \afb s -> (\x -> liftA2 (\s -> set lens2 s) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
+    -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
+
+    -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s) 
+    --             <$> 
+    --           afb ((\s -> getConst (lens1 Const s)) <$> s)
+
+    -- \f s -> (\x -> (\b ->  runIdentity . lens2 (const $ Identity b)) <$> x <*> s) 
+    --             <$> 
+    --           f ((\s -> getConst (lens1 Const s)) <$> s)
+
+    -- \f s -> (\x -> liftA2 (\a b -> runIdentity $ (lens2 . const . Identity $ b) a) s x)
+    --             <$> 
+    --           f ((getConst . lens1 Const) <$> s)
+
+    -- \f s -> liftA2 ( \a b -> runIdentity (lens2 (const (Identity b)) a) ) s <$> (f ((getConst . lens1 Const) <$> s))
+    -- \f s -> liftA2 ( \a -> runIdentity . flip lens2 a . const . Identity ) s <$> (f ((getConst . lens1 Const) <$> s))
+    \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
 
 
+
+    where
+        -- getBP a = (^. lens1) <$> a
+        -- setBP x a = liftA2 (lens2 .~) x a
+
+flx :: ((b1 -> a) -> b -> c) -> b -> a -> c
+flx l x = 
+    -- flip l x . const
+    -- (\f a b -> f b a) l x . const
+    -- (\b -> l b x) . const
+    -- (\b -> l b x) . (\x y -> x)
+    -- (\f g x -> f (g x)) (\b -> l b x) (\x y -> x)
+    -- (\f g x2 -> f (g x2)) (\b -> l b x) (\x3 y -> x3)
+    -- (\x2 -> (\b -> l b x)  ((\x3 y -> x3) x2))
+    -- (\x2 -> (\b -> l b x)  (\y -> x2))
+    -- (\x2 -> (l (\y -> x2) x))
+    (\x2 -> l (\_ -> x2) x)
+ 
+deriving instance Show a => Show (Note a)
+instance Transformable Int where
+    transform _ = id
+instance Transformable (Behavior a) where
+instance Transformable (Segment a) where
 
 
 
