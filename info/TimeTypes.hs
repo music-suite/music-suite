@@ -1125,6 +1125,9 @@ tabulated = iso tabulate index
 behavior :: Iso' (Time -> a) (Behavior a)
 behavior = tabulated
 
+-- |
+-- A behavior that
+--
 time :: Behavior Time
 time = id^.behavior
 
