@@ -62,11 +62,13 @@ module TimeTypes (
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
         placeAt,
+        place,
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
         -- ** The Reversible class
         Reversible(..),
+        reversed,
 
         -- * Music.Time.Split
         -- ** The Splittable class
@@ -174,7 +176,7 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<~>), (|>))
+                                               under, value, view, (<~>), (|>), place)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -184,11 +186,13 @@ import           Control.Arrow                (first, second, (***))
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, transform,
-                                               under, (|>))
+                                               under, (|>), reversed)
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
+import           Data.Distributive
+import           Data.Functor.Rep
 import           Data.AffineSpace.Point
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
@@ -819,11 +823,14 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
 bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <~> u, x)
 
-trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
-trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `isIn` s then x else mempty) x)
+-- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
+-- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `isIn` s then x else mempty) x)
 
-trim' :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
-trim' (Bounds (s, x)) = Bounds (s, ((<*>) . behavior) (\t x -> if t `isIn` s then x else mempty) x)
+trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
+trim = trim'
+
+trim' :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
+trim' (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `isIn` s then x else mempty) <*> x)
 
 
 instance Reversible (Bounds a) where
@@ -877,6 +884,8 @@ instance Indexable Segment where
 newtype Behavior a  = Behavior (Time -> a)   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
 
+deriving instance Distributive Behavior
+
 deriving instance Semigroup a => Semigroup (Behavior a)
 
 deriving instance Monoid a => Monoid (Behavior a)
@@ -891,6 +900,11 @@ instance Transformable (Behavior a) where
   transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f
 
 type instance Key Behavior = Time
+
+instance Representable Behavior where
+  type Rep Behavior = Time
+  tabulate = Behavior
+  index (Behavior x) = x
 
 instance Keyed Behavior where
   mapWithKey = (<*>) . behavior
@@ -1409,6 +1423,14 @@ alignAt p t x = (t .-. x `position` p) `delay` x
 placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
 placeAt s x = transform (s ^-^ era x) x
 
+-- |
+-- A lens to the position
+--
+-- XXX rename
+--
+place :: (HasPosition a, Transformable a) => Lens' a Span
+place = lens era (flip placeAt)
+
 -- *TimeTypes> (transform ((3 <~> 4) ^-^ (4 <~> 4.5)) (4 <~> 4.5))^.range
 -- (3,4)
     
@@ -1516,6 +1538,10 @@ instance Reversible Span where
 
 instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
+
+reversed :: Reversible a => Iso' a a
+reversed = iso rev rev
+
 
 
 class Sequential a where
