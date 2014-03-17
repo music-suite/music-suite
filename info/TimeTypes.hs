@@ -113,9 +113,11 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        noteValue,
-        mapNote,
         runNote,
+        reifyNote,
+        noteValue',
+        noteValue,
+        -- mapNote,
 
         -- * Music.Time.Bounds
         Bounds,
@@ -745,6 +747,33 @@ note :: Iso' (Note a) (Span, a)
 note = _Wrapped'
 
 -- |
+-- Extract the transformed value.
+--
+runNote :: Transformable a => Note a -> a
+runNote = uncurry transform . unwr
+
+-- |
+-- Extract the transformed value.
+--
+reifyNote :: Note a -> Note (Span, a)
+reifyNote = fmap (view note) . duplicate
+
+mapNote f (Note (s,x)) = Note (s, under f s x)
+
+-- |
+-- View the value in the note.
+--
+noteValue' :: (Transformable a, Transformable b) => Lens' (Note a) a
+noteValue' = lens runNote (flip $ mapNote . const)
+
+-- |
+-- View the value in the note.
+--
+noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+noteValue = lens runNote (flip $ mapNote . const)
+
+
+-- |
 -- View a delayed value as a pair of a the original value and a delay time.
 --
 -- XXX iso should expose (Duration, a) duration (but the monoid should still be additive)
@@ -757,20 +786,6 @@ delayed = _Wrapped'
 --
 stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
-
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-noteValue = lens runNote (flip $ mapNote . const)
-
-mapNote :: (Transformable a, Transformable b) => (a -> b) -> Note a -> Note b
-mapNote f (Note (s,x)) = Note (s, under f s x)
--- TODO use unwr
-
--- |
--- Extract the transformed value.
---
-runNote :: Transformable a => Note a -> a
-runNote = uncurry transform . unwr
-
 -- |
 -- Extract the delayed value.
 --
@@ -1321,11 +1336,15 @@ era x = onset x <-> offset x
 -- |
 -- Return the onset of the given value.
 --
+-- In an 'Envelope', this is the value between the attack and decay phases.
+--
 onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 onset     = (`position` 0)
 
 -- |
 -- Return the offset of the given value.
+--
+-- In an 'Envelope', this is the value between the sustain and release phases.
 --
 offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset    = (`position` 1.0)
@@ -1341,7 +1360,7 @@ preOnset  = (`position` (-0.5))
 -- |
 -- Return the post-onset of the given value.
 --
--- In an 'Envelope', this is the value between the release and sustain phases.
+-- In an 'Envelope', this is the value between the decay and sustain phases.
 --
 postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 postOnset   = (`position` 0.5)
@@ -1411,11 +1430,13 @@ pcat = Prelude.foldr (><) mempty
 x `sustain` y   = x <> duration x `stretchTo` y
 times n   = scat . replicate n
 
--- | Splitting and reversing things
+-- | 
+-- Class of values that can be split.
 --
+-- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
 --
--- Works for both positioned and unpositioned things
--- For positioned types, splits relative onset
+-- For positioned values succh as 'Note', split cuts a value relative to the local origin.
+--
 -- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
 -- XXX what about Behavior (infinite span)
 --
@@ -1425,10 +1446,16 @@ times n   = scat . replicate n
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
+  takeM, dropM  :: Duration -> a -> a
+  
+  takeM t = fst . split t
+  dropM t = snd . split t
 
 
 
-
+-- |
+-- Class of values that can be reversed.
+--
 class Reversible a where
   rev :: a -> a
 
