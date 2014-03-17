@@ -245,8 +245,8 @@ zipNormalizedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c)
 zipNormalizedWith f a b = ((a^.unnormalize) `f` (b^.unnormalize))^? normalize
 
 normalize' = Normalized
-addLim = zipNormalizedWith (+)    
-    
+addLim = zipNormalizedWith (+)
+
 normalize :: (Num a, Ord a) => Prism' a (Normalized a)
 normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalized x) else Left x)
 
@@ -329,7 +329,7 @@ instance HasPosition Time where
     position = const
 
 
--- | 
+-- |
 -- > 1 >-> 2 == (1,2)^.from delta
 --
 -- > 1 <-> 2 == (1,2)^.from range
@@ -407,10 +407,10 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 type family Pitch             (s :: *) :: * -- Pitch s   = a
 type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 
--- class Has s t a b | 
---     s -> a, 
---     -- t -> b, 
---     s b -> t, 
+-- class Has s t a b |
+--     s -> a,
+--     -- t -> b,
+--     s b -> t,
 --     -- t a -> s
 
 -- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
@@ -440,7 +440,7 @@ instance HasPitch Bool Bool where
     pitch = ($)
 instance HasPitches Bool Bool where
     pitches = ($)
-    
+
 type instance Pitch Int = Int
 type instance SetPitch a Int = a
 instance HasPitch Int Int where
@@ -470,11 +470,11 @@ instance HasPitches a b => HasPitches [a] [b] where
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
 type instance Pitch (Note a) = Pitch a
-instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where         
+instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where
     pitch = _Wrapped . pl
         where
             pl f (s,a) = (s,) <$> (pitch $ fmap (transform (negateV s)) . f . transform s) a
-instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where         
+instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where
     pitches = _Wrapped . pl
         where
             pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
@@ -483,10 +483,10 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 type instance Pitch (Score a) = Pitch a
-instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where         
+instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where
     pitches = _Wrapped . traverse . pl
         where
-            pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => 
+            pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) =>
                 Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
             pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
 
@@ -507,7 +507,7 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
     pitch = through pitch pitch
 
 through :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
-through lens1 lens2 = 
+through lens1 lens2 =
     -- lens getBP (flip setBP)
     -- (\sa sbt afb s -> sbt s <$> afb (sa s)) getBP (flip setBP)
     -- (\sbt afb s -> sbt s <$> afb (getBP s)) (flip setBP)
@@ -522,16 +522,16 @@ through lens1 lens2 =
     -- \afb s -> (\x -> liftA2 (\s -> set lens2 s) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
     -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
 
-    -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s) 
-    --             <$> 
+    -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s)
+    --             <$>
     --           afb ((\s -> getConst (lens1 Const s)) <$> s)
 
-    -- \f s -> (\x -> (\b ->  runIdentity . lens2 (const $ Identity b)) <$> x <*> s) 
-    --             <$> 
+    -- \f s -> (\x -> (\b ->  runIdentity . lens2 (const $ Identity b)) <$> x <*> s)
+    --             <$>
     --           f ((\s -> getConst (lens1 Const s)) <$> s)
 
     -- \f s -> (\x -> liftA2 (\a b -> runIdentity $ (lens2 . const . Identity $ b) a) s x)
-    --             <$> 
+    --             <$>
     --           f ((getConst . lens1 Const) <$> s)
 
     -- \f s -> liftA2 ( \a b -> runIdentity (lens2 (const (Identity b)) a) ) s <$> (f ((getConst . lens1 Const) <$> s))
@@ -545,7 +545,7 @@ deriving instance Show a => Show (Note a)
 instance Transformable Int where
     transform _ = id
 instance Transformable (Behavior a) where
-    transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f        
+    transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f
 instance Transformable (Segment a) where
 
 
@@ -599,7 +599,7 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, 
 -- A 'Stretched' value has a known 'position', but no duration.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
-    
+
 instance Reversible (Note a) where
     rev = stretch (-1)
 instance Splittable a => Splittable (Note a) where
@@ -671,13 +671,13 @@ runStretched = uncurry stretch . unwr
 -- |
 -- 'Bounds' restricts the start and stop time of a value.
 --
-newtype Bounds a      = Bounds      { getBounds :: (Span, a)     } 
+newtype Bounds a      = Bounds      { getBounds :: (Span, a)     }
     deriving (Functor, Foldable, Traversable)
 
 bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <-> u, x)
 
--- | XXX 
+-- | XXX
 trim :: Monoid a => Bounds a -> Bounds a
 trim = undefined
 
@@ -764,11 +764,11 @@ isIn x (view range -> (t, u)) = t <= x && x <= u
 
 -- TODO compose segments etc
 adsr :: Behavior Duration
-adsr = time <&> \t -> 
+adsr = time <&> \t ->
     if t `isIn` (0    <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
     if t `isIn` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-    if t `isIn` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else 
-    if t `isIn` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else 
+    if t `isIn` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+    if t `isIn` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
     0
 
 toFloat :: Real a => a -> Float
@@ -1176,27 +1176,27 @@ alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 alignAt p t x = (t .-. x `position` p) `delay` x
 
 
--- | 
+-- |
 -- a `lead`   b  moves a so that (offset a' == onset b)
--- 
+--
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 a `lead` b   = alignAt 1 (b `position` 0) a
 
 -- |
 -- a `follow` b  moves b so that (offset a  == onset b')
--- 
+--
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = alignAt 0 (a `position` 1) b
 
--- | 
+-- |
 -- a `lead`   b  moves a so that (offset a' == onset b)
--- 
+--
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 
--- | 
+-- |
 -- a `lead`   b  moves a so that (offset a' == onset b)
--- 
+--
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
@@ -1483,12 +1483,14 @@ writeG path dia = do
     let svg = renderDia SVG.SVG (SVG.SVGOptions (Height 300) Nothing) dia
     let bs  = renderSvg svg
     ByteString.writeFile path bs
-        
+
 openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
 openG dia = do
-    writeG "test.svg" $ dia -- 
+    writeG "test.svg" $ dia --
     -- FIXME find best reader
     system "echo '<img src=\"test.svg\"></img>' > test.html"
     -- system "open -a 'Firefox' test.html"
     system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
-    return ()    
+    return ()
+
+
