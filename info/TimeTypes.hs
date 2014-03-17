@@ -48,8 +48,10 @@ module TimeTypes (
         -- * Music.Time.Position
         -- ** The HasPosition class
         HasPosition(..),
-        -- ** Specific positions
+
+        -- ** Inspecting position
         era,
+        -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
         preOnset,       -- :: HasPosition a => a -> Time
@@ -111,7 +113,8 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        -- mapNote,
+        noteValue,
+        mapNote,
         runNote,
 
         -- * Music.Time.Bounds
@@ -754,6 +757,9 @@ delayed = _Wrapped'
 --
 stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
+
+noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+noteValue = lens runNote (flip $ mapNote . const)
 
 mapNote :: (Transformable a, Transformable b) => (a -> b) -> Note a -> Note b
 mapNote f (Note (s,x)) = Note (s, under f s x)
