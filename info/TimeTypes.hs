@@ -20,70 +20,83 @@
 module TimeTypes (
 
         -- * Music.Time.Transform
+        -- ** The Transformable class
         Transformable(..),
-        delaying,       -- :: Duration -> Span
+        -- *** Apply under a transformation
+        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+        underM,
+        -- conjugate,  -- :: Span -> Span -> Span
+
+        -- *** Specific transformations
+        delaying,
         undelaying,
-        stretching,     -- :: Duration -> Span
+        stretching,
         compressing,
-        delay,          -- :: Transformable a => Duration -> a -> a
+        delay,
         -- delay',
         undelay,
-        stretch,        -- :: Transformable a => Duration -> a -> a
+        stretch,
         compress,
 
         -- * Music.Time.Duration
+        -- ** The HasDuration class
         HasDuration(..),
-        stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
+        -- ** Stretching to absolute duration
+        stretchTo,
         -- stretchNorm,
 
         -- * Music.Time.Position
+        -- ** The HasPosition class
         HasPosition(..),
+        -- ** Specific positions
         era,
-        -- preOnset,       -- :: HasPosition a => a -> Time
         onset,          -- :: HasPosition a => a -> Time
-        -- postOnset,      -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
-        -- postOffset,     -- :: HasPosition a => a -> Time
+        preOnset,       -- :: HasPosition a => a -> Time
+        postOnset,      -- :: HasPosition a => a -> Time
+        postOffset,     -- :: HasPosition a => a -> Time
+        -- ** Moving to absolute positions
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
+        -- ** The Reversible class
         Reversible(..),
 
         -- * Music.Time.Split
+        -- ** The Splittable class
         Splittable(..),
 
-        -- * Music.Time.Sequential
-        Sequential(..),
-
-        -- * Music.Time.Parallel
-        Parallel(..),
-
         -- * Music.Time.Combinators
+        -- ** Align without composition
         lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
         follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+        -- ** Align and compose
         after,
         before,
-        -- (|>),
-        -- (>|),
         sustain,
+        -- ** Composition operators
+        Sequential(..),
+        Parallel(..),
         scat,
         pcat,
         times,
 
         -- * Music.Time.Types
+        -- ** Duration
         Duration,
+        -- ** Time points
         Time,
+        -- ** Time spans
         Span,
+        -- *** Constructing time spans
         (<->),
         (>->),
+        -- *** Deconstructing time spans
         range,
         delta,
-        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-        underF,
-        -- conjugate,  -- :: Span -> Span -> Span
 
         -- * Music.Time.Stretched
         Stretched,
@@ -435,11 +448,11 @@ t >-> d = Span (t, d)
 -- |
 -- View a span as pair of onset and offset.
 --
--- To convert a span to a pair, use @s^.'range'@.
+-- - To convert a span to a pair, use @s^.'range'@.
 --
 -- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
 --
--- - To pattern match over spans (requires @ViewPatterns@), use
+-- With the @ViewPatterns@ extension you can pattern match over spans using
 --
 -- > foo (view range -> (u,v)) = ...
 --
@@ -453,19 +466,28 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 --
 -- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
 --
--- - To pattern match over spans (requires @ViewPatterns@), use
+-- With the @ViewPatterns@ extension you can pattern match over spans using
 --
 -- > foo (view delta -> (t,d)) = ...
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
 
+-- | 
+-- Apply a function under transformation.
+-- 
 -- > forall s . id `sunder` s = id
+-- 
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform (negateV s) . f . transform s
 
-underF :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
-f `underF` s = fmap (transform (negateV s)) . f . transform s
+-- | 
+-- Apply a function under transformation.
+-- 
+-- > forall s . pure `sunderM` s = pure
+-- 
+underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
+f `underM` s = fmap (transform (negateV s)) . f . transform s
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -566,11 +588,11 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitch $ underF f s) a
+      pl f (s,a) = (s,) <$> (pitch $ underM f s) a
 instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitches $ underF f s) a
+      pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
@@ -580,7 +602,7 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
     where
       pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) =>
         Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
-      pl f (s,a) = (s,) <$> (pitches $ underF f s) a
+      pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
 
 -- TODO debug/move
@@ -1284,8 +1306,28 @@ onset     = (`position` 0)
 offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 offset    = (`position` 1.0)
 
+-- |
+-- Return the pre-onset of the given value.
+--
+-- In an 'Envelope', this is the value right before the attack phase.
+--
+preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 preOnset  = (`position` (-0.5))
+
+-- |
+-- Return the post-onset of the given value.
+--
+-- In an 'Envelope', this is the value between the release and sustain phases.
+--
+postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 postOnset   = (`position` 0.5)
+
+-- |
+-- Return the post-offset of the given value.
+--
+-- In an 'Envelope', this is the value right after the release phase.
+--
+postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 postOffset  = (`position` 1.5)
 
 -- |
