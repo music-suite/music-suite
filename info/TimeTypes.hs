@@ -463,6 +463,9 @@ delta = iso getDelta $ uncurry (>->)
 under :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
 s `under` f = transform (negateV s) . f . transform s
 
+underF :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
+f `underF` s = fmap (transform (negateV s)) . f . transform s
+
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
 
@@ -562,12 +565,11 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitch $ fmap (transform (negateV s)) . f . transform s) a
+      pl f (s,a) = (s,) <$> (pitch $ underF f s) a
 instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
-
+      pl f (s,a) = (s,) <$> (pitches $ underF f s) a
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
@@ -577,7 +579,7 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
     where
       pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) =>
         Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
-      pl f (s,a) = (s,) <$> (pitches $ fmap (transform (negateV s)) . f . transform s) a
+      pl f (s,a) = (s,) <$> (pitches $ underF f s) a
 
 
 -- TODO debug/move
