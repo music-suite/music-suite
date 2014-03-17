@@ -82,6 +82,7 @@ module TimeTypes (
         range,
         delta,
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+        underF,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- * Music.Time.Stretched
@@ -460,8 +461,8 @@ delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
 
 -- > forall s . id `sunder` s = id
-under :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-s `under` f = transform (negateV s) . f . transform s
+under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
+f `under` s = transform (negateV s) . f . transform s
 
 underF :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underF` s = fmap (transform (negateV s)) . f . transform s
@@ -724,7 +725,7 @@ stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
 
 mapNote :: (Transformable a, Transformable b) => (a -> b) -> Note a -> Note b
-mapNote f (Note (s,x)) = Note (s, under s f x)
+mapNote f (Note (s,x)) = Note (s, under f s x)
 -- TODO use unwr
 
 runNote :: Transformable a => Note a -> a
