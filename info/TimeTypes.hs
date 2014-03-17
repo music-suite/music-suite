@@ -111,7 +111,7 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        mapNote,
+        -- mapNote,
         runNote,
 
         -- * Music.Time.Bounds
@@ -359,12 +359,19 @@ instance HasPosition Time where
 -- transformation where onset is translation and duration is scaling.
 --
 -- You can create a span using the '<->' and '>->' constructors. To create and
--- destruct a span (in any of its incarnations), use the provided 'Iso's.
+-- destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
--- > > (1 <-> 2)^.range
--- > (1, 2)
--- > > (1 <-> 2)^.delta
--- > (1, 1)
+-- > hs> (2 <-> 3)^.range
+-- > (2, 3)
+-- >
+-- > hs> (2 <-> 3)^.delta
+-- > (2, 1)
+-- >
+-- > hs> (10 >-> 5)^.range
+-- > (10, 15)
+-- >
+-- > hs> (10 >-> 5)^.delta
+-- > (10, 5)
 --
 -- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
 --
@@ -482,7 +489,7 @@ under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform (negateV s) . f . transform s
 
 -- | 
--- Apply a function under transformation.
+-- Apply a morphism under transformation.
 -- 
 -- > forall s . pure `sunderM` s = pure
 -- 
@@ -728,21 +735,23 @@ instance HasDuration (Stretched a) where duration = duration . ask . unwr
 instance HasPosition (Note a) where x `position` p = ask (unwr x) `position` p
 instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 
+-- |
+-- View a note as a pair of the original value and the transformation.
+--
 note :: Iso' (Note a) (Span, a)
 note = _Wrapped'
 
--- noteValue :: Lens' (Note a) a
--- noteValue = value
-
-noteEra :: Lens' (Note a) Span
-noteEra = lens era undefined
-
-mkNote :: Time -> Duration -> a -> Note a
-mkNote t d v = t >-> d `transform` return v
-
+-- |
+-- View a delayed value as a pair of a the original value and a delay time.
+--
+-- XXX iso should expose (Duration, a) duration (but the monoid should still be additive)
+--
 delayed :: Iso' (Delayed a) (Time, a)
 delayed = _Wrapped'
 
+-- |
+-- View a stretched value as a pair of the original value and a stretch factor.
+--
 stretched :: Iso' (Stretched a) (Duration, a)
 stretched = _Wrapped'
 
@@ -750,12 +759,21 @@ mapNote :: (Transformable a, Transformable b) => (a -> b) -> Note a -> Note b
 mapNote f (Note (s,x)) = Note (s, under f s x)
 -- TODO use unwr
 
+-- |
+-- Extract the transformed value.
+--
 runNote :: Transformable a => Note a -> a
 runNote = uncurry transform . unwr
 
+-- |
+-- Extract the delayed value.
+--
 runDelayed :: Transformable a => Delayed a -> a
 runDelayed = uncurry delay' . unwr
 
+-- |
+-- Extract the stretched value.
+--
 runStretched :: Transformable a => Stretched a -> a
 runStretched = uncurry stretch . unwr
 
