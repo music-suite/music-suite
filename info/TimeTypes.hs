@@ -1193,41 +1193,49 @@ delay' t   = delay (t .-. 0)
 -- |
 -- Move a value forward in time.
 --
-delaying x   = (0 .+^ x) >-> 1
+delaying :: Duration -> Span
+delaying x = (0 .+^ x) >-> 1
 
 -- |
 -- A transformation that moves a value forward in time.
 --
-stretching x = 0     >-> x
+stretching :: Duration -> Span
+stretching x = 0 >-> x
 
 -- |
 -- A transformation that moves a value backward in time.
 --
+undelaying :: Duration -> Span
 undelaying x = delaying (negate x)
 
 -- |
 -- A transformation that compresses (diminishes) a value by the given factor.
 --
+compressing :: Duration -> Span
 compressing x = stretching (recip x)
 
 -- |
 -- A transformation that stretches (augments) a value by the given factor.
 --
-delay  = transform . delaying
+delay :: Transformable a => Duration -> a -> a
+delay = transform . delaying
 
 -- |
 -- Move a value backward in time. Equivalent to @'delay' . 'negate'@.
 --
-undelay  = transform . undelaying
+undelay :: Transformable a => Duration -> a -> a
+undelay = transform . undelaying
 
 -- |
 -- Stretch (augment) a value by the given factor.
 --
-stretch  = transform . stretching
+stretch :: Transformable a => Duration -> a -> a
+stretch = transform . stretching
 
 -- |
 -- Compress (diminish) a score. Equivalent to @'stretch' . 'recip'@.
 --
+compress :: Transformable a => Duration -> a -> a
 compress = transform . compressing
 
 -- Fitting things
