@@ -255,11 +255,12 @@ unnormalize = re normalize
 
 -- |
 -- Duration, corresponding to note values in standard notation.
---
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
+--
+-- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
 newtype Duration = Duration { getDuration :: Rational }
 instance Show Duration where
@@ -272,7 +273,11 @@ deriving instance Enum Duration
 deriving instance Fractional Duration
 deriving instance Real Duration
 deriving instance RealFrac Duration
-deriving instance AdditiveGroup Duration
+instance AdditiveGroup Duration where
+    zeroV = mempty
+    (^+^) = mappend
+    negateV = recip
+    
 instance VectorSpace Duration where
     type Scalar Duration = Duration
     (*^) = (*)
@@ -330,24 +335,84 @@ instance HasPosition Time where
 
 
 -- |
--- > 1 >-> 2 == (1,2)^.from delta
+-- A 'Span' represents two points in time @u@ and @v@ or, equivalently, a time @t@ and a
+-- duration @d@. A third way of looking at 'Span' is that it represents a time
+-- transformation where onset is translation and duration is scaling.
 --
--- > 1 <-> 2 == (1,2)^.from range
+-- You can create a span using the '<->' and '>->' constructors. To create and
+-- destruct a span (in any of its incarnations), use the provided 'Iso's.
+--
+-- > > (1 <-> 2)^.range
+-- > (1, 2)
+-- > > (1 <-> 2)^.delta
+-- > (1, 1)
+--
+-- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
 --
 newtype Span = Span { getDelta :: (Time, Duration) }
     deriving (Eq, Ord, Show, Typeable)
 
+-- | 
+-- @t \<-\> u@ represents the span between @t@ and @u@.
+--
+-- > t <-> u = t >-> (u .-. t)
+-- 
+-- Lemma
+--
+-- > onset    (t <-> u) = t
+-- > offset   (t <-> u) = u
+--
+-- Lemma
+--
+-- > duration (t <-> u) = u .-. t
+-- 
 (<->) :: Time -> Time -> Span
-(>->) :: Time -> Duration -> Span
 t <-> u = t >-> (u .-. t)
+
+-- | 
+-- @t >-> d@ represents the span between @t@ and @t .+^ d@.
+-- 
+-- > t >-> d = t <-> t .+^ d
+-- 
+-- Lemma
+--
+-- > onset    (t >-> d) = t
+-- > offset   (t >-> d) = t .+^ d
+--
+-- Lemma
+--
+-- > duration (t >-> d) = d
+-- 
+(>->) :: Time -> Duration -> Span
 t >-> d = Span (t, d)
 
+-- > (<->) = curry $ view $ from range
+-- > (>->) = curry $ view $ from delta
+
 -- |
+-- View a span as pair of onset and offset.
+--
+-- To convert a span to a pair, use @s^.'range'@.
+--
+-- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
+--
+-- - To pattern match over spans (requires @ViewPatterns@), use
+--
+-- > foo (view range -> (u,v)) = ...
 --
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- |
+-- View a span as a pair of onset and duration.
+--
+-- - To convert a span to a pair, use @s^.'delta'@.
+--
+-- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
+--
+-- - To pattern match over spans (requires @ViewPatterns@), use
+--
+-- > foo (view delta -> (t,d)) = ...
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
@@ -360,11 +425,26 @@ instance Transformable Span where
     transform = (<>)
 instance Splittable Span where
     -- XXX
+
+-- | 
+-- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
+-- be the identity transformation.
+--
 instance Semigroup Span where
     (<>) = (^+^)
+
+-- | 
+-- '<>' or '^+^' composes transformations, that is the scaling component is composed
+-- using the '<>' instance for 'Duration', and the translation component is composed
+-- using the '<>' instance for 'Time'.
+--
 instance Monoid Span where
     mempty  = zeroV
     mappend = (^+^)
+
+-- |
+-- 'negateV' negates time and duration using their respective 'negateV' instances. 
+--
 instance AdditiveGroup Span where
     zeroV   = 0 <-> 1
     Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
@@ -1074,22 +1154,22 @@ delay' t     = delay (t .-. 0)
 delaying x   = (0 .+^ x) >-> 1
 
 -- |
--- Move a value forward in time.
+-- A transformation that moves a value forward in time.
 --
 stretching x = 0         >-> x
 
 -- |
--- Move a value forward in time.
+-- A transformation that moves a value backward in time.
 --
 undelaying x = delaying (negate x)
 
 -- |
--- Move a value forward in time.
+-- A transformation that compresses (diminishes) a value by the given factor.
 --
 compressing x = stretching (recip x)
 
 -- |
--- Move a value forward in time.
+-- A transformation that stretches (augments) a value by the given factor.
 --
 delay    = transform . delaying
 
@@ -1120,6 +1200,9 @@ compress = transform . compressing
 class HasDuration a where
     duration :: a -> Duration
 
+-- |
+-- Stretch a value to have the given duration.
+--
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ duration x) `stretch` x
 
