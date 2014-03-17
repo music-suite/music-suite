@@ -61,6 +61,7 @@ module TimeTypes (
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+        placeAt,
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
@@ -123,6 +124,7 @@ module TimeTypes (
         Bounds,
         bounds,
         trim,
+        trim',
 
         -- * Music.Time.Segment
         Segment,
@@ -381,8 +383,10 @@ instance HasPosition Time where
 -- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
 --
 newtype Span = Span { getDelta :: (Time, Duration) }
-  deriving (Eq, Ord, Show, Typeable)
+  deriving (Eq, Ord, Typeable)
 
+instance Show Span where
+  show (view range -> (t,u)) = show t ++ " <~> " ++ show u
 
 instance HasPosition Span where
   position (view range -> (t1, t2)) = alerp t1 t2
@@ -815,9 +819,12 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
 bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <~> u, x)
 
--- | XXX
-trim :: Monoid a => Bounds a -> Bounds a
-trim = undefined
+trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
+trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `isIn` s then x else mempty) x)
+
+trim' :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
+trim' (Bounds (s, x)) = Bounds (s, ((<*>) . behavior) (\t x -> if t `isIn` s then x else mempty) x)
+
 
 instance Reversible (Bounds a) where
   rev = stretch (-1)
@@ -885,13 +892,17 @@ instance Transformable (Behavior a) where
 
 type instance Key Behavior = Time
 
+instance Keyed Behavior where
+  mapWithKey = (<*>) . behavior
+
 instance Lookup Behavior where
   lookup = lookupDefault
 
 instance Indexable Behavior where
   Behavior b `index` t = b t
 
-
+behavior :: (Time -> a) -> Behavior a
+behavior = Behavior
 
 time :: Fractional a => Behavior a
 time = Behavior realToFrac
@@ -1390,6 +1401,17 @@ stopAt t  x   = (t .-. offset x) `delay` x
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 alignAt p t x = (t .-. x `position` p) `delay` x
 
+-- |
+-- Place a value over the given span.
+--
+-- @placeAt s t@ places the given thing so that @era x == s@
+--
+placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
+placeAt s x = transform (s ^-^ era x) x
+
+-- *TimeTypes> (transform ((3 <~> 4) ^-^ (4 <~> 4.5)) (4 <~> 4.5))^.range
+-- (3,4)
+    
 
 -- |
 -- a `lead`   b  moves a so that (offset a' == onset b)
@@ -1464,6 +1486,8 @@ class HasDuration a => Splittable a where
 -- Class of values that can be reversed.
 --
 class Reversible a where
+
+  -- | Reverse the given value.
   rev :: a -> a
 
 instance Reversible () where
