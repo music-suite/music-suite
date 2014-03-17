@@ -835,14 +835,6 @@ instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
 -- A 'Segment' is a function of 'Duration'. Intuitively, it is a value varying over some unknown time span.
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
--- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
---
--- > pure s ! t == s
---
--- > fs <*> xs ! t == (fs ! t) (xs ! t)
---
--- > join s ! t == (s ! t) ! t
---
 newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
@@ -859,19 +851,21 @@ instance Lookup Segment where
 instance Indexable Segment where
   Segment b `index` t = b $ t ^?! normalize
 
--- |
---
--- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
--- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it inside
--- 'Bounds'.
---
--- Behavior is a 'Monad' and 'Applicative' functor, similar to the function instance:
+-- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
 --
 -- > pure s ! t == s
 --
 -- > fs <*> xs ! t == (fs ! t) (xs ! t)
 --
 -- > join s ! t == (s ! t) ! t
+--
+
+
+-- |
+--
+-- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
+-- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it inside
+-- 'Bounds'.
 --
 newtype Behavior a  = Behavior (Time -> a)   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
