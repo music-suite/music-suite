@@ -30,15 +30,15 @@ module TimeTypes (
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
-        delaying,
-        undelaying,
-        stretching,
-        compressing,
         delay,
         -- delay',
         undelay,
         stretch,
         compress,
+        delaying,
+        undelaying,
+        stretching,
+        compressing,
 
         -- * Music.Time.Duration
         -- ** The HasDuration class
@@ -119,17 +119,17 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        runNote,
         reifyNote,
         noteValue',
         noteValue,
         -- mapNote,
+        runNote,
 
         -- * Music.Time.Bounds
         Bounds,
         bounds,
         trim,
-        trimG,
+        -- trimG,
         bounding,
 
         -- * Music.Time.Segment
@@ -137,9 +137,9 @@ module TimeTypes (
 
         -- * Music.Time.Behavior
         Behavior,
-        behavior,
         time,
         atTime,
+        behavior,
 
         -- * Music.Time.Voice
         Voice,
@@ -1125,11 +1125,14 @@ tabulated = iso tabulate index
 behavior :: Iso' (Time -> a) (Behavior a)
 behavior = tabulated
 
-time :: Fractional a => Behavior a
-time = realToFrac^.behavior
+time :: Behavior Time
+time = id^.behavior
 
-sine = sin (time*tau)
-cosine = cos (time*tau)
+time' :: Fractional a => Behavior a
+time' = realToFrac^.behavior
+
+sine = sin (time'*tau)
+cosine = cos (time'*tau)
 
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
@@ -1138,7 +1141,7 @@ atTime = index
 
 
 a :: Behavior Float
-a = time
+a = time'
 
 
 -- TODO these are examples...
@@ -1160,14 +1163,38 @@ toFloat :: Real a => a -> Float
 toFloat = realToFrac
 
 modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
-modulate = (\t x -> x * sin (t*2*pi)) <$> time
+modulate = (\t x -> x * sin (t*2*pi)) <$> time'
 
 
 
 test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
   where
     -- c = 1
-c = (sin (time/20*2*pi))
+c = (sin (time'/20*2*pi))
+
+
+newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
+instance Wrapped PD where
+  type Unwrapped PD = (Behavior Float, Behavior Float)
+  _Wrapped' = iso getPD PD
+instance Rewrapped PD PD
+type instance Pitch PD = Behavior Float
+type instance SetPitch g PD = PD
+type instance Dynamic PD = Behavior Float
+type instance SetDynamic g PD = PD
+instance HasPitch PD PD where
+  pitch = _Wrapped . _2
+instance HasDynamic PD PD where
+  dynamic = _Wrapped . _1
+pd :: PD
+pd = PD (time', time')
+
+drawPD pd = openG $ grid <> (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
+
+
+
+
+
 
 c2 :: Behavior Float -> Behavior Float
 c2  = liftA2 (*) c
