@@ -263,16 +263,13 @@ unnormalize = re normalize
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
 newtype Duration = Duration { getDuration :: Rational }
+    deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+    
 instance Show Duration where
     show = showRatio . getDuration
-deriving instance Typeable Duration
-deriving instance Eq Duration
-deriving instance Ord Duration
-deriving instance Num Duration
-deriving instance Enum Duration
-deriving instance Fractional Duration
-deriving instance Real Duration
-deriving instance RealFrac Duration
+
+instance InnerSpace Duration
+
 instance AdditiveGroup Duration where
     zeroV = mempty
     (^+^) = mappend
@@ -281,15 +278,17 @@ instance AdditiveGroup Duration where
 instance VectorSpace Duration where
     type Scalar Duration = Duration
     (*^) = (*)
-instance Floating Duration
-instance InnerSpace Duration
+
 instance Semigroup Duration where
     (<>) = (*^)
+
 instance Monoid Duration where
     mempty  = 1 -- TODO use some notion of norm
     mappend = (*^)
+
 instance Transformable Duration where
     Span (_, d1) `transform` d2 = d1 * d2
+
 instance HasDuration Duration where
     duration = id
 
@@ -304,32 +303,33 @@ instance HasDuration Duration where
 -- difference space.
 --
 newtype Time = Time { getTime :: Rational }
+    deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+
 instance Show Time where
     show = showRatio . getTime
-deriving instance Typeable Time
-deriving instance Eq Time
-deriving instance Ord Time
-deriving instance Num Time
-deriving instance Enum Time
-deriving instance Fractional Time
-deriving instance Real Time
-deriving instance RealFrac Time
+
 deriving instance AdditiveGroup Time
+
 instance VectorSpace Time where
     type Scalar Time = Duration
     Duration x *^ Time y = Time (x * y)
+
 instance AffineSpace Time where
     type Diff Time = Duration
     Time x .-. Time y     = Duration (x - y)
     Time x .+^ Duration y = Time     (x + y)
+
 instance Semigroup Time where
     (<>) = (^+^)
+
 instance Monoid Time where
     mempty  = zeroV
     mappend = (^+^)
     mconcat = sumV
+
 instance Transformable Time where
     Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
+
 instance HasPosition Time where
     position = const
 
@@ -352,6 +352,43 @@ instance HasPosition Time where
 newtype Span = Span { getDelta :: (Time, Duration) }
     deriving (Eq, Ord, Show, Typeable)
 
+
+instance HasPosition Span where
+    position (view range -> (t1, t2)) = alerp t1 t2
+
+instance HasDuration Span where
+    duration = snd . view delta
+
+instance Transformable Span where
+    transform = (<>)
+
+instance Splittable Span where
+    -- XXX
+
+-- | 
+-- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
+-- be the identity transformation.
+--
+instance Semigroup Span where
+    (<>) = (^+^)
+
+-- | 
+-- '<>' or '^+^' composes transformations, that is the scaling component is composed
+-- using the '<>' instance for 'Duration', and the translation component is composed
+-- using the '<>' instance for 'Time'.
+--
+instance Monoid Span where
+    mempty  = zeroV
+    mappend = (^+^)
+
+-- |
+-- 'negateV' negates time and duration using their respective 'negateV' instances. 
+--
+instance AdditiveGroup Span where
+    zeroV   = 0 <-> 1
+    Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
+    negateV (Span (t, d)) = Span (-t ^/ d, recip d)
+                                                     
 -- | 
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
@@ -416,39 +453,6 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
-
-instance HasPosition Span where
-    position (view range -> (t1, t2)) = alerp t1 t2
-instance HasDuration Span where
-    duration = snd . view delta
-instance Transformable Span where
-    transform = (<>)
-instance Splittable Span where
-    -- XXX
-
--- | 
--- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
--- be the identity transformation.
---
-instance Semigroup Span where
-    (<>) = (^+^)
-
--- | 
--- '<>' or '^+^' composes transformations, that is the scaling component is composed
--- using the '<>' instance for 'Duration', and the translation component is composed
--- using the '<>' instance for 'Time'.
---
-instance Monoid Span where
-    mempty  = zeroV
-    mappend = (^+^)
-
--- |
--- 'negateV' negates time and duration using their respective 'negateV' instances. 
---
-instance AdditiveGroup Span where
-    zeroV   = 0 <-> 1
-    Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
-    negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
 -- > forall s . id `sunder` s = id
 under :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
@@ -1206,8 +1210,8 @@ class HasDuration a where
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ duration x) `stretch` x
 
-stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
-stretchNorm x = stretchTo (normalized $ duration x) x
+-- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
+-- stretchNorm x = stretchTo (normalized $ duration x) x
 
 
 -- Placing things
