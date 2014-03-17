@@ -94,8 +94,8 @@ module TimeTypes (
         -- ** Time spans
         Span,
         -- *** Constructing time spans
-        (<->),
-        (>->),
+        (<~>),
+        (>~>),
         -- *** Deconstructing time spans
         range,
         delta,
@@ -172,7 +172,7 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<->), (|>))
+                                               under, value, view, (<~>), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -363,19 +363,19 @@ instance HasPosition Time where
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
--- You can create a span using the '<->' and '>->' constructors. To create and
+-- You can create a span using the '<~>' and '>~>' constructors. To create and
 -- destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
--- > hs> (2 <-> 3)^.range
+-- > hs> (2 <~> 3)^.range
 -- > (2, 3)
 -- >
--- > hs> (2 <-> 3)^.delta
+-- > hs> (2 <~> 3)^.delta
 -- > (2, 1)
 -- >
--- > hs> (10 >-> 5)^.range
+-- > hs> (10 >~> 5)^.range
 -- > (10, 15)
 -- >
--- > hs> (10 >-> 5)^.delta
+-- > hs> (10 >~> 5)^.delta
 -- > (10, 5)
 --
 -- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
@@ -416,46 +416,46 @@ instance Monoid Span where
 -- 'negateV' negates time and duration using their respective 'negateV' instances.
 --
 instance AdditiveGroup Span where
-  zeroV   = 0 <-> 1
+  zeroV   = 0 <~> 1
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
--- > t <-> u = t >-> (u .-. t)
+-- > t <~> u = t >~> (u .-. t)
 --
 -- Lemma
 --
--- > onset    (t <-> u) = t
--- > offset   (t <-> u) = u
+-- > onset    (t <~> u) = t
+-- > offset   (t <~> u) = u
 --
 -- Lemma
 --
--- > duration (t <-> u) = u .-. t
+-- > duration (t <~> u) = u .-. t
 --
-(<->) :: Time -> Time -> Span
-t <-> u = t >-> (u .-. t)
+(<~>) :: Time -> Time -> Span
+t <~> u = t >~> (u .-. t)
 
 -- |
--- @t >-> d@ represents the span between @t@ and @t .+^ d@.
+-- @t >~> d@ represents the span between @t@ and @t .+^ d@.
 --
--- > t >-> d = t <-> t .+^ d
---
--- Lemma
---
--- > onset    (t >-> d) = t
--- > offset   (t >-> d) = t .+^ d
+-- > t >~> d = t <~> t .+^ d
 --
 -- Lemma
 --
--- > duration (t >-> d) = d
+-- > onset    (t >~> d) = t
+-- > offset   (t >~> d) = t .+^ d
 --
-(>->) :: Time -> Duration -> Span
-t >-> d = Span (t, d)
+-- Lemma
+--
+-- > duration (t >~> d) = d
+--
+(>~>) :: Time -> Duration -> Span
+t >~> d = Span (t, d)
 
--- > (<->) = curry $ view $ from range
--- > (>->) = curry $ view $ from delta
+-- > (<~>) = curry $ view $ from range
+-- > (>~>) = curry $ view $ from delta
 
 -- |
 -- View a span as pair of onset and offset.
@@ -469,7 +469,7 @@ t >-> d = Span (t, d)
 -- > foo (view range -> (u,v)) = ...
 --
 range :: Iso' Span (Time, Time)
-range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
+range = iso getRange $ uncurry (<~>) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- |
 -- View a span as a pair of onset and duration.
@@ -483,7 +483,7 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 -- > foo (view delta -> (t,d)) = ...
 --
 delta :: Iso' Span (Time, Duration)
-delta = iso getDelta $ uncurry (>->)
+delta = iso getDelta $ uncurry (>~>)
 
 -- | 
 -- Apply a function under transformation.
@@ -813,7 +813,7 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
   deriving (Functor, Foldable, Traversable)
 
 bounds :: Time -> a -> Time -> Bounds a
-bounds t x u = Bounds (t <-> u, x)
+bounds t x u = Bounds (t <~> u, x)
 
 -- | XXX
 trim :: Monoid a => Bounds a -> Bounds a
@@ -909,10 +909,10 @@ isIn x (view range -> (t, u)) = t <= x && x <= u
 -- TODO compose segments etc
 adsr :: Behavior Duration
 adsr = time <&> \t ->
-  if t `isIn` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `isIn` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `isIn` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `isIn` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  if t `isIn` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `isIn` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `isIn` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `isIn` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
   0
 
 toFloat :: Real a => a -> Float
@@ -932,7 +932,7 @@ c2 :: Behavior Float -> Behavior Float
 c2  = liftA2 (*) c
 
 nc :: Note (Behavior (Int, Float))
-nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+nc = transform (3 >~> 5) $ return $ fmap (0,) $ fmap toFloat adsr
 
 r :: Behavior Float
 r  = fmap snd $ runNote (nc & pitch %~ c2)
@@ -1252,13 +1252,13 @@ delay' t   = delay (t .-. 0)
 -- Move a value forward in time.
 --
 delaying :: Duration -> Span
-delaying x = (0 .+^ x) >-> 1
+delaying x = (0 .+^ x) >~> 1
 
 -- |
 -- A transformation that moves a value forward in time.
 --
 stretching :: Duration -> Span
-stretching x = 0 >-> x
+stretching x = 0 >~> x
 
 -- |
 -- A transformation that moves a value backward in time.
@@ -1325,7 +1325,7 @@ class HasPosition a where
 
 -- |  XXX make into lens for any positionable thing
 era :: HasPosition a => a -> Span
-era x = onset x <-> offset x
+era x = onset x <~> offset x
 
 -- |
 -- Return the onset of the given value.
@@ -1418,7 +1418,20 @@ a `before` b =  (a `lead` b) <> b
 pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
 pinned f x = startAt (onset x) (f x)
 
+-- |
+-- Compose a list of sequential objects, with onset and offset tangent to one another.
+--
+-- For non-positioned types, this is the often same as 'mconcat'
+-- For positioned types, this is the same as 'afterAnother'
+--
 scat = Prelude.foldr (//) mempty
+
+-- |
+-- Compose a list of parallel objects, so that their local origins align.
+--
+-- This not possible for non-positioned types, as they have no notion of an origin.
+-- For positioned types this is the same as 'mconcat'.
+--
 pcat = Prelude.foldr (><) mempty
 
 x `sustain` y   = x <> duration x `stretchTo` y
