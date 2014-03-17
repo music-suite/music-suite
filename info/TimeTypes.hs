@@ -52,7 +52,9 @@ module TimeTypes (
         HasPosition(..),
 
         -- ** Inspecting position
+        place,
         era,
+
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
@@ -64,7 +66,6 @@ module TimeTypes (
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
         placeAt,
-        place,
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
@@ -128,7 +129,7 @@ module TimeTypes (
         Bounds,
         bounds,
         trim,
-        trim',
+        trimG,
         bounding,
 
         -- * Music.Time.Segment
@@ -172,6 +173,16 @@ module TimeTypes (
         SetPitch,
         HasPitch(..),
         HasPitches(..),
+        pitch',
+        pitches',
+
+        -- * Music.Score.Dynamic
+        Dynamic,
+        SetDynamic,
+        HasDynamic(..),
+        HasDynamics(..),
+        dynamic',
+        dynamics',
 
   ) where
 
@@ -182,7 +193,8 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<~>), (|>), place, atTime)
+                                               under, value, view, (<~>), (|>), place, atTime, 
+                                               Dynamic)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -387,6 +399,12 @@ instance HasPosition Time where
 --
 -- To create and destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
+-- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
+--
+newtype Span = Span { getDelta :: (Time, Duration) }
+  deriving (Eq, Ord, Typeable)
+
+--
 -- > hs> (2 <~> 3)^.range
 -- > (2, 3)
 -- >
@@ -398,11 +416,6 @@ instance HasPosition Time where
 -- >
 -- > hs> (10 >~> 5)^.delta
 -- > (10, 5)
---
--- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
---
-newtype Span = Span { getDelta :: (Time, Duration) }
-  deriving (Eq, Ord, Typeable)
 
 instance Show Span where
   show (view range -> (t,u)) = show t ++ " <~> " ++ show u
@@ -461,10 +474,6 @@ t >~> d = Span (t, d)
 -- |
 -- View a span as pair of onset and offset.
 --
--- - To convert a span to a pair, use @s^.'range'@.
---
--- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
---
 -- With the @ViewPatterns@ extension you can pattern match over spans using
 --
 -- > foo (view range -> (u,v)) = ...
@@ -472,12 +481,13 @@ t >~> d = Span (t, d)
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<~>) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
+-- - To convert a span to a pair, use @s^.'range'@.
+--
+-- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
+--
+
 -- |
 -- View a span as a pair of onset and duration.
---
--- - To convert a span to a pair, use @s^.'delta'@.
---
--- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
 --
 -- With the @ViewPatterns@ extension you can pattern match over spans using
 --
@@ -485,6 +495,11 @@ range = iso getRange $ uncurry (<~>) where getRange x = let (t, d) = getDelta x 
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>~>)
+
+-- - To convert a span to a pair, use @s^.'delta'@.
+--
+-- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
+--
 
 -- | 
 -- Apply a function under transformation.
@@ -532,8 +547,16 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
     = Transformation (t1 <> t2) (t2' <> t1') (v1 ^+^ lapp t1 v2)
 -}
 
+-- |
+-- Pitch type.
+--
 type family Pitch             (s :: *) :: * -- Pitch s   = a
+
+-- |
+-- Pitch type.
+--
 type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
+
 
 -- class Has s t a b |
 --   s -> a,
@@ -548,8 +571,15 @@ type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 -- Class of types that provide a single pitch.
 --
 class (SetPitch (Pitch t) s ~ t) => HasPitch s t where
+
+  -- |
+  -- Pitch type.
+  --
   pitch :: Lens s t (Pitch s) (Pitch t)
 
+-- |
+-- Pitch type.
+--
 pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
 pitch' = pitch
 
@@ -557,8 +587,15 @@ pitch' = pitch
 -- Class of types that provide a pitch traversal.
 --
 class (SetPitch (Pitch t) s ~ t) => HasPitches s t where
+
+  -- |
+  -- Pitch type.
+  --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
+-- |
+-- Pitch type.
+--
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 
@@ -574,6 +611,13 @@ type instance SetPitch a Int = a
 instance HasPitch Int Int where
   pitch = ($)
 instance HasPitches Int Int where
+  pitches = ($)
+
+type instance Pitch Integer = Integer
+type instance SetPitch a Integer = a
+instance HasPitch Integer Integer where
+  pitch = ($)
+instance HasPitches Integer Integer where
   pitches = ($)
 
 type instance Pitch Float = Float
@@ -616,6 +660,147 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
       pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) =>
         Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- |
+-- Dynamics type.
+--
+type family Dynamic             (s :: *) :: * -- Dynamic s   = a
+
+-- |
+-- Dynamic type.
+--
+type family SetDynamic (b :: *) (s :: *) :: * -- Dynamic b s = t
+
+
+-- class Has s t a b |
+--   s -> a,
+--   -- t -> b,
+--   s b -> t,
+--   -- t a -> s
+
+-- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
+-- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+-- |
+-- Class of types that provide a single dynamic.
+--
+class (SetDynamic (Dynamic t) s ~ t) => HasDynamic s t where
+
+  -- |
+  -- Dynamic type.
+  --
+  dynamic :: Lens s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Dynamic type.
+--
+dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
+dynamic' = dynamic
+
+-- |
+-- Class of types that provide a dynamic traversal.
+--
+class (SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+
+  -- |
+  -- Dynamic type.
+  --
+  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Dynamic type.
+--
+dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
+dynamics' = dynamics
+
+type instance Dynamic Bool = Bool
+type instance SetDynamic a Bool = a
+instance HasDynamic Bool Bool where
+  dynamic = ($)
+instance HasDynamics Bool Bool where
+  dynamics = ($)
+
+type instance Dynamic Int = Int
+type instance SetDynamic a Int = a
+instance HasDynamic Int Int where
+  dynamic = ($)
+instance HasDynamics Int Int where
+  dynamics = ($)
+
+type instance Dynamic Integer = Integer
+type instance SetDynamic a Integer = a
+instance HasDynamic Integer Integer where
+  dynamic = ($)
+instance HasDynamics Integer Integer where
+  dynamics = ($)
+
+type instance Dynamic Float = Float
+type instance SetDynamic a Float = a
+instance HasDynamic Float Float where
+  dynamic = ($)
+instance HasDynamics Float Float where
+  dynamics = ($)
+
+type instance Dynamic (c,a) = Dynamic a
+type instance SetDynamic b (c,a) = (c,SetDynamic b a)
+instance HasDynamic a b => HasDynamic (c, a) (c, b) where
+  dynamic = _2 . dynamic
+instance HasDynamics a b => HasDynamics (c, a) (c, b) where
+  dynamics = traverse . dynamics
+
+type instance Dynamic [a] = Dynamic a
+type instance SetDynamic b [a] = [SetDynamic b a]
+instance HasDynamics a b => HasDynamics [a] [b] where
+  dynamics = traverse . dynamics
+
+type instance Dynamic (Note a) = Dynamic a
+type instance SetDynamic g (Note a) = Note (SetDynamic g a)
+type instance Dynamic (Note a) = Dynamic a
+instance (HasDynamic a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamic (Note a) (Note b) where
+  dynamic = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (dynamic $ underM f s) a
+instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamics (Note a) (Note b) where
+  dynamics = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
+
+type instance Dynamic (Score a) = Dynamic a
+type instance SetDynamic g (Score a) = Score (SetDynamic g a)
+type instance Dynamic (Score a) = Dynamic a
+instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamics (Score a) (Score b) where
+  dynamics = _Wrapped . traverse . pl
+    where
+      pl :: (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) =>
+        Traversal (Span, a) (Span, b) (Dynamic a) (Dynamic b)
+      pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -- TODO debug/move
@@ -820,10 +1005,10 @@ bounds t x u = Bounds (t <~> u, x)
 -- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `isIn` s then x else mempty) x)
 
 trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
-trim = trim'
+trim = trimG
 
-trim' :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
-trim' (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `isIn` s then x else mempty) <*> x)
+trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
+trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `isIn` s then x else mempty) <*> x)
 
 bounding :: Iso' (Bounds (Behavior a)) (Note (Segment a))
 bounding = undefined
@@ -1532,10 +1717,13 @@ times n   = scat . replicate n
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
-  takeM, dropM  :: Duration -> a -> a
+
+
+
+takeM, dropM :: Splittable a => Duration -> a -> a
   
-  takeM t = fst . split t
-  dropM t = snd . split t
+takeM t = fst . split t
+dropM t = snd . split t
 
 
 
