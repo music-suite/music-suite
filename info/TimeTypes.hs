@@ -592,7 +592,7 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
 
 through :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
 through lens1 lens2 =
-    -- lens getBP (flip setBP)
+    lens getBP (flip setBP)
     -- (\sa sbt afb s -> sbt s <$> afb (sa s)) getBP (flip setBP)
     -- (\sbt afb s -> sbt s <$> afb (getBP s)) (flip setBP)
     -- (\afb s -> (flip setBP) s <$> afb (getBP s))
@@ -620,16 +620,16 @@ through lens1 lens2 =
 
     -- \f s -> liftA2 ( \a b -> runIdentity (lens2 (const (Identity b)) a) ) s <$> (f ((getConst . lens1 Const) <$> s))
     -- \f s -> liftA2 ( \a -> runIdentity . flip lens2 a . const . Identity ) s <$> (f ((getConst . lens1 Const) <$> s))
-    \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
+    -- \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
     where
-        -- getBP a = (^. lens1) <$> a
-        -- setBP x a = liftA2 (lens2 .~) x a
+        getBP a = (^. lens1) <$> a
+        setBP x a = liftA2 (lens2 .~) x a
 
 deriving instance Show a => Show (Note a)
+
 instance Transformable Int where
     transform _ = id
-instance Transformable (Behavior a) where
-    transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f
+
 instance Transformable (Segment a) where
 
 
@@ -641,25 +641,9 @@ instance Transformable (Segment a) where
 
 
 
-
-
-
-
-
-
--- newtype Time -- Semigroup, Monoid (sum)
--- newtype Span -- Semigroup, Monoid, AdditiveGroup (composition)
---
--- spans :: Iso (Time^2) (Time, Dur)
--- spans = iso (\(t,d) -> (t,t.+^d)) (\(t,u) -> (t,u.-.t))
---
---
---
---
-
 -- |
--- A 'Note' is a value with a known 'position' and 'duration'.
--- Notes are isomorphic pairs of spans and values, as whitnessed by 'note'.
+-- A 'Note' is a value with a known 'position' and 'duration'. Notes are isomorphic pairs
+-- of spans and values, as whitnessed by 'note'.
 --
 -- Another way is to view a note is that it is a suspended application of a time
 -- transformation, with 'runNote' extracting the transformed value:
@@ -668,33 +652,38 @@ instance Transformable (Segment a) where
 --
 -- > runNote . transform s = transform s . runNote
 --
-newtype Note a      = Note      { getNote :: (Span, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
+newtype Note a      = Note      { getNote :: (Span, a)     } 
+    deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
 
--- | Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
---   at the default span 'mempty' and 'join' composing time transformations.
+-- | 
+-- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
+-- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
 
 -- |
 -- A 'Delayed' value has a known 'position', but no duration.
 --
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a)     } 
+    deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
 --
-newtype Stretched a = Stretched { getStretched :: (Duration, a) } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+newtype Stretched a = Stretched { getStretched :: (Duration, a) } 
+    deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 instance Reversible (Note a) where
     rev = stretch (-1)
+
 instance Splittable a => Splittable (Note a) where
 
 instance Reversible (Delayed a) where
 
 instance Reversible (Stretched a) where
     rev = stretch (-1)
+
 instance Splittable a => Splittable (Stretched a) where
 
--- XXX Compare with Located in diagrams
 
 instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
 instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
@@ -791,14 +780,17 @@ instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
 --
 newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
+
 instance Semigroup a => Semigroup (Segment a) where
     (<>) = undefined
+
 instance Monoid a => Monoid (Segment a) where
 
 type instance Key Segment = Duration
 
 instance Lookup Segment where
     t `lookup` Segment b = b <$> t ^? normalize
+
 instance Indexable Segment where
     Segment b `index` t = b $ t ^?! normalize
 
@@ -818,16 +810,25 @@ instance Indexable Segment where
 --
 newtype Behavior a  = Behavior (Time -> a)     deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
+
 deriving instance Semigroup a => Semigroup (Behavior a)
+
 deriving instance Monoid a => Monoid (Behavior a)
+
 deriving instance Num a => Num (Behavior a)
+
 deriving instance Fractional a => Fractional (Behavior a)
+
 deriving instance Floating a => Floating (Behavior a)
+
+instance Transformable (Behavior a) where
+    transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f
 
 type instance Key Behavior = Time
 
 instance Lookup Behavior where
     lookup = lookupDefault
+
 instance Indexable Behavior where
     Behavior b `index` t = b t
 
@@ -872,10 +873,10 @@ c2 :: Behavior Float -> Behavior Float
 c2  = liftA2 (*) c
 
 nc :: Note (Behavior (Int, Float))
-nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
 
 r :: Behavior Float
-r  = fmap snd $ runNote (nc & pitch %~ c2)
+r  = fmap snd $ runNote (nc & pitch %~ c2)
 
 drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
 drawNote n = let
@@ -891,27 +892,41 @@ instance Real a => Real (Behavior a) where
 
 
 
-newtype Score a     = Score      { getScore :: [(Span, a)]     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
-instance Wrapped (Score a) where { type Unwrapped (Score a) = [(Span, a)] ; _Wrapped' = iso getScore Score }
+newtype Score a     = Score      { getScore :: [(Span, a)]     }
+    deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+
+instance Wrapped (Score a) where
+    type Unwrapped (Score a) = [(Span, a)]
+    _Wrapped' = iso getScore Score
+
 instance Rewrapped (Score a) (Score b)
+
 instance Applicative Score where
     pure  = return
     (<*>) = ap
+
 instance Monad Score where
     return = (^. _Unwrapped') . return . return
     xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+
 instance Alternative Score where
     empty = mempty
     (<|>) = mappend
+
 instance MonadPlus Score where
     mzero = mempty
     mplus = mappend
+
 instance Transformable (Score a) where
     transform t (Score xs) = Score (fmap (transform t) xs)
+
 instance Reversible a => Reversible (Score a) where
     rev (Score xs) = Score (fmap rev xs)
+
 instance HasPosition (Score a) where
+
 instance HasDuration (Score a) where
+
 instance Splittable a => Splittable (Score a) where
 
 
@@ -954,17 +969,27 @@ mapFilterEvents f = undefined
 --
 newtype Voice a     = Voice      { getVoice :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}
     Functor, Foldable, Traversable, Semigroup, Monoid)
+
 instance Applicative Voice where
     pure  = return
     (<*>) = ap
+
 instance Monad Voice where
     return = (^. _Unwrapped') . return . return
     -- TODO
+
 instance Transformable (Voice a) where
+
 instance Reversible a => Reversible (Voice a) where
+
 instance HasDuration (Voice a) where
+
 instance Splittable a => Splittable (Voice a) where
-instance Wrapped (Voice a) where { type Unwrapped (Voice a) = (Seq (Stretched a)) ; _Wrapped' = iso getVoice Voice }
+
+instance Wrapped (Voice a) where
+    type Unwrapped (Voice a) = (Seq (Stretched a))
+    _Wrapped' = iso getVoice Voice
+
 instance Rewrapped (Voice a) (Voice b)
 
 -- |
@@ -1015,28 +1040,40 @@ voice = undefined
 -- The 'Divide' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
 --
 newtype Divide a = Divide (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
+
 instance Applicative Divide where
     pure  = return
     (<*>) = ap
+
 instance Monad Divide where
     -- TODO
+
 instance Transformable (Divide a) where
+
 instance Reversible a => Reversible (Divide a) where
+
 instance HasDuration (Divide a) where
+
 instance Splittable a => Splittable (Divide a) where
 
 voiceList :: Iso' (Divide a) (NonEmpty (Voices a))
 voiceList = undefined
 
 newtype Voices a     = Voices      { getVoices :: Seq (Stretched a)     } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+
 instance Applicative Voices where
     pure  = return
     (<*>) = ap
+
 instance Monad Voices where
     -- TODO
+
 instance Transformable (Voices a) where
+
 instance Reversible a => Reversible (Voices a) where
+
 instance HasDuration (Voices a) where
+
 instance Splittable a => Splittable (Voices a) where
 
 -- | XXX
@@ -1219,7 +1256,7 @@ stretchTo d x = (d ^/ duration x) `stretch` x
 class HasPosition a where
     position :: a -> {-Scalar-} Duration -> Time
 
--- |  XXX make into lens for any positionable thing
+-- |  XXX make into lens for any positionable thing
 era :: HasPosition a => a -> Span
 era x = onset x <-> offset x
 
@@ -1316,22 +1353,31 @@ class HasDuration a => Splittable a where
 
 class Reversible a where
     rev :: a -> a
+
 instance Reversible () where
     rev = id
+
 instance Reversible Int where
     rev = id
+
 instance Reversible Double where
     rev = id
+
 instance Reversible Integer where
     rev = id
+
 instance Reversible a => Reversible [a] where
     rev = reverse . fmap rev
+
 instance Reversible Duration where
     rev = stretch (-1)
+
 instance Reversible Time where
     rev = stretch (-1)
+
 instance Reversible Span where
     rev = stretch (-1)
+
 instance Reversible a => Reversible (a, b) where
     rev (s,a) = (rev s, a)
 
@@ -1339,12 +1385,15 @@ instance Reversible a => Reversible (a, b) where
 class Sequential a where
     (//) :: a -> a -> a
     (\\) :: a -> a -> a
+
 instance Sequential (Voice a) where
     (//) = (<>)
     (\\) = flip (<>)
+
 instance Sequential (Voices a) where
     (//) = (<>)
     (\\) = flip (<>)
+
 instance Sequential (Score a) where
     (//) = after
     (\\) = before
@@ -1353,6 +1402,7 @@ class Parallel a where
     (><) :: a -> a -> a
 -- instance Parallel (Divide a) where
     -- (><) = (<>)
+
 instance Parallel (Score a) where
     (><) = (<>)
 
@@ -1540,7 +1590,7 @@ drawPart' = mconcat . fmap drawNote'
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
 drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
     where
-    noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
+    noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 50
@@ -1557,21 +1607,21 @@ grid = grid'   20
 gridX = gridX' 20
 gridY = gridY' 20
 
-grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds*(1/20),-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
+grid' ds = {-showOr $ -}moveOriginTo (p2 (realToFrac ds*(1/20),-(realToFrac ds/2))) $ (gridX <> gridY & lc lightblue)
 
 gridY' :: (Renderable (Path R2) b) => Int -> Diagram b R2
-gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
+gridY' ds = alignTL $ hcat' (def & sep .~ 1) $ replicate (ds+1) $ vrule (realToFrac ds)
 
 gridX' :: (Renderable (Path R2) b) => Int -> Diagram b R2
-gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
+gridX' ds = alignTL $ vcat' (def & sep .~ 1) $ replicate (ds+1) $ hrule (realToFrac ds)
 
-writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
+writeG :: (a ~ SVG.SVG) => FilePath -> Diagram a R2 -> IO ()
 writeG path dia = do
     let svg = renderDia SVG.SVG (SVG.SVGOptions (Height 300) Nothing) dia
     let bs  = renderSvg svg
     ByteString.writeFile path bs
 
-openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
+openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
 openG dia = do
     writeG "test.svg" $ dia --
     -- FIXME find best reader
