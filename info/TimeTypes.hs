@@ -19,6 +19,8 @@
 
 module TimeTypes (
 
+        tabulated,
+        
         -- * Music.Time.Transform
         -- ** The Transformable class
         Transformable(..),
@@ -127,12 +129,16 @@ module TimeTypes (
         bounds,
         trim,
         trim',
+        bounding,
 
         -- * Music.Time.Segment
         Segment,
 
         -- * Music.Time.Behavior
         Behavior,
+        behavior,
+        time,
+        atTime,
 
         -- * Music.Time.Voice
         Voice,
@@ -176,7 +182,7 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<~>), (|>), place)
+                                               under, value, view, (<~>), (|>), place, atTime)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -186,7 +192,7 @@ import           Control.Arrow                (first, second, (***))
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, transform,
-                                               under, (|>), reversed)
+                                               under, (|>), reversed, index)
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -196,7 +202,7 @@ import           Data.Functor.Rep
 import           Data.AffineSpace.Point
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
-import           Data.Key
+-- import           Data.Key
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
@@ -283,6 +289,11 @@ normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalize
 unnormalize :: (Num a, Ord a) => Getter (Normalized a) a
 unnormalize = re normalize
 
+-- | 
+-- Internal time representation. Can be anything with Fractional and RealFrac instances.
+--
+type TimeBase = Rational
+
 -- |
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
@@ -292,18 +303,18 @@ unnormalize = re normalize
 --
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
-newtype Duration = Duration { getDuration :: Rational }
+newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
 instance Show Duration where
-  show = showRatio . getDuration
+  show = showRatio . realToFrac
 
 instance InnerSpace Duration
 
 instance AdditiveGroup Duration where
-  zeroV = mempty
-  (^+^) = mappend
-  negateV = recip
+  zeroV = 0
+  (^+^) = (+)
+  negateV = negate
 
 instance VectorSpace Duration where
   type Scalar Duration = Duration
@@ -332,11 +343,11 @@ instance HasDuration Duration where
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
 --
-newtype Time = Time { getTime :: Rational }
+newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
 instance Show Time where
-  show = showRatio . getTime
+  show = showRatio . realToFrac
 
 deriving instance AdditiveGroup Time
 
@@ -369,8 +380,12 @@ instance HasPosition Time where
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
--- You can create a span using the '<~>' and '>~>' constructors. To create and
--- destruct a span (in any of its incarnations), use the provided isomorphisms:
+-- You can create a span using the '<~>' and '>~>' constructors. Note that:
+--
+-- > t <~> u = t >~> (u .-. t)
+-- > t >~> d = t <~> t .+^ d
+--
+-- To create and destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
 -- > hs> (2 <~> 3)^.range
 -- > (2, 3)
@@ -431,33 +446,11 @@ instance AdditiveGroup Span where
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
--- > t <~> u = t >~> (u .-. t)
---
--- Lemma
---
--- > onset    (t <~> u) = t
--- > offset   (t <~> u) = u
---
--- Lemma
---
--- > duration (t <~> u) = u .-. t
---
 (<~>) :: Time -> Time -> Span
 t <~> u = t >~> (u .-. t)
 
 -- |
 -- @t >~> d@ represents the span between @t@ and @t .+^ d@.
---
--- > t >~> d = t <~> t .+^ d
---
--- Lemma
---
--- > onset    (t >~> d) = t
--- > offset   (t >~> d) = t .+^ d
---
--- Lemma
---
--- > duration (t >~> d) = d
 --
 (>~>) :: Time -> Duration -> Span
 t >~> d = Span (t, d)
@@ -832,6 +825,9 @@ trim = trim'
 trim' :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
 trim' (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `isIn` s then x else mempty) <*> x)
 
+bounding :: Iso' (Bounds (Behavior a)) (Note (Segment a))
+bounding = undefined
+
 
 instance Reversible (Bounds a) where
   rev = stretch (-1)
@@ -857,13 +853,13 @@ instance Semigroup a => Semigroup (Segment a) where
 
 instance Monoid a => Monoid (Segment a) where
 
-type instance Key Segment = Duration
-
-instance Lookup Segment where
-  t `lookup` Segment b = b <$> t ^? normalize
-
-instance Indexable Segment where
-  Segment b `index` t = b $ t ^?! normalize
+-- type instance Key Segment = Duration
+-- 
+-- instance Lookup Segment where
+--   t `lookup` Segment b = b <$> t ^? normalize
+-- 
+-- instance Indexable Segment where
+--   Segment b `index` t = b $ t ^?! normalize
 
 -- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
 --
@@ -881,10 +877,17 @@ instance Indexable Segment where
 -- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it inside
 -- 'Bounds'.
 --
-newtype Behavior a  = Behavior (Time -> a)   deriving (Functor, Applicative, Monad, Comonad)
+-- Behavior is 'Representable':
+--
+-- > ask = realToFrac <$> time
+-- > localRep (- t) = delay t
+-- > localRep (/ t) = stretch t
+--
+newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
 
 deriving instance Distributive Behavior
+deriving instance Distributive Segment
 
 deriving instance Semigroup a => Semigroup (Behavior a)
 
@@ -896,30 +899,58 @@ deriving instance Fractional a => Fractional (Behavior a)
 
 deriving instance Floating a => Floating (Behavior a)
 
+-- TODO should we conjugate the function?
 instance Transformable (Behavior a) where
-  transform (view delta -> (t,d)) (Behavior f) = Behavior $ (. (.-^ (t .-. 0))) . (. (^/ d)) $ f
+  -- transform (view delta -> (t,0)) _            = error "Scale by zero"
+  transform (view delta -> (t,d)) (Behavior f) = Behavior $ \t2 -> f $ (t2^/d .-^ t1)
+    where
+      t1 = t .-. 0
 
-type instance Key Behavior = Time
+-- type instance Key Behavior = Time
 
 instance Representable Behavior where
   type Rep Behavior = Time
   tabulate = Behavior
   index (Behavior x) = x
 
-instance Keyed Behavior where
-  mapWithKey = (<*>) . behavior
+instance Representable Segment where
+  type Rep Segment = Duration
+  -- tabulate = Behavior
+  -- index (Behavior x) = x
+  tabulate = error "No Representable Segment"
+  index    = error "No Representable Segment"
 
-instance Lookup Behavior where
-  lookup = lookupDefault
+tabulated :: Representable f => Iso' (Rep f -> a) (f a)
+tabulated = iso tabulate index
 
-instance Indexable Behavior where
-  Behavior b `index` t = b t
+-- instance Keyed Behavior where
+--   mapWithKey = (<*>) . behavior
+-- 
+-- instance Lookup Behavior where
+--   lookup = lookupDefault
+-- 
+-- instance Indexable Behavior where
+--   Behavior b `index` t = b t
 
-behavior :: (Time -> a) -> Behavior a
-behavior = Behavior
+-- |
+-- View a behavior as a time function and vice versa.
+--
+-- This is actually a specification of 'tabulated'.
+--
+behavior :: Iso' (Time -> a) (Behavior a)
+behavior = tabulated
 
 time :: Fractional a => Behavior a
-time = Behavior realToFrac
+time = realToFrac^.behavior
+
+sine = sin (time*tau)
+cosine = cos (time*tau)
+
+-- | Specification of 'index'.
+atTime :: Behavior a -> Time -> a
+atTime = index
+
+
 
 a :: Behavior Float
 a = time
@@ -969,9 +1000,13 @@ drawNote n = let
   in drawNote' (t,d,a)
 
 instance Eq a => Eq (Behavior a) where
+  (==) = error "No fun"
 instance Ord a => Ord (Behavior a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
 instance Real a => Real (Behavior a) where
-  toRational = toRational . (! 0)
+  toRational = toRational . (`index` 0)
 
 
 
@@ -1762,7 +1797,7 @@ drawSegment = drawBehavior' 50
 
 drawBehavior' count b = cubicSpline False points & lw 0.05
   where
-    points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b ! realToFrac x)) [0,1/samplesPerCell..]
+    points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b `index` realToFrac x)) [0,1/samplesPerCell..]
     samplesPerCell = 40
 
 grid = grid'   20
