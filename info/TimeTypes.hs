@@ -1656,25 +1656,25 @@ place = lens era (flip placeAt)
     
 
 -- |
--- a `lead`   b  moves a so that (offset a' == onset b)
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 a `lead` b   = alignAt 1 (b `position` 0) a
 
 -- |
--- a `follow` b  moves b so that (offset a  == onset b')
+-- @a \`follow\` b@  moves b so that @offset a  == onset b'@
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = alignAt 0 (a `position` 1) b
 
 -- |
--- a `lead`   b  moves a so that (offset a' == onset b)
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 
 -- |
--- a `lead`   b  moves a so that (offset a' == onset b)
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
