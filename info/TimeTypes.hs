@@ -1,21 +1,21 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 module TimeTypes (
 
@@ -146,46 +146,51 @@ module TimeTypes (
 
   ) where
 
-import Diagrams.Prelude hiding (Transformable, value, trim, view, transform, Segment, duration, position, era, under, stretchTo, offset, after, Time, Duration, (|>), (<->), stretch)
-import qualified Diagrams.Backend.SVG as SVG
-import Data.Default
-import System.Process (system)
-import Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
-import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.ByteString.Lazy         as ByteString
+import           Data.Default
+import qualified Diagrams.Backend.SVG         as SVG
+import           Diagrams.Prelude             hiding (Duration, Segment, Time,
+                                               Transformable, after, duration,
+                                               era, offset, position, stretch,
+                                               stretchTo, transform, trim,
+                                               under, value, view, (<->), (|>))
+import           System.Process               (system)
+import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (***))
+import           Control.Arrow                (first, second, (***))
 import           Control.Comonad
-import           Data.NumInstances
 import           Control.Comonad.Env
-import           Control.Lens           hiding (Indexable, transform, under, (|>))
+import           Control.Lens                 hiding (Indexable, transform,
+                                               under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
-import           Data.Key
-import           Data.List.NonEmpty (NonEmpty)
-import           Data.Maybe
 import           Data.AffineSpace.Point
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable as Foldable
+import           Data.Foldable                (Foldable)
+import qualified Data.Foldable                as Foldable
+import           Data.Key
+import           Data.List.NonEmpty           (NonEmpty)
+import           Data.Maybe
+import           Data.NumInstances
 -- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.Sequence                (Seq)
+import qualified Data.Sequence                as Seq
+import           Data.Traversable             (Traversable)
+import qualified Data.Traversable             as T
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Sequence(Seq)
-import qualified Data.Sequence as Seq
 
 import           Data.Int
-import           Test.SmallCheck.Series (Serial (..), cons0, newtypeCons,
-                                         series, (\/))
+import           Test.SmallCheck.Series       (Serial (..), cons0, newtypeCons,
+                                               series, (\/))
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
 
-import qualified Data.Ratio             as Util_Ratio
+import qualified Data.Ratio                   as Util_Ratio
 
 
 -- Misc instances
@@ -264,7 +269,7 @@ unnormalize = re normalize
 --
 newtype Duration = Duration { getDuration :: Rational }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
-  
+
 instance Show Duration where
   show = showRatio . getDuration
 
@@ -274,7 +279,7 @@ instance AdditiveGroup Duration where
   zeroV = mempty
   (^+^) = mappend
   negateV = recip
-  
+
 instance VectorSpace Duration where
   type Scalar Duration = Duration
   (*^) = (*)
@@ -365,14 +370,14 @@ instance Transformable Span where
 instance Splittable Span where
   -- XXX
 
--- | 
+-- |
 -- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
 -- be the identity transformation.
 --
 instance Semigroup Span where
   (<>) = (^+^)
 
--- | 
+-- |
 -- '<>' or '^+^' composes transformations, that is the scaling component is composed
 -- using the '<>' instance for 'Duration', and the translation component is composed
 -- using the '<>' instance for 'Time'.
@@ -382,18 +387,18 @@ instance Monoid Span where
   mappend = (^+^)
 
 -- |
--- 'negateV' negates time and duration using their respective 'negateV' instances. 
+-- 'negateV' negates time and duration using their respective 'negateV' instances.
 --
 instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
--- | 
+-- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
 -- > t <-> u = t >-> (u .-. t)
--- 
+--
 -- Lemma
 --
 -- > onset    (t <-> u) = t
@@ -402,15 +407,15 @@ instance AdditiveGroup Span where
 -- Lemma
 --
 -- > duration (t <-> u) = u .-. t
--- 
+--
 (<->) :: Time -> Time -> Span
 t <-> u = t >-> (u .-. t)
 
--- | 
+-- |
 -- @t >-> d@ represents the span between @t@ and @t .+^ d@.
--- 
+--
 -- > t >-> d = t <-> t .+^ d
--- 
+--
 -- Lemma
 --
 -- > onset    (t >-> d) = t
@@ -419,7 +424,7 @@ t <-> u = t >-> (u .-. t)
 -- Lemma
 --
 -- > duration (t >-> d) = d
--- 
+--
 (>->) :: Time -> Duration -> Span
 t >-> d = Span (t, d)
 
@@ -648,10 +653,10 @@ instance Transformable (Segment a) where
 --
 -- > runNote . transform s = transform s . runNote
 --
-newtype Note a    = Note    { getNote :: (Span, a)   } 
+newtype Note a    = Note    { getNote :: (Span, a)   }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
 
--- | 
+-- |
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
 -- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
@@ -659,13 +664,13 @@ deriving instance Monad Note
 -- |
 -- A 'Delayed' value has a known 'position', but no duration.
 --
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   } 
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
 --
-newtype Stretched a = Stretched { getStretched :: (Duration, a) } 
+newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 instance Reversible (Note a) where
