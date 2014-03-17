@@ -34,7 +34,7 @@ module TimeTypes (
         -- * Music.Time.Duration
         HasDuration(..),
         stretchTo,      -- :: (Transformable a, HasDuration a) => Duration -> a -> a
-        stretchNorm,
+        -- stretchNorm,
 
         -- * Music.Time.Position
         HasPosition(..),
@@ -291,7 +291,7 @@ instance HasDuration Duration where
 -- |
 -- Time points, representing duration since some known reference time, typically the start
 -- of the music. Note that time can be negative, representing events occuring before the
--- start time.
+-- reference time.
 --
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two
