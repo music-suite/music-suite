@@ -107,6 +107,10 @@ module TimeTypes (
         delta,
         -- *** Points in spans
         inSpan,
+        -- *** Important values (XXX)
+        start,
+        stop,
+        unit,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -212,11 +216,12 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
                                                under, value, view, (<~>), (|>), place, atTime, 
-                                               Dynamic)
+                                               Dynamic, start)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
 
+import qualified Control.Category
 import           Control.Applicative
 import           Control.Arrow                (first, second, (***))
 import           Control.Comonad
@@ -535,8 +540,19 @@ f `under` s = transform (negateV s) . f . transform s
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform (negateV s)) . f . transform s
 
+
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
+
+-- Use infix
+inSpan :: Time -> Span -> Bool
+inSpan x (view range -> (t, u)) = t <= x && x <= u
+
+start, stop :: Time
+unit :: Duration
+start = 0
+stop  = 1
+unit  = 1
 
 
 {-
@@ -1369,6 +1385,10 @@ instance Representable Behavior where
   tabulate = Behavior
   index (Behavior x) = x
 
+-- switch :: Time -> Reactive a -> Reactive a -> Reactive a
+-- trim :: Monoid a => Span -> Reactive a -> Reactive a
+
+
 instance Representable Segment where
   type Rep Segment = Duration
   -- tabulate = Behavior
@@ -1376,8 +1396,11 @@ instance Representable Segment where
   tabulate = error "No Representable Segment"
   index    = error "No Representable Segment"
 
+
 tabulated :: Representable f => Iso' (Rep f -> a) (f a)
 tabulated = iso tabulate index
+
+
 
 -- instance Keyed Behavior where
 --   mapWithKey = (<*>) . behavior
@@ -1419,10 +1442,6 @@ a = time'
 
 
 -- TODO these are examples...
-
--- Use infix
-inSpan :: Time -> Span -> Bool
-inSpan x (view range -> (t, u)) = t <= x && x <= u
 
 -- TODO compose segments etc
 adsr :: Behavior Duration
@@ -2063,6 +2082,9 @@ instance Reversible Span where
 instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
+-- |
+-- View the reverse of a value.
+--
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev
 
