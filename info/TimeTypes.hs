@@ -86,8 +86,8 @@ module TimeTypes (
         before,
         sustain,
         -- ** Composition operators
-        Sequential(..),
-        Parallel(..),
+        -- Sequential(..),
+        -- Parallel(..),
         scat,
         pcat,
         times,
@@ -1192,7 +1192,7 @@ instance HasDynamic PD PD where
 pd :: PD
 pd = PD (time', time')
 
-drawPD pd = openG $ grid <> (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
+drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
 
 
 
