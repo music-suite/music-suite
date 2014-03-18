@@ -136,7 +136,7 @@ module TimeTypes (
         bounds,
         trim,
         -- trimG,
-        bounding,
+        bounded,
 
         -- * Music.Time.Segment
         Segment,
@@ -1216,8 +1216,8 @@ instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 -- |
 -- View a note as a pair of the original value and the transformation.
 --
-note :: Iso' (Note a) (Span, a)
-note = _Wrapped'
+note :: Iso' (Span, a) (Note a)
+note = _Unwrapped'
 
 -- |
 -- Extract the transformed value.
@@ -1229,7 +1229,7 @@ runNote = uncurry transform . unwr
 -- Extract the transformed value.
 --
 reifyNote :: Note a -> Note (Span, a)
-reifyNote = fmap (view note) . duplicate
+reifyNote = fmap (view $ from note) . duplicate
 
 mapNote f (Note (s,x)) = Note (s, under f s x)
 
@@ -1251,14 +1251,14 @@ noteValue = lens runNote (flip $ mapNote . const)
 --
 -- XXX iso should expose (Duration, a) duration (but the monoid should still be additive)
 --
-delayed :: Iso' (Delayed a) (Time, a)
-delayed = _Wrapped'
+delayed :: Iso' (Time, a) (Delayed a)
+delayed = _Unwrapped'
 
 -- |
 -- View a stretched value as a pair of the original value and a stretch factor.
 --
-stretched :: Iso' (Stretched a) (Duration, a)
-stretched = _Wrapped'
+stretched :: Iso' (Duration, a) (Stretched a)
+stretched = _Unwrapped'
 -- |
 -- Extract the delayed value.
 --
@@ -1297,8 +1297,8 @@ trim = trimG
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
 trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inSpan` s then x else mempty) <*> x)
 
-bounding :: Iso' (Bounds (Behavior a)) (Note (Segment a))
-bounding = undefined
+bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
+bounded = undefined
 
 
 instance Reversible (Bounds a) where
