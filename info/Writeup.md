@@ -1,11 +1,10 @@
 
-
 ## Good ideas (original and stolen)
 
 - Putting the representations ADTs/parsing/printing in separate libraries
 - The overloaded terminology (pitches, intervals, dynamics)
 - The dynamic meta-attributes
-- Including continuos and discrete components
+- Including both continuos and discrete components (but not interactivity)
 - Using the vector-space library
 - Using the lens library
 - Using standard type-classes 
