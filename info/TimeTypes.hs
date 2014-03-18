@@ -105,6 +105,8 @@ module TimeTypes (
         -- *** Deconstructing time spans
         range,
         delta,
+        -- *** Points in spans
+        inSpan,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -1271,13 +1273,13 @@ bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <~> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
--- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `isIn` s then x else mempty) x)
+-- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inSpan` s then x else mempty) x)
 
 trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
 trim = trimG
 
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
-trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `isIn` s then x else mempty) <*> x)
+trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inSpan` s then x else mempty) <*> x)
 
 bounding :: Iso' (Bounds (Behavior a)) (Note (Segment a))
 bounding = undefined
@@ -1419,16 +1421,16 @@ a = time'
 -- TODO these are examples...
 
 -- Use infix
-isIn :: Time -> Span -> Bool
-isIn x (view range -> (t, u)) = t <= x && x <= u
+inSpan :: Time -> Span -> Bool
+inSpan x (view range -> (t, u)) = t <= x && x <= u
 
 -- TODO compose segments etc
 adsr :: Behavior Duration
 adsr = time <&> \t ->
-  if t `isIn` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `isIn` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `isIn` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `isIn` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  if t `inSpan` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `inSpan` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `inSpan` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `inSpan` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
   0
 
 toFloat :: Real a => a -> Float
