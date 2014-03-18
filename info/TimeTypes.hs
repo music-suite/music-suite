@@ -184,6 +184,22 @@ module TimeTypes (
         dynamic',
         dynamics',
 
+        -- * Music.Score.Articulation
+        Dynamic,
+        SetDynamic,
+        HasDynamic(..),
+        HasDynamics(..),
+        articulation',
+        articulations',
+
+        -- * Music.Score.Part
+        Dynamic,
+        SetDynamic,
+        HasDynamic(..),
+        HasDynamics(..),
+        part',
+        parts',
+
   ) where
 
 import qualified Data.ByteString.Lazy         as ByteString
@@ -204,7 +220,7 @@ import           Control.Arrow                (first, second, (***))
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, transform,
-                                               under, (|>), reversed, index)
+                                               under, (|>), reversed, index, parts)
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -785,9 +801,256 @@ type instance Dynamic (Score a) = Dynamic a
 instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamics (Score a) (Score b) where
   dynamics = _Wrapped . traverse . pl
     where
-      pl :: (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) =>
-        Traversal (Span, a) (Span, b) (Dynamic a) (Dynamic b)
       pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
+
+
+
+
+
+
+
+
+
+
+
+-- |
+-- Articulations type.
+--
+type family Articulation             (s :: *) :: * -- Articulation s   = a
+
+-- |
+-- Articulation type.
+--
+type family SetArticulation (b :: *) (s :: *) :: * -- Articulation b s = t
+
+
+-- class Has s t a b |
+--   s -> a,
+--   -- t -> b,
+--   s b -> t,
+--   -- t a -> s
+
+-- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
+-- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+-- |
+-- Class of types that provide a single articulation.
+--
+class (SetArticulation (Articulation t) s ~ t) => HasArticulation s t where
+
+  -- |
+  -- Articulation type.
+  --
+  articulation :: Lens s t (Articulation s) (Articulation t)
+
+-- |
+-- Articulation type.
+--
+articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
+articulation' = articulation
+
+-- |
+-- Class of types that provide a articulation traversal.
+--
+class (SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+
+  -- |
+  -- Articulation type.
+  --
+  articulations :: Traversal s t (Articulation s) (Articulation t)
+
+-- |
+-- Articulation type.
+--
+articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
+articulations' = articulations
+
+type instance Articulation Bool = Bool
+type instance SetArticulation a Bool = a
+instance HasArticulation Bool Bool where
+  articulation = ($)
+instance HasArticulations Bool Bool where
+  articulations = ($)
+
+type instance Articulation Int = Int
+type instance SetArticulation a Int = a
+instance HasArticulation Int Int where
+  articulation = ($)
+instance HasArticulations Int Int where
+  articulations = ($)
+
+type instance Articulation Integer = Integer
+type instance SetArticulation a Integer = a
+instance HasArticulation Integer Integer where
+  articulation = ($)
+instance HasArticulations Integer Integer where
+  articulations = ($)
+
+type instance Articulation Float = Float
+type instance SetArticulation a Float = a
+instance HasArticulation Float Float where
+  articulation = ($)
+instance HasArticulations Float Float where
+  articulations = ($)
+
+type instance Articulation (c,a) = Articulation a
+type instance SetArticulation b (c,a) = (c,SetArticulation b a)
+instance HasArticulation a b => HasArticulation (c, a) (c, b) where
+  articulation = _2 . articulation
+instance HasArticulations a b => HasArticulations (c, a) (c, b) where
+  articulations = traverse . articulations
+
+type instance Articulation [a] = Articulation a
+type instance SetArticulation b [a] = [SetArticulation b a]
+instance HasArticulations a b => HasArticulations [a] [b] where
+  articulations = traverse . articulations
+
+type instance Articulation (Note a) = Articulation a
+type instance SetArticulation g (Note a) = Note (SetArticulation g a)
+type instance Articulation (Note a) = Articulation a
+instance (HasArticulation a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulation (Note a) (Note b) where
+  articulation = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (articulation $ underM f s) a
+instance (HasArticulations a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulations (Note a) (Note b) where
+  articulations = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (articulations $ underM f s) a
+
+type instance Articulation (Score a) = Articulation a
+type instance SetArticulation g (Score a) = Score (SetArticulation g a)
+type instance Articulation (Score a) = Articulation a
+instance (HasArticulations a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulations (Score a) (Score b) where
+  articulations = _Wrapped . traverse . pl
+    where
+      pl f (s,a) = (s,) <$> (articulations $ underM f s) a 
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- |
+-- Parts type.
+--
+type family Part             (s :: *) :: * -- Part s   = a
+
+-- |
+-- Part type.
+--
+type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
+
+
+-- class Has s t a b |
+--   s -> a,
+--   -- t -> b,
+--   s b -> t,
+--   -- t a -> s
+
+-- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
+-- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+-- |
+-- Class of types that provide a single part.
+--
+class (SetPart (Part t) s ~ t) => HasPart s t where
+
+  -- |
+  -- Part type.
+  --
+  part :: Lens s t (Part s) (Part t)
+
+-- |
+-- Part type.
+--
+part' :: (HasPart s t, s ~ t) => Lens' s (Part s)
+part' = part
+
+-- |
+-- Class of types that provide a part traversal.
+--
+class (SetPart (Part t) s ~ t) => HasParts s t where
+
+  -- |
+  -- Part type.
+  --
+  parts :: Traversal s t (Part s) (Part t)
+
+-- |
+-- Part type.
+--
+parts' :: (HasParts s t, s ~ t) => Traversal' s (Part s)
+parts' = parts
+
+type instance Part Bool = Bool
+type instance SetPart a Bool = a
+instance HasPart Bool Bool where
+  part = ($)
+instance HasParts Bool Bool where
+  parts = ($)
+
+type instance Part Int = Int
+type instance SetPart a Int = a
+instance HasPart Int Int where
+  part = ($)
+instance HasParts Int Int where
+  parts = ($)
+
+type instance Part Integer = Integer
+type instance SetPart a Integer = a
+instance HasPart Integer Integer where
+  part = ($)
+instance HasParts Integer Integer where
+  parts = ($)
+
+type instance Part Float = Float
+type instance SetPart a Float = a
+instance HasPart Float Float where
+  part = ($)
+instance HasParts Float Float where
+  parts = ($)
+
+type instance Part (c,a) = Part a
+type instance SetPart b (c,a) = (c,SetPart b a)
+instance HasPart a b => HasPart (c, a) (c, b) where
+  part = _2 . part
+instance HasParts a b => HasParts (c, a) (c, b) where
+  parts = traverse . parts
+
+type instance Part [a] = Part a
+type instance SetPart b [a] = [SetPart b a]
+instance HasParts a b => HasParts [a] [b] where
+  parts = traverse . parts
+
+type instance Part (Note a) = Part a
+type instance SetPart g (Note a) = Note (SetPart g a)
+type instance Part (Note a) = Part a
+instance (HasPart a b, Transformable (Part a), Transformable (Part b)) => HasPart (Note a) (Note b) where
+  part = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (part $ underM f s) a
+instance (HasParts a b, Transformable (Part a), Transformable (Part b)) => HasParts (Note a) (Note b) where
+  parts = _Wrapped . pl
+    where
+      pl f (s,a) = (s,) <$> (parts $ underM f s) a
+
+type instance Part (Score a) = Part a
+type instance SetPart g (Score a) = Score (SetPart g a)
+type instance Part (Score a) = Part a
+instance (HasParts a b, Transformable (Part a), Transformable (Part b)) => HasParts (Score a) (Score b) where
+  parts = _Wrapped . traverse . pl
+    where
+      pl f (s,a) = (s,) <$> (parts $ underM f s) a 
+
+
+
 
 
 
