@@ -737,6 +737,12 @@ class (SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
   --
   dynamics :: Traversal s t (Dynamic s) (Dynamic t)
 
+-- XXX we should give the lens in the class another name
+-- and use the good name for an alias like this to get
+-- better :info prints in GHCI
+dynamics2 :: HasDynamics s t => Traversal s t (Dynamic s) (Dynamic t)
+dynamics2 = dynamics
+
 -- |
 -- Dynamic type.
 --
