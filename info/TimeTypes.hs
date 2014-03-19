@@ -113,7 +113,7 @@ module TimeTypes (
         range,
         delta,
         -- *** Points in spans
-        between,
+        inside,
         -- *** Important values (XXX)
         start,
         stop,
@@ -239,7 +239,7 @@ import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, index, parts,
-                                               reversed, transform, under, (|>))
+                                               reversed, transform, under, (|>), inside)
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -614,13 +614,11 @@ follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = alignAt 0 (a `position` 1) b
 
 -- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 
 -- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
@@ -1005,8 +1003,8 @@ conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 -- Use infix
-between :: Time -> Span -> Bool
-between x (view range -> (t, u)) = t <= x && x <= u
+inside :: Time -> Span -> Bool
+inside x (view range -> (t, u)) = t <= x && x <= u
 
 start, stop :: Time
 start = 0
@@ -1777,13 +1775,13 @@ bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <-> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
--- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `between` s then x else mempty) x)
+-- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inside` s then x else mempty) x)
 
 trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
 trim = trimG
 
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
-trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `between` s then x else mempty) <*> x)
+trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x)
 
 bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
 bounded = undefined
@@ -2303,10 +2301,10 @@ a = time
 -- TODO compose segments etc
 adsr :: Behavior Duration
 adsr = time <&> \t ->
-  if t `between` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `between` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `between` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `between` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  if t `inside` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `inside` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `inside` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `inside` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
   0
 
 toFloat :: Real a => a -> Float
