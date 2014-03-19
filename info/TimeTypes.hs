@@ -31,8 +31,8 @@ module TimeTypes (
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         underM,
         underW,
-        underTime,
-        underDuration,
+        underDelay,
+        underStretch,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -50,20 +50,25 @@ module TimeTypes (
         -- ** The HasDuration class
         HasDuration(..),
         -- ** Stretching to absolute duration
+        duration,
         stretchTo,
+        normalizeDuration,
         -- stretchNorm,
 
         -- * Music.Time.Position
         -- ** The HasPosition class
         HasPosition(..),
-
         -- ** Inspecting position
         era,
-        era',
+        _era,
 
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
+
+        _onset,
+        _offset,
+        offset,
         preOnset,       -- :: HasPosition a => a -> Time
         postOnset,      -- :: HasPosition a => a -> Time
         postOffset,     -- :: HasPosition a => a -> Time
@@ -225,7 +230,7 @@ import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
                                                after, atTime, duration, during,
-                                               era', interval, offset, place,
+                                               _era, interval, offset, place,
                                                position, start, stretch,
                                                stretchTo, transform, trim, era,
                                                under, value, view, (<->), (|>))
@@ -480,13 +485,18 @@ compress = transform . compressing
 -- > duration x = (offset x .-. onset x)
 --
 class HasDuration a where
-  duration :: a -> Duration
+  _duration :: a -> Duration
+
+duration :: (Transformable a, HasDuration a) => Lens' a Duration
+duration = lens _duration (flip stretchTo)
 
 -- |
 -- Stretch a value to have the given duration.
 --
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretchTo d x = (d ^/ duration x) `stretch` x
+stretchTo d x = (d ^/ _duration x) `stretch` x
+
+normalizeDuration = stretchTo 1
 
 -- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
 -- stretchNorm x = stretchTo (normalized $ duration x) x
@@ -505,34 +515,42 @@ stretchTo d x = (d ^/ duration x) `stretch` x
 --
 -- For instantaneous values, a suitable instance is:
 --
--- > position x = const t
+-- > _position x = const t
 --
 -- For values with an onset and offset you can use 'alerp':
 --
--- > position x = alerp onset offset
+-- > _position x = alerp onset offset
 --
 class HasPosition a where
-  position :: a -> {-Scalar-} Duration -> Time
+  _position :: a -> {-Scalar-} Duration -> Time
 
 -- |  XXX make into lens for any positionable thing
-era' :: HasPosition a => a -> Span
-era' x = onset x <-> offset x
+_era :: HasPosition a => a -> Span
+_era x = _onset x <-> _offset x
 
 -- |
 -- Return the onset of the given value.
 --
 -- In an 'Envelope', this is the value between the attack and decay phases.
 --
-onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-onset     = (`position` 0)
+_onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+_onset     = (`_position` 0)
 
 -- |
 -- Return the offset of the given value.
 --
 -- In an 'Envelope', this is the value between the sustain and release phases.
 --
-offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-offset    = (`position` 1.0)
+_offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+_offset    = (`_position` 1.0)
+
+onset :: (HasPosition a, Transformable a) => Lens' a Time
+onset = lens (`_position` 0) (flip $ alignAt 0)
+
+offset :: (HasPosition a, Transformable a) => Lens' a Time
+offset = lens (`_position` 1) (flip $ alignAt 1)
+
+
 
 -- |
 -- Return the pre-onset of the given value.
@@ -540,7 +558,7 @@ offset    = (`position` 1.0)
 -- In an 'Envelope', this is the value right before the attack phase.
 --
 preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-preOnset  = (`position` (-0.5))
+preOnset  = (`_position` (-0.5))
 
 -- |
 -- Return the post-onset of the given value.
@@ -548,7 +566,7 @@ preOnset  = (`position` (-0.5))
 -- In an 'Envelope', this is the value between the decay and sustain phases.
 --
 postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOnset   = (`position` 0.5)
+postOnset   = (`_position` 0.5)
 
 -- |
 -- Return the post-offset of the given value.
@@ -556,19 +574,19 @@ postOnset   = (`position` 0.5)
 -- In an 'Envelope', this is the value right after the release phase.
 --
 postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOffset  = (`position` 1.5)
+postOffset  = (`_position` 1.5)
 
 -- |
 -- Move a value forward in time.
 --
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
-startAt t x   = (t .-. onset x) `delay` x
+startAt t x   = (t .-. _onset x) `delay` x
 
 -- |
 -- Move a value forward in time.
 --
 stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt t  x   = (t .-. offset x) `delay` x
+stopAt t  x   = (t .-. _offset x) `delay` x
 
 -- |
 -- Align a value to a given position.
@@ -579,7 +597,7 @@ stopAt t  x   = (t .-. offset x) `delay` x
 -- > alignAt 1 == stopAt
 --
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-alignAt p t x = (t .-. x `position` p) `delay` x
+alignAt p t x = (t .-. x `_position` p) `delay` x
 
 -- |
 -- Place a value over the given span.
@@ -595,7 +613,7 @@ placeAt s x = transform (s ^-^ (view era) x) x
 -- XXX rename
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
-era = lens era' (flip placeAt)
+era = lens _era (flip placeAt)
 
 -- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
 -- (3,4)
@@ -605,13 +623,13 @@ era = lens era' (flip placeAt)
 -- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b   = alignAt 1 (b `position` 0) a
+a `lead` b   = alignAt 1 (b `_position` 0) a
 
 -- |
 -- @a \`follow\` b@  moves b so that @offset a  == onset b'@
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = alignAt 0 (a `position` 1) b
+a `follow` b = alignAt 0 (a `_position` 1) b
 
 -- |
 --
@@ -624,7 +642,7 @@ before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
 pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
-pinned f x = startAt (onset x) (f x)
+pinned f x = startAt (_onset x) (f x)
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
@@ -643,7 +661,7 @@ scat = Prelude.foldr (//) mempty
 pcat = Prelude.foldr (><) mempty
 
 during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-y `during`  x = placeAt (era' x) y
+y `during`  x = placeAt (_era x) y
 
 x `sustain` y   = x <> y `during` x
 
@@ -803,7 +821,7 @@ instance Transformable Duration where
   Span (_, d1) `transform` d2 = d1 * d2
 
 instance HasDuration Duration where
-  duration = id
+  _duration = id
 
 -- |
 -- Time points, representing duration since some known reference time, typically the start
@@ -844,7 +862,7 @@ instance Transformable Time where
   Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
 
 instance HasPosition Time where
-  position = const
+  _position = const
 
 
 -- |
@@ -881,10 +899,10 @@ instance Show Span where
   show (view range -> (t,u)) = show t ++ "<->" ++ show u
 
 instance HasPosition Span where
-  position (view range -> (t1, t2)) = alerp t1 t2
+  _position (view range -> (t1, t2)) = alerp t1 t2
 
 instance HasDuration Span where
-  duration = snd . view delta
+  _duration = snd . view delta
 
 instance Transformable Span where
   transform = (<>)
@@ -987,11 +1005,11 @@ f `underM` s = fmap (transform (negateV s)) . f . transform s
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
 
-underTime :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
-underTime     = flip (flip under . delaying . (.-. 0))
+underDelay :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
+underDelay     = flip (flip under . delaying . (.-. 0))
 
-underDuration :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
-underDuration = flip (flip under . stretching)
+underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
+underStretch = flip (flip under . stretching)
 
 underL :: (Functor f, Functor g, Transformable a, Transformable b) => 
        ((a -> g b) -> s -> f t)
@@ -1649,7 +1667,7 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
 
 deriving instance Typeable1 Delayed
 
-mapDelayed f (Delayed (t,x)) = Delayed (t, underTime f t x)
+mapDelayed f (Delayed (t,x)) = Delayed (t, underDelay f t x)
 
 
 
@@ -1667,7 +1685,7 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 
 deriving instance Typeable1 Stretched
 
-mapStretched f (Stretched (d,x)) = Stretched (d, underDuration f d x)
+mapStretched f (Stretched (d,x)) = Stretched (d, underStretch f d x)
 
 -- |
 -- View the value in the note.
@@ -1699,11 +1717,11 @@ instance Transformable (Note a) where transform t = unwrapped $ first (transform
 instance Transformable (Delayed a) where transform t = unwrapped $ first (transform t)
 instance Transformable (Stretched a) where transform t = unwrapped $ first (transform t)
 
-instance HasDuration (Note a) where duration = duration . ask . unwr
-instance HasDuration (Stretched a) where duration = duration . ask . unwr
+instance HasDuration (Note a) where _duration = _duration . ask . unwr
+instance HasDuration (Stretched a) where _duration = _duration . ask . unwr
 
-instance HasPosition (Note a) where x `position` p = ask (unwr x) `position` p
-instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
+instance HasPosition (Note a) where x `_position` p = ask (unwr x) `_position` p
+instance HasPosition (Delayed a) where x `_position` p = ask (unwr x)`_position` p
 
 -- |
 -- View a note as a pair of the original value and the transformation.
@@ -1793,8 +1811,8 @@ instance Splittable a => Splittable (Bounds a) where
 instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
 instance Rewrapped (Bounds a) (Bounds b)
 instance Transformable (Bounds a) where transform t = unwrapped $ first (transform t)
-instance HasDuration (Bounds a) where duration = duration . ask . unwr
-instance HasPosition (Bounds a) where x `position` p = ask (unwr x) `position` p
+instance HasDuration (Bounds a) where _duration = _duration . ask . unwr
+instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position` p
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
 
@@ -2469,7 +2487,7 @@ instance (Monad m, Serial m a) => Serial m (Behavior a) where
 constDurLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
   testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                duration a == duration (delay n a)
+                _duration a == _duration (delay n a)
   ]
 
 delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
