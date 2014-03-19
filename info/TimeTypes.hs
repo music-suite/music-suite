@@ -108,7 +108,7 @@ module TimeTypes (
         range,
         delta,
         -- *** Points in spans
-        inSpan,
+        between,
         -- *** Important values (XXX)
         start,
         stop,
@@ -147,7 +147,7 @@ module TimeTypes (
         Behavior,
         time,
         time',
-        atTime,
+        -- atTime,
         behavior,
 
         -- * Music.Time.Voice
@@ -444,7 +444,7 @@ newtype Span = Span { getDelta :: (Time, Duration) }
 -- > (10, 5)
 
 instance Show Span where
-  show (view range -> (t,u)) = show t ++ " <~> " ++ show u
+  show (view range -> (t,u)) = show t ++ "<~>" ++ show u
 
 instance HasPosition Span where
   position (view range -> (t1, t2)) = alerp t1 t2
@@ -556,8 +556,8 @@ conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 -- Use infix
-inSpan :: Time -> Span -> Bool
-inSpan x (view range -> (t, u)) = t <= x && x <= u
+between :: Time -> Span -> Bool
+between x (view range -> (t, u)) = t <= x && x <= u
 
 start, stop :: Time
 unit :: Duration
@@ -1145,10 +1145,13 @@ through lens1 lens2 =
     getBP a = (^. lens1) <$> a
     setBP x a = liftA2 (lens2 .~) x a
 
-deriving instance Show a => Show (Note a)
+instance (Show a, Transformable a) => Show (Note a) where
+  show x = show (x^.from note) ++ "^.note"
 deriving instance Show a => Show (Delayed a)
 deriving instance Show a => Show (Stretched a)
 
+instance Transformable () where
+  transform _ = id
 instance Transformable Int where
   transform _ = id
 instance Transformable Bool where
@@ -1181,7 +1184,7 @@ instance Transformable (Segment a) where
 -- > runNote . transform s = transform s . runNote
 --
 newtype Note a    = Note    { getNote :: (Span, a)   }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Note
 
@@ -1194,7 +1197,7 @@ deriving instance Monad Note
 -- A 'Delayed' value has a known 'position', but no duration.
 --
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Delayed
 
@@ -1202,7 +1205,7 @@ deriving instance Typeable1 Delayed
 -- A 'Stretched' value has a known 'position', but no duration.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Stretched
 
@@ -1312,13 +1315,13 @@ bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <~> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
--- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inSpan` s then x else mempty) x)
+-- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `between` s then x else mempty) x)
 
 trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
 trim = trimG
 
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
-trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inSpan` s then x else mempty) <*> x)
+trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `between` s then x else mempty) <*> x)
 
 bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
 bounded = undefined
@@ -1369,7 +1372,7 @@ instance Monoid a => Monoid (Segment a) where
 -- |
 --
 -- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
--- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it inside
+-- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it between
 -- 'Bounds'.
 --
 -- Behavior is 'Representable':
@@ -1474,10 +1477,10 @@ a = time
 -- TODO compose segments etc
 adsr :: Behavior Duration
 adsr = time <&> \t ->
-  if t `inSpan` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `inSpan` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `inSpan` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `inSpan` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  if t `between` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `between` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `between` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `between` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
   0
 
 toFloat :: Real a => a -> Float
@@ -1814,6 +1817,10 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 -- translation vs linear etc
 
 -- |
+-- Class of values that can be transformed (i.e. scaled and moved) in time.
+--
+-- In theory this could be generalized to arbitrary affine transformations.
+--
 -- Law
 --
 -- > transform s . transform t = transform (s <> t)
@@ -1909,6 +1916,8 @@ compress = transform . compressing
 -- Things with a duration
 
 -- |
+-- Class of values that have a duration.
+--
 -- Law Duration
 --
 -- > duration x = (offset x .-. onset x)
@@ -1928,6 +1937,23 @@ stretchTo d x = (d ^/ duration x) `stretch` x
 
 -- Placing things
 
+-- |
+-- Class of values that have a position in time.
+--
+-- Many values such as notes, envelopes etc can in fact have many positions such as
+-- onset, maxPoint, offset, decay time etc. Rather than having separate classes for
+-- a discrete set of cases, this class provides an interpolation from a /local/
+-- position to a /global/ position. While the local position goes from 0 to 1,
+-- the global position goes from 'onset' to 'offset'.
+--
+-- For instantaneous values, a suitable instance is:
+--
+-- > position x = const t
+--
+-- For values with an onset and offset you can use 'alerp':
+--
+-- > position x = alerp onset offset
+--
 class HasPosition a where
   position :: a -> {-Scalar-} Duration -> Time
 
