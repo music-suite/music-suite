@@ -146,6 +146,7 @@ module TimeTypes (
         -- * Music.Time.Behavior
         Behavior,
         time,
+        time',
         atTime,
         behavior,
 
@@ -1445,14 +1446,14 @@ behavior = tabulated
 -- |
 -- A behavior that
 --
-time :: Behavior Time
-time = id^.behavior
+time' :: Behavior Time
+time' = id^.behavior
 
-time' :: Fractional a => Behavior a
-time' = realToFrac^.behavior
+time :: Fractional a => Behavior a
+time = realToFrac^.behavior
 
-sine = sin (time'*tau)
-cosine = cos (time'*tau)
+sine = sin (time*tau)
+cosine = cos (time*tau)
 
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
@@ -1461,7 +1462,7 @@ atTime = index
 
 
 a :: Behavior Float
-a = time'
+a = time
 
 
 -- TODO these are examples...
@@ -1479,14 +1480,14 @@ toFloat :: Real a => a -> Float
 toFloat = realToFrac
 
 modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
-modulate = (\t x -> x * sin (t*2*pi)) <$> time'
+modulate = (\t x -> x * sin (t*2*pi)) <$> time
 
 
 
 test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
   where
     -- c = 1
-c = (sin (time'/20*2*pi))
+c = (sin (time/20*2*pi))
 
 
 newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
@@ -1503,7 +1504,7 @@ instance HasPitch PD PD where
 instance HasDynamic PD PD where
   dynamic = _Wrapped . _1
 pd :: PD
-pd = PD (time', time')
+pd = PD (time, time)
 
 drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
 
