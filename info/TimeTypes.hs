@@ -26,9 +26,12 @@ module TimeTypes (
         -- ** The Transformable class
         Transformable(..),
         -- *** Apply under a transformation
+
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         underM,
         underW,
+        underTime,
+        underDuration,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -86,6 +89,7 @@ module TimeTypes (
         -- ** Align and compose
         after,
         before,
+        during,
         sustain,
         -- ** Composition operators
         -- Sequential(..),
@@ -117,20 +121,22 @@ module TimeTypes (
         -- * Music.Time.Stretched
         Stretched,
         stretched,
+        unstretched,
         runStretched,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
+        undelayed,
         runDelayed,
 
         -- * Music.Time.Note
         Note,
         note,
-        noteValue,
+        unnote,
         -- runNote,
         -- reifyNote,
-        -- noteValue',
+        -- unnote',
         -- mapNote,
 
         -- * Music.Time.Bounds
@@ -147,6 +153,7 @@ module TimeTypes (
         Behavior,
         time,
         time',
+        interval,
         -- atTime,
         behavior,
 
@@ -218,7 +225,8 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<->), (|>), place, atTime, 
+                                               under, value, view, (<->), (|>), place, atTime,
+                                               interval, during,
                                                Dynamic, start)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -482,6 +490,9 @@ instance AdditiveGroup Span where
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
+durationToSpan d = (0 >-> d)
+timeToSpan t = (t >-> 1)
+
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
@@ -550,6 +561,9 @@ f `underM` s = fmap (transform (negateV s)) . f . transform s
 -- 
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
+
+underTime f t = under f (timeToSpan t)
+underDuration f d = under f (durationToSpan d)
 
 
 conjugate :: Span -> Span -> Span
@@ -1201,6 +1215,16 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
 
 deriving instance Typeable1 Delayed
 
+mapDelayed f (Delayed (t,x)) = Delayed (t, underTime f t x)
+
+
+
+-- |
+-- View the value in the note.
+--
+undelayed :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
+undelayed = lens runDelayed (flip $ mapDelayed . const)
+
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
 --
@@ -1208,6 +1232,14 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Stretched
+
+mapStretched f (Stretched (d,x)) = Stretched (d, underDuration f d x)
+
+-- |
+-- View the value in the note.
+--
+unstretched :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+unstretched = lens runStretched (flip $ mapStretched . const)
 
 instance Reversible (Note a) where
   rev = stretch (-1)
@@ -1262,14 +1294,8 @@ mapNote f (Note (s,x)) = Note (s, under f s x)
 -- |
 -- View the value in the note.
 --
-noteValue' :: (Transformable a, Transformable b) => Lens' (Note a) a
-noteValue' = lens runNote (flip $ mapNote . const)
-
--- |
--- View the value in the note.
---
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-noteValue = lens runNote (flip $ mapNote . const)
+unnote :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+unnote = lens runNote (flip $ mapNote . const)
 
 
 -- |
@@ -1458,6 +1484,8 @@ time' = id^.behavior
 
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
+
+interval t u = (t <-> u, time)^.note
 
 sine = sin (time*tau)
 cosine = cos (time*tau)
@@ -2087,7 +2115,11 @@ scat = Prelude.foldr (//) mempty
 --
 pcat = Prelude.foldr (><) mempty
 
-x `sustain` y   = x <> duration x `stretchTo` y
+during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+y `during`  x = placeAt (era x) y
+
+x `sustain` y   = x <> y `during` x
+
 times n   = scat . replicate n
 
 -- | 
