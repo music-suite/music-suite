@@ -1147,6 +1147,8 @@ through lens1 lens2 =
     setBP x a = liftA2 (lens2 .~) x a
 
 deriving instance Show a => Show (Note a)
+deriving instance Show a => Show (Delayed a)
+deriving instance Show a => Show (Stretched a)
 
 instance Transformable Int where
   transform _ = id
@@ -1176,6 +1178,8 @@ instance Transformable (Segment a) where
 newtype Note a    = Note    { getNote :: (Span, a)   }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
 
+deriving instance Typeable1 Note
+
 -- |
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
 -- at the default span 'mempty' and 'join' composing time transformations.
@@ -1187,11 +1191,15 @@ deriving instance Monad Note
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
+deriving instance Typeable1 Delayed
+
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+
+deriving instance Typeable1 Stretched
 
 instance Reversible (Note a) where
   rev = stretch (-1)
@@ -2255,20 +2263,44 @@ instance Monad m => Serial m Duration where
   series = msum $ fmap return [-1,0,1,2,1.51232,10]
 instance Monad m => Serial m Span where
   series = newtypeCons Span
-instance Serial IO a => Serial IO (BadFunctor a) where
+instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
   series = cons0 BF1 \/ cons0 BF2
-instance Serial IO a => Serial IO (BadMonoid a) where
+instance (Monad m, Serial m a) => Serial m (BadMonoid a) where
   series = newtypeCons BadMonoid
-instance Serial IO Int8 where
-  series = msum $ fmap return [0..2]
+-- instance Monad m => Serial m Int8 where
+  -- series = msum $ fmap return [0..2]
+instance (Monad m, Serial m a) => Serial m (Note a) where
+  series = newtypeCons Note
+instance (Monad m, Serial m a) => Serial m (Delayed a) where
+  series = newtypeCons Delayed
+instance (Monad m, Serial m a) => Serial m (Stretched a) where
+  series = newtypeCons Stretched
 instance (Monad m, Serial m a) => Serial m (Behavior a) where
   series = newtypeCons Behavior
 
 
-delayBehLaw = testGroup "Delay behavior" $ [
+-- > onset (delay n a)      = n ^+. onset a
+-- > offset (delay n a)     = n ^+. offset a
+-- > duration (stretch n a) = n ^* (duration a)
+--
+-- Lemma
+--
+-- > duration a = duration (delay n a)
+
+
+constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
+  testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
+                duration a == duration (delay n a)
+  ]
+
+delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) -> let b = time' in 
                 delay n b ! t == b ! (t .-^ n)
   ]
+
+
+
+
 
 -- DEBUG
 instance Show (Behavior a) where
@@ -2315,13 +2347,15 @@ main = defaultMain $ testGroup "" $ [
   monoid (undefined :: ()),
   monoid (undefined :: Maybe ()),
   monoid (undefined :: [()]),
-  monoid (undefined :: Behavior ()),
+  -- monoid (undefined :: Behavior ()), -- too slow!
 
   monoid (undefined :: Time),
   monoid (undefined :: Duration),
   monoid (undefined :: Span),
-  
-  delayBehLaw
+
+  constDurLaw (undefined :: Note ()),
+  constDurLaw (undefined :: Stretched ()),
+  delayBehLaw (undefined :: Behavior Float)
 
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
