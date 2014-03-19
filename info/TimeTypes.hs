@@ -16,6 +16,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE CPP                        #-}
 
 module TimeTypes (
 
@@ -332,6 +333,20 @@ normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalize
 unnormalize :: (Num a, Ord a) => Getter (Normalized a) a
 unnormalize = re normalize
 
+
+
+
+
+
+
+
+
+
+(!) :: Representable f => f a -> Rep f -> a
+(!) = index
+
+tabulated :: Representable f => Iso' (Rep f -> a) (f a)
+tabulated = iso tabulate index
 
 
 
@@ -985,9 +1000,10 @@ between :: Time -> Span -> Bool
 between x (view range -> (t, u)) = t <= x && x <= u
 
 start, stop :: Time
-unit :: Duration
 start = 0
 stop  = 1
+
+unit :: Duration
 unit  = 1
 
 
@@ -1097,25 +1113,35 @@ instance HasPitch Float Float where
 instance HasPitches Float Float where
   pitches = ($)
 
+
 type instance Pitch (c,a) = Pitch a
 type instance SetPitch b (c,a) = (c,SetPitch b a)
+
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
+
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
+
 type instance Pitch [a] = Pitch a
+
 type instance SetPitch b [a] = [SetPitch b a]
+
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
+
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
+
 type instance Pitch (Note a) = Pitch a
+
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (pitch $ underM f s) a
+
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
@@ -1123,6 +1149,7 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
+
 type instance Pitch (Score a) = Pitch a
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . pl
@@ -1203,51 +1230,70 @@ dynamics' = dynamics
 
 type instance Dynamic Bool = Bool
 type instance SetDynamic a Bool = a
+
 instance HasDynamic Bool Bool where
   dynamic = ($)
+
 instance HasDynamics Bool Bool where
   dynamics = ($)
 
+
 type instance Dynamic Int = Int
 type instance SetDynamic a Int = a
+
 instance HasDynamic Int Int where
   dynamic = ($)
+
 instance HasDynamics Int Int where
   dynamics = ($)
 
+
 type instance Dynamic Integer = Integer
 type instance SetDynamic a Integer = a
+
 instance HasDynamic Integer Integer where
   dynamic = ($)
+
 instance HasDynamics Integer Integer where
   dynamics = ($)
 
 type instance Dynamic Float = Float
 type instance SetDynamic a Float = a
+
 instance HasDynamic Float Float where
   dynamic = ($)
+
 instance HasDynamics Float Float where
   dynamics = ($)
 
+
 type instance Dynamic (c,a) = Dynamic a
 type instance SetDynamic b (c,a) = (c,SetDynamic b a)
+
 instance HasDynamic a b => HasDynamic (c, a) (c, b) where
   dynamic = _2 . dynamic
+
 instance HasDynamics a b => HasDynamics (c, a) (c, b) where
   dynamics = traverse . dynamics
 
+
 type instance Dynamic [a] = Dynamic a
 type instance SetDynamic b [a] = [SetDynamic b a]
+
 instance HasDynamics a b => HasDynamics [a] [b] where
   dynamics = traverse . dynamics
 
+
 type instance Dynamic (Note a) = Dynamic a
 type instance SetDynamic g (Note a) = Note (SetDynamic g a)
+
 type instance Dynamic (Note a) = Dynamic a
+
 instance HasDynamic a b => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (dynamic $ underM f s) a
+
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . pl
     where
@@ -1255,7 +1301,7 @@ instance HasDynamics a b => HasDynamics (Note a) (Note b) where
 
 type instance Dynamic (Score a) = Dynamic a
 type instance SetDynamic g (Score a) = Score (SetDynamic g a)
-type instance Dynamic (Score a) = Dynamic a
+
 instance HasDynamics a b => HasDynamics (Score a) (Score b) where
   dynamics = _Wrapped . traverse . pl
     where
@@ -1351,33 +1397,41 @@ instance HasArticulation Float Float where
 instance HasArticulations Float Float where
   articulations = ($)
 
+
 type instance Articulation (c,a) = Articulation a
 type instance SetArticulation b (c,a) = (c,SetArticulation b a)
+
 instance HasArticulation a b => HasArticulation (c, a) (c, b) where
   articulation = _2 . articulation
+
 instance HasArticulations a b => HasArticulations (c, a) (c, b) where
   articulations = traverse . articulations
 
+
 type instance Articulation [a] = Articulation a
 type instance SetArticulation b [a] = [SetArticulation b a]
+
 instance HasArticulations a b => HasArticulations [a] [b] where
   articulations = traverse . articulations
 
+
 type instance Articulation (Note a) = Articulation a
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
-type instance Articulation (Note a) = Articulation a
+
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
   articulation = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (articulation $ underM f s) a
+
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (articulations $ underM f s) a
 
+
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation g (Score a) = Score (SetArticulation g a)
-type instance Articulation (Score a) = Articulation a
+
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . pl
     where
@@ -1477,31 +1531,38 @@ instance HasParts Float Float where
 
 type instance Part (c,a) = Part a
 type instance SetPart b (c,a) = (c,SetPart b a)
+
 instance HasPart a b => HasPart (c, a) (c, b) where
   part = _2 . part
+
 instance HasParts a b => HasParts (c, a) (c, b) where
   parts = traverse . parts
 
+
 type instance Part [a] = Part a
 type instance SetPart b [a] = [SetPart b a]
+
 instance HasParts a b => HasParts [a] [b] where
   parts = traverse . parts
 
+
 type instance Part (Note a) = Part a
 type instance SetPart g (Note a) = Note (SetPart g a)
-type instance Part (Note a) = Part a
+
 instance (HasPart a b) => HasPart (Note a) (Note b) where
   part = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (part $ underM f s) a
+
 instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (parts $ underM f s) a
 
+
 type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
-type instance Part (Score a) = Part a
+
 instance (HasParts a b) => HasParts (Score a) (Score b) where
   parts = _Wrapped . traverse . pl
     where
@@ -1522,18 +1583,6 @@ instance (HasParts a b) => HasParts (Score a) (Score b) where
 
 
 
-
-
--- TODO debug/move
-type instance Pitch                 (Behavior a) = Behavior (Pitch a)
-type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
-type instance Pitch                 (Segment a) = Segment (Pitch a)
-type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
-
-instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
-  pitch = through pitch pitch
-instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
-  pitch = through pitch pitch
 
 through :: Applicative f => Lens' s a -> Lens s t a b -> Lens (f s) (f t) (f a) (f b)
 through lens1 lens2 =
@@ -1822,7 +1871,9 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor,
 -- Defined throughout, "focused" on 0-1
 
 deriving instance Typeable1 Behavior
+
 deriving instance Distributive Behavior
+
 deriving instance Distributive Segment
 
 deriving instance Semigroup a => Semigroup (Behavior a)
@@ -1842,12 +1893,24 @@ instance Transformable (Behavior a) where
     where
       t1 = t .-. 0
 
--- type instance Key Behavior = Time
-
 instance Representable Behavior where
   type Rep Behavior = Time
   tabulate = Behavior
   index (Behavior x) = x
+
+
+type instance Pitch                 (Behavior a) = Behavior (Pitch a)
+type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
+
+type instance Pitch                 (Segment a) = Segment (Pitch a)
+type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
+
+instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
+  pitch = through pitch pitch
+
+instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
+  pitch = through pitch pitch
+
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
@@ -1862,126 +1925,7 @@ instance Representable Segment where
 
 
 
-(!) :: Representable f => f a -> Rep f -> a
-(!) = index
 
-tabulated :: Representable f => Iso' (Rep f -> a) (f a)
-tabulated = iso tabulate index
-
-
-
--- instance Keyed Behavior where
---   mapWithKey = (<*>) . behavior
---
--- instance Lookup Behavior where
---   lookup = lookupDefault
---
--- instance Indexable Behavior where
---   Behavior b `index` t = b t
-
--- |
--- View a behavior as a time function and vice versa.
---
--- This is actually a specification of 'tabulated'.
---
-behavior :: Iso' (Time -> a) (Behavior a)
-behavior = tabulated
-
--- |
--- A behavior that
---
-time' :: Behavior Time
-time' = id^.behavior
-
-time :: Fractional a => Behavior a
-time = realToFrac^.behavior
-
-interval t u = (t <-> u, time)^.note
-
-sine = sin (time*tau)
-cosine = cos (time*tau)
-
--- | Specification of 'index'.
-atTime :: Behavior a -> Time -> a
-atTime = index
-
-
-
-a :: Behavior Float
-a = time
-
-
--- TODO these are examples...
-
--- TODO compose segments etc
-adsr :: Behavior Duration
-adsr = time <&> \t ->
-  if t `between` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `between` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `between` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `between` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
-  0
-
-toFloat :: Real a => a -> Float
-toFloat = realToFrac
-
-modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
-modulate = (\t x -> x * sin (t*2*pi)) <$> time
-
-
-
-test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
-  where
-    -- c = 1
-c = (sin (time/20*2*pi))
-
-
-newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
-instance Wrapped PD where
-  type Unwrapped PD = (Behavior Float, Behavior Float)
-  _Wrapped' = iso getPD PD
-instance Rewrapped PD PD
-type instance Pitch PD = Behavior Float
-type instance SetPitch g PD = PD
-type instance Dynamic PD = Behavior Float
-type instance SetDynamic g PD = PD
-instance HasPitch PD PD where
-  pitch = _Wrapped . _2
-instance HasDynamic PD PD where
-  dynamic = _Wrapped . _1
-pd :: PD
-pd = PD (time, time)
-
-drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
-
-
-
-
-
-
-c2 :: Behavior Float -> Behavior Float
-c2  = liftA2 (*) c
-
-nc :: Note (Behavior (Int, Float))
-nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
-
-r :: Behavior Float
-r  = fmap snd $ runNote (nc & pitch %~ c2)
-
-drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
-drawNote n = let
-  (t,d) = view delta $ era n
-  a = n ^?! traverse
-  in drawNote' (t,d,a)
-
-instance Eq a => Eq (Behavior a) where
-  (==) = error "No fun"
-instance Ord a => Ord (Behavior a) where
-  (<) = error "No fun"
-  max = liftA2 max
-  min = liftA2 min
-instance Real a => Real (Behavior a) where
-  toRational = toRational . (`index` 0)
 
 
 
@@ -2277,6 +2221,131 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 -- lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 -- follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 --
+
+
+                                             
+
+
+
+
+
+
+
+
+
+-- instance Keyed Behavior where
+--   mapWithKey = (<*>) . behavior
+--
+-- instance Lookup Behavior where
+--   lookup = lookupDefault
+--
+-- instance Indexable Behavior where
+--   Behavior b `index` t = b t
+
+-- |
+-- View a behavior as a time function and vice versa.
+--
+-- This is actually a specification of 'tabulated'.
+--
+behavior :: Iso' (Time -> a) (Behavior a)
+behavior = tabulated
+
+-- |
+-- A behavior that
+--
+time' :: Behavior Time
+time' = id^.behavior
+
+time :: Fractional a => Behavior a
+time = realToFrac^.behavior
+
+interval t u = (t <-> u, time)^.note
+
+sine = sin (time*tau)
+cosine = cos (time*tau)
+
+-- | Specification of 'index'.
+atTime :: Behavior a -> Time -> a
+atTime = index
+
+
+
+a :: Behavior Float
+a = time
+
+
+-- TODO these are examples...
+
+-- TODO compose segments etc
+adsr :: Behavior Duration
+adsr = time <&> \t ->
+  if t `between` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `between` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `between` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `between` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  0
+
+toFloat :: Real a => a -> Float
+toFloat = realToFrac
+
+modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
+modulate = (\t x -> x * sin (t*2*pi)) <$> time
+
+
+
+test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
+  where
+    -- c = 1
+c = (sin (time/20*2*pi))
+
+
+newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
+instance Wrapped PD where
+  type Unwrapped PD = (Behavior Float, Behavior Float)
+  _Wrapped' = iso getPD PD
+instance Rewrapped PD PD
+type instance Pitch PD = Behavior Float
+type instance SetPitch g PD = PD
+type instance Dynamic PD = Behavior Float
+type instance SetDynamic g PD = PD
+instance HasPitch PD PD where
+  pitch = _Wrapped . _2
+instance HasDynamic PD PD where
+  dynamic = _Wrapped . _1
+pd :: PD
+pd = PD (time, time)
+
+drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
+
+
+
+
+
+
+c2 :: Behavior Float -> Behavior Float
+c2  = liftA2 (*) c
+
+nc :: Note (Behavior (Int, Float))
+nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+
+r :: Behavior Float
+r  = fmap snd $ runNote (nc & pitch %~ c2)
+
+drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
+drawNote n = let
+  (t,d) = view delta $ era n
+  a = n ^?! traverse
+  in drawNote' (t,d,a)
+
+instance Eq a => Eq (Behavior a) where
+  (==) = error "No fun"
+instance Ord a => Ord (Behavior a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
+instance Real a => Real (Behavior a) where
+  toRational = toRational . (`index` 0)
+
 
 
 
