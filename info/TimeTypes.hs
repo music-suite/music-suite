@@ -59,7 +59,7 @@ module TimeTypes (
 
         -- ** Inspecting position
         place,
-        era,
+        -- era,
 
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
@@ -153,8 +153,8 @@ module TimeTypes (
         -- * Music.Time.Behavior
         Behavior,
         time,
-        time',
-        interval,
+        -- time',
+        -- interval,
         -- atTime,
         behavior,
 
@@ -964,10 +964,13 @@ delta = iso getDelta $ uncurry (>->)
 -- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
 --
 
+
+-- > forall s . id `under` s = id
+-- > forall s . return `underM` s = return
+-- > forall s . extract `underW` s = extract
+
 -- |
 -- Apply a function under transformation.
---
--- > forall s . id `under` s = id
 --
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform (negateV s) . f . transform s
@@ -975,21 +978,20 @@ f `under` s = transform (negateV s) . f . transform s
 -- |
 -- Apply a morphism under transformation (monadic version).
 --
--- > forall s . return `underM` s = return
---
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform (negateV s)) . f . transform s
 
 -- |
 -- Apply a morphism under transformation (co-monadic version).
 --
--- > forall s . extract `underW` s = extract
---
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
 
-underTime f t = under f (timeToSpan t)
-underDuration f d = under f (durationToSpan d)
+underTime :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
+underTime     = flip (flip under . delaying . (.-. 0))
+
+underDuration :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
+underDuration = flip (flip under . stretching)
 
 
 conjugate :: Span -> Span -> Span
@@ -1924,6 +1926,28 @@ type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
   pitch = through pitch pitch
+
+
+type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
+type instance SetDynamic (Behavior g) (Behavior a) = Behavior (SetDynamic g a)
+
+instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Behavior a) (Behavior b) where
+  dynamic = through dynamic dynamic
+
+
+type instance Articulation                 (Behavior a) = Behavior (Articulation a)
+type instance SetArticulation (Behavior g) (Behavior a) = Behavior (SetArticulation g a)
+
+instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Behavior a) (Behavior b) where
+  articulation = through articulation articulation
+
+
+type instance Part                 (Behavior a) = Behavior (Part a)
+type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
+
+instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
+  part = through part part
+
 
 
 -- |
