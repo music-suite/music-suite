@@ -19,6 +19,7 @@
 
 module TimeTypes (
 
+        (!),
         tabulated,
         
         -- * Music.Time.Transform
@@ -528,19 +529,24 @@ delta = iso getDelta $ uncurry (>~>)
 -- | 
 -- Apply a function under transformation.
 -- 
--- > forall s . id `sunder` s = id
+-- > forall s . id `under` s = id
 -- 
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform (negateV s) . f . transform s
 
 -- | 
--- Apply a morphism under transformation.
+-- Apply a morphism under transformation (monadic version).
 -- 
--- > forall s . pure `sunderM` s = pure
+-- > forall s . return `underM` s = return
 -- 
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform (negateV s)) . f . transform s
 
+-- | 
+-- Apply a morphism under transformation (co-monadic version).
+-- 
+-- > forall s . extract `underW` s = extract
+-- 
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
 
@@ -1401,6 +1407,10 @@ instance Representable Segment where
   index    = error "No Representable Segment"
 
 
+
+(!) :: Representable f => f a -> Rep f -> a
+(!) = index
+
 tabulated :: Representable f => Iso' (Rep f -> a) (f a)
 tabulated = iso tabulate index
 
@@ -1796,13 +1806,14 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 --
 -- Law
 --
--- > onset (delay n a) = n + onset a
--- > offset (delay n a) = n + offset a
--- > duration (stretch n a) = n * (duration a)
+-- > onset (delay n a)      = n ^+. onset a
+-- > offset (delay n a)     = n ^+. offset a
+-- > duration (stretch n a) = n ^* (duration a)
 --
 -- Lemma
 --
 -- > duration a = duration (delay n a)
+--
 class Transformable a where
   transform :: Span -> a -> a
 
@@ -1818,13 +1829,13 @@ delay' t   = delay (t .-. 0)
 
 
 -- |
--- Move a value forward in time.
+-- A transformation that moves a value forward in time.
 --
 delaying :: Duration -> Span
 delaying x = (0 .+^ x) >~> 1
 
 -- |
--- A transformation that moves a value forward in time.
+-- A transformation that stretches (augments) a value by the given factor.
 --
 stretching :: Duration -> Span
 stretching x = 0 >~> x
@@ -1842,25 +1853,39 @@ compressing :: Duration -> Span
 compressing x = stretching (recip x)
 
 -- |
--- A transformation that stretches (augments) a value by the given factor.
+-- Moves a value forward in time.
+--
+-- > onset (delay n x)  = n ^+. onset x
+-- > offset (delay n x) = n ^+. offset x
+--
+-- > delay n b ! t == b ! (t .-^ n)
 --
 delay :: Transformable a => Duration -> a -> a
 delay = transform . delaying
 
 -- |
--- Move a value backward in time. Equivalent to @'delay' . 'negate'@.
+-- Moves a value backward in time. Equivalent to @'stretch' . 'negate'@.
+--
+-- > onset (undelay n x) = n - onset x
+-- > offset (undelay n x) = n - offset x
+--
+-- > undelay n b ! t == b ! (t .+^ n)
 --
 undelay :: Transformable a => Duration -> a -> a
 undelay = transform . undelaying
 
 -- |
--- Stretch (augment) a value by the given factor.
+-- Stretches (augments) a value by the given factor.
+--
+-- > duration (stretch n a) = n * (duration a)
 --
 stretch :: Transformable a => Duration -> a -> a
 stretch = transform . stretching
 
 -- |
--- Compress (diminish) a score. Equivalent to @'stretch' . 'recip'@.
+-- Compresses (diminishes) a score. Equivalent to @'stretch' . 'recip'@.
+--
+-- > duration (compress n a) = (duration a) / n
 --
 compress :: Transformable a => Duration -> a -> a
 compress = transform . compressing
@@ -2234,6 +2259,12 @@ instance Serial IO a => Serial IO (BadMonoid a) where
 instance Serial IO Int8 where
   series = msum $ fmap return [0..2]
 
+
+delayBehLaw = testGroup "Delay behavior" $ [
+  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) -> let b = time' in 
+                delay n b ! t == b ! (t .-^ n)
+  ]
+
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
@@ -2279,7 +2310,9 @@ main = defaultMain $ testGroup "" $ [
 
   monoid (undefined :: Time),
   monoid (undefined :: Duration),
-  monoid (undefined :: Span)
+  monoid (undefined :: Span),
+  
+  delayBehLaw
 
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
