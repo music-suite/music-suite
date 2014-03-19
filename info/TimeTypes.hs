@@ -1854,6 +1854,22 @@ instance Monoid a => Monoid (Segment a) where
 -- > join s ! t == (s ! t) ! t
 --
 
+deriving instance Distributive Segment
+
+instance Representable Segment where
+  type Rep Segment = Duration
+  -- tabulate = Behavior
+  -- index (Behavior x) = x
+  tabulate = error "No Representable Segment"
+  index    = error "No Representable Segment"
+
+
+type instance Pitch                 (Segment a) = Segment (Pitch a)
+type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
+
+instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
+  pitch = through pitch pitch
+
 
 -- |
 --
@@ -1871,20 +1887,24 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor,
 -- Defined throughout, "focused" on 0-1
 
 deriving instance Typeable1 Behavior
-
 deriving instance Distributive Behavior
-
-deriving instance Distributive Segment
-
 deriving instance Semigroup a => Semigroup (Behavior a)
-
 deriving instance Monoid a => Monoid (Behavior a)
-
 deriving instance Num a => Num (Behavior a)
-
 deriving instance Fractional a => Fractional (Behavior a)
-
 deriving instance Floating a => Floating (Behavior a)
+
+instance Eq a => Eq (Behavior a) where
+  (==) = error "No fun"
+
+instance Ord a => Ord (Behavior a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
+
+instance Real a => Real (Behavior a) where
+  toRational = toRational . (`index` 0)
+
 
 -- TODO should we conjugate the function?
 instance Transformable (Behavior a) where
@@ -1902,26 +1922,39 @@ instance Representable Behavior where
 type instance Pitch                 (Behavior a) = Behavior (Pitch a)
 type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 
-type instance Pitch                 (Segment a) = Segment (Pitch a)
-type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
-
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
   pitch = through pitch pitch
 
-instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
-  pitch = through pitch pitch
 
+-- |
+-- View a behavior as a time function and vice versa.
+--
+-- This is actually a specification of 'tabulated'.
+--
+behavior :: Iso' (Time -> a) (Behavior a)
+behavior = tabulated
+
+-- |
+-- A behavior that
+--
+time' :: Behavior Time
+time' = id^.behavior
+
+time :: Fractional a => Behavior a
+time = realToFrac^.behavior
+
+interval t u = (t <-> u, time)^.note
+
+sine = sin (time*tau)
+cosine = cos (time*tau)
+
+-- | Specification of 'index'.
+atTime :: Behavior a -> Time -> a
+atTime = index                 
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
 
-
-instance Representable Segment where
-  type Rep Segment = Duration
-  -- tabulate = Behavior
-  -- index (Behavior x) = x
-  tabulate = error "No Representable Segment"
-  index    = error "No Representable Segment"
 
 
 
@@ -2233,40 +2266,7 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
--- instance Keyed Behavior where
---   mapWithKey = (<*>) . behavior
---
--- instance Lookup Behavior where
---   lookup = lookupDefault
---
--- instance Indexable Behavior where
---   Behavior b `index` t = b t
 
--- |
--- View a behavior as a time function and vice versa.
---
--- This is actually a specification of 'tabulated'.
---
-behavior :: Iso' (Time -> a) (Behavior a)
-behavior = tabulated
-
--- |
--- A behavior that
---
-time' :: Behavior Time
-time' = id^.behavior
-
-time :: Fractional a => Behavior a
-time = realToFrac^.behavior
-
-interval t u = (t <-> u, time)^.note
-
-sine = sin (time*tau)
-cosine = cos (time*tau)
-
--- | Specification of 'index'.
-atTime :: Behavior a -> Time -> a
-atTime = index
 
 
 
@@ -2337,14 +2337,6 @@ drawNote n = let
   a = n ^?! traverse
   in drawNote' (t,d,a)
 
-instance Eq a => Eq (Behavior a) where
-  (==) = error "No fun"
-instance Ord a => Ord (Behavior a) where
-  (<) = error "No fun"
-  max = liftA2 max
-  min = liftA2 min
-instance Real a => Real (Behavior a) where
-  toRational = toRational . (`index` 0)
 
 
 
