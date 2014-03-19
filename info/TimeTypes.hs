@@ -253,7 +253,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Data.Int
-import           Test.SmallCheck.Series       (Serial (..), cons0, newtypeCons,
+import           Test.SmallCheck.Series       (Serial(..), CoSerial(..), cons0, newtypeCons, newtypeAlts,
                                                series, (\/))
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
@@ -1368,6 +1368,7 @@ instance Monoid a => Monoid (Segment a) where
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
 
+deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 deriving instance Distributive Segment
 
@@ -1383,7 +1384,7 @@ deriving instance Floating a => Floating (Behavior a)
 
 -- TODO should we conjugate the function?
 instance Transformable (Behavior a) where
-  -- transform (view delta -> (t,0)) _            = error "Scale by zero"
+  transform (view delta -> (t,0)) _            = error "Scale by zero"
   transform (view delta -> (t,d)) (Behavior f) = Behavior $ \t2 -> f $ (t2^/d .-^ t1)
     where
       t1 = t .-. 0
@@ -2246,10 +2247,12 @@ instance Functor BadFunctor where
   fmap f BF1 = BF2 -- lawless
   fmap f BF2 = BF2
 
+instance Monad m => CoSerial m Time where
+  coseries = newtypeAlts  
 instance Monad m => Serial m Time where
-  series = msum $ fmap return [1..2]
+  series = msum $ fmap return [-1,0,1,2,2.13222,10]
 instance Monad m => Serial m Duration where
-  series = msum $ fmap return [0..2]
+  series = msum $ fmap return [-1,0,1,2,1.51232,10]
 instance Monad m => Serial m Span where
   series = newtypeCons Span
 instance Serial IO a => Serial IO (BadFunctor a) where
@@ -2258,12 +2261,18 @@ instance Serial IO a => Serial IO (BadMonoid a) where
   series = newtypeCons BadMonoid
 instance Serial IO Int8 where
   series = msum $ fmap return [0..2]
+instance (Monad m, Serial m a) => Serial m (Behavior a) where
+  series = newtypeCons Behavior
 
 
 delayBehLaw = testGroup "Delay behavior" $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) -> let b = time' in 
                 delay n b ! t == b ! (t .-^ n)
   ]
+
+-- DEBUG
+instance Show (Behavior a) where
+  show _ = "<<Behavior>>"
 
 monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
@@ -2306,7 +2315,7 @@ main = defaultMain $ testGroup "" $ [
   monoid (undefined :: ()),
   monoid (undefined :: Maybe ()),
   monoid (undefined :: [()]),
-  monoid (undefined :: BadMonoid Int8),
+  monoid (undefined :: Behavior ()),
 
   monoid (undefined :: Time),
   monoid (undefined :: Duration),
