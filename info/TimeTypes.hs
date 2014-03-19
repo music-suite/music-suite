@@ -123,13 +123,13 @@ module TimeTypes (
         Stretched,
         stretched,
         unstretched,
-        runStretched,
+        -- runStretched,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
         undelayed,
-        runDelayed,
+        -- runDelayed,
 
         -- * Music.Time.Note
         Note,
@@ -995,6 +995,11 @@ underTime     = flip (flip under . delaying . (.-. 0))
 underDuration :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 underDuration = flip (flip under . stretching)
 
+underL :: (Functor f, Functor g, Transformable a, Transformable b) => 
+       ((a -> g b) -> s -> f t)
+     -> (a -> g b) -> (Span, s) -> f (Span, t)
+underL l f (s,a) = (s,) <$> (l $ underM f s) a
+
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1151,15 +1156,6 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
     where
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
-type instance Pitch (Score a) = Pitch a
-type instance SetPitch g (Score a) = Score (SetPitch g a)
-
-type instance Pitch (Score a) = Pitch a
-instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches = _Wrapped . traverse . pl
-    where
-      pl f (s,a) = (s,) <$> (pitches $ underM f s) a
-
 
 
 
@@ -1303,13 +1299,6 @@ instance HasDynamics a b => HasDynamics (Note a) (Note b) where
     where
       pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
 
-type instance Dynamic (Score a) = Dynamic a
-type instance SetDynamic g (Score a) = Score (SetDynamic g a)
-
-instance HasDynamics a b => HasDynamics (Score a) (Score b) where
-  dynamics = _Wrapped . traverse . pl
-    where
-      pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
 
 
 
@@ -1433,14 +1422,6 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (articulations $ underM f s) a
 
 
-type instance Articulation (Score a) = Articulation a
-type instance SetArticulation g (Score a) = Score (SetArticulation g a)
-
-instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
-  articulations = _Wrapped . traverse . pl
-    where
-      pl f (s,a) = (s,) <$> (articulations $ underM f s) a
-
 
 
 
@@ -1560,15 +1541,6 @@ instance (HasPart a b) => HasPart (Note a) (Note b) where
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (parts $ underM f s) a
-
-
-type instance Part (Score a) = Part a
-type instance SetPart g (Score a) = Score (SetPart g a)
-
-instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts = _Wrapped . traverse . pl
     where
       pl f (s,a) = (s,) <$> (parts $ underM f s) a
 
@@ -1988,13 +1960,13 @@ atTime = index
 
 
 
-type ScoreNote a = (Span, a)
+type ScoreNote a = Note a
 
 newtype Score a = Score { getScore :: [ScoreNote a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
 instance Wrapped (Score a) where
-  type Unwrapped (Score a) = [(Span, a)]
+  type Unwrapped (Score a) = [ScoreNote a]
   _Wrapped' = iso getScore Score
 
 instance Rewrapped (Score a) (Score b)
@@ -2022,10 +1994,35 @@ instance Reversible a => Reversible (Score a) where
   rev (Score xs) = Score (fmap rev xs)
 
 instance HasPosition (Score a) where
-
 instance HasDuration (Score a) where
-
 instance Splittable a => Splittable (Score a) where
+
+type instance Pitch (Score a) = Pitch a
+type instance SetPitch g (Score a) = Score (SetPitch g a)
+
+type instance Pitch (Score a) = Pitch a
+instance (HasPitches a b) => HasPitches (Score a) (Score b) where
+  pitches = _Wrapped . traverse . from _Unwrapped . underL pitches
+
+
+
+type instance Part (Score a) = Part a
+type instance SetPart g (Score a) = Score (SetPart g a)
+
+instance (HasParts a b) => HasParts (Score a) (Score b) where
+  parts = _Wrapped . traverse . from _Unwrapped . underL parts
+
+type instance Dynamic (Score a) = Dynamic a
+type instance SetDynamic g (Score a) = Score (SetDynamic g a)
+
+instance HasDynamics a b => HasDynamics (Score a) (Score b) where
+  dynamics = _Wrapped . traverse . from _Unwrapped . underL dynamics
+
+type instance Articulation (Score a) = Articulation a
+type instance SetArticulation g (Score a) = Score (SetArticulation g a)
+
+instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
+  articulations = _Wrapped . traverse . from _Unwrapped . underL articulations
 
 
 
