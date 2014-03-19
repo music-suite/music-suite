@@ -2261,7 +2261,7 @@ instance Functor BadFunctor where
   fmap f BF2 = BF2
 
 instance Monad m => CoSerial m Time where
-  coseries = newtypeAlts  
+  coseries = liftM const -- TODO?  
 instance Monad m => Serial m Time where
   series = msum $ fmap return [-1,0,1,2,2.13222,10]
 instance Monad m => Serial m Duration where
