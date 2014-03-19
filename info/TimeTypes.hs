@@ -194,18 +194,18 @@ module TimeTypes (
         dynamics',
 
         -- * Music.Score.Articulation
-        Dynamic,
-        SetDynamic,
-        HasDynamic(..),
-        HasDynamics(..),
+        Articulation,
+        SetArticulation,
+        HasArticulation(..),
+        HasArticulations(..),
         articulation',
         articulations',
 
         -- * Music.Score.Part
-        Dynamic,
-        SetDynamic,
-        HasDynamic(..),
-        HasDynamics(..),
+        Part,
+        SetPart,
+        HasPart(..),
+        HasParts(..),
         part',
         parts',
 
@@ -743,7 +743,7 @@ type family SetDynamic (b :: *) (s :: *) :: * -- Dynamic b s = t
 -- |
 -- Class of types that provide a single dynamic.
 --
-class (SetDynamic (Dynamic t) s ~ t) => HasDynamic s t where
+class (Transformable (Dynamic s), Transformable (Dynamic t), SetDynamic (Dynamic t) s ~ t) => HasDynamic s t where
 
   -- |
   -- Dynamic type.
@@ -759,7 +759,7 @@ dynamic' = dynamic
 -- |
 -- Class of types that provide a dynamic traversal.
 --
-class (SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+class (Transformable (Dynamic s), Transformable (Dynamic t), SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
 
   -- |
   -- Dynamic type.
@@ -821,11 +821,11 @@ instance HasDynamics a b => HasDynamics [a] [b] where
 type instance Dynamic (Note a) = Dynamic a
 type instance SetDynamic g (Note a) = Note (SetDynamic g a)
 type instance Dynamic (Note a) = Dynamic a
-instance (HasDynamic a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamic (Note a) (Note b) where
+instance HasDynamic a b => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (dynamic $ underM f s) a
-instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamics (Note a) (Note b) where
+instance HasDynamics a b => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
@@ -833,7 +833,7 @@ instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b))
 type instance Dynamic (Score a) = Dynamic a
 type instance SetDynamic g (Score a) = Score (SetDynamic g a)
 type instance Dynamic (Score a) = Dynamic a
-instance (HasDynamics a b, Transformable (Dynamic a), Transformable (Dynamic b)) => HasDynamics (Score a) (Score b) where
+instance HasDynamics a b => HasDynamics (Score a) (Score b) where
   dynamics = _Wrapped . traverse . pl
     where
       pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
@@ -1152,6 +1152,12 @@ deriving instance Show a => Show (Delayed a)
 deriving instance Show a => Show (Stretched a)
 
 instance Transformable Int where
+  transform _ = id
+instance Transformable Bool where
+  transform _ = id
+instance Transformable Float where
+  transform _ = id
+instance Transformable Integer where
   transform _ = id
 
 instance Transformable (Segment a) where
