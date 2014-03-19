@@ -335,6 +335,420 @@ normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalize
 unnormalize :: (Num a, Ord a) => Getter (Normalized a) a
 unnormalize = re normalize
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Moving and scaling things
+
+-- FIXME compare with diagrams variant
+-- translation vs linear etc
+
+-- |
+-- Class of values that can be transformed (i.e. scaled and moved) in time.
+--
+-- In theory this could be generalized to arbitrary affine transformations.
+--
+-- Law
+--
+-- > transform s . transform t = transform (s <> t)
+--
+-- Law
+--
+-- > onset (delay n a)      = n ^+. onset a
+-- > offset (delay n a)     = n ^+. offset a
+-- > duration (stretch n a) = n ^* (duration a)
+--
+-- Lemma
+--
+-- > duration a = duration (delay n a)
+--
+class Transformable a where
+  transform :: Span -> a -> a
+
+instance Transformable a => Transformable (a, b) where
+  transform t (s,a) = (transform t s, a)
+
+-- FIXME strange
+-- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
+
+-- FIXME get rid of this
+delay' :: Transformable a => Time -> a -> a
+delay' t   = delay (t .-. 0)
+
+
+-- |
+-- A transformation that moves a value forward in time.
+--
+delaying :: Duration -> Span
+delaying x = (0 .+^ x) >-> 1
+
+-- |
+-- A transformation that stretches (augments) a value by the given factor.
+--
+stretching :: Duration -> Span
+stretching x = 0 >-> x
+
+-- |
+-- A transformation that moves a value backward in time.
+--
+undelaying :: Duration -> Span
+undelaying x = delaying (negate x)
+
+-- |
+-- A transformation that compresses (diminishes) a value by the given factor.
+--
+compressing :: Duration -> Span
+compressing x = stretching (recip x)
+
+-- |
+-- Moves a value forward in time.
+--
+-- > onset (delay n x)  = n ^+. onset x
+-- > offset (delay n x) = n ^+. offset x
+--
+-- > delay n b ! t == b ! (t .-^ n)
+--
+delay :: Transformable a => Duration -> a -> a
+delay = transform . delaying
+
+-- |
+-- Moves a value backward in time. Equivalent to @'stretch' . 'negate'@.
+--
+-- > onset (undelay n x) = n - onset x
+-- > offset (undelay n x) = n - offset x
+--
+-- > undelay n b ! t == b ! (t .+^ n)
+--
+undelay :: Transformable a => Duration -> a -> a
+undelay = transform . undelaying
+
+-- |
+-- Stretches (augments) a value by the given factor.
+--
+-- > duration (stretch n a) = n * (duration a)
+--
+stretch :: Transformable a => Duration -> a -> a
+stretch = transform . stretching
+
+-- |
+-- Compresses (diminishes) a score. Equivalent to @'stretch' . 'recip'@.
+--
+-- > duration (compress n a) = (duration a) / n
+--
+compress :: Transformable a => Duration -> a -> a
+compress = transform . compressing
+
+-- Fitting things
+
+-- Things with a duration
+
+-- |
+-- Class of values that have a duration.
+--
+-- Law Duration
+--
+-- > duration x = (offset x .-. onset x)
+--
+class HasDuration a where
+  duration :: a -> Duration
+
+-- |
+-- Stretch a value to have the given duration.
+--
+stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
+stretchTo d x = (d ^/ duration x) `stretch` x
+
+-- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
+-- stretchNorm x = stretchTo (normalized $ duration x) x
+
+
+-- Placing things
+
+-- |
+-- Class of values that have a position in time.
+--
+-- Many values such as notes, envelopes etc can in fact have many positions such as
+-- onset, maxPoint, offset, decay time etc. Rather than having separate classes for
+-- a discrete set of cases, this class provides an interpolation from a /local/
+-- position to a /global/ position. While the local position goes from 0 to 1,
+-- the global position goes from 'onset' to 'offset'.
+--
+-- For instantaneous values, a suitable instance is:
+--
+-- > position x = const t
+--
+-- For values with an onset and offset you can use 'alerp':
+--
+-- > position x = alerp onset offset
+--
+class HasPosition a where
+  position :: a -> {-Scalar-} Duration -> Time
+
+-- |  XXX make into lens for any positionable thing
+era :: HasPosition a => a -> Span
+era x = onset x <-> offset x
+
+-- |
+-- Return the onset of the given value.
+--
+-- In an 'Envelope', this is the value between the attack and decay phases.
+--
+onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+onset     = (`position` 0)
+
+-- |
+-- Return the offset of the given value.
+--
+-- In an 'Envelope', this is the value between the sustain and release phases.
+--
+offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+offset    = (`position` 1.0)
+
+-- |
+-- Return the pre-onset of the given value.
+--
+-- In an 'Envelope', this is the value right before the attack phase.
+--
+preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+preOnset  = (`position` (-0.5))
+
+-- |
+-- Return the post-onset of the given value.
+--
+-- In an 'Envelope', this is the value between the decay and sustain phases.
+--
+postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+postOnset   = (`position` 0.5)
+
+-- |
+-- Return the post-offset of the given value.
+--
+-- In an 'Envelope', this is the value right after the release phase.
+--
+postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+postOffset  = (`position` 1.5)
+
+-- |
+-- Move a value forward in time.
+--
+startAt :: (Transformable a, HasPosition a) => Time -> a -> a
+startAt t x   = (t .-. onset x) `delay` x
+
+-- |
+-- Move a value forward in time.
+--
+stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
+stopAt t  x   = (t .-. offset x) `delay` x
+
+-- |
+-- Align a value to a given position.
+--
+-- @alignAt p t@ places the given thing so that its position p is at time t
+--
+-- > alignAt 0 == startAt
+-- > alignAt 1 == stopAt
+--
+alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+alignAt p t x = (t .-. x `position` p) `delay` x
+
+-- |
+-- Place a value over the given span.
+--
+-- @placeAt s t@ places the given thing so that @era x == s@
+--
+placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
+placeAt s x = transform (s ^-^ era x) x
+
+-- |
+-- A lens to the position
+--
+-- XXX rename
+--
+place :: (HasPosition a, Transformable a) => Lens' a Span
+place = lens era (flip placeAt)
+
+-- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
+-- (3,4)
+    
+
+-- |
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
+--
+lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+a `lead` b   = alignAt 1 (b `position` 0) a
+
+-- |
+-- @a \`follow\` b@  moves b so that @offset a  == onset b'@
+--
+follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+a `follow` b = alignAt 0 (a `position` 1) b
+
+-- |
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
+--
+after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `after` b =  a <> (a `follow` b)
+
+-- |
+-- @a \`lead\` b@  moves a so that @offset a' == onset b@
+--
+before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `before` b =  (a `lead` b) <> b
+
+pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
+pinned f x = startAt (onset x) (f x)
+
+-- |
+-- Compose a list of sequential objects, with onset and offset tangent to one another.
+--
+-- For non-positioned types, this is the often same as 'mconcat'
+-- For positioned types, this is the same as 'afterAnother'
+--
+scat = Prelude.foldr (//) mempty
+
+-- |
+-- Compose a list of parallel objects, so that their local origins align.
+--
+-- This not possible for non-positioned types, as they have no notion of an origin.
+-- For positioned types this is the same as 'mconcat'.
+--
+pcat = Prelude.foldr (><) mempty
+
+during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+y `during`  x = placeAt (era x) y
+
+x `sustain` y   = x <> y `during` x
+
+times n   = scat . replicate n
+
+-- | 
+-- Class of values that can be split.
+--
+-- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
+--
+-- For positioned values succh as 'Note', split cuts a value relative to the local origin.
+--
+-- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
+-- XXX what about Behavior (infinite span)
+--
+-- Law
+--
+-- > let (a, b) = split x in duration a + duration b = duration x
+--
+class HasDuration a => Splittable a where
+  split  :: Duration -> a -> (a, a)
+
+
+
+takeM, dropM :: Splittable a => Duration -> a -> a
+  
+takeM t = fst . split t
+dropM t = snd . split t
+
+
+
+-- |
+-- Class of values that can be reversed.
+--
+class Reversible a where
+
+  -- | Reverse the given value.
+  rev :: a -> a
+
+instance Reversible () where
+  rev = id
+
+instance Reversible Int where
+  rev = id
+
+instance Reversible Double where
+  rev = id
+
+instance Reversible Integer where
+  rev = id
+
+instance Reversible a => Reversible [a] where
+  rev = reverse . fmap rev
+
+instance Reversible Duration where
+  rev = stretch (-1)
+
+instance Reversible Time where
+  rev = stretch (-1)
+
+instance Reversible Span where
+  rev = stretch (-1)
+
+instance Reversible a => Reversible (a, b) where
+  rev (s,a) = (rev s, a)
+
+-- |
+-- View the reverse of a value.
+--
+reversed :: Reversible a => Iso' a a
+reversed = iso rev rev
+
+
+
+class Sequential a where
+  (//) :: a -> a -> a
+  (\\) :: a -> a -> a
+
+instance Sequential (Voice a) where
+  (//) = (<>)
+  (\\) = flip (<>)
+
+instance Sequential (Voices a) where
+  (//) = (<>)
+  (\\) = flip (<>)
+
+instance Sequential (Score a) where
+  (//) = after
+  (\\) = before
+
+class Parallel a where
+  (><) :: a -> a -> a
+-- instance Parallel (Divide a) where
+  -- (><) = (<>)
+
+instance Parallel (Score a) where
+  (><) = (<>)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- | 
 -- Internal time representation. Can be anything with Fractional and RealFrac instances.
 --
@@ -1836,384 +2250,6 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
-
-
-
--- Moving and scaling things
-
--- FIXME compare with diagrams variant
--- translation vs linear etc
-
--- |
--- Class of values that can be transformed (i.e. scaled and moved) in time.
---
--- In theory this could be generalized to arbitrary affine transformations.
---
--- Law
---
--- > transform s . transform t = transform (s <> t)
---
--- Law
---
--- > onset (delay n a)      = n ^+. onset a
--- > offset (delay n a)     = n ^+. offset a
--- > duration (stretch n a) = n ^* (duration a)
---
--- Lemma
---
--- > duration a = duration (delay n a)
---
-class Transformable a where
-  transform :: Span -> a -> a
-
-instance Transformable a => Transformable (a, b) where
-  transform t (s,a) = (transform t s, a)
-
--- FIXME strange
--- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
-
--- FIXME get rid of this
-delay' :: Transformable a => Time -> a -> a
-delay' t   = delay (t .-. 0)
-
-
--- |
--- A transformation that moves a value forward in time.
---
-delaying :: Duration -> Span
-delaying x = (0 .+^ x) >-> 1
-
--- |
--- A transformation that stretches (augments) a value by the given factor.
---
-stretching :: Duration -> Span
-stretching x = 0 >-> x
-
--- |
--- A transformation that moves a value backward in time.
---
-undelaying :: Duration -> Span
-undelaying x = delaying (negate x)
-
--- |
--- A transformation that compresses (diminishes) a value by the given factor.
---
-compressing :: Duration -> Span
-compressing x = stretching (recip x)
-
--- |
--- Moves a value forward in time.
---
--- > onset (delay n x)  = n ^+. onset x
--- > offset (delay n x) = n ^+. offset x
---
--- > delay n b ! t == b ! (t .-^ n)
---
-delay :: Transformable a => Duration -> a -> a
-delay = transform . delaying
-
--- |
--- Moves a value backward in time. Equivalent to @'stretch' . 'negate'@.
---
--- > onset (undelay n x) = n - onset x
--- > offset (undelay n x) = n - offset x
---
--- > undelay n b ! t == b ! (t .+^ n)
---
-undelay :: Transformable a => Duration -> a -> a
-undelay = transform . undelaying
-
--- |
--- Stretches (augments) a value by the given factor.
---
--- > duration (stretch n a) = n * (duration a)
---
-stretch :: Transformable a => Duration -> a -> a
-stretch = transform . stretching
-
--- |
--- Compresses (diminishes) a score. Equivalent to @'stretch' . 'recip'@.
---
--- > duration (compress n a) = (duration a) / n
---
-compress :: Transformable a => Duration -> a -> a
-compress = transform . compressing
-
--- Fitting things
-
--- Things with a duration
-
--- |
--- Class of values that have a duration.
---
--- Law Duration
---
--- > duration x = (offset x .-. onset x)
---
-class HasDuration a where
-  duration :: a -> Duration
-
--- |
--- Stretch a value to have the given duration.
---
-stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretchTo d x = (d ^/ duration x) `stretch` x
-
--- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
--- stretchNorm x = stretchTo (normalized $ duration x) x
-
-
--- Placing things
-
--- |
--- Class of values that have a position in time.
---
--- Many values such as notes, envelopes etc can in fact have many positions such as
--- onset, maxPoint, offset, decay time etc. Rather than having separate classes for
--- a discrete set of cases, this class provides an interpolation from a /local/
--- position to a /global/ position. While the local position goes from 0 to 1,
--- the global position goes from 'onset' to 'offset'.
---
--- For instantaneous values, a suitable instance is:
---
--- > position x = const t
---
--- For values with an onset and offset you can use 'alerp':
---
--- > position x = alerp onset offset
---
-class HasPosition a where
-  position :: a -> {-Scalar-} Duration -> Time
-
--- |  XXX make into lens for any positionable thing
-era :: HasPosition a => a -> Span
-era x = onset x <-> offset x
-
--- |
--- Return the onset of the given value.
---
--- In an 'Envelope', this is the value between the attack and decay phases.
---
-onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-onset     = (`position` 0)
-
--- |
--- Return the offset of the given value.
---
--- In an 'Envelope', this is the value between the sustain and release phases.
---
-offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-offset    = (`position` 1.0)
-
--- |
--- Return the pre-onset of the given value.
---
--- In an 'Envelope', this is the value right before the attack phase.
---
-preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-preOnset  = (`position` (-0.5))
-
--- |
--- Return the post-onset of the given value.
---
--- In an 'Envelope', this is the value between the decay and sustain phases.
---
-postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOnset   = (`position` 0.5)
-
--- |
--- Return the post-offset of the given value.
---
--- In an 'Envelope', this is the value right after the release phase.
---
-postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOffset  = (`position` 1.5)
-
--- |
--- Move a value forward in time.
---
-startAt :: (Transformable a, HasPosition a) => Time -> a -> a
-startAt t x   = (t .-. onset x) `delay` x
-
--- |
--- Move a value forward in time.
---
-stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt t  x   = (t .-. offset x) `delay` x
-
--- |
--- Align a value to a given position.
---
--- @alignAt p t@ places the given thing so that its position p is at time t
---
--- > alignAt 0 == startAt
--- > alignAt 1 == stopAt
---
-alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-alignAt p t x = (t .-. x `position` p) `delay` x
-
--- |
--- Place a value over the given span.
---
--- @placeAt s t@ places the given thing so that @era x == s@
---
-placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
-placeAt s x = transform (s ^-^ era x) x
-
--- |
--- A lens to the position
---
--- XXX rename
---
-place :: (HasPosition a, Transformable a) => Lens' a Span
-place = lens era (flip placeAt)
-
--- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
--- (3,4)
-    
-
--- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
---
-lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b   = alignAt 1 (b `position` 0) a
-
--- |
--- @a \`follow\` b@  moves b so that @offset a  == onset b'@
---
-follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = alignAt 0 (a `position` 1) b
-
--- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
---
-after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-a `after` b =  a <> (a `follow` b)
-
--- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
---
-before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-a `before` b =  (a `lead` b) <> b
-
-pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
-pinned f x = startAt (onset x) (f x)
-
--- |
--- Compose a list of sequential objects, with onset and offset tangent to one another.
---
--- For non-positioned types, this is the often same as 'mconcat'
--- For positioned types, this is the same as 'afterAnother'
---
-scat = Prelude.foldr (//) mempty
-
--- |
--- Compose a list of parallel objects, so that their local origins align.
---
--- This not possible for non-positioned types, as they have no notion of an origin.
--- For positioned types this is the same as 'mconcat'.
---
-pcat = Prelude.foldr (><) mempty
-
-during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-y `during`  x = placeAt (era x) y
-
-x `sustain` y   = x <> y `during` x
-
-times n   = scat . replicate n
-
--- | 
--- Class of values that can be split.
---
--- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
---
--- For positioned values succh as 'Note', split cuts a value relative to the local origin.
---
--- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
--- XXX what about Behavior (infinite span)
---
--- Law
---
--- > let (a, b) = split x in duration a + duration b = duration x
---
-class HasDuration a => Splittable a where
-  split  :: Duration -> a -> (a, a)
-
-
-
-takeM, dropM :: Splittable a => Duration -> a -> a
-  
-takeM t = fst . split t
-dropM t = snd . split t
-
-
-
--- |
--- Class of values that can be reversed.
---
-class Reversible a where
-
-  -- | Reverse the given value.
-  rev :: a -> a
-
-instance Reversible () where
-  rev = id
-
-instance Reversible Int where
-  rev = id
-
-instance Reversible Double where
-  rev = id
-
-instance Reversible Integer where
-  rev = id
-
-instance Reversible a => Reversible [a] where
-  rev = reverse . fmap rev
-
-instance Reversible Duration where
-  rev = stretch (-1)
-
-instance Reversible Time where
-  rev = stretch (-1)
-
-instance Reversible Span where
-  rev = stretch (-1)
-
-instance Reversible a => Reversible (a, b) where
-  rev (s,a) = (rev s, a)
-
--- |
--- View the reverse of a value.
---
-reversed :: Reversible a => Iso' a a
-reversed = iso rev rev
-
-
-
-class Sequential a where
-  (//) :: a -> a -> a
-  (\\) :: a -> a -> a
-
-instance Sequential (Voice a) where
-  (//) = (<>)
-  (\\) = flip (<>)
-
-instance Sequential (Voices a) where
-  (//) = (<>)
-  (\\) = flip (<>)
-
-instance Sequential (Score a) where
-  (//) = after
-  (\\) = before
-
-class Parallel a where
-  (><) :: a -> a -> a
--- instance Parallel (Divide a) where
-  -- (><) = (<>)
-
-instance Parallel (Score a) where
-  (><) = (<>)
 
 
 -- -- Monoid/Semigroup
