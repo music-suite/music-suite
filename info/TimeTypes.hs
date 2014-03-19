@@ -102,8 +102,8 @@ module TimeTypes (
         -- ** Time spans
         Span,
         -- *** Constructing time spans
-        (<~>),
-        (>~>),
+        (<->),
+        (>->),
         -- *** Deconstructing time spans
         range,
         delta,
@@ -218,7 +218,7 @@ import           Diagrams.Prelude             hiding (Duration, Segment, Time,
                                                Transformable, after, duration,
                                                era, offset, position, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<~>), (|>), place, atTime, 
+                                               under, value, view, (<->), (|>), place, atTime, 
                                                Dynamic, start)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -418,10 +418,10 @@ instance HasPosition Time where
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
--- You can create a span using the '<~>' and '>~>' constructors. Note that:
+-- You can create a span using the '<->' and '>->' constructors. Note that:
 --
--- > t <~> u = t >~> (u .-. t)
--- > t >~> d = t <~> t .+^ d
+-- > t <-> u = t >-> (u .-. t)
+-- > t >-> d = t <-> t .+^ d
 --
 -- To create and destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
@@ -431,20 +431,20 @@ newtype Span = Span { getDelta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 --
--- > hs> (2 <~> 3)^.range
+-- > hs> (2 <-> 3)^.range
 -- > (2, 3)
 -- >
--- > hs> (2 <~> 3)^.delta
+-- > hs> (2 <-> 3)^.delta
 -- > (2, 1)
 -- >
--- > hs> (10 >~> 5)^.range
+-- > hs> (10 >-> 5)^.range
 -- > (10, 15)
 -- >
--- > hs> (10 >~> 5)^.delta
+-- > hs> (10 >-> 5)^.delta
 -- > (10, 5)
 
 instance Show Span where
-  show (view range -> (t,u)) = show t ++ "<~>" ++ show u
+  show (view range -> (t,u)) = show t ++ "<->" ++ show u
 
 instance HasPosition Span where
   position (view range -> (t1, t2)) = alerp t1 t2
@@ -478,24 +478,24 @@ instance Monoid Span where
 -- 'negateV' negates time and duration using their respective 'negateV' instances.
 --
 instance AdditiveGroup Span where
-  zeroV   = 0 <~> 1
+  zeroV   = 0 <-> 1
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
-(<~>) :: Time -> Time -> Span
-t <~> u = t >~> (u .-. t)
+(<->) :: Time -> Time -> Span
+t <-> u = t >-> (u .-. t)
 
 -- |
--- @t >~> d@ represents the span between @t@ and @t .+^ d@.
+-- @t >-> d@ represents the span between @t@ and @t .+^ d@.
 --
-(>~>) :: Time -> Duration -> Span
-t >~> d = Span (t, d)
+(>->) :: Time -> Duration -> Span
+t >-> d = Span (t, d)
 
--- > (<~>) = curry $ view $ from range
--- > (>~>) = curry $ view $ from delta
+-- > (<->) = curry $ view $ from range
+-- > (>->) = curry $ view $ from delta
 
 -- |
 -- View a span as pair of onset and offset.
@@ -505,7 +505,7 @@ t >~> d = Span (t, d)
 -- > foo (view range -> (u,v)) = ...
 --
 range :: Iso' Span (Time, Time)
-range = iso getRange $ uncurry (<~>) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
+range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- - To convert a span to a pair, use @s^.'range'@.
 --
@@ -520,7 +520,7 @@ range = iso getRange $ uncurry (<~>) where getRange x = let (t, d) = getDelta x 
 -- > foo (view delta -> (t,d)) = ...
 --
 delta :: Iso' Span (Time, Duration)
-delta = iso getDelta $ uncurry (>~>)
+delta = iso getDelta $ uncurry (>->)
 
 -- - To convert a span to a pair, use @s^.'delta'@.
 --
@@ -1312,7 +1312,7 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
   deriving (Functor, Foldable, Traversable)
 
 bounds :: Time -> a -> Time -> Bounds a
-bounds t x u = Bounds (t <~> u, x)
+bounds t x u = Bounds (t <-> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
 -- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `between` s then x else mempty) x)
@@ -1477,10 +1477,10 @@ a = time
 -- TODO compose segments etc
 adsr :: Behavior Duration
 adsr = time <&> \t ->
-  if t `between` (0  <~> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `between` (0.15 <~> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `between` (0.3  <~> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `between` (0.65 <~> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  if t `between` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `between` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `between` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `between` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
   0
 
 toFloat :: Real a => a -> Float
@@ -1524,7 +1524,7 @@ c2 :: Behavior Float -> Behavior Float
 c2  = liftA2 (*) c
 
 nc :: Note (Behavior (Int, Float))
-nc = transform (3 >~> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
 
 r :: Behavior Float
 r  = fmap snd $ runNote (nc & pitch %~ c2)
@@ -1853,13 +1853,13 @@ delay' t   = delay (t .-. 0)
 -- A transformation that moves a value forward in time.
 --
 delaying :: Duration -> Span
-delaying x = (0 .+^ x) >~> 1
+delaying x = (0 .+^ x) >-> 1
 
 -- |
 -- A transformation that stretches (augments) a value by the given factor.
 --
 stretching :: Duration -> Span
-stretching x = 0 >~> x
+stretching x = 0 >-> x
 
 -- |
 -- A transformation that moves a value backward in time.
@@ -1959,7 +1959,7 @@ class HasPosition a where
 
 -- |  XXX make into lens for any positionable thing
 era :: HasPosition a => a -> Span
-era x = onset x <~> offset x
+era x = onset x <-> offset x
 
 -- |
 -- Return the onset of the given value.
@@ -2040,7 +2040,7 @@ placeAt s x = transform (s ^-^ era x) x
 place :: (HasPosition a, Transformable a) => Lens' a Span
 place = lens era (flip placeAt)
 
--- *TimeTypes> (transform ((3 <~> 4) ^-^ (4 <~> 4.5)) (4 <~> 4.5))^.range
+-- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
 -- (3,4)
     
 
