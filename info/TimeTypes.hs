@@ -393,6 +393,8 @@ tabulated = iso tabulate index
 class Transformable a where
   transform :: Span -> a -> a
 
+-- TODO remove this one (or at least implement Score without it)
+-- maybe change it to transform both components?
 instance Transformable a => Transformable (a, b) where
   transform t (s,a) = (transform t s, a)
 
@@ -1986,8 +1988,9 @@ atTime = index
 
 
 
+type ScoreNote a = (Span, a)
 
-newtype Score a   = Score    { getScore :: [(Span, a)]   }
+newtype Score a = Score { getScore :: [ScoreNote a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
 instance Wrapped (Score a) where
