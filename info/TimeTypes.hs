@@ -197,6 +197,15 @@ module TimeTypes (
         HasPitches(..),
         pitch',
         pitches',
+        up,
+        down,
+        above,
+        below,
+        inv,
+        -- octavesUp,
+        -- octavesDown,
+        -- octavesAbove,
+        -- octavesBelow,
 
         -- * Music.Score.Dynamic
         Dynamic,
@@ -231,7 +240,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
                                                after, atTime, duration, during,
                                                _era, interval, offset, place,
-                                               position, start, stretch,
+                                               position, start, stretch, inv,
                                                stretchTo, transform, trim, era,
                                                under, value, view, (<->), (|>))
 import           System.Process               (system)
@@ -243,7 +252,7 @@ import           Control.Arrow                (first, second, (***))
 import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, index, parts,
+import           Control.Lens                 hiding (Indexable, index, parts, above, below,
                                                reversed, transform, under, (|>), inside)
 import           Control.Monad
 import           Control.Monad.Free
@@ -264,6 +273,7 @@ import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
 import           Data.VectorSpace
+import           Music.Pitch.Literal
 
 import           Data.Int
 import           Test.SmallCheck.Series       hiding ((><), NonEmpty)
@@ -1173,6 +1183,50 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
 
+type Interval a = Diff (Pitch a)
+type Transposable a = (HasPitches a a, VectorSpace (Interval a), AffineSpace (Pitch a), IsInterval (Interval a), IsPitch (Pitch a))
+
+-- |
+-- Transpose up.
+--
+up :: Transposable a => Interval a -> a -> a
+up a = pitches %~ (.+^ a)
+
+-- |
+-- Transpose down.
+--
+down :: Transposable a => Interval a -> a -> a
+down a = pitches %~ (.-^ a)
+
+-- |
+-- Add the given interval above.
+--
+above :: (Semigroup a, Transposable a) => Interval a -> a -> a
+above a x = x <> up a x
+
+-- |
+-- Add the given interval below.
+--
+below :: (Semigroup a, Transposable a) => Interval a -> a -> a
+below a x = x <> down a x
+
+-- |
+-- Invert pitches.
+--
+inv :: Transposable a => Pitch a -> a -> a
+inv p = pitches %~ (reflectThrough p)
+
+-- |
+-- Transpose up by the given number of octaves.
+--
+octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
+octavesUp a     = up (_P8^*a)
+
+-- |
+-- Transpose down by the given number of octaves.
+--
+octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
+octavesDown a   = down (_P8^*a)
 
 
 
@@ -2310,8 +2364,6 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
-a :: Behavior Float
-a = time
 
 
 -- TODO these are examples...
@@ -2333,10 +2385,10 @@ modulate = (\t x -> x * sin (t*2*pi)) <$> time
 
 
 
-test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c*5)) <> drawNote (fmap (fmap snd) nc)
+test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
   where
     -- c = 1
-c = (sin (time/20*2*pi))
+c1 = (sin (time/20*2*pi))
 
 
 newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
@@ -2359,11 +2411,13 @@ drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blu
 
 
 
+a :: Behavior Float
+a = time
 
 
 
 c2 :: Behavior Float -> Behavior Float
-c2  = liftA2 (*) c
+c2  = liftA2 (*) c1
 
 nc :: Note (Behavior (Int, Float))
 nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
