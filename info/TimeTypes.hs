@@ -21,7 +21,7 @@ module TimeTypes (
 
         (!),
         tabulated,
-        
+
         -- * Music.Time.Transform
         -- ** The Transformable class
         Transformable(..),
@@ -221,38 +221,36 @@ module TimeTypes (
 import qualified Data.ByteString.Lazy         as ByteString
 import           Data.Default
 import qualified Diagrams.Backend.SVG         as SVG
-import           Diagrams.Prelude             hiding (Duration, Segment, Time,
-                                               Transformable, after, duration,
-                                               era, offset, position, stretch,
+import           Diagrams.Prelude             hiding (Duration, Dynamic,
+                                               Segment, Time, Transformable,
+                                               after, atTime, duration, during,
+                                               era, interval, offset, place,
+                                               position, start, stretch,
                                                stretchTo, transform, trim,
-                                               under, value, view, (<->), (|>), place, atTime,
-                                               interval, during,
-                                               Dynamic, start)
+                                               under, value, view, (<->), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
 
-import qualified Control.Category
 import           Control.Applicative
 import           Control.Arrow                (first, second, (***))
+import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, transform,
-                                               under, (|>), reversed, index, parts)
+import           Control.Lens                 hiding (Indexable, index, parts,
+                                               reversed, transform, under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
 import           Data.AffineSpace
-import           Data.Distributive
-import           Data.Functor.Rep
 import           Data.AffineSpace.Point
+import           Data.Distributive
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
--- import           Data.Key
+import           Data.Functor.Rep
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
--- import           Data.Key (or use Control.Lens.Indexed?)
 import           Data.Semigroup
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
@@ -262,8 +260,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Data.Int
-import           Test.SmallCheck.Series       (Serial(..), CoSerial(..), cons0, newtypeCons, newtypeAlts,
-                                               series, (\/))
+import           Test.SmallCheck.Series       hiding ((><), NonEmpty)
 import           Test.Tasty
 import           Test.Tasty.SmallCheck
 
@@ -585,7 +582,7 @@ place = lens era (flip placeAt)
 
 -- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
 -- (3,4)
-    
+
 
 -- |
 -- @a \`lead\` b@  moves a so that @offset a' == onset b@
@@ -637,7 +634,7 @@ x `sustain` y   = x <> y `during` x
 
 times n   = scat . replicate n
 
--- | 
+-- |
 -- Class of values that can be split.
 --
 -- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
@@ -657,7 +654,7 @@ class HasDuration a => Splittable a where
 
 
 takeM, dropM :: Splittable a => Duration -> a -> a
-  
+
 takeM t = fst . split t
 dropM t = snd . split t
 
@@ -749,7 +746,7 @@ instance Parallel (Score a) where
 
 
 
--- | 
+-- |
 -- Internal time representation. Can be anything with Fractional and RealFrac instances.
 --
 type TimeBase = Rational
@@ -952,27 +949,27 @@ delta = iso getDelta $ uncurry (>->)
 -- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
 --
 
--- | 
+-- |
 -- Apply a function under transformation.
--- 
+--
 -- > forall s . id `under` s = id
--- 
+--
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform (negateV s) . f . transform s
 
--- | 
+-- |
 -- Apply a morphism under transformation (monadic version).
--- 
+--
 -- > forall s . return `underM` s = return
--- 
+--
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform (negateV s)) . f . transform s
 
--- | 
+-- |
 -- Apply a morphism under transformation (co-monadic version).
--- 
+--
 -- > forall s . extract `underW` s = extract
--- 
+--
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
 
@@ -1384,7 +1381,7 @@ type instance Articulation (Score a) = Articulation a
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . pl
     where
-      pl f (s,a) = (s,) <$> (articulations $ underM f s) a 
+      pl f (s,a) = (s,) <$> (articulations $ underM f s) a
 
 
 
@@ -1508,7 +1505,7 @@ type instance Part (Score a) = Part a
 instance (HasParts a b) => HasParts (Score a) (Score b) where
   parts = _Wrapped . traverse . pl
     where
-      pl f (s,a) = (s,) <$> (parts $ underM f s) a 
+      pl f (s,a) = (s,) <$> (parts $ underM f s) a
 
 
 
@@ -1792,10 +1789,10 @@ instance Semigroup a => Semigroup (Segment a) where
 instance Monoid a => Monoid (Segment a) where
 
 -- type instance Key Segment = Duration
--- 
+--
 -- instance Lookup Segment where
 --   t `lookup` Segment b = b <$> t ^? normalize
--- 
+--
 -- instance Indexable Segment where
 --   Segment b `index` t = b $ t ^?! normalize
 
@@ -1875,10 +1872,10 @@ tabulated = iso tabulate index
 
 -- instance Keyed Behavior where
 --   mapWithKey = (<*>) . behavior
--- 
+--
 -- instance Lookup Behavior where
 --   lookup = lookupDefault
--- 
+--
 -- instance Indexable Behavior where
 --   Behavior b `index` t = b t
 
@@ -2355,7 +2352,7 @@ instance Functor BadFunctor where
   fmap f BF2 = BF2
 
 instance Monad m => CoSerial m Time where
-  coseries = liftM const -- TODO?  
+  coseries = liftM const -- TODO?
 instance Monad m => Serial m Time where
   series = msum $ fmap return [-1,0,1,2,2.13222,10]
 instance Monad m => Serial m Duration where
@@ -2387,13 +2384,13 @@ instance (Monad m, Serial m a) => Serial m (Behavior a) where
 -- > duration a = duration (delay n a)
 
 constDurLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
-constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
-  testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
+constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
+  testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 duration a == duration (delay n a)
   ]
 
-delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
-  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $ 
+delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
+  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
                 delay n b ! t == b ! (t .-^ n)
   ]
 
