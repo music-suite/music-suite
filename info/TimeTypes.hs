@@ -702,8 +702,6 @@ type instance Pitch (Score a) = Pitch a
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . pl
     where
-      pl :: (HasPitches a b) =>
-        Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
 
