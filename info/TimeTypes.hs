@@ -27,6 +27,7 @@ module TimeTypes (
         -- *** Apply under a transformation
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         underM,
+        underW,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -539,6 +540,9 @@ f `under` s = transform (negateV s) . f . transform s
 -- 
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform (negateV s)) . f . transform s
+
+underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
+f `underW` s = transform (negateV s) . f . fmap (transform s)
 
 
 conjugate :: Span -> Span -> Span
