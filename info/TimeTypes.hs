@@ -127,11 +127,11 @@ module TimeTypes (
         -- * Music.Time.Note
         Note,
         note,
-        reifyNote,
-        noteValue',
         noteValue,
+        -- runNote,
+        -- reifyNote,
+        -- noteValue',
         -- mapNote,
-        runNote,
 
         -- * Music.Time.Bounds
         Bounds,
@@ -1234,7 +1234,7 @@ instance HasPosition (Delayed a) where x `position` p = ask (unwr x)`position` p
 -- |
 -- View a note as a pair of the original value and the transformation.
 --
-note :: Iso' (Span, a) (Note a)
+note :: Transformable a => Iso' (Span, a) (Note a)
 note = _Unwrapped'
 
 -- |
@@ -1246,7 +1246,7 @@ runNote = uncurry transform . unwr
 -- |
 -- Extract the transformed value.
 --
-reifyNote :: Note a -> Note (Span, a)
+reifyNote :: Transformable a => Note a -> Note (Span, a)
 reifyNote = fmap (view $ from note) . duplicate
 
 mapNote f (Note (s,x)) = Note (s, under f s x)
