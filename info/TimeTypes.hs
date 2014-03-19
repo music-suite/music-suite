@@ -2268,7 +2268,7 @@ instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
 instance (Monad m, Serial m a) => Serial m (BadMonoid a) where
   series = newtypeCons BadMonoid
 -- instance Monad m => Serial m Int8 where
-  -- series = msum $ fmap return [0..2]
+  -- series = msum $ fmap ereturn [0..2]
 instance (Monad m, Serial m a) => Serial m (Note a) where
   series = newtypeCons Note
 instance (Monad m, Serial m a) => Serial m (Delayed a) where
@@ -2287,14 +2287,14 @@ instance (Monad m, Serial m a) => Serial m (Behavior a) where
 --
 -- > duration a = duration (delay n a)
 
-
+constDurLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
   testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 duration a == duration (delay n a)
   ]
 
 delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
-  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) -> let b = time' in 
+  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $ 
                 delay n b ! t == b ! (t .-^ n)
   ]
 
@@ -2355,7 +2355,7 @@ main = defaultMain $ testGroup "" $ [
 
   constDurLaw (undefined :: Note ()),
   constDurLaw (undefined :: Stretched ()),
-  delayBehLaw (undefined :: Behavior Float)
+  delayBehLaw (undefined :: Behavior ())
 
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
