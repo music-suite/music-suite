@@ -58,8 +58,8 @@ module TimeTypes (
         HasPosition(..),
 
         -- ** Inspecting position
-        place,
-        -- era,
+        era,
+        era',
 
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
@@ -122,22 +122,22 @@ module TimeTypes (
         -- * Music.Time.Stretched
         Stretched,
         stretched,
-        unstretched,
+        stretchedValue,
         -- runStretched,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
-        undelayed,
+        delayedValue,
         -- runDelayed,
 
         -- * Music.Time.Note
         Note,
         note,
-        unnote,
+        noteValue,
         -- runNote,
         -- reifyNote,
-        -- unnote',
+        -- noteValue',
         -- mapNote,
 
         -- * Music.Time.Bounds
@@ -225,9 +225,9 @@ import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
                                                after, atTime, duration, during,
-                                               era, interval, offset, place,
+                                               era', interval, offset, place,
                                                position, start, stretch,
-                                               stretchTo, transform, trim,
+                                               stretchTo, transform, trim, era,
                                                under, value, view, (<->), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -515,8 +515,8 @@ class HasPosition a where
   position :: a -> {-Scalar-} Duration -> Time
 
 -- |  XXX make into lens for any positionable thing
-era :: HasPosition a => a -> Span
-era x = onset x <-> offset x
+era' :: HasPosition a => a -> Span
+era' x = onset x <-> offset x
 
 -- |
 -- Return the onset of the given value.
@@ -584,18 +584,18 @@ alignAt p t x = (t .-. x `position` p) `delay` x
 -- |
 -- Place a value over the given span.
 --
--- @placeAt s t@ places the given thing so that @era x == s@
+-- @placeAt s t@ places the given thing so that @x^.place == s@
 --
 placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
-placeAt s x = transform (s ^-^ era x) x
+placeAt s x = transform (s ^-^ (view era) x) x
 
 -- |
 -- A lens to the position
 --
 -- XXX rename
 --
-place :: (HasPosition a, Transformable a) => Lens' a Span
-place = lens era (flip placeAt)
+era :: (HasPosition a, Transformable a) => Lens' a Span
+era = lens era' (flip placeAt)
 
 -- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
 -- (3,4)
@@ -643,7 +643,7 @@ scat = Prelude.foldr (//) mempty
 pcat = Prelude.foldr (><) mempty
 
 during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-y `during`  x = placeAt (era x) y
+y `during`  x = placeAt (era' x) y
 
 x `sustain` y   = x <> y `during` x
 
@@ -1656,8 +1656,8 @@ mapDelayed f (Delayed (t,x)) = Delayed (t, underTime f t x)
 -- |
 -- View the value in the note.
 --
-undelayed :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-undelayed = lens runDelayed (flip $ mapDelayed . const)
+delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
+delayedValue = lens runDelayed (flip $ mapDelayed . const)
 
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
@@ -1672,8 +1672,8 @@ mapStretched f (Stretched (d,x)) = Stretched (d, underDuration f d x)
 -- |
 -- View the value in the note.
 --
-unstretched :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-unstretched = lens runStretched (flip $ mapStretched . const)
+stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+stretchedValue = lens runStretched (flip $ mapStretched . const)
 
 instance Reversible (Note a) where
   rev = stretch (-1)
@@ -1728,8 +1728,8 @@ mapNote f (Note (s,x)) = Note (s, under f s x)
 -- |
 -- View the value in the note.
 --
-unnote :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-unnote = lens runNote (flip $ mapNote . const)
+noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+noteValue = lens runNote (flip $ mapNote . const)
 
 
 -- |
@@ -2355,7 +2355,7 @@ r  = fmap snd $ runNote (nc & pitch %~ c2)
 
 drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
 drawNote n = let
-  (t,d) = view delta $ era n
+  (t,d) = view delta $ n^.era
   a = n ^?! traverse
   in drawNote' (t,d,a)
 
