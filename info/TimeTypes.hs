@@ -615,7 +615,7 @@ type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 -- |
 -- Class of types that provide a single pitch.
 --
-class (SetPitch (Pitch t) s ~ t) => HasPitch s t where
+class (Transformable (Pitch s), Transformable (Pitch t), SetPitch (Pitch t) s ~ t) => HasPitch s t where
 
   -- |
   -- Pitch type.
@@ -631,7 +631,7 @@ pitch' = pitch
 -- |
 -- Class of types that provide a pitch traversal.
 --
-class (SetPitch (Pitch t) s ~ t) => HasPitches s t where
+class (Transformable (Pitch s), Transformable (Pitch t), SetPitch (Pitch t) s ~ t) => HasPitches s t where
 
   -- |
   -- Pitch type.
@@ -687,11 +687,11 @@ instance HasPitches a b => HasPitches [a] [b] where
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
 type instance Pitch (Note a) = Pitch a
-instance (HasPitch a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitch (Note a) (Note b) where
+instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (pitch $ underM f s) a
-instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Note a) (Note b) where
+instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
@@ -699,10 +699,10 @@ instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => H
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 type instance Pitch (Score a) = Pitch a
-instance (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) => HasPitches (Score a) (Score b) where
+instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . pl
     where
-      pl :: (HasPitches a b, Transformable (Pitch a), Transformable (Pitch b)) =>
+      pl :: (HasPitches a b) =>
         Traversal (Span, a) (Span, b) (Pitch a) (Pitch b)
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
@@ -871,7 +871,7 @@ type family SetArticulation (b :: *) (s :: *) :: * -- Articulation b s = t
 -- |
 -- Class of types that provide a single articulation.
 --
-class (SetArticulation (Articulation t) s ~ t) => HasArticulation s t where
+class (Transformable (Articulation s), Transformable (Articulation t), SetArticulation (Articulation t) s ~ t) => HasArticulation s t where
 
   -- |
   -- Articulation type.
@@ -887,7 +887,7 @@ articulation' = articulation
 -- |
 -- Class of types that provide a articulation traversal.
 --
-class (SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+class (Transformable (Articulation s), Transformable (Articulation t), SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
 
   -- |
   -- Articulation type.
@@ -943,11 +943,11 @@ instance HasArticulations a b => HasArticulations [a] [b] where
 type instance Articulation (Note a) = Articulation a
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 type instance Articulation (Note a) = Articulation a
-instance (HasArticulation a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulation (Note a) (Note b) where
+instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
   articulation = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (articulation $ underM f s) a
-instance (HasArticulations a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulations (Note a) (Note b) where
+instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (articulations $ underM f s) a
@@ -955,7 +955,7 @@ instance (HasArticulations a b, Transformable (Articulation a), Transformable (A
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 type instance Articulation (Score a) = Articulation a
-instance (HasArticulations a b, Transformable (Articulation a), Transformable (Articulation b)) => HasArticulations (Score a) (Score b) where
+instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . pl
     where
       pl f (s,a) = (s,) <$> (articulations $ underM f s) a 
@@ -995,7 +995,7 @@ type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
 -- |
 -- Class of types that provide a single part.
 --
-class (SetPart (Part t) s ~ t) => HasPart s t where
+class (Transformable (Part s), Transformable (Part t), SetPart (Part t) s ~ t) => HasPart s t where
 
   -- |
   -- Part type.
@@ -1011,7 +1011,7 @@ part' = part
 -- |
 -- Class of types that provide a part traversal.
 --
-class (SetPart (Part t) s ~ t) => HasParts s t where
+class (Transformable (Part s), Transformable (Part t), SetPart (Part t) s ~ t) => HasParts s t where
 
   -- |
   -- Part type.
@@ -1067,11 +1067,11 @@ instance HasParts a b => HasParts [a] [b] where
 type instance Part (Note a) = Part a
 type instance SetPart g (Note a) = Note (SetPart g a)
 type instance Part (Note a) = Part a
-instance (HasPart a b, Transformable (Part a), Transformable (Part b)) => HasPart (Note a) (Note b) where
+instance (HasPart a b) => HasPart (Note a) (Note b) where
   part = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (part $ underM f s) a
-instance (HasParts a b, Transformable (Part a), Transformable (Part b)) => HasParts (Note a) (Note b) where
+instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . pl
     where
       pl f (s,a) = (s,) <$> (parts $ underM f s) a
@@ -1079,7 +1079,7 @@ instance (HasParts a b, Transformable (Part a), Transformable (Part b)) => HasPa
 type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 type instance Part (Score a) = Part a
-instance (HasParts a b, Transformable (Part a), Transformable (Part b)) => HasParts (Score a) (Score b) where
+instance (HasParts a b) => HasParts (Score a) (Score b) where
   parts = _Wrapped . traverse . pl
     where
       pl f (s,a) = (s,) <$> (parts $ underM f s) a 
