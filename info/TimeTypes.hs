@@ -18,7 +18,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE CPP                        #-}
 
-module TimeTypes (
+module Main (
+        main,
 
         (!),
         tabulated,
@@ -159,11 +160,21 @@ module TimeTypes (
 
         -- * Music.Time.Behavior
         Behavior,
-        time,
-        -- time',
-        -- interval,
-        -- atTime,
         behavior,
+        interval,
+
+        -- ** Special behaviors
+        time,
+        ui,
+        sine,
+        cosine,
+        dirac,
+
+        -- ** Combinators
+        switch,
+        switch',
+        splice,
+        concatBehavior,
 
         -- * Music.Time.Voice
         Voice,
@@ -339,6 +350,18 @@ instance Monoid b => Monad ((,) b) where
 -- | A value in the unit interval /(0,1)/.
 newtype Normalized a = Normalized { getNormalized :: a }
   deriving (Eq, Ord, Show, Functor)
+
+instance Num a => Bounded (Normalized a) where
+  minBound = Normalized 0
+  maxBound = Normalized 1
+instance (Num a, Ord a) => Num (Normalized a) where
+  fromInteger = toNorm . fromInteger
+instance (Num a, Ord a, Fractional a) => Fractional (Normalized a) where
+  fromRational = toNorm . fromRational
+
+toNorm   = fromMaybe (error "Outside 0-1") . (^? normalize)
+fromNorm = (^. unnormalize)
+
 
 zipNormalizedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Normalized a -> Normalized b -> Maybe (Normalized c)
 zipNormalizedWith f a b = ((a^.unnormalize) `f` (b^.unnormalize))^? normalize
@@ -1966,8 +1989,8 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
 -- |
 -- Add bounds.
 --
-bounds :: Time -> a -> Time -> Bounds a
-bounds t x u = Bounds (t <-> u, x)
+bounds :: Time -> Time -> a -> Bounds a
+bounds t u x = Bounds (t <-> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
 -- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inside` s then x else mempty) x)
@@ -1975,11 +1998,11 @@ bounds t x u = Bounds (t <-> u, x)
 -- |
 -- Add bounds.
 --
-trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
+trim :: Monoid b => Bounds (Behavior b) -> Behavior b
 trim = trimG
 
-trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
-trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x)
+trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
+trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x
 
 -- |
 -- Add bounds.
@@ -2067,7 +2090,22 @@ deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
 deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
+-- deriving instance RealFrac a => RealFrac (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
+
+-- FOO3
+-- TODO move
+instance Eq a => Eq (b -> a) where
+instance Ord a => Ord (b -> a) where
+  min = liftA2 min
+  max = liftA2 max
+instance Real a => Real (b -> a) where
+  toRational = error "No toRational for funtions"
+-- instance RealFrac a => RealFrac (b -> a) where
+  -- truncate = fmap truncate
+  -- round = fmap round
+  -- ceiling = fmap ceiling
+  -- floor = fmap floor
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No fun"
@@ -2151,15 +2189,53 @@ interval t u = (t <-> u, time)^.note
 
 sine = sin (time*tau)
 cosine = cos (time*tau)
+sawtooth = time - fmap floor' time
 
+floor' :: RealFrac a => a -> a
+floor' = fromIntegral . floor
+  
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
 atTime = index                 
 
+dirac :: (Num a, Bounded a) => Behavior a
+dirac = switch' 0 0 maxBound 0
 
+-- XXX name
+turnOn  = switch 0 0 1
+turnOff = switch 0 1 0
+
+deriving instance Bounded a => Bounded (Behavior a)
+
+-- TODO move to NumInstances
+instance Bounded a => Bounded (b -> a) where
+  minBound = pure minBound
+  maxBound = pure maxBound
+
+
+
+-- |
+-- @
+-- switch t a b ! t == b
+-- @
+--
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t (Behavior rx) (Behavior ry) = Behavior (\u -> if u < t then rx u else ry u)
 
+switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
+switch' t (Behavior rx) (Behavior ry) (Behavior rz) = Behavior $ \u -> case u `compare` t of
+    LT -> rx u
+    EQ -> ry u
+    GT -> rz u
+
+splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
+splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . Just . Last) c <> (trim . (fmap.fmap) (Option . Just . Last)) n
+
+
+
+
+concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
+concatBehavior = undefined
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
