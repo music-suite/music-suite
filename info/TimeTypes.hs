@@ -154,6 +154,8 @@ module TimeTypes (
 
         -- * Music.Time.Segment
         Segment,
+        fromSegment,
+        fromSegment2,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -1783,9 +1785,20 @@ instance Transformable Double where
 instance Transformable Integer where
   transform _ = id
 
+-- |
+-- Segments are /invariant/ under transformation.
+--
+-- To transform a timve varying value, use fromSegment.
+--
 instance Transformable (Segment a) where
+  transform _ = id
 
+-- | XXX name
+fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
+fromSegment = undefined
 
+fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
+fromSegment2 = undefined
 
 
 
@@ -2793,7 +2806,7 @@ drawBehavior' count b = cubicSpline False points & lw 0.05
     points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b `index` realToFrac x)) [0,1/samplesPerCell..]
     samplesPerCell = 40
 
-grid = grid'   20
+grid = grid' 20 <> fc lightblue (circle 0.1)
 gridX = gridX' 20
 gridY = gridY' 20
 
