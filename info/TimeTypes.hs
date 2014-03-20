@@ -31,6 +31,7 @@ module TimeTypes (
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         underM,
         underW,
+        -- underL,
         underDelay,
         underStretch,
         -- conjugate,  -- :: Span -> Span -> Span
@@ -60,18 +61,17 @@ module TimeTypes (
         HasPosition(..),
         -- ** Inspecting position
         era,
-        _era,
+        -- _era,
 
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
-
-        _onset,
-        _offset,
-        offset,
+        -- _onset,
+        -- _offset,
         preOnset,       -- :: HasPosition a => a -> Time
         postOnset,      -- :: HasPosition a => a -> Time
         postOffset,     -- :: HasPosition a => a -> Time
+        
         -- ** Moving to absolute positions
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
@@ -195,6 +195,8 @@ module TimeTypes (
         SetPitch,
         HasPitch(..),
         HasPitches(..),
+        Interval,
+        Transposable,
         pitch',
         pitches',
         up,
@@ -534,7 +536,6 @@ normalizeDuration = stretchTo 1
 class HasPosition a where
   _position :: a -> {-Scalar-} Duration -> Time
 
--- |  XXX make into lens for any positionable thing
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
 
@@ -554,12 +555,35 @@ _onset     = (`_position` 0)
 _offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 _offset    = (`_position` 1.0)
 
+-- |
+-- Onset of the given value.
+--
 onset :: (HasPosition a, Transformable a) => Lens' a Time
 onset = lens (`_position` 0) (flip $ alignAt 0)
 
+-- |
+-- Onset of the given value.
+--
 offset :: (HasPosition a, Transformable a) => Lens' a Time
 offset = lens (`_position` 1) (flip $ alignAt 1)
 
+-- |
+-- Onset of the given value.
+--
+preOnset :: (HasPosition a, Transformable a) => Lens' a Time
+preOnset = lens _preOnset (flip $ alignAt 1)
+
+-- |
+-- Onset of the given value.
+--
+postOnset :: (HasPosition a, Transformable a) => Lens' a Time
+postOnset = lens _postOnset (flip $ alignAt 1)
+
+-- |
+-- Onset of the given value.
+--
+postOffset :: (HasPosition a, Transformable a) => Lens' a Time
+postOffset = lens _postOffset (flip $ alignAt 1)
 
 
 -- |
@@ -567,24 +591,26 @@ offset = lens (`_position` 1) (flip $ alignAt 1)
 --
 -- In an 'Envelope', this is the value right before the attack phase.
 --
-preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-preOnset  = (`_position` (-0.5))
+_preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+_preOnset  = (`_position` (-0.5))
 
 -- |
 -- Return the post-onset of the given value.
 --
 -- In an 'Envelope', this is the value between the decay and sustain phases.
 --
-postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOnset   = (`_position` 0.5)
+_postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+_postOnset   = (`_position` 0.5)
 
 -- |
 -- Return the post-offset of the given value.
 --
 -- In an 'Envelope', this is the value right after the release phase.
 --
-postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-postOffset  = (`_position` 1.5)
+_postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+_postOffset  = (`_position` 1.5)
+
+
 
 -- |
 -- Move a value forward in time.
@@ -619,8 +645,6 @@ placeAt s x = transform (s ^-^ (view era) x) x
 
 -- |
 -- A lens to the position
---
--- XXX rename
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip placeAt)
@@ -1015,17 +1039,20 @@ f `underM` s = fmap (transform (negateV s)) . f . transform s
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform (negateV s) . f . fmap (transform s)
 
+-- |
+-- Apply a function under transformation.
+--
 underDelay :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
 underDelay     = flip (flip under . delaying . (.-. 0))
 
+-- |
+-- Apply a function under transformation.
+--
 underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 underStretch = flip (flip under . stretching)
 
-underL :: (Functor f, Functor g, Transformable a, Transformable b) => 
-       ((a -> g b) -> s -> f t)
-     -> (a -> g b) -> (Span, s) -> f (Span, t)
+underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
 underL l f (s,a) = (s,) <$> (l $ underM f s) a
-
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1146,6 +1173,13 @@ type instance SetPitch a Float = a
 instance HasPitch Float Float where
   pitch = ($)
 instance HasPitches Float Float where
+  pitches = ($)
+
+type instance Pitch Double = Double
+type instance SetPitch a Double = a
+instance HasPitch Double Double where
+  pitch = ($)
+instance HasPitches Double Double where
   pitches = ($)
 
 
@@ -1678,6 +1712,8 @@ instance Transformable Bool where
   transform _ = id
 instance Transformable Float where
   transform _ = id
+instance Transformable Double where
+  transform _ = id
 instance Transformable Integer where
   transform _ = id
 
@@ -1704,9 +1740,14 @@ instance Transformable (Segment a) where
 -- > runNote . transform s = transform s . runNote
 --
 newtype Note a    = Note    { getNote :: (Span, a)   }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Comonad, Foldable, Traversable)
 
+deriving instance Eq a => Eq (Note a)
+deriving instance Functor Note
 deriving instance Typeable1 Note
+deriving instance Foldable Note
+deriving instance Traversable Note
+deriving instance Applicative Note
+-- deriving instance Comonad Note
 
 -- |
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
@@ -1792,8 +1833,8 @@ runNote = uncurry transform . unwr
 -- |
 -- Extract the transformed value.
 --
-reifyNote :: Transformable a => Note a -> Note (Span, a)
-reifyNote = fmap (view $ from note) . duplicate
+-- reifyNote :: Transformable a => Note a -> Note (Span, a)
+-- reifyNote = fmap (view $ from note) . duplicate
 
 mapNote f (Note (s,x)) = Note (s, under f s x)
 
@@ -1806,8 +1847,6 @@ noteValue = lens runNote (flip $ mapNote . const)
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
---
--- XXX iso should expose (Duration, a) duration (but the monoid should still be additive)
 --
 delayed :: Iso' (Time, a) (Delayed a)
 delayed = _Unwrapped'
@@ -1917,17 +1956,17 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
 
 
--- |
---
--- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
--- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it between
--- 'Bounds'.
---
 -- Behavior is 'Representable':
 --
 -- > ask = realToFrac <$> time
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
+
+-- |
+--
+-- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
+-- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it between
+-- 'Bounds'.
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
@@ -1970,6 +2009,11 @@ type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
   pitch = through pitch pitch
+
+
+-- XXX is this correct?
+instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
+  pitches = through pitch pitch
 
 
 type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
@@ -2095,14 +2139,9 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . from _Unwrapped . underL articulations
 
 
-
-
-
-
-
 -- | XXX indexed traversal?
-score :: Traversal (Voice a) (Voice b) (Note a) (Note b)
-score = undefined
+score :: Traversal (Score a) (Score b) (Note a) (Note b)
+score = _Wrapped . traverse
 
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -2158,6 +2197,12 @@ instance Wrapped (Voice a) where
 instance Rewrapped (Voice a) (Voice b)
 
 -- |
+-- Voice
+--
+voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
+voice = _Wrapped . traverse
+
+-- |
 -- Join the given voices by multiplying durations and pairing values.
 --
 zipVoice :: Voice a -> Voice b -> Voice (a, b)
@@ -2197,9 +2242,6 @@ instance Ixed (Voice a) where
 stretchedToVoice :: Stretched a -> Voice a
 stretchedToVoice x = Voice (return x)
 
--- | XXX indexed traversal?
-voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voice = undefined
 
 -- |
 -- The 'Divide' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
@@ -2244,6 +2286,7 @@ instance Splittable a => Splittable (Voices a) where
 -- | XXX
 voiceMap :: Traversal (Voices a) (Voices b) (Stretched (Either a (Divide a))) (Stretched (Either a (Divide a)))
 voiceMap = undefined
+
 
 concatSubVoices :: Monoid a => Voices a -> Voice a
 concatSubVoices = undefined
@@ -2385,7 +2428,7 @@ modulate = (\t x -> x * sin (t*2*pi)) <$> time
 
 
 
-test = openG $ (<> grid) $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
+test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
   where
     -- c = 1
 c1 = (sin (time/20*2*pi))
@@ -2396,6 +2439,8 @@ instance Wrapped PD where
   type Unwrapped PD = (Behavior Float, Behavior Float)
   _Wrapped' = iso getPD PD
 instance Rewrapped PD PD
+instance Transformable PD where
+  transform _ = id
 type instance Pitch PD = Behavior Float
 type instance SetPitch g PD = PD
 type instance Dynamic PD = Behavior Float
@@ -2407,7 +2452,7 @@ instance HasDynamic PD PD where
 pd :: PD
 pd = PD (time, time)
 
-drawPD pd = openG $ (<> grid) $ (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
+drawPD pd = (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
 
 
 
@@ -2661,7 +2706,9 @@ writeG path dia = do
   ByteString.writeFile path bs
 
 openG :: (a ~ SVG.SVG) => Diagram a R2 -> IO ()
-openG dia = do
+openG = openG' . (<> grid)
+
+openG' dia = do
   writeG "test.svg" $ dia --
   -- FIXME find best reader
   system "echo '<img src=\"test.svg\"></img>' > test.html"
