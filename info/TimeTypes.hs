@@ -244,7 +244,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                _era, interval, offset, place,
                                                position, start, stretch, inv,
                                                stretchTo, transform, trim, era,
-                                               under, value, view, (<->), (|>))
+                                               under, value, view, (<->), (|>), ui)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -1051,6 +1051,9 @@ delta = iso getDelta $ uncurry (>->)
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform s . f . transform (negateV s)
 
+instance (Transformable a, Transformable b) => Transformable (a -> b) where
+    transform = flip under
+
 -- |
 -- Apply a morphism under transformation (monadic version).
 --
@@ -1086,7 +1089,7 @@ underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a 
 underStretch = flip (flip under . stretching)
 
 underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
-underL l f (s,a) = (s,) <$> (l $ underM f s) a
+underL l f (s,a) = (s,) <$> (l $ f `underM` negateV s) a
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1268,12 +1271,12 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitch $ underM f s) a
+      pl f (s,a) = (s,) <$> (pitch $ f `underM` negateV s) a
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitches $ underM f s) a
+      pl f (s,a) = (s,) <$> (pitches $ f `underM` negateV s) a
 
 
 -- |
@@ -1457,12 +1460,12 @@ type instance Dynamic (Note a) = Dynamic a
 instance HasDynamic a b => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (dynamic $ underM f s) a
+      pl f (s,a) = (s,) <$> (dynamic $ f `underM` negateV s) a
 
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (dynamics $ underM f s) a
+      pl f (s,a) = (s,) <$> (dynamics $ f `underM` negateV s) a
 
 
 
@@ -1579,12 +1582,12 @@ type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
   articulation = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (articulation $ underM f s) a
+      pl f (s,a) = (s,) <$> (articulation $ f `underM` negateV s) a
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (articulations $ underM f s) a
+      pl f (s,a) = (s,) <$> (articulations $ f `underM` negateV s) a
 
 
 
@@ -1702,12 +1705,12 @@ type instance SetPart g (Note a) = Note (SetPart g a)
 instance (HasPart a b) => HasPart (Note a) (Note b) where
   part = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (part $ underM f s) a
+      pl f (s,a) = (s,) <$> (part $ f `underM` negateV s) a
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (parts $ underM f s) a
+      pl f (s,a) = (s,) <$> (parts $ f `underM` negateV s) a
 
 
 
@@ -1769,6 +1772,8 @@ instance Transformable () where
   transform _ = id
 instance Transformable Int where
   transform _ = id
+instance Transformable Int8 where
+  transform _ = id
 instance Transformable Bool where
   transform _ = id
 instance Transformable Float where
@@ -1825,7 +1830,7 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
 
 deriving instance Typeable1 Delayed
 
-mapDelayed f (Delayed (t,x)) = Delayed (t, underDelay f t x)
+mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` negateV t) x)
 
 
 
@@ -1843,7 +1848,7 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 
 deriving instance Typeable1 Stretched
 
-mapStretched f (Stretched (d,x)) = Stretched (d, underStretch f d x)
+mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` negateV d) x)
 
 -- |
 -- View the value in the note.
@@ -2063,12 +2068,9 @@ instance Real a => Real (Behavior a) where
   toRational = toRational . (`index` 0)
 
 
--- TODO should we conjugate the function?
-instance Transformable (Behavior a) where
-  transform (view delta -> (t,0)) _            = error "Scale by zero"
-  transform (view delta -> (t,d)) (Behavior f) = Behavior $ \t2 -> f $ (t2^/d .-^ t1)
-    where
-      t1 = t .-. 0
+-- FOO1
+
+deriving instance Transformable a => Transformable (Behavior a)
 
 instance Representable Behavior where
   type Rep Behavior = Time
@@ -2130,6 +2132,8 @@ time' = id^.behavior
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
 
+ui = switch 0 0 (switch 1 time 1)
+
 interval t u = (t <-> u, time)^.note
 
 sine = sin (time*tau)
@@ -2138,6 +2142,11 @@ cosine = cos (time*tau)
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
 atTime = index                 
+
+
+switch :: Time -> Behavior a -> Behavior a -> Behavior a
+switch t (Behavior rx) (Behavior ry) = Behavior (\u -> if u < t then rx u else ry u)
+
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
@@ -2638,8 +2647,8 @@ instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
   series = cons0 BF1 \/ cons0 BF2
 instance (Monad m, Serial m a) => Serial m (BadMonoid a) where
   series = newtypeCons BadMonoid
--- instance Monad m => Serial m Int8 where
-  -- series = msum $ fmap ereturn [0..2]
+instance Monad m => Serial m Int8 where
+  series = msum $ fmap return [0..2]
 instance (Monad m, Serial m a) => Serial m (Note a) where
   series = newtypeCons Note
 instance (Monad m, Serial m a) => Serial m (Delayed a) where
@@ -2664,13 +2673,34 @@ constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
                 _duration a == _duration (delay n a)
   ]
 
+-- FOO2
+
 delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
                 delay n b ! t == b ! (t .-^ n)
   ]
 
 
+{-
+  (t<->u) `transform` b ! t           == b ! 0
+  (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5
+  (t<->u) `transform` b ! u           == b ! 1
+-}
 
+transformUi typ = testGroup ("Transform UI" ++ show (typeOf typ)) $ [
+  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+                (t<->u) `transform` b ! t          == b ! 0,
+
+  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+                (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
+
+  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+                (t<->u) `transform` b ! u           == b ! 1
+
+  ]
+notEqualTo x y 
+  | x == y    = y + 1
+  | otherwise = y
 
 
 -- DEBUG
@@ -2726,8 +2756,9 @@ main = defaultMain $ testGroup "" $ [
 
   constDurLaw (undefined :: Note ()),
   constDurLaw (undefined :: Stretched ()),
-  delayBehLaw (undefined :: Behavior ())
+  delayBehLaw (undefined :: Behavior Int8),
 
+  transformUi (undefined :: Behavior Int8)
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
 
