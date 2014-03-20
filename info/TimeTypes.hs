@@ -32,8 +32,8 @@ module TimeTypes (
         underM,
         underW,
         -- underL,
-        underDelay,
-        underStretch,
+        -- underDelay,
+        -- underStretch,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -192,10 +192,10 @@ module TimeTypes (
 
         -- * Music.Score.Pitch
         Pitch,
+        Interval,
         SetPitch,
         HasPitch(..),
         HasPitches(..),
-        Interval,
         Transposable,
         pitch',
         pitches',
@@ -499,6 +499,9 @@ compress = transform . compressing
 class HasDuration a where
   _duration :: a -> Duration
 
+-- |
+-- Access the duration.
+--
 duration :: (Transformable a, HasDuration a) => Lens' a Duration
 duration = lens _duration (flip stretchTo)
 
@@ -508,6 +511,9 @@ duration = lens _duration (flip stretchTo)
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 
+-- |
+-- Access the duration.
+--
 normalizeDuration = stretchTo 1
 
 -- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
@@ -526,12 +532,16 @@ normalizeDuration = stretchTo 1
 -- the global position goes from 'onset' to 'offset'.
 --
 -- For instantaneous values, a suitable instance is:
---
--- > _position x = const t
+-- 
+-- @
+-- '_position' x = 'const' t
+-- @
 --
 -- For values with an onset and offset you can use 'alerp':
 --
--- > _position x = alerp onset offset
+-- @
+-- '_position' x = 'alerp' 'onset' 'offset'
+-- @
 --
 class HasPosition a where
   _position :: a -> {-Scalar-} Duration -> Time
@@ -629,8 +639,10 @@ stopAt t  x   = (t .-. _offset x) `delay` x
 --
 -- @alignAt p t@ places the given thing so that its position p is at time t
 --
--- > alignAt 0 == startAt
--- > alignAt 1 == stopAt
+-- @
+-- 'alignAt' 0 == 'startAt'
+-- 'alignAt' 1 == 'stopAt'
+-- @
 --
 alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 alignAt p t x = (t .-. x `_position` p) `delay` x
@@ -913,24 +925,26 @@ instance HasPosition Time where
 --
 -- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
 --
+--
+-- >>> (2 <-> 3)^.range
+-- > (2, 3)
+-- >
+-- >>> hs> (2 <-> 3)^.delta
+-- > (2, 1)
+-- >
+-- >>> hs> (10 >-> 5)^.range
+-- > (10, 15)
+-- >
+-- >>> hs> (10 >-> 5)^.delta
+-- > (10, 5)
+--
 newtype Span = Span { getDelta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
---
--- > hs> (2 <-> 3)^.range
--- > (2, 3)
--- >
--- > hs> (2 <-> 3)^.delta
--- > (2, 1)
--- >
--- > hs> (10 >-> 5)^.range
--- > (10, 15)
--- >
--- > hs> (10 >-> 5)^.delta
--- > (10, 5)
 
 instance Show Span where
-  show (view range -> (t,u)) = show t ++ "<->" ++ show u
+  -- show (view range -> (t,u)) = show t ++ "<->" ++ show u
+  show (view delta -> (t,d)) = show t ++ ">->" ++ show d
 
 instance HasPosition Span where
   _position (view range -> (t1, t2)) = alerp t1 t2
@@ -991,7 +1005,9 @@ t >-> d = Span (t, d)
 --
 -- With the @ViewPatterns@ extension you can pattern match over spans using
 --
--- > foo (view range -> (u,v)) = ...
+-- @
+-- foo (view range -> (u,v)) = ...
+-- @
 --
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
@@ -1006,7 +1022,9 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 --
 -- With the @ViewPatterns@ extension you can pattern match over spans using
 --
--- > foo (view delta -> (t,d)) = ...
+-- @
+-- foo (view delta -> (t,d)) = ...
+-- @
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
@@ -1024,20 +1042,36 @@ delta = iso getDelta $ uncurry (>->)
 -- |
 -- Apply a function under transformation.
 --
+-- Designed to be used infix, as in
+-- 
+-- @
+-- 'stretch' 2 ``under`` 'delaying' 2
+-- @
+--
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
-f `under` s = transform (negateV s) . f . transform s
+f `under` s = transform s . f . transform (negateV s)
 
 -- |
 -- Apply a morphism under transformation (monadic version).
 --
+-- 
+-- @
+-- ('stretch' 2 . 'pure') ``underM`` 'delaying' 2
+-- @
+--
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
-f `underM` s = fmap (transform (negateV s)) . f . transform s
+f `underM` s = fmap (transform s) . f . transform (negateV s)
 
 -- |
 -- Apply a morphism under transformation (co-monadic version).
 --
+-- 
+-- @
+-- ('extract' . 'stretch' 2) ``underW`` 'delaying' 2
+-- @
+--
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
-f `underW` s = transform (negateV s) . f . fmap (transform s)
+f `underW` s = transform s . f . fmap (transform (negateV s))
 
 -- |
 -- Apply a function under transformation.
@@ -1057,14 +1091,34 @@ underL l f (s,a) = (s,) <$> (l $ underM f s) a
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
 
--- Use infix
+
+-- |
+-- Whether the given point falls inside the given span.
+--
+-- Designed to be used infix, as in
+--
+-- @
+-- t `inside`` (1 '<->' 2)
+-- @
+--
 inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
-start, stop :: Time
+-- |
+-- Global start time.
+--
+start :: Time
 start = 0
+
+-- |
+-- Global end time.
+--
+stop :: Time
 stop  = 1
 
+-- |
+-- Global start time.
+--
 unit :: Duration
 unit  = 1
 
@@ -1104,6 +1158,11 @@ type family Pitch             (s :: *) :: * -- Pitch s   = a
 -- Pitch type.
 --
 type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
+
+-- |
+-- Associated interval type.
+--
+type Interval a = Diff (Pitch a)
 
 
 -- class Has s t a b |
@@ -1217,7 +1276,9 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (pitches $ underM f s) a
 
 
-type Interval a = Diff (Pitch a)
+-- |
+-- Class of types that can be transposed.
+--
 type Transposable a = (HasPitches a a, VectorSpace (Interval a), AffineSpace (Pitch a), IsInterval (Interval a), IsPitch (Pitch a))
 
 -- |
@@ -1737,7 +1798,9 @@ instance Transformable (Segment a) where
 --
 -- There is a morphism from 'runNote' to 'transform':
 --
--- > runNote . transform s = transform s . runNote
+-- @
+-- 'runNote' . 'transform' s = 'transform' s . 'runNote'
+-- @
 --
 newtype Note a    = Note    { getNote :: (Span, a)   }
 
@@ -1747,7 +1810,7 @@ deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Applicative Note
--- deriving instance Comonad Note
+deriving instance Comonad Note
 
 -- |
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
@@ -1882,18 +1945,27 @@ runStretched = uncurry stretch . unwr
 newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
   deriving (Functor, Foldable, Traversable)
 
+-- |
+-- Add bounds.
+--
 bounds :: Time -> a -> Time -> Bounds a
 bounds t x u = Bounds (t <-> u, x)
 
 -- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
 -- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inside` s then x else mempty) x)
 
+-- |
+-- Add bounds.
+--
 trim :: Monoid b => Bounds (Behavior b) -> Bounds (Behavior b)
 trim = trimG
 
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> Bounds (f b)
 trimG (Bounds (s, x)) = Bounds (s, (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x)
 
+-- |
+-- Add bounds.
+--
 bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
 bounded = undefined
 
@@ -2052,6 +2124,9 @@ behavior = tabulated
 time' :: Behavior Time
 time' = id^.behavior
 
+-- |
+-- A behavior that
+--
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
 
