@@ -99,8 +99,7 @@ module Main (
         during,
         sustain,
         -- ** Composition operators
-        -- Sequential(..),
-        -- Parallel(..),
+        Sequential(..),
         scat,
         pcat,
         times,
@@ -728,7 +727,7 @@ pinned f x = startAt (_onset x) (f x)
 -- For non-positioned types, this is the often same as 'mconcat'
 -- For positioned types, this is the same as 'afterAnother'
 --
-scat = Prelude.foldr (//) mempty
+scat = Prelude.foldr (|>) mempty
 
 -- |
 -- Compose a list of parallel objects, so that their local origins align.
@@ -736,11 +735,10 @@ scat = Prelude.foldr (//) mempty
 -- This not possible for non-positioned types, as they have no notion of an origin.
 -- For positioned types this is the same as 'mconcat'.
 --
-pcat = Prelude.foldr (><) mempty
+pcat = Prelude.foldr (<>) mempty
 
 during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 y `during`  x = placeAt (_era x) y
-
 x `sustain` y   = x <> y `during` x
 
 times n   = scat . replicate n
@@ -815,28 +813,21 @@ reversed = iso rev rev
 
 
 class Sequential a where
-  (//) :: a -> a -> a
-  (\\) :: a -> a -> a
+  (|>) :: a -> a -> a
+  (<|) :: a -> a -> a
 
 instance Sequential (Voice a) where
-  (//) = (<>)
-  (\\) = flip (<>)
+  (|>) = (<>)
+  (<|) = flip (<>)
 
 instance Sequential (Voices a) where
-  (//) = (<>)
-  (\\) = flip (<>)
+  (|>) = (<>)
+  (<|) = flip (<>)
 
 instance Sequential (Score a) where
-  (//) = after
-  (\\) = before
+  (|>) = after
+  (<|) = before
 
-class Parallel a where
-  (><) :: a -> a -> a
--- instance Parallel (Divide a) where
-  -- (><) = (<>)
-
-instance Parallel (Score a) where
-  (><) = (<>)
 
 
 
