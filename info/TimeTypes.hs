@@ -161,14 +161,17 @@ module Main (
         -- * Music.Time.Behavior
         Behavior,
         behavior,
-        interval,
+        (!),
 
         -- ** Special behaviors
         time,
         ui,
         sine,
         cosine,
+        sawtooth,
         dirac,
+        turnOn,
+        turnOff,
 
         -- ** Combinators
         switch,
@@ -383,11 +386,15 @@ unnormalize = re normalize
 
 
 
-
+-- |
+-- Index a representable functor.
+--
+-- Infix version of 'index'.
+--
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
 
-tabulated :: Representable f => Iso' (Rep f -> a) (f a)
+tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
 tabulated = iso tabulate index
 
 
@@ -2168,7 +2175,7 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 --
 -- This is actually a specification of 'tabulated'.
 --
-behavior :: Iso' (Time -> a) (Behavior a)
+behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
 
 -- |
@@ -2178,32 +2185,68 @@ time' :: Behavior Time
 time' = id^.behavior
 
 -- |
--- A behavior that
+-- A behavior that acts
 --
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
 
+-- |
+-- A behavior that does something
+--
+ui :: Fractional a => Behavior a
 ui = switch 0 0 (switch 1 time 1)
 
+-- |
+-- A behavior that
+--
+interval :: (Fractional a, Transformable a) => Time -> Time -> Note (Behavior a)
 interval t u = (t <-> u, time)^.note
 
+-- |
+-- A behavior that
+--
+sine :: Floating a => Behavior a
 sine = sin (time*tau)
+
+-- |
+-- A behavior that
+--
+cosine :: Floating a => Behavior a
 cosine = cos (time*tau)
+
+-- |
+-- A behavior that
+--
+sawtooth :: RealFrac a => Behavior a
 sawtooth = time - fmap floor' time
+
+-- |
+-- A behavior that
+--
+dirac :: (Num a, Bounded a) => Behavior a
+dirac = switch' 0 0 maxBound 0
+
+-- |
+-- A behavior that
+-- XXX name
+--
+turnOn  = switch 0 0 1
+
+-- |
+-- A behavior that
+-- XXX name
+--
+turnOff = switch 0 1 0
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
   
+{-
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
 atTime = index                 
+-}
 
-dirac :: (Num a, Bounded a) => Behavior a
-dirac = switch' 0 0 maxBound 0
-
--- XXX name
-turnOn  = switch 0 0 1
-turnOff = switch 0 1 0
 
 deriving instance Bounded a => Bounded (Behavior a)
 
