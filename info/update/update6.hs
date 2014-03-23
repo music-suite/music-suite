@@ -32,7 +32,7 @@ import Data.Foldable
 import Data.Traversable
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import qualified Music.Pitch as M
+-- import qualified Music.Pitch as M
 
 type family Pitch             (s :: *) :: * -- Pitch s   = a
 type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
@@ -132,10 +132,10 @@ up a = pitches %~ (.+^ a)
 down a = pitches %~ (.-^ a)
 
 
-type HasInterval a = (Floating (Interval a), M.InnerSpace (Interval a), M.Scalar (Interval a) ~ (Interval a))
+-- type HasInterval a = (Floating (Interval a), M.InnerSpace (Interval a), M.Scalar (Interval a) ~ (Interval a))
 
-interval :: (HasPitch a a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Interval a
-interval x y = (x^.pitch) `distance` (y^.pitch)
+-- interval :: (HasPitch a a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Interval a
+-- interval x y = (x^.pitch) `distance` (y^.pitch)
 
 invert :: (HasPitch a a, AffineSpace (Pitch a)) => Pitch a -> a -> a
 invert p = pitch %~ reflectThrough p      
