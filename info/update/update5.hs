@@ -39,7 +39,7 @@ import Data.Foldable
 import Data.Traversable
 import Data.AffineSpace
 import Data.AffineSpace.Point
-import qualified Music.Pitch as M
+-- import qualified Music.Pitch as M
 
 type family Pitch (s :: *) :: *
 class HasGetPitch s where
@@ -110,7 +110,7 @@ instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (c,a) (c,b) where
 type instance Pitch Int = Int
 instance HasGetPitch Int where
     getPitch = id
-instance (a ~ Pitch a) => HasSetPitch Int a where
+instance HasSetPitch Int a where
     type SetPitch a Int = a
     setPitch = const
 
@@ -121,12 +121,12 @@ instance (a ~ Pitch a) => HasSetPitch Bool a where
     type SetPitch a Bool = a
     setPitch = const
 
-type instance Pitch M.Pitch = M.Pitch
-instance HasGetPitch M.Pitch where
-    getPitch = id
-instance (a ~ Pitch a) => HasSetPitch M.Pitch a where
-    type SetPitch a M.Pitch = a
-    setPitch = const
+-- type instance Pitch M.Pitch = M.Pitch
+-- instance HasGetPitch M.Pitch where
+--     getPitch = id
+-- instance (a ~ Pitch a) => HasSetPitch M.Pitch a where
+--     type SetPitch a M.Pitch = a
+--     setPitch = const
 
 
 
@@ -149,13 +149,13 @@ down :: (HasPitch' a, AffineSpace (Pitch a)) => Interval a -> a -> a
 down a = pitch %~ (.-^ a)
 
 
-type HasInterval a = (Floating (Interval a), M.InnerSpace (Interval a), M.Scalar (Interval a) ~ (Interval a))
+-- type HasInterval a = (Floating (Interval a), M.InnerSpace (Interval a), M.Scalar (Interval a) ~ (Interval a))
 
-interval :: (HasPitch' a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Interval a
-interval x y = (x^.pitch) `distance` (y^.pitch)
-
-invert :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
-invert p = pitch %~ reflectThrough p
+-- interval :: (HasPitch' a, AffineSpace (Pitch a), HasInterval a) => a -> a -> Interval a
+-- interval x y = (x^.pitch) `distance` (y^.pitch)
+-- 
+-- invert :: (HasPitch' a, AffineSpace (Pitch a)) => Pitch a -> a -> a
+-- invert p = pitch %~ reflectThrough p
 
 
 --                         
