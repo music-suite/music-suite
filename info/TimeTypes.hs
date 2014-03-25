@@ -78,6 +78,7 @@ module TimeTypes (
         -- * Music.Time.Reverse
         -- ** The Reversible class
         Reversible(..),
+        revDefault,
         reversed,
 
         -- * Music.Time.Split
@@ -353,8 +354,18 @@ instance Num a => Bounded (Normalized a) where
   minBound = Normalized 0
   maxBound = Normalized 1
 instance (Num a, Ord a) => Num (Normalized a) where
+  a + b = toNorm (fromNorm a + fromNorm b)
+  a - b = toNorm (fromNorm a - fromNorm b)
+  a * b = toNorm (fromNorm a * fromNorm b)
+  abs   = id
+  signum 0 = 0
+  signum _ = 1
+  negate = error "negate: No instance for Normalized"
   fromInteger = toNorm . fromInteger
 instance (Num a, Ord a, Fractional a) => Fractional (Normalized a) where
+  a / b = toNorm (fromNorm a / fromNorm b)
+  recip 1 = 1
+  recip _ = error "Can not take reciprocal of a normalized value other than 1"
   fromRational = toNorm . fromRational
 
 toNorm   = fromMaybe (error "Outside 0-1") . (^? normalize)
@@ -445,6 +456,9 @@ class Transformable a where
 -- maybe change it to transform both components?
 instance Transformable a => Transformable (a, b) where
   transform t (s,a) = (transform t s, a)
+
+instance (Transformable a, Transformable b) => Transformable (a -> b) where
+    transform = flip under
 
 -- FIXME strange
 -- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
@@ -771,10 +785,52 @@ dropM t = snd . split t
 -- |
 -- Class of values that can be reversed.
 --
+-- For positioned values succh as 'Note', the value is reversed relative to its middle point, i.e.
+-- the onset value becomes the offset value and vice versa.
+--
+-- For non-positioned values such as 'Stretched', the value is reversed in-place.
+--
+-- XXX counterintuitive Behavior instances (just Behavior should reverse around origin, while
+-- Bounds (Behavior a) should reverse around the middle, like a note)
+--
+-- Law
+--
+-- > rev (rev a) = a
+--
+-- > rev s `transform` a = rev (s `transform` a)
+--
+-- Lemmas
+--
+-- > delay n (rev a)   = rev (delay n a)
+-- > stretch n (rev a) = rev (stretch n a)
+--
 class Reversible a where
 
   -- | Reverse the given value.
   rev :: a -> a
+
+{-
+  TODO check
+  
+    openG $ drawNote $ rev $ delay 1 $ return 0
+    openG $ drawNote $ delay 1 $ rev $ return 0
+
+    openG $ drawNote $ rev $ stretch 0.5 $ return 0
+    openG $ drawNote $ stretch 0.5 $ rev $ return 0
+  
+    openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
+    openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
+
+    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ ui
+    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ ui
+
+    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ ui
+    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ ui
+  
+    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ ui
+    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ ui
+
+-}
 
 instance Reversible () where
   rev = id
@@ -795,16 +851,23 @@ instance Reversible Duration where
   rev = stretch (-1)
 
 instance Reversible Time where
-  rev = stretch (-1)
+  rev = revDefault
 
 instance Reversible Span where
-  rev = stretch (-1)
+  rev = revDefault
 
 instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
+revDefault :: (HasPosition a, Transformable a) => a -> a
+revDefault x = (stretch (-1) `under` delaying (_position x 0.5 .-. 0)) x
+
+
 -- |
 -- View the reverse of a value.
+--
+-- >>> [1,2,3] & reversed %~ sort
+-- > [3,2,1]
 --
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev
@@ -1064,9 +1127,6 @@ delta = iso getDelta $ uncurry (>->)
 --
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 f `under` s = transform s . f . transform (negateV s)
-
-instance (Transformable a, Transformable b) => Transformable (a -> b) where
-    transform = flip under
 
 -- |
 -- Apply a morphism under transformation (monadic version).
@@ -1878,7 +1938,7 @@ stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stre
 stretchedValue = lens runStretched (flip $ mapStretched . const)
 
 instance Reversible (Note a) where
-  rev = stretch (-1)
+  rev = revDefault
 
 instance Splittable a => Splittable (Note a) where
 
@@ -2041,7 +2101,7 @@ bounded = undefined
 
 
 instance Reversible (Bounds a) where
-  rev = stretch (-1)
+  rev = revDefault
 instance Splittable a => Splittable (Bounds a) where
 instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
 instance Rewrapped (Bounds a) (Bounds b)
@@ -2062,36 +2122,46 @@ instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position`
 newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
-instance Semigroup a => Semigroup (Segment a) where
-  (<>) = undefined
-
-instance Monoid a => Monoid (Segment a) where
-
--- type instance Key Segment = Duration
---
--- instance Lookup Segment where
---   t `lookup` Segment b = b <$> t ^? normalize
---
--- instance Indexable Segment where
---   Segment b `index` t = b $ t ^?! normalize
-
--- Segment is a 'Monad' and 'Applicative' functor, similar to the function instance:
---
--- > pure s ! t == s
---
--- > fs <*> xs ! t == (fs ! t) (xs ! t)
---
--- > join s ! t == (s ! t) ! t
---
-
+deriving instance Typeable1 Segment
 deriving instance Distributive Segment
+deriving instance Semigroup a => Semigroup (Segment a)
+deriving instance Monoid a => Monoid (Segment a)
+deriving instance AdditiveGroup a => AdditiveGroup (Segment a)
+instance VectorSpace a => VectorSpace (Segment a) where
+  type Scalar (Segment a) = Segment (Scalar a)
+  (*^) = liftA2 (*^)
+instance AffineSpace a => AffineSpace (Segment a) where
+  type Diff (Segment a) = Segment (Diff a)
+  (.-.) = liftA2 (.-.)
+  (.+^) = liftA2 (.+^)
+instance IsPitch a => IsPitch (Segment a) where
+  fromPitch = pure . fromPitch
+instance IsInterval a => IsInterval (Segment a) where
+  fromInterval = pure . fromInterval
+ 
+deriving instance Num a => Num (Segment a)
+deriving instance Fractional a => Fractional (Segment a)
+-- deriving instance RealFrac a => RealFrac (Segment a)
+deriving instance Floating a => Floating (Segment a)
+
+instance Eq a => Eq (Segment a) where
+  (==) = error "No fun"
+
+instance Ord a => Ord (Segment a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
+
+instance Real a => Real (Segment a) where
+  toRational = toRational . (`index` 0)
+
 
 instance Representable Segment where
   type Rep Segment = Duration
   -- tabulate = Behavior
   -- index (Behavior x) = x
-  tabulate = error "No Representable Segment"
-  index    = error "No Representable Segment"
+  tabulate f = Segment (f . fromNorm)
+  index    (Segment f) = f . toNorm
 
 
 type instance Pitch                 (Segment a) = Segment (Pitch a)
@@ -2099,6 +2169,12 @@ type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
 
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
+
+instance Reversible (Segment a) where
+  -- TODO in terms of Representable
+  rev (Segment f) = Segment (f . toNorm . r . fromNorm)
+    where
+      r x = (x * (-1)) + 1
 
 
 -- Behavior is 'Representable':
@@ -2170,7 +2246,17 @@ instance Real a => Real (Behavior a) where
 
 -- FOO1
 
-deriving instance Transformable a => Transformable (Behavior a)
+-- TODO remove Transformable a constraint
+instance Transformable a => Transformable (Behavior a) where
+  transform s (Behavior a) = Behavior (flip under s $ a)
+    where
+      f `under` s = f . transform (negateV s)
+    
+
+-- FOOBAR  
+instance Transformable a => Reversible (Behavior a) where
+  rev x = (stretch (-1) `under` delaying 0.5) x
+
 
 instance Representable Behavior where
   type Rep Behavior = Time
@@ -2790,7 +2876,6 @@ unwr = (^. _Wrapped')
 
 
 
-{-
 -- Tests
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
@@ -2944,7 +3029,6 @@ main = defaultMain $ testGroup "" $ [
 
 
 
--}
 
 
 
@@ -2961,14 +3045,16 @@ drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ t
   noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
-drawBehavior = drawBehavior' 50
+drawBehavior = drawBehavior' 0 50
 
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
-drawSegment = drawBehavior' 50
+drawSegment = drawBehavior' 0 1
 
-drawBehavior' count b = cubicSpline False points & lw 0.05
+drawBehavior' start count b = cubicSpline False points & lw 0.05
   where
-    points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, realToFrac $ b `index` realToFrac x)) [0,1/samplesPerCell..]
+    points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, fromVal (b ! toTime x))) [start,start+1/samplesPerCell..]
+    toTime = realToFrac
+    fromVal = realToFrac
     samplesPerCell = 40
 
 grid = grid' 20 <> fc lightblue (circle 0.1)
