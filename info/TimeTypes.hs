@@ -156,10 +156,10 @@ module TimeTypes (
         -- * Music.Time.Behavior
         Behavior,
         (!^),
-        behavior',
+        -- behavior',
         behavior,
 
-        -- ** Special behaviors
+        -- ** Common behaviors
         time,
         ui,
         sine,
@@ -2247,14 +2247,14 @@ instance Real a => Real (Behavior a) where
 -- FOO1
 
 -- TODO remove Transformable a constraint
-instance Transformable a => Transformable (Behavior a) where
+instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (flip under s $ a)
     where
       f `under` s = f . transform (negateV s)
     
 
 -- FOOBAR  
-instance Transformable a => Reversible (Behavior a) where
+instance Reversible (Behavior a) where
   rev x = (stretch (-1) `under` delaying 0.5) x
 
 
@@ -2307,6 +2307,17 @@ behavior' = tabulated
 -- |
 -- View a behavior as a time function and vice versa. Specification of 'tabulated'.
 --
+-- This isomorphism can be used to turn any function into a behavior, i.e.
+--
+-- >>> :t floor^.behavior
+-- > :: Integral a => Behavior a
+--
+-- >>> :t Control.Lens.under behavior
+-- > :: ((Time -> b) -> Time -> a) -> Behavior b -> Behavior a
+--
+-- >>> :t Control.Lens.over behavior
+-- > :: (Behavior a -> Behavior b) -> (Time -> a) -> Time -> b
+--
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
 
@@ -2317,13 +2328,20 @@ time' :: Behavior Time
 time' = id^.behavior
 
 -- |
--- A behavior that acts
+-- A behavior that gives the current time, i.e. the identity function
+--
+-- > f t = t
 --
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
 
 -- |
--- A behavior that does something
+-- A behavior that varies from 0 to 1 during the same time interval and is 0 before and 1 after
+-- that interval.
+--
+-- > f t | t < 0     = 0
+-- >     | t > 1     = 1
+-- >     | otherwise = t
 --
 ui :: Fractional a => Behavior a
 ui = switch 0 0 (switch 1 time 1)
@@ -2353,7 +2371,10 @@ sawtooth :: RealFrac a => Behavior a
 sawtooth = time - fmap floor' time
 
 -- |
--- A behavior that
+-- A behavior that is 'maxBound' at time 0, and 0 at all other times.
+--
+-- > f t | t == 0    = maxBound
+-- >     | otherwise = 0
 --
 dirac :: (Num a, Bounded a) => Behavior a
 dirac = switch' 0 0 maxBound 0
