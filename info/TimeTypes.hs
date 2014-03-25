@@ -19,6 +19,13 @@
 {-# LANGUAGE CPP                        #-}
 
 module TimeTypes (
+        -- * Data.Clipped
+        Clipped,
+        unsafeToClipped,
+        fromClipped,
+        clipped,
+        unclipped,
+
         (!),
         tabulated,
 
@@ -252,7 +259,7 @@ import           Data.Default
 import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
-                                               after, atTime, duration, during,
+                                               after, atTime, duration, during, clipped,
                                                _era, interval, offset, place,
                                                position, start, stretch, inv,
                                                stretchTo, transform, trim, era,
@@ -347,42 +354,46 @@ instance Monoid b => Monad ((,) b) where
 -}
 
 -- | A value in the unit interval /(0,1)/.
-newtype Normalized a = Normalized { getNormalized :: a }
+newtype Clipped a = UnsafeClip { unsafeGetClipped :: a }
   deriving (Eq, Ord, Show, Functor)
 
-instance Num a => Bounded (Normalized a) where
-  minBound = Normalized 0
-  maxBound = Normalized 1
-instance (Num a, Ord a) => Num (Normalized a) where
-  a + b = toNorm (fromNorm a + fromNorm b)
-  a - b = toNorm (fromNorm a - fromNorm b)
-  a * b = toNorm (fromNorm a * fromNorm b)
+-- instance Comonad Clipped where
+  -- extract = fromClipped
+
+clipped :: (Num a, Ord a) => Prism' a (Clipped a)
+clipped = prism unsafeGetClipped (\x -> if 0 <= x && x <= 1 then Right (UnsafeClip x) else Left x)
+
+unclipped :: (Num a, Ord a) => Getter (Clipped a) a
+unclipped = re clipped
+
+instance Num a => Bounded (Clipped a) where
+  minBound = UnsafeClip 0
+  maxBound = UnsafeClip 1
+
+instance (Num a, Ord a) => Num (Clipped a) where
+  a + b = unsafeToClipped (fromClipped a + fromClipped b)
+  a - b = unsafeToClipped (fromClipped a - fromClipped b)
+  a * b = unsafeToClipped (fromClipped a * fromClipped b)
   abs   = id
   signum 0 = 0
   signum _ = 1
-  negate = error "negate: No instance for Normalized"
-  fromInteger = toNorm . fromInteger
-instance (Num a, Ord a, Fractional a) => Fractional (Normalized a) where
-  a / b = toNorm (fromNorm a / fromNorm b)
+  negate = error "negate: No instance for Clipped"
+  fromInteger = unsafeToClipped . fromInteger
+instance (Num a, Ord a, Fractional a) => Fractional (Clipped a) where
+  a / b = unsafeToClipped (fromClipped a / fromClipped b)
   recip 1 = 1
-  recip _ = error "Can not take reciprocal of a normalized value other than 1"
-  fromRational = toNorm . fromRational
+  recip _ = error "Can not take reciprocal of a clippedd value other than 1"
+  fromRational = unsafeToClipped . fromRational
 
-toNorm   = fromMaybe (error "Outside 0-1") . (^? normalize)
-fromNorm = (^. unnormalize)
+unsafeToClipped   = fromMaybe (error "Outside 0-1") . (^? clipped)
+fromClipped = (^. unclipped)
 
 
-zipNormalizedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Normalized a -> Normalized b -> Maybe (Normalized c)
-zipNormalizedWith f a b = ((a^.unnormalize) `f` (b^.unnormalize))^? normalize
+zipClippedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Clipped a -> Clipped b -> Maybe (Clipped c)
+zipClippedWith f a b = ((a^.unclipped) `f` (b^.unclipped))^? clipped
 
-normalize' = Normalized
-addLim = zipNormalizedWith (+)
+addLim = zipClippedWith (+)
 
-normalize :: (Num a, Ord a) => Prism' a (Normalized a)
-normalize = prism getNormalized (\x -> if 0 <= x && x <= 1 then Right (Normalized x) else Left x)
-
-unnormalize :: (Num a, Ord a) => Getter (Normalized a) a
-unnormalize = re normalize
 
 
 
@@ -559,10 +570,10 @@ stretchTo d x = (d ^/ _duration x) `stretch` x
 -- |
 -- Access the duration.
 --
-normalizeDuration = stretchTo 1
+clippedDuration = stretchTo 1
 
--- stretchNorm :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
--- stretchNorm x = stretchTo (normalized $ duration x) x
+-- stretchClipped :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
+-- stretchClipped x = stretchTo (clippedd $ duration x) x
 
 
 -- Placing things
@@ -1285,7 +1296,7 @@ pitches' = pitches
 
 type instance Pitch Bool = Bool
 type instance SetPitch a Bool = a
-instance HasPitch Bool Bool where
+instance (Transformable a, a ~ Pitch a) => HasPitch Bool a where
   pitch = ($)
 instance HasPitches Bool Bool where
   pitches = ($)
@@ -2119,7 +2130,7 @@ instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position`
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
-newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
+newtype Segment a = Segment (Clipped Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
 deriving instance Typeable1 Segment
@@ -2160,8 +2171,8 @@ instance Representable Segment where
   type Rep Segment = Duration
   -- tabulate = Behavior
   -- index (Behavior x) = x
-  tabulate f = Segment (f . fromNorm)
-  index    (Segment f) = f . toNorm
+  tabulate f = Segment (f . fromClipped)
+  index    (Segment f) = f . unsafeToClipped
 
 
 type instance Pitch                 (Segment a) = Segment (Pitch a)
@@ -2172,7 +2183,7 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
 
 instance Reversible (Segment a) where
   -- TODO in terms of Representable
-  rev (Segment f) = Segment (f . toNorm . r . fromNorm)
+  rev (Segment f) = Segment (f . unsafeToClipped . r . fromClipped)
     where
       r x = (x * (-1)) + 1
 
