@@ -7,6 +7,7 @@
     DeriveTraversable,
     FlexibleInstances,
     FlexibleContexts,
+    ScopedTypeVariables,
     ConstraintKinds,
     NoMonomorphismRestriction,
     UndecidableInstances,
@@ -22,7 +23,7 @@ import Data.Semigroup
 import Data.Foldable
 import Data.Traversable
 import Data.AffineSpace -- tests
-import qualified Music.Pitch as M
+-- import qualified Music.Pitch as M
 
 class HasPitch s where
   type Pitch             (s :: *) :: *
@@ -85,19 +86,24 @@ instance (HasMutablePitch a b) => HasMutablePitch (c,a) (c,b) where
 
 
 
-instance HasPitch M.Pitch where
-    type Pitch M.Pitch = M.Pitch
-    getPitch = id
-instance HasMutablePitch M.Pitch M.Pitch where
-    type SetPitch M.Pitch M.Pitch = M.Pitch
-    setPitch = const
+-- instance HasPitch M.Pitch where
+--     type Pitch M.Pitch = M.Pitch
+--     getPitch = id
+-- instance HasMutablePitch M.Pitch M.Pitch where
+--     type SetPitch M.Pitch M.Pitch = M.Pitch
+--     setPitch = const
 
 
+instance HasPitch Int where
+  type Pitch Int = Int
+instance HasMutablePitch Int a where
+  type SetPitch a Int = a
+  setPitch = undefined
 
-type Interval a = Diff (Pitch a)
-
-up :: (HasMutablePitch a a, AffineSpace (Pitch a)) => Interval a -> a -> a
-up x = mapPitch (.+^ x)
+-- type Interval a = Diff (Pitch a)
+-- 
+-- up :: (HasMutablePitch a a, AffineSpace (Pitch a)) => Interval a -> a -> a
+-- up x = mapPitch (.+^ x)
 
 (x,int2float) = (PitchT 3 (True, 0), fromIntegral)
 int2float :: Int -> Float
