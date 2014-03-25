@@ -355,7 +355,7 @@ instance Monoid b => Monad ((,) b) where
 
 -- | A value in the unit interval /(0,1)/.
 newtype Clipped a = UnsafeClip { unsafeGetClipped :: a }
-  deriving (Eq, Ord, Show, Functor)
+  deriving (Eq, Ord, Show)
 
 -- instance Comonad Clipped where
   -- extract = fromClipped
