@@ -159,6 +159,7 @@ module TimeTypes (
         Segment,
         fromSegment,
         fromSegment2,
+        appendSegments,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -1883,10 +1884,12 @@ fromSegment = undefined
 fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
 fromSegment2 = undefined
 
+appendSegments :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
+appendSegments (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
-
-
-
+slerp :: Duration -> Segment a -> Segment a -> Segment a
+slerp i a b = tabulate $ \t -> if t < i then a ! (t*i) else b ! ((t-i)*(1-i))
+-- is is percentage of segment spent in a
 
 
 
@@ -2057,8 +2060,8 @@ bounds t u x = Bounds (t <-> u, x)
 trim :: Monoid b => Bounds (Behavior b) -> Behavior b
 trim = trimG
 
-trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
-trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x
+trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
+trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) `apRep` x
 
 
 -- mapPitch4' :: (HasPitch s s, Pitch s ~ a) => Behavior (a -> a) -> s -> s
@@ -3077,7 +3080,7 @@ drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ t
   noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
-drawBehavior = drawBehavior' 0 50
+drawBehavior = drawBehavior' 0 10
 
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
 drawSegment = drawBehavior' 0 1
