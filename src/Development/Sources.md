@@ -4,7 +4,10 @@ Unfortunately, developing a large cross-package system in Cabal is a sligthly cu
 
 It is *highly* recommended to upgrade `cabal-install` to a version supporting sandboxes (1.18 or later).
 
-    cabal install cabal-install
+    $ cabal install cabal-install
+    $ cabal --version
+    cabal-install version 1.18.0.3
+    using version 1.18.1.3 of the Cabal library
 
 
 ## Clone and setup source directories
