@@ -18,9 +18,7 @@
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE CPP                        #-}
 
-module Main (
-        main,
-
+module TimeTypes (
         (!),
         tabulated,
 
@@ -54,8 +52,6 @@ module Main (
         -- ** Stretching to absolute duration
         duration,
         stretchTo,
-        normalizeDuration,
-        -- stretchNorm,
 
         -- * Music.Time.Position
         -- ** The HasPosition class
@@ -76,8 +72,7 @@ module Main (
         -- ** Moving to absolute positions
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
-        alignAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-        placeAt,
+        placeAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
@@ -159,8 +154,9 @@ module Main (
 
         -- * Music.Time.Behavior
         Behavior,
+        (!^),
+        behavior',
         behavior,
-        (!),
 
         -- ** Special behaviors
         time,
@@ -393,6 +389,10 @@ unnormalize = re normalize
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
 
+-- | Index a behavior, specification of '!' (and 'index').
+(!^) :: Behavior a -> Time -> a
+(!^) = (!)
+
 tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
 tabulated = iso tabulate index
 
@@ -600,31 +600,31 @@ _offset    = (`_position` 1.0)
 -- Onset of the given value.
 --
 onset :: (HasPosition a, Transformable a) => Lens' a Time
-onset = lens (`_position` 0) (flip $ alignAt 0)
+onset = lens (`_position` 0) (flip $ placeAt 0)
 
 -- |
 -- Onset of the given value.
 --
 offset :: (HasPosition a, Transformable a) => Lens' a Time
-offset = lens (`_position` 1) (flip $ alignAt 1)
+offset = lens (`_position` 1) (flip $ placeAt 1)
 
 -- |
 -- Onset of the given value.
 --
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
-preOnset = lens _preOnset (flip $ alignAt 1)
+preOnset = lens _preOnset (flip $ placeAt 1)
 
 -- |
 -- Onset of the given value.
 --
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
-postOnset = lens _postOnset (flip $ alignAt 1)
+postOnset = lens _postOnset (flip $ placeAt 1)
 
 -- |
 -- Onset of the given value.
 --
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
-postOffset = lens _postOffset (flip $ alignAt 1)
+postOffset = lens _postOffset (flip $ placeAt 1)
 
 
 -- |
@@ -668,29 +668,29 @@ stopAt t  x   = (t .-. _offset x) `delay` x
 -- |
 -- Align a value to a given position.
 --
--- @alignAt p t@ places the given thing so that its position p is at time t
+-- @placeAt p t@ places the given thing so that its position p is at time t
 --
 -- @
--- 'alignAt' 0 == 'startAt'
--- 'alignAt' 1 == 'stopAt'
+-- 'placeAt' 0 == 'startAt'
+-- 'placeAt' 1 == 'stopAt'
 -- @
 --
-alignAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-alignAt p t x = (t .-. x `_position` p) `delay` x
+placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+placeAt p t x = (t .-. x `_position` p) `delay` x
 
 -- |
 -- Place a value over the given span.
 --
 -- @placeAt s t@ places the given thing so that @x^.place == s@
 --
-placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
-placeAt s x = transform (s ^-^ (view era) x) x
+_placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
+_placeAt s x = transform (s ^-^ (view era) x) x
 
 -- |
 -- A lens to the position
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
-era = lens _era (flip placeAt)
+era = lens _era (flip _placeAt)
 
 -- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
 -- (3,4)
@@ -700,13 +700,13 @@ era = lens _era (flip placeAt)
 -- @a \`lead\` b@  moves a so that @offset a' == onset b@
 --
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b   = alignAt 1 (b `_position` 0) a
+a `lead` b   = placeAt 1 (b `_position` 0) a
 
 -- |
 -- @a \`follow\` b@  moves b so that @offset a  == onset b'@
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = alignAt 0 (a `_position` 1) b
+a `follow` b = placeAt 0 (a `_position` 1) b
 
 -- |
 --
@@ -738,7 +738,7 @@ scat = Prelude.foldr (|>) mempty
 pcat = Prelude.foldr (<>) mempty
 
 during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-y `during`  x = placeAt (_era x) y
+y `during`  x = _placeAt (_era x) y
 x `sustain` y   = x <> y `during` x
 
 times n   = scat . replicate n
@@ -748,9 +748,8 @@ times n   = scat . replicate n
 --
 -- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
 --
--- For positioned values succh as 'Note', split cuts a value relative to the local origin.
+-- For positioned values succh as 'Note', split cuts a value relative to its onset.
 --
--- XXX would some instances look nicer if duration was absolute (compare mapping) and is this a bad sign?
 -- XXX what about Behavior (infinite span)
 --
 -- Law
@@ -948,6 +947,9 @@ instance HasPosition Time where
 --
 -- 'Span' is a 'Semigroup', 'Monoid' and 'AdditiveGroup':
 --
+-- - To convert a span to a pair, use @s^.'range'@.
+--
+-- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
 --
 -- >>> (2 <-> 3)^.range
 -- > (2, 3)
@@ -960,6 +962,12 @@ instance HasPosition Time where
 -- >
 -- >>> hs> (10 >-> 5)^.delta
 -- > (10, 5)
+--
+-- With the @ViewPatterns@ extension you can pattern match over spans using
+-- 
+-- @
+-- foo (view range -> (u,v)) = ...
+-- @
 --
 newtype Span = Span { getDelta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
@@ -1026,28 +1034,11 @@ t >-> d = Span (t, d)
 -- |
 -- View a span as pair of onset and offset.
 --
--- With the @ViewPatterns@ extension you can pattern match over spans using
---
--- @
--- foo (view range -> (u,v)) = ...
--- @
---
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
--- - To convert a span to a pair, use @s^.'range'@.
---
--- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
---
-
 -- |
 -- View a span as a pair of onset and duration.
---
--- With the @ViewPatterns@ extension you can pattern match over spans using
---
--- @
--- foo (view delta -> (t,d)) = ...
--- @
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
@@ -1190,7 +1181,6 @@ type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 --
 type Interval a = Diff (Pitch a)
 
-
 -- class Has s t a b |
 --   s -> a,
 --   -- t -> b,
@@ -1203,7 +1193,8 @@ type Interval a = Diff (Pitch a)
 -- |
 -- Class of types that provide a single pitch.
 --
-class (Transformable (Pitch s), Transformable (Pitch t), SetPitch (Pitch t) s ~ t) => HasPitch s t where
+class (Transformable (Pitch s), Transformable (Pitch t), 
+      SetPitch (Pitch t) s ~ t) => HasPitch s t where
 
   -- |
   -- Pitch type.
@@ -1241,7 +1232,7 @@ instance HasPitches Bool Bool where
 
 type instance Pitch Int = Int
 type instance SetPitch a Int = a
-instance HasPitch Int Int where
+instance (Transformable a, a ~ Pitch a) => HasPitch Int a where
   pitch = ($)
 instance HasPitches Int Int where
   pitches = ($)
@@ -1255,9 +1246,9 @@ instance HasPitches Integer Integer where
 
 type instance Pitch Float = Float
 type instance SetPitch a Float = a
-instance HasPitch Float Float where
+instance (Transformable a, a ~ Pitch a) => HasPitch Float a where
   pitch = ($)
-instance HasPitches Float Float where
+instance (Transformable a, a ~ Pitch a) => HasPitches Float a where
   pitches = ($)
 
 type instance Pitch Double = Double
@@ -1829,11 +1820,7 @@ fromSegment2 = undefined
 
 
 -- |
--- A 'Note' is a value with a known 'position' and 'duration'. Notes are isomorphic pairs
--- of spans and values, as whitnessed by 'note'.
---
--- Another way is to view a note is that it is a suspended application of a time
--- transformation, with 'runNote' extracting the transformed value:
+-- A 'Note' is a value with a known 'era'.
 --
 -- There is a morphism from 'runNote' to 'transform':
 --
@@ -1923,8 +1910,8 @@ instance HasPosition (Delayed a) where x `_position` p = ask (unwr x)`_position`
 -- |
 -- View a note as a pair of the original value and the transformation.
 --
-note :: Transformable a => Iso' (Span, a) (Note a)
-note = _Unwrapped'
+note :: Transformable a => Iso (Span, a) (Span, b) (Note a) (Note b)
+note = _Unwrapped
 
 -- |
 -- Extract the transformed value.
@@ -1956,8 +1943,8 @@ delayed = _Unwrapped'
 -- |
 -- View a stretched value as a pair of the original value and a stretch factor.
 --
-stretched :: Iso' (Duration, a) (Stretched a)
-stretched = _Unwrapped'
+stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
+stretched = _Unwrapped
 -- |
 -- Extract the delayed value.
 --
@@ -2002,6 +1989,50 @@ trim = trimG
 trimG :: (Applicative f, Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
 trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) <*> x
 
+
+-- mapPitch4' :: (HasPitch s s, Pitch s ~ a) => Behavior (a -> a) -> s -> s
+-- mapPitch4' = mapPitch4
+
+pureB :: a -> Behavior a
+pureB = pure
+
+mapPitch4 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => Behavior (a -> b) -> s -> t
+mapPitch4 f = (pitch %~ (f <*>))
+
+fix :: Transformable a => Note (Behavior a) -> Note a
+-- fix = from note %~ (\(s,x) -> (s,x ! 0))
+fix = fmap (! 0)
+
+-- TODO instead of pureB and fix use
+
+fixPitch :: (HasPitch s t, Pitch s ~ Behavior (Pitch t)) => s -> t
+fixPitch = pitch %~ (!^ 0)
+
+purePitch :: (HasPitch s t, Pitch t ~ Behavior (Pitch s)) => s -> t
+purePitch = pitch %~ pure
+
+{-
+mapPitch5 :: (
+  (Pitch (SetPitch (Behavior b) (SetPitch (Behavior a) s)) ~ Behavior b),
+  (Pitch (SetPitch (Behavior a) s) ~ Behavior a),
+  HasPitch s t, Pitch s ~ a, Pitch t ~ b) => Behavior (a -> b) -> s -> t
+mapPitch5 f = fixPitch . (pitch %~ (f <*>)) . purePitch
+-}
+
+
+
+mapPitch3 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => Behavior (a -> b) -> s -> t
+mapPitch3 f = pitch %~ (f <*>)
+
+mapPitch2 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => (Behavior a -> Behavior b) -> s -> t
+mapPitch2 f = pitch %~ f
+
+mapPitch1 :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
+mapPitch1 f = pitch %~ f
+
+
+
+
 -- |
 -- Add bounds.
 --
@@ -2022,7 +2053,10 @@ instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position`
 
 -- |
 --
--- A 'Segment' is a function of 'Duration'. Intuitively, it is a value varying over some unknown time span.
+-- A 'Segment' is a value varying over some unknown time span, semantically
+--
+-- > type Segment a => Duration -> a
+--
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
 newtype Segment a = Segment (Normalized Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
@@ -2075,9 +2109,13 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
 
 -- |
 --
--- A 'Behavior' is a function of 'Time'. Intuitively, it is a value varying over the set of all time points.
--- While a 'Behavior' can not be placed (as it has no endpoints), it can be "focused", by placing it between
--- 'Bounds'.
+-- A 'Behavior' is an infitately varying value, semantically
+-- 
+--
+-- > type Behavior a => Time -> a
+--
+-- While a 'Behavior' can not be placed (as it has no endpoints), we can focus on a
+-- certain part of a behavior by placing it inside 'Bounds'.
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad, Comonad)
 -- Defined throughout, "focused" on 0-1
@@ -2086,6 +2124,19 @@ deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
+deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
+instance VectorSpace a => VectorSpace (Behavior a) where
+  type Scalar (Behavior a) = Behavior (Scalar a)
+  (*^) = liftA2 (*^)
+instance AffineSpace a => AffineSpace (Behavior a) where
+  type Diff (Behavior a) = Behavior (Diff a)
+  (.-.) = liftA2 (.-.)
+  (.+^) = liftA2 (.+^)
+instance IsPitch a => IsPitch (Behavior a) where
+  fromPitch = pure . fromPitch
+instance IsInterval a => IsInterval (Behavior a) where
+  fromInterval = pure . fromInterval
+ 
 deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 -- deriving instance RealFrac a => RealFrac (Behavior a)
@@ -2162,9 +2213,13 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 
 
 -- |
--- View a behavior as a time function and vice versa.
+-- View a behavior as a time function and vice versa. Specification of 'tabulated'.
 --
--- This is actually a specification of 'tabulated'.
+behavior' :: Iso' (Time -> a) (Behavior a)
+behavior' = tabulated
+
+-- |
+-- View a behavior as a time function and vice versa. Specification of 'tabulated'.
 --
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
@@ -2470,7 +2525,7 @@ instance HasDuration (Divide a) where
 
 instance Splittable a => Splittable (Divide a) where
 
-voiceList :: Iso' (Divide a) (NonEmpty (Voices a))
+voiceList :: Iso (Divide a) (Divide b) (NonEmpty (Voices a)) (NonEmpty (Voices b))
 voiceList = undefined
 
 newtype Voices a   = Voices    { getVoices :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
@@ -2735,7 +2790,7 @@ unwr = (^. _Wrapped')
 
 
 
-
+{-
 -- Tests
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
@@ -2889,7 +2944,7 @@ main = defaultMain $ testGroup "" $ [
 
 
 
-
+-}
 
 
 
