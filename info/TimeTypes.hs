@@ -204,8 +204,8 @@ module TimeTypes (
         -- * Music.Score.Pitch
         Pitch,
         SetPitch,
-        HasPitch(..),
         HasPitches(..),
+        HasPitch(..),
         Interval,
         Transposable,
         Transposable',
@@ -225,8 +225,8 @@ module TimeTypes (
         -- * Music.Score.Dynamic
         Dynamic,
         SetDynamic,
-        HasDynamic(..),
         HasDynamics(..),
+        HasDynamic(..),
         dynamic',
         dynamics',
         Level,
@@ -242,8 +242,8 @@ module TimeTypes (
         -- * Music.Score.Articulation
         Articulation,
         SetArticulation,
-        HasArticulation(..),
         HasArticulations(..),
+        HasArticulation(..),
         articulation',
         articulations',
         
@@ -260,8 +260,8 @@ module TimeTypes (
         -- * Music.Score.Part
         Part,
         SetPart,
-        HasPart(..),
         HasParts(..),
+        HasPart(..),
         HasPart',
         HasParts',
         part',
@@ -1251,8 +1251,7 @@ type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 -- |
 -- Class of types that provide a single pitch.
 --
-class (Transformable (Pitch s), Transformable (Pitch t), 
-      SetPitch (Pitch t) s ~ t) => HasPitch s t where
+class HasPitches s t => HasPitch s t where
 
   -- |
   -- Pitch type.
@@ -1285,14 +1284,14 @@ type instance Pitch Bool = Bool
 type instance SetPitch a Bool = a
 instance (Transformable a, a ~ Pitch a) => HasPitch Bool a where
   pitch = ($)
-instance HasPitches Bool Bool where
+instance (Transformable a, a ~ Pitch a) => HasPitches Bool a where
   pitches = ($)
 
 type instance Pitch Int = Int
 type instance SetPitch a Int = a
 instance (Transformable a, a ~ Pitch a) => HasPitch Int a where
   pitch = ($)
-instance HasPitches Int Int where
+instance (Transformable a, a ~ Pitch a) => HasPitches Int a where
   pitches = ($)
 
 type instance Pitch Integer = Integer
@@ -1450,7 +1449,7 @@ type family SetDynamic (b :: *) (s :: *) :: * -- Dynamic b s = t
 -- |
 -- Class of types that provide a single dynamic.
 --
-class (Transformable (Dynamic s), Transformable (Dynamic t), SetDynamic (Dynamic t) s ~ t) => HasDynamic s t where
+class (HasDynamics s t) => HasDynamic s t where
 
   -- |
   -- Dynamic type.
@@ -1662,7 +1661,7 @@ type family SetArticulation (b :: *) (s :: *) :: * -- Articulation b s = t
 -- |
 -- Class of types that provide a single articulation.
 --
-class (Transformable (Articulation s), Transformable (Articulation t), SetArticulation (Articulation t) s ~ t) => HasArticulation s t where
+class (HasArticulations s t) => HasArticulation s t where
 
   -- |
   -- Articulation type.
@@ -1795,7 +1794,7 @@ type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
 -- |
 -- Class of types that provide a single part.
 --
-class (Transformable (Part s), Transformable (Part t), SetPart (Part t) s ~ t) => HasPart s t where
+class (HasParts s t) => HasPart s t where
 
   -- |
   -- Part type.
@@ -1828,29 +1827,21 @@ type instance Part Bool = Bool
 type instance SetPart a Bool = a
 instance (b ~ Part b, Transformable b) => HasPart Bool b where
   part = ($)
-instance HasParts Bool Bool where
+instance (b ~ Part b, Transformable b) => HasParts Bool b where
   parts = ($)
-
-
-data Foo a = Foo a | Bar a deriving (Show)
-type instance Part (Foo a) = (Foo a)
-type instance SetPart a (Foo b) = a
-instance (b ~ Part b, Transformable b) => HasPart (Foo x) b where
-  part = ($)
-instance Transformable (Foo x) where transform _ = id
 
 type instance Part Ordering = Ordering
 type instance SetPart a Ordering = a
 instance (b ~ Part b, Transformable b) => HasPart Ordering b where
   part = ($)
-instance HasParts Ordering Ordering where
+instance (b ~ Part b, Transformable b) => HasParts Ordering b where
   parts = ($)
 
 type instance Part () = ()
 type instance SetPart a () = a
 instance (b ~ Part b, Transformable b) => HasPart () b where
   part = ($)
-instance HasParts () () where
+instance (b ~ Part b, Transformable b) => HasParts () b where
   parts = ($)
 
 type instance Part Int = Int
@@ -2324,6 +2315,8 @@ instance Representable Segment where
 type instance Pitch                 (Segment a) = Segment (Pitch a)
 type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
 
+instance (HasPitch a a, HasPitch a b) => HasPitches (Segment a) (Segment b) where
+  pitches = through pitch pitch
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
 
@@ -2438,6 +2431,8 @@ instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) wh
 type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
 type instance SetDynamic (Behavior g) (Behavior a) = Behavior (SetDynamic g a)
 
+instance (HasDynamic a a, HasDynamic a b) => HasDynamics (Behavior a) (Behavior b) where
+  dynamics = through dynamic dynamic
 instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Behavior a) (Behavior b) where
   dynamic = through dynamic dynamic
 
@@ -2445,6 +2440,8 @@ instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Behavior a) (Behavior b
 type instance Articulation                 (Behavior a) = Behavior (Articulation a)
 type instance SetArticulation (Behavior g) (Behavior a) = Behavior (SetArticulation g a)
 
+instance (HasArticulation a a, HasArticulation a b) => HasArticulations (Behavior a) (Behavior b) where
+  articulations = through articulation articulation
 instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Behavior a) (Behavior b) where
   articulation = through articulation articulation
 
@@ -2452,6 +2449,8 @@ instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Behavior
 type instance Part                 (Behavior a) = Behavior (Part a)
 type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
 
+instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
+  parts = through part part
 instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
   part = through part part
 
@@ -2974,8 +2973,12 @@ type instance Pitch PD = Behavior Float
 type instance SetPitch g PD = PD
 type instance Dynamic PD = Behavior Float
 type instance SetDynamic g PD = PD
+instance HasPitches PD PD where
+  pitches = _Wrapped . _2
 instance HasPitch PD PD where
   pitch = _Wrapped . _2
+instance HasDynamics PD PD where
+  dynamics = _Wrapped . _1
 instance HasDynamic PD PD where
   dynamic = _Wrapped . _1
 pd :: PD
