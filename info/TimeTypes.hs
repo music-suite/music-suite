@@ -267,9 +267,12 @@ module TimeTypes (
         SetPart,
         HasPart(..),
         HasParts(..),
+        HasPart',
+        HasParts',
         part',
         parts',
         allParts,
+        extractPart,
         extractParts,
   ) where
 
@@ -1910,10 +1913,25 @@ instance (HasParts a b) => HasParts (Note a) (Note b) where
     where
       pl f (s,a) = (s,) <$> (parts $ f `underM` negateV s) a
 
+type HasPart' a = HasPart a a
+type HasParts' a = HasParts a a
 
-allParts = Data.List.nub . toListOf parts
+-- |
+-- List all the parts
+--
+allParts :: (Ord (Part a), HasParts' a) => a -> [Part a]
+allParts = Data.List.nub . Data.List.sort . toListOf parts
 
-extractParts :: (Eq (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart a a, HasParts (f a) (f a)) => f a -> [f a]
+-- |
+-- List all the parts
+--
+extractPart :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
+extractPart p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
+
+-- |
+-- List all the parts
+--
+extractParts :: (Ord (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart' a, HasParts' (f a)) => f a -> [f a]
 extractParts x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
 filterPart p = mfilter (\x -> p (x ^. part))
