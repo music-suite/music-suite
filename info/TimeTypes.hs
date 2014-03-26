@@ -136,12 +136,7 @@ module TimeTypes (
         Note,
         note,
         noteValue,
-        rawNoteValue,
-        rawNoteSpan,
-        -- runNote,
-        -- reifyNote,
-        -- noteValue',
-        -- mapNote,
+        originalNoteValue,
 
         -- * Music.Time.Bounds
         Bounds,
@@ -213,6 +208,7 @@ module TimeTypes (
         HasPitches(..),
         Interval,
         Transposable,
+        Transposable',
         pitch',
         pitches',
         up,
@@ -600,10 +596,10 @@ clippedDuration = stretchTo 1
 -- Class of values that have a position in time.
 --
 -- Many values such as notes, envelopes etc can in fact have many positions such as
--- onset, maxPoint, offset, decay time etc. Rather than having separate classes for
--- a discrete set of cases, this class provides an interpolation from a /local/
--- position to a /global/ position. While the local position goes from 0 to 1,
--- the global position goes from 'onset' to 'offset'.
+-- onset, attack point, offset, decay point time etc. Rather than having separate methods
+-- for a discrete set of cases, this class provides an interpolation from a /local/
+-- position to a /global/ position. While the local position goes from 0 to 1, the global
+-- position goes from 'onset' to 'offset'.
 --
 -- For instantaneous values, a sunittable instance is:
 -- 
@@ -1372,6 +1368,18 @@ type Interval a = Diff (Pitch a)
 -- Class of types that can be transposed.
 --
 type Transposable a = (HasPitches a a, VectorSpace (Interval a), AffineSpace (Pitch a), IsInterval (Interval a), IsPitch (Pitch a))
+
+class Transposable a => Transposable' a where
+-- instance Transposable' Int  
+-- instance Transposable' Integer  
+-- instance Transposable' Float  
+-- instance Transposable' Double 
+instance Transposable' a => Transposable' [a]
+instance Transposable' a => Transposable' (Score a)
+-- instance (Transposable' a, HasPitch a a) => Transposable' (Behavior a)  
+instance Transposable' a => Transposable' (Note a)	 
+instance Transposable' a => Transposable' (c, a)
+
 
 -- |
 -- Transpose up.
@@ -2145,11 +2153,11 @@ mapNote f (Note (s,x)) = Note (s, under f s x)
 noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
 
-rawNoteSpan :: Lens' (Note a) Span
-rawNoteSpan  = from note . _1
-
-rawNoteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-rawNoteValue = from note . _2
+-- |
+-- View the value in the note.
+--
+originalNoteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+originalNoteValue = from note . _2
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -3231,7 +3239,7 @@ drawBehavior = drawBehavior' 0 10
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
 drawSegment = scaleX 10 . drawBehavior' 0 1
 
-drawBehavior' start count b = draw points & lw 0.05
+drawBehavior' start count b = draw points & lw 0.02
   where
     points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, fromVal (b ! toTime x))) [start,start+1/samplesPerCell..]
     toTime = realToFrac
