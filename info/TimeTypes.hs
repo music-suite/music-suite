@@ -822,14 +822,20 @@ dropM t = snd . split t
 --
 -- Law
 --
--- > rev (rev a) = a
+-- @
+-- 'rev' ('rev' a) = a
+-- @
 --
--- > rev s `transform` a = rev (s `transform` a)
+-- @
+-- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
+-- @
 --
--- Lemmas
+-- Lemma
 --
--- > delay n (rev a)   = rev (delay n a)
--- > stretch n (rev a) = rev (stretch n a)
+-- @
+-- 'delay' n ('rev' a)   = 'rev' ('delay' n a)
+-- 'stretch' n ('rev' a) = 'rev' ('stretch' n a)
+-- @
 --
 class Reversible a where
 
