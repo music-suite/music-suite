@@ -190,9 +190,9 @@ module TimeTypes (
 
         -- * Music.Time.Voices
         Divide,
-        voiceList,
+        divide,
         Voices,
-        voiceMap,
+        voices,
         concatSubVoices,
 
         -- * Music.Time.Reactive
@@ -2662,8 +2662,13 @@ instance HasDuration (Divide a) where
 
 instance Splittable a => Splittable (Divide a) where
 
-voiceList :: Iso (Divide a) (Divide b) (NonEmpty (Voices a)) (NonEmpty (Voices b))
-voiceList = undefined
+divide :: Iso 
+  (Divide a) 
+  (Divide b) 
+  (NonEmpty (Voices a)) 
+  (NonEmpty (Voices b))
+-- TODO is there a non-empty version of traversal?
+divide = undefined
 
 newtype Voices a   = Voices    { getVoices :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
@@ -2683,8 +2688,12 @@ instance HasDuration (Voices a) where
 instance Splittable a => Splittable (Voices a) where
 
 -- | XXX
-voiceMap :: Traversal (Voices a) (Voices b) (Stretched (Either a (Divide a))) (Stretched (Either a (Divide a)))
-voiceMap = undefined
+voices :: Iso 
+  (Voices a) 
+  (Voices b) 
+  (Voice (Either a (Divide a))) 
+  (Voice (Either a (Divide a)))
+voices = undefined
 
 
 concatSubVoices :: Monoid a => Voices a -> Voice a
@@ -3139,5 +3148,20 @@ openG' dia = do
   -- system "open -a 'Firefox' test.html"
   system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
   return ()
+
+
+testNotes j = let
+  staff n = drawSomeNotes (take 60 $ drop n $ cycle $ fmap (subtract 5) $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
+  in
+  openG $ vcat $ [staff (i+j) <> strutY 12 | i <- [1..8]]
+
+-- drawSomeNotes [0,1,-3,5]
+drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) $ zip [0..] notes) <> lines
+  where      
+    -- pos is offset in spaces
+    note pos = moveTo pos $ fc black $ rotateBy (1/15) $ scaleX 1.4 (circle 0.5)
+    lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
+    linesWidth = 3 * fromIntegral (length notes)
+
 
 
