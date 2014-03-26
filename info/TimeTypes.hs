@@ -209,10 +209,10 @@ module TimeTypes (
 
         -- * Music.Score.Pitch
         Pitch,
-        Interval,
         SetPitch,
         HasPitch(..),
         HasPitches(..),
+        Interval,
         Transposable,
         pitch',
         pitches',
@@ -221,6 +221,7 @@ module TimeTypes (
         above,
         below,
         inv,
+        -- TODO gliss etc
         -- octavesUp,
         -- octavesDown,
         -- octavesAbove,
@@ -233,6 +234,14 @@ module TimeTypes (
         HasDynamics(..),
         dynamic',
         dynamics',
+        DynamicRange,
+        Attenuable,
+        louder,
+        softer,
+        level,
+        fadeIn,
+        fadeOut,
+        fade,
 
         -- * Music.Score.Articulation
         Articulation,
@@ -241,6 +250,16 @@ module TimeTypes (
         HasArticulations(..),
         articulation',
         articulations',
+        
+        accent,
+        marcato,
+        accentLast,
+        marcatoLast,
+        accentAll,
+        marcatoAll,
+        tenuto,
+        staccato,
+        legato,
 
         -- * Music.Score.Part
         Part,
@@ -249,7 +268,8 @@ module TimeTypes (
         HasParts(..),
         part',
         parts',
-
+        allParts,
+        extractParts,
   ) where
 
 import qualified Data.ByteString.Lazy         as ByteString
@@ -293,6 +313,7 @@ import qualified Data.Traversable             as T
 import           Data.Typeable
 import           Data.VectorSpace
 import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 
 import           Data.Int
 import           Test.SmallCheck.Series       hiding ((><), NonEmpty)
@@ -318,10 +339,8 @@ instance Monoid b => Monad ((,) b) where
 
 {-
   TODO
-
-  - Use graphing and verify that timed fmap (i.e. reactive's apply) works.
-
-  - New representations for Score, Voice and Reactive
+  - New representation for Reactive
+  - Implement Divs/Voices
 
 
 -}
@@ -346,9 +365,16 @@ instance Monoid b => Monad ((,) b) where
     a ^+^ b        = b ^+^ a
 
   Law Functor
+    fmap id = id
+    fmap (f . g) = fmap f . fmap g
   Law Eq
+    a == b = not (a /= b)
   Law Ord
-  Law
+  Law Applicative
+    pure id <*> v = v
+    pure f <*> pure x = pure (f x)
+    u <*> pure y = pure ($ y) <*> u
+    u <*> (v <*> w) = pure (.) <*> u <*> v <*> w
 -}
 
 -- | A value in the unit interval /(0,1)/.
@@ -792,7 +818,7 @@ dropM t = snd . split t
 
 
 -- |
--- Class of values that can be reversed.
+-- Class of values that can be reversed (retrograded).
 --
 -- For positioned values succh as 'Note', the value is reversed relative to its middle point, i.e.
 -- the onset value becomes the offset value and vice versa.
@@ -815,7 +841,7 @@ dropM t = snd . split t
 --
 class Reversible a where
 
-  -- | Reverse the given value.
+  -- | Reverse (retrograde) the given value.
   rev :: a -> a
 
 {-
@@ -1228,11 +1254,6 @@ type family Pitch             (s :: *) :: * -- Pitch s   = a
 --
 type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
 
--- |
--- Associated interval type.
---
-type Interval a = Diff (Pitch a)
-
 -- class Has s t a b |
 --   s -> a,
 --   -- t -> b,
@@ -1344,6 +1365,11 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
     where
       pl f (s,a) = (s,) <$> (pitches $ f `underM` negateV s) a
 
+
+-- |
+-- Associated interval type.
+--
+type Interval a = Diff (Pitch a)
 
 -- |
 -- Class of types that can be transposed.
@@ -1534,7 +1560,56 @@ instance HasDynamics a b => HasDynamics (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (dynamics $ f `underM` negateV s) a
 
 
+-- |
+-- Associated interval type.
+--
+type DynamicRange a = Diff (Dynamic a)
 
+-- |
+-- Class of types that can be transposed.
+--
+type Attenuable a = (HasDynamics a a, VectorSpace (DynamicRange a), AffineSpace (Dynamic a), IsDynamics (Dynamic a))
+
+-- |
+-- Transpose up.
+--
+louder :: Attenuable a => DynamicRange a -> a -> a
+louder a = dynamics %~ (.+^ a)
+
+-- |
+-- Transpose down.
+--
+softer :: Attenuable a => DynamicRange a -> a -> a
+softer a = dynamics %~ (.-^ a)
+
+-- |
+-- Transpose down.
+--
+volume :: (Attenuable a, Num (Dynamic a)) => Scalar (Diff (Dynamic a)) -> a -> a
+volume a = dynamics %~ (relative 0 $ \x -> a*^x)
+
+-- |
+-- Transpose down.
+--
+level :: Attenuable a => Dynamic a -> a -> a
+level a = dynamics .~ a
+
+-- fadeIn :: Duration -> a -> a
+-- fadeIn ()
+
+-- |
+-- Fade in.
+--
+fadeIn :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
+fadeIn t = dynamic %~ (\d -> liftA2 (*) (stretch t time) d )
+
+-- |
+-- Fade in.
+--
+fadeOut :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
+fadeOut t = dynamic %~ (\d -> liftA2 (*) (stretch t $ rev time) d )
+
+fade = undefined
 
 
 
@@ -1656,6 +1731,15 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (articulations $ f `underM` negateV s) a
 
 
+accent = undefined
+marcato = undefined
+accentLast = undefined
+marcatoLast = undefined
+accentAll = undefined
+marcatoAll = undefined
+tenuto = undefined
+staccato = undefined
+legato = undefined
 
 
 
@@ -1801,7 +1885,8 @@ instance (HasParts a b) => HasParts (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (parts $ f `underM` negateV s) a
 
 
-
+allParts = toListOf parts
+extractParts = undefined
 
 
 
