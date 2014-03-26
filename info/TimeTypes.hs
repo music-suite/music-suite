@@ -100,7 +100,6 @@ module TimeTypes (
         during,
         sustain,
         -- ** Composition operators
-        Sequential(..),
         scat,
         pcat,
         times,
@@ -477,9 +476,13 @@ tabulated = iso tabulate index
 --
 -- Law
 --
--- > onset (delay n a)      = n ^+. onset a
--- > offset (delay n a)     = n ^+. offset a
--- > duration (stretch n a) = n ^* (duration a)
+-- > onset (delay n a)       = n ^+. onset a
+-- > offset (delay n a)      = n ^+. offset a
+-- > duration (stretch n a)  = n * duration a
+-- > duration (compress n a) = duration a / n
+--
+-- > delay n b ! t    = b ! (t .-^ n)
+-- > undelay n b ! t  = b ! (t .+^ n)
 --
 -- Lemma
 --
@@ -535,21 +538,11 @@ compressing x = stretching (recip x)
 -- |
 -- Moves a value forward in time.
 --
--- > onset (delay n x)  = n ^+. onset x
--- > offset (delay n x) = n ^+. offset x
---
--- > delay n b ! t == b ! (t .-^ n)
---
 delay :: Transformable a => Duration -> a -> a
 delay = transform . delaying
 
 -- |
 -- Moves a value backward in time. Equnitvalent to @'stretch' . 'negate'@.
---
--- > onset (undelay n x) = n - onset x
--- > offset (undelay n x) = n - offset x
---
--- > undelay n b ! t == b ! (t .+^ n)
 --
 undelay :: Transformable a => Duration -> a -> a
 undelay = transform . undelaying
@@ -557,15 +550,11 @@ undelay = transform . undelaying
 -- |
 -- Stretches (augments) a value by the given factor.
 --
--- > duration (stretch n a) = n * (duration a)
---
 stretch :: Transformable a => Duration -> a -> a
 stretch = transform . stretching
 
 -- |
 -- Compresses (diminishes) a score. Equnitvalent to @'stretch' . 'recip'@.
---
--- > duration (compress n a) = (duration a) / n
 --
 compress :: Transformable a => Duration -> a -> a
 compress = transform . compressing
@@ -953,7 +942,9 @@ instance Sequential (Score a) where
 -- |
 -- Internal time representation. Can be anything with Fractional and RealFrac instances.
 --
-type TimeBase = Rational
+type TimeBase = Double
+deriving instance Floating Time
+deriving instance Floating Duration
 
 -- |
 -- Duration, corresponding to note values in standard notation.
@@ -2348,6 +2339,8 @@ instance Reversible (Segment a) where
 -- > ask = realToFrac <$> time
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
+notTime = stretch 10 ((stretch 2 $ 4**time-1)`min` 1)*10
+notTime2 = (rev `under` delaying 4.5) notTime
 
 -- |
 --
@@ -2366,14 +2359,14 @@ deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
-deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
-instance VectorSpace a => VectorSpace (Behavior a) where
-  type Scalar (Behavior a) = Behavior (Scalar a)
-  (*^) = liftA2 (*^)
-instance AffineSpace a => AffineSpace (Behavior a) where
-  type Diff (Behavior a) = Behavior (Diff a)
-  (.-.) = liftA2 (.-.)
-  (.+^) = liftA2 (.+^)
+-- deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
+-- instance VectorSpace a => VectorSpace (Behavior a) where
+  -- type Scalar (Behavior a) = Behavior (Scalar a)
+  -- (*^) = liftA2 (*^)
+-- instance AffineSpace a => AffineSpace (Behavior a) where
+--   type Diff (Behavior a) = Behavior (Diff a)
+--   (.-.) = liftA2 (.-.)
+--   (.+^) = liftA2 (.+^)
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
 instance IsInterval a => IsInterval (Behavior a) where
@@ -2465,8 +2458,6 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- | 
 -- Index a behavior.
 -- 
--- This is a specification of '!' (and 'index').
--- 
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
 
@@ -2479,10 +2470,9 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- >>> floor^.behavior ! 3.5
 -- 3
 --
--- This is a specification of 'tabulated'.
---
-behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+behavior :: Iso' (Time -> a) (Behavior a)
 behavior = tabulated
+-- behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 
 -- |
 -- A behavior that
@@ -2562,7 +2552,7 @@ atTime = index
 -}
 
 
-deriving instance Bounded a => Bounded (Behavior a)
+-- deriving instance Bounded a => Bounded (Behavior a)
 
 -- TODO move to NumInstances
 instance Bounded a => Bounded (b -> a) where
@@ -3066,7 +3056,7 @@ wr   = (^. _Unwrapped')
 unwr = (^. _Wrapped')
 
 
-
+#ifdef INCLUDE_TESTS
 -- Tests
 
 -- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
@@ -3217,7 +3207,7 @@ main = defaultMain $ testGroup "" $ [
   -- functor (undefined :: BadMonoid Int8)
 
   ]
-
+#endif // INCLUDE_TESTS
 
 
 
