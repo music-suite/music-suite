@@ -234,8 +234,9 @@ module TimeTypes (
         HasDynamics(..),
         dynamic',
         dynamics',
-        DynamicRange,
+        Level,
         Attenuable,
+        Attenuable',
         louder,
         softer,
         level,
@@ -292,7 +293,7 @@ import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, index, parts, above, below,
-                                               reversed, transform, under, (|>), inside)
+                                               reversed, transform, under, (|>), inside, Level)
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -1036,6 +1037,15 @@ instance HasPosition Time where
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
+-- With the @ViewPatterns@ extension you can pattern match over spans using
+-- 
+-- @
+-- foo (view range -> (u,v)) = ...
+-- @
+--
+newtype Span = Span { getDelta :: (Time, Duration) }
+  deriving (Eq, Ord, Typeable)
+
 -- You can create a span using the '<->' and '>->' constructors. Note that:
 --
 -- > t <-> u = t >-> (u .-. t)
@@ -1049,14 +1059,6 @@ instance HasPosition Time where
 --
 -- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
 --
--- With the @ViewPatterns@ extension you can pattern match over spans using
--- 
--- @
--- foo (view range -> (u,v)) = ...
--- @
---
-newtype Span = Span { getDelta :: (Time, Duration) }
-  deriving (Eq, Ord, Typeable)
 
 
 -- >>> (2 <-> 3)^.range
@@ -1517,13 +1519,22 @@ instance HasDynamic Integer Integer where
 instance HasDynamics Integer Integer where
   dynamics = ($)
 
+
 type instance Dynamic Float = Float
 type instance SetDynamic a Float = a
 
 instance HasDynamic Float Float where
   dynamic = ($)
-
 instance HasDynamics Float Float where
+  dynamics = ($)
+
+
+type instance Dynamic Double = Double
+type instance SetDynamic a Double = a
+
+instance HasDynamic Double Double where
+  dynamic = ($)
+instance HasDynamics Double Double where
   dynamics = ($)
 
 
@@ -1559,34 +1570,48 @@ instance HasDynamics a b => HasDynamics (Note a) (Note b) where
     where
       pl f (s,a) = (s,) <$> (dynamics $ f `underM` negateV s) a
 
+-- TODO move
+instance IsDynamics Bool where
+instance IsDynamics Float where
+instance IsDynamics Int where
+instance IsDynamics Integer where
 
 -- |
 -- Associated interval type.
 --
-type DynamicRange a = Diff (Dynamic a)
+type Level a = Diff (Dynamic a)
 
 -- |
 -- Class of types that can be transposed.
 --
-type Attenuable a = (HasDynamics a a, VectorSpace (DynamicRange a), AffineSpace (Dynamic a), IsDynamics (Dynamic a))
+type Attenuable a = (HasDynamics a a, VectorSpace (Level a), AffineSpace (Dynamic a), IsDynamics (Dynamic a))
+
+class Attenuable a => Attenuable' a where
+
+instance Attenuable' Float where  
+instance Attenuable' Double where  
+-- instance Attenuable' a => Attenuable' [b] where
+instance Attenuable' a => Attenuable' (Score a) where  
+instance Attenuable' a => Attenuable' (Note a)	where
+instance Attenuable' a => Attenuable' (c, a) where
 
 -- |
 -- Transpose up.
 --
-louder :: Attenuable a => DynamicRange a -> a -> a
+louder :: Attenuable a => Level a -> a -> a
 louder a = dynamics %~ (.+^ a)
 
 -- |
 -- Transpose down.
 --
-softer :: Attenuable a => DynamicRange a -> a -> a
+softer :: Attenuable a => Level a -> a -> a
 softer a = dynamics %~ (.-^ a)
 
 -- |
 -- Transpose down.
 --
-volume :: (Attenuable a, Num (Dynamic a)) => Scalar (Diff (Dynamic a)) -> a -> a
-volume a = dynamics %~ (relative 0 $ \x -> a*^x)
+volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
+volume a = dynamics *~ a
 
 -- |
 -- Transpose down.
@@ -1601,13 +1626,13 @@ level a = dynamics .~ a
 -- Fade in.
 --
 fadeIn :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeIn t = dynamic %~ (\d -> liftA2 (*) (stretch t time) d )
+fadeIn t = dynamic *~ (t `stretch` unit)
 
 -- |
 -- Fade in.
 --
 fadeOut :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeOut t = dynamic %~ (\d -> liftA2 (*) (stretch t $ rev time) d )
+fadeOut t = dynamic *~ (t `stretch` rev unit)
 
 fade = undefined
 
