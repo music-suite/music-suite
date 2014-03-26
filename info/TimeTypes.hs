@@ -163,13 +163,14 @@ module TimeTypes (
 
         -- ** Common behaviors
         time,
-        ui,
-        sine,
-        cosine,
-        sawtooth,
-        dirac,
+        unit,
+        impulse,
         turnOn,
         turnOff,
+        sawtooth,
+
+        sine,
+        cosine,
 
         -- ** Combinators
         switch,
@@ -258,7 +259,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                _era, interval, offset, place,
                                                position, start, stretch, inv,
                                                stretchTo, transform, trim, era,
-                                               under, value, view, (<->), (|>), ui)
+                                               under, value, view, (<->), (|>), unit)
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -406,10 +407,6 @@ addLim = zipClippedWith (+)
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
 
--- | Index a behavior, specification of '!' (and 'index').
-(!^) :: Behavior a -> Time -> a
-(!^) = (!)
-
 tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
 tabulated = iso tabulate index
 
@@ -510,7 +507,7 @@ delay :: Transformable a => Duration -> a -> a
 delay = transform . delaying
 
 -- |
--- Moves a value backward in time. Equivalent to @'stretch' . 'negate'@.
+-- Moves a value backward in time. Equnitvalent to @'stretch' . 'negate'@.
 --
 -- > onset (undelay n x) = n - onset x
 -- > offset (undelay n x) = n - offset x
@@ -529,7 +526,7 @@ stretch :: Transformable a => Duration -> a -> a
 stretch = transform . stretching
 
 -- |
--- Compresses (diminishes) a score. Equivalent to @'stretch' . 'recip'@.
+-- Compresses (diminishes) a score. Equnitvalent to @'stretch' . 'recip'@.
 --
 -- > duration (compress n a) = (duration a) / n
 --
@@ -582,7 +579,7 @@ clippedDuration = stretchTo 1
 -- position to a /global/ position. While the local position goes from 0 to 1,
 -- the global position goes from 'onset' to 'offset'.
 --
--- For instantaneous values, a suitable instance is:
+-- For instantaneous values, a sunittable instance is:
 -- 
 -- @
 -- '_position' x = 'const' t
@@ -796,7 +793,7 @@ dropM t = snd . split t
 --
 -- For non-positioned values such as 'Stretched', the value is reversed in-place.
 --
--- XXX counterintuitive Behavior instances (just Behavior should reverse around origin, while
+-- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
 -- Bounds (Behavior a) should reverse around the middle, like a note)
 --
 -- Law
@@ -827,14 +824,14 @@ class Reversible a where
     openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
     openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
 
-    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ ui
-    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ ui
+    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ unit
+    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ unit
 
-    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ ui
-    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ ui
+    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
+    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
   
-    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ ui
-    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ ui
+    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
+    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
 
 -}
 
@@ -1003,7 +1000,7 @@ instance HasPosition Time where
 
 
 -- |
--- A 'Span' represents two points in time @u@ and @v@ or, equivalently, a time @t@ and a
+-- A 'Span' represents two points in time @u@ and @v@ or, equnitvalently, a time @t@ and a
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
@@ -1179,32 +1176,14 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 -- |
 -- Whether the given point falls inside the given span.
 --
--- Designed to be used infix, as in
+-- Designed to be used infix, for example
 --
 -- @
--- t `inside`` (1 '<->' 2)
+-- 0.5 ``inside`` (1 '<->' 2)
 -- @
 --
 inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
-
--- |
--- Global start time.
---
-start :: Time
-start = 0
-
--- |
--- Global end time.
---
-stop :: Time
-stop  = 1
-
--- |
--- Global start time.
---
-unit :: Duration
-unit  = 1
 
 
 {-
@@ -2341,27 +2320,24 @@ type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
 instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
   part = through part part
 
+-- | 
+-- Index a behavior.
+-- 
+-- This is a specification of '!' (and 'index').
+-- 
+(!^) :: Behavior a -> Time -> a
+(!^) = (!)
 
 
 -- |
--- View a behavior as a time function and vice versa. Specification of 'tabulated'.
+-- View a behavior as a time function and vice versa.
 --
-behavior' :: Iso' (Time -> a) (Behavior a)
-behavior' = tabulated
-
--- |
--- View a behavior as a time function and vice versa. Specification of 'tabulated'.
+-- This isomorphism can be used to turn any function into a behavior
 --
--- This isomorphism can be used to turn any function into a behavior, i.e.
+-- >>> floor^.behavior ! 3.5
+-- 3
 --
--- >>> :t floor^.behavior
--- > :: Integral a => Behavior a
---
--- >>> :t Control.Lens.under behavior
--- > :: ((Time -> b) -> Time -> a) -> Behavior b -> Behavior a
---
--- >>> :t Control.Lens.over behavior
--- > :: (Behavior a -> Behavior b) -> (Time -> a) -> Time -> b
+-- This is a specification of 'tabulated'.
 --
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
@@ -2374,22 +2350,22 @@ time' = id^.behavior
 
 -- |
 -- A behavior that gives the current time, i.e. the identity function
+time :: Fractional a => Behavior a
+time = realToFrac^.behavior
 --
 -- > f t = t
 --
-time :: Fractional a => Behavior a
-time = realToFrac^.behavior
 
 -- |
 -- A behavior that varies from 0 to 1 during the same time interval and is 0 before and 1 after
 -- that interval.
 --
+unit :: Fractional a => Behavior a
+unit = switch 0 0 (switch 1 time 1)
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
 --
-ui :: Fractional a => Behavior a
-ui = switch 0 0 (switch 1 time 1)
 
 -- |
 -- A behavior that
@@ -2410,29 +2386,27 @@ cosine :: Floating a => Behavior a
 cosine = cos (time*tau)
 
 -- |
--- A behavior that
+-- A behavior that goes from 0 to 1 repeatedly with a period of 1.
 --
 sawtooth :: RealFrac a => Behavior a
 sawtooth = time - fmap floor' time
 
 -- |
--- A behavior that is 'maxBound' at time 0, and 0 at all other times.
+-- A behavior that is 1 at time 0, and 0 at all other times.
 --
--- > f t | t == 0    = maxBound
+impulse :: Num a => Behavior a
+impulse = switch' 0 0 1 0
+-- > f t | t == 0    = 1
 -- >     | otherwise = 0
 --
-dirac :: (Num a, Bounded a) => Behavior a
-dirac = switch' 0 0 maxBound 0
 
 -- |
--- A behavior that
--- XXX name
+-- A behavior that goes from 0 to 1 at time 0.
 --
 turnOn  = switch 0 0 1
 
 -- |
--- A behavior that
--- XXX name
+-- A behavior that goes from 1 to 0 at time 0.
 --
 turnOff = switch 0 1 0
 
@@ -3017,13 +2991,13 @@ delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
 -}
 
 transformUi typ = testGroup ("Transform UI" ++ show (typeOf typ)) $ [
-  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! t          == b ! 0,
 
-  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
 
-  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ \(t :: Time) (u2 :: Time) -> let b = (ui::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! u           == b ! 1
 
   ]
