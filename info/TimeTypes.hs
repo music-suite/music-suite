@@ -564,7 +564,9 @@ compress = transform . compressing
 --
 -- Law Duration
 --
--- > duration x = (offset x .-. onset x)
+-- @
+-- '_duration' x = ('offset' x '.-.' 'onset' x)
+-- @
 --
 class HasDuration a where
   _duration :: a -> Duration
@@ -1160,21 +1162,11 @@ f `under` s = transform s . f . transform (negateV s)
 -- |
 -- Apply a morphism under transformation (monadic version).
 --
--- 
--- @
--- ('stretch' 2 . 'pure') ``underM`` 'delaying' 2
--- @
---
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform s) . f . transform (negateV s)
 
 -- |
 -- Apply a morphism under transformation (co-monadic version).
---
--- 
--- @
--- ('extract' . 'stretch' 2) ``underW`` 'delaying' 2
--- @
 --
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `underW` s = transform s . f . fmap (transform (negateV s))
@@ -2042,10 +2034,10 @@ slerp2 f i a b
 -- |
 -- A 'Note' is a value with a known 'era'.
 --
--- There is a morphism from 'runNote' to 'transform':
+-- Law
 --
 -- @
--- 'runNote' . 'transform' s = 'transform' s . 'runNote'
+-- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
 -- @
 --
 newtype Note a    = Note    { getNote :: (Span, a)   }
