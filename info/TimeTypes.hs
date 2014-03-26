@@ -137,6 +137,8 @@ module TimeTypes (
         Note,
         note,
         noteValue,
+        rawNoteValue,
+        rawNoteSpan,
         -- runNote,
         -- reifyNote,
         -- noteValue',
@@ -294,8 +296,8 @@ import           Music.Pitch.Literal
 
 import           Data.Int
 import           Test.SmallCheck.Series       hiding ((><), NonEmpty)
-import           Test.Tasty
-import           Test.Tasty.SmallCheck
+import           Test.Tasty                   hiding (over, under)
+import           Test.Tasty.SmallCheck        hiding (over, under)
 
 import qualified Data.Ratio                   as Util_Ratio
 
@@ -462,6 +464,10 @@ instance Transformable a => Transformable (a, b) where
 
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
     transform = flip under
+
+instance Transformable a => Transformable [a] where
+  transform t = map (transform t)
+
 
 -- FIXME strange
 -- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
@@ -1994,7 +2000,7 @@ instance HasPosition (Delayed a) where x `_position` p = ask (unwr x)`_position`
 -- |
 -- View a note as a pair of the original value and the transformation.
 --
-note :: Transformable a => Iso (Span, a) (Span, b) (Note a) (Note b)
+note :: Iso (Span, a) (Span, b) (Note a) (Note b)
 note = _Unwrapped
 
 -- |
@@ -2017,6 +2023,11 @@ mapNote f (Note (s,x)) = Note (s, under f s x)
 noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
 
+rawNoteSpan :: Lens' (Note a) Span
+rawNoteSpan  = from note . _1
+
+rawNoteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+rawNoteValue = from note . _2
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
