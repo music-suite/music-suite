@@ -296,6 +296,7 @@ import           Control.Lens                 hiding (Indexable, index, parts, a
                                                reversed, transform, under, (|>), inside, Level)
 import           Control.Monad
 import           Control.Monad.Free
+import qualified Data.List
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
@@ -1910,10 +1911,12 @@ instance (HasParts a b) => HasParts (Note a) (Note b) where
       pl f (s,a) = (s,) <$> (parts $ f `underM` negateV s) a
 
 
-allParts = toListOf parts
-extractParts = undefined
+allParts = Data.List.nub . toListOf parts
 
+extractParts :: (Eq (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart a a, HasParts (f a) (f a)) => f a -> [f a]
+extractParts x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
+filterPart p = mfilter (\x -> p (x ^. part))
 
 
 
