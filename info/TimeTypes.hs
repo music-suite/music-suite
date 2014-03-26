@@ -21,11 +21,12 @@
 module TimeTypes (
         -- * Data.Clipped
         Clipped,
-        unsafeToClipped,
-        fromClipped,
+        -- unsafeToClipped,
+        -- fromClipped,
         clipped,
         unclipped,
 
+        -- * Data.Functor.Rep.Lens
         (!),
         tabulated,
 
@@ -37,9 +38,6 @@ module TimeTypes (
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         underM,
         underW,
-        -- underL,
-        -- underDelay,
-        -- underStretch,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -122,10 +120,6 @@ module TimeTypes (
         delta,
         -- *** Points in spans
         inside,
-        -- *** Important values (XXX)
-        start,
-        stop,
-        unit,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -1026,6 +1020,16 @@ instance HasPosition Time where
 --
 -- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
 --
+-- With the @ViewPatterns@ extension you can pattern match over spans using
+-- 
+-- @
+-- foo (view range -> (u,v)) = ...
+-- @
+--
+newtype Span = Span { getDelta :: (Time, Duration) }
+  deriving (Eq, Ord, Typeable)
+
+
 -- >>> (2 <-> 3)^.range
 -- > (2, 3)
 -- >
@@ -1038,15 +1042,6 @@ instance HasPosition Time where
 -- >>> hs> (10 >-> 5)^.delta
 -- > (10, 5)
 --
--- With the @ViewPatterns@ extension you can pattern match over spans using
--- 
--- @
--- foo (view range -> (u,v)) = ...
--- @
---
-newtype Span = Span { getDelta :: (Time, Duration) }
-  deriving (Eq, Ord, Typeable)
-
 
 instance Show Span where
   -- show (view range -> (t,u)) = show t ++ "<->" ++ show u
@@ -1742,9 +1737,31 @@ parts' = parts
 
 type instance Part Bool = Bool
 type instance SetPart a Bool = a
-instance HasPart Bool Bool where
+instance (b ~ Part b, Transformable b) => HasPart Bool b where
   part = ($)
 instance HasParts Bool Bool where
+  parts = ($)
+
+
+data Foo a = Foo a | Bar a deriving (Show)
+type instance Part (Foo a) = (Foo a)
+type instance SetPart a (Foo b) = a
+instance (b ~ Part b, Transformable b) => HasPart (Foo x) b where
+  part = ($)
+instance Transformable (Foo x) where transform _ = id
+
+type instance Part Ordering = Ordering
+type instance SetPart a Ordering = a
+instance (b ~ Part b, Transformable b) => HasPart Ordering b where
+  part = ($)
+instance HasParts Ordering Ordering where
+  parts = ($)
+
+type instance Part () = ()
+type instance SetPart a () = a
+instance (b ~ Part b, Transformable b) => HasPart () b where
+  part = ($)
+instance HasParts () () where
   parts = ($)
 
 type instance Part Int = Int
@@ -1862,6 +1879,8 @@ instance Transformable Int8 where
   transform _ = id
 instance Transformable Bool where
   transform _ = id
+instance Transformable Ordering where
+  transform _ = id
 instance Transformable Float where
   transform _ = id
 instance Transformable Double where
@@ -1887,9 +1906,21 @@ fromSegment2 = undefined
 appendSegments :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegments (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
+-- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
+-- i     is the fraction of the slerped segment spent in a
+-- (1-i) is the fraction of the slerped segment spent in b
 slerp :: Duration -> Segment a -> Segment a -> Segment a
-slerp i a b = tabulate $ \t -> if t < i then a ! (t*i) else b ! ((t-i)*(1-i))
--- is is percentage of segment spent in a
+slerp i a b
+  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | otherwise = tabulate $ \t -> if t < i then a ! (t/i) else b ! ((t-i)/(1-i))
+
+slerp2 :: (a -> a -> a) -> Duration -> Segment a -> Segment a -> Segment a
+slerp2 f i a b
+  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | otherwise = tabulate $ \t -> case t `compare` i of 
+      LT -> a ! (t/i) 
+      EQ -> (a ! 1) `f` (b ! 1)
+      GT -> b ! ((t-i)/(1-i))
 
 
 
@@ -3077,20 +3108,23 @@ drawPart' = mconcat . fmap drawNote'
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
 drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
   where
-  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets [r2 (1,0), r2 (-0.8,0.2), r2 (-0.2,0.8)]
+  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 0 10
 
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
-drawSegment = drawBehavior' 0 1
+drawSegment = scaleX 10 . drawBehavior' 0 1
 
-drawBehavior' start count b = cubicSpline False points & lw 0.05
+drawBehavior' start count b = draw points & lw 0.05
   where
     points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, fromVal (b ! toTime x))) [start,start+1/samplesPerCell..]
     toTime = realToFrac
     fromVal = realToFrac
-    samplesPerCell = 40
+    samplesPerCell = 90
+    -- draw = cubicSpline False
+    -- TODO offset without showing
+    draw = fromOffsets . (\xs -> zipWith (.-.) (tail xs) xs) . ((p2 (0,0)) :)
 
 grid = grid' 20 <> fc lightblue (circle 0.1)
 gridX = gridX' 20
