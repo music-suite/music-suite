@@ -4,27 +4,31 @@ Unfortunately, developing a large cross-package system in Cabal is a sligthly cu
 
 ## Setup source directories
 
-- Upgrade `cabal-install` to a 1.18 or later to get support for [sandboxes](http://coldwa.st/e/blog/2013-08-20-Cabal-sandbox.html). This will hopefully be in the Haskell Platform soon, but for now you have to upgrade manually like this:
+Upgrade `cabal-install` to a 1.18 or later to get support for [sandboxes](http://coldwa.st/e/blog/2013-08-20-Cabal-sandbox.html). This will hopefully be in the Haskell Platform soon, but for now you have to upgrade manually like this:
 
+~~~{.bash}
+$ cabal install cabal-install
+~~~
 
-    $ cabal install cabal-install
+Install the utility program;:
 
-- Install the utility program;:
+~~~{.bash}
+$ cabal update
+$ cabal install music-util
+~~~
 
+Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory where you want to keep the music-suite sources. Note that `music-util` will never modify anything outside this directory.
 
-    $ cabal update
-    $ cabal install music-util
+~~~{.bash}
+$ cat >> ~/.profile 
+export MUSIC_SUITE_DIR=/path/to/suite
+~~~
 
-- Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory where you want to keep the music-suite sources. Note that `music-util` will never modify anything outside this directory.
+Run the setup script. This will clone all source repos and setup a sandbox.
 
-
-    $ cat >> ~/.profile 
-    export MUSIC_SUITE_DIR=/path/to/suite
-
-- Run the setup script. This will clone all source repos and setup a sandbox.
-
-
-    music-util setup
+~~~{.bash}
+music-util setup
+~~~
 
 This will clone all repositories and setup a local sandbox (if your Cabal version supports it).
 
