@@ -10,7 +10,7 @@ Upgrade `cabal-install` to a 1.18 or later to get support for [sandboxes](http:/
 $ cabal install cabal-install
 ~~~
 
-Install the utility program;:
+Install the utility program (note that this does *not* install the rest of the suite):
 
 ~~~{.bash}
 $ cabal update
