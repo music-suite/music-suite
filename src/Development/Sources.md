@@ -24,7 +24,7 @@ $ cat >> ~/.profile
 export MUSIC_SUITE_DIR=/path/to/suite
 ~~~
 
-Run the setup script. This will clone all source repos and setup a sandbox.
+Run the setup script. This will clone all source repos and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default.
 
 ~~~{.bash}
 music-util setup
@@ -60,8 +60,6 @@ You can then push using `git push fork master`. Note that you can [set up differ
 
 
 ## Building and testing
-
-With sandboxes this is done automatically for you. The `setup` command (see above) creates a sandbox in `$MUSIC_SUITE_DIR/music-sandbox` and configures all packages in `$MUSIC_SUITE_DIR` to use that sandbox.
 
 To test a particular package on the REPL, move into its source directory and run `cabal repl`. For testing the "standard" part of the suite you usually want to test from the `preludes` directory. 
 
