@@ -1,5 +1,4 @@
 
-
 # Design overview
 
 <!--
@@ -64,11 +63,11 @@ The literals are kept in separate package because one often wishes to overload t
 	abcnotation				Unstable
 	music-pitch-literal		Stable
 	music-dynamics-literal	Stable
+	music-score				Major rewrite going on, soon to be stable
 	music-pitch				Stable, needs rewrite
 	music-part				Unstable
 	music-dynamics			Unstable
 	music-articulation		Unstable
-	music-score				Major rewrite going on, soon to be stable
 	music-preludes			Always changing to reflect upstream development.
 	
 ## License
