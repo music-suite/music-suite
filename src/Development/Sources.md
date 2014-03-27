@@ -2,23 +2,25 @@
 
 Unfortunately, developing a large cross-package system in Cabal is a sligthly cubersome task. There is a utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks. The names and internal dependencies of the music-suite packages are hardcoded into this program.
 
-It is *highly* recommended to upgrade `cabal-install` to a version supporting sandboxes (1.18 or later).
+## Setup source directories
+
+- Upgrade `cabal-install` to a 1.18 or later to get support for [sandboxes](http://coldwa.st/e/blog/2013-08-20-Cabal-sandbox.html). This will hopefully be in the Haskell Platform soon, but for now you have to upgrade manually like this:
 
     $ cabal install cabal-install
-    $ cabal --version
-    cabal-install version 1.18.0.3
-    using version 1.18.1.3 of the Cabal library
 
+- Install the utility program;:
 
-## Clone and setup source directories
+    $ cabal update
+    $ cabal install music-util
 
-To obtain the source code via git:
+- Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory where you want to keep the music-suite sources. Note that `music-util` will never modify anything outside this directory.
 
-- Install the utility program: `cabal update && cabal install music-util`
+    $ cat >> ~/.profile 
+    export MUSIC_SUITE_DIR=/path/to/suite
 
-- Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory where you want to keep the music-suite sources.
+- Run the setup script. This will clone all source repos and setup a sandbox.
 
-- `cd $MUSIC_SUITE_DIR && music-util setup`
+    music-util setup
 
 This will clone all repositories and setup a local sandbox (if your Cabal version supports it).
 
