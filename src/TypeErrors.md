@@ -11,7 +11,7 @@ It is *not* necessary to understand everything going on in the types.
 
 ### Fix the types
 
-ambigous type etc
+Ambigous type etc
 
 Utility functions `asScore` etc
 

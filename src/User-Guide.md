@@ -1055,7 +1055,7 @@ in  stretch (1/4) $ song </> left </> down _P8 right
 
 ### Acknowledgements
 
-The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
+The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
 It obviously ows a lot to the Haskell libraries that it follows including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite]. The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
 
@@ -1082,6 +1082,7 @@ It obviously ows a lot to the Haskell libraries that it follows including [Hasko
 [temporal-media]:   http://hackage.haskell.org/package/temporal-media
 [abjad]:            https://pypi.python.org/pypi/Abjad/2.3
 [max-msp]:          http://cycling74.com/products/max/
+[nyquist]:          http://audacity.sourceforge.net/help/nyquist
 [reactive]:         http://www.haskell.org/haskellwiki/Reactive
 [diagrams]:         http://projects.haskell.org/diagrams/
 [supercollider]:    http://supercollider.sourceforge.net/
