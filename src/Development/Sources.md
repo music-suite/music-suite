@@ -30,7 +30,6 @@ Run the setup script. This will clone all source repos and setup a sandbox.
 music-util setup
 ~~~
 
-This will clone all repositories and setup a local sandbox (if your Cabal version supports it).
 
 ## Status
 
@@ -62,20 +61,9 @@ You can then push using `git push fork master`. Note that you can [set up differ
 
 ## Building and testing
 
-### Without sandboxes
-
-Without sandboxes you can use the `music-util install` command to reinstall a particular package and its dependencies. For testing you generally need to reinstall the preludes:
-
-    cd $MUSIC_SUITE_DIR/music-preludes
-    music-util install music-preludes
-    ghci
-    ghci> :m + Music.Preludes.Basic
-
-### With sandboxes
-
 With sandboxes this is done automatically for you. The `setup` command (see above) creates a sandbox in `$MUSIC_SUITE_DIR/music-sandbox` and configures all packages in `$MUSIC_SUITE_DIR` to use that sandbox.
 
-For testing simply run the new `cabal repl` command in the prelude package
+To test a particular package on the REPL, move into its source directory and run `cabal repl`. For testing the "standard" part of the suite you usually want to test from the `preludes` directory. 
 
     cd $MUSIC_SUITE_DIR/music-preludes
     cabal repl
