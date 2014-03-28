@@ -68,8 +68,6 @@ module TimeTypes (
         -- ** Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
-        -- _onset,
-        -- _offset,
         preOnset,       -- :: HasPosition a => a -> Time
         postOnset,      -- :: HasPosition a => a -> Time
         postOffset,     -- :: HasPosition a => a -> Time
@@ -99,7 +97,6 @@ module TimeTypes (
         before,
         during,
         sustain,
-        -- ** Composition operators
         scat,
         pcat,
         times,
@@ -612,30 +609,36 @@ clippedDuration = stretchTo 1
 -- For values with an onset and offset you can use 'alerp':
 --
 -- @
--- '_position' x = 'alerp' 'onset' 'offset'
+-- '_position' x = 'alerp' '_onset' '_offset'
 -- @
 --
 class HasPosition a where
+  -- |
+  -- Return the onset of the given value.
+  --
+  -- In an 'Envelope', this is the value between the attack and decay phases.
+  --
   _position :: a -> {-Scalar-} Duration -> Time
+
+  -- |
+  -- Return the onset of the given value.
+  --
+  -- In an 'Envelope', this is the value between the attack and decay phases.
+  --
+  _onset :: ({-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+
+  -- |
+  -- Return the offset of the given value.
+  --
+  -- In an 'Envelope', this is the value between the sustain and release phases.
+  --
+  _offset :: ({-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+  _onset     = (`_position` 0)
+  _offset    = (`_position` 1.0)
 
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
 
--- |
--- Return the onset of the given value.
---
--- In an 'Envelope', this is the value between the attack and decay phases.
---
-_onset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-_onset     = (`_position` 0)
-
--- |
--- Return the offset of the given value.
---
--- In an 'Envelope', this is the value between the sustain and release phases.
---
-_offset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-_offset    = (`_position` 1.0)
 
 -- |
 -- Onset of the given value.
@@ -738,29 +741,38 @@ era = lens _era (flip _placeAt)
 
 
 -- |
--- @a \`lead\` b@  moves a so that @offset a' == onset b@
+-- Move a value so that
+--
+-- @
+-- '_offset' (a ``lead`` b) = '_onset' b
+-- @
+--
 --
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 a `lead` b   = placeAt 1 (b `_position` 0) a
 
 -- |
--- @a \`follow\` b@  moves b so that @offset a  == onset b'@
+-- Move a value so that
+--
+-- @
+-- '_offset' a = '_onset' (a ``follow`` b) 
+-- @
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = placeAt 0 (a `_position` 1) b
 
 -- |
+-- Move a value so that
 --
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 
 -- |
+-- Move a value so that
 --
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
-pinned :: (HasPosition a, Transformable a) => (a -> a) -> a -> a
-pinned f x = startAt (_onset x) (f x)
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
@@ -778,10 +790,21 @@ scat = Prelude.foldr (|>) mempty
 --
 pcat = Prelude.foldr (<>) mempty
 
+-- |
+-- Move a value so that
+--
 during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 y `during`  x = _placeAt (_era x) y
+
+-- |
+-- Move a value so that
+--
+sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 x `sustain` y   = x <> y `during` x
 
+-- |
+-- Move a value so that
+--
 times n   = scat . replicate n
 
 -- |
@@ -1167,6 +1190,9 @@ f `under` s = transform s . f . transform (negateV s)
 
 -- |
 -- Apply a morphism under transformation (monadic version).
+-- TODO we really must flip all these functions
+--    * Come up with some other name for the infix version
+--    * Acknowledge that this is a valid Lens (when flipped)
 --
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` s = fmap (transform s) . f . transform (negateV s)
@@ -2031,7 +2057,12 @@ slerp2 f i a b
 -- |
 -- A 'Note' is a value with a known 'era'.
 --
--- Law
+-- You can use 'noteValue' to apply a function in the context of the transformation,
+-- i.e. 
+-- 
+-- @
+-- over noteValue (* time) (delay 2 $ return time)
+-- @
 --
 -- @
 -- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
@@ -2053,7 +2084,11 @@ deriving instance Comonad Note
 deriving instance Monad Note
 
 -- |
--- A 'Delayed' value has a known 'position', but no duration.
+-- 'Delayed' represents a value with an offset in time.
+--
+-- A delayed value has a known 'position', but no duration.
+--
+-- 
 --
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
   deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
@@ -2268,8 +2303,10 @@ instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position`
 -- |
 --
 -- A 'Segment' is a value varying over some unknown time span, semantically
---
--- > type Segment a => Duration -> a
+-- 
+-- @
+-- type 'Segment' a => 'Duration' -> a
+-- @
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
@@ -2345,8 +2382,9 @@ notTime2 = (rev `under` delaying 4.5) notTime
 --
 -- A 'Behavior' is an infitately varying value, semantically
 -- 
---
--- > type Behavior a => Time -> a
+-- @
+-- type 'Behavior' a => 'Time' -> a
+-- @
 --
 -- While a 'Behavior' can not be placed (as it has no endpoints), we can focus on a
 -- certain part of a behavior by placing it inside 'Bounds'.
@@ -2470,14 +2508,17 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- |
 -- View a behavior as a time function and vice versa.
 --
+--
+behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+behavior = tabulated
+
+-- behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+
 -- This isomorphism can be used to turn any function into a behavior
 --
 -- >>> floor^.behavior ! 3.5
 -- 3
---
-behavior :: Iso' (Time -> a) (Behavior a)
-behavior = tabulated
--- behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+
 
 -- |
 -- A behavior that
@@ -2572,13 +2613,13 @@ instance Bounded a => Bounded (b -> a) where
 -- @
 --
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
-switch t (Behavior rx) (Behavior ry) = Behavior (\u -> if u < t then rx u else ry u)
+switch t rx ry = tabulate $ \u -> if u < t then rx ! u else ry ! u
 
 switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-switch' t (Behavior rx) (Behavior ry) (Behavior rz) = Behavior $ \u -> case u `compare` t of
-    LT -> rx u
-    EQ -> ry u
-    GT -> rz u
+switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
+    LT -> rx ! u
+    EQ -> ry ! u
+    GT -> rz ! u
 
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
 splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . Just . Last) c <> (trim . (fmap.fmap) (Option . Just . Last)) n
