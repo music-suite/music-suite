@@ -179,24 +179,28 @@ module TimeTypes (
         dzipVoiceWith,
         mergeEqualNotes,
 
-        -- * Music.Time.Voices
-        Divide,
-        divide,
+        -- * Music.Time.Phrases
         Voices,
-        voices,
-        concatSubVoices,
+        voices',
+        Phrases,
+        phrases',
+        concatSubPhrases,
 
         -- * Music.Time.Reactive
         Reactive,
 
         -- * Music.Time.Score
         Score,
+        voices,
+        phrases,
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
         mapEvents,
         filterEvents,
         mapFilterEvents,
+
+
 
         -- * Music.Score.Pitch
         Pitch,
@@ -337,7 +341,7 @@ instance Monoid b => Monad ((,) b) where
 {-
   TODO
   - New representation for Reactive
-  - Implement Divs/Voices
+  - Implement Divs/Phrases
 
 
 -}
@@ -2692,6 +2696,9 @@ type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . from _Unwrapped . underL articulations
 
+voices :: Prism' (Score a) (Voices a)
+phrases :: Prism' (Score a) (Phrases a)
+(voices, phrases) = undefined
 
 -- | XXX indexed traversal?
 score :: Traversal (Score a) (Score b) (Note a) (Note b)
@@ -2798,34 +2805,9 @@ stretchedToVoice x = Voice (return x)
 
 
 -- |
--- The 'Divide' and 'Voices' types represent a sequence of voices and sub-voices with possibly infinite division.
+-- The 'Voices' and 'Phrases' types represent a sequence of voices and sub-voices with possibly infinite division.
 --
-newtype Divide a = Divide (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
-
-instance Applicative Divide where
-  pure  = return
-  (<*>) = ap
-
-instance Monad Divide where
-  -- TODO
-
-instance Transformable (Divide a) where
-
-instance Reversible a => Reversible (Divide a) where
-
-instance HasDuration (Divide a) where
-
-instance Splittable a => Splittable (Divide a) where
-
-divide :: Iso 
-  (Divide a) 
-  (Divide b) 
-  (NonEmpty (Voices a)) 
-  (NonEmpty (Voices b))
--- TODO is there a non-empty version of traversal?
-divide = undefined
-
-newtype Voices a   = Voices    { getVoices :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+newtype Voices a = Voices (NonEmpty (Voice a)) deriving (Functor, Foldable, Traversable)
 
 instance Applicative Voices where
   pure  = return
@@ -2842,17 +2824,42 @@ instance HasDuration (Voices a) where
 
 instance Splittable a => Splittable (Voices a) where
 
--- | XXX
-voices :: Iso 
+phrases' :: Iso 
   (Voices a) 
   (Voices b) 
-  (Voice (Either a (Divide a))) 
-  (Voice (Either a (Divide a)))
-voices = undefined
+  (NonEmpty (Phrases a)) 
+  (NonEmpty (Phrases b))
+-- TODO is there a non-empty version of traversal?
+phrases' = undefined
+
+newtype Phrases a   = Phrases    { getPhrases :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+
+instance Applicative Phrases where
+  pure  = return
+  (<*>) = ap
+
+instance Monad Phrases where
+  -- TODO
+
+instance Transformable (Phrases a) where
+
+instance Reversible a => Reversible (Phrases a) where
+
+instance HasDuration (Phrases a) where
+
+instance Splittable a => Splittable (Phrases a) where
+
+-- | XXX
+voices' :: Iso 
+  (Phrases a) 
+  (Phrases b) 
+  (Voice (Either a (Voices a))) 
+  (Voice (Either a (Voices a)))
+voices' = undefined
 
 
-concatSubVoices :: Monoid a => Voices a -> Voice a
-concatSubVoices = undefined
+concatSubPhrases :: Monoid a => Phrases a -> Voice a
+concatSubPhrases = undefined
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
