@@ -274,7 +274,7 @@ import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
                                                after, atTime, duration, during, clipped,
-                                               _era, interval, offset, place,
+                                               era, interval, offset, place,
                                                position, start, stretch, inv,
                                                stretchTo, transform, trim, era,
                                                under, value, view, (<->), (|>), unit)
@@ -490,7 +490,7 @@ instance Transformable a => Transformable (a, b) where
   transform t (s,a) = (transform t s, a)
 
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
-    transform = flip under
+    transform t = (`under` negateV t)
 
 instance Transformable a => Transformable [a] where
   transform t = map (transform t)
@@ -916,7 +916,7 @@ instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
 revDefault :: (HasPosition a, Transformable a) => a -> a
-revDefault x = (stretch (-1) `under` delaying (_position x 0.5 .-. 0)) x
+revDefault x = (stretch (-1) `under` undelaying (_position x 0.5 .-. 0)) x
 
 
 -- |
@@ -969,9 +969,9 @@ instance Sequential (Score a) where
 -- |
 -- Internal time representation. Can be anything with Fractional and RealFrac instances.
 --
-type TimeBase = Double
-deriving instance Floating Time
-deriving instance Floating Duration
+type TimeBase = Rational
+-- deriving instance Floating Time
+-- deriving instance Floating Duration
 
 -- |
 -- Duration, corresponding to note values in standard notation.
@@ -1186,7 +1186,7 @@ delta = iso getDelta $ uncurry (>->)
 -- @
 --
 under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
-f `under` s = transform s . f . transform (negateV s)
+f `under` t = transform (negateV t) . f . transform t
 
 -- |
 -- Apply a morphism under transformation (monadic version).
@@ -1195,13 +1195,13 @@ f `under` s = transform s . f . transform (negateV s)
 --    * Acknowledge that this is a valid Lens (when flipped)
 --
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
-f `underM` s = fmap (transform s) . f . transform (negateV s)
+f `underM` t = fmap (transform (negateV t)) . f . transform t
 
 -- |
 -- Apply a morphism under transformation (co-monadic version).
 --
 underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
-f `underW` s = transform s . f . fmap (transform (negateV s))
+f `underW` t = transform (negateV t) . f . fmap (transform t)
 
 -- |
 -- Apply a function under transformation.
@@ -1216,7 +1216,7 @@ underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a 
 underStretch = flip (flip under . stretching)
 
 underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
-underL l f (s,a) = (s,) <$> (l $ f `underM` negateV s) a
+underL l f (s,a) = (s,) <$> (l $ f `underM` s) a
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1374,12 +1374,12 @@ type instance Pitch (Note a) = Pitch a
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitch $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (pitch $ f `underM` s) a
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (pitches $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (pitches $ f `underM` s) a
 
 
 -- |
@@ -1589,12 +1589,12 @@ type instance Dynamic (Note a) = Dynamic a
 instance HasDynamic a b => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (dynamic $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (dynamic $ f `underM` s) a
 
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (dynamics $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (dynamics $ f `underM` s) a
 
 -- TODO move
 instance IsDynamics Bool where
@@ -1774,12 +1774,12 @@ type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
   articulation = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (articulation $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (articulation $ f `underM` s) a
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (articulations $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (articulations $ f `underM` s) a
 
 
 accent = undefined
@@ -1920,12 +1920,12 @@ type instance SetPart g (Note a) = Note (SetPart g a)
 instance (HasPart a b) => HasPart (Note a) (Note b) where
   part = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (part $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (part $ f `underM` s) a
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . pl
     where
-      pl f (s,a) = (s,) <$> (parts $ f `underM` negateV s) a
+      pl f (s,a) = (s,) <$> (parts $ f `underM` s) a
 
 type HasPart' a = HasPart a a
 type HasParts' a = HasParts a a
@@ -2095,7 +2095,7 @@ newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
 
 deriving instance Typeable1 Delayed
 
-mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` negateV t) x)
+mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
 
 
 
@@ -2113,7 +2113,7 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 
 deriving instance Typeable1 Stretched
 
-mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` negateV d) x)
+mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
 
 -- |
 -- View the value in the note.
@@ -2169,7 +2169,7 @@ runNote = uncurry transform . unwr
 -- reifyNote :: Transformable a => Note a -> Note (Span, a)
 -- reifyNote = fmap (view $ from note) . duplicate
 
-mapNote f (Note (s,x)) = Note (s, under f s x)
+mapNote f (Note (s,x)) = Note (s, f `under` (negateV s) $ x)
 
 -- |
 -- View the value in the note.
@@ -2376,7 +2376,7 @@ instance Reversible (Segment a) where
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
 notTime = stretch 10 ((stretch 2 $ 4**time-1)`min` 1)*10
-notTime2 = (rev `under` delaying 4.5) notTime
+notTime2 = (rev `under` undelaying 4.5) notTime
 
 -- |
 --
@@ -2442,16 +2442,16 @@ instance Real a => Real (Behavior a) where
 
 -- FOO1
 
--- TODO remove Transformable a constraint
+-- TODO is this correct?
 instance Transformable (Behavior a) where
-  transform s (Behavior a) = Behavior (flip under s $ a)
+  transform s (Behavior a) = Behavior (a `under` s)
     where
       f `under` s = f . transform (negateV s)
     
 
--- FOOBAR  
+-- TODO correct?
 instance Reversible (Behavior a) where
-  rev x = (stretch (-1) `under` delaying 0.5) x
+  rev x = (stretch (-1) `under` undelaying 0.5) x
 
 
 instance Representable Behavior where
@@ -3106,6 +3106,7 @@ wr   = (^. _Unwrapped')
 unwr = (^. _Wrapped')
 
 
+#define INCLUDE_TESTS
 #ifdef INCLUDE_TESTS
 -- Tests
 
