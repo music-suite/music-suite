@@ -773,6 +773,9 @@ a `after` b =  a <> (a `follow` b)
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
+-- TODO overload these?
+(|>) = after
+(<|) = before
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
@@ -930,21 +933,6 @@ reversed = iso rev rev
 
 
 
-class Sequential a where
-  (|>) :: a -> a -> a
-  (<|) :: a -> a -> a
-
-instance Sequential (Voice a) where
-  (|>) = (<>)
-  (<|) = flip (<>)
-
-instance Sequential (Voices a) where
-  (|>) = (<>)
-  (<|) = flip (<>)
-
-instance Sequential (Score a) where
-  (|>) = after
-  (<|) = before
 
 
 
