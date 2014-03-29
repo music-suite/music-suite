@@ -189,7 +189,7 @@ module TimeTypes (
         concatVoices,
 
         -- * Music.Time.Reactive
-        Reactive,
+        Reactive(..),
 
         -- * Music.Time.Score
         Score,
@@ -865,6 +865,11 @@ dropM t = snd . split t
 -- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
 -- @
 --
+-- For 'Span'
+--
+-- @
+-- 'rev' = 'over' 'range' 'swap'
+-- @
 --
 class Reversible a where
 
@@ -1206,8 +1211,11 @@ underDelay     = flip (flip under . delaying . (.-. 0))
 underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 underStretch = flip (flip under . stretching)
 
-underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
-underL l f (s,a) = (s,) <$> (l $ f `underM` s) a
+-- underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
+underL  l f (s,a) = (s,) <$> (l $ f `underM` s) a
+
+underLT l f (t,a) = (t,) <$> (l $ f `underM` (t>->1)) a
+underLD l f (d,a) = (d,) <$> (l $ f `underM` (0>->d)) a
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1350,7 +1358,6 @@ instance HasPitches a b => HasPitches (c, a) (c, b) where
 
 
 type instance Pitch [a] = Pitch a
-
 type instance SetPitch b [a] = [SetPitch b a]
 
 instance HasPitches a b => HasPitches [a] [b] where
@@ -1360,17 +1367,29 @@ instance HasPitches a b => HasPitches [a] [b] where
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
 
-type instance Pitch (Note a) = Pitch a
-
-instance (HasPitch a b) => HasPitch (Note a) (Note b) where
-  pitch = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (pitch $ f `underM` s) a
-
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
-  pitches = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (pitches $ f `underM` s) a
+  pitches = _Wrapped . underL pitches
+instance (HasPitch a b) => HasPitch (Note a) (Note b) where
+  pitch = _Wrapped . underL pitch
+
+
+
+type instance Pitch (Delayed a) = Pitch a
+type instance SetPitch g (Delayed a) = Delayed (SetPitch g a)
+
+instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
+  pitches = _Wrapped . underLT pitches
+instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
+  pitch = _Wrapped . underLT pitch
+
+type instance Pitch (Stretched a) = Pitch a
+type instance SetPitch g (Stretched a) = Stretched (SetPitch g a)
+
+instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
+  pitches = _Wrapped . underLD pitches
+instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
+  pitch = _Wrapped . underLD pitch
+
 
 
 -- |
@@ -2870,7 +2889,7 @@ concatVoices = undefined
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
-type Reactive a = Voice (Segment a)
+data Reactive a = Reactive a (Voice (Segment a))
 
 -- newinstance Functor Behavior
 -- -- Distributive?
