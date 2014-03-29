@@ -1521,10 +1521,8 @@ class (Transformable (Dynamic s), Transformable (Dynamic t), SetDynamic (Dynamic
   dynamics :: Traversal s t (Dynamic s) (Dynamic t)
 
 -- XXX we should give the lens in the class another name
--- and use the good name for an alias like this to get
--- better :info prints in GHCI
-dynamics2 :: HasDynamics s t => Traversal s t (Dynamic s) (Dynamic t)
-dynamics2 = dynamics
+-- and use an alias like this to get better :info prints in GHCI
+-- (We can't do much about the :type prints)
 
 -- |
 -- Dynamic type.
@@ -1603,14 +1601,10 @@ type instance SetDynamic g (Note a) = Note (SetDynamic g a)
 type instance Dynamic (Note a) = Dynamic a
 
 instance HasDynamic a b => HasDynamic (Note a) (Note b) where
-  dynamic = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (dynamic $ f `underM` s) a
+  dynamic = _Wrapped . underL dynamic
 
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
-  dynamics = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (dynamics $ f `underM` s) a
+  dynamics = _Wrapped . underL dynamics
 
 -- TODO move
 instance IsDynamics Bool where
@@ -1788,14 +1782,10 @@ type instance Articulation (Note a) = Articulation a
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
-  articulation = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (articulation $ f `underM` s) a
+  articulation = _Wrapped . underL articulation
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
-  articulations = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (articulations $ f `underM` s) a
+  articulations = _Wrapped . underL articulations
 
 
 accent = undefined
@@ -1934,14 +1924,10 @@ type instance Part (Note a) = Part a
 type instance SetPart g (Note a) = Note (SetPart g a)
 
 instance (HasPart a b) => HasPart (Note a) (Note b) where
-  part = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (part $ f `underM` s) a
+  part = _Wrapped . underL part
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
-  parts = _Wrapped . pl
-    where
-      pl f (s,a) = (s,) <$> (parts $ f `underM` s) a
+  parts = _Wrapped . underL parts
 
 type HasPart' a = HasPart a a
 type HasParts' a = HasParts a a
@@ -2172,11 +2158,11 @@ instance Transformable (Note a) where transform t = over _Wrapped $ first (trans
 instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
 instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
 
-instance HasDuration (Note a) where _duration = _duration . ask . unwr
-instance HasDuration (Stretched a) where _duration = _duration . ask . unwr
+instance HasDuration (Note a) where _duration = _duration . ask . view _Wrapped
+instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
 
-instance HasPosition (Note a) where x `_position` p = ask (unwr x) `_position` p
-instance HasPosition (Delayed a) where x `_position` p = ask (unwr x)`_position` p
+instance HasPosition (Note a) where x `_position` p = ask (view _Wrapped x) `_position` p
+instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
 
 -- |
 -- View a note as a pair of the original value and the transformation.
@@ -2188,7 +2174,7 @@ note = _Unwrapped
 -- Extract the transformed value.
 --
 runNote :: Transformable a => Note a -> a
-runNote = uncurry transform . unwr
+runNote = uncurry transform . view _Wrapped
 
 -- |
 -- Extract the transformed value.
@@ -2226,13 +2212,13 @@ stretched = _Unwrapped
 -- Extract the delayed value.
 --
 runDelayed :: Transformable a => Delayed a -> a
-runDelayed = uncurry delay' . unwr
+runDelayed = uncurry delay' . view _Wrapped
 
 -- |
 -- Extract the stretched value.
 --
 runStretched :: Transformable a => Stretched a -> a
-runStretched = uncurry stretch . unwr
+runStretched = uncurry stretch . view _Wrapped
 
 -- instance HasPosition (Note a) where position n
 
@@ -2764,7 +2750,7 @@ type instance SetPitch g (Score a) = Score (SetPitch g a)
 
 type instance Pitch (Score a) = Pitch a
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches = _Wrapped . traverse . from _Unwrapped . underL pitches
+  pitches = _Wrapped . traverse . _Wrapped . underL pitches
 
 
 
@@ -2772,19 +2758,19 @@ type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 
 instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts = _Wrapped . traverse . from _Unwrapped . underL parts
+  parts = _Wrapped . traverse . _Wrapped . underL parts
 
 type instance Dynamic (Score a) = Dynamic a
 type instance SetDynamic g (Score a) = Score (SetDynamic g a)
 
 instance HasDynamics a b => HasDynamics (Score a) (Score b) where
-  dynamics = _Wrapped . traverse . from _Unwrapped . underL dynamics
+  dynamics = _Wrapped . traverse . _Wrapped . underL dynamics
 
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
-  articulations = _Wrapped . traverse . from _Unwrapped . underL articulations
+  articulations = _Wrapped . traverse . _Wrapped . underL articulations
 
 voices :: Traversal' (Score a) (Voices a)
 phrases :: Traversal' (Score a) (Phrases a)
@@ -3197,8 +3183,6 @@ assuming = flip const
 sameType :: a -> a -> ()
 sameType = undefined
 
-wr   = (^. _Unwrapped')
-unwr = (^. _Wrapped')
 
 
 #define INCLUDE_TESTS
