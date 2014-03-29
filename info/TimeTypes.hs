@@ -348,6 +348,12 @@ instance Monoid b => Monad ((,) b) where
 -- deriving instance Traversable ((,) o)
 
 
+-- TODO move
+instance IsDynamics Bool where
+instance IsDynamics Float where
+instance IsDynamics Int where
+instance IsDynamics Integer where
+
 {-
   TODO
   - New representation for Reactive
@@ -392,15 +398,6 @@ instance Monoid b => Monad ((,) b) where
 newtype Clipped a = UnsafeClip { unsafeGetClipped :: a }
   deriving (Eq, Ord, Show)
 
--- instance Comonad Clipped where
-  -- extract = fromClipped
-
-clipped :: (Num a, Ord a) => Prism' a (Clipped a)
-clipped = prism unsafeGetClipped (\x -> if 0 <= x && x <= 1 then Right (UnsafeClip x) else Left x)
-
-unclipped :: (Num a, Ord a) => Getter (Clipped a) a
-unclipped = re clipped
-
 instance Num a => Bounded (Clipped a) where
   minBound = UnsafeClip 0
   maxBound = UnsafeClip 1
@@ -423,6 +420,11 @@ instance (Num a, Ord a, Fractional a) => Fractional (Clipped a) where
 unsafeToClipped   = fromMaybe (error "Outside 0-1") . (^? clipped)
 fromClipped = (^. unclipped)
 
+clipped :: (Num a, Ord a) => Prism' a (Clipped a)
+clipped = prism unsafeGetClipped (\x -> if 0 <= x && x <= 1 then Right (UnsafeClip x) else Left x)
+
+unclipped :: (Num a, Ord a) => Getter (Clipped a) a
+unclipped = re clipped
 
 zipClippedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Clipped a -> Clipped b -> Maybe (Clipped c)
 zipClippedWith f a b = ((a^.unclipped) `f` (b^.unclipped))^? clipped
@@ -499,16 +501,40 @@ tabulated = iso tabulate index
 class Transformable a where
   transform :: Span -> a -> a
 
+instance Transformable () where
+  transform _ = id
+
+instance Transformable Int where
+  transform _ = id
+
+instance Transformable Int8 where
+  transform _ = id
+
+instance Transformable Bool where
+  transform _ = id
+
+instance Transformable Ordering where
+  transform _ = id
+
+instance Transformable Float where
+  transform _ = id
+
+instance Transformable Double where
+  transform _ = id
+
+instance Transformable Integer where
+  transform _ = id
+
 -- TODO remove this one (or at least implement Score without it)
 -- maybe change it to transform both components?
 instance Transformable a => Transformable (a, b) where
   transform t (s,a) = (transform t s, a)
 
-instance (Transformable a, Transformable b) => Transformable (a -> b) where
-    transform t = (`under` negateV t)
-
 instance Transformable a => Transformable [a] where
   transform t = map (transform t)
+
+instance (Transformable a, Transformable b) => Transformable (a -> b) where
+    transform t = (`under` negateV t)
 
 
 -- FIXME strange
@@ -882,29 +908,6 @@ class Reversible a where
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
 
-{-
-  TODO check
-  
-    openG $ drawNote $ rev $ delay 1 $ return 0
-    openG $ drawNote $ delay 1 $ rev $ return 0
-
-    openG $ drawNote $ rev $ stretch 0.5 $ return 0
-    openG $ drawNote $ stretch 0.5 $ rev $ return 0
-  
-    openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
-    openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
-
-    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ unit
-    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ unit
-
-    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
-    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
-  
-    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
-    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
-
--}
-
 instance Reversible () where
   rev = id
 
@@ -944,6 +947,29 @@ revDefault x = (stretch (-1) `under` undelaying (_position x 0.5 .-. 0)) x
 --
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev
+
+{-
+  TODO check
+  
+    openG $ drawNote $ rev $ delay 1 $ return 0
+    openG $ drawNote $ delay 1 $ rev $ return 0
+
+    openG $ drawNote $ rev $ stretch 0.5 $ return 0
+    openG $ drawNote $ stretch 0.5 $ rev $ return 0
+  
+    openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
+    openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
+
+    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ unit
+    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ unit
+
+    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
+    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
+  
+    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
+    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
+
+-}
 
 
 
@@ -1355,24 +1381,20 @@ instance HasPitches Double Double where
 
 type instance Pitch (c,a) = Pitch a
 type instance SetPitch b (c,a) = (c,SetPitch b a)
-
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
-
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
 
 type instance Pitch [a] = Pitch a
 type instance SetPitch b [a] = [SetPitch b a]
-
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
 
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
-
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . underL pitches
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
@@ -1382,7 +1404,6 @@ instance (HasPitch a b) => HasPitch (Note a) (Note b) where
 
 type instance Pitch (Delayed a) = Pitch a
 type instance SetPitch g (Delayed a) = Delayed (SetPitch g a)
-
 instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
   pitches = _Wrapped . underLT pitches
 instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
@@ -1390,7 +1411,6 @@ instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
 
 type instance Pitch (Stretched a) = Pitch a
 type instance SetPitch g (Stretched a) = Stretched (SetPitch g a)
-
 instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
   pitches = _Wrapped . underLD pitches
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
@@ -1606,11 +1626,6 @@ instance HasDynamic a b => HasDynamic (Note a) (Note b) where
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . underL dynamics
 
--- TODO move
-instance IsDynamics Bool where
-instance IsDynamics Float where
-instance IsDynamics Int where
-instance IsDynamics Integer where
 
 -- |
 -- Associated interval type.
@@ -2004,67 +2019,6 @@ through lens1 lens2 =
     getBP a = (^. lens1) <$> a
     setBP x a = liftA2 (lens2 .~) x a
 
-instance (Show a, Transformable a) => Show (Note a) where
-  show x = show (x^.from note) ++ "^.note"
-deriving instance Show a => Show (Delayed a)
-deriving instance Show a => Show (Stretched a)
-
-instance Transformable () where
-  transform _ = id
-instance Transformable Int where
-  transform _ = id
-instance Transformable Int8 where
-  transform _ = id
-instance Transformable Bool where
-  transform _ = id
-instance Transformable Ordering where
-  transform _ = id
-instance Transformable Float where
-  transform _ = id
-instance Transformable Double where
-  transform _ = id
-instance Transformable Integer where
-  transform _ = id
-
--- |
--- Segments are /invariant/ under transformation.
---
--- To transform a timve varying value, use fromSegment.
---
-instance Transformable (Segment a) where
-  transform _ = id
-
--- | XXX name
-fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
-fromSegment = undefined
-
-fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
-fromSegment2 = undefined
-
-appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
--- TODO use different name?
-
-concatSegment :: Voice (Segment a) -> Stretched (Segment a)
-concatSegment v = foldr1 appendSegment (toListOf voice v)
--- TODO rename voice lens to make this look more natural
-
--- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
--- i     is the fraction of the slerped segment spent in a
--- (1-i) is the fraction of the slerped segment spent in b
-slerp :: Duration -> Segment a -> Segment a -> Segment a
-slerp i a b
-  | i < 0 || i >= 1    = error "slerp: Bad value"
-  | otherwise = tabulate $ \t -> if t < i then a ! (t/i) else b ! ((t-i)/(1-i))
-
-slerp2 :: (a -> a -> a) -> Duration -> Segment a -> Segment a -> Segment a
-slerp2 f i a b
-  | i < 0 || i >= 1    = error "slerp: Bad value"
-  | otherwise = tabulate $ \t -> case t `compare` i of 
-      LT -> a ! (t/i) 
-      EQ -> (a ! 1) `f` (b ! 1)
-      GT -> b ! ((t-i)/(1-i))
-
 
 
 -- |
@@ -2090,33 +2044,53 @@ deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Applicative Note
 deriving instance Comonad Note
+instance (Show a, Transformable a) => Show (Note a) where
+  show x = show (x^.from note) ++ "^.note"
 
 -- |
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
 -- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
 
+instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
+instance Rewrapped (Note a) (Note b)
+instance Transformable (Note a) where transform t = over _Wrapped $ first (transform t)
+instance HasDuration (Note a) where _duration = _duration . ask . view _Wrapped
+instance HasPosition (Note a) where x `_position` p = ask (view _Wrapped x) `_position` p
+instance Splittable a => Splittable (Note a) where
+instance Reversible (Note a) where
+  rev = revDefault
+
+
+
+
+
 -- |
 -- 'Delayed' represents a value with an offset in time.
 --
 -- A delayed value has a known 'position', but no duration.
 --
--- 
---
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
   deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Delayed
-
+instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
+instance Rewrapped (Delayed a) (Delayed b)
+instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
+instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
+instance Reversible (Delayed a) where
+  -- TODO
+deriving instance Show a => Show (Delayed a)
+                            
 mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
-
-
 
 -- |
 -- View the value in the note.
 --
 delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 delayedValue = lens runDelayed (flip $ mapDelayed . const)
+
+
 
 -- |
 -- A 'Stretched' value has a known 'position', but no duration.
@@ -2125,6 +2099,14 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
 
 deriving instance Typeable1 Stretched
+instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
+instance Rewrapped (Stretched a) (Stretched b)
+instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
+instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
+instance Reversible (Stretched a) where
+  rev = stretch (-1)
+instance Splittable a => Splittable (Stretched a) where
+deriving instance Show a => Show (Stretched a)
 
 mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
 
@@ -2134,35 +2116,7 @@ mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretchedValue = lens runStretched (flip $ mapStretched . const)
 
-instance Reversible (Note a) where
-  rev = revDefault
 
-instance Splittable a => Splittable (Note a) where
-
-instance Reversible (Delayed a) where
-
-instance Reversible (Stretched a) where
-  rev = stretch (-1)
-
-instance Splittable a => Splittable (Stretched a) where
-
-
-instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
-instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
-instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
-instance Rewrapped (Note a) (Note b)
-instance Rewrapped (Delayed a) (Delayed b)
-instance Rewrapped (Stretched a) (Stretched b)
-
-instance Transformable (Note a) where transform t = over _Wrapped $ first (transform t)
-instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
-instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
-
-instance HasDuration (Note a) where _duration = _duration . ask . view _Wrapped
-instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
-
-instance HasPosition (Note a) where x `_position` p = ask (view _Wrapped x) `_position` p
-instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
 
 -- |
 -- View a note as a pair of the original value and the transformation.
@@ -2368,6 +2322,7 @@ instance Real a => Real (Segment a) where
   toRational = toRational . (`index` 0)
 
 
+
 instance Representable Segment where
   type Rep Segment = Duration
   -- tabulate = Behavior
@@ -2375,6 +2330,14 @@ instance Representable Segment where
   tabulate f = Segment (f . fromClipped)
   index    (Segment f) = f . unsafeToClipped
 
+
+-- |
+-- Segments are /invariant/ under transformation.
+--
+-- To transform a timve varying value, use fromSegment.
+--
+instance Transformable (Segment a) where
+  transform _ = id
 
 type instance Pitch                 (Segment a) = Segment (Pitch a)
 type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
@@ -2413,6 +2376,39 @@ _unit' = id^.segment
 -- A behavior that gives the current time, i.e. the identity function
 _unit :: Fractional a => Segment a
 _unit = realToFrac^.segment
+
+
+
+-- | XXX name
+fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
+fromSegment = undefined
+
+fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
+fromSegment2 = undefined
+
+appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
+appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+-- TODO use different name?
+
+concatSegment :: Voice (Segment a) -> Stretched (Segment a)
+concatSegment v = foldr1 appendSegment (toListOf voice v)
+-- TODO rename voice lens to make this look more natural
+
+-- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
+-- i     is the fraction of the slerped segment spent in a
+-- (1-i) is the fraction of the slerped segment spent in b
+slerp :: Duration -> Segment a -> Segment a -> Segment a
+slerp i a b
+  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | otherwise = tabulate $ \t -> if t < i then a ! (t/i) else b ! ((t-i)/(1-i))
+
+slerp2 :: (a -> a -> a) -> Duration -> Segment a -> Segment a -> Segment a
+slerp2 f i a b
+  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | otherwise = tabulate $ \t -> case t `compare` i of 
+      LT -> a ! (t/i) 
+      EQ -> (a ! 1) `f` (b ! 1)
+      GT -> b ! ((t-i)/(1-i))
 
 
 -- Behavior is 'Representable':
@@ -2508,6 +2504,8 @@ instance Representable Behavior where
 type instance Pitch                 (Behavior a) = Behavior (Pitch a)
 type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 
+instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
+  pitches = through pitch pitch
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
   pitch = through pitch pitch
 
@@ -2521,12 +2519,6 @@ y = over pitch (returnB) x
 
 -- > :t over pitch returnB x
 -- > :t over pitch extractB $ over pitch (returnB) $ x
-
-
-
--- XXX is this correct?
-instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
-  pitches = through pitch pitch
 
 
 type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
@@ -2653,8 +2645,6 @@ atTime :: Behavior a -> Time -> a
 atTime = index                 
 -}
 
-
--- deriving instance Bounded a => Bounded (Behavior a)
 
 -- TODO move to NumInstances
 instance Bounded a => Bounded (b -> a) where
@@ -2886,6 +2876,9 @@ stretchedToVoice :: Stretched a -> Voice a
 stretchedToVoice x = Voice (return x)
 
 
+
+
+
 -- |
 -- The 'Voices' and 'Phrases' types represent a sequence of voices and sub-voices with possibly infinite division.
 --
@@ -2953,32 +2946,6 @@ updates :: Reactive a -> Voice a
 (initial, final, updates) = undefined
 
 
--- newinstance Functor Behavior
--- -- Distributive?
--- -- XXX potentially slow, improve by memoization/const optimization
--- instance Representable Behavior where
---   type Rep = Time
--- instance Applicative Behavior
--- instance Monad Behavior
--- instance Monoid a => Monoid (Behavior a)
---
--- newtype Track a = [(Time, a)]
---   -- XXX Start time, laziness
---   -- Functor, Monad
--- newtype Score a = [(Span, a)]
--- -- XXX Start time, laziness
---   -- Functor, Monad
---
---
--- newtype Reactive a = (Time -> (a, Duration^2))
--- -- XXX Start time, laziness
--- -- Distributive?
--- instance Representable Reactive where
---   type Rep = Time
--- instance Applicative Reactive
--- instance Monad Reactive
--- instance Monoid a => Monoid (Reactive a)
-
 {-
 
 -- Fre monad of ?
@@ -3021,38 +2988,9 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
--- -- Monoid/Semigroup
---
---
 -- -- Has... Pitch Dynamics Articulation Part Chord?? Clef Slide Tremolo Text Harmonic Meta
 -- -- Has+Is ... Midi/MusicXml
 -- -- Is ... Pitch Interval Dynamic
---
---
---
--- reverse
--- split
---   take
---   drop
--- duration
--- position
---   onset
---   offset
--- transform
---   delay
---   stretch
--- scat
--- pcat
---
--- -- a `lead`   b  moves a so that (offset a' == onset b)
--- -- a `follow` b  moves b so that (offset a  == onset b')
--- lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
--- follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
---
-
-
-                                             
-
 
 
 
