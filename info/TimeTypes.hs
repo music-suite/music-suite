@@ -2501,6 +2501,18 @@ type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
   pitch = through pitch pitch
 
+-- TODO tests
+returnB = return :: (a -> Behavior a)
+extractB = (!^ 0)
+x = ((),3::Float)
+y = over pitch (returnB) x
+-- z = over pitch (extractB) x -- TODO
+
+
+-- > :t over pitch returnB x
+-- > :t over pitch extractB $ over pitch (returnB) $ x
+
+
 
 -- XXX is this correct?
 instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
