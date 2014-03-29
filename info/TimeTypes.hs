@@ -175,6 +175,7 @@ module TimeTypes (
         -- * Music.Time.Voice
         Voice,
         voice,
+        singleStretched,
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
@@ -194,6 +195,8 @@ module TimeTypes (
         Score,
         voices,
         phrases,
+        singleNote,
+        notes,
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -2696,13 +2699,16 @@ type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . from _Unwrapped . underL articulations
 
-voices :: Prism' (Score a) (Voices a)
-phrases :: Prism' (Score a) (Phrases a)
+voices :: Traversal' (Score a) (Voices a)
+phrases :: Traversal' (Score a) (Phrases a)
 (voices, phrases) = undefined
 
+singleNote :: Prism' (Score a) (Note a)
+singleNote = undefined
+
 -- | XXX indexed traversal?
-score :: Traversal (Score a) (Score b) (Note a) (Note b)
-score = _Wrapped . traverse
+notes :: Traversal' (Score a) (Note a)
+notes = _Wrapped . traverse
 
 -- | Map over the events in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -2734,6 +2740,9 @@ mapFilterEvents f = undefined
 --
 newtype Voice a   = Voice    { getVoice :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}
   Functor, Foldable, Traversable, Semigroup, Monoid)
+
+singleStretched :: Prism' (Voice a) (Stretched a)
+singleStretched = undefined
 
 instance Applicative Voice where
   pure  = return
@@ -2824,11 +2833,9 @@ instance HasDuration (Voices a) where
 
 instance Splittable a => Splittable (Voices a) where
 
-voices' :: Iso 
+voices' :: Traversal' 
   (Voices a) 
-  (Voices b) 
-  (NonEmpty (Phrases a)) 
-  (NonEmpty (Phrases b))
+  (Phrases a) 
 -- TODO is there a non-empty version of traversal?
 voices' = undefined
 
@@ -2850,11 +2857,9 @@ instance HasDuration (Phrases a) where
 instance Splittable a => Splittable (Phrases a) where
 
 -- | XXX
-phrases' :: Iso 
+phrases' :: Traversal'
   (Phrases a) 
-  (Phrases b) 
-  (Voice (Either a (Voices a))) 
-  (Voice (Either a (Voices a)))
+  (Either (Voice a) (Voices a))
 phrases' = undefined
 
 
