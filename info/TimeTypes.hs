@@ -83,6 +83,7 @@ module TimeTypes (
         Reversible(..),
         revDefault,
         reversed,
+        NoReverse(..),
 
         -- * Music.Time.Split
         -- ** The Splittable class
@@ -949,6 +950,12 @@ instance Reversible a => Reversible (a, b) where
 
 revDefault :: (HasPosition a, Transformable a) => a -> a
 revDefault x = (stretch (-1) `under` undelaying (_position x 0.5 .-. 0)) x
+
+newtype NoReverse a = NoReverse { getNoReverse :: a }
+
+instance Reversible (NoReverse a) where
+  rev = id
+
 
 
 -- |
