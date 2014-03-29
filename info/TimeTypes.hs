@@ -347,12 +347,23 @@ instance Monoid b => Monad ((,) b) where
 -- deriving instance Foldable ((,) o)
 -- deriving instance Traversable ((,) o)
 
+instance Eq a => Eq (b -> a) where
+instance Ord a => Ord (b -> a) where
+  min = liftA2 min
+  max = liftA2 max
+instance Real a => Real (b -> a) where
+  toRational = error "No toRational for funtions"
 
--- TODO move
 instance IsDynamics Bool where
 instance IsDynamics Float where
 instance IsDynamics Int where
 instance IsDynamics Integer where
+
+-- TODO move to NumInstances
+instance Bounded a => Bounded (b -> a) where
+  minBound = pure minBound
+  maxBound = pure maxBound
+
 
 {-
   TODO
@@ -411,6 +422,7 @@ instance (Num a, Ord a) => Num (Clipped a) where
   signum _ = 1
   negate = error "negate: No instance for Clipped"
   fromInteger = unsafeToClipped . fromInteger
+
 instance (Num a, Ord a, Fractional a) => Fractional (Clipped a) where
   a / b = unsafeToClipped (fromClipped a / fromClipped b)
   recip 1 = 1
@@ -1378,7 +1390,6 @@ instance HasPitch Double Double where
 instance HasPitches Double Double where
   pitches = ($)
 
-
 type instance Pitch (c,a) = Pitch a
 type instance SetPitch b (c,a) = (c,SetPitch b a)
 instance HasPitch a b => HasPitch (c, a) (c, b) where
@@ -1386,12 +1397,10 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
-
 type instance Pitch [a] = Pitch a
 type instance SetPitch b [a] = [SetPitch b a]
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
-
 
 type instance Pitch (Note a) = Pitch a
 type instance SetPitch g (Note a) = Note (SetPitch g a)
@@ -1399,8 +1408,6 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . underL pitches
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . underL pitch
-
-
 
 type instance Pitch (Delayed a) = Pitch a
 type instance SetPitch g (Delayed a) = Delayed (SetPitch g a)
@@ -2047,7 +2054,6 @@ deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Applicative Note
--- deriving instance Comonad Note
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
 
@@ -2178,8 +2184,6 @@ runDelayed = uncurry delay' . view _Wrapped
 runStretched :: Transformable a => Stretched a -> a
 runStretched = uncurry stretch . view _Wrapped
 
--- instance HasPosition (Note a) where position n
-
 
 
 
@@ -2199,7 +2203,10 @@ bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
 bounded = undefined
 
 
-instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
+instance Wrapped (Bounds a) where
+  type Unwrapped (Bounds a) = (Span, a)
+  _Wrapped' = iso getBounds Bounds
+
 instance Rewrapped (Bounds a) (Bounds b)
 
 instance Reversible a => Reversible (Bounds a) where
@@ -2209,8 +2216,10 @@ instance Splittable a => Splittable (Bounds a) where
 
 instance Transformable a => Transformable (Bounds a) where 
   transform t = over _Wrapped (transform t *** transform t)
+
 instance HasDuration a => HasDuration (Bounds a) where
   -- TODO truncate then take duration
+
 instance HasPosition a => HasPosition (Bounds a) where 
   -- TODO remove everything outside bounds
 
@@ -2296,23 +2305,15 @@ deriving instance Typeable1 Segment
 deriving instance Distributive Segment
 deriving instance Semigroup a => Semigroup (Segment a)
 deriving instance Monoid a => Monoid (Segment a)
--- deriving instance AdditiveGroup a => AdditiveGroup (Segment a)
--- instance VectorSpace a => VectorSpace (Segment a) where
-  -- type Scalar (Segment a) = Segment (Scalar a)
-  -- (*^) = liftA2 (*^)
--- instance AffineSpace a => AffineSpace (Segment a) where
-  -- type Diff (Segment a) = Segment (Diff a)
-  -- (.-.) = liftA2 (.-.)
-  -- (.+^) = liftA2 (.+^)
-instance IsPitch a => IsPitch (Segment a) where
-  fromPitch = pure . fromPitch
-instance IsInterval a => IsInterval (Segment a) where
-  fromInterval = pure . fromInterval
- 
 deriving instance Num a => Num (Segment a)
 deriving instance Fractional a => Fractional (Segment a)
--- deriving instance RealFrac a => RealFrac (Segment a)
 deriving instance Floating a => Floating (Segment a)
+
+instance IsPitch a => IsPitch (Segment a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Segment a) where
+  fromInterval = pure . fromInterval
 
 instance Eq a => Eq (Segment a) where
   (==) = error "No fun"
@@ -2325,15 +2326,10 @@ instance Ord a => Ord (Segment a) where
 instance Real a => Real (Segment a) where
   toRational = toRational . (`index` 0)
 
-
-
 instance Representable Segment where
   type Rep Segment = Duration
-  -- tabulate = Behavior
-  -- index (Behavior x) = x
   tabulate f = Segment (f . fromClipped)
   index    (Segment f) = f . unsafeToClipped
-
 
 -- |
 -- Segments are /invariant/ under transformation.
@@ -2343,6 +2339,12 @@ instance Representable Segment where
 instance Transformable (Segment a) where
   transform _ = id
 
+instance Reversible (Segment a) where
+  -- TODO in terms of Representable
+  rev (Segment f) = Segment (f . unsafeToClipped . r . fromClipped)
+    where
+      r x = (x * (-1)) + 1
+
 type instance Pitch                 (Segment a) = Segment (Pitch a)
 type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
 
@@ -2350,12 +2352,6 @@ instance (HasPitch a a, HasPitch a b) => HasPitches (Segment a) (Segment b) wher
   pitches = through pitch pitch
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
-
-instance Reversible (Segment a) where
-  -- TODO in terms of Representable
-  rev (Segment f) = Segment (f . unsafeToClipped . r . fromClipped)
-    where
-      r x = (x * (-1)) + 1
 
 -- | 
 -- Index a segment.
@@ -2441,37 +2437,14 @@ deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
--- deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
--- instance VectorSpace a => VectorSpace (Behavior a) where
-  -- type Scalar (Behavior a) = Behavior (Scalar a)
-  -- (*^) = liftA2 (*^)
--- instance AffineSpace a => AffineSpace (Behavior a) where
---   type Diff (Behavior a) = Behavior (Diff a)
---   (.-.) = liftA2 (.-.)
---   (.+^) = liftA2 (.+^)
+deriving instance Num a => Num (Behavior a)
+deriving instance Fractional a => Fractional (Behavior a)
+deriving instance Floating a => Floating (Behavior a)
+
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
 instance IsInterval a => IsInterval (Behavior a) where
   fromInterval = pure . fromInterval
- 
-deriving instance Num a => Num (Behavior a)
-deriving instance Fractional a => Fractional (Behavior a)
--- deriving instance RealFrac a => RealFrac (Behavior a)
-deriving instance Floating a => Floating (Behavior a)
-
--- FOO3
--- TODO move
-instance Eq a => Eq (b -> a) where
-instance Ord a => Ord (b -> a) where
-  min = liftA2 min
-  max = liftA2 max
-instance Real a => Real (b -> a) where
-  toRational = error "No toRational for funtions"
--- instance RealFrac a => RealFrac (b -> a) where
-  -- truncate = fmap truncate
-  -- round = fmap round
-  -- ceiling = fmap ceiling
-  -- floor = fmap floor
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No fun"
@@ -2648,12 +2621,6 @@ floor' = fromIntegral . floor
 atTime :: Behavior a -> Time -> a
 atTime = index                 
 -}
-
-
--- TODO move to NumInstances
-instance Bounded a => Bounded (b -> a) where
-  minBound = pure minBound
-  maxBound = pure maxBound
 
 focus :: Behavior a -> Segment a
 focus = undefined
