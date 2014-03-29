@@ -31,16 +31,16 @@ module TimeTypes (
         tabulated,
 
         -- * Music.Time.Transform
-        -- ** The Transformable class
+        -- * The Transformable class
         Transformable(..),
-        -- *** Apply under a transformation
+        -- ** Apply under a transformation
 
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
         -- underM,
         -- underW,
         -- conjugate,  -- :: Span -> Span -> Span
 
-        -- *** Specific transformations
+        -- ** Specific transformations
         delay,
         -- delay',
         undelay,
@@ -52,48 +52,48 @@ module TimeTypes (
         compressing,
 
         -- * Music.Time.Duration
-        -- ** The HasDuration class
+        -- * The HasDuration class
         HasDuration(..),
-        -- ** Stretching to absolute duration
+        -- * Stretching to absolute duration
         duration,
         stretchTo,
 
         -- * Music.Time.Position
-        -- ** The HasPosition class
+        -- * The HasPosition class
         HasPosition(..),
-        -- ** Inspecting position
+        -- * Inspecting position
         era,
         -- _era,
 
-        -- ** Specific positions
+        -- * Specific positions
         onset,          -- :: HasPosition a => a -> Time
         offset,         -- :: HasPosition a => a -> Time
         preOnset,       -- :: HasPosition a => a -> Time
         postOnset,      -- :: HasPosition a => a -> Time
         postOffset,     -- :: HasPosition a => a -> Time
         
-        -- ** Moving to absolute positions
+        -- * Moving to absolute positions
         startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
         stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
         placeAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
         -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
 
         -- * Music.Time.Reverse
-        -- ** The Reversible class
+        -- * The Reversible class
         Reversible(..),
         revDefault,
         reversed,
         NoReverse(..),
 
         -- * Music.Time.Split
-        -- ** The Splittable class
+        -- * The Splittable class
         Splittable(..),
 
         -- * Music.Time.Combinators
-        -- ** Align without composition
+        -- * Align without composition
         lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
         follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-        -- ** Align and compose
+        -- * Align and compose
         after,
         before,
         during,
@@ -103,19 +103,19 @@ module TimeTypes (
         times,
 
         -- * Music.Time.Types
-        -- ** Duration
+        -- * Duration
         Duration,
-        -- ** Time points
+        -- * Time points
         Time,
-        -- ** Time spans
+        -- * Time spans
         Span,
-        -- *** Constructing time spans
+        -- ** Constructing time spans
         (<->),
         (>->),
-        -- *** Deconstructing time spans
+        -- ** Deconstructing time spans
         range,
         delta,
-        -- *** Points in spans
+        -- ** Points in spans
         inside,
 
         -- * Music.Time.Stretched
@@ -149,7 +149,8 @@ module TimeTypes (
         -- fromSegment2,
         focus,
         focusOn,
-        unfocus,
+        focused,
+        focusedOn,
         appendSegment,
         concatSegment,
 
@@ -159,7 +160,7 @@ module TimeTypes (
         -- behavior',
         behavior,
 
-        -- ** Common behaviors
+        -- * Common behaviors
         time,
         unit,
         impulse,
@@ -170,16 +171,17 @@ module TimeTypes (
         sine,
         cosine,
 
-        -- ** Combinators
-        switch,
-        switch',
+        -- * Combinators
+        change,
+        change',
         splice,
         concatBehavior,
 
         -- * Music.Time.Voice
         Voice,
-        voice,
-        singleStretched,
+        voiceNotes,
+        voiceElements,
+        -- singleStretched,
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
@@ -518,9 +520,6 @@ instance Transformable () where
   transform _ = id
 
 instance Transformable Int where
-  transform _ = id
-
-instance Transformable Int8 where
   transform _ = id
 
 instance Transformable Bool where
@@ -1460,46 +1459,48 @@ instance Transposable' a => Transposable' (c, a)
 -- Transpose up.
 --
 up :: Transposable a => Interval a -> a -> a
-up a = pitches %~ (.+^ a)
+up v = pitches %~ (.+^ v)
 
 -- |
 -- Transpose down.
 --
 down :: Transposable a => Interval a -> a -> a
-down a = pitches %~ (.-^ a)
+down v = pitches %~ (.-^ v)
 
 -- |
 -- Add the given interval above.
 --
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
-above a x = x <> up a x
+above v x = x <> up v x
 
 -- |
 -- Add the given interval below.
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
-below a x = x <> down a x
+below v x = x <> down v x
 
 -- |
 -- Invert pitches.
 --
 inv :: Transposable a => Pitch a -> a -> a
-inv p = pitches %~ (reflectThrough p)
+inv p = pitches %~ reflectThrough p
+
+-- TODO invert diatonically
 
 -- |
 -- Transpose up by the given number of octaves.
 --
 octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
-octavesUp a     = up (_P8^*a)
+octavesUp x = up (_P8^*x)
 
 -- |
 -- Transpose down by the given number of octaves.
 --
 octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
-octavesDown a   = down (_P8^*a)
+octavesDown x = down (_P8^*x)
 
-
-
+-- TODO augment/diminish intervals (requires withPrev or similar)
+-- TODO rotatePitch (requires some kind of separate traversal)
 
 
 
@@ -2040,6 +2041,77 @@ through lens1 lens2 =
 
 
 -- |
+-- 'Delayed' represents a value with an offset in time.
+--
+-- A delayed value has a known 'position', but no duration.
+--
+-- Placing a value inside 'Delayed' does not make it invariant under stretch, as the offset
+-- of a delayed value may be stretched with respect to the origin. However, in contrast to a note
+-- the /duration/ is not stretched.
+--
+-- >>> stretch 2 $ (3,1)^.delayed
+-- (6,1)^.stretched
+--
+-- >>> delay 2 $ (3,1)^.delayed
+-- (3,1)^.stretched
+--
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {-Comonad, -}Foldable, Traversable)
+
+deriving instance Typeable1 Delayed
+instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
+instance Rewrapped (Delayed a) (Delayed b)
+instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
+instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
+instance Reversible (Delayed a) where
+  rev = revDefault
+deriving instance Show a => Show (Delayed a)
+                            
+mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
+
+-- |
+-- View the value in the note.
+--
+delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
+delayedValue = lens runDelayed (flip $ mapDelayed . const)
+
+
+
+-- |
+-- A 'Stretched' value has a known 'position', but no duration.
+--
+-- Placing a value inside 'Stretched' makes it /invariant/ under delay.
+--
+-- >>> stretch 2 $ (5,1)^.stretched
+-- (10,1)^.stretched
+--
+-- >>> delay 2 $ (5,1)^.stretched
+-- (5,1)^.stretched
+--
+newtype Stretched a = Stretched { getStretched :: (Duration, a) }
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {- Comonad, -} Foldable, Traversable)
+
+deriving instance Typeable1 Stretched
+instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
+instance Rewrapped (Stretched a) (Stretched b)
+instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
+instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
+instance Reversible (Stretched a) where
+  rev = stretch (-1)
+instance Splittable a => Splittable (Stretched a) where
+deriving instance Show a => Show (Stretched a)
+
+mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
+
+-- |
+-- View the value in the note.
+--
+stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+stretchedValue = lens runStretched (flip $ mapStretched . const)
+
+
+
+-- |
 -- A 'Note' is a value with a known 'era'.
 --
 -- You can use 'noteValue' to apply a function in the context of the transformation,
@@ -2077,63 +2149,6 @@ instance HasPosition (Note a) where x `_position` p = ask (view _Wrapped x) `_po
 instance Splittable a => Splittable (Note a) where
 instance Reversible (Note a) where
   rev = revDefault
-
-
-
-
-
--- |
--- 'Delayed' represents a value with an offset in time.
---
--- A delayed value has a known 'position', but no duration.
---
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {-Comonad, -}Foldable, Traversable)
-
-deriving instance Typeable1 Delayed
-instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
-instance Rewrapped (Delayed a) (Delayed b)
-instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
-instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
-instance Reversible (Delayed a) where
-  -- TODO
-deriving instance Show a => Show (Delayed a)
-                            
-mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
-
--- |
--- View the value in the note.
---
-delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-delayedValue = lens runDelayed (flip $ mapDelayed . const)
-
-
-
--- |
--- A 'Stretched' value has a known 'position', but no duration.
---
-newtype Stretched a = Stretched { getStretched :: (Duration, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {- Comonad, -} Foldable, Traversable)
-
-deriving instance Typeable1 Stretched
-instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
-instance Rewrapped (Stretched a) (Stretched b)
-instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
-instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
-instance Reversible (Stretched a) where
-  rev = stretch (-1)
-instance Splittable a => Splittable (Stretched a) where
-deriving instance Show a => Show (Stretched a)
-
-mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
-
--- |
--- View the value in the note.
---
-stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-stretchedValue = lens runStretched (flip $ mapStretched . const)
-
-
 
 -- |
 -- View a note as a pair of the original value and the transformation.
@@ -2395,11 +2410,9 @@ fromSegment2 = undefined
 
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
--- TODO use different name?
 
 concatSegment :: Voice (Segment a) -> Stretched (Segment a)
-concatSegment v = foldr1 appendSegment (toListOf voice v)
--- TODO rename voice lens to make this look more natural
+concatSegment = foldr1 appendSegment . toListOf voiceElements
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
@@ -2476,7 +2489,10 @@ instance Transformable (Behavior a) where
 
 -- TODO correct?
 instance Reversible (Behavior a) where
-  rev x = (stretch (-1) `under` undelaying 0.5) x
+  rev = stretch (-1)
+  -- OR
+  -- rev = (stretch (-1) `under` undelaying 0.5)
+  -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
 
 
 instance Representable Behavior where
@@ -2571,7 +2587,7 @@ time = realToFrac^.behavior
 -- that interval.
 --
 unit :: Fractional a => Behavior a
-unit = switch 0 0 (switch 1 time 1)
+unit = change 0 0 (change 1 time 1)
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
@@ -2605,7 +2621,7 @@ sawtooth = time - fmap floor' time
 -- A behavior that is 1 at time 0, and 0 at all other times.
 --
 impulse :: Num a => Behavior a
-impulse = switch' 0 0 1 0
+impulse = change' 0 0 1 0
 -- > f t | t == 0    = 1
 -- >     | otherwise = 0
 --
@@ -2613,12 +2629,12 @@ impulse = switch' 0 0 1 0
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
 --
-turnOn  = switch 0 0 1
+turnOn  = change 0 0 1
 
 -- |
 -- A behavior that goes from 1 to 0 at time 0.
 --
-turnOff = switch 0 1 0
+turnOff = change 0 1 0
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
@@ -2630,26 +2646,28 @@ atTime = index
 -}
 
 focus :: Behavior a -> Segment a
-focus = undefined
+focus = focusOn mempty
 
 focusOn :: Span -> Behavior a -> Segment a
-focusOn = undefined
+focusOn s = view (focusedOn s)
 
-unfocus :: Monoid a => Segment a -> Behavior a
-unfocus = undefined
+focused :: Lens' (Behavior a) (Segment a)
+focused = focusedOn mempty
 
-
--- |
--- This
---
-switch :: Time -> Behavior a -> Behavior a -> Behavior a
-switch t rx ry = tabulate $ \u -> if u < t then rx ! u else ry ! u
+focusedOn :: Span -> Lens' (Behavior a) (Segment a)
+focusedOn = undefined
 
 -- |
 -- This
 --
-switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
+change :: Time -> Behavior a -> Behavior a -> Behavior a
+change t rx ry = change' t rx ry ry
+
+-- |
+-- This
+--
+change' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
+change' t rx ry rz = tabulate $ \u -> case u `compare` t of
     LT -> rx ! u
     EQ -> ry ! u
     GT -> rz ! u
@@ -2666,7 +2684,7 @@ splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . J
 concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehavior = undefined
 
--- switch :: Time -> Reactive a -> Reactive a -> Reactive a
+-- change :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
 
 
@@ -2779,8 +2797,8 @@ mapFilterEvents f = undefined
 -- |
 -- A 'Voice' is a sequence of stretched values.
 --
-newtype Voice a   = Voice    { getVoice :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}
-  Functor, Foldable, Traversable, Semigroup, Monoid)
+newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid)
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = undefined
@@ -2790,8 +2808,8 @@ instance Applicative Voice where
   (<*>) = ap
 
 instance Monad Voice where
-  return = (^. _Unwrapped') . return . return
-  -- TODO
+  return = view _Unwrapped . return . return
+  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` (view _Wrapped xs)
 
 instance Transformable (Voice a) where
 
@@ -2810,8 +2828,14 @@ instance Rewrapped (Voice a) (Voice b)
 -- |
 -- Voice
 --
-voice :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voice = _Wrapped . traverse
+voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
+voiceNotes = undefined
+
+-- |
+-- Voice
+--
+voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
+voiceElements = _Wrapped . traverse
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
@@ -2831,11 +2855,17 @@ zipVoiceWith  = undefined
 dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
 dzipVoiceWith = undefined
 
+
+voiceList :: Iso' (Voice a) [(Duration, a)]
+voiceList = undefined
+
 -- |
 -- Merge consecutive equal note.
 --
 mergeEqualNotes :: Eq a => Voice a -> Voice a
-mergeEqualNotes = undefined
+mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
+    where
+        f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
 
 
 {-
@@ -3091,6 +3121,10 @@ mjoin = fmap join . join . fmap T.sequence
 
 mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n a) -> m (n b)
 mbind = (join .) . fmap . (fmap join .) . T.mapM
+
+-- Like Data.Ord.comparing
+inspecting :: Eq a => (b -> a) -> b -> b -> Bool
+inspecting p x y = p x == p y
 
 -- Same as @flip const@, useful to fix the type of the first argument.
 assuming :: a -> b -> b
