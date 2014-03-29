@@ -19,12 +19,12 @@
 {-# LANGUAGE CPP                        #-}
 
 module TimeTypes (
-        -- * Data.Clipped
-        Clipped,
-        -- unsafeToClipped,
-        -- fromClipped,
-        clipped,
-        unclipped,
+        -- -- * Data.Clipped
+        -- Clipped,
+        -- -- unsafeToClipped,
+        -- -- fromClipped,
+        -- clipped,
+        -- unclipped,
 
         -- * Data.Functor.Rep.Lens
         (!),
@@ -36,8 +36,8 @@ module TimeTypes (
         -- *** Apply under a transformation
 
         under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
-        underM,
-        underW,
+        -- underM,
+        -- underW,
         -- conjugate,  -- :: Span -> Span -> Span
 
         -- *** Specific transformations
@@ -144,8 +144,11 @@ module TimeTypes (
 
         -- * Music.Time.Segment
         Segment,
-        fromSegment,
-        fromSegment2,
+        -- fromSegment,
+        -- fromSegment2,
+        focus,
+        focusOn,
+        unfocus,
         appendSegment,
         concatSegment,
 
@@ -190,6 +193,9 @@ module TimeTypes (
 
         -- * Music.Time.Reactive
         Reactive(..),
+        initial,
+        final,
+        updates,
 
         -- * Music.Time.Score
         Score,
@@ -1949,14 +1955,20 @@ allParts = Data.List.nub . Data.List.sort . toListOf parts
 -- |
 -- List all the parts
 --
-extractPart :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
-extractPart p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
+extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
+extractPart = extractPartG
+
+extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
+extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 
 -- |
 -- List all the parts
 --
-extractParts :: (Ord (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart' a, HasParts' (f a)) => f a -> [f a]
-extractParts x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
+extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
+extractParts = extractPartsG
+
+extractPartsG :: (Ord (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart' a, HasParts' (f a)) => f a -> [f a]
+extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
 filterPart p = mfilter (\x -> p (x ^. part))
 
@@ -2201,14 +2213,15 @@ originalNoteValue = from note . _2
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
 --
-delayed :: Iso' (Time, a) (Delayed a)
-delayed = _Unwrapped'
+delayed :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
+delayed = _Unwrapped
 
 -- |
 -- View a stretched value as a pair of the original value and a stretch factor.
 --
 stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
 stretched = _Unwrapped
+
 -- |
 -- Extract the delayed value.
 --
@@ -2627,22 +2640,40 @@ instance Bounded a => Bounded (b -> a) where
   minBound = pure minBound
   maxBound = pure maxBound
 
+focus :: Behavior a -> Segment a
+focus = undefined
 
+focusOn :: Span -> Behavior a -> Segment a
+focusOn = undefined
+
+unfocus :: Monoid a => Segment a -> Behavior a
+unfocus = undefined
+
+
+-- |
+-- This
+--
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = tabulate $ \u -> if u < t then rx ! u else ry ! u
 
+-- |
+-- This
+--
 switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
     LT -> rx ! u
     EQ -> ry ! u
     GT -> rz ! u
 
+-- |
+-- This
+--
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
 splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . Just . Last) c <> (trim . (fmap.fmap) (Option . Just . Last)) n
 
-
-
-
+-- |
+-- This
+--
 concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehavior = undefined
 
@@ -2889,7 +2920,17 @@ concatVoices = undefined
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
-data Reactive a = Reactive a (Voice (Segment a))
+data Reactive a = Reactive a (Voice a) a
+
+-- | Get the initial value.
+initial :: Reactive a -> a
+
+-- | Get the final value.
+final :: Reactive a -> a
+
+updates :: Reactive a -> Voice a
+(initial, final, updates) = undefined
+
 
 -- newinstance Functor Behavior
 -- -- Distributive?
