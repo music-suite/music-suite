@@ -2142,9 +2142,9 @@ instance Rewrapped (Note a) (Note b)
 instance Rewrapped (Delayed a) (Delayed b)
 instance Rewrapped (Stretched a) (Stretched b)
 
-instance Transformable (Note a) where transform t = unwrapped $ first (transform t)
-instance Transformable (Delayed a) where transform t = unwrapped $ first (transform t)
-instance Transformable (Stretched a) where transform t = unwrapped $ first (transform t)
+instance Transformable (Note a) where transform t = over _Wrapped $ first (transform t)
+instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
+instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
 
 instance HasDuration (Note a) where _duration = _duration . ask . unwr
 instance HasDuration (Stretched a) where _duration = _duration . ask . unwr
@@ -2224,6 +2224,28 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
 -- |
 -- Add bounds.
 --
+bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
+bounded = undefined
+
+
+instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
+instance Rewrapped (Bounds a) (Bounds b)
+
+instance Reversible a => Reversible (Bounds a) where
+  -- TODO
+instance Splittable a => Splittable (Bounds a) where
+  -- TODO
+
+instance Transformable a => Transformable (Bounds a) where 
+  transform t = over _Wrapped (transform t *** transform t)
+instance HasDuration a => HasDuration (Bounds a) where
+  -- TODO truncate then take duration
+instance HasPosition a => HasPosition (Bounds a) where 
+  -- TODO remove everything outside bounds
+
+-- |
+-- Add bounds.
+--
 bounds :: Time -> Time -> a -> Bounds a
 bounds t u x = Bounds (t <-> u, x)
 
@@ -2283,21 +2305,6 @@ mapPitch1 f = pitch %~ f
 
 
 
--- |
--- Add bounds.
---
-bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
-bounded = undefined
-
-
-instance Reversible (Bounds a) where
-  rev = revDefault
-instance Splittable a => Splittable (Bounds a) where
-instance Wrapped (Bounds a) where { type Unwrapped (Bounds a) = (Span, a) ; _Wrapped' = iso getBounds Bounds }
-instance Rewrapped (Bounds a) (Bounds b)
-instance Transformable (Bounds a) where transform t = unwrapped $ first (transform t)
-instance HasDuration (Bounds a) where _duration = _duration . ask . unwr
-instance HasPosition (Bounds a) where x `_position` p = ask (unwr x) `_position` p
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
 
@@ -3100,8 +3107,6 @@ assuming = flip const
 sameType :: a -> a -> ()
 sameType = undefined
 
--- TODO must be a better way to do this
-unwrapped f = wr . f . unwr
 wr   = (^. _Unwrapped')
 unwr = (^. _Wrapped')
 
