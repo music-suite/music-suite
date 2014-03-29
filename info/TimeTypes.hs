@@ -146,7 +146,8 @@ module TimeTypes (
         Segment,
         fromSegment,
         fromSegment2,
-        appendSegments,
+        appendSegment,
+        concatSegment,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -184,7 +185,7 @@ module TimeTypes (
         voices',
         Phrases,
         phrases',
-        concatSubPhrases,
+        concatVoices,
 
         -- * Music.Time.Reactive
         Reactive,
@@ -2025,8 +2026,13 @@ fromSegment = undefined
 fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
 fromSegment2 = undefined
 
-appendSegments :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-appendSegments (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
+appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+-- TODO use different name?
+
+concatSegment :: Voice (Segment a) -> Stretched (Segment a)
+concatSegment v = foldr1 appendSegment (toListOf voice v)
+-- TODO rename voice lens to make this look more natural
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
@@ -2598,12 +2604,6 @@ instance Bounded a => Bounded (b -> a) where
   maxBound = pure maxBound
 
 
-
--- |
--- @
--- switch t a b ! t == b
--- @
---
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = tabulate $ \u -> if u < t then rx ! u else ry ! u
 
@@ -2824,13 +2824,13 @@ instance HasDuration (Voices a) where
 
 instance Splittable a => Splittable (Voices a) where
 
-phrases' :: Iso 
+voices' :: Iso 
   (Voices a) 
   (Voices b) 
   (NonEmpty (Phrases a)) 
   (NonEmpty (Phrases b))
 -- TODO is there a non-empty version of traversal?
-phrases' = undefined
+voices' = undefined
 
 newtype Phrases a   = Phrases    { getPhrases :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
@@ -2850,16 +2850,16 @@ instance HasDuration (Phrases a) where
 instance Splittable a => Splittable (Phrases a) where
 
 -- | XXX
-voices' :: Iso 
+phrases' :: Iso 
   (Phrases a) 
   (Phrases b) 
   (Voice (Either a (Voices a))) 
   (Voice (Either a (Voices a)))
-voices' = undefined
+phrases' = undefined
 
 
-concatSubPhrases :: Monoid a => Phrases a -> Voice a
-concatSubPhrases = undefined
+concatVoices :: Monoid a => Phrases a -> Voice a
+concatVoices = undefined
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
