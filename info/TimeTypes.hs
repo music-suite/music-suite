@@ -473,7 +473,8 @@ tabulated = iso tabulate index
 --
 -- Law
 --
--- > transform s . transform t = transform (s <> t)
+-- > transform mempty = id
+-- > transform (s <> t) = transform s . transform t
 --
 -- Law
 --
@@ -864,12 +865,6 @@ dropM t = snd . split t
 -- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
 -- @
 --
--- Lemma
---
--- @
--- 'delay' n ('rev' a)   = 'rev' ('delay' n a)
--- 'stretch' n ('rev' a) = 'rev' ('stretch' n a)
--- @
 --
 class Reversible a where
 
