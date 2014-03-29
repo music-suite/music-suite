@@ -219,7 +219,7 @@ module TimeTypes (
         HasPitch(..),
         Interval,
         Transposable,
-        Transposable',
+        -- Transposable',
         pitch',
         pitches',
         up,
@@ -242,7 +242,7 @@ module TimeTypes (
         dynamics',
         Level,
         Attenuable,
-        Attenuable',
+        -- Attenuable',
         louder,
         softer,
         level,
@@ -1428,6 +1428,7 @@ type Interval a = Diff (Pitch a)
 --
 type Transposable a = (HasPitches a a, VectorSpace (Interval a), AffineSpace (Pitch a), IsInterval (Interval a), IsPitch (Pitch a))
 
+{-
 class Transposable a => Transposable' a where
 -- instance Transposable' Int  
 -- instance Transposable' Integer  
@@ -1436,8 +1437,9 @@ class Transposable a => Transposable' a where
 instance Transposable' a => Transposable' [a]
 instance Transposable' a => Transposable' (Score a)
 -- instance (Transposable' a, HasPitch a a) => Transposable' (Behavior a)  
-instance Transposable' a => Transposable' (Note a)	 
+instance Transposable' a => Transposable' (Note a)   
 instance Transposable' a => Transposable' (c, a)
+-}
 
 
 -- |
@@ -1637,14 +1639,16 @@ type Level a = Diff (Dynamic a)
 --
 type Attenuable a = (HasDynamics a a, VectorSpace (Level a), AffineSpace (Dynamic a), IsDynamics (Dynamic a))
 
+{-
 class Attenuable a => Attenuable' a where
 
 instance Attenuable' Float where  
 instance Attenuable' Double where  
 -- instance Attenuable' a => Attenuable' [b] where
 instance Attenuable' a => Attenuable' (Score a) where  
-instance Attenuable' a => Attenuable' (Note a)	where
+instance Attenuable' a => Attenuable' (Note a)  where
 instance Attenuable' a => Attenuable' (c, a) where
+-}
 
 -- |
 -- Transpose up.
@@ -2043,7 +2047,7 @@ deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Applicative Note
-deriving instance Comonad Note
+-- deriving instance Comonad Note
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
 
@@ -2071,7 +2075,7 @@ instance Reversible (Note a) where
 -- A delayed value has a known 'position', but no duration.
 --
 newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {-Comonad, -}Foldable, Traversable)
 
 deriving instance Typeable1 Delayed
 instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
@@ -2096,7 +2100,7 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
 -- A 'Stretched' value has a known 'position', but no duration.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, Comonad, Foldable, Traversable)
+  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {- Comonad, -} Foldable, Traversable)
 
 deriving instance Typeable1 Stretched
 instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
@@ -2292,14 +2296,14 @@ deriving instance Typeable1 Segment
 deriving instance Distributive Segment
 deriving instance Semigroup a => Semigroup (Segment a)
 deriving instance Monoid a => Monoid (Segment a)
-deriving instance AdditiveGroup a => AdditiveGroup (Segment a)
-instance VectorSpace a => VectorSpace (Segment a) where
-  type Scalar (Segment a) = Segment (Scalar a)
-  (*^) = liftA2 (*^)
-instance AffineSpace a => AffineSpace (Segment a) where
-  type Diff (Segment a) = Segment (Diff a)
-  (.-.) = liftA2 (.-.)
-  (.+^) = liftA2 (.+^)
+-- deriving instance AdditiveGroup a => AdditiveGroup (Segment a)
+-- instance VectorSpace a => VectorSpace (Segment a) where
+  -- type Scalar (Segment a) = Segment (Scalar a)
+  -- (*^) = liftA2 (*^)
+-- instance AffineSpace a => AffineSpace (Segment a) where
+  -- type Diff (Segment a) = Segment (Diff a)
+  -- (.-.) = liftA2 (.-.)
+  -- (.+^) = liftA2 (.+^)
 instance IsPitch a => IsPitch (Segment a) where
   fromPitch = pure . fromPitch
 instance IsInterval a => IsInterval (Segment a) where
@@ -2430,7 +2434,7 @@ notTime2 = (rev `under` undelaying 4.5) notTime
 -- While a 'Behavior' can not be placed (as it has no endpoints), we can focus on a
 -- certain part of a behavior by placing it inside 'Bounds'.
 --
-newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad, Comonad)
+newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined throughout, "focused" on 0-1
 
 deriving instance Typeable1 Behavior
@@ -3123,7 +3127,7 @@ sameType = undefined
 
 
 
-#define INCLUDE_TESTS
+-- #define INCLUDE_TESTS
 #ifdef INCLUDE_TESTS
 -- Tests
 
