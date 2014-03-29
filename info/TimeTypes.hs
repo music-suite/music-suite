@@ -2404,6 +2404,30 @@ instance Reversible (Segment a) where
     where
       r x = (x * (-1)) + 1
 
+-- | 
+-- Index a segment.
+-- 
+(!.) :: Segment a -> Duration -> a
+(!.) = (!)
+
+-- |
+-- View a behavior as a time function and vice versa.
+--
+--
+segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
+segment = tabulated
+
+-- |
+-- A behavior that
+--
+_unit' :: Segment Duration
+_unit' = id^.segment
+
+-- |
+-- A behavior that gives the current time, i.e. the identity function
+_unit :: Fractional a => Segment a
+_unit = realToFrac^.segment
+
 
 -- Behavior is 'Representable':
 --
@@ -2550,7 +2574,6 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- 
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
-
 
 -- |
 -- View a behavior as a time function and vice versa.
