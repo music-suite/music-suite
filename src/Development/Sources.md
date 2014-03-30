@@ -6,7 +6,7 @@ There is a also utility program [`music-util`](https://github.com/music-suite/mu
 
 This document describes how to install and use `music-util` to manage the Music Suite sources.
 
-## Setup source directories
+## First steps
 
 Upgrade `cabal-install` to a 1.18 or later to get support for sandboxes. This will hopefully be in the Haskell Platform soon, but for now you have to upgrade manually like this:
 
