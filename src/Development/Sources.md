@@ -26,8 +26,7 @@ $ cabal install music-util
 Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory where you want to keep the music-suite sources. Note that `music-util` will never modify anything outside this directory.
 
 ~~~{.bash}
-$ cat >> ~/.profile 
-export MUSIC_SUITE_DIR=/path/to/suite
+$ echo "export MUSIC_SUITE_DIR=/path/to/suite" >> ~/.profile
 ~~~
 
 Run the setup script. This will clone all source repos and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default.
