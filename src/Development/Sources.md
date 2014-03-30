@@ -19,6 +19,7 @@ $ cabal install cabal-install
 Install the utility program (note that this does *not* install the rest of the suite):
 
 ~~~{.bash}
+$ cabal update
 $ cabal install music-util
 ~~~
 
