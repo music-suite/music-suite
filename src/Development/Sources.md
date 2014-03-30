@@ -71,7 +71,7 @@ To test a particular package on the REPL, move into its source directory and run
     cd $MUSIC_SUITE_DIR/music-preludes
     cabal repl
     
-Inside the REPL, everything should work as expected. You can load any module from the suite, and changes to the sources become visible whenever you restart the REPL. You can still load modules directly using `:load`.
+Inside the REPL, everything should work as expected. You can import any module from the suite, and changes to these modules becomes visible whenever you restart the REPL. You can still load modules directly using `:load`.
 
     $ cabal repl
     ghci> :load examples/annotatations.hs
