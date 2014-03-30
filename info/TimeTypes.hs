@@ -216,25 +216,31 @@ module TimeTypes (
 
 
         -- * Music.Score.Pitch
+        -- * Pitch type functions
         Pitch,
         SetPitch,
-        HasPitches(..),
-        HasPitch(..),
         Interval,
         Transposable,
         -- Transposable',
+        -- * Pitch lens and traversal
+        HasPitches(..),
+        HasPitch(..),
         pitch',
         pitches',
+        -- * Pitch manipulation
+        -- ** Transposition
         up,
         down,
         above,
         below,
-        inv,
-        -- TODO gliss etc
+        invertPitches,
         -- octavesUp,
         -- octavesDown,
         -- octavesAbove,
         -- octavesBelow,
+        -- ** Intervals
+        augmentIntervals,
+        -- TODO gliss etc
 
         -- * Music.Score.Dynamic
         Dynamic,
@@ -1482,8 +1488,13 @@ below v x = x <> down v x
 -- |
 -- Invert pitches.
 --
-inv :: Transposable a => Pitch a -> a -> a
-inv p = pitches %~ reflectThrough p
+invertPitches :: Transposable a => Pitch a -> a -> a
+invertPitches p = pitches %~ reflectThrough p
+
+-- |
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
+augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
+augmentIntervals = undefined
 
 -- TODO invert diatonically
 
@@ -2777,7 +2788,7 @@ mapWithSpan f = undefined
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 filterWithSpan f = undefined
 
--- | Efficient combination of 'mapEvents' and 'filterEvents'.
+-- | Combination of 'mapEvents' and 'filterEvents'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 mapFilterWithSpan f = undefined
 
