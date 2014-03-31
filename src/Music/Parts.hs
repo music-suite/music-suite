@@ -56,6 +56,11 @@ module Music.Parts (
         clarinet,
         aClarinet,
         bassClarinet,
+
+        sopranoSax,
+        altoSax,
+        tenorSax,
+        baritoneSax,
         
         bassoon,
         contraBassoon,
@@ -265,6 +270,11 @@ ebClarinet      = OtherInstrument "Woodwind.SingleReed.Clarinet.Eb"
 clarinet        = StdInstrument 71
 aClarinet       = OtherInstrument "Woodwind.SingleReed.Clarinet.A"
 bassClarinet    = OtherInstrument "Woodwind.SingleReed.Clarinet.Bass"
+
+sopranoSax      = StdInstrument 64
+altoSax         = StdInstrument 65
+tenorSax        = StdInstrument 66
+baritoneSax     = StdInstrument 67
 
 bassoon         = StdInstrument 70
 contraBassoon   = OtherInstrument "Woodwind.DoubleReed.Bassoon.Contra"
