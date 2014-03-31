@@ -368,6 +368,11 @@ instance IsDynamics Float where
 instance IsDynamics Int where
 instance IsDynamics Integer where
 
+instance IsInterval Float where
+  fromInterval x = realToFrac (fromInterval x :: Double)
+instance IsPitch Float where
+  fromPitch x = realToFrac (fromPitch x :: Double)
+
 -- TODO move to NumInstances
 instance Bounded a => Bounded (b -> a) where
   minBound = pure minBound
@@ -1402,6 +1407,15 @@ instance HasPitch Double Double where
 instance HasPitches Double Double where
   pitches = ($)
 
+-- TODO move
+instance Transformable Char
+type instance Pitch Char = Char
+type instance SetPitch a Char = a
+instance HasPitch Char Char where
+  pitch = ($)
+instance HasPitches Char Char where
+  pitches = ($)
+
 type instance Pitch (c,a) = Pitch a
 type instance SetPitch b (c,a) = (c,SetPitch b a)
 instance HasPitch a b => HasPitch (c, a) (c, b) where
@@ -1409,6 +1423,12 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
+-- type instance Pitch [a] = [Pitch a]
+-- type instance SetPitch [b] [a] = [SetPitch b a]
+-- instance (HasPitch a a, HasPitch a b) => HasPitches [a] [b] where
+--   pitches = through pitch pitch
+-- instance (HasPitch a a, HasPitch a b) => HasPitch [a] [b] where
+--   pitch = through pitch pitch
 type instance Pitch [a] = Pitch a
 type instance SetPitch b [a] = [SetPitch b a]
 instance HasPitches a b => HasPitches [a] [b] where
@@ -1706,14 +1726,14 @@ level a = dynamics .~ a
 -- |
 -- Fade in.
 --
-fadeIn :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeIn t = dynamic *~ (t `stretch` unit)
+fadeIn :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
+fadeIn t = dynamics *~ (t `stretch` unit)
 
 -- |
 -- Fade in.
 --
-fadeOut :: (Fractional c, HasDynamic s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeOut t = dynamic *~ (t `stretch` rev unit)
+fadeOut :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
+fadeOut t = dynamics *~ (t `stretch` rev unit)
 
 fade = undefined
 
@@ -2046,8 +2066,8 @@ through lens1 lens2 =
   -- \f s -> liftA2 ( \a -> runIdentity . flip lens2 a . const . Identity ) s <$> (f ((getConst . lens1 Const) <$> s))
   -- \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
   where
-    getBP a = (^. lens1) <$> a
-    setBP x a = liftA2 (lens2 .~) x a
+    getBP a = (view lens1) <$> a
+    setBP x a = liftA2 (over lens2 . const) x a
 
 
 
@@ -2476,6 +2496,8 @@ instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
 instance IsInterval a => IsInterval (Behavior a) where
   fromInterval = pure . fromInterval
+instance IsDynamics a => IsDynamics (Behavior a) where
+  fromDynamics = pure . fromDynamics
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No fun"
@@ -2488,8 +2510,16 @@ instance Ord a => Ord (Behavior a) where
 instance Real a => Real (Behavior a) where
   toRational = toRational . (`index` 0)
 
+deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
--- FOO1
+instance VectorSpace a => VectorSpace (Behavior a) where
+  type Scalar (Behavior a) = Behavior (Scalar a)
+  (*^) = liftA2 (*^)
+
+instance AffineSpace a => AffineSpace (Behavior a) where
+  type Diff (Behavior a) = Behavior (Diff a)
+  (.-.) = liftA2 (.-.)
+  (.+^) = liftA2 (.+^)
 
 -- TODO is this correct?
 instance Transformable (Behavior a) where
@@ -2512,20 +2542,31 @@ instance Representable Behavior where
   index (Behavior x) = x
 
 
-type instance Pitch                 (Behavior a) = Behavior (Pitch a)
-type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
+-- type instance Pitch                 (Behavior a) = Behavior (Pitch a)
+-- type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
+-- 
+-- instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
+--   pitches = through pitch pitch
+-- instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
+--   pitch = through pitch pitch
 
-instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
-  pitches = through pitch pitch
-instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
-  pitch = through pitch pitch
+type instance Pitch      (Behavior a) = Behavior a
+type instance SetPitch b (Behavior a) = b
+instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
+  pitches = ($)
+instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
+  pitch = ($)
+
+
 
 -- TODO tests
 returnB = return :: (a -> Behavior a)
 extractB = (!^ 0)
-x = ((),3::Float)
-y = over pitch (returnB) x
--- z = over pitch (extractB) x -- TODO
+x = delay 2 $ return (return 3) :: Note ((), (Float, Float))
+y = over pitches (returnB) x
+z = over pitches (extractB) y -- TODO
+
+aa = (\f -> {-over pitches extractB .-} over pitches f . over pitches returnB) (*(time*2)) x
 
 
 -- > :t over pitch returnB x
@@ -2744,8 +2785,6 @@ instance Splittable a => Splittable (Score a) where
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
-
-type instance Pitch (Score a) = Pitch a
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . _Wrapped . underL pitches
 
@@ -3043,8 +3082,8 @@ modulate = (\t x -> x * sin (t*2*pi)) <$> time
 
 
 
-test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
-  where
+-- test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
+  -- where
     -- c = 1
 c1 = (sin (time/20*2*pi))
 
@@ -3080,20 +3119,20 @@ a = time
 
 
 
-c2 :: Behavior Float -> Behavior Float
-c2  = liftA2 (*) c1
+-- c2 :: Behavior Float -> Behavior Float
+-- c2  = liftA2 (*) c1
 
-nc :: Note (Behavior (Int, Float))
-nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
+-- nc :: Note (Behavior (Int, Float))
+-- nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
 
-r :: Behavior Float
-r  = fmap snd $ runNote (nc & pitch %~ c2)
+-- r :: Behavior Float
+-- r  = fmap snd $ runNote (nc & pitch %~ c2)
 
-drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
-drawNote n = let
-  (t,d) = view delta $ n^.era
-  a = n ^?! traverse
-  in drawNote' (t,d,a)
+-- drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
+-- drawNote n = let
+  -- (t,d) = view delta $ n^.era
+  -- a = n ^?! traverse
+  -- in drawNote' (t,d,a)
 
 
 
@@ -3146,7 +3185,7 @@ sameType = undefined
 
 
 
--- #define INCLUDE_TESTS
+#define INCLUDE_TESTS
 #ifdef INCLUDE_TESTS
 -- Tests
 
