@@ -43,23 +43,52 @@ module Music.Parts (
         tutti,
         
         -- ** Instruments etc
+        piccoloFlute,
         flute,
+        altoFlute,
+        bassFlute,
+        
         oboe,
         corAnglais,
+        heckelphone,
+        
+        ebClarinet,
         clarinet,
+        aClarinet,
+        bassClarinet,
+        
         bassoon,
-        frenchHorn,
+        contraBassoon,
+        
+        horn,
+        piccoloTrumpet,
         trumpet,
+        bassTrumpet,
+        altoTrombone,
+        tenorTrombone,
         trombone,
+        bassTrombone,
         tuba,
+        
         timpani,
         piano,
+        
+        celesta,
+        glockenspiel,
+        vibraphone,
+        marimba,
+        xylophone,
+        xylorimba,
+        tubularBells,
+        dulcimer,
+        
+        accordion,
+        harmonica,
         
         violin,
         viola,
         cello,
-        bass,
-        tubularBells,
+        doubleBass,
 
         -- ** Default values
         defaultClef,
@@ -219,27 +248,58 @@ Part solo1 instr1 subp1 `containsPart` Part solo2 instr2 subp2 =
 containsSubpart :: Subpart -> Subpart -> Bool
 Subpart x `containsSubpart` Subpart y = y `Data.List.isPrefixOf` x
 
-solo instr = Part Solo instr def
-tutti instr = Part Tutti instr def
+solo instr      = Part Solo instr def
+tutti instr     = Part Tutti instr def
 
-flute = StdInstrument 73
-oboe = StdInstrument 68
-corAnglais = StdInstrument 69
-clarinet = StdInstrument 71
-bassoon = StdInstrument 70
-frenchHorn = StdInstrument 60
-trumpet = StdInstrument 56
-trombone = StdInstrument 57
-tuba = StdInstrument 58
-timpani = StdInstrument 47
-piano = StdInstrument 0
 
-violin = StdInstrument 40
-viola = StdInstrument 41
-cello = StdInstrument 42
-bass = StdInstrument 43
+piccoloFlute    = StdInstrument 72
+flute           = StdInstrument 73
+altoFlute       = OtherInstrument "Woodwind.Flute.Alto"
+bassFlute       = OtherInstrument "Woodwind.Flute.Bass"
 
-tubularBells = StdInstrument 14
+oboe            = StdInstrument 68
+corAnglais      = StdInstrument 69
+heckelphone     = OtherInstrument "Woodwind.DoubleReed.Heckelphone"
+
+ebClarinet      = OtherInstrument "Woodwind.SingleReed.Clarinet.Eb"
+clarinet        = StdInstrument 71
+aClarinet       = OtherInstrument "Woodwind.SingleReed.Clarinet.A"
+bassClarinet    = OtherInstrument "Woodwind.SingleReed.Clarinet.Bass"
+
+bassoon         = StdInstrument 70
+contraBassoon   = OtherInstrument "Woodwind.DoubleReed.Bassoon.Contra"
+
+horn            = StdInstrument 60
+piccoloTrumpet  = OtherInstrument "Brass.Trumpet.Piccolo"
+trumpet         = StdInstrument 56
+bassTrumpet     = OtherInstrument "Brass.Trumpet.Bass"
+altoTrombone    = OtherInstrument "Brass.Trombone.Alto"
+tenorTrombone   = StdInstrument 57
+trombone        = StdInstrument 57
+bassTrombone    = OtherInstrument "Brass.Trombone.Bass"
+tuba            = StdInstrument 58
+
+timpani         = StdInstrument 47
+piano           = StdInstrument 0
+
+celesta         = StdInstrument 8
+glockenspiel    = StdInstrument 9
+vibraphone      = StdInstrument 11
+marimba         = StdInstrument 12
+xylophone       = StdInstrument 13
+xylorimba       = OtherInstrument "Percussion.Pitched.Xylorimba"
+tubularBells    = StdInstrument 14
+dulcimer        = StdInstrument 15
+
+accordion       = StdInstrument 21
+harmonica       = StdInstrument 22
+
+violin          = StdInstrument 40
+viola           = StdInstrument 41
+cello           = StdInstrument 42
+doubleBass      = StdInstrument 43
+
+
 
 defaultClef :: Part -> Int
 defaultMidiNote :: Part -> Int
