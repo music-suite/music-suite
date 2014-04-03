@@ -50,7 +50,7 @@ import           Data.Traversable       (Traversable (..))
 import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Data.VectorSpace       hiding (Sum)
-import           Test.QuickCheck        (Arbitrary (..), Gen (..))
+-- import           Test.QuickCheck        (Arbitrary (..), Gen (..))
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal

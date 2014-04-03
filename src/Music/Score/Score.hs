@@ -64,7 +64,7 @@ import           Data.Semigroup
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.VectorSpace
-import           Test.QuickCheck        (Arbitrary (..), Gen (..))
+-- import           Test.QuickCheck        (Arbitrary (..), Gen (..))
 
 import           Data.Default
 import           Data.Foldable          (Foldable)
