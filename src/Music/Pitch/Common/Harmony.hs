@@ -15,6 +15,13 @@ import Data.Semigroup
 import Data.Set (Set)
 import qualified Data.Set as Set
 
+{-
+  TODO
+  Generalize simple like this:
+    > (number (asInterval (m9))-(fromIntegral $ signum (m9))) `mod` 7
+    
+-}
+
 -- | Whether the given interval is a (harmonic) dissonance.
 isDissonance :: Interval -> Bool
 isDissonance x = case number (simple x) of
