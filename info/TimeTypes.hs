@@ -2494,8 +2494,10 @@ deriving instance Floating a => Floating (Behavior a)
 
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
+
 instance IsInterval a => IsInterval (Behavior a) where
   fromInterval = pure . fromInterval
+
 instance IsDynamics a => IsDynamics (Behavior a) where
   fromDynamics = pure . fromDynamics
 
@@ -2772,6 +2774,15 @@ instance Alternative Score where
 instance MonadPlus Score where
   mzero = mempty
   mplus = mappend
+
+instance IsPitch a => IsPitch (Score a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Score a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Score a) where
+  fromDynamics = pure . fromDynamics
 
 instance Transformable (Score a) where
   transform t (Score xs) = Score (fmap (transform t) xs)
