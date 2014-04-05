@@ -124,8 +124,8 @@ instance HasLilypond Double                     where   getLilypond d = getLilyp
 instance Integral a => HasLilypond (Ratio a)    where   getLilypond d = getLilypond d . toInteger . round
 
 instance HasLilypond Integer where
-    getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond . (+ 12)
-    getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap (spellLilypond . (+ 12))
+    getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond
+    getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond
 
 instance HasLilypond a => HasLilypond (ChordT a) where
     getLilypond d = getLilypondChord d . getChordT
@@ -433,5 +433,5 @@ spellLilypond' p = Lilypond.Pitch (
     fromIntegral alt,
     fromIntegral oct
     )
-    where (pc,alt,oct) = spellPitch p
+    where (pc,alt,oct) = spellPitch (p + 72)
 

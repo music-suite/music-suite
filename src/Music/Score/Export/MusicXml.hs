@@ -344,5 +344,5 @@ spellMusicXml p = (
     if alt == 0 then Nothing else Just (fromIntegral alt),
     fromIntegral oct
     )
-    where (pc,alt,oct) = spellPitch p
+    where (pc,alt,oct) = spellPitch (p + 60)
 

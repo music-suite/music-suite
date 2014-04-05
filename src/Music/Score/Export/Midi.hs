@@ -133,8 +133,8 @@ class HasMidi a where
 
 instance HasMidi (Integer, Integer) where
     getMidi (p,v) = mempty
-        |> return (Midi.NoteOn 0 (fromIntegral p) (fromIntegral v))
-        |> return (Midi.NoteOff 0 (fromIntegral p) (fromIntegral v))
+        |> return (Midi.NoteOn 0 (fromIntegral $ p + 60) (fromIntegral v))
+        |> return (Midi.NoteOff 0 (fromIntegral $ p + 60) (fromIntegral v))
 
 instance HasMidi Midi.Message               where   getMidi = return
 instance HasMidi Int                        where   getMidi = getMidi . toInteger
