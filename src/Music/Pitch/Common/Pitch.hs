@@ -262,7 +262,7 @@ instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) =
         Pitch $ interval' (qual a) (c + 1)
             ^+^
-            (perfect octave^* fromIntegral (o - 4))
+            (perfect octave^* fromIntegral o)
         where
             qual Nothing  = 0
             qual (Just n) = round n
