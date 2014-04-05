@@ -244,15 +244,6 @@ name = toEnum . fromIntegral . pred . number . simple . getPitch
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
 
--- instance HasOctaves Pitch where
---     octaves = octaves . getPitch
--- 
--- instance HasSemitones Pitch where
---     semitones = semitones . getPitch
--- 
--- instance HasSteps Pitch where
---     steps = steps . getPitch
-
 -- | The same as 'c', but fixed to 'Pitch'. This is useful if you want
 --   to treat 'Pitch' as an affine space around middle C, that is /C4/ in Scientific Pitch Notation.
 middleC :: Pitch

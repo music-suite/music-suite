@@ -436,8 +436,8 @@ instance HasOctaves Interval where
 instance HasSemitones Interval where
     semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
 
-instance HasSteps Interval where
-    steps a = fromIntegral $ semitones a `mod` 12
+-- instance HasSteps Interval where
+    -- steps a = fromIntegral $ semitones a `mod` 12
 
 instance IsInterval Interval where
     fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)

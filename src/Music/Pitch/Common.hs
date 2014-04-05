@@ -21,7 +21,7 @@ module Music.Pitch.Common (
 
     -- ** Steps
     Steps,
-    HasSteps(..),
+    -- HasSteps(..),
 
     -- ** Semitones
     Semitones,

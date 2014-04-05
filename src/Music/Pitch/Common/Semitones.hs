@@ -23,7 +23,7 @@ module Music.Pitch.Common.Semitones (
 
         -- ** Steps
         Steps,
-        HasSteps(..),
+        -- HasSteps(..),
 
         -- ** Semitones
         Semitones,
@@ -84,8 +84,9 @@ newtype Steps = Steps { getSteps :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show     Steps where { show = show . getSteps }
-instance HasSteps Steps where { steps = id }
+-- instance HasSteps Steps where { steps = id }
 
+{-
 -- |
 -- Class of intervals that has a number of 'Steps'.
 --
@@ -100,6 +101,7 @@ class HasSteps a where
     -- > octaves (-m7)             =  -1
     --
     steps :: a -> Steps
+-}
 
 
 
