@@ -4,3 +4,4 @@ dist
 *.ly
 *.pdf
 *.xml
+*sandbox.config
