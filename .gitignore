@@ -7,3 +7,4 @@ dist
 *.tex
 *.texi
 .shelly
+*sandbox.config
