@@ -7,3 +7,4 @@ test.pdf
 *.ly
 *.xml
 dist
+cabal.sandbox.config
