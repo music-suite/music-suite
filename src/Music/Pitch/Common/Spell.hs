@@ -23,12 +23,12 @@ module Music.Pitch.Common.Spell (
         -- * Spelling type
         Spelling,
         spell,
-        spelledWith,
+        spelled,
         
         -- ** Standard spellings
-        modal,
-        sharps,
-        flats,
+        modally,
+        usingSharps,
+        usingFlats,
   ) where
 
 import Data.VectorSpace
@@ -69,9 +69,9 @@ import Music.Pitch.Common.Semitones
 --
 -- Examples:
 --
--- > spell sharps tritone   == _A4
--- > spell flats  tritone   == d5
--- > spell modal  tone      == _M2
+-- > spell usingSharps tritone   == _A4
+-- > spell usingFlats  tritone   == d5
+-- > spell modally    tone      == _M2
 --
 type Spelling = Semitones -> Number
 
@@ -100,21 +100,21 @@ spell spelling x = let
 -- |
 -- Flipped version of 'spell'. To be used infix, as in:
 --
--- > d5 `spelledWith` sharps
+-- > d5 `spelled` usingSharps
 --        
-spelledWith :: HasSemitones a => a -> Spelling -> Interval
-spelledWith = flip spell
+spelled :: HasSemitones a => a -> Spelling -> Interval
+spelled = flip spell
 
 -- |
 -- Spell using the most the most common accidentals. Double sharps and flats are not
 -- preserved.
 --
--- This spelling is particularly useful for modal music with C or F as tonic.
+-- This spelling is particularly useful for modal music where the tonic is C.
 --
 -- > c cs d eb e f fs g gs a bb b
 --
-modal :: Spelling
-modal = go
+modally :: Spelling
+modally = go
     where
         go 0  = 0
         go 1  = 0
@@ -134,8 +134,8 @@ modal = go
 --
 -- > c cs d ds e f fs g gs a as b
 --
-sharps :: Spelling
-sharps = go
+usingSharps :: Spelling
+usingSharps = go
     where
         go 0  = 0
         go 1  = 0
@@ -155,8 +155,8 @@ sharps = go
 --
 -- > c db d eb e f gb g ab a bb b
 --
-flats :: Spelling
-flats = go
+usingFlats :: Spelling
+usingFlats = go
     where
         go 0  = 0
         go 1  = 1
