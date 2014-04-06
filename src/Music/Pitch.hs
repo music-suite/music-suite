@@ -36,7 +36,7 @@ module Music.Pitch (
 
         -- -- | Pitch and intervals, as defined in Common Music Theory (CMT).
         -- --
-        -- --   Includes representation of common practice pitches and intervalssuch as /c sharp/, 
+        -- --   Includes representation of common practice pitches and intervals such as /c sharp/, 
         -- --   /diminished second/ and so on.
         module Music.Pitch.Common,
         

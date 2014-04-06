@@ -37,8 +37,6 @@ library
                         vector-space
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
-                        Music.Pitch.Alterable
-                        Music.Pitch.Augmentable
                         Music.Pitch.Common
                         Music.Pitch.Common.Interval
                         Music.Pitch.Common.Pitch
