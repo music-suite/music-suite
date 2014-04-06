@@ -43,6 +43,8 @@ import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Alterable
 import           Music.Score.Articulation
 import           Music.Score.Chord
 import           Music.Score.Combinators
@@ -440,19 +442,89 @@ deriving instance HasText a => HasText (SlideT a)
 
 
 
+-------------------------------------------------------------------------------------
+-- Literal instances
+-------------------------------------------------------------------------------------
 
+instance Alterable a => Alterable (Score a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (ChordT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (DynamicT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (SlideT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (TieT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (HarmonicT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (ArticulationT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (TextT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (TremoloT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Alterable a => Alterable (PartT n a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 
+instance Augmentable a => Augmentable (Score a) where
+    augment = fmap augment
+    diminish = fmap diminish
 
+instance Augmentable a => Augmentable (ChordT a) where
+    augment = fmap augment
+    diminish = fmap diminish
 
+instance Augmentable a => Augmentable (DynamicT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (SlideT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (TieT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (HarmonicT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (ArticulationT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (TextT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (TremoloT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (PartT n a) where
+    augment = fmap augment
+    diminish = fmap diminish
 
 
 
