@@ -36,7 +36,7 @@ module Music.Pitch.Common.Pitch (
 
         -- * Pitch
         Pitch,    
-        pitch,
+        mkPitch,
         name,
         accidental,
         asPitch
@@ -221,8 +221,8 @@ asPitch = id
 -- |
 -- Creates a pitch from name accidental.
 --
-pitch :: Name -> Accidental -> Pitch
-pitch name acc = Pitch $ interval' (fromIntegral acc) (fromEnum name + 1)
+mkPitch :: Name -> Accidental -> Pitch
+mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name + 1)
 
 -- |
 -- Returns the name of a pitch.
@@ -252,7 +252,7 @@ middleC = c
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) =
-        Pitch $ interval' (qual a) (c + 1)
+        Pitch $ mkInterval' (qual a) (c + 1)
             ^+^
             (perfect octave^* fromIntegral o)
         where

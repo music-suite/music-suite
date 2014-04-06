@@ -51,7 +51,7 @@ module Music.Pitch.Common.Interval (
         Interval,
 
         -- *** Creating intervals
-        interval,
+        mkInterval,
         perfect,
         major,
         minor,
@@ -81,7 +81,7 @@ module Music.Pitch.Common.Interval (
         -- * Utility
         asInterval,
         intervalDiff,
-        interval',
+        mkInterval',
   ) where
 
 import Data.Maybe
@@ -457,46 +457,46 @@ asInterval = id
 -- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
-interval :: Quality -> Number -> Interval
-interval quality number = interval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
+mkInterval :: Quality -> Number -> Interval
+mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
     where
         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
 
-interval' :: Int -> Int -> Interval
-interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
+mkInterval' :: Int -> Int -> Interval
+mkInterval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
     where
         (octave, diatonic) = (number - 1) `divMod` 7
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
 perfect :: Number -> Interval
-perfect = interval Perfect
+perfect = mkInterval Perfect
 
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
 major :: Number -> Interval
-major = interval Major
+major = mkInterval Major
 
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
 minor :: Number -> Interval
-minor = interval Minor
+minor = mkInterval Minor
 
 -- | Creates an augmented interval.
 augmented :: Number -> Interval
-augmented  = interval (Augmented 1)
+augmented  = mkInterval (Augmented 1)
 
 -- | Creates a diminished interval.
 diminished :: Number -> Interval
-diminished = interval (Diminished 1)
+diminished = mkInterval (Diminished 1)
 
 -- | Creates a doubly augmented interval.
 doublyAugmented :: Number -> Interval
-doublyAugmented  = interval (Augmented 2)
+doublyAugmented  = mkInterval (Augmented 2)
 
 -- | Creates a doubly diminished interval.
 doublyDiminished :: Number -> Interval
-doublyDiminished = interval (Diminished 2)
+doublyDiminished = mkInterval (Diminished 2)
 
 
 invertDiatonic :: Num a => a -> a
@@ -639,6 +639,6 @@ diatonicToChromatic = go
         go 6 = 11
 
 {-# DEPRECATED intervalDiff "This should be hidden" #-}
-{-# DEPRECATED interval'    "This should be hidden "#-}
+{-# DEPRECATED mkInterval'  "This should be hidden "#-}
 
 replicate' n = replicate (fromIntegral n)

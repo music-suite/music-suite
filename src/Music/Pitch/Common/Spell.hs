@@ -85,7 +85,7 @@ spell spelling x = let
     (octaves, steps) = semitones x `divMod` 12
     num  = fromIntegral (spelling steps)
     diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
-    in interval' diff (num + 1) ^+^ _P8^*(fromIntegral octaves)
+    in mkInterval' diff (num + 1) ^+^ _P8^*(fromIntegral octaves)
     where
         diatonicToChromatic = go
             where
