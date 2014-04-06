@@ -71,7 +71,7 @@ import Music.Pitch.Common.Semitones
 --
 -- > spell usingSharps tritone   == _A4
 -- > spell usingFlats  tritone   == d5
--- > spell modally    tone      == _M2
+-- > spell modally     tone      == _M2
 --
 type Spelling = Semitones -> Number
 
