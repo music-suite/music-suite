@@ -245,73 +245,73 @@ newtype Number = Number { getNumber :: Integer }
 instance Show Number where { show = show . getNumber }
 instance HasNumber Number where number = id
 
-unison      :: Number
-prime       :: Number
-second      :: Number
-third       :: Number
-fourth      :: Number
-fifth       :: Number
-sixth       :: Number
-seventh     :: Number
-octave      :: Number
-ninth       :: Number
-tenth       :: Number
-eleventh    :: Number
-twelfth     :: Number
-duodecim    :: Number
-thirteenth  :: Number
-fourteenth  :: Number
-fifteenth   :: Number
 
 -- | A synonym for @1@.
+unison      :: Number
 unison      = 1
 
 -- | A synonym for @2@.
+prime       :: Number
 prime       = 1
 
 -- | A synonym for @3@.
+second      :: Number
 second      = 2
 
 -- | A synonym for @4@.
+third       :: Number
 third       = 3
 
 -- | A synonym for @5@.
+fourth      :: Number
 fourth      = 4     
 
 -- | A synonym for @6@.
+fifth       :: Number
 fifth       = 5
 
 -- | A synonym for @7@.
+sixth       :: Number
 sixth       = 6
 
 -- | A synonym for @8@.
+seventh     :: Number
 seventh     = 7
 
 -- | A synonym for @9@.
+octave      :: Number
 octave      = 8
 
 -- | A synonym for @10@.
+ninth       :: Number
 ninth       = 9
 
 -- | A synonym for @11@.
+tenth       :: Number
 tenth       = 10
 
 -- | A synonym for @12@.
+eleventh    :: Number
 eleventh    = 11
 
 -- | A synonym for @13@.
+twelfth     :: Number
 twelfth     = 12
 
 -- | A synonym for @14@.
+duodecim    :: Number
 duodecim    = 12
 
 -- | A synonym for @15@.
+thirteenth  :: Number
 thirteenth  = 13
 
 -- | A synonym for @16@.
+fourteenth  :: Number
 fourteenth  = 14
 
 -- | A synonym for @17@.
+fifteenth   :: Number
 fifteenth   = 15
 
 class HasNumber a where
@@ -431,7 +431,6 @@ instance Augmentable Interval where
     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
 
--- instance HasOctaves Interval where
 -- |
 -- Returns the non-simple part of an interval.
 --
@@ -441,9 +440,6 @@ octaves = fst . separate
 
 instance HasSemitones Interval where
     semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
-
--- instance HasSteps Interval where
-    -- steps a = fromIntegral $ semitones a `mod` 12
 
 instance IsInterval Interval where
     fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
@@ -473,26 +469,33 @@ interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
+perfect :: Number -> Interval
 perfect = interval Perfect
 
 -- | Creates a major interval.
 --   If given a perfect number, constructs a perfect interval.
+major :: Number -> Interval
 major = interval Major
 
 -- | Creates a minor interval.
 --   If given a perfect number, constructs a diminished interval.
+minor :: Number -> Interval
 minor = interval Minor
 
 -- | Creates an augmented interval.
+augmented :: Number -> Interval
 augmented  = interval (Augmented 1)
 
 -- | Creates a diminished interval.
+diminished :: Number -> Interval
 diminished = interval (Diminished 1)
 
 -- | Creates a doubly augmented interval.
+doublyAugmented :: Number -> Interval
 doublyAugmented  = interval (Augmented 2)
 
 -- | Creates a doubly diminished interval.
+doublyDiminished :: Number -> Interval
 doublyDiminished = interval (Diminished 2)
 
 
