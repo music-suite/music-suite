@@ -17,10 +17,10 @@ module Music.Pitch.Common (
     -- * Enharmonic representation
     -- ** Octaves
     Octaves,
-    HasOctaves(..),
+    -- HasOctaves(..),
 
     -- ** Steps
-    Steps,
+    -- Steps,
     -- HasSteps(..),
 
     -- ** Semitones
@@ -124,6 +124,7 @@ module Music.Pitch.Common (
     isSimple,
     isCompound,
     separate,
+    octaves,
     simple,
 
     -- *** Inversion

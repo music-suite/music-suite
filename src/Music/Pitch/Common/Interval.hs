@@ -61,6 +61,7 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
+        octaves,
         isNegative,
         isPositive,
         isNonNegative,
@@ -430,8 +431,13 @@ instance Augmentable Interval where
     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
 
-instance HasOctaves Interval where
-    octaves = fst . separate
+-- instance HasOctaves Interval where
+-- |
+-- Returns the non-simple part of an interval.
+--
+-- > (perfect octave)^*x + y = z  iff  y = simple z
+--
+octaves = fst . separate
 
 instance HasSemitones Interval where
     semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
@@ -464,7 +470,6 @@ interval' :: Int -> Int -> Interval
 interval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
     where
         (octave, diatonic) = (number - 1) `divMod` 7
-
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.

@@ -19,7 +19,7 @@ module Music.Pitch.Common.Semitones (
         -- * Types
         -- ** Octaves
         Octaves,
-        HasOctaves(..),
+        -- HasOctaves(..),
 
         -- ** Steps
         Steps,

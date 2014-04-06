@@ -39,8 +39,7 @@ module Music.Pitch.Common.Pitch (
         pitch,
         name,
         accidental,
-        asPitch,
-        middleC,
+        asPitch
   ) where
 
 import Data.Maybe
@@ -231,7 +230,9 @@ pitch name acc = Pitch $ interval' (fromIntegral acc) (fromEnum name + 1)
 -- To convert a pitch to a numeric type, use 'octaves', 'steps' or 'semitones'
 -- on the relevant interval type, for example:
 --
--- @ semitones (a' .-. 'middleC') @
+-- @
+-- semitones ('a\'' .-. 'c')
+-- @
 --
 name :: Pitch -> Name
 name = toEnum . fromIntegral . pred . number . simple . getPitch
