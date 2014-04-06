@@ -87,11 +87,11 @@ instance Alterable Accidental where
 
 -- | 
 -- Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
--- Requires @FlexibleInstances@.
 --
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
     fromPitch l 1       = sharpen (fromPitch l)
     fromPitch l (-1)    = flatten (fromPitch l)
+-- Requires FlexibleInstances
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
 
