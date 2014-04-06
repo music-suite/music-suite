@@ -14,127 +14,130 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common (
+    -- -- * Enharmonic representation
+    -- -- ** Octaves
+    -- Octaves,
+    -- -- HasOctaves(..),
+    -- 
+    -- -- ** Steps
+    -- -- Steps,
+    -- -- HasSteps(..),
+    -- 
+    -- -- ** Semitones
+    -- Semitones,
+    -- HasSemitones(..),
+    -- semitone,
+    -- tone,
+    -- ditone,
+    -- tritone,
+    -- isSemitone,
+    -- isTone,
+    -- isTritone,
+    -- 
+    -- -- ** Enharmonic equivalence
+    -- (=:=),
+    -- (/:=),
+    -- 
+    -- -- * Pitches
+    -- -- ** Name type
+    -- Name(..),
+    -- 
+    -- -- ** Accidental  type
+    -- Accidental,
+    -- doubleFlat, 
+    -- flat, 
+    -- natural, 
+    -- sharp, 
+    -- doubleSharp,
+    -- 
+    -- -- *** Inspecting accidentals
+    -- isNatural,
+    -- isSharpened,
+    -- isFlattened,
+    -- isStandard,
+    -- 
+    -- -- ** Pitch type
+    -- Pitch,    
+    -- pitch,
+    -- name,
+    -- accidental,
+    -- asPitch,
+    -- 
+    -- -- module Music.Pitch.Common.Name,
+    -- -- module Music.Pitch.Common.Accidental,
+    -- -- module Music.Pitch.Common.Pitch,
+    -- 
+    -- -- * Intervals
+    -- -- ** Number type
+    -- Number,
+    -- HasNumber(..),   
+    -- unison,
+    -- prime,
+    -- second,
+    -- third,
+    -- fourth,
+    -- fifth,
+    -- sixth,
+    -- seventh,
+    -- octave,
+    -- ninth,
+    -- tenth,
+    -- twelfth, 
+    -- duodecim,
+    -- thirteenth,
+    -- fourteenth,
+    -- fifteenth,
+    -- 
+    -- -- ** Quality type
+    -- Quality(..),    
+    -- HasQuality(..),
+    -- invertQuality,
+    -- isPerfect,
+    -- isMajor,
+    -- isMinor,
+    -- isAugmented,
+    -- isDiminished,
+    -- 
+    -- -- ** Interval type
+    -- Interval,
+    -- 
+    -- -- *** Creating intervals
+    -- interval,
+    -- perfect,
+    -- major,
+    -- minor,
+    -- augmented,
+    -- diminished,
+    -- doublyAugmented,
+    -- doublyDiminished,
+    -- asInterval,
+    -- 
+    -- -- *** Inspecting intervals
+    -- isNegative,
+    -- isPositive,
+    -- isNonNegative,
+    -- isPerfectUnison,
+    -- isStep,
+    -- isLeap,
+    -- 
+    -- -- *** Simple and compound intervals
+    -- isSimple,
+    -- isCompound,
+    -- separate,
+    -- octaves,
+    -- simple,
+    -- 
+    -- -- *** Inversion
+    -- invert,  
+
     -- * Enharmonic representation
-    -- ** Octaves
-    Octaves,
-    -- HasOctaves(..),
+    module Music.Pitch.Common.Semitones,
 
-    -- ** Steps
-    -- Steps,
-    -- HasSteps(..),
+    -- * Non-enharmonic representation
+    module Music.Pitch.Common.Interval,
+    module Music.Pitch.Common.Pitch,
 
-    -- ** Semitones
-    Semitones,
-    HasSemitones(..),
-    semitone,
-    tone,
-    ditone,
-    tritone,
-    isSemitone,
-    isTone,
-    isTritone,
-    
-    -- ** Enharmonic equivalence
-    (=:=),
-    (/:=),
-
-    -- * Pitches
-    -- ** Name type
-    Name(..),
-
-    -- ** Accidental  type
-    Accidental,
-    doubleFlat, 
-    flat, 
-    natural, 
-    sharp, 
-    doubleSharp,
-
-    -- *** Inspecting accidentals
-    isNatural,
-    isSharpened,
-    isFlattened,
-    isStandard,
-
-    -- ** Pitch type
-    Pitch,    
-    pitch,
-    name,
-    accidental,
-    asPitch,
-
-    -- module Music.Pitch.Common.Name,
-    -- module Music.Pitch.Common.Accidental,
-    -- module Music.Pitch.Common.Pitch,
-
-    -- * Intervals
-    -- ** Number type
-    Number,
-    HasNumber(..),   
-    unison,
-    prime,
-    second,
-    third,
-    fourth,
-    fifth,
-    sixth,
-    seventh,
-    octave,
-    ninth,
-    tenth,
-    twelfth, 
-    duodecim,
-    thirteenth,
-    fourteenth,
-    fifteenth,
-
-    -- ** Quality type
-    Quality(..),    
-    HasQuality(..),
-    invertQuality,
-    isPerfect,
-    isMajor,
-    isMinor,
-    isAugmented,
-    isDiminished,
-
-    -- ** Interval type
-    Interval,
-
-    -- *** Creating intervals
-    interval,
-    perfect,
-    major,
-    minor,
-    augmented,
-    diminished,
-    doublyAugmented,
-    doublyDiminished,
-    asInterval,
-
-    -- *** Inspecting intervals
-    isNegative,
-    isPositive,
-    isNonNegative,
-    isPerfectUnison,
-    isStep,
-    isLeap,
-
-    -- *** Simple and compound intervals
-    isSimple,
-    isCompound,
-    separate,
-    octaves,
-    simple,
-
-    -- *** Inversion
-    invert,
-
-    -- module Music.Pitch.Common.Number,
-    -- module Music.Pitch.Common.Quality,
-    -- module Music.Pitch.Common.Interval,
-
-    -- * Miscellaneous
+    -- * Utility
     module Music.Pitch.Common.Spell,
     module Music.Pitch.Common.Harmony,
 )
