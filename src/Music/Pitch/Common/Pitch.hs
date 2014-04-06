@@ -19,16 +19,16 @@
 module Music.Pitch.Common.Pitch (
         -- * Accidentals
         Accidental,
-        doubleFlat, 
-        flat, 
         natural, 
+        flat, 
         sharp, 
+        doubleFlat, 
         doubleSharp,
 
         -- ** Inspecting accidentals
         isNatural,
-        isSharpened,
         isFlattened,
+        isSharpened,
         isStandard,
 
         -- ** Name
@@ -64,7 +64,7 @@ import Music.Pitch.Common.Semitones
 -- An accidental is either flat, natural or sharp.
 --
 -- This representation allows for an arbitrary number of flats or sharps rather than just
--- single (the ♯ and ♭ symbols) and double (i.e. the /x/ and ♭♭ symbols).
+-- single and double.
 --
 -- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones, 
 -- i.e. a double flat is @-2@, natural @0@ and so on.
@@ -123,7 +123,7 @@ isFlattened = (< 0)
 
 
 -- | Returns whether this is a standard accidental, i.e.
---   either a double flat, flat, natural, sharp or doubl sharp.
+--   either a double flat, flat, natural, sharp or double sharp.
 isStandard :: Accidental -> Bool
 isStandard a = abs a < 2
 
