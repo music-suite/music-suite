@@ -1,7 +1,7 @@
 
-TRANSFORM=transf +RTS -N4
-TRANSFORM_PDF=transf --format=pdf
-RESOLVE_LINKS=hslinks
+TRANSFORM    =GHC_PACKAGE_PATH=`music-util package-path` transf +RTS -N4
+TRANSFORM_PDF=GHC_PACKAGE_PATH=`music-util package-path` transf --format=pdf
+RESOLVE_LINKS=GHC_PACKAGE_PATH=`music-util package-path` hslinks
 PANDOC=pandoc
 CABAL_FILES=\
 	../../music-score/music-score.cabal \
