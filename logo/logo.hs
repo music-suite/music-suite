@@ -19,7 +19,10 @@ logo = mempty
     -- <> translate (r2 (5.5,1.8)) (scale 1.8 (scale (-1) eightNote))
     <> trig 
     <> translate (r2 (-2,4)) (scaleY 3 $ scaleX 0.45 $ sign) 
-    <> fc white (square 25) 
+    <> (translateX 1.5 $ translateY 2.75 $ lc crimson $ lw 0.1 $ hrule 10)
+    <> (translateX 1.5 $ translateY 1.75 $ lc crimson $ lw 0.1 $ hrule 10)
+    <> (translateX 1.5 $ translateY 0.75 $ lc crimson $ lw 0.1 $ hrule 10)
+    <> (fc white $ strut 25) 
 
 sign = lc steelblue $ drawBehavior (\t -> sin ((t*tau)/2) * sin ((t*tau)/10))
 eightNote = fc black $ text' "\x1D160"
