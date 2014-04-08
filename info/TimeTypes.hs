@@ -27,6 +27,7 @@ module TimeTypes (
         -- unclipped,
 
         -- * Data.Functor.Rep.Lens
+        -- $dataFunctorRepLens
         (!),
         tabulated,
         retabulated,
@@ -465,13 +466,13 @@ addLim = zipClippedWith (+)
 
 
 
-
-
+-- $dataFunctorRepLens
+-- Provides access to the definition in "Data.Functor.Rep" in terms of "Control.Lens".
 
 -- |
 -- Index a representable functor.
 --
--- This is an infix alias for 'index' from "Data.Functor.Rep".
+-- This is an infix alias for 'index'.
 --
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
