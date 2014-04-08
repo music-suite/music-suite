@@ -261,7 +261,6 @@ module TimeTypes (
         level,
         fadeIn,
         fadeOut,
-        fade,
 
         -- * Music.Score.Articulation
         Articulation,
@@ -314,8 +313,9 @@ import           Control.Arrow                (first, second, (***))
 import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, index, parts, above, below,
-                                               reversed, transform, under, (|>), inside, Level)
+import           Control.Lens                 hiding (Indexable, index, parts, above, 
+                                               below, reversed, transform, under, (|>),
+                                               inside, Level)
 import           Control.Monad
 import           Control.Monad.Free
 import qualified Data.List
@@ -417,12 +417,20 @@ unsafeToClipped   = fromMaybe (error "Outside 0-1") . (^? clipped)
 fromClipped = (^. unclipped)
 
 clipped :: (Num a, Ord a) => Prism' a (Clipped a)
-clipped = prism unsafeGetClipped (\x -> if 0 <= x && x <= 1 then Right (UnsafeClip x) else Left x)
+clipped = prism unsafeGetClipped $
+  \x -> if 0 <= x && x <= 1 
+      then Right (UnsafeClip x) 
+      else Left x
 
 unclipped :: (Num a, Ord a) => Getter (Clipped a) a
 unclipped = re clipped
 
-zipClippedWith :: (Num a, Ord a, Num b, Ord b, Num c, Ord c) => (a -> b -> c) -> Clipped a -> Clipped b -> Maybe (Clipped c)
+zipClippedWith 
+  :: (Num a, Ord a, 
+      Num b, Ord b, 
+      Num c, Ord c) 
+  => (a -> b -> c) 
+  -> Clipped a -> Clipped b -> Maybe (Clipped c)
 zipClippedWith f a b = ((a^.unclipped) `f` (b^.unclipped))^? clipped
 
 addLim = zipClippedWith (+)
@@ -1296,50 +1304,51 @@ inside x (view range -> (t, u)) = t <= x && x <= u
 
 
 
--- |
--- Pitch type.
---
-type family Pitch             (s :: *) :: * -- Pitch s   = a
+
+
+-- 
+-- TODO
+-- 
+-- We should give the lens in the each aspect class another name and use aliases 
+-- :info prints in GHCI
+-- 
+-- (We can't do much about the :type prints) 
+-- 
+
 
 -- |
 -- Pitch type.
 --
-type family SetPitch (b :: *) (s :: *) :: * -- Pitch b s = t
+type family Pitch (s :: *) :: * 
 
--- class Has s t a b |
---   s -> a,
---   -- t -> b,
---   s b -> t,
---   -- t a -> s
-
--- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
--- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+-- |
+-- Pitch type.
+--
+type family SetPitch (b :: *) (s :: *) :: *
 
 -- |
 -- Class of types that provide a single pitch.
 --
 class HasPitches s t => HasPitch s t where
 
-  -- |
-  -- Pitch type.
-  --
+  -- | Access the pitch.
   pitch :: Lens s t (Pitch s) (Pitch t)
+
+-- |
+-- Class of types that provide a pitch traversal.
+--
+class (Transformable (Pitch s),
+       Transformable (Pitch t),
+       SetPitch (Pitch t) s ~ t) => HasPitches s t where
+
+  -- | Access all pitches.
+  pitches :: Traversal s t (Pitch s) (Pitch t)
 
 -- |
 -- Pitch type.
 --
 pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
 pitch' = pitch
-
--- |
--- Class of types that provide a pitch traversal.
---
-class (Transformable (Pitch s), Transformable (Pitch t), SetPitch (Pitch t) s ~ t) => HasPitches s t where
-
-  -- |
-  -- Pitch type.
-  --
-  pitches :: Traversal s t (Pitch s) (Pitch t)
 
 -- |
 -- Pitch type.
@@ -1382,7 +1391,6 @@ instance HasPitch Double Double where
 instance HasPitches Double Double where
   pitches = ($)
 
--- TODO move
 instance Transformable Char
 type instance Pitch Char = Char
 type instance SetPitch a Char = a
@@ -1424,8 +1432,6 @@ instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
   pitch = _Wrapped . underLD pitch
 
-
-
 -- |
 -- Associated interval type.
 --
@@ -1434,21 +1440,9 @@ type Interval a = Diff (Pitch a)
 -- |
 -- Class of types that can be transposed.
 --
-type Transposable a = (HasPitches a a, VectorSpace (Interval a), AffineSpace (Pitch a), IsInterval (Interval a), IsPitch (Pitch a))
-
-{-
-class Transposable a => Transposable' a where
--- instance Transposable' Int  
--- instance Transposable' Integer  
--- instance Transposable' Float  
--- instance Transposable' Double 
-instance Transposable' a => Transposable' [a]
-instance Transposable' a => Transposable' (Score a)
--- instance (Transposable' a, HasPitch a a) => Transposable' (Behavior a)  
-instance Transposable' a => Transposable' (Note a)   
-instance Transposable' a => Transposable' (c, a)
--}
-
+type Transposable a = (HasPitches a a, 
+                       VectorSpace (Interval a), AffineSpace (Pitch a), 
+                       IsInterval (Interval a), IsPitch (Pitch a))
 
 -- |
 -- Transpose up.
@@ -1481,11 +1475,9 @@ invertPitches :: Transposable a => Pitch a -> a -> a
 invertPitches p = pitches %~ reflectThrough p
 
 -- |
--- TODO generalize to any type where we can traverse phrases of something that has pitch
 augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
 augmentIntervals = undefined
-
--- TODO invert diatonically
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
 
 -- |
 -- Transpose up by the given number of octaves.
@@ -1500,6 +1492,7 @@ octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
 octavesDown x = down (_P8^*x)
 
 -- TODO augment/diminish intervals (requires withPrev or similar)
+-- TODO invert diatonically
 -- TODO rotatePitch (requires some kind of separate traversal)
 
 
@@ -1514,22 +1507,12 @@ octavesDown x = down (_P8^*x)
 -- |
 -- Dynamics type.
 --
-type family Dynamic             (s :: *) :: * -- Dynamic s   = a
+type family Dynamic (s :: *) :: *
 
 -- |
 -- Dynamic type.
 --
-type family SetDynamic (b :: *) (s :: *) :: * -- Dynamic b s = t
-
-
--- class Has s t a b |
---   s -> a,
---   -- t -> b,
---   s b -> t,
---   -- t a -> s
-
--- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
--- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+type family SetDynamic (b :: *) (s :: *) :: *
 
 -- |
 -- Class of types that provide a single dynamic.
@@ -1537,29 +1520,23 @@ type family SetDynamic (b :: *) (s :: *) :: * -- Dynamic b s = t
 class (HasDynamics s t) => HasDynamic s t where
 
   -- |
-  -- Dynamic type.
-  --
   dynamic :: Lens s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Class of types that provide a dynamic traversal.
+--
+class (Transformable (Dynamic s), 
+       Transformable (Dynamic t), 
+       SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+
+  -- | Dynamic type.
+  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
 
 -- |
 -- Dynamic type.
 --
 dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
 dynamic' = dynamic
-
--- |
--- Class of types that provide a dynamic traversal.
---
-class (Transformable (Dynamic s), Transformable (Dynamic t), SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
-
-  -- |
-  -- Dynamic type.
-  --
-  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
-
--- XXX we should give the lens in the class another name
--- and use an alias like this to get better :info prints in GHCI
--- (We can't do much about the :type prints)
 
 -- |
 -- Dynamic type.
@@ -1652,18 +1629,9 @@ type Level a = Diff (Dynamic a)
 -- |
 -- Class of types that can be transposed.
 --
-type Attenuable a = (HasDynamics a a, VectorSpace (Level a), AffineSpace (Dynamic a), IsDynamics (Dynamic a))
-
-{-
-class Attenuable a => Attenuable' a where
-
-instance Attenuable' Float where  
-instance Attenuable' Double where  
--- instance Attenuable' a => Attenuable' [b] where
-instance Attenuable' a => Attenuable' (Score a) where  
-instance Attenuable' a => Attenuable' (Note a)  where
-instance Attenuable' a => Attenuable' (c, a) where
--}
+type Attenuable a = (HasDynamics a a, 
+                     VectorSpace (Level a), AffineSpace (Dynamic a), 
+                     IsDynamics (Dynamic a))
 
 -- |
 -- Transpose up.
@@ -1689,9 +1657,6 @@ volume a = dynamics *~ a
 level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
--- fadeIn :: Duration -> a -> a
--- fadeIn ()
-
 -- |
 -- Fade in.
 --
@@ -1704,8 +1669,6 @@ fadeIn t = dynamics *~ (t `stretch` unit)
 fadeOut :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
 fadeOut t = dynamics *~ (t `stretch` rev unit)
 
-fade = undefined
-
 
 
 
@@ -1717,48 +1680,36 @@ fade = undefined
 -- |
 -- Articulations type.
 --
-type family Articulation             (s :: *) :: * -- Articulation s   = a
+type family Articulation (s :: *) :: *
 
 -- |
 -- Articulation type.
 --
-type family SetArticulation (b :: *) (s :: *) :: * -- Articulation b s = t
-
-
--- class Has s t a b |
---   s -> a,
---   -- t -> b,
---   s b -> t,
---   -- t a -> s
-
--- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
--- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+type family SetArticulation (b :: *) (s :: *) :: *
 
 -- |
 -- Class of types that provide a single articulation.
 --
 class (HasArticulations s t) => HasArticulation s t where
 
-  -- |
-  -- Articulation type.
-  --
+  -- | Articulation type.
   articulation :: Lens s t (Articulation s) (Articulation t)
+
+-- |
+-- Class of types that provide a articulation traversal.
+--
+class (Transformable (Articulation s),
+       Transformable (Articulation t), 
+       SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+
+  -- | Articulation type.
+  articulations :: Traversal s t (Articulation s) (Articulation t)
 
 -- |
 -- Articulation type.
 --
 articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
 articulation' = articulation
-
--- |
--- Class of types that provide a articulation traversal.
---
-class (Transformable (Articulation s), Transformable (Articulation t), SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
-
-  -- |
-  -- Articulation type.
-  --
-  articulations :: Traversal s t (Articulation s) (Articulation t)
 
 -- |
 -- Articulation type.
@@ -1840,54 +1791,39 @@ legato = undefined
 
 
 
-
-
-
 -- |
 -- Parts type.
 --
-type family Part             (s :: *) :: * -- Part s   = a
+type family Part (s :: *) :: * -- Part s   = a
 
 -- |
 -- Part type.
 --
 type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
 
-
--- class Has s t a b |
---   s -> a,
---   -- t -> b,
---   s b -> t,
---   -- t a -> s
-
--- type Lens      s t a b = forall f. Functor f     => (a -> f b) -> s -> f t
--- type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
-
 -- |
 -- Class of types that provide a single part.
 --
 class (HasParts s t) => HasPart s t where
 
-  -- |
-  -- Part type.
-  --
+  -- | Part type.
   part :: Lens s t (Part s) (Part t)
+
+-- |
+-- Class of types that provide a part traversal.
+--
+class (Transformable (Part s), 
+       Transformable (Part t), 
+       SetPart (Part t) s ~ t) => HasParts s t where
+
+  -- | Part type.
+  parts :: Traversal s t (Part s) (Part t)
 
 -- |
 -- Part type.
 --
 part' :: (HasPart s t, s ~ t) => Lens' s (Part s)
 part' = part
-
--- |
--- Class of types that provide a part traversal.
---
-class (Transformable (Part s), Transformable (Part t), SetPart (Part t) s ~ t) => HasParts s t where
-
-  -- |
-  -- Part type.
-  --
-  parts :: Traversal s t (Part s) (Part t)
 
 -- |
 -- Part type.
