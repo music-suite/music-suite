@@ -75,7 +75,6 @@ module TimeTypes (
         -- $dataFunctorRepLens
         (!),
         tabulated,
-        retabulated,
 
         -- * Music.Time.Meta
         Meta,
@@ -213,8 +212,8 @@ module TimeTypes (
         -- focusingOn,
         -- TODO
         -- appendSegment,
-        appendSegments,
-        concatSegments,
+        appendS,
+        concatS,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -230,7 +229,7 @@ module TimeTypes (
         trim,
         trimBefore,
         trimAfter,
-        concatBehaviors,
+        concatB,
         -- cross,
         -- noteToBehavior,
         -- noteToBehavior',
@@ -262,17 +261,17 @@ module TimeTypes (
         -- * Music.Time.Stretched
         Stretched,
         stretched,
-        stretchedValue,
+        valueS,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
-        delayedValue,
+        valueD,
 
         -- * Music.Time.Note
         Note,
         note,
-        noteValue,
+        value,
 
         -- * Music.Time.Bound
         Bound,
@@ -284,7 +283,7 @@ module TimeTypes (
 
 
         -- * Music.Time.Phrase
-        Phrase,
+        -- Phrase,
 
         -- * Music.Time.Voice
         Voice,
@@ -598,24 +597,10 @@ infixl 6 !
 --
 -- @
 -- 'tabulated' = 'iso' 'tabulate' 'index'
--- 'tabulated' = 'from' 'retabulated'
 -- @
 --
 tabulated :: (Representable f, Representable g) => Iso (Rep f -> a) (Rep g -> b) (f a) (g b)
 tabulated = iso tabulate index
--- tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
-
--- |
--- The reverse isomorpism between a representable functor and its representation.
---
--- @
--- 'retabulated' = 'iso' 'index' 'tabulate'
--- 'retabulated' = 'from' 'tabulated'
--- @
---
-retabulated :: (Representable f, Representable g) => Iso (f a) (g b) (Rep f -> a) (Rep g -> b)
-retabulated = iso index tabulate
-
 
 
 
@@ -2314,15 +2299,15 @@ instance Reversible (Delayed a) where
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-delayedValue :: (Transformable a, Transformable b) 
+valueD :: (Transformable a, Transformable b) 
   => Lens 
       (Delayed a) (Delayed b) 
       a b
-delayedValue = lens runDelayed (flip $ _delayed . const)
+valueD = lens runDelayed (flip $ _delayed . const)
   where
     _delayed f (Delayed (t,x)) = 
       Delayed (t, f `whilstDelay` t $ x)
-{-# INLINE delayedValue #-}
+{-# INLINE valueD #-}
 
 
 
@@ -2378,26 +2363,26 @@ deriving instance Show a => Show (Stretched a)
 -- |
 -- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
-stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-stretchedValue = lens runStretched (flip $ _stretched . const)
+valueS :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+valueS = lens runStretched (flip $ _stretched . const)
   where
     _stretched f (Stretched (d,x)) = 
       Stretched (d, f `whilstStretch` d $ x)
-{-# INLINE stretchedValue #-}
+{-# INLINE valueS #-}
 
 
 -- |
 -- A 'Note' is a value with a known 'era'.
 --
--- You can use 'noteValue' to apply a function in the context of the transformation,
+-- You can use 'value' to apply a function in the context of the transformation,
 -- i.e.
 --
 -- @
--- over noteValue (* time) (delay 2 $ return time)
+-- over value (* time) (delay 2 $ return time)
 -- @
 --
 -- @
--- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
+-- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
 -- @
 --
 -- /Semantics/
@@ -2456,16 +2441,16 @@ note = _Unwrapped
 -- |
 -- View the value in the note.
 --
-noteValue :: (Transformable a, Transformable b) => 
+value :: (Transformable a, Transformable b) => 
   Lens 
     (Note a) (Note b) 
     a b
-noteValue = lens runNote (flip $ mapNote . const)
+value = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
 
-{-# INLINE noteValue #-}
+{-# INLINE value #-}
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -2788,8 +2773,8 @@ appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp 
 -- |
 -- Append a voice of segments to a single stretched segment.
 --
-appendSegments :: Voice (Segment a) -> Stretched (Segment a)
-appendSegments = foldr1 appendSegment . toListOf voiceElements
+appendS :: Voice (Segment a) -> Stretched (Segment a)
+appendS = foldr1 appendSegment . toListOf voiceElements
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
@@ -3102,7 +3087,7 @@ turnOff = switch 0 1 0
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded.noteValue) . bounds 0 1
+    get = view (from bounded.value) . bounds 0 1
     set x = splice x . (view bounded) . pure
 
 
@@ -3152,18 +3137,18 @@ concatSegment = trim . view bounded
 -- |
 -- Concatenate a score of (possibly overlapping) segments.
 --
--- See also 'concatBehaviors' and 'continous'.
+-- See also 'concatB' and 'continous'.
 --
-concatSegments :: Monoid a => Score (Segment a) -> Behavior a
-concatSegments = mconcat . map concatSegment . view notes
+concatS :: Monoid a => Score (Segment a) -> Behavior a
+concatS = mconcat . map concatSegment . view notes
 
 -- |
 -- Concatenate a score of (possibly overlapping) segments.
 --
 -- See also 'concatSegment' and 'continous'.
 --
-concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehaviors = concatSegments . fmap (view focusing)
+concatB :: Monoid a => Score (Behavior a) -> Behavior a
+concatB = concatS . fmap (view focusing)
 
 
 
@@ -3670,10 +3655,15 @@ discrete = continous . fmap pure
 -- |
 -- Realize a 'Reactive' value as an continous behavior.
 --
--- See also 'concatSegment' and 'concatBehaviors'.
+-- See also 'concatSegment' and 'concatB'.
 --
 continous :: Reactive (Segment a) -> Behavior a
 
+-- |
+-- Realize a 'Reactive' value as an continous behavior.
+--
+-- See also 'concatSegment' and 'concatB'.
+--
 continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
 continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 
