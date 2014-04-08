@@ -209,6 +209,12 @@ module TimeTypes (
         appendSegment,
         concatSegment,
 
+        -- * Music.Time.Reactive
+        Reactive(..),
+        initial,
+        final,
+        updates,  
+
         -- * Music.Time.Behavior
         Behavior,
         -- ** Examples
@@ -236,6 +242,9 @@ module TimeTypes (
         concatBehavior,
         concatBehaviors,
 
+        -- * Music.Time.Phrase
+        Phrase,
+
         -- * Music.Time.Voice
         Voice,
         -- voiceNotes,
@@ -255,11 +264,6 @@ module TimeTypes (
         concatVoices,
 -}
 
-        -- * Music.Time.Reactive
-        Reactive(..),
-        initial,
-        final,
-        updates,
 
         -- * Music.Time.Score
         Score,
@@ -407,7 +411,7 @@ import qualified Data.Sequence                as Seq
 import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
-import           Data.VectorSpace
+import           Data.VectorSpace hiding (Sum(..))
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 
@@ -2603,20 +2607,43 @@ notTime = stretch 10 (stretch 2 (4**time-1) `min` 1)*10
 notTime2 = (rev `whilst` undelaying 4.5) notTime
 
 -- |
--- A 'Behavior' is a time-varying value.
+-- A 'Behavior' is a value varying over time.
+-- 
+-- /Semantics/
 --
 -- @
--- type 'Behavior' a => 'Time' -> a
+-- 'Time' -> a
 -- @
 --
--- While a 'Behavior' can not be placed (as it has no endpoints), we can focus on a
--- certain part of a behavior by placing it inside 'Bounds'.
---
--- TODO document
+-- We can 'focusOn' any part of a behavior, thereby obtaining a 'Segment'.
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
--- Defined throughout, "focused" on 0-1
 
+--
+-- $musicTimeBehaviorExamples
+--
+-- 'behavior' let us convert any function to a behavior using '^.' or 'view'.
+--
+-- We can unwrap a behavior using @'from' 'behavior'@ or '!^'.
+--
+-- A sine function
+--
+-- @
+-- ('sin' . (* 'tau') . 'realToFrac')^.'behavior'
+-- @
+--
+-- A behavior that switches from (-1) to 1 at time 0
+--
+-- @
+-- (\\t -> if t < 0 then (-1) else 1)^.'behavior'
+-- @
+--
+-- A time-varying function applied to a value
+--
+-- @
+-- ('+')^.'behavior' '<*>' 10
+-- @
+-- 
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
@@ -2758,34 +2785,6 @@ behavior = tabulated
 unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 unbehavior = from behavior
 
---
--- $musicTimeBehaviorExamples
---
--- 'behavior' let us convert any function to a behavior using '^.' or 'view'.
---
--- We can unwrap a behavior using @'from' 'behavior'@ or '!^'.
---
--- A sine function
---
--- @
--- ('sin' . (* 'tau') . 'realToFrac')^.'behavior'
--- @
---
--- A behavior that switches from (-1) to 1 at time 0
---
--- @
--- (\\t -> if t < 0 then (-1) else 1)^.'behavior'
--- @
---
--- A time-varying function applied to a value
---
--- @
--- ('+')^.'behavior' '<*>' 10
--- @
---
-
-
--- TODO find a place for this
 --
 -- @
 -- ('const' x)^.'behavior' ! t == x   forall t
@@ -2958,9 +2957,14 @@ noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
 
 noteToBehavior' :: Monoid a => Note a -> Behavior a
 noteToBehavior' = concatBehavior . fmap pure
-    
+
+-- XXX this is the thing    
 concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
-concatBehavior = concatBehaviors . view (re singleNote)
+concatBehavior = splice mempty . noteToBounds
+
+-- TODO unify with bounded Iso
+noteToBounds :: Note (Behavior a) -> Bounds (Behavior a)
+noteToBounds (view (from note) -> (s,x)) = bounding s (transform s x)
 
 -- |
 -- This
@@ -3096,6 +3100,15 @@ filterEvents f = error "No filterEvents"
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = error "No mapFilterEvents"
+
+
+
+
+
+-- * Music.Time.Phrases
+newtype Phrase p a = Phrase (p, [Stretched a])
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
 
 
 -- |
