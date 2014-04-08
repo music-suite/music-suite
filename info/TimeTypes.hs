@@ -2821,9 +2821,9 @@ switch t rx ry = switch3 t rx ry ry
 --
 switch3 :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
-    LT -> rx ! u
-    EQ -> ry ! u
-    GT -> rz ! u
+  LT -> rx ! u
+  EQ -> ry ! u
+  GT -> rz ! u
 
 -- |
 -- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
@@ -3037,8 +3037,8 @@ voiceList = error "No voiceList"
 --
 mergeEqualNotes :: Eq a => Voice a -> Voice a
 mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
-    where
-        f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
+  where
+    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
 
 
 {-
