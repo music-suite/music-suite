@@ -1713,7 +1713,7 @@ pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
 
-#define PRIM_PITCH_INSTANCE(TYPE) \
+#define PRIM_PITCH_INSTANCE(TYPE)       \
                                         \
 type instance Pitch TYPE = TYPE;        \
 type instance SetPitch a TYPE = a;      \
@@ -1727,13 +1727,14 @@ instance (Transformable a, a ~ Pitch a) \
   pitches = ($)              } ;        \
 
 
+PRIM_PITCH_INSTANCE(())
 PRIM_PITCH_INSTANCE(Bool)
+PRIM_PITCH_INSTANCE(Ordering)
+PRIM_PITCH_INSTANCE(Char)
 PRIM_PITCH_INSTANCE(Int)
 PRIM_PITCH_INSTANCE(Integer)
 PRIM_PITCH_INSTANCE(Float)
 PRIM_PITCH_INSTANCE(Double)
-PRIM_PITCH_INSTANCE(Char)
-PRIM_PITCH_INSTANCE(())
 
 type instance Pitch (c,a)               = Pitch a
 type instance SetPitch b (c,a)          = (c,SetPitch b a)
@@ -1895,53 +1896,27 @@ dynamic' = dynamic
 dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
 dynamics' = dynamics
 
-type instance Dynamic Bool = Bool
-type instance SetDynamic a Bool = a
+#define PRIM_DYNAMIC_INSTANCE(TYPE)       \
+                                          \
+type instance Dynamic TYPE = TYPE;        \
+type instance SetDynamic a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamic TYPE a where {            \
+  dynamic = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamics TYPE a where {           \
+  dynamics = ($)               } ;        \
 
-instance HasDynamic Bool Bool where
-  dynamic = ($)
-
-instance HasDynamics Bool Bool where
-  dynamics = ($)
-
-
-type instance Dynamic Int = Int
-type instance SetDynamic a Int = a
-
-instance HasDynamic Int Int where
-  dynamic = ($)
-
-instance HasDynamics Int Int where
-  dynamics = ($)
-
-
-type instance Dynamic Integer = Integer
-type instance SetDynamic a Integer = a
-
-instance HasDynamic Integer Integer where
-  dynamic = ($)
-
-instance HasDynamics Integer Integer where
-  dynamics = ($)
-
-
-type instance Dynamic Float = Float
-type instance SetDynamic a Float = a
-
-instance HasDynamic Float Float where
-  dynamic = ($)
-instance HasDynamics Float Float where
-  dynamics = ($)
-
-
-type instance Dynamic Double = Double
-type instance SetDynamic a Double = a
-
-instance HasDynamic Double Double where
-  dynamic = ($)
-instance HasDynamics Double Double where
-  dynamics = ($)
-
+PRIM_DYNAMIC_INSTANCE(())
+PRIM_DYNAMIC_INSTANCE(Bool)
+PRIM_DYNAMIC_INSTANCE(Ordering)
+PRIM_DYNAMIC_INSTANCE(Char)
+PRIM_DYNAMIC_INSTANCE(Int)
+PRIM_DYNAMIC_INSTANCE(Integer)
+PRIM_DYNAMIC_INSTANCE(Float)
+PRIM_DYNAMIC_INSTANCE(Double)
 
 type instance Dynamic (c,a) = Dynamic a
 type instance SetDynamic b (c,a) = (c,SetDynamic b a)
@@ -2080,33 +2055,27 @@ articulation' = articulation
 articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
 articulations' = articulations
 
-type instance Articulation Bool = Bool
-type instance SetArticulation a Bool = a
-instance HasArticulation Bool Bool where
-  articulation = ($)
-instance HasArticulations Bool Bool where
-  articulations = ($)
+#define PRIM_ARTICULATION_INSTANCE(TYPE)       \
+                                          \
+type instance Articulation TYPE = TYPE;        \
+type instance SetArticulation a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulation TYPE a where {            \
+  articulation = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulations TYPE a where {           \
+  articulations = ($)               } ;        \
 
-type instance Articulation Int = Int
-type instance SetArticulation a Int = a
-instance HasArticulation Int Int where
-  articulation = ($)
-instance HasArticulations Int Int where
-  articulations = ($)
-
-type instance Articulation Integer = Integer
-type instance SetArticulation a Integer = a
-instance HasArticulation Integer Integer where
-  articulation = ($)
-instance HasArticulations Integer Integer where
-  articulations = ($)
-
-type instance Articulation Float = Float
-type instance SetArticulation a Float = a
-instance HasArticulation Float Float where
-  articulation = ($)
-instance HasArticulations Float Float where
-  articulations = ($)
+PRIM_ARTICULATION_INSTANCE(())
+PRIM_ARTICULATION_INSTANCE(Bool)
+PRIM_ARTICULATION_INSTANCE(Ordering)
+PRIM_ARTICULATION_INSTANCE(Char)
+PRIM_ARTICULATION_INSTANCE(Int)
+PRIM_ARTICULATION_INSTANCE(Integer)
+PRIM_ARTICULATION_INSTANCE(Float)
+PRIM_ARTICULATION_INSTANCE(Double)
 
 
 type instance Articulation (c,a) = Articulation a
