@@ -1092,7 +1092,7 @@ instance HasDuration Duration where
 
 -- |
 -- Time points, representing duration since some known reference time, typically the start
--- of the music. Note that time can be negative, representing events occuring before the
+-- of the music. Note that time can be negative, representing values occuring before the
 -- reference time.
 --
 -- Time forms an affine space with durations as the underlying vector space, that is, we
@@ -2903,11 +2903,11 @@ singleNote = undefined
 notes :: Traversal' (Score a) (Note a)
 notes = _Wrapped . traverse
 
--- | Map over the events in a score.
+-- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
 mapWithSpan f = undefined
 
--- | Filter the events in a score.
+-- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 filterWithSpan f = undefined
 
@@ -2915,11 +2915,11 @@ filterWithSpan f = undefined
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 mapFilterWithSpan f = undefined
 
--- | Map over the events in a score.
+-- | Map over the values in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
 mapEvents f = mapWithSpan (uncurry f . view delta)
 
--- | Filter the events in a score.
+-- | Filter the values in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
 filterEvents f = undefined
 
