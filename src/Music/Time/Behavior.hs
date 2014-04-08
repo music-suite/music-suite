@@ -31,13 +31,13 @@
 
 module Music.Time.Behavior (
         Behavior,
-        constant,
-        behavior,
-        varying,
-        varyingIn,
+        -- constant,
+        -- behavior,
+        -- varying,
+        -- varyingIn,
         -- time,
-        switchB,
-        trimBeforeB,
+        -- switchB,
+        -- trimBeforeB,
   ) where
 
 import           Prelude                hiding (trimAfter)
