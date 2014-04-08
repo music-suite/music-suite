@@ -880,7 +880,8 @@ times n   = scat . replicate n
 -- |
 -- Class of values that can be split.
 --
--- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece of the given duration and the rest.
+-- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece
+-- of the given duration and the rest.
 --
 -- For positioned values succh as 'Note', split cuts a value relative to its onset.
 --
@@ -1135,7 +1136,9 @@ newtype Span = Span { getDelta :: (Time, Duration) }
 -- - To construct a span from a pair, use @(t, u)^.'from' 'range'@.
 --
 
-
+--
+-- $musicTimeSpanIsos
+--
 -- >>> (2 <-> 3)^.range
 -- > (2, 3)
 -- >
@@ -1211,7 +1214,9 @@ t >-> d = Span (t, d)
 -- View a span as pair of onset and offset.
 --
 range :: Iso' Span (Time, Time)
-range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x in (t, t .+^ d)
+range = iso getRange $ uncurry (<->)
+  where 
+    getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- |
 -- View a span as a pair of onset and duration.
@@ -1281,10 +1286,10 @@ underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a 
 underStretch = flip (flip under . stretching)
 
 -- underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
-underL  l f (s,a) = (s,) <$> (l $ f `underM` s) a
 
-underLT l f (t,a) = (t,) <$> (l $ f `underM` (t>->1)) a
-underLD l f (d,a) = (d,) <$> (l $ f `underM` (0>->d)) a
+underL  l f (s,a) = (s,) <$> (l $ f `underM` s) a
+underLT l f (t,a) = (t,) <$> (l $ f `underM` (t >-> 1)) a
+underLD l f (d,a) = (d,) <$> (l $ f `underM` (0 >-> d)) a
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1923,9 +1928,13 @@ extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
-extractPartsG :: (Ord (Part a), Part (f a) ~ Part a, MonadPlus f, HasPart' a, HasParts' (f a)) => f a -> [f a]
+extractPartsG 
+  :: (MonadPlus f,
+      HasParts' (f a), HasPart' a, Part (f a) ~ Part a, 
+      Ord (Part a)) => f a -> [f a]
 extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
+filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
 filterPart p = mfilter (\x -> p (x ^. part))
 
 
@@ -1979,53 +1988,73 @@ through lens1 lens2 =
 -- |
 -- 'Delayed' represents a value with an offset in time.
 --
--- A delayed value has a known 'position', but no duration.
+-- A delayed value has a known 'position', but no 'duration'.
 --
--- Placing a value inside 'Delayed' does not make it invariant under stretch, as the offset
--- of a delayed value may be stretched with respect to the origin. However, in contrast to a note
--- the /duration/ is not stretched.
+-- Placing a value inside 'Delayed' does not make it invariant under 'stretch', as the
+-- offset of a delayed value may be stretched with respect to the origin. However, in
+-- contrast to a note the /duration/ is not stretched.
 --
+newtype Delayed a   = Delayed   { getDelayed :: (Time, a) }
+  deriving (Eq, {-Ord, -}{-Show, -}
+            Applicative, Monad, {-Comonad, -}
+            Functor,  Foldable, Traversable)
+
 -- >>> stretch 2 $ (3,1)^.delayed
 -- (6,1)^.stretched
 --
 -- >>> delay 2 $ (3,1)^.delayed
 -- (3,1)^.stretched
 --
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a)   }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {-Comonad, -}Foldable, Traversable)
 
 deriving instance Typeable1 Delayed
-instance Wrapped (Delayed a) where { type Unwrapped (Delayed a) = (Time, a) ; _Wrapped' = iso getDelayed Delayed }
+deriving instance Show a => Show (Delayed a)
+
+instance Wrapped (Delayed a) where
+  type Unwrapped (Delayed a) = (Time, a)
+  _Wrapped' = iso getDelayed Delayed
+  
 instance Rewrapped (Delayed a) (Delayed b)
-instance Transformable (Delayed a) where transform t = over _Wrapped $ first (transform t)
-instance HasPosition (Delayed a) where x `_position` p = ask (view _Wrapped x)`_position` p
+
+instance Transformable (Delayed a) where
+  transform t = over _Wrapped $ first (transform t)
+
+instance HasPosition (Delayed a) where
+  x `_position` p = ask (view _Wrapped x)`_position` p
+
 instance Reversible (Delayed a) where
   rev = revDefault
-deriving instance Show a => Show (Delayed a)
-                            
-mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
 
 -- |
 -- View the value in the note.
 --
 delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 delayedValue = lens runDelayed (flip $ mapDelayed . const)
+  where
+      mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
+
+
+
+
+
 
 
 
 -- |
--- A 'Stretched' value has a known 'position', but no duration.
+-- A 'Stretched' value has a known 'duration', but no 'position'.
 --
--- Placing a value inside 'Stretched' makes it /invariant/ under delay.
+-- Placing a value inside 'Stretched' makes it /invariant/ under 'delay'.
 --
+newtype Stretched a = Stretched { getStretched :: (Duration, a) }
+  deriving (Eq, {-Ord, -}{-Show, -}
+            Applicative, Monad, {-Comonad, -}
+            Functor,  Foldable, Traversable)
+
 -- >>> stretch 2 $ (5,1)^.stretched
 -- (10,1)^.stretched
 --
 -- >>> delay 2 $ (5,1)^.stretched
 -- (5,1)^.stretched
 --
-newtype Stretched a = Stretched { getStretched :: (Duration, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}Functor, Applicative, Monad, {- Comonad, -} Foldable, Traversable)
 
 deriving instance Typeable1 Stretched
 instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
@@ -2061,7 +2090,7 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 -- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
 -- @
 --
-newtype Note a    = Note    { getNote :: (Span, a)   }
+newtype Note a = Note { getNote :: (Span, a) }
 
 deriving instance Eq a => Eq (Note a)
 deriving instance Functor Note
@@ -2069,6 +2098,7 @@ deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Applicative Note
+
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
 
@@ -2250,9 +2280,8 @@ instance Representable Segment where
   index    (Segment f) = f . unsafeToClipped
 
 -- |
--- Segments are /invariant/ under transformation.
---
--- To transform a timve varying value, use fromSegment.
+-- Segments are /invariant/ under transformation. To transform a timve varying value, use
+-- 'fromSegment'.
 --
 instance Transformable (Segment a) where
   transform _ = id
