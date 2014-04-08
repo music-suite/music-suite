@@ -1208,6 +1208,7 @@ revDefault :: (HasPosition a, Transformable a) => a -> a
 revDefault x = stretch (-1) x
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
+  deriving (Typeable, Eq, Ord, Show)
 
 instance Transformable (NoReverse a) where
   transform _ = id
@@ -2568,7 +2569,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- @
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
-  deriving (Functor, Semigroup, Typeable, Show)
+  deriving (Functor, Semigroup, Typeable, Eq, Show)
 
 --
 -- TODO define Applicative/Monad
@@ -2596,7 +2597,7 @@ instance Wrapped (Bound a) where
 instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
-  -- TODO
+  rev = over _Wrapped $ \(s,x) -> (rev s, rev x)
 instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
 
@@ -2611,7 +2612,9 @@ instance (HasPosition a, HasDuration a) => HasDuration (Bound a) where
   _duration x = _offset x .-. _onset x
 
 instance HasPosition a => HasPosition (Bound a) where
-  _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
+  -- TODO lawless
+  -- _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
+  _position (Bound (view range -> (t, u), x)) d = alerp t u d
 
 truncating :: Ord a => a -> a -> a -> a
 truncating t u x = (x `max` t) `min` u
@@ -3719,8 +3722,8 @@ inspecting p x y = p x == p y
 assuming :: a -> b -> b
 assuming = flip const
 
-sameType :: a -> a -> ()
-sameType _ _ = ()
+sameType :: a -> a -> a
+sameType _ x = x
 
 
 #define INCLUDE_TESTS
@@ -3784,6 +3787,9 @@ instance (Monad m, Serial m a) => Serial m (Note a) where
 instance (Monad m, Serial m a) => Serial m (Bound a) where
   series = newtypeCons Bound
 
+instance (Monad m, Serial m a) => Serial m (NoReverse a) where
+  series = newtypeCons NoReverse
+
 instance (Monad m, Serial m a) => Serial m (Delayed a) where
   series = newtypeCons Delayed
 
@@ -3842,6 +3848,11 @@ delayIndexLaw typ = testGroup ("Delay/! " ++ show (typeOf typ)) $ [
                 delay n b ! t == b ! (t .-^ n)
   ]
 
+--  _duration x = (offset x .-. onset x)
+durationOnsetOffsetLaw typ = testGroup ("Duration/onset/offset " ++ show (typeOf typ)) $ [
+  testProperty "_duration x == (_offset x .-. _onset x)" $ \x y -> assuming (sameType typ (sameType x y)) $
+                _duration x == (_offset x .-. _onset x)
+  ]
 
 --
 -- > (t<->u) `transform` b ! t           == b ! 0
@@ -3895,10 +3906,10 @@ reversibleEq (===) typ = testGroup ("instance Reversible " ++ show (typeOf typ))
   testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
                 (rev (rev x)) === x,
 
-  testGroup "" [],
+  -- testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
+                -- ((transform . rev) s x) === ((fmap rev . transform) s x),
 
-  testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
-                ((transform . rev) s x) === ((fmap rev . transform) s x)
+  testGroup "" []
   ]
 
 
@@ -3911,6 +3922,8 @@ main = defaultMain $ testGroup "All tests" $ [
     monoid (undefined :: Span),
     monoidEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
     monoidEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Time),
+    -- Reactive
+    -- Phrase
     monoid (undefined :: Voice Time),
     monoid (undefined :: Score Time)
   ],
@@ -3929,8 +3942,14 @@ main = defaultMain $ testGroup "All tests" $ [
   testGroup "Reversible" [
     reversible (undefined :: ()),
     reversible (undefined :: Double),
+    reversible (undefined :: Int),
+    reversible (undefined :: Integer),
     reversible (undefined :: Duration),
     reversible (undefined :: Span),
+
+    reversible (undefined :: [Duration]),
+    -- reversible (undefined :: Seq Duration),
+
     reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
     reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
 
@@ -3938,12 +3957,20 @@ main = defaultMain $ testGroup "All tests" $ [
     reversible (undefined :: Stretched Duration),
     reversible (undefined :: Delayed Duration),
 
+    reversible (undefined :: NoReverse Duration),
+    reversible (undefined :: Bound Duration),
+
     reversible (undefined :: Voice Duration),
     reversible (undefined :: Score Duration)
   ],
 
   testProperty "============================================================" $ True,  
-  testGroup "Delay and stretch" [
+  testGroup "Transformable: Monoid morphism" [
+    -- TODO
+  ],
+  
+  testProperty "============================================================" $ True,  
+  testGroup "Transformable: Delay and stretch" [
     
     delayOnsetLaw      (undefined :: Delayed Time),
     delayOffsetLaw     (undefined :: Delayed Time),
@@ -3976,10 +4003,18 @@ main = defaultMain $ testGroup "All tests" $ [
     delayDurationLaw   (undefined :: Score Time)
   ],
 
+  testProperty "============================================================" $ True,  
+  testGroup "Position and duration" [
+    durationOnsetOffsetLaw  (undefined :: Span),
+    -- durationOnsetOffsetLaw  (undefined :: Delayed Time),
+    -- durationOnsetOffsetLaw  (undefined :: Stretched Time),
+    durationOnsetOffsetLaw  (undefined :: Note Time),
+    -- durationOnsetOffsetLaw  (undefined :: Bound (Behavior Time)),
+    -- durationOnsetOffsetLaw  (undefined :: Voice Time),
+    durationOnsetOffsetLaw  (undefined :: Score Time)    
+  ],
+
   -- delayIndexLaw (undefined :: Behavior Int8),
-  -- transformUi (undefined :: Behavior Int8)
-  -- functor (undefined :: BadFunctor Int8),
-  -- functor (undefined :: BadMonoid Int8)
                              
   testProperty "============================================================" $ True,  
     testGroup "Nothing" []
