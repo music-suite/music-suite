@@ -28,7 +28,7 @@
 
   Music.Time.Time      \
   Music.Time.Duration   * (merge as M.T.Types?) 
-  Music.Time.Spen      /
+  Music.Time.Span      /
 
   Music.Time.Stretched
   Music.Time.Delayed
@@ -56,7 +56,6 @@
   Music.Score.Slide
   Music.Score.Clef
   Music.Score.Repeats
-  
 -}
 
 module TimeTypes (
@@ -82,9 +81,14 @@ module TimeTypes (
         Transformable(..),
         -- ** Apply under a transformation
         whilst,
+        whilstM,
+        whilstW,
+        whilstL,
+        whilstLD,
+        whilstLT,
         -- underM,
         -- underW,
-        -- conjugate,
+        conjugate,
 
         -- ** Specific transformations
         delay,
@@ -167,14 +171,16 @@ module TimeTypes (
 
         -- * Time spans
         Span,
+        -- *** Creating spans
         (<->),
         (>->),
         (<-<),
+        -- *** Accessing spans
         range,
         delta,
 
         -- ** Properties
-        -- isProper,
+        isProper,
         -- Proper spans are always bounded and closed
         
         -- ** Points in spans
@@ -1409,13 +1415,14 @@ newtype Span = Delta { _delta :: (Time, Duration) }
 --
 
 instance Show Span where
-  -- show (view range -> (t,u)) = show t ++ "<->" ++ show u
-  show (view delta -> (t,d)) = show t ++ ">->" ++ show d
+  -- show (view range -> (t,u)) = show t ++ " <-> " ++ show u
+  show (view delta -> (t,d)) = show t ++ " >-> " ++ show d
 
 instance HasPosition Span where
-  -- _position (view range -> (t1, t2)) = alerp t1 t2
-  _onset  (view range -> (t1, t2)) = t1
-  _offset (view range -> (t1, t2)) = t2
+  -- Override as an optimization:
+  _onset    (view range -> (t1, t2)) = t1
+  _offset   (view range -> (t1, t2)) = t2
+  _position (view range -> (t1, t2)) = alerp t1 t2
 
 instance Transformable Span where
   transform = (<>)
@@ -1446,9 +1453,6 @@ instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
   Delta (t1, d1) ^+^ Delta (t2, d2) = Delta (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Delta (t, d)) = Delta (-t ^/ d, recip d)
-
-durationToSpan d  = 0 >-> d
-timeToSpan t      = t >-> 1
 
 --
 -- a >-> b = a         <-> (a .+^ b)
@@ -1496,6 +1500,17 @@ range = iso _range $ uncurry (<->)
 delta :: Iso' Span (Time, Duration)
 delta = iso _delta Delta
 
+pureStretch :: Prism' Span Duration
+pureStretch = prism (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+  (0, d) -> Right d
+  _      -> Left x
+
+pureDelay :: Prism' Span Time
+pureDelay = prism (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+  (t, 1) -> Right t
+  _      -> Left x
+       
+
 --
 -- $musicTimeSpanConstruct
 --
@@ -1509,9 +1524,6 @@ delta = iso _delta Delta
 -- > forall s . id `whilst` s = id
 -- > forall s . return `whilstM` s = return
 -- > forall s . extract `whilstW` s = extract
-
-
-
 
 
 -- We really must flip all these functions. To do:
@@ -1559,10 +1571,19 @@ whilstDelay     = flip (flip whilst . delaying . (.-. 0))
 whilstStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 whilstStretch = flip (flip whilst . stretching)
 
--- whilstL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
-
+whilstL :: (Functor f, Transformable a, Transformable b) 
+  => LensLike f s t a b 
+  -> LensLike f (Span,s) (Span,t) a b
 whilstL  l f (s,a) = (s,) <$> (l $ f `whilstM` s) a
+
+whilstLT :: (Functor f, Transformable a, Transformable b) 
+  => LensLike f s t a b 
+  -> LensLike f (Time,s) (Time,t) a b
 whilstLT l f (t,a) = (t,) <$> (l $ f `whilstM` (t >-> 1)) a
+
+whilstLD :: (Functor f, Transformable a, Transformable b) 
+  => LensLike f s t a b 
+  -> LensLike f (Duration,s) (Duration,t) a b
 whilstLD l f (d,a) = (d,) <$> (l $ f `whilstM` (0 >-> d)) a
 
 conjugate :: Span -> Span -> Span
