@@ -227,6 +227,16 @@ module TimeTypes (
         (!^),
         behavior,
 
+        -- * Combinators
+        switch,
+        switch3,
+        cross,
+        splice,
+        -- noteToBehavior,
+        -- noteToBehavior',
+        concatBehavior,
+        concatBehaviors,
+
         -- * Common behaviors
         time,
         unit,
@@ -234,18 +244,8 @@ module TimeTypes (
         turnOn,
         turnOff,
         sawtooth,
-
         sine,
         cosine,
-
-        -- * Combinators
-        switch,
-        switch3,
-        splice,
-        noteToBehavior,
-        noteToBehavior',
-        concatBehavior,
-        concatBehaviors,
 
         -- * Music.Time.Phrase
         Phrase,
@@ -3035,11 +3035,6 @@ focusedOn = error "No focusedOn"
 -- |
 -- Instantly switch from one behavior to another.
 --
--- @
--- 'switch' t x y '!' n | n <  t = x '!' n
---                  | n >= t = y '!' n
--- @ 
---
 -- That is @switch t x y@ behaves as @x@ until time @t@, at which point it starts behaving as @y@.
 --
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
@@ -3047,12 +3042,6 @@ switch t rx ry = switch3 t rx ry ry
 
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
---
--- @
--- 'switch3' t x y z '!' n | n <  t = x '!' n
---                     | n == t = y '!' n
---                     | n >  t = z '!' n
--- @ 
 --
 -- That is @'switch' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
 -- At time @t@ it has value @y '!' t@.
@@ -3062,7 +3051,21 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
+-- @
+-- 'switch' t x y '!' n | n <  t = x '!' n
+--                  | n >= t = y '!' n
+-- @ 
+--
 
+-- @
+-- 'switch3' t x y z '!' n | n <  t = x '!' n
+--                     | n == t = y '!' n
+--                     | n >  t = z '!' n
+-- @ 
+--
+
+cross :: Segment (a -> a -> a) -> Duration -> Time -> Behavior a -> Behavior a -> Behavior a
+cross = error "No cross"
 
 -- |
 -- This
