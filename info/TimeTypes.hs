@@ -1,4 +1,5 @@
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -16,7 +17,6 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE CPP                        #-}
 
 module TimeTypes (
         -- -- * Data.Clipped
@@ -72,7 +72,7 @@ module TimeTypes (
         preOnset,
         postOnset,
         postOffset,
-        
+
         -- * Moving to absolute positions
         startAt,
         stopAt,
@@ -268,7 +268,7 @@ module TimeTypes (
         HasArticulation(..),
         articulation',
         articulations',
-        
+
         accent,
         marcato,
         accentLast,
@@ -295,14 +295,16 @@ module TimeTypes (
 
 import qualified Data.ByteString.Lazy         as ByteString
 import           Data.Default
+import           Data.Ratio
 import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
-                                               after, atTime, duration, during, clipped,
-                                               era, interval, offset, place,
-                                               position, start, stretch, inv,
-                                               stretchTo, transform, trim, era,
-                                               under, value, view, (<->), (|>), unit)
+                                               after, atTime, clipped, duration,
+                                               during, era, era, interval, inv,
+                                               offset, place, position, start,
+                                               stretch, stretchTo, transform,
+                                               trim, under, unit, value, view,
+                                               (<->), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -312,12 +314,11 @@ import           Control.Arrow                (first, second, (***))
 import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, index, parts, above, 
-                                               below, reversed, transform, under, (|>),
-                                               inside, Level)
+import           Control.Lens                 hiding (Indexable, Level, above,
+                                               below, index, inside, parts,
+                                               reversed, transform, under, (|>))
 import           Control.Monad
 import           Control.Monad.Free
-import qualified Data.List
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
@@ -325,6 +326,7 @@ import           Data.Distributive
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
 import           Data.Functor.Rep
+import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
@@ -335,11 +337,11 @@ import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
 import           Data.VectorSpace
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
 
 import           Data.Int
-import           Test.SmallCheck.Series       hiding ((><), NonEmpty)
+import           Test.SmallCheck.Series       hiding (NonEmpty, (><))
 import           Test.Tasty                   hiding (over, under)
 import           Test.Tasty.SmallCheck        hiding (over, under)
 
@@ -348,7 +350,7 @@ import qualified Data.Ratio                   as Util_Ratio
 
 {-
   Semantics:
-    
+
     Duration    ≡ R
     Time        ≡ R
     Span        ≡ (R, R)
@@ -365,7 +367,7 @@ import qualified Data.Ratio                   as Util_Ratio
     Segment a   ≡ Duration -> a
     Behavior a  ≡ Time -> a
     Reactive a  ≡ ([Time], Behavior ae)
-  
+
 -}
 
 
@@ -441,18 +443,18 @@ fromClipped = (^. unclipped)
 
 clipped :: (Num a, Ord a) => Prism' a (Clipped a)
 clipped = prism unsafeGetClipped $
-  \x -> if 0 <= x && x <= 1 
-      then Right (UnsafeClip x) 
+  \x -> if 0 <= x && x <= 1
+      then Right (UnsafeClip x)
       else Left x
 
 unclipped :: (Num a, Ord a) => Getter (Clipped a) a
 unclipped = re clipped
 
-zipClippedWith 
-  :: (Num a, Ord a, 
-      Num b, Ord b, 
-      Num c, Ord c) 
-  => (a -> b -> c) 
+zipClippedWith
+  :: (Num a, Ord a,
+      Num b, Ord b,
+      Num c, Ord c)
+  => (a -> b -> c)
   -> Clipped a -> Clipped b -> Maybe (Clipped c)
 zipClippedWith f a b = ((a^.unclipped) `f` (b^.unclipped))^? clipped
 
@@ -477,7 +479,7 @@ addLim = zipClippedWith (+)
 
 -- |
 -- The isomorpism between a representable functor and its representation.
--- 
+--
 -- @
 -- 'tabulated' ≡ 'iso' 'tabulate' 'index'
 -- 'tabulated' ≡ 'from' 'retabulated'
@@ -488,7 +490,7 @@ tabulated = iso tabulate index
 
 -- |
 -- The reverse isomorpism between a representable functor and its representation.
--- 
+--
 -- @
 -- 'retabulated' ≡ 'iso' 'index' 'tabulate'
 -- 'retabulated' ≡ 'from' 'tabulated'
@@ -543,22 +545,28 @@ class Transformable a where
 instance Transformable () where
   transform _ = id
 
-instance Transformable Int where
-  transform _ = id
-
 instance Transformable Bool where
   transform _ = id
 
 instance Transformable Ordering where
   transform _ = id
 
+instance Transformable Char where
+  transform _ = id
+
+instance Transformable Int where
+  transform _ = id
+
+instance Transformable Integer where
+  transform _ = id
+
+instance Transformable a => Transformable (Ratio a) where
+  transform _ = id
+
 instance Transformable Float where
   transform _ = id
 
 instance Transformable Double where
-  transform _ = id
-
-instance Transformable Integer where
   transform _ = id
 
 --
@@ -588,8 +596,8 @@ instance (Transformable a, Transformable b) => Transformable (a -> b) where
     transform t = (`under` negateV t)
 
 -- |
--- Delay relative to 'origin'. 
--- 
+-- Delay relative to 'origin'.
+--
 -- Provided for situations when you have a value that should forward based on the distance
 -- between some time @t@ and the origin, but it does not necessarily have a start time.
 --
@@ -694,7 +702,7 @@ clippedDuration = stretchTo 1
 -- goes from the 'onset' to the 'offset' of the value.
 --
 -- For instantaneous values, a suitable instance is:
--- 
+--
 -- @
 -- '_position' x ≡ 'const' t
 -- @
@@ -848,7 +856,7 @@ a `lead` b   = placeAt 1 (b `_position` 0) a
 -- Move a value so that
 --
 -- @
--- '_offset' a = '_onset' (a ``follow`` b) 
+-- '_offset' a = '_onset' (a ``follow`` b)
 -- @
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
@@ -1012,13 +1020,13 @@ reversed = iso rev rev
 
 {-
   TODO check
-  
+
     openG $ drawNote $ rev $ delay 1 $ return 0
     openG $ drawNote $ delay 1 $ rev $ return 0
 
     openG $ drawNote $ rev $ stretch 0.5 $ return 0
     openG $ drawNote $ stretch 0.5 $ rev $ return 0
-  
+
     openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
     openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
 
@@ -1027,7 +1035,7 @@ reversed = iso rev rev
 
     openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
     openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
-  
+
     openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
     openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
 
@@ -1042,7 +1050,7 @@ reversed = iso rev rev
 
 
 -- |
--- Internal time representation. Can be anything with instances 
+-- Internal time representation. Can be anything with instances
 -- for 'Fractional' and 'RealFrac'.
 --
 type TimeBase = Rational
@@ -1088,7 +1096,7 @@ instance Monoid Duration where
   mempty  = 1
   mappend = (*^)
  -- TODO use some notion of norm rather than 1
- 
+
 instance Transformable Duration where
   Span (_, d1) `transform` d2 = d1 * d2
 
@@ -1143,7 +1151,7 @@ instance HasPosition Time where
 -- transformation where onset is translation and duration is scaling.
 --
 -- You can pattern match over spans using the @ViewPatterns@ extension:
--- 
+--
 -- @
 -- foo (view range -> (u,v)) = ...
 -- @
@@ -1244,7 +1252,7 @@ t >-> d = Span (t, d)
 --
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->)
-  where 
+  where
     getRange x = let (t, d) = getDelta x in (t, t .+^ d)
 
 -- |
@@ -1283,7 +1291,7 @@ delta = iso getDelta $ uncurry (>->)
 -- Apply a function under transformation.
 --
 -- Designed to be used infix, as in
--- 
+--
 -- @
 -- 'stretch' 2 ``under`` 'delaying' 2
 -- @
@@ -1342,20 +1350,20 @@ inside x (view range -> (t, u)) = t <= x && x <= u
 
 
 
--- 
+--
 -- TODO
--- 
--- We should give the lens in the each aspect class another name and use aliases 
+--
+-- We should give the lens in the each aspect class another name and use aliases
 -- :info prints in GHCI
--- 
--- (We can't do much about the :type prints) 
--- 
+--
+-- (We can't do much about the :type prints)
+--
 
 
 -- |
 -- Pitch type.
 --
-type family Pitch (s :: *) :: * 
+type family Pitch (s :: *) :: *
 
 -- |
 -- Pitch type.
@@ -1427,7 +1435,6 @@ instance HasPitch Double Double where
 instance HasPitches Double Double where
   pitches = ($)
 
-instance Transformable Char
 type instance Pitch Char = Char
 type instance SetPitch a Char = a
 instance HasPitch Char Char where
@@ -1476,8 +1483,8 @@ type Interval a = Diff (Pitch a)
 -- |
 -- Class of types that can be transposed.
 --
-type Transposable a = (HasPitches a a, 
-                       VectorSpace (Interval a), AffineSpace (Pitch a), 
+type Transposable a = (HasPitches a a,
+                       VectorSpace (Interval a), AffineSpace (Pitch a),
                        IsInterval (Interval a), IsPitch (Pitch a))
 
 -- |
@@ -1561,8 +1568,8 @@ class (HasDynamics s t) => HasDynamic s t where
 -- |
 -- Class of types that provide a dynamic traversal.
 --
-class (Transformable (Dynamic s), 
-       Transformable (Dynamic t), 
+class (Transformable (Dynamic s),
+       Transformable (Dynamic t),
        SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
 
   -- | Dynamic type.
@@ -1665,8 +1672,8 @@ type Level a = Diff (Dynamic a)
 -- |
 -- Class of types that can be transposed.
 --
-type Attenuable a = (HasDynamics a a, 
-                     VectorSpace (Level a), AffineSpace (Dynamic a), 
+type Attenuable a = (HasDynamics a a,
+                     VectorSpace (Level a), AffineSpace (Dynamic a),
                      IsDynamics (Dynamic a))
 
 -- |
@@ -1735,7 +1742,7 @@ class (HasArticulations s t) => HasArticulation s t where
 -- Class of types that provide a articulation traversal.
 --
 class (Transformable (Articulation s),
-       Transformable (Articulation t), 
+       Transformable (Articulation t),
        SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
 
   -- | Articulation type.
@@ -1848,8 +1855,8 @@ class (HasParts s t) => HasPart s t where
 -- |
 -- Class of types that provide a part traversal.
 --
-class (Transformable (Part s), 
-       Transformable (Part t), 
+class (Transformable (Part s),
+       Transformable (Part t),
        SetPart (Part t) s ~ t) => HasParts s t where
 
   -- | Part type.
@@ -1959,9 +1966,9 @@ extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
-extractPartsG 
+extractPartsG
   :: (MonadPlus f,
-      HasParts' (f a), HasPart' a, Part (f a) ~ Part a, 
+      HasParts' (f a), HasPart' a, Part (f a) ~ Part a,
       Ord (Part a)) => f a -> [f a]
 extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
@@ -1993,7 +2000,7 @@ through lens1 lens2 =
   -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> s ^. lens1) <$> s)
   -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
   -- \afb s -> (\x -> liftA2 (\s -> set lens2 s) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
-  -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . 
+  -- \afb s -> (\x -> liftA2 (\b ->  runIdentity .
   --        lens2 (\_ -> Identity b)) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
 
   -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s)
@@ -2044,7 +2051,7 @@ deriving instance Show a => Show (Delayed a)
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
   _Wrapped' = iso getDelayed Delayed
-  
+
 instance Rewrapped (Delayed a) (Delayed b)
 
 instance Transformable (Delayed a) where
@@ -2116,8 +2123,8 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 -- A 'Note' is a value with a known 'era'.
 --
 -- You can use 'noteValue' to apply a function in the context of the transformation,
--- i.e. 
--- 
+-- i.e.
+--
 -- @
 -- over noteValue (* time) (delay 2 $ return time)
 -- @
@@ -2226,13 +2233,13 @@ instance Reversible a => Reversible (Bounds a) where
 instance Splittable a => Splittable (Bounds a) where
   -- TODO
 
-instance Transformable a => Transformable (Bounds a) where 
+instance Transformable a => Transformable (Bounds a) where
   transform t = over _Wrapped (transform t *** transform t)
 
 instance HasDuration a => HasDuration (Bounds a) where
   -- TODO truncate then take duration
 
-instance HasPosition a => HasPosition (Bounds a) where 
+instance HasPosition a => HasPosition (Bounds a) where
   -- TODO remove everything outside bounds
 
 
@@ -2268,7 +2275,7 @@ trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) 
 -- |
 --
 -- A 'Segment' is a value varying over some unknown time span, semantically
--- 
+--
 -- @
 -- type 'Segment' a = 'Duration' -> a
 -- @
@@ -2330,9 +2337,9 @@ instance (HasPitch a a, HasPitch a b) => HasPitches (Segment a) (Segment b) wher
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
 
--- | 
+-- |
 -- Index a segment.
--- 
+--
 (!.) :: Segment a -> Duration -> a
 (!.) = (!)
 
@@ -2380,8 +2387,8 @@ slerp i a b
 slerp2 :: (a -> a -> a) -> Duration -> Segment a -> Segment a -> Segment a
 slerp2 f i a b
   | i < 0 || i >= 1    = error "slerp: Bad value"
-  | otherwise = tabulate $ \t -> case t `compare` i of 
-      LT -> a ! (t/i) 
+  | otherwise = tabulate $ \t -> case t `compare` i of
+      LT -> a ! (t/i)
       EQ -> (a ! 1) `f` (b ! 1)
       GT -> b ! ((t-i)/(1-i))
 
@@ -2396,7 +2403,7 @@ notTime2 = (rev `under` undelaying 4.5) notTime
 
 -- |
 -- A 'Behavior' is a time-varying value.
--- 
+--
 -- @
 -- type 'Behavior' a => 'Time' -> a
 -- @
@@ -2453,7 +2460,7 @@ instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `under` s)
     where
       f `under` s = f . transform (negateV s)
-    
+
 
 -- TODO correct?
 instance Reversible (Behavior a) where
@@ -2471,7 +2478,7 @@ instance Representable Behavior where
 
 -- type instance Pitch                 (Behavior a) = Behavior (Pitch a)
 -- type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
--- 
+--
 -- instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
 --   pitches = through pitch pitch
 -- instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
@@ -2526,7 +2533,7 @@ instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
 instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
   part = through part part
 
--- | 
+-- |
 -- Returns the value of a behavior at a given time
 --
 -- Note that this is just an alias defined to make the documentation nicer:
@@ -2534,7 +2541,7 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- @
 -- '!^' ≡ '!'
 -- @
--- 
+--
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
 
@@ -2547,7 +2554,7 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- @
 -- 'behavior' ≡ 'tabulated'
 -- @
--- 
+--
 
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
@@ -2563,15 +2570,15 @@ behavior = tabulated
 unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 unbehavior = from behavior
 
--- 
+--
 -- $musicTimeBehaviorExamples
--- 
+--
 -- 'behavior' let us convert any function to a behavior using '^.' or 'view'.
 --
 -- We can unwrap a behavior using @'from' 'behavior'@ or '!^'.
 --
 -- A sine function
---   
+--
 -- @
 -- ('sin' . (* 'tau') . 'realToFrac')^.'behavior'
 -- @
@@ -2583,20 +2590,20 @@ unbehavior = from behavior
 -- @
 --
 -- A time-varying function applied to a value
--- 
+--
 -- @
 -- ('+')^.'behavior' '<*>' 10
 -- @
--- 
+--
 
 
 -- TODO find a place for this
--- 
+--
 -- @
 -- ('const' x)^.'behavior' ! t == x   forall t
 -- @
 --
--- 
+--
 
 
 -- |
@@ -2669,11 +2676,11 @@ turnOff = switch 0 1 0
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
-  
+
 {-
 -- | Specification of 'index'.
 atTime :: Behavior a -> Time -> a
-atTime = index                 
+atTime = index
 -}
 
 focus :: Behavior a -> Segment a
@@ -2717,7 +2724,7 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
 -- outside.
 --
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
-splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
+splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
   where
     toLast   = Option . Just . Last
     fromLast = getLast . fromMaybe undefined . getOption
@@ -2958,9 +2965,9 @@ instance HasDuration (Voices a) where
 
 instance Splittable a => Splittable (Voices a) where
 
-voices' :: Traversal' 
-  (Voices a) 
-  (Phrases a) 
+voices' :: Traversal'
+  (Voices a)
+  (Phrases a)
 -- TODO is there a non-empty version of traversal?
 voices' = error "No voices'"
 
@@ -2984,7 +2991,7 @@ instance Splittable a => Splittable (Phrases a) where
 
 -- | XXX
 phrases' :: Traversal'
-  (Phrases a) 
+  (Phrases a)
   (Either (Voice a) (Voices a))
 phrases' = error "No phrases'"
 
@@ -3264,20 +3271,20 @@ delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
 -}
 
 transformUi typ = testGroup ("Transform UI" ++ show (typeOf typ)) $ [
-  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ 
+  testProperty "(t<->u) `transform` b ! t          == b ! 0" $
     \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! t          == b ! 0,
 
-  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ 
+  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $
     \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
 
-  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ 
+  testProperty "(t<->u) `transform` b ! u           == b ! 1" $
     \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! u           == b ! 1
 
   ]
-notEqualTo x y 
+notEqualTo x y
   | x == y    = y + 1
   | otherwise = y
 
@@ -3358,7 +3365,7 @@ drawPart' = mconcat . fmap drawNote'
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
 drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
   where
-  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) 
+  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5)
     $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
@@ -3409,8 +3416,8 @@ openG' dia = do
 
 
 testNotes j = let
-  staff n = drawSomeNotes 
-    (take 60 $ drop n $ cycle $ fmap (subtract 5) 
+  staff n = drawSomeNotes
+    (take 60 $ drop n $ cycle $ fmap (subtract 5)
     $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,
        8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
   in
@@ -3418,7 +3425,7 @@ testNotes j = let
 
 -- drawSomeNotes [0,1,-3,5]
 drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) $ zip [0..] notes) <> lines
-  where      
+  where
     -- pos is offset in spaces
     note pos = moveTo pos $ fc black $ rotateBy (1/15) $ scaleX 1.4 (circle 0.5)
     lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
