@@ -159,6 +159,8 @@ module TimeTypes (
 
         -- * Music.Time.Behavior
         Behavior,
+        -- ** Examples
+        -- $musicTimeBehaviorExamples
         (!^),
         behavior,
 
@@ -174,8 +176,8 @@ module TimeTypes (
         cosine,
 
         -- * Combinators
-        change,
-        change',
+        switch,
+        switch3,
         splice,
         concatBehavior,
 
@@ -708,6 +710,9 @@ _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
 
 
+-- |
+-- Position of the given value.
+--
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
 position d = lens (`_position` d) (flip $ placeAt d)
 
@@ -2202,6 +2207,7 @@ instance HasDuration a => HasDuration (Bounds a) where
 instance HasPosition a => HasPosition (Bounds a) where 
   -- TODO remove everything outside bounds
 
+
 -- |
 -- Add bounds.
 --
@@ -2210,6 +2216,10 @@ bounds t u x = Bounds (t <-> u, x)
 
 -- |
 -- Add bounds.
+--
+-- @
+-- (s,x)^.note = (bounding s . transform s) x
+-- @
 --
 bounding :: Span -> a -> Bounds a
 bounding (view range -> (t, u)) = bounds t u
@@ -2489,26 +2499,50 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- | 
 -- Returns the value of a behavior at a given time
 --
--- You can use '!' instead of '!^', it is only defined here to provide
--- a nicer documentation for behaviors.
--- 
--- @
--- ('const' x)^.'behavior' ! t == x   forall t
--- @
+-- Note that 
 --
+-- @
+-- '!^' == '!'
+-- @
+-- 
+-- It is defined as an alias to make the documentation somewhat nicer.
+-- 
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
 
 -- |
 -- View a behavior as a time function and vice versa.
 --
--- You can use 'tabulated' instead of 'behavior', it is only defined here to provide
--- a nicer documentation for behaviors.
+-- Note that 
 --
--- This let us convert any function to a behavior using '^.' or 'view'.
---
--- /Examples/
+-- @
+-- 'behavior' == 'tabulated'
+-- @
 -- 
+-- It is defined as an alias to make the documentation somewhat nicer.
+-- 
+
+behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+behavior = tabulated
+
+-- |
+-- View a time function as a behavior.
+--
+-- @
+-- unbehavior    = from behavior
+-- x^.unbehavior = (x !)
+-- @
+--
+unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
+unbehavior = from behavior
+
+-- 
+-- $musicTimeBehaviorExamples
+-- 
+-- 'behavior' let us convert any function to a behavior using '^.' or 'view'.
+--
+-- We can unwrap a behavior using @'from' 'behavior'@ or '!^'.
+--
 -- A sine function
 --   
 -- @
@@ -2527,26 +2561,15 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- ('+')^.'behavior' '<*>' 10
 -- @
 -- 
-behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-behavior = tabulated
 
--- |
--- View a time function as a behavior.
---
+
+-- TODO find a place for this
+-- 
 -- @
--- unbehavior    = from behavior
--- x^.unbehavior = (x !)
+-- ('const' x)^.'behavior' ! t == x   forall t
 -- @
 --
-unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
-unbehavior = from behavior
-
--- behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-
--- This isomorphism can be used to turn any function into a behavior
---
--- >>> floor^.behavior ! 3.5
--- 3
+-- 
 
 
 -- |
@@ -2568,7 +2591,7 @@ time = realToFrac^.behavior
 -- that interval.
 --
 unit :: Fractional a => Behavior a
-unit = change 0 0 (change 1 time 1)
+unit = switch 0 0 (switch 1 time 1)
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
@@ -2602,7 +2625,7 @@ sawtooth = time - fmap floor' time
 -- A behavior that is 1 at time 0, and 0 at all other times.
 --
 impulse :: Num a => Behavior a
-impulse = change' 0 0 1 0
+impulse = switch3 0 0 1 0
 -- > f t | t == 0    = 1
 -- >     | otherwise = 0
 --
@@ -2610,12 +2633,12 @@ impulse = change' 0 0 1 0
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
 --
-turnOn  = change 0 0 1
+turnOn  = switch 0 0 1
 
 -- |
 -- A behavior that goes from 1 to 0 at time 0.
 --
-turnOff = change 0 1 0
+turnOff = switch 0 1 0
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
@@ -2639,22 +2662,22 @@ focusedOn :: Span -> Lens' (Behavior a) (Segment a)
 focusedOn = undefined
 
 -- |
--- Instantly change from one behavior to another.
+-- Instantly switch from one behavior to another.
 --
--- Formally, @'change' t x y@ behaves as @x@ until time @t@, at which point it starts
+-- @'switch' t x y@ behaves as @x@ until time @t@, at which point it starts
 -- behaving as @y@.
 --
-change :: Time -> Behavior a -> Behavior a -> Behavior a
-change t rx ry = change' t rx ry ry
+switch :: Time -> Behavior a -> Behavior a -> Behavior a
+switch t rx ry = switch3 t rx ry ry
 
 -- |
--- Instantly change from one behavior to another with an optinal intermediate value.
+-- Instantly switch from one behavior to another with an optinal intermediate value.
 --
--- Formally, @'change\'' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
+-- @'switch' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
 -- At time @t@ it has value @y '!^' t@.
 --
-change' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-change' t rx ry rz = tabulate $ \u -> case u `compare` t of
+switch3 :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
+switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
     LT -> rx ! u
     EQ -> ry ! u
     GT -> rz ! u
@@ -2663,7 +2686,7 @@ change' t rx ry rz = tabulate $ \u -> case u `compare` t of
 -- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
 -- for a limited amount of time.
 --
--- Formally, @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
+-- @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
 -- outside.
 --
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
@@ -2675,7 +2698,7 @@ splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . J
 concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehavior = undefined
 
--- change :: Time -> Reactive a -> Reactive a -> Reactive a
+-- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
 
 
