@@ -448,7 +448,7 @@ import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, Level, above,
                                                below, index, inside, parts,
-                                               reversed, transform, under, (|>))
+                                               reversed, transform, (|>))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -601,8 +601,9 @@ infixl 6 !
 -- 'tabulated' = 'from' 'retabulated'
 -- @
 --
-tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
+tabulated :: (Representable f, Representable g) => Iso (Rep f -> a) (Rep g -> b) (f a) (g b)
 tabulated = iso tabulate index
+-- tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
 
 -- |
 -- The reverse isomorpism between a representable functor and its representation.
@@ -612,7 +613,7 @@ tabulated = iso tabulate index
 -- 'retabulated' = 'from' 'tabulated'
 -- @
 --
-retabulated :: Representable f => Iso (f a) (f b) (Rep f -> a) (Rep f -> b)
+retabulated :: (Representable f, Representable g) => Iso (f a) (g b) (Rep f -> a) (Rep g -> b)
 retabulated = iso index tabulate
 
 
@@ -2598,8 +2599,8 @@ bounded = iso ns2bb bb2ns
   where
     bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
     ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
-    s2b = tabulate . ( .realToFrac) . index
-    b2s = tabulate . (. realToFrac) . index
+    s2b = under tabulated (. realToFrac)
+    b2s = under tabulated (. realToFrac)
 
 --
 -- Note that the isomorhism only works because of 'Bound' being abstract.
