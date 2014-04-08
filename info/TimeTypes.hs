@@ -18,6 +18,47 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
 
+{-
+  Music.Time.Transform
+  Music.Time.Duration
+  Music.Time.Position
+  Music.Time.Reverse
+  Music.Time.Split
+  Music.Time.Juxtapose
+
+  Music.Time.Time      \
+  Music.Time.Duration   * (merge as M.T.Types?) 
+  Music.Time.Spen      /
+
+  Music.Time.Stretched
+  Music.Time.Delayed
+  Music.Time.Note
+  Music.Time.Voice
+  Music.Time.Chord
+  Music.Time.Score
+  Music.Time.Segment
+  Music.Time.Linear   ?
+  Music.Time.Spline   ?
+  Music.Time.Behavior
+  Music.Time.Reactive
+  
+  Music.Score.Meta
+  Music.Score.Pitch
+  Music.Score.Dynamics
+  Music.Score.Articulation
+  Music.Score.Part
+    
+  Music.Score.GraceNotes
+  Music.Score.Ornaments
+  Music.Score.Tremolo
+  Music.Score.Text
+  Music.Score.Harmonics
+  Music.Score.Slide
+  Music.Score.Clef
+  Music.Score.Repeats
+  
+-}
+
 module TimeTypes (
         -- -- * Data.Clipped
         -- Clipped,
@@ -231,6 +272,14 @@ module TimeTypes (
         mapEvents,
         filterEvents,
         mapFilterEvents,
+        
+        
+        -- voices -- Lens' (Score a) [Voice a]
+        -- phrases -- Lens' (Voice a) [Phrase a]
+        -- XXX how to compose traversals?
+        
+        -- mapVoices, -- ([Voice a] -> [Voice a]) -> Score a -> Score a
+        -- mapPhrases, -- ([Phrase a] -> [Phrase a]) -> Voice a -> Voice a
 
 
 
@@ -259,6 +308,9 @@ module TimeTypes (
         -- octavesBelow,
         -- ** Intervals
         augmentIntervals,
+        
+        -- pitchIs, to write filter pitchIs ... etc
+        
         -- TODO gliss etc
 
         -- * Music.Score.Dynamic
