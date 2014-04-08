@@ -3439,22 +3439,10 @@ monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   where
     (<>) = mappend
 
--- functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
--- functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
---   testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
---          (fmap id x == id x)
---   ]
-
--- applicative :: (Applicative f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
--- applicative typ = testGroup ("instance Applicative " ++ show (typeOf typ)) $ [
---
---   testProperty "pure id <*> v = v" $ \x -> assuming (sameType typ x) ((pure id <*> x) == x),
---
---   testProperty "pure (.) <*> u <*> v <*> w = u <*> (v <*> w)"
---     $ \u v w -> assuming (sameType typ w)
---       ((pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w)))
---
---   ]
+functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
+  testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
+         (fmap id x == id x)
+  ]
 
 reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
   testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
@@ -3469,6 +3457,28 @@ reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
 
 
 main = defaultMain $ testGroup "All tests" $ [
+  testGroup "Monoid" [
+    monoid (undefined :: ()),
+    monoid (undefined :: Duration),
+    monoid (undefined :: Time),
+    monoid (undefined :: Span),
+    monoidEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
+    monoidEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Time),
+    monoid (undefined :: Voice Time),
+    monoid (undefined :: Score Time)
+  ],
+
+  testProperty "============================================================" $ True,  
+  testGroup "Functor" [
+    functor (undefined :: [()]),
+    functor (undefined :: Note Time),
+    functor (undefined :: Delayed Time),
+    functor (undefined :: Stretched Time),
+    functor (undefined :: Voice Time),
+    functor (undefined :: Score Time)
+  ],
+
+  testProperty "============================================================" $ True,  
   testGroup "Reversible" [
     reversible (undefined :: ()),
     reversible (undefined :: Double),
@@ -3485,25 +3495,7 @@ main = defaultMain $ testGroup "All tests" $ [
     reversible (undefined :: Score Time)
   ],
 
-  testGroup "Reversible" [
-    monoid (undefined :: ()),
-
-    monoid (undefined :: Duration),
-    monoid (undefined :: Time),
-    monoid (undefined :: Span),
-
-    monoidEq (inspecting (! 0)) (undefined :: Segment Time),
-    monoidEq (inspecting (! 1)) (undefined :: Segment Time),
-
-    monoidEq (inspecting (! 0)) (undefined :: Behavior Time),
-    monoidEq (inspecting (! 1)) (undefined :: Behavior Time),
-    monoidEq (inspecting (! 0)) (undefined :: Behavior ()),
-    monoidEq (inspecting (! 1)) (undefined :: Behavior ()),
-
-    monoid (undefined :: Voice Time),
-    monoid (undefined :: Score Time)
-  ],
-
+  testProperty "============================================================" $ True,  
   testGroup "Delay and stretch" [
     stretchDurationLaw (undefined :: Stretched Time),
     delayDurationLaw   (undefined :: Stretched Time),
@@ -3520,6 +3512,7 @@ main = defaultMain $ testGroup "All tests" $ [
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
                              
+  testProperty "============================================================" $ True,  
     testGroup "Nothing" []
   ]
 #endif // INCLUDE_TESTS
