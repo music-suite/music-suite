@@ -1,4 +1,3 @@
-
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -2280,7 +2279,7 @@ instance Rewrapped (Bounds a) (Bounds b)
 
 instance Reversible a => Reversible (Bounds a) where
   -- TODO
-instance Splittable a => Splittable (Bounds a) where
+instance (HasPosition a, Splittable a) => Splittable (Bounds a) where
   -- TODO
 
 -- |
@@ -2290,11 +2289,14 @@ instance Splittable a => Splittable (Bounds a) where
 instance Transformable a => Transformable (Bounds a) where
   transform t = over (_Wrapped) (transform t *** transform t)
 
-instance HasDuration a => HasDuration (Bounds a) where
-  -- TODO truncate then take duration
+instance (HasPosition a, HasDuration a) => HasDuration (Bounds a) where
+  _duration x = _offset x .-. _onset x
 
 instance HasPosition a => HasPosition (Bounds a) where
-  -- TODO remove everything outside bounds
+  _position (Bounds (view range -> (t, u), x)) d = truncating t u (_position x d)
+
+truncating :: Ord a => a -> a -> a -> a
+truncating t u x = (x `max` t) `min` u
 
 
 -- |
