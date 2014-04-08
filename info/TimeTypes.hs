@@ -427,6 +427,7 @@ import           Data.Ratio
 import qualified Diagrams.Backend.SVG         as SVG
 import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                Segment, Time, Transformable,
+                                               Product,
                                                after, atTime, clipped, duration,
                                                during, era, era, interval, inv,
                                                offset, place, position, start,
@@ -462,7 +463,7 @@ import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
-import           Data.Semigroup
+import           Data.Semigroup               hiding (Product)
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
 import           Data.Traversable             (Traversable)
@@ -478,6 +479,11 @@ import           Test.Tasty                   hiding (over, under)
 import           Test.Tasty.SmallCheck        hiding (over, under)
 
 import qualified Data.Ratio                   as Util_Ratio
+
+import Data.Functor.Compose
+import Data.Functor.Constant
+import Data.Functor.Identity
+import Data.Functor.Product
 
 
 -- Misc instances
@@ -818,11 +824,11 @@ instance HasDuration a => HasDuration (a, b) where
 instance HasDuration b => HasDuration (a, b, c) where
   _duration (_,d,_) = _duration d
 
-instance HasDuration a => HasDuration (Product a) where
-  _duration (Product x) = _duration x
+-- instance HasDuration a => HasDuration (Product a) where
+  -- _duration (Product x) = _duration x
 
-instance HasDuration a => HasDuration (Sum a) where
-  _duration (Sum x) = _duration x
+-- instance HasDuration a => HasDuration (Sum a) where
+  -- _duration (Sum x) = _duration x
 
 instance HasDuration a => HasDuration (Min a) where
   _duration (Min x) = _duration x
@@ -2437,7 +2443,6 @@ deriving instance Functor Note
 deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
-deriving instance Applicative Note
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
@@ -2446,6 +2451,7 @@ instance (Show a, Transformable a) => Show (Note a) where
 -- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
 -- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
+deriving instance Applicative Note
 
 -- | TODO Unsafe
 instance Wrapped (Note a) where
@@ -2487,7 +2493,7 @@ noteValue :: (Transformable a, Transformable b) =>
 noteValue = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
-    mapNote f (Note (s,x)) = Note (s, f `whilst` negateV s $ x)
+    mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
 
 {-# INLINE noteValue #-}
 
@@ -2621,8 +2627,8 @@ bounded :: Iso
   (Bound (Behavior b))
 bounded = iso ns2bb bb2ns 
   where
-    bb2ns (Bound (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
-    ns2bb (Note (s, x))   = Bound (s,       transform s           $ s2b $ x)
+    bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
+    ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
     s2b = tabulate . ( .realToFrac) . index
     b2s = tabulate . (. realToFrac) . index
 
@@ -3127,7 +3133,7 @@ focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
     get = view (from bounded.noteValue) . bounds 0 1
-    set x = splice x . (view bounded) . return
+    set x = splice x . (view bounded) . pure
 
 
 -- |
@@ -3216,8 +3222,8 @@ instance Applicative Score where
   (<*>) = ap
 
 instance Monad Score where
-  return = (^. _Unwrapped') . return . return
-  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+  return = (^. _Unwrapped) . pure . pure
+  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Score where
   empty = mempty
@@ -3627,9 +3633,13 @@ instance Wrapped (Reactive a) where
     type Unwrapped (Reactive a) = ([Time], Behavior a)
     _Wrapped' = iso getReactive Reactive
 
+instance Rewrapped (Reactive a) (Reactive b)
 instance Applicative Reactive where
-    pure    = (^. _Unwrapped') . pure . pure
-    ((^. _Wrapped') -> (tf, rf)) <*> ((^. _Wrapped') -> (tx, rx)) = (^. _Unwrapped') (tf <> tx, rf <*> rx)
+    pure  = pureDefault
+    (<*>) = apDefault
+
+(view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)
+pureDefault = view _Unwrapped . pure . pure
 
 -- |
 -- Get the initial value.
@@ -4219,8 +4229,8 @@ testPD = openG $ (mconcat $ fmap draw notes2)
 
     pitchCurve = delay 1 $ stretch 20 sine
     dynCurve   = delay 1 $ delay 3 unit
-    note1      = delay 1 $ delay 0.5 $ stretch 3 $ return $ PD (cosine,sine)
-    note2      = delay 1 $ delay 7  $ stretch 1 $ return $ PD (cosine,sine)
+    note1      = delay 1 $ delay 0.5 $ stretch 3 $ pure $ PD (cosine,sine)
+    note2      = delay 1 $ delay 7  $ stretch 1 $ pure $ PD (cosine,sine)
   
 
 
