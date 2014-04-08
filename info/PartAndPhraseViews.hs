@@ -8,6 +8,21 @@ Behavior a
 Linear a  = (a, a)
   -- Note that (Span === Linear Time)
 Spline a
+  focusedOn :: Span -> Lens (Behavior a) (Segment a)
+
+
+
+Score a
+  -- single voice, starting at 0
+  note :: Prism (Score a) (Note a)   
+  -- single restless voice, starting at 0
+  voice :: Prism (Score a) (Voice a) 
+
+  -- restless voices starting at 0 (no overlap but possibly different length)
+  voices :: Eq (Part a) => Prism (Score a) [Voice a]
+
+
+-- XXX Rename Voice to Phrase, use 'Voice a' to mean [Phrase a]  
 
 Score a       -- Arbitrary position, transl-sens
     Note a    -- Gives something a position and duration, transl-sens    

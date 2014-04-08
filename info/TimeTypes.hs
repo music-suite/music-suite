@@ -1872,6 +1872,11 @@ volume a = dynamics *~ a
 level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
+
+--
+-- TODO non-linear fades etc
+--
+
 -- |
 -- Fade in.
 --
@@ -3814,3 +3819,6 @@ drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) 
 
 toDouble :: Real a => a -> Double
 toDouble = realToFrac
+
+vs :: Lens' (Score a) [Voice a]
+vs = undefined
