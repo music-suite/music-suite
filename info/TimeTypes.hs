@@ -598,6 +598,9 @@ instance Transformable a => Transformable (a, b) where
 instance Transformable a => Transformable [a] where
   transform t = map (transform t)
 
+instance Transformable a => Transformable (Seq a) where
+  transform t = fmap (transform t)
+
 -- |
 -- Functions transform by conjugation, i.e. we reverse-transform the argument
 -- and transform the result.
@@ -2642,7 +2645,7 @@ unbehavior = from behavior
 -- A behavior that switches from (-1) to 1 at time 0
 --
 -- @
--- (\t -> if t < 0 then (-1) else 1)^.'behavior'
+-- (\\t -> if t < 0 then (-1) else 1)^.'behavior'
 -- @
 --
 -- A time-varying function applied to a value
@@ -2804,7 +2807,7 @@ concatBehavior = error "No concatBehavior"
 type ScoreNote a = Note a
 
 newtype Score a = Score { getScore :: [ScoreNote a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show)
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = [ScoreNote a]
@@ -2913,7 +2916,7 @@ mapFilterEvents f = error "No mapFilterEvents"
 -- A 'Voice' is a sequence of stretched values.
 --
 newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid)
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show)
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = error "No singleStretched"
@@ -2926,23 +2929,23 @@ instance Monad Voice where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` (view _Wrapped xs)
 
-instance Transformable (Voice a) where
-  -- TODO
-
-instance Reversible a => Reversible (Voice a) where
-  -- TODO
-
-instance HasDuration (Voice a) where
-  -- TODO
-
-instance Splittable a => Splittable (Voice a) where
-  -- TODO
-
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (Seq (Stretched a))
   _Wrapped' = iso getVoice Voice
 
 instance Rewrapped (Voice a) (Voice b)
+
+instance Transformable (Voice a) where
+  transform s = over _Wrapped' (transform s)
+
+instance HasDuration (Voice a) where
+  _duration = Foldable.sum . fmap _duration . view _Wrapped'
+
+instance Splittable a => Splittable (Voice a) where
+  -- TODO
+
+instance Reversible a => Reversible (Voice a) where
+  -- TODO
 
 -- |
 -- Voice
@@ -3302,6 +3305,17 @@ instance (Monad m, Serial m a) => Serial m (Stretched a) where
 instance (Monad m, Serial m a) => Serial m (Behavior a) where
   series = newtypeCons Behavior
 
+instance (Monad m, Serial m a) => Serial m (Voice a) where
+  series = do
+    x <- series
+    y <- series
+    return $ return x <> return y
+instance (Monad m, Serial m a) => Serial m (Score a) where
+  series = do
+    x <- series
+    y <- series
+    return $ return x <> return y
+
 
 -- > onset (delay n a)      = n ^+. onset a
 -- > offset (delay n a)     = n ^+. offset a
@@ -3311,15 +3325,21 @@ instance (Monad m, Serial m a) => Serial m (Behavior a) where
 --
 -- > duration a = duration (delay n a)
 
-constDurLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
-constDurLaw typ = testGroup ("Delay and duration" ++ show (typeOf typ)) $ [
-  testProperty "duration a == duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
+delayDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
+delayDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
+  testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration a == _duration (delay n a)
+  ]
+
+stretchDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
+stretchDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
+  testProperty "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
+                _duration (stretch n a) == n ^* (_duration a)
   ]
 
 -- FOO2
 
-delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
+delayBehLaw typ = testGroup ("Delay behavior " ++ show (typeOf typ)) $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
                 delay n b ! t == b ! (t .-^ n)
   ]
@@ -3331,7 +3351,7 @@ delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
   (t<->u) `transform` b ! u           == b ! 1
 -}
 
-transformUi typ = testGroup ("Transform UI" ++ show (typeOf typ)) $ [
+transformUi typ = testGroup ("Transform UI " ++ show (typeOf typ)) $ [
   testProperty "(t<->u) `transform` b ! t          == b ! 0" $
     \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! t          == b ! 0,
@@ -3389,8 +3409,8 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
 ap2 u v w = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
 
 main = defaultMain $ testGroup "" $ [
-  testProperty "rev . rev == id" $ \(x :: ())  -> rev (rev x) == x,
-  testProperty "rev . rev == id" $ \(x :: [Int]) -> rev (rev x) == x,
+  testProperty "rev . rev == id" $ \(x :: ())   -> rev (rev x) == x,
+  testProperty "rev . rev == id" $ \(x :: [()]) -> rev (rev x) == x,
 
   monoid (undefined :: ()),
   monoid (undefined :: Maybe ()),
@@ -3401,8 +3421,15 @@ main = defaultMain $ testGroup "" $ [
   monoid (undefined :: Duration),
   monoid (undefined :: Span),
 
-  constDurLaw (undefined :: Note ()),
-  constDurLaw (undefined :: Stretched ()),
+  stretchDurationLaw (undefined :: Stretched ()),
+  delayDurationLaw   (undefined :: Stretched ()),
+  stretchDurationLaw (undefined :: Note ()),
+  delayDurationLaw   (undefined :: Note ()),
+  stretchDurationLaw (undefined :: Voice ()),
+  delayDurationLaw   (undefined :: Voice ()),
+  stretchDurationLaw (undefined :: Score ()),
+  delayDurationLaw   (undefined :: Score ()),
+  
   delayBehLaw (undefined :: Behavior Int8),
 
   transformUi (undefined :: Behavior Int8)
