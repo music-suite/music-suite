@@ -209,7 +209,7 @@ module TimeTypes (
         Reactive,
         initial,
         final,
-        intermediates,
+        intermediate,
         discrete,
         interpolate,
         sample,  
@@ -217,7 +217,7 @@ module TimeTypes (
         -- ** Combinators
         switch,
         switch3,
-        cross,
+        -- cross,
         splice,
         -- noteToBehavior,
         -- noteToBehavior',
@@ -1492,7 +1492,7 @@ t <-> u = t >-> (u .-. t)
 (>->) = curry Span
 
 -- |
--- @d <-> t@ represents the span between @t .-^ d@ and @t@.
+-- @d \<-\> t@ represents the span between @t .-^ d@ and @t@.
 --
 (<-<) :: Duration -> Time -> Span
 a <-< b = (b .-^ a) <-> b
@@ -3529,18 +3529,38 @@ newtype Reactive a = Reactive (Store (Zipper [] Time) a)
 data Store s a = Store (s -> a) s
 data Zipper f a = Zipper (f a) a (f a)
 
--- | Get the initial value.
+-- |
+-- Get the initial value.
+--
 initial :: Reactive a -> a
 
--- | Get the final value.
+-- |
+-- Get the final value.
+--
 final :: Reactive a -> a
 
-intermediates :: Reactive a -> Voice a
-(initial, final, intermediates) = error "No (initial, final, intermediates)"
+-- |
+-- Get all intermediate values.
+--
+intermediate :: Reactive a -> [Note a]
+(initial, final, intermediate) = error "No (initial, final, intermediate)"
 
+-- |
+-- Realize a 'Reactive' value as a discretely changing behavior.
+--
 discrete :: Reactive a -> Behavior a
+
+-- |
+-- Realize a 'Reactive' value as an interpolated behavior.
+--
 interpolate :: Segment (a -> b) -> Reactive a -> Behavior b
+
+-- |
+-- Sample a 'Behavior' into a reactive.
+--
 sample   :: [Time] -> Behavior a -> Reactive a
+
+-- TODO linear approximation
 (discrete, interpolate, sample) = error "No (discrete, interpolate, sample)"
 
 {-
