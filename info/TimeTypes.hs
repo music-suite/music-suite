@@ -18,6 +18,11 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
 
+#ifndef __HADDOCK__
+#define INCLUDE_TESTS
+#define INCLUDE_LIFTED
+#endif
+
 {-
   Music.Time.Transform
   Music.Time.Duration
@@ -248,6 +253,7 @@ module TimeTypes (
         intermediate,
         discrete,
         continous,
+        continousWith,
         sample,
         -- TODO
         -- window,
@@ -2698,28 +2704,6 @@ instance Show (Segment a) where
 
 deriving instance Typeable1 Segment
 deriving instance Distributive Segment
-deriving instance Semigroup a => Semigroup (Segment a)
-deriving instance Monoid a => Monoid (Segment a)
-deriving instance Num a => Num (Segment a)
-deriving instance Fractional a => Fractional (Segment a)
-deriving instance Floating a => Floating (Segment a)
-
-instance IsPitch a => IsPitch (Segment a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Segment a) where
-  fromInterval = pure . fromInterval
-
-instance Eq a => Eq (Segment a) where
-  (==) = error "No fun"
-
-instance Ord a => Ord (Segment a) where
-  (<) = error "No fun"
-  max = liftA2 max
-  min = liftA2 min
-
--- instance Real a => Real (Segment a) where
-  -- toRational = toRational . (`index` 0)
 
 instance Representable Segment where
   type Rep Segment = Duration
@@ -2773,6 +2757,29 @@ instance (HasPart a a, HasPart a b) => HasParts (Segment a) (Segment b) where
 instance (HasPart a a, HasPart a b) => HasPart (Segment a) (Segment b) where
   part = through part part
 
+#ifdef INCLUDE_LIFTED
+deriving instance Semigroup a => Semigroup (Segment a)
+deriving instance Monoid a => Monoid (Segment a)
+deriving instance Num a => Num (Segment a)
+deriving instance Fractional a => Fractional (Segment a)
+deriving instance Floating a => Floating (Segment a)
+
+instance IsPitch a => IsPitch (Segment a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Segment a) where
+  fromInterval = pure . fromInterval
+
+instance Eq a => Eq (Segment a) where
+  (==) = error "No fun"
+
+instance Ord a => Ord (Segment a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
+#endif
+
+
 -- |
 -- Index a segment.
 --
@@ -2793,8 +2800,11 @@ timeS :: Floating a => Segment a
 timeS = realToFrac^.segment
 
 sineS :: Floating a => Segment a
+#ifdef INCLUDE_LIFTED
 sineS = sin (timeS*tau)
-
+#else
+sineS = undefined
+#endif
 
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
@@ -2874,39 +2884,6 @@ instance Show (Behavior a) where
 deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 
-deriving instance Semigroup a => Semigroup (Behavior a)
-deriving instance Monoid a => Monoid (Behavior a)
-deriving instance Num a => Num (Behavior a)
-deriving instance Fractional a => Fractional (Behavior a)
-deriving instance Floating a => Floating (Behavior a)
-deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
-
-instance IsPitch a => IsPitch (Behavior a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Behavior a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Behavior a) where
-  fromDynamics = pure . fromDynamics
-
-instance Eq a => Eq (Behavior a) where
-  (==) = error "No fun"
-
-instance Ord a => Ord (Behavior a) where
-  (<) = error "No fun"
-  max = liftA2 max
-  min = liftA2 min
-
-instance VectorSpace a => VectorSpace (Behavior a) where
-  type Scalar (Behavior a) = Behavior (Scalar a)
-  (*^) = liftA2 (*^)
-
-instance AffineSpace a => AffineSpace (Behavior a) where
-  type Diff (Behavior a) = Behavior (Diff a)
-  (.-.) = liftA2 (.-.)
-  (.+^) = liftA2 (.+^)
-
 instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
     where
@@ -2917,7 +2894,6 @@ instance Reversible (Behavior a) where
   -- TODO alternative
   -- rev = (stretch (-1) `whilst` undelaying 0.5)
   -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
-
 
 instance Representable Behavior where
   type Rep Behavior = Time
@@ -2968,6 +2944,46 @@ instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
   parts = through part part
 instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
   part = through part part
+
+
+
+-- Needed by Reactive
+deriving instance Semigroup a => Semigroup (Behavior a)
+deriving instance Monoid a => Monoid (Behavior a)
+deriving instance Num a => Num (Behavior a)
+deriving instance Fractional a => Fractional (Behavior a)
+deriving instance Floating a => Floating (Behavior a)
+
+#ifdef INCLUDE_LIFTED
+deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
+
+instance IsPitch a => IsPitch (Behavior a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Behavior a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Behavior a) where
+  fromDynamics = pure . fromDynamics
+
+instance Eq a => Eq (Behavior a) where
+  (==) = error "No fun"
+
+instance Ord a => Ord (Behavior a) where
+  (<) = error "No fun"
+  max = liftA2 max
+  min = liftA2 min
+
+instance VectorSpace a => VectorSpace (Behavior a) where
+  type Scalar (Behavior a) = Behavior (Scalar a)
+  (*^) = liftA2 (*^)
+
+instance AffineSpace a => AffineSpace (Behavior a) where
+  type Diff (Behavior a) = Behavior (Diff a)
+  (.-.) = liftA2 (.-.)
+  (.+^) = liftA2 (.+^)
+#endif
+
 
 -- |
 -- Returns the value of a behavior at a given time
@@ -3782,10 +3798,6 @@ sameType _ x = x
 (~~) = sameType
 infixl 0 ~~
 
-#ifndef __HADDOCK__
-#define INCLUDE_TESTS
-#endif
-
 #ifdef INCLUDE_TESTS
 
 -- Tests
@@ -4116,7 +4128,6 @@ main = defaultMain $ testGroup "All tests" $ [
   testProperty "============================================================" $ True,  
     testGroup "Nothing" []
   ]
-#endif // INCLUDE_TESTS
 
 
 
@@ -4314,11 +4325,19 @@ drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) 
     lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
     linesWidth = 3 * fromIntegral (length notes)
 
+#endif // INCLUDE_TESTS
+
+
+
+
+
+
+
+
+
+
 toDouble :: Real a => a -> Double
 toDouble = realToFrac
-
-vs :: Lens' (Score a) [Voice a]
-vs = undefined
 
 -- | Merge lists.
 -- > category: List
