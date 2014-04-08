@@ -174,11 +174,21 @@ module TimeTypes (
         range,
         delta,
 
+        -- ** Properties
+        -- isProper,
+        -- Proper spans are always bounded and closed
+        
         -- ** Points in spans
         inside,
+        
+        -- ** Spans
+        -- Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
         encloses,
-        -- isBefore,
         overlaps,
+        -- union
+        -- intersection
+        -- difference (that actually becomes a split)
+        -- overlap a b = _duration (intersection a b)
 
         -- * Music.Time.Stretched
         Stretched,
@@ -1152,8 +1162,8 @@ instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
 revDefault :: (HasPosition a, Transformable a) => a -> a
-revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
--- revDefault x = (stretch (-1) `under` undelaying (0)) x
+-- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
+revDefault x = stretch (-1) x
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
 
@@ -2615,7 +2625,10 @@ trim :: Monoid b => Bound (Behavior b) -> Behavior b
 trim = trimG
   where
     trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
-    trimG (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
+    trimG (Bound (s, x)) = tabulate (trimOutside s) `apRep` x
+
+trimOutside :: Monoid a => Span -> Time -> a -> a
+trimOutside s t x = if t `inside` s then x else mempty
 
 -- |
 -- Provides an alternative behavior for a limited amount of time.
@@ -3337,7 +3350,7 @@ instance Splittable a => Splittable (Voice a) where
   -- TODO
 
 instance Reversible a => Reversible (Voice a) where
-  rev = over _Wrapped' rev
+  rev = over _Wrapped' (fmap rev) -- TODO OK?
 
 instance HasMeta (Voice a) where
   meta = error "No meta" -- TODO
@@ -3626,10 +3639,8 @@ instance Monad m => CoSerial m Time where
 instance Monad m => CoSerial m Duration where
   coseries = liftM const -- TODO?
 
-instance (Monad m, CoSerial m a) => CoSerial m (Clipped a) where
-  coseries = undefined
-  -- TODO
-  -- coseries = fmap unsafeToClipped
+instance (Monad m, CoSerial m a, Ord a, Num a) => CoSerial m (Clipped a) where
+  coseries = fmap (. fromClipped) . coseries
 
 instance Monad m => Serial m Time where
   series = msum $ fmap return [-1,0,2.13222,10,20]
