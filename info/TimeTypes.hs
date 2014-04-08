@@ -193,8 +193,8 @@ module TimeTypes (
         noteValue,
 
 
-        -- * Music.Time.Bounds
-        Bounds,
+        -- * Music.Time.Bound
+        Bound,
         bounds,
         bounding,
         trim,
@@ -438,7 +438,7 @@ import qualified Data.Ratio                   as Util_Ratio
     Stretched a ≡ (Duration, a)
     Delayed a   ≡ (Duration, a)
     Note a      ≡ (Span, a)
-    Bounds a    ≡ (Time, Time, a)
+    Bound a    ≡ (Time, Time, a)
 
     Voice a     ≡ [Stretched a]
     Track a     ≡ [Delayed a]
@@ -1068,7 +1068,7 @@ class Reversible a where
   rev :: a -> a
 
 -- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
--- Bounds (Behavior a) should reverse around the middle, like a note)
+-- Bound (Behavior a) should reverse around the middle, like a note)
 
 
 
@@ -2417,55 +2417,55 @@ runStretched = uncurry stretch . view _Wrapped
 -- |
 -- TODO rename to 'Bound' ('Bounded' is taken)
 --
--- 'Bounds' restricts the start and stop time of a value, and prevents access to values
--- outside the bounds ('Bounds' SHOULD NOT BE 'Foldable' for this reason).
+-- 'Bound' restricts the start and stop time of a value, and prevents access to values
+-- outside the bounds ('Bound' SHOULD NOT BE 'Foldable' for this reason).
 --
--- 'Bounds' is especially useful to restrict the range of a 'Behavior'. If you have a
+-- 'Bound' is especially useful to restrict the range of a 'Behavior'. If you have a
 -- value with can only be reasonably defined for a particular time range, you can
--- represent it as 'Bounds' 'Behavior'. This is isomorphic to a 'Note' 'Segment', and
+-- represent it as 'Bound' 'Behavior'. This is isomorphic to a 'Note' 'Segment', and
 -- 'bounded' whitnesses the isomorphism.
 --
--- Note that 'trim' and and 'splice' provides a way to safely extract a 'Bounds' 'Behavior'.
+-- Note that 'trim' and and 'splice' provides a way to safely extract a 'Bound' 'Behavior'.
 --
 -- Intuitively, an infinately varying value with a restricted range is the same as a value
 -- defined in a particular range with an explicit 'position'.
 --
-newtype Bounds a = Bounds { getBounds :: (Span, a) }
+newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor)
 
 -- | TODO unsafe
-instance Foldable Bounds where
-  foldr f z (Bounds (_,x)) = f x z
+instance Foldable Bound where
+  foldr f z (Bound (_,x)) = f x z
 
 -- | TODO unsafe
-instance Traversable Bounds where
-  traverse f (Bounds (s,x)) = (Bounds . (s,)) <$> f x
+instance Traversable Bound where
+  traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
 
 -- | TODO unsafe
-instance Wrapped (Bounds a) where
-  type Unwrapped (Bounds a) = (Span, a)
-  _Wrapped' = iso getBounds Bounds
+instance Wrapped (Bound a) where
+  type Unwrapped (Bound a) = (Span, a)
+  _Wrapped' = iso getBound Bound
 
   -- | TODO unsafe
-instance Rewrapped (Bounds a) (Bounds b)
+instance Rewrapped (Bound a) (Bound b)
 
-instance Reversible a => Reversible (Bounds a) where
+instance Reversible a => Reversible (Bound a) where
   -- TODO
-instance (HasPosition a, Splittable a) => Splittable (Bounds a) where
+instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
 
 -- |
--- 'Bounds' transform by transforming the bounded value as well as
+-- 'Bound' transform by transforming the bounded value as well as
 -- the bounds.
 --
-instance Transformable a => Transformable (Bounds a) where
+instance Transformable a => Transformable (Bound a) where
   transform t = over _Wrapped (transform t *** transform t)
 
-instance (HasPosition a, HasDuration a) => HasDuration (Bounds a) where
+instance (HasPosition a, HasDuration a) => HasDuration (Bound a) where
   _duration x = _offset x .-. _onset x
 
-instance HasPosition a => HasPosition (Bounds a) where
-  _position (Bounds (view range -> (t, u), x)) d = truncating t u (_position x d)
+instance HasPosition a => HasPosition (Bound a) where
+  _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
 
 truncating :: Ord a => a -> a -> a -> a
 truncating t u x = (x `max` t) `min` u
@@ -2473,8 +2473,8 @@ truncating t u x = (x `max` t) `min` u
 -- |
 -- Add bounds.
 --
-bounds :: Time -> Time -> a -> Bounds a
-bounds t u x = Bounds (t <-> u, x)
+bounds :: Time -> Time -> a -> Bound a
+bounds t u x = Bound (t <-> u, x)
 
 -- |
 -- Add bounds.
@@ -2483,17 +2483,17 @@ bounds t u x = Bounds (t <-> u, x)
 -- (s,x)^.note = (bounding s . transform s) x
 -- @
 --
-bounding :: Span -> a -> Bounds a
+bounding :: Span -> a -> Bound a
 bounding (view range -> (t, u)) = bounds t u
 
 -- |
 -- Add bounds.
 --
-trim :: Monoid b => Bounds (Behavior b) -> Behavior b
+trim :: Monoid b => Bound (Behavior b) -> Behavior b
 trim = genericTrim
 
-genericTrim :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
-genericTrim (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
+genericTrim :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
+genericTrim (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
 
 -- |
 -- Add bounds.
@@ -2501,18 +2501,43 @@ genericTrim (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else memp
 -- TODO name
 -- TODO only an iso op to trim
 --
-bounded :: Iso' (Note (Segment a)) (Bounds (Behavior a))
+bounded :: Iso' (Note (Segment a)) (Bound (Behavior a))
 bounded = iso ns2bb bb2ns 
   where
-    bb2ns (Bounds (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
-    ns2bb (Note (s, x))   = Bounds (s,       transform s           $ s2b $ x)
+    bb2ns (Bound (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
+    ns2bb (Note (s, x))   = Bound (s,       transform s           $ s2b $ x)
     s2b = tabulate . ( .realToFrac) . index
     b2s = tabulate . (. realToFrac) . index
 
 -- TODO unify with bounded Iso
-noteToBounds :: Note (Behavior a) -> Bounds (Behavior a)
-noteToBounds (view (from note) -> (s,x)) = bounding s (transform s x)
+noteToBound :: Note (Behavior a) -> Bound (Behavior a)
+noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
 
+-- |
+-- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
+-- for a limited amount of time.
+--
+-- @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
+-- outside.
+--
+splice :: Behavior a -> Bound (Behavior a) -> Behavior a
+splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
+  where
+    toLast   = Option . Just . Last
+    fromLast = getLast . fromJust . getOption
+    -- fromJust is safe here, as toLast is used to create the Maybe wrapper
+
+noteToBehavior :: Note a -> Behavior (Maybe a)
+noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
+  where
+    toLast   = Option . Just . Last
+    fromLast = fmap getLast . getOption
+
+noteToBehavior' :: Monoid a => Note a -> Behavior a
+noteToBehavior' = concatBehavior . fmap pure
+
+concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
+concatBehavior = splice mempty . noteToBound
 
 
 
@@ -2620,7 +2645,7 @@ _unit = realToFrac^.segment
 fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
 fromSegment = error "No fromSegment"
 
-fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
+fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bound (Behavior a)) (Bound (Behavior b))
 fromSegment2 = error "No fromSegment2"
 -}
 
@@ -2983,32 +3008,6 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
-
--- |
--- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
--- for a limited amount of time.
---
--- @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
--- outside.
---
-splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
-splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
-  where
-    toLast   = Option . Just . Last
-    fromLast = getLast . fromJust . getOption
-    -- fromJust is safe here, as toLast is used to create the Maybe wrapper
-
-noteToBehavior :: Note a -> Behavior (Maybe a)
-noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
-  where
-    toLast   = Option . Just . Last
-    fromLast = fmap getLast . getOption
-
-noteToBehavior' :: Monoid a => Note a -> Behavior a
-noteToBehavior' = concatBehavior . fmap pure
-
-concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
-concatBehavior = splice mempty . noteToBounds
 
 
 -- |
