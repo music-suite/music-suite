@@ -1790,7 +1790,7 @@ invertPitches p = pitches %~ reflectThrough p
 
 -- |
 augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals = error "No augmentIntervals"
+augmentIntervals = error "Not implemented: augmentIntervals"
 -- TODO generalize to any type where we can traverse phrases of something that has pitch
 
 -- |
@@ -1977,7 +1977,7 @@ compressor :: Attenuable a =>
   -> Scalar (Level a) -- ^ Ratio
   -> a 
   -> a
-compressor = error "No compress"
+compressor = error "Not implemented: compressor"
 
 --
 -- TODO non-linear fades etc
@@ -2099,15 +2099,15 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstL articulations
 
 
-accent = error "No accent"
-marcato = error "No marcato"
-accentLast = error "No accentLast"
-marcatoLast = error "No marcatoLast"
-accentAll = error "No accentAll"
-marcatoAll = error "No marcatoAll"
-tenuto = error "No tenuto"
-staccato = error "No staccato"
-legato = error "No legato"
+accent = error "Not implemented: accent"
+marcato = error "Not implemented: marcato"
+accentLast = error "Not implemented: accentLast"
+marcatoLast = error "Not implemented: marcatoLast"
+accentAll = error "Not implemented: accentAll"
+marcatoAll = error "Not implemented: marcatoAll"
+tenuto = error "Not implemented: tenuto"
+staccato = error "Not implemented: staccato"
+legato = error "Not implemented: legato"
 
 
 
@@ -3143,11 +3143,16 @@ focusOn s = view (focusedOn s)
 -- > focusedOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
 
-focused :: Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
-focused = focusedOn mempty
+focused :: Lens' (Behavior a) (Segment a)
+focused = lens get set
+  where
+    get = view (from bounded.noteValue) . bounds 0 1
+    set x = splice x . (view bounded) . return
 
-focusedOn :: Span -> Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
-focusedOn = error "No focusedOn"
+
+focusedOn :: Span -> Lens' (Behavior a) (Segment a)
+focusedOn s = flip whilstM (negateV s) . focused
+-- or focused . flip whilstM s
 
 -- |
 -- Instantly switch from one behavior to another.
@@ -3176,12 +3181,6 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
 --                     | n >  t = z '!' n
 -- @ 
 --
-
--- |
--- This
---
-cross :: Segment (a -> a -> a) -> Duration -> Time -> Behavior a -> Behavior a -> Behavior a
-cross = error "No cross"
 
 -- |
 -- This
@@ -3289,7 +3288,7 @@ instance Splittable a => Splittable (Score a) where
   -- TODO
 
 instance HasMeta (Score a) where
-  meta = error "No meta" -- TODO
+  meta = error "Not implemented: meta" -- TODO
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
@@ -3317,31 +3316,31 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 notes :: Iso' (Score a) [Note a]
 voices :: Prism' (Score a) [Voice a]
 phrases :: Prism' (Score a) [Phrase () a]
-(voices, phrases) = error "No (voices, phrases)"
+(voices, phrases) = error "Not implemented: (voices, phrases)"
 
 singleNote :: Prism' (Score a) (Note a)
-singleNote = error "No singleNote"
+singleNote = error "Not implemented: singleNote"
 
 singleVoice :: Prism' (Score a) (Voice a)
-singleVoice = error "No singleNote"
+singleVoice = error "Not implemented: singleNote"
 
 singlePhrase :: Prism' (Score a) (Phrase () a)
-singlePhrase = error "No singleNote"
+singlePhrase = error "Not implemented: singleNote"
 
 -- | XXX indexed traversal?
 notes = _Wrapped
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = error "No mapWithSpan"
+mapWithSpan f = error "Not implemented: mapWithSpan"
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = error "No filterWithSpan"
+filterWithSpan f = error "Not implemented: filterWithSpan"
 
 -- | Combination of 'mapEvents' and 'filterEvents'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = error "No mapFilterWithSpan"
+mapFilterWithSpan f = error "Not implemented: mapFilterWithSpan"
 
 -- | Map over the values in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
@@ -3349,11 +3348,11 @@ mapEvents f = mapWithSpan (uncurry f . view delta)
 
 -- | Filter the values in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = error "No filterEvents"
+filterEvents f = error "Not implemented: filterEvents"
 
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = error "No mapFilterEvents"
+mapFilterEvents f = error "Not implemented: mapFilterEvents"
 
 
 
@@ -3373,7 +3372,7 @@ newtype Phrase p a = Phrase (p, [Stretched a])
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance HasMeta (Phrase p a) where
-  meta = error "No meta" -- TODO
+  meta = error "Not implemented: meta" -- TODO
 
 
 
@@ -3424,7 +3423,7 @@ instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
 
 instance HasMeta (Voice a) where
-  meta = error "No meta" -- TODO
+  meta = error "Not implemented: meta" -- TODO
 
 type instance Pitch (Voice a) = Pitch a
 type instance SetPitch g (Voice a) = Voice (SetPitch g a)
@@ -3433,16 +3432,16 @@ instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
 
 
 singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = error "No singleStretched"
+singleStretched = error "Not implemented: singleStretched"
 
 voice :: Prism' (Voice a) [Stretched a]
-voice = error "No singleStretched"
+voice = error "Not implemented: singleStretched"
 
 -- |
 -- Voice
 --
 voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
-voiceNotes = error "No voiceNotes"
+voiceNotes = error "Not implemented: voiceNotes"
 
 -- |
 -- Voice
@@ -3460,17 +3459,17 @@ zipVoice = zipVoiceWith (,)
 -- Join the given voices by multiplying durations and combining values using the given function.
 --
 zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith  = error "No zipVoiceWith"
+zipVoiceWith  = error "Not implemented: zipVoiceWith"
 
 -- |
 -- Join the given voices by combining durations and values using the given function.
 --
 dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
-dzipVoiceWith = error "No dzipVoiceWith"
+dzipVoiceWith = error "Not implemented: dzipVoiceWith"
 
 
 voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = error "No voiceList"
+voiceList = error "Not implemented: voiceList"
 
 -- |
 -- Merge consecutive equal note.
@@ -3524,7 +3523,7 @@ voices' :: Traversal'
   (Voices a)
   (Phrases a)
 -- TODO is there a non-empty version of traversal?
-voices' = error "No voices'"
+voices' = error "Not implemented: voices'"
 
 newtype Phrases a = Phrases { getPhrases :: Seq (Stretched a) }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
@@ -3547,11 +3546,11 @@ instance Splittable a => Splittable (Phrases a) where
 phrases' :: Traversal'
   (Phrases a)
   (Either (Voice a) (Voices a))
-phrases' = error "No phrases'"
+phrases' = error "Not implemented: phrases'"
 
 
 concatVoices :: Monoid a => Phrases a -> Voice a
-concatVoices = error "No concatVoices"
+concatVoices = error "Not implemented: concatVoices"
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -3588,7 +3587,7 @@ final :: Reactive a -> a
 -- Get all intermediate values.
 --
 intermediate :: Reactive a -> [Note a]
-(initial, final, intermediate) = error "No (initial, final, intermediate)"
+(initial, final, intermediate) = error "Not implemented: (initial, final, intermediate)"
 
 -- |
 -- Realize a 'Reactive' value as a discretely changing behavior.
@@ -3612,12 +3611,12 @@ continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 sample   :: [Time] -> Behavior a -> Reactive a
 
 -- TODO linear approximation
-(continous, sample) = error "No (discrete, continous, sample)"
+(continous, sample) = error "Not implemented: (discrete, continous, sample)"
 
 
 window :: [Time] -> Behavior a -> Reactive (Segment a)
 windowed :: Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
-(window, windowed) = error "No (window, windowed)"
+(window, windowed) = error "Not implemented: (window, windowed)"
 
 {-
 
