@@ -29,6 +29,7 @@ module TimeTypes (
         -- * Data.Functor.Rep.Lens
         (!),
         tabulated,
+        retabulated,
 
         -- * Music.Time.Transform
         -- * The Transformable class
@@ -159,6 +160,7 @@ module TimeTypes (
         (!^),
         -- behavior',
         behavior,
+        -- unbehavior,
 
         -- * Common behaviors
         time,
@@ -469,13 +471,32 @@ addLim = zipClippedWith (+)
 -- |
 -- Index a representable functor.
 --
--- Infix version of 'index'.
+-- This is an infix alias for 'index' from "Data.Functor.Rep".
 --
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
 
+-- |
+-- The isomorpism between a representable functor and its representation.
+-- 
+-- @
+-- 'tabulated' = 'iso' 'tabulate' 'index'
+-- 'tabulated' = 'from' 'retabulated'
+-- @
+--
 tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
 tabulated = iso tabulate index
+
+-- |
+-- The reverse isomorpism between a representable functor and its representation.
+-- 
+-- @
+-- 'retabulated' = 'iso' 'index' 'tabulate'
+-- 'retabulated' = 'from' 'tabulated'
+-- @
+--
+retabulated :: Representable f => Iso (f a) (f b) (Rep f -> a) (Rep f -> b)
+retabulated = iso index tabulate
 
 
 
@@ -2602,17 +2623,59 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
   part = through part part
 
 -- | 
--- Index a behavior.
+-- Returns the value of a behavior at a given time
+--
+-- You can use '!' instead of '!^', it is only defined here to provide
+-- a nicer documentation for behaviors.
 -- 
+-- @
+-- ('const' x)^.'behavior' ! t == x   forall t
+-- @
+--
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
 
 -- |
 -- View a behavior as a time function and vice versa.
 --
+-- You can use 'tabulated' instead of 'behavior', it is only defined here to provide
+-- a nicer documentation for behaviors.
 --
+-- This let us convert any function to a behavior using '^.' or 'view'.
+--
+-- /Examples/
+-- 
+-- A sine function
+--   
+-- @
+-- ('sin'.(*'tau').'realToFrac')^.'behavior'
+-- @
+--
+-- A behavior that switches from (-1) to 1 at time 0
+--
+-- @
+-- (\t -> if t < 0 then (-1) else 1)^.'behavior'
+-- @
+--
+-- A time-varying function applied to a value
+-- 
+-- @
+-- ('+')^.'behavior' '<*>' 10
+-- @
+-- 
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
+
+-- |
+-- View a time function as a behavior.
+--
+-- @
+-- unbehavior    = from behavior
+-- x^.unbehavior = (x !)
+-- @
+--
+unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
+unbehavior = from behavior
 
 -- behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 
@@ -2712,13 +2775,19 @@ focusedOn :: Span -> Lens' (Behavior a) (Segment a)
 focusedOn = undefined
 
 -- |
--- This
+-- Instantly change from one behavior to another.
+--
+-- Formally, @'change' t x y@ behaves as @x@ until time @t@, at which point it starts
+-- behaving as @y@.
 --
 change :: Time -> Behavior a -> Behavior a -> Behavior a
 change t rx ry = change' t rx ry ry
 
 -- |
--- This
+-- Instantly change from one behavior to another with an optinal intermediate value.
+--
+-- Formally, @'change\'' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
+-- At time @t@ it has value @y '!^' t@.
 --
 change' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 change' t rx ry rz = tabulate $ \u -> case u `compare` t of
@@ -2727,7 +2796,11 @@ change' t rx ry rz = tabulate $ \u -> case u `compare` t of
     GT -> rz ! u
 
 -- |
--- This
+-- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
+-- for a limited amount of time.
+--
+-- Formally, @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
+-- outside.
 --
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
 splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . Just . Last) c <> (trim . (fmap.fmap) (Option . Just . Last)) n
