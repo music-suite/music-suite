@@ -1003,27 +1003,19 @@ reversed = iso rev rev
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 -- |
--- Internal time representation. Can be anything with Fractional and RealFrac instances.
+-- Internal time representation. Can be anything with instances 
+-- for 'Fractional' and 'RealFrac'.
 --
 type TimeBase = Rational
+
+
+-- Can be enabled for experimental time representation
+
 -- deriving instance Floating Time
 -- deriving instance Floating Duration
+
+
 
 -- |
 -- Duration, corresponding to note values in standard notation.
@@ -1055,9 +1047,10 @@ instance Semigroup Duration where
   (<>) = (*^)
 
 instance Monoid Duration where
-  mempty  = 1 -- TODO use some notion of norm
+  mempty  = 1
   mappend = (*^)
-
+ -- TODO use some notion of norm rather than 1
+ 
 instance Transformable Duration where
   Span (_, d1) `transform` d2 = d1 * d2
 
@@ -1218,15 +1211,29 @@ range = iso getRange $ uncurry (<->) where getRange x = let (t, d) = getDelta x 
 delta :: Iso' Span (Time, Duration)
 delta = iso getDelta $ uncurry (>->)
 
--- - To convert a span to a pair, use @s^.'delta'@.
 --
+-- $musicTimeSpanConstruct
+--
+-- - To convert a span to a pair, use @s^.'delta'@.
 -- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
 --
 
-
+--
+-- $musicTimeSpanLaws
+--
 -- > forall s . id `under` s = id
 -- > forall s . return `underM` s = return
 -- > forall s . extract `underW` s = extract
+
+
+
+
+
+-- We really must flip all these functions. To do:
+--
+--    1) Come up with some other name for the infix version
+--    2) Acknowledge that this is a valid Lens (when flipped)
+--
 
 -- |
 -- Apply a function under transformation.
@@ -1242,10 +1249,8 @@ f `under` t = transform (negateV t) . f . transform t
 
 -- |
 -- Apply a morphism under transformation (monadic version).
--- TODO we really must flip all these functions
---    * Come up with some other name for the infix version
---    * Acknowledge that this is a valid Lens (when flipped)
 --
+
 underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `underM` t = fmap (transform (negateV t)) . f . transform t
 
@@ -1290,31 +1295,6 @@ inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
 
-{-
-  (\x -> (transl x, matrixRep x)) ((inv $ translation 2 <> scaling 2) :: Transformation Double)
--}
-
-{-
-  -- | Invert a transformation.
-  inv :: HasLinearMap v => Transformation v -> Transformation v
-  inv (Transformation t t' v) = Transformation (linv t) (linv t')
-                         (negateV (lapp (linv t) v))
-
-  -- | Get the transpose of a transformation (ignoring the translation
-  --   component).
-  transp :: Transformation v -> (v :-: v)
-  transp (Transformation _ t' _) = t'
-
-  -- | Get the translational component of a transformation.
-  transl :: Transformation v -> v
-  transl (Transformation _ _ v) = v
-
-  -- | Transformations are closed under composition; @t1 <> t2@ is the
-  --   transformation which performs first @t2@, then @t1@.
-  instance HasLinearMap v => Semigroup (Transformation v) where
-    Transformation t1 t1' v1 <> Transformation t2 t2' v2
-    = Transformation (t1 <> t2) (t2' <> t1') (v1 ^+^ lapp t1 v2)
--}
 
 -- |
 -- Pitch type.
@@ -1418,12 +1398,6 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
--- type instance Pitch [a] = [Pitch a]
--- type instance SetPitch [b] [a] = [SetPitch b a]
--- instance (HasPitch a a, HasPitch a b) => HasPitches [a] [b] where
---   pitches = through pitch pitch
--- instance (HasPitch a a, HasPitch a b) => HasPitch [a] [b] where
---   pitch = through pitch pitch
 type instance Pitch [a] = Pitch a
 type instance SetPitch b [a] = [SetPitch b a]
 instance HasPitches a b => HasPitches [a] [b] where
