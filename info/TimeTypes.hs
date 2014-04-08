@@ -3267,18 +3267,18 @@ sameType = undefined
 
 #define INCLUDE_TESTS
 #ifdef INCLUDE_TESTS
+
 -- Tests
 
--- sc_semigroup :: (Semigroup a, Typeable a, Eq a, Serial IO a) => a -> TestTree
--- sc_semigroup x = testGroup ("Semigroup " ++ show (typeOf x)) [
-  -- testProperty "mempty <> a == a" $ \a -> mempty <> a == (a :: a)
-  -- ]
+-- Bad examples (to verify tests)
 
 newtype BadMonoid a = BadMonoid [a]
   deriving (Eq, Ord, Show, Typeable)
+
 instance Monoid (BadMonoid a) where
   BadMonoid x `mappend` BadMonoid y = BadMonoid (y `mappend` reverse x) -- lawless
   mempty = BadMonoid []
+
 instance Functor BadMonoid where
   fmap f (BadMonoid xs) = BadMonoid (fmap f $ reverse $ xs) -- lawless
 
@@ -3289,32 +3289,48 @@ instance Functor BadFunctor where
   fmap f BF1 = BF2 -- lawless
   fmap f BF2 = BF2
 
+
+-- Serial instances
+
 instance Monad m => CoSerial m Time where
   coseries = liftM const -- TODO?
+
 instance Monad m => CoSerial m Duration where
   coseries = liftM const -- TODO?
+
 instance (Monad m, CoSerial m a) => CoSerial m (Clipped a) where
   coseries = error "no Clipped.coseries"
+
 instance Monad m => Serial m Time where
   series = msum $ fmap return [-1,0,2.13222,10,20]
+
 instance Monad m => Serial m Duration where
   series = msum $ fmap return [-1,0,1.51232,10,20]
+
 instance Monad m => Serial m Span where
   series = newtypeCons Span
+
 instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
   series = cons0 BF1 \/ cons0 BF2
+
 instance (Monad m, Serial m a) => Serial m (BadMonoid a) where
   series = newtypeCons BadMonoid
+
 instance Monad m => Serial m Int8 where
   series = msum $ fmap return [0..2]
+
 instance (Monad m, Serial m a) => Serial m (Note a) where
   series = newtypeCons Note
+
 instance (Monad m, Serial m a) => Serial m (Delayed a) where
   series = newtypeCons Delayed
+
 instance (Monad m, Serial m a) => Serial m (Stretched a) where
   series = newtypeCons Stretched
+
 instance (Monad m, Serial m a) => Serial m (Behavior a) where
   series = newtypeCons Behavior
+
 instance (Monad m, Serial m a) => Serial m (Segment a) where
   series = newtypeCons Segment
 
@@ -3323,6 +3339,7 @@ instance (Monad m, Serial m a) => Serial m (Voice a) where
     x <- series
     y <- series
     return $ return x <> return y
+
 instance (Monad m, Serial m a) => Serial m (Score a) where
   series = do
     x <- series
@@ -3338,19 +3355,15 @@ instance (Monad m, Serial m a) => Serial m (Score a) where
 --
 -- > duration a = duration (delay n a)
 
--- delayDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 delayDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
   testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration a == _duration (delay n a)
   ]
 
--- stretchDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 stretchDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
   testProperty "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration (stretch n a) == n ^* (_duration a)
   ]
-
--- FOO2
 
 delayBehLaw typ = testGroup ("Delay behavior " ++ show (typeOf typ)) $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
@@ -3358,32 +3371,32 @@ delayBehLaw typ = testGroup ("Delay behavior " ++ show (typeOf typ)) $ [
   ]
 
 
-{-
-  (t<->u) `transform` b ! t           == b ! 0
-  (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5
-  (t<->u) `transform` b ! u           == b ! 1
--}
+--
+-- > (t<->u) `transform` b ! t           == b ! 0
+-- > (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5
+-- > (t<->u) `transform` b ! u           == b ! 1
+--
 
 transformUi typ = testGroup ("Transform UI " ++ show (typeOf typ)) $ [
   testProperty "(t<->u) `transform` b ! t          == b ! 0" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
                 (t<->u) `transform` b ! t          == b ! 0,
 
   testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
                 (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
 
   testProperty "(t<->u) `transform` b ! u           == b ! 1" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
                 (t<->u) `transform` b ! u           == b ! 1
 
   ]
-notEqualTo x y
+
+decollide :: (Eq a, Num a) => a -> a -> a
+decollide x y
   | x == y    = y + 1
   | otherwise = y
 
-
--- monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
           x <> (y <> z) == (x <> y) <> z,
@@ -3397,7 +3410,6 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   where
     (<>) = mappend
 
--- monoidEq :: (Monoid t, Show t, Typeable t, Serial IO t) => (t -> t -> Bool) -> t -> TestTree
 monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
           (x <> (y <> z)) === ((x <> y) <> z),
@@ -3433,59 +3445,73 @@ reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
                 rev (rev x) == x
   ]
 
-ap2 u v w = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
 
-main = defaultMain $ testGroup "Checking TimeTypes laws" $ [
-  reversible (undefined :: ()),
-  reversible (undefined :: Double),
-  reversible (undefined :: Time),
-  reversible (undefined :: Duration),
-  reversible (undefined :: Behavior Time),
-  reversible (undefined :: Segment Time),
 
-  reversible (undefined :: Note Time),
-  reversible (undefined :: Stretched Time),
-  reversible (undefined :: Delayed Time),
+main = defaultMain $ testGroup "All tests" $ [
+  testGroup "Reversible" [
+    reversible (undefined :: ()),
+    reversible (undefined :: Double),
+    reversible (undefined :: Time),
+    reversible (undefined :: Duration),
+    reversible (undefined :: Behavior Time),
+    reversible (undefined :: Segment Time),
 
-  reversible (undefined :: Voice Time),
-  reversible (undefined :: Score Time),
+    reversible (undefined :: Note Time),
+    reversible (undefined :: Stretched Time),
+    reversible (undefined :: Delayed Time),
 
-  testProperty "rev . rev == id" $ \(x :: [()]) -> rev (rev x) == x,
+    reversible (undefined :: Voice Time),
+    reversible (undefined :: Score Time)
+  ],
 
-  monoid (undefined :: ()),
+  testGroup "Reversible" [
+    monoid (undefined :: ()),
 
-  monoid (undefined :: Duration),
-  monoid (undefined :: Time),
-  monoid (undefined :: Span),
+    monoid (undefined :: Duration),
+    monoid (undefined :: Time),
+    monoid (undefined :: Span),
 
-  monoidEq (inspecting (! 0)) (undefined :: Segment Time),
-  monoidEq (inspecting (! 1)) (undefined :: Segment Time),
+    monoidEq (inspecting (! 0)) (undefined :: Segment Time),
+    monoidEq (inspecting (! 1)) (undefined :: Segment Time),
 
-  monoidEq (inspecting (! 0)) (undefined :: Behavior Time),
-  monoidEq (inspecting (! 1)) (undefined :: Behavior Time),
-  monoidEq (inspecting (! 0)) (undefined :: Behavior ()),
-  monoidEq (inspecting (! 1)) (undefined :: Behavior ()),
+    monoidEq (inspecting (! 0)) (undefined :: Behavior Time),
+    monoidEq (inspecting (! 1)) (undefined :: Behavior Time),
+    monoidEq (inspecting (! 0)) (undefined :: Behavior ()),
+    monoidEq (inspecting (! 1)) (undefined :: Behavior ()),
 
-  monoid (undefined :: Voice Time),
-  monoid (undefined :: Score Time),
+    monoid (undefined :: Voice Time),
+    monoid (undefined :: Score Time)
+  ],
 
-  stretchDurationLaw (undefined :: Stretched Time),
-  delayDurationLaw   (undefined :: Stretched Time),
-  stretchDurationLaw (undefined :: Note Time),
-  delayDurationLaw   (undefined :: Note Time),
-  stretchDurationLaw (undefined :: Voice Time),
-  delayDurationLaw   (undefined :: Voice Time),
-  stretchDurationLaw (undefined :: Score Time),
-  delayDurationLaw   (undefined :: Score Time),
-  
-  delayBehLaw (undefined :: Behavior Int8),
+  testGroup "Delay and stretch" [
+    stretchDurationLaw (undefined :: Stretched Time),
+    delayDurationLaw   (undefined :: Stretched Time),
+    stretchDurationLaw (undefined :: Note Time),
+    delayDurationLaw   (undefined :: Note Time),
+    stretchDurationLaw (undefined :: Voice Time),
+    delayDurationLaw   (undefined :: Voice Time),
+    stretchDurationLaw (undefined :: Score Time),
+    delayDurationLaw   (undefined :: Score Time)
+  ],
 
-  transformUi (undefined :: Behavior Int8)
+  -- delayBehLaw (undefined :: Behavior Int8),
+  -- transformUi (undefined :: Behavior Int8)
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
-
+                             
+    testGroup "Nothing" []
   ]
 #endif // INCLUDE_TESTS
+
+
+
+
+
+
+
+
+
+
 
 
 
