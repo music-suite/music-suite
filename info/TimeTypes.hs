@@ -281,15 +281,21 @@ module TimeTypes (
         splice,
         bounded,
 
-
+{-
         -- * Music.Time.Phrase
-        -- Phrase,
+        Phrase,
+-}
+
+        -- * Music.Time.Chord
+        Chord,
+        -- ** Substructure
+        chord,
+        -- ** TODO
 
         -- * Music.Time.Voice
         Voice,
         -- ** Substructure
         voice,
-
         -- ** Zips
         zipVoice,
         zipVoiceWith,
@@ -313,12 +319,13 @@ module TimeTypes (
         Score,
 
         -- ** Substructure
+        score,
+        notes,
         voices,
         phrases,
-        notes,
         singleNote,
-        singlePhrase,
         singleVoice,
+        singlePhrase,
         
         -- ** Special traversals
         mapWithSpan,
@@ -3171,6 +3178,70 @@ instance HasMeta (Phrase p a) where
 
 
 
+
+-- |
+-- A 'Chord' is a sequence of stretched values.
+--
+-- @
+-- type Chord a = [Delayed a]
+-- @
+--
+newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+-- Can use [] or Seq here
+type ChordList = []
+
+-- Can use any type as long as chordEv provides an Iso
+type ChordEv a = Delayed a
+
+chordEv :: Iso (Delayed a) (Delayed b) (ChordEv a) (ChordEv b)
+chordEv = id
+
+instance Applicative Chord where
+  pure  = return
+  (<*>) = ap
+
+instance Monad Chord where
+  return = view _Unwrapped . return . return
+  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+
+-- | TODO Unsafe
+instance Wrapped (Chord a) where
+  type Unwrapped (Chord a) = (ChordList (ChordEv a))
+  _Wrapped' = iso getChord Chord
+
+instance Rewrapped (Chord a) (Chord b)
+
+instance Transformable (Chord a) where
+  transform s = over _Wrapped' (transform s)
+
+instance HasDuration (Chord a) where
+  _duration = Foldable.sum . fmap _duration . view _Wrapped'
+
+instance Splittable a => Splittable (Chord a) where
+  -- TODO
+
+instance Reversible a => Reversible (Chord a) where
+  rev = over _Wrapped' (fmap rev) -- TODO OK?
+
+instance HasMeta (Chord a) where
+  meta = error "Not implemented: meta" -- TODO
+
+type instance Pitch (Chord a) = Pitch a
+type instance SetPitch g (Chord a) = Chord (SetPitch g a)
+instance (HasPitches a b) => HasPitches (Chord a) (Chord b) where
+  pitches = _Wrapped . traverse . from chordEv . _Wrapped . whilstLT pitches
+
+
+chord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
+chord = _Wrapped 
+
+
+
+
+
+
 -- |
 -- A 'Voice' is a sequence of stretched values.
 --
@@ -3226,7 +3297,7 @@ instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
   pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
 
 
-voice :: Prism' (Voice a) [Stretched a]
+voice :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 voice = _Wrapped
 
 singleStretched :: Prism' (Voice a) (Stretched a)
@@ -3375,20 +3446,32 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
 -- |
+-- Create a score from a list of notes.
+--
+-- This is a getter for the sake of syntactic unity:
+--
+-- >>> [(1 <-> 2)^.note, (3 <-> 4, 2)^.note]^.score
+--
+-- >>> view score $ fmap (view note) $ [(0 <-> 1, 1)]
+--
+score :: Getter [Note a] (Score a)
+score = to $ \x -> mzero & notes .~ x
+
+-- |
 -- View a score as a list of notes.
 -- 
-notes :: Iso' (Score a) [Note a]
+notes :: Lens (Score a) (Score b) [Note a] [Note b]
 notes = _Wrapped
 
 -- |
 -- View a score as a list of voices.
 -- 
-voices :: Prism' (Score a) [Voice a]
+voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
 
 -- |
 -- View a score as a list of phrases.
 -- 
-phrases :: Prism' (Score a) [Phrase () a]
+phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
 (voices, phrases) = error "Not implemented: (voices, phrases)"
 
 -- |
@@ -4173,6 +4256,10 @@ instance Real a => Drawable (Segment a) where
   draw = drawSegment
 -- instance Drawable a => Drawable (Note a) where
   -- draw (view from note -> (s,x)) = draw x
+-- instance Real a => Drawable (Span, a) where
+--   draw = uncurry drawSegmentAt . fmap return
+-- instance Real a => Drawable (Span, a) where
+--   draw = uncurry drawBehaviorAt . fmap return
 instance Real a => Drawable (Span, Segment a) where
   draw = uncurry drawSegmentAt
 instance Real a => Drawable (Span, Behavior a) where
@@ -4184,6 +4271,8 @@ instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, Ha
   draw (view (from stretched) -> (d,x)) = draw $ (0 >-> d, x)^.note
 instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Note a) where
   draw (view (from note) -> (s, transform s -> x)) = lc red (draw (s, x^.pitch)) <> lc blue (draw (s, x^.dynamic))
+instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Score a) where
+  draw = mconcat . fmap draw . view notes
 
 
 drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dynamics)
