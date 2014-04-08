@@ -2598,12 +2598,13 @@ trim = trimG
     trimG (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
 
 -- |
--- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
--- for a limited amount of time.
+-- Provides an alternative behavior for a limited amount of time.
 --
 -- @
 -- 'trim' = 'splice' 'mempty'
 -- @
+--
+-- Named after the analogous tape-editing technique.
 --
 splice :: Behavior a -> Bound (Behavior a) -> Behavior a
 splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
