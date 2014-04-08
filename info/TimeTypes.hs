@@ -145,6 +145,8 @@ module TimeTypes (
         -- * Align and compose
         after,
         before,
+        (|>),
+        (<|),
         during,
         sustain,
         palindrome,
@@ -439,7 +441,7 @@ import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens                 hiding (Indexable, Level, above,
                                                below, index, inside, parts,
-                                               reversed, transform, (|>))
+                                               reversed, transform, (|>), (<|))
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
@@ -3337,10 +3339,23 @@ type ScoreNote a = Note a
 --
 -- To create a score, see 'score', 'notes', 'voices', and 'phrases'.
 --
--- You can also use the 'Alternative'/'MonadPlus' interface:
--- 'empty' creates an empty score and '<|>' (or '<>') compose in parallel.
+-- You can also use the 'Alternative' interface:
+-- 
+--   * 'empty' creates an empty score 
+-- 
+--   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
+-- 
+--   * '<|>' (and '<>') composes scores in parallel.
 -- 
 -- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
+-- 
+--   * '|>' composes scores in sequence
+-- 
+--   * '>|' composes scores in sequence
+-- 
+--   * '<|' composes scores in sequence
+-- 
+--   * '|<' composes scores in sequence
 -- 
 -- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
 --
