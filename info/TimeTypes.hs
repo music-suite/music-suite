@@ -3167,6 +3167,129 @@ concatBehaviors = concatSegments . fmap (view focusing)
 
 
 
+
+
+
+-- |
+--
+-- /Semantics/
+--
+-- @
+-- type Phrase p a = (p, Voice a)
+-- @
+--
+newtype Phrase p a = Phrase (p, [Stretched a])
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+instance HasMeta (Phrase p a) where
+  meta = error "Not implemented: meta" -- TODO
+
+
+
+-- |
+-- A 'Voice' is a sequence of stretched values.
+--
+-- @
+-- type Voice a = [Stretched a]
+-- @
+--
+newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+-- Can use [] or Seq here
+type VoiceList = []
+
+-- Can use any type as long as voiceEv provides an Iso
+type VoiceEv a = Stretched a
+
+voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
+voiceEv = id
+
+instance Applicative Voice where
+  pure  = return
+  (<*>) = ap
+
+instance Monad Voice where
+  return = view _Unwrapped . return . return
+  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+
+-- | TODO Unsafe
+instance Wrapped (Voice a) where
+  type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
+  _Wrapped' = iso getVoice Voice
+
+instance Rewrapped (Voice a) (Voice b)
+
+instance Transformable (Voice a) where
+  transform s = over _Wrapped' (transform s)
+
+instance HasDuration (Voice a) where
+  _duration = Foldable.sum . fmap _duration . view _Wrapped'
+
+instance Splittable a => Splittable (Voice a) where
+  -- TODO
+
+instance Reversible a => Reversible (Voice a) where
+  rev = over _Wrapped' (fmap rev) -- TODO OK?
+
+instance HasMeta (Voice a) where
+  meta = error "Not implemented: meta" -- TODO
+
+type instance Pitch (Voice a) = Pitch a
+type instance SetPitch g (Voice a) = Voice (SetPitch g a)
+instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
+  pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
+
+
+voice :: Prism' (Voice a) [Stretched a]
+voice = _Wrapped
+
+singleStretched :: Prism' (Voice a) (Stretched a)
+singleStretched = error "Not implemented: singleStretched"
+
+-- |
+-- Voice
+--
+voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
+voiceNotes = error "Not implemented: voiceNotes"
+
+-- |
+-- Voice
+--
+voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
+voiceElements = _Wrapped . traverse . from voiceEv
+
+-- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice :: Voice a -> Voice b -> Voice (a, b)
+zipVoice = zipVoiceWith (,)
+
+-- |
+-- Join the given voices by multiplying durations and combining values using the given function.
+--
+zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith  = error "Not implemented: zipVoiceWith"
+
+-- |
+-- Join the given voices by combining durations and values using the given function.
+--
+dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
+dzipVoiceWith = error "Not implemented: dzipVoiceWith"
+
+
+voiceList :: Iso' (Voice a) [(Duration, a)]
+voiceList = error "Not implemented: voiceList"
+
+-- |
+-- Merge consecutive equal note.
+--
+mergeEqualNotes :: Eq a => Voice a -> Voice a
+mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
+  where
+    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
+
+
 type ScoreNote a = Note a
 
 -- |
@@ -3301,10 +3424,6 @@ singleVoice = error "Not implemented: singleNote"
 singlePhrase :: Prism' (Score a) (Phrase () a)
 singlePhrase = error "Not implemented: singlePhrase"
 
-
-
-
-
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = error "Not implemented: singleNote"
@@ -3334,131 +3453,6 @@ mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
 
-
-
-
--- * Music.Time.Phrases
-
--- |
---
--- /Semantics/
---
--- @
--- type Phrase p a = (p, Voice a)
--- @
---
-newtype Phrase p a = Phrase (p, [Stretched a])
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
-
-instance HasMeta (Phrase p a) where
-  meta = error "Not implemented: meta" -- TODO
-
-
-
--- |
--- A 'Voice' is a sequence of stretched values.
---
--- @
--- type Voice a = [Stretched a]
--- @
---
-newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
-
--- Can use [] or Seq here
-type VoiceList = []
-
--- Can use any type as long as voiceEv provides an Iso
-type VoiceEv a = Stretched a
-
-voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
-voiceEv = id
-
-instance Applicative Voice where
-  pure  = return
-  (<*>) = ap
-
-instance Monad Voice where
-  return = view _Unwrapped . return . return
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
-
--- | TODO Unsafe
-instance Wrapped (Voice a) where
-  type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
-  _Wrapped' = iso getVoice Voice
-
-instance Rewrapped (Voice a) (Voice b)
-
-instance Transformable (Voice a) where
-  transform s = over _Wrapped' (transform s)
-
-instance HasDuration (Voice a) where
-  _duration = Foldable.sum . fmap _duration . view _Wrapped'
-
-instance Splittable a => Splittable (Voice a) where
-  -- TODO
-
-instance Reversible a => Reversible (Voice a) where
-  rev = over _Wrapped' (fmap rev) -- TODO OK?
-
-instance HasMeta (Voice a) where
-  meta = error "Not implemented: meta" -- TODO
-
-type instance Pitch (Voice a) = Pitch a
-type instance SetPitch g (Voice a) = Voice (SetPitch g a)
-instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
-  pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
-
-
-voice :: Prism' (Voice a) [Stretched a]
-voice = _Wrapped
-
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = error "Not implemented: singleStretched"
-
--- |
--- Voice
---
-voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
-voiceNotes = error "Not implemented: voiceNotes"
-
--- |
--- Voice
---
-voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voiceElements = _Wrapped . traverse . from voiceEv
-
--- |
--- Join the given voices by multiplying durations and pairing values.
---
-zipVoice :: Voice a -> Voice b -> Voice (a, b)
-zipVoice = zipVoiceWith (,)
-
--- |
--- Join the given voices by multiplying durations and combining values using the given function.
---
-zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith  = error "Not implemented: zipVoiceWith"
-
--- |
--- Join the given voices by combining durations and values using the given function.
---
-dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
-dzipVoiceWith = error "Not implemented: dzipVoiceWith"
-
-
-voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = error "Not implemented: voiceList"
-
--- |
--- Merge consecutive equal note.
---
-mergeEqualNotes :: Eq a => Voice a -> Voice a
-mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
-  where
-    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
-
-
 -- 
 -- TODO
 -- 
@@ -3472,6 +3466,7 @@ mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
 -- instance Ixed (Voice a) where
 --   ix n = _Wrapped' . ix n
 -- 
+{-
 
 -- |
 -- The 'Voices' and 'Phrases' types represent a sequence of voices and sub-voices with possibly infinite division.
@@ -3526,6 +3521,7 @@ phrases' = error "Not implemented: phrases'"
 concatVoices :: Monoid a => Phrases a -> Voice a
 concatVoices = error "Not implemented: concatVoices"
 
+-}
 
 
 {-
