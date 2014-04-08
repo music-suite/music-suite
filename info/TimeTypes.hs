@@ -217,7 +217,6 @@ module TimeTypes (
         splice,
         switch,
         switch',
-        appendBehaviors,
         concatBehaviors,
         -- cross,
         -- noteToBehavior,
@@ -242,7 +241,7 @@ module TimeTypes (
         discrete,
         continous,
         sample,
-        window,
+        -- window,
         windowed,
 
         -- * Music.Time.Stretched
@@ -260,7 +259,6 @@ module TimeTypes (
         note,
         noteValue,
 
-
         -- * Music.Time.Bound
         Bound,
         bounds,
@@ -269,15 +267,16 @@ module TimeTypes (
         splice,
         bounded,
 
+
         -- * Music.Time.Phrase
         Phrase,
 
         -- * Music.Time.Voice
         Voice,
+        -- ** Substructure
         voice,
-        -- voiceNotes,
-        -- voiceElements,
-        -- singleStretched,
+
+        -- ** Zips
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
@@ -298,12 +297,16 @@ module TimeTypes (
 
         -- * Music.Time.Score
         Score,
+
+        -- ** Substructure
         voices,
         phrases,
         notes,
         singleNote,
         singlePhrase,
         singleVoice,
+        
+        -- ** Special traversals
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -345,10 +348,10 @@ module TimeTypes (
         -- octavesBelow,
         -- ** Intervals
         augmentIntervals,
-
+        
         -- TODO pitchIs, to write filter pitchIs ... etc        
         -- TODO gliss etc
-
+        
         -- * Music.Score.Dynamic
         Dynamic,
         SetDynamic,
@@ -365,7 +368,7 @@ module TimeTypes (
         compressor,
         fadeIn,
         fadeOut,
-
+        
         -- * Music.Score.Articulation
         Articulation,
         SetArticulation,
@@ -373,7 +376,7 @@ module TimeTypes (
         HasArticulation(..),
         articulation',
         articulations',
-
+        
         accent,
         marcato,
         accentLast,
@@ -383,7 +386,7 @@ module TimeTypes (
         tenuto,
         staccato,
         legato,
-
+        
         -- * Music.Score.Part
         Part,
         SetPart,
@@ -395,12 +398,10 @@ module TimeTypes (
         parts',
         allParts,
         extractPart,
-        extractParts,
-        
-        -- * Music.Time.Draw
-        Drawable(..),
+        extractParts,     
   ) where
 
+import Data.Fixed
 import qualified Data.ByteString.Lazy         as ByteString
 import           Data.Default
 import           Data.Ratio
@@ -456,29 +457,6 @@ import           Test.Tasty                   hiding (over, under)
 import           Test.Tasty.SmallCheck        hiding (over, under)
 
 import qualified Data.Ratio                   as Util_Ratio
-
-
-{-
-  Semantics:
-
-    Duration    ≡ R
-    Time        ≡ R
-    Span        ≡ (R, R)
-
-    Stretched a ≡ (Duration, a)
-    Delayed a   ≡ (Duration, a)
-    Note a      ≡ (Span, a)
-    Bound a    ≡ (Time, Time, a)
-
-    Voice a     ≡ [Stretched a]
-    Track a     ≡ [Delayed a]
-    Score a     ≡ [Note a]
-
-    Segment a   ≡ Duration -> a
-    Behavior a  ≡ Time -> a
-    Reactive a  ≡ ([Time], Behavior ae)
-
--}
 
 
 -- Misc instances
@@ -592,8 +570,8 @@ infixl 6 !
 -- The isomorpism between a representable functor and its representation.
 --
 -- @
--- 'tabulated' ≡ 'iso' 'tabulate' 'index'
--- 'tabulated' ≡ 'from' 'retabulated'
+-- 'tabulated' = 'iso' 'tabulate' 'index'
+-- 'tabulated' = 'from' 'retabulated'
 -- @
 --
 tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
@@ -603,8 +581,8 @@ tabulated = iso tabulate index
 -- The reverse isomorpism between a representable functor and its representation.
 --
 -- @
--- 'retabulated' ≡ 'iso' 'index' 'tabulate'
--- 'retabulated' ≡ 'from' 'tabulated'
+-- 'retabulated' = 'iso' 'index' 'tabulate'
+-- 'retabulated' = 'from' 'tabulated'
 -- @
 --
 retabulated :: Representable f => Iso (f a) (f b) (Rep f -> a) (Rep f -> b)
@@ -649,22 +627,22 @@ instance HasMeta Meta where
 --
 -- Law
 --
--- > transform mempty ≡ id
--- > transform (s <> t) ≡ transform s . transform t
+-- > transform mempty = id
+-- > transform (s <> t) = transform s . transform t
 --
 -- Law
 --
--- > onset (delay n a)       ≡ n ^+. onset a
--- > offset (delay n a)      ≡ n ^+. offset a
--- > duration (stretch n a)  ≡ n * duration a
--- > duration (compress n a) ≡ duration a / n
+-- > onset (delay n a)       = n ^+. onset a
+-- > offset (delay n a)      = n ^+. offset a
+-- > duration (stretch n a)  = n * duration a
+-- > duration (compress n a) = duration a / n
 --
--- > delay n b ! t    ≡ b ! (t .-^ n)
--- > undelay n b ! t  ≡ b ! (t .+^ n)
+-- > delay n b ! t    = b ! (t .-^ n)
+-- > undelay n b ! t  = b ! (t .+^ n)
 --
 -- Lemma
 --
--- > duration a ≡ duration (delay n a)
+-- > duration a = duration (delay n a)
 --
 class Transformable a where
   transform :: Span -> a -> a
@@ -728,7 +706,7 @@ instance (Transformable a, Transformable b) => Transformable (a -> b) where
 -- |
 -- Delay relative to 'origin'.
 --
--- Provided for situations when you have a value that should forward based on the distance
+-- Provided for situations when we have a value that should forward based on the distance
 -- between some time @t@ and the origin, but it does not necessarily have a start time.
 --
 delayTime :: Transformable a => Time -> a -> a
@@ -868,16 +846,16 @@ clippedDuration = stretchTo 1
 -- For instantaneous values, a suitable instance is:
 --
 -- @
--- '_position' x ≡ 'const' t
+-- '_position' x = 'const' t
 -- @
 --
--- For values with an onset and offset you can use 'alerp':
+-- For values with an onset and offset we can use 'alerp':
 --
 -- @
--- '_position' x ≡ 'alerp' ('_onset' x) ('_offset' x)
+-- '_position' x = 'alerp' ('_onset' x) ('_offset' x)
 -- @
 --
-class HasPosition a where
+class HasDuration a => HasPosition a where
   -- |
   -- Return the onset of the given value.
   --
@@ -895,9 +873,12 @@ class HasPosition a where
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
-instance HasPosition a => HasPosition [a] where
-  _onset  = minimum . fmap _onset
-  _offset = maximum . fmap _offset
+instance (HasPosition a, HasDuration a) => HasDuration [a] where
+  _duration x = _offset x .-. _onset x
+
+instance (HasPosition a, HasDuration a) => HasPosition [a] where
+  _onset  = foldr min 0 . fmap _onset
+  _offset = foldr max 0 . fmap _offset
 
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
@@ -1104,7 +1085,7 @@ times n   = scat . replicate n
 --
 -- Law
 --
--- > let (a, b) ≡ split x in duration a + duration b ≡ duration x
+-- > let (a, b) = split x in duration a + duration b = duration x
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
@@ -1130,11 +1111,11 @@ dropM t = snd . split t
 -- Law
 --
 -- @
--- 'rev' ('rev' a) ≡ a
+-- 'rev' ('rev' a) = a
 -- @
 --
 -- @
--- 'rev' s ``transform`` a ≡ 'rev' (s ``transform`` a)
+-- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
 -- @
 --
 -- or equivalently,
@@ -1146,7 +1127,7 @@ dropM t = snd . split t
 -- For 'Span'
 --
 -- @
--- 'rev' ≡ 'over' 'range' 'swap'
+-- 'rev' = 'over' 'range' 'swap'
 -- @
 --
 class Transformable a => Reversible a where
@@ -1162,12 +1143,12 @@ class Transformable a => Reversible a where
 
 
 {-
-      rev s `transform` a     ≡ rev (s `transform` a)
-  ==> (rev s `transform`)     ≡ rev . (s `transform`)
-  ==> transform (rev s)       ≡ rev . (transform s)
-  ==> (transform . rev) s     ≡ (rev .) (transform s)
-  ==> (transform . rev) s     ≡ fmap rev (transform s)
-  ==> transform . rev         ≡ fmap rev . transform
+      rev s `transform` a     = rev (s `transform` a)
+  ==> (rev s `transform`)     = rev . (s `transform`)
+  ==> transform (rev s)       = rev . (transform s)
+  ==> (transform . rev) s     = (rev .) (transform s)
+  ==> (transform . rev) s     = fmap rev (transform s)
+  ==> transform . rev         = fmap rev . transform
 -}
 
 instance Reversible () where
@@ -1262,8 +1243,11 @@ reversed = iso rev rev
 -- Internal time representation. Can be anything with instances
 -- for 'Fractional' and 'RealFrac'.
 --
-type TimeBase = Rational
-
+type TimeBase = Fixed E12
+instance HasResolution a => AdditiveGroup (Fixed a) where
+  zeroV = 0
+  negateV = negate
+  (^+^) = (+)
 
 -- Can be enabled for experimental time representation
 
@@ -1371,6 +1355,9 @@ instance Monoid Time where
 
 instance Transformable Time where
   Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
+
+instance HasDuration Time where
+  _duration = 0
 
 instance HasPosition Time where
   _position = const
@@ -2361,6 +2348,9 @@ instance Rewrapped (Delayed a) (Delayed b)
 instance Transformable (Delayed a) where
   transform t = over _Wrapped $ first (transform t)
 
+instance HasDuration (Delayed a) where
+  _duration x = _offset x .-. _onset x
+
 instance HasPosition (Delayed a) where
   x `_position` p = ask (view _Wrapped x) `_position` p
 
@@ -2450,7 +2440,7 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 -- @
 --
 -- @
--- ('view' 'noteValue') . 'transform' s ≡ 'transform' s . ('view' 'noteValue')
+-- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
 -- @
 --
 -- /Semantics/
@@ -2553,14 +2543,14 @@ runStretched = uncurry stretch . view _Wrapped
 -- 'Bound' restricts the start and stop time of a value, and prevents access to values
 -- outside the bounds.
 --
--- 'Bound' is especially useful to restrict the range of a 'Behavior'. If you have a
--- value with can only be reasonably defined for a particular time range, you can
+-- 'Bound' is especially useful to restrict the range of a 'Behavior'. If we have a
+-- value with can only be reasonably defined for a particular time range, we can
 -- represent it as 'Bound' 'Behavior'. This is isomorphic to a 'Note' 'Segment', and
 -- 'bounded' whitnesses the isomorphism.
 --
 -- 'Bound' is not 'Foldable' or 'Traversable', as that would allow us to access values
--- outside the bounds. However, you can still access values of a 'Bound' 'Behavior' in a safe manner
--- using 'trim' or 'splice'.
+-- outside the bounds. However, we can still access values of a 'Bound' 'Behavior' in a
+-- safe manner using 'trim' or 'splice'.
 --
 -- /Semantics/
 --
@@ -2572,12 +2562,15 @@ newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor, Semigroup, Typeable, Eq, Show)
 
 --
+
 -- TODO define Applicative/Monad
 --
+
 -- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
 -- A possible problem with this is that there are multiple representations of the empty
 -- set (namely [(t, t)^.from range | t <- {Time} ]).
 --
+
 
 {-
 These are both unsafe, as they allow us to define 'unBound'
@@ -2713,9 +2706,9 @@ noteToBehavior' = concatSegments' . fmap pure
 --
 -- A 'Segment' is a value varying over some unknown time span.
 --
--- * To give a segment an explicit duration, use 'Stretched' 'Segment'.
+-- To give a segment an explicit duration, use 'Stretched' 'Segment'.
 --
--- * To place a segment in a particular time span, use 'Note' 'Segment'.
+-- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
 -- /Semantics/
 --
@@ -2897,8 +2890,6 @@ deriving instance Floating a => Floating (Behavior a)
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 -- TODO is this right? (for appendBehaviors etc)
-instance HasPosition (Behavior a) where
-  _position b = const 0
 
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
@@ -2995,7 +2986,7 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- Note that this is just an alias defined to make the documentation nicer:
 --
 -- @
--- '!^' ≡ '!'
+-- '!^' = '!'
 -- @
 --
 (!^) :: Behavior a -> Time -> a
@@ -3010,7 +3001,7 @@ infixl 6 !^
 --
 --
 -- @
--- 'behavior' ≡ 'tabulated'
+-- 'behavior' = 'tabulated'
 -- @
 --
 
@@ -3212,8 +3203,8 @@ concatSegments = mconcat . map concatSegments' . scoreToNotes
 scoreToNotes :: Score a -> [Note a]
 scoreToNotes = toListOf traverse . view _Wrapped
 
-appendBehaviors :: Semigroup a => Bound (Behavior a) -> Bound (Behavior a) -> Bound (Behavior a)
-appendBehaviors = (|>)
+-- appendBehaviors :: Semigroup a => Bound (Behavior a) -> Bound (Behavior a) -> Bound (Behavior a)
+-- appendBehaviors = (|>)
 
 -- |
 -- This
@@ -3496,7 +3487,7 @@ instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
     Nothing   -> Left mempty
 
 type instance Index (Voice a) = Int
-type instance IxValue (Voice a) = Stretched a
+type instance IxV (Voice a) = Stretched a
 instance Ixed (Voice a) where
   ix n = _Wrapped' . ix n
 -}
@@ -3624,7 +3615,7 @@ sample   :: [Time] -> Behavior a -> Reactive a
 
 
 window :: [Time] -> Behavior a -> Reactive (Segment a)
-windowed :: [Time] -> Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
+windowed :: Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
 (window, windowed) = error "No (window, windowed)"
 
 {-
@@ -3727,7 +3718,9 @@ sameType _ x = x
 (~~) = sameType
 infixl 0 ~~
 
+#ifndef __HADDOCK__
 #define INCLUDE_TESTS
+#endif
 
 #ifdef INCLUDE_TESTS
 
@@ -3765,10 +3758,10 @@ instance (Monad m, CoSerial m a, Ord a, Num a) => CoSerial m (Clipped a) where
   coseries = fmap (. fromClipped) . coseries
 
 instance Monad m => Serial m Time where
-  series = msum $ fmap return [-1,0,2.13222,10,20]
+  series = msum $ fmap return [-1,0,2.13222,20]
 
 instance Monad m => Serial m Duration where
-  series = msum $ fmap return [-1,0,1.51232,10,20]
+  series = msum $ fmap return [-1,0,1.51232,20]
 
 instance Monad m => Serial m Span where
   series = newtypeCons Span
@@ -3817,6 +3810,22 @@ instance (Monad m, Serial m a) => Serial m (Score a) where
 
 
 v ^+. p = p .+^ v
+
+-- transform mempty = id
+-- transform (s <> t) = transform s . transform t
+
+-- > _onset (delay n a) = n ^+. _onset a
+transformMonoidMorphism = transformMonoidMorphismEq (==)
+
+transformMonoidMorphismEq (===) typ = testGroup ("Transform is a Monoid morphism " ++ show (typeOf typ)) $ [
+  testProperty 
+    "transform mempty = id" $ \x -> assuming (typ ~~ x) $
+     transform mempty x === x,
+  testProperty 
+    "transform (s <> t) = transform s . transform t" $ \(s :: Span) (t :: Span) x -> assuming (typ ~~ x) $
+     transform (s <> t) x === (transform s . transform t) x
+  ]
+
 
 -- > _onset (delay n a) = n ^+. _onset a
 delayOnsetLaw typ = testGroup ("Delay/onset " ++ show (typeOf typ)) $ [
@@ -3977,7 +3986,14 @@ main = defaultMain $ testGroup "All tests" $ [
 
   testProperty "============================================================" $ True,  
   testGroup "Transformable: Monoid morphism" [
-    -- TODO
+    transformMonoidMorphism   (undefined :: Delayed Time),
+    transformMonoidMorphism   (undefined :: Stretched Time),
+    transformMonoidMorphism   (undefined :: Note Time),
+    transformMonoidMorphismEq 
+      (\x y -> fmap (! 0) x == fmap (! 0) y && fmap (! 1) x == fmap (! 1) y)
+      (undefined :: Bound (Behavior Time)),
+    transformMonoidMorphism   (undefined :: Voice Time),
+    transformMonoidMorphism   (undefined :: Score Time)
   ],
   
   testProperty "============================================================" $ True,  
@@ -3998,8 +4014,8 @@ main = defaultMain $ testGroup "All tests" $ [
     stretchDurationLaw (undefined :: Note Time),
     delayDurationLaw   (undefined :: Note Time),
 
-    delayOnsetLaw      (undefined :: Bound (Behavior Time)),
-    delayOffsetLaw     (undefined :: Bound (Behavior Time)),
+    -- delayOnsetLaw      (undefined :: Bound (Behavior Time)),
+    -- delayOffsetLaw     (undefined :: Bound (Behavior Time)),
     -- stretchDurationLaw (undefined :: Bound (Behavior Time)),
     -- delayDurationLaw   (undefined :: Bound (Behavior Time)),
     
@@ -4017,11 +4033,11 @@ main = defaultMain $ testGroup "All tests" $ [
   testProperty "============================================================" $ True,  
   testGroup "Position and duration" [
     durationOnsetOffsetLaw  (undefined :: Span),
-    -- durationOnsetOffsetLaw  (undefined :: Delayed Time),
-    -- durationOnsetOffsetLaw  (undefined :: Stretched Time),
+    durationOnsetOffsetLaw  (undefined :: Time),
+    -- durationOnsetOffsetLaw  (undefined :: [Time]), -- too slow
+    durationOnsetOffsetLaw  (undefined :: Delayed Time),
     durationOnsetOffsetLaw  (undefined :: Note Time),
-    -- durationOnsetOffsetLaw  (undefined :: Bound (Behavior Time)),
-    -- durationOnsetOffsetLaw  (undefined :: Voice Time),
+    durationOnsetOffsetLaw  (undefined :: Bound Time),
     durationOnsetOffsetLaw  (undefined :: Score Time)    
   ],
 
