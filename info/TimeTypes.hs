@@ -1274,7 +1274,7 @@ type TimeBase = Rational
 -- /Semantics/
 --
 -- @
--- data Duration = R
+-- type Duration = R
 -- @
 --
 newtype Duration = Duration { getDuration :: TimeBase }
@@ -1331,7 +1331,7 @@ fromDuration = realToFrac
 -- /Semantics/
 --
 -- @
--- data Time a = R
+-- type Time = R
 -- @
 --
 newtype Time = Time { getTime :: TimeBase }
@@ -1394,7 +1394,7 @@ fromTime = realToFrac
 -- /Semantics/
 --
 -- @
--- data Span = R2
+-- type Span = R2
 -- @
 --
 newtype Span = Span { getSpan :: (Time, Duration) }
@@ -2323,7 +2323,7 @@ through lens1 lens2 =
 -- /Semantics/
 --
 -- @
--- data Delayed a = Delayed Time a
+-- type Delayed a = (Time, a)
 -- @
 --
 newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
@@ -2380,7 +2380,7 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
 -- /Semantics/
 --
 -- @
--- data Stretched = Stretched Duration a
+-- type Stretched = (Duration, a)
 -- @
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
@@ -2444,7 +2444,7 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 -- /Semantics/
 --
 -- @
--- data Note a = Note Span a
+-- type Note a = (Span, a)
 -- @
 --
 newtype Note a = Note { getNote :: (Span, a) }
@@ -2552,7 +2552,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- /Semantics/
 --
 -- @
--- data Bound a = Bound Time Time a
+-- type Bound a = (Time, Time, a)
 -- @
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
@@ -2700,7 +2700,7 @@ noteToBehavior' = concatBehavior' . fmap pure
 -- /Semantics/
 --
 -- @
--- data Segment a = Segment ('Duration' -> a)
+-- type Segment a = 'Duration' -> a
 -- @
 --
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
@@ -2833,7 +2833,7 @@ notTime2 = (rev `whilst` undelaying 4.5) notTime
 -- /Semantics/
 --
 -- @
--- data Behavior a = Behavior ('Time' -> a)
+-- type Behavior a = 'Time' -> a
 -- @
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
@@ -3196,7 +3196,7 @@ type ScoreNote a = Note a
 -- /Semantics/
 --
 -- @
--- data Score a = Score [Note a]
+-- type Score a = [Note a]
 -- @
 --
 newtype Score a = Score { getScore :: [ScoreNote a] }
@@ -3329,7 +3329,7 @@ mapFilterEvents f = error "No mapFilterEvents"
 -- /Semantics/
 --
 -- @
--- data Phrase p a = Phrase p (Voice a)
+-- type Phrase p a = (p, Voice a)
 -- @
 --
 newtype Phrase p a = Phrase (p, [Stretched a])
@@ -3344,7 +3344,7 @@ instance HasMeta (Phrase p a) where
 -- A 'Voice' is a sequence of stretched values.
 --
 -- @
--- data Voice a = Voice [Stretched a]
+-- type Voice a = [Stretched a]
 -- @
 --
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
@@ -3519,7 +3519,7 @@ concatVoices = error "No concatVoices"
 -- /Semantics/
 --
 -- @
--- data Reactive a = Reactive a Time (Voice a)
+-- type Reactive a = (a, Time, Voice a)
 -- @
 --
 newtype Reactive a = Reactive (Store (Zipper [] Time) a)
