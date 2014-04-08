@@ -343,10 +343,10 @@ module TimeTypes (
         above,
         below,
         invertPitches,
-        -- octavesUp,
-        -- octavesDown,
-        -- octavesAbove,
-        -- octavesBelow,
+        octavesUp,
+        octavesDown,
+        octavesAbove,
+        octavesBelow,
         -- ** Intervals
         augmentIntervals,
         
@@ -1043,7 +1043,10 @@ a `before` b =  (a `lead` b) <> b
 palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 palindrome a = a `after` rev a
 
+(|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (|>) = after
+
+(<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (<|) = before
 
 -- |
@@ -1099,13 +1102,6 @@ class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
 
 
-takeM, dropM :: Splittable a => Duration -> a -> a
-
-takeM t = fst . split t
-dropM t = snd . split t
-
-
-
 -- |
 -- Class of values that can be reversed (retrograded).
 --
@@ -1144,20 +1140,20 @@ class Transformable a => Reversible a where
   rev :: a -> a
 
 --
--- XXX counter-intuitive Behavior instances (just Behavior should reverse around origin,
+-- XXX Counter-intuitive Behavior instances (just Behavior should reverse around origin,
 -- while Bound (Behavior a) should reverse around the middle, like a note)
 --
 
-
-
-{-
-      rev s `transform` a     = rev (s `transform` a)
-  ==> (rev s `transform`)     = rev . (s `transform`)
-  ==> transform (rev s)       = rev . (transform s)
-  ==> (transform . rev) s     = (rev .) (transform s)
-  ==> (transform . rev) s     = fmap rev (transform s)
-  ==> transform . rev         = fmap rev . transform
--}
+--
+-- XXX Alternate formulation of second Reversiblee law
+-- 
+--     rev s `transform` a     = rev (s `transform` a)
+-- ==> (rev s `transform`)     = rev . (s `transform`)
+-- ==> transform (rev s)       = rev . (transform s)
+-- ==> (transform . rev) s     = (rev .) (transform s)
+-- ==> (transform . rev) s     = fmap rev (transform s)
+-- ==> transform . rev         = fmap rev . transform
+-- 
 
 instance Reversible () where
   rev = id
@@ -1180,8 +1176,10 @@ instance Reversible a => Reversible (Seq a) where
 instance Reversible Duration where
   rev = stretch (-1)
 
+--
 -- There is no instance for Reversible Time
 -- as we can not satisfy the second Reversible law
+--
 
 instance Reversible Span where
   rev = revDefault
@@ -1205,8 +1203,6 @@ instance Transformable (NoReverse a) where
 instance Reversible (NoReverse a) where
   rev = id
 
-
-
 -- |
 -- View the reverse of a value.
 --
@@ -1215,31 +1211,6 @@ instance Reversible (NoReverse a) where
 --
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev
-
-{-
-  TODO check
-
-    openG $ drawNote $ rev $ delay 1 $ return 0
-    openG $ drawNote $ delay 1 $ rev $ return 0
-
-    openG $ drawNote $ rev $ stretch 0.5 $ return 0
-    openG $ drawNote $ stretch 0.5 $ rev $ return 0
-
-    openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
-    openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
-
-    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ unit
-    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ unit
-
-    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
-    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
-
-    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
-    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
-
--}
-
-
 
 
 
@@ -1253,16 +1224,15 @@ reversed = iso rev rev
 --
 type TimeBase = Rational
 -- type TimeBase = Fixed E12
+
 instance HasResolution a => AdditiveGroup (Fixed a) where
   zeroV = 0
   negateV = negate
   (^+^) = (+)
 
 -- Can be enabled for experimental time representation
-
 -- deriving instance Floating Time
 -- deriving instance Floating Duration
-
 
 
 -- |
@@ -1306,7 +1276,7 @@ instance Monoid Duration where
  -- TODO use some notion of norm rather than 1
 
 instance Transformable Duration where
-  Span (_, d1) `transform` d2 = d1 * d2
+  (view delta -> (_, d1)) `transform` d2 = d1 * d2
 
 -- |
 -- Convert a value to a duration.
@@ -1363,7 +1333,7 @@ instance Monoid Time where
   mconcat = sumV
 
 instance Transformable Time where
-  Span (t1, d1) `transform` t2 = t1 ^+^ d1 *^ t2
+  (view delta -> (t1, d1)) `transform` t2 = t1 ^+^ d1 *^ t2
 
 instance HasDuration Time where
   _duration = 0
@@ -1403,7 +1373,7 @@ fromTime = realToFrac
 -- type Span = R2
 -- @
 --
-newtype Span = Span { getSpan :: (Time, Duration) }
+newtype Span = Delta { _delta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 -- You can create a span using the '<->' and '>->' constructors. Note that:
@@ -1472,8 +1442,8 @@ instance Monoid Span where
 --
 instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
-  Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
-  negateV (Span (t, d)) = Span (-t ^/ d, recip d)
+  Delta (t1, d1) ^+^ Delta (t2, d2) = Delta (t1 ^+^ d1 *^ t2, d1*d2)
+  negateV (Delta (t, d)) = Delta (-t ^/ d, recip d)
 
 durationToSpan d  = 0 >-> d
 timeToSpan t      = t >-> 1
@@ -1495,7 +1465,7 @@ t <-> u = t >-> (u .-. t)
 -- @t >-> d@ represents the span between @t@ and @t .+^ d@.
 --
 (>->) :: Time -> Duration -> Span
-(>->) = curry Span
+(>->) = curry Delta
 
 -- |
 -- @d \<-\> t@ represents the span between @t .-^ d@ and @t@.
@@ -1514,15 +1484,15 @@ isProper (view range -> (t, u)) = t < u
 -- View a span as pair of onset and offset.
 --
 range :: Iso' Span (Time, Time)
-range = iso getRange $ uncurry (<->)
+range = iso _range $ uncurry (<->)
   where
-    getRange x = let (t, d) = getSpan x in (t, t .+^ d)
+    _range x = let (t, d) = _delta x in (t, t .+^ d)
 
 -- |
 -- View a span as a pair of onset and duration.
 --
 delta :: Iso' Span (Time, Duration)
-delta = iso getSpan Span
+delta = iso _delta Delta
 
 --
 -- $musicTimeSpanConstruct
@@ -1800,21 +1770,34 @@ invertPitches :: Transposable a => Pitch a -> a -> a
 invertPitches p = pitches %~ reflectThrough p
 
 -- |
-augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals = error "Not implemented: augmentIntervals"
--- TODO generalize to any type where we can traverse phrases of something that has pitch
-
--- |
 -- Transpose up by the given number of octaves.
 --
 octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
-octavesUp x = up (_P8^*x)
+octavesUp n = up (_P8^*n)
 
 -- |
 -- Transpose down by the given number of octaves.
 --
 octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
-octavesDown x = down (_P8^*x)
+octavesDown n = down (_P8^*n)
+
+-- |
+-- Add the given octave above.
+--
+octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesAbove n = above (_P8^*n)
+
+-- |
+-- Add the given octave below.
+--
+octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesBelow n = below (_P8^*n)
+
+-- |
+augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
+augmentIntervals = error "Not implemented: augmentIntervals"
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
+
 
 -- TODO augment/diminish intervals (requires withPrev or similar)
 -- TODO invert diatonically
@@ -2293,13 +2276,6 @@ newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
 
--- >>> stretch 2 $ (3,1)^.delayed
--- (6,1)^.stretched
---
--- >>> delay 2 $ (3,1)^.delayed
--- (3,1)^.stretched
---
-
 deriving instance Typeable1 Delayed
 deriving instance Show a => Show (Delayed a)
 
@@ -2325,11 +2301,14 @@ instance Reversible (Delayed a) where
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-delayedValue = lens runDelayed (flip $ mapDelayed . const)
+delayedValue :: (Transformable a, Transformable b) 
+  => Lens 
+      (Delayed a) (Delayed b) 
+      a b
+delayedValue = lens runDelayed (flip $ _delayed . const)
   where
-      mapDelayed f (Delayed (t,x)) = Delayed (t, (f `whilstDelay` t) x)
-
+    _delayed f (Delayed (t,x)) = 
+      Delayed (t, f `whilstDelay` t $ x)
 {-# INLINE delayedValue #-}
 
 
@@ -2387,10 +2366,10 @@ deriving instance Show a => Show (Stretched a)
 -- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-stretchedValue = lens runStretched (flip $ mapStretched . const)
+stretchedValue = lens runStretched (flip $ _stretched . const)
   where
-    mapStretched f (Stretched (d,x)) = Stretched (d, (f `whilstStretch` d) x)
-
+    _stretched f (Stretched (d,x)) = 
+      Stretched (d, f `whilstStretch` d $ x)
 {-# INLINE stretchedValue #-}
 
 
@@ -2527,26 +2506,26 @@ runStretched = uncurry stretch . view _Wrapped
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor, Semigroup, Typeable, Eq, Show)
 
---
 
+--
 -- TODO define Applicative/Monad
 --
-
+--
 -- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
 -- A possible problem with this is that there are multiple representations of the empty
 -- set (namely [(t, t)^.from range | t <- {Time} ]).
 --
 
 
-{-
-These are both unsafe, as they allow us to define 'unBound'
-
-instance Foldable Bound where
-  foldr f z (Bound (_,x)) = f x z
-
-instance Traversable Bound where
-  traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
--}
+-- 
+-- These are both unsafe, as they allow us to define 'unBound'
+-- 
+-- instance Foldable Bound where
+--   foldr f z (Bound (_,x)) = f x z
+-- 
+-- instance Traversable Bound where
+--   traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
+-- 
 
 -- | TODO Unsafe
 instance Wrapped (Bound a) where
@@ -2557,6 +2536,7 @@ instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
   rev = over _Wrapped $ \(s,x) -> (rev s, rev x)
+
 instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
 
@@ -2650,21 +2630,6 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     toLast   = Option . Just . Last
     fromLast = getLast . fromJust . getOption
     -- fromJust is safe here, as toLast is used to create the Maybe wrapper
-
--- noteToBehavior :: Note a -> Behavior (Maybe a)
--- noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
---   where
---     toLast   = Option . Just . Last
---     fromLast = fmap getLast . getOption
-
--- TODO unify
--- noteToBound :: Note (Behavior a) -> Bound (Behavior a)
--- noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
-
--- TODO unify
--- noteToBehavior' :: Monoid a => Note a -> Behavior a
--- noteToBehavior' = concatSegments' . fmap pure
-
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
@@ -2791,24 +2756,14 @@ segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = tabulated
 
 -- |
--- A behavior that
---
-_unit' :: Segment Duration
-_unit' = id^.segment
-
--- |
 -- A behavior that gives the current time, i.e. the identity function
-_unit :: Fractional a => Segment a
-_unit = realToFrac^.segment
+-- 
+timeS :: Floating a => Segment a
+timeS = realToFrac^.segment
 
+sineS :: Floating a => Segment a
+sineS = sin (timeS*tau)
 
-{-
-fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
-fromSegment = error "No fromSegment"
-
-fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bound (Behavior a)) (Bound (Behavior b))
-fromSegment2 = error "No fromSegment2"
--}
 
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
@@ -2892,8 +2847,6 @@ deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
--- TODO is this right? (for appendBehaviors etc)
-
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
 
@@ -2920,17 +2873,14 @@ instance AffineSpace a => AffineSpace (Behavior a) where
   (.-.) = liftA2 (.-.)
   (.+^) = liftA2 (.+^)
 
--- TODO is this correct?
 instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
     where
       f `whilst` s = f . transform (negateV s)
 
-
--- TODO correct?
 instance Reversible (Behavior a) where
   rev = stretch (-1)
-  -- OR
+  -- TODO alternative
   -- rev = (stretch (-1) `whilst` undelaying 0.5)
   -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
 
@@ -2941,6 +2891,7 @@ instance Representable Behavior where
   index (Behavior x) = x
 
 
+-- 
 -- type instance Pitch                 (Behavior a) = Behavior (Pitch a)
 -- type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
 --
@@ -2948,6 +2899,7 @@ instance Representable Behavior where
 --   pitches = through pitch pitch
 -- instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
 --   pitch = through pitch pitch
+-- 
 
 type instance Pitch      (Behavior a) = Behavior a
 type instance SetPitch b (Behavior a) = b
@@ -3071,12 +3023,6 @@ interval t u = (t <-> u, time)^.note
 sine :: Floating a => Behavior a
 sine = sin (time*tau)
 
--- TODO
-timeS = realToFrac^.segment
-sineS :: Floating a => Segment a
-sineS = sin (timeS*tau)
-
-
 -- |
 -- A behavior that
 --
@@ -3195,19 +3141,6 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- @
--- 'switch' t x y '!' n | n <  t = x '!' n
---                  | n >= t = y '!' n
--- @ 
---
-
--- @
--- 'switch'' t x y z '!' n | n <  t = x '!' n
---                     | n == t = y '!' n
---                     | n >  t = z '!' n
--- @ 
---
-
 -- |
 -- This
 --
@@ -3229,16 +3162,12 @@ concatSegments = mconcat . map concatSegments' . scoreToNotes
 scoreToNotes :: Score a -> [Note a]
 scoreToNotes = toListOf traverse . view _Wrapped
 
--- appendBehaviors :: Semigroup a => Bound (Behavior a) -> Bound (Behavior a) -> Bound (Behavior a)
--- appendBehaviors = (|>)
-
 -- |
 -- This
 --
--- See also 'concatBehaviors' and 'continous'.
---
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehaviors = concatSegments . fmap focus
+
 
 
 
@@ -3308,16 +3237,20 @@ instance Reversible a => Reversible (Score a) where
 instance HasPosition (Score a) where
   _onset = Foldable.minimum . fmap _onset . view _Wrapped'
   _offset = Foldable.maximum . fmap _offset . view _Wrapped'
+
 instance HasDuration (Score a) where
   _duration x = _offset x .-. _onset x
+
 instance Splittable a => Splittable (Score a) where
   -- TODO
 
 instance HasMeta (Score a) where
   meta = error "Not implemented: meta" -- TODO
 
+
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
+
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . _Wrapped . whilstL pitches
 
@@ -3340,6 +3273,8 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
 notes :: Iso' (Score a) [Note a]
+notes = _Wrapped
+
 voices :: Prism' (Score a) [Voice a]
 phrases :: Prism' (Score a) [Phrase () a]
 (voices, phrases) = error "Not implemented: (voices, phrases)"
@@ -3352,9 +3287,6 @@ singleVoice = error "Not implemented: singleNote"
 
 singlePhrase :: Prism' (Score a) (Phrase () a)
 singlePhrase = error "Not implemented: singleNote"
-
--- | XXX indexed traversal?
-notes = _Wrapped
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -3457,11 +3389,11 @@ instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
   pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
 
 
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = error "Not implemented: singleStretched"
-
 voice :: Prism' (Voice a) [Stretched a]
 voice = _Wrapped
+
+singleStretched :: Prism' (Voice a) (Stretched a)
+singleStretched = error "Not implemented: singleStretched"
 
 -- |
 -- Voice
@@ -3506,24 +3438,19 @@ mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
     f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
 
 
-{-
-instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
-  _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
-    Just (x,xs) -> Right (x,wr xs)
-    Nothing   -> Left mempty
-
-type instance Index (Voice a) = Int
-type instance IxV (Voice a) = Stretched a
-instance Ixed (Voice a) where
-  ix n = _Wrapped' . ix n
--}
-
-stretchedToVoice :: Stretched a -> Voice a
-stretchedToVoice x = Voice (return $ view (voiceEv) $ x)
-
-
-
-
+-- 
+-- TODO
+-- 
+-- instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
+--   _Cons = prism (\(s,v) -> stretchedToVoice s <> v) $ \v -> case uncons (unwr v) of
+--     Just (x,xs) -> Right (x,wr xs)
+--     Nothing   -> Left mempty
+-- 
+-- type instance Index (Voice a) = Int
+-- type instance IxV (Voice a) = Stretched a
+-- instance Ixed (Voice a) where
+--   ix n = _Wrapped' . ix n
+-- 
 
 -- |
 -- The 'Voices' and 'Phrases' types represent a sequence of voices and sub-voices with possibly infinite division.
@@ -3885,7 +3812,7 @@ instance Monad m => Serial m Duration where
   series = newtypeCons Duration
 
 instance Monad m => Serial m Span where
-  series = newtypeCons Span
+  series = newtypeCons Delta
 
 instance (Monad m, Serial m a) => Serial m (BadFunctor a) where
   series = cons0 BF1 \/ cons0 BF2
@@ -4405,3 +4332,28 @@ through lens1 lens2 = lens getter (flip setter)
     getter = fmap (view lens1)
     setter = liftA2 (over lens2 . const)
 {-# INLINE through #-}
+
+{-
+  TODO check
+
+    openG $ drawNote $ rev $ delay 1 $ return 0
+    openG $ drawNote $ delay 1 $ rev $ return 0
+
+    openG $ drawNote $ rev $ stretch 0.5 $ return 0
+    openG $ drawNote $ stretch 0.5 $ rev $ return 0
+
+    openG $ drawNote $ rev $ transform (3 <-> 2) $ return 0
+    openG $ drawNote $ transform (3 <-> 2) $ rev $ return 0
+
+    openG $ drawBehavior $ delay 3 $ rev $ delay 1 $ unit
+    openG $ drawBehavior $ delay 3 $ delay 1 $ rev $ unit
+
+    openG $ drawBehavior $ delay 3 $ rev $ stretch 0.5 $ unit
+    openG $ drawBehavior $ delay 3 $ stretch 0.5 $ rev $ unit
+
+    openG $ drawBehavior $ delay 3 $ rev $ transform (3 <-> 2) $ unit
+    openG $ drawBehavior $ delay 3 $ transform (3 <-> 2) $ rev $ unit
+
+-}
+
+
