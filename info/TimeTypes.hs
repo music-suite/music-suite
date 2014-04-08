@@ -189,6 +189,9 @@ module TimeTypes (
         switch,
         switch3,
         splice,
+        noteToBehavior,
+        noteToBehavior',
+        concatBehavior,
         concatBehaviors,
 
         -- * Music.Time.Voice
@@ -384,7 +387,6 @@ import qualified Data.Ratio                   as Util_Ratio
     Reactive a  ≡ ([Time], Behavior ae)
 
 -}
-
 
 
 -- Misc instances
@@ -2950,6 +2952,16 @@ instance Alternative Score where
 instance MonadPlus Score where
   mzero = mempty
   mplus = mappend
+
+instance FunctorWithIndex Span Score where
+  imap = mapWithSpan
+
+instance FoldableWithIndex Span Score where
+  -- TODO
+
+instance TraversableWithIndex Span Score where
+  itraverse = undefined
+  -- TODO
 
 instance IsPitch a => IsPitch (Score a) where
   fromPitch = pure . fromPitch
