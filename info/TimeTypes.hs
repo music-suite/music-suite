@@ -44,7 +44,7 @@ module TimeTypes (
 
         -- ** Specific transformations
         delay,
-        -- delay',
+        -- delayTime,
         undelay,
         stretch,
         compress,
@@ -517,15 +517,8 @@ retabulated = iso index tabulate
 
 
 
--- Moving and scaling things
-
--- FIXME compare with diagrams variant
--- translation vs linear etc
-
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
---
--- In theory this could be generalized to arbitrary affine transformations.
 --
 -- Law
 --
@@ -570,24 +563,40 @@ instance Transformable Double where
 instance Transformable Integer where
   transform _ = id
 
--- TODO remove this one (or at least implement Score without it)
--- maybe change it to transform both components?
+--
+-- TODO
+--
+-- Should really transform the /second/ element, but this is incompatible with Note/SCcore
+--
+-- 1) Change this to transform both components
+--    Then Note could be defined as   type Note a = (Span, TransfInv a)
+--
+-- 2) Redefine note as                type Note a = (a, Span)
+--
 instance Transformable a => Transformable (a, b) where
   transform t (s,a) = (transform t s, a)
 
+-- |
+-- Lists transform by transforming each element.
+--
 instance Transformable a => Transformable [a] where
   transform t = map (transform t)
 
+-- |
+-- Functions transform by conjugation, i.e. we reverse-transform the argument
+-- and transform the result.
+--
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
     transform t = (`under` negateV t)
 
-
--- FIXME strange
--- transformInv (view delta -> (t,d)) = stretch (recip d) . delay' (reflectThrough 0 t)
-
--- FIXME get rid of this
-delay' :: Transformable a => Time -> a -> a
-delay' t   = delay (t .-. 0)
+-- |
+-- Delay relative to 'origin'. 
+-- 
+-- Provided for situations when you have a value that should forward based on the distance
+-- between some time @t@ and the origin, but it does not necessarily have a start time.
+--
+delayTime :: Transformable a => Time -> a -> a
+delayTime t = delay (t .-. 0)
 
 
 -- |
@@ -1059,7 +1068,7 @@ type TimeBase = Rational
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
 --
--- 'Duration' is invariant under translation so 'delay' has no effect on it.
+-- 'Duration' is invariant under translation so 'delayTime has no effect on it.
 --
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
@@ -2032,7 +2041,7 @@ extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
 extractPart = extractPartG
 
 extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
-extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
+extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 
 -- |
 -- List all the parts
@@ -2251,7 +2260,7 @@ stretched = _Unwrapped
 -- Extract the delayed value.
 --
 runDelayed :: Transformable a => Delayed a -> a
-runDelayed = uncurry delay' . view _Wrapped
+runDelayed = uncurry delayTime . view _Wrapped
 
 -- |
 -- Extract the stretched value.
@@ -2472,12 +2481,12 @@ concatSegment = foldr1 appendSegment . toListOf voiceElements
 -- (1-i) is the fraction of the slerped segment spent in b
 slerp :: Duration -> Segment a -> Segment a -> Segment a
 slerp i a b
-  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | i < 0 || i >= 1    = error "slerp: Bad value"
   | otherwise = tabulate $ \t -> if t < i then a ! (t/i) else b ! ((t-i)/(1-i))
 
 slerp2 :: (a -> a -> a) -> Duration -> Segment a -> Segment a -> Segment a
 slerp2 f i a b
-  | i < 0 || i >= 1    = error "slerp: Bad value"
+  | i < 0 || i >= 1    = error "slerp: Bad value"
   | otherwise = tabulate $ \t -> case t `compare` i of 
       LT -> a ! (t/i) 
       EQ -> (a ! 1) `f` (b ! 1)
@@ -2594,7 +2603,7 @@ aa = (\f -> {-over pitches extractB .-} over pitches f . over pitches returnB) (
 
 
 -- > :t over pitch returnB x
--- > :t over pitch extractB $ over pitch (returnB) $ x
+-- > :t over pitch extractB $ over pitch (returnB) $ x
 
 
 type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
@@ -3079,10 +3088,10 @@ concatVoices = undefined
 -- Need to use alternative to voice similar to a zipper etc
 data Reactive a = Reactive a (Voice a) a
 
--- | Get the initial value.
+-- | Get the initial value.
 initial :: Reactive a -> a
 
--- | Get the final value.
+-- | Get the final value.
 final :: Reactive a -> a
 
 updates :: Reactive a -> Voice a
@@ -3438,7 +3447,7 @@ drawPart' = mconcat . fmap drawNote'
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
 drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
   where
-  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
+  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 0 10
@@ -3487,7 +3496,7 @@ openG' dia = do
 
 
 testNotes j = let
-  staff n = drawSomeNotes (take 60 $ drop n $ cycle $ fmap (subtract 5) $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
+  staff n = drawSomeNotes (take 60 $ drop n $ cycle $ fmap (subtract 5) $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
   in
   openG $ vcat $ [staff (i+j) <> strutY 12 | i <- [1..8]]
 
@@ -3496,7 +3505,7 @@ drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) 
   where      
     -- pos is offset in spaces
     note pos = moveTo pos $ fc black $ rotateBy (1/15) $ scaleX 1.4 (circle 0.5)
-    lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
+    lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
     linesWidth = 3 * fromIntegral (length notes)
 
 
