@@ -86,6 +86,7 @@ module TimeTypes (
         whilstL,
         whilstLD,
         whilstLT,
+        on,     
         -- underM,
         -- underW,
         conjugate,
@@ -181,13 +182,13 @@ module TimeTypes (
 
         -- ** Properties
         isProper,
+        stretches,
+        delays,
         -- Proper spans are always bounded and closed
         
         -- ** Points in spans
         inside,
-        
-        -- ** Spans
-        -- Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
+        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
         encloses,
         overlaps,
         -- union
@@ -203,10 +204,8 @@ module TimeTypes (
         segment,
         
         -- ** Combinators
-        -- focus,
-        -- focusOn,
         focusing,
-        focusingOn,     
+        focusingOn,
         -- TODO
         -- appendSegment,
         appendSegments,
@@ -428,7 +427,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                stretch, stretchTo, transform,
                                                trim, trimBefore, trimAfter, 
                                                under, unit, value, view,
-                                               toDuration, fromDuration,
+                                               toDuration, fromDuration, conjugate,
                                                toTime, fromTime, discrete, sample,
                                                (<->), (|>), (~~))
 import           System.Process               (system)
@@ -1480,9 +1479,6 @@ t <-> u = t >-> (u .-. t)
 a <-< b = (b .-^ a) <-> b
 
 
-isProper :: Span -> Bool
-isProper (view range -> (t, u)) = t < u
-
 -- > (<->) = curry $ view $ from range
 -- > (>->) = curry $ view $ from delta
 
@@ -1500,13 +1496,25 @@ range = iso _range $ uncurry (<->)
 delta :: Iso' Span (Time, Duration)
 delta = iso _delta Delta
 
-pureStretch :: Prism' Span Duration
-pureStretch = prism (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+-- |
+-- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
+--
+isProper :: Span -> Bool
+isProper (view range -> (t, u)) = t < u
+
+-- |
+-- A prism to the subset of 'Span' that performs a stretch but no delay.
+--
+stretches :: Prism' Span Duration
+stretches = prism (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
   (0, d) -> Right d
   _      -> Left x
 
-pureDelay :: Prism' Span Time
-pureDelay = prism (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+-- |
+-- A prism to the subset of 'Span' that performs a delay but no stretch.
+--
+delays :: Prism' Span Time
+delays = prism (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
   (t, 1) -> Right t
   _      -> Left x
        
@@ -3080,31 +3088,6 @@ turnOn  = switch 0 0 1
 --
 turnOff = switch 0 1 0
 
-floor' :: RealFrac a => a -> a
-floor' = fromIntegral . floor
-
-{-
--- | Specification of 'index'.
-atTime :: Behavior a -> Time -> a
-atTime = index
--}
-
--- |
--- The segment representing the behavior in the unit interval.
--- 
--- @
--- 'focus' = 'focusOn' 'mempty'
--- @
---
-focus :: Behavior a -> Segment a
-focus = focusOn mempty
-
--- |
--- The segment representing the behavior in a given interval.
---
-focusOn :: Span -> Behavior a -> Segment a
-focusOn s = view (focusingOn s)
-
 --
 -- TODO
 --
@@ -3137,12 +3120,16 @@ focusing = lens get set
 -- This can be used to modify a behavior in a specific range, as in
 --
 -- @
--- 'time' & 'focusingOn' (2 '<->' 3) '*~' 1
+-- 'time' & 'focusingOn' (2 '<->' 3) '+~' 1
+-- 'time' & 'focusing' ``on`` (2 '<->' 3) '+a~' 1
 -- @
 --
 focusingOn :: Span -> Lens' (Behavior a) (Segment a)
 focusingOn s = flip whilstM (negateV s) . focusing
 -- or focusing . flip whilstM s
+
+-- focusing `on` s == focusingOn s
+f `on` s = flip whilstM (negateV s) . f
 
 -- |
 -- Instantly switch from one behavior to another.
@@ -3184,7 +3171,7 @@ concatSegments = mconcat . map concatSegment . view notes
 -- See also 'concatSegment' and 'continous'.
 --
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehaviors = concatSegments . fmap focus
+concatBehaviors = concatSegments . fmap (view focusing)
 
 
 
@@ -4390,4 +4377,7 @@ through lens1 lens2 = lens getter (flip setter)
 
 -}
 
+
+floor' :: RealFrac a => a -> a
+floor' = fromIntegral . floor
 
