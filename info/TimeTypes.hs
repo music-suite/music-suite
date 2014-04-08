@@ -3866,9 +3866,9 @@ drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dyn
 drawPDNote :: (Renderable (Path R2) b, Real a) => Note PD -> Diagram b R2
 drawPDNote (view (from note) -> (s, transform s -> pd)) = lc red (drawBehaviorAt s $ pd^.pitch) <> lc blue (drawBehaviorAt s $ pd^.dynamic)
 
-testPD = openG $ (mconcat $ fmap draw notes2) 
+testPD = openG $ (mconcat $ fmap draw notes2) 
   <> lc pink (draw $ pitchCurve) 
-  <> lc lightblue (draw $ dynCurve)
+  <> lc lightblue (draw $ dynCurve)
   where   
     notes2 = notes :: [Note PD]
     notes  = [note1, note2] & dynamics' *~ dynCurve & pitches' *~ pitchCurve
