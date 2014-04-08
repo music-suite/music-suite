@@ -3622,6 +3622,7 @@ concatVoices = error "Not implemented: concatVoices"
 
 
 
+{-
 
 -- |
 -- Represents past and future points of change, relative time zero.
@@ -3629,28 +3630,30 @@ concatVoices = error "Not implemented: concatVoices"
 -- A value must have the form @Changes [a0..aN-1,aN] [b0,b1..bN] where 
 -- aN <= aN+1, bN <= bN+1 and aN <= 0 <= b0.
 --
-data Changes = Changes [Time] [Time]
+data Changes a = Changes [a] [a]
   deriving (Eq, Show, Typeable)
 
-instance Semigroup Changes where
+instance Ord a => Semigroup (Changes a) where
   Changes a1 b1 <> Changes a2 b2
     = Changes (a1 `merge` a2) (b1 `merge` b2)
-instance Monoid Changes where
+instance Ord a => Monoid (Changes a) where
   mempty = Changes [] []
   mappend = (<>)
 
-forward :: Changes -> Changes
-forward (Changes a b) = Changes a b
-
-instance Transformable Changes where
+instance (Num a, Ord a, Transformable a) => Transformable (Changes a) where
   transform s (Changes a b) = Changes 
     (takeWhile (< 0) $ Data.List.sort $ transform s a <> transform s b)
-    (dropWhile (< 0)  $ Data.List.sort $ transform s a <> transform s b)
+    (dropWhile (< 0) $ Data.List.sort $ transform s a <> transform s b)
 
+normalizeChanges :: (Num a, Ord a) => (Changes a) -> (Changes a)
 normalizeChanges (Changes a b) = 
   Changes
     (takeWhile (< 0) $ Data.List.sort $ a <> b)
     (dropWhile (< 0)  $ Data.List.sort $ a <> b)
+
+splitChanges :: (Num a, Ord a) => (Changes a) -> ((Changes a), (Changes a))
+splitChanges (Changes a b) = (Changes a [0], Changes [] (0:b))
+-}
             
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -3661,7 +3664,10 @@ normalizeChanges (Changes a b) =
 -- type Reactive a = (a, Time, Voice a)
 -- @
 --
-newtype Reactive a = Reactive a-- (Store (Zipper [] Time) a)
+newtype Reactive a = Reactive a
+
+
+-- (Store (Zipper [] Time) a)
 -- data Reactive a = Const a | Switch (Reactive a) Time (Reactive a)
 -- data Reactive a = Reactive a (Delayed (Voice a)) a
 
@@ -3857,8 +3863,8 @@ instance Monad m => CoSerial m Duration where
 instance (Monad m, CoSerial m a, Ord a, Num a) => CoSerial m (Clipped a) where
   coseries = fmap (. fromClipped) . coseries
 
-instance Monad m => Serial m Changes where
-  series = fmap normalizeChanges $ cons2 Changes
+-- instance (Monad m, Num a, Ord a, Serial m a) => Serial m (Changes a) where
+  -- series = fmap normalizeChanges $ cons2 Changes
 
 instance Monad m => Serial m Time where
   -- series = msum $ fmap return [-1,0,2.13222]
@@ -4097,7 +4103,7 @@ main = defaultMain $ testGroup "All tests" $ [
     transformMonoidMorphismEq 
       (\x y -> fmap (! 0) x == fmap (! 0) y && fmap (! 1) x == fmap (! 1) y)
       (undefined :: Bound (Behavior Time)),
-    transformMonoidMorphism   (undefined :: Changes),
+    -- transformMonoidMorphism   (undefined :: Changes Time),
     transformMonoidMorphism   (undefined :: Voice Time),
     transformMonoidMorphism   (undefined :: Score Time)
   ],
