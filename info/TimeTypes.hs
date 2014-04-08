@@ -977,6 +977,9 @@ a `after` b =  a <> (a `follow` b)
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 
+-- |
+-- A value followed by its reverse (retrograde).
+--
 palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 palindrome a = a `after` rev a
 
@@ -2442,19 +2445,16 @@ runStretched = uncurry stretch . view _Wrapped
 
 -- |
 -- 'Bound' restricts the start and stop time of a value, and prevents access to values
--- outside the bounds (note that 'Bound' is not 'Foldable' for this reason).
+-- outside the bounds.
 --
 -- 'Bound' is especially useful to restrict the range of a 'Behavior'. If you have a
 -- value with can only be reasonably defined for a particular time range, you can
 -- represent it as 'Bound' 'Behavior'. This is isomorphic to a 'Note' 'Segment', and
 -- 'bounded' whitnesses the isomorphism.
 --
--- Note that 'trim' and and 'splice' provides a way to safely extract a 'Bound' 'Behavior'.
---
--- Intuitively, an infinately varying value with a restricted range is the same as a value
--- defined in a particular range with an explicit 'position'.
---
--- (This should really have been called 'Bounded', but that name is taken).
+-- 'Bound' is not 'Foldable' or 'Traversable', as that would allow us to access values
+-- outside the bounds. However, you can still access values of a 'Bound' 'Behavior' in a safe manner
+-- using 'trim' or 'splice'.
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor)
@@ -2525,15 +2525,6 @@ bounding (view range -> (t, u)) = bounds t u
 -- |
 -- Add bounds.
 --
-trim :: Monoid b => Bound (Behavior b) -> Behavior b
-trim = genericTrim
-
-genericTrim :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
-genericTrim (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
-
--- |
--- Add bounds.
---
 bounded :: Iso' (Note (Segment a)) (Bound (Behavior a))
 bounded = iso ns2bb bb2ns 
   where
@@ -2541,25 +2532,36 @@ bounded = iso ns2bb bb2ns
     ns2bb (Note (s, x))   = Bound (s,       transform s           $ s2b $ x)
     s2b = tabulate . ( .realToFrac) . index
     b2s = tabulate . (. realToFrac) . index
+
 --
 -- Note that the isomorhism only works because of 'Bound' being abstract.
 -- A function @unBound :: Bound a -> a@ could break the isomorphism
 -- as follows:
 --
--- >>> (unBound . view (from bounded . bounded) . bounds 0 1) b ! 2
+-- > (unBound . view (from bounded . bounded) . bounds 0 1) b ! 2
 -- *** Exception: Outside 0-1
 --
 
--- TODO unify with bounded Iso
-noteToBound :: Note (Behavior a) -> Bound (Behavior a)
-noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
+-- |
+-- Extract a bounded behavior, replacing all values outside the bound with 'mempty'.
+--
+-- @
+-- 'trim' = 'splice' 'mempty'
+-- @
+--
+trim :: Monoid b => Bound (Behavior b) -> Behavior b
+trim = trimG
+  where
+    trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
+    trimG (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
 
 -- |
 -- Splice (named for the analogous tape-editing technique) proivides an alternative behavior
 -- for a limited amount of time.
 --
--- @'splice' b ('bounds' t u b')@ behaves as @b'@ inside the bounds, and as @b@
--- outside.
+-- @
+-- 'trim' = 'splice' 'mempty'
+-- @
 --
 splice :: Behavior a -> Bound (Behavior a) -> Behavior a
 splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
@@ -2574,12 +2576,13 @@ noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
     toLast   = Option . Just . Last
     fromLast = fmap getLast . getOption
 
+-- TODO unify
+noteToBound :: Note (Behavior a) -> Bound (Behavior a)
+noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
+
+-- TODO unify
 noteToBehavior' :: Monoid a => Note a -> Behavior a
 noteToBehavior' = concatBehavior . fmap pure
-
-concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
-concatBehavior = splice mempty . noteToBound
-
 
 
 
@@ -3060,6 +3063,12 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
+
+-- |
+-- This
+--
+concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
+concatBehavior = splice mempty . noteToBound
 
 -- |
 -- This
