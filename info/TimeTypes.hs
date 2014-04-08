@@ -414,7 +414,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                trim, under, unit, value, view,
                                                toDuration, fromDuration,
                                                toTime, fromTime, discrete, sample,
-                                               (<->), (|>))
+                                               (<->), (|>), (~~))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
@@ -3724,7 +3724,8 @@ assuming = flip const
 
 sameType :: a -> a -> a
 sameType _ x = x
-
+(~~) = sameType
+infixl 0 ~~
 
 #define INCLUDE_TESTS
 
@@ -3819,39 +3820,45 @@ v ^+. p = p .+^ v
 
 -- > _onset (delay n a) = n ^+. _onset a
 delayOnsetLaw typ = testGroup ("Delay/onset " ++ show (typeOf typ)) $ [
-  testProperty "_onset (delay n a) == n ^+. _onset a" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                _onset (delay n a) == n ^+. _onset a
+  testProperty 
+    "_onset (delay n a) == n ^+. _onset a" $ \(n :: Duration) a -> assuming (typ ~~ a) $
+     _onset (delay n a) == n ^+. _onset a
   ]
 
 -- > _offset (delay n a) = n ^+. _offset a
 delayOffsetLaw typ = testGroup ("Delay/offset " ++ show (typeOf typ)) $ [
-  testProperty "_offset (delay n a) == n ^+. _offset a" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                _offset (delay n a) == n ^+. _offset a
+  testProperty 
+    "_offset (delay n a) == n ^+. _offset a" $ \(n :: Duration) a -> assuming (typ ~~ a) $
+     _offset (delay n a) == n ^+. _offset a
   ]
 
 -- > duration (stretch n a) = n ^* (duration a)
 stretchDurationLaw typ = testGroup ("Stretch/duration " ++ show (typeOf typ)) $ [
-  testProperty "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                _duration (stretch n a) == n ^* (_duration a)
+  testProperty 
+    "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (typ ~~ a) $
+     _duration (stretch n a) == n ^* (_duration a)
   ]
 
 -- > duration a = duration (delay n a)
 delayDurationLaw typ = testGroup ("Delay/duration " ++ show (typeOf typ)) $ [
-  testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                _duration a == _duration (delay n a)
+  testProperty 
+    "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (typ ~~ a) $
+     _duration a == _duration (delay n a)
   ]
 
 
 
 delayIndexLaw typ = testGroup ("Delay/! " ++ show (typeOf typ)) $ [
-  testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
-                delay n b ! t == b ! (t .-^ n)
+  testProperty 
+    "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (typ ~~ b) $
+     delay n b ! t == b ! (t .-^ n)
   ]
 
 --  _duration x = (offset x .-. onset x)
 durationOnsetOffsetLaw typ = testGroup ("Duration/onset/offset " ++ show (typeOf typ)) $ [
-  testProperty "_duration x == (_offset x .-. _onset x)" $ \x y -> assuming (sameType typ (sameType x y)) $
-                _duration x == (_offset x .-. _onset x)
+  testProperty
+    "_duration x == (_offset x .-. _onset x)" $ \x y -> assuming (typ ~~ x ~~ y) $
+     _duration x == (_offset x .-. _onset x)
   ]
 
 --
@@ -3861,17 +3868,16 @@ durationOnsetOffsetLaw typ = testGroup ("Duration/onset/offset " ++ show (typeOf
 --
 
 transformUi typ = testGroup ("Transform UI " ++ show (typeOf typ)) $ [
-  testProperty "(t<->u) `transform` b ! t          == b ! 0" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
-                (t<->u) `transform` b ! t          == b ! 0,
+  testProperty
+    "(t<->u) `transform` b ! t == b ! 0" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
+     (t<->u) `transform` b ! t == b ! 0,
 
-  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
-                (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
+  testProperty 
+    "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in 
+     (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
 
-  testProperty "(t<->u) `transform` b ! u           == b ! 1" $
-    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
-                (t<->u) `transform` b ! u           == b ! 1
+  testProperty "(t<->u) `transform` b ! u == b ! 1" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = decollide t u2 in
+                (t<->u) `transform` b ! u == b ! 1
 
   ]
 
@@ -3883,28 +3889,33 @@ decollide x y
 monoid = monoidEq (==)
 
 monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
-  testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
-          (x <> (y <> z)) === ((x <> y) <> z),
+  testProperty 
+    "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (typ ~~ x)
+     (x <> (y <> z)) === ((x <> y) <> z),
 
-  testProperty "mempty <> x == x"         $ \x   -> assuming (sameType typ x)
-          (mempty <> x) === x,
+  testProperty 
+    " mempty <> x  === x" $ \x   -> assuming (typ ~~ x)
+     (mempty <> x) === x,
 
-  testProperty "x <> mempty == x"         $ \x   -> assuming (sameType typ x)
-         ((x <> mempty) === x)
+  testProperty
+    "((x <> mempty) === x)" $ \x   -> assuming (typ ~~ x)
+     ((x <> mempty) === x)
   ]
   where
     (<>) = mappend
 
 functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
-  testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
-         (fmap id x == id x)
+  testProperty 
+    "fmap id = id" $ \x -> assuming (sameType typ x) $
+     fmap id x == id x
   ]
 
 reversible = reversibleEq (==)
 
 reversibleEq (===) typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
-  testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
-                (rev (rev x)) === x,
+  testProperty 
+    "rev . rev == id" $ \x -> assuming (sameType typ x)
+    (rev (rev x)) === x,
 
   -- testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
                 -- ((transform . rev) s x) === ((fmap rev . transform) s x),
