@@ -85,14 +85,7 @@ module TimeTypes (
         Transformable(..),
         -- ** Apply under a transformation
         whilst,
-        -- whilstM,
-        -- whilstW,
-        -- whilstL,
-        -- whilstLD,
-        -- whilstLT,
         on,     
-        -- underM,
-        -- underW,
         conjugate,
 
         -- ** Specific transformations
@@ -196,9 +189,8 @@ module TimeTypes (
         encloses,
         overlaps,
         -- union
-        -- intersection
-        -- difference (that actually becomes a split)
-        -- overlap a b = _duration (intersection a b)
+        -- intersection (alt name 'overlap')
+        -- difference (would actually become a split)
 
         -- * Music.Time.Segment
         Segment,
@@ -209,9 +201,6 @@ module TimeTypes (
         
         -- ** Combinators
         focusing,
-        -- focusingOn,
-        -- TODO
-        -- appendSegment,
         appendS,
         concatS,
 
@@ -230,10 +219,6 @@ module TimeTypes (
         trimBefore,
         trimAfter,
         concatB,
-        -- cross,
-        -- noteToBehavior,
-        -- noteToBehavior',
-        -- concatBehavior',
 
         -- * Common behaviors
         time,
@@ -3350,6 +3335,18 @@ type ScoreNote a = Note a
 
 -- |
 --
+-- To create a score, see 'score', 'notes', 'voices', and 'phrases'.
+--
+-- You can also use the 'Alternative'/'MonadPlus' interface:
+-- 'empty' creates an empty score and '<|>' (or '<>') compose in parallel.
+-- 
+-- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
+-- 
+-- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
+--
+-- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
+-- well as 'singleNote', 'singleVoice', and 'singlePhrase'
+--
 -- /Semantics/
 --
 -- @
@@ -3450,15 +3447,20 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 --
 -- This is a getter for the sake of syntactic unity:
 --
--- >>> [(1 <-> 2)^.note, (3 <-> 4, 2)^.note]^.score
+-- >>> [(1 <-> 2, 1)^.note, (3 <-> 4, 2)^.note]^.score
 --
 -- >>> view score $ fmap (view note) $ [(0 <-> 1, 1)]
 --
+-- Se also 'notes'.
+--
 score :: Getter [Note a] (Score a)
-score = to $ \x -> mzero & notes .~ x
+score = to $ \x -> empty & notes .~ x
 
 -- |
 -- View a score as a list of notes.
+--
+-- This is not an 'Iso', as the note list representation does not contain meta-data.
+-- To construct a score from a note list, use 'score' ('from' 'notes' does not work).
 -- 
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
 notes = _Wrapped
