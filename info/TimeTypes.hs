@@ -2027,9 +2027,9 @@ instance HasPosition (Delayed a) where
 instance Reversible (Delayed a) where
   rev = revDefault
 
--- |
--- View the value in the note.
---
+  -- |
+  -- View a delayed value as a pair of the original value and the transformation (and vice versa).
+  --
 delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 delayedValue = lens runDelayed (flip $ mapDelayed . const)
   where
@@ -2070,7 +2070,7 @@ instance Splittable a => Splittable (Stretched a) where
 deriving instance Show a => Show (Stretched a)
 
 -- |
--- View the value in the note.
+-- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretchedValue = lens runStretched (flip $ mapStretched . const)
@@ -2120,7 +2120,7 @@ instance Reversible (Note a) where
   rev = revDefault
 
 -- |
--- View a note as a pair of the original value and the transformation.
+-- View a note as a pair of the original value and the transformation (and vice versa).
 --
 note :: Iso (Span, a) (Span, b) (Note a) (Note b)
 note = _Unwrapped
