@@ -2410,13 +2410,6 @@ runStretched = uncurry stretch . view _Wrapped
 newtype Bounds a = Bounds { getBounds :: (Span, a) }
   deriving (Functor, Foldable, Traversable)
 
--- |
--- Add bounds.
---
-bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
-bounded = error "No bounded"
-
-
 instance Wrapped (Bounds a) where
   type Unwrapped (Bounds a) = (Span, a)
   _Wrapped' = iso getBounds Bounds
@@ -2444,7 +2437,6 @@ instance HasPosition a => HasPosition (Bounds a) where
 truncating :: Ord a => a -> a -> a -> a
 truncating t u x = (x `max` t) `min` u
 
-
 -- |
 -- Add bounds.
 --
@@ -2465,22 +2457,46 @@ bounding (view range -> (t, u)) = bounds t u
 -- Add bounds.
 --
 trim :: Monoid b => Bounds (Behavior b) -> Behavior b
-trim = trimG
+trim = genericTrim
 
--- More generic definition
-trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
-trimG (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
+genericTrim :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
+genericTrim (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
+
+-- |
+-- Add bounds.
+--
+-- TODO name
+-- TODO only an iso op to trim
+--
+bounded :: Iso' (Bounds (Behavior a)) (Note (Segment a))
+bounded = iso bb2ns ns2bb
+  where
+    bb2ns (Bounds (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
+    ns2bb (Note (s, x))   = Bounds (s,       transform s           $ s2b $ x)
+    s2b = tabulate . ( .realToFrac) . index
+    b2s = tabulate . (. realToFrac) . index
+
+-- TODO unify with bounded Iso
+noteToBounds :: Note (Behavior a) -> Bounds (Behavior a)
+noteToBounds (view (from note) -> (s,x)) = bounding s (transform s x)
+
+
+
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
 
 -- |
 --
--- A 'Segment' is a value varying over some unknown time span, semantically
+-- A 'Segment' is a value varying over some unknown time span
+--
+-- Semantics
 --
 -- @
--- type 'Segment' a = 'Duration' -> a
+-- 'Duration' -> a
 -- @
+--
+-- where duration is in @0 < d < 1@.
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
@@ -2567,13 +2583,13 @@ _unit :: Fractional a => Segment a
 _unit = realToFrac^.segment
 
 
-
--- | XXX name
+{-
 fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
 fromSegment = error "No fromSegment"
 
 fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
 fromSegment2 = error "No fromSegment2"
+-}
 
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
@@ -2948,7 +2964,6 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     toLast   = Option . Just . Last
     fromLast = getLast . fromMaybe undefined . getOption
 
-
 noteToBehavior :: Note a -> Behavior (Maybe a)
 noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
   where
@@ -2958,24 +2973,19 @@ noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
 noteToBehavior' :: Monoid a => Note a -> Behavior a
 noteToBehavior' = concatBehavior . fmap pure
 
--- XXX this is the thing    
 concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
 concatBehavior = splice mempty . noteToBounds
 
--- TODO unify with bounded Iso
-noteToBounds :: Note (Behavior a) -> Bounds (Behavior a)
-noteToBounds (view (from note) -> (s,x)) = bounding s (transform s x)
 
 -- |
 -- This
 --
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehaviors = error "No concatBehaviors"
--- TODO write this in terms of noteToBehavior, not the other way around!
+concatBehaviors = mconcat . map concatBehavior . scoreToNotes
 
--- switch :: Time -> Reactive a -> Reactive a -> Reactive a
--- trim :: Monoid a => Span -> Reactive a -> Reactive a
-
+-- TODO replace with iso/traversal
+scoreToNotes :: Score a -> [Note a]
+scoreToNotes = toListOf traverse . view _Wrapped
 
 
 
