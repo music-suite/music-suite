@@ -1434,47 +1434,21 @@ pitch' = pitch
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 
-type instance Pitch Bool = Bool
-type instance SetPitch a Bool = a
-instance (Transformable a, a ~ Pitch a) => HasPitch Bool a where
-  pitch = ($)
-instance (Transformable a, a ~ Pitch a) => HasPitches Bool a where
-  pitches = ($)
+#define PRIM_PITCH_INSTANCE(TYPE) \
+type instance Pitch TYPE = TYPE;       \
+type instance SetPitch a TYPE = a;     \
+instance (Transformable a, a ~ Pitch a) => HasPitch TYPE a where {    \
+  pitch = ($)                     };   \
+instance (Transformable a, a ~ Pitch a) => HasPitches TYPE a where {  \
+  pitches = ($)                     }; \
 
-type instance Pitch Int = Int
-type instance SetPitch a Int = a
-instance (Transformable a, a ~ Pitch a) => HasPitch Int a where
-  pitch = ($)
-instance (Transformable a, a ~ Pitch a) => HasPitches Int a where
-  pitches = ($)
-
-type instance Pitch Integer = Integer
-type instance SetPitch a Integer = a
-instance HasPitch Integer Integer where
-  pitch = ($)
-instance HasPitches Integer Integer where
-  pitches = ($)
-
-type instance Pitch Float = Float
-type instance SetPitch a Float = a
-instance (Transformable a, a ~ Pitch a) => HasPitch Float a where
-  pitch = ($)
-instance (Transformable a, a ~ Pitch a) => HasPitches Float a where
-  pitches = ($)
-
-type instance Pitch Double = Double
-type instance SetPitch a Double = a
-instance HasPitch Double Double where
-  pitch = ($)
-instance HasPitches Double Double where
-  pitches = ($)
-
-type instance Pitch Char = Char
-type instance SetPitch a Char = a
-instance HasPitch Char Char where
-  pitch = ($)
-instance HasPitches Char Char where
-  pitches = ($)
+PRIM_PITCH_INSTANCE(Bool)
+PRIM_PITCH_INSTANCE(Int)
+PRIM_PITCH_INSTANCE(Integer)
+PRIM_PITCH_INSTANCE(Float)
+PRIM_PITCH_INSTANCE(Double)
+PRIM_PITCH_INSTANCE(Char)
+PRIM_PITCH_INSTANCE(())
 
 type instance Pitch (c,a) = Pitch a
 type instance SetPitch b (c,a) = (c,SetPitch b a)
