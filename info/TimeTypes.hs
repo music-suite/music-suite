@@ -165,6 +165,7 @@ module TimeTypes (
         Span,
         (<->),
         (>->),
+        (<-<),
         range,
         delta,
 
@@ -1283,7 +1284,7 @@ fromTime = realToFrac
 -- foo (view range -> (u,v)) = ...
 -- @
 --
-newtype Span = Span { getDelta :: (Time, Duration) }
+newtype Span = Span { getSpan :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 -- You can create a span using the '<->' and '>->' constructors. Note that:
@@ -1361,6 +1362,13 @@ instance AdditiveGroup Span where
 durationToSpan d  = 0 >-> d
 timeToSpan t      = t >-> 1
 
+--
+-- a >-> b = a         <-> (a .+^ b)
+-- a <-< b = (b .-^ a) <-> b
+-- a <-> b = a         >-> (b .-. a)
+-- (b .-^ a) <-> b = a <-< b
+--
+
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
@@ -1371,7 +1379,15 @@ t <-> u = t >-> (u .-. t)
 -- @t >-> d@ represents the span between @t@ and @t .+^ d@.
 --
 (>->) :: Time -> Duration -> Span
-t >-> d = Span (t, d)
+(>->) = curry Span
+
+-- |
+-- @d <-> t@ represents the span between @t .-^ d@ and @t@.
+--
+(<-<) :: Duration -> Time -> Span
+a <-< b = (b .-^ a) <-> b
+
+
 
 -- > (<->) = curry $ view $ from range
 -- > (>->) = curry $ view $ from delta
@@ -1382,13 +1398,13 @@ t >-> d = Span (t, d)
 range :: Iso' Span (Time, Time)
 range = iso getRange $ uncurry (<->)
   where
-    getRange x = let (t, d) = getDelta x in (t, t .+^ d)
+    getRange x = let (t, d) = getSpan x in (t, t .+^ d)
 
 -- |
 -- View a span as a pair of onset and duration.
 --
 delta :: Iso' Span (Time, Duration)
-delta = iso getDelta $ uncurry (>->)
+delta = iso getSpan Span
 
 --
 -- $musicTimeSpanConstruct
@@ -1853,7 +1869,7 @@ level a = dynamics .~ a
 -- Fade in.
 --
 fadeIn :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeIn t = dynamics *~ (t `stretch` unit)
+fadeIn d = dynamics *~ (0 >-> d `transform` unit)
 
 -- |
 -- Fade in.
