@@ -3146,9 +3146,15 @@ phrases' = error "No phrases'"
 concatVoices :: Monoid a => Phrases a -> Voice a
 concatVoices = error "No concatVoices"
 
--- | XXX only defined positively
--- Need to use alternative to voice similar to a zipper etc
-data Reactive a = Reactive a (Voice a) a
+-- |
+-- Forms an applicative as per 'Behavior', but only switches at discrete points.
+--
+newtype Reactive a = Reactive (Store (Zipper [] Time) a)
+-- data Reactive a = Const a | Switch (Reactive a) Time (Reactive a)
+-- data Reactive a = Reactive a (Delayed (Voice a)) a
+
+data Store s a = Store (s -> a) s
+data Zipper f a = Zipper (f a) a (f a)
 
 -- | Get the initial value.
 initial :: Reactive a -> a
