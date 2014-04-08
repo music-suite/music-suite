@@ -1208,6 +1208,12 @@ type TimeBase = Rational
 --
 -- 'Duration' is invariant under translation so 'delayTime has no effect on it.
 --
+-- /Semantics/
+--
+-- @
+-- data Duration = R
+-- @
+--
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
@@ -1262,6 +1268,12 @@ fromDuration = realToFrac
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
 --
+-- /Semantics/
+--
+-- @
+-- data Time a = R
+-- @
+--
 newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
@@ -1309,7 +1321,7 @@ fromTime = realToFrac
 
 
 -- |
--- A 'Span' represents two points in time @u@ and @v@ or, equnitvalently, a time @t@ and a
+-- A 'Span' represents two points in time @u@ and @v@ or, equivalently, a time @t@ and a
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
@@ -1317,6 +1329,12 @@ fromTime = realToFrac
 --
 -- @
 -- foo (view range -> (u,v)) = ...
+-- @
+--
+-- /Semantics/
+--
+-- @
+-- data Span = R2
 -- @
 --
 newtype Span = Span { getSpan :: (Time, Duration) }
@@ -2245,6 +2263,12 @@ through lens1 lens2 =
 -- offset of a delayed value may be stretched with respect to the origin. However, in
 -- contrast to a note the /duration/ is not stretched.
 --
+-- /Semantics/
+--
+-- @
+-- data Delayed a = Delayed Time a
+-- @
+--
 newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
@@ -2295,6 +2319,12 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
 -- A 'Stretched' value has a known 'duration', but no 'position'.
 --
 -- Placing a value inside 'Stretched' makes it invariante under 'delay'.
+--
+-- /Semantics/
+--
+-- @
+-- data Stretched = Stretched Duration a
+-- @
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
@@ -2352,6 +2382,12 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 --
 -- @
 -- ('view' 'noteValue') . 'transform' s ≡ 'transform' s . ('view' 'noteValue')
+-- @
+--
+-- /Semantics/
+--
+-- @
+-- data Note a = Note Span a
 -- @
 --
 newtype Note a = Note { getNote :: (Span, a) }
@@ -2455,6 +2491,12 @@ runStretched = uncurry stretch . view _Wrapped
 -- 'Bound' is not 'Foldable' or 'Traversable', as that would allow us to access values
 -- outside the bounds. However, you can still access values of a 'Bound' 'Behavior' in a safe manner
 -- using 'trim' or 'splice'.
+--
+-- /Semantics/
+--
+-- @
+-- data Bound a = Bound Time Time a
+-- @
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor)
@@ -2590,17 +2632,15 @@ noteToBehavior' = concatBehavior . fmap pure
 
 -- |
 --
--- A 'Segment' is a value varying over some unknown time span
---
--- Semantics
---
--- @
--- 'Duration' -> a
--- @
---
--- where duration is in @0 < d < 1@.
+-- A 'Segment' is a value varying over some unknown time span.
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
+--
+-- /Semantics/
+--
+-- @
+-- data Segment a = Segment ('Duration' -> a)
+-- @
 --
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
   deriving (Functor, Applicative, Monad{-, Comonad-})
@@ -2727,13 +2767,13 @@ notTime2 = (rev `whilst` undelaying 4.5) notTime
 -- |
 -- A 'Behavior' is a value varying over time.
 -- 
+-- We can 'focusOn' any part of a behavior, thereby obtaining a 'Segment'.
+--
 -- /Semantics/
 --
 -- @
--- 'Time' -> a
+-- data Behavior a = Behavior ('Time' -> a)
 -- @
---
--- We can 'focusOn' any part of a behavior, thereby obtaining a 'Segment'.
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
 
@@ -3091,6 +3131,14 @@ scoreToNotes = toListOf traverse . view _Wrapped
 
 type ScoreNote a = Note a
 
+-- |
+--
+-- /Semantics/
+--
+-- @
+-- data Score a = Score [Note a]
+-- @
+--
 newtype Score a = Score { getScore :: [ScoreNote a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
@@ -3212,6 +3260,15 @@ mapFilterEvents f = error "No mapFilterEvents"
 
 
 -- * Music.Time.Phrases
+
+-- |
+--
+-- /Semantics/
+--
+-- @
+-- data Phrase p a = Phrase p (Voice a)
+-- @
+--
 newtype Phrase p a = Phrase (p, [Stretched a])
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
@@ -3219,6 +3276,10 @@ newtype Phrase p a = Phrase (p, [Stretched a])
 
 -- |
 -- A 'Voice' is a sequence of stretched values.
+--
+-- @
+-- data Voice a = Voice [Stretched a]
+-- @
 --
 newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
@@ -3375,6 +3436,12 @@ concatVoices = error "No concatVoices"
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
+--
+-- /Semantics/
+--
+-- @
+-- data Reactive a = Reactive a Time (Voice a)
+-- @
 --
 newtype Reactive a = Reactive (Store (Zipper [] Time) a)
 -- data Reactive a = Const a | Switch (Reactive a) Time (Reactive a)
