@@ -346,6 +346,30 @@ import           Test.Tasty.SmallCheck        hiding (over, under)
 import qualified Data.Ratio                   as Util_Ratio
 
 
+{-
+  Semantics:
+    
+    Duration    ≡ R
+    Time        ≡ R
+    Span        ≡ (R, R)
+
+    Stretched a ≡ (Duration, a)
+    Delayed a   ≡ (Duration, a)
+    Note a      ≡ (Span, a)
+    Bounds a    ≡ (Time, Time, a)
+
+    Voice a     ≡ [Stretched a]
+    Track a     ≡ [Delayed a]
+    Score a     ≡ [Note a]
+
+    Segment a   ≡ Duration -> a
+    Behavior a  ≡ Time -> a
+    Reactive a  ≡ ([Time], Behavior a)
+  
+-}
+
+
+
 -- Misc instances
 
 instance Monoid b => Monad ((,) b) where
@@ -2049,7 +2073,7 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
 -- |
 -- A 'Stretched' value has a known 'duration', but no 'position'.
 --
--- Placing a value inside 'Stretched' makes it invariant under 'delay'.
+-- Placing a value inside 'Stretched' makes it invariante under 'delay'.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
