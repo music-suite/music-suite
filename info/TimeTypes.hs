@@ -64,10 +64,9 @@ module TimeTypes (
         HasPosition(..),
         -- * Inspecting position
         era,
-        -- _era,
+        position,
 
         -- * Specific positions
-        position,
         onset,
         offset,
         preOnset,
@@ -2050,7 +2049,7 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
 -- |
 -- A 'Stretched' value has a known 'duration', but no 'position'.
 --
--- Placing a value inside 'Stretched' makes it /invariant/ under 'delay'.
+-- Placing a value inside 'Stretched' makes it invariant under 'delay'.
 --
 newtype Stretched a = Stretched { getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
