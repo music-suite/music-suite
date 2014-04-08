@@ -791,6 +791,39 @@ compress = transform . compressing
 class HasDuration a where
   _duration :: a -> Duration
 
+instance HasDuration Duration where
+  _duration = id
+
+instance HasDuration Span where
+  _duration = snd . view delta
+
+--
+-- By convention, we treat pairs and triplets as having the form
+-- (t,x), (d,x) and (t,d,x) where t has a position and d has a 
+-- duration. This makes it convenient to represent simple event
+-- lists as [(Time, Duration, a)] without needing any special
+-- structure.
+--
+
+instance HasDuration a => HasDuration (a, b) where
+  _duration (d,_) = _duration d
+
+instance HasDuration b => HasDuration (a, b, c) where
+  _duration (_,d,_) = _duration d
+
+instance HasDuration a => HasDuration (Product a) where
+  _duration (Product x) = _duration x
+
+instance HasDuration a => HasDuration (Sum a) where
+  _duration (Sum x) = _duration x
+
+instance HasDuration a => HasDuration (Min a) where
+  _duration (Min x) = _duration x
+
+instance HasDuration a => HasDuration (Max a) where
+  _duration (Max x) = _duration x
+
+
 -- |
 -- Access the duration.
 --
@@ -1272,9 +1305,6 @@ instance Monoid Duration where
 instance Transformable Duration where
   Span (_, d1) `transform` d2 = d1 * d2
 
-instance HasDuration Duration where
-  _duration = id
-
 -- |
 -- Convert a value to a duration.
 -- 
@@ -1408,9 +1438,6 @@ instance HasPosition Span where
   -- _position (view range -> (t1, t2)) = alerp t1 t2
   _onset  (view range -> (t1, t2)) = t1
   _offset (view range -> (t1, t2)) = t2
-
-instance HasDuration Span where
-  _duration = snd . view delta
 
 instance Transformable Span where
   transform = (<>)
@@ -3320,11 +3347,17 @@ instance HasMeta (Phrase p a) where
 -- data Voice a = Voice [Stretched a]
 -- @
 --
-newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
+newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = error "No singleStretched"
+-- Can use [] or Seq here
+type VoiceList = []
+
+-- Can use any type as long as voiceEv provides an Iso
+type VoiceEv a = Stretched a
+
+voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
+voiceEv = id
 
 instance Applicative Voice where
   pure  = return
@@ -3335,7 +3368,7 @@ instance Monad Voice where
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
 instance Wrapped (Voice a) where
-  type Unwrapped (Voice a) = (Seq (Stretched a))
+  type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
   _Wrapped' = iso getVoice Voice
 
 instance Rewrapped (Voice a) (Voice b)
@@ -3358,7 +3391,11 @@ instance HasMeta (Voice a) where
 type instance Pitch (Voice a) = Pitch a
 type instance SetPitch g (Voice a) = Voice (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
-  pitches = _Wrapped . traverse . _Wrapped . whilstLD pitches
+  pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
+
+
+singleStretched :: Prism' (Voice a) (Stretched a)
+singleStretched = error "No singleStretched"
 
 -- |
 -- Voice
@@ -3370,7 +3407,7 @@ voiceNotes = error "No voiceNotes"
 -- Voice
 --
 voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voiceElements = _Wrapped . traverse
+voiceElements = _Wrapped . traverse . from voiceEv
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
@@ -3416,7 +3453,7 @@ instance Ixed (Voice a) where
 -}
 
 stretchedToVoice :: Stretched a -> Voice a
-stretchedToVoice x = Voice (return x)
+stretchedToVoice x = Voice (return $ view (voiceEv) $ x)
 
 
 
