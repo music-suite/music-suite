@@ -240,8 +240,10 @@ module TimeTypes (
         final,
         intermediate,
         discrete,
-        interpolate,
-        sample,  
+        continous,
+        sample,
+        window,
+        windowed,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -2669,7 +2671,7 @@ trimOutside :: Monoid a => Span -> Time -> a -> a
 trimOutside s t x = if t `inside` s then x else mempty
 
 -- |
--- Provides an alternative behavior for a limited amount of time.
+-- Inserts a bounded behavior on top of another behavior.
 --
 -- @
 -- 'trim' = 'splice' 'mempty'
@@ -3187,11 +3189,16 @@ cross = error "No cross"
 -- |
 -- This
 --
+-- See also 'concatBehaviors' and 'continous'.
+--
 concatSegments' :: Monoid a => Note (Segment a) -> Behavior a
 concatSegments' = trim . view bounded
 
 -- |
 -- This
+--
+--
+-- See also 'concatBehaviors' and 'continous'.
 --
 concatSegments :: Monoid a => Score (Segment a) -> Behavior a
 concatSegments = mconcat . map concatSegments' . scoreToNotes
@@ -3203,6 +3210,11 @@ scoreToNotes = toListOf traverse . view _Wrapped
 appendBehaviors :: Semigroup a => Bound (Behavior a) -> Bound (Behavior a) -> Bound (Behavior a)
 appendBehaviors = (|>)
 
+-- |
+-- This
+--
+-- See also 'concatBehaviors' and 'continous'.
+--
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehaviors = concatSegments . fmap focus
 
@@ -3551,6 +3563,11 @@ newtype Reactive a = Reactive (Store (Zipper [] Time) a)
 data Store s a = Store (s -> a) s
 data Zipper f a = Zipper (f a) a (f a)
 
+instance Functor Reactive where
+  -- TODO
+instance Applicative Reactive where
+-- TODO
+
 -- |
 -- Get the initial value.
 --
@@ -3571,11 +3588,17 @@ intermediate :: Reactive a -> [Note a]
 -- Realize a 'Reactive' value as a discretely changing behavior.
 --
 discrete :: Reactive a -> Behavior a
+discrete = continous . fmap pure
 
 -- |
--- Realize a 'Reactive' value as an interpolated behavior.
+-- Realize a 'Reactive' value as an continous behavior.
 --
-interpolate :: Segment (a -> b) -> Reactive a -> Behavior b
+-- See also 'concatSegments' and 'concatBehaviors'.
+--
+continous :: Reactive (Segment a) -> Behavior a
+
+continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
+continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 
 -- |
 -- Sample a 'Behavior' into a reactive.
@@ -3583,7 +3606,12 @@ interpolate :: Segment (a -> b) -> Reactive a -> Behavior b
 sample   :: [Time] -> Behavior a -> Reactive a
 
 -- TODO linear approximation
-(discrete, interpolate, sample) = error "No (discrete, interpolate, sample)"
+(continous, sample) = error "No (discrete, continous, sample)"
+
+
+window :: [Time] -> Behavior a -> Reactive (Segment a)
+windowed :: [Time] -> Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
+(window, windowed) = error "No (window, windowed)"
 
 {-
 
