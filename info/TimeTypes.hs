@@ -198,6 +198,7 @@ module TimeTypes (
         bounds,
         bounding,
         trim,
+        splice,
         bounded,
 
         -- * Music.Time.Segment
@@ -213,7 +214,7 @@ module TimeTypes (
         Reactive(..),
         initial,
         final,
-        updates,  
+        intermediates,  
 
         -- * Music.Time.Behavior
         Behavior,
@@ -254,6 +255,10 @@ module TimeTypes (
         zipVoiceWith,
         dzipVoiceWith,
         mergeEqualNotes,
+        
+        -- mapDurations, -- ([Duration] -> [Duration]) -> Voice a -> Voice a
+        -- mapPitches,   -- ([Pitch a]  -> [Pitch a])  -> Voice a -> Voice a
+        -- etc
 
 {-
         -- * Music.Time.Phrases
@@ -2410,15 +2415,38 @@ runStretched = uncurry stretch . view _Wrapped
 
 
 -- |
--- 'Bounds' restricts the start and stop time of a value.
+-- TODO rename to 'Bound' ('Bounded' is taken)
+--
+-- 'Bounds' restricts the start and stop time of a value, and prevents access to values
+-- outside the bounds ('Bounds' SHOULD NOT BE 'Foldable' for this reason).
+--
+-- 'Bounds' is especially useful to restrict the range of a 'Behavior'. If you have a
+-- value with can only be reasonably defined for a particular time range, you can
+-- represent it as 'Bounds' 'Behavior'. This is isomorphic to a 'Note' 'Segment', and
+-- 'bounded' whitnesses the isomorphism.
+--
+-- Note that 'trim' and and 'splice' provides a way to safely extract a 'Bounds' 'Behavior'.
+--
+-- Intuitively, an infinately varying value with a restricted range is the same as a value
+-- defined in a particular range with an explicit 'position'.
 --
 newtype Bounds a = Bounds { getBounds :: (Span, a) }
-  deriving (Functor, Foldable, Traversable)
+  deriving (Functor)
 
+-- | TODO unsafe
+instance Foldable Bounds where
+  foldr f z (Bounds (_,x)) = f x z
+
+-- | TODO unsafe
+instance Traversable Bounds where
+  traverse f (Bounds (s,x)) = (Bounds . (s,)) <$> f x
+
+-- | TODO unsafe
 instance Wrapped (Bounds a) where
   type Unwrapped (Bounds a) = (Span, a)
   _Wrapped' = iso getBounds Bounds
 
+  -- | TODO unsafe
 instance Rewrapped (Bounds a) (Bounds b)
 
 instance Reversible a => Reversible (Bounds a) where
@@ -2473,8 +2501,8 @@ genericTrim (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else memp
 -- TODO name
 -- TODO only an iso op to trim
 --
-bounded :: Iso' (Bounds (Behavior a)) (Note (Segment a))
-bounded = iso bb2ns ns2bb
+bounded :: Iso' (Note (Segment a)) (Bounds (Behavior a))
+bounded = iso ns2bb bb2ns 
   where
     bb2ns (Bounds (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
     ns2bb (Note (s, x))   = Bounds (s,       transform s           $ s2b $ x)
@@ -3299,8 +3327,8 @@ initial :: Reactive a -> a
 -- | Get the final value.
 final :: Reactive a -> a
 
-updates :: Reactive a -> Voice a
-(initial, final, updates) = error "No (initial, final, updates)"
+intermediates :: Reactive a -> Voice a
+(initial, final, intermediates) = error "No (initial, final, intermediates)"
 
 
 {-
