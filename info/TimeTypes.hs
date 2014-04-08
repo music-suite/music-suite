@@ -2551,11 +2551,13 @@ instance Show (Behavior a) where
 
 deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
+
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
 deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
+deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
@@ -2573,11 +2575,6 @@ instance Ord a => Ord (Behavior a) where
   (<) = error "No fun"
   max = liftA2 max
   min = liftA2 min
-
--- instance Real a => Real (Behavior a) where
-  -- toRational = toRational . (`index` 0)
-
-deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance VectorSpace a => VectorSpace (Behavior a) where
   type Scalar (Behavior a) = Behavior (Scalar a)
@@ -2623,21 +2620,6 @@ instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior
   pitches = ($)
 instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
-
-
-
--- TODO tests
-returnB = return :: (a -> Behavior a)
-extractB = (!^ 0)
-x = delay 2 $ return (return 3) :: Note ((), (Float, Float))
-y = over pitches returnB x
-z = over pitches extractB y -- TODO
-
-aa = (\f -> {-over pitches extractB .-} over pitches f . over pitches returnB) (*(time*2)) x
-
-
--- > :t over pitch returnB x
--- > :t over pitch extractB $ over pitch (returnB) $ x
 
 
 type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
@@ -3552,15 +3534,7 @@ main = defaultMain $ testGroup "All tests" $ [
 
 
 
-
-
-
-
-
-
 -- PD test
-
-
 -- TODO these are examples...
 
 -- TODO compose segments etc
@@ -3743,6 +3717,4 @@ drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) 
     note pos = moveTo pos $ fc black $ rotateBy (1/15) $ scaleX 1.4 (circle 0.5)
     lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
     linesWidth = 3 * fromIntegral (length notes)
-
-
 
