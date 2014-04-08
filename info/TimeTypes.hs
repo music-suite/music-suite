@@ -200,8 +200,9 @@ module TimeTypes (
         -- focus,
         -- focusOn,
         focusing,
-        focusingOn,
-        appendSegment,
+        focusingOn,     
+        -- TODO
+        -- appendSegment,
         appendSegments,
         concatSegments,
 
@@ -243,8 +244,9 @@ module TimeTypes (
         discrete,
         continous,
         sample,
+        -- TODO
         -- window,
-        windowed,
+        -- windowed,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -2768,6 +2770,9 @@ sineS = sin (timeS*tau)
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
+-- |
+-- Append a voice of segments to a single stretched segment.
+--
 appendSegments :: Voice (Segment a) -> Stretched (Segment a)
 appendSegments = foldr1 appendSegment . toListOf voiceElements
 
@@ -3141,35 +3146,24 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- |
--- This
---
--- See also 'concatBehaviors' and 'continous'.
---
-concatSegments' :: Monoid a => Note (Segment a) -> Behavior a
-concatSegments' = trim . view bounded
+concatSegment :: Monoid a => Note (Segment a) -> Behavior a
+concatSegment = trim . view bounded
 
 -- |
--- This
---
+-- Concatenate a score of (possibly overlapping) segments.
 --
 -- See also 'concatBehaviors' and 'continous'.
 --
 concatSegments :: Monoid a => Score (Segment a) -> Behavior a
-concatSegments = mconcat . map concatSegments' . scoreToNotes
-
--- TODO replace with iso/traversal
-scoreToNotes :: Score a -> [Note a]
-scoreToNotes = toListOf traverse . view _Wrapped
+concatSegments = mconcat . map concatSegment . view notes
 
 -- |
--- This
+-- Concatenate a score of (possibly overlapping) segments.
+--
+-- See also 'concatSegment' and 'continous'.
 --
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehaviors = concatSegments . fmap focus
-
-
-
 
 
 
@@ -3272,19 +3266,38 @@ type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
+-- |
+-- View a score as a list of notes.
+-- 
 notes :: Iso' (Score a) [Note a]
 notes = _Wrapped
 
+-- |
+-- View a score as a list of voices.
+-- 
 voices :: Prism' (Score a) [Voice a]
+
+-- |
+-- View a score as a list of phrases.
+-- 
 phrases :: Prism' (Score a) [Phrase () a]
 (voices, phrases) = error "Not implemented: (voices, phrases)"
 
+-- |
+-- View a score as a single note.
+-- 
 singleNote :: Prism' (Score a) (Note a)
 singleNote = error "Not implemented: singleNote"
 
+-- |
+-- View a score as a single voice.
+-- 
 singleVoice :: Prism' (Score a) (Voice a)
 singleVoice = error "Not implemented: singleNote"
 
+-- |
+-- View a score as a single phrase.
+-- 
 singlePhrase :: Prism' (Score a) (Phrase () a)
 singlePhrase = error "Not implemented: singleNote"
 
@@ -3641,7 +3654,7 @@ discrete = continous . fmap pure
 -- |
 -- Realize a 'Reactive' value as an continous behavior.
 --
--- See also 'concatSegments' and 'concatBehaviors'.
+-- See also 'concatSegment' and 'concatBehaviors'.
 --
 continous :: Reactive (Segment a) -> Behavior a
 
