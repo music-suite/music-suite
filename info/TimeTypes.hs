@@ -1802,7 +1802,7 @@ fadeIn t = dynamics *~ (t `stretch` unit)
 -- Fade in.
 --
 fadeOut :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeOut t = dynamics *~ (t `stretch` rev unit)
+fadeOut t = dynamics *~ (t `stretch` delay 1 (rev unit))
 
 
 
@@ -3025,6 +3025,11 @@ instance Splittable a => Splittable (Voice a) where
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' rev
 
+type instance Pitch (Voice a) = Pitch a
+type instance SetPitch g (Voice a) = Voice (SetPitch g a)
+instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
+  pitches = _Wrapped . traverse . _Wrapped . whilstLD pitches
+
 -- |
 -- Voice
 --
@@ -3545,20 +3550,34 @@ instance HasDynamic PD PD where
 
 
 
+class Drawable a where
+  draw :: Renderable (Path R2) b => a -> Diagram b R2
+instance Real a => Drawable (Behavior a) where
+  draw = drawBehavior
+instance Real a => Drawable (Span, Behavior a) where
+  draw = uncurry drawBehaviorAt
+
+instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Note a) where
+  draw (view (from note) -> (s, transform s -> pd)) = lc red (draw (s, pd^.pitch)) <> lc blue (draw (s, pd^.dynamic))
+
+
 drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dynamics)
+
 
 drawPDNote :: (Renderable (Path R2) b, Real a) => Note PD -> Diagram b R2
 drawPDNote (view (from note) -> (s, transform s -> pd)) = lc red (drawBehaviorAt s $ pd^.pitch) <> lc blue (drawBehaviorAt s $ pd^.dynamic)
 
-testPD = openG $ (mconcat $ fmap drawPDNote notes) 
-  <> lc pink (drawBehavior $ pitchCurve) 
-  <> lc lightblue (drawBehavior $ dynCurve)
-  where
-    notes = [note1, note2] & dynamics' *~ (dynCurve) & pitches' *~ (pitchCurve)
-    note1 = delay 0.1 $ stretch 3 $ return $ pitch +~ (time) $ PD (sine,sine)
-    note2 = delay 7  $ stretch 3 $ return $ pitch +~ (time) $ PD (sine,sine)
-    pitchCurve = stretch 20 sine
-    dynCurve   = delay 3 unit
+testPD = openG $ (mconcat $ fmap draw notes2) 
+  <> lc pink (draw $ pitchCurve) 
+  <> lc lightblue (draw $ dynCurve)
+  where   
+    notes2 = notes :: [Note PD]
+    notes  = [note1, note2] & dynamics' *~ dynCurve & pitches' *~ pitchCurve
+
+    pitchCurve = delay 1 $ stretch 20 sine
+    dynCurve   = delay 1 $ delay 3 unit
+    note1      = delay 1 $ delay 0.5 $ stretch 3 $ return $ PD (cosine,sine)
+    note2      = delay 1 $ delay 7  $ stretch 1 $ return $ PD (cosine,sine)
   
 
 
