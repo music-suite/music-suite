@@ -36,11 +36,10 @@ module TimeTypes (
         -- * The Transformable class
         Transformable(..),
         -- ** Apply under a transformation
-
-        under,      -- :: (Transformable a, Transformable b) => Span -> (a -> b) -> a -> b
+        under,
         -- underM,
         -- underW,
-        -- conjugate,  -- :: Span -> Span -> Span
+        -- conjugate,
 
         -- ** Specific transformations
         delay,
@@ -68,17 +67,17 @@ module TimeTypes (
         -- _era,
 
         -- * Specific positions
-        onset,          -- :: HasPosition a => a -> Time
-        offset,         -- :: HasPosition a => a -> Time
-        preOnset,       -- :: HasPosition a => a -> Time
-        postOnset,      -- :: HasPosition a => a -> Time
-        postOffset,     -- :: HasPosition a => a -> Time
+        position,
+        onset,
+        offset,
+        preOnset,
+        postOnset,
+        postOffset,
         
         -- * Moving to absolute positions
-        startAt,        -- :: (Transformable a, HasPosition a) => Time -> a -> a
-        stopAt,         -- :: (Transformable a, HasPosition a) => Time -> a -> a
-        placeAt,        -- :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-        -- pinned,        -- :: (HasPosition a, HasPosition b, Transformable b) => (a -> b) -> a -> b
+        startAt,
+        stopAt,
+        placeAt,
 
         -- * Music.Time.Reverse
         -- * The Reversible class
@@ -93,8 +92,8 @@ module TimeTypes (
 
         -- * Music.Time.Combinators
         -- * Align without composition
-        lead,           -- :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-        follow,         -- :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+        lead,
+        follow,
         -- * Align and compose
         after,
         before,
@@ -663,13 +662,13 @@ clippedDuration = stretchTo 1
 -- |
 -- Class of values that have a position in time.
 --
--- Many values such as notes, envelopes etc can in fact have many positions such as
--- onset, attack point, offset, decay point time etc. Rather than having separate methods
--- for a discrete set of cases, this class provides an interpolation from a /local/
--- position to a /global/ position. While the local position goes from 0 to 1, the global
--- position goes from 'onset' to 'offset'.
+-- Many values such as notes, envelopes etc can in fact have many positions such as onset,
+-- attack point, offset, decay point time etc. Rather than having separate methods for a
+-- discrete set of cases, this class provides an interpolation from a /local/ position to
+-- a /global/ position. While the local position goes from 0 to 1, the global position
+-- goes from the 'onset' to the 'offset' of the value.
 --
--- For instantaneous values, a sunittable instance is:
+-- For instantaneous values, a suitable instance is:
 -- 
 -- @
 -- '_position' x = 'const' t
@@ -709,35 +708,38 @@ _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
 
 
+position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
+position d = lens (`_position` d) (flip $ placeAt d)
+
 -- |
 -- Onset of the given value.
 --
 onset :: (HasPosition a, Transformable a) => Lens' a Time
-onset = lens (`_position` 0) (flip $ placeAt 0)
+onset = position 0
 
 -- |
 -- Onset of the given value.
 --
 offset :: (HasPosition a, Transformable a) => Lens' a Time
-offset = lens (`_position` 1) (flip $ placeAt 1)
+offset = position 1
 
 -- |
 -- Onset of the given value.
 --
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
-preOnset = lens _preOnset (flip $ placeAt 1)
+preOnset = position (-0.5)
 
 -- |
 -- Onset of the given value.
 --
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
-postOnset = lens _postOnset (flip $ placeAt 1)
+postOnset = position 0.5
 
 -- |
 -- Onset of the given value.
 --
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
-postOffset = lens _postOffset (flip $ placeAt 1)
+postOffset = position 1.5
 
 
 -- |
@@ -1112,7 +1114,7 @@ instance HasPosition Time where
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
--- With the @ViewPatterns@ extension you can pattern match over spans using
+-- You can pattern match over spans using the @ViewPatterns@ extension:
 -- 
 -- @
 -- foo (view range -> (u,v)) = ...
@@ -1246,6 +1248,8 @@ delta = iso getDelta $ uncurry (>->)
 --    1) Come up with some other name for the infix version
 --    2) Acknowledge that this is a valid Lens (when flipped)
 --
+-- Perhaps we should call the inline version `whilst`, as in @f `whilst` delaying 2@?
+
 
 -- |
 -- Apply a function under transformation.
@@ -1295,7 +1299,7 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 
 -- |
--- Whether the given point falls inside the given span.
+-- Whether the given point falls inside the given span (inclusively).
 --
 -- Designed to be used infix, for example
 --
