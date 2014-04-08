@@ -73,6 +73,10 @@ module TimeTypes (
         tabulated,
         retabulated,
 
+        -- * Music.Time.Meta
+        Meta,
+        HasMeta(..),
+
         -- * Music.Time.Transform
         -- * The Transformable class
         Transformable(..),
@@ -604,7 +608,23 @@ retabulated = iso index tabulate
 
 
 
+-- * Music.Time.Meta
 
+data Meta
+-- TODO
+
+-- | Type class for things which have meta-information.
+class HasMeta a where
+    -- | Apply meta-information by combining it (on the left) with the
+    --   existing meta-information.
+    meta :: Lens' a Meta
+
+instance HasMeta Meta where
+    meta = ($)
+
+
+
+-- * Music.Time.Transform
 
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
@@ -3198,6 +3218,9 @@ instance HasDuration (Score a) where
 instance Splittable a => Splittable (Score a) where
   -- TODO
 
+instance HasMeta (Score a) where
+  meta = error "No meta" -- TODO
+
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
@@ -3273,6 +3296,9 @@ mapFilterEvents f = error "No mapFilterEvents"
 newtype Phrase p a = Phrase (p, [Stretched a])
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
+instance HasMeta (Phrase p a) where
+  meta = error "No meta" -- TODO
+
 
 
 -- |
@@ -3313,6 +3339,9 @@ instance Splittable a => Splittable (Voice a) where
 
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' rev
+
+instance HasMeta (Voice a) where
+  meta = error "No meta" -- TODO
 
 type instance Pitch (Voice a) = Pitch a
 type instance SetPitch g (Voice a) = Voice (SetPitch g a)
