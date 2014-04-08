@@ -2568,7 +2568,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- @
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
-  deriving (Functor, Semigroup)
+  deriving (Functor, Semigroup, Typeable, Show)
 
 --
 -- TODO define Applicative/Monad
@@ -3723,7 +3723,7 @@ sameType :: a -> a -> ()
 sameType _ _ = ()
 
 
--- #define INCLUDE_TESTS
+#define INCLUDE_TESTS
 
 #ifdef INCLUDE_TESTS
 
@@ -3769,7 +3769,7 @@ instance Monad m => Serial m Duration where
 instance Monad m => Serial m Span where
   series = newtypeCons Span
 
-instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
+instance (Monad m, Serial m a) => Serial m (BadFunctor a) where
   series = cons0 BF1 \/ cons0 BF2
 
 instance (Monad m, Serial m a) => Serial m (BadMonoid a) where
@@ -3780,6 +3780,9 @@ instance Monad m => Serial m Int8 where
 
 instance (Monad m, Serial m a) => Serial m (Note a) where
   series = newtypeCons Note
+
+instance (Monad m, Serial m a) => Serial m (Bound a) where
+  series = newtypeCons Bound
 
 instance (Monad m, Serial m a) => Serial m (Delayed a) where
   series = newtypeCons Delayed
@@ -3806,25 +3809,35 @@ instance (Monad m, Serial m a) => Serial m (Score a) where
     return $ return x <> return y
 
 
--- > onset (delay n a)      = n ^+. onset a
--- > offset (delay n a)     = n ^+. offset a
--- > duration (stretch n a) = n ^* (duration a)
---
--- Lemma
---
--- > duration a = duration (delay n a)
+v ^+. p = p .+^ v
 
-delayDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
-  testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
-                _duration a == _duration (delay n a)
+-- > _onset (delay n a) = n ^+. _onset a
+delayOnsetLaw typ = testGroup ("Delay/onset " ++ show (typeOf typ)) $ [
+  testProperty "_onset (delay n a) == n ^+. _onset a" $ \(n :: Duration) a -> assuming (sameType typ a) $
+                _onset (delay n a) == n ^+. _onset a
   ]
 
-stretchDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
+-- > _offset (delay n a) = n ^+. _offset a
+delayOffsetLaw typ = testGroup ("Delay/offset " ++ show (typeOf typ)) $ [
+  testProperty "_offset (delay n a) == n ^+. _offset a" $ \(n :: Duration) a -> assuming (sameType typ a) $
+                _offset (delay n a) == n ^+. _offset a
+  ]
+
+-- > duration (stretch n a) = n ^* (duration a)
+stretchDurationLaw typ = testGroup ("Stretch/duration " ++ show (typeOf typ)) $ [
   testProperty "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration (stretch n a) == n ^* (_duration a)
   ]
 
-delayBehLaw typ = testGroup ("Delay behavior " ++ show (typeOf typ)) $ [
+-- > duration a = duration (delay n a)
+delayDurationLaw typ = testGroup ("Delay/duration " ++ show (typeOf typ)) $ [
+  testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
+                _duration a == _duration (delay n a)
+  ]
+
+
+
+delayIndexLaw typ = testGroup ("Delay/! " ++ show (typeOf typ)) $ [
   testProperty "delay n b ! t == b ! (t .-^ n)" $ \(n :: Duration) (t :: Time) b -> assuming (sameType typ b) $
                 delay n b ! t == b ! (t .-^ n)
   ]
@@ -3931,17 +3944,39 @@ main = defaultMain $ testGroup "All tests" $ [
 
   testProperty "============================================================" $ True,  
   testGroup "Delay and stretch" [
+    
+    delayOnsetLaw      (undefined :: Delayed Time),
+    delayOffsetLaw     (undefined :: Delayed Time),
+    -- stretchDurationLaw (undefined :: Delayed Time),
+    -- delayDurationLaw   (undefined :: Delayed Time),
+
+    -- delayOnsetLaw      (undefined :: Stretched Time),
+    -- delayOffsetLaw     (undefined :: Stretched Time),
     stretchDurationLaw (undefined :: Stretched Time),
     delayDurationLaw   (undefined :: Stretched Time),
+    
+    delayOnsetLaw      (undefined :: Note Time),
+    delayOffsetLaw     (undefined :: Note Time),
     stretchDurationLaw (undefined :: Note Time),
     delayDurationLaw   (undefined :: Note Time),
+
+    delayOnsetLaw      (undefined :: Bound (Behavior Time)),
+    delayOffsetLaw     (undefined :: Bound (Behavior Time)),
+    -- stretchDurationLaw (undefined :: Bound (Behavior Time)),
+    -- delayDurationLaw   (undefined :: Bound (Behavior Time)),
+    
+    -- delayOnsetLaw      (undefined :: Voice Time),
+    -- delayOffsetLaw     (undefined :: Voice Time),
     stretchDurationLaw (undefined :: Voice Time),
     delayDurationLaw   (undefined :: Voice Time),
+    
+    delayOnsetLaw      (undefined :: Score Time),
+    delayOffsetLaw     (undefined :: Score Time),
     stretchDurationLaw (undefined :: Score Time),
     delayDurationLaw   (undefined :: Score Time)
   ],
 
-  -- delayBehLaw (undefined :: Behavior Int8),
+  -- delayIndexLaw (undefined :: Behavior Int8),
   -- transformUi (undefined :: Behavior Int8)
   -- functor (undefined :: BadFunctor Int8),
   -- functor (undefined :: BadMonoid Int8)
