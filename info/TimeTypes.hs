@@ -141,6 +141,7 @@ module TimeTypes (
         -- * Music.Time.Bounds
         Bounds,
         bounds,
+        bounding,
         trim,
         -- trimG,
         bounded,
@@ -2313,8 +2314,11 @@ instance HasPosition a => HasPosition (Bounds a) where
 bounds :: Time -> Time -> a -> Bounds a
 bounds t u x = Bounds (t <-> u, x)
 
--- trim :: (Monoid b, Keyed f, Key f ~ Time) => Bounds (f b) -> Bounds (f b)
--- trim (Bounds (s, x)) = Bounds (s, mapWithKey (\t x -> if t `inside` s then x else mempty) x)
+-- |
+-- Add bounds.
+--
+bounding :: Span -> a -> Bounds a
+bounding (view range -> (t, u)) = bounds t u
 
 -- |
 -- Add bounds.
@@ -2322,12 +2326,12 @@ bounds t u x = Bounds (t <-> u, x)
 trim :: Monoid b => Bounds (Behavior b) -> Behavior b
 trim = trimG
 
+-- More generic definition
 trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
 trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) `apRep` x
 
 
--- mapPitch4' :: (HasPitch s s, Pitch s ~ a) => Behavior (a -> a) -> s -> s
--- mapPitch4' = mapPitch4
+{-
 
 pureB :: a -> Behavior a
 pureB = pure
@@ -2346,6 +2350,7 @@ fixPitch = pitch %~ (!^ 0)
 
 purePitch :: (HasPitch s t, Pitch t ~ Behavior (Pitch s)) => s -> t
 purePitch = pitch %~ pure
+-}
 
 {-
 mapPitch5 :: (
@@ -2357,6 +2362,7 @@ mapPitch5 f = fixPitch . (pitch %~ (f <*>)) . purePitch
 
 
 
+{-
 mapPitch3 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => Behavior (a -> b) -> s -> t
 mapPitch3 f = pitch %~ (f <*>)
 
@@ -2365,6 +2371,7 @@ mapPitch2 f = pitch %~ f
 
 mapPitch1 :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
 mapPitch1 f = pitch %~ f
+                                   -}
 
 
 
