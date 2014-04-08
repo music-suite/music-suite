@@ -105,8 +105,13 @@ module TimeTypes (
         -- * Music.Time.Types
         -- * Duration
         Duration,
+        toDuration,
+        fromDuration,
+        
         -- * Time points
         Time,
+        toTime,
+        fromTime,
 
         -- * Time spans
         Span,
@@ -307,6 +312,8 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                offset, place, position, start,
                                                stretch, stretchTo, transform,
                                                trim, under, unit, value, view,
+                                               toDuration, fromDuration,
+                                               toTime, fromTime,
                                                (<->), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -1107,6 +1114,13 @@ instance Transformable Duration where
 instance HasDuration Duration where
   _duration = id
 
+toDuration :: Real a => a -> Duration
+toDuration = realToFrac
+
+fromDuration :: Fractional a => Duration -> a
+fromDuration = realToFrac
+
+
 -- |
 -- Time points, representing duration since some known reference time, typically the start
 -- of the music. Note that time can be negative, representing values occuring before the
@@ -1147,6 +1161,14 @@ instance Transformable Time where
 
 instance HasPosition Time where
   _position = const
+
+toTime :: Real a => a -> Time
+toTime = realToFrac
+
+fromTime :: Fractional a => Time -> a
+fromTime = realToFrac
+
+
 
 
 -- |
