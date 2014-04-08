@@ -3298,19 +3298,27 @@ singleVoice = error "Not implemented: singleNote"
 -- View a score as a single phrase.
 -- 
 singlePhrase :: Prism' (Score a) (Phrase () a)
-singlePhrase = error "Not implemented: singleNote"
+singlePhrase = error "Not implemented: singlePhrase"
+
+
+
+
+
+-- | Map with the associated time span.
+mapScore :: (Note a -> b) -> Score a -> Score b
+mapScore f = error "Not implemented: singleNote"
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = error "Not implemented: mapWithSpan"
+mapWithSpan f = mapScore (uncurry f . getNote)
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = error "Not implemented: filterWithSpan"
+filterWithSpan f = mapFilterWithSpan (partial2 f)
 
 -- | Combination of 'mapEvents' and 'filterEvents'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = error "Not implemented: mapFilterWithSpan"
+mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
 -- | Map over the values in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
@@ -3318,11 +3326,11 @@ mapEvents f = mapWithSpan (uncurry f . view delta)
 
 -- | Filter the values in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = error "Not implemented: filterEvents"
+filterEvents f = mapFilterEvents (partial3 f)
 
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = error "Not implemented: mapFilterEvents"
+mapFilterEvents f = mcatMaybes . mapEvents f
 
 
 
@@ -4378,4 +4386,22 @@ through lens1 lens2 = lens getter (flip setter)
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
+
+-- TODO mo
+partial2 :: (a -> b      -> Bool) -> a -> b      -> Maybe b
+partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+partial2 f = curry  (fmap snd  . partial (uncurry f))
+partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
+
+curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
+curry3 = curry . curry . (. tripl)
+
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 = (. untripl) . uncurry . uncurry
+
+untripl :: (a,b,c) -> ((a,b),c)
+untripl (a,b,c) = ((a,b),c)
+
+tripl :: ((a,b),c) -> (a,b,c)
+tripl ((a,b),c) = (a,b,c)
 
