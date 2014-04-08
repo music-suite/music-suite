@@ -606,7 +606,7 @@ instance Transformable a => Transformable (Seq a) where
 -- and transform the result.
 --
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
-    transform t = (`whilst` negateV t)
+  transform t = (`whilst` negateV t)
 
 -- |
 -- Delay relative to 'origin'.
@@ -732,7 +732,7 @@ class HasPosition a where
   --
   -- In an 'Envelope', this is the value between the attack and decay phases.
   --
-  _position :: a -> {-Scalar-} Duration -> Time
+  _position :: a -> Duration -> Time
   _position x = alerp (_onset x) (_offset x)
 
   -- |
@@ -740,14 +740,7 @@ class HasPosition a where
   --
   -- In an 'Envelope', this is the value between the attack and decay phases.
   --
-  _onset :: ({-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-
-  -- |
-  -- Return the offset of the given value.
-  --
-  -- In an 'Envelope', this is the value between the sustain and release phases.
-  --
-  _offset :: ({-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
+  _onset, _offset :: a -> Time
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
