@@ -2415,8 +2415,6 @@ runStretched = uncurry stretch . view _Wrapped
 
 
 -- |
--- TODO rename to 'Bound' ('Bounded' is taken)
---
 -- 'Bound' restricts the start and stop time of a value, and prevents access to values
 -- outside the bounds ('Bound' SHOULD NOT BE 'Foldable' for this reason).
 --
@@ -2429,6 +2427,8 @@ runStretched = uncurry stretch . view _Wrapped
 --
 -- Intuitively, an infinately varying value with a restricted range is the same as a value
 -- defined in a particular range with an explicit 'position'.
+--
+-- (This should really have been called 'Bounded', but that name is taken).
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor)
