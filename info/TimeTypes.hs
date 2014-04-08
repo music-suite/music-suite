@@ -36,7 +36,7 @@ module TimeTypes (
         -- * The Transformable class
         Transformable(..),
         -- ** Apply under a transformation
-        under,
+        whilst,
         -- underM,
         -- underW,
         -- conjugate,
@@ -98,8 +98,12 @@ module TimeTypes (
         before,
         during,
         sustain,
+        
+        -- ** Composition operators
         scat,
         pcat,
+
+        -- ** Repetition
         times,
 
         -- * Music.Time.Types
@@ -115,19 +119,15 @@ module TimeTypes (
 
         -- * Time spans
         Span,
-
-        -- ** Constructing time spans
         (<->),
         (>->),
-
-        -- ** Deconstructing time spans
         range,
         delta,
 
         -- ** Points in spans
         inside,
-        comprises,
-        isBefore,
+        encloses,
+        -- isBefore,
         overlaps,
 
         -- * Music.Time.Stretched
@@ -606,7 +606,7 @@ instance Transformable a => Transformable (Seq a) where
 -- and transform the result.
 --
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
-    transform t = (`under` negateV t)
+    transform t = (`whilst` negateV t)
 
 -- |
 -- Delay relative to 'origin'.
@@ -936,7 +936,6 @@ times n   = scat . replicate n
 --
 -- For positioned values succh as 'Note', split cuts a value relative to its onset.
 --
--- XXX what about Behavior (infinite span)
 --
 -- Law
 --
@@ -944,6 +943,8 @@ times n   = scat . replicate n
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
+
+-- XXX what about Behavior (infinite span)
 
 
 
@@ -961,9 +962,6 @@ dropM t = snd . split t
 -- the onset value becomes the offset value and vice versa.
 --
 -- For non-positioned values such as 'Stretched', the value is reversed in-place.
---
--- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
--- Bounds (Behavior a) should reverse around the middle, like a note)
 --
 -- FIXME Second law is incompatible with revDefault
 --
@@ -993,6 +991,10 @@ class Reversible a where
 
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
+
+-- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
+-- Bounds (Behavior a) should reverse around the middle, like a note)
+
 
 
 {-
@@ -1035,7 +1037,7 @@ instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
 revDefault :: (HasPosition a, Transformable a) => a -> a
-revDefault x = (stretch (-1) `under` undelaying (_position x 0.5 .-. 0)) x
+revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
 -- revDefault x = (stretch (-1) `under` undelaying (0)) x
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
@@ -1139,9 +1141,15 @@ instance Transformable Duration where
 instance HasDuration Duration where
   _duration = id
 
+-- |
+-- Convert a value to a duration.
+-- 
 toDuration :: Real a => a -> Duration
 toDuration = realToFrac
 
+-- |
+-- Convert a value to a duration.
+-- 
 fromDuration :: Fractional a => Duration -> a
 fromDuration = realToFrac
 
@@ -1187,9 +1195,15 @@ instance Transformable Time where
 instance HasPosition Time where
   _position = const
 
+-- |
+-- Convert a value to a duration.
+-- 
 toTime :: Real a => a -> Time
 toTime = realToFrac
 
+-- |
+-- Convert a value to a duration.
+-- 
 fromTime :: Fractional a => Time -> a
 fromTime = realToFrac
 
@@ -1324,9 +1338,9 @@ delta = iso getDelta $ uncurry (>->)
 --
 -- $musicTimeSpanLaws
 --
--- > forall s . id `under` s = id
--- > forall s . return `underM` s = return
--- > forall s . extract `underW` s = extract
+-- > forall s . id `whilst` s = id
+-- > forall s . return `whilstM` s = return
+-- > forall s . extract `whilstW` s = extract
 
 
 
@@ -1346,42 +1360,42 @@ delta = iso getDelta $ uncurry (>->)
 -- Designed to be used infix, as in
 --
 -- @
--- 'stretch' 2 ``under`` 'delaying' 2
+-- 'stretch' 2 ``whilst`` 'delaying' 2
 -- @
 --
-under :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
-f `under` t = transform (negateV t) . f . transform t
+whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
+f `whilst` t = transform (negateV t) . f . transform t
 
 -- |
 -- Apply a morphism under transformation (monadic version).
 --
 
-underM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
-f `underM` t = fmap (transform (negateV t)) . f . transform t
+whilstM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
+f `whilstM` t = fmap (transform (negateV t)) . f . transform t
 
 -- |
 -- Apply a morphism under transformation (co-monadic version).
 --
-underW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
-f `underW` t = transform (negateV t) . f . fmap (transform t)
+whilstW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
+f `whilstW` t = transform (negateV t) . f . fmap (transform t)
 
 -- |
 -- Apply a function under transformation.
 --
-underDelay :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
-underDelay     = flip (flip under . delaying . (.-. 0))
+whilstDelay :: (Transformable a, Transformable b) => (a -> b) -> Time -> a -> b
+whilstDelay     = flip (flip whilst . delaying . (.-. 0))
 
 -- |
 -- Apply a function under transformation.
 --
-underStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
-underStretch = flip (flip under . stretching)
+whilstStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
+whilstStretch = flip (flip whilst . stretching)
 
--- underL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
+-- whilstL :: (Transformable a, Transformable b) => Traversal s t a b -> Traversal (Span,s) (Span,t) a b
 
-underL  l f (s,a) = (s,) <$> (l $ f `underM` s) a
-underLT l f (t,a) = (t,) <$> (l $ f `underM` (t >-> 1)) a
-underLD l f (d,a) = (d,) <$> (l $ f `underM` (0 >-> d)) a
+whilstL  l f (s,a) = (s,) <$> (l $ f `whilstM` s) a
+whilstLT l f (t,a) = (t,) <$> (l $ f `whilstM` (t >-> 1)) a
+whilstLD l f (d,a) = (d,) <$> (l $ f `whilstM` (0 >-> d)) a
 
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
@@ -1399,14 +1413,21 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
-comprises :: Span -> Span -> Bool
-a `comprises` b = _onset b `inside` a && _offset b `inside` a
+-- |
+-- Whether the given 
+-- 
+encloses :: Span -> Span -> Bool
+a `encloses` b = _onset b `inside` a && _offset b `inside` a
+
+-- |
+-- Whether the given 
+-- 
+overlaps :: Span -> Span -> Bool
+a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 
-overlaps :: Span -> Span -> Bool
-a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
 {-
 
@@ -1517,19 +1538,19 @@ instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
-  pitches = _Wrapped . underL pitches
+  pitches = _Wrapped . whilstL pitches
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
-  pitch = _Wrapped . underL pitch
+  pitch = _Wrapped . whilstL pitch
 
 instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
-  pitches = _Wrapped . underLT pitches
+  pitches = _Wrapped . whilstLT pitches
 instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
-  pitch = _Wrapped . underLT pitch
+  pitch = _Wrapped . whilstLT pitch
 
 instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
-  pitches = _Wrapped . underLD pitches
+  pitches = _Wrapped . whilstLD pitches
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
-  pitch = _Wrapped . underLD pitch
+  pitch = _Wrapped . whilstLD pitch
 
 -- |
 -- Associated interval type.
@@ -1714,10 +1735,10 @@ type instance SetDynamic g (Note a) = Note (SetDynamic g a)
 type instance Dynamic (Note a) = Dynamic a
 
 instance HasDynamic a b => HasDynamic (Note a) (Note b) where
-  dynamic = _Wrapped . underL dynamic
+  dynamic = _Wrapped . whilstL dynamic
 
 instance HasDynamics a b => HasDynamics (Note a) (Note b) where
-  dynamics = _Wrapped . underL dynamics
+  dynamics = _Wrapped . whilstL dynamics
 
 
 -- |
@@ -1866,10 +1887,10 @@ type instance Articulation (Note a) = Articulation a
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 
 instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
-  articulation = _Wrapped . underL articulation
+  articulation = _Wrapped . whilstL articulation
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
-  articulations = _Wrapped . underL articulations
+  articulations = _Wrapped . whilstL articulations
 
 
 accent = error "No accent"
@@ -1993,10 +2014,10 @@ type instance Part (Note a) = Part a
 type instance SetPart g (Note a) = Note (SetPart g a)
 
 instance (HasPart a b) => HasPart (Note a) (Note b) where
-  part = _Wrapped . underL part
+  part = _Wrapped . whilstL part
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
-  parts = _Wrapped . underL parts
+  parts = _Wrapped . whilstL parts
 
 type HasPart' a = HasPart a a
 type HasParts' a = HasParts a a
@@ -2119,13 +2140,13 @@ instance HasPosition (Delayed a) where
 instance Reversible (Delayed a) where
   rev = revDefault
 
-  -- |
-  -- View a delayed value as a pair of the original value and the transformation (and vice versa).
-  --
+-- |
+-- View a delayed value as a pair of the original value and the transformation (and vice versa).
+--
 delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 delayedValue = lens runDelayed (flip $ mapDelayed . const)
   where
-      mapDelayed f (Delayed (t,x)) = Delayed (t, (f `underDelay` t) x)
+      mapDelayed f (Delayed (t,x)) = Delayed (t, (f `whilstDelay` t) x)
 
 
 
@@ -2178,7 +2199,7 @@ deriving instance Show a => Show (Stretched a)
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretchedValue = lens runStretched (flip $ mapStretched . const)
   where
-    mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
+    mapStretched f (Stretched (d,x)) = Stretched (d, (f `whilstStretch` d) x)
 
 
 
@@ -2251,7 +2272,7 @@ runNote = uncurry transform . view _Wrapped
 noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
   where
-    mapNote f (Note (s,x)) = Note (s, f `under` (negateV s) $ x)
+    mapNote f (Note (s,x)) = Note (s, f `whilst` (negateV s) $ x)
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -2483,7 +2504,7 @@ slerp2 f i a b
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
 notTime = stretch 10 ((stretch 2 $ 4**time-1)`min` 1)*10
-notTime2 = (rev `under` undelaying 4.5) notTime
+notTime2 = (rev `whilst` undelaying 4.5) notTime
 
 -- |
 -- A 'Behavior' is a time-varying value.
@@ -2544,16 +2565,16 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 
 -- TODO is this correct?
 instance Transformable (Behavior a) where
-  transform s (Behavior a) = Behavior (a `under` s)
+  transform s (Behavior a) = Behavior (a `whilst` s)
     where
-      f `under` s = f . transform (negateV s)
+      f `whilst` s = f . transform (negateV s)
 
 
 -- TODO correct?
 instance Reversible (Behavior a) where
   rev = stretch (-1)
   -- OR
-  -- rev = (stretch (-1) `under` undelaying 0.5)
+  -- rev = (stretch (-1) `whilst` undelaying 0.5)
   -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
 
 
@@ -2885,25 +2906,25 @@ instance Splittable a => Splittable (Score a) where
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches = _Wrapped . traverse . _Wrapped . underL pitches
+  pitches = _Wrapped . traverse . _Wrapped . whilstL pitches
 
 type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 
 instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts = _Wrapped . traverse . _Wrapped . underL parts
+  parts = _Wrapped . traverse . _Wrapped . whilstL parts
 
 type instance Dynamic (Score a) = Dynamic a
 type instance SetDynamic g (Score a) = Score (SetDynamic g a)
 
 instance HasDynamics a b => HasDynamics (Score a) (Score b) where
-  dynamics = _Wrapped . traverse . _Wrapped . underL dynamics
+  dynamics = _Wrapped . traverse . _Wrapped . whilstL dynamics
 
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
-  articulations = _Wrapped . traverse . _Wrapped . underL articulations
+  articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
 voices :: Traversal' (Score a) (Voices a)
 phrases :: Traversal' (Score a) (Phrases a)
@@ -3287,8 +3308,8 @@ sameType :: a -> a -> ()
 sameType = undefined
 
 
+-- #define INCLUDE_TESTS
 
-#define INCLUDE_TESTS
 #ifdef INCLUDE_TESTS
 
 -- Tests
