@@ -199,8 +199,8 @@ module TimeTypes (
         -- ** Combinators
         -- focus,
         -- focusOn,
-        focused,
-        focusedOn,
+        focusing,
+        focusingOn,
         appendSegment,
         appendSegments,
         concatSegments,
@@ -438,6 +438,7 @@ import           Control.Lens                 hiding (Indexable, Level, above,
 import           Control.Monad
 import           Control.Monad.Free
 import           Control.Monad.Plus
+import qualified Control.Comonad.Representable.Store as Store
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Distributive
@@ -1270,7 +1271,7 @@ instance HasResolution a => AdditiveGroup (Fixed a) where
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
 --
--- 'Duration' is invariant under translation so 'delayTime has no effect on it.
+-- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
 -- /Semantics/
 --
@@ -1502,6 +1503,8 @@ t <-> u = t >-> (u .-. t)
 a <-< b = (b .-^ a) <-> b
 
 
+isProper :: Span -> Bool
+isProper (view range -> (t, u)) = t < u
 
 -- > (<->) = curry $ view $ from range
 -- > (>->) = curry $ view $ from delta
@@ -3169,7 +3172,7 @@ focus = focusOn mempty
 -- The segment representing the behavior in a given interval.
 --
 focusOn :: Span -> Behavior a -> Segment a
-focusOn s = view (focusedOn s)
+focusOn s = view (focusingOn s)
 
 --
 -- TODO
@@ -3180,19 +3183,35 @@ focusOn s = view (focusedOn s)
 -- these combinators:
 --
 -- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
--- > focusedOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
+-- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
 
-focused :: Lens' (Behavior a) (Segment a)
-focused = lens get set
+-- |
+-- View part of a 'Behavior' as a 'Segment'.
+--
+-- @
+-- 'focusing' = 'focusingOn' 'mempty'
+-- @
+--
+focusing :: Lens' (Behavior a) (Segment a)
+focusing = lens get set
   where
     get = view (from bounded.noteValue) . bounds 0 1
     set x = splice x . (view bounded) . return
 
 
-focusedOn :: Span -> Lens' (Behavior a) (Segment a)
-focusedOn s = flip whilstM (negateV s) . focused
--- or focused . flip whilstM s
+-- |
+-- View part of a 'Behavior' as a 'Segment'.
+--
+-- This can be used to modify a behavior in a specific range, as in
+--
+-- @
+-- 'time' & 'focusingOn' (2 '<->' 3) '*~' 1
+-- @
+--
+focusingOn :: Span -> Lens' (Behavior a) (Segment a)
+focusingOn s = flip whilstM (negateV s) . focusing
+-- or focusing . flip whilstM s
 
 -- |
 -- Instantly switch from one behavior to another.
@@ -3600,6 +3619,28 @@ phrases' = error "Not implemented: phrases'"
 concatVoices :: Monoid a => Phrases a -> Voice a
 concatVoices = error "Not implemented: concatVoices"
 
+
+
+
+-- |
+-- Represents past and future points of change, relative time zero.
+--
+-- A value must have the form @Changes [a0..aN-1,aN] [b0,b1..bN] where 
+-- aN <= aN+1, bN <= bN+1 and aN <= 0 <= b0.
+--
+data Changes = Changes [Time] [Time]
+  deriving (Eq, Show)
+
+instance Semigroup Changes where
+  Changes a1 b1 <> Changes a2 b2
+    = Changes (a1 `merge` a2) (b1 `merge` b2)
+instance Monoid Changes where
+  mempty = Changes [] []
+  mappend = (<>)
+
+instance Transformable Changes where
+  transform s (Changes a b) = Changes (transform s a) (transform s b)
+
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
 --
@@ -3609,12 +3650,12 @@ concatVoices = error "Not implemented: concatVoices"
 -- type Reactive a = (a, Time, Voice a)
 -- @
 --
-newtype Reactive a = Reactive (Store (Zipper [] Time) a)
+newtype Reactive a = Reactive a-- (Store (Zipper [] Time) a)
 -- data Reactive a = Const a | Switch (Reactive a) Time (Reactive a)
 -- data Reactive a = Reactive a (Delayed (Voice a)) a
 
-data Store s a = Store (s -> a) s
-data Zipper f a = Zipper (f a) a (f a)
+-- data Store s a = Store (s -> a) s
+-- data Zipper f a = Zipper (f a) a (f a)
 
 instance Functor Reactive where
   -- TODO
@@ -4297,3 +4338,28 @@ toDouble = realToFrac
 
 vs :: Lens' (Score a) [Voice a]
 vs = undefined
+
+-- | Merge lists.
+-- > category: List
+-- > depends: base
+merge :: Ord a => [a] -> [a] -> [a]
+merge = mergeBy compare
+
+-- | Merge lists.
+-- > category: List
+-- > depends: base
+mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
+mergeBy f = mergeBy' $ (fmap.fmap) orderingToBool f
+    where
+        orderingToBool LT = True
+        orderingToBool EQ = True
+        orderingToBool GT = False
+
+mergeBy' :: (a -> a -> Bool) -> [a] -> [a] -> [a]
+mergeBy' pred xs []         = xs
+mergeBy' pred [] ys         = ys
+mergeBy' pred (x:xs) (y:ys) =
+    case pred x y of
+        True  -> x: mergeBy' pred xs (y:ys)
+        False -> y: mergeBy' pred (x:xs) ys
+   
