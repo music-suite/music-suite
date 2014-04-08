@@ -340,6 +340,7 @@ module TimeTypes (
         louder,
         softer,
         level,
+        compressor,
         fadeIn,
         fadeOut,
 
@@ -1870,7 +1871,7 @@ type Level a = Diff (Dynamic a)
 type Attenuable a 
   = (HasDynamics a a,
      VectorSpace (Level a), AffineSpace (Dynamic a),
-     IsDynamics (Dynamic a){-, IsLevel (Level a)-})
+     {-IsLevel (Level a), -} IsDynamics (Dynamic a))
 
 -- |
 -- Transpose up.
@@ -1896,6 +1897,12 @@ volume a = dynamics *~ a
 level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
+compressor :: Attenuable a => 
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a 
+  -> a
+compressor = error "No compress"
 
 --
 -- TODO non-linear fades etc
