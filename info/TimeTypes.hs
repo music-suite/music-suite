@@ -87,12 +87,11 @@ module TimeTypes (
         -- conjugate,
 
         -- ** Specific transformations
-        -- *** Applying transformations
         delay,
         undelay,
         stretch,
         compress,
-        -- *** Transformations
+        -- *** Applied transformations
         delaying,
         undelaying,
         stretching,
@@ -190,6 +189,42 @@ module TimeTypes (
         -- difference (that actually becomes a split)
         -- overlap a b = _duration (intersection a b)
 
+        -- * Music.Time.Segment
+        Segment,
+        focus,
+        focusOn,
+        focused,
+        focusedOn,
+        appendSegment,
+        concatSegment,
+
+        -- * Music.Time.Behavior
+        Behavior,
+        -- ** Examples
+        -- $musicTimeBehaviorExamples
+        (!^),
+        behavior,
+
+        -- * Music.Time.Reactive
+        Reactive,
+        initial,
+        final,
+        intermediates,
+        discrete,
+        interpolate,
+        sample,  
+
+        -- ** Combinators
+        switch,
+        switch3,
+        cross,
+        splice,
+        -- noteToBehavior,
+        -- noteToBehavior',
+        -- concatBehavior',
+        concatBehavior,
+
+
         -- * Music.Time.Stretched
         Stretched,
         stretched,
@@ -215,41 +250,6 @@ module TimeTypes (
         trim,
         splice,
         bounded,
-
-        -- * Music.Time.Segment
-        Segment,
-        focus,
-        focusOn,
-        focused,
-        focusedOn,
-        appendSegment,
-        concatSegment,
-
-        -- * Music.Time.Reactive
-        Reactive,
-        initial,
-        final,
-        intermediates,
-        discrete,
-        interpolate,
-        sample,  
-
-        -- * Music.Time.Behavior
-        Behavior,
-        -- ** Examples
-        -- $musicTimeBehaviorExamples
-        (!^),
-        behavior,
-
-        -- * Combinators
-        switch,
-        switch3,
-        cross,
-        splice,
-        -- noteToBehavior,
-        -- noteToBehavior',
-        -- concatBehavior',
-        concatBehavior,
 
         -- * Common behaviors
         time,
