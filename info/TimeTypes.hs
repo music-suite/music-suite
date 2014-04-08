@@ -975,6 +975,12 @@ dropM t = snd . split t
 -- 'rev' s ``transform`` a ≡ 'rev' (s ``transform`` a)
 -- @
 --
+-- or equivalently,
+--
+-- @
+-- 'transform' . 'rev' = 'fmap' 'rev' . 'transform'
+-- @
+--
 -- For 'Span'
 --
 -- @
@@ -985,6 +991,16 @@ class Reversible a where
 
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
+
+
+{-
+      rev s `transform` a     ≡ rev (s `transform` a)
+  ==> (rev s `transform`)     ≡ rev . (s `transform`)
+  ==> transform (rev s)       ≡ rev . (transform s)
+  ==> (transform . rev) s     ≡ (rev .) (transform s)
+  ==> (transform . rev) s     ≡ fmap rev (transform s)
+  ==> transform . rev         ≡ fmap rev . transform
+-}
 
 instance Reversible () where
   rev = id
@@ -3442,7 +3458,12 @@ monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
 
 reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
   testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
-                rev (rev x) == x
+                rev (rev x) == x,
+
+  testGroup "" [],
+
+  testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
+                (transform . rev) s x == (fmap rev . transform) s x
   ]
 
 
