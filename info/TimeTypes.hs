@@ -213,12 +213,12 @@ module TimeTypes (
         behavior,
 
         -- ** Combinators
+        switch,
+        switch',
+        splice,
         trim,
         trimBefore,
         trimAfter,
-        splice,
-        switch,
-        switch',
         concatBehaviors,
         -- cross,
         -- noteToBehavior,
@@ -1251,7 +1251,8 @@ reversed = iso rev rev
 -- Internal time representation. Can be anything with instances
 -- for 'Fractional' and 'RealFrac'.
 --
-type TimeBase = Fixed E12
+type TimeBase = Rational
+-- type TimeBase = Fixed E12
 instance HasResolution a => AdditiveGroup (Fixed a) where
   zeroV = 0
   negateV = negate
@@ -2640,7 +2641,7 @@ bounding :: Span -> a -> Bound a
 bounding (view range -> (t, u)) = bounds t u
 
 -- |
--- Add bounds.
+-- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
 bounded :: Iso
   (Note (Segment a))
@@ -3629,7 +3630,7 @@ concatVoices = error "Not implemented: concatVoices"
 -- aN <= aN+1, bN <= bN+1 and aN <= 0 <= b0.
 --
 data Changes = Changes [Time] [Time]
-  deriving (Eq, Show)
+  deriving (Eq, Show, Typeable)
 
 instance Semigroup Changes where
   Changes a1 b1 <> Changes a2 b2
@@ -3638,9 +3639,19 @@ instance Monoid Changes where
   mempty = Changes [] []
   mappend = (<>)
 
-instance Transformable Changes where
-  transform s (Changes a b) = Changes (transform s a) (transform s b)
+forward :: Changes -> Changes
+forward (Changes a b) = Changes a b
 
+instance Transformable Changes where
+  transform s (Changes a b) = Changes 
+    (takeWhile (< 0) $ Data.List.sort $ transform s a <> transform s b)
+    (dropWhile (< 0)  $ Data.List.sort $ transform s a <> transform s b)
+
+normalizeChanges (Changes a b) = 
+  Changes
+    (takeWhile (< 0) $ Data.List.sort $ a <> b)
+    (dropWhile (< 0)  $ Data.List.sort $ a <> b)
+            
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
 --
@@ -3846,11 +3857,16 @@ instance Monad m => CoSerial m Duration where
 instance (Monad m, CoSerial m a, Ord a, Num a) => CoSerial m (Clipped a) where
   coseries = fmap (. fromClipped) . coseries
 
+instance Monad m => Serial m Changes where
+  series = fmap normalizeChanges $ cons2 Changes
+
 instance Monad m => Serial m Time where
-  series = msum $ fmap return [-1,0,2.13222,20]
+  -- series = msum $ fmap return [-1,0,2.13222]
+  series = newtypeCons Time
 
 instance Monad m => Serial m Duration where
-  series = msum $ fmap return [-1,0,1.51232,20]
+  -- series = msum $ fmap return [-1,0,1.51232]
+  series = newtypeCons Duration
 
 instance Monad m => Serial m Span where
   series = newtypeCons Span
@@ -4081,6 +4097,7 @@ main = defaultMain $ testGroup "All tests" $ [
     transformMonoidMorphismEq 
       (\x y -> fmap (! 0) x == fmap (! 0) y && fmap (! 1) x == fmap (! 1) y)
       (undefined :: Bound (Behavior Time)),
+    transformMonoidMorphism   (undefined :: Changes),
     transformMonoidMorphism   (undefined :: Voice Time),
     transformMonoidMorphism   (undefined :: Score Time)
   ],
