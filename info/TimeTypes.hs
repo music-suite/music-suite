@@ -509,7 +509,7 @@ instance (Num a, Ord a) => Num (Clipped a) where
 instance (Num a, Ord a, Fractional a) => Fractional (Clipped a) where
   a / b = unsafeToClipped (fromClipped a / fromClipped b)
   recip 1 = 1
-  recip _ = error "Can not take reciprocal of a clippedd value other than 1"
+  recip _ = error "Can not take reciprocal of a clipped value other than 1"
   fromRational = unsafeToClipped . fromRational
 
 unsafeToClipped   = fromMaybe (error "Outside 0-1") . (^? clipped)
@@ -767,7 +767,7 @@ stretchTo d x = (d ^/ _duration x) `stretch` x
 clippedDuration = stretchTo 1
 
 -- stretchClipped :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
--- stretchClipped x = stretchTo (clippedd $ duration x) x
+-- stretchClipped x = stretchTo (clipped $ duration x) x
 
 
 -- Placing things
@@ -1887,7 +1887,7 @@ fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
 -- Fade in.
 --
 fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` delay 1 (rev unit))
+fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
 
 
 
@@ -2967,7 +2967,8 @@ splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
 splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
   where
     toLast   = Option . Just . Last
-    fromLast = getLast . fromMaybe undefined . getOption
+    fromLast = getLast . fromJust . getOption
+    -- fromJust is safe here, as toLast is used to create the Maybe wrapper
 
 noteToBehavior :: Note a -> Behavior (Maybe a)
 noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
@@ -3398,7 +3399,7 @@ assuming :: a -> b -> b
 assuming = flip const
 
 sameType :: a -> a -> ()
-sameType = undefined
+sameType _ _ = ()
 
 
 -- #define INCLUDE_TESTS
@@ -3437,6 +3438,7 @@ instance Monad m => CoSerial m Duration where
 
 instance (Monad m, CoSerial m a) => CoSerial m (Clipped a) where
   coseries = undefined
+  -- TODO
   -- coseries = fmap unsafeToClipped
 
 instance Monad m => Serial m Time where
