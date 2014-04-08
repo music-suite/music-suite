@@ -428,7 +428,7 @@ import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
 
 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***))
+import           Control.Arrow                (first, second, (***), (&&&))
 import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env
@@ -2732,6 +2732,10 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
   deriving (Functor, Applicative, Monad{-, Comonad-})
 
+--
+-- TODO constant-optimize a la Conal
+--
+
 -- $musicTimeSegmentExamples
 -- 
 -- > foldr1 appendSegment $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
@@ -3503,7 +3507,7 @@ singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = error "Not implemented: singleStretched"
 
 voice :: Prism' (Voice a) [Stretched a]
-voice = error "Not implemented: singleStretched"
+voice = _Wrapped
 
 -- |
 -- Voice
@@ -3654,6 +3658,28 @@ normalizeChanges (Changes a b) =
 splitChanges :: (Num a, Ord a) => (Changes a) -> ((Changes a), (Changes a))
 splitChanges (Changes a b) = (Changes a [0], Changes [] (0:b))
 -}
+
+-- data Rea a
+--   = Constant a
+--   | Switch (Rea a) Time (Rea a)
+--   deriving (Show)
+-- 
+-- _optDropAfter t (Constant x)   = Constant x
+-- _optDropAfter t (Switch a u b)
+--   -- Switch occurs after t, so we can safely discard it
+--   | t         <= u = _optDropAfter t a
+--   | otherwise      = Switch a u $ _optDropAfter t b
+-- 
+-- _isConstant (Constant x) = True
+-- _isConstant _            = False
+-- 
+-- _initial (Constant x)   = x
+-- _initial (Switch a t b) = _initial a
+-- 
+-- _final (Constant x)   = x
+-- _final (Switch a t b) = _final b
+
+
             
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -3664,36 +3690,66 @@ splitChanges (Changes a b) = (Changes a [0], Changes [] (0:b))
 -- type Reactive a = (a, Time, Voice a)
 -- @
 --
-newtype Reactive a = Reactive a
+newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
+    deriving (Functor, Semigroup, Monoid)
+--
+-- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
+-- 
+-- Possible approach:
+-- 
+--  * Implement PosReactive (no negative values) and define Reactive = Delayed (PosReactive)
+-- 
+--  * Implement liftA2 for PosReactive (preferably with a single traversal)
+-- 
 
+instance Transformable (Reactive a) where
+    transform s (Reactive (t,r)) = Reactive (transform s t, transform s r)
 
--- (Store (Zipper [] Time) a)
--- data Reactive a = Const a | Switch (Reactive a) Time (Reactive a)
--- data Reactive a = Reactive a (Delayed (Voice a)) a
+instance Wrapped (Reactive a) where
+    type Unwrapped (Reactive a) = ([Time], Behavior a)
+    _Wrapped' = iso getReactive Reactive
 
--- data Store s a = Store (s -> a) s
--- data Zipper f a = Zipper (f a) a (f a)
-
-instance Functor Reactive where
-  -- TODO
 instance Applicative Reactive where
--- TODO
+    pure    = (^. _Unwrapped') . pure . pure
+    ((^. _Wrapped') -> (tf, rf)) <*> ((^. _Wrapped') -> (tx, rx)) = (^. _Unwrapped') (tf <> tx, rf <*> rx)
 
 -- |
 -- Get the initial value.
 --
 initial :: Reactive a -> a
+initial r = r `atTime` minB (occs r)
+    where
+        -- If there are no updates, just use value at time 0
+        -- Otherwise pick an arbitrary time /before/ the first value
+        -- It looks strange but it works
+        minB []    = 0
+        minB (x:_) = x - 1
 
 -- |
 -- Get the final value.
 --
 final :: Reactive a -> a
+final (renderR -> (i,[])) = i
+final (renderR -> (i,xs)) = snd $ last xs
+
+occs :: Reactive a -> [Time]
+occs = fst . (^. _Wrapped')
+
+atTime :: Reactive a -> Time -> a
+atTime = (!) . snd . (^. _Wrapped')
+
+-- | Get the time of all updates and the value switched to at this point.
+updates :: Reactive a -> [(Time, a)]
+updates r = (\t -> (t, r `atTime` t)) <$> (Data.List.sort . Data.List.nub) (occs r)
+
+renderR = initial &&& updates
 
 -- |
 -- Get all intermediate values.
 --
 intermediate :: Reactive a -> [Note a]
-(initial, final, intermediate) = error "Not implemented: (initial, final, intermediate)"
+(intermediate) = error "Not implemented: (intermediate)"
+-- Similar to update, but zip with next value (offset)
 
 -- |
 -- Realize a 'Reactive' value as a discretely changing behavior.
