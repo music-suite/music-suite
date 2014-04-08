@@ -383,45 +383,11 @@ instance Bounded a => Bounded (b -> a) where
   maxBound = pure maxBound
 
 
-{-
-  TODO
-  - New representation for Reactive
-  - Implement Divs/Phrases
-
-
--}
 
 
 
 
--- Types etc
 
-{-
-  Law Semigroup
-    a <> (b <> c)  = (a <> b) <> c
-    a    <> mempty = a
-    mempty <> a    = a
-
-  Law AdditiveGroup
-    a ^+^ (b ^+^ c)  = (a ^+^ b) ^+^ c
-    a    ^+^ zeroV   = a
-    zeroV  ^+^ a     = a
-    a    ^+^ negateV a = zeroV
-    negateV a ^+^ a    = zeroV
-    a ^+^ b        = b ^+^ a
-
-  Law Functor
-    fmap id = id
-    fmap (f . g) = fmap f . fmap g
-  Law Eq
-    a == b = not (a /= b)
-  Law Ord
-  Law Applicative
-    pure id <*> v = v
-    pure f <*> pure x = pure (f x)
-    u <*> pure y = pure ($ y) <*> u
-    u <*> (v <*> w) = pure (.) <*> u <*> v <*> w
--}
 
 -- | A value in the unit interval /(0,1)/.
 newtype Clipped a = UnsafeClip { unsafeGetClipped :: a }
@@ -791,8 +757,6 @@ _postOnset   = (`_position` 0.5)
 _postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
 _postOffset  = (`_position` 1.5)
 
-
-
 -- |
 -- Move a value forward in time.
 --
@@ -831,10 +795,6 @@ _placeAt s x = transform (s ^-^ (view era) x) x
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _placeAt)
-
--- *TimeTypes> (transform ((3 <-> 4) ^-^ (4 <-> 4.5)) (4 <-> 4.5))^.range
--- (3,4)
-
 
 -- |
 -- Move a value so that
@@ -879,6 +839,7 @@ a `before` b =  (a `lead` b) <> b
 -- For non-positioned types, this is the often same as 'mconcat'
 -- For positioned types, this is the same as 'afterAnother'
 --
+scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
 scat = Prelude.foldr (|>) mempty
 
 -- |
@@ -887,6 +848,7 @@ scat = Prelude.foldr (|>) mempty
 -- This not possible for non-positioned types, as they have no notion of an origin.
 -- For positioned types this is the same as 'mconcat'.
 --
+pcat :: (Semigroup a, Monoid a) => [a] -> a
 pcat = Prelude.foldr (<>) mempty
 
 -- |
@@ -904,6 +866,7 @@ x `sustain` y   = x <> y `during` x
 -- |
 -- Move a value so that
 --
+times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
 times n   = scat . replicate n
 
 -- |
@@ -2329,52 +2292,6 @@ trim = trimG
 -- More generic definition
 trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
 trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) `apRep` x
-
-
-{-
-
-pureB :: a -> Behavior a
-pureB = pure
-
-mapPitch4 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => Behavior (a -> b) -> s -> t
-mapPitch4 f = (pitch %~ (f <*>))
-
-fix :: Transformable a => Note (Behavior a) -> Note a
--- fix = from note %~ (\(s,x) -> (s,x ! 0))
-fix = fmap (! 0)
-
--- TODO instead of pureB and fix use
-
-fixPitch :: (HasPitch s t, Pitch s ~ Behavior (Pitch t)) => s -> t
-fixPitch = pitch %~ (!^ 0)
-
-purePitch :: (HasPitch s t, Pitch t ~ Behavior (Pitch s)) => s -> t
-purePitch = pitch %~ pure
--}
-
-{-
-mapPitch5 :: (
-  (Pitch (SetPitch (Behavior b) (SetPitch (Behavior a) s)) ~ Behavior b),
-  (Pitch (SetPitch (Behavior a) s) ~ Behavior a),
-  HasPitch s t, Pitch s ~ a, Pitch t ~ b) => Behavior (a -> b) -> s -> t
-mapPitch5 f = fixPitch . (pitch %~ (f <*>)) . purePitch
--}
-
-
-
-{-
-mapPitch3 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => Behavior (a -> b) -> s -> t
-mapPitch3 f = pitch %~ (f <*>)
-
-mapPitch2 :: (HasPitch s t, Pitch s ~ Behavior a, Pitch t ~ Behavior b) => (Behavior a -> Behavior b) -> s -> t
-mapPitch2 f = pitch %~ f
-
-mapPitch1 :: HasPitch s t => (Pitch s -> Pitch t) -> s -> t
-mapPitch1 f = pitch %~ f
-                                   -}
-
-
-
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
