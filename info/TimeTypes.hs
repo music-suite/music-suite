@@ -1503,12 +1503,18 @@ pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 
 #define PRIM_PITCH_INSTANCE(TYPE) \
-type instance Pitch TYPE = TYPE;       \
-type instance SetPitch a TYPE = a;     \
-instance (Transformable a, a ~ Pitch a) => HasPitch TYPE a where {    \
-  pitch = ($)                     };   \
-instance (Transformable a, a ~ Pitch a) => HasPitches TYPE a where {  \
-  pitches = ($)                     }; \
+                                        \
+type instance Pitch TYPE = TYPE;        \
+type instance SetPitch a TYPE = a;      \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitch TYPE a where {            \
+  pitch = ($)              } ;          \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitches TYPE a where {          \
+  pitches = ($)              } ;        \
+
 
 PRIM_PITCH_INSTANCE(Bool)
 PRIM_PITCH_INSTANCE(Int)
