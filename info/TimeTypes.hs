@@ -3246,6 +3246,7 @@ mbind :: (Monad m, Monad n, Functor m, Traversable n) => (a -> m (n b)) -> m (n 
 mbind = (join .) . fmap . (fmap join .) . T.mapM
 
 -- Like Data.Ord.comparing
+-- (Are both variants of contramap?)
 inspecting :: Eq a => (b -> a) -> b -> b -> Bool
 inspecting p x y = p x == p y
 
@@ -3285,9 +3286,9 @@ instance Functor BadFunctor where
 instance Monad m => CoSerial m Time where
   coseries = liftM const -- TODO?
 instance Monad m => Serial m Time where
-  series = msum $ fmap return [-1,0,1,2,2.13222,10]
+  series = msum $ fmap return [-1,0,2.13222]
 instance Monad m => Serial m Duration where
-  series = msum $ fmap return [-1,0,1,2,1.51232,10]
+  series = msum $ fmap return [-1,0,1.51232]
 instance Monad m => Serial m Span where
   series = newtypeCons Span
 instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
@@ -3388,6 +3389,20 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   where
     (<>) = mappend
 
+monoidEq :: (Monoid t, Show t, Typeable t, Serial IO t) => (t -> t -> Bool) -> t -> TestTree
+monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
+  testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
+          (x <> (y <> z)) === ((x <> y) <> z),
+
+  testProperty "mempty <> x == x"         $ \x   -> assuming (sameType typ x)
+          (mempty <> x) === x,
+
+  testProperty "x <> mempty == x"         $ \x   -> assuming (sameType typ x)
+         ((x <> mempty) === x)
+  ]
+  where
+    (<>) = mappend
+
 -- functor :: (Functor f, Eq (f b), Show (f b), Typeable b, Typeable1 f, Serial IO (f b)) => f b -> TestTree
 -- functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
 --   testProperty "fmap id = id" $ \x -> assuming (sameType typ x)
@@ -3417,9 +3432,13 @@ main = defaultMain $ testGroup "" $ [
   monoid (undefined :: [()]),
   -- monoid (undefined :: Behavior ()), -- too slow!
 
-  monoid (undefined :: Time),
   monoid (undefined :: Duration),
+  monoid (undefined :: Time),
   monoid (undefined :: Span),
+  -- monoid (undefined :: Segment Time),
+  monoidEq (inspecting (! 0)) (undefined :: Behavior Time),
+  monoidEq (inspecting (! 1)) (undefined :: Behavior Time),
+  monoidEq (inspecting (! 3)) (undefined :: Behavior Time),
 
   stretchDurationLaw (undefined :: Stretched ()),
   delayDurationLaw   (undefined :: Stretched ()),
