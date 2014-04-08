@@ -186,7 +186,7 @@ module TimeTypes (
         switch,
         switch3,
         splice,
-        concatBehavior,
+        concatBehaviors,
 
         -- * Music.Time.Voice
         Voice,
@@ -2865,11 +2865,25 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     toLast   = Option . Just . Last
     fromLast = getLast . fromMaybe undefined . getOption
 
+
+noteToBehavior :: Note a -> Behavior (Maybe a)
+noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
+  where
+    toLast   = Option . Just . Last
+    fromLast = fmap getLast . getOption
+
+noteToBehavior' :: Monoid a => Note a -> Behavior a
+noteToBehavior' = concatBehavior . fmap pure
+    
+concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
+concatBehavior = concatBehaviors . view (re singleNote)
+
 -- |
 -- This
 --
-concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehavior = error "No concatBehavior"
+concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
+concatBehaviors = error "No concatBehaviors"
+-- TODO write this in terms of noteToBehavior, not the other way around!
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
