@@ -42,15 +42,18 @@ module TimeTypes (
         -- conjugate,
 
         -- ** Specific transformations
+        -- *** Applying transformations
         delay,
-        delayTime,
         undelay,
         stretch,
         compress,
+        -- *** Transformations
         delaying,
         undelaying,
         stretching,
         compressing,
+        -- *** Utility
+        delayTime,
 
         -- * Music.Time.Duration
         -- * The HasDuration class
@@ -2744,6 +2747,10 @@ time' = id^.behavior
 
 -- |
 -- A behavior that gives the current time, i.e. the identity function
+--
+-- Should really have the type 'Behavior' 'Time', but is provided in a more general form
+-- for convenience.
+--
 time :: Fractional a => Behavior a
 time = realToFrac^.behavior
 --
@@ -2819,11 +2826,33 @@ atTime :: Behavior a -> Time -> a
 atTime = index
 -}
 
+-- |
+-- The segment representing the behavior in the unit interval.
+-- 
+-- @
+-- 'focus' = 'focusOn' 'mempty'
+-- @
+--
 focus :: Behavior a -> Segment a
 focus = focusOn mempty
 
+-- |
+-- The segment representing the behavior in a given interval.
+--
 focusOn :: Span -> Behavior a -> Segment a
 focusOn s = view (focusedOn s)
+
+--
+-- TODO
+--
+-- Because the 'Time' type is fixed and unbounded in the current version, we can not
+-- define a generix isomorphism from behaviors to segments. If we change the library to
+-- provide multiple time representations (using TFs or similar), we should provide
+-- these combinators:
+--
+-- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
+-- > focusedOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
+--
 
 focused :: Lens' (Behavior a) (Segment a)
 focused = focusedOn mempty
