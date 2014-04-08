@@ -965,6 +965,8 @@ dropM t = snd . split t
 -- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
 -- Bounds (Behavior a) should reverse around the middle, like a note)
 --
+-- FIXME Second law is incompatible with revDefault
+--
 -- Law
 --
 -- @
@@ -1023,8 +1025,8 @@ instance Reversible a => Reversible (Seq a) where
 instance Reversible Duration where
   rev = stretch (-1)
 
-instance Reversible Time where
-  rev = revDefault
+-- There is no instance for Reversible Time
+-- as we can not satisfy the second Reversible law
 
 instance Reversible Span where
   rev = revDefault
@@ -1034,6 +1036,7 @@ instance Reversible a => Reversible (a, b) where
 
 revDefault :: (HasPosition a, Transformable a) => a -> a
 revDefault x = (stretch (-1) `under` undelaying (_position x 0.5 .-. 0)) x
+-- revDefault x = (stretch (-1) `under` undelaying (0)) x
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
 
@@ -3478,17 +3481,17 @@ main = defaultMain $ testGroup "All tests" $ [
   testGroup "Reversible" [
     reversible (undefined :: ()),
     reversible (undefined :: Double),
-    reversible (undefined :: Time),
     reversible (undefined :: Duration),
-    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Time),
+    reversible (undefined :: Span),
+    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
     reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
 
-    reversible (undefined :: Note Time),
-    reversible (undefined :: Stretched Time),
-    reversible (undefined :: Delayed Time),
+    reversible (undefined :: Note Duration),
+    reversible (undefined :: Stretched Duration),
+    reversible (undefined :: Delayed Duration),
 
-    reversible (undefined :: Voice Time),
-    reversible (undefined :: Score Time)
+    reversible (undefined :: Voice Duration),
+    reversible (undefined :: Score Duration)
   ],
 
   testProperty "============================================================" $ True,  
