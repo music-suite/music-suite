@@ -2490,21 +2490,22 @@ instance Reversible (Note a) where
 -- |
 -- View a note as a pair of the original value and the transformation (and vice versa).
 --
-note :: Iso (Span, a) (Span, b) (Note a) (Note b)
+note :: (Transformable a, Transformable b) => 
+  Iso 
+    (Span, a) (Span, b) 
+    (Note a) (Note b)
 note = _Unwrapped
-
--- |
--- Extract the transformed value.
---
-runNote :: Transformable a => Note a -> a
-runNote = uncurry transform . view _Wrapped
 
 -- |
 -- View the value in the note.
 --
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+noteValue :: (Transformable a, Transformable b) => 
+  Lens 
+    (Note a) (Note b) 
+    a b
 noteValue = lens runNote (flip $ mapNote . const)
   where
+    runNote = uncurry transform . view _Wrapped
     mapNote f (Note (s,x)) = Note (s, f `whilst` negateV s $ x)
 
 {-# INLINE noteValue #-}
