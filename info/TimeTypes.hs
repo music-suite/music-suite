@@ -2345,6 +2345,9 @@ newtype Segment a = Segment { getSegment :: (Clipped Duration -> a) }
   deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
+instance Show (Segment a) where
+  show _ = "<<Segment>>"
+
 deriving instance Typeable1 Segment
 deriving instance Distributive Segment
 deriving instance Semigroup a => Semigroup (Segment a)
@@ -2474,6 +2477,9 @@ notTime2 = (rev `under` undelaying 4.5) notTime
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined throughout, "focused" on 0-1
+
+instance Show (Behavior a) where
+  show _ = "<<Behavior>>"
 
 deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
@@ -2807,7 +2813,7 @@ concatBehavior = error "No concatBehavior"
 type ScoreNote a = Note a
 
 newtype Score a = Score { getScore :: [ScoreNote a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show)
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = [ScoreNote a]
@@ -2916,7 +2922,7 @@ mapFilterEvents f = error "No mapFilterEvents"
 -- A 'Voice' is a sequence of stretched values.
 --
 newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show)
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = error "No singleStretched"
@@ -3285,10 +3291,14 @@ instance Functor BadFunctor where
 
 instance Monad m => CoSerial m Time where
   coseries = liftM const -- TODO?
+instance Monad m => CoSerial m Duration where
+  coseries = liftM const -- TODO?
+instance (Monad m, CoSerial m a) => CoSerial m (Clipped a) where
+  coseries = error "no Clipped.coseries"
 instance Monad m => Serial m Time where
-  series = msum $ fmap return [-1,0,2.13222]
+  series = msum $ fmap return [-1,0,2.13222,10,20]
 instance Monad m => Serial m Duration where
-  series = msum $ fmap return [-1,0,1.51232]
+  series = msum $ fmap return [-1,0,1.51232,10,20]
 instance Monad m => Serial m Span where
   series = newtypeCons Span
 instance (Monad m, Serial m a) =>  Serial m (BadFunctor a) where
@@ -3305,6 +3315,8 @@ instance (Monad m, Serial m a) => Serial m (Stretched a) where
   series = newtypeCons Stretched
 instance (Monad m, Serial m a) => Serial m (Behavior a) where
   series = newtypeCons Behavior
+instance (Monad m, Serial m a) => Serial m (Segment a) where
+  series = newtypeCons Segment
 
 instance (Monad m, Serial m a) => Serial m (Voice a) where
   series = do
@@ -3326,13 +3338,13 @@ instance (Monad m, Serial m a) => Serial m (Score a) where
 --
 -- > duration a = duration (delay n a)
 
-delayDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
+-- delayDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 delayDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
   testProperty "_duration a == _duration (delay n a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration a == _duration (delay n a)
   ]
 
-stretchDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
+-- stretchDurationLaw :: (Show a, Typeable a, Serial IO a, HasDuration a, Transformable a) => a -> TestTree
 stretchDurationLaw typ = testGroup ("Delay and duration " ++ show (typeOf typ)) $ [
   testProperty "_duration (stretch n a) == n ^* (_duration a)" $ \(n :: Duration) a -> assuming (sameType typ a) $
                 _duration (stretch n a) == n ^* (_duration a)
@@ -3371,11 +3383,7 @@ notEqualTo x y
   | otherwise = y
 
 
--- DEBUG
-instance Show (Behavior a) where
-  show _ = "<<Behavior>>"
-
-monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
+-- monoid :: (Monoid t, Eq t, Show t, Typeable t, Serial IO t) => t -> TestTree
 monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
           x <> (y <> z) == (x <> y) <> z,
@@ -3389,7 +3397,7 @@ monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   where
     (<>) = mappend
 
-monoidEq :: (Monoid t, Show t, Typeable t, Serial IO t) => (t -> t -> Bool) -> t -> TestTree
+-- monoidEq :: (Monoid t, Show t, Typeable t, Serial IO t) => (t -> t -> Bool) -> t -> TestTree
 monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
           (x <> (y <> z)) === ((x <> y) <> z),
@@ -3420,34 +3428,55 @@ monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
 --
 --   ]
 
+reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
+  testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
+                rev (rev x) == x
+  ]
 
 ap2 u v w = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
 
-main = defaultMain $ testGroup "" $ [
-  testProperty "rev . rev == id" $ \(x :: ())   -> rev (rev x) == x,
+main = defaultMain $ testGroup "Checking TimeTypes laws" $ [
+  reversible (undefined :: ()),
+  reversible (undefined :: Double),
+  reversible (undefined :: Time),
+  reversible (undefined :: Duration),
+  reversible (undefined :: Behavior Time),
+  reversible (undefined :: Segment Time),
+
+  reversible (undefined :: Note Time),
+  reversible (undefined :: Stretched Time),
+  reversible (undefined :: Delayed Time),
+
+  reversible (undefined :: Voice Time),
+  reversible (undefined :: Score Time),
+
   testProperty "rev . rev == id" $ \(x :: [()]) -> rev (rev x) == x,
 
   monoid (undefined :: ()),
-  monoid (undefined :: Maybe ()),
-  monoid (undefined :: [()]),
-  -- monoid (undefined :: Behavior ()), -- too slow!
 
   monoid (undefined :: Duration),
   monoid (undefined :: Time),
   monoid (undefined :: Span),
-  -- monoid (undefined :: Segment Time),
+
+  monoidEq (inspecting (! 0)) (undefined :: Segment Time),
+  monoidEq (inspecting (! 1)) (undefined :: Segment Time),
+
   monoidEq (inspecting (! 0)) (undefined :: Behavior Time),
   monoidEq (inspecting (! 1)) (undefined :: Behavior Time),
-  monoidEq (inspecting (! 3)) (undefined :: Behavior Time),
+  monoidEq (inspecting (! 0)) (undefined :: Behavior ()),
+  monoidEq (inspecting (! 1)) (undefined :: Behavior ()),
 
-  stretchDurationLaw (undefined :: Stretched ()),
-  delayDurationLaw   (undefined :: Stretched ()),
-  stretchDurationLaw (undefined :: Note ()),
-  delayDurationLaw   (undefined :: Note ()),
-  stretchDurationLaw (undefined :: Voice ()),
-  delayDurationLaw   (undefined :: Voice ()),
-  stretchDurationLaw (undefined :: Score ()),
-  delayDurationLaw   (undefined :: Score ()),
+  monoid (undefined :: Voice Time),
+  monoid (undefined :: Score Time),
+
+  stretchDurationLaw (undefined :: Stretched Time),
+  delayDurationLaw   (undefined :: Stretched Time),
+  stretchDurationLaw (undefined :: Note Time),
+  delayDurationLaw   (undefined :: Note Time),
+  stretchDurationLaw (undefined :: Voice Time),
+  delayDurationLaw   (undefined :: Voice Time),
+  stretchDurationLaw (undefined :: Score Time),
+  delayDurationLaw   (undefined :: Score Time),
   
   delayBehLaw (undefined :: Behavior Int8),
 
