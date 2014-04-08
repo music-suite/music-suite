@@ -3413,18 +3413,7 @@ decollide x y
   | x == y    = y + 1
   | otherwise = y
 
-monoid typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
-  testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
-          x <> (y <> z) == (x <> y) <> z,
-
-  testProperty "mempty <> x == x"         $ \x   -> assuming (sameType typ x)
-          mempty <> x == x,
-
-  testProperty "x <> mempty == x"         $ \x   -> assuming (sameType typ x)
-         (x <> mempty == x)
-  ]
-  where
-    (<>) = mappend
+monoid = monoidEq (==)
 
 monoidEq (===) typ = testGroup ("instance Monoid " ++ show (typeOf typ)) $ [
   testProperty "x <> (y <> z) == (x <> y) <> z" $ \x y z -> assuming (sameType typ x)
@@ -3444,14 +3433,16 @@ functor typ = testGroup ("instance Functor " ++ show (typeOf typ)) $ [
          (fmap id x == id x)
   ]
 
-reversible typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
+reversible = reversibleEq (==)
+
+reversibleEq (===) typ = testGroup ("instance Reversible " ++ show (typeOf typ)) $ [
   testProperty "rev . rev == id" $ \x -> assuming (sameType typ x)
-                rev (rev x) == x,
+                (rev (rev x)) === x,
 
   testGroup "" [],
 
   testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
-                (transform . rev) s x == (fmap rev . transform) s x
+                ((transform . rev) s x) === ((fmap rev . transform) s x)
   ]
 
 
@@ -3484,8 +3475,8 @@ main = defaultMain $ testGroup "All tests" $ [
     reversible (undefined :: Double),
     reversible (undefined :: Time),
     reversible (undefined :: Duration),
-    reversible (undefined :: Behavior Time),
-    reversible (undefined :: Segment Time),
+    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Time),
+    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
 
     reversible (undefined :: Note Time),
     reversible (undefined :: Stretched Time),
