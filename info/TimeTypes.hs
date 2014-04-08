@@ -274,6 +274,7 @@ module TimeTypes (
 
         -- * Music.Time.Voice
         Voice,
+        voice,
         -- voiceNotes,
         -- voiceElements,
         -- singleStretched,
@@ -295,13 +296,14 @@ module TimeTypes (
         concatVoices,
 -}
 
-
         -- * Music.Time.Score
         Score,
-        -- voices,
-        -- phrases,
+        voices,
+        phrases,
+        notes,
         singleNote,
-        -- notes,
+        singlePhrase,
+        singleVoice,
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -3317,15 +3319,21 @@ type instance SetArticulation g (Score a) = Score (SetArticulation g a)
 instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
   articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
-voices :: Traversal' (Score a) (Voices a)
-phrases :: Traversal' (Score a) (Phrases a)
+notes :: Iso' (Score a) [Note a]
+voices :: Prism' (Score a) [Voice a]
+phrases :: Prism' (Score a) [Phrase () a]
 (voices, phrases) = error "No (voices, phrases)"
 
 singleNote :: Prism' (Score a) (Note a)
 singleNote = error "No singleNote"
 
+singleVoice :: Prism' (Score a) (Voice a)
+singleVoice = error "No singleNote"
+
+singlePhrase :: Prism' (Score a) (Phrase () a)
+singlePhrase = error "No singleNote"
+
 -- | XXX indexed traversal?
-notes :: Traversal' (Score a) [Note a]
 notes = _Wrapped
 
 -- | Map over the values in a score.
@@ -3431,6 +3439,9 @@ instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = error "No singleStretched"
+
+voice :: Prism' (Voice a) [Stretched a]
+voice = error "No singleStretched"
 
 -- |
 -- Voice
