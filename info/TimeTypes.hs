@@ -1015,7 +1015,10 @@ instance Reversible Integer where
   rev = id
 
 instance Reversible a => Reversible [a] where
-  rev = reverse . fmap rev
+  rev = reverse . map rev
+
+instance Reversible a => Reversible (Seq a) where
+  rev = Seq.reverse . fmap rev
 
 instance Reversible Duration where
   rev = stretch (-1)
@@ -2869,9 +2872,10 @@ instance Reversible a => Reversible (Score a) where
   rev (Score xs) = Score (fmap rev xs)
 
 instance HasPosition (Score a) where
-  -- TODO
+  _onset = Foldable.minimum . fmap _onset . view _Wrapped'
+  _offset = Foldable.maximum . fmap _offset . view _Wrapped'
 instance HasDuration (Score a) where
-  -- TODO
+  _duration x = _offset x .-. _onset x
 instance Splittable a => Splittable (Score a) where
   -- TODO
 
@@ -2967,7 +2971,7 @@ instance Splittable a => Splittable (Voice a) where
   -- TODO
 
 instance Reversible a => Reversible (Voice a) where
-  -- TODO
+  rev = over _Wrapped' rev
 
 -- |
 -- Voice
@@ -3315,7 +3319,8 @@ instance Monad m => CoSerial m Duration where
   coseries = liftM const -- TODO?
 
 instance (Monad m, CoSerial m a) => CoSerial m (Clipped a) where
-  coseries = error "no Clipped.coseries"
+  coseries = undefined
+  -- coseries = fmap unsafeToClipped
 
 instance Monad m => Serial m Time where
   series = msum $ fmap return [-1,0,2.13222,10,20]
