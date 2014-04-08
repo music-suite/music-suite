@@ -847,7 +847,7 @@ placeAt p t x = (t .-. x `_position` p) `delay` x
 -- @placeAt s t@ places the given thing so that @x^.place == s@
 --
 _placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
-_placeAt s x = transform (s ^-^ (view era) x) x
+_placeAt s x = transform (s ^-^ view era x) x
 
 -- |
 -- A lens to the position
@@ -1296,8 +1296,8 @@ instance AdditiveGroup Span where
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d)) = Span (-t ^/ d, recip d)
 
-durationToSpan d = (0 >-> d)
-timeToSpan t = (t >-> 1)
+durationToSpan d  = 0 >-> d
+timeToSpan t      = t >-> 1
 
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
@@ -1566,9 +1566,10 @@ type Interval a = Diff (Pitch a)
 -- |
 -- Class of types that can be transposed.
 --
-type Transposable a = (HasPitches a a,
-                       VectorSpace (Interval a), AffineSpace (Pitch a),
-                       IsInterval (Interval a), IsPitch (Pitch a))
+type Transposable a
+  = (HasPitches a a,
+     VectorSpace (Interval a), AffineSpace (Pitch a),
+     IsInterval (Interval a), IsPitch (Pitch a))
 
 -- |
 -- Transpose up.
@@ -1755,9 +1756,10 @@ type Level a = Diff (Dynamic a)
 -- |
 -- Class of types that can be transposed.
 --
-type Attenuable a = (HasDynamics a a,
-                     VectorSpace (Level a), AffineSpace (Dynamic a),
-                     IsDynamics (Dynamic a))
+type Attenuable a 
+  = (HasDynamics a a,
+     VectorSpace (Level a), AffineSpace (Dynamic a),
+     IsDynamics (Dynamic a){-, IsLevel (Level a)-})
 
 -- |
 -- Transpose up.
@@ -2102,8 +2104,8 @@ through lens1 lens2 =
   -- \f s -> liftA2 ( \a -> runIdentity . flip lens2 a . const . Identity ) s <$> (f ((getConst . lens1 Const) <$> s))
   -- \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
   where
-    getBP a = (view lens1) <$> a
-    setBP x a = liftA2 (over lens2 . const) x a
+    getBP = fmap (view lens1)
+    setBP = liftA2 (over lens2 . const)
 
 
 
@@ -2278,7 +2280,7 @@ runNote = uncurry transform . view _Wrapped
 noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
   where
-    mapNote f (Note (s,x)) = Note (s, f `whilst` (negateV s) $ x)
+    mapNote f (Note (s,x)) = Note (s, f `whilst` negateV s $ x)
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -2339,7 +2341,7 @@ instance (HasPosition a, Splittable a) => Splittable (Bounds a) where
 -- the bounds.
 --
 instance Transformable a => Transformable (Bounds a) where
-  transform t = over (_Wrapped) (transform t *** transform t)
+  transform t = over _Wrapped (transform t *** transform t)
 
 instance (HasPosition a, HasDuration a) => HasDuration (Bounds a) where
   _duration x = _offset x .-. _onset x
@@ -2375,7 +2377,7 @@ trim = trimG
 
 -- More generic definition
 trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bounds (f b) -> f b
-trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) `apRep` x
+trimG (Bounds (s, x)) = tabulate (\t x -> if t `inside` s then x else mempty) `apRep` x
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
@@ -2390,7 +2392,7 @@ trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) 
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
-newtype Segment a = Segment { getSegment :: (Clipped Duration -> a) }
+newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
   deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
@@ -2509,7 +2511,7 @@ slerp2 f i a b
 -- > ask = realToFrac <$> time
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
-notTime = stretch 10 ((stretch 2 $ 4**time-1)`min` 1)*10
+notTime = stretch 10 (stretch 2 (4**time-1) `min` 1)*10
 notTime2 = (rev `whilst` undelaying 4.5) notTime
 
 -- |
@@ -2611,8 +2613,8 @@ instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a
 returnB = return :: (a -> Behavior a)
 extractB = (!^ 0)
 x = delay 2 $ return (return 3) :: Note ((), (Float, Float))
-y = over pitches (returnB) x
-z = over pitches (extractB) y -- TODO
+y = over pitches returnB x
+z = over pitches extractB y -- TODO
 
 aa = (\f -> {-over pitches extractB .-} over pitches f . over pitches returnB) (*(time*2)) x
 
@@ -2983,7 +2985,7 @@ instance Applicative Voice where
 
 instance Monad Voice where
   return = view _Unwrapped . return . return
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` (view _Wrapped xs)
+  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (Seq (Stretched a))
@@ -3214,7 +3216,7 @@ modulate = (\t x -> x * sin (t*2*pi)) <$> time
 -- test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
   -- where
     -- c = 1
-c1 = (sin (time/20*2*pi))
+c1 = sin (time/20*2*pi)
 
 
 newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
@@ -3239,7 +3241,7 @@ instance HasDynamic PD PD where
 pd :: PD
 pd = PD (time, time)
 
-drawPD pd = (lc red $ drawBehavior $ pd^.dynamic) <> (lc blue $ drawBehavior $ pd^.pitch)
+drawPD pd = lc red (drawBehavior $ pd^.dynamic) <> lc blue (drawBehavior $ pd^.pitch)
 
 
 
@@ -3565,7 +3567,7 @@ drawPart' :: (Renderable (Path R2) b, Real a) =>    [(Time, Duration, a)] -> Dia
 drawPart' = mconcat . fmap drawNote'
 
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
-drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
+drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d noteShape
   where
   noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5)
     $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
