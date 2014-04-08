@@ -2096,17 +2096,24 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 --
 
 deriving instance Typeable1 Stretched
+
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
   _Wrapped' = iso getStretched Stretched
+
 instance Rewrapped (Stretched a) (Stretched b)
+
 instance Transformable (Stretched a) where
   transform t = over _Wrapped $ first (transform t)
+
 instance HasDuration (Stretched a) where
   _duration = _duration . ask . view _Wrapped
+
 instance Reversible (Stretched a) where
   rev = stretch (-1)
+
 instance Splittable a => Splittable (Stretched a) where
+
 deriving instance Show a => Show (Stretched a)
 
 -- |
@@ -2150,12 +2157,23 @@ instance (Show a, Transformable a) => Show (Note a) where
 -- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
 
-instance Wrapped (Note a) where { type Unwrapped (Note a) = (Span, a) ; _Wrapped' = iso getNote Note }
+instance Wrapped (Note a) where
+  type Unwrapped (Note a) = (Span, a)
+  _Wrapped' = iso getNote Note
+
 instance Rewrapped (Note a) (Note b)
-instance Transformable (Note a) where transform t = over _Wrapped $ first (transform t)
-instance HasDuration (Note a) where _duration = _duration . ask . view _Wrapped
-instance HasPosition (Note a) where x `_position` p = ask (view _Wrapped x) `_position` p
+
+instance Transformable (Note a) where
+  transform t = over _Wrapped $ first (transform t)
+
+instance HasDuration (Note a) where
+  _duration = _duration . ask . view _Wrapped
+
+instance HasPosition (Note a) where
+  x `_position` p = ask (view _Wrapped x) `_position` p
+
 instance Splittable a => Splittable (Note a) where
+
 instance Reversible (Note a) where
   rev = revDefault
 
@@ -2233,8 +2251,12 @@ instance Reversible a => Reversible (Bounds a) where
 instance Splittable a => Splittable (Bounds a) where
   -- TODO
 
+-- |
+-- 'Bounds' transform by transforming the bounded value as well as
+-- the bounds.
+--
 instance Transformable a => Transformable (Bounds a) where
-  transform t = over _Wrapped (transform t *** transform t)
+  transform t = over (_Wrapped) (transform t *** transform t)
 
 instance HasDuration a => HasDuration (Bounds a) where
   -- TODO truncate then take duration
