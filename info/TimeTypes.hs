@@ -1450,34 +1450,35 @@ PRIM_PITCH_INSTANCE(Double)
 PRIM_PITCH_INSTANCE(Char)
 PRIM_PITCH_INSTANCE(())
 
-type instance Pitch (c,a) = Pitch a
-type instance SetPitch b (c,a) = (c,SetPitch b a)
+type instance Pitch (c,a)               = Pitch a
+type instance SetPitch b (c,a)          = (c,SetPitch b a)
+type instance Pitch [a]                 = Pitch a
+type instance SetPitch b [a]            = [SetPitch b a]
+type instance Pitch (Note a)            = Pitch a
+type instance SetPitch g (Note a)       = Note (SetPitch g a)
+type instance Pitch (Delayed a)         = Pitch a
+type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
+type instance Pitch (Stretched a)       = Pitch a
+type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
+
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
-type instance Pitch [a] = Pitch a
-type instance SetPitch b [a] = [SetPitch b a]
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
-type instance Pitch (Note a) = Pitch a
-type instance SetPitch g (Note a) = Note (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . underL pitches
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . underL pitch
 
-type instance Pitch (Delayed a) = Pitch a
-type instance SetPitch g (Delayed a) = Delayed (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
   pitches = _Wrapped . underLT pitches
 instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
   pitch = _Wrapped . underLT pitch
 
-type instance Pitch (Stretched a) = Pitch a
-type instance SetPitch g (Stretched a) = Stretched (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
   pitches = _Wrapped . underLD pitches
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
