@@ -1,3 +1,4 @@
+
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -2366,8 +2367,8 @@ instance Ord a => Ord (Segment a) where
   max = liftA2 max
   min = liftA2 min
 
-instance Real a => Real (Segment a) where
-  toRational = toRational . (`index` 0)
+-- instance Real a => Real (Segment a) where
+  -- toRational = toRational . (`index` 0)
 
 instance Representable Segment where
   type Rep Segment = Duration
@@ -2499,8 +2500,8 @@ instance Ord a => Ord (Behavior a) where
   max = liftA2 max
   min = liftA2 min
 
-instance Real a => Real (Behavior a) where
-  toRational = toRational . (`index` 0)
+-- instance Real a => Real (Behavior a) where
+  -- toRational = toRational . (`index` 0)
 
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
