@@ -142,6 +142,7 @@ module TimeTypes (
         before,
         during,
         sustain,
+        palindrome,
         
         -- ** Composition operators
         scat,
@@ -930,6 +931,12 @@ era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _placeAt)
 {-# INLINE era #-}
 
+
+--
+-- TODO names
+-- Especially 'after' is counter-intuitive
+--
+
 -- |
 -- Move a value so that
 --
@@ -962,6 +969,9 @@ a `after` b =  a <> (a `follow` b)
 --
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
+
+palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
+palindrome a = a `after` rev a
 
 -- TODO overload these?
 (|>) = after
@@ -1062,7 +1072,7 @@ dropM t = snd . split t
 -- 'rev' ≡ 'over' 'range' 'swap'
 -- @
 --
-class Reversible a where
+class Transformable a => Reversible a where
 
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
@@ -1116,6 +1126,9 @@ revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
 -- revDefault x = (stretch (-1) `under` undelaying (0)) x
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
+
+instance Transformable (NoReverse a) where
+  transform _ = id
 
 instance Reversible (NoReverse a) where
   rev = id
@@ -2416,7 +2429,7 @@ runStretched = uncurry stretch . view _Wrapped
 
 -- |
 -- 'Bound' restricts the start and stop time of a value, and prevents access to values
--- outside the bounds ('Bound' SHOULD NOT BE 'Foldable' for this reason).
+-- outside the bounds (note that 'Bound' is not 'Foldable' for this reason).
 --
 -- 'Bound' is especially useful to restrict the range of a 'Behavior'. If you have a
 -- value with can only be reasonably defined for a particular time range, you can
@@ -2433,6 +2446,15 @@ runStretched = uncurry stretch . view _Wrapped
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor)
 
+--
+-- TODO define Applicative/Monad
+--
+-- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
+-- A possible problem with this is that there are multiple representations of the empty
+-- set (namely [(t, t)^.from range | t <- {Time} ]).
+--
+
+{-
 -- | TODO unsafe
 instance Foldable Bound where
   foldr f z (Bound (_,x)) = f x z
@@ -2440,13 +2462,14 @@ instance Foldable Bound where
 -- | TODO unsafe
 instance Traversable Bound where
   traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
+-}
 
--- | TODO unsafe
+-- | TODO Unsafe, as it allow us to define 'unBound'.
 instance Wrapped (Bound a) where
   type Unwrapped (Bound a) = (Span, a)
   _Wrapped' = iso getBound Bound
 
-  -- | TODO unsafe
+-- | TODO Unsafe, as it allow us to define 'unBound'.
 instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
@@ -2498,9 +2521,6 @@ genericTrim (Bound (s, x)) = tabulate (\t x -> if t `inside` s then x else mempt
 -- |
 -- Add bounds.
 --
--- TODO name
--- TODO only an iso op to trim
---
 bounded :: Iso' (Note (Segment a)) (Bound (Behavior a))
 bounded = iso ns2bb bb2ns 
   where
@@ -2508,6 +2528,14 @@ bounded = iso ns2bb bb2ns
     ns2bb (Note (s, x))   = Bound (s,       transform s           $ s2b $ x)
     s2b = tabulate . ( .realToFrac) . index
     b2s = tabulate . (. realToFrac) . index
+--
+-- Note that the isomorhism only works because of 'Bound' being abstract.
+-- A function @unBound :: Bound a -> a@ could break the isomorphism
+-- as follows:
+--
+-- >>> (unBound . view (from bounded . bounded) . bounds 0 1) b ! 2
+-- *** Exception: Outside 0-1
+--
 
 -- TODO unify with bounded Iso
 noteToBound :: Note (Behavior a) -> Bound (Behavior a)
@@ -2991,8 +3019,12 @@ focusedOn = error "No focusedOn"
 -- |
 -- Instantly switch from one behavior to another.
 --
--- @'switch' t x y@ behaves as @x@ until time @t@, at which point it starts
--- behaving as @y@.
+-- @
+-- 'switch' t x y '!' n | n <  t = x '!' n
+--                  | n >= t = y '!' n
+-- @ 
+--
+-- That is @switch t x y@ behaves as @x@ until time @t@, at which point it starts behaving as @y@.
 --
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = switch3 t rx ry ry
@@ -3000,8 +3032,14 @@ switch t rx ry = switch3 t rx ry ry
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
 --
--- @'switch' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
--- At time @t@ it has value @y '!^' t@.
+-- @
+-- 'switch3' t x y z '!' n | n <  t = x '!' n
+--                     | n == t = y '!' n
+--                     | n >  t = z '!' n
+-- @ 
+--
+-- That is @'switch' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
+-- At time @t@ it has value @y '!' t@.
 --
 switch3 :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
