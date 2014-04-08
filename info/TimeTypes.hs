@@ -109,14 +109,18 @@ module TimeTypes (
         Duration,
         -- * Time points
         Time,
+
         -- * Time spans
         Span,
+
         -- ** Constructing time spans
         (<->),
         (>->),
+
         -- ** Deconstructing time spans
         range,
         delta,
+
         -- ** Points in spans
         inside,
 
@@ -124,32 +128,29 @@ module TimeTypes (
         Stretched,
         stretched,
         stretchedValue,
-        -- runStretched,
+
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
         delayedValue,
-        -- runDelayed,
+
 
         -- * Music.Time.Note
         Note,
         note,
         noteValue,
-        originalNoteValue,
+
 
         -- * Music.Time.Bounds
         Bounds,
         bounds,
         bounding,
         trim,
-        -- trimG,
         bounded,
 
         -- * Music.Time.Segment
         Segment,
-        -- fromSegment,
-        -- fromSegment2,
         focus,
         focusOn,
         focused,
@@ -160,9 +161,7 @@ module TimeTypes (
         -- * Music.Time.Behavior
         Behavior,
         (!^),
-        -- behavior',
         behavior,
-        -- unbehavior,
 
         -- * Common behaviors
         time,
@@ -2066,13 +2065,13 @@ instance Reversible (Stretched a) where
 instance Splittable a => Splittable (Stretched a) where
 deriving instance Show a => Show (Stretched a)
 
-mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
-
 -- |
 -- View the value in the note.
 --
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretchedValue = lens runStretched (flip $ mapStretched . const)
+  where
+    mapStretched f (Stretched (d,x)) = Stretched (d, (f `underStretch` d) x)
 
 
 
@@ -2129,24 +2128,12 @@ runNote :: Transformable a => Note a -> a
 runNote = uncurry transform . view _Wrapped
 
 -- |
--- Extract the transformed value.
---
--- reifyNote :: Transformable a => Note a -> Note (Span, a)
--- reifyNote = fmap (view $ from note) . duplicate
-
-mapNote f (Note (s,x)) = Note (s, f `under` (negateV s) $ x)
-
--- |
 -- View the value in the note.
 --
 noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
-
--- |
--- View the value in the note.
---
-originalNoteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-originalNoteValue = from note . _2
+  where
+    mapNote f (Note (s,x)) = Note (s, f `under` (negateV s) $ x)
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
