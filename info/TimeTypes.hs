@@ -3648,14 +3648,22 @@ atTime = (!) . snd . (^. _Wrapped')
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r `atTime` t)) <$> (Data.List.sort . Data.List.nub) (occs r)
 
+renderR :: Reactive a -> (a, [(Time, a)])
 renderR = initial &&& updates
+
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+switchR :: Time -> Reactive a -> Reactive a -> Reactive a
+switchR t (Reactive (tx, bx)) (Reactive (ty, by)) = Reactive $ (,)
+    (filter (< t) tx <> [t] <> filter (> t) ty) (switch t bx by)
 
 -- |
 -- Get all intermediate values.
 --
-intermediate :: Reactive a -> [Note a]
-(intermediate) = error "Not implemented: (intermediate)"
--- Similar to update, but zip with next value (offset)
+intermediate :: Transformable a => Reactive a -> [Note a]
+intermediate (updates -> []) = []
+intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.note) $ withNext $ xs
+  where
+    withNext xs = zip xs (tail xs)
 
 -- |
 -- Realize a 'Reactive' value as a discretely changing behavior.
