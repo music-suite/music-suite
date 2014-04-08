@@ -121,6 +121,9 @@ module TimeTypes (
 
         -- ** Points in spans
         inside,
+        comprises,
+        isBefore,
+        overlaps,
 
         -- * Music.Time.Stretched
         Stretched,
@@ -710,7 +713,7 @@ clippedDuration = stretchTo 1
 -- For values with an onset and offset you can use 'alerp':
 --
 -- @
--- '_position' x ≡ 'alerp' '_onset' '_offset'
+-- '_position' x ≡ 'alerp' ('_onset' x) ('_offset' x)
 -- @
 --
 class HasPosition a where
@@ -720,6 +723,7 @@ class HasPosition a where
   -- In an 'Envelope', this is the value between the attack and decay phases.
   --
   _position :: a -> {-Scalar-} Duration -> Time
+  _position x = alerp (_onset x) (_offset x)
 
   -- |
   -- Return the onset of the given value.
@@ -1346,8 +1350,36 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
+comprises :: Span -> Span -> Bool
+a `comprises` b = _onset b `inside` a && _offset b `inside` a
 
+isBefore :: Span -> Span -> Bool
+a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 
+overlaps :: Span -> Span -> Bool
+a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
+
+{-
+
+  TODO test
+  > (0 <-> 1) `overlaps` (1 <-> 3)
+  False
+  > (0 <-> 1) `overlaps` (1 <-> 0)
+  True
+  > (0 <-> 1) `overlaps` (1 <-> 2)
+  False
+  > (0 <-> 1.1) `overlaps` (1 <-> 2)
+  True
+  > (0 <-> 1) `overlaps` ((-1) <-> 2)
+  True
+  > (0 <-> (-1)) `overlaps` ((-1) <-> 2)
+  True
+  > ((-4) <-> (-1)) `overlaps` ((-1) <-> 2)
+  False
+  > ((-4) <-> (-1)) `overlaps` (0 <-> 2)
+  False
+  > (0 <-> 1) `overlaps` (0 <-> 4)
+-}
 
 
 --
