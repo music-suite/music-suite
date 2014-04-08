@@ -212,10 +212,13 @@ module TimeTypes (
         concatSegment,
 
         -- * Music.Time.Reactive
-        Reactive(..),
+        Reactive,
         initial,
         final,
-        intermediates,  
+        intermediates,
+        discrete,
+        interpolate,
+        sample,  
 
         -- * Music.Time.Behavior
         Behavior,
@@ -370,6 +373,9 @@ module TimeTypes (
         allParts,
         extractPart,
         extractParts,
+        
+        -- * Music.Time.Draw
+        Drawable(..),
   ) where
 
 import qualified Data.ByteString.Lazy         as ByteString
@@ -384,7 +390,7 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                stretch, stretchTo, transform,
                                                trim, under, unit, value, view,
                                                toDuration, fromDuration,
-                                               toTime, fromTime,
+                                               toTime, fromTime, discrete, sample,
                                                (<->), (|>))
 import           System.Process               (system)
 import           Text.Blaze.Svg.Renderer.Utf8 (renderSvg)
@@ -3367,6 +3373,10 @@ final :: Reactive a -> a
 intermediates :: Reactive a -> Voice a
 (initial, final, intermediates) = error "No (initial, final, intermediates)"
 
+discrete :: Reactive a -> Behavior a
+interpolate :: Segment (a -> b) -> Reactive a -> Behavior b
+sample   :: [Time] -> Behavior a -> Reactive a
+(discrete, interpolate, sample) = error "No (discrete, interpolate, sample)"
 
 {-
 
@@ -3757,6 +3767,8 @@ instance Real a => Drawable (Behavior a) where
   draw = drawBehavior
 instance Real a => Drawable (Span, Behavior a) where
   draw = uncurry drawBehaviorAt
+instance Drawable a => Drawable [a] where
+  draw = mconcat . fmap draw
 
 instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Note a) where
   draw (view (from note) -> (s, transform s -> pd)) = lc red (draw (s, pd^.pitch)) <> lc blue (draw (s, pd^.dynamic))
