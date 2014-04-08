@@ -197,8 +197,8 @@ module TimeTypes (
         segment,
         
         -- ** Combinators
-        focus,
-        focusOn,
+        -- focus,
+        -- focusOn,
         focused,
         focusedOn,
         appendSegment,
@@ -324,18 +324,17 @@ module TimeTypes (
 
 
         -- * Music.Score.Pitch
-        -- * Pitch type functions
+        -- ** Pitch type functions
         Pitch,
         SetPitch,
         Interval,
         Transposable,
-        -- Transposable',
-        -- * Pitch lens and traversal
+        -- ** Accessing pitch
         HasPitches(..),
         HasPitch(..),
         pitch',
         pitches',
-        -- * Pitch manipulation
+        -- * Manipulating pitch
         -- ** Transposition
         up,
         down,
@@ -353,15 +352,17 @@ module TimeTypes (
         -- TODO gliss etc
         
         -- * Music.Score.Dynamic
+        -- ** Dynamic type functions
         Dynamic,
         SetDynamic,
+        -- ** Accessing dynamics
         HasDynamics(..),
         HasDynamic(..),
         dynamic',
         dynamics',
+        -- * Manipulating dynamics
         Level,
         Attenuable,
-        -- Attenuable',
         louder,
         softer,
         level,
@@ -370,13 +371,15 @@ module TimeTypes (
         fadeOut,
         
         -- * Music.Score.Articulation
+        -- ** Articulation type functions
         Articulation,
         SetArticulation,
+        -- ** Accessing articulation
         HasArticulations(..),
         HasArticulation(..),
         articulation',
         articulations',
-        
+        -- * Manipulating articulation        
         accent,
         marcato,
         accentLast,
@@ -388,14 +391,15 @@ module TimeTypes (
         legato,
         
         -- * Music.Score.Part
+        -- ** Articulation type functions
         Part,
         SetPart,
+        -- ** Accessing parts
         HasParts(..),
         HasPart(..),
-        HasPart',
-        HasParts',
         part',
         parts',
+        -- * Manipulating parts (TODO)
         allParts,
         extractPart,
         extractParts,     
@@ -2685,19 +2689,19 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     fromLast = getLast . fromJust . getOption
     -- fromJust is safe here, as toLast is used to create the Maybe wrapper
 
-noteToBehavior :: Note a -> Behavior (Maybe a)
-noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
-  where
-    toLast   = Option . Just . Last
-    fromLast = fmap getLast . getOption
+-- noteToBehavior :: Note a -> Behavior (Maybe a)
+-- noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
+--   where
+--     toLast   = Option . Just . Last
+--     fromLast = fmap getLast . getOption
 
 -- TODO unify
 -- noteToBound :: Note (Behavior a) -> Bound (Behavior a)
 -- noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
 
 -- TODO unify
-noteToBehavior' :: Monoid a => Note a -> Behavior a
-noteToBehavior' = concatSegments' . fmap pure
+-- noteToBehavior' :: Monoid a => Note a -> Behavior a
+-- noteToBehavior' = concatSegments' . fmap pure
 
 
 
@@ -2719,7 +2723,13 @@ noteToBehavior' = concatSegments' . fmap pure
 --
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
   deriving (Functor, Applicative, Monad{-, Comonad-})
--- Defined 0-1
+
+-- $musicTimeSegmentExamples
+-- 
+-- > foldr1 appendSegment $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
+--
+-- > openG $ draw $ (1, timeS :: Segment Float)^.stretched
+-- 
 
 instance Show (Segment a) where
   show _ = "<<Segment>>"
@@ -2774,6 +2784,32 @@ instance (HasPitch a a, HasPitch a b) => HasPitches (Segment a) (Segment b) wher
   pitches = through pitch pitch
 instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
   pitch = through pitch pitch
+
+type instance Dynamic                 (Segment a) = Segment (Dynamic a)
+type instance SetDynamic (Segment g) (Segment a) = Segment (SetDynamic g a)
+
+instance (HasDynamic a a, HasDynamic a b) => HasDynamics (Segment a) (Segment b) where
+  dynamics = through dynamic dynamic
+instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Segment a) (Segment b) where
+  dynamic = through dynamic dynamic
+
+
+type instance Articulation                 (Segment a) = Segment (Articulation a)
+type instance SetArticulation (Segment g) (Segment a) = Segment (SetArticulation g a)
+
+instance (HasArticulation a a, HasArticulation a b) => HasArticulations (Segment a) (Segment b) where
+  articulations = through articulation articulation
+instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Segment a) (Segment b) where
+  articulation = through articulation articulation
+
+
+type instance Part                 (Segment a) = Segment (Part a)
+type instance SetPart (Segment g) (Segment a) = Segment (SetPart g a)
+
+instance (HasPart a a, HasPart a b) => HasParts (Segment a) (Segment b) where
+  parts = through part part
+instance (HasPart a a, HasPart a b) => HasPart (Segment a) (Segment b) where
+  part = through part part
 
 -- |
 -- Index a segment.
@@ -4106,13 +4142,21 @@ class Drawable a where
   draw :: Renderable (Path R2) b => a -> Diagram b R2
 instance Real a => Drawable (Behavior a) where
   draw = drawBehavior
+instance Real a => Drawable (Segment a) where
+  draw = drawSegment
+-- instance Drawable a => Drawable (Note a) where
+  -- draw (view from note -> (s,x)) = draw x
+instance Real a => Drawable (Span, Segment a) where
+  draw = uncurry drawSegmentAt
 instance Real a => Drawable (Span, Behavior a) where
   draw = uncurry drawBehaviorAt
 instance Drawable a => Drawable [a] where
   draw = mconcat . fmap draw
 
+instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Stretched a) where
+  draw (view (from stretched) -> (d,x)) = draw $ (0 >-> d, x)^.note
 instance (Drawable (Span, Pitch a), Drawable (Span, Dynamic a), HasPitch a a, HasDynamic a a, Transformable a) => Drawable (Note a) where
-  draw (view (from note) -> (s, transform s -> pd)) = lc red (draw (s, pd^.pitch)) <> lc blue (draw (s, pd^.dynamic))
+  draw (view (from note) -> (s, transform s -> x)) = lc red (draw (s, x^.pitch)) <> lc blue (draw (s, x^.dynamic))
 
 
 drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dynamics)
@@ -4165,10 +4209,9 @@ drawBehaviorAt s@(view delta -> (realToFrac -> t, realToFrac -> d))
   = translateX t . scaleX d . drawBehavior' 0 1 . transform (negateV s) 
 
 drawSegmentAt :: (Renderable (Path R2) b, Real a) => Span -> Segment a -> Diagram b R2
-drawSegmentAt s x = drawBehaviorAt s (segmentToBehavior x)
-  where
-    segmentToBehavior :: Segment a -> Behavior a
-    segmentToBehavior = tabulate . (. realToFrac) . index
+drawSegmentAt s@(view delta -> (realToFrac -> t, realToFrac -> d)) 
+  -- = drawBehavior' t d
+  = translateX t . scaleX d . drawBehavior' 0 1 . transform (negateV s) 
 
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
 drawSegment = scaleX 10 . drawBehavior' 0 1
