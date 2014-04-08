@@ -210,7 +210,7 @@ module TimeTypes (
         
         -- ** Combinators
         focusing,
-        focusingOn,
+        -- focusingOn,
         -- TODO
         -- appendSegment,
         appendSegments,
@@ -3096,7 +3096,7 @@ turnOff = switch 0 1 0
 -- View part of a 'Behavior' as a 'Segment'.
 --
 -- @
--- 'focusing' = 'focusingOn' 'mempty'
+-- 'time' & 'focusing' ``on`` (2 '<->' 3) '+~' 1
 -- @
 --
 focusing :: Lens' (Behavior a) (Segment a)
@@ -3112,8 +3112,8 @@ focusing = lens get set
 -- This can be used to modify a behavior in a specific range, as in
 --
 -- @
--- 'time' & 'focusingOn' (2 '<->' 3) '+~' 1
 -- 'time' & 'focusing' ``on`` (2 '<->' 3) '+a~' 1
+-- 'time' & 'focusingOn' (2 '<->' 3) '+~' 1
 -- @
 --
 focusingOn :: Span -> Lens' (Behavior a) (Segment a)
