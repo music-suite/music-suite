@@ -16,8 +16,9 @@
 ## Possibly good
 
 - Enforcing the separation of aspects vs. structure
-    - Great for modularity, forces us to be explicit in the constraints put on things
-      like pitch.
+    - Great for modularity
+    - Forces us to be explicit in the constraints put on things like pitch.
+    - Nice 3-way separation: structure (fixed/classes), aspects (polymorphic) and meta (dynamic)
 
 - Using flat structures (i.e no hierarchy part -> voice -> subvoice -> phrase etc)
     - We will need these representations along with flat ones
@@ -43,8 +44,10 @@
         - Ditto for specific representations (12-tone theory, ragas, scales etc)
     - Timed structure, meta information etc goes into `score`
     - Consolidating instances, examples etc goes into `preludes`
-    - Operations that can apply directly to *music* (score, voice, note etc) goes into `score`, while operations that apply to a single *aspect value* (reflect pitch, divide part) etc goes into the supporting package (and can be applied inside containers using
-a lens/tranversal composition).
+    - Operations that can apply directly to *music* (score, voice, note etc) goes into
+      `score`, while operations that apply to a single *aspect value* (reflect pitch,
+      divide part) etc goes into the supporting package (and can be applied inside
+      containers using a lens/tranversal composition).
 
 ## New stuff
 

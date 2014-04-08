@@ -43,7 +43,7 @@ module TimeTypes (
 
         -- ** Specific transformations
         delay,
-        -- delayTime,
+        delayTime,
         undelay,
         stretch,
         compress,
@@ -190,20 +190,22 @@ module TimeTypes (
 
         -- * Music.Time.Voice
         Voice,
-        voiceNotes,
-        voiceElements,
+        -- voiceNotes,
+        -- voiceElements,
         -- singleStretched,
         zipVoice,
         zipVoiceWith,
         dzipVoiceWith,
         mergeEqualNotes,
 
+{-
         -- * Music.Time.Phrases
         Voices,
         voices',
         Phrases,
         phrases',
         concatVoices,
+-}
 
         -- * Music.Time.Reactive
         Reactive(..),
@@ -213,10 +215,10 @@ module TimeTypes (
 
         -- * Music.Time.Score
         Score,
-        voices,
-        phrases,
+        -- voices,
+        -- phrases,
         singleNote,
-        notes,
+        -- notes,
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -487,6 +489,8 @@ addLim = zipClippedWith (+)
 (!) :: Representable f => f a -> Rep f -> a
 (!) = index
 
+infixl 6 !
+
 -- |
 -- The isomorpism between a representable functor and its representation.
 --
@@ -687,6 +691,7 @@ class HasDuration a where
 --
 duration :: (Transformable a, HasDuration a) => Lens' a Duration
 duration = lens _duration (flip stretchTo)
+{-# INLINE duration #-}
 
 -- |
 -- Stretch a value to have the given duration.
@@ -753,36 +758,42 @@ _era x = _onset x <-> _offset x
 --
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
 position d = lens (`_position` d) (flip $ placeAt d)
+{-# INLINE position #-}
 
 -- |
 -- Onset of the given value.
 --
 onset :: (HasPosition a, Transformable a) => Lens' a Time
 onset = position 0
+{-# INLINE onset #-}
 
 -- |
 -- Onset of the given value.
 --
 offset :: (HasPosition a, Transformable a) => Lens' a Time
 offset = position 1
+{-# INLINE offset #-}
 
 -- |
 -- Onset of the given value.
 --
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
+{-# INLINE preOnset #-}
 
 -- |
 -- Onset of the given value.
 --
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset = position 0.5
+{-# INLINE postOnset #-}
 
 -- |
 -- Onset of the given value.
 --
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
 postOffset = position 1.5
+{-# INLINE postOffset #-}
 
 
 -- |
@@ -847,6 +858,7 @@ _placeAt s x = transform (s ^-^ view era x) x
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _placeAt)
+{-# INLINE era #-}
 
 -- |
 -- Move a value so that
@@ -1488,12 +1500,14 @@ class (Transformable (Pitch s),
 --
 pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
 pitch' = pitch
+{-# INLINE pitch' #-}
 
 -- |
 -- Pitch type.
 --
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
+{-# INLINE pitches' #-}
 
 #define PRIM_PITCH_INSTANCE(TYPE) \
                                         \
@@ -2099,6 +2113,7 @@ through lens1 lens2 =
   where
     getBP = fmap (view lens1)
     setBP = liftA2 (over lens2 . const)
+{-# INLINE through #-}
 
 
 
@@ -2149,6 +2164,7 @@ delayedValue = lens runDelayed (flip $ mapDelayed . const)
   where
       mapDelayed f (Delayed (t,x)) = Delayed (t, (f `whilstDelay` t) x)
 
+{-# INLINE delayedValue #-}
 
 
 
@@ -2202,6 +2218,7 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
   where
     mapStretched f (Stretched (d,x)) = Stretched (d, (f `whilstStretch` d) x)
 
+{-# INLINE stretchedValue #-}
 
 
 -- |
@@ -2274,6 +2291,8 @@ noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
   where
     mapNote f (Note (s,x)) = Note (s, f `whilst` negateV s $ x)
+
+{-# INLINE noteValue #-}
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -2653,6 +2672,8 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 --
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
+
+infixl 6 !^
 
 -- |
 -- View a behavior as a time function and vice versa.
@@ -3170,93 +3191,11 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
--- -- Has... Pitch Dynamics Articulation Part Chord?? Clef Slide Tremolo Text Harmonic Meta
--- -- Has+Is ... Midi/MusicXml
--- -- Is ... Pitch Interval Dynamic
 
 
 
 
 
-
-
-
-
-
-
-
-
-
--- TODO these are examples...
-
--- TODO compose segments etc
-adsr :: Behavior Duration
-adsr = time <&> \t ->
-  if t `inside` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
-  if t `inside` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
-  if t `inside` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
-  if t `inside` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
-  0
-
-toFloat :: Real a => a -> Float
-toFloat = realToFrac
-
-modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
-modulate = (\t x -> x * sin (t*2*pi)) <$> time
-
-
-
--- test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
-  -- where
-    -- c = 1
-c1 = sin (time/20*2*pi)
-
-
-newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
-instance Wrapped PD where
-  type Unwrapped PD = (Behavior Float, Behavior Float)
-  _Wrapped' = iso getPD PD
-instance Rewrapped PD PD
-instance Transformable PD where
-  transform _ = id
-type instance Pitch PD = Behavior Float
-type instance SetPitch g PD = PD
-type instance Dynamic PD = Behavior Float
-type instance SetDynamic g PD = PD
-instance HasPitches PD PD where
-  pitches = _Wrapped . _2
-instance HasPitch PD PD where
-  pitch = _Wrapped . _2
-instance HasDynamics PD PD where
-  dynamics = _Wrapped . _1
-instance HasDynamic PD PD where
-  dynamic = _Wrapped . _1
-pd :: PD
-pd = PD (time, time)
-
-drawPD pd = lc red (drawBehavior $ pd^.dynamic) <> lc blue (drawBehavior $ pd^.pitch)
-
-
-
-a :: Behavior Float
-a = time
-
-
-
--- c2 :: Behavior Float -> Behavior Float
--- c2  = liftA2 (*) c1
-
--- nc :: Note (Behavior (Int, Float))
--- nc = transform (3 >-> 5) $ return $ fmap (0,) $ fmap toFloat adsr
-
--- r :: Behavior Float
--- r  = fmap snd $ runNote (nc & pitch %~ c2)
-
--- drawNote :: (Real a, Renderable (Path R2) b) => Note a -> Diagram b R2
--- drawNote n = let
-  -- (t,d) = view delta $ n^.era
-  -- a = n ^?! traverse
-  -- in drawNote' (t,d,a)
 
 
 
@@ -3547,10 +3486,66 @@ main = defaultMain $ testGroup "All tests" $ [
 
 
 
+-- PD test
+
+
+-- TODO these are examples...
+
+-- TODO compose segments etc
+adsr :: Behavior Duration
+adsr = time <&> \t ->
+  if t `inside` (0  <-> 0.15) then lerp 0   1   ((t .-. 0)^/0.15)   else
+  if t `inside` (0.15 <-> 0.3)  then lerp 1   0.3 ((t .-. 0.15)^/0.15) else
+  if t `inside` (0.3  <-> 0.65) then lerp 0.3 0.2 ((t .-. 0.3)^/0.35) else
+  if t `inside` (0.65 <-> 1.0)  then lerp 0.2 0   ((t .-. 0.65)^/0.35) else
+  0
+
+toFloat :: Real a => a -> Float
+toFloat = realToFrac
+
+modulate :: Floating (Pitch a) => Behavior (Pitch a -> Pitch a)
+modulate = (\t x -> x * sin (t*2*pi)) <$> time
+
+
+
+-- test = openG $ drawBehavior (r*5) <> lc blue (drawBehavior (c1*5)) <> drawNote (fmap (fmap snd) nc)
+  -- where
+    -- c = 1
+c1 = sin (time/20*2*pi)
+
+
+newtype PD = PD { getPD :: (Behavior Float, Behavior Float) }
+  deriving (Eq, Ord, Show)
+instance Wrapped PD where
+  type Unwrapped PD = (Behavior Float, Behavior Float)
+  _Wrapped' = iso getPD PD
+instance Rewrapped PD PD
+instance Transformable PD where
+  transform _ = id
+type instance Pitch PD = Behavior Float
+type instance SetPitch g PD = PD
+type instance Dynamic PD = Behavior Float
+type instance SetDynamic g PD = PD
+instance HasPitches PD PD where
+  pitches = _Wrapped . _1
+instance HasPitch PD PD where
+  pitch = _Wrapped . _1
+instance HasDynamics PD PD where
+  dynamics = _Wrapped . _2
+instance HasDynamic PD PD where
+  dynamic = _Wrapped . _2
+
+drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dynamics)
+drawPDNote (view (from note) -> (s, pd)) = lc red (drawBehaviorAt s $ pd^.pitch) <> lc blue (drawBehaviorAt s $ pd^.dynamic)
 
 
 
 
+
+
+
+
+-- Drawing
 
 
 drawScore' :: (Renderable (Path R2) b, Real a) =>     [[(Time, Duration, a)]] -> Diagram b R2
@@ -3568,20 +3563,32 @@ drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ t
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 0 10
 
+drawBehaviorAt :: (Renderable (Path R2) b, Real a) => Span -> Behavior a -> Diagram b R2
+drawBehaviorAt s@(view delta -> (realToFrac -> t, realToFrac -> d)) b 
+  = translateX t $ scaleX d $ drawBehavior' 0 1 (transform (negateV s) b)
+
+
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
 drawSegment = scaleX 10 . drawBehavior' 0 1
 
+-- Draw a behavior or a segment in the given span
+drawBehavior'
+  :: (Fractional (Rep f), Real a, TrailLike b, HasStyle b, Representable f, V b ~ R2) =>
+     Double -> Double -> f a -> b
 drawBehavior' start count b = draw points & lw 0.02
   where
-    points = take (samplesPerCell*count) $ fmap (\x -> p2 (x, fromVal (b ! toTime x))) [start,start+1/samplesPerCell..]
+    points = take (ceiling $ sampleRate*count) $ fmap (\x -> p2 (x, fromVal (b ! toTime x))) [start,start+sampleLength..]
     toTime = realToFrac
     fromVal = realToFrac
-    samplesPerCell = 90
+    
+    sampleRate = 90
+    sampleLength = 1/sampleRate
+    
     -- draw = cubicSpline False
     -- TODO offset without showing
     draw = fromOffsets . (\xs -> zipWith (.-.) (tail xs) xs) . ((p2 (0,0)) :)
 
-grid = grid' 20 <> fc lightblue (circle 0.1)
+grid = grid' 20 <> fc lightblue (circle 0.1) <> translateX 5 (fc lightblue (circle 0.1)) <> translateX 10 (fc lightblue (circle 0.1))
 gridX = gridX' 20
 gridY = gridY' 20
 
