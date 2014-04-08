@@ -214,6 +214,8 @@ module TimeTypes (
 
         -- ** Combinators
         trim,
+        trimBefore,
+        trimAfter,
         splice,
         switch,
         switch',
@@ -416,7 +418,8 @@ import           Diagrams.Prelude             hiding (Duration, Dynamic,
                                                during, era, era, interval, inv,
                                                offset, place, position, start,
                                                stretch, stretchTo, transform,
-                                               trim, under, unit, value, view,
+                                               trim, trimBefore, trimAfter, 
+                                               under, unit, value, view,
                                                toDuration, fromDuration,
                                                toTime, fromTime, discrete, sample,
                                                (<->), (|>), (~~))
@@ -2661,7 +2664,8 @@ bounded = iso ns2bb bb2ns
 -- Extract a bounded behavior, replacing all values outside the bound with 'mempty'.
 --
 -- @
--- 'trim' = 'splice' 'mempty'
+-- 'trim'   = 'splice' 'mempty'
+-- 'trim' x = 'trimBefore' '_onset' x . 'trimAfter' '_offset' x
 -- @
 --
 trim :: Monoid b => Bound (Behavior b) -> Behavior b
@@ -3195,6 +3199,14 @@ focusedOn s = flip whilstM (negateV s) . focused
 --
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = switch' t rx ry ry
+
+-- | Replace everthing before the given time by `mempty`.
+trimBefore :: Monoid a => Time -> Behavior a -> Behavior a
+trimBefore start x = switch start mempty x
+
+-- | Replace everthing after the given time by `mempty`.
+trimAfter :: Monoid a => Time -> Behavior a -> Behavior a
+trimAfter stop x = switch stop x mempty
 
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
