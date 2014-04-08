@@ -238,8 +238,8 @@ module TimeTypes (
         splice,
         -- noteToBehavior,
         -- noteToBehavior',
+        -- concatBehavior',
         concatBehavior,
-        concatBehaviors,
 
         -- * Common behaviors
         time,
@@ -2645,7 +2645,7 @@ noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
 
 -- TODO unify
 noteToBehavior' :: Monoid a => Note a -> Behavior a
-noteToBehavior' = concatBehavior . fmap pure
+noteToBehavior' = concatBehavior' . fmap pure
 
 
 
@@ -3096,22 +3096,18 @@ focusedOn = error "No focusedOn"
 -- |
 -- Instantly switch from one behavior to another.
 --
--- That is @switch t x y@ behaves as @x@ until time @t@, at which point it starts behaving as @y@.
---
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
 switch t rx ry = switch3 t rx ry ry
 
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
 --
--- That is @'switch' t x y z@ behaves as @x@ until time @t@ and as @z@ after time @t@.
--- At time @t@ it has value @y '!' t@.
---
 switch3 :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
+
 -- @
 -- 'switch' t x y '!' n | n <  t = x '!' n
 --                  | n >= t = y '!' n
@@ -3125,20 +3121,23 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
 -- @ 
 --
 
+-- |
+-- This
+--
 cross :: Segment (a -> a -> a) -> Duration -> Time -> Behavior a -> Behavior a -> Behavior a
 cross = error "No cross"
 
 -- |
 -- This
 --
-concatBehavior :: Monoid a => Note (Behavior a) -> Behavior a
-concatBehavior = splice mempty . noteToBound
+concatBehavior' :: Monoid a => Note (Behavior a) -> Behavior a
+concatBehavior' = splice mempty . noteToBound
 
 -- |
 -- This
 --
-concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehaviors = mconcat . map concatBehavior . scoreToNotes
+concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
+concatBehavior = mconcat . map concatBehavior' . scoreToNotes
 
 -- TODO replace with iso/traversal
 scoreToNotes :: Score a -> [Note a]
