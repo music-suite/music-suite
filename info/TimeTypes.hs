@@ -193,10 +193,10 @@ module TimeTypes (
         Segment,
         focus,
         focusOn,
-        focused,
-        focusedOn,
+        focusing,
+        focusingOn,
         appendSegment,
-        concatSegment,
+        appendSegments,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -215,27 +215,36 @@ module TimeTypes (
         sample,  
 
         -- ** Combinators
-        switch,
-        switch3,
-        -- cross,
+        trim,
         splice,
+        switch,
+        switch',
+        concatSegments,
+        concatBehaviors,
+        -- cross,
         -- noteToBehavior,
         -- noteToBehavior',
         -- concatBehavior',
-        concatBehavior,
 
+        -- * Common behaviors
+        time,
+        unit,
+        impulse,
+        turnOn,
+        turnOff,
+        sawtooth,
+        sine,
+        cosine,
 
         -- * Music.Time.Stretched
         Stretched,
         stretched,
         stretchedValue,
 
-
         -- * Music.Time.Delayed
         Delayed,
         delayed,
         delayedValue,
-
 
         -- * Music.Time.Note
         Note,
@@ -250,16 +259,6 @@ module TimeTypes (
         trim,
         splice,
         bounded,
-
-        -- * Common behaviors
-        time,
-        unit,
-        impulse,
-        turnOn,
-        turnOff,
-        sawtooth,
-        sine,
-        cosine,
 
         -- * Music.Time.Phrase
         Phrase,
@@ -2624,7 +2623,11 @@ bounding (view range -> (t, u)) = bounds t u
 -- |
 -- Add bounds.
 --
-bounded :: Iso' (Note (Segment a)) (Bound (Behavior a))
+bounded :: Iso
+  (Note (Segment a))
+  (Note (Segment b))
+  (Bound (Behavior a))
+  (Bound (Behavior b))
 bounded = iso ns2bb bb2ns 
   where
     bb2ns (Bound (s, x)) = Note   (s, b2s $ transform (negateV s) $ x)
@@ -2680,12 +2683,12 @@ noteToBehavior = fmap fromLast . noteToBehavior' . fmap toLast
     fromLast = fmap getLast . getOption
 
 -- TODO unify
-noteToBound :: Note (Behavior a) -> Bound (Behavior a)
-noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
+-- noteToBound :: Note (Behavior a) -> Bound (Behavior a)
+-- noteToBound (view (from note) -> (s,x)) = bounding s (transform s x)
 
 -- TODO unify
 noteToBehavior' :: Monoid a => Note a -> Behavior a
-noteToBehavior' = concatBehavior' . fmap pure
+noteToBehavior' = concatSegments' . fmap pure
 
 
 
@@ -2797,8 +2800,8 @@ fromSegment2 = error "No fromSegment2"
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
-concatSegment :: Voice (Segment a) -> Stretched (Segment a)
-concatSegment = foldr1 appendSegment . toListOf voiceElements
+appendSegments :: Voice (Segment a) -> Stretched (Segment a)
+appendSegments = foldr1 appendSegment . toListOf voiceElements
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
@@ -3075,7 +3078,7 @@ sawtooth = time - fmap floor' time
 -- A behavior that is 1 at time 0, and 0 at all other times.
 --
 impulse :: Num a => Behavior a
-impulse = switch3 0 0 1 0
+impulse = switch' 0 0 1 0
 -- > f t | t == 0    = 1
 -- >     | otherwise = 0
 --
@@ -3113,7 +3116,7 @@ focus = focusOn mempty
 -- The segment representing the behavior in a given interval.
 --
 focusOn :: Span -> Behavior a -> Segment a
-focusOn s = view (focusedOn s)
+focusOn s = view (focusingOn s)
 
 --
 -- TODO
@@ -3124,26 +3127,26 @@ focusOn s = view (focusedOn s)
 -- these combinators:
 --
 -- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
--- > focusedOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
+-- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
 
-focused :: Lens' (Behavior a) (Segment a)
-focused = focusedOn mempty
+focusing :: Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
+focusing = focusingOn mempty
 
-focusedOn :: Span -> Lens' (Behavior a) (Segment a)
-focusedOn = error "No focusedOn"
+focusingOn :: Span -> Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
+focusingOn = error "No focusingOn"
 
 -- |
 -- Instantly switch from one behavior to another.
 --
 switch :: Time -> Behavior a -> Behavior a -> Behavior a
-switch t rx ry = switch3 t rx ry ry
+switch t rx ry = switch' t rx ry ry
 
 -- |
 -- Instantly switch from one behavior to another with an optinal intermediate value.
 --
-switch3 :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
+switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
+switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
@@ -3155,7 +3158,7 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
 --
 
 -- @
--- 'switch3' t x y z '!' n | n <  t = x '!' n
+-- 'switch'' t x y z '!' n | n <  t = x '!' n
 --                     | n == t = y '!' n
 --                     | n >  t = z '!' n
 -- @ 
@@ -3170,20 +3173,21 @@ cross = error "No cross"
 -- |
 -- This
 --
-concatBehavior' :: Monoid a => Note (Behavior a) -> Behavior a
-concatBehavior' = splice mempty . noteToBound
+concatSegments' :: Monoid a => Note (Segment a) -> Behavior a
+concatSegments' = trim . view bounded
 
 -- |
 -- This
 --
-concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehavior = mconcat . map concatBehavior' . scoreToNotes
+concatSegments :: Monoid a => Score (Segment a) -> Behavior a
+concatSegments = mconcat . map concatSegments' . scoreToNotes
 
 -- TODO replace with iso/traversal
 scoreToNotes :: Score a -> [Note a]
 scoreToNotes = toListOf traverse . view _Wrapped
 
-
+concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
+concatBehaviors = concatSegments . fmap focus
 
 
 
