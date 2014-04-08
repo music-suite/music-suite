@@ -128,8 +128,8 @@ module TimeTypes (
         -- * Music.Time.Reverse
         -- * The Reversible class
         Reversible(..),
-        revDefault,
         reversed,
+        revDefault,
         NoReverse(..),
 
         -- * Music.Time.Split
@@ -191,12 +191,19 @@ module TimeTypes (
 
         -- * Music.Time.Segment
         Segment,
+        -- ** Examples
+        -- $musicTimeSegmentExamples
+        (!.),
+        segment,
+        
+        -- ** Combinators
         focus,
         focusOn,
-        focusing,
-        focusingOn,
+        focused,
+        focusedOn,
         appendSegment,
         appendSegments,
+        concatSegments,
 
         -- * Music.Time.Behavior
         Behavior,
@@ -205,21 +212,12 @@ module TimeTypes (
         (!^),
         behavior,
 
-        -- * Music.Time.Reactive
-        Reactive,
-        initial,
-        final,
-        intermediate,
-        discrete,
-        interpolate,
-        sample,  
-
         -- ** Combinators
         trim,
         splice,
         switch,
         switch',
-        concatSegments,
+        appendBehaviors,
         concatBehaviors,
         -- cross,
         -- noteToBehavior,
@@ -235,6 +233,15 @@ module TimeTypes (
         sawtooth,
         sine,
         cosine,
+
+        -- * Music.Time.Reactive
+        Reactive,
+        initial,
+        final,
+        intermediate,
+        discrete,
+        interpolate,
+        sample,  
 
         -- * Music.Time.Stretched
         Stretched,
@@ -303,7 +310,6 @@ module TimeTypes (
         
         -- voices -- Lens' (Score a) [Voice a]
         -- phrases -- Lens' (Voice a) [Phrase a]
-        -- XXX how to compose traversals?
         
         -- mapVoices, -- ([Voice a] -> [Voice a]) -> Score a -> Score a
         -- mapPhrases, -- ([Phrase a] -> [Phrase a]) -> Voice a -> Voice a
@@ -335,9 +341,8 @@ module TimeTypes (
         -- octavesBelow,
         -- ** Intervals
         augmentIntervals,
-        
-        -- pitchIs, to write filter pitchIs ... etc
-        
+
+        -- TODO pitchIs, to write filter pitchIs ... etc        
         -- TODO gliss etc
 
         -- * Music.Score.Dynamic
@@ -978,8 +983,8 @@ stopAt t  x   = (t .-. _offset x) `delay` x
 -- @placeAt p t@ places the given thing so that its position p is at time t
 --
 -- @
--- 'placeAt' 0 == 'startAt'
--- 'placeAt' 1 == 'stopAt'
+-- 'placeAt' 0 = 'startAt'
+-- 'placeAt' 1 = 'stopAt'
 -- @
 --
 placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
@@ -988,7 +993,7 @@ placeAt p t x = (t .-. x `_position` p) `delay` x
 -- |
 -- Place a value over the given span.
 --
--- @placeAt s t@ places the given thing so that @x^.place == s@
+-- @placeAt s t@ places the given thing so that @x^.place = s@
 --
 _placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
 _placeAt s x = transform (s ^-^ view era x) x
@@ -1045,7 +1050,6 @@ a `before` b =  (a `lead` b) <> b
 palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 palindrome a = a `after` rev a
 
--- TODO overload these?
 (|>) = after
 (<|) = before
 
@@ -1101,9 +1105,6 @@ times n   = scat . replicate n
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
 
--- XXX what about Behavior (infinite span)
-
-
 
 takeM, dropM :: Splittable a => Duration -> a -> a
 
@@ -1149,8 +1150,10 @@ class Transformable a => Reversible a where
   -- | Reverse (retrograde) the given value.
   rev :: a -> a
 
--- XXX counterintunittive Behavior instances (just Behavior should reverse around origin, while
--- Bound (Behavior a) should reverse around the middle, like a note)
+--
+-- XXX counter-intuitive Behavior instances (just Behavior should reverse around origin,
+-- while Bound (Behavior a) should reverse around the middle, like a note)
+--
 
 
 
@@ -1193,6 +1196,9 @@ instance Reversible Span where
 instance Reversible a => Reversible (a, b) where
   rev (s,a) = (rev s, a)
 
+-- |
+-- A default implementation of 'rev'
+--
 revDefault :: (HasPosition a, Transformable a) => a -> a
 -- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
 revDefault x = stretch (-1) x
@@ -1442,7 +1448,7 @@ instance Transformable Span where
   transform = (<>)
 
 instance Splittable Span where
-  -- XXX
+  -- TODO
 
 -- |
 -- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
@@ -2340,6 +2346,7 @@ newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
 deriving instance Typeable1 Delayed
 deriving instance Show a => Show (Delayed a)
 
+-- | TODO Unsafe
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
   _Wrapped' = iso getDelayed Delayed
@@ -2396,6 +2403,7 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 
 deriving instance Typeable1 Stretched
 
+-- | TODO Unsafe
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
   _Wrapped' = iso getStretched Stretched
@@ -2463,6 +2471,7 @@ instance (Show a, Transformable a) => Show (Note a) where
 -- at the default span 'mempty' and 'join' composing time transformations.
 deriving instance Monad Note
 
+-- | TODO Unsafe
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
   _Wrapped' = iso getNote Note
@@ -2555,7 +2564,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- @
 --
 newtype Bound a = Bound { getBound :: (Span, a) }
-  deriving (Functor)
+  deriving (Functor, Semigroup)
 
 --
 -- TODO define Applicative/Monad
@@ -2566,21 +2575,20 @@ newtype Bound a = Bound { getBound :: (Span, a) }
 --
 
 {-
--- | TODO unsafe
+These are both unsafe, as they allow us to define 'unBound'
+
 instance Foldable Bound where
   foldr f z (Bound (_,x)) = f x z
 
--- | TODO unsafe
 instance Traversable Bound where
   traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
 -}
 
--- | TODO Unsafe, as it allow us to define 'unBound'.
+-- | TODO Unsafe
 instance Wrapped (Bound a) where
   type Unwrapped (Bound a) = (Span, a)
   _Wrapped' = iso getBound Bound
 
--- | TODO Unsafe, as it allow us to define 'unBound'.
 instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
@@ -2698,7 +2706,9 @@ noteToBehavior' = concatSegments' . fmap pure
 --
 -- A 'Segment' is a value varying over some unknown time span.
 --
--- To place a segment in a particular time span, use 'Note' 'Segment'.
+-- * To give a segment an explicit duration, use 'Stretched' 'Segment'.
+--
+-- * To place a segment in a particular time span, use 'Note' 'Segment'.
 --
 -- /Semantics/
 --
@@ -2771,7 +2781,7 @@ instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
 (!.) = (!)
 
 -- |
--- View a behavior as a time function and vice versa.
+-- View a segment as a time function and vice versa.
 --
 --
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
@@ -2878,6 +2888,10 @@ deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
+
+-- TODO is this right? (for appendBehaviors etc)
+instance HasPosition (Behavior a) where
+  _position b = const 0
 
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch
@@ -3009,7 +3023,7 @@ unbehavior = from behavior
 
 --
 -- @
--- ('const' x)^.'behavior' ! t == x   forall t
+-- ('const' x)^.'behavior' ! t = x   forall t
 -- @
 --
 --
@@ -3116,7 +3130,7 @@ focus = focusOn mempty
 -- The segment representing the behavior in a given interval.
 --
 focusOn :: Span -> Behavior a -> Segment a
-focusOn s = view (focusingOn s)
+focusOn s = view (focusedOn s)
 
 --
 -- TODO
@@ -3127,14 +3141,14 @@ focusOn s = view (focusingOn s)
 -- these combinators:
 --
 -- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
--- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
+-- > focusedOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
 
-focusing :: Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
-focusing = focusingOn mempty
+focused :: Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
+focused = focusedOn mempty
 
-focusingOn :: Span -> Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
-focusingOn = error "No focusingOn"
+focusedOn :: Span -> Lens (Behavior a) (Behavior b) (Segment a) (Segment b)
+focusedOn = error "No focusedOn"
 
 -- |
 -- Instantly switch from one behavior to another.
@@ -3186,6 +3200,9 @@ concatSegments = mconcat . map concatSegments' . scoreToNotes
 scoreToNotes :: Score a -> [Note a]
 scoreToNotes = toListOf traverse . view _Wrapped
 
+appendBehaviors :: Semigroup a => Bound (Behavior a) -> Bound (Behavior a) -> Bound (Behavior a)
+appendBehaviors = (|>)
+
 concatBehaviors :: Monoid a => Score (Behavior a) -> Behavior a
 concatBehaviors = concatSegments . fmap focus
 
@@ -3206,6 +3223,7 @@ type ScoreNote a = Note a
 newtype Score a = Score { getScore :: [ScoreNote a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
+-- | TODO Unsafe
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = [ScoreNote a]
   _Wrapped' = iso getScore Score
@@ -3295,8 +3313,8 @@ singleNote :: Prism' (Score a) (Note a)
 singleNote = error "No singleNote"
 
 -- | XXX indexed traversal?
-notes :: Traversal' (Score a) (Note a)
-notes = _Wrapped . traverse
+notes :: Traversal' (Score a) [Note a]
+notes = _Wrapped
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -3371,6 +3389,7 @@ instance Monad Voice where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
+-- | TODO Unsafe
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
   _Wrapped' = iso getVoice Voice
@@ -3507,7 +3526,6 @@ instance HasDuration (Phrases a) where
 
 instance Splittable a => Splittable (Phrases a) where
 
--- | XXX
 phrases' :: Traversal'
   (Phrases a)
   (Either (Voice a) (Voices a))
