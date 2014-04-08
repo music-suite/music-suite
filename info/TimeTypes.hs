@@ -479,8 +479,8 @@ addLim = zipClippedWith (+)
 -- The isomorpism between a representable functor and its representation.
 -- 
 -- @
--- 'tabulated' = 'iso' 'tabulate' 'index'
--- 'tabulated' = 'from' 'retabulated'
+-- 'tabulated' ≡ 'iso' 'tabulate' 'index'
+-- 'tabulated' ≡ 'from' 'retabulated'
 -- @
 --
 tabulated :: Representable f => Iso (Rep f -> a) (Rep f -> b) (f a) (f b)
@@ -490,8 +490,8 @@ tabulated = iso tabulate index
 -- The reverse isomorpism between a representable functor and its representation.
 -- 
 -- @
--- 'retabulated' = 'iso' 'index' 'tabulate'
--- 'retabulated' = 'from' 'tabulated'
+-- 'retabulated' ≡ 'iso' 'index' 'tabulate'
+-- 'retabulated' ≡ 'from' 'tabulated'
 -- @
 --
 retabulated :: Representable f => Iso (f a) (f b) (Rep f -> a) (Rep f -> b)
@@ -520,22 +520,22 @@ retabulated = iso index tabulate
 --
 -- Law
 --
--- > transform mempty = id
--- > transform (s <> t) = transform s . transform t
+-- > transform mempty ≡ id
+-- > transform (s <> t) ≡ transform s . transform t
 --
 -- Law
 --
--- > onset (delay n a)       = n ^+. onset a
--- > offset (delay n a)      = n ^+. offset a
--- > duration (stretch n a)  = n * duration a
--- > duration (compress n a) = duration a / n
+-- > onset (delay n a)       ≡ n ^+. onset a
+-- > offset (delay n a)      ≡ n ^+. offset a
+-- > duration (stretch n a)  ≡ n * duration a
+-- > duration (compress n a) ≡ duration a / n
 --
--- > delay n b ! t    = b ! (t .-^ n)
--- > undelay n b ! t  = b ! (t .+^ n)
+-- > delay n b ! t    ≡ b ! (t .-^ n)
+-- > undelay n b ! t  ≡ b ! (t .+^ n)
 --
 -- Lemma
 --
--- > duration a = duration (delay n a)
+-- > duration a ≡ duration (delay n a)
 --
 class Transformable a where
   transform :: Span -> a -> a
@@ -696,13 +696,13 @@ clippedDuration = stretchTo 1
 -- For instantaneous values, a suitable instance is:
 -- 
 -- @
--- '_position' x = 'const' t
+-- '_position' x ≡ 'const' t
 -- @
 --
 -- For values with an onset and offset you can use 'alerp':
 --
 -- @
--- '_position' x = 'alerp' '_onset' '_offset'
+-- '_position' x ≡ 'alerp' '_onset' '_offset'
 -- @
 --
 class HasPosition a where
@@ -918,7 +918,7 @@ times n   = scat . replicate n
 --
 -- Law
 --
--- > let (a, b) = split x in duration a + duration b = duration x
+-- > let (a, b) ≡ split x in duration a + duration b ≡ duration x
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
@@ -946,17 +946,17 @@ dropM t = snd . split t
 -- Law
 --
 -- @
--- 'rev' ('rev' a) = a
+-- 'rev' ('rev' a) ≡ a
 -- @
 --
 -- @
--- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
+-- 'rev' s ``transform`` a ≡ 'rev' (s ``transform`` a)
 -- @
 --
 -- For 'Span'
 --
 -- @
--- 'rev' = 'over' 'range' 'swap'
+-- 'rev' ≡ 'over' 'range' 'swap'
 -- @
 --
 class Reversible a where
@@ -2026,7 +2026,7 @@ through lens1 lens2 =
 -- offset of a delayed value may be stretched with respect to the origin. However, in
 -- contrast to a note the /duration/ is not stretched.
 --
-newtype Delayed a   = Delayed   { getDelayed :: (Time, a) }
+newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
@@ -2123,7 +2123,7 @@ stretchedValue = lens runStretched (flip $ mapStretched . const)
 -- @
 --
 -- @
--- ('view' 'noteValue') . 'transform' s = 'transform' s . ('view' 'noteValue')
+-- ('view' 'noteValue') . 'transform' s ≡ 'transform' s . ('view' 'noteValue')
 -- @
 --
 newtype Note a = Note { getNote :: (Span, a) }
@@ -2205,7 +2205,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- |
 -- 'Bounds' restricts the start and stop time of a value.
 --
-newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
+newtype Bounds a = Bounds { getBounds :: (Span, a) }
   deriving (Functor, Foldable, Traversable)
 
 -- |
@@ -2270,12 +2270,13 @@ trimG (Bounds (s, x)) = (tabulate $ \t x -> if t `inside` s then x else mempty) 
 -- A 'Segment' is a value varying over some unknown time span, semantically
 -- 
 -- @
--- type 'Segment' a => 'Duration' -> a
+-- type 'Segment' a = 'Duration' -> a
 -- @
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
-newtype Segment a = Segment (Clipped Duration -> a) deriving (Functor, Applicative, Monad{-, Comonad-})
+newtype Segment a = Segment { getSegment :: (Clipped Duration -> a) }
+  deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined 0-1
 
 deriving instance Typeable1 Segment
@@ -2394,8 +2395,7 @@ notTime = stretch 10 ((stretch 2 $ 4**time-1)`min` 1)*10
 notTime2 = (rev `under` undelaying 4.5) notTime
 
 -- |
---
--- A 'Behavior' is an infitately varying value, semantically
+-- A 'Behavior' is a time-varying value.
 -- 
 -- @
 -- type 'Behavior' a => 'Time' -> a
@@ -2403,6 +2403,8 @@ notTime2 = (rev `under` undelaying 4.5) notTime
 --
 -- While a 'Behavior' can not be placed (as it has no endpoints), we can focus on a
 -- certain part of a behavior by placing it inside 'Bounds'.
+--
+-- TODO document
 --
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
 -- Defined throughout, "focused" on 0-1
@@ -2527,13 +2529,11 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- | 
 -- Returns the value of a behavior at a given time
 --
--- Note that 
+-- Note that this is just an alias defined to make the documentation nicer:
 --
 -- @
--- '!^' == '!'
+-- '!^' ≡ '!'
 -- @
--- 
--- It is defined as an alias to make the documentation somewhat nicer.
 -- 
 (!^) :: Behavior a -> Time -> a
 (!^) = (!)
@@ -2541,13 +2541,12 @@ instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
 -- |
 -- View a behavior as a time function and vice versa.
 --
--- Note that 
+-- Note that this is just an alias defined to make the documentation nicer:
+--
 --
 -- @
--- 'behavior' == 'tabulated'
+-- 'behavior' ≡ 'tabulated'
 -- @
--- 
--- It is defined as an alias to make the documentation somewhat nicer.
 -- 
 
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
