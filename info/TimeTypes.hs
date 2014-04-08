@@ -364,7 +364,7 @@ import qualified Data.Ratio                   as Util_Ratio
 
     Segment a   ≡ Duration -> a
     Behavior a  ≡ Time -> a
-    Reactive a  ≡ ([Time], Behavior a)
+    Reactive a  ≡ ([Time], Behavior ae)
   
 -}
 
@@ -1512,7 +1512,7 @@ invertPitches p = pitches %~ reflectThrough p
 
 -- |
 augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals = undefined
+augmentIntervals = error "No augmentIntervals"
 -- TODO generalize to any type where we can traverse phrases of something that has pitch
 
 -- |
@@ -1809,15 +1809,15 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . underL articulations
 
 
-accent = undefined
-marcato = undefined
-accentLast = undefined
-marcatoLast = undefined
-accentAll = undefined
-marcatoAll = undefined
-tenuto = undefined
-staccato = undefined
-legato = undefined
+accent = error "No accent"
+marcato = error "No marcato"
+accentLast = error "No accentLast"
+marcatoLast = error "No marcatoLast"
+accentAll = error "No accentAll"
+marcatoAll = error "No marcatoAll"
+tenuto = error "No tenuto"
+staccato = error "No staccato"
+legato = error "No legato"
 
 
 
@@ -2207,7 +2207,7 @@ newtype Bounds a    = Bounds    { getBounds :: (Span, a)   }
 -- Add bounds.
 --
 bounded :: Lens' (Bounds (Behavior a)) (Note (Segment a))
-bounded = undefined
+bounded = error "No bounded"
 
 
 instance Wrapped (Bounds a) where
@@ -2352,10 +2352,10 @@ _unit = realToFrac^.segment
 
 -- | XXX name
 fromSegment :: Monoid a => Iso (Segment a) (Segment b) (Behavior a) (Behavior b)
-fromSegment = undefined
+fromSegment = error "No fromSegment"
 
 fromSegment2 :: Monoid a => Iso (Segment a) (Segment b) (Bounds (Behavior a)) (Bounds (Behavior b))
-fromSegment2 = undefined
+fromSegment2 = error "No fromSegment2"
 
 appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
@@ -2682,7 +2682,7 @@ focused :: Lens' (Behavior a) (Segment a)
 focused = focusedOn mempty
 
 focusedOn :: Span -> Lens' (Behavior a) (Segment a)
-focusedOn = undefined
+focusedOn = error "No focusedOn"
 
 -- |
 -- Instantly switch from one behavior to another.
@@ -2719,7 +2719,7 @@ splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . J
 -- This
 --
 concatBehavior :: Monoid a => Score (Behavior a) -> Behavior a
-concatBehavior = undefined
+concatBehavior = error "No concatBehavior"
 
 -- switch :: Time -> Reactive a -> Reactive a -> Reactive a
 -- trim :: Monoid a => Span -> Reactive a -> Reactive a
@@ -2804,10 +2804,10 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 
 voices :: Traversal' (Score a) (Voices a)
 phrases :: Traversal' (Score a) (Phrases a)
-(voices, phrases) = undefined
+(voices, phrases) = error "No (voices, phrases)"
 
 singleNote :: Prism' (Score a) (Note a)
-singleNote = undefined
+singleNote = error "No singleNote"
 
 -- | XXX indexed traversal?
 notes :: Traversal' (Score a) (Note a)
@@ -2815,15 +2815,15 @@ notes = _Wrapped . traverse
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = undefined
+mapWithSpan f = error "No mapWithSpan"
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = undefined
+filterWithSpan f = error "No filterWithSpan"
 
 -- | Combination of 'mapEvents' and 'filterEvents'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = undefined
+mapFilterWithSpan f = error "No mapFilterWithSpan"
 
 -- | Map over the values in a score.
 mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
@@ -2831,11 +2831,11 @@ mapEvents f = mapWithSpan (uncurry f . view delta)
 
 -- | Filter the values in a score.
 filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = undefined
+filterEvents f = error "No filterEvents"
 
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = undefined
+mapFilterEvents f = error "No mapFilterEvents"
 
 
 -- |
@@ -2845,7 +2845,7 @@ newtype Voice a = Voice { getVoice :: Seq (Stretched a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid)
 
 singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = undefined
+singleStretched = error "No singleStretched"
 
 instance Applicative Voice where
   pure  = return
@@ -2873,7 +2873,7 @@ instance Rewrapped (Voice a) (Voice b)
 -- Voice
 --
 voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
-voiceNotes = undefined
+voiceNotes = error "No voiceNotes"
 
 -- |
 -- Voice
@@ -2891,17 +2891,17 @@ zipVoice = zipVoiceWith (,)
 -- Join the given voices by multiplying durations and combining values using the given function.
 --
 zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith  = undefined
+zipVoiceWith  = error "No zipVoiceWith"
 
 -- |
 -- Join the given voices by combining durations and values using the given function.
 --
 dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
-dzipVoiceWith = undefined
+dzipVoiceWith = error "No dzipVoiceWith"
 
 
 voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = undefined
+voiceList = error "No voiceList"
 
 -- |
 -- Merge consecutive equal note.
@@ -2955,7 +2955,7 @@ voices' :: Traversal'
   (Voices a) 
   (Phrases a) 
 -- TODO is there a non-empty version of traversal?
-voices' = undefined
+voices' = error "No voices'"
 
 newtype Phrases a   = Phrases    { getPhrases :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
@@ -2978,11 +2978,11 @@ instance Splittable a => Splittable (Phrases a) where
 phrases' :: Traversal'
   (Phrases a) 
   (Either (Voice a) (Voices a))
-phrases' = undefined
+phrases' = error "No phrases'"
 
 
 concatVoices :: Monoid a => Phrases a -> Voice a
-concatVoices = undefined
+concatVoices = error "No concatVoices"
 
 -- | XXX only defined positively
 -- Need to use alternative to voice similar to a zipper etc
@@ -2995,7 +2995,7 @@ initial :: Reactive a -> a
 final :: Reactive a -> a
 
 updates :: Reactive a -> Voice a
-(initial, final, updates) = undefined
+(initial, final, updates) = error "No (initial, final, updates)"
 
 
 {-
