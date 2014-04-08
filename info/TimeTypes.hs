@@ -1197,7 +1197,9 @@ instance Show Span where
   show (view delta -> (t,d)) = show t ++ ">->" ++ show d
 
 instance HasPosition Span where
-  _position (view range -> (t1, t2)) = alerp t1 t2
+  -- _position (view range -> (t1, t2)) = alerp t1 t2
+  _onset  (view range -> (t1, t2)) = t1
+  _offset (view range -> (t1, t2)) = t2
 
 instance HasDuration Span where
   _duration = snd . view delta
@@ -2089,7 +2091,7 @@ instance Transformable (Delayed a) where
   transform t = over _Wrapped $ first (transform t)
 
 instance HasPosition (Delayed a) where
-  x `_position` p = ask (view _Wrapped x)`_position` p
+  x `_position` p = ask (view _Wrapped x) `_position` p
 
 instance Reversible (Delayed a) where
   rev = revDefault
@@ -2844,15 +2846,16 @@ instance Reversible a => Reversible (Score a) where
   rev (Score xs) = Score (fmap rev xs)
 
 instance HasPosition (Score a) where
+  -- TODO
 instance HasDuration (Score a) where
+  -- TODO
 instance Splittable a => Splittable (Score a) where
+  -- TODO
 
 type instance Pitch (Score a) = Pitch a
 type instance SetPitch g (Score a) = Score (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches = _Wrapped . traverse . _Wrapped . underL pitches
-
-
 
 type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
@@ -2926,12 +2929,16 @@ instance Monad Voice where
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` (view _Wrapped xs)
 
 instance Transformable (Voice a) where
+  -- TODO
 
 instance Reversible a => Reversible (Voice a) where
+  -- TODO
 
 instance HasDuration (Voice a) where
+  -- TODO
 
 instance Splittable a => Splittable (Voice a) where
+  -- TODO
 
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (Seq (Stretched a))
