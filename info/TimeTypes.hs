@@ -807,9 +807,12 @@ class HasPosition a where
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
+instance HasPosition a => HasPosition [a] where
+  _onset  = minimum . fmap _onset
+  _offset = maximum . fmap _offset
+
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
-
 
 -- |
 -- Position of the given value.
@@ -1868,14 +1871,14 @@ level a = dynamics .~ a
 -- |
 -- Fade in.
 --
-fadeIn :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeIn d = dynamics *~ (0 >-> d `transform` unit)
+fadeIn :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
 
 -- |
 -- Fade in.
 --
-fadeOut :: (Fractional c, HasDynamics s s, Dynamic s ~ Behavior c) => Duration -> s -> s
-fadeOut t = dynamics *~ (t `stretch` delay 1 (rev unit))
+fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` delay 1 (rev unit))
 
 
 
@@ -3786,3 +3789,5 @@ drawSomeNotes notes = (mconcat $ fmap (note.p2.((_1 %~ (*3)) . (_2 %~ (*0.5)))) 
     lines = translateX (linesWidth/2) $ translateY 2 $ vcat $ replicate 5 $ (lw 0.1 $ hrule (linesWidth+4) <> strutY 1)
     linesWidth = 3 * fromIntegral (length notes)
 
+toDouble :: Real a => a -> Double
+toDouble = realToFrac
