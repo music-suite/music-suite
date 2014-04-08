@@ -2773,6 +2773,12 @@ interval t u = (t <-> u, time)^.note
 sine :: Floating a => Behavior a
 sine = sin (time*tau)
 
+-- TODO
+timeS = realToFrac^.segment
+sineS :: Floating a => Segment a
+sineS = sin (timeS*tau)
+
+
 -- |
 -- A behavior that
 --
@@ -3520,12 +3526,13 @@ instance Wrapped PD where
   type Unwrapped PD = (Behavior Float, Behavior Float)
   _Wrapped' = iso getPD PD
 instance Rewrapped PD PD
-instance Transformable PD where
-  transform _ = id
 type instance Pitch PD = Behavior Float
 type instance SetPitch g PD = PD
 type instance Dynamic PD = Behavior Float
 type instance SetDynamic g PD = PD
+
+instance Transformable PD where
+  transform s (PD x) = PD ((transform s *** transform s) x)
 instance HasPitches PD PD where
   pitches = _Wrapped . _1
 instance HasPitch PD PD where
@@ -3535,10 +3542,24 @@ instance HasDynamics PD PD where
 instance HasDynamic PD PD where
   dynamic = _Wrapped . _2
 
+
+
+
 drawPD pd = lc red (drawBehavior $ pd^.pitch) <> lc blue (drawBehavior $ pd^.dynamics)
-drawPDNote (view (from note) -> (s, pd)) = lc red (drawBehaviorAt s $ pd^.pitch) <> lc blue (drawBehaviorAt s $ pd^.dynamic)
 
+drawPDNote :: (Renderable (Path R2) b, Real a) => Note PD -> Diagram b R2
+drawPDNote (view (from note) -> (s, transform s -> pd)) = lc red (drawBehaviorAt s $ pd^.pitch) <> lc blue (drawBehaviorAt s $ pd^.dynamic)
 
+testPD = openG $ (mconcat $ fmap drawPDNote notes) 
+  <> lc pink (drawBehavior $ pitchCurve) 
+  <> lc lightblue (drawBehavior $ dynCurve)
+  where
+    notes = [note1, note2] & dynamics' *~ (dynCurve) & pitches' *~ (pitchCurve)
+    note1 = delay 0.1 $ stretch 3 $ return $ pitch +~ (time) $ PD (sine,sine)
+    note2 = delay 7  $ stretch 3 $ return $ pitch +~ (time) $ PD (sine,sine)
+    pitchCurve = stretch 20 sine
+    dynCurve   = delay 3 unit
+  
 
 
 
@@ -3548,6 +3569,7 @@ drawPDNote (view (from note) -> (s, pd)) = lc red (drawBehaviorAt s $ pd^.pitch)
 -- Drawing
 
 
+{-
 drawScore' :: (Renderable (Path R2) b, Real a) =>     [[(Time, Duration, a)]] -> Diagram b R2
 drawScore' = vcat' (def & sep .~ 2) . fmap drawPart'
 
@@ -3559,14 +3581,21 @@ drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ t
   where
   noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5)
     $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
+-}
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 0 10
 
 drawBehaviorAt :: (Renderable (Path R2) b, Real a) => Span -> Behavior a -> Diagram b R2
-drawBehaviorAt s@(view delta -> (realToFrac -> t, realToFrac -> d)) b 
-  = translateX t $ scaleX d $ drawBehavior' 0 1 (transform (negateV s) b)
+drawBehaviorAt s@(view delta -> (realToFrac -> t, realToFrac -> d)) 
+  -- = drawBehavior' t d
+  = translateX t . scaleX d . drawBehavior' 0 1 . transform (negateV s) 
 
+drawSegmentAt :: (Renderable (Path R2) b, Real a) => Span -> Segment a -> Diagram b R2
+drawSegmentAt s x = drawBehaviorAt s (segmentToBehavior x)
+  where
+    segmentToBehavior :: Segment a -> Behavior a
+    segmentToBehavior = tabulate . (. realToFrac) . index
 
 drawSegment :: (Renderable (Path R2) b, Real a) =>  Segment a -> Diagram b R2
 drawSegment = scaleX 10 . drawBehavior' 0 1
