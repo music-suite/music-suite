@@ -1993,7 +1993,8 @@ through lens1 lens2 =
   -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> s ^. lens1) <$> s)
   -- \afb s -> (\x -> liftA2 (lens2 .~) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
   -- \afb s -> (\x -> liftA2 (\s -> set lens2 s) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
-  -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
+  -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . 
+  --        lens2 (\_ -> Identity b)) x s) <$> afb ((\s -> getConst (lens1 Const s)) <$> s)
 
   -- \afb s -> (\x -> liftA2 (\b ->  runIdentity . lens2 (\_ -> Identity b)) x s)
   --       <$>
@@ -2088,10 +2089,14 @@ newtype Stretched a = Stretched { getStretched :: (Duration, a) }
 --
 
 deriving instance Typeable1 Stretched
-instance Wrapped (Stretched a) where { type Unwrapped (Stretched a) = (Duration, a) ; _Wrapped' = iso getStretched Stretched }
+instance Wrapped (Stretched a) where
+  type Unwrapped (Stretched a) = (Duration, a)
+  _Wrapped' = iso getStretched Stretched
 instance Rewrapped (Stretched a) (Stretched b)
-instance Transformable (Stretched a) where transform t = over _Wrapped $ first (transform t)
-instance HasDuration (Stretched a) where _duration = _duration . ask . view _Wrapped
+instance Transformable (Stretched a) where
+  transform t = over _Wrapped $ first (transform t)
+instance HasDuration (Stretched a) where
+  _duration = _duration . ask . view _Wrapped
 instance Reversible (Stretched a) where
   rev = stretch (-1)
 instance Splittable a => Splittable (Stretched a) where
