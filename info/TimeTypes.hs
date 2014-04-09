@@ -2569,7 +2569,7 @@ unbehavior = from behavior
 -- A sine function
 --   
 -- @
--- ('sin'.(*'tau').'realToFrac')^.'behavior'
+-- ('sin' . (* 'tau') . 'realToFrac')^.'behavior'
 -- @
 --
 -- A behavior that switches from (-1) to 1 at time 0
@@ -2713,7 +2713,10 @@ switch3 t rx ry rz = tabulate $ \u -> case u `compare` t of
 -- outside.
 --
 splice :: Behavior a -> Bounds (Behavior a) -> Behavior a
-splice c n = fmap (getLast . fromMaybe undefined . getOption) $ fmap (Option . Just . Last) c <> (trim . (fmap.fmap) (Option . Just . Last)) n
+splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
+  where
+    toLast   = Option . Just . Last
+    fromLast = getLast . fromMaybe undefined . getOption
 
 -- |
 -- This
@@ -2957,7 +2960,8 @@ voices' :: Traversal'
 -- TODO is there a non-empty version of traversal?
 voices' = error "No voices'"
 
-newtype Phrases a   = Phrases    { getPhrases :: Seq (Stretched a)   } deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
+newtype Phrases a = Phrases { getPhrases :: Seq (Stretched a) }
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid)
 
 instance Applicative Phrases where
   pure  = return
@@ -3256,13 +3260,16 @@ delayBehLaw typ = testGroup ("Delay behavior" ++ show (typeOf typ)) $ [
 -}
 
 transformUi typ = testGroup ("Transform UI" ++ show (typeOf typ)) $ [
-  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! t          == b ! 0" $ 
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! t          == b ! 0,
 
-  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5" $ 
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! ((u-t)/2+t) == b ! 0.5,
 
-  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
+  testProperty "(t<->u) `transform` b ! u           == b ! 1" $ 
+    \(t :: Time) (u2 :: Time) -> let b = (unit::Behavior Double); u = notEqualTo t u2 in
                 (t<->u) `transform` b ! u           == b ! 1
 
   ]
@@ -3347,7 +3354,8 @@ drawPart' = mconcat . fmap drawNote'
 drawNote' :: (Renderable (Path R2) b, Real a) => (Time, Duration, a) -> Diagram b R2
 drawNote' (realToFrac -> t, realToFrac -> d, realToFrac -> y) = translateY y $ translateX t $ scaleX d $ noteShape
   where
-  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
+  noteShape = {-showOr $-} lcA transparent $ fcA (blue `withOpacity` 0.5) 
+    $ strokeLoop $ closeLine $ fromOffsets $ fmap r2 $ [(1.2,0), (-0.2,0.2),(-0.8,0.2), (-0.2,0.6),(-0.2,-1)]
 
 drawBehavior :: (Renderable (Path R2) b, Real a) =>  Behavior a -> Diagram b R2
 drawBehavior = drawBehavior' 0 10
@@ -3391,12 +3399,16 @@ openG' dia = do
   -- FIXME find best reader
   system "echo '<img src=\"test.svg\"></img>' > test.html"
   -- system "open -a 'Firefox' test.html"
-  system "osascript -e 'tell application \"Google Chrome\" to tell the active tab of its first window' -e 'reload' -e 'end tell'"
+  system $ "osascript -e 'tell application \"Google Chrome\" "
+    ++ "to tell the active tab of its first window' -e 'reload' -e 'end tell'"
   return ()
 
 
 testNotes j = let
-  staff n = drawSomeNotes (take 60 $ drop n $ cycle $ fmap (subtract 5) $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
+  staff n = drawSomeNotes 
+    (take 60 $ drop n $ cycle $ fmap (subtract 5) 
+    $ [1,8,2,7,2,3,7,6,5,1,7,6,7,4,8,2,6,3,6,
+       8,9,7,2,6,3,8,9,7,6,3,9,8,7,4,6,2,3,7,3,7])
   in
   openG $ vcat $ [staff (i+j) <> strutY 12 | i <- [1..8]]
 
