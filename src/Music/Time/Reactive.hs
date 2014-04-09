@@ -40,12 +40,12 @@ module Music.Time.Reactive (
 
         -- * Create, isos etc (TODO)
         initial,
+        updates,
+        occs,
         -- final,
         -- Future,
         -- Past,
-        updates,
         -- resets,
-        occs,
 
         -- * Predicates
         isConstant,
@@ -53,10 +53,11 @@ module Music.Time.Reactive (
 
         -- * Combinators
         -- step,
+
         switch,
         trim,
-        trimBefore,
-        trimAfter,
+        -- trimBefore,
+        -- trimAfter,
 
         -- * Semantics
         -- renderR,

@@ -148,13 +148,13 @@ b `behAt` t = ((^. _Wrapped') b ? t) t
 
 time :: Behavior Time
 time = behavior id
-
-trimBeforeB :: Monoid a => Time -> Behavior a -> Behavior a
-trimBeforeB t = _Wrapping' Behavior %~ trimBefore t
-
-switchB :: Time -> Behavior a -> Behavior a -> Behavior a
-switchB t ((^. _Wrapped') -> x) ((^. _Wrapped') -> y) = (^. _Unwrapped') $ switch t x y
-
-
-
-
+-- 
+-- trimBeforeB :: Monoid a => Time -> Behavior a -> Behavior a
+-- trimBeforeB t = _Wrapping' Behavior %~ trimBefore t
+-- 
+-- switchB :: Time -> Behavior a -> Behavior a -> Behavior a
+-- switchB t ((^. _Wrapped') -> x) ((^. _Wrapped') -> y) = (^. _Unwrapped') $ switch t x y
+-- 
+-- 
+-- 
+--                  
