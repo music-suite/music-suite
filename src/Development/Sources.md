@@ -1,6 +1,6 @@
 # Managing sources and builds
 
-Developing a large cross-package system in Haskell used to be a cubersome task, but fortunately [sandboxes](http://coldwa.st/e/blog/2013-08-20-Cabal-sandbox.html) makes it much easier.
+Cross-package development used to be a cubersome task in Haskell, but fortunately [sandboxes](http://coldwa.st/e/blog/2013-08-20-Cabal-sandbox.html) makes it much easier.
 
 There is a also utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks relating to the Music Suite source directories such as cloning, pushing, pulling and status checking. This program has been granted some knowledge of the names and internal dependencies of the Music Suite packages and it designed to be used with `cabal` and `git`.
 
