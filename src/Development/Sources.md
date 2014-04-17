@@ -32,7 +32,7 @@ $ echo "export MUSIC_SUITE_DIR=/path/to/suite" >> ~/.profile
 Run the setup script. This will clone all source repos and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default.
 
 ~~~{.bash}
-music-util setup
+$ music-util setup
 ~~~
 
 
@@ -59,7 +59,9 @@ To push to a repo you need to make a fork. For example with the `music-pitch` pa
 - In the newly forked repo, find the Clone URL frame, press SSH and then copy the URL 
 (which should start with git@github.com:username)
 
-- `cd $MUSIC_SUITE_DIR/music-pitch && git remote add fork <paste-url-here>`
+~~~{.bash}
+$ cd $MUSIC_SUITE_DIR/music-pitch && git remote add fork <paste-url-here>
+~~~
 
 You can then push using `git push fork master`. Note that you can [set up different repositories for push and pull](http://sleepycoders.blogspot.se/2012/05/different-git-push-pullfetch-urls.html).
 
@@ -68,12 +70,16 @@ You can then push using `git push fork master`. Note that you can [set up differ
 
 To start an interpreter session, simply use:
 
-    music-suite repl
+~~~{.bash}
+$ music-suite repl
+~~~
     
 This will recompile the suite as needed and load it into GHCi. Chnages to the source code becomes visible whenever you restart the REPL. You can still load modules directly using `:load`.
 
-    $ cabal repl
-    ghci> :load examples/annotatations.hs
-    ghci> main
+~~~{.bash}
+$ cabal repl
+ghci> :load examples/annotatations.hs
+ghci> main
+~~~
 
 TODO run unit tests etc
