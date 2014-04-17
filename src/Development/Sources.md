@@ -64,16 +64,16 @@ To push to a repo you need to make a fork. For example with the `music-pitch` pa
 You can then push using `git push fork master`. Note that you can [set up different repositories for push and pull](http://sleepycoders.blogspot.se/2012/05/different-git-push-pullfetch-urls.html).
 
 
-## Building and testing
+## Testing
 
-To test a particular package on the REPL, move into its source directory and run `cabal repl`. For testing the "standard" part of the suite you usually want to test from the `preludes` directory. 
+To start an interpreter session, simply use:
 
-    cd $MUSIC_SUITE_DIR/music-preludes
-    cabal repl
+    music-suite repl
     
-Inside the REPL, everything should work as expected. You can import any module from the suite, and changes to these modules becomes visible whenever you restart the REPL. You can still load modules directly using `:load`.
+This will recompile the suite as needed and load it into GHCi. Chnages to the source code becomes visible whenever you restart the REPL. You can still load modules directly using `:load`.
 
     $ cabal repl
     ghci> :load examples/annotatations.hs
     ghci> main
 
+TODO run unit tests etc
