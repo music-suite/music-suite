@@ -71,13 +71,13 @@ You can then push using `git push fork master`. Note that you can [set up differ
 To start an interpreter session, simply use:
 
 ~~~{.bash}
-$ music-suite repl
+$ music-util repl
 ~~~
     
 This will recompile the suite as needed and load it into GHCi. Chnages to the source code becomes visible whenever you restart the REPL. You can still load modules directly using `:load`.
 
 ~~~{.bash}
-$ cabal repl
+$ music-util repl
 ghci> :load examples/annotatations.hs
 ghci> main
 ~~~
