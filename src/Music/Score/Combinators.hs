@@ -28,9 +28,9 @@
 
 module Music.Score.Combinators (
         -- * Basic
-        note,
-        rest,
-        noteRest,
+        -- note,
+        -- rest,
+        -- noteRest,
         removeRests,
 
         -- * Mapping over events
@@ -42,12 +42,14 @@ module Music.Score.Combinators (
         filterEvents,
         mapFilterEvents,
 
+{-
         -- * Editing
         before,
         after,
         split,
         slice,
         splice,
+-}
 
         -- * Meta-events
         metaAt,
