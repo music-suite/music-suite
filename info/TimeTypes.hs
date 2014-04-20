@@ -3049,7 +3049,7 @@ unbehavior = from behavior
 -- A behavior that
 --
 time' :: Behavior Time
-time' = id^.behavior
+time' = id ^. tabulated
 
 -- |
 -- A behavior that gives the current time, i.e. the identity function
@@ -3058,7 +3058,7 @@ time' = id^.behavior
 -- for convenience.
 --
 time :: Fractional a => Behavior a
-time = realToFrac^.behavior
+time = realToFrac ^. tabulated
 --
 -- > f t = t
 --
@@ -3078,7 +3078,7 @@ unit = switch 0 0 (switch 1 time 1)
 -- A behavior that
 --
 interval :: (Fractional a, Transformable a) => Time -> Time -> Note (Behavior a)
-interval t u = (t <-> u, time)^.note
+interval t u = (t <-> u, time) ^. note
 
 -- |
 -- A behavior that
@@ -3139,7 +3139,7 @@ turnOff = switch 0 1 0
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded.getNote) . bounds 0 1
+    get = view (from bounded . getNote) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 
 
