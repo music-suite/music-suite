@@ -48,8 +48,10 @@ module Music.Score.Articulation (
         legato,
         spiccato,
 
+{-
         -- ** Miscellaneous
         resetArticulation,
+-}
 
   ) where
 

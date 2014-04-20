@@ -3470,7 +3470,7 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- |
 -- Create a score from a list of notes.
 --
--- This is a getter for the sake of syntactic unity:
+-- This is a getter rather than a function to make the synax more consitent:
 --
 -- >>> [(1 <-> 2, 1)^.note, (3 <-> 4, 2)^.note]^.score
 --
