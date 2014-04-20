@@ -460,7 +460,7 @@ import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
-import           Data.Semigroup               hiding (Product)
+import           Data.Semigroup               hiding ()
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
 import           Data.Traversable             (Traversable)
@@ -476,11 +476,6 @@ import           Test.Tasty                   hiding (over, under)
 import           Test.Tasty.SmallCheck        hiding (over, under)
 
 import qualified Data.Ratio                   as Util_Ratio
-
-import Data.Functor.Compose
-import Data.Functor.Constant
-import Data.Functor.Identity
-import Data.Functor.Product
 
 
 -- Misc instances
@@ -804,11 +799,11 @@ instance HasDuration a => HasDuration (a, b) where
 instance HasDuration b => HasDuration (a, b, c) where
   _duration (_,d,_) = _duration d
 
--- instance HasDuration a => HasDuration (Product a) where
-  -- _duration (Product x) = _duration x
+instance HasDuration a => HasDuration (Product a) where
+  _duration (Product x) = _duration x
 
--- instance HasDuration a => HasDuration (Sum a) where
-  -- _duration (Sum x) = _duration x
+instance HasDuration a => HasDuration (Sum a) where
+  _duration (Sum x) = _duration x
 
 instance HasDuration a => HasDuration (Min a) where
   _duration (Min x) = _duration x
@@ -1098,6 +1093,11 @@ times n   = scat . replicate n
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
 
+instance Splittable Duration where
+  split x y = (x, y ^-^ x)
+
+instance Splittable Span where
+  split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
 
 -- |
 -- Class of values that can be reversed (retrograded).
@@ -1415,9 +1415,6 @@ instance HasPosition Span where
 
 instance Transformable Span where
   transform = (<>)
-
-instance Splittable Span where
-  -- TODO
 
 -- |
 -- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
