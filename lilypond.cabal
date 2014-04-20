@@ -1,6 +1,6 @@
 
 name:                   lilypond
-version:                1.6.1
+version:                1.6.2
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
 license:                BSD3
@@ -22,14 +22,14 @@ source-repository head
 
 
 library
-    build-depends:      base                >= 4 && < 5,
-                        semigroups,
+    build-depends:      base                    >= 4 && < 5,
+                        semigroups              >= 0.13.0.1 && < 1,
                         vector-space,
                         process,
                         data-default,
                         prettify,
-                        music-pitch-literal     == 1.6,
-                        music-dynamics-literal  == 1.6
+                        music-pitch-literal     == 1.6.2,
+                        music-dynamics-literal  == 1.6.2
     exposed-modules:    Music.Lilypond
                         Music.Lilypond.Pitch
                         Music.Lilypond.Dynamics
