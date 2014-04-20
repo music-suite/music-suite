@@ -144,6 +144,7 @@ module TimeTypes (
         -- * Music.Time.Split
         -- * The Splittable class
         Splittable(..),
+        chunks,
 
         -- * Music.Time.Combinators
         -- * Align without composition
@@ -1099,7 +1100,7 @@ times n   = scat . replicate n
 -- |
 -- Class of values that can be split.
 --
--- For non-positioned values such as 'Stretched', split cuts a value into pieces a piece
+-- For non-positioned values such as 'Stretched', split cuts a value into pieces
 -- of the given duration and the rest.
 --
 -- For positioned values succh as 'Note', split cuts a value relative to its onset.
@@ -1127,6 +1128,17 @@ instance Splittable Span where
   -- split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
   split d' (view delta -> (t, d)) = let (d1, d2) = split d' d in (t >-> d1, (t.+^d1) >-> d2)
 
+takeMWhile :: (Monoid a, Splittable a) => Duration -> (a -> Bool) -> a -> a
+takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
+  where
+    takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
+
+chunks :: Splittable a => Duration -> a -> [a]
+chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
+  where
+    chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
+
+  
 -- |
 -- Class of values that can be reversed (retrograded).
 --
