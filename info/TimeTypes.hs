@@ -1135,6 +1135,10 @@ instance Splittable Span where
 -- @
 --
 -- @
+-- 'abs' ('_duration' x) = _duration ('rev' x)
+-- @
+--
+-- @
 -- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
 -- @
 --
@@ -4123,6 +4127,12 @@ reversibleEq (===) typ = testGroup ("instance Reversible " ++ show (typeOf typ))
   testGroup "" []
   ]
 
+reversibleDur = reversibleDurEq (==)
+reversibleDurEq (===) typ = testProperty 
+  "abs . _duration . rev = _duration" $ \x -> assuming (sameType typ x)
+  abs (_duration x) === _duration (rev x)
+
+
 splittable = splittableEq (==)
 
 splittableEq (===) typ = testGroup ("instance Splittable " ++ show (typeOf typ)) $ [
@@ -4249,7 +4259,24 @@ main = defaultMain $ testGroup "All tests" $ [
     reversible (undefined :: Bound Duration),
 
     reversible (undefined :: Voice Duration),
-    reversible (undefined :: Score Duration)
+    reversible (undefined :: Score Duration),
+    
+    
+    -- reversibleDur (undefined :: [Duration]),
+    -- reversibleDur (undefined :: Seq Duration),
+    -- reversibleDurEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
+    -- reversibleDurEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
+
+    reversibleDur (undefined :: Note Duration),
+    reversibleDur (undefined :: Stretched Duration),
+    reversibleDur (undefined :: Delayed Duration),
+
+    -- reversibleDur (undefined :: NoReverse Duration),
+    -- reversibleDur (undefined :: Bound Duration),
+
+    reversibleDur (undefined :: Voice Duration),
+    reversibleDur (undefined :: Score Duration)
+    
   ],
 
   testProperty "============================================================" $ True,  
