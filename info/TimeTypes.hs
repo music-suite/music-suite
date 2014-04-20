@@ -772,10 +772,6 @@ stretch = transform . stretching
 compress :: Transformable a => Duration -> a -> a
 compress = transform . compressing
 
--- Fitting things
-
--- Things with a duration
-
 -- |
 -- Class of values that have a duration.
 --
@@ -842,8 +838,6 @@ clippedDuration = stretchTo 1
 -- stretchClipped :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
 -- stretchClipped x = stretchTo (clipped $ duration x) x
 
-
--- Placing things
 
 -- |
 -- Class of values that have a position in time.
