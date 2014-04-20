@@ -1113,7 +1113,7 @@ class HasDuration a => Splittable a where
 --
 -- For non-positioned values such as 'Stretched', the value is reversed in-place.
 --
--- FIXME Second law is incompatible with revDefault
+-- FIXME Second law is incompatible with 'revDefault' (and the 'Span' definition below)
 --
 -- Law
 --
