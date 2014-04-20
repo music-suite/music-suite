@@ -637,22 +637,30 @@ instance HasMeta Meta where
 --
 -- Law
 --
--- > transform mempty = id
--- > transform (s <> t) = transform s . transform t
+-- @
+-- transform mempty = id
+-- transform (s \<> t) = transform s . transform t
+-- @
 --
 -- Law
 --
--- > onset (delay n a)       = n ^+. onset a
--- > offset (delay n a)      = n ^+. offset a
--- > duration (stretch n a)  = n * duration a
--- > duration (compress n a) = duration a / n
+-- @
+-- onset (delay n a)       = n ^+. onset a
+-- offset (delay n a)      = n ^+. offset a
+-- duration (stretch n a)  = n * duration a
+-- duration (compress n a) = duration a / n
+-- @
 --
--- > delay n b ! t    = b ! (t .-^ n)
--- > undelay n b ! t  = b ! (t .+^ n)
+-- @
+-- delay n b ! t    = b ! (t .-^ n)
+-- undelay n b ! t  = b ! (t .+^ n)
+-- @
 --
 -- Lemma
 --
--- > duration a = duration (delay n a)
+-- @
+-- duration a = duration (delay n a)
+-- @
 --
 class Transformable a where
   transform :: Span -> a -> a
@@ -1091,8 +1099,10 @@ times n   = scat . replicate n
 --
 --
 -- Law
---
--- > let (a, b) = split x in duration a + duration b = duration x
+-- 
+-- @
+-- forall t . '_duration' a + '_duration' b = '_duration' x  where  (a, b) = 'split' t x
+-- @
 --
 class HasDuration a => Splittable a where
   split  :: Duration -> a -> (a, a)
@@ -2300,6 +2310,8 @@ instance HasPosition (Delayed a) where
 instance Reversible (Delayed a) where
   rev = revDefault
 
+instance Splittable a => Splittable (Delayed a) where
+
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
@@ -2579,6 +2591,9 @@ bounding (view range -> (t, u)) = bounds t u
 -- |
 -- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
+-- This can be used to safely turn a behavior into a segment and vice
+-- versa. Usually 'focusing' is more convenient to use.
+--
 bounded :: Iso
   (Note (Segment a))
   (Note (Segment b))
@@ -2624,7 +2639,7 @@ trimOutside s t x = if t `inside` s then x else mempty
 -- 'trim' = 'splice' 'mempty'
 -- @
 --
--- Named after the analogous tape-editing technique.
+-- (Named after the analogous tape-editing technique.)
 --
 splice :: Behavior a -> Bound (Behavior a) -> Behavior a
 splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
@@ -2802,13 +2817,11 @@ slerp2 f i a b
 -- > ask = realToFrac <$> time
 -- > localRep (- t) = delay t
 -- > localRep (/ t) = stretch t
-notTime = stretch 10 (stretch 2 (4**time-1) `min` 1)*10
-notTime2 = (rev `whilst` undelaying 4.5) notTime
 
 -- |
 -- A 'Behavior' is a value varying over time.
 -- 
--- We can 'focusOn' any part of a behavior, thereby obtaining a 'Segment'.
+-- Use 'focusing' to view a particular 'Segment'.
 --
 -- /Semantics/
 --
