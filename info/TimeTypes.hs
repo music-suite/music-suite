@@ -211,7 +211,7 @@ module TimeTypes (
         -- * Music.Time.Segment
         Segment,
         -- ** Examples
-        -- $musicTimeSegmentExamples
+        -- $XXmusicTimeSegmentExamples
         (!.),
         segment',
         segment,
@@ -2432,7 +2432,8 @@ getStretched = lens runStretched (flip $ _stretched . const)
 
 
 -- |
--- A 'Note' is a value with a known 'era'.
+-- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance
+-- of 'Transformable'.
 --
 -- You can use 'value' to apply a function in the context of the transformation,
 -- i.e.
