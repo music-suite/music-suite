@@ -63,7 +63,13 @@
   Music.Score.Repeats
 -}
 
+#ifndef __HADDOCK__
+module Main (
+        main,
+#else
 module TimeTypes (
+#endif
+
         -- -- * Data.Clipped
         -- Clipped,
         -- -- unsafeToClipped,
@@ -75,6 +81,7 @@ module TimeTypes (
         -- $dataFunctorRepLens
         (!),
         tabulated,
+
 
         -- * Music.Time.Meta
         Meta,
@@ -1109,14 +1116,16 @@ class HasDuration a => Splittable a where
   split      :: Duration -> a -> (a, a)
   beginning  :: Duration -> a -> a
   ending     :: Duration -> a -> a
+  split   d x = (beginning d x, ending d x)
   beginning d = fst . split d
   ending    d = snd . split d
 
 instance Splittable Duration where
-  split x y = (x, y ^-^ x)
+  split x y = (x `min` y, y ^-^ (x `min` y))
 
 instance Splittable Span where
-  split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
+  -- split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
+  split d' (view delta -> (t, d)) = let (d1, d2) = split d' d in (t >-> d1, (t.+^d1) >-> d2)
 
 -- |
 -- Class of values that can be reversed (retrograded).
@@ -2320,6 +2329,7 @@ instance Reversible (Delayed a) where
   rev = revDefault
 
 instance Splittable a => Splittable (Delayed a) where
+  -- FIXME
 
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
@@ -2382,6 +2392,8 @@ instance Reversible (Stretched a) where
   rev = stretch (-1)
 
 instance Splittable a => Splittable (Stretched a) where
+  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
+  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
 
 deriving instance Show a => Show (Stretched a)
 
@@ -2450,6 +2462,8 @@ instance HasPosition (Note a) where
   x `_position` p = ask (view _Wrapped x) `_position` p
 
 instance Splittable a => Splittable (Note a) where
+  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
+  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
 
 instance Reversible (Note a) where
   rev = revDefault
@@ -3107,7 +3121,7 @@ turnOff = switch 0 1 0
 -- View part of a 'Behavior' as a 'Segment'.
 --
 -- @
--- 'time' & 'focusing' ``on`` (2 '<->' 3) '+~' 1
+-- 'time' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
 -- @
 --
 focusing :: Lens' (Behavior a) (Segment a)
@@ -3117,6 +3131,7 @@ focusing = lens get set
     set x = splice x . (view bounded) . pure
 
 
+{-
 -- |
 -- View part of a 'Behavior' as a 'Segment'.
 --
@@ -3130,6 +3145,7 @@ focusing = lens get set
 focusingOn :: Span -> Lens' (Behavior a) (Segment a)
 focusingOn s = flip whilstM (negateV s) . focusing
 -- or focusing . flip whilstM s
+-}
 
 -- focusing `on` s == focusingOn s
 f `on` s = flip whilstM (negateV s) . f
@@ -3492,7 +3508,7 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- |
 -- Create a score from a list of notes.
 --
--- This is a getter rather than a function to make the synax more consitent:
+-- This is a getter rather than a function to make the synax more consistent:
 --
 -- >>> [(1 <-> 2, 1)^.note, (3 <-> 4, 2)^.note]^.score
 --
@@ -4288,6 +4304,7 @@ main = defaultMain $ testGroup "All tests" $ [
     -- splittableEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
 
     splittable (undefined :: Note Duration),
+    splittable (undefined :: Note (Note Duration)),
     splittable (undefined :: Stretched Duration),
     splittable (undefined :: Delayed Duration),
 
