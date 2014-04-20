@@ -194,6 +194,10 @@ module TimeTypes (
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
 
+        -- ** Utility
+        showRange,
+        showDelta,
+
         -- * Music.Time.Segment
         Segment,
         -- ** Examples
@@ -1404,8 +1408,13 @@ newtype Span = Delta { _delta :: (Time, Duration) }
 --
 
 instance Show Span where
-  -- show (view range -> (t,u)) = show t ++ " <-> " ++ show u
-  show (view delta -> (t,d)) = show t ++ " >-> " ++ show d
+  show = showDelta
+
+showRange :: Span -> String
+showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
+
+showDelta :: Span -> String
+showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
 
 instance HasPosition Span where
   -- Override as an optimization:
