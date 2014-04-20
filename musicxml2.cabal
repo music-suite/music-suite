@@ -1,6 +1,6 @@
 
 name:                   musicxml2
-version:                1.6
+version:                1.6.1
 synopsis:               A representation of the MusicXML format.
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
