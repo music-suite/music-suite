@@ -1,0 +1,3 @@
+Placed  Note
+Curve   Segment
+Signal  Behavior

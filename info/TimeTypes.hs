@@ -1138,6 +1138,8 @@ takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
   where
     takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
 
+--     > Data.List.mapAccumL (\x t -> swap $ split t x) (0 <-> 10) (replicate 10 2)
+
 chunks :: Splittable a => Duration -> a -> [a]
 chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
   where
@@ -1403,9 +1405,8 @@ fromTime = realToFrac
 
 
 -- |
--- A 'Span' represents two points in time @u@ and @v@ or, equivalently, a time @t@ and a
--- duration @d@. A third way of looking at 'Span' is that it represents a time
--- transformation where onset is translation and duration is scaling.
+-- A 'Span' represents an onset and offset in time (or equivalently: an onset and a
+-- duration, /or/ a duration and an offset, /or/ a duration and a middle point). 
 --
 -- Pattern matching over span is possible (with @ViewPatterns@):
 --
@@ -1414,10 +1415,13 @@ fromTime = realToFrac
 -- foo ('view' 'delta' -> (t, d)) = ...
 -- @
 --
+-- Another way of looking at 'Span' is that it represents a time transformation where
+-- onset is translation and duration is scaling. TODO see 'transform' and 'whilst'
+--
 -- The semantics are given by
 --
 -- @
--- type Span = R2
+-- type Span = Time x Time
 -- @
 --
 newtype Span = Delta { _delta :: (Time, Duration) }
@@ -1454,7 +1458,9 @@ newtype Span = Delta { _delta :: (Time, Duration) }
 --
 
 instance Show Span where
-  show = showDelta
+  -- show = showDelta
+  show = showRange
+  -- Which form should we use?
 
 showRange :: Span -> String
 showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
@@ -1479,16 +1485,15 @@ instance Semigroup Span where
   (<>) = (^+^)
 
 -- |
--- '<>' or '^+^' composes transformations, that is the scaling component is composed
--- using the '<>' instance for 'Duration', and the translation component is composed
--- using the '<>' instance for 'Time'.
+-- '<>' or '^+^' composes transformations, i.e. both time and duration is stretched,
+-- and then time is added.
 --
 instance Monoid Span where
   mempty  = zeroV
   mappend = (^+^)
 
 -- |
--- 'negateV' negates time and duration using their respective 'negateV' instances.
+-- 'negateV' returns the inverse of a given transformation.
 --
 instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
@@ -2480,8 +2485,9 @@ instance HasPosition (Note a) where
   x `_position` p = ask (view _Wrapped x) `_position` p
 
 instance Splittable a => Splittable (Note a) where
-  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
+  -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)
+  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (d / _duration s) v)
+  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    (1 - (d / _duration s)) v)
 
 instance Reversible (Note a) where
   rev = revDefault
@@ -3554,12 +3560,13 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- This is a getter (rather than a function) for consistency:
 --
 -- @
--- [ (1 \<-> 2, 1)^.note, 
---   (3 \<-> 4, 2)^.note ]^.score
+-- [ (0 '<->' 1, 10)^.'note'
+-- , (1 '<->' 2, 20)^.'note'
+-- , (3 '<->' 4, 30)^.'note' ]^.'score'
 -- @
 -- 
 -- @
--- view score $ fmap (view note) $ [(0 \<-> 1, 1)]
+-- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
 -- @
 --
 -- Se also 'notes'.
