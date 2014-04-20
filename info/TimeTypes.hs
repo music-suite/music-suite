@@ -1553,11 +1553,13 @@ f `whilst` t = transform (negateV t) . f . transform t
 whilstM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
 f `whilstM` t = fmap (transform (negateV t)) . f . transform t
 
+{-
 -- |
 -- Apply a morphism under transformation (co-monadic version).
 --
 whilstW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `whilstW` t = transform (negateV t) . f . fmap (transform t)
+-}
 
 -- |
 -- Apply a function under transformation.
