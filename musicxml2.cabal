@@ -1,6 +1,6 @@
 
 name:                   musicxml2
-version:                1.6.1
+version:                1.6.2
 synopsis:               A representation of the MusicXML format.
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
@@ -20,14 +20,14 @@ source-repository head
 
 library
     build-depends:      base                    >= 4 && < 5,
-                        semigroups,
+                        semigroups              >= 0.13.0.1 && < 1,
                         nats,
                         data-default,
                         type-unary,
                         reverse-apply,
                         xml,
-                        music-pitch-literal     == 1.6,
-                        music-dynamics-literal  == 1.6
+                        music-pitch-literal     == 1.6.2,
+                        music-dynamics-literal  == 1.6.2
     exposed-modules:    Music.MusicXml
                         Music.MusicXml.Time
                         Music.MusicXml.Pitch
