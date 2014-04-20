@@ -18,15 +18,10 @@ a:hover {
         color: #ccc;
         text-decoration:none;
 }
-h1 > a, 
-h2 > a, 
-h3 > a, 
-h1 > a:active, 
-h2 > a:active, 
-h3 > a:active, 
-h1 > a:visited, 
-h2 > a:visited, 
-h3 > a:visited 
+
+h1,
+h2,
+h3
 {
         font-family: Palatino;
         color: black;
