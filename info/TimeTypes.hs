@@ -4123,6 +4123,23 @@ reversibleEq (===) typ = testGroup ("instance Reversible " ++ show (typeOf typ))
   testGroup "" []
   ]
 
+splittable = splittableEq (==)
+
+splittableEq (===) typ = testGroup ("instance Splittable " ++ show (typeOf typ)) $ [
+  testProperty 
+    "_duration (beginning t x) + _duration (ending t x) =   _duration x" $ \(t :: Duration) x -> assuming (sameType typ x)
+     (_duration (beginning t x) + _duration (ending t x)) === _duration x,
+
+  testProperty 
+    "_duration (beginning t x) =   t `min` _duration x" $ \(t :: Duration) x -> assuming (sameType typ x)
+     _duration (beginning t x) === (t `min` _duration x),
+
+  -- testProperty "transform . rev == fmap rev . transform" $ \(s :: Span) x -> assuming (sameType typ x)
+                -- ((transform . rev) s x) === ((fmap rev . transform) s x),
+
+  testGroup "" []
+  ]
+
 
 
 main = defaultMain $ testGroup "All tests" $ [
@@ -4147,32 +4164,6 @@ main = defaultMain $ testGroup "All tests" $ [
     functor (undefined :: Stretched Time),
     functor (undefined :: Voice Time),
     functor (undefined :: Score Time)
-  ],
-
-  testProperty "============================================================" $ True,  
-  testGroup "Reversible" [
-    reversible (undefined :: ()),
-    reversible (undefined :: Double),
-    reversible (undefined :: Int),
-    reversible (undefined :: Integer),
-    reversible (undefined :: Duration),
-    reversible (undefined :: Span),
-
-    reversible (undefined :: [Duration]),
-    -- reversible (undefined :: Seq Duration),
-
-    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
-    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
-
-    reversible (undefined :: Note Duration),
-    reversible (undefined :: Stretched Duration),
-    reversible (undefined :: Delayed Duration),
-
-    reversible (undefined :: NoReverse Duration),
-    reversible (undefined :: Bound Duration),
-
-    reversible (undefined :: Voice Duration),
-    reversible (undefined :: Score Duration)
   ],
 
   testProperty "============================================================" $ True,  
@@ -4223,7 +4214,7 @@ main = defaultMain $ testGroup "All tests" $ [
   ],
 
   testProperty "============================================================" $ True,  
-  testGroup "Position and duration" [
+  testGroup "HasPosition/HasDuration" [
     durationOnsetOffsetLaw  (undefined :: Span),
     durationOnsetOffsetLaw  (undefined :: Time),
     -- durationOnsetOffsetLaw  (undefined :: [Time]), -- too slow
@@ -4235,6 +4226,51 @@ main = defaultMain $ testGroup "All tests" $ [
 
   -- delayIndexLaw (undefined :: Behavior Int8),
                              
+  testProperty "============================================================" $ True,  
+  testGroup "Reversible" [
+    reversible (undefined :: ()),
+    reversible (undefined :: Double),
+    reversible (undefined :: Int),
+    reversible (undefined :: Integer),
+    reversible (undefined :: Duration),
+    reversible (undefined :: Span),
+
+    reversible (undefined :: [Duration]),
+    -- reversible (undefined :: Seq Duration),
+
+    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
+    reversibleEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
+
+    reversible (undefined :: Note Duration),
+    reversible (undefined :: Stretched Duration),
+    reversible (undefined :: Delayed Duration),
+
+    reversible (undefined :: NoReverse Duration),
+    reversible (undefined :: Bound Duration),
+
+    reversible (undefined :: Voice Duration),
+    reversible (undefined :: Score Duration)
+  ],
+
+  testProperty "============================================================" $ True,  
+  testGroup "Splittable" [
+    splittable (undefined :: Duration),
+    splittable (undefined :: Span),
+
+    -- splittableEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Behavior Duration),
+    -- splittableEq (\x y -> x ! 0 == y ! 0 && x ! 1 == y ! 1) (undefined :: Segment Time),
+
+    splittable (undefined :: Note Duration),
+    splittable (undefined :: Stretched Duration),
+    splittable (undefined :: Delayed Duration),
+
+    -- splittable (undefined :: Bound Duration),
+
+    splittable (undefined :: Voice Duration),
+    splittable (undefined :: Score Duration)
+    
+  ],
+
   testProperty "============================================================" $ True,  
     testGroup "Nothing" []
   ]
