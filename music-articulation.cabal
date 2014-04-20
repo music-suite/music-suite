@@ -1,6 +1,6 @@
 
 name:                   music-articulation
-version:                1.6.1
+version:                1.6.2
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -24,7 +24,7 @@ library
     build-depends:      base                    >= 4 && < 5,
                         time,
                         random,
-                        semigroups,
+                        semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids
     exposed-modules:    Music.Articulation
     hs-source-dirs:     src
