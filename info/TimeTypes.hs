@@ -248,17 +248,17 @@ module TimeTypes (
         -- * Music.Time.Stretched
         Stretched,
         stretched,
-        valueS,
+        getStretched,
 
         -- * Music.Time.Delayed
         Delayed,
         delayed,
-        valueD,
+        getDelayed,
 
         -- * Music.Time.Note
         Note,
         note,
-        value,
+        getNote,
 
         -- * Music.Time.Bound
         Bound,
@@ -2267,7 +2267,7 @@ filterPart p = mfilter (\x -> p (x ^. part))
 -- type Delayed a = (Time, a)
 -- @
 --
-newtype Delayed a = Delayed   { getDelayed :: (Time, a) }
+newtype Delayed a = Delayed   { _getDelayed :: (Time, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
@@ -2278,7 +2278,7 @@ deriving instance Show a => Show (Delayed a)
 -- | TODO Unsafe
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
-  _Wrapped' = iso getDelayed Delayed
+  _Wrapped' = iso _getDelayed Delayed
 
 instance Rewrapped (Delayed a) (Delayed b)
 
@@ -2297,15 +2297,15 @@ instance Reversible (Delayed a) where
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-valueD :: (Transformable a, Transformable b) 
+getDelayed :: (Transformable a, Transformable b) 
   => Lens 
       (Delayed a) (Delayed b) 
       a b
-valueD = lens runDelayed (flip $ _delayed . const)
+getDelayed = lens runDelayed (flip $ _delayed . const)
   where
     _delayed f (Delayed (t,x)) = 
       Delayed (t, f `whilstDelay` t $ x)
-{-# INLINE valueD #-}
+{-# INLINE getDelayed #-}
 
 
 
@@ -2324,7 +2324,7 @@ valueD = lens runDelayed (flip $ _delayed . const)
 -- type Stretched = (Duration, a)
 -- @
 --
-newtype Stretched a = Stretched { getStretched :: (Duration, a) }
+newtype Stretched a = Stretched { _getStretched :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
@@ -2341,7 +2341,7 @@ deriving instance Typeable1 Stretched
 -- | TODO Unsafe
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
-  _Wrapped' = iso getStretched Stretched
+  _Wrapped' = iso _getStretched Stretched
 
 instance Rewrapped (Stretched a) (Stretched b)
 
@@ -2361,12 +2361,12 @@ deriving instance Show a => Show (Stretched a)
 -- |
 -- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
-valueS :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-valueS = lens runStretched (flip $ _stretched . const)
+getStretched :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+getStretched = lens runStretched (flip $ _stretched . const)
   where
     _stretched f (Stretched (d,x)) = 
       Stretched (d, f `whilstStretch` d $ x)
-{-# INLINE valueS #-}
+{-# INLINE getStretched #-}
 
 
 -- |
@@ -2389,7 +2389,7 @@ valueS = lens runStretched (flip $ _stretched . const)
 -- type Note a = (Span, a)
 -- @
 --
-newtype Note a = Note { getNote :: (Span, a) }
+newtype Note a = Note { _getNote :: (Span, a) }
 
 deriving instance Eq a => Eq (Note a)
 deriving instance Functor Note
@@ -2409,7 +2409,7 @@ deriving instance Applicative Note
 -- | TODO Unsafe
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso getNote Note
+  _Wrapped' = iso _getNote Note
 
 instance Rewrapped (Note a) (Note b)
 
@@ -2439,16 +2439,16 @@ note = _Unwrapped
 -- |
 -- View the value in the note.
 --
-value :: (Transformable a, Transformable b) => 
+getNote :: (Transformable a, Transformable b) => 
   Lens 
     (Note a) (Note b) 
     a b
-value = lens runNote (flip $ mapNote . const)
+getNote = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
 
-{-# INLINE value #-}
+{-# INLINE getNote #-}
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
@@ -3085,7 +3085,7 @@ turnOff = switch 0 1 0
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded.value) . bounds 0 1
+    get = view (from bounded.getNote) . bounds 0 1
     set x = splice x . (view bounded) . pure
 
 
@@ -3519,7 +3519,7 @@ mapScore f = error "Not implemented: singleNote"
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . getNote)
+mapWithSpan f = mapScore (uncurry f . _getNote)
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
