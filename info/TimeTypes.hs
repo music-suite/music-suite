@@ -27,8 +27,8 @@
   Music.Time.Transform
   Music.Time.Duration
   Music.Time.Position
-  Music.Time.Reverse
   Music.Time.Split
+  Music.Time.Reverse
   Music.Time.Juxtapose
 
   Music.Time.Time      \
@@ -134,6 +134,11 @@ module TimeTypes (
         stopAt,
         placeAt,
 
+        -- * Music.Time.Split
+        -- * The Splittable class
+        Splittable(..),
+        chunks,
+
         -- * Music.Time.Reverse
         -- * The Reversible class
         Reversible(..),
@@ -141,25 +146,22 @@ module TimeTypes (
         revDefault,
         NoReverse(..),
 
-        -- * Music.Time.Split
-        -- * The Splittable class
-        Splittable(..),
-        chunks,
-
-        -- * Music.Time.Combinators
+        -- * Music.Time.Juxtapose
         -- * Align without composition
         lead,
         follow,
         -- * Align and compose
         after,
         before,
-        (|>),
-        (<|),
         during,
         sustain,
         palindrome,
         
         -- ** Composition operators
+        (|>),
+        (<|),
+
+        -- ** Catenation
         scat,
         pcat,
 
@@ -211,6 +213,7 @@ module TimeTypes (
         -- ** Examples
         -- $musicTimeSegmentExamples
         (!.),
+        segment',
         segment,
         
         -- ** Combinators
@@ -223,6 +226,7 @@ module TimeTypes (
         -- ** Examples
         -- $musicTimeBehaviorExamples
         (!^),
+        behavior',
         behavior,
 
         -- ** Combinators
@@ -278,6 +282,7 @@ module TimeTypes (
         bounding,
         trim,
         splice,
+        bounded',
         bounded,
 
 {-
@@ -1285,7 +1290,7 @@ instance HasResolution a => AdditiveGroup (Fixed a) where
 --
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Duration = R
@@ -1342,7 +1347,7 @@ fromDuration = realToFrac
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Time = R
@@ -1402,13 +1407,14 @@ fromTime = realToFrac
 -- duration @d@. A third way of looking at 'Span' is that it represents a time
 -- transformation where onset is translation and duration is scaling.
 --
--- You can pattern match over spans using the @ViewPatterns@ extension:
+-- Pattern matching over span is possible (with @ViewPatterns@):
 --
 -- @
--- foo (view range -> (u,v)) = ...
+-- foo ('view' 'range' -> (t1, t2)) = ...
+-- foo ('view' 'delta' -> (t, d)) = ...
 -- @
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Span = R2
@@ -2307,7 +2313,7 @@ filterPart p = mfilter (\x -> p (x ^. part))
 -- offset of a delayed value may be stretched with respect to the origin. However, in
 -- contrast to a note the /duration/ is not stretched.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Delayed a = (Time, a)
@@ -2367,7 +2373,7 @@ getDelayed = lens runDelayed (flip $ _delayed . const)
 --
 -- Placing a value inside 'Stretched' makes it invariante under 'delay'.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Stretched = (Duration, a)
@@ -2434,7 +2440,7 @@ getStretched = lens runStretched (flip $ _stretched . const)
 -- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
 -- @
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Note a = (Span, a)
@@ -2546,7 +2552,7 @@ runStretched = uncurry stretch . view _Wrapped
 -- outside the bounds. However, we can still access values of a 'Bound' 'Behavior' in a
 -- safe manner using 'trim' or 'splice'.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Bound a = (Time, Time, a)
@@ -2629,6 +2635,17 @@ bounding (view range -> (t, u)) = bounds t u
 -- This can be used to safely turn a behavior into a segment and vice
 -- versa. Usually 'focusing' is more convenient to use.
 --
+bounded' :: Iso'
+  (Note (Segment a))
+  (Bound (Behavior a))
+bounded' = bounded
+
+-- |
+-- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
+--
+-- This can be used to safely turn a behavior into a segment and vice
+-- versa. Usually 'focusing' is more convenient to use.
+--
 bounded :: Iso
   (Note (Segment a))
   (Note (Segment b))
@@ -2694,7 +2711,7 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Segment a = 'Duration' -> a
@@ -2804,6 +2821,11 @@ instance Ord a => Ord (Segment a) where
 -- |
 -- View a segment as a time function and vice versa.
 --
+segment' :: Iso' (Duration -> a) (Segment a)
+segment' = segment
+
+-- |
+-- View a segment as a time function and vice versa.
 --
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = tabulated
@@ -2858,7 +2880,7 @@ slerp2 f i a b
 -- 
 -- Use 'focusing' to view a particular 'Segment'.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Behavior a = 'Time' -> a
@@ -3022,7 +3044,19 @@ infixl 6 !^
 -- 'behavior' = 'tabulated'
 -- @
 --
+behavior' :: Iso' (Time -> a) (Behavior a)
+behavior' = tabulated
 
+-- |
+-- View a behavior as a time function and vice versa.
+--
+-- Note that this is just an alias defined to make the documentation nicer:
+--
+--
+-- @
+-- 'behavior' = 'tabulated'
+-- @
+--
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 behavior = tabulated
 
@@ -3211,7 +3245,7 @@ concatB = concatS . fmap (view focusing)
 
 -- |
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Phrase p a = (p, Voice a)
@@ -3397,8 +3431,24 @@ type ScoreNote a = Note a
 
 -- |
 --
--- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface:
+-- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface.
 -- 
+-- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
+-- 
+-- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
+--
+-- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
+-- well as 'singleNote', 'singleVoice', and 'singlePhrase'
+--
+-- The semantics are given by
+--
+-- @
+-- type Score a = [Note a]
+-- @
+--
+newtype Score a = Score { getScore :: [ScoreNote a] }
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
 --   * 'empty' creates an empty score 
 -- 
 --   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
@@ -3411,21 +3461,6 @@ type ScoreNote a = Note a
 --
 -- You can also use '<>' and 'mempty' of course.
 -- 
--- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
--- 
--- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
---
--- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
--- well as 'singleNote', 'singleVoice', and 'singlePhrase'
---
--- /Semantics/
---
--- @
--- type Score a = [Note a]
--- @
---
-newtype Score a = Score { getScore :: [ScoreNote a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 -- | TODO Unsafe
 instance Wrapped (Score a) where
@@ -3516,11 +3551,16 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- |
 -- Create a score from a list of notes.
 --
--- This is a getter rather than a function to make the synax more consistent:
+-- This is a getter (rather than a function) for consistency:
 --
--- >>> [(1 <-> 2, 1)^.note, (3 <-> 4, 2)^.note]^.score
---
--- >>> view score $ fmap (view note) $ [(0 <-> 1, 1)]
+-- @
+-- [ (1 \<-> 2, 1)^.note, 
+--   (3 \<-> 4, 2)^.note ]^.score
+-- @
+-- 
+-- @
+-- view score $ fmap (view note) $ [(0 \<-> 1, 1)]
+-- @
 --
 -- Se also 'notes'.
 --
@@ -3723,7 +3763,7 @@ splitChanges (Changes a b) = (Changes a [0], Changes [] (0:b))
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
 --
--- /Semantics/
+-- The semantics are given by
 --
 -- @
 -- type Reactive a = (a, Time, Voice a)
