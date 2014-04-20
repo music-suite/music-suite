@@ -1101,11 +1101,16 @@ times n   = scat . replicate n
 -- Law
 -- 
 -- @
--- forall t . '_duration' a + '_duration' b = '_duration' x  where  (a, b) = 'split' t x
+-- '_duration' ('beginning' t x) + '_duration' ('ending' t x) = '_duration' x
+-- '_duration' ('beginning' t x) = t ``min`` '_duration' x
 -- @
 --
 class HasDuration a => Splittable a where
-  split  :: Duration -> a -> (a, a)
+  split      :: Duration -> a -> (a, a)
+  beginning  :: Duration -> a -> a
+  ending     :: Duration -> a -> a
+  beginning d = fst . split d
+  ending    d = snd . split d
 
 instance Splittable Duration where
   split x y = (x, y ^-^ x)
