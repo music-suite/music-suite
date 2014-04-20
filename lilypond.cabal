@@ -1,9 +1,9 @@
 
 name:                   lilypond
-version:                1.6
+version:                1.6.1
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
-    license:            BSD3
+license:                BSD3
 license-file:           COPYING
 synopsis:               Bindings to Lilypond
 category:               Music
