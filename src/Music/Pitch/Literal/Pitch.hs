@@ -43,7 +43,6 @@ module Music.Pitch.Literal.Pitch (
   ) where
 
 import Data.Semigroup
-import Data.Semigroup.Applicative ()
 import Control.Applicative
 
 -- Pitch literal, defined as @(class, alteration, octave)@, where

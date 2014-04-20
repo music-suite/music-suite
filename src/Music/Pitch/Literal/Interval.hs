@@ -41,7 +41,6 @@ module Music.Pitch.Literal.Interval (
   ) where
 
 import Data.Semigroup
-import Data.Semigroup.Applicative ()
 import Control.Applicative
 
 newtype IntervalL = IntervalL (Integer, Integer, Integer)
