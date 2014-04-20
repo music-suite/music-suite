@@ -394,9 +394,13 @@ module TimeTypes (
         marcatoLast,
         accentAll,
         marcatoAll,
+
         tenuto,
+        separated,
         staccato,
+        portato,
         legato,
+        spiccato,
         
         -- * Music.Score.Part
         -- ** Articulation type functions
@@ -2093,9 +2097,13 @@ accentLast = error "Not implemented: accentLast"
 marcatoLast = error "Not implemented: marcatoLast"
 accentAll = error "Not implemented: accentAll"
 marcatoAll = error "Not implemented: marcatoAll"
+
 tenuto = error "Not implemented: tenuto"
+separated = error "Not implemented: separated"
 staccato = error "Not implemented: staccato"
+portato = error "Not implemented: portato"
 legato = error "Not implemented: legato"
+spiccato = error "Not implemented: spiccato"
 
 
 
