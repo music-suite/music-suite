@@ -3385,25 +3385,21 @@ type ScoreNote a = Note a
 
 -- |
 --
--- To create a score, see 'score', 'notes', 'voices', and 'phrases'.
---
--- You can also use the 'Alternative' interface:
+-- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface:
 -- 
 --   * 'empty' creates an empty score 
 -- 
 --   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
 -- 
---   * '<|>' (and '<>') composes scores in parallel.
+--   * '<|>' composes scores in parallel
+-- 
+--   * '|>' composes scores as a forward sequence
+-- 
+--   * '<|' composes scores as a backward sequence
+--
+-- You can also use '<>' and 'mempty' of course.
 -- 
 -- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
--- 
---   * '|>' composes scores in sequence
--- 
---   * '>|' composes scores in sequence
--- 
---   * '<|' composes scores in sequence
--- 
---   * '|<' composes scores in sequence
 -- 
 -- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
 --
