@@ -32,7 +32,7 @@ module Music.Score.Export.Midi (
         toMidiTrack,
         writeMidi,
         -- playMidi,
-        playMidiIO,
+        -- playMidiIO,
   ) where
 
 import           Prelude                   hiding (concat, concatMap, foldl,
