@@ -326,10 +326,10 @@ module TimeTypes (
         score,
         notes,
         voices,
-        phrases,
+        -- phrases,
         singleNote,
         singleVoice,
-        singlePhrase,
+        -- singlePhrase,
         
         -- ** Special traversals
         mapWithSpan,
@@ -3272,7 +3272,7 @@ instance HasMeta (Phrase p a) where
 
 
 -- |
--- A 'Chord' is a sequence of stretched values.
+-- A 'Chord' is a parallel composition of values.
 --
 -- @
 -- type Chord a = [Delayed a]
@@ -3335,7 +3335,7 @@ chord = _Wrapped
 
 
 -- |
--- A 'Voice' is a sequence of stretched values.
+-- A 'Voice' is a sequential composition of values. Events may not overlap.
 --
 -- @
 -- type Voice a = [Stretched a]
@@ -3441,6 +3441,7 @@ mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
 type ScoreNote a = Note a
 
 -- |
+-- A 'Score' is a sequential or parallel composition of values, and allows overlapping events
 --
 -- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface.
 -- 
