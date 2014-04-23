@@ -191,8 +191,8 @@ module TimeTypes (
 
         -- ** Properties
         isProper,
-        stretches,
-        delays,
+        delayOnly,
+        stretchOnly,
         -- Proper spans are always bounded and closed
         
         -- ** Points in spans
@@ -1550,21 +1550,25 @@ isProper :: Span -> Bool
 isProper (view range -> (t, u)) = t < u
 
 -- |
--- A prism to the subset of 'Span' that performs a stretch but no delay.
---
-stretches :: Prism' Span Duration
-stretches = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
-  (0, d) -> Just d
-  _      -> Nothing
-
--- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
 --
-delays :: Prism' Span Time
-delays = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+-- To access the delay component in any span, use @'view' ('delta' . '_1')@
+--
+delayOnly :: Prism' Span Time
+delayOnly = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
   (t, 1) -> Just t
   _      -> Nothing
        
+
+-- |
+-- A prism to the subset of 'Span' that performs a stretch but no delay.
+--
+-- To access the stretch component in any span, use @'view' ('delta' . '_2')@
+--
+stretchOnly :: Prism' Span Duration
+stretchOnly = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+  (0, d) -> Just d
+  _      -> Nothing
 
 --
 -- $musicTimeSpanConstruct
