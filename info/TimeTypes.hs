@@ -3565,9 +3565,9 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- This is a getter (rather than a function) for consistency:
 --
 -- @
--- [ (0 '<->' 1, 10)^.'note'
--- , (1 '<->' 2, 20)^.'note'
--- , (3 '<->' 4, 30)^.'note' ]^.'score'
+-- [ (0 '<->' 1, 10)^.'note',
+--   (1 '<->' 2, 20)^.'note',
+--   (3 '<->' 4, 30)^.'note' ]^.'score'
 -- @
 -- 
 -- @
@@ -3577,60 +3577,101 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 -- Se also 'notes'.
 --
 score :: Getter [Note a] (Score a)
-score = to $ \x -> empty & notes .~ x
+score = to $ flip (set notes) empty
 
 -- |
 -- View a score as a list of notes.
 --
+-- @
+-- 'view' 'notes'                        :: 'Score' a -> ['Note' a]
+-- 'set'  'notes'                        :: ['Note' a] -> 'Score' a -> 'Score' a
+-- 'over' 'notes'                        :: (['Note' a] -> ['Note' b]) -> 'Score' a -> 'Score' b
+-- @
+--
+-- @
+-- 'preview'  ('notes' . 'each')           :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'set'      ('notes' . 'each')           :: 'Note' a -> 'Score' a -> 'Score' a
+-- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'toListOf' ('notes' . 'each')           :: 'Score' a -> ['Note' a]
+-- @
+--
+-- @
+-- 'preview'  ('notes' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'set'      ('notes' . 'element' 1)      :: 'Note' a -> 'Score' a -> 'Score' a
+-- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'preview'  ('notes' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'set'      ('notes' . 'elements' odd)   :: 'Note' a -> 'Score' a -> 'Score' a
+-- 'over'     ('notes' . 'elements' odd)   :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'toListOf' ('notes' . 'elements' odd)   :: 'Score' a -> ['Note' a]
+-- 'toListOf' ('notes' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Note' a]
+-- @
+--
 -- This is not an 'Iso', as the note list representation does not contain meta-data.
--- To construct a score from a note list, use 'score' ('from' 'notes' does not work).
+-- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
 -- 
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = _Wrapped
+notes = unsafeNotes
+{-# INLINE notes #-}
 
 -- |
 -- View a score as a list of voices.
 --
 -- @
--- 'view' 'voices'                      :: Score a -> [Voice a]
--- 'set'  'voices'                      :: [Voice a] -> Score a
--- 'over' 'voices'                      :: ([Voice a] -> [Voice b]) -> Score a -> Score b
+-- 'view' 'voices'                        :: 'Score' a -> ['Voice' a]
+-- 'set'  'voices'                        :: ['Voice' a] -> 'Score' a -> 'Score' a
+-- 'over' 'voices'                        :: (['Voice' a] -> ['Voice' b]) -> 'Score' a -> 'Score' b
 -- @
 --
 -- @
--- 'preview'  ('voices' . 'element' 1)      :: Score a -> Maybe (Voice a)
--- 'set'      ('voices' . 'element' 1)      :: Voice a -> Score a -> Score a
--- 'over'     ('voices' . 'element' 1)      :: (Voice a -> Voice b) -> Score a -> Score b
--- 'toListOf' ('voices' . 'each')           :: Score a -> [Voice a]
+-- 'preview'  ('voices' . 'each')           :: 'Score' a -> 'Maybe' ('Voice' a)
+-- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
+-- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
 -- @
 --
 -- @
--- 'preview'  ('voices' . 'elements' odd)   :: Score a -> Maybe (Voice a)
--- 'set'      ('voices' . 'elements' odd)   :: Voice a -> Score a -> Score a
--- 'over'     ('voices' . 'elements' odd)   :: (Voice a -> Voice b) -> Score a -> Score b
--- 'toListOf' ('voices' . 'elements' odd)   :: Score a -> [Voice a]
+-- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
+-- 'set'      ('voices' . 'element' 1)      :: 'Voice' a -> 'Score' a -> 'Score' a
+-- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
+-- 'set'      ('voices' . 'elements' odd)   :: 'Voice' a -> 'Score' a -> 'Score' a
+-- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- 'toListOf' ('voices' . 'elements' odd)   :: 'Score' a -> ['Voice' a]
+-- 'toListOf' ('voices' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Voice' a]
 -- @
+--
+-- This is not an 'Iso', as the voice list representation does not contain meta-data.
+-- To construct a score from a voice list, use 'score' or @'flip' ('set' 'voices') 'empty'@.
 --
 voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
+voices = unsafeVoices
+{-# INLINE voices #-}
 
 -- |
 -- View a score as a list of phrases.
 -- 
 phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
-(voices, phrases) = error "Not implemented: (voices, phrases)"
+phrases = error "Not implemented: phrases"
+
+
+
+single :: Prism' [a] a
+single = prism' return $ \xs -> case xs of
+  [x] -> Just x
+  _   -> Nothing
+
+unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
+unsafeNotes = _Wrapped
+
+unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
+unsafeVoices = error "Not impl"
 
 -- |
 -- View a score as a single note.
 -- 
 singleNote :: Prism' (Score a) (Note a)
-singleNote = error "Not implemented: singleNote"
+singleNote = unsafeNotes . single
 
-
-sn :: Prism' (Score a) (Note a)
--- sn = _Wrapped . _head
-sn = prism' 
-  (view score . return) 
-  (preview $ _Wrapped . _head)
 
 -- |
 -- View a score as a single voice.
