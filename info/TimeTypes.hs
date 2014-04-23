@@ -929,50 +929,33 @@ offset = position 1
 {-# INLINE offset #-}
 
 -- |
--- Onset of the given value.
+-- Pre-onset of the given value.
+--
+-- In an 'Envelope', this is the value right before the attack phase.
 --
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
 {-# INLINE preOnset #-}
 
 -- |
--- Onset of the given value.
+-- Post-onset of the given value.
+--
+-- In an 'Envelope', this is the value between the decay and sustain phases.
 --
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset = position 0.5
 {-# INLINE postOnset #-}
 
 -- |
--- Onset of the given value.
+-- Post-offset of the given value.
+--
+-- In an 'Envelope', this is the value right after the release phase.
 --
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
 postOffset = position 1.5
 {-# INLINE postOffset #-}
 
 
--- |
--- Return the pre-onset of the given value.
---
--- In an 'Envelope', this is the value right before the attack phase.
---
-_preOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-_preOnset  = (`_position` (-0.5))
-
--- |
--- Return the post-onset of the given value.
---
--- In an 'Envelope', this is the value between the decay and sustain phases.
---
-_postOnset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-_postOnset   = (`_position` 0.5)
-
--- |
--- Return the post-offset of the given value.
---
--- In an 'Envelope', this is the value right after the release phase.
---
-_postOffset :: (HasPosition a{-, Fractional s, s ~ (Scalar (Duration))-}) => a -> Time
-_postOffset  = (`_position` 1.5)
 
 -- |
 -- Move a value forward in time.
@@ -2335,7 +2318,7 @@ newtype Delayed a = Delayed   { _getDelayed :: (Time, a) }
 deriving instance Typeable1 Delayed
 deriving instance Show a => Show (Delayed a)
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
   _Wrapped' = iso _getDelayed Delayed
@@ -2401,7 +2384,7 @@ newtype Stretched a = Stretched { _getStretched :: (Duration, a) }
 
 deriving instance Typeable1 Stretched
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
   _Wrapped' = iso _getStretched Stretched
@@ -2473,7 +2456,7 @@ instance (Show a, Transformable a) => Show (Note a) where
 deriving instance Monad Note
 deriving instance Applicative Note
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
   _Wrapped' = iso _getNote Note
@@ -2591,7 +2574,7 @@ newtype Bound a = Bound { getBound :: (Span, a) }
 -- set (namely [(t, t)^.from range | t <- {Time} ]).
 --
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Bound a) where
   type Unwrapped (Bound a) = (Span, a)
   _Wrapped' = iso getBound Bound
@@ -2653,7 +2636,7 @@ bounded' = bounded
 -- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
 -- This can be used to safely turn a behavior into a segment and vice
--- versa. Usually 'focusing' is more convenient to use.
+-- versa. Often 'focusing' is more convenient to use.
 --
 bounded :: Iso
   (Note (Segment a))
@@ -3257,7 +3240,7 @@ instance Monad Chord where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Chord a) where
   type Unwrapped (Chord a) = (ChordList (ChordEv a))
   _Wrapped' = iso getChord Chord
@@ -3324,7 +3307,7 @@ instance Monad Voice where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
   _Wrapped' = iso getVoice Voice
@@ -3464,7 +3447,7 @@ newtype Score a = Score { getScore :: [ScoreNote a] }
 -- You can also use '<>' and 'mempty' of course.
 -- 
 
--- | TODO Unsafe
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = [ScoreNote a]
   _Wrapped' = iso getScore Score
