@@ -38,7 +38,11 @@ module Music.Time.Score (
       mapEvents,
       filterEvents,
       mapFilterEvents,
-      
+
+      -- ** Simultaneous notes
+      mapSimultaneous,
+      simultaneous,
+      simultaneous',
       
       -- voices -- Lens' (Score a) [Voice a]
       -- phrases -- Lens' (Voice a) [Phrase a]
@@ -53,6 +57,7 @@ import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
 import           Data.Semigroup
+import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
@@ -449,4 +454,63 @@ filterEvents f = mapFilterEvents (partial3 f)
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
+
+
+
+
+
+
+-- |
+-- Process all simultaneous events.
+--
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
+--
+mapSimultaneous :: Transformable a => (Score [a] -> Score [b]) -> Score a -> Score b
+mapSimultaneous f = mscatter . f . simultaneous'
+
+-- |
+-- Merge all simultaneous events using their 'Semigroup' instance.
+--
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
+--
+simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
+simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
+
+-- |
+-- Group simultaneous events as lists.
+--
+-- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
+-- era, that is if @`era` a == `era` b@
+--
+-- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
+--
+simultaneous' :: Transformable a => Score a -> Score [a]
+simultaneous' sc = (^. from events) vs
+    where
+        -- es :: [Era]
+        -- evs :: [[a]]
+        -- vs :: [(Time, Duration, [a])]
+        es  = List.nub $ eras sc
+        evs = fmap (`chordEvents` sc) es
+        vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
+-- TODO handle meta
+
+
+-- TODO (re)move these
+
+eras :: Transformable a => Score a -> [Span]
+eras sc = fmap getSpan . (^. events) $ sc
+
+chordEvents :: Transformable a => Span -> Score a -> [a]
+chordEvents era sc = fmap getValue . filter (\ev -> getSpan ev == era) . (^. events) $ sc
+
+getValue :: (Time, Duration, a) -> a
+getValue (t,d,a) = a
+
+getSpan :: (Time, Duration, a) -> Span
+getSpan (t,d,a) = t >-> d
+
+
 
