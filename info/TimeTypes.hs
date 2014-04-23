@@ -300,6 +300,8 @@ module TimeTypes (
         Voice,
         -- ** Substructure
         voice,
+        singleStretched,
+        voiceElements,
         -- ** Zips
         zipVoice,
         zipVoiceWith,
@@ -3390,22 +3392,29 @@ instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
 
 
 voice :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-voice = _Wrapped
+voice = unsafeVoice
 
 singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = error "Not implemented: singleStretched"
+singleStretched = unsafeVoice . single
 
+unsafeVoice :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
+unsafeVoice = _Wrapped
+
+
+{-
 -- |
 -- Voice
 --
 voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
 voiceNotes = error "Not implemented: voiceNotes"
+-}
 
 -- |
 -- Voice
 --
 voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voiceElements = _Wrapped . traverse . from voiceEv
+voiceElements = _Wrapped . traverse . from voiceEv   
+
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
@@ -3579,6 +3588,7 @@ instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
 --
 score :: Getter [Note a] (Score a)
 score = to $ flip (set notes) empty
+{-# INLINE score #-}
 
 -- |
 -- View a score as a list of notes.
@@ -3666,32 +3676,33 @@ voices = unsafeVoices
 -- 
 phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
 phrases = error "Not implemented: phrases"
-
-
-
-single :: Prism' [a] a
-single = prism' return $ \xs -> case xs of
-  [x] -> Just x
-  _   -> Nothing
+{-# INLINE phrases #-}
 
 unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
 unsafeNotes = _Wrapped
+{-# INLINE unsafeNotes #-}
 
 unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
 unsafeVoices = error "Not impl"
+{-# INLINE unsafeVoices #-}
 
 -- |
 -- View a score as a single note.
 -- 
 singleNote :: Prism' (Score a) (Note a)
 singleNote = unsafeNotes . single
-
+{-# INLINE singleNote #-}
+-- TODO make prism fail if score contains meta-data
+-- (or else second prism law is not satisfied)
 
 -- |
 -- View a score as a single voice.
 -- 
 singleVoice :: Prism' (Score a) (Voice a)
-singleVoice = error "Not implemented: singleNote"
+singleVoice = unsafeVoices . single
+{-# INLINE singleVoice #-}
+-- TODO make prism fail if score contains meta-data
+-- (or else second prism law is not satisfied)
 
 -- |
 -- View a score as a single phrase.
@@ -3702,6 +3713,7 @@ singlePhrase = error "Not implemented: singlePhrase"
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = error "Not implemented: singleNote"
+
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
@@ -4710,6 +4722,13 @@ through lens1 lens2 = lens getter (flip setter)
     getter = fmap (view lens1)
     setter = liftA2 (over lens2 . const)
 {-# INLINE through #-}
+
+single :: Prism' [a] a
+single = prism' return $ \xs -> case xs of
+  [x] -> Just x
+  _   -> Nothing
+{-# INLINE single #-}
+
 
 {-
   TODO check
