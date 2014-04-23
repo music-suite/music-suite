@@ -3591,20 +3591,27 @@ score = to $ flip (set notes) empty
 --
 -- @
 -- 'preview'  ('notes' . 'each')           :: 'Score' a -> 'Maybe' ('Note' a)
--- 'set'      ('notes' . 'each')           :: 'Note' a -> 'Score' a -> 'Score' a
--- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
--- 'toListOf' ('notes' . 'each')           :: 'Score' a -> ['Note' a]
+-- 'preview'  ('notes' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'preview'  ('notes' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Note' a)
 -- @
 --
 -- @
--- 'preview'  ('notes' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'set'      ('notes' . 'each')           :: 'Note' a -> 'Score' a -> 'Score' a
 -- 'set'      ('notes' . 'element' 1)      :: 'Note' a -> 'Score' a -> 'Score' a
--- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
--- 'preview'  ('notes' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Note' a)
 -- 'set'      ('notes' . 'elements' odd)   :: 'Note' a -> 'Score' a -> 'Score' a
+-- @
+--
+-- @
+-- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
 -- 'over'     ('notes' . 'elements' odd)   :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
--- 'toListOf' ('notes' . 'elements' odd)   :: 'Score' a -> ['Note' a]
--- 'toListOf' ('notes' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Note' a]
+-- @
+--
+-- @
+-- 'toListOf' ('notes' . 'each')                :: 'Score' a -> ['Note' a]
+-- 'toListOf' ('notes' . 'elements' odd)        :: 'Score' a -> ['Note' a]
+-- 'toListOf' ('notes' . 'each' . 'filtered' 
+--              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Note' a]
 -- @
 --
 -- This is not an 'Iso', as the note list representation does not contain meta-data.
@@ -3625,18 +3632,24 @@ notes = unsafeNotes
 --
 -- @
 -- 'preview'  ('voices' . 'each')           :: 'Score' a -> 'Maybe' ('Voice' a)
--- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
--- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
+-- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
+-- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
 -- @
 --
 -- @
--- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
+-- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
 -- 'set'      ('voices' . 'element' 1)      :: 'Voice' a -> 'Score' a -> 'Score' a
--- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
 -- 'set'      ('voices' . 'elements' odd)   :: 'Voice' a -> 'Score' a -> 'Score' a
+-- @
+--
+-- @
+-- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
 -- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- @
+--
+-- @
+-- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
 -- 'toListOf' ('voices' . 'elements' odd)   :: 'Score' a -> ['Voice' a]
 -- 'toListOf' ('voices' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Voice' a]
 -- @
