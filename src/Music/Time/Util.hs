@@ -3,7 +3,7 @@
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Music.Score.Util where
+module Music.Time.Util where
 
 ----------------------------------------------------------------------
 --

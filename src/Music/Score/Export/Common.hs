@@ -46,17 +46,14 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Music.Score.Articulation
-import           Music.Score.Combinators
-import           Music.Score.Convert
+-- import           Music.Score.Combinators
+-- import           Music.Score.Convert
 import           Music.Score.Dynamics
-import           Music.Score.Ornaments
+-- import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
-import           Music.Score.Voice
 import           Music.Time
 
 import qualified Codec.Midi               as Midi
@@ -74,14 +71,14 @@ import           System.Process
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars' barDurs = fmap (^. from voice) . splitTiesVoiceAt barDurs
+voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
 -- TODO remove prime from name
 
 -- | Convert absolute to relative durations.
 toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
-toRelative = snd . mapAccumL g origin
+toRelative = snd . mapAccumL g 0
     where
-        g now (t,d,x) = (t, (origin .+^ (t .-. now),d,x))
+        g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
 
 -- | Basic spelling for integral types.
 spellPitch :: Integral a => a -> (a, a, a)
