@@ -27,30 +27,30 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Combinators (
-        -- * Basic
-        -- note,
-        -- rest,
-        -- noteRest,
-        removeRests,
-
-        -- * Mapping over events
-        mapEvents,
-
-        -- * Filtering events
-
-        -- ** Editing
-        filterEvents,
-        mapFilterEvents,
-
-{-
-        -- * Editing
-        before,
-        after,
-        split,
-        slice,
-        splice,
--}
-
+--         -- * Basic
+--         -- note,
+--         -- rest,
+--         -- noteRest,
+--         removeRests,
+-- 
+--         -- * Mapping over events
+--         mapEvents,
+-- 
+--         -- * Filtering events
+-- 
+--         -- ** Editing
+--         filterEvents,
+--         mapFilterEvents,
+-- 
+-- {-
+--         -- * Editing
+--         before,
+--         after,
+--         split,
+--         slice,
+--         splice,
+-- -}
+-- 
         -- * Meta-events
         metaAt,
         metaAtStart,
@@ -62,40 +62,40 @@ module Music.Score.Combinators (
 
 
 
-        -- ** Map over phrases
-        mapFirst,
-        mapLast,
-        mapPhrase,
-        mapPhraseSingle,
-
-        -- * Parts
-        -- ** Extracting parts
-        filterPart,
-        extractParts,
-        extractParts',
-
-        -- ** Map over parts
-        -- mapPart,
-        mapParts,
-        mapAllParts,
-        -- modifyParts,
-
-        -- ** Part composition
-        (</>),
-        rcat,
-        -- moveParts,
-        -- moveToPart,
-
-        -- * Zippers
-        -- apply,
-        -- snapshot,
-        -- snapshotWith,
-
-        -- ** Single-part versions
-        applySingle,
-        -- snapshotSingle,
-        -- snapshotWithSingle,
-  ) where
+        -- -- ** Map over phrases
+        --  mapFirst,
+        --  mapLast,
+        --  mapPhrase,
+        --  mapPhraseSingle,
+        -- 
+        --  -- * Parts
+        --  -- ** Extracting parts
+        --  filterPart,
+        --  extractParts,
+        --  extractParts',
+        -- 
+        --  -- ** Map over parts
+        --  -- mapPart,
+        --  mapParts,
+        --  mapAllParts,
+        --  -- modifyParts,
+        -- 
+        --  -- ** Part composition
+        --  (</>),
+        --  rcat,
+        --  -- moveParts,
+        --  -- moveToPart,
+        -- 
+        --  -- * Zippers
+        --  -- apply,
+        --  -- snapshot,
+        --  -- snapshotWith,
+        -- 
+        --  -- ** Single-part versions
+        --  applySingle,
+        --  -- snapshotSingle,
+        --  -- snapshotWithSingle,
+   ) where
 
 import           Control.Applicative
 import           Control.Arrow
