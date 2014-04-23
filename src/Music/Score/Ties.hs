@@ -49,11 +49,9 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
 
-import           Music.Score.Combinators
-import           Music.Score.Convert
+-- import           Music.Score.Combinators
+-- import           Music.Score.Convert
 import           Music.Score.Part
-import           Music.Score.Score
-import           Music.Score.Voice
 import           Music.Time
 
 -- |
@@ -110,7 +108,9 @@ instance Tiable a => Tiable (TieT a) where
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTiesVoice :: Tiable a => Voice a -> Voice a
-splitTiesVoice = (^. voice) . concat . snd . List.mapAccumL g 0 . (^. from voice)
+splitTiesVoice = (^. voice) . map (^. stretched) 
+  . concat . snd . List.mapAccumL g 0 
+  . map (^. from stretched) . (^. stretcheds)
     where
         g t (d, x) = (t + d, occs)
             where
@@ -125,7 +125,7 @@ splitTiesVoice = (^. voice) . concat . snd . List.mapAccumL g 0 . (^. from voice
 -- Notes that cross a barlines are split into tied notes.
 --
 splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
-splitTiesVoiceAt barDurs x = fmap (^. voice) $ splitTiesVoiceAt' barDurs ((^. from voice) x)
+splitTiesVoiceAt barDurs x = fmap ((^. voice) . map (^. stretched)) $ splitTiesVoiceAt' barDurs ((map (^. from stretched) . (^. stretcheds)) x)
 
 splitTiesVoiceAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
 splitTiesVoiceAt' []  _  =  []
@@ -135,7 +135,7 @@ splitTiesVoiceAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
     (barOccs, restOccs) -> barOccs : splitTiesVoiceAt' rbarDur restOccs
 
 tsplitTiesVoiceAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesVoiceAt barDurs = fmap (^. from voice) . splitTiesVoiceAt barDurs . (^. voice) . fmap (\x -> (x,'_'))
+tsplitTiesVoiceAt barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs . ((^. voice) . map (^. stretched)) . fmap (\x -> (x,'_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.

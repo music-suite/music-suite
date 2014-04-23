@@ -29,7 +29,7 @@ module Music.Score (
         -- module Music.Score.Combinators,
 
         -- ** Structure
-        -- module Music.Score.Ties,
+        module Music.Score.Ties,
         -- module Music.Score.Chord,
 
         -- ** Meta-information
@@ -108,4 +108,4 @@ import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
 -- import           Music.Score.Rhythm
--- import           Music.Score.Ties
+import           Music.Score.Ties

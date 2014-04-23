@@ -80,7 +80,7 @@ library
                         Music.Score
                         -- Music.Score.Combinators
                         -- Music.Score.Convert
-                        -- Music.Score.Ties
+                        Music.Score.Ties
                         Music.Score.Part
                         -- Music.Score.Chord
                         -- Music.Score.Meta
