@@ -1552,7 +1552,7 @@ isProper (view range -> (t, u)) = t < u
 -- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
 --
--- To access the delay component in any span, use @'view' ('delta' . '_1')@
+-- To access the delay component in any span, use @'view' ('delta' . e'_1')@
 --
 delayOnly :: Prism' Span Time
 delayOnly = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
@@ -3590,7 +3590,27 @@ notes = _Wrapped
 
 -- |
 -- View a score as a list of voices.
--- 
+--
+-- @
+-- 'view' 'voices'                      :: Score a -> [Voice a]
+-- 'set'  'voices'                      :: [Voice a] -> Score a
+-- 'over' 'voices'                      :: ([Voice a] -> [Voice b]) -> Score a -> Score b
+-- @
+--
+-- @
+-- 'preview'  ('voices' . 'element' 1)      :: Score a -> Maybe (Voice a)
+-- 'set'      ('voices' . 'element' 1)      :: Voice a -> Score a -> Score a
+-- 'over'     ('voices' . 'element' 1)      :: (Voice a -> Voice b) -> Score a -> Score b
+-- 'toListOf' ('voices' . 'each')           :: Score a -> [Voice a]
+-- @
+--
+-- @
+-- 'preview'  ('voices' . 'elements' odd)   :: Score a -> Maybe (Voice a)
+-- 'set'      ('voices' . 'elements' odd)   :: Voice a -> Score a -> Score a
+-- 'over'     ('voices' . 'elements' odd)   :: (Voice a -> Voice b) -> Score a -> Score b
+-- 'toListOf' ('voices' . 'elements' odd)   :: Score a -> [Voice a]
+-- @
+--
 voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
 
 -- |
@@ -3604,6 +3624,13 @@ phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
 -- 
 singleNote :: Prism' (Score a) (Note a)
 singleNote = error "Not implemented: singleNote"
+
+
+sn :: Prism' (Score a) (Note a)
+-- sn = _Wrapped . _head
+sn = prism' 
+  (view score . return) 
+  (preview $ _Wrapped . _head)
 
 -- |
 -- View a score as a single voice.
