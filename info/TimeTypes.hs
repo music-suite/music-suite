@@ -301,6 +301,7 @@ module TimeTypes (
         Voice,
         -- ** Substructure
         voice,
+        stretcheds,
         singleStretched,
         voiceElements,
         -- ** Zips
@@ -496,6 +497,9 @@ import           Test.Tasty                   hiding (over, under)
 import           Test.Tasty.SmallCheck        hiding (over, under)
 
 import qualified Data.Ratio                   as Util_Ratio
+import qualified Data.List as List
+import qualified Data.Foldable as Foldable
+import qualified Data.Ord as Ord
 
 
 -- Misc instances
@@ -2457,6 +2461,7 @@ deriving instance Functor Note
 deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
+deriving instance Comonad Note
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
@@ -3310,6 +3315,10 @@ instance Applicative Voice where
   pure  = return
   (<*>) = ap
 
+instance Alternative Voice where
+  (<|>) = (<>)
+  empty = mempty
+
 instance Monad Voice where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
@@ -3341,9 +3350,29 @@ type instance SetPitch g (Voice a) = Voice (SetPitch g a)
 instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
   pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
 
+-- |
+-- Create a score from a list of notes.
+--
+-- This is a getter (rather than a function) for consistency:
+--
+-- @
+-- [ (0 '<->' 1, 10)^.'note',
+--   (1 '<->' 2, 20)^.'note',
+--   (3 '<->' 4, 30)^.'note' ]^.'score'
+-- @
+-- 
+-- @
+-- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
+-- @
+--
+-- Se also 'notes'.
+--
+voice :: Getter [Stretched a] (Voice a)
+voice = to $ flip (set stretcheds) empty
+{-# INLINE voice #-}
 
-voice :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-voice = unsafeVoice
+stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
+stretcheds = unsafeVoice
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = unsafeVoice . single
@@ -3618,7 +3647,7 @@ notes = unsafeNotes
 -- This is not an 'Iso', as the voice list representation does not contain meta-data.
 -- To construct a score from a voice list, use 'score' or @'flip' ('set' 'voices') 'empty'@.
 --
-voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
+voices :: HasPart a a => Lens (Score a) (Score b) [Voice a] [Voice b]
 voices = unsafeVoices
 {-# INLINE voices #-}
 
@@ -3633,7 +3662,7 @@ unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
 unsafeNotes = _Wrapped
 {-# INLINE unsafeNotes #-}
 
-unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
+unsafeVoices :: HasPart a a => Iso (Score a) (Score b) [Voice a] [Voice b]
 unsafeVoices = error "Not impl"
 {-# INLINE unsafeVoices #-}
 
@@ -3649,7 +3678,7 @@ singleNote = unsafeNotes . single
 -- |
 -- View a score as a single voice.
 -- 
-singleVoice :: Prism' (Score a) (Voice a)
+singleVoice :: HasPart a a => Prism' (Score a) (Voice a)
 singleVoice = unsafeVoices . single
 {-# INLINE singleVoice #-}
 -- TODO make prism fail if score contains meta-data
@@ -3664,6 +3693,52 @@ singlePhrase = error "Not implemented: singlePhrase"
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = error "Not implemented: singleNote"
+
+
+reifyScore :: Score a -> Score (Note a)
+reifyScore = over _Wrapped $ fmap duplicate
+
+events :: Transformable a => Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+events = iso _getScore _score
+
+_score :: [(Time, Duration, a)] -> Score a
+_score = mconcat . fmap (uncurry3 event)
+  where
+    event t d x   = (delay (t .-. 0) . stretch d) (return x)
+
+_getScore :: Transformable a => Score a -> [(Time, Duration, a)]
+_getScore =
+  fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
+  List.sortBy (Ord.comparing fst) .
+  Foldable.toList .
+  fmap (view $ from note) .
+  reifyScore
+
+scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
+scoreToVoice = view voice . fmap (view stretched) . fmap throwTime . addRests . (^. events)
+  where
+     throwTime (t,d,x) = (d,x)
+     addRests = concat . snd . List.mapAccumL g 0
+       where
+         g u (t, d, x)
+           | u == t  = (t .+^ d, [(t, d, Just x)])
+           | u <  t  = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+           | otherwise = error "addRests: Strange prevTime"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -- | Map over the values in a score.
