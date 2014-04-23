@@ -42,7 +42,7 @@ module Music.Score.Meta (
         -- * Meta-values
         Meta,
         -- addMeta,
-        addMetaNote,
+        -- addMetaNote,
         addGlobalMetaNote,
         runMeta,
         HasMeta(..),
