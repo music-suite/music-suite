@@ -24,6 +24,10 @@
 #endif
 
 {-
+  Music.Time.Time      \
+  Music.Time.Duration   * (merge as M.T.Types?) 
+  Music.Time.Span      /
+
   Music.Time.Transform
   Music.Time.Duration
   Music.Time.Position
@@ -31,10 +35,8 @@
   Music.Time.Reverse
   Music.Time.Juxtapose
 
-  Music.Time.Time      \
-  Music.Time.Duration   * (merge as M.T.Types?) 
-  Music.Time.Span      /
-
+  Music.Score.Part
+  
   Music.Time.Stretched
   Music.Time.Delayed
   Music.Time.Note
@@ -47,11 +49,10 @@
   Music.Time.Behavior
   Music.Time.Reactive
   
-  Music.Score.Meta
+  Music.Score.Meta (we need to factor out internal types, as the HasMeta instances need to see them...)
   Music.Score.Pitch
   Music.Score.Dynamics
   Music.Score.Articulation
-  Music.Score.Part
     
   Music.Score.GraceNotes
   Music.Score.Ornaments
