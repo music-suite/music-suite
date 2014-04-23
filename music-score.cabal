@@ -82,7 +82,7 @@ library
                         -- Music.Score.Convert
                         Music.Score.Ties
                         Music.Score.Part
-                        -- Music.Score.Meta
+                        Music.Score.Meta
                         -- Music.Score.Meta.Annotations
                         -- Music.Score.Meta.Attribution
                         -- Music.Score.Meta.Barline

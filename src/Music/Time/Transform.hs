@@ -79,6 +79,8 @@ import           Data.NumInstances
 import           Data.Semigroup               hiding ()
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
 import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
@@ -184,6 +186,9 @@ instance Transformable a => Transformable [a] where
 
 instance Transformable a => Transformable (Seq a) where
   transform t = fmap (transform t)
+
+instance (Ord k, Transformable a) => Transformable (Map k a) where
+  transform t = Map.map (transform t)
 
 -- |
 -- Functions transform by conjugation, i.e. we reverse-transform the argument

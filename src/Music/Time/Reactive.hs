@@ -42,6 +42,9 @@ module Music.Time.Reactive (
       final,
       intermediate,
       discrete,
+      updates,
+      occs,
+      switchR,
       continous,
       continousWith,
       sample,
@@ -159,6 +162,9 @@ renderR = initial &&& updates
 
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
+
+{-# DEPRECATED updates "" #-}
+{-# DEPRECATED occs "" #-}
 
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')

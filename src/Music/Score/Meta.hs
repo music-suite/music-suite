@@ -69,11 +69,9 @@ import           Data.Typeable
 import           Data.Void
 
 import           Music.Pitch.Literal
-import           Music.Score.Note
 import           Music.Score.Part
-import           Music.Score.Pitch
+-- import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Score.Voice
 import           Music.Time
 
 
@@ -96,15 +94,13 @@ instance Semigroup Attribute where
         Nothing  -> a2
         Just a2' -> Attribute (a1 <> a2')
 
-instance Delayable Attribute where
-    delay _ (Attribute  a) = Attribute a
-instance Stretchable Attribute where
-    stretch _ (Attribute  a) = Attribute a
+instance Transformable Attribute where
+    transform _ (Attribute  a) = Attribute a
 
 
 -- TODO is Transformable right w.r.t. join?
 newtype Meta = Meta (Map String (Reactive Attribute))
-    deriving (Delayable, Stretchable)
+    deriving (Transformable)
 
 -- instance HasPart Meta where
 
@@ -116,32 +112,32 @@ addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
 
 -- XXX
-addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b, Ord (Part b), Show (Part b)) => Note a -> b -> b
 addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 
 -- Switch at time t to the given value (switch is valid until the end of the music).
 -- TODO might not work as we think
-addMetaChange :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Time -> a -> b -> b
-addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switch t mempty (pure x)) y
+addMetaChange :: forall a b . (IsAttribute a, HasMeta b, HasPart' b, Ord (Part b), Show (Part b)) => Time -> a -> b -> b
+addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switchR t mempty (pure x)) y
 
 
-runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
+runMeta :: forall a b . (HasPart' a, Ord (Part a), Show (Part a), IsAttribute b) => Maybe a -> Meta -> Reactive b
 runMeta part = fromMaybe mempty . runMeta' part
 
-addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
-addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
+addMeta' :: forall a b . (HasPart' a, Ord (Part a), Show (Part a), IsAttribute b) => Maybe a -> Reactive b -> Meta
+addMeta' pa a = Meta $ Map.singleton key $ fmap wrapAttr a
     where
         key = ty ++ pt
-        pt = show $ fmap getPart part
+        pt = show $ fmap (view part) pa
         ty = show $ typeOf (undefined :: b)
 
 -- runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a)
-runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b)
-runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
+runMeta' :: forall a b . (HasPart' a, Ord (Part a), Show (Part a), IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b)
+runMeta' pa   (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt
-        pt = show $ fmap getPart part
+        pt = show $ fmap (view part) pa
         ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
@@ -213,11 +209,11 @@ splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap mkNote $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
-        note (t,u,x) = t <-> u =: x
+        mkNote (t,u,x) = (t <-> u, x)^.note
 
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
@@ -235,9 +231,10 @@ splitReactive r = case updates r of
                 go [x]      = [(x, Nothing)]
                 go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
+-- TODO move
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
-        turnOn  = switch start
-        turnOff = switch stop
+        turnOn  = switchR start
+        turnOff = switchR stop
 
