@@ -27,8 +27,8 @@
 
 module Music.Score.Convert (
         -- * Conversion
-        noteToVoice,
-        noteToScore,
+        -- noteToVoice,
+        -- noteToScore,
         -- scoreToNotes,
         -- notesToScore,
         voiceToScore,
