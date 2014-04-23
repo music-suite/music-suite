@@ -212,21 +212,21 @@ module TimeTypes (
         Segment,
         -- ** Examples
         -- $XXmusicTimeSegmentExamples
-        (!.),
-        segment',
+        -- (!.),
+        -- segment',
         segment,
         
         -- ** Combinators
         focusing,
-        appendS,
+        segmented,
         concatS,
 
         -- * Music.Time.Behavior
         Behavior,
         -- ** Examples
         -- $musicTimeBehaviorExamples
-        (!^),
-        behavior',
+        -- (!^),
+        -- behavior',
         behavior,
 
         -- ** Combinators
@@ -2733,7 +2733,7 @@ newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
 
 -- $musicTimeSegmentExamples
 -- 
--- > foldr1 appendSegment $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
+-- > foldr1 segment $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
 --
 -- > openG $ draw $ (1, timeS :: Segment Float)^.stretched
 -- 
@@ -2850,14 +2850,14 @@ sineS = sin (timeS*tau)
 sineS = undefined
 #endif
 
-appendSegment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-appendSegment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+segment :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
+segment (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
 -- |
 -- Append a voice of segments to a single stretched segment.
 --
-appendS :: Voice (Segment a) -> Stretched (Segment a)
-appendS = foldr1 appendSegment . toListOf voiceElements
+segmented :: Voice (Segment a) -> Stretched (Segment a)
+segmented = foldr1 segment . toListOf voiceElements
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
