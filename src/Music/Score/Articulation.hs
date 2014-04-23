@@ -1,4 +1,24 @@
 
+
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
+
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -27,12 +47,15 @@
 
 
 module Music.Score.Articulation (
-        -- * Representation
+        -- ** Articulation type functions
+        Articulation,
+        SetArticulation,
+        -- ** Accessing articulation
+        HasArticulations(..),
         HasArticulation(..),
-        ArticulationT(..),
-
-        -- * Transformations
-        -- ** Accents
+        articulation',
+        articulations',
+        -- * Manipulating articulation        
         accent,
         marcato,
         accentLast,
@@ -40,32 +63,158 @@ module Music.Score.Articulation (
         accentAll,
         marcatoAll,
 
-        -- ** Phrasing
         tenuto,
         separated,
         staccato,
         portato,
         legato,
         spiccato,
-
-{-
-        -- ** Miscellaneous
-        resetArticulation,
--}
-
+        
+        -- -- * Representation
+        -- HasArticulation(..),
+        -- ArticulationT(..),
+        -- 
+        -- -- * Transformations
+        -- -- ** Accents
+        -- accent,
+        -- marcato,
+        -- accentLast,
+        -- marcatoLast,
+        -- accentAll,
+        -- marcatoAll,
+        -- 
+        -- -- ** Phrasing
+        -- tenuto,
+        -- separated,
+        -- staccato,
+        -- portato,
+        -- legato,
+        -- spiccato,
+        -- -- ** Miscellaneous
+        -- resetArticulation,
   ) where
 
 import           Control.Applicative
+import Control.Lens hiding (above, below, transform)
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
 
+import Music.Time
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import           Music.Score.Combinators
+-- import           Music.Score.Combinators
 import           Music.Score.Part
-import           Music.Score.Score
+-- import           Music.Score.Score
 
+
+
+-- |
+-- Articulations type.
+--
+type family Articulation (s :: *) :: *
+
+-- |
+-- Articulation type.
+--
+type family SetArticulation (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single articulation.
+--
+class (HasArticulations s t) => HasArticulation s t where
+
+  -- | Articulation type.
+  articulation :: Lens s t (Articulation s) (Articulation t)
+
+-- |
+-- Class of types that provide a articulation traversal.
+--
+class (Transformable (Articulation s),
+       Transformable (Articulation t),
+       SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+
+  -- | Articulation type.
+  articulations :: Traversal s t (Articulation s) (Articulation t)
+
+-- |
+-- Articulation type.
+--
+articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
+articulation' = articulation
+
+-- |
+-- Articulation type.
+--
+articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
+articulations' = articulations
+
+#define PRIM_ARTICULATION_INSTANCE(TYPE)       \
+                                          \
+type instance Articulation TYPE = TYPE;        \
+type instance SetArticulation a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulation TYPE a where {            \
+  articulation = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulations TYPE a where {           \
+  articulations = ($)               } ;        \
+
+PRIM_ARTICULATION_INSTANCE(())
+PRIM_ARTICULATION_INSTANCE(Bool)
+PRIM_ARTICULATION_INSTANCE(Ordering)
+PRIM_ARTICULATION_INSTANCE(Char)
+PRIM_ARTICULATION_INSTANCE(Int)
+PRIM_ARTICULATION_INSTANCE(Integer)
+PRIM_ARTICULATION_INSTANCE(Float)
+PRIM_ARTICULATION_INSTANCE(Double)
+
+
+type instance Articulation (c,a) = Articulation a
+type instance SetArticulation b (c,a) = (c,SetArticulation b a)
+
+instance HasArticulation a b => HasArticulation (c, a) (c, b) where
+  articulation = _2 . articulation
+
+instance HasArticulations a b => HasArticulations (c, a) (c, b) where
+  articulations = traverse . articulations
+
+
+type instance Articulation [a] = Articulation a
+type instance SetArticulation b [a] = [SetArticulation b a]
+
+instance HasArticulations a b => HasArticulations [a] [b] where
+  articulations = traverse . articulations
+
+
+type instance Articulation (Note a) = Articulation a
+type instance SetArticulation g (Note a) = Note (SetArticulation g a)
+
+instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
+  articulation = _Wrapped . whilstL articulation
+
+instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
+  articulations = _Wrapped . whilstL articulations
+
+
+accent = error "Not implemented: accent"
+marcato = error "Not implemented: marcato"
+accentLast = error "Not implemented: accentLast"
+marcatoLast = error "Not implemented: marcatoLast"
+accentAll = error "Not implemented: accentAll"
+marcatoAll = error "Not implemented: marcatoAll"
+
+tenuto = error "Not implemented: tenuto"
+separated = error "Not implemented: separated"
+staccato = error "Not implemented: staccato"
+portato = error "Not implemented: portato"
+legato = error "Not implemented: legato"
+spiccato = error "Not implemented: spiccato"
+
+
+{-
 class HasArticulation a where
     setBeginSlur :: Bool -> a -> a
     setContSlur :: Bool -> a -> a
@@ -172,3 +321,4 @@ resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . 
 -- Safe for tuple-like types
 get1 = head . toList
 
+-}

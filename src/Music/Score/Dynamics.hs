@@ -1,4 +1,24 @@
 
+
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
+
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -26,26 +46,44 @@
 
 
 module Music.Score.Dynamics (
-        -- * Dynamics representation
+        -- ** Dynamic type functions
+        Dynamic,
+        SetDynamic,
+        -- ** Accessing dynamics
+        HasDynamics(..),
         HasDynamic(..),
-        DynamicT(..),
-        dynamics,
-        dynamicVoice,
-        dynamicSingle,
+        dynamic',
+        dynamics',
+        -- * Manipulating dynamics
+        Level,
+        Attenuable,
+        louder,
+        softer,
+        level,
+        compressor,
+        fadeIn,
+        fadeOut,
 
-        -- * Dynamic transformations
-        -- ** Crescendo and diminuendo
-        Level(..),
-        cresc,
-        dim,
-
-        -- ** Miscellaneous
-        resetDynamics,
+        -- -- * Dynamics representation
+        -- HasDynamic(..),
+        -- DynamicT(..),
+        -- dynamics,
+        -- dynamicVoice,
+        -- dynamicSingle,
+        -- 
+        -- -- * Dynamic transformations
+        -- -- ** Crescendo and diminuendo
+        -- Level(..),
+        -- cresc,
+        -- dim,
+        -- 
+        -- -- ** Miscellaneous
+        -- resetDynamics,  
   ) where
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens            hiding (Level)
+import           Control.Lens            hiding (Level, transform)
 import           Control.Monad
 import           Data.AffineSpace
 import           Data.Foldable
@@ -56,15 +94,169 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace        hiding (Sum)
 
-import           Music.Score.Combinators
-import           Music.Score.Convert
-import           Music.Score.Part
-import           Music.Score.Score
-import           Music.Score.Voice
+-- import           Music.Score.Combinators
+-- import           Music.Score.Convert
+import           Music.Time.Score
+import           Music.Time.Voice
 import           Music.Time
-
+-- import           Music.Score.Part
 import           Music.Dynamics.Literal
 
+
+-- |
+-- Dynamics type.
+--
+type family Dynamic (s :: *) :: *
+
+-- |
+-- Dynamic type.
+--
+type family SetDynamic (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single dynamic.
+--
+class (HasDynamics s t) => HasDynamic s t where
+
+  -- |
+  dynamic :: Lens s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Class of types that provide a dynamic traversal.
+--
+class (Transformable (Dynamic s),
+       Transformable (Dynamic t),
+       SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+
+  -- | Dynamic type.
+  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Dynamic type.
+--
+dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
+dynamic' = dynamic
+
+-- |
+-- Dynamic type.
+--
+dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
+dynamics' = dynamics
+
+#define PRIM_DYNAMIC_INSTANCE(TYPE)       \
+                                          \
+type instance Dynamic TYPE = TYPE;        \
+type instance SetDynamic a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamic TYPE a where {            \
+  dynamic = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamics TYPE a where {           \
+  dynamics = ($)               } ;        \
+
+PRIM_DYNAMIC_INSTANCE(())
+PRIM_DYNAMIC_INSTANCE(Bool)
+PRIM_DYNAMIC_INSTANCE(Ordering)
+PRIM_DYNAMIC_INSTANCE(Char)
+PRIM_DYNAMIC_INSTANCE(Int)
+PRIM_DYNAMIC_INSTANCE(Integer)
+PRIM_DYNAMIC_INSTANCE(Float)
+PRIM_DYNAMIC_INSTANCE(Double)
+
+type instance Dynamic (c,a) = Dynamic a
+type instance SetDynamic b (c,a) = (c,SetDynamic b a)
+
+instance HasDynamic a b => HasDynamic (c, a) (c, b) where
+  dynamic = _2 . dynamic
+
+instance HasDynamics a b => HasDynamics (c, a) (c, b) where
+  dynamics = traverse . dynamics
+
+
+type instance Dynamic [a] = Dynamic a
+type instance SetDynamic b [a] = [SetDynamic b a]
+
+instance HasDynamics a b => HasDynamics [a] [b] where
+  dynamics = traverse . dynamics
+
+
+type instance Dynamic (Note a) = Dynamic a
+type instance SetDynamic g (Note a) = Note (SetDynamic g a)
+
+type instance Dynamic (Note a) = Dynamic a
+
+instance HasDynamic a b => HasDynamic (Note a) (Note b) where
+  dynamic = _Wrapped . whilstL dynamic
+
+instance HasDynamics a b => HasDynamics (Note a) (Note b) where
+  dynamics = _Wrapped . whilstL dynamics
+
+
+-- |
+-- Associated interval type.
+--
+type Level a = Diff (Dynamic a)
+
+-- |
+-- Class of types that can be transposed.
+--
+type Attenuable a 
+  = (HasDynamics a a,
+     VectorSpace (Level a), AffineSpace (Dynamic a),
+     {-IsLevel (Level a), -} IsDynamics (Dynamic a))
+
+-- |
+-- Transpose up.
+--
+louder :: Attenuable a => Level a -> a -> a
+louder a = dynamics %~ (.+^ a)
+
+-- |
+-- Transpose down.
+--
+softer :: Attenuable a => Level a -> a -> a
+softer a = dynamics %~ (.-^ a)
+
+-- |
+-- Transpose down.
+--
+volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
+volume a = dynamics *~ a
+
+-- |
+-- Transpose down.
+--
+level :: Attenuable a => Dynamic a -> a -> a
+level a = dynamics .~ a
+
+compressor :: Attenuable a => 
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a 
+  -> a
+compressor = error "Not implemented: compressor"
+
+--
+-- TODO non-linear fades etc
+--
+
+-- |
+-- Fade in.
+--
+fadeIn :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
+
+-- |
+-- Fade in.
+--
+fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
+
+
+
+{-
 class HasDynamic a where
     setBeginCresc   :: Bool -> a -> a
     setEndCresc     :: Bool -> a -> a
@@ -183,3 +375,4 @@ dim a b = fromDynamics $ DynamicsL (Just a, Just b)
 resetDynamics :: HasDynamic c => c -> c
 resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
 
+-}

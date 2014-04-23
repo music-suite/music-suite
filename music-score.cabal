@@ -85,7 +85,7 @@ library
                         -- Music.Score.Combinators
                         -- Music.Score.Convert
                         -- Music.Score.Ties
-                        -- Music.Score.Part
+                        Music.Score.Part
                         -- Music.Score.Chord
                         -- Music.Score.Meta
                         -- Music.Score.Meta.Annotations
@@ -100,8 +100,8 @@ library
                         -- Music.Score.Meta.Title
                         -- Music.Score.Clef
                         Music.Score.Pitch
-                        -- Music.Score.Articulation
-                        -- Music.Score.Dynamics
+                        Music.Score.Articulation
+                        Music.Score.Dynamics
                         -- Music.Score.Ornaments
                         -- Music.Score.Export.Abc
                         -- Music.Score.Export.Lilypond
