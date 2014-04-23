@@ -3816,12 +3816,12 @@ initial r = r `atTime` minB (occs r)
         minB []    = 0
         minB (x:_) = x - 1
 
--- |
--- Get the final value.
---
-final :: Reactive a -> a
-final (renderR -> (i,[])) = i
-final (renderR -> (i,xs)) = snd $ last xs
+-- | Get the time of all updates and the value switched to at this point.
+updates :: Reactive a -> [(Time, a)]
+updates r = (\t -> (t, r `atTime` t)) <$> (Data.List.sort . Data.List.nub) (occs r)
+
+renderR :: Reactive a -> (a, [(Time, a)])
+renderR = initial &&& updates
 
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
@@ -3829,12 +3829,12 @@ occs = fst . (^. _Wrapped')
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')
 
--- | Get the time of all updates and the value switched to at this point.
-updates :: Reactive a -> [(Time, a)]
-updates r = (\t -> (t, r `atTime` t)) <$> (Data.List.sort . Data.List.nub) (occs r)
-
-renderR :: Reactive a -> (a, [(Time, a)])
-renderR = initial &&& updates
+-- |
+-- Get the final value.
+--
+final :: Reactive a -> a
+final (renderR -> (i,[])) = i
+final (renderR -> (i,xs)) = snd $ last xs
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switchR :: Time -> Reactive a -> Reactive a -> Reactive a
@@ -3877,7 +3877,7 @@ continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 sample   :: [Time] -> Behavior a -> Reactive a
 
 -- TODO linear approximation
-(continous, sample) = error "Not implemented: (discrete, continous, sample)"
+(continous, sample) = error "Not implemented: (continous, sample)"
 
 
 window :: [Time] -> Behavior a -> Reactive (Segment a)
