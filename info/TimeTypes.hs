@@ -1694,606 +1694,6 @@ a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 --
 
 
--- |
--- Pitch type.
---
-type family Pitch (s :: *) :: *
-
--- |
--- Pitch type.
---
-type family SetPitch (b :: *) (s :: *) :: *
-
--- |
--- Class of types that provide a single pitch.
---
-class HasPitches s t => HasPitch s t where
-
-  -- | Access the pitch.
-  pitch :: Lens s t (Pitch s) (Pitch t)
-
--- |
--- Class of types that provide a pitch traversal.
---
-class (Transformable (Pitch s),
-       Transformable (Pitch t),
-       SetPitch (Pitch t) s ~ t) => HasPitches s t where
-
-  -- | Access all pitches.
-  pitches :: Traversal s t (Pitch s) (Pitch t)
-
--- |
--- Pitch type.
---
-pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
-pitch' = pitch
-{-# INLINE pitch' #-}
-
--- |
--- Pitch type.
---
-pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
-pitches' = pitches
-{-# INLINE pitches' #-}
-
-#define PRIM_PITCH_INSTANCE(TYPE)       \
-                                        \
-type instance Pitch TYPE = TYPE;        \
-type instance SetPitch a TYPE = a;      \
-                                        \
-instance (Transformable a, a ~ Pitch a) \
-  => HasPitch TYPE a where {            \
-  pitch = ($)              } ;          \
-                                        \
-instance (Transformable a, a ~ Pitch a) \
-  => HasPitches TYPE a where {          \
-  pitches = ($)              } ;        \
-
-
-PRIM_PITCH_INSTANCE(())
-PRIM_PITCH_INSTANCE(Bool)
-PRIM_PITCH_INSTANCE(Ordering)
-PRIM_PITCH_INSTANCE(Char)
-PRIM_PITCH_INSTANCE(Int)
-PRIM_PITCH_INSTANCE(Integer)
-PRIM_PITCH_INSTANCE(Float)
-PRIM_PITCH_INSTANCE(Double)
-
-type instance Pitch (c,a)               = Pitch a
-type instance SetPitch b (c,a)          = (c,SetPitch b a)
-type instance Pitch [a]                 = Pitch a
-type instance SetPitch b [a]            = [SetPitch b a]
-type instance Pitch (Note a)            = Pitch a
-type instance SetPitch g (Note a)       = Note (SetPitch g a)
-type instance Pitch (Delayed a)         = Pitch a
-type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
-type instance Pitch (Stretched a)       = Pitch a
-type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
-
-instance HasPitch a b => HasPitch (c, a) (c, b) where
-  pitch = _2 . pitch
-instance HasPitches a b => HasPitches (c, a) (c, b) where
-  pitches = traverse . pitches
-
-instance HasPitches a b => HasPitches [a] [b] where
-  pitches = traverse . pitches
-
-instance (HasPitches a b) => HasPitches (Note a) (Note b) where
-  pitches = _Wrapped . whilstL pitches
-instance (HasPitch a b) => HasPitch (Note a) (Note b) where
-  pitch = _Wrapped . whilstL pitch
-
-instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
-  pitches = _Wrapped . whilstLT pitches
-instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
-  pitch = _Wrapped . whilstLT pitch
-
-instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
-  pitches = _Wrapped . whilstLD pitches
-instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
-  pitch = _Wrapped . whilstLD pitch
-
--- |
--- Associated interval type.
---
-type Interval a = Diff (Pitch a)
-
--- |
--- Class of types that can be transposed.
---
-type Transposable a
-  = (HasPitches a a,
-     VectorSpace (Interval a), AffineSpace (Pitch a),
-     IsInterval (Interval a), IsPitch (Pitch a))
-
--- |
--- Transpose up.
---
-up :: Transposable a => Interval a -> a -> a
-up v = pitches %~ (.+^ v)
-
--- |
--- Transpose down.
---
-down :: Transposable a => Interval a -> a -> a
-down v = pitches %~ (.-^ v)
-
--- |
--- Add the given interval above.
---
-above :: (Semigroup a, Transposable a) => Interval a -> a -> a
-above v x = x <> up v x
-
--- |
--- Add the given interval below.
---
-below :: (Semigroup a, Transposable a) => Interval a -> a -> a
-below v x = x <> down v x
-
--- |
--- Invert pitches.
---
-invertPitches :: Transposable a => Pitch a -> a -> a
-invertPitches p = pitches %~ reflectThrough p
-
--- |
--- Transpose up by the given number of octaves.
---
-octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
-octavesUp n = up (_P8^*n)
-
--- |
--- Transpose down by the given number of octaves.
---
-octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
-octavesDown n = down (_P8^*n)
-
--- |
--- Add the given octave above.
---
-octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-octavesAbove n = above (_P8^*n)
-
--- |
--- Add the given octave below.
---
-octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-octavesBelow n = below (_P8^*n)
-
--- |
-augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals = error "Not implemented: augmentIntervals"
--- TODO generalize to any type where we can traverse phrases of something that has pitch
-
-
--- TODO augment/diminish intervals (requires withPrev or similar)
--- TODO invert diatonically
--- TODO rotatePitch (requires some kind of separate traversal)
-
-
-
-
-
-
-
-
-
-
--- |
--- Dynamics type.
---
-type family Dynamic (s :: *) :: *
-
--- |
--- Dynamic type.
---
-type family SetDynamic (b :: *) (s :: *) :: *
-
--- |
--- Class of types that provide a single dynamic.
---
-class (HasDynamics s t) => HasDynamic s t where
-
-  -- |
-  dynamic :: Lens s t (Dynamic s) (Dynamic t)
-
--- |
--- Class of types that provide a dynamic traversal.
---
-class (Transformable (Dynamic s),
-       Transformable (Dynamic t),
-       SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
-
-  -- | Dynamic type.
-  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
-
--- |
--- Dynamic type.
---
-dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
-dynamic' = dynamic
-
--- |
--- Dynamic type.
---
-dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
-dynamics' = dynamics
-
-#define PRIM_DYNAMIC_INSTANCE(TYPE)       \
-                                          \
-type instance Dynamic TYPE = TYPE;        \
-type instance SetDynamic a TYPE = a;      \
-                                          \
-instance (Transformable a, a ~ Dynamic a) \
-  => HasDynamic TYPE a where {            \
-  dynamic = ($)              } ;          \
-                                          \
-instance (Transformable a, a ~ Dynamic a) \
-  => HasDynamics TYPE a where {           \
-  dynamics = ($)               } ;        \
-
-PRIM_DYNAMIC_INSTANCE(())
-PRIM_DYNAMIC_INSTANCE(Bool)
-PRIM_DYNAMIC_INSTANCE(Ordering)
-PRIM_DYNAMIC_INSTANCE(Char)
-PRIM_DYNAMIC_INSTANCE(Int)
-PRIM_DYNAMIC_INSTANCE(Integer)
-PRIM_DYNAMIC_INSTANCE(Float)
-PRIM_DYNAMIC_INSTANCE(Double)
-
-type instance Dynamic (c,a) = Dynamic a
-type instance SetDynamic b (c,a) = (c,SetDynamic b a)
-
-instance HasDynamic a b => HasDynamic (c, a) (c, b) where
-  dynamic = _2 . dynamic
-
-instance HasDynamics a b => HasDynamics (c, a) (c, b) where
-  dynamics = traverse . dynamics
-
-
-type instance Dynamic [a] = Dynamic a
-type instance SetDynamic b [a] = [SetDynamic b a]
-
-instance HasDynamics a b => HasDynamics [a] [b] where
-  dynamics = traverse . dynamics
-
-
-type instance Dynamic (Note a) = Dynamic a
-type instance SetDynamic g (Note a) = Note (SetDynamic g a)
-
-type instance Dynamic (Note a) = Dynamic a
-
-instance HasDynamic a b => HasDynamic (Note a) (Note b) where
-  dynamic = _Wrapped . whilstL dynamic
-
-instance HasDynamics a b => HasDynamics (Note a) (Note b) where
-  dynamics = _Wrapped . whilstL dynamics
-
-
--- |
--- Associated interval type.
---
-type Level a = Diff (Dynamic a)
-
--- |
--- Class of types that can be transposed.
---
-type Attenuable a 
-  = (HasDynamics a a,
-     VectorSpace (Level a), AffineSpace (Dynamic a),
-     {-IsLevel (Level a), -} IsDynamics (Dynamic a))
-
--- |
--- Transpose up.
---
-louder :: Attenuable a => Level a -> a -> a
-louder a = dynamics %~ (.+^ a)
-
--- |
--- Transpose down.
---
-softer :: Attenuable a => Level a -> a -> a
-softer a = dynamics %~ (.-^ a)
-
--- |
--- Transpose down.
---
-volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
-volume a = dynamics *~ a
-
--- |
--- Transpose down.
---
-level :: Attenuable a => Dynamic a -> a -> a
-level a = dynamics .~ a
-
-compressor :: Attenuable a => 
-  Dynamic a           -- ^ Threshold
-  -> Scalar (Level a) -- ^ Ratio
-  -> a 
-  -> a
-compressor = error "Not implemented: compressor"
-
---
--- TODO non-linear fades etc
---
-
--- |
--- Fade in.
---
-fadeIn :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
-
--- |
--- Fade in.
---
-fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
-
-
-
-
-
-
-
-
-
--- |
--- Articulations type.
---
-type family Articulation (s :: *) :: *
-
--- |
--- Articulation type.
---
-type family SetArticulation (b :: *) (s :: *) :: *
-
--- |
--- Class of types that provide a single articulation.
---
-class (HasArticulations s t) => HasArticulation s t where
-
-  -- | Articulation type.
-  articulation :: Lens s t (Articulation s) (Articulation t)
-
--- |
--- Class of types that provide a articulation traversal.
---
-class (Transformable (Articulation s),
-       Transformable (Articulation t),
-       SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
-
-  -- | Articulation type.
-  articulations :: Traversal s t (Articulation s) (Articulation t)
-
--- |
--- Articulation type.
---
-articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
-articulation' = articulation
-
--- |
--- Articulation type.
---
-articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
-articulations' = articulations
-
-#define PRIM_ARTICULATION_INSTANCE(TYPE)       \
-                                          \
-type instance Articulation TYPE = TYPE;        \
-type instance SetArticulation a TYPE = a;      \
-                                          \
-instance (Transformable a, a ~ Articulation a) \
-  => HasArticulation TYPE a where {            \
-  articulation = ($)              } ;          \
-                                          \
-instance (Transformable a, a ~ Articulation a) \
-  => HasArticulations TYPE a where {           \
-  articulations = ($)               } ;        \
-
-PRIM_ARTICULATION_INSTANCE(())
-PRIM_ARTICULATION_INSTANCE(Bool)
-PRIM_ARTICULATION_INSTANCE(Ordering)
-PRIM_ARTICULATION_INSTANCE(Char)
-PRIM_ARTICULATION_INSTANCE(Int)
-PRIM_ARTICULATION_INSTANCE(Integer)
-PRIM_ARTICULATION_INSTANCE(Float)
-PRIM_ARTICULATION_INSTANCE(Double)
-
-
-type instance Articulation (c,a) = Articulation a
-type instance SetArticulation b (c,a) = (c,SetArticulation b a)
-
-instance HasArticulation a b => HasArticulation (c, a) (c, b) where
-  articulation = _2 . articulation
-
-instance HasArticulations a b => HasArticulations (c, a) (c, b) where
-  articulations = traverse . articulations
-
-
-type instance Articulation [a] = Articulation a
-type instance SetArticulation b [a] = [SetArticulation b a]
-
-instance HasArticulations a b => HasArticulations [a] [b] where
-  articulations = traverse . articulations
-
-
-type instance Articulation (Note a) = Articulation a
-type instance SetArticulation g (Note a) = Note (SetArticulation g a)
-
-instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
-  articulation = _Wrapped . whilstL articulation
-
-instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
-  articulations = _Wrapped . whilstL articulations
-
-
-accent = error "Not implemented: accent"
-marcato = error "Not implemented: marcato"
-accentLast = error "Not implemented: accentLast"
-marcatoLast = error "Not implemented: marcatoLast"
-accentAll = error "Not implemented: accentAll"
-marcatoAll = error "Not implemented: marcatoAll"
-
-tenuto = error "Not implemented: tenuto"
-separated = error "Not implemented: separated"
-staccato = error "Not implemented: staccato"
-portato = error "Not implemented: portato"
-legato = error "Not implemented: legato"
-spiccato = error "Not implemented: spiccato"
-
-
-
-
-
-
-
-
-
--- |
--- Parts type.
---
-type family Part (s :: *) :: * -- Part s   = a
-
--- |
--- Part type.
---
-type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
-
--- |
--- Class of types that provide a single part.
---
-class (HasParts s t) => HasPart s t where
-
-  -- | Part type.
-  part :: Lens s t (Part s) (Part t)
-
--- |
--- Class of types that provide a part traversal.
---
-class (Transformable (Part s),
-       Transformable (Part t),
-       SetPart (Part t) s ~ t) => HasParts s t where
-
-  -- | Part type.
-  parts :: Traversal s t (Part s) (Part t)
-
--- |
--- Part type.
---
-part' :: (HasPart s t, s ~ t) => Lens' s (Part s)
-part' = part
-
--- |
--- Part type.
---
-parts' :: (HasParts s t, s ~ t) => Traversal' s (Part s)
-parts' = parts
-
-type instance Part Bool = Bool
-type instance SetPart a Bool = a
-instance (b ~ Part b, Transformable b) => HasPart Bool b where
-  part = ($)
-instance (b ~ Part b, Transformable b) => HasParts Bool b where
-  parts = ($)
-
-type instance Part Ordering = Ordering
-type instance SetPart a Ordering = a
-instance (b ~ Part b, Transformable b) => HasPart Ordering b where
-  part = ($)
-instance (b ~ Part b, Transformable b) => HasParts Ordering b where
-  parts = ($)
-
-type instance Part () = ()
-type instance SetPart a () = a
-instance (b ~ Part b, Transformable b) => HasPart () b where
-  part = ($)
-instance (b ~ Part b, Transformable b) => HasParts () b where
-  parts = ($)
-
-type instance Part Int = Int
-type instance SetPart a Int = a
-instance HasPart Int Int where
-  part = ($)
-instance HasParts Int Int where
-  parts = ($)
-
-type instance Part Integer = Integer
-type instance SetPart a Integer = a
-instance HasPart Integer Integer where
-  part = ($)
-instance HasParts Integer Integer where
-  parts = ($)
-
-type instance Part Float = Float
-type instance SetPart a Float = a
-instance HasPart Float Float where
-  part = ($)
-instance HasParts Float Float where
-  parts = ($)
-
-type instance Part (c,a) = Part a
-type instance SetPart b (c,a) = (c,SetPart b a)
-
-instance HasPart a b => HasPart (c, a) (c, b) where
-  part = _2 . part
-
-instance HasParts a b => HasParts (c, a) (c, b) where
-  parts = traverse . parts
-
-
-type instance Part [a] = Part a
-type instance SetPart b [a] = [SetPart b a]
-
-instance HasParts a b => HasParts [a] [b] where
-  parts = traverse . parts
-
-
-type instance Part (Note a) = Part a
-type instance SetPart g (Note a) = Note (SetPart g a)
-
-instance (HasPart a b) => HasPart (Note a) (Note b) where
-  part = _Wrapped . whilstL part
-
-instance (HasParts a b) => HasParts (Note a) (Note b) where
-  parts = _Wrapped . whilstL parts
-
-type HasPart' a = HasPart a a
-type HasParts' a = HasParts a a
-
--- |
--- List all the parts
---
-allParts :: (Ord (Part a), HasParts' a) => a -> [Part a]
-allParts = Data.List.nub . Data.List.sort . toListOf parts
-
--- |
--- List all the parts
---
-extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
-extractPart = extractPartG
-
-extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
-extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
-
--- |
--- List all the parts
---
-extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
-extractParts = extractPartsG
-
-extractPartsG
-  :: (MonadPlus f,
-      HasParts' (f a), HasPart' a, Part (f a) ~ Part a,
-      Ord (Part a)) => f a -> [f a]
-extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
-
-filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
-filterPart p = mfilter (\x -> p (x ^. part))
-
-
-
-
 
 -- |
 -- 'Delayed' represents a value with an offset in time.
@@ -4028,7 +3428,603 @@ newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
 
 
 
+-- |
+-- Pitch type.
+--
+type family Pitch (s :: *) :: *
 
+-- |
+-- Pitch type.
+--
+type family SetPitch (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single pitch.
+--
+class HasPitches s t => HasPitch s t where
+
+  -- | Access the pitch.
+  pitch :: Lens s t (Pitch s) (Pitch t)
+
+-- |
+-- Class of types that provide a pitch traversal.
+--
+class (Transformable (Pitch s),
+       Transformable (Pitch t),
+       SetPitch (Pitch t) s ~ t) => HasPitches s t where
+
+  -- | Access all pitches.
+  pitches :: Traversal s t (Pitch s) (Pitch t)
+
+-- |
+-- Pitch type.
+--
+pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
+pitch' = pitch
+{-# INLINE pitch' #-}
+
+-- |
+-- Pitch type.
+--
+pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
+pitches' = pitches
+{-# INLINE pitches' #-}
+
+#define PRIM_PITCH_INSTANCE(TYPE)       \
+                                        \
+type instance Pitch TYPE = TYPE;        \
+type instance SetPitch a TYPE = a;      \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitch TYPE a where {            \
+  pitch = ($)              } ;          \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitches TYPE a where {          \
+  pitches = ($)              } ;        \
+
+
+PRIM_PITCH_INSTANCE(())
+PRIM_PITCH_INSTANCE(Bool)
+PRIM_PITCH_INSTANCE(Ordering)
+PRIM_PITCH_INSTANCE(Char)
+PRIM_PITCH_INSTANCE(Int)
+PRIM_PITCH_INSTANCE(Integer)
+PRIM_PITCH_INSTANCE(Float)
+PRIM_PITCH_INSTANCE(Double)
+
+type instance Pitch (c,a)               = Pitch a
+type instance SetPitch b (c,a)          = (c,SetPitch b a)
+type instance Pitch [a]                 = Pitch a
+type instance SetPitch b [a]            = [SetPitch b a]
+type instance Pitch (Note a)            = Pitch a
+type instance SetPitch g (Note a)       = Note (SetPitch g a)
+type instance Pitch (Delayed a)         = Pitch a
+type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
+type instance Pitch (Stretched a)       = Pitch a
+type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
+
+instance HasPitch a b => HasPitch (c, a) (c, b) where
+  pitch = _2 . pitch
+instance HasPitches a b => HasPitches (c, a) (c, b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches [a] [b] where
+  pitches = traverse . pitches
+
+instance (HasPitches a b) => HasPitches (Note a) (Note b) where
+  pitches = _Wrapped . whilstL pitches
+instance (HasPitch a b) => HasPitch (Note a) (Note b) where
+  pitch = _Wrapped . whilstL pitch
+
+instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
+  pitches = _Wrapped . whilstLT pitches
+instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
+  pitch = _Wrapped . whilstLT pitch
+
+instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
+  pitches = _Wrapped . whilstLD pitches
+instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
+  pitch = _Wrapped . whilstLD pitch
+
+-- |
+-- Associated interval type.
+--
+type Interval a = Diff (Pitch a)
+
+-- |
+-- Class of types that can be transposed.
+--
+type Transposable a
+  = (HasPitches a a,
+     VectorSpace (Interval a), AffineSpace (Pitch a),
+     IsInterval (Interval a), IsPitch (Pitch a))
+
+-- |
+-- Transpose up.
+--
+up :: Transposable a => Interval a -> a -> a
+up v = pitches %~ (.+^ v)
+
+-- |
+-- Transpose down.
+--
+down :: Transposable a => Interval a -> a -> a
+down v = pitches %~ (.-^ v)
+
+-- |
+-- Add the given interval above.
+--
+above :: (Semigroup a, Transposable a) => Interval a -> a -> a
+above v x = x <> up v x
+
+-- |
+-- Add the given interval below.
+--
+below :: (Semigroup a, Transposable a) => Interval a -> a -> a
+below v x = x <> down v x
+
+-- |
+-- Invert pitches.
+--
+invertPitches :: Transposable a => Pitch a -> a -> a
+invertPitches p = pitches %~ reflectThrough p
+
+-- |
+-- Transpose up by the given number of octaves.
+--
+octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
+octavesUp n = up (_P8^*n)
+
+-- |
+-- Transpose down by the given number of octaves.
+--
+octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
+octavesDown n = down (_P8^*n)
+
+-- |
+-- Add the given octave above.
+--
+octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesAbove n = above (_P8^*n)
+
+-- |
+-- Add the given octave below.
+--
+octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesBelow n = below (_P8^*n)
+
+-- |
+augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
+augmentIntervals = error "Not implemented: augmentIntervals"
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
+
+
+-- TODO augment/diminish intervals (requires withPrev or similar)
+-- TODO invert diatonically
+-- TODO rotatePitch (requires some kind of separate traversal)
+
+
+
+
+
+
+
+
+
+
+-- |
+-- Dynamics type.
+--
+type family Dynamic (s :: *) :: *
+
+-- |
+-- Dynamic type.
+--
+type family SetDynamic (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single dynamic.
+--
+class (HasDynamics s t) => HasDynamic s t where
+
+  -- |
+  dynamic :: Lens s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Class of types that provide a dynamic traversal.
+--
+class (Transformable (Dynamic s),
+       Transformable (Dynamic t),
+       SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+
+  -- | Dynamic type.
+  dynamics :: Traversal s t (Dynamic s) (Dynamic t)
+
+-- |
+-- Dynamic type.
+--
+dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
+dynamic' = dynamic
+
+-- |
+-- Dynamic type.
+--
+dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
+dynamics' = dynamics
+
+#define PRIM_DYNAMIC_INSTANCE(TYPE)       \
+                                          \
+type instance Dynamic TYPE = TYPE;        \
+type instance SetDynamic a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamic TYPE a where {            \
+  dynamic = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Dynamic a) \
+  => HasDynamics TYPE a where {           \
+  dynamics = ($)               } ;        \
+
+PRIM_DYNAMIC_INSTANCE(())
+PRIM_DYNAMIC_INSTANCE(Bool)
+PRIM_DYNAMIC_INSTANCE(Ordering)
+PRIM_DYNAMIC_INSTANCE(Char)
+PRIM_DYNAMIC_INSTANCE(Int)
+PRIM_DYNAMIC_INSTANCE(Integer)
+PRIM_DYNAMIC_INSTANCE(Float)
+PRIM_DYNAMIC_INSTANCE(Double)
+
+type instance Dynamic (c,a) = Dynamic a
+type instance SetDynamic b (c,a) = (c,SetDynamic b a)
+
+instance HasDynamic a b => HasDynamic (c, a) (c, b) where
+  dynamic = _2 . dynamic
+
+instance HasDynamics a b => HasDynamics (c, a) (c, b) where
+  dynamics = traverse . dynamics
+
+
+type instance Dynamic [a] = Dynamic a
+type instance SetDynamic b [a] = [SetDynamic b a]
+
+instance HasDynamics a b => HasDynamics [a] [b] where
+  dynamics = traverse . dynamics
+
+
+type instance Dynamic (Note a) = Dynamic a
+type instance SetDynamic g (Note a) = Note (SetDynamic g a)
+
+type instance Dynamic (Note a) = Dynamic a
+
+instance HasDynamic a b => HasDynamic (Note a) (Note b) where
+  dynamic = _Wrapped . whilstL dynamic
+
+instance HasDynamics a b => HasDynamics (Note a) (Note b) where
+  dynamics = _Wrapped . whilstL dynamics
+
+
+-- |
+-- Associated interval type.
+--
+type Level a = Diff (Dynamic a)
+
+-- |
+-- Class of types that can be transposed.
+--
+type Attenuable a 
+  = (HasDynamics a a,
+     VectorSpace (Level a), AffineSpace (Dynamic a),
+     {-IsLevel (Level a), -} IsDynamics (Dynamic a))
+
+-- |
+-- Transpose up.
+--
+louder :: Attenuable a => Level a -> a -> a
+louder a = dynamics %~ (.+^ a)
+
+-- |
+-- Transpose down.
+--
+softer :: Attenuable a => Level a -> a -> a
+softer a = dynamics %~ (.-^ a)
+
+-- |
+-- Transpose down.
+--
+volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
+volume a = dynamics *~ a
+
+-- |
+-- Transpose down.
+--
+level :: Attenuable a => Dynamic a -> a -> a
+level a = dynamics .~ a
+
+compressor :: Attenuable a => 
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a 
+  -> a
+compressor = error "Not implemented: compressor"
+
+--
+-- TODO non-linear fades etc
+--
+
+-- |
+-- Fade in.
+--
+fadeIn :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
+
+-- |
+-- Fade in.
+--
+fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
+
+
+
+
+
+
+
+
+
+-- |
+-- Articulations type.
+--
+type family Articulation (s :: *) :: *
+
+-- |
+-- Articulation type.
+--
+type family SetArticulation (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single articulation.
+--
+class (HasArticulations s t) => HasArticulation s t where
+
+  -- | Articulation type.
+  articulation :: Lens s t (Articulation s) (Articulation t)
+
+-- |
+-- Class of types that provide a articulation traversal.
+--
+class (Transformable (Articulation s),
+       Transformable (Articulation t),
+       SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+
+  -- | Articulation type.
+  articulations :: Traversal s t (Articulation s) (Articulation t)
+
+-- |
+-- Articulation type.
+--
+articulation' :: (HasArticulation s t, s ~ t) => Lens' s (Articulation s)
+articulation' = articulation
+
+-- |
+-- Articulation type.
+--
+articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
+articulations' = articulations
+
+#define PRIM_ARTICULATION_INSTANCE(TYPE)       \
+                                          \
+type instance Articulation TYPE = TYPE;        \
+type instance SetArticulation a TYPE = a;      \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulation TYPE a where {            \
+  articulation = ($)              } ;          \
+                                          \
+instance (Transformable a, a ~ Articulation a) \
+  => HasArticulations TYPE a where {           \
+  articulations = ($)               } ;        \
+
+PRIM_ARTICULATION_INSTANCE(())
+PRIM_ARTICULATION_INSTANCE(Bool)
+PRIM_ARTICULATION_INSTANCE(Ordering)
+PRIM_ARTICULATION_INSTANCE(Char)
+PRIM_ARTICULATION_INSTANCE(Int)
+PRIM_ARTICULATION_INSTANCE(Integer)
+PRIM_ARTICULATION_INSTANCE(Float)
+PRIM_ARTICULATION_INSTANCE(Double)
+
+
+type instance Articulation (c,a) = Articulation a
+type instance SetArticulation b (c,a) = (c,SetArticulation b a)
+
+instance HasArticulation a b => HasArticulation (c, a) (c, b) where
+  articulation = _2 . articulation
+
+instance HasArticulations a b => HasArticulations (c, a) (c, b) where
+  articulations = traverse . articulations
+
+
+type instance Articulation [a] = Articulation a
+type instance SetArticulation b [a] = [SetArticulation b a]
+
+instance HasArticulations a b => HasArticulations [a] [b] where
+  articulations = traverse . articulations
+
+
+type instance Articulation (Note a) = Articulation a
+type instance SetArticulation g (Note a) = Note (SetArticulation g a)
+
+instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
+  articulation = _Wrapped . whilstL articulation
+
+instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
+  articulations = _Wrapped . whilstL articulations
+
+
+accent = error "Not implemented: accent"
+marcato = error "Not implemented: marcato"
+accentLast = error "Not implemented: accentLast"
+marcatoLast = error "Not implemented: marcatoLast"
+accentAll = error "Not implemented: accentAll"
+marcatoAll = error "Not implemented: marcatoAll"
+
+tenuto = error "Not implemented: tenuto"
+separated = error "Not implemented: separated"
+staccato = error "Not implemented: staccato"
+portato = error "Not implemented: portato"
+legato = error "Not implemented: legato"
+spiccato = error "Not implemented: spiccato"
+
+
+
+
+
+
+
+
+
+-- |
+-- Parts type.
+--
+type family Part (s :: *) :: * -- Part s   = a
+
+-- |
+-- Part type.
+--
+type family SetPart (b :: *) (s :: *) :: * -- Part b s = t
+
+-- |
+-- Class of types that provide a single part.
+--
+class (HasParts s t) => HasPart s t where
+
+  -- | Part type.
+  part :: Lens s t (Part s) (Part t)
+
+-- |
+-- Class of types that provide a part traversal.
+--
+class (Transformable (Part s),
+       Transformable (Part t),
+       SetPart (Part t) s ~ t) => HasParts s t where
+
+  -- | Part type.
+  parts :: Traversal s t (Part s) (Part t)
+
+-- |
+-- Part type.
+--
+part' :: (HasPart s t, s ~ t) => Lens' s (Part s)
+part' = part
+
+-- |
+-- Part type.
+--
+parts' :: (HasParts s t, s ~ t) => Traversal' s (Part s)
+parts' = parts
+
+type instance Part Bool = Bool
+type instance SetPart a Bool = a
+instance (b ~ Part b, Transformable b) => HasPart Bool b where
+  part = ($)
+instance (b ~ Part b, Transformable b) => HasParts Bool b where
+  parts = ($)
+
+type instance Part Ordering = Ordering
+type instance SetPart a Ordering = a
+instance (b ~ Part b, Transformable b) => HasPart Ordering b where
+  part = ($)
+instance (b ~ Part b, Transformable b) => HasParts Ordering b where
+  parts = ($)
+
+type instance Part () = ()
+type instance SetPart a () = a
+instance (b ~ Part b, Transformable b) => HasPart () b where
+  part = ($)
+instance (b ~ Part b, Transformable b) => HasParts () b where
+  parts = ($)
+
+type instance Part Int = Int
+type instance SetPart a Int = a
+instance HasPart Int Int where
+  part = ($)
+instance HasParts Int Int where
+  parts = ($)
+
+type instance Part Integer = Integer
+type instance SetPart a Integer = a
+instance HasPart Integer Integer where
+  part = ($)
+instance HasParts Integer Integer where
+  parts = ($)
+
+type instance Part Float = Float
+type instance SetPart a Float = a
+instance HasPart Float Float where
+  part = ($)
+instance HasParts Float Float where
+  parts = ($)
+
+type instance Part (c,a) = Part a
+type instance SetPart b (c,a) = (c,SetPart b a)
+
+instance HasPart a b => HasPart (c, a) (c, b) where
+  part = _2 . part
+
+instance HasParts a b => HasParts (c, a) (c, b) where
+  parts = traverse . parts
+
+
+type instance Part [a] = Part a
+type instance SetPart b [a] = [SetPart b a]
+
+instance HasParts a b => HasParts [a] [b] where
+  parts = traverse . parts
+
+
+type instance Part (Note a) = Part a
+type instance SetPart g (Note a) = Note (SetPart g a)
+
+instance (HasPart a b) => HasPart (Note a) (Note b) where
+  part = _Wrapped . whilstL part
+
+instance (HasParts a b) => HasParts (Note a) (Note b) where
+  parts = _Wrapped . whilstL parts
+
+type HasPart' a = HasPart a a
+type HasParts' a = HasParts a a
+
+-- |
+-- List all the parts
+--
+allParts :: (Ord (Part a), HasParts' a) => a -> [Part a]
+allParts = Data.List.nub . Data.List.sort . toListOf parts
+
+-- |
+-- List all the parts
+--
+extractPart :: (Eq (Part a), HasPart' a) => Part a -> Score a -> Score a
+extractPart = extractPartG
+
+extractPartG :: (Eq (Part a), MonadPlus f, HasPart' a) => Part a -> f a -> f a
+extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
+
+-- |
+-- List all the parts
+--
+extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
+extractParts = extractPartsG
+
+extractPartsG
+  :: (MonadPlus f,
+      HasParts' (f a), HasPart' a, Part (f a) ~ Part a,
+      Ord (Part a)) => f a -> [f a]
+extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
+
+filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
+filterPart p = mfilter (\x -> p (x ^. part))
+                                                    
 
 
 
