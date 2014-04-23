@@ -196,7 +196,9 @@ instance Reversible a => Reversible (Score a) where
     rev = fmap rev . withSameOnset (stretch (-1))
 
 instance HasMeta (Score a) where
-    meta = _Wrapped' . _1
+    -- TODO temporary disable
+    meta = lens (\_ -> mempty) (\s x -> s)
+    -- meta = _Wrapped' . _1
 
 
 
