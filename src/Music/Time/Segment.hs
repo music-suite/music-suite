@@ -20,6 +20,52 @@
 
 
 module Music.Time.Segment (
+    -- * Behavior type
+    Behavior,
+    -- ** Examples
+    -- $musicTimeBehaviorExamples
+    -- (!^),
+    -- behavior',
+    behavior,
+
+    -- ** Combinators
+    switch,
+    switch',
+    splice,
+    trim,
+    trimBefore,
+    trimAfter,
+    concatB,
+
+    -- * Common behaviors
+    time,
+    unit,
+    impulse,
+    turnOn,
+    turnOff,
+    sawtooth,
+    sine,
+    cosine,
+         
+    -- * Music.Time.Segment
+    Segment,
+    -- ** Examples
+    -- $XXmusicTimeSegmentExamples
+    segment,
+    
+    -- ** Combinators
+    focusing,
+    apSegments',
+    apSegments,
+    -- concatS,
+    
+    Bound,
+    bounds,
+    bounding,
+    trim,
+    splice,
+    bounded',
+    bounded,
   ) where
 
 import Data.Clipped
@@ -42,8 +88,13 @@ import           Music.Time.Split
 import           Music.Time.Reverse
 import           Music.Time.Bound
 import           Music.Time.Behavior
+import           Music.Time.Stretched
+import           Music.Time.Score
+import           Music.Time.Voice
+import           Music.Time.Note
 
 -----
+import Data.Functor.Rep.Lens
 import Data.Fixed
 import           Data.Default
 import           Data.Ratio
@@ -218,7 +269,8 @@ sineS = undefined
 -}
 
 apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-apSegments' (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2)) 
+  = view stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
 -- |
 -- Append a voice of segments to a single stretched segment.
@@ -241,3 +293,112 @@ slerp2 f i a b
       LT -> a ! (t/i)
       EQ -> (a ! 1) `f` (b ! 1)
       GT -> b ! ((t-i)/(1-i))
+
+
+-- |
+-- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
+--
+-- This can be used to safely turn a behavior into a segment and vice
+-- versa. Often 'focusing' is more convenient to use.
+--
+bounded' :: Iso'
+  (Note (Segment a))
+  (Bound (Behavior a))
+bounded' = bounded
+
+-- |
+-- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
+--
+-- This can be used to safely turn a behavior into a segment and vice
+-- versa. Often 'focusing' is more convenient to use.
+--
+bounded :: Iso
+  (Note (Segment a))
+  (Note (Segment b))
+  (Bound (Behavior a))
+  (Bound (Behavior b))
+bounded = iso ns2bb bb2ns 
+  where
+    bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
+    ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
+    s2b = under tabulated (. realToFrac)
+    b2s = under tabulated (. realToFrac)
+
+--
+-- Note that the isomorhism only works because of 'Bound' being abstract.
+-- A function @unBound :: Bound a -> a@ could break the isomorphism
+-- as follows:
+--
+-- > (unBound . view (from bounded . bounded) . bounds 0 1) b ! 2
+-- *** Exception: Outside 0-1
+--
+
+-- |
+-- Extract a bounded behavior, replacing all values outside the bound with 'mempty'.
+--
+-- @
+-- 'trim'   = 'splice' 'mempty'
+-- 'trim' x = 'trimBefore' '_onset' x . 'trimAfter' '_offset' x
+-- @
+--
+trim :: Monoid b => Bound (Behavior b) -> Behavior b
+trim = trimG
+  where
+    trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
+    trimG (Bound (s, x)) = tabulate (trimOutside s) `apRep` x
+
+trimOutside :: Monoid a => Span -> Time -> a -> a
+trimOutside s t x = if t `inside` s then x else mempty
+
+-- |
+-- Inserts a bounded behavior on top of another behavior.
+--
+-- @
+-- 'trim' = 'splice' 'mempty'
+-- @
+--
+-- (Named after the analogous tape-editing technique.)
+--
+splice :: Behavior a -> Bound (Behavior a) -> Behavior a
+splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
+  where
+    toLast   = Option . Just . Last
+    fromLast = getLast . fromJust . getOption
+    -- fromJust is safe here, as toLast is used to create the Maybe wrapper
+
+
+concatSegment :: Monoid a => Note (Segment a) -> Behavior a
+concatSegment = trim . view bounded
+
+-- |
+-- Concatenate a score of (possibly overlapping) segments.
+--
+-- See also 'concatB' and 'continous'.
+--
+concatS :: Monoid a => Score (Segment a) -> Behavior a
+concatS = mconcat . map concatSegment . view notes
+
+-- |
+-- Concatenate a score of (possibly overlapping) segments.
+--
+-- See also 'concatSegment' and 'continous'.
+--
+concatB :: Monoid a => Score (Behavior a) -> Behavior a
+concatB = concatS . fmap (view focusing)
+
+
+
+-- |
+-- View part of a 'Behavior' as a 'Segment'.
+--
+-- @
+-- 'time' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
+-- @
+--
+focusing :: Lens' (Behavior a) (Segment a)
+focusing = lens get set
+  where
+    get = view (from bounded . getNote) . {-pure-}bounding mempty
+    set x = splice x . (view bounded) . pure
+
+

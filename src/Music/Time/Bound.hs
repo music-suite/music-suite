@@ -19,6 +19,13 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Bound (
+    Bound(..), -- TODO
+    bounds,
+    bounding,
+    -- trim,
+    -- splice,
+    -- bounded',
+    -- bounded,    
   ) where
 
 import           Data.AffineSpace
@@ -166,75 +173,4 @@ bounds t u x = Bound (t <-> u, x)
 --
 bounding :: Span -> a -> Bound a
 bounding (view range -> (t, u)) = bounds t u
-
--- |
--- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
---
--- This can be used to safely turn a behavior into a segment and vice
--- versa. Often 'focusing' is more convenient to use.
---
-bounded' :: Iso'
-  (Note (Segment a))
-  (Bound (Behavior a))
-bounded' = bounded
-
--- |
--- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
---
--- This can be used to safely turn a behavior into a segment and vice
--- versa. Often 'focusing' is more convenient to use.
---
-bounded :: Iso
-  (Note (Segment a))
-  (Note (Segment b))
-  (Bound (Behavior a))
-  (Bound (Behavior b))
-bounded = iso ns2bb bb2ns 
-  where
-    bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
-    ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
-    s2b = under tabulated (. realToFrac)
-    b2s = under tabulated (. realToFrac)
-
---
--- Note that the isomorhism only works because of 'Bound' being abstract.
--- A function @unBound :: Bound a -> a@ could break the isomorphism
--- as follows:
---
--- > (unBound . view (from bounded . bounded) . bounds 0 1) b ! 2
--- *** Exception: Outside 0-1
---
-
--- |
--- Extract a bounded behavior, replacing all values outside the bound with 'mempty'.
---
--- @
--- 'trim'   = 'splice' 'mempty'
--- 'trim' x = 'trimBefore' '_onset' x . 'trimAfter' '_offset' x
--- @
---
-trim :: Monoid b => Bound (Behavior b) -> Behavior b
-trim = trimG
-  where
-    trimG :: (Monoid b, Representable f, Rep f ~ Time) => Bound (f b) -> f b
-    trimG (Bound (s, x)) = tabulate (trimOutside s) `apRep` x
-
-trimOutside :: Monoid a => Span -> Time -> a -> a
-trimOutside s t x = if t `inside` s then x else mempty
-
--- |
--- Inserts a bounded behavior on top of another behavior.
---
--- @
--- 'trim' = 'splice' 'mempty'
--- @
---
--- (Named after the analogous tape-editing technique.)
---
-splice :: Behavior a -> Bound (Behavior a) -> Behavior a
-splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fmap toLast) insert)
-  where
-    toLast   = Option . Just . Last
-    fromLast = getLast . fromJust . getOption
-    -- fromJust is safe here, as toLast is used to create the Maybe wrapper
 

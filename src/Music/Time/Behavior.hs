@@ -61,11 +61,11 @@ module Music.Time.Behavior (
     -- ** Combinators
     switch,
     switch',
-    splice,
-    trim,
+    -- splice,
+    -- trim,
     trimBefore,
     trimAfter,
-    concatB,
+    -- concatB,
 
     -- * Common behaviors
     time,
@@ -97,9 +97,12 @@ import           Music.Time.Duration
 import           Music.Time.Split
 import           Music.Time.Reverse
 import           Music.Time.Bound
+import           Music.Time.Note
+import           Music.Time.Score
 
 -----
 import Data.Fixed
+import Data.Functor.Rep.Lens
 import           Data.Default
 import           Data.Ratio
 
@@ -410,20 +413,6 @@ turnOff = switch 0 1 0
 -- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
 
--- |
--- View part of a 'Behavior' as a 'Segment'.
---
--- @
--- 'time' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
--- @
---
-focusing :: Lens' (Behavior a) (Segment a)
-focusing = lens get set
-  where
-    get = view (from bounded . getNote) . {-pure-}bounding mempty
-    set x = splice x . (view bounded) . pure
-
-
 {-
 -- |
 -- View part of a 'Behavior' as a 'Segment'.
@@ -465,26 +454,6 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
-
-concatSegment :: Monoid a => Note (Segment a) -> Behavior a
-concatSegment = trim . view bounded
-
--- |
--- Concatenate a score of (possibly overlapping) segments.
---
--- See also 'concatB' and 'continous'.
---
-concatS :: Monoid a => Score (Segment a) -> Behavior a
-concatS = mconcat . map concatSegment . view notes
-
--- |
--- Concatenate a score of (possibly overlapping) segments.
---
--- See also 'concatSegment' and 'continous'.
---
-concatB :: Monoid a => Score (Behavior a) -> Behavior a
-concatB = concatS . fmap (view focusing)
-
 
 
 {-
@@ -606,3 +575,10 @@ time = behavior id
 -- 
 --                  
 -}
+
+tau = 2 * pi
+
+floor' :: RealFrac a => a -> a
+floor' = fromIntegral . floor
+
+-- TODO move

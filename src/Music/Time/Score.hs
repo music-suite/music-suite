@@ -19,6 +19,32 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Score (
+      -- * Music.Time.Score
+      Score,
+
+      -- ** Substructure
+      score,
+      notes,
+      voices,
+      -- phrases,
+      singleNote,
+      singleVoice,
+      -- singlePhrase,
+      
+      -- ** Special traversals
+      mapWithSpan,
+      filterWithSpan,
+      mapFilterWithSpan,
+      mapEvents,
+      filterEvents,
+      mapFilterEvents,
+      
+      
+      -- voices -- Lens' (Score a) [Voice a]
+      -- phrases -- Lens' (Voice a) [Phrase a]
+      
+      -- mapVoices, -- ([Voice a] -> [Voice a]) -> Score a -> Score a
+      -- mapPhrases, -- ([Phrase a] -> [Phrase a]) -> Voice a -> Voice a
   ) where
 
 import           Data.AffineSpace

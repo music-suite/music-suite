@@ -24,6 +24,10 @@ module Music.Time.Transform (
       Transformable(..),
       -- ** Apply under a transformation
       whilst,
+      whilstM,
+      whilstL,
+      whilstLT,
+      whilstLD,
       whilstStretch,
       whilstDelay,
       on,     

@@ -36,33 +36,18 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Reactive (
-        Reactive,
-
-        -- * Create, isos etc (TODO)
-        initial,
-        updates,
-        occs,
-        -- final,
-        -- Future,
-        -- Past,
-        -- resets,
-
-        -- * Predicates
-        isConstant,
-        isVariable,
-
-        -- * Combinators
-        -- step,
-
-        switch,
-        trim,
-        -- trimBefore,
-        -- trimAfter,
-
-        -- * Semantics
-        -- renderR,
-        -- renderR',
-        -- printR,
+      -- * Music.Time.Reactive
+      Reactive,
+      initial,
+      final,
+      intermediate,
+      discrete,
+      continous,
+      continousWith,
+      sample,
+      -- TODO
+      -- window,
+      -- windowed,
   ) where
 
 import           Music.Time.Types
@@ -72,6 +57,8 @@ import           Music.Time.Duration
 import           Music.Time.Split
 import           Music.Time.Bound
 import           Music.Time.Behavior
+import           Music.Time.Note
+import           Music.Time.Segment
 
 ----
 import Data.Fixed
@@ -94,6 +81,7 @@ import           Data.Distributive
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
 import           Data.Functor.Rep
+import           Data.Functor.Rep.Lens
 import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
