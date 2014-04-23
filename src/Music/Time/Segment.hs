@@ -273,7 +273,7 @@ apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2)
 -- Append a voice of segments to a single stretched segment.
 --
 apSegments :: Voice (Segment a) -> Stretched (Segment a)
-apSegments = foldr1 apSegments' . toListOf voiceElements
+apSegments = foldr1 apSegments' . toListOf (stretcheds . each)
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a

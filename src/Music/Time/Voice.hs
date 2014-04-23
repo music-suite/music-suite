@@ -21,11 +21,12 @@
 module Music.Time.Voice (
     -- * Music.Time.Voice
     Voice,
+
     -- ** Substructure
     voice,
     stretcheds,
     singleStretched,
-    voiceElements,
+
     -- ** Zips
     zipVoice,
     zipVoiceWith,
