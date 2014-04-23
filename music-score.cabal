@@ -75,7 +75,7 @@ library
                         
                         
                         ------
-                        -- Music.Score.Rhythm
+                        Music.Score.Rhythm
                         -- 
                         Music.Score
                         -- Music.Score.Combinators

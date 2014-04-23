@@ -51,7 +51,6 @@ import           Text.Parsec.Pos
 
 import           Music.Score.Ties
 import           Music.Score.Util
-import           Music.Score.Voice
 import           Music.Time
 
 data Rhythm a
@@ -112,10 +111,10 @@ instance Monoid (Rhythm a) where
     a        `mappend` b          =  Group [a, b]
 
 instance HasDuration (Rhythm a) where
-    duration (Beat d _)        = d
-    duration (Dotted n a)      = duration a * dotMod n
-    duration (Tuplet c a)      = duration a * c
-    duration (Group as)        = sum (fmap duration as)
+    _duration (Beat d _)        = d
+    _duration (Dotted n a)      = _duration a * dotMod n
+    _duration (Tuplet c a)      = _duration a * c
+    _duration (Group as)        = sum (fmap _duration as)
 
 instance AdditiveGroup (Rhythm a) where
     zeroV   = error "No zeroV for (Rhythm a)"
@@ -177,15 +176,17 @@ splitTuplet orig@(Tuplet n (Group xs)) = case trySplit xs of
     Just (as, bs) -> Tuplet n (Group as) <> Tuplet n (Group bs)
 splitTuplet orig = orig
 
+{-
 -- TODO bad instance
 instance HasDuration a => HasDuration [a] where
-    duration = sum . fmap duration
+    _duration = sum . fmap _duration
+-}
 
 trySplit :: [Rhythm a] -> Maybe ([Rhythm a], [Rhythm a])
 trySplit = firstJust . fmap g . splits
     where
         g (part1, part2)
-            | duration part1 == duration part2 = Just (part1, part2)
+            | (sum . fmap _duration) part1 == (sum . fmap _duration) part2 = Just (part1, part2)
             | otherwise                        = Nothing
         splits xs = List.inits xs `zip` List.tails xs
         firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
@@ -348,7 +349,7 @@ tuplet' d = do
 -- many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
 -- many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
 
--- Matches a (duration, value) pair iff the predicate matches, returns beat
+-- Matches a (_duration, value) pair iff the predicate matches, returns beat
 match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
     where
@@ -356,7 +357,7 @@ match p = tokenPrim show next test
         next pos _ _  = updatePosChar pos 'x'
         test (d,x)    = if p d x then Just (Beat d x) else Nothing
 
--- Matches a (duration, value) pair iff the predicate matches, returns beat
+-- Matches a (_duration, value) pair iff the predicate matches, returns beat
 match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
 match' f = tokenPrim show next test
     where
