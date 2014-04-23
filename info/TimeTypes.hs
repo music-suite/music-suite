@@ -1891,7 +1891,7 @@ instance Reversible (Note a) where
 -- |
 -- View a note as a pair of the original value and the transformation (and vice versa).
 --
-note :: (Transformable a, Transformable b) => 
+note :: ({-Transformable a, Transformable b-}) => 
   Iso 
     (Span, a) (Span, b) 
     (Note a) (Note b)
@@ -3145,7 +3145,7 @@ scoreToVoice = view voice . fmap (view stretched) . fmap throwTime . addRests . 
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . view (from delta))
+mapWithSpan f = mapScore (uncurry f . view (from note))
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a

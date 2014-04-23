@@ -98,6 +98,7 @@ import qualified Data.Ord as Ord
 -- @
 -- transform mempty = id
 -- transform (s \<> t) = transform s . transform t
+-- transform (s \<> negateV t) = id
 -- @
 --
 -- Law

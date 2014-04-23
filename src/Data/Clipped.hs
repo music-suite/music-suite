@@ -21,10 +21,11 @@
 module Data.Clipped (
     -- * Data.Clipped
     Clipped,
-    unsafeToClipped,
-    fromClipped,
     clipped,
-    unclipped,    
+    fromClipped,
+    -- ** Unsafe operations
+    unsafeToClipped,
+    -- unclipped,    
   ) where
 
 -----
