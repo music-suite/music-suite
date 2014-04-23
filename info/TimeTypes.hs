@@ -34,8 +34,6 @@
   Music.Time.Split
   Music.Time.Reverse
   Music.Time.Juxtapose
-
-  Music.Score.Part
   
   Music.Time.Stretched
   Music.Time.Delayed
@@ -43,16 +41,18 @@
   Music.Time.Voice
   Music.Time.Chord
   Music.Time.Score
-  Music.Time.Segment
   Music.Time.Linear   ?
   Music.Time.Spline   ?
+  Music.Time.Segment
   Music.Time.Behavior
   Music.Time.Reactive
+
+  Music.Time.Meta (we need to factor out internal types, as the HasMeta instances need to see them...)
   
-  Music.Score.Meta (we need to factor out internal types, as the HasMeta instances need to see them...)
   Music.Score.Pitch
   Music.Score.Dynamics
   Music.Score.Articulation
+  Music.Score.Part
     
   Music.Score.GraceNotes
   Music.Score.Ornaments
@@ -87,6 +87,46 @@ module TimeTypes (
         -- * Music.Time.Meta
         Meta,
         HasMeta(..),
+
+        -- * Music.Time.Types
+        -- * Duration
+        Duration,
+        toDuration,
+        fromDuration,
+        
+        -- * Time points
+        Time,
+        toTime,
+        fromTime,
+
+        -- * Time spans
+        Span,
+        -- *** Creating spans
+        (<->),
+        (>->),
+        (<-<),
+        -- *** Accessing spans
+        range,
+        delta,
+
+        -- ** Properties
+        isProper,
+        delayOnly,
+        stretchOnly,
+        -- Proper spans are always bounded and closed
+        
+        -- ** Points in spans
+        inside,
+        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
+        encloses,
+        overlaps,
+        -- union
+        -- intersection (alt name 'overlap')
+        -- difference (would actually become a split)
+
+        -- ** Utility
+        showRange,
+        showDelta,
 
         -- * Music.Time.Transform
         -- * The Transformable class
@@ -168,46 +208,6 @@ module TimeTypes (
 
         -- ** Repetition
         times,
-
-        -- * Music.Time.Types
-        -- * Duration
-        Duration,
-        toDuration,
-        fromDuration,
-        
-        -- * Time points
-        Time,
-        toTime,
-        fromTime,
-
-        -- * Time spans
-        Span,
-        -- *** Creating spans
-        (<->),
-        (>->),
-        (<-<),
-        -- *** Accessing spans
-        range,
-        delta,
-
-        -- ** Properties
-        isProper,
-        delayOnly,
-        stretchOnly,
-        -- Proper spans are always bounded and closed
-        
-        -- ** Points in spans
-        inside,
-        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
-        encloses,
-        overlaps,
-        -- union
-        -- intersection (alt name 'overlap')
-        -- difference (would actually become a split)
-
-        -- ** Utility
-        showRange,
-        showDelta,
 
         -- * Music.Time.Segment
         Segment,
