@@ -52,6 +52,8 @@ module Music.Score.Part (
         -- ** Accessing parts
         HasParts(..),
         HasPart(..),
+        HasPart',
+        HasParts',
         part',
         parts',
         -- * Manipulating parts (TODO)

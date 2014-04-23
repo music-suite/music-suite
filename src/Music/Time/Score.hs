@@ -39,6 +39,9 @@ module Music.Time.Score (
       filterEvents,
       mapFilterEvents,
 
+      -- TODO
+      mapPhrase,
+
       -- ** Simultaneous notes
       mapSimultaneous,
       simultaneous,
@@ -512,5 +515,7 @@ getValue (t,d,a) = a
 getSpan :: (Time, Duration, a) -> Span
 getSpan (t,d,a) = t >-> d
 
-
+mapPhrase :: (Score a -> Score a) -> Score a -> Score a
+mapPhrase _ = id
+-- FIXME
 

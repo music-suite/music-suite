@@ -51,17 +51,14 @@ import qualified Data.Traversable        as T
 import           Data.Typeable
 import           Data.Void
 
-import           Music.Score.Combinators (mapFirst)
-import           Music.Score.Meta
-import           Music.Score.Meta.Clef
-import           Music.Score.Note
+-- import           Music.Score.Combinators (mapFirst)
+-- import           Music.Score.Meta
+-- import           Music.Score.Meta.Clef
 import           Music.Score.Ornaments   (HasText, text)
 import           Music.Score.Part
-import           Music.Score.Score
 import           Music.Score.Ties
 import           Music.Score.Util
 import           Music.Time
-import           Music.Time.Reactive
 
 
 -- Put the given clef in front of the note

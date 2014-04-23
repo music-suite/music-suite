@@ -58,10 +58,8 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
 
-import           Music.Score.Combinators
+-- import           Music.Score.Combinators
 import           Music.Score.Part
-import           Music.Score.Score
-import           Music.Score.Voice
 import           Music.Time
 
 class HasTremolo a where
@@ -172,19 +170,19 @@ tremolo = setTrem
 -- Attach the given text to the first note in the score.
 --
 text :: (HasPart' a, HasText a) => String -> Score a -> Score a
-text s = mapPhrase (addText s) id id
+text s = mapPhraseWise3 (addText s) id id
 
 -- |
 -- Add a slide between the first and the last note.
 --
 slide :: (HasPart' a, HasSlide a) => Score a -> Score a
-slide = mapPhrase (setBeginSlide True) id (setEndSlide True)
+slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
 
 -- |
 -- Add a glissando between the first and the last note.
 --
 glissando :: (HasPart' a, HasSlide a) => Score a -> Score a
-glissando = mapPhrase (setBeginGliss True) id (setEndGliss True)
+glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
 
 -- |
 -- Make all notes natural harmonics on the given overtone (1 for octave, 2 for fifth etc).
@@ -200,4 +198,9 @@ harmonic n = setNatural True . setHarmonic n
 --
 artificial :: HasHarmonic a => a -> a
 artificial =  setNatural False . setHarmonic 3
+
+
+mapPhraseWise3 :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
+mapPhraseWise3 f _ _ = fmap f
+-- TODO
 

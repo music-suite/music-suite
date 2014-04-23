@@ -97,7 +97,7 @@ library
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
-                        -- Music.Score.Ornaments
+                        Music.Score.Ornaments
                         -- Music.Score.Export.Abc
                         -- Music.Score.Export.Lilypond
                         -- Music.Score.Export.MusicXml
