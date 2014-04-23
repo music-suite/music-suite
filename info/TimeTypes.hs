@@ -853,15 +853,6 @@ stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 
 -- |
--- Access the duration.
---
-clippedDuration = stretchTo 1
-
--- stretchClipped :: (Transformable a, HasDuration a, InnerSpace Duration) => a -> a
--- stretchClipped x = stretchTo (clipped $ duration x) x
-
-
--- |
 -- Class of values that have a position in time.
 --
 -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
@@ -2574,17 +2565,6 @@ runStretched = uncurry stretch . view _Wrapped
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor, Semigroup, Typeable, Eq, Show)
 
-
---
--- TODO define Applicative/Monad
---
---
--- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
--- A possible problem with this is that there are multiple representations of the empty
--- set (namely [(t, t)^.from range | t <- {Time} ]).
---
-
-
 -- 
 -- These are both unsafe, as they allow us to define 'unBound'
 -- 
@@ -2594,6 +2574,15 @@ newtype Bound a = Bound { getBound :: (Span, a) }
 -- instance Traversable Bound where
 --   traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
 -- 
+
+--
+-- TODO define Applicative/Monad
+--
+--
+-- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
+-- A possible problem with this is that there are multiple representations of the empty
+-- set (namely [(t, t)^.from range | t <- {Time} ]).
+--
 
 -- | TODO Unsafe
 instance Wrapped (Bound a) where
@@ -2824,25 +2813,13 @@ instance Ord a => Ord (Segment a) where
   min = liftA2 min
 #endif
 
-
--- |
--- Index a segment.
---
-(!.) :: Segment a -> Duration -> a
-(!.) = (!)
-
--- |
--- View a segment as a time function and vice versa.
---
-segment' :: Iso' (Duration -> a) (Segment a)
-segment' = segment
-
 -- |
 -- View a segment as a time function and vice versa.
 --
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = tabulated
 
+{-
 -- |
 -- A behavior that gives the current time, i.e. the identity function
 -- 
@@ -2855,6 +2832,7 @@ sineS = sin (timeS*tau)
 #else
 sineS = undefined
 #endif
+-}
 
 segmented1 :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 segmented1 (Stretched (d1,s1)) (Stretched (d2,s2)) = Stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
@@ -3031,34 +3009,6 @@ instance AffineSpace a => AffineSpace (Behavior a) where
   (.-.) = liftA2 (.-.)
   (.+^) = liftA2 (.+^)
 #endif
-
-
--- |
--- Returns the value of a behavior at a given time
---
--- Note that this is just an alias defined to make the documentation nicer:
---
--- @
--- '!^' = '!'
--- @
---
-(!^) :: Behavior a -> Time -> a
-(!^) = (!)
-
-infixl 6 !^
-
--- |
--- View a behavior as a time function and vice versa.
---
--- Note that this is just an alias defined to make the documentation nicer:
---
---
--- @
--- 'behavior' = 'tabulated'
--- @
---
-behavior' :: Iso' (Time -> a) (Behavior a)
-behavior' = tabulated
 
 -- |
 -- View a behavior as a time function and vice versa.
