@@ -14,27 +14,39 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
-        module Music.Time.Time,
-        module Music.Time.Span,
+    module Music.Time.Types,
+    module Music.Time.Transform,
+    module Music.Time.Duration,
+    module Music.Time.Position,
+    module Music.Time.Split,
+    module Music.Time.Reverse,
+    module Music.Time.Juxtapose,
 
-        module Music.Time.Delayable,
-        module Music.Time.Stretchable,
-        module Music.Time.Onset,
-
-        module Music.Time.Juxtapose,
-        module Music.Time.Reverse,
-        module Music.Time.Reactive,
-        module Music.Time.Behavior
+    module Music.Time.Stretched,
+    module Music.Time.Delayed,
+    module Music.Time.Note,
+    module Music.Time.Voice,
+    module Music.Time.Chord,
+    module Music.Time.Score,
+    module Music.Time.Segment,
+    module Music.Time.Behavior,
+    module Music.Time.Reactive,
   ) where
 
-import           Music.Time.Span
-import           Music.Time.Time
+import Music.Time.Types
+import Music.Time.Transform
+import Music.Time.Duration
+import Music.Time.Position
+import Music.Time.Split
+import Music.Time.Reverse
+import Music.Time.Juxtapose
 
-import           Music.Time.Delayable
-import           Music.Time.Onset
-import           Music.Time.Stretchable
-
-import           Music.Time.Behavior
-import           Music.Time.Juxtapose
-import           Music.Time.Reactive
-import           Music.Time.Reverse
+import Music.Time.Stretched
+import Music.Time.Delayed
+import Music.Time.Note
+import Music.Time.Voice
+import Music.Time.Chord
+import Music.Time.Score
+import Music.Time.Segment
+import Music.Time.Behavior
+import Music.Time.Reactive

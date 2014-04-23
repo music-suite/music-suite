@@ -65,6 +65,210 @@ module Music.Time.Reactive (
         -- printR,
   ) where
 
+import           Music.Time.Types
+import           Music.Time.Transform
+import           Music.Time.Position
+import           Music.Time.Duration
+import           Music.Time.Split
+import           Music.Time.Bound
+import           Music.Time.Behavior
+
+----
+import Data.Fixed
+import           Data.Default
+import           Data.Ratio
+
+import           Control.Applicative
+import           Control.Arrow                (first, second, (***), (&&&))
+import qualified Control.Category
+import           Control.Comonad
+import           Control.Comonad.Env
+import           Control.Lens                 hiding (Indexable, Level, above,
+                                               below, index, inside, parts,
+                                               reversed, transform, (|>), (<|))
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Distributive
+import           Data.Foldable                (Foldable)
+import qualified Data.Foldable                as Foldable
+import           Data.Functor.Rep
+import qualified Data.List
+import           Data.List.NonEmpty           (NonEmpty)
+import           Data.Maybe
+import           Data.NumInstances
+import           Data.Semigroup               hiding ()
+import           Data.Sequence                (Seq)
+import qualified Data.Sequence                as Seq
+import           Data.Traversable             (Traversable)
+import qualified Data.Traversable             as T
+import           Data.Typeable
+import           Data.VectorSpace hiding (Sum(..))
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+
+import qualified Data.Ratio                   as Util_Ratio
+import qualified Data.List as List
+import qualified Data.Foldable as Foldable
+import qualified Data.Ord as Ord
+-----
+
+
+
+
+-- |
+-- Forms an applicative as per 'Behavior', but only switches at discrete points.
+--
+-- The semantics are given by
+--
+-- @
+-- type Reactive a = (a, Time, Voice a)
+-- @
+--
+newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
+    deriving (Functor, Semigroup, Monoid)
+--
+-- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
+-- 
+-- Possible approach:
+-- 
+--  * Implement PosReactive (no negative values) and define Reactive = Delayed (PosReactive)
+-- 
+--  * Implement liftA2 for PosReactive (preferably with a single traversal)
+-- 
+
+instance Transformable (Reactive a) where
+    transform s (Reactive (t,r)) = Reactive (transform s t, transform s r)
+
+instance Wrapped (Reactive a) where
+    type Unwrapped (Reactive a) = ([Time], Behavior a)
+    _Wrapped' = iso getReactive Reactive
+
+instance Rewrapped (Reactive a) (Reactive b)
+instance Applicative Reactive where
+    pure  = pureDefault
+    (<*>) = apDefault
+
+(view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)
+pureDefault = view _Unwrapped . pure . pure
+
+-- |
+-- Get the initial value.
+--
+initial :: Reactive a -> a
+initial r = r `atTime` minB (occs r)
+    where
+        -- If there are no updates, just use value at time 0
+        -- Otherwise pick an arbitrary time /before/ the first value
+        -- It looks strange but it works
+        minB []    = 0
+        minB (x:_) = x - 1
+
+-- | Get the time of all updates and the value switched to at this point.
+updates :: Reactive a -> [(Time, a)]
+updates r = (\t -> (t, r `atTime` t)) <$> (Data.List.sort . Data.List.nub) (occs r)
+
+renderR :: Reactive a -> (a, [(Time, a)])
+renderR = initial &&& updates
+
+occs :: Reactive a -> [Time]
+occs = fst . (^. _Wrapped')
+
+atTime :: Reactive a -> Time -> a
+atTime = (!) . snd . (^. _Wrapped')
+
+-- |
+-- Get the final value.
+--
+final :: Reactive a -> a
+final (renderR -> (i,[])) = i
+final (renderR -> (i,xs)) = snd $ last xs
+
+-- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
+switchR :: Time -> Reactive a -> Reactive a -> Reactive a
+switchR t (Reactive (tx, bx)) (Reactive (ty, by)) = Reactive $ (,)
+    (filter (< t) tx <> [t] <> filter (> t) ty) (switch t bx by)
+
+-- |
+-- Get all intermediate values.
+--
+intermediate :: Transformable a => Reactive a -> [Note a]
+intermediate (updates -> []) = []
+intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.note) $ withNext $ xs
+  where
+    withNext xs = zip xs (tail xs)
+
+-- |
+-- Realize a 'Reactive' value as a discretely changing behavior.
+--
+discrete :: Reactive a -> Behavior a
+discrete = continous . fmap pure
+
+-- |
+-- Realize a 'Reactive' value as an continous behavior.
+--
+-- See also 'concatSegment' and 'concatB'.
+--
+continous :: Reactive (Segment a) -> Behavior a
+
+-- |
+-- Realize a 'Reactive' value as an continous behavior.
+--
+-- See also 'concatSegment' and 'concatB'.
+--
+continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
+continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
+
+-- |
+-- Sample a 'Behavior' into a reactive.
+--
+sample   :: [Time] -> Behavior a -> Reactive a
+
+-- TODO linear approximation
+(continous, sample) = error "Not implemented: (continous, sample)"
+
+
+window :: [Time] -> Behavior a -> Reactive (Segment a)
+windowed :: Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
+(window, windowed) = error "Not implemented: (window, windowed)"
+
+{-
+
+-- Fre monad of ?
+{-
+data Score s a
+  = SOne a
+  | SPlus s [Score a]
+-}
+newtype Trans s a = Trans (s, [a]) deriving (Functor)
+instance Monoid s => Monad (Trans s) where
+  return = Trans . return . return
+  -- TODO the usual >>=
+
+type Score s a = Free (Trans s) a
+
+viewScore :: Monoid s => Score s a -> [(s, a)]
+viewScore x = case retract x of
+  Trans (s,as) -> zip (repeat s) as
+
+
+-- Free monad of (a,a)
+{-
+data Tree a
+  = One a
+  | Plus (Tree a) (Tree a)
+-}
+data Pair a = Pair a a deriving (Functor)
+newtype MaybePair a = MaybePair (Maybe (Pair a)) deriving (Functor) -- Use compose
+type Tree a = Free MaybePair a
+
+-- CPS-version of Tree
+newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
+   -}
+
+
+{-
 import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens
@@ -87,17 +291,13 @@ import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Data.VectorSpace
 
-import           Music.Time.Delayable
-import           Music.Time.Span
-import           Music.Time.Stretchable
-import           Music.Time.Time
-import           Music.Time.Time
--- import Music.Score.Note
--- import Music.Score.Track
--- import Music.Score.Pitch
--- import Music.Score.Util
--- import Music.Pitch.Literal
--- import Music.Dynamics.Literal
+import           Music.Time.Types
+import           Music.Time.Transform
+import           Music.Time.Duration
+import           Music.Time.Position
+import           Music.Time.Juxtapose
+import           Music.Time.Reverse
+import           Music.Time.Split
 
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
     deriving (Functor, Semigroup, Monoid)
@@ -271,3 +471,4 @@ printR r = let (x, xs) = renderR r in do
 
 unzip' :: Functor f => f (a, b) -> (f a, f b)
 unzip' r = (fst <$> r, snd <$> r)
+                                     -}

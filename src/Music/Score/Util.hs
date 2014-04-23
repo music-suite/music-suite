@@ -1,5 +1,6 @@
 
 
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Music.Score.Util where
@@ -31,101 +32,14 @@ module Music.Score.Util where
             
 -}
 
+import Control.Lens
+import Control.Monad.Plus
+import Control.Applicative
 import qualified Data.Char
 import qualified Data.Monoid
 import qualified Data.List
 import qualified Data.Ratio
 
--- | Synonym for 'Data.Char.toUpper'
--- > category : String
--- > depends : base
-toUpperChar :: Char -> Char
-toUpperChar = Data.Char.toUpper
-
--- | Synonym for 'Data.Char.toLower'
--- > category : String
--- > depends : base
-toLowerChar :: Char -> Char
-toLowerChar = Data.Char.toLower
-
--- | Synonym for 'fmap Data.Char.toUpper'
--- > category : String
--- > depends : base
-toUpperString :: String -> String
-toUpperString = fmap Data.Char.toUpper
-
--- | Synonym for 'fmap Data.Char.toLower'
--- > category : String
--- > depends : base
-toLowerString :: String -> String
-toLowerString = fmap Data.Char.toLower
-
--- | Convert a string to use upper case for the leading letter and lower case for remaining letters.
--- > category : String
--- > depends : base
-toCapitalString :: String -> String
-toCapitalString [] = []
-toCapitalString (x:xs) = toUpperChar x : toLowerString xs
-
--- | Synonym for '(++)'
--- > category : List
--- > depends : base
-withPrefix :: [a] -> [a] -> [a]
-withPrefix x = (x ++)
-
--- | Synonym for 'flip (++)'
--- > category : List
--- > depends : base
-withSuffix :: [a] -> [a] -> [a]
-withSuffix x = (++ x)
-
--- | Separate a list by the given element. Equivalent to 'Data.List.intersperse'.
--- > category : List
--- > depends : base
-sep :: a -> [a] -> [a]
-sep = Data.List.intersperse
-
--- | Initiate and separate a list by the given element.
--- > category : List
--- > depends : base
-pre :: a -> [a] -> [a]
-pre x = (x :) . sep x
-
--- | Separate and terminate a list by the given element.
--- > category : List
--- > depends : base
-post :: a -> [a] -> [a]
-post x = withSuffix [x] . sep x
-
--- | Separate and terminate a list by the given element.
--- > category : List
--- > depends : base
-wrap :: a -> a -> [a] -> [a]
-wrap x y = (x :) . withSuffix [y] . sep x
-
--- | Combination of 'concat' and 'sep'.  Equivalent to 'Data.List.intercalate'.
--- > category : List
--- > depends : base
-concatSep :: [a] -> [[a]] -> [a]
-concatSep x = concat . sep x
-
--- | Combination of 'concat' and 'pre'.
--- > category : List
--- > depends : base
-concatPre :: [a] -> [[a]] -> [a]
-concatPre x = concat . pre x
-
--- | Combination of 'concat' and 'post'.
--- > category : List
--- > depends : base
-concatPost :: [a] -> [[a]] -> [a]
-concatPost x = concat . post x
-
--- | Combination of 'concat' and 'wrap'.
--- > category : List
--- > depends : base
-concatWrap :: [a] -> [a] -> [[a]] -> [a]
-concatWrap x y = concat . wrap x y
 
 -- | Divide a list into parts of maximum length n.
 -- > category : List
@@ -280,6 +194,13 @@ tripl ((a,b),c) = (a,b,c)
 tripr :: (a,(b,c)) -> (a,b,c)
 tripr (a,(b,c)) = (a,b,c)
 
+
+-- TODO mo
+partial2 :: (a -> b      -> Bool) -> a -> b      -> Maybe b
+partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
+partial2 f = curry  (fmap snd  . partial (uncurry f))
+partial3 f = curry3 (fmap (view _3) . partial (uncurry3 f))
+
 -- | Case matching on lists.
 -- > category: List
 -- > depends: base
@@ -382,3 +303,43 @@ withNext = go
 -- > depends: base
 mapWithNext :: (a -> Maybe a -> b) -> [a] -> [b]
 mapWithNext f = fmap (uncurry f) . withNext
+
+
+
+
+--------
+
+
+
+
+
+
+
+toDouble :: Real a => a -> Double
+toDouble = realToFrac
+
+through :: Applicative f => 
+  Lens' s a 
+  -> Lens s t a b 
+  -> Lens (f s) (f t) (f a) (f b)
+through lens1 lens2 = lens getter (flip setter)
+  where
+    getter = fmap (view lens1)
+    setter = liftA2 (over lens2 . const)
+{-# INLINE through #-}
+
+single :: Prism' [a] a
+single = prism' return $ \xs -> case xs of
+  [x] -> Just x
+  _   -> Nothing
+{-# INLINE single #-}
+
+
+floor' :: RealFrac a => a -> a
+floor' = fromIntegral . floor
+
+-- Like Data.Ord.comparing
+-- (Are both variants of contramap?)
+inspecting :: Eq a => (b -> a) -> b -> b -> Bool
+inspecting p x y = p x == p y
+

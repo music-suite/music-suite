@@ -1,6 +1,25 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
+
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -16,14 +35,12 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Reverse (
-        -- * Reversible class
+        -- * Music.Time.Reverse
+        -- * The Reversible class
         Reversible(..),
-
-        -- ** Utility
-        NoRev(..),
-        WithRev(..),
-        withRev,
-        fromWithRev,
+        reversed,
+        revDefault,
+        NoReverse(..),
   ) where
 
 import           Data.AffineSpace
@@ -36,12 +53,171 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Delayable
-import           Music.Time.Juxtapose
-import           Music.Time.Onset
-import           Music.Time.Stretchable
-import           Music.Time.Time
+import           Music.Time.Types
+import           Music.Time.Transform
+import           Music.Time.Position
+import           Music.Time.Duration
 
+-----
+import Data.Fixed
+import           Data.Default
+import           Data.Ratio
+
+import           Control.Applicative
+import           Control.Arrow                (first, second, (***), (&&&))
+import qualified Control.Category
+import           Control.Comonad
+import           Control.Comonad.Env
+import           Control.Lens                 hiding (Indexable, Level, above,
+                                               below, index, inside, parts,
+                                               reversed, transform, (|>), (<|))
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Distributive
+import           Data.Foldable                (Foldable)
+import qualified Data.Foldable                as Foldable
+import           Data.Functor.Rep
+import qualified Data.List
+import           Data.List.NonEmpty           (NonEmpty)
+import           Data.Maybe
+import           Data.NumInstances
+import           Data.Semigroup               hiding ()
+import           Data.Sequence                (Seq)
+import qualified Data.Sequence                as Seq
+import           Data.Traversable             (Traversable)
+import qualified Data.Traversable             as T
+import           Data.Typeable
+import           Data.VectorSpace hiding (Sum(..))
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+
+import qualified Data.Ratio                   as Util_Ratio
+import qualified Data.List as List
+import qualified Data.Foldable as Foldable
+import qualified Data.Ord as Ord
+-----
+
+-- |
+-- Class of values that can be reversed (retrograded).
+--
+-- For positioned values succh as 'Note', the value is reversed relative to its middle point, i.e.
+-- the onset value becomes the offset value and vice versa.
+--
+-- For non-positioned values such as 'Stretched', the value is reversed in-place.
+--
+-- FIXME Second law is incompatible with 'revDefault' (and the 'Span' definition below)
+--
+-- Law
+--
+-- @
+-- 'rev' ('rev' a) = a
+-- @
+--
+-- @
+-- 'abs' ('_duration' x) = _duration ('rev' x)
+-- @
+--
+-- @
+-- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
+-- @
+--
+-- or equivalently,
+--
+-- @
+-- 'transform' . 'rev' = 'fmap' 'rev' . 'transform'
+-- @
+--
+-- For 'Span'
+--
+-- @
+-- 'rev' = 'over' 'range' 'swap'
+-- @
+--
+class Transformable a => Reversible a where
+
+  -- | Reverse (retrograde) the given value.
+  rev :: a -> a
+
+--
+-- XXX Counter-intuitive Behavior instances (just Behavior should reverse around origin,
+-- while Bound (Behavior a) should reverse around the middle, like a note)
+--
+
+--
+-- XXX Alternate formulation of second Reversiblee law
+-- 
+--     rev s `transform` a     = rev (s `transform` a)
+-- ==> (rev s `transform`)     = rev . (s `transform`)
+-- ==> transform (rev s)       = rev . (transform s)
+-- ==> (transform . rev) s     = (rev .) (transform s)
+-- ==> (transform . rev) s     = fmap rev (transform s)
+-- ==> transform . rev         = fmap rev . transform
+-- 
+
+instance Reversible () where
+  rev = id
+
+instance Reversible Int where
+  rev = id
+
+instance Reversible Double where
+  rev = id
+
+instance Reversible Integer where
+  rev = id
+
+instance Reversible a => Reversible [a] where
+  rev = reverse . map rev
+
+instance Reversible a => Reversible (Seq a) where
+  rev = Seq.reverse . fmap rev
+
+instance Reversible Duration where
+  rev = stretch (-1)
+
+--
+-- There is no instance for Reversible Time
+-- as we can not satisfy the second Reversible law
+--
+
+instance Reversible Span where
+  rev = revDefault
+
+instance Reversible a => Reversible (a, b) where
+  rev (s,a) = (rev s, a)
+
+-- |
+-- A default implementation of 'rev'
+--
+revDefault :: (HasPosition a, Transformable a) => a -> a
+-- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
+revDefault x = stretch (-1) x
+
+newtype NoReverse a = NoReverse { getNoReverse :: a }
+  deriving (Typeable, Eq, Ord, Show)
+
+instance Transformable (NoReverse a) where
+  transform _ = id
+
+instance Reversible (NoReverse a) where
+  rev = id
+
+-- |
+-- View the reverse of a value.
+--
+-- >>> [1,2,3] & reversed %~ sort
+-- > [3,2,1]
+--
+reversed :: Reversible a => Iso' a a
+reversed = iso rev rev
+
+
+
+
+
+{-
 -- |
 -- Reversible values.
 --
@@ -63,6 +239,7 @@ import           Music.Time.Time
 -- >     rev = withSameOnset (stretch (-1))
 --
 --
+
 class Reversible a where
 
     -- |
@@ -115,5 +292,6 @@ fromWithRev (WithRev (_,x)) = x
 instance Reversible a => Reversible (WithRev a) where
     rev (WithRev (r,x)) = WithRev (x,r)
 
+                                         -}
 
 

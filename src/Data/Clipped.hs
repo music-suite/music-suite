@@ -1,0 +1,3 @@
+
+module Data.Clipped where
+  

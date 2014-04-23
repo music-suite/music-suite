@@ -21,15 +21,17 @@ source-repository head
   location:         	git://github.com/music-suite/music-score.git
   
 library                    
-    build-depends: 		base				>= 4 && < 5,
+    build-depends:      base				>= 4 && < 5,
                         lens				>= 4.0 && < 4.1,
                         process,
                         data-default,           
                         containers,       
                         comonad,
-                        NumInstances,
                         profunctors,
                         transformers,
+                        distributive,
+                        adjunctions,
+                        NumInstances,
                         monadplus,
                         void,
                         semigroups              >= 0.13.0.1 && < 1,
@@ -45,19 +47,35 @@ library
                         music-dynamics-literal  == 1.6.2,
                         prettify,
                         parsec
-    exposed-modules:	Data.PairMonad
+    exposed-modules:	  Data.Clipped
+                        Data.PairMonad
+                        Data.Functor.Rep.Lens
                         Control.Monad.Compose
-                        Music.Time
-                        Music.Time.Delayable
-                        Music.Time.Stretchable
-                        Music.Time.Onset
-                        Music.Time.Juxtapose
+
+                        Music.Time.Types
+                        Music.Time.Transform
+                        Music.Time.Duration
+                        Music.Time.Position
+                        Music.Time.Split
                         Music.Time.Reverse
-                        Music.Time.Time
-                        Music.Time.Span
-                        Music.Time.Reactive
+                        Music.Time.Juxtapose
+
+                        Music.Time.Stretched
+                        Music.Time.Delayed
+                        Music.Time.Note
+                        Music.Time.Voice
+                        Music.Time.Chord
+                        Music.Time.Score
+                        -- Music.Time.Linear   ?
+                        -- Music.Time.Spline   ?
+                        Music.Time.Segment
                         Music.Time.Behavior
+                        Music.Time.Reactive
+                        
+                        
+                        ------
                         Music.Score.Rhythm
+                        
                         Music.Score
                         Music.Score.Note
                         Music.Score.Track

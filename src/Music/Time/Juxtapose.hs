@@ -6,6 +6,26 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
+
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -19,29 +39,26 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Juxtapose (
-        -- * Prerequisites
-        Transformable(..),
-
-        -- ** Juxtaposing values
-        following,
-        preceding,
+       -- * Align without composition
+        lead,
+        follow,
+        -- * Align and compose
+        after,
+        before,
         during,
-
-        -- * Composing values
+        sustain,
+        palindrome,
+        
+        -- ** Composition operators
         (|>),
-        (>|),
         (<|),
+
+        -- ** Catenation
         scat,
         pcat,
 
-        -- ** Special composition
-        sustain,
-        anticipate,
-
         -- ** Repetition
         times,
-        repeated,
-        group,
   ) where
 
 
@@ -51,11 +68,141 @@ import           Data.Monoid.WithSemigroup
 import           Data.Semigroup
 import           Data.VectorSpace
 
-import           Music.Time.Delayable
-import           Music.Time.Onset
-import           Music.Time.Stretchable
-import           Music.Time.Time
+import           Music.Time.Types
+import           Music.Time.Transform
+import           Music.Time.Position
+import           Music.Time.Duration
+import           Music.Time.Reverse
 
+-----
+import Data.Fixed
+import           Data.Default
+import           Data.Ratio
+
+import           Control.Applicative
+import           Control.Arrow                (first, second, (***), (&&&))
+import qualified Control.Category
+import           Control.Comonad
+import           Control.Comonad.Env
+import           Control.Lens                 hiding (Indexable, Level, above,
+                                               below, index, inside, parts,
+                                               reversed, transform, (|>), (<|))
+import           Control.Monad
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Distributive
+import           Data.Foldable                (Foldable)
+import qualified Data.Foldable                as Foldable
+import           Data.Functor.Rep
+import qualified Data.List
+import           Data.List.NonEmpty           (NonEmpty)
+import           Data.Maybe
+import           Data.NumInstances
+import           Data.Semigroup               hiding ()
+import           Data.Sequence                (Seq)
+import qualified Data.Sequence                as Seq
+import           Data.Traversable             (Traversable)
+import qualified Data.Traversable             as T
+import           Data.Typeable
+import           Data.VectorSpace hiding (Sum(..))
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+
+import qualified Data.Ratio                   as Util_Ratio
+import qualified Data.List as List
+import qualified Data.Foldable as Foldable
+import qualified Data.Ord as Ord
+-----
+
+
+--
+-- TODO names
+-- Especially 'after' is counter-intuitive
+--
+
+-- |
+-- Move a value so that
+--
+-- @
+-- '_offset' (a ``lead`` b) = '_onset' b
+-- @
+--
+--
+lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+a `lead` b   = placeAt 1 (b `_position` 0) a
+
+-- |
+-- Move a value so that
+--
+-- @
+-- '_offset' a = '_onset' (a ``follow`` b)
+-- @
+--
+follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+a `follow` b = placeAt 0 (a `_position` 1) b
+
+-- |
+-- Move a value so that
+--
+after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `after` b =  a <> (a `follow` b)
+
+-- |
+-- Move a value so that
+--
+before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `before` b =  (a `lead` b) <> b
+
+-- |
+-- A value followed by its reverse (retrograde).
+--
+palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
+palindrome a = a `after` rev a
+
+(|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+(|>) = after
+
+(<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+(<|) = before
+
+-- |
+-- Compose a list of sequential objects, with onset and offset tangent to one another.
+--
+-- For non-positioned types, this is the often same as 'mconcat'
+-- For positioned types, this is the same as 'afterAnother'
+--
+scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+scat = Prelude.foldr (|>) mempty
+
+-- |
+-- Compose a list of parallel objects, so that their local origins align.
+--
+-- This not possible for non-positioned types, as they have no notion of an origin.
+-- For positioned types this is the same as 'mconcat'.
+--
+pcat :: (Semigroup a, Monoid a) => [a] -> a
+pcat = Prelude.foldr (<>) mempty
+
+-- |
+-- Move a value so that
+--
+during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+y `during`  x = _placeAt (_era x) y
+
+-- |
+-- Move a value so that
+--
+sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+x `sustain` y   = x <> y `during` x
+
+-- |
+-- Move a value so that
+--
+times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
+times n   = scat . replicate n
+
+{-
 -- |
 -- This pseudo-class gathers the restrictions needed to implement position a value at
 -- any point and duration in time.
@@ -206,3 +353,4 @@ times n     = scat . replicate n
 repeated    = flip (\f -> scat . fmap f)
 group n     = times n . (fromIntegral n `compress`)
 
+-}
