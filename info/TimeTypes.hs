@@ -1553,17 +1553,17 @@ isProper (view range -> (t, u)) = t < u
 -- A prism to the subset of 'Span' that performs a stretch but no delay.
 --
 stretches :: Prism' Span Duration
-stretches = prism (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
-  (0, d) -> Right d
-  _      -> Left x
+stretches = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+  (0, d) -> Just d
+  _      -> Nothing
 
 -- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
 --
 delays :: Prism' Span Time
-delays = prism (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
-  (t, 1) -> Right t
-  _      -> Left x
+delays = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+  (t, 1) -> Just t
+  _      -> Nothing
        
 
 --
