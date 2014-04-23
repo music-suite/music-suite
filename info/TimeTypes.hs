@@ -2641,7 +2641,7 @@ bounding (view range -> (t, u)) = bounds t u
 -- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
 -- This can be used to safely turn a behavior into a segment and vice
--- versa. Usually 'focusing' is more convenient to use.
+-- versa. Often 'focusing' is more convenient to use.
 --
 bounded' :: Iso'
   (Note (Segment a))
@@ -3592,7 +3592,7 @@ score = to $ flip (set notes) empty
 -- @
 --
 -- @
--- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' b) -> 'Score' a -> 'Score' b
 -- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
 -- 'over'     ('notes' . 'elements' odd)   :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
 -- @
@@ -3633,7 +3633,7 @@ notes = unsafeNotes
 -- @
 --
 -- @
--- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' b) -> 'Score' a -> 'Score' b
 -- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
 -- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
 -- @
