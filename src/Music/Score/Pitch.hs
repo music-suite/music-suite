@@ -33,49 +33,80 @@
 
 
 module Music.Score.Pitch (     
-        -- * Accessors
+        -- ** Pitch type functions
+        Pitch,
+        SetPitch,
+        Interval,
+        Transposable,
+        -- ** Accessing pitch
+        HasPitches(..),
+        HasPitch(..),
         pitch',
-        pitch,
-        -- pitch_,
-        -- pitches',
-        -- pitches,
-
-        -- * Transformations
-        -- ** Transformations
-        inv,
-
-        -- ** Transformations
+        pitches',
+        -- * Manipulating pitch
+        -- ** Transposition
         up,
         down,
-        fifthsUp,
-        fifthsDown,
+        above,
+        below,
+        invertPitches,
         octavesUp,
         octavesDown,
-
-        -- ** Transformations
-        -- above,
-        -- below,
-        fifthsAbove,
-        fifthsBelow,
         octavesAbove,
         octavesBelow,
-
-        -- * Pitch representation
-        Pitch,
-        Interval,
-        HasGetPitch(..),
-        HasSetPitch(..),
-        HasPitch'(..),
-        HasPitch(..),
-        HasSetPitch'(..),
-        Transposable,
-        Transposable1,
+        fifthsUp,
+        fifthsDown,
+        fifthsAbove,
+        fifthsBelow,
+        -- ** Intervals
+        augmentIntervals,
+        
+        -- TODO pitchIs, to write filter pitchIs ... etc        
+        -- TODO gliss etc
+        
+        -- -- * Accessors
+        -- pitch',
+        -- pitch,
+        -- -- pitch_,
+        -- -- pitches',
+        -- -- pitches,
+        -- 
+        -- -- * Transformations
+        -- -- ** Transformations
+        -- inv,
+        -- 
+        -- -- ** Transformations
+        -- up,
+        -- down,
+        -- fifthsUp,
+        -- fifthsDown,
+        -- octavesUp,
+        -- octavesDown,
+        -- 
+        -- -- ** Transformations
+        -- -- above,
+        -- -- below,
+        -- fifthsAbove,
+        -- fifthsBelow,
+        -- octavesAbove,
+        -- octavesBelow,
+        -- 
+        -- -- * Pitch representation
+        -- Pitch,
+        -- Interval,
+        -- HasGetPitch(..),
+        -- HasSetPitch(..),
+        -- HasPitch'(..),
+        -- HasPitch(..),
+        -- HasSetPitch'(..),
+        -- Transposable,
+        -- Transposable1,
 
   ) where
 
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Control.Applicative
-import Control.Lens
+import Control.Lens hiding (above, below)
 import Data.Semigroup
 import Data.String
 import Data.Typeable
@@ -90,6 +121,207 @@ import qualified Data.List as List
 import Music.Time
 import Music.Pitch.Literal
 
+-- |
+-- Pitch type.
+--
+type family Pitch (s :: *) :: *
+
+-- |
+-- Pitch type.
+--
+type family SetPitch (b :: *) (s :: *) :: *
+
+-- |
+-- Class of types that provide a single pitch.
+--
+class HasPitches s t => HasPitch s t where
+
+  -- | Access the pitch.
+  pitch :: Lens s t (Pitch s) (Pitch t)
+
+-- |
+-- Class of types that provide a pitch traversal.
+--
+class (Transformable (Pitch s),
+       Transformable (Pitch t),
+       SetPitch (Pitch t) s ~ t) => HasPitches s t where
+
+  -- | Access all pitches.
+  pitches :: Traversal s t (Pitch s) (Pitch t)
+
+-- |
+-- Pitch type.
+--
+pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
+pitch' = pitch
+{-# INLINE pitch' #-}
+
+-- |
+-- Pitch type.
+--
+pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
+pitches' = pitches
+{-# INLINE pitches' #-}
+
+#define PRIM_PITCH_INSTANCE(TYPE)       \
+                                        \
+type instance Pitch TYPE = TYPE;        \
+type instance SetPitch a TYPE = a;      \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitch TYPE a where {            \
+  pitch = ($)              } ;          \
+                                        \
+instance (Transformable a, a ~ Pitch a) \
+  => HasPitches TYPE a where {          \
+  pitches = ($)              } ;        \
+
+
+PRIM_PITCH_INSTANCE(())
+PRIM_PITCH_INSTANCE(Bool)
+PRIM_PITCH_INSTANCE(Ordering)
+PRIM_PITCH_INSTANCE(Char)
+PRIM_PITCH_INSTANCE(Int)
+PRIM_PITCH_INSTANCE(Integer)
+PRIM_PITCH_INSTANCE(Float)
+PRIM_PITCH_INSTANCE(Double)
+
+type instance Pitch (c,a)               = Pitch a
+type instance SetPitch b (c,a)          = (c,SetPitch b a)
+type instance Pitch [a]                 = Pitch a
+type instance SetPitch b [a]            = [SetPitch b a]
+type instance Pitch (Note a)            = Pitch a
+type instance SetPitch g (Note a)       = Note (SetPitch g a)
+type instance Pitch (Delayed a)         = Pitch a
+type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
+type instance Pitch (Stretched a)       = Pitch a
+type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
+
+instance HasPitch a b => HasPitch (c, a) (c, b) where
+  pitch = _2 . pitch
+instance HasPitches a b => HasPitches (c, a) (c, b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches [a] [b] where
+  pitches = traverse . pitches
+
+instance (HasPitches a b) => HasPitches (Note a) (Note b) where
+  pitches = _Wrapped . whilstL pitches
+instance (HasPitch a b) => HasPitch (Note a) (Note b) where
+  pitch = _Wrapped . whilstL pitch
+
+instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
+  pitches = _Wrapped . whilstLT pitches
+instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
+  pitch = _Wrapped . whilstLT pitch
+
+instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
+  pitches = _Wrapped . whilstLD pitches
+instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
+  pitch = _Wrapped . whilstLD pitch
+
+-- |
+-- Associated interval type.
+--
+type Interval a = Diff (Pitch a)
+
+-- |
+-- Class of types that can be transposed.
+--
+type Transposable a
+  = (HasPitches a a,
+     VectorSpace (Interval a), AffineSpace (Pitch a),
+     IsInterval (Interval a), IsPitch (Pitch a))
+
+-- |
+-- Transpose up.
+--
+up :: Transposable a => Interval a -> a -> a
+up v = pitches %~ (.+^ v)
+
+-- |
+-- Transpose down.
+--
+down :: Transposable a => Interval a -> a -> a
+down v = pitches %~ (.-^ v)
+
+-- |
+-- Add the given interval above.
+--
+above :: (Semigroup a, Transposable a) => Interval a -> a -> a
+above v x = x <> up v x
+
+-- |
+-- Add the given interval below.
+--
+below :: (Semigroup a, Transposable a) => Interval a -> a -> a
+below v x = x <> down v x
+
+-- |
+-- Invert pitches.
+--
+invertPitches :: Transposable a => Pitch a -> a -> a
+invertPitches p = pitches %~ reflectThrough p
+
+-- |
+-- Transpose up by the given number of octaves.
+--
+octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
+octavesUp n = up (_P8^*n)
+
+-- |
+-- Transpose down by the given number of octaves.
+--
+octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
+octavesDown n = down (_P8^*n)
+
+-- |
+-- Add the given octave above.
+--
+octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesAbove n = above (_P8^*n)
+
+-- |
+-- Add the given octave below.
+--
+octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+octavesBelow n = below (_P8^*n)
+
+-- |
+-- Transpose up by the given number of fifths.
+--
+fifthsUp :: Transposable a => Scalar (Interval a) -> a -> a
+fifthsUp n = up (_P8^*n)
+
+-- |
+-- Transpose down by the given number of fifths.
+--
+fifthsDown :: Transposable a => Scalar (Interval a) -> a -> a
+fifthsDown n = down (_P8^*n)
+
+-- |
+-- Add the given octave above.
+--
+fifthsAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+fifthsAbove n = above (_P8^*n)
+
+-- |
+-- Add the given octave below.
+--
+fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
+fifthsBelow n = below (_P8^*n)
+
+-- |
+augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
+augmentIntervals = error "Not implemented: augmentIntervals"
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
+
+
+-- TODO augment/diminish intervals (requires withPrev or similar)
+-- TODO invert diatonically
+-- TODO rotatePitch (requires some kind of separate traversal)
+
+{-
 -- This is outside HasGetPitch etc because HasSetPitch needs it
 -- (and it allow us to derive more instances, see #95)
 type family Pitch a
@@ -322,4 +554,5 @@ lowestPitch = maximum . __getPitches
 meanPitch = mean . __getPitches
 mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x 
 
+-}
 -}
