@@ -53,10 +53,7 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Position
-import           Music.Time.Duration
 
 -----
 import Data.Fixed

@@ -68,10 +68,8 @@ import           Data.Monoid.WithSemigroup
 import           Data.Semigroup
 import           Data.VectorSpace
 
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Position
-import           Music.Time.Duration
+import           Music.Time.Split
 import           Music.Time.Reverse
 
 -----

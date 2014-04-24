@@ -50,11 +50,9 @@ module Music.Time.Reactive (
       -- windowed,
   ) where
 
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Position
-import           Music.Time.Duration
 import           Music.Time.Split
+import           Music.Time.Reverse
 import           Music.Time.Bound
 import           Music.Time.Behavior
 import           Music.Time.Note

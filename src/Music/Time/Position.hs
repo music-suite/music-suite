@@ -41,6 +41,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Position (
+      module Music.Time.Duration,
+      
       -- * Music.Time.Position
       -- * The HasPosition class
       HasPosition(..),
@@ -62,19 +64,6 @@ module Music.Time.Position (
       -- TODO
       _placeAt,
       _era,
-
-      -- ** Points in spans
-      -- TODO move
-      isProper,
-
-      inside,
-      -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
-      encloses,
-      overlaps,
-      -- union
-      -- intersection (alt name 'overlap')
-      -- difference (would actually become a split)
-
   ) where
 
 
@@ -88,8 +77,6 @@ import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum)
 
 import           Music.Score.Util
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Duration
 
 -----
@@ -285,6 +272,7 @@ era = lens _era (flip _placeAt)
 
 
 
+{-
 
 -- |
 -- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
@@ -319,6 +307,7 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 
+-}
 
 {-
 -- |

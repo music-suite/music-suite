@@ -26,10 +26,7 @@ module Music.Time.Split (
   ) where
 
 import Music.Score.Util
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Position
-import           Music.Time.Duration
 
 -----
 import Data.Fixed

@@ -19,6 +19,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Duration (
+      module Music.Time.Transform,
+      
       -- * Music.Time.Duration
       -- * The HasDuration class
       HasDuration(..),
@@ -27,7 +29,6 @@ module Music.Time.Duration (
       stretchTo,
   ) where
 
-import Music.Time.Types
 import           Music.Time.Transform
 
 -----

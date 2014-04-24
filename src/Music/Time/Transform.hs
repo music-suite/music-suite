@@ -19,6 +19,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Transform (
+      module Music.Time.Types,
+      
       -- * Music.Time.Transform
       -- * The Transformable class
       Transformable(..),

@@ -1,4 +1,4 @@
-c
+
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -38,10 +38,7 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Types
-import           Music.Time.Transform
 import           Music.Time.Position
-import           Music.Time.Duration
 import           Music.Time.Split
 import           Music.Time.Reverse
 import           Music.Time.Delayed

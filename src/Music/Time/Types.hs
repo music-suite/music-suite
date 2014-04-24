@@ -57,6 +57,18 @@ module Music.Time.Types (
         range,
         delta,
 
+        -- ** Points in spans
+        -- TODO move
+        isProper,
+
+        inside,
+        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
+        encloses,
+        overlaps,
+        -- union
+        -- intersection (alt name 'overlap')
+        -- difference (would actually become a split)
+
         -- ** Properties
         delayOnly,
         stretchOnly,
@@ -67,7 +79,9 @@ module Music.Time.Types (
         showDelta,
   ) where
 
-import Control.Lens
+import           Control.Lens                 hiding (Indexable, Level, above,
+                                               below, index, inside, parts,
+                                               reversed, transform, (|>), (<|))
 import Data.Typeable
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
@@ -362,4 +376,42 @@ stretchOnly = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x 
   (0, d) -> Just d
   _      -> Nothing
 
+
+-- Same as (onset, offset), defined here for bootstrapping reasons
+startTime  (view range -> (t1, t2)) = t1
+stopTime   (view range -> (t1, t2)) = t2
+
+
+-- |
+-- Whether this is a proper span, i.e. whether @'_onset' x '<' 'stopTime' x@.
+--
+isProper :: Span -> Bool
+isProper (view range -> (t, u)) = t < u
+
+-- |
+-- Whether the given point falls inside the given span (inclusively).
+--
+-- Designed to be used infix, for example
+--
+-- @
+-- 0.5 ``inside`` (1 '<->' 2)
+-- @
+--
+inside :: Time -> Span -> Bool
+inside x (view range -> (t, u)) = t <= x && x <= u
+
+-- |
+-- Whether the given 
+-- 
+encloses :: Span -> Span -> Bool
+a `encloses` b = startTime b `inside` a && stopTime b `inside` a
+
+-- |
+-- Whether the given 
+-- 
+overlaps :: Span -> Span -> Bool
+a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
+
+isBefore :: Span -> Span -> Bool
+a `isBefore` b = (startTime a `max` stopTime a) <= (startTime b `min` stopTime b)
 
