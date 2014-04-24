@@ -46,6 +46,7 @@ import Music.Time.Delayed
 import Music.Time.Note
 import Music.Time.Voice
 import Music.Time.Chord
+import Music.Time.Track
 import Music.Time.Score
 import Music.Time.Segment
 import Music.Time.Behavior

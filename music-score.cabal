@@ -63,6 +63,7 @@ library
                         Music.Time.Stretched
                         Music.Time.Delayed
                         Music.Time.Note
+                        Music.Time.Track
                         Music.Time.Voice
                         Music.Time.Chord
                         Music.Time.Score
