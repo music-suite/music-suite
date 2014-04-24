@@ -30,7 +30,7 @@ module Music.Score (
 
         -- ** Structure
         module Music.Score.Ties,
-        -- module Music.Score.Chord,
+        module Music.Score.Rhythm,
 
         -- ** Meta-information
         -- module Music.Score.Meta,
@@ -107,5 +107,5 @@ import           Music.Score.Dynamics
 -- import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
--- import           Music.Score.Rhythm
+import           Music.Score.Rhythm
 import           Music.Score.Ties

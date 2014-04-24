@@ -95,6 +95,7 @@ import           Data.Typeable
 import           Data.VectorSpace        hiding (Sum)
 
 import           Music.Time
+import Music.Score.Part
 import           Music.Dynamics.Literal
 
 

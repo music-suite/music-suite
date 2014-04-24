@@ -44,7 +44,7 @@ import           Music.Time.Delayed
 
 -----
 import Control.Monad.Compose
-import Music.Score.Util
+import Music.Time.Util
 import Data.Fixed
 import           Data.Default
 import           Data.Ratio

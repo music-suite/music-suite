@@ -54,7 +54,7 @@ import           Music.Time.Stretched
 
 -----
 import Control.Monad.Compose
-import Music.Score.Util
+import Music.Time.Util
 
 import Data.Fixed
 import           Data.Default

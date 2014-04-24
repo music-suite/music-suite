@@ -51,7 +51,7 @@ import           Data.VectorSpace
 
 -- import           Music.Score.Combinators
 -- import           Music.Score.Convert
-import           Music.Score.Part
+-- import           Music.Score.Part
 import           Music.Time
 
 -- |

@@ -76,7 +76,7 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum)
 
-import           Music.Score.Util
+import           Music.Time.Util
 import           Music.Time.Duration
 
 -----

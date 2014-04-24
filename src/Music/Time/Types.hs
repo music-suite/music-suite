@@ -88,7 +88,7 @@ import           Data.AffineSpace.Point
 import           Data.Semigroup
 import           Data.VectorSpace
 
-import           Music.Score.Util       (showRatio)
+import           Music.Time.Util       (showRatio)
 
 
 -- $convert

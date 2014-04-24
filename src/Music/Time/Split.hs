@@ -27,7 +27,7 @@ module Music.Time.Split (
       chunks,      
   ) where
 
-import Music.Score.Util
+import Music.Time.Util
 import           Music.Time.Position
 
 -----
