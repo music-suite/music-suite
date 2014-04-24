@@ -94,12 +94,7 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace        hiding (Sum)
 
--- import           Music.Score.Combinators
--- import           Music.Score.Convert
-import           Music.Time.Score
-import           Music.Time.Voice
 import           Music.Time
--- import           Music.Score.Part
 import           Music.Dynamics.Literal
 
 

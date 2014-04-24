@@ -80,7 +80,6 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Position
 import           Music.Time.Split
 import           Music.Time.Reverse
 import           Music.Time.Bound

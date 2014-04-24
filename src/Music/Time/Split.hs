@@ -19,6 +19,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Split (
+      module Music.Time.Position,
+
       -- * Music.Time.Split
       -- * The Splittable class
       Splittable(..),

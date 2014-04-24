@@ -81,6 +81,7 @@ import           Data.Semigroup
 import           Data.Traversable
 import           Data.Typeable
 import qualified Data.List as List
+
 import           Music.Time
 import           Music.Score.Util (through)
 
