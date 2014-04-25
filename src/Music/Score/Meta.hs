@@ -68,9 +68,7 @@ import qualified Data.Traversable          as T
 import           Data.Typeable
 import           Data.Void
 
-import           Music.Pitch.Literal
 import           Music.Score.Part
-import           Music.Score.Pitch
 import           Music.Score.Util
 import           Music.Time (Reactive, Delayable(..), Stretchable(..), Time, Duration,
                               -- TODO move all below
@@ -138,20 +136,20 @@ runMetaReactive part = fromMaybe mempty . runMeta part
 --
 
 addMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
-addMeta part a = Meta $ Map.singleton key $ wrapTAttr a
+addMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
         pt = ""
-        -- pt = show $ fmap getPart part
+        -- pt = show $ fmap getPart partId
         ty = show $ typeOf (undefined :: b)
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
-runMeta part (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
+runMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt       
         pt = ""
-        -- pt = show $ fmap getPart part
+        -- pt = show $ fmap getPart partId
         ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
