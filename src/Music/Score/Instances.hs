@@ -408,9 +408,9 @@ instance Tiable a => Tiable (TextT a) where
 -- 
 -- deriving instance HasDynamic a => HasDynamic (TextT a)
 -- deriving instance HasArticulation a => HasArticulation (TextT a)
--- deriving instance HasTremolo a => HasTremolo (TextT a)
--- deriving instance HasHarmonic a => HasHarmonic (TextT a)
--- deriving instance HasSlide a => HasSlide (TextT a)
+deriving instance HasTremolo a => HasTremolo (TextT a)
+deriving instance HasHarmonic a => HasHarmonic (TextT a)
+deriving instance HasSlide a => HasSlide (TextT a)
 -- 
 -- 
 -- -- HarmonicT
@@ -434,9 +434,9 @@ instance Tiable a => Tiable (HarmonicT a) where
 -- 
 -- deriving instance HasDynamic a => HasDynamic (HarmonicT a)
 -- deriving instance HasArticulation a => HasArticulation (HarmonicT a)
--- deriving instance HasTremolo a => HasTremolo (HarmonicT a)
--- deriving instance HasSlide a => HasSlide (HarmonicT a)
--- deriving instance HasText a => HasText (HarmonicT a)
+deriving instance HasTremolo a => HasTremolo (HarmonicT a)
+deriving instance HasSlide a => HasSlide (HarmonicT a)
+deriving instance HasText a => HasText (HarmonicT a)
 -- 
 -- 
 -- -- SlideT
@@ -462,9 +462,9 @@ instance Tiable a => Tiable (SlideT a) where
 -- 
 -- deriving instance HasDynamic a => HasDynamic (SlideT a)
 -- deriving instance HasArticulation a => HasArticulation (SlideT a)
--- deriving instance HasTremolo a => HasTremolo (SlideT a)
--- deriving instance HasHarmonic a => HasHarmonic (SlideT a)
--- deriving instance HasText a => HasText (SlideT a)
+deriving instance HasTremolo a => HasTremolo (SlideT a)
+deriving instance HasHarmonic a => HasHarmonic (SlideT a)
+deriving instance HasText a => HasText (SlideT a)
 -- 
 -- 
 -- 
@@ -484,9 +484,9 @@ instance Alterable a => Alterable (Score a) where
 --     sharpen = fmap sharpen
 --     flatten = fmap flatten
 -- 
--- instance Alterable a => Alterable (SlideT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
+instance Alterable a => Alterable (SlideT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 -- 
 instance Alterable a => Alterable (TieT a) where
     sharpen = fmap sharpen

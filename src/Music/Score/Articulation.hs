@@ -199,19 +199,32 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstL articulations
 
 
-accent = error "Not implemented: accent"
-marcato = error "Not implemented: marcato"
-accentLast = error "Not implemented: accentLast"
-marcatoLast = error "Not implemented: marcatoLast"
-accentAll = error "Not implemented: accentAll"
-marcatoAll = error "Not implemented: marcatoAll"
+-- accent = error "Not implemented: accent"
+-- marcato = error "Not implemented: marcato"
+-- accentLast = error "Not implemented: accentLast"
+-- marcatoLast = error "Not implemented: marcatoLast"
+-- accentAll = error "Not implemented: accentAll"
+-- marcatoAll = error "Not implemented: marcatoAll"
+-- 
+-- tenuto = error "Not implemented: tenuto"
+-- separated = error "Not implemented: separated"
+-- staccato = error "Not implemented: staccato"
+-- portato = error "Not implemented: portato"
+-- legato = error "Not implemented: legato"
+-- spiccato = error "Not implemented: spiccato"
+accent = id
+marcato = id
+accentLast = id
+marcatoLast = id
+accentAll = id
+marcatoAll = id
 
-tenuto = error "Not implemented: tenuto"
-separated = error "Not implemented: separated"
-staccato = error "Not implemented: staccato"
-portato = error "Not implemented: portato"
-legato = error "Not implemented: legato"
-spiccato = error "Not implemented: spiccato"
+tenuto = id
+separated = id
+staccato = id
+portato = id
+legato = id
+spiccato = id
 
 
 {-
