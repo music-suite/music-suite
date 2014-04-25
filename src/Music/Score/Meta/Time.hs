@@ -77,8 +77,7 @@ import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Time
-import           Music.Time.Reactive
+import           Music.Time hiding (time)
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the
@@ -164,18 +163,18 @@ getTimeSignature :: TimeSignature -> ([Integer], Integer)
 getTimeSignature (TimeSignature x) = x
 
 -- | Set the time signature of the given score.
-timeSignature :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => TimeSignature -> a -> a
-timeSignature c x = timeSignatureDuring (start <-> offset x) c x
+timeSignature :: (HasMeta a, HasPart' a, HasPosition a) => TimeSignature -> a -> a
+timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
 
--- use (onset x <-> offset x) instead of (start <-> offset x)
+-- use (_onset x <-> _offset x) instead of (0 <-> _offset x)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: (HasMeta a, HasPart' a) => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addGlobalMetaNote (s =: optionFirst c)
+timeSignatureDuring s c = addGlobalMetaNote $ view note (s, optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . (view meta)
+getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . runMetaReactive (Nothing::Maybe Int) . (view meta)
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . getTimeSignatures def

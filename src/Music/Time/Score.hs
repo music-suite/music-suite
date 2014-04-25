@@ -65,6 +65,7 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
+import           Music.Score.Meta
 import           Music.Time.Split
 import           Music.Time.Reverse
 import           Music.Time.Note
@@ -208,6 +209,10 @@ instance HasDuration (Score a) where
   _duration x = _offset x .-. _onset x
 
 instance Splittable a => Splittable (Score a) where
+  -- TODO
+
+instance HasMeta (Score a) where
+  meta = lens (const mempty) (const)
   -- TODO
 
 -- TODO

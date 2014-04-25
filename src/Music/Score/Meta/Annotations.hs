@@ -64,11 +64,11 @@ getAnnotation = Data.List.nub . getAnnotation_
 
 -- | Annotate the whole score.
 annotate :: String -> Score a -> Score a
-annotate str x = annotateSpan (start >-> duration x) str x
+annotate str x = annotateSpan (0 >-> _duration x) str x
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a
-annotateSpan span str x = addGlobalMetaNote (sapp span $ return $ Annotation [str]) x
+annotateSpan span str x = addGlobalMetaNote (transform span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
 showAnnotations :: (HasPart' a, HasText a) => Score a -> Score a

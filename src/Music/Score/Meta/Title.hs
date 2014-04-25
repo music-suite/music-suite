@@ -48,6 +48,7 @@ module Music.Score.Meta.Title (
   ) where
 
 import           Control.Arrow
+import           Control.Lens (view)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
@@ -119,28 +120,28 @@ getTitleAt :: Title -> Int -> Maybe String
 getTitleAt (Title t) n = fmap getLast . getOption . t $ n
 
 -- | Set title of the given score.
-title :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
-title t x = titleDuring (era x) t x
+title :: (HasMeta a, HasPart' a, HasPosition a) => Title -> a -> a
+title t x = titleDuring (_era x) t x
 
 -- | Set title of the given part of a score.
 titleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-titleDuring s t = addGlobalMetaNote (s =: t)
+titleDuring s t = addGlobalMetaNote $ view note (s, t)
 
 -- | Set subtitle of the given score.
-subtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
-subtitle t x = subtitleDuring (era x) t x
+subtitle :: (HasMeta a, HasPart' a, HasPosition a) => Title -> a -> a
+subtitle t x = subtitleDuring (_era x) t x
 
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-subtitleDuring s t = addGlobalMetaNote (s =: denoteTitle t)
+subtitleDuring s t = addGlobalMetaNote $ view note (s, denoteTitle t)
 
 -- | Set subsubtitle of the given score.
-subsubtitle :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Title -> a -> a
-subsubtitle t x = subsubtitleDuring (era x) t x
+subsubtitle :: (HasMeta a, HasPart' a, HasPosition a) => Title -> a -> a
+subsubtitle t x = subsubtitleDuring (_era x) t x
 
 -- | Set subsubtitle of the given part of a score.
 subsubtitleDuring :: (HasMeta a, HasPart' a) => Span -> Title -> a -> a
-subsubtitleDuring s t = addGlobalMetaNote (s =: denoteTitle (denoteTitle t))
+subsubtitleDuring s t = addGlobalMetaNote $ view note (s, denoteTitle (denoteTitle t))
 
 -- | Extract the title in from the given score.
 withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a

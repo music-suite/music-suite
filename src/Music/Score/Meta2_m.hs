@@ -26,36 +26,34 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Meta2 (
---         -- * Basic
---         -- note,
---         -- rest,
---         -- noteRest,
---         removeRests,
--- 
---         -- * Mapping over events
---         mapEvents,
--- 
---         -- * Filtering events
--- 
---         -- ** Editing
---         filterEvents,
---         mapFilterEvents,
--- 
--- {-
---         -- * Editing
---         before,
---         after,
---         split,
---         slice,
---         splice,
--- -}
--- 
+module Music.Score.Combinators (
+        -- * Basic
+        note,
+        rest,
+        noteRest,
+        removeRests,
+
+        -- * Mapping over events
+        mapEvents,
+
+        -- * Filtering events
+
+        -- ** Editing
+        filterEvents,
+        mapFilterEvents,
+
+        -- * Editing
+        before,
+        after,
+        split,
+        slice,
+        splice,
+
         -- * Meta-events
         addMetaNote,
         addGlobalMetaNote,
         runMetaReactive,
-
+        
         metaAt,
         metaAtStart,
         withMeta,
@@ -66,40 +64,40 @@ module Music.Score.Meta2 (
 
 
 
-        -- -- ** Map over phrases
-        --  mapFirst,
-        --  mapLast,
-        --  mapPhrase,
-        --  mapPhraseSingle,
-        -- 
-        --  -- * Parts
-        --  -- ** Extracting parts
-        --  filterPart,
-        --  extractParts,
-        --  extractParts',
-        -- 
-        --  -- ** Map over parts
-        --  -- mapPart,
-        --  mapParts,
-        --  mapAllParts,
-        --  -- modifyParts,
-        -- 
-        --  -- ** Part composition
-        --  (</>),
-        --  rcat,
-        --  -- moveParts,
-        --  -- moveToPart,
-        -- 
-        --  -- * Zippers
-        --  -- apply,
-        --  -- snapshot,
-        --  -- snapshotWith,
-        -- 
-        --  -- ** Single-part versions
-        --  applySingle,
-        --  -- snapshotSingle,
-        --  -- snapshotWithSingle,
-   ) where
+        -- ** Map over phrases
+        mapFirst,
+        mapLast,
+        mapPhrase,
+        mapPhraseSingle,
+
+        -- * Parts
+        -- ** Extracting parts
+        filterPart,
+        extractParts,
+        extractParts',
+
+        -- ** Map over parts
+        -- mapPart,
+        mapParts,
+        mapAllParts,
+        -- modifyParts,
+
+        -- ** Part composition
+        (</>),
+        rcat,
+        -- moveParts,
+        -- moveToPart,
+
+        -- * Zippers
+        -- apply,
+        -- snapshot,
+        -- snapshotWith,
+
+        -- ** Single-part versions
+        applySingle,
+        -- snapshotSingle,
+        -- snapshotWithSingle,
+  ) where
 
 import           Control.Applicative
 import           Control.Arrow
@@ -110,23 +108,27 @@ import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable (..))
 import           Data.Ord
-import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
+import           Data.Maybe
 
+import           Music.Score.Convert
 import           Music.Score.Meta
+import           Music.Score.Note
 import           Music.Score.Part
+import           Music.Score.Score
+import           Music.Score.Track
 import           Music.Score.Util
+import           Music.Score.Voice
 import           Music.Time
 import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
 
-{-
 -- | Create a score containing a note at time zero and duration one. This is an alias for 'return'.
 note :: Monad m => a -> m a
 note = return
@@ -215,12 +217,10 @@ mapAll f = saveMeta $ over events f
         saveMeta f x = (meta .~) ((view meta) x) $ f x
 
 
--}
 
 --------------------------------------------------------------------------------
 -- Parts
 --------------------------------------------------------------------------------
-{-
 
 -- |
 -- Filter a score to include only those events whose parts match a given predicate.
@@ -267,6 +267,12 @@ mapParts        :: HasPart' a => (Score a -> Score b) -> Score a -> Score b
 --
 mapAllParts     :: HasPart' a => ([Score a] -> [Score b]) -> Score a -> Score b
 
+{-# DEPRECATED mapParts "" #-}
+{-# DEPRECATED mapAllParts "" #-}
+{-# DEPRECATED filterPart "" #-}
+{-# DEPRECATED extractParts "" #-}
+{-# DEPRECATED extractParts' "" #-}
+
 
 mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 mapParts f      = mapAllParts (fmap f)
@@ -279,14 +285,12 @@ mapAllParts f   = mconcat . f . extractParts
 --
 modifyParts :: HasPart' a => (Part a -> Part a) -> Score a -> Score a
 modifyParts n = fmap (modifyPart n)
--}
 
 
 
 --------------------------------------------------------------------------------
 -- Part composition
 --------------------------------------------------------------------------------
-{-
 
 infixr 6 </>
 
@@ -336,6 +340,7 @@ applySingle fs = notJoin . fmap (uncurry ($)) . sample fs
     where
         notJoin   = mconcat . Foldable.toList
         sample fs = snapshotSingle (voiceToScore fs)
+{-# DEPRECATED applySingle "" #-}
 
 -- |
 -- Get all notes that start during a given note.
@@ -369,17 +374,30 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 
 
 
--}
-addMetaNote :: forall a b . (IsAttribute a, HasMeta b{-, HasPart' b-}) => Note a -> b -> b
+
+
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
 addMetaNote x y = (applyMeta $ addMeta (Just y) $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
 
-runMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
+runMetaReactive :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
 runMetaReactive part = fromMaybe mempty . runMeta part
 
+{-
 
+-- TODO rename during
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+    where
+        turnOn  = switch start
+        turnOff = switch stop
+
+-}
 
 
 
@@ -404,22 +422,22 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-runScoreMeta :: forall a b . ({-HasPart' a, -}IsAttribute b) => Score a -> Reactive b
+runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
 runScoreMeta = runMetaReactive (Nothing :: Maybe a) . (view meta)
 
-metaAt :: ({-HasPart' a, -}IsAttribute b) => Time -> Score a -> b
-metaAt x = (`atTime` x) . runScoreMeta
+metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
+metaAt x = (? x) . runScoreMeta
 
-metaAtStart :: ({-HasPart' a, -}IsAttribute b) => Score a -> b
-metaAtStart x = _onset x `metaAt` x
+metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
+metaAtStart x = onset x `metaAt` x
 
 withGlobalMeta :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMeta = withMeta' (Nothing :: Maybe Int)
 
-withMeta :: (IsAttribute a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = withMeta' (Just x) f x
 
-withMeta' :: ({-HasPart' c, -}IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
+withMeta' :: (HasPart' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
     m = (view meta) x
     r = runMetaReactive part m
@@ -428,33 +446,24 @@ withMeta' part f x = let
         Right ((a, t), bs, (u, c)) ->
             (meta .~) m
                 $ mapBefore t (f a)
-                $ (composed $ fmap (\(view (from note) -> (s, a)) -> mapDuring s $ f a) $ bs)
+                $ (composed $ fmap (\(getNote -> (s, a)) -> mapDuring s $ f a) $ bs)
                 $ mapAfter u (f c)
                 $ x
 
 withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
 
-withMetaAtStart :: (IsAttribute a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
-withMetaAtStart' :: (IsAttribute b{-, HasPart' p-}) =>
+withMetaAtStart' :: (IsAttribute b, HasPart' p) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
-withMetaAtStart' partId f x = let
+withMetaAtStart' part f x = let
     m = (view meta) x
-    in f (runMetaReactive partId m `atTime` _onset x) x
+    in f (runMetaReactive part m ? onset x) x
 
 
 
--- TODO move
-noteToReactive :: Monoid a => Note a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
-
-activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
-    where
-        turnOn  = switchR start
-        turnOff = switchR stop
 
 
 -------------------------------------------------------------------------------------

@@ -66,9 +66,9 @@ newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
 
 type instance Part (ClefT a) = Part a
-instance HasPart a => HasPart (ClefT a) where
-    getPart (ClefT (_,a)) = getPart a
-    modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
+-- instance HasPart a => HasPart (ClefT a) where
+--     getPart (ClefT (_,a)) = getPart a
+--     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
 
 instance Monad ClefT where
     return x = ClefT (mempty, x)
@@ -88,5 +88,6 @@ instance HasClef a => HasClef (b,a) where
     applyClef c = fmap (applyClef c)
 
 instance (HasPart' a, HasClef a) => HasClef (Score a) where
-    applyClef c = mapFirst (applyClef c) id
+    applyClef c = id -- TODO
+    -- applyClef c = mapFirst (applyClef c) id
 

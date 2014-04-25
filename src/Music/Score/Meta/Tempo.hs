@@ -73,8 +73,7 @@ import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Time
-import           Music.Time.Reactive
+import           Music.Time hiding (time)
 
 type Bpm       = Duration
 type NoteValue = Duration
@@ -157,12 +156,12 @@ tempoToDuration :: Tempo -> Duration
 tempoToDuration (Tempo _ _ x) = x
 
 -- | Set the tempo of the given score.
-tempo :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Tempo -> a -> a
-tempo c x = tempoDuring (era x) c x
+tempo :: (HasMeta a, HasPart' a, HasPosition a) => Tempo -> a -> a
+tempo c x = tempoDuring (_era x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a, HasPart' a) => Span -> Tempo -> a -> a
-tempoDuring s c = addGlobalMetaNote (s =: (optionFirst c))
+tempoDuring s c = addGlobalMetaNote $ view note (s, (optionFirst c))
 
 
 -- TODO move
@@ -173,20 +172,21 @@ inSpan' (view range -> (t,u)) x = t <= x && x < u
 
 -- | Split a reactive into notes, as well as the values before and after the first/last update
 -- TODO fails if not positive
--- TODO same as reactiveToVoice
+-- TODO consolidate
 reactiveIn :: Span -> Reactive a -> [Note a]
 reactiveIn s r
-    | duration s <= 0 = error "reactiveIn: Needs positive duration"
-    | otherwise       = let r2 = trim s (fmap optionFirst r)
+    | _duration s <= 0 = error "reactiveIn: Needs positive duration"
+    | otherwise       = let r2 = trimR s (fmap optionFirst r)
     in fmap (fmap $ fromJust . unOptionFirst) $ case updates r2 of
         -- We have at least 2 value because of trim
-        (frl -> ((t,x),[],(u,_))) -> [t <-> u =: x] -- one note
+        (frl -> ((t,x),[],(u,_))) -> [view note (t <-> u, x)] -- one note
         (frl -> ((t0,x0), unzip -> (tn,xn), (tl,_))) -> let
             times  = [t0] ++ tn
             spans  = mapWithNext (\t mu -> t <-> fromMaybe tl mu) times
             values = [x0] ++ xn
-            in zipWith (=:) spans values
+            in zipWith mkNote spans values
 
+mkNote s x = view note (s, x)
 
 
 
@@ -197,14 +197,14 @@ reactiveIn s r
 renderTempo :: Score a -> Score a
 renderTempo sc =
     flip composed sc $ fmap renderTempoScore
-        $ tempoRegions (era sc)
-        $ tempoRegions0 (era sc)
+        $ tempoRegions (_era sc)
+        $ tempoRegions0 (_era sc)
         $ getTempoChanges defTempo sc
 
 renderTempoTest :: Score a -> [TempoRegion]
 renderTempoTest sc = id
-    $ tempoRegions (era sc)
-    $ tempoRegions0 (era sc)
+    $ tempoRegions (_era sc)
+    $ tempoRegions0 (_era sc)
     $ getTempoChanges defTempo sc
 
 
@@ -215,17 +215,17 @@ defTempo :: Tempo
 defTempo = metronome (1/1) 60
 
 getTempoChanges :: Tempo -> Score a -> Reactive Tempo
-getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . (view meta)
+getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMetaReactive (Nothing::Maybe Int) . (view meta)
 
 
 -- | Get all tempo regions for the given span.
 tempoRegions0 :: Span -> Reactive Tempo -> [TempoRegion0]
 tempoRegions0 s r = fmap f $ s `reactiveIn` r
     where
-        f (getNote -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
+        f (view (from note) -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
 
 tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
-tempoRegions s = snd . List.mapAccumL f (onset s, onset s) -- XXX offset?
+tempoRegions s = snd . List.mapAccumL f (_onset s, _onset s) -- XXX offset?
     where
         f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
             TempoRegion nt (nt .+^ d) st x
@@ -252,7 +252,7 @@ renderTempoSpan tr = over range $ \(t,u) ->
 
 -- TODO use lens
 renderTempoScore :: TempoRegion -> Score a -> Score a
-renderTempoScore tr = over notes $ fmap $ over (note_ . _1) $ renderTempoSpan tr
+renderTempoScore tr = over notes $ fmap $ over (from note . _1) $ renderTempoSpan tr
 
 
 data TempoRegion0 =
@@ -273,10 +273,6 @@ data TempoRegion =
     deriving (Eq, Ord, Show)
 
 tempoRegionNotated (TempoRegion t u _ _) = t <-> u
-
--- TODO add to Music.Score.Note
-note_ :: Iso (Note a) (Note b) (Span, a) (Span, b)
-note_ = iso getNote (uncurry (=:))
 
 -- span :: Iso (Note a) (Note b) Span Span
 

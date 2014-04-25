@@ -38,6 +38,7 @@ module Music.Score.Meta.RehearsalMark (
 
 
 import           Control.Arrow
+import           Control.Lens (view)
 import           Control.Monad.Plus
 import           Data.Default
 import           Data.Foldable             (Foldable)
@@ -89,11 +90,11 @@ instance Show RehearsalMark where
 -- metronome :: Duration -> Bpm -> Tempo
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
-rehearsalMark :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => RehearsalMark -> a -> a
-rehearsalMark c x = rehearsalMarkDuring (era x) c x
+rehearsalMark :: (HasMeta a, HasPart' a, HasPosition a) => RehearsalMark -> a -> a
+rehearsalMark c x = rehearsalMarkDuring (_era x) c x
 
 rehearsalMarkDuring :: (HasMeta a, HasPart' a) => Span -> RehearsalMark -> a -> a
-rehearsalMarkDuring s x = addGlobalMetaNote (s =: x)
+rehearsalMarkDuring s x = addGlobalMetaNote $ view note (s, x)
 
 withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
 withRehearsalMark = withGlobalMeta

@@ -47,6 +47,7 @@ module Music.Time.Reactive (
       atTime,
       splitReactive,
       switchR,
+      trimR,
       continous,
       continousWith,
       sample,
@@ -117,7 +118,7 @@ import qualified Data.Ord as Ord
 -- @
 --
 newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
-    deriving (Functor, Semigroup, Monoid)
+    deriving (Functor, Semigroup, Monoid, Typeable)
 --
 -- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
 -- 
@@ -192,7 +193,6 @@ splitReactive r = case updates r of
                 go [x]      = [(x, Nothing)]
                 go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
-
 {-# DEPRECATED updates "" #-}
 {-# DEPRECATED occs "" #-}
 {-# DEPRECATED splitReactive "" #-}
@@ -212,6 +212,9 @@ final (renderR -> (i,xs)) = snd $ last xs
 switchR :: Time -> Reactive a -> Reactive a -> Reactive a
 switchR t (Reactive (tx, bx)) (Reactive (ty, by)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty) (switch t bx by)
+
+trimR :: Monoid a => Span -> Reactive a -> Reactive a
+trimR (view range -> (t, u)) x = switchR t mempty (switchR u x mempty)
 
 -- |
 -- Get all intermediate values.

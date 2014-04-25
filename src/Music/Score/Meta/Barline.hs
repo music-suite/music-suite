@@ -41,6 +41,7 @@ module Music.Score.Meta.Barline (
 
 
 import           Control.Arrow
+import           Control.Lens (view)
 import           Control.Monad.Plus
 import           Data.Default
 import           Data.Foldable             (Foldable)
@@ -78,20 +79,20 @@ data BarlineType = StandardBarline | DoubleBarline | FinalBarline
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
-barline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
-barline c x = barlineDuring (era x) c x
+barline :: (HasMeta a, HasPart' a, HasPosition a) => Barline -> a -> a
+barline c x = barlineDuring (_era x) c x
 
 -- | Add a barline over the whole score.
-doubleBarline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
+doubleBarline :: (HasMeta a, HasPart' a, HasPosition a) => Barline -> a -> a
 doubleBarline = undefined
 
 -- | Add a barline over the whole score.
-finalBarline :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Barline -> a -> a
+finalBarline :: (HasMeta a, HasPart' a, HasPosition a) => Barline -> a -> a
 finalBarline = undefined
 
 -- | Add a barline to the given score.
 barlineDuring :: (HasMeta a, HasPart' a) => Span -> Barline -> a -> a
-barlineDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+barlineDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract barlines in from the given score, using the given default barline.
 withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a

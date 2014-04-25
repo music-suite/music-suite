@@ -39,6 +39,7 @@ module Music.Score.Meta.Fermata (
 
 
 import           Control.Arrow
+import           Control.Lens (view)
 import           Control.Monad.Plus
 import           Data.Default
 import           Data.Foldable             (Foldable)
@@ -76,12 +77,12 @@ data FermataType = StandardFermata | LongFermata | VeryLongFermata
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a fermata over the whole score.
-fermata :: (HasMeta a, HasPart' a, HasOnset a, HasOffset a) => Fermata -> a -> a
-fermata c x = fermataDuring (era x) c x
+fermata :: (HasMeta a, HasPart' a, HasPosition a) => Fermata -> a -> a
+fermata c x = fermataDuring (_era x) c x
 
 -- | Add a fermata to the given score.
 fermataDuring :: (HasMeta a, HasPart' a) => Span -> Fermata -> a -> a
-fermataDuring s c = addMetaNote (s =: (Option $ Just $ Last c))
+fermataDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract fermatas in from the given score, using the given default fermata.
 withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a
