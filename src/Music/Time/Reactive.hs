@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -73,6 +74,7 @@ import           Control.Monad.Compose
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Typeable
 import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as F
 import qualified Data.List              as List
@@ -100,7 +102,7 @@ import           Music.Time.Time
 -- import Music.Dynamics.Literal
 
 newtype Reactive a = Reactive { getReactive :: ([Time], Time -> a) }
-    deriving (Functor, Semigroup, Monoid)
+    deriving (Functor, Semigroup, Monoid, Typeable)
 
 instance Delayable (Reactive a) where
     delay n (Reactive (t,r)) = Reactive (delay n t, delay n r)
