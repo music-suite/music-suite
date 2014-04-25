@@ -26,7 +26,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Combinators (
+module Music.Score.Meta2 (
 --         -- * Basic
 --         -- note,
 --         -- rest,
@@ -112,20 +112,16 @@ import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
 
-import           Music.Score.Convert
 import           Music.Score.Meta
-import           Music.Score.Note
 import           Music.Score.Part
-import           Music.Score.Score
-import           Music.Score.Track
 import           Music.Score.Util
-import           Music.Score.Voice
 import           Music.Time
 import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
 
+{-
 -- | Create a score containing a note at time zero and duration one. This is an alias for 'return'.
 note :: Monad m => a -> m a
 note = return
@@ -214,10 +210,12 @@ mapAll f = saveMeta $ over events f
         saveMeta f x = (meta .~) ((view meta) x) $ f x
 
 
+-}
 
 --------------------------------------------------------------------------------
 -- Parts
 --------------------------------------------------------------------------------
+{-
 
 -- |
 -- Filter a score to include only those events whose parts match a given predicate.
@@ -264,12 +262,6 @@ mapParts        :: HasPart' a => (Score a -> Score b) -> Score a -> Score b
 --
 mapAllParts     :: HasPart' a => ([Score a] -> [Score b]) -> Score a -> Score b
 
-{-# DEPRECATED mapParts "" #-}
-{-# DEPRECATED mapAllParts "" #-}
-{-# DEPRECATED filterPart "" #-}
-{-# DEPRECATED extractParts "" #-}
-{-# DEPRECATED extractParts' "" #-}
-
 
 mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
 mapParts f      = mapAllParts (fmap f)
@@ -282,12 +274,14 @@ mapAllParts f   = mconcat . f . extractParts
 --
 modifyParts :: HasPart' a => (Part a -> Part a) -> Score a -> Score a
 modifyParts n = fmap (modifyPart n)
+-}
 
 
 
 --------------------------------------------------------------------------------
 -- Part composition
 --------------------------------------------------------------------------------
+{-
 
 infixr 6 </>
 
@@ -337,7 +331,6 @@ applySingle fs = notJoin . fmap (uncurry ($)) . sample fs
     where
         notJoin   = mconcat . Foldable.toList
         sample fs = snapshotSingle (voiceToScore fs)
-{-# DEPRECATED applySingle "" #-}
 
 -- |
 -- Get all notes that start during a given note.
@@ -371,6 +364,7 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 
 
 
+-}
 
 withSpan :: Score a -> Score (Span, a)
 withSpan = mapEvents (\t d x -> (t >-> d,x))
@@ -386,26 +380,28 @@ mapBefore t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t
 mapDuring s f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t,x) -> t `inSpan` s) (withTime x) in (f y <> n)
 mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 >= t) (withTime x) in (f y <> n)
 
+-- TODO
+type HasParts'' a = (HasParts' a, Ord (Part a), Show (Part a))
 
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
+runScoreMeta :: forall a b . (HasParts'' a, IsAttribute b) => Score a -> Reactive b
 runScoreMeta = runMeta (Nothing :: Maybe a) . (view meta)
 
-metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
-metaAt x = (? x) . runScoreMeta
+metaAt :: (HasParts'' a, IsAttribute b) => Time -> Score a -> b
+metaAt x = (`atTime` x) . runScoreMeta
 
-metaAtStart :: (HasPart' a, IsAttribute b) => Score a -> b
-metaAtStart x = onset x `metaAt` x
+metaAtStart :: (HasParts'' a, IsAttribute b) => Score a -> b
+metaAtStart x = _onset x `metaAt` x
 
 withGlobalMeta :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMeta = withMeta' (Nothing :: Maybe Int)
 
-withMeta :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta :: (IsAttribute a, HasParts'' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = withMeta' (Just x) f x
 
-withMeta' :: (HasPart' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
+withMeta' :: (HasParts'' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
     m = (view meta) x
     r = runMeta part m
@@ -421,14 +417,14 @@ withMeta' part f x = let
 withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
 
-withMetaAtStart :: (IsAttribute a, HasPart' b) => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart :: (IsAttribute a, HasParts'' b) => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
-withMetaAtStart' :: (IsAttribute b, HasPart' p) =>
+withMetaAtStart' :: (IsAttribute b, HasParts'' p) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' part f x = let
     m = (view meta) x
-    in f (runMeta part m ? onset x) x
+    in f (runMeta part m `atTime` _onset x) x
 
 
 

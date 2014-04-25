@@ -44,6 +44,8 @@ module Music.Time.Reactive (
       discrete,
       updates,
       occs,
+      atTime,
+      splitReactive,
       switchR,
       continous,
       continousWith,
@@ -163,8 +165,38 @@ renderR = initial &&& updates
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
+-- | Split a reactive into notes, as well as the values before and after the first/last update
+splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+splitReactive r = case updates r of
+    []          -> Left  (initial r)
+    (t,x):[]    -> Right ((initial r, t), [], (t, x))
+    (t,x):xs    -> Right ((initial r, t), fmap mkNote $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+
+    where
+
+        mkNote (t,u,x) = (t <-> u, x)^.note
+
+        -- Always returns a 0 or more Right followed by one left
+        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
+        res rs = let (ts,xs) = unzip rs in
+            flip fmap (withNext ts `zip` xs) $
+                \ ((t, mu), x) -> case mu of
+                    Nothing -> Left (t, x)
+                    Just u  -> Right (t, u, x)
+
+        -- lenght xs == length (withNext xs)
+        withNext :: [a] -> [(a, Maybe a)]
+        withNext = go
+            where
+                go []       = []
+                go [x]      = [(x, Nothing)]
+                go (x:y:rs) = (x, Just y) : withNext (y : rs)
+
+
 {-# DEPRECATED updates "" #-}
 {-# DEPRECATED occs "" #-}
+{-# DEPRECATED splitReactive "" #-}
+{-# DEPRECATED atTime "" #-}
 
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')

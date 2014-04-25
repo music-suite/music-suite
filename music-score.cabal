@@ -83,17 +83,17 @@ library
                         Music.Score.Ties
                         Music.Score.Part
                         Music.Score.Meta
-                        -- Music.Score.Meta.Annotations
-                        -- Music.Score.Meta.Attribution
-                        -- Music.Score.Meta.Barline
-                        -- Music.Score.Meta.Clef
-                        -- Music.Score.Meta.Fermata
-                        -- Music.Score.Meta.Key
-                        -- Music.Score.Meta.RehearsalMark
-                        -- Music.Score.Meta.Tempo
-                        -- Music.Score.Meta.Time
-                        -- Music.Score.Meta.Title
-                        -- Music.Score.Clef
+                        Music.Score.Meta.Annotations
+                        Music.Score.Meta.Attribution
+                        Music.Score.Meta.Barline
+                        Music.Score.Meta.Clef
+                        Music.Score.Meta.Fermata
+                        Music.Score.Meta.Key
+                        Music.Score.Meta.RehearsalMark
+                        Music.Score.Meta.Tempo
+                        Music.Score.Meta.Time
+                        Music.Score.Meta.Title
+                        Music.Score.Clef
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
