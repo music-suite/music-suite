@@ -90,18 +90,23 @@ wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
 unwrapAttr :: IsAttribute a => Attribute -> Maybe a
-unwrapAttr (Attribute a)  = cast a
+unwrapAttr (Attribute a) = cast a
 
 wrapTAttr :: ({-Transformable a,-}Delayable a, Stretchable a, IsAttribute a) => a -> Attribute
-wrapTAttr = Attribute
+wrapTAttr = TAttribute
 
 unwrapTAttr :: ({-Transformable a,-}Delayable a, Stretchable a, IsAttribute a) => Attribute -> Maybe a
-unwrapTAttr (Attribute a)  = cast a
+unwrapTAttr (TAttribute a) = cast a
 
 instance Semigroup Attribute where
     (Attribute a1) <> a2 = case unwrapAttr a2 of
-        Nothing  -> a2
+        -- Nothing  -> a2
+        Nothing  -> error "Attribute.(<>) mismatch"
         Just a2' -> Attribute (a1 <> a2')
+    (TAttribute a1) <> a2 = case unwrapTAttr a2 of
+        -- Nothing  -> a2
+        Nothing  -> error "Attribute.(<>) mismatch"
+        Just a2' -> TAttribute (a1 <> a2')
 
 instance Delayable Attribute where
     delay _ (Attribute  a) = Attribute a
@@ -111,7 +116,7 @@ instance Stretchable Attribute where
     stretch n (TAttribute  a) = TAttribute (stretch n a)
 
 -- Meta is Transformable because the contents of the map is transformable
-newtype Meta = Meta (Map String (Reactive Attribute))
+newtype Meta = Metax (Map String Attribute)
     deriving (Delayable, Stretchable)
 
 
@@ -126,16 +131,15 @@ runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reacti
 runMeta part = fromMaybe mempty . runMeta' part
 
 
-
-addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
-addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
+addMeta' :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
+addMeta' part a = Metax $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
         pt = show $ fmap getPart part
         ty = show $ typeOf (undefined :: b)
 
-runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b)
-runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
+runMeta' :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
+runMeta' part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt
@@ -143,14 +147,14 @@ runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr))
         ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
-    Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
+    Metax s1 <> Metax s2 = Metax $ Map.unionWith (<>) s1 s2
 
 -- | The empty meta contains no attributes; composition of metas is
 --   a union of attributes; if the two metas have attributes of the
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
-    mempty = Meta Map.empty
+    mempty = Metax Map.empty
     mappend = (<>)
 
 -- | Type class for things which have meta-information.
