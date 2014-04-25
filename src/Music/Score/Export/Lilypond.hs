@@ -63,6 +63,7 @@ import           Data.VectorSpace             hiding (Sum)
 import           System.Process
 
 import           Music.Dynamics.Literal
+import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 -- import           Music.Score.Chord
@@ -70,7 +71,7 @@ import           Music.Score.Clef
 import           Music.Score.Meta2
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
--- import           Music.Score.Instances
+import           Music.Score.Instances
 import           Music.Score.Meta
 import           Music.Score.Meta.Attribution
 import           Music.Score.Meta.Clef
@@ -122,11 +123,20 @@ instance HasLilypond Integer where
     getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond
     getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond
 
+instance HasLilypond a => HasLilypond [a] where
+    getLilypond d = getLilypondChord d
+
+instance HasLilypond a => HasLilypond (Sum a) where
+    getLilypond d (Sum a) = getLilypond d a
+
+instance HasLilypond a => HasLilypond (Product a) where
+    getLilypond d (Product a) = getLilypond d a
+
 -- instance HasLilypond a => HasLilypond (ChordT a) where
 --     getLilypond d = getLilypondChord d . getChordT
 -- 
--- instance HasLilypond a => HasLilypond (PartT n a) where
---     getLilypond d (PartT (_,x))                     = getLilypond d x
+instance HasLilypond a => HasLilypond (PartT n a) where
+  getLilypond d (PartT (_,x))                     = getLilypond d x
 -- 
 -- instance HasLilypond a => HasLilypond (TieT a) where
 --     getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
@@ -433,10 +443,10 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 -- TODO remove
-scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = error "See Lilypond.hs"
-reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' = error "See Lilypond.hs"
+-- scoreToVoice :: Score a -> Voice (Maybe a)
+-- scoreToVoice = error "See Lilypond.hs"
+-- reactiveToVoice' :: Span -> Reactive a -> Voice a
+-- reactiveToVoice' = error "See Lilypond.hs"
 start = 0
 stop = 0
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))

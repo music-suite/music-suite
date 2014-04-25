@@ -1,13 +1,13 @@
 -- :load src/Music/Score/Meta/Tempo.hs
 
-:set -hide-package monads-tf
+-- :set -hide-package monads-tf
 
--- :m + Control.Lens
--- :m + Music.Score.Part
+:m + Control.Lens
+:m + Music.Score
 -- :m + Music.Score.Score
 -- :m + Music.Score.Meta.Time
 -- :m + Music.Score.Export.Midi
--- :m + Music.Score.Export.Lilypond 
+:m + Music.Score.Export.Lilypond 
 -- :m + Music.Score.Ties
 -- :m + Music.Score.Chord 
 :set prompt "> "

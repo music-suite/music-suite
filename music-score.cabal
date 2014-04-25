@@ -72,14 +72,15 @@ library
                         Music.Time.Segment
                         Music.Time.Behavior
                         Music.Time.Reactive
+                        Music.Time.Bound
                         
                         
                         ------
                         Music.Score.Rhythm
                         -- 
                         Music.Score
-                        -- Music.Score.Combinators
-                        -- Music.Score.Convert
+                        Music.Score.Meta2
+                        Music.Score.Convert
                         Music.Score.Ties
                         Music.Score.Part
                         Music.Score.Meta
@@ -107,7 +108,8 @@ library
                         -- Music.Score.Import.Midi
                         -- -- Need to expose these to allow GHCI development
                         Music.Score.Util
+                        Music.Time.Util
                         Music.Score.Export.Common 
-    -- other-modules:      Music.Score.Instances
+    -- other-modules:   Music.Score.Instances
     hs-source-dirs: 	src
     default-language: 	Haskell2010

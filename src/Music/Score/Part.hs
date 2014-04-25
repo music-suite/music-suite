@@ -62,7 +62,9 @@ module Music.Score.Part (
         extractParts,
         extractParts',
 
-        -- -- * Part representation
+        -- * Part representation
+        PartT(..),
+
         -- Part,
         -- HasPart(..),
         -- HasPart',
@@ -86,6 +88,7 @@ import           Data.Typeable
 import qualified Data.List as List
 
 import           Music.Time
+import           Music.Score.Ties
 import           Music.Score.Util (through)
 
 
@@ -234,6 +237,25 @@ extractParts' :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractParts' x = zip (allParts x) (extractParts x)
 
 
+
+newtype PartT n a = PartT { getPartT :: (n, a) }
+  deriving (Eq, Ord, Show, Typeable, Functor, 
+    Applicative, Comonad, Monad, Transformable)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (PartT p a) where
+  type Unwrapped (PartT p a) = (p, a)
+  _Wrapped' = iso getPartT PartT
+instance Rewrapped (PartT p a) (PartT p' b)
+
+
+type instance Part (PartT p a) = p
+type instance SetPart p' (PartT p a) = PartT p' a
+
+instance (Transformable p, Transformable p') => HasPart (PartT p a) (PartT p' a) where
+  part = _Wrapped . _1
+instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a) where
+  parts = _Wrapped . _1
 
 
 

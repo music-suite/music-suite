@@ -26,25 +26,20 @@
 
 
 module Music.Score.Convert (
-        -- * Conversion
-        -- noteToVoice,
-        -- noteToScore,
-        -- scoreToNotes,
-        -- notesToScore,
         voiceToScore,
-        voicesToScore,
+        -- voicesToScore,
         trackToScore,
         trackToScore',
         scoreToVoice,
         reactiveToVoice,
         reactiveToVoice',
         noteToReactive,
-        splitReactive,
+        -- splitReactive,
         activate,
   ) where
 
 import           Control.Applicative
-import           Control.Lens
+import           Control.Lens hiding (transform, time)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
@@ -57,11 +52,7 @@ import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
 
-import           Music.Score.Note
 import           Music.Score.Part
-import           Music.Score.Score
-import           Music.Score.Track
-import           Music.Score.Voice
 import           Music.Time
 import           Music.Time.Reactive
 
@@ -69,13 +60,13 @@ import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
 
 
--- | Convert a note to an onset and a voice.
+-- | Convert a note to an _onset and a voice.
 noteToVoice :: Note a -> (Time, Voice a)
-noteToVoice (getNote -> (s,x)) = (onset s, stretchTo (duration s) $ return x)
+noteToVoice (view (from note) -> (s,x)) = (_onset s, stretchTo (_duration s) $ return x)
 
 -- | Convert a note to a score.
 noteToScore :: Note a -> Score a
-noteToScore (getNote -> (s,x)) = s `sapp` return x
+noteToScore (view (from note) -> (s,x)) = s `transform` return x
 
 -- scoreToNotes :: Score a -> [Note a]
 -- scoreToNotes = Foldable.toList . reifyScore
@@ -84,25 +75,25 @@ noteToScore (getNote -> (s,x)) = s `sapp` return x
 -- notesToScore = pcat . fmap noteToScore
 
 reactiveToVoice :: Duration -> Reactive a -> Voice a
-reactiveToVoice d r = (^. voice) $ durs `zip` (fmap (r ?) times)
+reactiveToVoice d r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
     where
-        times = origin : filter (\t -> origin < t && t < origin .+^ d) (occs r)
-        durs  = toRelN' (origin .+^ d) times
+        times = 0 : filter (\t -> 0 < t && t < 0 .+^ d) (occs r)
+        durs  = toRelN' (0 .+^ d) times
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ durs `zip` (fmap (r ?) times)
+reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
     where
-        times = origin : filter (\t -> u < t && t < v) (occs r)
+        times = 0 : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelN' v times
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.
 --
-scoreToVoice :: Score a -> Voice (Maybe a)
-scoreToVoice = (^. voice) . fmap throwTime . addRests . (^. events)
+scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
+scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. events)
     where
        throwTime (t,d,x) = (d,x)
-       addRests = concat . snd . mapAccumL g origin
+       addRests = concat . snd . mapAccumL g 0
            where
                g u (t, d, x)
                    | u == t    = (t .+^ d, [(t, d, Just x)])
@@ -114,13 +105,15 @@ scoreToVoice = (^. voice) . fmap throwTime . addRests . (^. events)
 -- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . (^. from voice)
+voiceToScore = scat . fmap g . (^. stretcheds)
     where
-        g (d,x) = stretch d (return x)
+        g = (^. getStretched) . fmap return
 
+{-
 -- | Join voices in a given part into a score.
 voicesToScore :: HasPart a => [(Part a, Voice a)] -> Score a
 voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
+-}
 
 -- |
 -- Convert a voice which may contain rests to a score.
@@ -131,19 +124,19 @@ voiceToScore' = mcatMaybes . voiceToScore
 -- |
 -- Convert a track to a score where each event is given a fixed duration.
 --
-trackToScore :: Duration -> Track a -> Score a
+trackToScore :: Transformable a => Duration -> Track a -> Score a
 trackToScore x = trackToScore' (const x)
 
 -- |
 -- Convert a track to a score, using durations determined by the values.
 --
-trackToScore' :: (a -> Duration) -> Track a -> Score a
-trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . (^. from track)
+trackToScore' :: Transformable a => (a -> Duration) -> Track a -> Score a
+trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . map (^. from delayed) . (^. delayeds)
 
 
 -- Convert to delta (time to wait before this note)
 toRel :: [Time] -> [Duration]
-toRel = snd . mapAccumL g origin where g prev t = (t, t .-. prev)
+toRel = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
 
 -- Convert to delta (time to wait before next note)
 toRelN :: [Time] -> [Duration]
@@ -159,23 +152,23 @@ toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
 
 -- Convert from delta (time to wait before this note)
 toAbs :: [Duration] -> [Time]
-toAbs = snd . mapAccumL g origin where g now d = (now .+^ d, now .+^ d)
+toAbs = snd . mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
 
 
 -- TODO rename during
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
--- | Split a reactive into notes, as well as the values before and after the first/last update
+-- | Split a reactive into mkNotes, as well as the values before and after the first/last update
 splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap mkNote $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
-        note (t,u,x) = t <-> u =: x
+        mkNote (t,u,x) = (t <-> u, x)^.note
 
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
@@ -194,8 +187,8 @@ splitReactive r = case updates r of
                 go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
-        turnOn  = switch start
-        turnOff = switch stop
+        turnOn  = switchR start
+        turnOff = switchR stop
 

@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -39,6 +40,7 @@ import           Control.Arrow
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Plus
+import           Data.Functor.Adjunction (unzipR)
 import           Data.AffineSpace
 import           Data.Default
 import           Data.Foldable           hiding (concat)
@@ -47,7 +49,7 @@ import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.VectorSpace
+import           Data.VectorSpace hiding (Sum)
 
 -- import           Music.Score.Combinators
 -- import           Music.Score.Convert
@@ -96,13 +98,22 @@ instance Tiable Integer     where { beginTie = id ; endTie = id }
 instance Tiable ()          where { beginTie = id ; endTie = id }
 instance Tiable (Ratio a)   where { beginTie = id ; endTie = id }
 
-instance Tiable a => Tiable (Maybe a) where
-    beginTie = fmap beginTie
-    endTie   = fmap endTie
-
 instance Tiable a => Tiable (TieT a) where
     toTied (TieT ((prevTie, nextTie), a))   = (TieT ((prevTie, Any True), b), TieT ((Any True, nextTie), c))
          where (b,c) = toTied a
+
+instance Tiable a => Tiable [a] where
+    toTied = unzip . fmap toTied
+
+instance Tiable a => Tiable (Maybe a) where
+    toTied = unzipR . fmap toTied
+
+instance Tiable a => Tiable (Sum a) where
+    toTied = unzipR . fmap toTied
+
+instance Tiable a => Tiable (Product a) where
+    toTied = unzipR . fmap toTied
+
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -190,5 +201,7 @@ splitDur maxDur (d,a)
     | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
 
 
-
+-- TODO move!
+deriving instance Functor Sum
+deriving instance Functor Product
 
