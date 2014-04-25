@@ -389,7 +389,7 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b . (HasPart' a, IsAttribute b) => Score a -> Reactive b
-runScoreMeta = runMeta (Nothing :: Maybe a) . (view meta)
+runScoreMeta = runMetaReactive (Nothing :: Maybe a) . (view meta)
 
 metaAt :: (HasPart' a, IsAttribute b) => Time -> Score a -> b
 metaAt x = (? x) . runScoreMeta
@@ -406,7 +406,7 @@ withMeta f x = withMeta' (Just x) f x
 withMeta' :: (HasPart' c, IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
     m = (view meta) x
-    r = runMeta part m
+    r = runMetaReactive part m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a, t), bs, (u, c)) ->
@@ -426,7 +426,7 @@ withMetaAtStart' :: (IsAttribute b, HasPart' p) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' part f x = let
     m = (view meta) x
-    in f (runMeta part m ? onset x) x
+    in f (runMetaReactive part m ? onset x) x
 
 
 

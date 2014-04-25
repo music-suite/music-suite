@@ -44,7 +44,7 @@ module Music.Score.Meta (
         -- addMeta,
         addMetaNote,
         addGlobalMetaNote,
-        runMeta,
+        runMetaReactive,
         HasMeta(..),
   ) where
 
@@ -122,24 +122,24 @@ newtype Meta = Metax (Map String Attribute)
 
 
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
+addMetaNote x y = (applyMeta $ addMeta (Just y) $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
+addGlobalMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
 
-runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
-runMeta part = fromMaybe mempty . runMeta' part
+runMetaReactive :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
+runMetaReactive part = fromMaybe mempty . runMeta part
 
 
-addMeta' :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
-addMeta' part a = Metax $ Map.singleton key $ wrapTAttr a
+addMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
+addMeta part a = Metax $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
         pt = show $ fmap getPart part
         ty = show $ typeOf (undefined :: b)
 
-runMeta' :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
-runMeta' part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
+runMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
+runMeta part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt

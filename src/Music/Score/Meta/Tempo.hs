@@ -219,7 +219,7 @@ defTempo :: Tempo
 defTempo = metronome (1/1) 60
 
 getTempoChanges :: Tempo -> Score a -> Reactive Tempo
-getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . (view meta)
+getTempoChanges def = fmap (fromMaybe def . unOptionFirst) . runMetaReactive (Nothing::Maybe Int) . (view meta)
 
 
 -- | Get all tempo regions for the given span.
