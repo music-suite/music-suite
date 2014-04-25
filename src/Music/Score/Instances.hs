@@ -31,7 +31,7 @@ module Music.Score.Instances () where
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Monad
-import           Control.Lens hiding ()
+import           Control.Lens hiding (transform, part)
 import           Data.AffineSpace
 import           Data.Default
 import           Data.Foldable
@@ -96,75 +96,97 @@ instance IsDynamics a => IsDynamics [a] where
 -- instance IsDynamics a => IsDynamics (ChordT a) where
 --     fromDynamics = return . fromDynamics
 -- 
--- instance IsPitch a => IsPitch (TieT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (TieT a) where
---     fromDynamics = return . fromDynamics
--- 
+instance IsPitch a => IsPitch (TieT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (TieT a) where
+    fromDynamics = return . fromDynamics
+
 -- instance IsPitch a => IsPitch (DynamicT a) where
 --     fromPitch = pure . fromPitch
 -- instance IsDynamics a => IsDynamics (DynamicT a) where
 --     fromDynamics = return . fromDynamics
 -- 
--- instance IsPitch a => IsPitch (TremoloT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (TremoloT a) where
---     fromDynamics = pure . fromDynamics
+instance IsPitch a => IsPitch (TremoloT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (TremoloT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (TextT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (TextT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (HarmonicT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (HarmonicT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (SlideT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (SlideT a) where
+    fromDynamics = pure . fromDynamics
+
+-- -------------------------------------------------------------------------------------
 -- 
--- instance IsPitch a => IsPitch (TextT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (TextT a) where
---     fromDynamics = pure . fromDynamics
--- 
--- instance IsPitch a => IsPitch (HarmonicT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (HarmonicT a) where
---     fromDynamics = pure . fromDynamics
--- 
--- instance IsPitch a => IsPitch (SlideT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (SlideT a) where
---     fromDynamics = pure . fromDynamics
--- 
+-- instance Transformable (ChordT a) where
+--     transform s = id
+-- instance Transformable a => Transformable (DynamicT a) where
+--     transform s = fmap (transform s)
+instance Transformable a => Transformable (SlideT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (TieT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (HarmonicT a) where
+    transform s = fmap (transform s)
+-- instance Transformable a => Transformable (ArticulationT a) where
+--     transform s = fmap (transform s)
+instance Transformable a => Transformable (TextT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (TremoloT a) where
+    transform s = fmap (transform s)
+-- instance Transformable a => Transformable (PartT p a) where
+    -- transform s = fmap rev
+
+
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Reversible (ChordT a) where
 --     rev = id
 -- instance Reversible a => Reversible (DynamicT a) where
 --     rev = fmap rev
--- instance Reversible a => Reversible (SlideT a) where
---     rev = fmap rev
--- instance Reversible a => Reversible (TieT a) where
---     rev = fmap rev
--- instance Reversible a => Reversible (HarmonicT a) where
---     rev = fmap rev
+instance Reversible a => Reversible (SlideT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (TieT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (HarmonicT a) where
+    rev = fmap rev
 -- instance Reversible a => Reversible (ArticulationT a) where
 --     rev = fmap rev
--- instance Reversible a => Reversible (TextT a) where
---     rev = fmap rev
--- instance Reversible a => Reversible (TremoloT a) where
---     rev = fmap rev
+instance Reversible a => Reversible (TextT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (TremoloT a) where
+    rev = fmap rev
 instance Reversible a => Reversible (PartT p a) where
     rev = fmap rev
--- 
--- 
+
+
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Semigroup a => Semigroup (DynamicT a) where
 --     DynamicT (d1, x1) <> DynamicT (d2, x2) = DynamicT (d1 <> d2, x1 <> x2)
--- instance Semigroup a => Semigroup (SlideT a) where
---     (<>) = liftA2 (<>)
--- instance Semigroup a => Semigroup (TieT a) where
---     TieT (t1, x1) <> TieT (t2, x2) = TieT (t1 <> t2, x1 <> x2)
---     -- This instance is suspect: in general chord notes are not required to share ties,
---     -- so this instance may be removed (provided that TieT is moved inside ChordT for
---     -- all Preludes). See #134
--- instance Semigroup a => Semigroup (HarmonicT a) where
---     (<>) = liftA2 (<>)
--- instance Semigroup a => Semigroup (TextT a) where
---     (<>) = liftA2 (<>)
--- instance Semigroup a => Semigroup (TremoloT a) where
---     (<>) = liftA2 (<>)
+instance Semigroup a => Semigroup (SlideT a) where
+    (<>) = liftA2 (<>)
+instance Semigroup a => Semigroup (TieT a) where
+    TieT (t1, x1) <> TieT (t2, x2) = TieT (t1 <> t2, x1 <> x2)
+    -- This instance is suspect: in general chord notes are not required to share ties,
+    -- so this instance may be removed (provided that TieT is moved inside ChordT for
+    -- all Preludes). See #134
+instance Semigroup a => Semigroup (HarmonicT a) where
+    (<>) = liftA2 (<>)
+instance Semigroup a => Semigroup (TextT a) where
+    (<>) = liftA2 (<>)
+instance Semigroup a => Semigroup (TremoloT a) where
+    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (PartT n a) where
     PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
 -- 
@@ -272,10 +294,10 @@ deriving instance HasText a => HasText (PartT n a)
 -- 
 -- deriving instance HasDynamic a => HasDynamic (TieT a)
 -- deriving instance HasArticulation a => HasArticulation (TieT a)
--- deriving instance HasTremolo a => HasTremolo (TieT a)
--- deriving instance HasHarmonic a => HasHarmonic (TieT a)
--- deriving instance HasSlide a => HasSlide (TieT a)
--- deriving instance HasText a => HasText (TieT a)
+deriving instance HasTremolo a => HasTremolo (TieT a)
+deriving instance HasHarmonic a => HasHarmonic (TieT a)
+deriving instance HasSlide a => HasSlide (TieT a)
+deriving instance HasText a => HasText (TieT a)
 -- 
 -- 
 -- -- DynamicT
@@ -341,9 +363,9 @@ deriving instance HasText a => HasText (PartT n a)
 -- 
 -- -- TremoloT
 -- 
--- instance Tiable a => Tiable (TremoloT a) where
---     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
--- type instance Part (TremoloT a)                          = Part a
+instance Tiable a => Tiable (TremoloT a) where
+    toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+type instance Part (TremoloT a)                          = Part a
 -- instance HasPart a => HasPart (TremoloT a) where
 --     getPart (TremoloT (_,a))                        = getPart a
 --     modifyPart f (TremoloT (n,x))                   = TremoloT (n, modifyPart f x)
@@ -360,15 +382,15 @@ deriving instance HasText a => HasText (PartT n a)
 -- 
 -- deriving instance HasDynamic a => HasDynamic (TremoloT a)
 -- deriving instance HasArticulation a => HasArticulation (TremoloT a)
--- deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
--- deriving instance HasSlide a => HasSlide (TremoloT a)
--- deriving instance HasText a => HasText (TremoloT a)
+deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
+deriving instance HasSlide a => HasSlide (TremoloT a)
+deriving instance HasText a => HasText (TremoloT a)
 -- 
 -- 
 -- -- TextT
 -- 
--- instance Tiable a => Tiable (TextT a) where
---     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
+instance Tiable a => Tiable (TextT a) where
+    toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
 -- type instance Part (TextT a)                             = Part a
 -- instance HasPart a => HasPart (TextT a) where
 --     getPart (TextT (_,a))                           = getPart a
@@ -393,8 +415,8 @@ deriving instance HasText a => HasText (PartT n a)
 -- 
 -- -- HarmonicT
 -- 
--- instance Tiable a => Tiable (HarmonicT a) where
---     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
+instance Tiable a => Tiable (HarmonicT a) where
+    toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
 -- type instance Part (HarmonicT a)                         = Part a
 -- instance HasPart a => HasPart (HarmonicT a) where
 --     getPart (HarmonicT (_,a))                       = getPart a
@@ -420,8 +442,8 @@ deriving instance HasText a => HasText (PartT n a)
 -- -- SlideT
 -- 
 -- 
--- instance Tiable a => Tiable (SlideT a) where
---     toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
+instance Tiable a => Tiable (SlideT a) where
+    toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
 -- 
 -- type instance Part (SlideT a) = Part a
 -- instance HasPart a => HasPart (SlideT a) where
@@ -450,9 +472,9 @@ deriving instance HasText a => HasText (PartT n a)
 -- -- Literal instances
 -- -------------------------------------------------------------------------------------
 -- 
--- instance Alterable a => Alterable (Score a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
+instance Alterable a => Alterable (Score a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 -- 
 -- instance Alterable a => Alterable (ChordT a) where
 --     sharpen = fmap sharpen
@@ -466,34 +488,34 @@ deriving instance HasText a => HasText (PartT n a)
 --     sharpen = fmap sharpen
 --     flatten = fmap flatten
 -- 
--- instance Alterable a => Alterable (TieT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
--- instance Alterable a => Alterable (HarmonicT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
+instance Alterable a => Alterable (TieT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
+instance Alterable a => Alterable (HarmonicT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
 -- instance Alterable a => Alterable (ArticulationT a) where
 --     sharpen = fmap sharpen
 --     flatten = fmap flatten
 -- 
--- instance Alterable a => Alterable (TextT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
--- instance Alterable a => Alterable (TremoloT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
+instance Alterable a => Alterable (TextT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
+instance Alterable a => Alterable (TremoloT a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
 instance Alterable a => Alterable (PartT n a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
--- 
--- instance Augmentable a => Augmentable (Score a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
+
+instance Augmentable a => Augmentable (Score a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
 -- instance Augmentable a => Augmentable (ChordT a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
@@ -502,30 +524,30 @@ instance Alterable a => Alterable (PartT n a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
 -- 
--- instance Augmentable a => Augmentable (SlideT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
--- instance Augmentable a => Augmentable (TieT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
--- instance Augmentable a => Augmentable (HarmonicT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
+instance Augmentable a => Augmentable (SlideT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (TieT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (HarmonicT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
 -- instance Augmentable a => Augmentable (ArticulationT a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
--- 
--- instance Augmentable a => Augmentable (TextT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
--- instance Augmentable a => Augmentable (TremoloT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
+
+instance Augmentable a => Augmentable (TextT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
+instance Augmentable a => Augmentable (TremoloT a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
 instance Augmentable a => Augmentable (PartT n a) where
     augment = fmap augment
     diminish = fmap diminish
@@ -561,6 +583,30 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
     PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
     toInteger (PartT (v,a)) = toInteger a
 
+-- []
+
+-- instance Num a => Num (ChordT a) where
+--     ChordT [a] + ChordT [b]   = ChordT [a+b]
+--     ChordT [a] * ChordT [b]   = ChordT [a*b]
+--     ChordT [a] - ChordT [b]   = ChordT [a-b]
+--     abs (ChordT [a])          = ChordT [abs a]
+--     signum (ChordT [a])       = ChordT [signum a]
+--     fromInteger a             = ChordT [fromInteger a]
+
+instance Enum a => Enum [a] where
+    toEnum a       = [toEnum a]
+    fromEnum ([a]) = fromEnum a
+
+instance Bounded a => Bounded [a] where
+    minBound = [minBound]
+    maxBound = [maxBound]
+
+-- instance (Num a, Ord a, Real a) => Real (ChordT a) where
+--     toRational (ChordT [a]) = toRational a
+
+-- instance (Real a, Enum a, Integral a) => Integral (ChordT a) where
+--     ChordT [a] `quotRem` ChordT [b] = (ChordT [q], ChordT [r]) where (q,r) = a `quotRem` b
+--     toInteger (ChordT [a]) = toInteger a
 
 -- -- ChordT
 -- 
@@ -588,51 +634,51 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
 -- --     toInteger (ChordT [a]) = toInteger a
 -- 
 -- 
--- -- TieT
--- 
--- instance Num a => Num (TieT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (TieT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (TieT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (TieT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (TieT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (TieT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (TieT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
+-- TieT
+
+instance Num a => Num (TieT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TieT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TieT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TieT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TieT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TieT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TieT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 -- 
 -- 
 -- -- DynamicT
@@ -728,190 +774,190 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
 --     rem = liftA2 rem
 --     toInteger = toInteger . get1
 -- 
--- -- TremoloT
--- 
--- instance Num a => Num (TremoloT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (TremoloT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (TremoloT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (TremoloT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (TremoloT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (TremoloT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
--- 
--- -- TextT
--- 
--- instance Num a => Num (TextT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (TextT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (TextT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (TextT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (TextT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (TextT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (TextT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
--- 
--- 
--- -- HarmonicT
--- 
--- instance Num a => Num (HarmonicT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (HarmonicT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (HarmonicT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (HarmonicT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (HarmonicT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
--- 
--- -- SlideT
--- 
--- instance Num a => Num (SlideT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (SlideT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (SlideT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (SlideT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (SlideT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (SlideT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
+-- TremoloT
+
+instance Num a => Num (TremoloT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TremoloT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TremoloT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TremoloT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TremoloT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TremoloT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
+
+-- TextT
+
+instance Num a => Num (TextT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TextT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TextT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TextT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TextT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TextT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TextT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
+
+
+-- HarmonicT
+
+instance Num a => Num (HarmonicT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (HarmonicT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (HarmonicT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (HarmonicT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (HarmonicT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
+
+-- SlideT
+
+instance Num a => Num (SlideT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (SlideT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (SlideT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (SlideT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (SlideT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (SlideT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 -- 
 -- 
 -- type instance Pitch (Behavior a) = Behavior (Pitch a)
@@ -921,16 +967,16 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
 --     type SetPitch (Behavior p) (Behavior a) = Behavior (SetPitch p a)
 --     __mapPitch f a = liftA2 (__setPitch) (f $ (__getPitch) <$> a) a
 -- 
--- instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
+instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
 -- 
 -- 
 -- 
--- -- Safe for tuple-like types
--- get1 = head . toList
--- -- TODO replace with extract
--- 
--- fmaps :: Functor f => (a -> (b, c)) -> f a -> (f b, f c)
--- fmaps f x = ((fst . f) <$> x, (snd . f) <$> x)
--- 
--- liftsA2 :: Applicative f => (a -> b -> (c, d)) -> f a -> f b -> (f a, f b)
--- liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))
+-- Safe for tuple-like types
+get1 = head . toList
+-- TODO replace with extract
+
+fmaps :: Functor f => (a -> (b, c)) -> f a -> (f b, f c)
+fmaps f x = ((fst . f) <$> x, (snd . f) <$> x)
+
+liftsA2 :: Applicative f => (a -> b -> (c, d)) -> f a -> f b -> (f a, f b)
+liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))

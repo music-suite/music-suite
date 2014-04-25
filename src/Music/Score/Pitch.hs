@@ -69,6 +69,7 @@ module Music.Score.Pitch (
         down,
         above,
         below,
+        inv,
         invertPitches,
         octavesUp,
         octavesDown,
@@ -298,6 +299,9 @@ above v x = x <> up v x
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
 below v x = x <> down v x
+
+inv = invertPitches
+{-# DEPRECATED inv "" #-}
 
 -- |
 -- Invert pitches.

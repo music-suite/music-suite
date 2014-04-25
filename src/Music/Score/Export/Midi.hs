@@ -140,8 +140,8 @@ instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toIntege
 instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfromMaybe
 instance HasMidi Integer                    where   getMidi x = getMidi (x,100::Integer)
 
--- instance HasMidi a => HasMidi (PartT n a) where
---     getMidi (PartT (_,a))                           = getMidi a
+instance HasMidi a => HasMidi (PartT n a) where
+    getMidi (PartT (_,a))                           = getMidi a
 -- instance HasMidi a => HasMidi (DynamicT a) where
 --     getMidi (DynamicT (_,a))                        = getMidi a
 -- instance HasMidi a => HasMidi (ArticulationT a) where
@@ -149,19 +149,20 @@ instance HasMidi Integer                    where   getMidi x = getMidi (x,100::
 -- 
 -- instance HasMidi a => HasMidi (ChordT a) where
 --     getMidi = pcat . fmap getMidi . getChordT
--- instance HasMidi a => HasMidi (TieT a) where
---     getMidi (TieT (_,a))                            = getMidi a
--- instance HasMidi a => HasMidi (TremoloT a) where
---     getMidi (TremoloT (_,a))                        = getMidi a
--- instance HasMidi a => HasMidi (TextT a) where
---     getMidi (TextT (_,a))                           = getMidi a
--- instance HasMidi a => HasMidi (HarmonicT a) where
---     getMidi (HarmonicT (_,a))                       = getMidi a
--- instance HasMidi a => HasMidi (SlideT a) where
---     getMidi (SlideT (_,a))                          = getMidi a
--- 
--- instance HasMidi a => HasMidi (Behavior a) where
---     getMidi = getMidi . (? 0)
+instance HasMidi a => HasMidi [a] where
+    getMidi = pcat . fmap getMidi
+instance HasMidi a => HasMidi (TieT a) where
+    getMidi (TieT (_,a))                            = getMidi a
+instance HasMidi a => HasMidi (TremoloT a) where
+    getMidi (TremoloT (_,a))                        = getMidi a
+instance HasMidi a => HasMidi (TextT a) where
+    getMidi (TextT (_,a))                           = getMidi a
+instance HasMidi a => HasMidi (HarmonicT a) where
+    getMidi (HarmonicT (_,a))                       = getMidi a
+instance HasMidi a => HasMidi (SlideT a) where
+    getMidi (SlideT (_,a))                          = getMidi a
+instance HasMidi a => HasMidi (Behavior a) where
+    getMidi = getMidi . (! 0)
 
 
 -- |

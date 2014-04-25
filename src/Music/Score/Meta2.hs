@@ -84,9 +84,9 @@ module Music.Score.Meta2 (
         --  mapAllParts,
         --  -- modifyParts,
         -- 
-        --  -- ** Part composition
-        --  (</>),
-        --  rcat,
+         -- ** Part composition
+         (</>),
+         rcat,
         --  -- moveParts,
         --  -- moveToPart,
         -- 
@@ -103,7 +103,7 @@ module Music.Score.Meta2 (
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens           hiding (perform)
+import           Control.Lens           hiding (perform, parts)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
@@ -286,38 +286,38 @@ modifyParts n = fmap (modifyPart n)
 --------------------------------------------------------------------------------
 -- Part composition
 --------------------------------------------------------------------------------
-{-
 
 infixr 6 </>
 
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
-(</>) :: (HasPart' a, Enum (Part a)) => Score a -> Score a -> Score a
+(</>) :: (HasParts' a, Enum (Part a)) => Score a -> Score a -> Score a
 a </> b = a <> moveParts offset b
     where
         -- max voice in a + 1
-        offset = succ $ maximum' 0 $ fmap fromEnum $ getParts a
+        offset = succ $ maximum' 0 $ fmap fromEnum $ toListOf parts a
 
 -- |
 -- Concatenate parts.
 --
-rcat :: (HasPart' a, Enum (Part a)) => [Score a] -> Score a
+rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
 rcat = List.foldr (</>) mempty
 
 -- |
 -- Move down one voice (all parts).
 --
-moveParts :: (Integral b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
-moveParts x = modifyParts (successor x)
+moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
+moveParts x = parts %~ (successor x)
 
 -- |
 -- Move top-part to the specific voice (other parts follow).
 --
-moveToPart :: (Enum b, HasPart' a, Enum (Part a)) => b -> Score a -> Score a
+moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
 
 
+{-
 
 -------------------------------------------------------------------------------------
 -- Zippers

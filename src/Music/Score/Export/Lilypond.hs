@@ -137,14 +137,14 @@ instance HasLilypond a => HasLilypond (Product a) where
 -- 
 instance HasLilypond a => HasLilypond (PartT n a) where
   getLilypond d (PartT (_,x))                     = getLilypond d x
--- 
--- instance HasLilypond a => HasLilypond (TieT a) where
---     getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
---         where
---             addTies | ta && tb                      = id . Lilypond.beginTie
---                     | tb                            = Lilypond.beginTie
---                     | ta                            = id
---                     | otherwise                     = id
+
+instance HasLilypond a => HasLilypond (TieT a) where
+    getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
+        where
+            addTies | ta && tb                      = id . Lilypond.beginTie
+                    | tb                            = Lilypond.beginTie
+                    | ta                            = id
+                    | otherwise                     = id
 -- 
 -- instance HasLilypond a => HasLilypond (DynamicT a) where
 --     getLilypond d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getLilypond d a
@@ -175,36 +175,36 @@ instance HasLilypond a => HasLilypond (PartT n a) where
 --                 2    -> Lilypond.addStaccatissimo
 --             nbs    = if bs then Lilypond.beginSlur else id
 -- 
--- instance HasLilypond a => HasLilypond (TremoloT a) where
---     getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
---     getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
---         where
---             scale   = 2^n
---             newDur  = (d `min` (1/4)) / scale
---             repeats = d / newDur
---             notate = Lilypond.Tremolo (round repeats)
--- 
--- instance HasLilypond a => HasLilypond (TextT a) where
---     getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
---         where
---             notate ts = foldr (.) id (fmap Lilypond.addText ts)
--- 
--- instance HasLilypond a => HasLilypond (HarmonicT a) where
---     getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
---         where
---             notate _     0 = id
---             notate True  n = notateNatural n
---             notate False n = notateArtificial n
--- 
---             notateNatural n = Lilypond.addFlageolet -- addOpen?
--- 
---             notateArtificial n = id -- TODO
--- 
--- instance HasLilypond a => HasLilypond (SlideT a) where
---     getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
---         where
---             notate = if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
--- 
+instance HasLilypond a => HasLilypond (TremoloT a) where
+    getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
+    getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
+        where
+            scale   = 2^n
+            newDur  = (d `min` (1/4)) / scale
+            repeats = d / newDur
+            notate = Lilypond.Tremolo (round repeats)
+
+instance HasLilypond a => HasLilypond (TextT a) where
+    getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
+        where
+            notate ts = foldr (.) id (fmap Lilypond.addText ts)
+
+instance HasLilypond a => HasLilypond (HarmonicT a) where
+    getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
+        where
+            notate _     0 = id
+            notate True  n = notateNatural n
+            notate False n = notateArtificial n
+
+            notateNatural n = Lilypond.addFlageolet -- addOpen?
+
+            notateArtificial n = id -- TODO
+
+instance HasLilypond a => HasLilypond (SlideT a) where
+    getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
+        where
+            notate = if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
+
 instance HasLilypond a => HasLilypond (ClefT a) where
     -- TODO consolidate
     getLilypondWithPrefix d (ClefT (c, a)) = (notate c, getLilypond d a)
@@ -217,9 +217,9 @@ instance HasLilypond a => HasLilypond (ClefT a) where
             notate c = case fmap getLast $ getOption c of
                 Nothing -> id
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
--- 
--- instance HasLilypond a => HasLilypond (Behavior a) where
---     getLilypond d = getLilypond d . (? 0)
+
+instance HasLilypond a => HasLilypond (Behavior a) where
+    getLilypond d = getLilypond d . (! 0)
 
 
 -- TODO
