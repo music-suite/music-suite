@@ -197,7 +197,7 @@ instance Reversible a => Reversible (Score a) where
 
 instance HasMeta (Score a) where
     meta = _Wrapped' . _1
-
+    -- meta = lens (const mempty) const
 
 
 

@@ -69,13 +69,15 @@ import           Data.Typeable
 import           Data.Void
 
 import           Music.Pitch.Literal
-import           Music.Score.Note
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Score.Voice
-import           Music.Time
-
+import           Music.Time (Reactive, Delayable(..), Stretchable(..), Time, Duration,
+                              -- TODO move all below
+                              switch, range
+                              )
+-- TODO move
+import Music.Score.Note
 
 type IsAttribute a = (Typeable a, Monoid' a)
 
@@ -101,28 +103,18 @@ instance Delayable Attribute where
 instance Stretchable Attribute where
     stretch _ (Attribute  a) = Attribute a
 
-
--- TODO is Transformable right w.r.t. join?
+-- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String (Reactive Attribute))
     deriving (Delayable, Stretchable)
 
--- instance HasPart Meta where
 
-inMeta :: (Map String (Reactive Attribute) -> Map String (Reactive Attribute)) -> Meta -> Meta
-inMeta f (Meta s) = Meta (f s)
 
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
+addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
 
--- XXX
-addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
-
--- Switch at time t to the given value (switch is valid until the end of the music).
--- TODO might not work as we think
-addMetaChange :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Time -> a -> b -> b
-addMetaChange t x y = (applyMeta $ addMeta' (Just y) $ switch t mempty (pure x)) y
 
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
@@ -135,7 +127,6 @@ addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
         pt = show $ fmap getPart part
         ty = show $ typeOf (undefined :: b)
 
--- runMeta' :: forall a . IsAttribute a => Meta -> Maybe (Reactive a)
 runMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Maybe (Reactive b)
 runMeta' part (Meta s) = fmap (fmap (fromMaybe (error "runMeta'") . unwrapAttr)) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
@@ -167,38 +158,6 @@ instance HasMeta Meta where
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = (meta <>~ m)
 
--- instance (HasMeta a, HasMeta b) => HasMeta (a,b) where
---     applyMeta s = applyMeta s *** applyMeta s
--- 
--- instance HasMeta a => HasMeta [a] where
---     applyMeta = fmap . applyMeta
--- 
--- instance HasMeta b => HasMeta (a -> b) where
---     applyMeta = fmap . applyMeta
--- 
--- instance HasMeta a => HasMeta (Map k a) where
---     applyMeta = fmap . applyMeta
--- 
--- instance (HasMeta a, Ord a) => HasMeta (Set a) where
---     applyMeta = Set.map . applyMeta
--- 
-
-
-
-
-
-
-
-
-
-newtype RehearsalMark = RehearsalMark ()
-    deriving (Typeable, Monoid, Semigroup)
-
-
-
-
-
-
 
 
 
@@ -207,33 +166,6 @@ newtype RehearsalMark = RehearsalMark ()
 -- TODO rename during
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
-
--- | Split a reactive into notes, as well as the values before and after the first/last update
-splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
-splitReactive r = case updates r of
-    []          -> Left  (initial r)
-    (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap note $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
-
-    where
-
-        note (t,u,x) = t <-> u =: x
-
-        -- Always returns a 0 or more Right followed by one left
-        res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
-        res rs = let (ts,xs) = unzip rs in
-            flip fmap (withNext ts `zip` xs) $
-                \ ((t, mu), x) -> case mu of
-                    Nothing -> Left (t, x)
-                    Just u  -> Right (t, u, x)
-
-        -- lenght xs == length (withNext xs)
-        withNext :: [a] -> [(a, Maybe a)]
-        withNext = go
-            where
-                go []       = []
-                go [x]      = [(x, Nothing)]
-                go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
