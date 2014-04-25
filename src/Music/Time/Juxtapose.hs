@@ -157,11 +157,17 @@ a `before` b =  (a `lead` b) <> b
 palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 palindrome a = a `after` rev a
 
+infixr 6 |>
+infixr 6 <|
+
 (|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (|>) = after
 
 (<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (<|) = before
+
+-- infixr 6 >|
+-- infixr 6 |<
 
 -- |
 -- Compose a list of sequential objects, with onset and offset tangent to one another.
