@@ -116,7 +116,7 @@ instance Stretchable Attribute where
     stretch n (TAttribute  a) = TAttribute (stretch n a)
 
 -- Meta is Transformable because the contents of the map is transformable
-newtype Meta = Metax (Map String Attribute)
+newtype Meta = Meta (Map String Attribute)
     deriving (Delayable, Stretchable)
 
 
@@ -138,7 +138,7 @@ runMetaReactive part = fromMaybe mempty . runMeta part
 --
 
 addMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
-addMeta part a = Metax $ Map.singleton key $ wrapTAttr a
+addMeta part a = Meta $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
         pt = ""
@@ -146,7 +146,7 @@ addMeta part a = Metax $ Map.singleton key $ wrapTAttr a
         ty = show $ typeOf (undefined :: b)
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
-runMeta part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
+runMeta part (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt       
@@ -155,14 +155,14 @@ runMeta part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
         ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
-    Metax s1 <> Metax s2 = Metax $ Map.unionWith (<>) s1 s2
+    Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
 
 -- | The empty meta contains no attributes; composition of metas is
 --   a union of attributes; if the two metas have attributes of the
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
-    mempty = Metax Map.empty
+    mempty = Meta Map.empty
     mappend = (<>)
 
 -- | Type class for things which have meta-information.
