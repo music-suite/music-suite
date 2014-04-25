@@ -73,10 +73,6 @@ instance Wrapped (ClefT a) where
   _Wrapped' = iso getClefT ClefT
 instance Rewrapped (ClefT a) (ClefT b)
 
--- instance HasPart a => HasPart (ClefT a) where
---     getPart (ClefT (_,a)) = getPart a
---     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
-
 instance Monad ClefT where
     return x = ClefT (mempty, x)
     (>>=) = error "No ClefT.(>>=)"

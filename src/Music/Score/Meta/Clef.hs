@@ -78,3 +78,4 @@ clefDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 -- | Extract the clef in from the given score, using the given default clef.
 withClef :: HasPart' a => Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
 withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)
+
