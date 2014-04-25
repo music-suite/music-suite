@@ -131,19 +131,27 @@ runMetaReactive :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -
 runMetaReactive part = fromMaybe mempty . runMeta part
 
 
+--
+-- TODO
+-- Temporarily disabling part specific meta-events
+-- The API still works, but all parts are merged together
+--
+
 addMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> b -> Meta
 addMeta part a = Metax $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
-        pt = show $ fmap getPart part
+        pt = ""
+        -- pt = show $ fmap getPart part
         ty = show $ typeOf (undefined :: b)
 
 runMeta :: forall a b . (HasPart' a, IsAttribute b, Delayable b, Stretchable b) => Maybe a -> Meta -> Maybe b
 runMeta part (Metax s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
-        key = ty ++ pt
-        pt = show $ fmap getPart part
+        key = ty ++ pt       
+        pt = ""
+        -- pt = show $ fmap getPart part
         ty = show . typeOf $ (undefined :: b)
 
 instance Semigroup Meta where
