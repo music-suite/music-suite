@@ -222,9 +222,9 @@ zipVoiceWith  = error "Not implemented: zipVoiceWith"
 dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
 dzipVoiceWith = error "Not implemented: dzipVoiceWith"
 
-
+-- TODO not simple
 voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = error "Not implemented: voiceList"
+voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
 
 -- |
 -- Merge consecutive equal note.

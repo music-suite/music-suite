@@ -81,11 +81,16 @@ import           Music.Score.Util
 -}
 
 
--- instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
---     fromPitch l                                     = PartT (toEnum 0, fromPitch l)
--- instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
---     fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
--- 
+instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
+    fromPitch l                                     = PartT (toEnum 0, fromPitch l)
+instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
+    fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
+
+instance IsPitch a => IsPitch [a] where
+    fromPitch = return . fromPitch
+instance IsDynamics a => IsDynamics [a] where
+    fromDynamics = return . fromDynamics
+
 -- instance IsPitch a => IsPitch (ChordT a) where
 --     fromPitch = return . fromPitch
 -- instance IsDynamics a => IsDynamics (ChordT a) where
@@ -139,8 +144,8 @@ import           Music.Score.Util
 --     rev = fmap rev
 -- instance Reversible a => Reversible (TremoloT a) where
 --     rev = fmap rev
--- instance Reversible a => Reversible (PartT p a) where
---     rev = fmap rev
+instance Reversible a => Reversible (PartT p a) where
+    rev = fmap rev
 -- 
 -- 
 -- -------------------------------------------------------------------------------------
@@ -160,8 +165,8 @@ import           Music.Score.Util
 --     (<>) = liftA2 (<>)
 -- instance Semigroup a => Semigroup (TremoloT a) where
 --     (<>) = liftA2 (<>)
--- instance Semigroup a => Semigroup (PartT n a) where
---     PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
+instance Semigroup a => Semigroup (PartT n a) where
+    PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
 -- 
 -- 
 -- -------------------------------------------------------------------------------------
@@ -193,21 +198,22 @@ import           Music.Score.Util
 --     type ChordNote (PartT n a)                           = PartT n (ChordNote a)
 --     getChord (PartT (v,x))                          = fmap (\x -> PartT (v,x)) (getChord x)
 -- 
--- type instance Pitch (PartT n a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (PartT n a) where
---     __getPitch = __getPitch . extract
--- instance HasSetPitch a b => HasSetPitch (PartT n a) (PartT n b) where
---     type SetPitch g (PartT n a) = PartT n (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
+type instance Pitch (PartT p a) = Pitch a
+type instance SetPitch b (PartT p a) = PartT p (SetPitch b a)
+
+instance HasPitch a b => HasPitch (PartT p a) (PartT p b) where
+  pitch = _Wrapped . _2 . pitch
+instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
+  pitches = _Wrapped . _2 . pitches
+
 instance Tiable a => Tiable (PartT n a) where
     toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 -- deriving instance HasDynamic a => HasDynamic (PartT n a)
 -- deriving instance HasArticulation a => HasArticulation (PartT n a)
--- deriving instance HasTremolo a => HasTremolo (PartT n a)
--- deriving instance HasHarmonic a => HasHarmonic (PartT n a)
--- deriving instance HasSlide a => HasSlide (PartT n a)
--- deriving instance HasText a => HasText (PartT n a)
+deriving instance HasTremolo a => HasTremolo (PartT n a)
+deriving instance HasHarmonic a => HasHarmonic (PartT n a)
+deriving instance HasSlide a => HasSlide (PartT n a)
+deriving instance HasText a => HasText (PartT n a)
 -- 
 -- 
 -- -- ChordT
@@ -480,9 +486,9 @@ instance Tiable a => Tiable (PartT n a) where
 --     sharpen = fmap sharpen
 --     flatten = fmap flatten
 -- 
--- instance Alterable a => Alterable (PartT n a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
+instance Alterable a => Alterable (PartT n a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
 -- 
 -- instance Augmentable a => Augmentable (Score a) where
 --     augment = fmap augment
@@ -520,9 +526,9 @@ instance Tiable a => Tiable (PartT n a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
 -- 
--- instance Augmentable a => Augmentable (PartT n a) where
---     augment = fmap augment
---     diminish = fmap diminish
+instance Augmentable a => Augmentable (PartT n a) where
+    augment = fmap augment
+    diminish = fmap diminish
 -- 
 -- 
 -- 
@@ -530,32 +536,32 @@ instance Tiable a => Tiable (PartT n a) where
 -- -- Num, Integral, Enum and Bounded
 -- -------------------------------------------------------------------------------------
 -- 
--- -- PartT
--- 
--- instance (Enum v, Eq v, Num a) => Num (PartT v a) where
---     PartT (v,a) + PartT (_,b) = PartT (v,a+b)
---     PartT (v,a) * PartT (_,b) = PartT (v,a*b)
---     PartT (v,a) - PartT (_,b) = PartT (v,a-b)
---     abs (PartT (v,a))          = PartT (v,abs a)
---     signum (PartT (v,a))       = PartT (v,signum a)
---     fromInteger a               = PartT (toEnum 0,fromInteger a)
--- 
--- instance (Enum v, Enum a) => Enum (PartT v a) where
---     toEnum a = PartT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
---     fromEnum (PartT (v,a)) = fromEnum a
--- 
--- instance (Enum v, Bounded a) => Bounded (PartT v a) where
---     minBound = PartT (toEnum 0, minBound)
---     maxBound = PartT (toEnum 0, maxBound)
--- 
--- instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
---     toRational (PartT (v,a)) = toRational a
--- 
--- instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
---     PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
---     toInteger (PartT (v,a)) = toInteger a
--- 
--- 
+-- PartT
+
+instance (Enum v, Eq v, Num a) => Num (PartT v a) where
+    PartT (v,a) + PartT (_,b) = PartT (v,a+b)
+    PartT (v,a) * PartT (_,b) = PartT (v,a*b)
+    PartT (v,a) - PartT (_,b) = PartT (v,a-b)
+    abs (PartT (v,a))          = PartT (v,abs a)
+    signum (PartT (v,a))       = PartT (v,signum a)
+    fromInteger a               = PartT (toEnum 0,fromInteger a)
+
+instance (Enum v, Enum a) => Enum (PartT v a) where
+    toEnum a = PartT (toEnum 0, toEnum a) -- TODO use def, mempty or minBound?
+    fromEnum (PartT (v,a)) = fromEnum a
+
+instance (Enum v, Bounded a) => Bounded (PartT v a) where
+    minBound = PartT (toEnum 0, minBound)
+    maxBound = PartT (toEnum 0, maxBound)
+
+instance (Enum v, Ord v, Num a, Ord a, Real a) => Real (PartT v a) where
+    toRational (PartT (v,a)) = toRational a
+
+instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) where
+    PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
+    toInteger (PartT (v,a)) = toInteger a
+
+
 -- -- ChordT
 -- 
 -- -- instance Num a => Num (ChordT a) where

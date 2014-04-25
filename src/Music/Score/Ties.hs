@@ -201,7 +201,3 @@ splitDur maxDur (d,a)
     | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
 
 
--- TODO move!
-deriving instance Functor Sum
-deriving instance Functor Product
-

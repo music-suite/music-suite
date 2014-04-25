@@ -110,6 +110,6 @@ library
                         Music.Score.Util
                         Music.Time.Util
                         Music.Score.Export.Common 
-    -- other-modules:   Music.Score.Instances
+    other-modules:      Music.Score.Instances
     hs-source-dirs: 	src
     default-language: 	Haskell2010

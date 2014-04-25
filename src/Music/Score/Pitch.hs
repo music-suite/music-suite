@@ -218,12 +218,18 @@ type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
 type instance Pitch (Stretched a)       = Pitch a
 type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
 
+type instance Pitch (Voice a)       = Pitch a
+type instance SetPitch g (Voice a)  = Voice (SetPitch g a)
+type instance Pitch (Chord a)       = Pitch a
+type instance SetPitch g (Chord a)  = Chord (SetPitch g a)
+type instance Pitch (Track a)       = Pitch a
+type instance SetPitch g (Track a)  = Track (SetPitch g a)
+type instance Pitch (Score a)       = Pitch a
+type instance SetPitch g (Score a)  = Score (SetPitch g a)
+
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
 instance HasPitches a b => HasPitches (c, a) (c, b) where
-  pitches = traverse . pitches
-
-instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Note a) (Note b) where
@@ -240,6 +246,21 @@ instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
   pitches = _Wrapped . whilstLD pitches
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
   pitch = _Wrapped . whilstLD pitch
+
+instance HasPitches a b => HasPitches [a] [b] where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Voice a) (Voice b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Track a) (Track b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Chord a) (Chord b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Score a) (Score b) where
+  pitches = traverse . pitches
 
 -- |
 -- Associated interval type.

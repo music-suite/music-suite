@@ -32,6 +32,7 @@ import           Prelude             hiding (concat, concatMap, foldl, foldr,
                                       mapM, maximum, minimum, sum)
 
 import           Control.Applicative
+import           Control.Lens        ((^.))
 import           Control.Arrow       hiding (left)
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either
@@ -69,8 +70,9 @@ getBeatDuration :: Rhythm a -> Duration
 getBeatDuration (Beat d a) = d
 getBeatDuration _          = error "getBeatValue: Not a beat"
 
-realize :: Rhythm a -> [(Duration, a)]
-realize (Beat d a)      = [(d, a)]
+-- TODO return voice
+realize :: Rhythm a -> [Stretched a]
+realize (Beat d a)      = [(d, a)^.stretched]
 realize (Group rs)      = rs >>= realize
 realize (Dotted n r)    = dotMod n `stretch` realize r
 realize (Tuplet n r)    = n `stretch` realize r

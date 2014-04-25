@@ -170,6 +170,12 @@ instance Transformable a => Transformable (Option a) where
 instance Transformable a => Transformable (Last a) where
   transform s = fmap (transform s)
 
+instance Transformable a => Transformable (Sum a) where
+  transform s = fmap (transform s)
+
+instance Transformable a => Transformable (Product a) where
+  transform s = fmap (transform s)
+
 --
 -- TODO
 --
@@ -180,8 +186,8 @@ instance Transformable a => Transformable (Last a) where
 --
 -- 2) Redefine note as                type Note a = (a, Span)
 --
-instance Transformable a => Transformable (a, b) where
-  transform t (s,a) = (transform t s, a)
+instance Transformable a => Transformable (b, a) where
+  transform t (s,a) = (s, transform t a)
 
 -- |
 -- Lists transform by transforming each element.
@@ -344,3 +350,9 @@ conjugate t1 t2  = negateV t1 <> t2 <> t1
 
 on :: (Functor f, Transformable c, Transformable b) => (a -> c -> f b) -> Span -> a -> c -> f b
 f `on` s = flip whilstM (negateV s) . f
+
+
+-- TODO move!
+deriving instance Functor Sum
+deriving instance Functor Product
+

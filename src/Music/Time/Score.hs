@@ -72,6 +72,7 @@ import           Music.Time.Reverse
 import           Music.Time.Note
 import           Music.Time.Stretched
 import           Music.Time.Voice
+import           Music.Time.Juxtapose (scat)
 
 -----
 import Control.Monad.Compose
@@ -360,9 +361,9 @@ unsafeNotes = _Wrapped
 {-# INLINE unsafeNotes #-}
 
 unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
-unsafeVoices = error "Not impl"
+unsafeVoices = error "Not implemented: unsafeVoices"
 {-# INLINE unsafeVoices #-}
-
+  
 -- |
 -- View a score as a single note.
 -- 
@@ -391,7 +392,7 @@ singlePhrase = error "Not implemented: singlePhrase"
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
-mapScore f = error "Not implemented: singleNote"
+mapScore f = error "Not implemented: mapScore"
 
 
 reifyScore :: Score a -> Score (Note a)

@@ -184,8 +184,8 @@ instance Reversible Duration where
 instance Reversible Span where
   rev = revDefault
 
-instance Reversible a => Reversible (a, b) where
-  rev (s,a) = (rev s, a)
+instance Reversible a => Reversible (b, a) where
+  rev (s,a) = (s, rev a)
 
 -- |
 -- A default implementation of 'rev'
