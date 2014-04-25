@@ -45,20 +45,17 @@ import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Alterable
+import           Music.Time
+import           Music.Score.Meta
+import           Music.Score.Meta2
 import           Music.Score.Articulation
-import           Music.Score.Chord
-import           Music.Score.Combinators
 import           Music.Score.Dynamics
-import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
+import           Music.Score.Ornaments
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
 import           Music.Score.Util
-import           Music.Score.Voice
-import           Music.Time
 
 -------------------------------------------------------------------------------------
 

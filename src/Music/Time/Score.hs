@@ -25,6 +25,7 @@ module Music.Time.Score (
       -- ** Substructure
       score,
       notes,
+      events,
       voices,
       -- phrases,
       singleNote,

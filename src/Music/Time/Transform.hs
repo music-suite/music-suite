@@ -76,7 +76,7 @@ import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
 import           Data.NumInstances
-import           Data.Semigroup               hiding ()
+import           Data.Semigroup
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
 import           Data.Map                (Map)
@@ -164,6 +164,11 @@ instance Transformable Time where
 instance Transformable Span where
   transform = (<>)
 
+instance Transformable a => Transformable (Option a) where
+  transform s = fmap (transform s)
+
+instance Transformable a => Transformable (Last a) where
+  transform s = fmap (transform s)
 
 --
 -- TODO

@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -35,6 +36,7 @@ module Music.Score.Clef (
   ) where
 
 import           Control.Arrow
+import           Control.Lens hiding (transform, parts)
 import           Control.Monad.Plus
 import           Data.Foldable           (Foldable)
 import qualified Data.Foldable           as F
@@ -65,7 +67,12 @@ import           Music.Time
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
 
-type instance Part (ClefT a) = Part a
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (ClefT a) where
+  type Unwrapped (ClefT a) = (Option (Last Clef), a)
+  _Wrapped' = iso getClefT ClefT
+instance Rewrapped (ClefT a) (ClefT b)
+
 -- instance HasPart a => HasPart (ClefT a) where
 --     getPart (ClefT (_,a)) = getPart a
 --     modifyPart f (ClefT (a,b)) = ClefT (a, modifyPart f b)
@@ -74,7 +81,18 @@ instance Monad ClefT where
     return x = ClefT (mempty, x)
     (>>=) = error "No ClefT.(>>=)"
 
+type instance Part (ClefT a) = Part a
+type instance SetPart b (ClefT a) = ClefT (SetPart b a)
 
+instance (HasParts a b) => HasParts (ClefT a) (ClefT b) where
+  parts = _Wrapped . parts
+instance (HasPart a b) => HasPart (ClefT a) (ClefT b) where
+  part = _Wrapped . part
+
+
+instance Transformable a => Transformable (ClefT a) where
+    transform s = over (_Wrapped . _2) $ transform s
+  
 instance Tiable a => Tiable (ClefT a) where
     toTied (ClefT (clef,a)) = (ClefT (clef,b), ClefT (mempty,c)) where (b,c) = toTied a
 

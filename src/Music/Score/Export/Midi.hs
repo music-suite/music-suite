@@ -66,18 +66,14 @@ import Codec.Midi hiding (Track)
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
-import           Music.Score.Chord
-import           Music.Score.Combinators
+import           Music.Score.Meta2
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
-import           Music.Score.Voice
 import           Music.Time
 
 import qualified Codec.Midi                as Midi
@@ -89,7 +85,7 @@ import qualified Text.Pretty               as Pretty
 
 
 -- | Class of types with MIDI-compatible parts.
-type HasMidiPart a = (HasPart' a, HasMidiProgram (Part a))
+type HasMidiPart a = (HasPart' a, Ord (Part a), HasMidiProgram (Part a))
 
 -- | Class of part types with an associated MIDI program number.
 class HasMidiProgram a where
@@ -144,27 +140,28 @@ instance Integral a => HasMidi (Ratio a)    where   getMidi = getMidi . toIntege
 instance HasMidi a => HasMidi (Maybe a)     where   getMidi = getMidiScore . mfromMaybe
 instance HasMidi Integer                    where   getMidi x = getMidi (x,100::Integer)
 
-instance HasMidi a => HasMidi (PartT n a) where
-    getMidi (PartT (_,a))                           = getMidi a
-instance HasMidi a => HasMidi (ChordT a) where
-    getMidi = pcat . fmap getMidi . getChordT
-instance HasMidi a => HasMidi (TieT a) where
-    getMidi (TieT (_,a))                            = getMidi a
-instance HasMidi a => HasMidi (DynamicT a) where
-    getMidi (DynamicT (_,a))                        = getMidi a
-instance HasMidi a => HasMidi (ArticulationT a) where
-    getMidi (ArticulationT (_,a))                   = getMidi a
-instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,a))                        = getMidi a
-instance HasMidi a => HasMidi (TextT a) where
-    getMidi (TextT (_,a))                           = getMidi a
-instance HasMidi a => HasMidi (HarmonicT a) where
-    getMidi (HarmonicT (_,a))                       = getMidi a
-instance HasMidi a => HasMidi (SlideT a) where
-    getMidi (SlideT (_,a))                          = getMidi a
-
-instance HasMidi a => HasMidi (Behavior a) where
-    getMidi = getMidi . (? 0)
+-- instance HasMidi a => HasMidi (PartT n a) where
+--     getMidi (PartT (_,a))                           = getMidi a
+-- instance HasMidi a => HasMidi (DynamicT a) where
+--     getMidi (DynamicT (_,a))                        = getMidi a
+-- instance HasMidi a => HasMidi (ArticulationT a) where
+--     getMidi (ArticulationT (_,a))                   = getMidi a
+-- 
+-- instance HasMidi a => HasMidi (ChordT a) where
+--     getMidi = pcat . fmap getMidi . getChordT
+-- instance HasMidi a => HasMidi (TieT a) where
+--     getMidi (TieT (_,a))                            = getMidi a
+-- instance HasMidi a => HasMidi (TremoloT a) where
+--     getMidi (TremoloT (_,a))                        = getMidi a
+-- instance HasMidi a => HasMidi (TextT a) where
+--     getMidi (TextT (_,a))                           = getMidi a
+-- instance HasMidi a => HasMidi (HarmonicT a) where
+--     getMidi (HarmonicT (_,a))                       = getMidi a
+-- instance HasMidi a => HasMidi (SlideT a) where
+--     getMidi (SlideT (_,a))                          = getMidi a
+-- 
+-- instance HasMidi a => HasMidi (Behavior a) where
+--     getMidi = getMidi . (? 0)
 
 
 -- |
@@ -190,7 +187,7 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
                 prg = getMidiProgram p
 
         scoreToMTrack :: Score a -> Midi.Track Midi.Ticks
-        scoreToMTrack = fmap (\(t,_,x) -> (round ((t.-. origin) ^* divisions), x)) . toRelative . (^. events) . getMidiScore
+        scoreToMTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events) . getMidiScore
 
         -- TODO render voices separately
 
@@ -198,7 +195,7 @@ toMidi score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
 -- Convert a score to a track of MIDI messages.
 --
 toMidiTrack :: HasMidi a => Score a -> Track Message
-toMidiTrack = (^. track) . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScore
+toMidiTrack = (^. track) . fmap (^. delayed) . fmap (\(t,_,m) -> (t, m)) . (^. events) . getMidiScore
 
 -- |
 -- Convert a score MIDI and write to a file.
@@ -242,4 +239,7 @@ setChannel c = go
         go (PitchWheel _ w)      = PitchWheel c w
         go (ChannelPrefix _)     = ChannelPrefix c
 
+-- TODO move
+instance Transformable Midi.Message where
+  transform _ = id
 

@@ -65,13 +65,12 @@ import           System.Process
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
-import           Music.Score.Chord
+-- import           Music.Score.Chord
 import           Music.Score.Clef
-import           Music.Score.Combinators
-import           Music.Score.Convert
+import           Music.Score.Meta2
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
-import           Music.Score.Instances
+-- import           Music.Score.Instances
 import           Music.Score.Meta
 import           Music.Score.Meta.Attribution
 import           Music.Score.Meta.Clef
@@ -81,13 +80,9 @@ import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
 import           Music.Score.Util
-import           Music.Score.Voice
-import           Music.Time
-import           Music.Time.Reactive          (initial)
+import           Music.Time hiding (time)
 
 import qualified Codec.Midi                   as Midi
 import qualified Data.List                    as List
@@ -127,79 +122,79 @@ instance HasLilypond Integer where
     getLilypond      d = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond
     getLilypondChord d = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond
 
-instance HasLilypond a => HasLilypond (ChordT a) where
-    getLilypond d = getLilypondChord d . getChordT
-
-instance HasLilypond a => HasLilypond (PartT n a) where
-    getLilypond d (PartT (_,x))                     = getLilypond d x
-
-instance HasLilypond a => HasLilypond (TieT a) where
-    getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
-        where
-            addTies | ta && tb                      = id . Lilypond.beginTie
-                    | tb                            = Lilypond.beginTie
-                    | ta                            = id
-                    | otherwise                     = id
-
-instance HasLilypond a => HasLilypond (DynamicT a) where
-    getLilypond d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getLilypond d a
-        where
-            notate x = nec . ned . nl . nbc . nbd $ x
-            nec    = if ec then Lilypond.endCresc    else id
-            ned    = if ed then Lilypond.endDim      else id
-            nbc    = if bc then Lilypond.beginCresc  else id
-            nbd    = if bd then Lilypond.beginDim    else id
-            nl     = case l of
-                Nothing          -> id
-                Just (First lvl) -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
-
-instance HasLilypond a => HasLilypond (ArticulationT a) where
-    getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
-        where
-            notate = nes . nal . nsl . nbs
-            nes    = if es then Lilypond.endSlur else id
-            nal    = case al of
-                0    -> id
-                1    -> Lilypond.addAccent
-                2    -> Lilypond.addMarcato
-            nsl    = case sl of
-                (-2) -> Lilypond.addTenuto
-                (-1) -> Lilypond.addPortato
-                0    -> id
-                1    -> Lilypond.addStaccato
-                2    -> Lilypond.addStaccatissimo
-            nbs    = if bs then Lilypond.beginSlur else id
-
-instance HasLilypond a => HasLilypond (TremoloT a) where
-    getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
-    getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
-        where
-            scale   = 2^n
-            newDur  = (d `min` (1/4)) / scale
-            repeats = d / newDur
-            notate = Lilypond.Tremolo (round repeats)
-
-instance HasLilypond a => HasLilypond (TextT a) where
-    getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
-        where
-            notate ts = foldr (.) id (fmap Lilypond.addText ts)
-
-instance HasLilypond a => HasLilypond (HarmonicT a) where
-    getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
-        where
-            notate _     0 = id
-            notate True  n = notateNatural n
-            notate False n = notateArtificial n
-
-            notateNatural n = Lilypond.addFlageolet -- addOpen?
-
-            notateArtificial n = id -- TODO
-
-instance HasLilypond a => HasLilypond (SlideT a) where
-    getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
-        where
-            notate = if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
-
+-- instance HasLilypond a => HasLilypond (ChordT a) where
+--     getLilypond d = getLilypondChord d . getChordT
+-- 
+-- instance HasLilypond a => HasLilypond (PartT n a) where
+--     getLilypond d (PartT (_,x))                     = getLilypond d x
+-- 
+-- instance HasLilypond a => HasLilypond (TieT a) where
+--     getLilypond d (TieT ((Any ta, Any tb),x)) = addTies $ getLilypond d x
+--         where
+--             addTies | ta && tb                      = id . Lilypond.beginTie
+--                     | tb                            = Lilypond.beginTie
+--                     | ta                            = id
+--                     | otherwise                     = id
+-- 
+-- instance HasLilypond a => HasLilypond (DynamicT a) where
+--     getLilypond d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getLilypond d a
+--         where
+--             notate x = nec . ned . nl . nbc . nbd $ x
+--             nec    = if ec then Lilypond.endCresc    else id
+--             ned    = if ed then Lilypond.endDim      else id
+--             nbc    = if bc then Lilypond.beginCresc  else id
+--             nbd    = if bd then Lilypond.beginDim    else id
+--             nl     = case l of
+--                 Nothing          -> id
+--                 Just (First lvl) -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
+-- 
+-- instance HasLilypond a => HasLilypond (ArticulationT a) where
+--     getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
+--         where
+--             notate = nes . nal . nsl . nbs
+--             nes    = if es then Lilypond.endSlur else id
+--             nal    = case al of
+--                 0    -> id
+--                 1    -> Lilypond.addAccent
+--                 2    -> Lilypond.addMarcato
+--             nsl    = case sl of
+--                 (-2) -> Lilypond.addTenuto
+--                 (-1) -> Lilypond.addPortato
+--                 0    -> id
+--                 1    -> Lilypond.addStaccato
+--                 2    -> Lilypond.addStaccatissimo
+--             nbs    = if bs then Lilypond.beginSlur else id
+-- 
+-- instance HasLilypond a => HasLilypond (TremoloT a) where
+--     getLilypond d (TremoloT (Sum 0, x)) = getLilypond d x
+--     getLilypond d (TremoloT (Sum n, x)) = notate $ getLilypond newDur x
+--         where
+--             scale   = 2^n
+--             newDur  = (d `min` (1/4)) / scale
+--             repeats = d / newDur
+--             notate = Lilypond.Tremolo (round repeats)
+-- 
+-- instance HasLilypond a => HasLilypond (TextT a) where
+--     getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
+--         where
+--             notate ts = foldr (.) id (fmap Lilypond.addText ts)
+-- 
+-- instance HasLilypond a => HasLilypond (HarmonicT a) where
+--     getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
+--         where
+--             notate _     0 = id
+--             notate True  n = notateNatural n
+--             notate False n = notateArtificial n
+-- 
+--             notateNatural n = Lilypond.addFlageolet -- addOpen?
+-- 
+--             notateArtificial n = id -- TODO
+-- 
+-- instance HasLilypond a => HasLilypond (SlideT a) where
+--     getLilypond d (SlideT (((eg,es),(bg,bs)),a)) = notate $ getLilypond d a
+--         where
+--             notate = if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
+-- 
 instance HasLilypond a => HasLilypond (ClefT a) where
     -- TODO consolidate
     getLilypondWithPrefix d (ClefT (c, a)) = (notate c, getLilypond d a)
@@ -212,9 +207,9 @@ instance HasLilypond a => HasLilypond (ClefT a) where
             notate c = case fmap getLast $ getOption c of
                 Nothing -> id
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
-
-instance HasLilypond a => HasLilypond (Behavior a) where
-    getLilypond d = getLilypond d . (? 0)
+-- 
+-- instance HasLilypond a => HasLilypond (Behavior a) where
+--     getLilypond d = getLilypond d . (? 0)
 
 
 -- TODO
@@ -240,13 +235,13 @@ scatLilypond = foldr Lilypond.sequential e
 -- |
 -- Convert a score to a Lilypond representaiton and print it on the standard output.
 --
-showLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
+showLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 showLilypond = putStrLn . toLilypondString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
+writeLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
 writeLilypond = writeLilypond' def
 
 data LilypondOptions
@@ -258,7 +253,7 @@ instance Default LilypondOptions where
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
-writeLilypond' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
 writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypondString sc
     where
         title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
@@ -305,10 +300,10 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
 -- |
 -- Typeset a score using Lilypond and open it.
 --
-openLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> IO ()
+openLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 openLilypond = openLilypond' def
 
-openLilypond' :: (HasLilypond a, HasPart' a, Semigroup a) => LilypondOptions -> Score a -> IO ()
+openLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> Score a -> IO ()
 openLilypond' options sc = do
     writeLilypond' options "test.ly" sc
     runLilypond
@@ -322,13 +317,13 @@ openLilypond'' = void $ runCommand "open test.pdf"
 -- |
 -- Convert a score to a Lilypond string.
 --
-toLilypondString :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> String
+toLilypondString :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
 -- |
 -- Convert a score to a Lilypond representation.
 --
-toLilypond :: (HasLilypond a, HasPart' a, Semigroup a) => Score a -> Lilypond
+toLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> Lilypond
 toLilypond sc =
           -- Score structure
           pcatLilypond . fmap (
@@ -351,9 +346,9 @@ toLilypond sc =
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
+        timeSigsV = fmap swap $ fmap (^. from stretched) $ (^. stretcheds) $ mergeEqualNotes $ reactiveToVoice' (start <-> _offset sc) timeSigs
 
-        -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
+        -- Despite mergeEqualNotes above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
         barDurations =                 getBarDurations      $ timeSigsV
 
@@ -373,7 +368,7 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToLilypond :: HasLilypond a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLilypond :: HasLilypond2 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
 voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
 --
 -- This is where notation of a single voice takes place
@@ -386,27 +381,27 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
 
 
-barToLilypond :: HasLilypond a => [(Duration, Maybe a)] -> Lilypond
+barToLilypond :: HasLilypond2 a => [(Duration, Maybe a)] -> Lilypond
 barToLilypond bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLilypond rh
 
 rhythmToLilypond = uncurry ($) . rhythmToLilypond2
 
--- rhythmToLilypond :: HasLilypond a => Rhythm (Maybe a) -> Lilypond
+-- rhythmToLilypond :: HasLilypond2 a => Rhythm (Maybe a) -> Lilypond
 -- rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
 -- rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
 -- rhythmToLilypond (Group rs)            = scatLilypond $ map rhythmToLilypond rs
 -- rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
 --     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 --
--- noteRestToLilypond :: HasLilypond a => Duration -> Maybe a -> Lilypond
+-- noteRestToLilypond :: HasLilypond2 a => Duration -> Maybe a -> Lilypond
 -- noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
 -- noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
 
 
 
-rhythmToLilypond2 :: HasLilypond a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
+rhythmToLilypond2 :: HasLilypond2 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
 rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
 rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
 
@@ -416,7 +411,7 @@ rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilyp
 rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLilypond2 :: HasLilypond a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
+noteRestToLilypond2 :: HasLilypond2 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
 noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
 noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
 
@@ -436,3 +431,13 @@ spellLilypond' p = Lilypond.Pitch (
     )
     where (pc,alt,oct) = spellPitch (p + 72)
 
+
+-- TODO remove
+scoreToVoice :: Score a -> Voice (Maybe a)
+scoreToVoice = error "See Lilypond.hs"
+reactiveToVoice' :: Span -> Reactive a -> Voice a
+reactiveToVoice' = error "See Lilypond.hs"
+start = 0
+stop = 0
+type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
+type HasLilypond2 a = (HasLilypond a, Transformable a)

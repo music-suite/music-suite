@@ -23,6 +23,8 @@ module Music.Time.Track (
     Track,
     -- ** Substructure
     track,
+    delayeds,
+    singleDelayed,
     -- ** TODO
     
   ) where
@@ -108,6 +110,10 @@ instance Applicative Track where
   pure  = return
   (<*>) = ap
 
+instance Alternative Track where
+  (<|>) = (<>)
+  empty = mempty
+
 instance Monad Track where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
@@ -142,7 +148,22 @@ instance Reversible a => Reversible (Track a) where
 --   pitches = _Wrapped . traverse . from trackEv . _Wrapped . whilstLT pitches
 
 
-track :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
-track = _Wrapped 
+-- |
+-- Create a track from a list of notes.
+--
+-- Se also 'delayeds'.
+--
+track :: Getter [Delayed a] (Track a)
+track = to $ flip (set delayeds) empty
+{-# INLINE track #-}
+
+delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
+delayeds = unsafeTrack
+
+singleDelayed :: Prism' (Track a) (Delayed a)
+singleDelayed = unsafeTrack . single
+
+unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
+unsafeTrack = _Wrapped
 
 

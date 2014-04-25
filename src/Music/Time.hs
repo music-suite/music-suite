@@ -29,6 +29,7 @@ module Music.Time (
     module Music.Time.Note,
     module Music.Time.Voice,
     module Music.Time.Chord,
+    module Music.Time.Track,
     module Music.Time.Score,
     module Music.Time.Segment,
     module Music.Time.Behavior,
