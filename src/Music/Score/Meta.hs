@@ -84,14 +84,19 @@ type IsAttribute a = (Typeable a, Monoid' a)
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
     Attribute  :: IsAttribute a => a -> Attribute
-    -- TAttribute  :: (Transformable a, IsAttribute a) => a -> Attribute
+    TAttribute :: ({-Transformable a,-}Delayable a, Stretchable a, IsAttribute a) => a -> Attribute
 
--- | Wrap up an attribute.
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
 unwrapAttr :: IsAttribute a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
+
+wrapTAttr :: ({-Transformable a,-}Delayable a, Stretchable a, IsAttribute a) => a -> Attribute
+wrapTAttr = Attribute
+
+unwrapTAttr :: ({-Transformable a,-}Delayable a, Stretchable a, IsAttribute a) => Attribute -> Maybe a
+unwrapTAttr (Attribute a)  = cast a
 
 instance Semigroup Attribute where
     (Attribute a1) <> a2 = case unwrapAttr a2 of
@@ -100,8 +105,10 @@ instance Semigroup Attribute where
 
 instance Delayable Attribute where
     delay _ (Attribute  a) = Attribute a
+    delay n (TAttribute  a) = TAttribute (delay n a)
 instance Stretchable Attribute where
     stretch _ (Attribute  a) = Attribute a
+    stretch n (TAttribute  a) = TAttribute (stretch n a)
 
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String (Reactive Attribute))
@@ -115,10 +122,10 @@ addMetaNote x y = (applyMeta $ addMeta' (Just y) $ noteToReactive x) y
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ addMeta' (Nothing::Maybe Int) $ noteToReactive x
 
-
-
 runMeta :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
 runMeta part = fromMaybe mempty . runMeta' part
+
+
 
 addMeta' :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Reactive b -> Meta
 addMeta' part a = Meta $ Map.singleton key $ fmap wrapAttr a
