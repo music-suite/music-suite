@@ -44,7 +44,7 @@ import           Data.String
 import           Data.Typeable
 import           Data.Void
 
-import           Music.Score.Combinators (withGlobalMeta)
+import           Music.Score.Combinators
 import           Music.Score.Meta
 import           Music.Score.Note
 import           Music.Score.Ornaments   (HasText, text)

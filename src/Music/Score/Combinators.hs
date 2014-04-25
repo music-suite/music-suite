@@ -50,6 +50,10 @@ module Music.Score.Combinators (
         splice,
 
         -- * Meta-events
+        addMetaNote,
+        addGlobalMetaNote,
+        runMetaReactive,
+        
         metaAt,
         metaAtStart,
         withMeta,
@@ -109,6 +113,7 @@ import           Data.Semigroup
 import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
+import           Data.Maybe
 
 import           Music.Score.Convert
 import           Music.Score.Meta
@@ -364,6 +369,35 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 -- We could also have used mfilter. filterOnce is more lazy,
 -- but depends on the events being sorted
 
+
+
+
+
+
+
+
+addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
+addMetaNote x y = (applyMeta $ addMeta (Just y) $ noteToReactive x) y
+
+addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
+addGlobalMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
+
+runMetaReactive :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
+runMetaReactive part = fromMaybe mempty . runMeta part
+
+{-
+
+-- TODO rename during
+noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive n = (pure <$> n) `activate` pure mempty
+
+activate :: Note (Reactive a) -> Reactive a -> Reactive a
+activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+    where
+        turnOn  = switch start
+        turnOff = switch stop
+
+-}
 
 
 

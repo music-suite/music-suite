@@ -41,11 +41,10 @@ module Music.Score.Meta (
 
         -- * Meta-values
         Meta,
-        -- addMeta,
-        addMetaNote,
-        addGlobalMetaNote,
-        runMetaReactive,
+        addMeta,
+        runMeta,
         HasMeta(..),
+        applyMeta,
   ) where
 
 import           Control.Applicative
@@ -117,18 +116,6 @@ instance Stretchable Attribute where
 newtype Meta = Meta (Map String Attribute)
     deriving (Delayable, Stretchable)
 
-
-
-addMetaNote :: forall a b . (IsAttribute a, HasMeta b, HasPart' b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ addMeta (Just y) $ noteToReactive x) y
-
-addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
-
-runMetaReactive :: forall a b . (HasPart' a, IsAttribute b) => Maybe a -> Meta -> Reactive b
-runMetaReactive part = fromMaybe mempty . runMeta part
-
-
 --
 -- TODO
 -- Temporarily disabling part specific meta-events
@@ -175,18 +162,4 @@ instance HasMeta Meta where
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = (meta <>~ m)
 
-
-
-
-
-
--- TODO rename during
-noteToReactive :: Monoid a => Note a -> Reactive a
-noteToReactive n = (pure <$> n) `activate` pure mempty
-
-activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (getNote -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
-    where
-        turnOn  = switch start
-        turnOff = switch stop
 
