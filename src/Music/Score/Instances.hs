@@ -33,6 +33,7 @@ import           Control.Comonad
 import           Control.Monad
 import           Control.Lens hiding (transform, part)
 import           Data.AffineSpace
+import           Data.Functor.Adjunction (unzipR)
 import           Data.Default
 import           Data.Foldable
 import qualified Data.List                as List
@@ -967,10 +968,9 @@ instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
 --     type SetPitch (Behavior p) (Behavior a) = Behavior (SetPitch p a)
 --     __mapPitch f a = liftA2 (__setPitch) (f $ (__getPitch) <$> a) a
 -- 
-instance Tiable a => Tiable (Behavior a) where toTied x = (x,x)
--- 
--- 
--- 
+instance Tiable a => Tiable (Behavior a) where
+  toTied = unzipR . fmap toTied
+
 -- Safe for tuple-like types
 get1 = head . toList
 -- TODO replace with extract
