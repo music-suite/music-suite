@@ -262,8 +262,8 @@ instance HasPitches a b => HasPitches (Track a) (Track b) where
 instance HasPitches a b => HasPitches (Chord a) (Chord b) where
   pitches = traverse . pitches
 
-instance HasPitches a b => HasPitches (Score a) (Score b) where
-  pitches = traverse . pitches
+instance (HasPitches a b) => HasPitches (Score a) (Score b) where
+  pitches = _Wrapped . traverse . _Wrapped . whilstL pitches
 
 type instance Pitch      (Behavior a) = Behavior a
 type instance SetPitch b (Behavior a) = b
