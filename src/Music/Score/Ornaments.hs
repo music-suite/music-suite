@@ -68,6 +68,13 @@ class HasTremolo a where
 newtype TremoloT a = TremoloT { getTremoloT :: (Sum Int, a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (TremoloT a) where
+  type Unwrapped (TremoloT a) = (Sum Int, a)
+  _Wrapped' = iso getTremoloT TremoloT
+
+instance Rewrapped (TremoloT a) (TremoloT b)
+
 instance HasTremolo (TremoloT a) where
     setTrem      n (TremoloT (_,x))                 = TremoloT (Sum n,x)
 
@@ -86,6 +93,13 @@ class HasText a where
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (TextT a) where
+  type Unwrapped (TextT a) = ([String], a)
+  _Wrapped' = iso getTextT TextT
+
+instance Rewrapped (TextT a) (TextT b)
 
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
@@ -107,6 +121,13 @@ class HasHarmonic a where
 -- (isNatural, overtone series index where 0 is fundamental)
 newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Any, Sum Int), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (HarmonicT a) where
+  type Unwrapped (HarmonicT a) = ((Any, Sum Int), a)
+  _Wrapped' = iso getHarmonicT HarmonicT
+
+instance Rewrapped (HarmonicT a) (HarmonicT b)
 
 instance HasHarmonic (HarmonicT a) where
     setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((Any b,n),x)
@@ -132,9 +153,12 @@ class HasSlide a where
 newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
+-- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (SlideT a) where
-    type Unwrapped (SlideT a) = (((Any, Any), (Any, Any)), a)
-    _Wrapped' = iso getSlideT SlideT 
+  type Unwrapped (SlideT a) = (((Any, Any), (Any, Any)), a)
+  _Wrapped' = iso getSlideT SlideT
+
+instance Rewrapped (SlideT a) (SlideT b)
 
 bg, bs, eg, es :: Lens' (SlideT a) Any
 bg = _Wrapped' . _1 . _2 . _1

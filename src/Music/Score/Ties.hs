@@ -1,4 +1,5 @@
 
+{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -90,6 +91,13 @@ class Tiable a where
 
 newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
     deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (TieT a) where
+  type Unwrapped (TieT a) = ((Any, Any), a)
+  _Wrapped' = iso getTieT TieT
+
+instance Rewrapped (TieT a) (TieT b)
 
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }

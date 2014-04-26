@@ -141,6 +141,8 @@ import qualified Data.List as List
 
 import Music.Time
 import Music.Score.Part
+import Music.Score.Ornaments -- TODO
+import Music.Score.Ties -- TODO
 import Music.Pitch.Literal
 
 -- |
@@ -262,6 +264,50 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
 
 instance HasPitches a b => HasPitches (Score a) (Score b) where
   pitches = traverse . pitches
+
+type instance Pitch      (Behavior a) = Behavior a
+type instance SetPitch b (Behavior a) = b
+instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
+  pitches = ($)
+instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
+  pitch = ($)
+
+type instance Pitch (TremoloT a)        = Pitch a
+type instance SetPitch g (TremoloT a)   = TremoloT (SetPitch g a)
+type instance Pitch (TextT a)           = Pitch a
+type instance SetPitch g (TextT a)      = TextT (SetPitch g a)
+type instance Pitch (HarmonicT a)       = Pitch a
+type instance SetPitch g (HarmonicT a)  = HarmonicT (SetPitch g a)
+type instance Pitch (TieT a)            = Pitch a
+type instance SetPitch g (TieT a)       = TieT (SetPitch g a)
+type instance Pitch (SlideT a)          = Pitch a
+type instance SetPitch g (SlideT a)     = SlideT (SetPitch g a)
+
+instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
+  pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (TextT a) (TextT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (TextT a) (TextT b) where
+  pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (HarmonicT a) (HarmonicT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (HarmonicT a) (HarmonicT b) where
+  pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (TieT a) (TieT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (TieT a) (TieT b) where
+  pitch = _Wrapped . pitch
+
+instance (HasPitches a b) => HasPitches (SlideT a) (SlideT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
+  pitch = _Wrapped . pitch
+
 
 -- |
 -- Associated interval type.

@@ -263,7 +263,7 @@ deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
 
-#ifdef INCLUDE_LIFTED
+-- #ifdef INCLUDE_LIFTED
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance IsPitch a => IsPitch (Behavior a) where
@@ -283,6 +283,10 @@ instance Ord a => Ord (Behavior a) where
   max = liftA2 max
   min = liftA2 min
 
+instance Enum a => Enum (Behavior a) where
+  toEnum = pure . toEnum
+  fromEnum = fromEnum . (! 0)
+
 instance VectorSpace a => VectorSpace (Behavior a) where
   type Scalar (Behavior a) = Behavior (Scalar a)
   (*^) = liftA2 (*^)
@@ -291,7 +295,7 @@ instance AffineSpace a => AffineSpace (Behavior a) where
   type Diff (Behavior a) = Behavior (Diff a)
   (.-.) = liftA2 (.-.)
   (.+^) = liftA2 (.+^)
-#endif
+-- #endif
 
 -- |
 -- View a behavior as a time function and vice versa.
