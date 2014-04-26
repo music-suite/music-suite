@@ -182,20 +182,12 @@ instance FunctorWithIndex Span Score where
   imap = mapWithSpan
 
 instance FoldableWithIndex Span Score where
+  ifoldMap = undefined
   -- TODO
 
 instance TraversableWithIndex Span Score where
   itraverse = undefined
   -- TODO
-
-instance IsPitch a => IsPitch (Score a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Score a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Score a) where
-  fromDynamics = pure . fromDynamics
 
 instance Transformable (Score a) where
   transform t (Score xs) = Score (fmap (transform t) xs)
@@ -211,32 +203,41 @@ instance HasDuration (Score a) where
   _duration x = _offset x .-. _onset x
 
 instance Splittable a => Splittable (Score a) where
+  split = undefined
   -- TODO
+
+
+
+
+
+instance IsPitch a => IsPitch (Score a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Score a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Score a) where
+  fromDynamics = pure . fromDynamics
 
 instance HasMeta (Score a) where
   meta = lens (const mempty) (const)
   -- TODO
 
-
-
-
-
-
--- Exotic instances:
-
+-- | Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Score a) where
     toEnum = return . toEnum
     fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
--- TODO
+-- | Bogus instance, so we can use numeric literals
 instance Num a => Num (Score a) where
     fromInteger = return . fromInteger
+    abs    = fmap abs
+    signum = fmap signum
+    (+)    = error "Not impl"
+    (-)    = error "Not impl"
+    (*)    = error "Not impl"
 
-
-
--- Bogus VectorSpace instance, so we can use c^*2 etc.
--- If you hate this instance, please open an issue.
-
+-- | Bogus instance, so we can use c^*2 etc.
 instance AdditiveGroup (Score a) where
     zeroV   = error "Not impl"
     (^+^)   = error "Not impl"
@@ -246,31 +247,6 @@ instance VectorSpace (Score a) where
     type Scalar (Score a) = Duration
     d *^ s = d `stretch` s
 
-
--- TODO
--- type instance Pitch (Score a) = Pitch a
--- type instance SetPitch g (Score a) = Score (SetPitch g a)
--- 
--- instance (HasPitches a b) => HasPitches (Score a) (Score b) where
---   pitches = _Wrapped . traverse . _Wrapped . whilstL pitches
--- 
--- type instance Part (Score a) = Part a
--- type instance SetPart g (Score a) = Score (SetPart g a)
--- 
--- instance (HasParts a b) => HasParts (Score a) (Score b) where
---   parts = _Wrapped . traverse . _Wrapped . whilstL parts
--- 
--- type instance Dynamic (Score a) = Dynamic a
--- type instance SetDynamic g (Score a) = Score (SetDynamic g a)
--- 
--- instance HasDynamics a b => HasDynamics (Score a) (Score b) where
---   dynamics = _Wrapped . traverse . _Wrapped . whilstL dynamics
--- 
--- type instance Articulation (Score a) = Articulation a
--- type instance SetArticulation g (Score a) = Score (SetArticulation g a)
--- 
--- instance (HasArticulations a b) => HasArticulations (Score a) (Score b) where
---   articulations = _Wrapped . traverse . _Wrapped . whilstL articulations
 
 
 -- |
