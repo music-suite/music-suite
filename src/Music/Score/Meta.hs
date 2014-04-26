@@ -72,6 +72,8 @@ import           Data.Void
 -- import           Music.Score.Part
 import           Music.Score.Util
 import           Music.Time.Transform
+import           Music.Time.Reverse
+import           Music.Time.Split
 
 type IsAttribute a = (Typeable a, Monoid' a)
 
@@ -106,9 +108,16 @@ instance Transformable Attribute where
     transform _ (Attribute a) = Attribute a
     transform s (TAttribute a) = TAttribute (transform s a)
 
+-- instance HasDuration Attribute where
+  -- _duration = error "No impl (HasDuration Attribute)"
+instance Splittable Attribute where
+  split = error "No impl (Splittable Attribute)"
+instance Reversible Attribute where
+  rev = error "No impl (Reversible Attribute)"
+
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String Attribute)
-    deriving (Transformable)
+    deriving (Transformable, Reversible, Splittable)
 
 instance Semigroup Meta where
     Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2

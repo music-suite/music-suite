@@ -121,6 +121,19 @@ import qualified Data.Ord as Ord
 
 type ScoreNote a = Note a
 
+--   * 'empty' creates an empty score 
+-- 
+--   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
+-- 
+--   * '<|>' composes scores in parallel
+-- 
+--   * '|>' composes scores as a forward sequence
+-- 
+--   * '<|' composes scores as a backward sequence
+--
+-- You can also use '<>' and 'mempty' of course.
+-- 
+
 -- |
 -- A 'Score' is a sequential or parallel composition of values, and allows overlapping events
 --
@@ -139,36 +152,23 @@ type ScoreNote a = Note a
 -- type Score a = [Note a]
 -- @
 --
-newtype Score a = Score { getScore :: [ScoreNote a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
---   * 'empty' creates an empty score 
--- 
---   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
--- 
---   * '<|>' composes scores in parallel
--- 
---   * '|>' composes scores as a forward sequence
--- 
---   * '<|' composes scores as a backward sequence
---
--- You can also use '<>' and 'mempty' of course.
--- 
+newtype Score a = Score { getScore' :: (Meta, NScore a) }
+    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Score a) where
-  type Unwrapped (Score a) = [ScoreNote a]
-  _Wrapped' = iso getScore Score
+  type Unwrapped (Score a) = (Meta, NScore a)
+  _Wrapped' = iso getScore' Score
 
-instance Rewrapped (Score a) (Score b)
+instance Rewrapped (Score a) (Score b) where
 
 instance Applicative Score where
-  pure  = return
+  pure = return
   (<*>) = ap
 
 instance Monad Score where
-  return = (^. _Unwrapped) . pure . pure
-  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+  return = (^. _Unwrapped') . return . return
+  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
 instance Alternative Score where
   empty = mempty
@@ -179,36 +179,37 @@ instance MonadPlus Score where
   mplus = mappend
 
 instance FunctorWithIndex Span Score where
-  imap = mapWithSpan
+  imap f = over (_Wrapped._2) $ imap f
 
 instance FoldableWithIndex Span Score where
-  ifoldMap = undefined
+  ifoldMap f (Score (m,x)) = ifoldMap f x
   -- TODO
 
 instance TraversableWithIndex Span Score where
-  itraverse = undefined
+  itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
   -- TODO
 
 instance Transformable (Score a) where
-  transform t (Score xs) = Score (fmap (transform t) xs)
+  transform t (Score (m,x)) = Score (transform t m, transform t x)
 
 instance Reversible a => Reversible (Score a) where
-  rev (Score xs) = Score (fmap rev xs)
-
-instance HasPosition (Score a) where
-  _onset = Foldable.minimum . fmap _onset . view _Wrapped'
-  _offset = Foldable.maximum . fmap _offset . view _Wrapped'
-
-instance HasDuration (Score a) where
-  _duration x = _offset x .-. _onset x
+  rev (Score (m,x)) = Score (rev m, rev x)
 
 instance Splittable a => Splittable (Score a) where
-  split = undefined
-  -- TODO
+  -- split (Score (m,x)) = unzipR $ Score (split m, split x)
+  split = error "No Score.split"
+
+instance HasPosition (Score a) where
+  _onset (Score (_,x))    = _onset x
+  _offset (Score (_,x))   = _offset x
+  _position (Score (_,x)) = _position x
+
+instance HasDuration (Score a) where
+  _duration (Score (_,x)) = _duration x
 
 
 
-
+-- Lifted instances
 
 instance IsPitch a => IsPitch (Score a) where
   fromPitch = pure . fromPitch
@@ -219,33 +220,98 @@ instance IsInterval a => IsInterval (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
   fromDynamics = pure . fromDynamics
 
-instance HasMeta (Score a) where
-  meta = lens (const mempty) (const)
-  -- TODO
-
 -- | Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Score a) where
-    toEnum = return . toEnum
-    fromEnum = list 0 (fromEnum . head) . Foldable.toList
+  toEnum = return . toEnum
+  fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
 -- | Bogus instance, so we can use numeric literals
 instance Num a => Num (Score a) where
-    fromInteger = return . fromInteger
-    abs    = fmap abs
-    signum = fmap signum
-    (+)    = error "Not impl"
-    (-)    = error "Not impl"
-    (*)    = error "Not impl"
+  fromInteger = return . fromInteger
+  abs    = fmap abs
+  signum = fmap signum
+  (+)    = error "Not impl"
+  (-)    = error "Not impl"
+  (*)    = error "Not impl"
 
 -- | Bogus instance, so we can use c^*2 etc.
 instance AdditiveGroup (Score a) where
-    zeroV   = error "Not impl"
-    (^+^)   = error "Not impl"
-    negateV = error "Not impl"
+  zeroV   = error "Not impl"
+  (^+^)   = error "Not impl"
+  negateV = error "Not impl"
 
 instance VectorSpace (Score a) where
-    type Scalar (Score a) = Duration
-    d *^ s = d `stretch` s
+  type Scalar (Score a) = Duration
+  d *^ s = d `stretch` s
+
+instance HasMeta (Score a) where
+  meta = _Wrapped . _1
+
+
+
+
+
+
+
+newtype NScore a = NScore { getNScore :: [ScoreNote a] }
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (NScore a) where
+  type Unwrapped (NScore a) = [ScoreNote a]
+  _Wrapped' = iso getNScore NScore
+
+instance Rewrapped (NScore a) (NScore b)
+
+instance Applicative NScore where
+  pure  = return
+  (<*>) = ap
+
+instance Monad NScore where
+  return = (^. _Unwrapped) . pure . pure
+  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+
+instance Alternative NScore where
+  empty = mempty
+  (<|>) = mappend
+
+instance MonadPlus NScore where
+  mzero = mempty
+  mplus = mappend
+
+instance FunctorWithIndex Span NScore where
+  imap = undefined
+  -- TODO
+
+instance FoldableWithIndex Span NScore where
+  ifoldMap = undefined
+  -- TODO
+
+instance TraversableWithIndex Span NScore where
+  itraverse = undefined
+  -- TODO
+
+instance Transformable (NScore a) where
+  transform t (NScore xs) = NScore (fmap (transform t) xs)
+
+instance Reversible a => Reversible (NScore a) where
+  rev (NScore xs) = NScore (fmap rev xs)
+
+instance HasPosition (NScore a) where
+  _onset = Foldable.minimum . fmap _onset . view _Wrapped'
+  _offset = Foldable.maximum . fmap _offset . view _Wrapped'
+
+instance HasDuration (NScore a) where
+  _duration x = _offset x .-. _onset x
+
+instance Splittable a => Splittable (NScore a) where
+  split = undefined
+  -- TODO
+
+
+
+
+
 
 
 
@@ -359,7 +425,9 @@ phrases = error "Not implemented: phrases"
 {-# INLINE phrases #-}
 
 unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeNotes = _Wrapped
+unsafeNotes = _Wrapped . noMeta . _Wrapped
+  where
+    noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 {-# INLINE unsafeNotes #-}
 
 unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
@@ -394,11 +462,12 @@ singlePhrase = error "Not implemented: singlePhrase"
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
-mapScore f = error "Not implemented: mapScore"
-
+mapScore f = over (_Wrapped._2) (mapNScore f)
+-- TODO move
+mapNScore f = over (_Wrapped.traverse) (extend f)
 
 reifyScore :: Score a -> Score (Note a)
-reifyScore = over _Wrapped $ fmap duplicate
+reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 events :: Transformable a => Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = iso _getScore _score
@@ -528,3 +597,13 @@ mapPhrase :: (Score a -> Score a) -> Score a -> Score a
 mapPhrase _ = id
 -- FIXME
 
+
+
+{-
+-- TODO remove
+instance HasDuration Meta where
+instance Splittable Meta where
+  split = error "No impl (Splittable Meta)"
+instance Reversible Meta where
+  rev = error "No impl ( Reversible Meta)"
+-}

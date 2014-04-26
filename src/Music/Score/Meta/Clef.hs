@@ -68,14 +68,14 @@ data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Set clef of the given score.
-clef :: (HasMeta a, HasPart' a, HasPosition a) => Clef -> a -> a
+clef :: (HasMeta a, {-HasPart' a,-} HasPosition a) => Clef -> a -> a
 clef c x = clefDuring (_era x) c x
 
 -- | Set clef of the given part of a score.
-clefDuring :: (HasMeta a, HasPart' a) => Span -> Clef -> a -> a
+clefDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Clef -> a -> a
 clefDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract the clef in from the given score, using the given default clef.
-withClef :: HasPart' a => Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
+withClef :: {-HasPart' a =>-} Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a
 withClef def f = withMeta (f . fromMaybe def . fmap getLast . getOption)
 

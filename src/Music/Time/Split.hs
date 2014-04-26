@@ -51,6 +51,7 @@ import           Data.Distributive
 import           Data.Foldable                (Foldable)
 import qualified Data.Foldable                as Foldable
 import           Data.Functor.Rep
+import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List
 import           Data.List.NonEmpty           (NonEmpty)
 import           Data.Maybe
@@ -58,6 +59,8 @@ import           Data.NumInstances
 import           Data.Semigroup               hiding ()
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
 import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
@@ -87,7 +90,7 @@ import qualified Data.Ord as Ord
 -- '_duration' ('beginning' t x) = t ``min`` '_duration' x
 -- @
 --
-class HasDuration a => Splittable a where
+class Splittable a where
   split      :: Duration -> a -> (a, a)
   beginning  :: Duration -> a -> a
   ending     :: Duration -> a -> a
@@ -102,14 +105,18 @@ instance Splittable Span where
   -- split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
   split d' (view delta -> (t, d)) = let (d1, d2) = split d' d in (t >-> d1, (t.+^d1) >-> d2)
 
-takeMWhile :: (Monoid a, Splittable a) => Duration -> (a -> Bool) -> a -> a
+instance (Ord k, Splittable a) => Splittable (Map k a) where
+  split d = unzipR . Map.map (split d)
+
+
+takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
 takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
   where
     takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
 
 --     > Data.List.mapAccumL (\x t -> swap $ split t x) (0 <-> 10) (replicate 10 2)
 
-chunks :: Splittable a => Duration -> a -> [a]
+chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
 chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs

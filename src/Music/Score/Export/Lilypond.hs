@@ -350,7 +350,8 @@ toLilypond sc =
 
     where
         -- TODO temporary to make most tests pass
-        addClefs2 = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+        -- addClefs2 = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+        addClefs2 = id
 
         addClefT :: a -> ClefT a
         addClefT = return

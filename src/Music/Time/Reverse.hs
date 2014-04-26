@@ -85,6 +85,8 @@ import           Data.NumInstances
 import           Data.Semigroup               hiding ()
 import           Data.Sequence                (Seq)
 import qualified Data.Sequence                as Seq
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
 import           Data.Traversable             (Traversable)
 import qualified Data.Traversable             as T
 import           Data.Typeable
@@ -172,6 +174,9 @@ instance Reversible a => Reversible [a] where
 
 instance Reversible a => Reversible (Seq a) where
   rev = Seq.reverse . fmap rev
+
+instance (Ord k, Reversible a) => Reversible (Map k a) where
+  rev = Map.map rev
 
 instance Reversible Duration where
   rev = stretch (-1)
