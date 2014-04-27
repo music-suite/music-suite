@@ -31,6 +31,10 @@ module Music.Time.Score (
       singleNote,
       singleVoice,
       -- singlePhrase,
+
+      -- *** Unsafe operations
+      unsafeNotes,
+      unsafeVoices,
       
       -- ** Special traversals
       mapWithSpan,
@@ -333,7 +337,8 @@ instance Splittable a => Splittable (NScore a) where
 -- Se also 'notes'.
 --
 score :: Getter [Note a] (Score a)
-score = to $ flip (set notes) empty
+score = from unsafeNotes
+-- score = to $ flip (set notes) empty
 {-# INLINE score #-}
 
 -- |
@@ -424,10 +429,19 @@ phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
 phrases = error "Not implemented: phrases"
 {-# INLINE phrases #-}
 
+-- |
+-- View a score as a list of notes.
+--
+-- This operation is /unsafe/ as it is only isomorphic up to meta-data equivalence,
+-- i.e. it only works for values @x@ such that @'view' 'meta' x == 'mempty'@.
+--
+-- See also the safe (but more restricted) 'notes' and 'score'.
+--
 unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
 unsafeNotes = _Wrapped . noMeta . _Wrapped
   where
-    noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
+    noMeta = iso extract return
+    -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 {-# INLINE unsafeNotes #-}
 
 unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]

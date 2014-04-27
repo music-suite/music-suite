@@ -381,6 +381,7 @@ concatSegment = trim . view bounded
 --
 concatS :: Monoid a => Score (Segment a) -> Behavior a
 concatS = mconcat . map concatSegment . view notes
+-- Or: mconcat.fmap trim.toListOf (notes.each.bounded)
 
 -- |
 -- Concatenate a score of (possibly overlapping) segments.
@@ -389,7 +390,7 @@ concatS = mconcat . map concatSegment . view notes
 --
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
 concatB = concatS . fmap (view focusing)
-
+-- Or (more generally): mconcat.toListOf (notes.each.getNote)
 
 
 -- |
