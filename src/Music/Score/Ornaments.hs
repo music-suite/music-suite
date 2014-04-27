@@ -65,18 +65,18 @@ import           Music.Time
 class HasTremolo a where
     setTrem :: Int -> a -> a
 
-newtype TremoloT a = TremoloT { getTremoloT :: (Sum Int, a) }
+newtype TremoloT a = TremoloT { getTremoloT :: (Max Int, a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TremoloT a) where
-  type Unwrapped (TremoloT a) = (Sum Int, a)
+  type Unwrapped (TremoloT a) = (Max Int, a)
   _Wrapped' = iso getTremoloT TremoloT
 
 instance Rewrapped (TremoloT a) (TremoloT b)
 
 instance HasTremolo (TremoloT a) where
-    setTrem      n (TremoloT (_,x))                 = TremoloT (Sum n,x)
+    setTrem      n (TremoloT (_,x)) = TremoloT (Max n,x)
 
 instance HasTremolo b => HasTremolo (a, b) where
     setTrem n = fmap (setTrem n)
