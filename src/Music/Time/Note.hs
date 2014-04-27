@@ -119,6 +119,9 @@ instance (Show a, Transformable a) => Show (Note a) where
 deriving instance Monad Note
 deriving instance Applicative Note
 
+-- instance ComonadEnv Span Note where
+  -- ask = getNoteSpan
+
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
