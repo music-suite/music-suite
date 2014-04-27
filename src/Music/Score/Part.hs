@@ -88,6 +88,7 @@ import           Data.Typeable
 import qualified Data.List as List
 
 import           Music.Time
+import Music.Time.Internal.Transform
 import           Music.Score.Ties
 import           Music.Score.Util (through)
 

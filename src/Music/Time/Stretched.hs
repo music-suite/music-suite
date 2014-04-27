@@ -140,8 +140,7 @@ stretched = _Unwrapped
 getStretched :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 getStretched = lens runStretched (flip $ _stretched . const)
   where
-    _stretched f (Stretched (d,x)) = 
-      Stretched (d, f `whilstStretch` d $ x)
+    _stretched f (Stretched (d,x)) = Stretched (d, f `whilst` stretching d $ x)
 {-# INLINE getStretched #-}
 
 runStretched :: Transformable a => Stretched a -> a

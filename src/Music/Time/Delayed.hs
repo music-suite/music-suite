@@ -142,8 +142,7 @@ getDelayed :: (Transformable a, Transformable b)
       a b
 getDelayed = lens runDelayed (flip $ _delayed . const)
   where
-    _delayed f (Delayed (t,x)) = 
-      Delayed (t, f `whilstDelay` t $ x)
+    _delayed f (Delayed (t,x)) = Delayed (t, f `whilst` delaying (t .-. 0) $ x)
 {-# INLINE getDelayed #-}
 
 

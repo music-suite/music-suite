@@ -101,6 +101,7 @@ import           Data.Semigroup
 import           Data.Typeable
 
 import Music.Time
+import Music.Time.Internal.Transform
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 -- import           Music.Score.Combinators

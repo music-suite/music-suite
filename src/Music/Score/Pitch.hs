@@ -140,6 +140,7 @@ import Data.AffineSpace.Point
 import qualified Data.List as List
 
 import Music.Time
+import Music.Time.Internal.Transform
 import Music.Score.Part
 import Music.Score.Ornaments -- TODO
 import Music.Score.Ties -- TODO

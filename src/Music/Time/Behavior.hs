@@ -95,6 +95,7 @@ import           Music.Time.Reverse
 import           Music.Time.Bound
 import           Music.Time.Note
 import           Music.Time.Score
+import Music.Time.Internal.Transform
 
 import           Music.Pitch.Literal
 import           Music.Pitch.Augmentable
