@@ -211,57 +211,6 @@ instance Representable Behavior where
   tabulate = Behavior
   index (Behavior x) = x
 
-
-{-
--- 
--- type instance Pitch                 (Behavior a) = Behavior (Pitch a)
--- type instance SetPitch (Behavior g) (Behavior a) = Behavior (SetPitch g a)
---
--- instance (HasPitch a a, HasPitch a b) => HasPitches (Behavior a) (Behavior b) where
---   pitches = through pitch pitch
--- instance (HasPitch a a, HasPitch a b) => HasPitch (Behavior a) (Behavior b) where
---   pitch = through pitch pitch
--- 
--}
-
--- TODO
--- type instance Pitch      (Behavior a) = Behavior a
--- type instance SetPitch b (Behavior a) = b
--- instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
---   pitches = ($)
--- instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
---   pitch = ($)
--- 
--- 
--- type instance Dynamic                 (Behavior a) = Behavior (Dynamic a)
--- type instance SetDynamic (Behavior g) (Behavior a) = Behavior (SetDynamic g a)
--- 
--- instance (HasDynamic a a, HasDynamic a b) => HasDynamics (Behavior a) (Behavior b) where
---   dynamics = through dynamic dynamic
--- instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Behavior a) (Behavior b) where
---   dynamic = through dynamic dynamic
--- 
--- 
--- type instance Articulation                 (Behavior a) = Behavior (Articulation a)
--- type instance SetArticulation (Behavior g) (Behavior a) = Behavior (SetArticulation g a)
--- 
--- instance (HasArticulation a a, HasArticulation a b) => HasArticulations (Behavior a) (Behavior b) where
---   articulations = through articulation articulation
--- instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Behavior a) (Behavior b) where
---   articulation = through articulation articulation
--- 
--- 
--- type instance Part                 (Behavior a) = Behavior (Part a)
--- type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
--- 
--- instance (HasPart a a, HasPart a b) => HasParts (Behavior a) (Behavior b) where
---   parts = through part part
--- instance (HasPart a a, HasPart a b) => HasPart (Behavior a) (Behavior b) where
---   part = through part part  
-
-
-
--- Needed by Reactive
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
 deriving instance Num a => Num (Behavior a)
@@ -589,9 +538,8 @@ time = behavior id
 --                  
 -}
 
+-- TODO move
 tau = 2 * pi
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
-
--- TODO move

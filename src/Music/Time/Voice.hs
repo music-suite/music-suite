@@ -146,17 +146,6 @@ instance Splittable a => Splittable (Voice a) where
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
 
--- TODO
--- instance HasMeta (Voice a) where
-  -- meta = error "Not implemented: meta" 
-
--- TODO
--- type instance Pitch (Voice a) = Pitch a
--- type instance SetPitch g (Voice a) = Voice (SetPitch g a)
--- instance (HasPitches a b) => HasPitches (Voice a) (Voice b) where
---   pitches = _Wrapped . traverse . from voiceEv . _Wrapped . whilstLD pitches
-
-
 
 -- |
 -- Create a score from a list of notes.
@@ -188,21 +177,14 @@ singleStretched = unsafeVoice . single
 unsafeVoice :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeVoice = _Wrapped
 
-
 {-
 -- |
 -- Voice
 --
-voiceNotes :: Traversal (Voice a) (Voice b) (Note a) (Note b)
-voiceNotes = error "Not implemented: voiceNotes"
+voiceNotes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+
+-- TODO requires some @Prism (Note a) (Note b) (Stretched a) (Stretched b)@
 -}
-
--- |
--- Voice
---
-voiceElements :: Traversal (Voice a) (Voice b) (Stretched a) (Stretched b)
-voiceElements = _Wrapped . traverse . from voiceEv   
-
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
@@ -232,4 +214,11 @@ voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . ma
 mergeEqualNotes :: Eq a => Voice a -> Voice a
 mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
   where
-    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as) 
+    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
+    
+--
+-- TODO
+-- Implement meta-data
+-- Separate safe/unsafe Isos (see voiceList...)
+--
+

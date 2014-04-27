@@ -137,16 +137,6 @@ instance Splittable a => Splittable (Track a) where
 instance Reversible a => Reversible (Track a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
 
--- TODO
--- instance HasMeta (Track a) where
-  -- meta = error "Not implemented: meta" 
-
--- TODO
--- type instance Pitch (Track a) = Pitch a
--- type instance SetPitch g (Track a) = Track (SetPitch g a)
--- instance (HasPitches a b) => HasPitches (Track a) (Track b) where
---   pitches = _Wrapped . traverse . from trackEv . _Wrapped . whilstLT pitches
-
 
 -- |
 -- Create a track from a list of notes.
@@ -154,7 +144,7 @@ instance Reversible a => Reversible (Track a) where
 -- Se also 'delayeds'.
 --
 track :: Getter [Delayed a] (Track a)
-track = to $ flip (set delayeds) empty
+track = from unsafeTrack
 {-# INLINE track #-}
 
 delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
@@ -166,4 +156,7 @@ singleDelayed = unsafeTrack . single
 unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
 unsafeTrack = _Wrapped
 
-
+--
+-- TODO
+-- Implement meta-data
+--
