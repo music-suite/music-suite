@@ -63,6 +63,11 @@ import           Music.Time.Behavior
 import           Music.Time.Note
 import           Music.Time.Segment
 
+import           Music.Pitch.Literal
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Alterable
+
+
 ----
 import Data.Fixed
 import           Data.Default
@@ -140,6 +145,24 @@ instance Rewrapped (Reactive a) (Reactive b)
 instance Applicative Reactive where
     pure  = pureDefault
     (<*>) = apDefault
+
+instance IsPitch a => IsPitch (Reactive a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Reactive a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Reactive a) where
+  fromDynamics = pure . fromDynamics
+
+instance Alterable a => Alterable (Reactive a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
+instance Augmentable a => Augmentable (Reactive a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
 
 (view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)
 pureDefault = view _Unwrapped . pure . pure

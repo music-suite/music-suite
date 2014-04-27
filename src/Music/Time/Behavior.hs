@@ -96,6 +96,10 @@ import           Music.Time.Bound
 import           Music.Time.Note
 import           Music.Time.Score
 
+import           Music.Pitch.Literal
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Alterable
+
 -----
 import Data.Fixed
 import Data.Functor.Rep.Lens
@@ -274,6 +278,14 @@ instance IsInterval a => IsInterval (Behavior a) where
 
 instance IsDynamics a => IsDynamics (Behavior a) where
   fromDynamics = pure . fromDynamics
+
+instance Alterable a => Alterable (Behavior a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
+instance Augmentable a => Augmentable (Behavior a) where
+    augment = fmap augment
+    diminish = fmap diminish
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No fun"

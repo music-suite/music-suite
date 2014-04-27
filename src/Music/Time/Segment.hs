@@ -234,6 +234,14 @@ instance IsPitch a => IsPitch (Segment a) where
 instance IsInterval a => IsInterval (Segment a) where
   fromInterval = pure . fromInterval
 
+instance Alterable a => Alterable (Segment a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+
+instance Augmentable a => Augmentable (Segment a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
 instance Eq a => Eq (Segment a) where
   (==) = error "No fun"
 
