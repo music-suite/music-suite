@@ -97,6 +97,17 @@ import qualified Data.Ord as Ord
 newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
+-- A track is a list of events with explicit onset.
+--
+-- Track is a 'Monoid' under parallel composition. 'mempty' is the empty track
+-- and 'mappend' interleaves values.
+--
+-- Track is a 'Monad'. 'return' creates a track containing a single value at time
+-- zero, and '>>=' transforms the values of a track, allowing the addition and
+-- removal of values relative to the time of the value. Perhaps more intuitively,
+-- 'join' delays each inner track to start at the offset of an outer track, then
+-- removes the intermediate structure.
+
 -- Can use [] or Seq here
 type TrackList = []
 

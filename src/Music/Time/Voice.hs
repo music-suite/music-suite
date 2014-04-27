@@ -106,6 +106,17 @@ import qualified Data.Ord as Ord
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
+-- A voice is a list of events with explicit duration. Events can not overlap.
+--
+-- Voice is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
+-- appends parts.
+--
+-- Voice is a 'Monad'. 'return' creates a part containing a single value of duration
+-- one, and '>>=' transforms the values of a part, allowing the addition and
+-- removal of values under relative duration. Perhaps more intuitively, 'join' scales
+-- each inner part to the duration of the outer part, then removes the
+-- intermediate structure.
+
 -- Can use [] or Seq here
 type VoiceList = []
 
