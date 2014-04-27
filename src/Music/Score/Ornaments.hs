@@ -198,19 +198,19 @@ tremolo = setTrem
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (HasPart' a, HasText a) => String -> Score a -> Score a
+text :: (HasParts' a, HasText a) => String -> Score a -> Score a
 text s = mapPhraseWise3 (addText s) id id
 
 -- |
 -- Add a slide between the first and the last note.
 --
-slide :: (HasPart' a, HasSlide a) => Score a -> Score a
+slide :: (HasParts' a, HasSlide a) => Score a -> Score a
 slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
 
 -- |
 -- Add a glissando between the first and the last note.
 --
-glissando :: (HasPart' a, HasSlide a) => Score a -> Score a
+glissando :: (HasParts' a, HasSlide a) => Score a -> Score a
 glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
 
 -- |
