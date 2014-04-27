@@ -219,7 +219,8 @@ instance HasLilypond a => HasLilypond (ClefT a) where
                 Just c -> \x -> Lilypond.Sequential [addClef c, x]
 
 instance HasLilypond a => HasLilypond (Behavior a) where
-    getLilypond d = getLilypond d . (! 0)
+    getLilypond d      = getLilypond d      . (! 0)
+    getLilypondChord d = getLilypondChord d . fmap (! 0)
 
 
 -- TODO
@@ -350,8 +351,8 @@ toLilypond sc =
 
     where
         -- TODO temporary to make most tests pass
-        -- addClefs2 = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
-        addClefs2 = id
+        addClefs2 = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+        -- addClefs2 = id
 
         addClefT :: a -> ClefT a
         addClefT = return
