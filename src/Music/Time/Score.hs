@@ -187,11 +187,9 @@ instance FunctorWithIndex Span Score where
 
 instance FoldableWithIndex Span Score where
   ifoldMap f (Score (m,x)) = ifoldMap f x
-  -- TODO
 
 instance TraversableWithIndex Span Score where
   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
-  -- TODO
 
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)
