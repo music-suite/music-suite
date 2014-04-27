@@ -55,6 +55,7 @@ import           Control.Lens
 import           Data.Foldable
 import           Data.Foldable
 import           Data.Ratio
+import           Data.Word
 import           Data.Semigroup
 import           Data.Typeable
 
@@ -65,18 +66,22 @@ import           Music.Time
 class HasTremolo a where
     setTrem :: Int -> a -> a
 
-newtype TremoloT a = TremoloT { getTremoloT :: (Max Int, a) }
+newtype TremoloT a = TremoloT { getTremoloT :: (Max Word, a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+-- 
+-- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
+-- Preferably we would use Natural but unfortunately this is not an instance of Bounded
+-- 
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TremoloT a) where
-  type Unwrapped (TremoloT a) = (Max Int, a)
+  type Unwrapped (TremoloT a) = (Max Word, a)
   _Wrapped' = iso getTremoloT TremoloT
 
 instance Rewrapped (TremoloT a) (TremoloT b)
 
 instance HasTremolo (TremoloT a) where
-    setTrem      n (TremoloT (_,x)) = TremoloT (Max n,x)
+    setTrem n (TremoloT (_,x)) = TremoloT (Max $ fromIntegral n,x)
 
 instance HasTremolo b => HasTremolo (a, b) where
     setTrem n = fmap (setTrem n)
