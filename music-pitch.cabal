@@ -43,7 +43,6 @@ library
                         Music.Pitch.Common.Semitones
                         Music.Pitch.Common.Spell
                         Music.Pitch.Common.Harmony
-                        Music.Pitch.Koizumi
                         Music.Pitch.Tokawa
                         Music.Pitch.Intonation
     hs-source-dirs:     src
