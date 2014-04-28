@@ -6,12 +6,12 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
@@ -56,33 +56,33 @@ module Music.Time.Reactive (
       -- windowed,
   ) where
 
-import           Music.Time.Split
-import           Music.Time.Reverse
-import           Music.Time.Bound
 import           Music.Time.Behavior
+import           Music.Time.Bound
 import           Music.Time.Note
+import           Music.Time.Reverse
 import           Music.Time.Segment
+import           Music.Time.Split
 
-import           Music.Pitch.Literal
-import           Music.Pitch.Augmentable
 import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
 
 
-import Data.Functor.Rep.Lens
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
+import           Control.Arrow           (first, second, (&&&), (***))
+import           Control.Lens            hiding (Indexable, Level, above, below,
+                                          index, inside, parts, reversed,
+                                          transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.Distributive
 import           Data.Functor.Rep
-import           Data.Semigroup               hiding ()
+import           Data.Functor.Rep.Lens
+import qualified Data.List               as List
+import           Data.Semigroup          hiding ()
 import           Data.Typeable
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import qualified Data.List as List
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -97,13 +97,13 @@ newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
     deriving (Functor, Semigroup, Monoid, Typeable)
 --
 -- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
--- 
+--
 -- Possible approach:
--- 
+--
 --  * Implement PosReactive (no negative values) and define Reactive = Delayed (PosReactive)
--- 
+--
 --  * Implement liftA2 for PosReactive (preferably with a single traversal)
--- 
+--
 
 instance Transformable (Reactive a) where
     transform s (Reactive (t,r)) = Reactive (transform s t, transform s r)

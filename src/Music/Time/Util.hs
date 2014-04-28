@@ -1,5 +1,4 @@
 
-
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -78,7 +77,7 @@ splitWhile p xs = case splitWhile' p xs of
 breakList :: Int -> [a] -> [a] -> [a]
 breakList n z = Data.Monoid.mconcat . Data.List.intersperse z . divideList n
 
--- | Map over the indices and elements of list.
+-- | Map over the indices and elements of list.
 -- > category : List
 -- > depends : base
 mapIndexed :: (Int -> a -> b) -> [a] -> [b]

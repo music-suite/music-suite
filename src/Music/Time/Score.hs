@@ -35,7 +35,7 @@ module Music.Time.Score (
       -- *** Unsafe operations
       unsafeNotes,
       unsafeVoices,
-      
+
       -- ** Special traversals
       mapWithSpan,
       filterWithSpan,
@@ -51,100 +51,79 @@ module Music.Time.Score (
       mapSimultaneous,
       simultaneous,
       simultaneous',
-      
+
       -- voices -- Lens' (Score a) [Voice a]
       -- phrases -- Lens' (Voice a) [Phrase a]
-      
+
       -- mapVoices, -- ([Voice a] -> [Voice a]) -> Score a -> Score a
       -- mapPhrases, -- ([Phrase a] -> [Phrase a]) -> Voice a -> Voice a
   ) where
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import qualified Data.List.NonEmpty     as NonEmpty
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
 import           Data.Semigroup
-import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
 import           Music.Score.Meta
-import           Music.Time.Split
-import           Music.Time.Reverse
+import           Music.Time.Juxtapose   (scat)
 import           Music.Time.Note
+import           Music.Time.Reverse
+import           Music.Time.Split
 import           Music.Time.Stretched
 import           Music.Time.Voice
-import           Music.Time.Juxtapose (scat)
 
------
-import Control.Monad.Compose
-import Music.Time.Util
--- import Data.Fixed
--- import           Data.Default
--- import           Data.Ratio
--- 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
--- import qualified Control.Category
+import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Comonad
--- import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Control.Monad
+import           Control.Monad.Compose
 import           Control.Monad.Plus
--- import           Data.AffineSpace
--- import           Data.AffineSpace.Point
--- import           Data.Distributive
-import           Data.Foldable                (Foldable)
-import qualified Data.Foldable                as Foldable
--- import           Data.Functor.Rep
-import qualified Data.List as List
--- import           Data.List.NonEmpty           (NonEmpty)
--- import           Data.Maybe
--- import           Data.NumInstances
-import           Data.Semigroup               hiding ()
--- import           Data.Sequence                (Seq)
--- import qualified Data.Sequence                as Seq
-import           Data.Traversable             (Traversable)
-import qualified Data.Traversable             as T
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as Foldable
+import qualified Data.List              as List
+import qualified Data.Ord               as Ord
+import           Data.Semigroup         hiding ()
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
 import           Data.Typeable
-import           Data.VectorSpace hiding (Sum(..))
+import           Data.VectorSpace       hiding (Sum (..))
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
--- 
--- import qualified Data.Ratio                   as Util_Ratio
--- import qualified Data.List as List
--- import qualified Data.Foldable as Foldable
-import qualified Data.Ord as Ord
------
+import           Music.Time.Util
 
 
 
 type ScoreNote a = Note a
 
---   * 'empty' creates an empty score 
--- 
+--   * 'empty' creates an empty score
+--
 --   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
--- 
+--
 --   * '<|>' composes scores in parallel
--- 
+--
 --   * '|>' composes scores as a forward sequence
--- 
+--
 --   * '<|' composes scores as a backward sequence
 --
 -- You can also use '<>' and 'mempty' of course.
--- 
+--
 
 -- |
 -- A 'Score' is a sequential or parallel composition of values, and allows overlapping events
 --
 -- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface.
--- 
+--
 -- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
--- 
+--
 -- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
 --
 -- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
@@ -327,7 +306,7 @@ instance Splittable a => Splittable (NScore a) where
 --   (1 '<->' 2, 20)^.'note',
 --   (3 '<->' 4, 30)^.'note' ]^.'score'
 -- @
--- 
+--
 -- @
 -- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
 -- @
@@ -369,13 +348,13 @@ score = from unsafeNotes
 -- @
 -- 'toListOf' ('notes' . 'each')                :: 'Score' a -> ['Note' a]
 -- 'toListOf' ('notes' . 'elements' odd)        :: 'Score' a -> ['Note' a]
--- 'toListOf' ('notes' . 'each' . 'filtered' 
+-- 'toListOf' ('notes' . 'each' . 'filtered'
 --              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Note' a]
 -- @
 --
 -- This is not an 'Iso', as the note list representation does not contain meta-data.
 -- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
--- 
+--
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
 notes = unsafeNotes
 {-# INLINE notes #-}
@@ -422,7 +401,7 @@ voices = unsafeVoices
 
 -- |
 -- View a score as a list of phrases.
--- 
+--
 phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
 phrases = error "Not implemented: phrases"
 {-# INLINE phrases #-}
@@ -445,10 +424,10 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped
 unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
 unsafeVoices = error "Not implemented: unsafeVoices"
 {-# INLINE unsafeVoices #-}
-  
+
 -- |
 -- View a score as a single note.
--- 
+--
 singleNote :: Prism' (Score a) (Note a)
 singleNote = unsafeNotes . single
 {-# INLINE singleNote #-}
@@ -457,7 +436,7 @@ singleNote = unsafeNotes . single
 
 -- |
 -- View a score as a single voice.
--- 
+--
 singleVoice :: Prism' (Score a) (Voice a)
 singleVoice = unsafeVoices . single
 {-# INLINE singleVoice #-}
@@ -467,7 +446,7 @@ singleVoice = unsafeVoices . single
 {-
 -- |
 -- View a score as a single phrase.
--- 
+--
 singlePhrase :: Prism' (Score a) (Phrase () a)
 singlePhrase = error "Not implemented: singlePhrase"
 -}

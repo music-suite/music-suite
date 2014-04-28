@@ -39,7 +39,7 @@ module Music.Time.Types (
         Duration,
         toDuration,
         fromDuration,
-        
+
         -- * Time points
         Time,
         toTime,
@@ -73,22 +73,22 @@ module Music.Time.Types (
         delayOnly,
         stretchOnly,
         -- Proper spans are always bounded and closed
-        
+
         -- ** Utility
         showRange,
         showDelta,
   ) where
 
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
-import Data.Typeable
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Semigroup
+import           Data.Typeable
 import           Data.VectorSpace
 
-import           Music.Time.Util       (showRatio)
+import           Music.Time.Util        (showRatio)
 
 
 -- $convert
@@ -158,13 +158,13 @@ instance Monoid Duration where
 
 -- |
 -- Convert a value to a duration.
--- 
+--
 toDuration :: Real a => a -> Duration
 toDuration = realToFrac
 
 -- |
 -- Convert a value to a duration.
--- 
+--
 fromDuration :: Fractional a => Duration -> a
 fromDuration = realToFrac
 
@@ -212,13 +212,13 @@ instance Monoid Time where
 
 -- |
 -- Convert a value to a duration.
--- 
+--
 toTime :: Real a => a -> Time
 toTime = realToFrac
 
 -- |
 -- Convert a value to a duration.
--- 
+--
 fromTime :: Fractional a => Time -> a
 fromTime = realToFrac
 
@@ -227,7 +227,7 @@ fromTime = realToFrac
 
 -- |
 -- A 'Span' represents an onset and offset in time (or equivalently: an onset and a
--- duration, /or/ a duration and an offset, /or/ a duration and a middle point). 
+-- duration, /or/ a duration and an offset, /or/ a duration and a middle point).
 --
 -- Pattern matching over span is possible (with @ViewPatterns@):
 --
@@ -364,7 +364,7 @@ delayOnly :: Prism' Span Time
 delayOnly = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
   (t, 1) -> Just t
   _      -> Nothing
-       
+
 
 -- |
 -- A prism to the subset of 'Span' that performs a stretch but no delay.
@@ -401,14 +401,14 @@ inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
 -- |
--- Whether the given 
--- 
+-- Whether the given
+--
 encloses :: Span -> Span -> Bool
 a `encloses` b = startTime b `inside` a && stopTime b `inside` a
 
 -- |
--- Whether the given 
--- 
+-- Whether the given
+--
 overlaps :: Span -> Span -> Bool
 a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 

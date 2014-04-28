@@ -25,7 +25,7 @@ module Music.Time.Bound (
     -- trim,
     -- splice,
     -- bounded',
-    -- bounded,    
+    -- bounded,
   ) where
 
 import           Data.AffineSpace
@@ -38,14 +38,14 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Split
 import           Music.Time.Reverse
+import           Music.Time.Split
 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
+import           Control.Arrow          (first, second, (&&&), (***))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Data.Typeable
 
 -- |
@@ -70,15 +70,15 @@ import           Data.Typeable
 newtype Bound a = Bound { getBound :: (Span, a) }
   deriving (Functor, Semigroup, Typeable, Eq, Show)
 
--- 
+--
 -- These are both unsafe, as they allow us to define 'unBound'
--- 
+--
 -- instance Foldable Bound where
 --   foldr f z (Bound (_,x)) = f x z
--- 
+--
 -- instance Traversable Bound where
 --   traverse f (Bound (s,x)) = (Bound . (s,)) <$> f x
--- 
+--
 
 --
 -- TODO define Applicative/Monad

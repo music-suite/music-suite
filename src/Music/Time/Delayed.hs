@@ -16,7 +16,6 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Delayed (
     -- * Music.Time.Delayed
@@ -35,19 +34,19 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Split
 import           Music.Time.Reverse
+import           Music.Time.Split
 
-import Data.PairMonad
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
+import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
-import           Data.Foldable                (Foldable)
-import qualified Data.Foldable                as Foldable
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as Foldable
+import           Data.PairMonad
 import           Data.Typeable
 
 
@@ -106,9 +105,9 @@ delayed = _Unwrapped
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-getDelayed :: (Transformable a, Transformable b) 
-  => Lens 
-      (Delayed a) (Delayed b) 
+getDelayed :: (Transformable a, Transformable b)
+  => Lens
+      (Delayed a) (Delayed b)
       a b
 getDelayed = lens runDelayed (flip $ _delayed . const)
   where

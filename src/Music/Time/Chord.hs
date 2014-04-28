@@ -16,7 +16,6 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Chord (
     -- * Music.Time.Chord
@@ -24,7 +23,7 @@ module Music.Time.Chord (
     -- ** Substructure
     chord,
     -- ** TODO
-    
+
   ) where
 
 
@@ -38,22 +37,22 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Split
-import           Music.Time.Reverse
 import           Music.Time.Delayed
+import           Music.Time.Reverse
+import           Music.Time.Split
 
-import Control.Monad.Compose
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
+import           Control.Arrow          (first, second, (&&&), (***))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Control.Monad
+import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable                (Foldable)
-import qualified Data.Foldable                as Foldable
-import           Data.Traversable             (Traversable)
-import qualified Data.Traversable             as T
+import           Data.Foldable          (Foldable)
+import qualified Data.Foldable          as Foldable
+import           Data.Traversable       (Traversable)
+import qualified Data.Traversable       as T
 import           Data.Typeable
 
 -- |
@@ -104,7 +103,7 @@ instance Reversible a => Reversible (Chord a) where
 
 -- TODO
 -- instance HasMeta (Chord a) where
-  -- meta = error "Not implemented: meta" 
+  -- meta = error "Not implemented: meta"
 
 -- TODO
 -- type instance Pitch (Chord a) = Pitch a
@@ -114,6 +113,6 @@ instance Reversible a => Reversible (Chord a) where
 
 
 chord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
-chord = _Wrapped 
+chord = _Wrapped
 
 

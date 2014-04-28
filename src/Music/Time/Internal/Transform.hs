@@ -31,7 +31,7 @@ module Music.Time.Internal.Transform (
       whilstLD,
       whilstStretch,
       whilstDelay,
-      on,     
+      on,
       conjugate,
 
       -- ** Specific transformations
@@ -48,22 +48,22 @@ module Music.Time.Internal.Transform (
       delayTime,
   ) where
 
-import Music.Time.Types
+import           Music.Time.Types
 
 import           Data.Ratio
 
 import           Control.Applicative
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
 import           Data.Semigroup
-import           Data.Sequence                (Seq)
-import qualified Data.Sequence                as Seq
-import           Data.Map                (Map)
-import qualified Data.Map                as Map
-import           Data.VectorSpace hiding (Sum(..))
+import           Data.Sequence          (Seq)
+import qualified Data.Sequence          as Seq
+import           Data.VectorSpace       hiding (Sum (..))
 
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
@@ -289,18 +289,18 @@ f `whilstM` t = fmap (transform (negateV t)) . f . transform t
 whilstW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
 f `whilstW` t = transform (negateV t) . f . fmap (transform t)
 -}
-whilstL :: (Functor f, Transformable a, Transformable b) 
-  => LensLike f s t a b 
+whilstL :: (Functor f, Transformable a, Transformable b)
+  => LensLike f s t a b
   -> LensLike f (Span,s) (Span,t) a b
 whilstL  l f (s,a) = (s,) <$> (l $ f `whilstM` s) a
 
-whilstLT :: (Functor f, Transformable a, Transformable b) 
-  => LensLike f s t a b 
+whilstLT :: (Functor f, Transformable a, Transformable b)
+  => LensLike f s t a b
   -> LensLike f (Time,s) (Time,t) a b
 whilstLT l f (t,a) = (t,) <$> (l $ f `whilstM` (t >-> 1)) a
 
-whilstLD :: (Functor f, Transformable a, Transformable b) 
-  => LensLike f s t a b 
+whilstLD :: (Functor f, Transformable a, Transformable b)
+  => LensLike f s t a b
   -> LensLike f (Duration,s) (Duration,t) a b
 whilstLD l f (d,a) = (d,) <$> (l $ f `whilstM` (0 >-> d)) a
 

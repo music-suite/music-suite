@@ -16,11 +16,10 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Transform (
       module Music.Time.Types,
-      
+
       -- * The Transformable class
       Transformable(..),
 
@@ -28,7 +27,7 @@ module Music.Time.Transform (
       whilst,
       -- whilstStretch,
       -- whilstDelay,
-      on,     
+      on,
       conjugate,
 
       -- ** Specific transformations
@@ -47,6 +46,6 @@ module Music.Time.Transform (
       delayTime,
   ) where
 
-import Music.Time.Types
-import Music.Time.Internal.Transform
+import           Music.Time.Internal.Transform
+import           Music.Time.Types
 

@@ -46,19 +46,19 @@ module Music.Time.Segment (
     sawtooth,
     sine,
     cosine,
-         
+
     -- * Music.Time.Segment
     Segment,
     -- ** Examples
     -- $XXmusicTimeSegmentExamples
     segment,
-    
+
     -- ** Combinators
     focusing,
     apSegments',
     apSegments,
     -- concatS,
-    
+
     Bound,
     bounds,
     bounding,
@@ -68,10 +68,10 @@ module Music.Time.Segment (
     bounded,
   ) where
 
-import Data.Clipped
-import Data.Functor.Rep.Lens
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Clipped
+import           Data.Functor.Rep.Lens
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
@@ -80,57 +80,27 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Split
-import           Music.Time.Reverse
-import           Music.Time.Bound
 import           Music.Time.Behavior
-import           Music.Time.Stretched
-import           Music.Time.Score
-import           Music.Time.Voice
+import           Music.Time.Bound
 import           Music.Time.Note
+import           Music.Time.Reverse
+import           Music.Time.Score
+import           Music.Time.Split
+import           Music.Time.Stretched
+import           Music.Time.Voice
 
------
--- import Data.Functor.Rep.Lens
--- import Data.Fixed
-import Data.Functor.Rep.Lens
--- import           Data.Default
--- import           Data.Ratio
--- 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
--- import qualified Control.Category
--- import           Control.Comonad
--- import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
--- import           Control.Monad
--- import           Control.Monad.Plus
--- import           Data.AffineSpace
--- import           Data.AffineSpace.Point
+import           Control.Arrow          (first, second, (&&&), (***))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Data.Distributive
--- import           Data.Foldable                (Foldable)
--- import qualified Data.Foldable                as Foldable
 import           Data.Functor.Rep
--- import qualified Data.List
--- import           Data.List.NonEmpty           (NonEmpty)
+import           Data.Functor.Rep.Lens
 import           Data.Maybe
--- import           Data.NumInstances
--- import           Data.Semigroup               hiding ()
--- import           Data.Sequence                (Seq)
--- import qualified Data.Sequence                as Seq
--- import           Data.Traversable             (Traversable)
--- import qualified Data.Traversable             as T
 import           Data.Typeable
--- import           Data.VectorSpace hiding (Sum(..))
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
--- 
--- import qualified Data.Ratio                   as Util_Ratio
--- import qualified Data.List as List
--- import qualified Data.Foldable as Foldable
--- import qualified Data.Ord as Ord
------
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)
@@ -157,11 +127,11 @@ newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
 --
 
 -- $musicTimeSegmentExamples
--- 
+--
 -- > foldr1 apSegments' $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
 --
 -- > openG $ draw $ (1, timeS :: Segment Float)^.stretched
--- 
+--
 
 instance Show (Segment a) where
   show _ = "<<Segment>>"
@@ -190,37 +160,37 @@ instance Reversible (Segment a) where
 -- TODO
 -- type instance Pitch                 (Segment a) = Segment (Pitch a)
 -- type instance SetPitch (Segment g)  (Segment a) = Segment (SetPitch g a)
--- 
+--
 -- instance (HasPitch a a, HasPitch a b) => HasPitches (Segment a) (Segment b) where
 --   pitches = through pitch pitch
 -- instance (HasPitch a a, HasPitch a b) => HasPitch (Segment a) (Segment b) where
 --   pitch = through pitch pitch
--- 
+--
 -- type instance Dynamic                 (Segment a) = Segment (Dynamic a)
 -- type instance SetDynamic (Segment g) (Segment a) = Segment (SetDynamic g a)
--- 
+--
 -- instance (HasDynamic a a, HasDynamic a b) => HasDynamics (Segment a) (Segment b) where
 --   dynamics = through dynamic dynamic
 -- instance (HasDynamic a a, HasDynamic a b) => HasDynamic (Segment a) (Segment b) where
 --   dynamic = through dynamic dynamic
--- 
--- 
+--
+--
 -- type instance Articulation                 (Segment a) = Segment (Articulation a)
 -- type instance SetArticulation (Segment g) (Segment a) = Segment (SetArticulation g a)
--- 
+--
 -- instance (HasArticulation a a, HasArticulation a b) => HasArticulations (Segment a) (Segment b) where
 --   articulations = through articulation articulation
 -- instance (HasArticulation a a, HasArticulation a b) => HasArticulation (Segment a) (Segment b) where
 --   articulation = through articulation articulation
--- 
--- 
+--
+--
 -- type instance Part                 (Segment a) = Segment (Part a)
 -- type instance SetPart (Segment g) (Segment a) = Segment (SetPart g a)
--- 
+--
 -- instance (HasPart a a, HasPart a b) => HasParts (Segment a) (Segment b) where
 --   parts = through part part
 -- instance (HasPart a a, HasPart a b) => HasPart (Segment a) (Segment b) where
---   part = through part part          
+--   part = through part part
 
 #ifdef INCLUDE_LIFTED
 deriving instance Semigroup a => Semigroup (Segment a)
@@ -261,7 +231,7 @@ segment = tabulated
 {-
 -- |
 -- A behavior that gives the current time, i.e. the identity function
--- 
+--
 timeS :: Floating a => Segment a
 timeS = realToFrac^.segment
 
@@ -274,7 +244,7 @@ sineS = undefined
 -}
 
 apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2)) 
+apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2))
   = view stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
 -- |
@@ -322,7 +292,7 @@ bounded :: Iso
   (Note (Segment b))
   (Bound (Behavior a))
   (Bound (Behavior b))
-bounded = iso ns2bb bb2ns 
+bounded = iso ns2bb bb2ns
   where
     bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
     ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)

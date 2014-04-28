@@ -42,7 +42,7 @@
 
 module Music.Time.Position (
       module Music.Time.Duration,
-      
+
       -- * Music.Time.Position
       -- * The HasPosition class
       HasPosition(..),
@@ -76,12 +76,12 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum)
 
-import           Music.Time.Util
 import           Music.Time.Duration
+import           Music.Time.Util
 
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                                below, index, inside, parts,
-                                                reversed, transform, (|>), (<|))
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 
 -- |
 -- Class of values that have a position in time.
@@ -256,14 +256,14 @@ inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
 -- |
--- Whether the given 
--- 
+-- Whether the given
+--
 encloses :: Span -> Span -> Bool
 a `encloses` b = _onset b `inside` a && _offset b `inside` a
 
 -- |
--- Whether the given 
--- 
+-- Whether the given
+--
 overlaps :: Span -> Span -> Bool
 a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 

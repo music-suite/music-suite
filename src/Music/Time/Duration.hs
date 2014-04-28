@@ -16,11 +16,10 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 module Music.Time.Duration (
       module Music.Time.Transform,
-      
+
       -- * Music.Time.Duration
       -- * The HasDuration class
       HasDuration(..),
@@ -31,12 +30,12 @@ module Music.Time.Duration (
 
 import           Music.Time.Transform
 
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
-import           Data.NumInstances ()
-import           Data.Semigroup               hiding ()
-import           Data.VectorSpace hiding (Sum(..))
+import           Control.Lens         hiding (Indexable, Level, above, below,
+                                       index, inside, parts, reversed,
+                                       transform, (<|), (|>))
+import           Data.NumInstances    ()
+import           Data.Semigroup       hiding ()
+import           Data.VectorSpace     hiding (Sum (..))
 
 -- |
 -- Class of values that have a duration.
@@ -61,7 +60,7 @@ instance HasDuration Span where
 
 --
 -- By convention, we treat pairs and triplets as having the form
--- (t,x), (d,x) and (t,d,x) where t has a position and d has a 
+-- (t,x), (d,x) and (t,d,x) where t has a position and d has a
 -- duration. This makes it convenient to represent simple event
 -- lists as [(Time, Duration, a)] without needing any special
 -- structure.
