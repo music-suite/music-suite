@@ -458,7 +458,7 @@ isVariable :: Reactive a -> Bool
 isVariable = not . isConstant
 
 resets :: Reactive a -> [Past a]
-resets = error "resets: Not impl"
+resets = error "resets: Not implemented"
 
 -- | The unit step function, which goes from 0 to 1 at 'start'.
 step :: (AdditiveGroup a, Fractional a) => Reactive a

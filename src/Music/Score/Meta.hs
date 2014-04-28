@@ -109,11 +109,11 @@ instance Transformable Attribute where
     transform s (TAttribute a) = TAttribute (transform s a)
 
 -- instance HasDuration Attribute where
-  -- _duration = error "No impl (HasDuration Attribute)"
+  -- _duration = error "Not implemented (HasDuration Attribute)"
 instance Splittable Attribute where
-  split = error "No impl (Splittable Attribute)"
+  split = error "Not implemented (Splittable Attribute)"
 instance Reversible Attribute where
-  rev = error "No impl (Reversible Attribute)"
+  rev = error "Not implemented (Reversible Attribute)"
 
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String Attribute)

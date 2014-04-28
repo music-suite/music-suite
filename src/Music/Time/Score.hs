@@ -223,15 +223,15 @@ instance Num a => Num (Score a) where
   fromInteger = return . fromInteger
   abs    = fmap abs
   signum = fmap signum
-  (+)    = error "Not impl"
-  (-)    = error "Not impl"
-  (*)    = error "Not impl"
+  (+)    = error "Not implemented"
+  (-)    = error "Not implemented"
+  (*)    = error "Not implemented"
 
 -- | Bogus instance, so we can use c^*2 etc.
 instance AdditiveGroup (Score a) where
-  zeroV   = error "Not impl"
-  (^+^)   = error "Not impl"
-  negateV = error "Not impl"
+  zeroV   = error "Not implemented"
+  (^+^)   = error "Not implemented"
+  negateV = error "Not implemented"
 
 instance VectorSpace (Score a) where
   type Scalar (Score a) = Duration
