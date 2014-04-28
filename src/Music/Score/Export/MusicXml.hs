@@ -60,7 +60,6 @@ import           Music.Score.Chord
 import           Music.Score.Clef
 import           Music.Score.Combinators
 import           Music.Score.Convert
-import           Music.Score.Convert
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Instances

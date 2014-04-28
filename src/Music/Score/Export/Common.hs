@@ -46,10 +46,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Music.Score.Articulation
--- import           Music.Score.Combinators
--- import           Music.Score.Convert
 import           Music.Score.Dynamics
--- import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
