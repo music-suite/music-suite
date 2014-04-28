@@ -202,6 +202,46 @@ data Music
     | Set String Value                            
     deriving (Eq, Show)
 
+foldMusic :: (Music -> Music) -> Music -> Music
+foldMusic f = go
+    where
+        go (Sequential ms)      = Sequential (fmap go ms)                          
+        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)                     
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)  
+        go (Tremolo n m)        = Tremolo n (go m)                             
+        go (Times r m)          = Times r (go m)                          
+        go (Transpose p p2 m)   = Transpose p p2 (go m)                   
+        go (Relative p m)       = Relative p (go m)                          
+        go (New s v m)          = New s v (go m)               
+        go (Context s v m)      = Context s v (go m)
+        go x = f x
+
+foldMusic' :: (Music -> Music) -- Rest Note Chord
+           -> (Music -> Music) -- Other non-recursive
+           -> (Music -> Music) -- Recursive
+           -> Music -> Music
+foldMusic' f g h = go
+    where               
+        go m@(Rest _ _)           = f m
+        go m@(Note _ _ _)         = f m
+        go m@(Chord _ _ _)        = f m
+        go m@(Clef _)             = g m
+        go m@(Key _ _)            = g m
+        go m@(Time _ _)           = g m
+        go m@(Breathe _)          = g m
+        go m@(Tempo _ _)          = g m
+        go m@(Set _ _)            = g m
+        go (Sequential ms)      = Sequential (fmap h ms)                          
+        go (Simultaneous b ms)  = Simultaneous b (fmap h ms)                     
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (h *** h) qmm)  
+        go (Tremolo n m)        = Tremolo n (h m)                             
+        go (Times r m)          = Times r (h m)                          
+        go (Transpose p p2 m)   = Transpose p p2 (h m)                   
+        go (Relative p m)       = Relative p (h m)                          
+        go (New s v m)          = New s v (h m)               
+        go (Context s v m)      = Context s v (h m)
+
+
 instance Pretty Music where
     pretty (Rest d p)       = "r" <> pretty d <> prettyList p
 
@@ -605,10 +645,11 @@ a `simultaneous` b                                 = Simultaneous True ([a,b])
 
 
 addPost :: PostEvent -> Music -> Music
-addPost a (Rest d es)     = Rest d (es ++ [a])
-addPost a (Note n d es)   = Note n d (es ++ [a])
-addPost a (Chord ns d es) = Chord ns d (es ++ [a])
-addPost a m               = m
+addPost a = foldMusic' (addPost' a) id (addPost a)
+  where
+    addPost' a (Rest d es)     = Rest d (es ++ [a])
+    addPost' a (Note n d es)   = Note n d (es ++ [a])
+    addPost' a (Chord ns d es) = Chord ns d (es ++ [a])
 
 addText :: String -> Music -> Music
 addText s = addPost (Text def s)
@@ -789,20 +830,6 @@ addVarCoda :: Music -> Music
 addVarCoda = addArticulation VarCoda
 
 
-
-foldMusic :: (Music -> Music) -> Music -> Music
-foldMusic f = go
-    where
-        go (Sequential ms)      = Sequential (fmap go ms)                          
-        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)                     
-        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)  
-        go (Tremolo n m)        = Tremolo n (go m)                             
-        go (Times r m)          = Times r (go m)                          
-        go (Transpose p p2 m)   = Transpose p p2 (go m)                   
-        go (Relative p m)       = Relative p (go m)                          
-        go (New s v m)          = New s v (go m)               
-        go (Context s v m)      = Context s v (go m)
-        go x = f x
 
 removeSingleChords :: Music -> Music
 removeSingleChords = foldMusic go
