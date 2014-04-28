@@ -177,12 +177,7 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
             notateNatural n = Xml.setNoteHead Xml.DiamondNoteHead
             -- Most programs do not recognize the harmonic tag
             -- We set a single diamond notehead instead, which can be manually replaced
-
             notateArtificial n = id -- TODO
-
-
-            -- notate | n /= 0     = Xml.setNoteHead Xml.DiamondNoteHead
-    -- TODO adjust pitch etc
 
 instance HasMusicXml a => HasMusicXml (SlideT a) where
     getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
@@ -208,12 +203,6 @@ instance HasMusicXml a => HasMusicXml (Behavior a) where
 
 
 -- |
--- Convert a score to MusicXML and write to a file.
---
-writeMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
-writeMusicXml path sc = writeFile path (Xml.showXml $ toMusicXml sc)
-
--- |
 -- Convert a score to MusicXML and open it.
 --
 openMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
@@ -222,19 +211,11 @@ openMusicXml sc = do
     -- FIXME find out which program to use...
     void $ rawSystem "open" ["-a", "Sibelius 7", "test.xml"]
 
--- -- |
--- -- Convert a score to MusicXML and write to a file.
--- --
--- writeXmlSingle :: HasMusicXml2 a => FilePath -> Score a -> IO ()
--- writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
-
--- -- |
--- -- Convert a score to MusicXML and open it.
--- --
--- openXmlSingle :: HasMusicXml2 a => Score a -> IO ()
--- openXmlSingle sc = do
---     writeXmlSingle "test.xml" sc
---     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+-- |
+-- Convert a score to MusicXML and write to a file.
+--
+writeMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
+writeMusicXml path = writeFile path . toMusicXmlString
 
 -- |
 -- Convert a score to MusicXML and print it on the standard output.
@@ -248,6 +229,7 @@ showMusicXml = putStrLn . toMusicXmlString
 toMusicXmlString :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> String
 toMusicXmlString = Xml.showXml . toMusicXml
 
+
 -- |
 -- Convert a score to a MusicXML representation.
 --
@@ -257,7 +239,8 @@ toMusicXml sc =
            Xml.fromParts title composer pl
 
                 -- Main notation pipeline
-                . fmap (voiceToMusicXml' barTimeSigs barDurations . temporaryClefFix . scoreToVoice . simultaneous
+                . fmap (
+                voiceToMusicXml' barTimeSigs barDurations . temporaryClefFix . toMVoice
 
                 -- Meta-event expansion
                 . addClefs
@@ -267,7 +250,7 @@ toMusicXml sc =
 
     where
         -- TODO temporary to make most tests pass
-        temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+        temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
         -- temporaryClefFix = id
 
         addClefT :: a -> ClefT a
@@ -277,20 +260,19 @@ toMusicXml sc =
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ fmap (^. from stretched) $ (^. stretcheds) $ mergeEqualNotes $ reactiveToVoice' (start <-> _offset sc) timeSigs
+        timeSigsV = fmap swap $ unvoice $ mergeEqualNotes $ reactiveToVoice' (0 <-> _offset sc) timeSigs
 
         -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
+        barTimeSigs  :: [Maybe TimeSignature]
+        barDurations :: [Duration]
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
         barDurations =                 getBarDurations      $ timeSigsV
 
+        title, composer :: String
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
         pl = Xml.partList (fmap show $ allParts sc)
-
-mergeBars :: [XmlMusic] -> XmlMusic
-mergeBars [x] = x
-mergeBars _   = error "mergeBars: Not supported"
 
 -- |
 -- Convert a voice score to a list of bars.
@@ -347,7 +329,30 @@ spellMusicXml p = (
     where (pc,alt,oct) = spellPitch (p + 60)
 
 -- TODO remove
-start = 0
-stop = 0
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
 type HasMusicXml2 a = (HasMusicXml a, Transformable a)
+
+
+
+
+
+
+{-
+foo
+  :: (Semigroup a, Transformable a, HasClef a, HasMusicXml a) =>
+     [Maybe TimeSignature] 
+      -> [Duration] 
+      -> Score a 
+      -> [XmlMusic]
+foo barTimeSigs barDurations  = voiceToMusicXml' barTimeSigs barDurations . temporaryClefFix . toMVoice
+  where
+    temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+-}
+
+type MVoice a = Voice (Maybe a)
+toMVoice :: (Semigroup a, Transformable a) => Score a -> Voice (Maybe a)
+toMVoice = scoreToVoice . simultaneous    
+
+unvoice :: Voice b -> [(Duration, b)]
+unvoice = toListOf (stretcheds . traverse . from stretched)
+-- unvoice = fmap (^. from stretched) . (^. stretcheds)
