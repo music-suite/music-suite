@@ -236,11 +236,11 @@ toMusicXmlString = Xml.showXml . toMusicXml
 toMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> XmlScore
 toMusicXml sc =
            -- Score structure
-           Xml.fromParts title composer pl
+           Xml.fromParts title composer partList
 
                 -- Main notation pipeline
                 . fmap (
-                voiceToMusicXml' barTimeSigs barDurations . temporaryClefFix . toMVoice
+                mvoiceToMusicXml barTimeSigs barDurations . temporaryClefFix . toMVoice
 
                 -- Meta-event expansion
                 . addClefs
@@ -259,26 +259,29 @@ toMusicXml sc =
         addClefs = setClef . fmap addClefT
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
-        timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ unvoice $ mergeEqualNotes $ reactiveToVoice' (0 <-> _offset sc) timeSigs
-
         -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  :: [Maybe TimeSignature]
         barDurations :: [Duration]
-        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
-        barDurations =                 getBarDurations      $ timeSigsV
+        barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigs
+        barDurations =                 getBarDurations      $ timeSigs
 
         title, composer :: String
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
-        pl = Xml.partList (fmap show $ allParts sc)
+        timeSigs = fmap swap $ unvoice $ mergeEqualNotes 
+          $ reactiveToVoice' (0 <-> _offset sc) $ getTimeSignatures def sc
+          where
+            def = 4/4
+
+        partList :: Xml.PartList
+        partList = Xml.partList (fmap show $ allParts sc)
 
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToMusicXml' :: HasMusicXml2 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
-voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToMusicXml . voiceToBars' barDurations
+mvoiceToMusicXml :: HasMusicXml2 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
+mvoiceToMusicXml barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToMusicXml . voiceToBars' barDurations
 -- TODO attach key signatures in each bar (basically zip)
 
 --
@@ -287,18 +290,21 @@ voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig
 --      * barToMusicXml is specific: it handles quantization and notation
 --
     where
-        -- FIXME compounds
+        setBarTimeSig :: Maybe TimeSignature -> Xml.Music -> Xml.Music
         setBarTimeSig Nothing x = x
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = Xml.time (fromInteger m) (fromInteger n) <> x
+        -- TODO compounds
 
+        addStartInfo :: [Xml.Music] -> [Xml.Music]
         addStartInfo []     = []
         addStartInfo (x:xs) = (startInfo <> x):xs
+        
+        startInfo :: Xml.Music
         startInfo = mempty
             <> Xml.defaultKey
             <> Xml.defaultDivisions
             <> Xml.metronome (1/4) 60
             -- <> Xml.commonTime
-            -- TODO explicit time sig
 
 
 barToMusicXml :: HasMusicXml2 a => [(Duration, Maybe a)] -> XmlMusic
@@ -344,7 +350,7 @@ foo
       -> [Duration] 
       -> Score a 
       -> [XmlMusic]
-foo barTimeSigs barDurations  = voiceToMusicXml' barTimeSigs barDurations . temporaryClefFix . toMVoice
+foo barTimeSigs barDurations  = mvoiceToMusicXml barTimeSigs barDurations . temporaryClefFix . toMVoice
   where
     temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
 -}
