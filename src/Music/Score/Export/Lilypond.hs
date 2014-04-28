@@ -447,10 +447,6 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 -- TODO remove
--- scoreToVoice :: Score a -> Voice (Maybe a)
--- scoreToVoice = error "See Lilypond.hs"
--- reactiveToVoice' :: Span -> Reactive a -> Voice a
--- reactiveToVoice' = error "See Lilypond.hs"
 start = 0
 stop = 0
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))

@@ -56,14 +56,14 @@ import           System.Process
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
-import           Music.Score.Chord
+-- import           Music.Score.Chord
 import           Music.Score.Clef
-import           Music.Score.Combinators
 import           Music.Score.Convert
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Instances
 import           Music.Score.Meta
+import           Music.Score.Meta2
 import           Music.Score.Meta.Attribution
 import           Music.Score.Meta.Clef
 import           Music.Score.Meta.Time
@@ -72,13 +72,9 @@ import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
 import           Music.Score.Util
-import           Music.Score.Voice
-import           Music.Time
-import           Music.Time.Reactive          (Reactive, initial)
+import           Music.Time hiding (time)
 
 import qualified Codec.Midi                   as Midi
 import qualified Data.List                    as List
@@ -115,8 +111,8 @@ instance HasMusicXml Integer where
     getMusicXml      d = (`Xml.note` realToFrac d)  . spellMusicXml . fromIntegral
     getMusicXmlChord d = (`Xml.chord` realToFrac d) . fmap (spellMusicXml . fromIntegral)
 
-instance HasMusicXml a => HasMusicXml (ChordT a) where
-    getMusicXml d = getMusicXmlChord d . getChordT
+instance HasMusicXml a => HasMusicXml [a] where
+    getMusicXml d = getMusicXmlChord d
 
 instance HasMusicXml a => HasMusicXml (PartT n a) where
     getMusicXml d (PartT (_,x))                     = getMusicXml d x
@@ -129,41 +125,41 @@ instance HasMusicXml a => HasMusicXml (TieT a) where
                     | ta                            = Xml.endTie
                     | otherwise                     = id
 
-instance HasMusicXml a => HasMusicXml (DynamicT a) where
-    getMusicXml d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getMusicXml d a
-        where
-            notate x = nec <> ned <> nl <> nbc <> nbd <> x
-            nec    = if ec then Xml.endCresc    else mempty
-            ned    = if ed then Xml.endDim      else mempty
-            nbc    = if bc then Xml.beginCresc  else mempty
-            nbd    = if bd then Xml.beginDim    else mempty
-            nl     = case l of
-                Nothing          -> mempty
-                Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
-
-instance HasMusicXml a => HasMusicXml (ArticulationT a) where
-    getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
-        where
-            notate = nes . nal . nsl . nbs
-            nes    = if es then Xml.endSlur else id
-            nal    = case al of
-                0    -> id
-                1    -> Xml.accent
-                2    -> Xml.strongAccent
-            nsl    = case sl of
-                (-2) -> Xml.tenuto
-                (-1) -> Xml.tenuto . Xml.staccato
-                0    -> id
-                1    -> Xml.staccato
-                2    -> Xml.staccatissimo
-            nbs    = if bs then Xml.beginSlur else id
+-- instance HasMusicXml a => HasMusicXml (DynamicT a) where
+--     getMusicXml d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getMusicXml d a
+--         where
+--             notate x = nec <> ned <> nl <> nbc <> nbd <> x
+--             nec    = if ec then Xml.endCresc    else mempty
+--             ned    = if ed then Xml.endDim      else mempty
+--             nbc    = if bc then Xml.beginCresc  else mempty
+--             nbd    = if bd then Xml.beginDim    else mempty
+--             nl     = case l of
+--                 Nothing          -> mempty
+--                 Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
+-- 
+-- instance HasMusicXml a => HasMusicXml (ArticulationT a) where
+--     getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
+--         where
+--             notate = nes . nal . nsl . nbs
+--             nes    = if es then Xml.endSlur else id
+--             nal    = case al of
+--                 0    -> id
+--                 1    -> Xml.accent
+--                 2    -> Xml.strongAccent
+--             nsl    = case sl of
+--                 (-2) -> Xml.tenuto
+--                 (-1) -> Xml.tenuto . Xml.staccato
+--                 0    -> id
+--                 1    -> Xml.staccato
+--                 2    -> Xml.staccatissimo
+--             nbs    = if bs then Xml.beginSlur else id
 
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (Sum n,x))      = notate $ getMusicXml d x
+    getMusicXml d (TremoloT (Max n, x))      = notate $ getMusicXml d x
         where
             notate = case n of
                 0 -> id
-                _ -> Xml.tremolo n
+                n -> Xml.tremolo (fromIntegral n)
 
 instance HasMusicXml a => HasMusicXml (TextT a) where
     getMusicXml d (TextT (s,x))                     = notate s $ getMusicXml d x
@@ -207,19 +203,20 @@ instance HasMusicXml a => HasMusicXml (ClefT a) where
                 Just FClef -> (Xml.bassClef <>)
 
 instance HasMusicXml a => HasMusicXml (Behavior a) where
-    getMusicXml d = getMusicXml d . (? 0)
+    getMusicXml d      = getMusicXml d . (! 0)
+    getMusicXmlChord d = getMusicXmlChord d . fmap (! 0)
 
 
 -- |
 -- Convert a score to MusicXML and write to a file.
 --
-writeMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => FilePath -> Score a -> IO ()
+writeMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
 writeMusicXml path sc = writeFile path (Xml.showXml $ toMusicXml sc)
 
 -- |
 -- Convert a score to MusicXML and open it.
 --
-openMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
+openMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 openMusicXml sc = do
     writeMusicXml "test.xml" sc
     -- FIXME find out which program to use...
@@ -228,13 +225,13 @@ openMusicXml sc = do
 -- -- |
 -- -- Convert a score to MusicXML and write to a file.
 -- --
--- writeXmlSingle :: HasMusicXml a => FilePath -> Score a -> IO ()
+-- writeXmlSingle :: HasMusicXml2 a => FilePath -> Score a -> IO ()
 -- writeXmlSingle path sc = writeFile path (Xml.showXml $ toXmlSingle sc)
 
 -- -- |
 -- -- Convert a score to MusicXML and open it.
 -- --
--- openXmlSingle :: HasMusicXml a => Score a -> IO ()
+-- openXmlSingle :: HasMusicXml2 a => Score a -> IO ()
 -- openXmlSingle sc = do
 --     writeXmlSingle "test.xml" sc
 --     void $ rawSystem "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
@@ -242,19 +239,19 @@ openMusicXml sc = do
 -- |
 -- Convert a score to MusicXML and print it on the standard output.
 --
-showMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> IO ()
+showMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 showMusicXml = putStrLn . toMusicXmlString
 
 -- |
 -- Convert a score to a MusicXML string.
 --
-toMusicXmlString :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> String
+toMusicXmlString :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> String
 toMusicXmlString = Xml.showXml . toMusicXml
 
 -- |
 -- Convert a score to a MusicXML representation.
 --
-toMusicXml :: (HasMusicXml a, HasPart' a, Semigroup a) => Score a -> XmlScore
+toMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> XmlScore
 toMusicXml sc =
            -- Score structure
            Xml.fromParts title composer pl
@@ -276,7 +273,7 @@ toMusicXml sc =
         setClef  = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ (^. from voice) $ mergeEqual $ reactiveToVoice' (start <-> offset sc) timeSigs
+        timeSigsV = fmap swap $ fmap (^. from stretched) $ (^. stretcheds) $ mergeEqualNotes $ reactiveToVoice' (start <-> _offset sc) timeSigs
 
         -- Despite mergeEqual above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
@@ -285,7 +282,7 @@ toMusicXml sc =
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
-        pl = Xml.partList (fmap show $ getParts sc)
+        pl = Xml.partList (fmap show $ allParts sc)
 
 mergeBars :: [XmlMusic] -> XmlMusic
 mergeBars [x] = x
@@ -294,7 +291,7 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToMusicXml' :: HasMusicXml a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
+voiceToMusicXml' :: HasMusicXml2 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [XmlMusic]
 voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig barTimeSigs . fmap barToMusicXml . voiceToBars' barDurations
 -- TODO attach key signatures in each bar (basically zip)
 
@@ -318,19 +315,19 @@ voiceToMusicXml' barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig
             -- TODO explicit time sig
 
 
-barToMusicXml :: HasMusicXml a => [(Duration, Maybe a)] -> XmlMusic
+barToMusicXml :: HasMusicXml2 a => [(Duration, Maybe a)] -> XmlMusic
 barToMusicXml bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToMusicXml: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToMusicXml rh
 
-rhythmToMusicXml :: HasMusicXml a => Rhythm (Maybe a) -> XmlMusic
+rhythmToMusicXml :: HasMusicXml2 a => Rhythm (Maybe a) -> XmlMusic
 rhythmToMusicXml (Beat d x)            = noteRestToMusicXml d x
 rhythmToMusicXml (Group rs)            = mconcat $ map rhythmToMusicXml rs
 rhythmToMusicXml (Dotted n (Beat d x)) = noteRestToMusicXml (dotMod n * d) x
 rhythmToMusicXml (Tuplet m r)          = Xml.tuplet b a (rhythmToMusicXml r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToMusicXml :: HasMusicXml a => Duration -> Maybe a -> XmlMusic
+noteRestToMusicXml :: HasMusicXml2 a => Duration -> Maybe a -> XmlMusic
 noteRestToMusicXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
 noteRestToMusicXml d (Just p) = setDefaultVoice $ getMusicXml d p
 
@@ -345,3 +342,8 @@ spellMusicXml p = (
     )
     where (pc,alt,oct) = spellPitch (p + 60)
 
+-- TODO remove
+start = 0
+stop = 0
+type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
+type HasMusicXml2 a = (HasMusicXml a, Transformable a)

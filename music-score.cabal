@@ -98,7 +98,7 @@ library
                         Music.Score.Ornaments
                         Music.Score.Export.Abc
                         Music.Score.Export.Lilypond
-                        -- Music.Score.Export.MusicXml
+                        Music.Score.Export.MusicXml
                         Music.Score.Export.Midi
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
