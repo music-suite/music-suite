@@ -1,24 +1,11 @@
 
-{-# LANGUAGE CPP                        #-}
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
-{-# LANGUAGE CPP            #-}
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -31,7 +18,6 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -76,72 +62,42 @@ module Music.Time.Behavior (
     sawtooth,
     sine,
     cosine,
-    
+
   ) where
 
-import           Prelude                hiding (trimAfter)
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Map                      (Map)
+import qualified Data.Map                      as Map
 import           Data.Ratio
 import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
+import           Data.Set                      (Set)
+import qualified Data.Set                      as Set
 import           Data.VectorSpace
+import           Prelude                       hiding (trimAfter)
 
-import           Music.Time.Split
-import           Music.Time.Reverse
-import           Music.Time.Bound
-import           Music.Time.Note
-import           Music.Time.Score
-import Music.Time.Internal.Transform
-
-import           Music.Pitch.Literal
-import           Music.Pitch.Augmentable
-import           Music.Pitch.Alterable
-
------
--- import Data.Fixed
-import Data.Functor.Rep.Lens
--- import           Data.Default
--- import           Data.Ratio
--- 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
--- import qualified Control.Category
--- import           Control.Comonad
--- import           Control.Comonad.Env
-import           Control.Lens                 hiding (Indexable, Level, above,
-                                               below, index, inside, parts,
-                                               reversed, transform, (|>), (<|))
--- import           Control.Monad
--- import           Control.Monad.Plus
--- import           Data.AffineSpace
--- import           Data.AffineSpace.Point
+import           Control.Arrow                 (first, second, (&&&), (***))
+import           Control.Lens                  hiding (Indexable, Level, above,
+                                                below, index, inside, parts,
+                                                reversed, transform, (<|), (|>))
+
 import           Data.Distributive
--- import           Data.Foldable                (Foldable)
--- import qualified Data.Foldable                as Foldable
 import           Data.Functor.Rep
--- import qualified Data.List
--- import           Data.List.NonEmpty           (NonEmpty)
--- import           Data.Maybe
--- import           Data.NumInstances
--- import           Data.Semigroup               hiding ()
--- import           Data.Sequence                (Seq)
--- import qualified Data.Sequence                as Seq
--- import           Data.Traversable             (Traversable)
--- import qualified Data.Traversable             as T
+import           Data.Functor.Rep.Lens
 import           Data.Typeable
--- import           Data.VectorSpace hiding (Sum(..))
+import           Music.Time.Bound
+import           Music.Time.Internal.Transform
+import           Music.Time.Note
+import           Music.Time.Reverse
+import           Music.Time.Score
+import           Music.Time.Split
+
 import           Music.Dynamics.Literal
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
--- 
--- import qualified Data.Ratio                   as Util_Ratio
--- import qualified Data.List as List
--- import qualified Data.Foldable as Foldable
--- import qualified Data.Ord as Ord
------
+import           Music.Pitch.Literal
 
 
 
@@ -153,7 +109,7 @@ import           Music.Pitch.Literal
 
 -- |
 -- A 'Behavior' is a value varying over time.
--- 
+--
 -- Use 'focusing' to view a particular 'Segment'.
 --
 -- The semantics are given by
@@ -188,7 +144,7 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor,
 -- @
 -- ('+')^.'behavior' '<*>' 10
 -- @
--- 
+--
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
@@ -526,16 +482,16 @@ b `behAt` t = ((^. _Wrapped') b ? t) t
 
 time :: Behavior Time
 time = behavior id
--- 
+--
 -- trimBeforeB :: Monoid a => Time -> Behavior a -> Behavior a
 -- trimBeforeB t = _Wrapping' Behavior %~ trimBefore t
--- 
+--
 -- switchB :: Time -> Behavior a -> Behavior a -> Behavior a
 -- switchB t ((^. _Wrapped') -> x) ((^. _Wrapped') -> y) = (^. _Unwrapped') $ switch t x y
--- 
--- 
--- 
---                  
+--
+--
+--
+--
 -}
 
 -- TODO move
