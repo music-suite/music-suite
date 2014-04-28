@@ -106,17 +106,13 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
 --
 class HasDuration a => HasPosition a where
   -- |
-  -- Return the onset of the given value.
-  --
-  -- In an 'Envelope', this is the value between the attack and decay phases.
+  -- Return the onset of the given value, or the value between the attack and decay phases.
   --
   _position :: a -> Duration -> Time
   _position x = alerp (_onset x) (_offset x)
 
   -- |
-  -- Return the onset of the given value.
-  --
-  -- In an 'Envelope', this is the value between the attack and decay phases.
+  -- Return the onset of the given value, or the value between the attack and decay phases.
   --
   _onset, _offset :: a -> Time
   _onset     = (`_position` 0)
@@ -140,6 +136,7 @@ instance (HasPosition a, HasDuration a) => HasPosition [a] where
 
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
+{-# INLINE _era #-}
 
 -- |
 -- Position of the given value.
@@ -163,27 +160,21 @@ offset = position 1
 {-# INLINE offset #-}
 
 -- |
--- Pre-onset of the given value.
---
--- In an 'Envelope', this is the value right before the attack phase.
+-- Pre-onset of the given value, or the value right before the attack phase.
 --
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
 {-# INLINE preOnset #-}
 
 -- |
--- Post-onset of the given value.
---
--- In an 'Envelope', this is the value between the decay and sustain phases.
+-- Post-onset of the given value, or the value between the decay and sustain phases.
 --
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset = position 0.5
 {-# INLINE postOnset #-}
 
 -- |
--- Post-offset of the given value.
---
--- In an 'Envelope', this is the value right after the release phase.
+-- Post-offset of the given value, or the value right after the release phase.
 --
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
 postOffset = position 1.5
@@ -195,13 +186,13 @@ postOffset = position 1.5
 -- Move a value forward in time.
 --
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
-startAt t x   = (t .-. _onset x) `delay` x
+startAt t x = (t .-. _onset x) `delay` x
 
 -- |
 -- Move a value forward in time.
 --
 stopAt  :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt t  x   = (t .-. _offset x) `delay` x
+stopAt t x = (t .-. _offset x) `delay` x
 
 -- |
 -- Align a value to a given position.

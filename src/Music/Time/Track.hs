@@ -146,9 +146,11 @@ delayeds = unsafeTrack
 
 singleDelayed :: Prism' (Track a) (Delayed a)
 singleDelayed = unsafeTrack . single
+{-# INLINE singleDelayed #-}
 
 unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
 unsafeTrack = _Wrapped
+{-# INLINE unsafeTrack #-}
 
 --
 -- TODO

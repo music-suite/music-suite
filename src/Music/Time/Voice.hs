@@ -164,12 +164,15 @@ voice = to $ flip (set stretcheds) empty
 
 stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 stretcheds = unsafeVoice
+{-# INLINE stretcheds #-}
 
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = unsafeVoice . single
+{-# INLINE singleStretched #-}
 
 unsafeVoice :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeVoice = _Wrapped
+{-# INLINE unsafeVoice #-}
 
 {-
 -- |
