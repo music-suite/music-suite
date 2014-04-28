@@ -55,14 +55,14 @@ module Music.Score (
         module Music.Score.Ornaments,
 
         -- * Import and export
-        -- module Music.Score.Import.Abc,
-        -- module Music.Score.Import.Lilypond,
-        -- module Music.Score.Import.Midi,
+        module Music.Score.Import.Abc,
+        module Music.Score.Import.Lilypond,
+        module Music.Score.Import.Midi,
 
         -- module Music.Score.Export.Abc,
         module Music.Score.Export.Midi,
         module Music.Score.Export.Lilypond,
-        -- module Music.Score.Export.MusicXml,
+        module Music.Score.Export.MusicXml,
 )
 where
 
@@ -86,13 +86,13 @@ import           Music.Time hiding (time)
 import           Music.Score.Articulation
 import           Music.Score.Clef
 import           Music.Score.Dynamics
--- import           Music.Score.Export.Abc
+import           Music.Score.Export.Abc
 import           Music.Score.Export.Lilypond
 import           Music.Score.Export.Midi
--- import           Music.Score.Export.MusicXml
--- import           Music.Score.Import.Abc
--- import           Music.Score.Import.Lilypond
--- import           Music.Score.Import.Midi
+import           Music.Score.Export.MusicXml
+import           Music.Score.Import.Abc
+import           Music.Score.Import.Lilypond
+import           Music.Score.Import.Midi
 import           Music.Score.Instances          ()
 import           Music.Score.Meta
 import           Music.Score.Meta2

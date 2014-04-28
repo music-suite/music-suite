@@ -340,7 +340,7 @@ toLilypond sc =
                 addStaff . scatLilypond . uncurry addPartName
 
                 -- Main notation pipeline
-                . second (voiceToLilypond barTimeSigs barDurations . addClefs2 . scoreToVoice . simultaneous)
+                . second (voiceToLilypond barTimeSigs barDurations . temporaryClefFix . scoreToVoice . simultaneous)
 
                 -- Meta-event expansion
                 . uncurry addClefs
@@ -350,8 +350,8 @@ toLilypond sc =
 
     where
         -- TODO temporary to make most tests pass
-        addClefs2 = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
-        -- addClefs2 = id
+        temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
+        -- temporaryClefFix = id
 
         addClefT :: a -> ClefT a
         addClefT = return
