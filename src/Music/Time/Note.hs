@@ -88,7 +88,7 @@ import qualified Data.Ord as Ord
 -- i.e.
 --
 -- @
--- over value (* time) (delay 2 $ return time)
+-- over value (* line) (delay 2 $ return line)
 -- @
 --
 -- @

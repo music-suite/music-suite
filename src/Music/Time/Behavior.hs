@@ -68,7 +68,7 @@ module Music.Time.Behavior (
     -- concatB,
 
     -- * Common behaviors
-    time,
+    line,
     unit,
     impulse,
     turnOn,
@@ -294,8 +294,8 @@ unbehavior = from behavior
 -- |
 -- A behavior that
 --
-time' :: Behavior Time
-time' = id ^. tabulated
+line' :: Behavior Time
+line' = id ^. tabulated
 
 -- |
 -- A behavior that gives the current time, i.e. the identity function
@@ -303,8 +303,8 @@ time' = id ^. tabulated
 -- Should really have the type 'Behavior' 'Time', but is provided in a more general form
 -- for convenience.
 --
-time :: Fractional a => Behavior a
-time = realToFrac ^. tabulated
+line :: Fractional a => Behavior a
+line = realToFrac ^. tabulated
 --
 -- > f t = t
 --
@@ -314,7 +314,7 @@ time = realToFrac ^. tabulated
 -- that interval.
 --
 unit :: Fractional a => Behavior a
-unit = switch 0 0 (switch 1 time 1)
+unit = switch 0 0 (switch 1 line 1)
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
@@ -324,25 +324,25 @@ unit = switch 0 0 (switch 1 time 1)
 -- A behavior that
 --
 interval :: (Fractional a, Transformable a) => Time -> Time -> Note (Behavior a)
-interval t u = (t <-> u, time) ^. note
+interval t u = (t <-> u, line) ^. note
 
 -- |
 -- A behavior that
 --
 sine :: Floating a => Behavior a
-sine = sin (time*tau)
+sine = sin (line*tau)
 
 -- |
 -- A behavior that
 --
 cosine :: Floating a => Behavior a
-cosine = cos (time*tau)
+cosine = cos (line*tau)
 
 -- |
 -- A behavior that goes from 0 to 1 repeatedly with a period of 1.
 --
 sawtooth :: RealFrac a => Behavior a
-sawtooth = time - fmap floor' time
+sawtooth = line - fmap floor' line
 
 -- |
 -- A behavior that is 1 at time 0, and 0 at all other times.
@@ -382,8 +382,8 @@ turnOff = switch 0 1 0
 -- This can be used to modify a behavior in a specific range, as in
 --
 -- @
--- 'time' & 'focusing' ``on`` (2 '<->' 3) '+a~' 1
--- 'time' & 'focusingOn' (2 '<->' 3) '+~' 1
+-- 'line' & 'focusing' ``on`` (2 '<->' 3) '+a~' 1
+-- 'line' & 'focusingOn' (2 '<->' 3) '+~' 1
 -- @
 --
 focusingOn :: Span -> Lens' (Behavior a) (Segment a)

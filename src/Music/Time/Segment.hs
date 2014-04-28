@@ -38,7 +38,7 @@ module Music.Time.Segment (
     concatB,
 
     -- * Common behaviors
-    time,
+    line,
     unit,
     impulse,
     turnOn,
@@ -397,7 +397,7 @@ concatB = concatS . fmap (view focusing)
 -- View part of a 'Behavior' as a 'Segment'.
 --
 -- @
--- 'time' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
+-- 'line' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
 -- @
 --
 focusing :: Lens' (Behavior a) (Segment a)
