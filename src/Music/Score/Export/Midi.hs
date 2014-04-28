@@ -112,14 +112,12 @@ instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
 -- Numeric types are interpreted as notes with a default velocity, pairs are
 -- interpreted as @(pitch, velocity)@ pairs.
 --
--- Minimal definition: 'getMidi'. Given 'getMidiScore', 'getMidi' can be implemented
--- as @getMidiScore . return@.
---
 class HasMidi a where
 
     -- | Convert a value to a MIDI score.
     --   Typically, generates an /on/ event using 'note' followed by an optional /off/ event.
     getMidi :: a -> Score Midi.Message
+    getMidi = getMidiScore . return
 
     -- | Convert a score to a MIDI score.
     --   The default definition can be overriden for efficiency.
@@ -127,7 +125,7 @@ class HasMidi a where
     getMidiScore = (>>= getMidi)
 
 
-instance HasMidi (Integer, Integer) where
+instance (Integral a, Integral b) => HasMidi (a, b) where
     getMidi (p,v) = mempty
         |> return (Midi.NoteOn 0 (fromIntegral $ p + 60) (fromIntegral v))
         |> return (Midi.NoteOff 0 (fromIntegral $ p + 60) (fromIntegral v))
