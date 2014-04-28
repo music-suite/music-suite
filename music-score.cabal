@@ -74,10 +74,7 @@ library
                         Music.Time.Reactive
                         Music.Time.Bound
                         
-                        
-                        ------
                         Music.Score.Rhythm
-                        -- 
                         Music.Score
                         Music.Score.Meta2
                         Music.Score.Convert
@@ -99,13 +96,13 @@ library
                         Music.Score.Articulation
                         Music.Score.Dynamics
                         Music.Score.Ornaments
-                        -- Music.Score.Export.Abc
+                        Music.Score.Export.Abc
                         Music.Score.Export.Lilypond
                         -- Music.Score.Export.MusicXml
                         Music.Score.Export.Midi
-                        -- Music.Score.Import.Abc
-                        -- Music.Score.Import.Lilypond
-                        -- Music.Score.Import.Midi
+                        Music.Score.Import.Abc
+                        Music.Score.Import.Lilypond
+                        Music.Score.Import.Midi
                         -- -- Need to expose these to allow GHCI development
                         Music.Score.Util
                         Music.Time.Util

@@ -14,7 +14,6 @@ module Music.Score.Import.Midi (
   ) where
 
 import           Music.Pitch.Literal       (IsPitch)
-import           Music.Score.Score
 
 import           Control.Applicative
 import           Control.Lens
@@ -26,18 +25,13 @@ import Codec.Midi hiding (Track)
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
-import           Music.Score.Chord
-import           Music.Score.Combinators
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
-import           Music.Score.Score
 import           Music.Score.Ties
-import           Music.Score.Track
-import           Music.Score.Voice
 import           Music.Time
 
 import qualified Codec.Midi                as Midi
@@ -57,11 +51,12 @@ type IsMidi a = (
     -- TODO
     IsPitch a,
     HasPart' a,
+    Ord (Part a),
     Enum (Part a),
     -- HasPitch a,
     Num (Pitch a),
     HasTremolo a,
-    HasArticulation a,
+    HasArticulation a a,
     Tiable a
     )
 
