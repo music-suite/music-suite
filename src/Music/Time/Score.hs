@@ -368,7 +368,8 @@ score = from unsafeNotes
 -- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
 --
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = unsafeNotes
+notes = _Wrapped . _2 . _Wrapped
+-- notes = unsafeNotes
 {-# INLINE notes #-}
 
 -- |
