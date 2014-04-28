@@ -61,3 +61,19 @@ Part a ~ Z3/4?? => Score a -> Seq [Par [Seq [Par [Voice a]]]]
 
 (Part a ~:~ Int) => Score a `Iso` [Voice (Maybe a)]
 Voice (Maybe a) `Iso` [Either Duration (Voice a)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
