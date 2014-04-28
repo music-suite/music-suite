@@ -17,6 +17,18 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-------------------------------------------------------------------------------------
+
 module Music.Time.Track (
     -- * Music.Time.Track
     Track,
@@ -43,7 +55,6 @@ import           Music.Time.Delayed
 import           Music.Time.Reverse
 import           Music.Time.Split
 
------
 import           Control.Applicative
 import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Lens           hiding (Indexable, Level, above, below,

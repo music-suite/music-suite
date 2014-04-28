@@ -16,22 +16,13 @@
 
 -------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund 2012-2014
 --
 -- License     : BSD-style
 --
 -- Maintainer  : hans@hanshoglund.se
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
---
--- Reactive values, or piecewise functions of time.
---
--- Similar to Conal's definition in <http://conal.net/blog/posts/reactive-normal-form>,
--- but defined in negative time as well. Its semantics function is either 'occs' @&&&@ '?'
--- /or/ 'initial' @&&&@ 'updates', where 'intial' is the value from negative infinity
--- to the first update.
---
--- TODO integrate better in the library
 --
 -------------------------------------------------------------------------------------
 
@@ -55,6 +46,16 @@ module Music.Time.Reactive (
       -- window,
       -- windowed,
   ) where
+
+-- Reactive values, or piecewise functions of time.
+--
+-- Similar to Conal's definition in <http://conal.net/blog/posts/reactive-normal-form>,
+-- but defined in negative time as well. Its semantics function is either 'occs' @&&&@ '?'
+-- /or/ 'initial' @&&&@ 'updates', where 'intial' is the value from negative infinity
+-- to the first update.
+--
+-- TODO integrate better in the library
+--
 
 import           Music.Time.Behavior
 import           Music.Time.Bound
