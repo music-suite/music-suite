@@ -147,12 +147,56 @@ import Music.Score.Ties -- TODO
 import Music.Pitch.Literal
 
 -- |
--- Pitch type.
+-- This type fuction is used to retrive the /pitch type/ for a given concrete type.
+--
+-- For types representing pitch, it is generally 'Identity', i.e
+--
+-- @
+-- Pitch Integer ~ Integer
+-- Pitch Double ~ Double
+-- @
+-- 
+-- and so on.
+--
+-- For containers, 'Pitch' provides a morphism:
+--
+-- @
+-- 'Pitch' (c,a)             ~ 'Pitch' a
+-- 'Pitch' [a]               ~ 'Pitch' a
+-- 'Pitch' ('Note' a)          ~ 'Pitch' a
+-- 'Pitch' ('Delayed' a)       ~ 'Pitch' a
+-- 'Pitch' ('Stretched' a)     ~ 'Pitch' a
+-- 'Pitch' ('Voice' a)         ~ 'Pitch' a
+-- 'Pitch' ('Chord' a)         ~ 'Pitch' a
+-- 'Pitch' ('Track' a)         ~ 'Pitch' a
+-- 'Pitch' ('Score' a)         ~ 'Pitch' a
+-- @
 --
 type family Pitch (s :: *) :: *
 
 -- |
--- Pitch type.
+-- This type fuction is used to retrive the /pitch type/ for a given concrete type.
+--
+-- For types representing pitch, it is generally 'Constant', i.e
+--
+-- @
+-- SetPitch a Double ~ a
+-- SetPitch a Integer ~ a
+-- @
+--
+-- For containers, 'Pitch' provides a morphism:
+--
+-- @
+-- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
+-- 'SetPitch' b [a]            ~ ['SetPitch' b a]
+-- 'SetPitch' g ('Note' a)       ~ Note ('SetPitch' g a)
+-- 'SetPitch' g ('Delayed' a)    ~ Delayed ('SetPitch' g a)
+-- 'SetPitch' g ('Stretched' a)  ~ Stretched ('SetPitch' g a)
+-- 'SetPitch' g ('Voice' a)      ~ 'Voice' ('SetPitch' g a)
+-- 'SetPitch' g ('Chord' a)      ~ 'Chord' ('SetPitch' g a)
+-- 'SetPitch' g ('Track' a)      ~ 'Track' ('SetPitch' g a)
+-- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
+-- @
 --
 type family SetPitch (b :: *) (s :: *) :: *
 
@@ -162,6 +206,21 @@ type family SetPitch (b :: *) (s :: *) :: *
 class HasPitches s t => HasPitch s t where
 
   -- | Access the pitch.
+  --   
+  --   As this is a 'Traversal', you can use all combinators from the lens package,
+  --   for example:
+  --
+  --   @
+  --   'view' 'pitch' :: HasPitch a a 
+  --   @
+  --
+  --   @
+  --   'over' 'pitch'         :: HasPitch' a => a -> Pitch a
+  --   'pitch' %~ 'succ'      :: HasPitch' a => a -> a
+  --   'pitch' +~ 2         :: (HasPitch' a, Num (Pitch a)) => a -> a
+  --   'pitch' .~ c         :: (HasPitch' a, IsPitch a) => a -> a
+  --   @
+  --
   pitch :: Lens s t (Pitch s) (Pitch t)
 
 -- |
@@ -172,6 +231,22 @@ class (Transformable (Pitch s),
        SetPitch (Pitch t) s ~ t) => HasPitches s t where
 
   -- | Access all pitches.
+  --   
+  --   As this is a 'Traversal', you can use all combinators from the lens package,
+  --   for example:
+  --
+  --   @
+  --   'lengthOf' 'pitches' :: HasPitches a a => a -> Int 
+  --   @
+  --
+  --   @
+  --   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a 
+  --   @
+  --
+  --   @
+  --   'over' 'pitches' :: HasPitches a b => a -> b 
+  --   @
+  --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
 -- |
@@ -321,7 +396,7 @@ instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
 type Interval a = Diff (Pitch a)
 
 -- |
--- Class of types that can be transposed.
+-- Class of types that can be transposed, inverted and so on.
 --
 type Transposable a
   = (HasPitches a a,
