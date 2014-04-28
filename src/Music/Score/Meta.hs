@@ -49,8 +49,8 @@ module Music.Score.Meta (
         applyMeta,
   ) where
 
-import           Control.Applicative
-import           Control.Arrow
+-- import           Control.Applicative
+-- import           Control.Arrow
 import           Control.Lens hiding (transform)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
@@ -64,8 +64,8 @@ import           Data.Semigroup
 import           Data.Set                  (Set)
 import qualified Data.Set                  as Set
 import           Data.String
-import           Data.Traversable          (Traversable)
-import qualified Data.Traversable          as T
+-- import           Data.Traversable          (Traversable)
+-- import qualified Data.Traversable          as T
 import           Data.Typeable
 import           Data.Void
 
