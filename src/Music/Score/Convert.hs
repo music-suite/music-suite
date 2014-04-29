@@ -27,7 +27,7 @@
 
 module Music.Score.Convert (
         voiceToScore,
-        -- voicesToScore,
+        voiceToScore',
         -- trackToScore,
         -- trackToScore',
         scoreToVoice,
@@ -91,6 +91,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
     where
         times = 0 : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelN' v times
+{-# DEPRECATED reactiveToVoice' "" #-}
 
 -- |
 -- Convert a score to a voice. Fails if the score contain overlapping events.
@@ -105,13 +106,14 @@ scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^
                    | u == t    = (t .+^ d, [(t, d, Just x)])
                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
                    | otherwise = error "addRests: Strange prevTime"
-
+{-# DEPRECATED scoreToVoice "" #-}
 
 -- |
 -- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
 voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. getStretched) . fmap return
+{-# DEPRECATED voiceToScore "" #-}
 
 {-
 -- | Join voices in a given part into a score.
@@ -124,6 +126,7 @@ voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
 --
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
+{-# DEPRECATED voiceToScore' "" #-}
 
 {-
 -- |
