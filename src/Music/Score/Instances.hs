@@ -208,42 +208,6 @@ deriving instance HasTremolo a => HasTremolo (PartT n a)
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 deriving instance HasSlide a => HasSlide (PartT n a)
 deriving instance HasText a => HasText (PartT n a)
--- 
--- 
--- -- ChordT
--- 
--- instance Tiable a => Tiable (ChordT a) where
---     toTied (ChordT as)                              = (ChordT bs, ChordT cs) where (bs,cs) = (unzip . fmap toTied) as
--- -- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
--- -- This restriction assures all chord notes are in the same part
--- 
--- instance HasDynamic a => HasDynamic (ChordT a) where
---     setEndDim     n = fmap (setEndDim n)
---     setLevel      n = fmap (setLevel n)
--- instance HasArticulation a => HasArticulation (ChordT a) where
---     setEndSlur    n = fmap (setEndSlur n)
---     setContSlur   n = fmap (setContSlur n)
---     setBeginSlur  n = fmap (setBeginSlur n)
---     setAccLevel   n = fmap (setAccLevel n)
---     setStaccLevel n = fmap (setStaccLevel n)
-
--- instance HasTremolo a => HasTremolo (ChordT a) where
---     setTrem       n = fmap (setTrem n)
--- instance HasHarmonic a => HasHarmonic (ChordT a) where
---     setNatural    n = fmap (setNatural n)
---     setHarmonic   n = fmap (setHarmonic n)
--- instance HasSlide a => HasSlide (ChordT a) where
---     setBeginGliss n = fmap (setBeginGliss n)
---     setBeginSlide n = fmap (setBeginSlide n)
---     setEndGliss   n = fmap (setEndGliss n)
---     setEndSlide   n = fmap (setEndSlide n)
--- instance HasText a => HasText (ChordT a) where
---     addText       s (ChordT as) = ChordT (mapF (addText s) as)
-
-
-
-
-
 
 
 -- -- TieT

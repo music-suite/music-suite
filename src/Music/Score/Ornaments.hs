@@ -67,7 +67,10 @@ import           Music.Time
 class HasTremolo a where
     setTrem :: Int -> a -> a
 
-instance HasTremolo b => HasTremolo (a, b) where
+instance HasTremolo a => HasTremolo (b, a) where
+    setTrem n = fmap (setTrem n)
+
+instance HasTremolo a => HasTremolo [a] where
     setTrem n = fmap (setTrem n)
 
 instance HasTremolo a => HasTremolo (Score a) where
@@ -154,6 +157,9 @@ newtype TextT a = TextT { getTextT :: ([String], a) }
 instance HasText a => HasText (b, a) where
     addText       s                                 = fmap (addText s)
 
+instance HasText a => HasText [a] where
+    addText       s                                 = fmap (addText s)
+
 instance HasText a => HasText (Score a) where
     addText       s                                 = fmap (addText s)
 
@@ -230,6 +236,10 @@ instance HasHarmonic a => HasHarmonic (b, a) where
     setNatural b = fmap (setNatural b)
     setHarmonic n = fmap (setHarmonic n)
 
+instance HasHarmonic a => HasHarmonic [a] where
+    setNatural b = fmap (setNatural b)
+    setHarmonic n = fmap (setHarmonic n)
+
 instance HasHarmonic a => HasHarmonic (Score a) where
     setNatural b = fmap (setNatural b)
     setHarmonic n = fmap (setHarmonic n)
@@ -302,6 +312,12 @@ class HasSlide a where
     setEndSlide   :: Bool -> a -> a
 
 instance HasSlide a => HasSlide (b, a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
+
+instance HasSlide a => HasSlide [a] where
     setBeginGliss n = fmap (setBeginGliss n)
     setBeginSlide n = fmap (setBeginSlide n)
     setEndGliss   n = fmap (setEndGliss n)
