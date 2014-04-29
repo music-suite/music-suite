@@ -87,10 +87,10 @@ import           Music.Time.Util (tripped, through)
 -- @
 --
 newtype Note a = Note { _getNote :: (Span, a) }
+  deriving (Typeable)
 
 deriving instance Eq a => Eq (Note a)
 deriving instance Functor Note
-deriving instance Typeable1 Note
 deriving instance Foldable Note
 deriving instance Traversable Note
 deriving instance Comonad Note

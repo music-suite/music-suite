@@ -80,9 +80,8 @@ import           Data.Typeable
 newtype Delayed a = Delayed   { _getDelayed :: (Time, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
-            Functor,  Foldable, Traversable)
+            Functor,  Foldable, Traversable, Typeable)
 
-deriving instance Typeable1 Delayed
 deriving instance Show a => Show (Delayed a)
 
 -- | Unsafe: Do not use 'Wrapped' instances

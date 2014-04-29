@@ -8,9 +8,6 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -97,7 +94,6 @@ import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
-import           Music.Pitch.Literal
 
 
 
@@ -118,7 +114,8 @@ import           Music.Pitch.Literal
 -- type Behavior a = 'Time' -> a
 -- @
 --
-newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor, Applicative, Monad{-, Comonad-})
+newtype Behavior a  = Behavior { getBehavior :: Time -> a }
+  deriving (Functor, Applicative, Monad, Typeable)
 
 --
 -- $musicTimeBehaviorExamples
@@ -148,7 +145,6 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }   deriving (Functor,
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
-deriving instance Typeable1 Behavior
 deriving instance Distributive Behavior
 
 instance Transformable (Behavior a) where
@@ -358,7 +354,7 @@ switch t rx ry = switch' t rx ry ry
 
 -- | Replace everthing before the given time by `mempty`.
 trimBefore :: Monoid a => Time -> Behavior a -> Behavior a
-trimBefore start x = switch start mempty x
+trimBefore start = switch start mempty
 
 -- | Replace everthing after the given time by `mempty`.
 trimAfter :: Monoid a => Time -> Behavior a -> Behavior a

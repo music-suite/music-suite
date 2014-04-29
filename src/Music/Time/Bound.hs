@@ -2,9 +2,7 @@
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -12,7 +10,6 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
@@ -109,7 +106,8 @@ instance Wrapped (Bound a) where
 instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
-  rev = over _Wrapped $ \(s,x) -> (rev s, rev x)
+  -- rev = over (_Wrapped . each) rev
+  rev = over _Wrapped $ (rev *** rev)
 
 instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
@@ -127,7 +125,7 @@ instance (HasPosition a, HasDuration a) => HasDuration (Bound a) where
 instance HasPosition a => HasPosition (Bound a) where
   -- TODO lawless
   -- _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
-  _position (Bound (view range -> (t, u), x)) d = alerp t u d
+  _position (Bound (view range -> (t, u), x)) = alerp t u
 
 truncating :: Ord a => a -> a -> a -> a
 truncating t u x = (x `max` t) `min` u
