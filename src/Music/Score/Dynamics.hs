@@ -312,14 +312,14 @@ dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
 -- Apply a dynamic level over a voice.
 --
 dynamicVoice :: HasDynamic a => Score (Level Double) -> Voice (Maybe a) -> Voice (Maybe a)
-dynamicVoice d = scoreToVoice . dynamicSingle d . removeRests . voiceToScore
+dynamicVoice d = s coreToVoice . dynamicSingle d . removeRests . v oiceToScore
 
 
 dynamics' :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
 dynamics' ds = mapAllParts (fmap $ dynamicsSingle' ds)
 
 dynamicsSingle' :: HasDynamic a => Score (Level Double) -> Score a -> Score a
-dynamicsSingle' ds = applyDynSingle (fmap fromJust $ scoreToVoice ds)
+dynamicsSingle' ds = applyDynSingle (fmap fromJust $ s coreToVoice ds)
 
 
 applyDynSingle :: HasDynamic a => Voice (Level Double) -> Score a -> Score a

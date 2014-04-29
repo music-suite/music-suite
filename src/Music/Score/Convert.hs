@@ -33,9 +33,9 @@ module Music.Score.Convert (
         scoreToVoice,
         -- reactiveToVoice,
         reactiveToVoice',
-        noteToReactive,
+        -- noteToReactive,
         -- splitReactive,
-        activate,
+        -- activate,
   ) where
 
 import           Control.Applicative
