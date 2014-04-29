@@ -77,6 +77,8 @@ import           Data.List.NonEmpty     (NonEmpty)
 import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
 import           Music.Time.Util
 
 -- |
@@ -139,6 +141,47 @@ instance Splittable a => Splittable (Voice a) where
 
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
+
+
+-- Lifted instances
+
+instance IsPitch a => IsPitch (Voice a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Voice a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Voice a) where
+  fromDynamics = pure . fromDynamics
+
+-- | Bogus instance, so we can use [c..g] expressions
+instance Enum a => Enum (Voice a) where
+  toEnum = return . toEnum
+  fromEnum = list 0 (fromEnum . head) . Foldable.toList
+
+-- | Bogus instance, so we can use numeric literals
+instance Num a => Num (Voice a) where
+  fromInteger = return . fromInteger
+  abs    = fmap abs
+  signum = fmap signum
+  (+)    = error "Not implemented"
+  (-)    = error "Not implemented"
+  (*)    = error "Not implemented"
+
+-- | Bogus instance, so we can use c^*2 etc.
+instance AdditiveGroup (Voice a) where
+  zeroV   = error "Not implemented"
+  (^+^)   = error "Not implemented"
+  negateV = error "Not implemented"
+
+instance VectorSpace (Voice a) where
+  type Scalar (Voice a) = Duration
+  d *^ s = d `stretch` s
+
+{-
+instance HasMeta (Voice a) where
+  meta = _Wrapped . _1
+-}
 
 
 -- |
