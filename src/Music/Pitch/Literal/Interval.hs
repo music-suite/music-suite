@@ -61,6 +61,12 @@ instance IsInterval a => IsInterval (First a) where
 instance IsInterval a => IsInterval (Last a) where
     fromInterval = pure . fromInterval
 
+instance IsInterval a => IsInterval [a] where
+    fromInterval = pure . fromInterval
+
+instance (Monoid b, IsInterval a) => IsInterval (b, a) where
+    fromInterval = pure . fromInterval
+
 instance IsInterval Double where
     fromInterval = fromIntegral . asInteger . fromInterval
 

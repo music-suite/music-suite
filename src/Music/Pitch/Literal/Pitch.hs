@@ -78,6 +78,9 @@ instance IsPitch a => IsPitch (Last a) where
 instance IsPitch a => IsPitch [a] where
     fromPitch = pure . fromPitch
 
+instance (Monoid b, IsPitch a) => IsPitch (b, a) where
+    fromPitch = pure . fromPitch
+
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + oct * 12
         where
