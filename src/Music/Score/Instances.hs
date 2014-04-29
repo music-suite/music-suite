@@ -66,6 +66,12 @@ instance IsPitch a => IsPitch [a] where
     fromPitch = return . fromPitch
 instance IsDynamics a => IsDynamics [a] where
     fromDynamics = return . fromDynamics
+instance Alterable a => Alterable (b, a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten
+instance Augmentable a => Augmentable (b, a) where
+    augment = fmap augment
+    diminish = fmap diminish
 
 -- instance IsPitch a => IsPitch (DynamicT a) where
 --     fromPitch = pure . fromPitch
@@ -178,6 +184,7 @@ deriving instance HasText a => HasText (TieT a)
 -- 
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+
 type instance Part (TremoloT a)                          = Part a
 deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
 deriving instance HasSlide a => HasSlide (TremoloT a)
@@ -217,38 +224,22 @@ deriving instance HasText a => HasText (SlideT a)
 -- -- Literal instances
 -- -------------------------------------------------------------------------------------
 -- 
+
+
 instance Alterable a => Alterable (Score a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
 
-instance Alterable a => Alterable (SlideT a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
-instance Alterable a => Alterable (TieT a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
-instance Alterable a => Alterable (HarmonicT a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
+deriving instance Alterable a => Alterable (SlideT a)
+deriving instance Alterable a => Alterable (TieT a)
+deriving instance Alterable a => Alterable (HarmonicT a)
 -- instance Alterable a => Alterable (ArticulationT a) where
 --     sharpen = fmap sharpen
 --     flatten = fmap flatten
 -- 
-instance Alterable a => Alterable (TextT a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
-instance Alterable a => Alterable (TremoloT a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
-instance Alterable a => Alterable (PartT n a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-
+deriving instance Alterable a => Alterable (TextT a)
+deriving instance Alterable a => Alterable (TremoloT a)
+deriving instance Alterable a => Alterable (PartT n a)
 instance Augmentable a => Augmentable (Score a) where
     augment = fmap augment
     diminish = fmap diminish
@@ -257,34 +248,16 @@ instance Augmentable a => Augmentable (Score a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
 -- 
-instance Augmentable a => Augmentable (SlideT a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
-instance Augmentable a => Augmentable (TieT a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
-instance Augmentable a => Augmentable (HarmonicT a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
+deriving instance Augmentable a => Augmentable (SlideT a)
+deriving instance Augmentable a => Augmentable (TieT a)
+deriving instance Augmentable a => Augmentable (HarmonicT a)
 -- instance Augmentable a => Augmentable (ArticulationT a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
 
-instance Augmentable a => Augmentable (TextT a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
-instance Augmentable a => Augmentable (TremoloT a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
-instance Augmentable a => Augmentable (PartT n a) where
-    augment = fmap augment
-    diminish = fmap diminish
--- 
+deriving instance Augmentable a => Augmentable (TextT a)
+deriving instance Augmentable a => Augmentable (TremoloT a)
+deriving instance Augmentable a => Augmentable (PartT n a)
 -- 
 -- 
 -- -------------------------------------------------------------------------------------
