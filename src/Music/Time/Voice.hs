@@ -245,6 +245,7 @@ dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a ->
 dzipVoiceWith = error "Not implemented: dzipVoiceWith"
 
 -- TODO not simple
+-- TODO unsafe (meta...)
 voiceList :: Iso' (Voice a) [(Duration, a)]
 voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
 

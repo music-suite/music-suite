@@ -15,7 +15,7 @@
 
 module Music.Score (
         -- * Prerequisites
-        -- TODO lens
+        module Control.Lens,
         module Control.Applicative,
         module Control.Monad,
         module Control.Monad.Plus,
@@ -24,13 +24,16 @@ module Music.Score (
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
 
-        -- * Basic types
         module Music.Time,
         -- module Music.Score.Combinators,
 
-        -- ** Structure
-        module Music.Score.Ties,
-        module Music.Score.Rhythm,
+        -- * Music representation
+        -- ** Musical elements
+        module Music.Score.Part,
+        module Music.Score.Pitch,
+        module Music.Score.Dynamics,
+        module Music.Score.Articulation,
+        module Music.Score.Ornaments,
 
         -- ** Meta-information
         module Music.Score.Meta,
@@ -45,14 +48,11 @@ module Music.Score (
         module Music.Score.Meta.Time,
         module Music.Score.Meta.Tempo,
         module Music.Score.Meta.Annotations,
-        module Music.Score.Clef,
 
-        -- ** Musical elements
-        module Music.Score.Part,
-        module Music.Score.Pitch,
-        module Music.Score.Dynamics,
-        module Music.Score.Articulation,
-        module Music.Score.Ornaments,
+        -- ** Miscellaneous
+        module Music.Score.Ties,
+        module Music.Score.Rhythm,
+        module Music.Score.Clef,
 
         -- * Import and export
         module Music.Score.Import.Abc,
@@ -69,6 +69,7 @@ where
 import           Control.Applicative
 import           Control.Monad                  hiding (mapM)
 import           Control.Monad.Plus
+import           Control.Lens hiding (Level, above, below, parts, reversed, transform, (<|), (|>), (<.>), inside, rewrite)
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Basis

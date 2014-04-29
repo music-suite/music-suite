@@ -14,9 +14,13 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
+        -- * Prerequisites
     module Data.Functor.Rep.Lens,
     
+    -- * Basic types
     module Music.Time.Types,
+
+    -- * Time transformations
     module Music.Time.Transform,
     module Music.Time.Duration,
     module Music.Time.Position,
@@ -24,6 +28,8 @@ module Music.Time (
     module Music.Time.Reverse,
     module Music.Time.Juxtapose,
 
+    -- * Time types
+    -- ** Discrete time
     module Music.Time.Stretched,
     module Music.Time.Delayed,
     module Music.Time.Note,
@@ -31,6 +37,7 @@ module Music.Time (
     module Music.Time.Chord,
     module Music.Time.Track,
     module Music.Time.Score,
+    -- ** Continous time
     module Music.Time.Segment,
     module Music.Time.Behavior,
     module Music.Time.Reactive,
