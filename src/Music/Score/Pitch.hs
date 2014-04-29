@@ -444,8 +444,9 @@ above v x = x <> up v x
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
 below v x = x <> down v x
 
+inv :: Transposable a => Pitch a -> a -> a
 inv = invertPitches
-{-# DEPRECATED inv "" #-}
+{-# DEPRECATED inv "Use 'invertPitches'" #-}
 
 -- |
 -- Invert pitches.
