@@ -46,6 +46,7 @@ module Music.Time.Score (
 
       -- *** Unsafe operations
       unsafeNotes,
+      unsafeEvents,
       -- unsafeVoices,
 
       -- ** Special traversals
@@ -473,10 +474,19 @@ mapNScore f = over (_Wrapped.traverse) (extend f)
 reifyScore :: Score a -> Score (Note a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
-events :: Transformable a => Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+-- |
+-- View a score as a list of events, i.e. time-duration-value triplets. 
+--
+-- This is a convenient combination of 'notes' and 'event'.
+--
+-- @
+-- 'events' = 'notes' . 'through' 'event' 'event'
+-- @
+--
+events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = notes . through event event
 
-unsafeEvents :: Transformable a => Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeEvents :: {-Transformable a => -}Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 unsafeEvents = iso _getScore _score
 
 _score :: [(Time, Duration, a)] -> Score a
@@ -484,7 +494,7 @@ _score = mconcat . fmap (uncurry3 event)
   where
     event t d x   = (delay (t .-. 0) . stretch d) (return x)
 
-_getScore :: Transformable a => Score a -> [(Time, Duration, a)]
+_getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
 _getScore =
   fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
   List.sortBy (Ord.comparing fst) .
