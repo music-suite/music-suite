@@ -38,7 +38,7 @@ module Music.Score.Ties (
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens
+import           Control.Lens hiding (transform)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.Functor.Adjunction (unzipR)
@@ -52,10 +52,9 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace hiding (Sum)
 
--- import           Music.Score.Combinators
--- import           Music.Score.Convert
--- import           Music.Score.Part
 import           Music.Time
+import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note
@@ -112,6 +111,10 @@ instance Tiable a => Tiable (TieT a) where
 
 instance Tiable a => Tiable [a] where
     toTied = unzip . fmap toTied
+
+instance Tiable a => Tiable (Behavior a) where
+    toTied = unzipR . fmap toTied
+
 -- 
 -- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
 -- This restriction assures all chord notes are in the same part
@@ -126,6 +129,63 @@ instance Tiable a => Tiable (Sum a) where
 instance Tiable a => Tiable (Product a) where
     toTied = unzipR . fmap toTied
 
+-- Lifted instances
+
+instance IsPitch a => IsPitch (TieT a) where
+    fromPitch = pure . fromPitch
+
+instance IsDynamics a => IsDynamics (TieT a) where
+    fromDynamics = return . fromDynamics
+
+instance Transformable a => Transformable (TieT a) where
+    transform s = fmap (transform s)
+
+instance Reversible a => Reversible (TieT a) where
+    rev = fmap rev
+
+instance Num a => Num (TieT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TieT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TieT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TieT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TieT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TieT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TieT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1  
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -212,4 +272,7 @@ splitDur maxDur (d,a)
     | d <= maxDur =  ((d, a), Nothing)
     | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
 
+
+-- TODO use extract
+get1 (TieT (_,x)) = x
 

@@ -88,9 +88,11 @@ import           Data.Typeable
 import qualified Data.List as List
 
 import           Music.Time
-import Music.Time.Internal.Transform
+import           Music.Time.Internal.Transform
 import           Music.Score.Ties
 import           Music.Score.Util (through)
+import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 
 
 -- |
@@ -249,7 +251,6 @@ instance Wrapped (PartT p a) where
   _Wrapped' = iso getPartT PartT
 instance Rewrapped (PartT p a) (PartT p' b)
 
-
 type instance Part (PartT p a) = p
 type instance SetPart p' (PartT p a) = PartT p' a
 
@@ -257,6 +258,19 @@ instance (Transformable p, Transformable p') => HasPart (PartT p a) (PartT p' a)
   part = _Wrapped . _1
 instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a) where
   parts = _Wrapped . _1
+
+instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
+    fromPitch l = PartT (toEnum 0, fromPitch l)
+
+instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
+    fromDynamics l = PartT (toEnum 0, fromDynamics l)
+
+instance Reversible a => Reversible (PartT p a) where
+    rev = fmap rev
+
+instance Tiable a => Tiable (PartT n a) where
+    toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
+
 
 
 

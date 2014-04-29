@@ -61,20 +61,10 @@ import           Music.Score.Util
 
 -------------------------------------------------------------------------------------
 
-
-instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
-    fromPitch l                                     = PartT (toEnum 0, fromPitch l)
-instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
-    fromDynamics l                                  = PartT (toEnum 0, fromDynamics l)
-
+-- TODO move to pitch-literal
 instance IsPitch a => IsPitch [a] where
     fromPitch = return . fromPitch
 instance IsDynamics a => IsDynamics [a] where
-    fromDynamics = return . fromDynamics
-
-instance IsPitch a => IsPitch (TieT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (TieT a) where
     fromDynamics = return . fromDynamics
 
 -- instance IsPitch a => IsPitch (DynamicT a) where
@@ -82,65 +72,25 @@ instance IsDynamics a => IsDynamics (TieT a) where
 -- instance IsDynamics a => IsDynamics (DynamicT a) where
 --     fromDynamics = return . fromDynamics
 -- 
-instance IsPitch a => IsPitch (TremoloT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (TremoloT a) where
-    fromDynamics = pure . fromDynamics
-
-instance IsPitch a => IsPitch (TextT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (TextT a) where
-    fromDynamics = pure . fromDynamics
-
-instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics = pure . fromDynamics
-
-instance IsPitch a => IsPitch (SlideT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (SlideT a) where
-    fromDynamics = pure . fromDynamics
-
+-- instance IsPitch a => IsPitch (ArticulationT a) where
+--     fromPitch = pure . fromPitch
+-- instance IsDynamics a => IsDynamics (ArticulationT a) where
+--     fromDynamics = return . fromDynamics
+-- 
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Transformable a => Transformable (DynamicT a) where
 --     transform s = fmap (transform s)
-instance Transformable a => Transformable (SlideT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (TieT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (HarmonicT a) where
-    transform s = fmap (transform s)
 -- instance Transformable a => Transformable (ArticulationT a) where
 --     transform s = fmap (transform s)
-instance Transformable a => Transformable (TextT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (TremoloT a) where
-    transform s = fmap (transform s)
--- instance Transformable a => Transformable (PartT p a) where
-    -- transform s = fmap rev
 
 
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Reversible a => Reversible (DynamicT a) where
 --     rev = fmap rev
-instance Reversible a => Reversible (SlideT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (TieT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (HarmonicT a) where
-    rev = fmap rev
 -- instance Reversible a => Reversible (ArticulationT a) where
 --     rev = fmap rev
-instance Reversible a => Reversible (TextT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (TremoloT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (PartT p a) where
-    rev = fmap rev
-
 
 -- -------------------------------------------------------------------------------------
 -- 
@@ -164,34 +114,12 @@ instance Semigroup a => Semigroup (PartT n a) where
 -- 
 -- 
 -- -------------------------------------------------------------------------------------
--- 
--- -- Maybe
--- 
--- -- TODO this instance may be problematic with mapPhrase
--- instance HasArticulation a => HasArticulation (Maybe a) where
---     setEndSlur    n = fmap (setEndSlur n)
---     setContSlur   n = fmap (setContSlur n)
---     setBeginSlur  n = fmap (setBeginSlur n)
---     setAccLevel   n = fmap (setAccLevel n)
---     setStaccLevel n = fmap (setStaccLevel n)
--- type instance Part (Maybe a)                             = Part a
--- instance HasPart a => HasPart (Maybe a) where
---     getPart Nothing                                 = error "Nothing: no part"
---     getPart (Just a)                                = getPart a
---     modifyPart f = fmap (modifyPart f)
--- type instance Pitch (Maybe a) = Pitch a
--- instance HasSetPitch a b => HasSetPitch (Maybe a) (Maybe b) where
---     type SetPitch g (Maybe a) = Maybe (SetPitch g a)
---     __mapPitch f (Nothing)                          = Nothing
---     __mapPitch f (Just a)                           = Just (__mapPitch f a)
--- 
--- 
--- -- PartT
--- 
--- instance HasChord a => HasChord (PartT n a) where
---     type ChordNote (PartT n a)                           = PartT n (ChordNote a)
---     getChord (PartT (v,x))                          = fmap (\x -> PartT (v,x)) (getChord x)
--- 
+
+--
+-- Aspect instaces (Pitch, Dynamics and Articulation) for PartT needs to go here,
+-- as the other aspects depends on partwise traversals etc
+--
+
 type instance Pitch (PartT p a) = Pitch a
 type instance SetPitch b (PartT p a) = PartT p (SetPitch b a)
 
@@ -200,40 +128,22 @@ instance HasPitch a b => HasPitch (PartT p a) (PartT p b) where
 instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
   pitches = _Wrapped . _2 . pitches
 
-instance Tiable a => Tiable (PartT n a) where
-    toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
--- deriving instance HasDynamic a => HasDynamic (PartT n a)
--- deriving instance HasArticulation a => HasArticulation (PartT n a)
+-- -------------------------------------------------------------------------------------
+
+
+
+
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 deriving instance HasSlide a => HasSlide (PartT n a)
 deriving instance HasText a => HasText (PartT n a)
 
 
--- -- TieT
--- 
--- type instance Part (TieT a) = Part a
--- instance HasPart a => HasPart (TieT a) where
---     getPart (TieT (_,x)) = getPart x
---     modifyPart f = fmap (modifyPart f)
--- instance HasChord a => HasChord (TieT a) where
---     type ChordNote (TieT a) = TieT (ChordNote a)
---     getChord (TieT (t,x))   = fmap (\x -> TieT (t,x)) (getChord x)
--- 
--- type instance Pitch (TieT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (TieT a) where
---     __getPitch = __getPitch . get1
--- instance HasSetPitch a b => HasSetPitch (TieT a) (TieT b) where
---     type SetPitch g (TieT a) = TieT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- 
--- deriving instance HasDynamic a => HasDynamic (TieT a)
--- deriving instance HasArticulation a => HasArticulation (TieT a)
 deriving instance HasTremolo a => HasTremolo (TieT a)
 deriving instance HasHarmonic a => HasHarmonic (TieT a)
 deriving instance HasSlide a => HasSlide (TieT a)
 deriving instance HasText a => HasText (TieT a)
+
 -- 
 -- 
 -- -- DynamicT
@@ -244,23 +154,6 @@ deriving instance HasText a => HasText (TieT a)
 -- instance Tiable a => Tiable (DynamicT a) where
 --     toTied (DynamicT (l, a)) = (DynamicT (l, b), DynamicT (mempty, c)) where (b,c) = toTied a
 -- 
--- type instance Part (DynamicT a) = Part a
--- instance HasPart a => HasPart (DynamicT a) where
---     getPart (DynamicT (_,x)) = getPart x
---     modifyPart f = fmap (modifyPart f)
--- instance HasChord a => HasChord (DynamicT a) where
---     type ChordNote (DynamicT a) = DynamicT (ChordNote a)
---     getChord (DynamicT (d,as)) = fmap (\x -> DynamicT (d,x)) (getChord as)
--- 
--- type instance Pitch (DynamicT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (DynamicT a) where
---     __getPitch (DynamicT (_,x)) = __getPitch x
--- instance HasSetPitch a b => HasSetPitch (DynamicT a) (DynamicT b) where
---     type SetPitch g (DynamicT a) = DynamicT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- 
--- deriving instance HasArticulation a => HasArticulation (DynamicT a)
 -- deriving instance HasTremolo a => HasTremolo (DynamicT a)
 -- deriving instance HasHarmonic a => HasHarmonic (DynamicT a)
 -- deriving instance HasSlide a => HasSlide (DynamicT a)
@@ -276,22 +169,6 @@ deriving instance HasText a => HasText (TieT a)
 -- instance Tiable a => Tiable (ArticulationT a) where
 --     toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
 -- 
--- type instance Part (ArticulationT a)                         = Part a
--- instance HasPart a => HasPart (ArticulationT a) where
---     getPart = getPart . get1
---     modifyPart   f                                      = fmap (modifyPart f)
--- instance HasChord a => HasChord (ArticulationT a) where
---     type ChordNote (ArticulationT a)                         = ArticulationT (ChordNote a)
---     getChord (ArticulationT (v,x))                          = fmap (\x -> ArticulationT (v,x)) (getChord x)
--- 
--- type instance Pitch (ArticulationT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (ArticulationT a) where
---     __getPitch (ArticulationT (_,a)) = __getPitch a
--- instance HasSetPitch a b => HasSetPitch (ArticulationT a) (ArticulationT b) where
---     type SetPitch g (ArticulationT a) = ArticulationT (SetPitch g a)
---     __mapPitch f (ArticulationT (v,x)) = (ArticulationT (v,__mapPitch f x))
--- 
--- deriving instance HasDynamic a => HasDynamic (ArticulationT a)
 -- deriving instance HasTremolo a => HasTremolo (ArticulationT a)
 -- deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
 -- deriving instance HasSlide a => HasSlide (ArticulationT a)
@@ -302,22 +179,6 @@ deriving instance HasText a => HasText (TieT a)
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 type instance Part (TremoloT a)                          = Part a
--- instance HasPart a => HasPart (TremoloT a) where
---     getPart (TremoloT (_,a))                        = getPart a
---     modifyPart f (TremoloT (n,x))                   = TremoloT (n, modifyPart f x)
--- instance HasChord a => HasChord (TremoloT a) where
---     type ChordNote (TremoloT a)                          = TremoloT (ChordNote a)
---     getChord (TremoloT (n,x))                       = fmap (\x -> TremoloT (n,x)) (getChord x)
--- 
--- type instance Pitch (TremoloT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (TremoloT a) where
---     __getPitch = __getPitch . get1
--- instance HasSetPitch a b => HasSetPitch (TremoloT a) (TremoloT b) where
---     type SetPitch g (TremoloT a) = TremoloT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- deriving instance HasDynamic a => HasDynamic (TremoloT a)
--- deriving instance HasArticulation a => HasArticulation (TremoloT a)
 deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
 deriving instance HasSlide a => HasSlide (TremoloT a)
 deriving instance HasText a => HasText (TremoloT a)
@@ -327,23 +188,6 @@ deriving instance HasText a => HasText (TremoloT a)
 -- 
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
--- type instance Part (TextT a)                             = Part a
--- instance HasPart a => HasPart (TextT a) where
---     getPart (TextT (_,a))                           = getPart a
---     modifyPart f = fmap (modifyPart f)
--- instance HasChord a => HasChord (TextT a) where
---     type ChordNote (TextT a)                             = TextT (ChordNote a)
---     getChord (TextT (n,x))                          = fmap (\x -> TextT (n,x)) (getChord x)
--- 
--- type instance Pitch (TextT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (TextT a) where
---     __getPitch = __getPitch . get1
--- instance HasSetPitch a b => HasSetPitch (TextT a) (TextT b) where
---     type SetPitch g (TextT a) = TextT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- deriving instance HasDynamic a => HasDynamic (TextT a)
--- deriving instance HasArticulation a => HasArticulation (TextT a)
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
 deriving instance HasSlide a => HasSlide (TextT a)
@@ -353,23 +197,6 @@ deriving instance HasSlide a => HasSlide (TextT a)
 -- 
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
--- type instance Part (HarmonicT a)                         = Part a
--- instance HasPart a => HasPart (HarmonicT a) where
---     getPart (HarmonicT (_,a))                       = getPart a
---     modifyPart f (HarmonicT (n,x))                  = HarmonicT (n, modifyPart f x)
--- instance HasChord a => HasChord (HarmonicT a) where
---     type ChordNote (HarmonicT a)                         = HarmonicT (ChordNote a)
---     getChord (HarmonicT (n,x))                      = fmap (\x -> HarmonicT (n,x)) (getChord x)
--- 
--- type instance Pitch (HarmonicT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (HarmonicT a) where
---     __getPitch = __getPitch . get1
--- instance HasSetPitch a b => HasSetPitch (HarmonicT a) (HarmonicT b) where
---     type SetPitch g (HarmonicT a) = HarmonicT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- deriving instance HasDynamic a => HasDynamic (HarmonicT a)
--- deriving instance HasArticulation a => HasArticulation (HarmonicT a)
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
 deriving instance HasSlide a => HasSlide (HarmonicT a)
 deriving instance HasText a => HasText (HarmonicT a)
@@ -380,24 +207,6 @@ deriving instance HasText a => HasText (HarmonicT a)
 -- 
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
--- 
--- type instance Part (SlideT a) = Part a
--- instance HasPart a => HasPart (SlideT a) where
---     getPart = getPart . get1
---     modifyPart f = fmap (modifyPart f)
--- instance HasChord a => HasChord (SlideT a) where
---     type ChordNote (SlideT a) = SlideT (ChordNote a)
---     getChord (SlideT (x,as)) = fmap (\a -> SlideT (x,a)) (getChord as)
--- 
--- type instance Pitch (SlideT a) = Pitch a
--- instance HasGetPitch a => HasGetPitch (SlideT a) where
---     __getPitch = __getPitch . get1
--- instance HasSetPitch a b => HasSetPitch (SlideT a) (SlideT b) where
---     type SetPitch g (SlideT a) = SlideT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
--- deriving instance HasDynamic a => HasDynamic (SlideT a)
--- deriving instance HasArticulation a => HasArticulation (SlideT a)
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)
@@ -519,52 +328,6 @@ instance Bounded a => Bounded [a] where
     minBound = [minBound]
     maxBound = [maxBound]
 
-
--- TieT
-
-instance Num a => Num (TieT a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (TieT a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
-
-instance Floating a => Floating (TieT a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
-
-instance Enum a => Enum (TieT a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
-
-instance Bounded a => Bounded (TieT a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
-
-instance (Num a, Ord a, Real a) => Real (TieT a) where
-    toRational = toRational . get1
-
-instance (Real a, Enum a, Integral a) => Integral (TieT a) where
-    quot = liftA2 quot
-    rem = liftA2 rem
-    toInteger = toInteger . get1
 -- 
 -- 
 -- -- DynamicT
@@ -660,17 +423,6 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
 --     rem = liftA2 rem
 --     toInteger = toInteger . get1
 -- 
--- 
--- 
--- type instance Pitch (Behavior a) = Behavior (Pitch a)
--- 
--- -- TODO undecidable
--- instance (HasGetPitch a, HasSetPitch a b) => HasSetPitch (Behavior a) (Behavior b) where
---     type SetPitch (Behavior p) (Behavior a) = Behavior (SetPitch p a)
---     __mapPitch f a = liftA2 (__setPitch) (f $ (__getPitch) <$> a) a
--- 
-instance Tiable a => Tiable (Behavior a) where
-  toTied = unzipR . fmap toTied
 
 -- TODO replace with (^?!), extract or similar
 get1 = head . toList

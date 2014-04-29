@@ -52,7 +52,7 @@ module Music.Score.Ornaments (
   ) where
 
 import           Control.Applicative
-import           Control.Lens
+import           Control.Lens hiding (transform)
 import           Data.Foldable
 import           Data.Foldable
 import           Data.Ratio
@@ -63,6 +63,8 @@ import           Data.Typeable
 -- import           Music.Score.Combinators
 import           Music.Score.Part
 import           Music.Time
+import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 
 class HasTremolo a where
     setTrem :: Int -> a -> a
@@ -341,17 +343,17 @@ instance Wrapped (SlideT a) where
 
 instance Rewrapped (SlideT a) (SlideT b)
 
-bg, bs, eg, es :: Lens' (SlideT a) Any
-bg = _Wrapped' . _1 . _2 . _1
-bs = _Wrapped' . _1 . _2 . _2
-eg = _Wrapped' . _1 . _1 . _1
-es = _Wrapped' . _1 . _1 . _2
+_bg, _bs, _eg, _es :: Lens' (SlideT a) Any
+_bg = _Wrapped' . _1 . _2 . _1
+_bs = _Wrapped' . _1 . _2 . _2
+_eg = _Wrapped' . _1 . _1 . _1
+_es = _Wrapped' . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
-    setBeginGliss x = bg .~ Any x
-    setBeginSlide x = bs .~ Any x
-    setEndGliss   x = eg .~ Any x
-    setEndSlide   x = es .~ Any x
+    setBeginGliss x = _bg .~ Any x
+    setBeginSlide x = _bs .~ Any x
+    setEndGliss   x = _eg .~ Any x
+    setEndSlide   x = _es .~ Any x
 
 -- Lifted instances
 
@@ -447,3 +449,45 @@ mapPhraseWise3 f _ _ = fmap f
 -- TODO replace with (^?!), extract or similar
 get1 = head . toList
 
+
+
+
+instance IsPitch a => IsPitch (TremoloT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (TremoloT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (TextT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (TextT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (HarmonicT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (HarmonicT a) where
+    fromDynamics = pure . fromDynamics
+
+instance IsPitch a => IsPitch (SlideT a) where
+    fromPitch = pure . fromPitch
+instance IsDynamics a => IsDynamics (SlideT a) where
+    fromDynamics = pure . fromDynamics
+
+
+instance Transformable a => Transformable (SlideT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (HarmonicT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (TextT a) where
+    transform s = fmap (transform s)
+instance Transformable a => Transformable (TremoloT a) where
+    transform s = fmap (transform s)
+
+
+instance Reversible a => Reversible (SlideT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (HarmonicT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (TextT a) where
+    rev = fmap rev
+instance Reversible a => Reversible (TremoloT a) where
+    rev = fmap rev
