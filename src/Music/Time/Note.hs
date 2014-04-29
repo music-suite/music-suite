@@ -34,6 +34,8 @@ module Music.Time.Note (
     -- * Music.Time.Note
     Note,
     note,
+    -- fromNote,
+    event,
     getNote,
   ) where
 
@@ -61,6 +63,7 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
+import           Music.Time.Util (tripped, through)
 
 -- |
 -- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance
@@ -148,6 +151,12 @@ getNote = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
-
 {-# INLINE getNote #-}
+
+fromNote = from note
+
+event :: Lens (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+event = from note . alongside delta id . tripped
+
+
 

@@ -38,7 +38,7 @@ module Music.Time.Score (
       score,
       notes,
       events,
-      voices,
+      -- voices,
       -- phrases,
       singleNote,
       singleVoice,
@@ -46,7 +46,7 @@ module Music.Time.Score (
 
       -- *** Unsafe operations
       unsafeNotes,
-      unsafeVoices,
+      -- unsafeVoices,
 
       -- ** Special traversals
       mapWithSpan,
@@ -473,8 +473,11 @@ mapNScore f = over (_Wrapped.traverse) (extend f)
 reifyScore :: Score a -> Score (Note a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
-events :: Transformable a => Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-events = iso _getScore _score
+events :: Transformable a => Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+events = notes . through event event
+
+unsafeEvents :: Transformable a => Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeEvents = iso _getScore _score
 
 _score :: [(Time, Duration, a)] -> Score a
 _score = mconcat . fmap (uncurry3 event)
@@ -489,6 +492,7 @@ _getScore =
   fmap (view $ from note) .
   reifyScore
 
+{-
 scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
 scoreToVoice = view voice . fmap (view stretched) . fmap throwTime . addRests . (^. events)
   where
@@ -499,6 +503,7 @@ scoreToVoice = view voice . fmap (view stretched) . fmap throwTime . addRests . 
            | u == t  = (t .+^ d, [(t, d, Just x)])
            | u <  t  = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
            | otherwise = error "addRests: Strange prevTime"
+-}
 
 
 
@@ -572,7 +577,7 @@ simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 -- Note that 'simultaneous' is identical to 'simultaneous' @.@ 'fmap' 'return'
 --
 simultaneous' :: Transformable a => Score a -> Score [a]
-simultaneous' sc = (^. from events) vs
+simultaneous' sc = (^. from unsafeEvents) vs
     where
         -- es :: [Era]
         -- evs :: [[a]]

@@ -333,6 +333,9 @@ single = prism' return $ \xs -> case xs of
   _   -> Nothing
 {-# INLINE single #-}
 
+tripped :: Iso ((a, b), c) ((a', b'), c') (a, b, c) (a', b', c')
+tripped = iso tripl untripl
+{-# INLINE tripped #-}
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor

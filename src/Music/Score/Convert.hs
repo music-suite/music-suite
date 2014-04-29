@@ -28,8 +28,8 @@
 module Music.Score.Convert (
         voiceToScore,
         -- voicesToScore,
-        trackToScore,
-        trackToScore',
+        -- trackToScore,
+        -- trackToScore',
         scoreToVoice,
         -- reactiveToVoice,
         reactiveToVoice',
@@ -125,6 +125,7 @@ voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
 voiceToScore' :: Voice (Maybe a) -> Score a
 voiceToScore' = mcatMaybes . voiceToScore
 
+{-
 -- |
 -- Convert a track to a score where each event is given a fixed duration.
 --
@@ -136,6 +137,7 @@ trackToScore x = trackToScore' (const x)
 --
 trackToScore' :: Transformable a => (a -> Duration) -> Track a -> Score a
 trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . map (^. from delayed) . (^. delayeds)
+-}
 
 
 -- Convert to delta (time to wait before this note)
