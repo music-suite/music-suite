@@ -112,6 +112,10 @@ instance Tiable a => Tiable (TieT a) where
 
 instance Tiable a => Tiable [a] where
     toTied = unzip . fmap toTied
+-- 
+-- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
+-- This restriction assures all chord notes are in the same part
+-- 
 
 instance Tiable a => Tiable (Maybe a) where
     toTied = unzipR . fmap toTied

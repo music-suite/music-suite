@@ -217,12 +217,6 @@ deriving instance HasText a => HasText (PartT n a)
 -- -- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
 -- -- This restriction assures all chord notes are in the same part
 -- 
--- type instance Pitch (ChordT a) = Pitch a
--- 
--- instance HasSetPitch a b => HasSetPitch (ChordT a) (ChordT b) where
---     type SetPitch g (ChordT a) = ChordT (SetPitch g a)
---     __mapPitch f = fmap (__mapPitch f)
--- 
 -- instance HasDynamic a => HasDynamic (ChordT a) where
 --     setEndDim     n = fmap (setEndDim n)
 --     setLevel      n = fmap (setLevel n)
@@ -232,6 +226,7 @@ deriving instance HasText a => HasText (PartT n a)
 --     setBeginSlur  n = fmap (setBeginSlur n)
 --     setAccLevel   n = fmap (setAccLevel n)
 --     setStaccLevel n = fmap (setStaccLevel n)
+
 -- instance HasTremolo a => HasTremolo (ChordT a) where
 --     setTrem       n = fmap (setTrem n)
 -- instance HasHarmonic a => HasHarmonic (ChordT a) where
