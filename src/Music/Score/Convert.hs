@@ -31,7 +31,7 @@ module Music.Score.Convert (
         trackToScore,
         trackToScore',
         scoreToVoice,
-        reactiveToVoice,
+        -- reactiveToVoice,
         reactiveToVoice',
         noteToReactive,
         -- splitReactive,
@@ -60,13 +60,17 @@ import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
 
 
+{-
 -- | Convert a note to an _onset and a voice.
 noteToVoice :: Note a -> (Time, Voice a)
 noteToVoice (view (from note) -> (s,x)) = (_onset s, stretchTo (_duration s) $ return x)
+-}
 
+{-
 -- | Convert a note to a score.
 noteToScore :: Note a -> Score a
 noteToScore (view (from note) -> (s,x)) = s `transform` return x
+-}
 
 -- scoreToNotes :: Score a -> [Note a]
 -- scoreToNotes = Foldable.toList . reifyScore
@@ -74,11 +78,13 @@ noteToScore (view (from note) -> (s,x)) = s `transform` return x
 -- notesToScore :: [Note a] -> Score a
 -- notesToScore = pcat . fmap noteToScore
 
+{-
 reactiveToVoice :: Duration -> Reactive a -> Voice a
 reactiveToVoice d r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> 0 < t && t < 0 .+^ d) (occs r)
         durs  = toRelN' (0 .+^ d) times
+-}
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
 reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)

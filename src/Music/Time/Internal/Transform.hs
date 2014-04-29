@@ -31,6 +31,7 @@ module Music.Time.Internal.Transform (
       whilstLD,
       whilstStretch,
       whilstDelay,
+      spanned,
       on,
       conjugate,
 
@@ -320,9 +321,25 @@ whilstStretch = flip (flip whilst . stretching)
 conjugate :: Span -> Span -> Span
 conjugate t1 t2  = negateV t1 <> t2 <> t1
 
-on :: (Functor f, Transformable c, Transformable b) => (a -> c -> f b) -> Span -> a -> c -> f b
-f `on` s = flip whilstM (negateV s) . f
 
+-- |
+-- Transforms a lens of to a 'Transformable' type to act inside a transformation.
+--
+spanned :: (Transformable a, Transformable b) => Span -> Lens a b a b
+spanned s = flip whilstM (negateV s)
+
+-- |
+-- Transforms a lens of to a 'Transformable' type to act inside a transformation.
+--
+-- Designed to be used infix, as in
+--
+-- @
+-- l `on` (2 \<-> 3)
+-- @
+--
+on :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
+f `on` s = spanned s . f
+-- TODO name
 
 -- TODO move!
 deriving instance Functor Sum
