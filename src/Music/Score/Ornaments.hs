@@ -491,3 +491,14 @@ instance Reversible a => Reversible (TextT a) where
     rev = fmap rev
 instance Reversible a => Reversible (TremoloT a) where
     rev = fmap rev
+
+
+deriving instance Alterable a => Alterable (SlideT a)
+deriving instance Alterable a => Alterable (HarmonicT a)
+deriving instance Alterable a => Alterable (TextT a)
+deriving instance Alterable a => Alterable (TremoloT a)
+
+deriving instance Augmentable a => Augmentable (SlideT a)
+deriving instance Augmentable a => Augmentable (HarmonicT a)
+deriving instance Augmentable a => Augmentable (TextT a)
+deriving instance Augmentable a => Augmentable (TremoloT a)

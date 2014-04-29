@@ -73,31 +73,6 @@ instance Augmentable a => Augmentable (b, a) where
     augment = fmap augment
     diminish = fmap diminish
 
--- instance IsPitch a => IsPitch (DynamicT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (DynamicT a) where
---     fromDynamics = return . fromDynamics
--- 
--- instance IsPitch a => IsPitch (ArticulationT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (ArticulationT a) where
---     fromDynamics = return . fromDynamics
--- 
--- -------------------------------------------------------------------------------------
--- 
--- instance Transformable a => Transformable (DynamicT a) where
---     transform s = fmap (transform s)
--- instance Transformable a => Transformable (ArticulationT a) where
---     transform s = fmap (transform s)
-
-
--- -------------------------------------------------------------------------------------
--- 
--- instance Reversible a => Reversible (DynamicT a) where
---     rev = fmap rev
--- instance Reversible a => Reversible (ArticulationT a) where
---     rev = fmap rev
-
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Semigroup a => Semigroup (DynamicT a) where
@@ -117,8 +92,8 @@ instance Semigroup a => Semigroup (TremoloT a) where
     (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (PartT n a) where
     PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
--- 
--- 
+
+
 -- -------------------------------------------------------------------------------------
 
 --
@@ -136,9 +111,6 @@ instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
 
 -- -------------------------------------------------------------------------------------
 
-
-
-
 deriving instance HasTremolo a => HasTremolo (PartT n a)
 deriving instance HasHarmonic a => HasHarmonic (PartT n a)
 deriving instance HasSlide a => HasSlide (PartT n a)
@@ -150,38 +122,6 @@ deriving instance HasHarmonic a => HasHarmonic (TieT a)
 deriving instance HasSlide a => HasSlide (TieT a)
 deriving instance HasText a => HasText (TieT a)
 
--- 
--- 
--- -- DynamicT
--- 
--- -- end cresc/dim, level, begin cresc/dim
--- -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
--- 
--- instance Tiable a => Tiable (DynamicT a) where
---     toTied (DynamicT (l, a)) = (DynamicT (l, b), DynamicT (mempty, c)) where (b,c) = toTied a
--- 
--- deriving instance HasTremolo a => HasTremolo (DynamicT a)
--- deriving instance HasHarmonic a => HasHarmonic (DynamicT a)
--- deriving instance HasSlide a => HasSlide (DynamicT a)
--- deriving instance HasText a => HasText (DynamicT a)
--- 
--- 
--- -- ArticulationT
--- 
--- -- end slur, cont slur, acc level, stacc level, begin slur
--- -- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
--- 
--- 
--- instance Tiable a => Tiable (ArticulationT a) where
---     toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
--- 
--- deriving instance HasTremolo a => HasTremolo (ArticulationT a)
--- deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
--- deriving instance HasSlide a => HasSlide (ArticulationT a)
--- deriving instance HasText a => HasText (ArticulationT a)
--- 
--- -- TremoloT
--- 
 instance Tiable a => Tiable (TremoloT a) where
     toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
 
@@ -189,74 +129,52 @@ type instance Part (TremoloT a)                          = Part a
 deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
 deriving instance HasSlide a => HasSlide (TremoloT a)
 deriving instance HasText a => HasText (TremoloT a)
--- 
--- 
--- -- TextT
--- 
+
+
+-- TextT
+
 instance Tiable a => Tiable (TextT a) where
     toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
 deriving instance HasSlide a => HasSlide (TextT a)
--- 
--- 
--- -- HarmonicT
--- 
+
+
+-- HarmonicT
+
 instance Tiable a => Tiable (HarmonicT a) where
     toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
 deriving instance HasSlide a => HasSlide (HarmonicT a)
 deriving instance HasText a => HasText (HarmonicT a)
--- 
--- 
--- -- SlideT
--- 
--- 
+
+
+-- SlideT
+
+
 instance Tiable a => Tiable (SlideT a) where
     toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)
--- 
--- 
--- 
--- -------------------------------------------------------------------------------------
--- -- Literal instances
--- -------------------------------------------------------------------------------------
--- 
+
+
+
+-------------------------------------------------------------------------------------
+-- Literal instances
+-------------------------------------------------------------------------------------
 
 
 instance Alterable a => Alterable (Score a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
-
-deriving instance Alterable a => Alterable (SlideT a)
 deriving instance Alterable a => Alterable (TieT a)
-deriving instance Alterable a => Alterable (HarmonicT a)
--- instance Alterable a => Alterable (ArticulationT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
-deriving instance Alterable a => Alterable (TextT a)
-deriving instance Alterable a => Alterable (TremoloT a)
 deriving instance Alterable a => Alterable (PartT n a)
+
 instance Augmentable a => Augmentable (Score a) where
     augment = fmap augment
     diminish = fmap diminish
-
--- instance Augmentable a => Augmentable (DynamicT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
-deriving instance Augmentable a => Augmentable (SlideT a)
 deriving instance Augmentable a => Augmentable (TieT a)
-deriving instance Augmentable a => Augmentable (HarmonicT a)
--- instance Augmentable a => Augmentable (ArticulationT a) where
---     augment = fmap augment
---     diminish = fmap diminish
-
-deriving instance Augmentable a => Augmentable (TextT a)
-deriving instance Augmentable a => Augmentable (TremoloT a)
 deriving instance Augmentable a => Augmentable (PartT n a)
 -- 
 -- 
@@ -301,101 +219,8 @@ instance Bounded a => Bounded [a] where
     minBound = [minBound]
     maxBound = [maxBound]
 
--- 
--- 
--- -- DynamicT
--- 
--- instance Num a => Num (DynamicT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (DynamicT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (DynamicT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (DynamicT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (DynamicT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (DynamicT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (DynamicT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
--- 
--- 
--- -- ArticulationT
--- 
--- instance Num a => Num (ArticulationT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (ArticulationT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (ArticulationT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (ArticulationT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . get1
--- 
--- instance Bounded a => Bounded (ArticulationT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (ArticulationT a) where
---     toRational = toRational . get1
--- 
--- instance (Real a, Enum a, Integral a) => Integral (ArticulationT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . get1
--- 
+
+
 
 -- TODO replace with (^?!), extract or similar
 get1 = head . toList
@@ -405,3 +230,71 @@ fmaps f x = ((fst . f) <$> x, (snd . f) <$> x)
 
 liftsA2 :: Applicative f => (a -> b -> (c, d)) -> f a -> f b -> (f a, f b)
 liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))
+
+
+
+
+-- 
+-- 
+-- -- DynamicT
+-- 
+-- -- end cresc/dim, level, begin cresc/dim
+-- -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
+-- 
+-- instance Tiable a => Tiable (DynamicT a) where
+--     toTied (DynamicT (l, a)) = (DynamicT (l, b), DynamicT (mempty, c)) where (b,c) = toTied a
+-- 
+-- deriving instance HasTremolo a => HasTremolo (DynamicT a)
+-- deriving instance HasHarmonic a => HasHarmonic (DynamicT a)
+-- deriving instance HasSlide a => HasSlide (DynamicT a)
+-- deriving instance HasText a => HasText (DynamicT a)
+-- 
+-- 
+-- -- ArticulationT
+-- 
+-- -- end slur, cont slur, acc level, stacc level, begin slur
+-- -- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
+-- 
+-- 
+-- instance Tiable a => Tiable (ArticulationT a) where
+--     toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
+-- 
+-- deriving instance HasTremolo a => HasTremolo (ArticulationT a)
+-- deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
+-- deriving instance HasSlide a => HasSlide (ArticulationT a)
+-- deriving instance HasText a => HasText (ArticulationT a)
+-- 
+-- -- TremoloT
+-- 
+
+-- instance IsPitch a => IsPitch (DynamicT a) where
+--     fromPitch = pure . fromPitch
+-- instance IsDynamics a => IsDynamics (DynamicT a) where
+--     fromDynamics = return . fromDynamics
+-- 
+-- instance IsPitch a => IsPitch (ArticulationT a) where
+--     fromPitch = pure . fromPitch
+-- instance IsDynamics a => IsDynamics (ArticulationT a) where
+--     fromDynamics = return . fromDynamics
+-- 
+-- instance Transformable a => Transformable (DynamicT a) where
+--     transform s = fmap (transform s)
+-- instance Transformable a => Transformable (ArticulationT a) where
+--     transform s = fmap (transform s)
+--
+-- instance Reversible a => Reversible (DynamicT a) where
+--     rev = fmap rev
+-- instance Reversible a => Reversible (ArticulationT a) where
+--     rev = fmap rev
+
+-- instance Alterable a => Alterable (ArticulationT a) where
+--     sharpen = fmap sharpen
+--     flatten = fmap flatten
+-- 
+-- instance Augmentable a => Augmentable (DynamicT a) where
+--     augment = fmap augment
+--     diminish = fmap diminish
+-- 
+-- instance Augmentable a => Augmentable (ArticulationT a) where
+--     augment = fmap augment
+--     diminish = fmap diminish
