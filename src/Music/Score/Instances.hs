@@ -61,26 +61,6 @@ import           Music.Score.Util
 
 -------------------------------------------------------------------------------------
 
-{-
-    Rewrite pairs:
-
-    CANNOT DO
-        ChordT
-    TODO
-        PartT
-
-    DONE
-        DynamicT
-        TieT
-        ArticulationT
-        TremoloT
-        HarmonicT
-        TextT
-        SlideT
-
-
--}
-
 
 instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
     fromPitch l                                     = PartT (toEnum 0, fromPitch l)
@@ -92,11 +72,6 @@ instance IsPitch a => IsPitch [a] where
 instance IsDynamics a => IsDynamics [a] where
     fromDynamics = return . fromDynamics
 
--- instance IsPitch a => IsPitch (ChordT a) where
---     fromPitch = return . fromPitch
--- instance IsDynamics a => IsDynamics (ChordT a) where
---     fromDynamics = return . fromDynamics
--- 
 instance IsPitch a => IsPitch (TieT a) where
     fromPitch = pure . fromPitch
 instance IsDynamics a => IsDynamics (TieT a) where
@@ -129,8 +104,6 @@ instance IsDynamics a => IsDynamics (SlideT a) where
 
 -- -------------------------------------------------------------------------------------
 -- 
--- instance Transformable (ChordT a) where
---     transform s = id
 -- instance Transformable a => Transformable (DynamicT a) where
 --     transform s = fmap (transform s)
 instance Transformable a => Transformable (SlideT a) where
@@ -151,8 +124,6 @@ instance Transformable a => Transformable (TremoloT a) where
 
 -- -------------------------------------------------------------------------------------
 -- 
--- instance Reversible (ChordT a) where
---     rev = id
 -- instance Reversible a => Reversible (DynamicT a) where
 --     rev = fmap rev
 instance Reversible a => Reversible (SlideT a) where
@@ -180,7 +151,7 @@ instance Semigroup a => Semigroup (SlideT a) where
 instance Semigroup a => Semigroup (TieT a) where
     TieT (t1, x1) <> TieT (t2, x2) = TieT (t1 <> t2, x1 <> x2)
     -- This instance is suspect: in general chord notes are not required to share ties,
-    -- so this instance may be removed (provided that TieT is moved inside ChordT for
+    -- so this instance may be removed (provided that TieT is moved inside Chord for
     -- all Preludes). See #134
 instance Semigroup a => Semigroup (HarmonicT a) where
     (<>) = liftA2 (<>)
@@ -273,8 +244,13 @@ deriving instance HasText a => HasText (PartT n a)
 --     setEndSlide   n = fmap (setEndSlide n)
 -- instance HasText a => HasText (ChordT a) where
 --     addText       s (ChordT as) = ChordT (mapF (addText s) as)
--- 
--- 
+
+
+
+
+
+
+
 -- -- TieT
 -- 
 -- type instance Part (TieT a) = Part a
@@ -476,19 +452,11 @@ deriving instance HasText a => HasText (SlideT a)
 instance Alterable a => Alterable (Score a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
--- 
--- instance Alterable a => Alterable (ChordT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
--- instance Alterable a => Alterable (DynamicT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
+
 instance Alterable a => Alterable (SlideT a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
--- 
+
 instance Alterable a => Alterable (TieT a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
@@ -517,10 +485,6 @@ instance Augmentable a => Augmentable (Score a) where
     augment = fmap augment
     diminish = fmap diminish
 
--- instance Augmentable a => Augmentable (ChordT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
 -- instance Augmentable a => Augmentable (DynamicT a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
@@ -584,16 +548,10 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
     PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
     toInteger (PartT (v,a)) = toInteger a
 
--- []
-
--- instance Num a => Num (ChordT a) where
---     ChordT [a] + ChordT [b]   = ChordT [a+b]
---     ChordT [a] * ChordT [b]   = ChordT [a*b]
---     ChordT [a] - ChordT [b]   = ChordT [a-b]
---     abs (ChordT [a])          = ChordT [abs a]
---     signum (ChordT [a])       = ChordT [signum a]
---     fromInteger a             = ChordT [fromInteger a]
-
+-- 
+-- TODO suspect instances
+-- We should remove both these after replacing [] by Chord in Preludes
+-- 
 instance Enum a => Enum [a] where
     toEnum a       = [toEnum a]
     fromEnum ([a]) = fromEnum a
@@ -602,39 +560,7 @@ instance Bounded a => Bounded [a] where
     minBound = [minBound]
     maxBound = [maxBound]
 
--- instance (Num a, Ord a, Real a) => Real (ChordT a) where
---     toRational (ChordT [a]) = toRational a
 
--- instance (Real a, Enum a, Integral a) => Integral (ChordT a) where
---     ChordT [a] `quotRem` ChordT [b] = (ChordT [q], ChordT [r]) where (q,r) = a `quotRem` b
---     toInteger (ChordT [a]) = toInteger a
-
--- -- ChordT
--- 
--- -- instance Num a => Num (ChordT a) where
--- --     ChordT [a] + ChordT [b]   = ChordT [a+b]
--- --     ChordT [a] * ChordT [b]   = ChordT [a*b]
--- --     ChordT [a] - ChordT [b]   = ChordT [a-b]
--- --     abs (ChordT [a])          = ChordT [abs a]
--- --     signum (ChordT [a])       = ChordT [signum a]
--- --     fromInteger a             = ChordT [fromInteger a]
--- 
--- instance Enum a => Enum (ChordT a) where
---     toEnum a                  = ChordT [toEnum a]
---     fromEnum (ChordT [a])     = fromEnum a
--- 
--- instance Bounded a => Bounded (ChordT a) where
---     minBound = ChordT [minBound]
---     maxBound = ChordT [maxBound]
--- 
--- -- instance (Num a, Ord a, Real a) => Real (ChordT a) where
--- --     toRational (ChordT [a]) = toRational a
--- 
--- -- instance (Real a, Enum a, Integral a) => Integral (ChordT a) where
--- --     ChordT [a] `quotRem` ChordT [b] = (ChordT [q], ChordT [r]) where (q,r) = a `quotRem` b
--- --     toInteger (ChordT [a]) = toInteger a
--- 
--- 
 -- TieT
 
 instance Num a => Num (TieT a) where
