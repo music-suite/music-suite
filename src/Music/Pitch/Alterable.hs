@@ -58,3 +58,7 @@ instance Integral a => Alterable (Ratio a) where
 instance Alterable a => Alterable [a] where
     sharpen = fmap sharpen
     flatten = fmap flatten
+
+instance Alterable a => Alterable (b, a) where
+    sharpen = fmap sharpen
+    flatten = fmap flatten

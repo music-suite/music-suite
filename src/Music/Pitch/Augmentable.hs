@@ -54,3 +54,8 @@ instance Integral a => Augmentable (Ratio a) where
 instance Augmentable a => Augmentable [a] where
     augment = fmap augment
     diminish = fmap diminish
+
+instance Augmentable a => Augmentable (b, a) where
+    augment = fmap augment
+    diminish = fmap diminish
+
