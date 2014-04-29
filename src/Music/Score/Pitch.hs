@@ -61,8 +61,13 @@ module Music.Score.Pitch (
         -- ** Accessing pitch
         HasPitches(..),
         HasPitch(..),
+        -- ** Simple versions
+        HasPitches',
+        HasPitch',
         pitch',
         pitches',
+        -- ** Converting pitch to container
+        fromPitch',
         -- * Manipulating pitch
         -- ** Transposition
         up,
@@ -249,6 +254,11 @@ class (Transformable (Pitch s),
   --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
+type HasPitch' a = HasPitch a a
+
+type HasPitches' a = HasPitches a a
+
+
 -- |
 -- Pitch type.
 --
@@ -262,6 +272,13 @@ pitch' = pitch
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
+
+
+-- TODO flip name of this and Literal.fromPitch (or call that fromPitchL)
+fromPitch' :: (HasPitch' a, IsPitch a) => Pitch a -> a
+fromPitch' x = c & pitch' .~ x
+{-# INLINE fromPitch' #-}
+
 
 #define PRIM_PITCH_INSTANCE(TYPE)       \
                                         \
