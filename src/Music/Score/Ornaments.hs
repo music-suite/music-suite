@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
@@ -66,6 +67,14 @@ import           Music.Time
 class HasTremolo a where
     setTrem :: Int -> a -> a
 
+instance HasTremolo b => HasTremolo (a, b) where
+    setTrem n = fmap (setTrem n)
+
+instance HasTremolo a => HasTremolo (Score a) where
+    setTrem n = fmap (setTrem n)
+
+
+
 newtype TremoloT a = TremoloT { getTremoloT :: (Max Word, a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 -- 
@@ -83,11 +92,54 @@ instance Rewrapped (TremoloT a) (TremoloT b)
 instance HasTremolo (TremoloT a) where
     setTrem n (TremoloT (_,x)) = TremoloT (Max $ fromIntegral n,x)
 
-instance HasTremolo b => HasTremolo (a, b) where
-    setTrem n = fmap (setTrem n)
+-- Lifted instances
 
-instance HasTremolo a => HasTremolo (Score a) where
-    setTrem n = fmap (setTrem n)
+instance Num a => Num (TremoloT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TremoloT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TremoloT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TremoloT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TremoloT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TremoloT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
+
+
+
 
 
 
@@ -99,6 +151,13 @@ class HasText a where
 newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
+instance HasText a => HasText (b, a) where
+    addText       s                                 = fmap (addText s)
+
+instance HasText a => HasText (Score a) where
+    addText       s                                 = fmap (addText s)
+
+
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TextT a) where
   type Unwrapped (TextT a) = ([String], a)
@@ -109,11 +168,51 @@ instance Rewrapped (TextT a) (TextT b)
 instance HasText (TextT a) where
     addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
 
-instance HasText a => HasText (b, a) where
-    addText       s                                 = fmap (addText s)
+-- Lifted instances
 
-instance HasText a => HasText (Score a) where
-    addText       s                                 = fmap (addText s)
+instance Num a => Num (TextT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (TextT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (TextT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (TextT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (TextT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (TextT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (TextT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 
 
@@ -127,6 +226,15 @@ class HasHarmonic a where
 newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Any, Sum Int), a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
 
+instance HasHarmonic a => HasHarmonic (b, a) where
+    setNatural b = fmap (setNatural b)
+    setHarmonic n = fmap (setHarmonic n)
+
+instance HasHarmonic a => HasHarmonic (Score a) where
+    setNatural b = fmap (setNatural b)
+    setHarmonic n = fmap (setHarmonic n)
+
+
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (HarmonicT a) where
   type Unwrapped (HarmonicT a) = ((Any, Sum Int), a)
@@ -138,13 +246,52 @@ instance HasHarmonic (HarmonicT a) where
     setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((Any b,n),x)
     setHarmonic n (HarmonicT ((nat,_),x)) = HarmonicT ((nat,Sum n),x)
 
-instance HasHarmonic a => HasHarmonic (b, a) where
-    setNatural b = fmap (setNatural b)
-    setHarmonic n = fmap (setHarmonic n)
+-- Lifted instances
 
-instance HasHarmonic a => HasHarmonic (Score a) where
-    setNatural b = fmap (setNatural b)
-    setHarmonic n = fmap (setHarmonic n)
+instance Num a => Num (HarmonicT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (HarmonicT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (HarmonicT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (HarmonicT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (HarmonicT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
+                                        
 
 
 
@@ -153,6 +300,19 @@ class HasSlide a where
     setBeginSlide :: Bool -> a -> a
     setEndGliss   :: Bool -> a -> a
     setEndSlide   :: Bool -> a -> a
+
+instance HasSlide a => HasSlide (b, a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
+
+instance HasSlide a => HasSlide (Score a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
+
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
@@ -177,17 +337,51 @@ instance HasSlide (SlideT a) where
     setEndGliss   x = eg .~ Any x
     setEndSlide   x = es .~ Any x
 
-instance HasSlide a => HasSlide (b, a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+-- Lifted instances
 
-instance HasSlide a => HasSlide (Score a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+instance Num a => Num (SlideT a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance Fractional a => Fractional (SlideT a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance Floating a => Floating (SlideT a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance Enum a => Enum (SlideT a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance Bounded a => Bounded (SlideT a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+instance (Num a, Ord a, Real a) => Real (SlideT a) where
+    toRational = toRational . get1
+
+instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
+    quot = liftA2 quot
+    rem = liftA2 rem
+    toInteger = toInteger . get1
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
@@ -232,4 +426,8 @@ artificial =  setNatural False . setHarmonic 3
 mapPhraseWise3 :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
 mapPhraseWise3 f _ _ = fmap f
 -- TODO
+
+
+-- TODO replace with (^?!), extract or similar
+get1 = head . toList
 
