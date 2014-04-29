@@ -455,46 +455,24 @@ get1 = head . toList
 
 
 
-instance IsPitch a => IsPitch (TremoloT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (TremoloT a) where
-    fromDynamics = pure . fromDynamics
+deriving instance IsPitch a => IsPitch (TremoloT a)
+deriving instance IsDynamics a => IsDynamics (TremoloT a)
+deriving instance IsPitch a => IsPitch (TextT a)
+deriving instance IsDynamics a => IsDynamics (TextT a)
+deriving instance IsPitch a => IsPitch (HarmonicT a)
+deriving instance IsDynamics a => IsDynamics (HarmonicT a)
+deriving instance IsPitch a => IsPitch (SlideT a)
+deriving instance IsDynamics a => IsDynamics (SlideT a)
 
-instance IsPitch a => IsPitch (TextT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (TextT a) where
-    fromDynamics = pure . fromDynamics
+deriving instance Transformable a => Transformable (SlideT a)
+deriving instance Transformable a => Transformable (HarmonicT a)
+deriving instance Transformable a => Transformable (TextT a)
+deriving instance Transformable a => Transformable (TremoloT a)
 
-instance IsPitch a => IsPitch (HarmonicT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (HarmonicT a) where
-    fromDynamics = pure . fromDynamics
-
-instance IsPitch a => IsPitch (SlideT a) where
-    fromPitch = pure . fromPitch
-instance IsDynamics a => IsDynamics (SlideT a) where
-    fromDynamics = pure . fromDynamics
-
-
-instance Transformable a => Transformable (SlideT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (HarmonicT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (TextT a) where
-    transform s = fmap (transform s)
-instance Transformable a => Transformable (TremoloT a) where
-    transform s = fmap (transform s)
-
-
-instance Reversible a => Reversible (SlideT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (HarmonicT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (TextT a) where
-    rev = fmap rev
-instance Reversible a => Reversible (TremoloT a) where
-    rev = fmap rev
-
+deriving instance Reversible a => Reversible (SlideT a)
+deriving instance Reversible a => Reversible (HarmonicT a)
+deriving instance Reversible a => Reversible (TextT a)
+deriving instance Reversible a => Reversible (TremoloT a)
 
 deriving instance Alterable a => Alterable (SlideT a)
 deriving instance Alterable a => Alterable (HarmonicT a)
@@ -505,3 +483,4 @@ deriving instance Augmentable a => Augmentable (SlideT a)
 deriving instance Augmentable a => Augmentable (HarmonicT a)
 deriving instance Augmentable a => Augmentable (TextT a)
 deriving instance Augmentable a => Augmentable (TremoloT a)
+
