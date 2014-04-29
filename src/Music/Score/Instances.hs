@@ -59,20 +59,6 @@ import           Music.Score.Rhythm
 import           Music.Score.Ties
 import           Music.Score.Util
 
--------------------------------------------------------------------------------------
-
--- TODO move to pitch-literal
-instance IsPitch a => IsPitch [a] where
-    fromPitch = return . fromPitch
-instance IsDynamics a => IsDynamics [a] where
-    fromDynamics = return . fromDynamics
-instance Alterable a => Alterable (b, a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
-instance Augmentable a => Augmentable (b, a) where
-    augment = fmap augment
-    diminish = fmap diminish
-
 -- -------------------------------------------------------------------------------------
 -- 
 -- instance Semigroup a => Semigroup (DynamicT a) where

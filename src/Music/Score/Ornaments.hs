@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -65,6 +66,8 @@ import           Music.Score.Part
 import           Music.Time
 import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
 
 class HasTremolo a where
     setTrem :: Int -> a -> a
