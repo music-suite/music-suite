@@ -155,8 +155,11 @@ getNote = lens runNote (flip $ mapNote . const)
 
 fromNote = from note
 
-event :: Lens (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-event = from note . alongside delta id . tripped
+-- |
+-- View a note as an events, i.e. a time-duration-value triplet. 
+--
+event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+event = from note . bimapping delta id . tripped
 
 
 
