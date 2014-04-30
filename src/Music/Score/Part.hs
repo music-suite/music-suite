@@ -57,6 +57,8 @@ module Music.Score.Part (
         part',
         parts',
         -- * Manipulating parts (TODO)
+        extracted,
+        extracted',
         allParts,
         extractPart,
         extractParts,
@@ -238,6 +240,13 @@ filterPart p = mfilter (\x -> p (x ^. part))
                                                     
 extractParts' :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractParts' x = zip (allParts x) (extractParts x)
+
+extracted :: (Ord (Part a), HasPart' a) => Iso' (Score a) [Score a]
+extracted = iso extractParts mconcat
+
+-- TODO what to use instead of elements to select parts?
+extracted' :: (Ord (Part a), HasPart' a) => Iso' (Score a) [(Part a, Score a)]
+extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts)
 
 
 
