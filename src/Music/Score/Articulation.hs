@@ -50,12 +50,15 @@ module Music.Score.Articulation (
         -- ** Articulation type functions
         Articulation,
         SetArticulation,
+        Accentuation,
+        Separation,
         -- ** Accessing articulation
         HasArticulations(..),
         HasArticulation(..),
         articulation',
         articulations',
         -- * Manipulating articulation        
+        Articulated,
         accent,
         marcato,
         accentLast,
@@ -96,6 +99,8 @@ module Music.Score.Articulation (
 
 import           Control.Applicative
 import Control.Lens hiding (above, below, transform)
+import           Data.AffineSpace
+import           Data.VectorSpace        hiding (Sum)
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
@@ -200,6 +205,19 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstL articulations
 
 
+type family Accentuation (a :: *) :: *
+
+type family Separation (a :: *) :: *
+
+-- |
+-- Class of types that can be transposed, inverted and so on.
+--
+type Articulated a
+  = (HasArticulations a a, 
+     AffineSpace (Accentuation a), 
+     AffineSpace (Separation a))
+
+
 -- accent = error "Not implemented: accent"
 -- marcato = error "Not implemented: marcato"
 -- accentLast = error "Not implemented: accentLast"
@@ -213,18 +231,41 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
 -- portato = error "Not implemented: portato"
 -- legato = error "Not implemented: legato"
 -- spiccato = error "Not implemented: spiccato"
+accent :: Articulated a => a -> a
 accent = id
+
+marcato :: Articulated a => a -> a
 marcato = id
+
+accentLast :: Articulated a => a -> a
 accentLast = id
+
+marcatoLast :: Articulated a => a -> a
 marcatoLast = id
+
+accentAll :: Articulated a => a -> a
 accentAll = id
+
+marcatoAll :: Articulated a => a -> a
 marcatoAll = id
 
+
+tenuto :: Articulated a => a -> a
 tenuto = id
+
+separated :: Articulated a => a -> a
 separated = id
+
+staccato :: Articulated a => a -> a
 staccato = id
+
+portato :: Articulated a => a -> a
 portato = id
+
+legato :: Articulated a => a -> a
 legato = id
+
+spiccato :: Articulated a => a -> a
 spiccato = id
 
 

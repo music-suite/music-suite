@@ -57,7 +57,6 @@ module Music.Score.Pitch (
         Pitch,
         SetPitch,
         Interval,
-        Transposable,
         -- ** Accessing pitch
         HasPitches(..),
         HasPitch(..),
@@ -70,6 +69,7 @@ module Music.Score.Pitch (
         fromPitch',
         -- * Manipulating pitch
         -- ** Transposition
+        Transposable,
         up,
         down,
         above,
