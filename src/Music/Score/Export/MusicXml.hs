@@ -58,7 +58,7 @@ import           Music.Pitch.Literal
 import           Music.Score.Articulation
 -- import           Music.Score.Chord
 import           Music.Score.Clef
-import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
+import           Music.Score.Convert (reactiveToVoice')
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Instances
@@ -338,11 +338,6 @@ spellMusicXml p = (
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
 type HasMusicXml2 a = (HasMusicXml a, Transformable a)
 
-
-
-
-
-
 {-
 foo
   :: (Semigroup a, Transformable a, HasClef a, HasMusicXml a) =>
@@ -354,11 +349,3 @@ foo barTimeSigs barDurations  = mvoiceToMusicXml barTimeSigs barDurations . temp
   where
     temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
 -}
-
-type MVoice a = Voice (Maybe a)
-toMVoice :: (Semigroup a, Transformable a) => Score a -> Voice (Maybe a)
-toMVoice = scoreToVoice . simultaneous    
-
-unvoice :: Voice b -> [(Duration, b)]
-unvoice = toListOf (stretcheds . traverse . from stretched)
--- unvoice = fmap (^. from stretched) . (^. stretcheds)

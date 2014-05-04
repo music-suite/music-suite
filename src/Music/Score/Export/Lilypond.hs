@@ -63,7 +63,7 @@ import           Data.VectorSpace             hiding (Sum)
 import           System.Process
 
 import           Music.Dynamics.Literal
-import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
+import           Music.Score.Convert (reactiveToVoice')
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 import           Music.Score.Clef
@@ -340,7 +340,7 @@ toLilypond sc =
                 addStaff . scatLilypond . uncurry addPartName
 
                 -- Main notation pipeline
-                . second (voiceToLilypond barTimeSigs barDurations . temporaryClefFix . scoreToVoice . simultaneous)
+                . second (voiceToLilypond barTimeSigs barDurations . temporaryClefFix . toMVoice)
 
                 -- Meta-event expansion
                 . uncurry addClefs
@@ -449,7 +449,3 @@ spellLilypond' p = Lilypond.Pitch (
 -- TODO remove
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
 type HasLilypond2 a = (HasLilypond a, Transformable a)
-
-unvoice :: Voice b -> [(Duration, b)]
-unvoice = toListOf (stretcheds . traverse . from stretched)
--- unvoice = fmap (^. from stretched) . (^. stretcheds)

@@ -21,7 +21,10 @@ module Music.Score.Export.Common (
         -- separateBars,
         spellPitch,
         toRelative,
-  ) where
+        MVoice,
+        toMVoice,
+        unvoice,
+          ) where
 
 import           Prelude                  hiding (concat, concatMap, foldl,
                                            foldr, mapM, maximum, minimum, sum)
@@ -45,6 +48,7 @@ import           Data.Traversable
 import           Data.Typeable
 import           Data.VectorSpace
 
+import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 import           Music.Score.Articulation
 import           Music.Score.Dynamics
 import           Music.Score.Part
@@ -97,3 +101,11 @@ spellPitch p = (
                 add a x = (a + x, a + x)
         major = scaleFromSteps [0,2,2,1,2,2,2,1]
 
+
+type MVoice a = Voice (Maybe a)
+toMVoice :: (Semigroup a, Transformable a) => Score a -> Voice (Maybe a)
+toMVoice = scoreToVoice . simultaneous    
+
+unvoice :: Voice b -> [(Duration, b)]
+unvoice = toListOf (stretcheds . traverse . from stretched)
+-- unvoice = fmap (^. from stretched) . (^. stretcheds)
