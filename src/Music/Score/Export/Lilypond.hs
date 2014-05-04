@@ -360,7 +360,7 @@ toLilypond sc =
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ fmap (^. from stretched) $ (^. stretcheds) $ mergeEqualNotes $ reactiveToVoice' (0 <-> _offset sc) timeSigs
+        timeSigsV = fmap swap $ unvoice $ mergeEqualNotes $ reactiveToVoice' (0 <-> _offset sc) timeSigs
 
         -- Despite mergeEqualNotes above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
@@ -449,3 +449,7 @@ spellLilypond' p = Lilypond.Pitch (
 -- TODO remove
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
 type HasLilypond2 a = (HasLilypond a, Transformable a)
+
+unvoice :: Voice b -> [(Duration, b)]
+unvoice = toListOf (stretcheds . traverse . from stretched)
+-- unvoice = fmap (^. from stretched) . (^. stretcheds)
