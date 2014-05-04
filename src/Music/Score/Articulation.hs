@@ -231,6 +231,12 @@ type Articulated a
 -- portato = error "Not implemented: portato"
 -- legato = error "Not implemented: legato"
 -- spiccato = error "Not implemented: spiccato"
+
+--
+-- TODO use phrase-wise traversal here
+-- The constraint becomes (HasVoices a b, Articulated b) ... or similar
+--
+
 accent :: Articulated a => a -> a
 accent = id
 
