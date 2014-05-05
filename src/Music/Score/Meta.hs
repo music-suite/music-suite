@@ -26,7 +26,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Meta2 (
+module Music.Score.Meta (
   module Music.Time.Meta,
 
 --         -- * Basic

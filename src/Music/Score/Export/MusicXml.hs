@@ -63,7 +63,7 @@ import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Instances
 import           Music.Score.Meta.Attribution
-import           Music.Score.Meta2
+import           Music.Score.Meta
 import           Music.Score.Meta.Clef
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title

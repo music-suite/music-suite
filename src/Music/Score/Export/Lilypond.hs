@@ -67,7 +67,7 @@ import           Music.Score.Convert (reactiveToVoice')
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 import           Music.Score.Clef
-import           Music.Score.Meta2
+import           Music.Score.Meta
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
 import           Music.Score.Instances
