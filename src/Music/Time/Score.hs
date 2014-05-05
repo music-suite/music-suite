@@ -83,7 +83,7 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Score.Meta
+import           Music.Time.Meta
 import           Music.Time.Juxtapose   (scat)
 import           Music.Time.Note
 import           Music.Time.Reverse

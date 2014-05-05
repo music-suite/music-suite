@@ -48,7 +48,6 @@ import           Music.Pitch.Literal
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Alterable
 import           Music.Time
-import           Music.Score.Meta
 import           Music.Score.Meta2
 import           Music.Score.Articulation
 import           Music.Score.Dynamics

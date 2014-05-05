@@ -60,7 +60,6 @@ library
                         Music.Time.Split
                         Music.Time.Reverse
                         Music.Time.Juxtapose
-
                         Music.Time.Stretched
                         Music.Time.Delayed
                         Music.Time.Note
@@ -74,14 +73,14 @@ library
                         Music.Time.Behavior
                         Music.Time.Reactive
                         Music.Time.Bound
+                        Music.Time.Meta
                         
                         Music.Score.Rhythm
                         Music.Score
-                        Music.Score.Meta2
                         Music.Score.Convert
                         Music.Score.Ties
                         Music.Score.Part
-                        Music.Score.Meta
+                        Music.Score.Meta2
                         Music.Score.Meta.Annotations
                         Music.Score.Meta.Attribution
                         Music.Score.Meta.Barline

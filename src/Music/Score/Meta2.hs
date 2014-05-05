@@ -27,6 +27,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta2 (
+  module Music.Time.Meta,
+
 --         -- * Basic
 --         -- note,
 --         -- rest,
@@ -117,7 +119,7 @@ import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
 
-import           Music.Score.Meta
+import           Music.Time.Meta
 import           Music.Score.Part
 import           Music.Score.Util
 import           Music.Time

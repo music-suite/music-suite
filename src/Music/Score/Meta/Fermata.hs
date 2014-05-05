@@ -60,7 +60,6 @@ import           Data.Void
 
 import           Music.Pitch.Literal
 import           Music.Score.Meta2
-import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util

@@ -32,7 +32,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Meta (
+module Music.Time.Meta (
         -- * Attributes
         IsAttribute,
         Attribute,

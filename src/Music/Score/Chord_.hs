@@ -62,7 +62,7 @@ import           Music.Score.Note
 import           Music.Score.Part
 import           Music.Score.Score
 import           Music.Score.Voice
-import           Music.Score.Meta
+import           Music.Score.MetX
 import           Music.Time
 
 class HasChord a where
