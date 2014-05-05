@@ -28,6 +28,9 @@
 
 ## Bad
 
+
+(All now adressed!)
+
 - Maybe we went slightly *too far* in the logical/presentational separation
 - It is absolutely right for barlines, fermatas, tempo etc but maybe not quite
   right for part/voice/subvoice separation. See above.
