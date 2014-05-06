@@ -27,6 +27,8 @@ library
                         semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
                         data-default,
+                        adjunctions,
+                        lens,
                         roman-numerals
     exposed-modules:    Music.Parts
                         -- Music.Parts.Strings

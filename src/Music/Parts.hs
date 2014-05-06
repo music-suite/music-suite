@@ -112,6 +112,10 @@ import Data.Default
 import Data.Semigroup
 import Data.Typeable
 import Data.Maybe
+import Data.Traversable (traverse)
+import Control.Lens (toListOf)
+import Data.Functor.Adjunction (unzipR)
+import Control.Applicative
 import Text.Numeral.Roman (toRoman)
 import qualified Data.List
 
@@ -238,8 +242,14 @@ instance Enum Part where
     toEnum x = Part Tutti (toEnum x) def
     fromEnum (Part solo instr subp) = fromEnum instr
 
+-- Semantics: Monoid (Option . First)
+instance Monoid Part where
+  mappend x _ = x
+  mempty = def
+instance Semigroup Part where
+  (<>) = mappend
 instance Default Part where
-    def = Part def def def
+  def = Part def def def
 
 -- | 
 -- @a \`containsPart\` b@ holds if the set of players represented by a is an improper subset of the 
@@ -675,12 +685,44 @@ gmPerc = [
         | Pno
 
 -}
+-- TODO move
+instance Num a => Num (Option a) where
+  (+)       = liftA2 (+)
+  (-)       = liftA2 (-)
+  (*)       = liftA2 (*)
+  abs       = fmap abs
+  signum    = fmap signum
+  fromInteger = pure . fromInteger
+instance Integral a => Integral (Option a) where
+  quotRem x y = unzipR $ liftA2 quotRem x y
+  toInteger = toInteger . get where get = (head.toListOf traverse)
+instance Real a => Real (Option a) where
+  toRational = toRational . get where get = (head.toListOf traverse)
+instance Enum a => Enum (Option a) where
+  fromEnum = fromEnum . get where get = (head.toListOf traverse)
+  toEnum = pure . toEnum
 
+instance Num a => Num (First a) where
+  (+)       = liftA2 (+)
+  (-)       = liftA2 (-)
+  (*)       = liftA2 (*)
+  abs       = fmap abs
+  signum    = fmap signum
+  fromInteger = pure . fromInteger
+instance Integral a => Integral (First a) where
+  quotRem x y = unzipR $ liftA2 quotRem x y
+  toInteger = toInteger . get where get = (head.toListOf traverse)
+instance Real a => Real (First a) where
+  toRational = toRational . get where get = (head.toListOf traverse)
+-- instance Enum a => Enum (First a) where
+  -- toEnum = toEnum . get where get = (head.toListOf traverse)
+  -- fromEnum = pure . fromEnum
 
-newtype BasicPart = BasicPart { getBasicPart :: Integer }
-    deriving (Eq, Ord, Num, Integral, Real, Enum, Typeable)
+newtype BasicPart = BasicPart { getBasicPart :: Option (First Integer) }
+    deriving (Eq, Ord, Num, Integral, Real, Enum, Typeable, Semigroup, Monoid)
 
-instance Default BasicPart where def = BasicPart 0
+instance Default BasicPart where
+  def = mempty
 
 instance Show BasicPart where
     show _ = ""
