@@ -292,8 +292,11 @@ instance Reversible a => Reversible (NScore a) where
   rev (NScore xs) = NScore (fmap rev xs)
 
 instance HasPosition (NScore a) where
-  _onset = Foldable.minimum . fmap _onset . view _Wrapped'
-  _offset = Foldable.maximum . fmap _offset . view _Wrapped'
+  _onset = minimum' . fmap _onset . view _Wrapped'
+  _offset = maximum' . fmap _offset . view _Wrapped'
+-- TODO clean
+minimum' xs = if null xs then 0 else minimum xs
+maximum' xs = if null xs then 0 else maximum xs
 
 instance HasDuration (NScore a) where
   _duration x = _offset x .-. _onset x
