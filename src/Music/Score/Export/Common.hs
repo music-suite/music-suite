@@ -24,6 +24,7 @@ module Music.Score.Export.Common (
         MVoice,
         toMVoice,
         unvoice,
+        openCommand
           ) where
 
 import           Prelude                  hiding (concat, concatMap, foldl,
