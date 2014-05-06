@@ -207,7 +207,7 @@ instance HasMusicXml a => HasMusicXml (Behavior a) where
 openMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 openMusicXml sc = do
     writeMusicXml "test.xml" sc
-    -- FIXME find out which program to use...
+    -- FIXME find out which program to use etc...
     void $ rawSystem "open" ["-a", "Sibelius 7", "test.xml"]
 
 -- |

@@ -321,7 +321,7 @@ openLilypond' options sc = do
 
 runLilypond    = void $ runCommand "lilypond -f pdf test.ly 2>/dev/null" >>= waitForProcess
 cleanLilypond  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-openLilypond'' = void $ runCommand "open test.pdf"
+openLilypond'' = void $ runCommand $ openCommand ++ " test.pdf"
 
 -- |
 -- Convert a score to a Lilypond string.

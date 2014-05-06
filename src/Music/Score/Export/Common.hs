@@ -63,12 +63,14 @@ import qualified Data.Map                 as Map
 import qualified Music.Lilypond           as Lilypond
 import qualified Music.MusicXml.Simple    as Xml
 import qualified Text.Pretty              as Pretty
+import qualified System.Info              as Info
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Util
 import           System.IO.Unsafe
 import           System.Process
+import           Control.Exception
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
@@ -110,3 +112,27 @@ toMVoice = scoreToVoice . simultaneous
 unvoice :: Voice b -> [(Duration, b)]
 unvoice = toListOf (stretcheds . traverse . from stretched)
 -- unvoice = fmap (^. from stretched) . (^. stretcheds)
+
+
+openCommand :: String
+openCommand = case Info.os of
+  "darwin" -> "open"
+  "linux"  -> "xdg-open"
+
+{-
+-- TODO any version and/or OS
+hasMuseScore = do 
+  result <- try (readProcess "ls" ["/Applications/MuseScore.app"] "")
+  return $ case result of
+    Left e   -> (e::SomeException) `assumed` False
+    Right _ ->  True
+
+hasSibelius = do 
+  result <- try (readProcess "ls" ["/Applications/Sibelius 7.app"] "")
+  return $ case result of
+    Left e   -> (e::SomeException) `assumed` False
+    Right _ ->  True
+
+
+assumed = flip const
+-}
