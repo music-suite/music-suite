@@ -6,7 +6,7 @@ The types used in the suite, and particularly in `music-score` are very generic.
 
 ### Don't panic
 
-It is *not* necessary to understand everything going on in the types.
+It is not necessary to understand *everything* going on in the types, but a general idea of what they mean is very helpful.
 
 ### Fix the types
 
