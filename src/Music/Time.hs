@@ -27,6 +27,7 @@ module Music.Time (
     module Music.Time.Split,
     module Music.Time.Reverse,
     module Music.Time.Juxtapose,
+    module Music.Time.Rest,
 
     -- * Time types
     -- ** Discrete time
@@ -53,6 +54,7 @@ import Music.Time.Position
 import Music.Time.Split
 import Music.Time.Reverse
 import Music.Time.Juxtapose
+import Music.Time.Rest
 
 import Music.Time.Stretched
 import Music.Time.Delayed
