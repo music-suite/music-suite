@@ -103,7 +103,8 @@ spellPitch p = (
 
 
 type MVoice a = Voice (Maybe a)
-toMVoice :: (Semigroup a, Transformable a) => Score a -> Voice (Maybe a)
+
+toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
 toMVoice = scoreToVoice . simultaneous    
 
 unvoice :: Voice b -> [(Duration, b)]
