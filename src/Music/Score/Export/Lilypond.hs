@@ -173,11 +173,82 @@ instance HasLilypond a => HasLilypond (TieT a) where
 type DynType = Behavior (Product Double)
 
 
+-- This is not used in the actual export
 instance (HasLilypond a) => HasLilypond (DynamicT DynType a) where
-  getLilypond d (DynamicT (n, a)) = getLilypond d a
+  getLilypond d (DynamicT (n, a)) = notate n $ getLilypond d a
+    where
+      notate n = Lilypond.addText (show n)
+
 
 instance (HasLilypond a) => HasLilypond (DynamicT (Ctxt DynType) a) where
-  getLilypond d (DynamicT (n, a)) = getLilypond d a
+  getLilypond d (DynamicT (n, a)) = notate (mapCtxt (! 0) n) $ getLilypond d a
+    where
+      notate ctxt = notateDD (extractCtxt ctxt) (dynamicDisplay ctxt)
+
+notateDD :: (Ord a, Real a) => a -> ([CrescDim], ShowDyn) -> Lilypond -> Lilypond
+notateDD lvl (cds, showLevel) = (composed $ fmap notateCrescDim cds) . notateLevel
+  where         
+    notateCrescDim x = case x of
+      NoCrescDim -> id
+      BeginCresc -> Lilypond.beginCresc
+      EndCresc   -> Lilypond.endCresc
+      BeginDim   -> Lilypond.beginDim
+      EndDim     -> Lilypond.endDim
+    
+    -- TODO these literals are not so nice...
+    notateLevel = if not showLevel then id else 
+        Lilypond.addDynamics (fromDynamics (DynamicsL (Just . fixLevel . realToFrac $ lvl, Nothing)))
+    
+
+
+
+fixLevel :: Double -> Double
+fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
+
+data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
+
+instance Monoid CrescDim where
+  mempty = NoCrescDim
+  mappend a _ = a
+
+type ShowDyn  = Bool
+
+mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
+mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
+
+extractCtxt :: Ctxt a -> a
+extractCtxt (_,x,_) = x
+
+-- Given a dynamic value and its context, decide:
+--   
+--   1) Whether we should begin or end a crescendo or diminuendo
+--   2) Whether we should display the current dynamic value
+--   
+dynamicDisplay :: (Ord a, Real a) => Ctxt a -> ([CrescDim], ShowDyn)
+dynamicDisplay x = case x of
+  (Nothing, y, Just z ) -> case (y `compare` z) of
+    LT      -> ([BeginCresc], True)
+    EQ      -> ([],           True)
+    GT      -> ([BeginDim],   True)
+  (Just x,  y, Just z ) -> case (x `compare` y, y `compare` z) of
+    (LT,LT) -> ([NoCrescDim], False)
+    (LT,EQ) -> ([EndCresc],   True)
+    (EQ,LT) -> ([BeginCresc], False{-True-})
+
+    (GT,GT) -> ([NoCrescDim], False)
+    (GT,EQ) -> ([EndDim],     True)
+    (EQ,GT) -> ([BeginDim],   False{-True-})
+
+    (EQ,EQ) -> ([],                   False)
+    (LT,GT) -> ([EndCresc, BeginDim], True)
+    (GT,LT) -> ([EndDim, BeginCresc], True)
+
+
+  (Just x,  y, Nothing) -> case (x `compare` y) of
+    LT      -> ([EndCresc],   True)
+    EQ      -> ([],           False)
+    GT      -> ([EndDim],     True)
+
 
     -- getLilypond d (DynamicT (n, a)) = notate $ getLilypond d a
     --   where
