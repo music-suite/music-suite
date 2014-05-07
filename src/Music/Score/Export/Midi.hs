@@ -140,8 +140,8 @@ instance HasMidi Integer                    where   getMidi x = getMidi (x,100::
 
 instance HasMidi a => HasMidi (PartT n a) where
     getMidi (PartT (_,a))                           = getMidi a
--- instance HasMidi a => HasMidi (DynamicT a) where
---     getMidi (DynamicT (_,a))                        = getMidi a
+instance HasMidi a => HasMidi (DynamicT d a) where
+    getMidi (DynamicT (_,a))                        = getMidi a
 -- instance HasMidi a => HasMidi (ArticulationT a) where
 --     getMidi (ArticulationT (_,a))                   = getMidi a
 -- 

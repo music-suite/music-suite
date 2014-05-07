@@ -124,7 +124,8 @@ instance HasMusicXml a => HasMusicXml (TieT a) where
                     | ta                            = Xml.endTie
                     | otherwise                     = id
 
--- instance HasMusicXml a => HasMusicXml (DynamicT a) where
+instance (Tiable d, HasMusicXml a) => HasMusicXml (DynamicT d a) where
+  getMusicXml d (DynamicT (_,a)) = getMusicXml d a
 --     getMusicXml d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getMusicXml d a
 --         where
 --             notate x = nec <> ned <> nl <> nbc <> nbd <> x

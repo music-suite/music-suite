@@ -586,8 +586,6 @@ type HasLilypond2 a = (
   )
 
 
-type Ctxt a = (Maybe a, a, Maybe a)
-
 addDynCon2 :: (
   HasDynamic a a, HasDynamic a b, 
   Dynamic b ~ Ctxt (Dynamic a),

@@ -65,6 +65,7 @@ module Music.Score.Dynamics (
         fadeOut,
 
         DynamicT(..),
+        Ctxt,
         addDynCon,
 
         -- -- * Dynamics representation
@@ -511,6 +512,9 @@ vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) =
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
 -- vdynamic = through dynamic dynamic
  
-addDynCon :: (HasPhrases s t a b, HasDynamic a a, HasDynamic a b, Dynamic a ~ d, Dynamic b ~ (Maybe d, d, Maybe d)) => s -> t
+addDynCon :: (HasPhrases s t a b, HasDynamic a a, HasDynamic a b, Dynamic a ~ d, Dynamic b ~ Ctxt d) => s -> t
 addDynCon = over (phrases.vdynamic) withContext
+
+type Ctxt a = (Maybe a, a, Maybe a)
+
 
