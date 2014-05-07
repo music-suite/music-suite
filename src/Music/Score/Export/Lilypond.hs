@@ -359,9 +359,9 @@ toLilypond sc =
         setClef = withClef def $ \c x -> applyClef c x where def = GClef -- TODO use part default
 
         timeSigs = getTimeSignatures (time 4 4) sc -- 4/4 is default
-        timeSigsV = fmap swap $ unvoice $ mergeEqualNotes $ reactiveToVoice' (0 <-> _offset sc) timeSigs
+        timeSigsV = fmap swap $ unvoice $ fuse $ reactiveToVoice' (0 <-> _offset sc) timeSigs
 
-        -- Despite mergeEqualNotes above we need retainUpdates here to prevent redundant repetition of time signatures
+        -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
         barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
         barDurations =                 getBarDurations      $ timeSigsV
 

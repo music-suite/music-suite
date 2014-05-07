@@ -43,8 +43,8 @@ module Music.Time.Voice (
     zipVoice,
     zipVoiceWith,
     dzipVoiceWith,
-    mergeEqualNotes,
-    mergeEqualNotesBy,
+    fuse,
+    fuseBy,
 
     -- mapDurations, -- ([Duration] -> [Duration]) -> Voice a -> Voice a
     -- mapPitches,   -- ([Pitch a]  -> [Pitch a])  -> Voice a -> Voice a
@@ -254,14 +254,14 @@ voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . ma
 -- |
 -- Merge consecutive equal notes.
 --
-mergeEqualNotes :: Eq a => Voice a -> Voice a
-mergeEqualNotes = mergeEqualNotesBy (==)
+fuse :: Eq a => Voice a -> Voice a
+fuse = fuseBy (==)
   
-mergeEqualNotesBy :: (a -> a -> Bool) -> Voice a -> Voice a
-mergeEqualNotesBy p = mergeEqualNotesBy' p head
+fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
+fuseBy p = fuseBy' p head
 
-mergeEqualNotesBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-mergeEqualNotesBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
+fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     -- Typically, the combination function us just 'head', as we know that group returns

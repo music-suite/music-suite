@@ -268,7 +268,7 @@ toMusicXml sc =
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
-        timeSigs = fmap swap $ unvoice $ mergeEqualNotes 
+        timeSigs = fmap swap $ unvoice $ fuse 
           $ reactiveToVoice' (0 <-> _offset sc) $ getTimeSignatures def sc
           where
             def = 4/4
