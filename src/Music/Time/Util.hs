@@ -317,8 +317,15 @@ mapWithPrev f = map (uncurry f) . withPrev
 mapWithPrevNext :: (Maybe a -> a -> Maybe a -> b) -> [a] -> [b]
 mapWithPrevNext f = map (uncurry3 f) . withPrevNext
 
-
-
+-- |
+-- Rotate a list.
+--
+-- > rotate n xs == id iff (n `mod` length xs) == 0
+-- > rotate (-n) . rotate n == id
+rotate :: Int -> [a] -> [a]
+rotate n xs = drop n' xs ++ take n' xs
+  where
+    n' = negate n `mod` length xs
 
 --------
 

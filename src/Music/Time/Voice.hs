@@ -48,9 +48,17 @@ module Music.Time.Voice (
     -- ** Zips
     zipVoice,
     zipVoiceWith,
-    dzipVoiceWith,
+    -- dzipVoiceWith,
+    zipVoiceWith',
     fuse,
     fuseBy,
+
+    vrhythm,
+    vvalues,
+    rotateRhythm,
+    rotateValues,
+    reverseRhythm,
+    reverseValues,
 
     -- mapDurations, -- ([Duration] -> [Duration]) -> Voice a -> Voice a
     -- mapPitches,   -- ([Pitch a]  -> [Pitch a])  -> Voice a -> Voice a
@@ -257,7 +265,7 @@ zipVoice = zipVoiceWith (,)
 -- Join the given voices by multiplying durations and combining values using the given function.
 --
 zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith  = error "Not implemented: zipVoiceWith"
+zipVoiceWith = zipVoiceWith' (*)
 
 -- |
 -- Join the given voices by combining durations and values using the given function.
@@ -286,6 +294,56 @@ fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy 
     -- Typically, the combination function us just 'head', as we know that group returns
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
+
+
+
+zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
+
+-- TODO more elegant definition using indexed traversal or similar?
+vrhythm :: Lens' (Voice a) [Duration]
+vrhythm = lens getDurs (flip setDurs)
+  where
+    getDurs :: Voice a -> [Duration]
+    getDurs = map fst . view eventsV
+
+    setDurs :: [Duration] -> Voice a -> Voice a
+    setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
+
+    durToVoice d = stretch d $ pure ()
+
+-- TODO more elegant definition using indexed traversal or similar?
+vvalues :: Lens' (Voice a) [a]
+vvalues = lens getValues (flip setValues)
+  where
+    getValues :: Voice a -> [a]
+    getValues = map snd . view eventsV
+
+    setValues :: [a] -> Voice a -> Voice a
+    setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
+
+    listToVoice = mconcat . map pure
+
+rotateRhythm :: Int -> Voice a -> Voice a
+rotateRhythm n = over vrhythm (rotate n)
+
+rotateValues :: Int -> Voice a -> Voice a
+rotateValues n = over vvalues (rotate n)
+
+reverseRhythm :: Voice a -> Voice a
+reverseRhythm = over vrhythm reverse
+
+reverseValues :: Voice a -> Voice a
+reverseValues = over vvalues reverse
+
+
+zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith' f g
+  ((unzip.view eventsV) -> (ad, as))
+  ((unzip.view eventsV) -> (bd, bs))
+  = let cd = zipWith f ad bd
+        cs = zipWith g as bs
+     in view (from unsafeEventsV) (zip cd cs)
 
 --
 -- TODO
