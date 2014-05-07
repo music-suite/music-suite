@@ -65,6 +65,7 @@ module Music.Score.Dynamics (
         fadeOut,
 
         DynamicT(..),
+        addDynCon,
 
         -- -- * Dynamics representation
         -- HasDynamic(..),
@@ -103,6 +104,7 @@ import Music.Score.Part
 import Music.Score.Ornaments -- TODO
 import Music.Score.Ties -- TODO
 import           Music.Dynamics.Literal
+import           Music.Score.Phrases
 
 
 -- |
@@ -496,4 +498,16 @@ deriving instance Reversible a => Reversible (DynamicT p a)
 deriving instance Tiable a => Tiable (DynamicT n a)
 
 
+-- |
+-- View just the dynamices in a voice.
+-- 
+vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) => 
+  Lens 
+    (Voice a) (Voice b) 
+    (Voice (Dynamic a)) (Voice (Dynamic b))
+vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
+-- vdynamic = through dynamic dynamic
  
+addDynCon :: (HasPhrases s t a b, HasDynamic a a, HasDynamic a b, Dynamic a ~ d, Dynamic b ~ (Maybe d, d, Maybe d)) => s -> t
+addDynCon = over (phrases.vdynamic) withContext
+
