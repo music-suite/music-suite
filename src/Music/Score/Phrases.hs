@@ -35,7 +35,9 @@ module Music.Score.Phrases (
     singleMVoice,
 
     HasPhrases(..),
+    HasPhrases',
     phrases,
+    phrases',
 
     -- * Utility (TODO move)
     headV,
@@ -54,7 +56,7 @@ import Data.Semigroup
 import Control.Monad.Plus
 import Control.Exception (assert)
 
-import Music.Score.Part (Part, HasPart', extracted)
+import Music.Score.Part
 -- import Music.Score.Util (tripl, untripl, through)
 import Music.Score.Convert
 import Music.Time
@@ -65,6 +67,7 @@ type MVoice a = Voice (Maybe a)
 type PVoice a = [Either Duration (Phrase a)]
 
 
+{-
 class HasPhrases a b | a -> b where
   mvoices :: Traversal' a (MVoice b)
 
@@ -77,6 +80,23 @@ instance HasPhrases (PVoice a) a where
 
 instance (HasPart' a, Transformable a, Ord (Part a)) => HasPhrases (Score a) a where
   mvoices = extracted . each . singleMVoice
+-}
+
+class HasPhrases s t a b | s -> a, t -> b, s a b -> t where
+  mvoices :: Traversal s t (MVoice a) (MVoice b)
+
+instance HasPhrases (MVoice a) (MVoice b) a b where
+  mvoices = id
+
+instance HasPhrases (PVoice a) (PVoice b) a b where
+  -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
+  mvoices = from unsafeMvoicePVoice
+
+instance (HasPart' a, HasPart a b, Transformable a, Ord (Part a)) => 
+  HasPhrases (Score a) (Score b) a b where
+  mvoices = extracted . each . singleMVoice
+
+type HasPhrases' s a = HasPhrases s s a a
 
 {-
 Phrase traversal for score:
@@ -86,7 +106,10 @@ phrasesS = extracted . each . singleMVoice . mvoicePVoice . each . _Right
 
 More generally:
 -}
-phrases :: HasPhrases a b => Traversal' a (Phrase b)
+phrases' :: HasPhrases' s a => Traversal' s (Phrase a)
+phrases' = phrases
+
+phrases :: HasPhrases s t a b => Traversal s t (Phrase a) (Phrase b)
 phrases = mvoices . mvoicePVoice . each . _Right
 
 
