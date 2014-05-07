@@ -1,6 +1,7 @@
 
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -43,6 +44,7 @@ module Music.Time.Voice (
     zipVoiceWith,
     dzipVoiceWith,
     mergeEqualNotes,
+    mergeEqualNotesBy,
 
     -- mapDurations, -- ([Duration] -> [Duration]) -> Voice a -> Voice a
     -- mapPitches,   -- ([Pitch a]  -> [Pitch a])  -> Voice a -> Voice a
@@ -250,12 +252,18 @@ voiceList :: Iso' (Voice a) [(Duration, a)]
 voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
 
 -- |
--- Merge consecutive equal note.
+-- Merge consecutive equal notes.
 --
 mergeEqualNotes :: Eq a => Voice a -> Voice a
-mergeEqualNotes = over voiceList $ fmap f . Data.List.groupBy (inspecting snd)
+mergeEqualNotes = mergeEqualNotesBy (==)
+  
+mergeEqualNotesBy :: (a -> a -> Bool) -> Voice a -> Voice a
+mergeEqualNotesBy p = mergeEqualNotesBy' p head
+
+mergeEqualNotesBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
+mergeEqualNotesBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
-    f dsAs = let (ds,as) = unzip dsAs in (sum ds, head as)
+    foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
 --
 -- TODO

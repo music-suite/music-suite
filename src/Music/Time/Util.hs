@@ -357,5 +357,8 @@ floor' = fromIntegral . floor
 -- Like Data.Ord.comparing
 -- (Are both variants of contramap?)
 inspecting :: Eq a => (b -> a) -> b -> b -> Bool
-inspecting p x y = p x == p y
+inspecting f x y = f x == f y
+
+inspectingBy :: (b -> a) -> (a -> a -> Bool) -> (b -> b -> Bool)
+inspectingBy f p x y = f x `p` f y
 
