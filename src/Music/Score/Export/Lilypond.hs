@@ -1,4 +1,7 @@
 
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -145,15 +148,44 @@ instance HasLilypond a => HasLilypond (TieT a) where
                     | otherwise                     = id
 
 
+{-
+  The instance for (HasLilypond (DynamicT ...)) must look at context for cresc/dim etc to work
+  If DynamicT is part of a transformer stack passed to toLilypond, then it does not include context
 
-instance (HasLilypond a, Real n) => HasLilypond (DynamicT n a) where
-    getLilypond d (DynamicT (n, a)) = notate $ getLilypond d a
-      where
-        notate = case n of
-          lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just . fixLevel . realToFrac $ lvl, Nothing)))
-        
-        fixLevel :: Double -> Double
-        fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
+  Solution 1:
+    Include context in the type used in the stack (used in toLilypond)
+    Context starts out empty and is filled in "dynamically" before the notation is rendered
+    GOOD easy
+    BAD  not very elegant
+    BAD  forced to pass around empty contexts
+  
+  Solution 2:
+    Add an extra type Dynamic2T
+    BAD  to much code, ugly
+  
+  Solution 3:
+    Replace the dynamic type
+    Add a contraint to toLilypond like (Dynamic a ~ Double) or similar
+    Run 'addDynCon' to add the context (i.e. the dynamic type changes)
+    What to do with the (HasLilypond (DynamicT ...)) instance?
+-}
+
+type DynType = Behavior (Product Double)
+
+
+instance (HasLilypond a) => HasLilypond (DynamicT DynType a) where
+  getLilypond d (DynamicT (n, a)) = getLilypond d a
+
+instance (HasLilypond a) => HasLilypond (DynamicT (Ctxt DynType) a) where
+  getLilypond d (DynamicT (n, a)) = getLilypond d a
+
+    -- getLilypond d (DynamicT (n, a)) = notate $ getLilypond d a
+    --   where
+    --     notate = case n of
+    --       lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just . fixLevel . realToFrac $ lvl, Nothing)))
+    --     
+    --     fixLevel :: Double -> Double
+    --     fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
           
 -- 
 -- instance HasLilypond a => HasLilypond (DynamicT a) where
@@ -354,7 +386,7 @@ toLilypond sc =
                 . second (voiceToLilypond barTimeSigs barDurations . temporaryClefFix . toMVoice)
 
                 -- Meta-event expansion
-                . uncurry addClefs
+                 . uncurry addClefs . second addDynCon2
                 )
 
         . extractParts' $ sc
@@ -393,7 +425,7 @@ mergeBars _   = error "mergeBars: Not supported"
 -- |
 -- Convert a voice score to a list of bars.
 --
-voiceToLilypond :: HasLilypond2 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLilypond :: HasLilypond15 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
 voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
 --
 -- This is where notation of a single voice takes place
@@ -406,7 +438,7 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
 
 
-barToLilypond :: HasLilypond2 a => [(Duration, Maybe a)] -> Lilypond
+barToLilypond :: HasLilypond15 a => [(Duration, Maybe a)] -> Lilypond
 barToLilypond bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLilypond rh
@@ -426,7 +458,7 @@ rhythmToLilypond = uncurry ($) . rhythmToLilypond2
 
 
 
-rhythmToLilypond2 :: HasLilypond2 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
+rhythmToLilypond2 :: HasLilypond15 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
 rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
 rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
 
@@ -436,7 +468,7 @@ rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilyp
 rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLilypond2 :: HasLilypond2 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
+noteRestToLilypond2 :: HasLilypond15 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
 noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
 noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
 
@@ -457,6 +489,52 @@ spellLilypond' p = Lilypond.Pitch (
     where (pc,alt,oct) = spellPitch (p + 72)
 
 
+
+
+
+
 -- TODO remove
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
-type HasLilypond2 a = (HasLilypond a, Transformable a)
+type HasLilypond15 a = (HasLilypond a, Transformable a)
+
+type HasLilypond2 a = (
+  HasLilypond a, 
+  Transformable a, 
+  HasPart' a,
+  HasDynamic    a a,
+
+  HasDynamic    a (SetDynamic (Ctxt (Dynamic a)) a),
+  Dynamic       (SetDynamic (Ctxt (Dynamic a)) a) ~ Ctxt (Dynamic a),
+  HasLilypond   (SetDynamic (Ctxt (Dynamic a)) a),
+  Semigroup     (SetDynamic (Ctxt (Dynamic a)) a),
+  HasPart'      (SetDynamic (Ctxt (Dynamic a)) a),
+  Transformable (SetDynamic (Ctxt (Dynamic a)) a)
+  )
+
+
+type Ctxt a = (Maybe a, a, Maybe a)
+
+addDynCon2 :: (
+  HasDynamic a a, HasDynamic a b, 
+  Dynamic b ~ Ctxt (Dynamic a),
+  HasPart' a,
+  Ord (Part a),
+  Transformable a,
+  b ~ SetDynamic (Ctxt (Dynamic a)) a
+  
+  ) => Score a -> Score b
+addDynCon2 = addDynCon
+
+
+
+
+
+
+
+type instance Pitch (ClefT a) = Pitch a
+type instance SetPitch b (ClefT a) = ClefT (SetPitch b a)
+
+instance (HasPitches a b) => HasPitches (ClefT a) (ClefT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (ClefT a) (ClefT b) where
+  pitch = _Wrapped . pitch
