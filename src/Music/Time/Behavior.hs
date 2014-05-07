@@ -169,6 +169,10 @@ deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
 
+-- TODO bad instance
+instance Real a => Real (Behavior a) where
+  toRational = toRational . (! 0)
+
 -- #ifdef INCLUDE_LIFTED
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 

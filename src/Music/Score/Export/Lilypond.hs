@@ -143,6 +143,18 @@ instance HasLilypond a => HasLilypond (TieT a) where
                     | tb                            = Lilypond.beginTie
                     | ta                            = id
                     | otherwise                     = id
+
+
+
+instance (HasLilypond a, Real n) => HasLilypond (DynamicT n a) where
+    getLilypond d (DynamicT (n, a)) = notate $ getLilypond d a
+      where
+        notate = case n of
+          lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just . fixLevel . realToFrac $ lvl, Nothing)))
+        
+        fixLevel :: Double -> Double
+        fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
+          
 -- 
 -- instance HasLilypond a => HasLilypond (DynamicT a) where
 --     getLilypond d (DynamicT (((Any ec,Any ed),Option l,(Any bc,Any bd)), a)) = notate $ getLilypond d a

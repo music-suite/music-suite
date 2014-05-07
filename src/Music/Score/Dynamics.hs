@@ -103,6 +103,7 @@ import Music.Time.Internal.Transform
 import Music.Score.Part
 import Music.Score.Ornaments -- TODO
 import Music.Score.Ties -- TODO
+import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Score.Phrases
 
@@ -472,7 +473,7 @@ resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . se
 
 newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
   deriving (Eq, Ord, Show, Typeable, Functor, 
-    Applicative, {-Comonad,-} Monad, Transformable)
+    Applicative, {-Comonad,-} Monad, Transformable, Monoid, Semigroup)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (DynamicT p a) where
@@ -488,9 +489,8 @@ instance (Transformable p, Transformable p') => HasDynamic (DynamicT p a) (Dynam
 instance (Transformable p, Transformable p') => HasDynamics (DynamicT p a) (DynamicT p' a) where
   dynamics = _Wrapped . _1
 
--- instance (IsPitch a, Monoid n) => IsPitch (DynamicT n a) where
-    -- fromPitch = pure . fromPitch
-
+deriving instance (IsPitch a, Monoid n) => IsPitch (DynamicT n a)
+deriving instance (IsInterval a, Monoid n) => IsInterval (DynamicT n a)
 instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
     fromDynamics l = DynamicT (fromDynamics l, mempty)
 
