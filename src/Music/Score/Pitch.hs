@@ -307,21 +307,27 @@ type instance Pitch (c,a)               = Pitch a
 type instance SetPitch b (c,a)          = (c,SetPitch b a)
 type instance Pitch [a]                 = Pitch a
 type instance SetPitch b [a]            = [SetPitch b a]
+
+type instance Pitch (Maybe a)           = Pitch a
+type instance SetPitch b (Maybe a)      = Maybe (SetPitch b a)
+type instance Pitch (Either c a)        = Pitch a
+type instance SetPitch b (Either c a)   = Either c (SetPitch b a)
+
 type instance Pitch (Note a)            = Pitch a
-type instance SetPitch g (Note a)       = Note (SetPitch g a)
+type instance SetPitch b (Note a)       = Note (SetPitch b a)
 type instance Pitch (Delayed a)         = Pitch a
-type instance SetPitch g (Delayed a)    = Delayed (SetPitch g a)
+type instance SetPitch b (Delayed a)    = Delayed (SetPitch b a)
 type instance Pitch (Stretched a)       = Pitch a
-type instance SetPitch g (Stretched a)  = Stretched (SetPitch g a)
+type instance SetPitch b (Stretched a)  = Stretched (SetPitch b a)
 
 type instance Pitch (Voice a)       = Pitch a
-type instance SetPitch g (Voice a)  = Voice (SetPitch g a)
+type instance SetPitch b (Voice a)  = Voice (SetPitch b a)
 type instance Pitch (Chord a)       = Pitch a
-type instance SetPitch g (Chord a)  = Chord (SetPitch g a)
+type instance SetPitch b (Chord a)  = Chord (SetPitch b a)
 type instance Pitch (Track a)       = Pitch a
-type instance SetPitch g (Track a)  = Track (SetPitch g a)
+type instance SetPitch b (Track a)  = Track (SetPitch b a)
 type instance Pitch (Score a)       = Pitch a
-type instance SetPitch g (Score a)  = Score (SetPitch g a)
+type instance SetPitch b (Score a)  = Score (SetPitch b a)
 
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
@@ -342,6 +348,12 @@ instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
   pitches = _Wrapped . whilstLD pitches
 instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
   pitch = _Wrapped . whilstLD pitch
+
+instance HasPitches a b => HasPitches (Maybe a) (Maybe b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Either c a) (Either c b) where
+  pitches = traverse . pitches
 
 instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
