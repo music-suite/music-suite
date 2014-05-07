@@ -95,6 +95,17 @@ instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
   pitches = _Wrapped . _2 . pitches
 
 
+type instance Pitch (DynamicT p a) = Pitch a
+type instance SetPitch b (DynamicT p a) = DynamicT p (SetPitch b a)
+
+instance HasPitch a b => HasPitch (DynamicT p a) (DynamicT p b) where
+  pitch = _Wrapped . _2 . pitch
+instance HasPitches a b => HasPitches (DynamicT p a) (DynamicT p b) where
+  pitches = _Wrapped . _2 . pitches
+
+
+
+
 type instance Dynamic (PartT p a) = Dynamic a
 type instance SetDynamic b (PartT p a) = PartT p (SetDynamic b a)
 
