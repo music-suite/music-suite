@@ -82,7 +82,7 @@ instance (HasPart' a, Transformable a, Ord (Part a)) => HasPhrases (Score a) a w
   mvoices = extracted . each . singleMVoice
 -}
 
-class HasPhrases s t a b | s -> a, t -> b, s a b -> t where
+class HasPhrases s t a b | s -> a, t -> b, s b -> t, t a -> s where
   mvoices :: Traversal s t (MVoice a) (MVoice b)
 
 instance HasPhrases (MVoice a) (MVoice b) a b where
@@ -92,7 +92,7 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
   mvoices = from unsafeMvoicePVoice
 
-instance (HasPart' a, HasPart a b, Transformable a, Ord (Part a)) => 
+instance (HasPart' a, {-HasPart a b, -}Transformable a, Ord (Part a)) => 
   HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
 
