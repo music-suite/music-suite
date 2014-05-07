@@ -495,8 +495,11 @@ instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
     fromDynamics l = DynamicT (fromDynamics l, mempty)
 
 deriving instance Reversible a => Reversible (DynamicT p a)
-deriving instance Tiable a => Tiable (DynamicT n a)
-
+instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
+  toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2)) 
+    where 
+      (a1,a2) = toTied a
+      (d1,d2) = toTied d
 
 -- |
 -- View just the dynamices in a voice.

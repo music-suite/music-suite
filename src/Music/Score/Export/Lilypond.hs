@@ -180,8 +180,11 @@ instance (HasLilypond a) => HasLilypond (DynamicT DynType a) where
       notate n = Lilypond.addText (show n)
 
 
+instance Tiable (Ctxt a) where
+  toTied (p,c,n) = ((p,c,Just c), (Just c,c,n))
+
 instance (HasLilypond a) => HasLilypond (DynamicT (Ctxt DynType) a) where
-  getLilypond d (DynamicT (n, a)) = notate (mapCtxt (! 0) n) $ getLilypond d a
+  getLilypond d (DynamicT (n, a)) = notate (mapCtxt ((! 0)) n) $ getLilypond d a
     where
       notate ctxt = notateDD (extractCtxt ctxt) (dynamicDisplay ctxt)
 
@@ -197,7 +200,7 @@ notateDD lvl (cds, showLevel) = (composed $ fmap notateCrescDim cds) . notateLev
     
     -- TODO these literals are not so nice...
     notateLevel = if not showLevel then id else 
-        Lilypond.addDynamics (fromDynamics (DynamicsL (Just . fixLevel . realToFrac $ lvl, Nothing)))
+        Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
     
 
 
