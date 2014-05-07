@@ -97,6 +97,8 @@ import           Data.VectorSpace        hiding (Sum)
 import           Music.Time
 import Music.Time.Internal.Transform
 import Music.Score.Part
+import Music.Score.Ornaments -- TODO
+import Music.Score.Ties -- TODO
 import           Music.Dynamics.Literal
 
 
@@ -162,33 +164,121 @@ PRIM_DYNAMIC_INSTANCE(Integer)
 PRIM_DYNAMIC_INSTANCE(Float)
 PRIM_DYNAMIC_INSTANCE(Double)
 
-type instance Dynamic (c,a) = Dynamic a
-type instance SetDynamic b (c,a) = (c,SetDynamic b a)
+type instance Dynamic (c,a)               = Dynamic a
+type instance SetDynamic b (c,a)          = (c,SetDynamic b a)
+type instance Dynamic [a]                 = Dynamic a
+type instance SetDynamic b [a]            = [SetDynamic b a]
+
+type instance Dynamic (Maybe a)           = Dynamic a
+type instance SetDynamic b (Maybe a)      = Maybe (SetDynamic b a)
+type instance Dynamic (Either c a)        = Dynamic a
+type instance SetDynamic b (Either c a)   = Either c (SetDynamic b a)
+
+type instance Dynamic (Note a)            = Dynamic a
+type instance SetDynamic b (Note a)       = Note (SetDynamic b a)
+type instance Dynamic (Delayed a)         = Dynamic a
+type instance SetDynamic b (Delayed a)    = Delayed (SetDynamic b a)
+type instance Dynamic (Stretched a)       = Dynamic a
+type instance SetDynamic b (Stretched a)  = Stretched (SetDynamic b a)
+
+type instance Dynamic (Voice a)       = Dynamic a
+type instance SetDynamic b (Voice a)  = Voice (SetDynamic b a)
+type instance Dynamic (Chord a)       = Dynamic a
+type instance SetDynamic b (Chord a)  = Chord (SetDynamic b a)
+type instance Dynamic (Track a)       = Dynamic a
+type instance SetDynamic b (Track a)  = Track (SetDynamic b a)
+type instance Dynamic (Score a)       = Dynamic a
+type instance SetDynamic b (Score a)  = Score (SetDynamic b a)
 
 instance HasDynamic a b => HasDynamic (c, a) (c, b) where
   dynamic = _2 . dynamic
-
 instance HasDynamics a b => HasDynamics (c, a) (c, b) where
   dynamics = traverse . dynamics
 
+instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
+  dynamics = _Wrapped . whilstL dynamics
+instance (HasDynamic a b) => HasDynamic (Note a) (Note b) where
+  dynamic = _Wrapped . whilstL dynamic
 
-type instance Dynamic [a] = Dynamic a
-type instance SetDynamic b [a] = [SetDynamic b a]
+instance (HasDynamics a b) => HasDynamics (Delayed a) (Delayed b) where
+  dynamics = _Wrapped . whilstLT dynamics
+instance (HasDynamic a b) => HasDynamic (Delayed a) (Delayed b) where
+  dynamic = _Wrapped . whilstLT dynamic
+
+instance (HasDynamics a b) => HasDynamics (Stretched a) (Stretched b) where
+  dynamics = _Wrapped . whilstLD dynamics
+instance (HasDynamic a b) => HasDynamic (Stretched a) (Stretched b) where
+  dynamic = _Wrapped . whilstLD dynamic
+
+instance HasDynamics a b => HasDynamics (Maybe a) (Maybe b) where
+  dynamics = traverse . dynamics
+
+instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
+  dynamics = traverse . dynamics
 
 instance HasDynamics a b => HasDynamics [a] [b] where
   dynamics = traverse . dynamics
 
+instance HasDynamics a b => HasDynamics (Voice a) (Voice b) where
+  dynamics = traverse . dynamics
 
-type instance Dynamic (Note a) = Dynamic a
-type instance SetDynamic g (Note a) = Note (SetDynamic g a)
+instance HasDynamics a b => HasDynamics (Track a) (Track b) where
+  dynamics = traverse . dynamics
 
-type instance Dynamic (Note a) = Dynamic a
+instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
+  dynamics = traverse . dynamics
 
-instance HasDynamic a b => HasDynamic (Note a) (Note b) where
-  dynamic = _Wrapped . whilstL dynamic
+instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
+  dynamics = 
+    _Wrapped . _2   -- into NScore
+    . _Wrapped
+    . traverse 
+    . _Wrapped      -- this needed?
+    . whilstL dynamics
 
-instance HasDynamics a b => HasDynamics (Note a) (Note b) where
-  dynamics = _Wrapped . whilstL dynamics
+type instance Dynamic      (Behavior a) = Behavior a
+type instance SetDynamic b (Behavior a) = b
+instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamics (Behavior a) b where
+  dynamics = ($)
+instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamic (Behavior a) b where
+  dynamic = ($)
+
+type instance Dynamic (TremoloT a)        = Dynamic a
+type instance SetDynamic g (TremoloT a)   = TremoloT (SetDynamic g a)
+type instance Dynamic (TextT a)           = Dynamic a
+type instance SetDynamic g (TextT a)      = TextT (SetDynamic g a)
+type instance Dynamic (HarmonicT a)       = Dynamic a
+type instance SetDynamic g (HarmonicT a)  = HarmonicT (SetDynamic g a)
+type instance Dynamic (TieT a)            = Dynamic a
+type instance SetDynamic g (TieT a)       = TieT (SetDynamic g a)
+type instance Dynamic (SlideT a)          = Dynamic a
+type instance SetDynamic g (SlideT a)     = SlideT (SetDynamic g a)
+
+instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
+  dynamic = _Wrapped . dynamic
+
+instance (HasDynamics a b) => HasDynamics (TextT a) (TextT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (TextT a) (TextT b) where
+  dynamic = _Wrapped . dynamic
+
+instance (HasDynamics a b) => HasDynamics (HarmonicT a) (HarmonicT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (HarmonicT a) (HarmonicT b) where
+  dynamic = _Wrapped . dynamic
+
+instance (HasDynamics a b) => HasDynamics (TieT a) (TieT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (TieT a) (TieT b) where
+  dynamic = _Wrapped . dynamic
+
+instance (HasDynamics a b) => HasDynamics (SlideT a) (SlideT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
+  dynamic = _Wrapped . dynamic
+
 
 
 -- |
