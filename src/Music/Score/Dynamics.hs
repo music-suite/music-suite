@@ -476,6 +476,50 @@ newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
   deriving (Eq, Ord, Show, Typeable, Functor, 
     Applicative, {-Comonad,-} Monad, Transformable, Monoid, Semigroup)
 
+instance (Monoid n, Num a) => Num (DynamicT n a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance (Monoid n, Fractional a) => Fractional (DynamicT n a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance (Monoid n, Floating a) => Floating (DynamicT n a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance (Monoid n, Enum a) => Enum (DynamicT n a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+-- instance (Monoid n, Num a, Ord a, Real a) => Real (DynamicT n a) where
+--     toRational = toRational . get1
+-- 
+-- instance (Monoid n, Real a, Enum a, Integral a) => Integral (DynamicT n a) where
+--     quot = liftA2 quot
+--     rem = liftA2 rem
+--     toInteger = toInteger . get1  
+
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (DynamicT p a) where
   type Unwrapped (DynamicT p a) = (p, a)
@@ -517,4 +561,7 @@ addDynCon = over (phrases.vdynamic) withContext
 
 type Ctxt a = (Maybe a, a, Maybe a)
 
+
+-- TODO use extract
+get1 (DynamicT (_,x)) = x
 
