@@ -94,6 +94,15 @@ instance HasPitch a b => HasPitch (PartT p a) (PartT p b) where
 instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
   pitches = _Wrapped . _2 . pitches
 
+
+type instance Dynamic (PartT p a) = Dynamic a
+type instance SetDynamic b (PartT p a) = PartT p (SetDynamic b a)
+
+instance HasDynamic a b => HasDynamic (PartT p a) (PartT p b) where
+  dynamic = _Wrapped . _2 . dynamic
+instance HasDynamics a b => HasDynamics (PartT p a) (PartT p b) where
+  dynamics = _Wrapped . _2 . dynamics
+
 -- -------------------------------------------------------------------------------------
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
@@ -283,3 +292,52 @@ liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))
 -- instance Augmentable a => Augmentable (ArticulationT a) where
 --     augment = fmap augment
 --     diminish = fmap diminish
+
+-- TODO move
+-- TODO derive more of these?
+instance Applicative Product where
+  pure = Product
+  Product f <*> Product x = Product (f x)
+deriving instance Floating a => Floating (Product a)
+instance Num a => Num (Product a) where
+  fromInteger = pure . fromInteger
+  abs    = fmap abs
+  signum = fmap signum
+  (+)    = liftA2 (+)
+  (-)    = liftA2 (-)
+  (*)    = liftA2 (*)
+instance Fractional a => Fractional (Product a) where
+  fromRational = pure . fromRational
+  (/) = liftA2 (/)
+instance Real a => Real (Product a) where
+  toRational (Product x) = toRational x
+
+
+
+
+-- type instance Part (DynamicT d a) = Part a
+-- type instance SetPart b (DynamicT d a) = DynamicT d (SetPart b a)
+-- deriving instance HasParts a b => HasParts (DynamicT d a) (DynamicT d b) 
+-- deriving instance HasPart a b => HasPart (DynamicT d a) (DynamicT d b) 
+
+
+-- TODO use wrapper type and replace withContext
+type instance Dynamic (a,b,c) = (a,b,c)
+type instance SetDynamic g (a,b,c) = g
+
+instance Transformable a => Transformable (Maybe a) where
+  transform s = fmap (transform s)
+instance (Transformable a, Transformable b, Transformable c) => Transformable (a,b,c) where
+  transform s (a,b,c) = (transform s a,transform s b,transform s c)
+
+deriving instance IsDynamics a => IsDynamics (Product a)
+deriving instance AdditiveGroup a => AdditiveGroup (Product a)
+instance VectorSpace a => VectorSpace (Product a) where
+  type Scalar (Product a) = Scalar a
+  x *^ Product y = Product (x *^ y)
+instance AffineSpace a => AffineSpace (Product a) where
+  type Diff (Product a) = Product (Diff a)
+  Product p .-. Product q = Product (p .-. q)
+  Product p .+^ Product v = Product (p .+^ v)
+
+
