@@ -291,18 +291,32 @@ swap (x, y) = (y, x)
 -- > category: List
 -- > depends: base
 withNext :: [a] -> [(a, Maybe a)]
-withNext = go
-    where
-        go []       = []
-        go [x]      = [(x, Nothing)]
-        go (x:y:rs) = (x, Just y) : withNext (y : rs)
+withNext = fmap (\(p,c,n) -> (c,n)) . withPrevNext
+
+withPrev :: [a] -> [(Maybe a, a)]
+withPrev = fmap (\(p,c,n) -> (p,c)) . withPrevNext
+
+-- withNext = go
+--     where
+--         go []       = []
+--         go [x]      = [(x, Nothing)]
+--         go (x:y:rs) = (x, Just y) : withNext (y : rs)
+
+withPrevNext :: [a] -> [(Maybe a, a, Maybe a)]
+withPrevNext xs = zip3 (pure Nothing ++ fmap Just xs) xs (fmap Just (tail xs) ++ repeat Nothing)
 
 -- Map over a list with the next consecutive element.
 --
 -- > category: List
 -- > depends: base
 mapWithNext :: (a -> Maybe a -> b) -> [a] -> [b]
-mapWithNext f = fmap (uncurry f) . withNext
+mapWithNext f = map (uncurry f) . withNext
+
+mapWithPrev :: (Maybe a -> a -> b) -> [a] -> [b]
+mapWithPrev f = map (uncurry f) . withPrev
+
+mapWithPrevNext :: (Maybe a -> a -> Maybe a -> b) -> [a] -> [b]
+mapWithPrevNext f = map (uncurry3 f) . withPrevNext
 
 
 
