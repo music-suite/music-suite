@@ -107,11 +107,16 @@ import           Data.Typeable
 
 import Music.Time
 import Music.Time.Internal.Transform
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
+-- import           Music.Dynamics.Literal
+-- import           Music.Pitch.Literal
 -- import           Music.Score.Combinators
 import           Music.Score.Part
 -- import           Music.Score.Score
+
+import Music.Score.Part
+import Music.Score.Ornaments -- TODO
+import Music.Score.Ties -- TODO
+import           Music.Score.Phrases
 
 
 
