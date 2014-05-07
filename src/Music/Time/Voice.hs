@@ -55,6 +55,8 @@ module Music.Time.Voice (
     -- dzipVoiceWith,
     zipVoiceWith',
     zipVoiceWithNoScale,
+
+    withContext,
     
     -- ** Separating rhythms and values
     vrhythm,
@@ -295,7 +297,8 @@ fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy 
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
-
+withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
+withContext = over vvalues withPrevNext
 
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
@@ -313,13 +316,13 @@ vrhythm = lens getDurs (flip setDurs)
     durToVoice d = stretch d $ pure ()
 
 -- TODO more elegant definition using indexed traversal or similar?
-vvalues :: Lens' (Voice a) [a]
+vvalues :: Lens (Voice a) (Voice b) [a] [b]
 vvalues = lens getValues (flip setValues)
   where
     getValues :: Voice a -> [a]
     getValues = map snd . view eventsV
 
-    setValues :: [a] -> Voice a -> Voice a
+    setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
 
     listToVoice = mconcat . map pure
