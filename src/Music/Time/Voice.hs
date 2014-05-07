@@ -37,7 +37,13 @@ module Music.Time.Voice (
     -- ** Substructure
     voice,
     stretcheds,
+    eventsV,
+    
     singleStretched,
+
+    -- *** Unsafe operations
+    unsafeStretcheds,
+    unsafeEventsV,
 
     -- ** Zips
     zipVoice,
@@ -204,20 +210,33 @@ instance HasMeta (Voice a) where
 -- Se also 'notes'.
 --
 voice :: Getter [Stretched a] (Voice a)
-voice = to $ flip (set stretcheds) empty
+voice = from unsafeStretcheds
+-- voice = to $ flip (set stretcheds) empty
 {-# INLINE voice #-}
 
 stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-stretcheds = unsafeVoice
+stretcheds = unsafeStretcheds
 {-# INLINE stretcheds #-}
 
+-- TODO meta-data
+eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+eventsV = unsafeEventsV
+{-# INLINE eventsV #-}
+  --(stretcheds.through (from stretched) (from stretched))
+
+unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafeEventsV = iso (map (^.from stretched).(^.stretcheds)) ((^.voice).map (^.stretched))
+{-# INLINE unsafeEventsV #-}
+
+
+
 singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = unsafeVoice . single
+singleStretched = unsafeStretcheds . single
 {-# INLINE singleStretched #-}
 
-unsafeVoice :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
-unsafeVoice = _Wrapped
-{-# INLINE unsafeVoice #-}
+unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
+unsafeStretcheds = _Wrapped
+{-# INLINE unsafeStretcheds #-}
 
 {-
 -- |

@@ -190,13 +190,6 @@ groupDiff' p (x:xs)
   | p x       = Right (x : List.takeWhile p         xs) : groupDiff' p (List.dropWhile p         xs)
 
 
-eventsV :: Lens (Phrase a) (Phrase b) [(Duration, a)] [(Duration, b)]
-eventsV = unsafeEventsV
-  --(stretcheds.through (from stretched) (from stretched))
-
-unsafeEventsV :: Iso (Phrase a) (Phrase b) [(Duration, a)] [(Duration, b)]
-unsafeEventsV = iso (map (^.from stretched).(^.stretcheds)) ((^.voice).map (^.stretched))
-
 
 
 
