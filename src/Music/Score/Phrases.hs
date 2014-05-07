@@ -90,12 +90,12 @@ phrases :: HasPhrases a b => Traversal' a (Phrase b)
 phrases = mvoices . mvoicePVoice . each . _Right
 
 
-mvoicePVoice :: Lens' (MVoice a) (PVoice a)
+mvoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 mvoicePVoice = unsafeMvoicePVoice
 
 -- TODO only up to meta-data (as it uses unsafeEventsV)...
 -- This is not a problem if we restrict it to a traversal
-unsafeMvoicePVoice :: Iso' (MVoice a) (PVoice a)
+unsafeMvoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
   where
     mvoiceToPVoice :: MVoice a -> PVoice a
@@ -127,7 +127,7 @@ unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
 
 -- TODO failure
 -- TODO why Transformable?
-singleMVoice :: Transformable a => Prism' (Score a) (MVoice a)
+singleMVoice :: Transformable a => Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: Transformable a => Score a -> MVoice a
