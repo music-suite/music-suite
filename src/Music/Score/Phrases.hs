@@ -52,12 +52,12 @@ import Control.Applicative
 import Data.AffineSpace
 import Data.Semigroup
 import Control.Monad.Plus
+import Control.Exception (assert)
 
-import Music.Score (Part, HasPart', extracted)
+import Music.Score.Part (Part, HasPart', extracted)
 -- import Music.Score.Util (tripl, untripl, through)
 import Music.Score.Convert
 import Music.Time
--- import Music.Prelude.Basic
 
 
 type Phrase a = Voice a
@@ -106,7 +106,7 @@ unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
        . view eventsV
 
     voiceToRest :: MVoice a -> Duration
-    voiceToRest = sumOf (eventsV.each._1) . fmap (assert "isNothing" isNothing)
+    voiceToRest = sumOf (eventsV.each._1) . fmap (\x -> assert (isNothing x) x)
     -- TODO just _duration
 
     voiceToPhrase :: MVoice a -> Phrase a
@@ -132,14 +132,14 @@ singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: Transformable a => Score a -> MVoice a
     scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. events)
-        where
-           throwTime (t,d,x) = (d,x)
-           addRests = concat . snd . List.mapAccumL g 0
-               where
-                   g u (t, d, x)
-                       | u == t    = (t .+^ d, [(t, d, Just x)])
-                       | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-                       | otherwise = error "addRests: Strange prevTime"
+      where
+        throwTime (t,d,x) = (d,x)
+        addRests = concat . snd . List.mapAccumL g 0
+          where
+            g u (t, d, x)
+              | u == t    = (t .+^ d, [(t, d, Just x)])
+              | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+              | otherwise = error "addRests: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
     voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. getStretched) . fmap return
@@ -166,13 +166,6 @@ lastV = (eventsV._last._2)
 _middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
 -- Traverse writing to all elements *except* first and last
 _middle = _tail._init
-
-
-
-
-assert t p x = if p x then x else error ("assertion failed: " ++ t)
-
-
 
 
 

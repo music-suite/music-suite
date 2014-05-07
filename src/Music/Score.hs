@@ -35,6 +35,12 @@ module Music.Score (
         module Music.Score.Articulation,
         module Music.Score.Ornaments,
 
+        -- ** Miscellaneous
+        module Music.Score.Ties,
+        module Music.Score.Phrases,
+        module Music.Score.Rhythm,
+        module Music.Score.Clef,
+
         -- ** Meta-information
         module Music.Score.Meta,
         module Music.Score.Meta.Title,
@@ -47,11 +53,6 @@ module Music.Score (
         module Music.Score.Meta.Time,
         module Music.Score.Meta.Tempo,
         module Music.Score.Meta.Annotations,
-
-        -- ** Miscellaneous
-        module Music.Score.Ties,
-        module Music.Score.Rhythm,
-        module Music.Score.Clef,
 
         -- * Import and export
         module Music.Score.Import.Abc,
@@ -109,6 +110,7 @@ import           Music.Score.Meta.Tempo
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
 import           Music.Score.Ornaments
+import           Music.Score.Phrases
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
