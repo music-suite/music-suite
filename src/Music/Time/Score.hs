@@ -39,10 +39,8 @@ module Music.Time.Score (
       notes,
       events,
       -- voices,
-      -- phrases,
       singleNote,
       singleVoice,
-      -- singlePhrase,
 
       -- *** Unsafe operations
       unsafeNotes,
@@ -417,13 +415,6 @@ voices = unsafeVoices
 {-# INLINE voices #-}
 
 -- |
--- View a score as a list of phrases.
---
-phrases :: Lens (Score a) (Score b) [[Voice a]] [[Voice b]]
-phrases = error "Not implemented: phrases"
-{-# INLINE phrases #-}
-
--- |
 -- View a score as a list of notes.
 --
 -- This operation is /unsafe/ as it is only isomorphic up to meta-data equivalence,
@@ -459,14 +450,6 @@ singleVoice = unsafeVoices . single
 {-# INLINE singleVoice #-}
 -- TODO make prism fail if score contains meta-data
 -- (or else second prism law is not satisfied)
-
-{-
--- |
--- View a score as a single phrase.
---
-singlePhrase :: Prism' (Score a) (Phrase () a)
-singlePhrase = error "Not implemented: singlePhrase"
--}
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
