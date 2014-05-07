@@ -241,8 +241,9 @@ filterPart p = mfilter (\x -> p (x ^. part))
 extractParts' :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractParts' x = zip (allParts x) (extractParts x)
 
-extracted :: (Ord (Part a), HasPart' a) => Iso' (Score a) [Score a]
+extracted :: (Ord (Part a), HasPart' a, HasPart a b) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
+-- extracted :: (Ord (Part a), HasPart' a) => Iso' (Score a) [Score a]
 
 -- TODO what to use instead of elements to select parts?
 extracted' :: (Ord (Part a), HasPart' a) => Iso' (Score a) [(Part a, Score a)]
