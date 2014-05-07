@@ -55,19 +55,10 @@ module Music.Time.Score (
       filterEvents,
       mapFilterEvents,
 
-      -- TODO
-      mapPhrase,
-
       -- ** Simultaneous notes
       mapSimultaneous,
       simultaneous,
       simultaneous',
-
-      -- voices -- Lens' (Score a) [Voice a]
-      -- phrases -- Lens' (Voice a) [Phrase a]
-
-      -- mapVoices, -- ([Voice a] -> [Voice a]) -> Score a -> Score a
-      -- mapPhrases, -- ([Phrase a] -> [Phrase a]) -> Voice a -> Voice a
   ) where
 
 import           Data.AffineSpace
@@ -589,8 +580,4 @@ getValue (t,d,a) = a
 
 getSpan :: (Time, Duration, a) -> Span
 getSpan (t,d,a) = t >-> d
-
-mapPhrase :: (Score a -> Score a) -> Score a -> Score a
-mapPhrase _ = id
--- FIXME
 
