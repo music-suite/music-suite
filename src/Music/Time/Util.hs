@@ -38,7 +38,7 @@ import qualified Data.Char
 import qualified Data.Monoid
 import qualified Data.List
 import qualified Data.Ratio
-
+import Data.Functor.Contravariant
 
 -- | Divide a list into parts of maximum length n.
 -- > category : List
@@ -360,5 +360,6 @@ inspecting :: Eq a => (b -> a) -> b -> b -> Bool
 inspecting f x y = f x == f y
 
 inspectingBy :: (b -> a) -> (a -> a -> Bool) -> (b -> b -> Bool)
-inspectingBy f p x y = f x `p` f y
+inspectingBy f e = getEquivalence $ contramap f $ Equivalence e
+-- inspectingBy f p x y = f x `p` f y
 

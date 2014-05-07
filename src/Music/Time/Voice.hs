@@ -263,6 +263,9 @@ mergeEqualNotesBy p = mergeEqualNotesBy' p head
 mergeEqualNotesBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
 mergeEqualNotesBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
+    -- Add up durations and use a custom function to combine notes
+    -- Typically, the combination function us just 'head', as we know that group returns
+    -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
 --

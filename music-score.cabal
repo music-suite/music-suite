@@ -36,6 +36,7 @@ library
                         void,
                         semigroups              >= 0.13.0.1 && < 1,
                         monoid-extras,
+                        contravariant           >= 0.4.4 && < 1,
                         nats,          
                         semigroupoids,
                         HCodecs                 >= 0.3 && < 0.4,
