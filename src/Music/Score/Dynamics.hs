@@ -64,6 +64,8 @@ module Music.Score.Dynamics (
         fadeIn,
         fadeOut,
 
+        DynamicT(..),
+
         -- -- * Dynamics representation
         -- HasDynamic(..),
         -- DynamicT(..),
@@ -95,6 +97,7 @@ import           Data.Typeable
 import           Data.VectorSpace        hiding (Sum)
 
 import           Music.Time
+import           Music.Score.Util (through)
 import Music.Time.Internal.Transform
 import Music.Score.Part
 import Music.Score.Ornaments -- TODO
@@ -463,3 +466,34 @@ resetDynamics :: HasDynamic c => c -> c
 resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
 
 -}
+
+
+newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
+  deriving (Eq, Ord, Show, Typeable, Functor, 
+    Applicative, {-Comonad,-} Monad, Transformable)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (DynamicT p a) where
+  type Unwrapped (DynamicT p a) = (p, a)
+  _Wrapped' = iso getDynamicT DynamicT
+instance Rewrapped (DynamicT p a) (DynamicT p' b)
+
+type instance Dynamic (DynamicT p a) = p
+type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
+
+instance (Transformable p, Transformable p') => HasDynamic (DynamicT p a) (DynamicT p' a) where
+  dynamic = _Wrapped . _1
+instance (Transformable p, Transformable p') => HasDynamics (DynamicT p a) (DynamicT p' a) where
+  dynamics = _Wrapped . _1
+
+-- instance (IsPitch a, Monoid n) => IsPitch (DynamicT n a) where
+    -- fromPitch = pure . fromPitch
+
+instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
+    fromDynamics l = DynamicT (fromDynamics l, mempty)
+
+deriving instance Reversible a => Reversible (DynamicT p a)
+deriving instance Tiable a => Tiable (DynamicT n a)
+
+
+ 

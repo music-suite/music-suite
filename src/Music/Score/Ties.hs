@@ -119,6 +119,8 @@ instance Tiable a => Tiable (Behavior a) where
 -- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
 -- This restriction assures all chord notes are in the same part
 -- 
+instance Tiable a => Tiable (c, a) where
+    toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Maybe a) where
     toTied = unzipR . fmap toTied
