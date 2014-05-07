@@ -45,24 +45,24 @@ module Music.Time.Voice (
     unsafeStretcheds,
     unsafeEventsV,
 
+    -- ** Fusion
+    fuse,
+    fuseBy,
+
     -- ** Zips
     zipVoice,
     zipVoiceWith,
     -- dzipVoiceWith,
     zipVoiceWith',
-    fuse,
-    fuseBy,
-
+    zipVoiceWithNoScale,
+    
+    -- ** Separating rhythms and values
     vrhythm,
     vvalues,
     rotateRhythm,
     rotateValues,
     reverseRhythm,
     reverseValues,
-
-    -- mapDurations, -- ([Duration] -> [Duration]) -> Voice a -> Voice a
-    -- mapPitches,   -- ([Pitch a]  -> [Pitch a])  -> Voice a -> Voice a
-    -- etc
   ) where
 
 import           Data.AffineSpace
