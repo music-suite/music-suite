@@ -40,7 +40,7 @@ module Music.Time.Score (
       events,
       -- voices,
       singleNote,
-      singleVoice,
+      -- singleVoice,
 
       -- *** Unsafe operations
       unsafeNotes,
@@ -374,45 +374,45 @@ notes = _Wrapped . _2 . _Wrapped
 -- notes = unsafeNotes
 {-# INLINE notes #-}
 
--- |
--- View a score as a list of voices.
---
--- @
--- 'view' 'voices'                        :: 'Score' a -> ['Voice' a]
--- 'set'  'voices'                        :: ['Voice' a] -> 'Score' a -> 'Score' a
--- 'over' 'voices'                        :: (['Voice' a] -> ['Voice' b]) -> 'Score' a -> 'Score' b
--- @
---
--- @
--- 'preview'  ('voices' . 'each')           :: 'Score' a -> 'Maybe' ('Voice' a)
--- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
--- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
--- @
---
--- @
--- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
--- 'set'      ('voices' . 'element' 1)      :: 'Voice' a -> 'Score' a -> 'Score' a
--- 'set'      ('voices' . 'elements' odd)   :: 'Voice' a -> 'Score' a -> 'Score' a
--- @
---
--- @
--- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' b) -> 'Score' a -> 'Score' b
--- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- @
---
--- @
--- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
--- 'toListOf' ('voices' . 'elements' odd)   :: 'Score' a -> ['Voice' a]
--- 'toListOf' ('voices' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Voice' a]
--- @
---
--- This is not an 'Iso', as the voice list representation does not contain meta-data.
--- To construct a score from a voice list, use 'score' or @'flip' ('set' 'voices') 'empty'@.
---
-voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
-voices = unsafeVoices
-{-# INLINE voices #-}
+-- -- |
+-- -- View a score as a list of voices.
+-- --
+-- -- @
+-- -- 'view' 'voices'                        :: 'Score' a -> ['Voice' a]
+-- -- 'set'  'voices'                        :: ['Voice' a] -> 'Score' a -> 'Score' a
+-- -- 'over' 'voices'                        :: (['Voice' a] -> ['Voice' b]) -> 'Score' a -> 'Score' b
+-- -- @
+-- --
+-- -- @
+-- -- 'preview'  ('voices' . 'each')           :: 'Score' a -> 'Maybe' ('Voice' a)
+-- -- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
+-- -- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
+-- -- @
+-- --
+-- -- @
+-- -- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
+-- -- 'set'      ('voices' . 'element' 1)      :: 'Voice' a -> 'Score' a -> 'Score' a
+-- -- 'set'      ('voices' . 'elements' odd)   :: 'Voice' a -> 'Score' a -> 'Score' a
+-- -- @
+-- --
+-- -- @
+-- -- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' b) -> 'Score' a -> 'Score' b
+-- -- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- -- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
+-- -- @
+-- --
+-- -- @
+-- -- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
+-- -- 'toListOf' ('voices' . 'elements' odd)   :: 'Score' a -> ['Voice' a]
+-- -- 'toListOf' ('voices' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Voice' a]
+-- -- @
+-- --
+-- -- This is not an 'Iso', as the voice list representation does not contain meta-data.
+-- -- To construct a score from a voice list, use 'score' or @'flip' ('set' 'voices') 'empty'@.
+-- --
+-- voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
+-- voices = unsafeVoices
+-- {-# INLINE voices #-}
 
 -- |
 -- View a score as a list of notes.
@@ -429,9 +429,9 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 {-# INLINE unsafeNotes #-}
 
-unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
-unsafeVoices = error "Not implemented: unsafeVoices"
-{-# INLINE unsafeVoices #-}
+-- unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
+-- unsafeVoices = error "Not implemented: unsafeVoices"
+-- {-# INLINE unsafeVoices #-}
 
 -- |
 -- View a score as a single note.
@@ -442,14 +442,6 @@ singleNote = unsafeNotes . single
 -- TODO make prism fail if score contains meta-data
 -- (or else second prism law is not satisfied)
 
--- |
--- View a score as a single voice.
---
-singleVoice :: Prism' (Score a) (Voice a)
-singleVoice = unsafeVoices . single
-{-# INLINE singleVoice #-}
--- TODO make prism fail if score contains meta-data
--- (or else second prism law is not satisfied)
 
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
