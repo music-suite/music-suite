@@ -229,6 +229,7 @@ extractCtxt (_,x,_) = x
 --   
 dynamicDisplay :: (Ord a, Real a) => Ctxt a -> ([CrescDim], ShowDyn)
 dynamicDisplay x = case x of
+  (Nothing, y, Nothing) -> ([], True)
   (Nothing, y, Just z ) -> case (y `compare` z) of
     LT      -> ([BeginCresc], True)
     EQ      -> ([],           True)
