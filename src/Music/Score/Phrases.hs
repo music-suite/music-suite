@@ -31,6 +31,7 @@ module Music.Score.Phrases (
     MVoice,
     PVoice,
     mvoicePVoice,
+    unsafeMvoicePVoice,
     singleMVoice,
 
     HasPhrases(..),
@@ -72,7 +73,7 @@ instance HasPhrases (MVoice a) a where
 
 instance HasPhrases (PVoice a) a where
   -- Note: This is actually OK in 'phrases', as that just becomes (id . each . _Right)
-  mvoices = from mvoicePVoice
+  mvoices = from unsafeMvoicePVoice
 
 instance (HasPart' a, Transformable a, Ord (Part a)) => HasPhrases (Score a) a where
   mvoices = extracted . each . singleMVoice
@@ -89,10 +90,13 @@ phrases :: HasPhrases a b => Traversal' a (Phrase b)
 phrases = mvoices . mvoicePVoice . each . _Right
 
 
+mvoicePVoice :: Lens' (MVoice a) (PVoice a)
+mvoicePVoice = unsafeMvoicePVoice
+
 -- TODO only up to meta-data (as it uses unsafeEventsV)...
 -- This is not a problem if we restrict it to a traversal
-mvoicePVoice :: Iso' (MVoice a) (PVoice a)
-mvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
+unsafeMvoicePVoice :: Iso' (MVoice a) (PVoice a)
+unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
   where
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
