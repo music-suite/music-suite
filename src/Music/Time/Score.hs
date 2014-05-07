@@ -471,34 +471,6 @@ _getScore =
   fmap (view $ from note) .
   reifyScore
 
-{-
-scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-scoreToVoice = view voice . fmap (view stretched) . fmap throwTime . addRests . (^. events)
-  where
-     throwTime (t,d,x) = (d,x)
-     addRests = concat . snd . List.mapAccumL g 0
-       where
-         g u (t, d, x)
-           | u == t  = (t .+^ d, [(t, d, Just x)])
-           | u <  t  = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-           | otherwise = error "addRests: Strange prevTime"
--}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
