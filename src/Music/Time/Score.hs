@@ -594,13 +594,3 @@ mapPhrase :: (Score a -> Score a) -> Score a -> Score a
 mapPhrase _ = id
 -- FIXME
 
-
-
-{-
--- TODO remove
-instance HasDuration Meta where
-instance Splittable Meta where
-  split = error "No impl (Splittable Meta)"
-instance Reversible Meta where
-  rev = error "No impl ( Reversible Meta)"
--}
