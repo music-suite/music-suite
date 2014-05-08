@@ -275,7 +275,10 @@ dynamicDisplay x = case x of
 --                 Nothing          -> id
 --                 Just (First lvl) -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just lvl, Nothing)))
 -- 
--- instance HasLilypond a => HasLilypond (ArticulationT a) where
+instance (Tiable n, HasLilypond a) => HasLilypond (ArticulationT n a) where
+  getLilypond d (ArticulationT (n, a)) = notate n $ getLilypond d a
+    where notate _ = id
+
 --     getLilypond d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getLilypond d a
 --         where
 --             notate = nes . nal . nsl . nbs

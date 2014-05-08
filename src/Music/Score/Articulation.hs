@@ -95,6 +95,8 @@ module Music.Score.Articulation (
         -- spiccato,
         -- -- ** Miscellaneous
         -- resetArticulation,
+        
+        ArticulationT(..),
   ) where
 
 import           Control.Applicative
@@ -116,7 +118,10 @@ import           Music.Score.Part
 import Music.Score.Part
 import Music.Score.Ornaments -- TODO
 import Music.Score.Ties -- TODO
+import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 import           Music.Score.Phrases
+
 
 
 
@@ -209,6 +214,47 @@ instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstL articulations
 
+type instance Articulation (Score a) = Articulation a
+type instance SetArticulation b (Score a) = Score (SetArticulation b a)
+instance HasArticulations a b => HasArticulations (Score a) (Score b) where
+instance HasArticulation a b => HasArticulation (Score a) (Score b) where
+
+type instance Articulation (TremoloT a)        = Articulation a
+type instance SetArticulation g (TremoloT a)   = TremoloT (SetArticulation g a)
+type instance Articulation (TextT a)           = Articulation a
+type instance SetArticulation g (TextT a)      = TextT (SetArticulation g a)
+type instance Articulation (HarmonicT a)       = Articulation a
+type instance SetArticulation g (HarmonicT a)  = HarmonicT (SetArticulation g a)
+type instance Articulation (TieT a)            = Articulation a
+type instance SetArticulation g (TieT a)       = TieT (SetArticulation g a)
+type instance Articulation (SlideT a)          = Articulation a
+type instance SetArticulation g (SlideT a)     = SlideT (SetArticulation g a)
+
+instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
+  articulation = _Wrapped . articulation
+
+instance (HasArticulations a b) => HasArticulations (TextT a) (TextT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (TextT a) (TextT b) where
+  articulation = _Wrapped . articulation
+
+instance (HasArticulations a b) => HasArticulations (HarmonicT a) (HarmonicT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (HarmonicT a) (HarmonicT b) where
+  articulation = _Wrapped . articulation
+
+instance (HasArticulations a b) => HasArticulations (TieT a) (TieT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (TieT a) (TieT b) where
+  articulation = _Wrapped . articulation
+
+-- instance (HasArticulations a b) => HasArticulations (SlideT a) (SlideT b) where
+  -- articulations = _Wrapped . articulations
+-- instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
+  -- articulation = _Wrapped . articulations  
+                                                
 
 type family Accentuation (a :: *) :: *
 
@@ -388,3 +434,80 @@ resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . 
 get1 = head . toList
 
 -}
+
+newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
+  deriving (Eq, Ord, Show, Typeable, Functor, 
+    Applicative, {-Comonad,-} Monad, Transformable, Monoid, Semigroup)
+
+instance (Monoid n, Num a) => Num (ArticulationT n a) where
+    (+) = liftA2 (+)
+    (*) = liftA2 (*)
+    (-) = liftA2 (-)
+    abs = fmap abs
+    signum = fmap signum
+    fromInteger = pure . fromInteger
+
+instance (Monoid n, Fractional a) => Fractional (ArticulationT n a) where
+    recip        = fmap recip
+    fromRational = pure . fromRational
+
+instance (Monoid n, Floating a) => Floating (ArticulationT n a) where
+    pi    = pure pi
+    sqrt  = fmap sqrt
+    exp   = fmap exp
+    log   = fmap log
+    sin   = fmap sin
+    cos   = fmap cos
+    asin  = fmap asin
+    atan  = fmap atan
+    acos  = fmap acos
+    sinh  = fmap sinh
+    cosh  = fmap cosh
+    asinh = fmap asinh
+    atanh = fmap atanh
+    acosh = fmap acos
+
+instance (Monoid n, Enum a) => Enum (ArticulationT n a) where
+    toEnum = pure . toEnum
+    fromEnum = fromEnum . get1
+
+instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
+    minBound = pure minBound
+    maxBound = pure maxBound
+
+-- instance (Monoid n, Num a, Ord a, Real a) => Real (ArticulationT n a) where
+--     toRational = toRational . get1
+-- 
+-- instance (Monoid n, Real a, Enum a, Integral a) => Integral (ArticulationT n a) where
+--     quot = liftA2 quot
+--     rem = liftA2 rem
+--     toInteger = toInteger . get1  
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (ArticulationT p a) where
+  type Unwrapped (ArticulationT p a) = (p, a)
+  _Wrapped' = iso getArticulationT ArticulationT
+instance Rewrapped (ArticulationT p a) (ArticulationT p' b)
+
+type instance Articulation (ArticulationT p a) = p
+type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
+
+instance (Transformable p, Transformable p') => HasArticulation (ArticulationT p a) (ArticulationT p' a) where
+  articulation = _Wrapped . _1
+instance (Transformable p, Transformable p') => HasArticulations (ArticulationT p a) (ArticulationT p' a) where
+  articulations = _Wrapped . _1
+
+deriving instance (IsPitch a, Monoid n) => IsPitch (ArticulationT n a)
+deriving instance (IsInterval a, Monoid n) => IsInterval (ArticulationT n a)
+
+deriving instance Reversible a => Reversible (ArticulationT p a)
+instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
+  toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2)) 
+    where 
+      (a1,a2) = toTied a
+      (d1,d2) = toTied d
+
+
+ -- TODO use extract
+get1 (ArticulationT (_,x)) = x
+
