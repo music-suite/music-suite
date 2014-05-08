@@ -205,6 +205,8 @@ instance HasMusicXml a => HasMusicXml (Behavior a) where
 -- |
 -- Convert a score to MusicXML and open it.
 --
+-- /Note/ This is simple wrapper around 'writeMusicXml' that may not work well on all platforms.
+--
 openMusicXml :: (HasMusicXml2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 openMusicXml sc = do
     writeMusicXml "test.xml" sc

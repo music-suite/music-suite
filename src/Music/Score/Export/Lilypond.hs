@@ -431,6 +431,8 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
 -- |
 -- Typeset a score using Lilypond and open it.
 --
+-- /Note/ This is simple wrapper around 'writeLilypond' that may not work well on all platforms.
+--
 openLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
 openLilypond = openLilypond' def
 
@@ -581,21 +583,22 @@ type HasLilypond2 a = (
   HasPart' a,
   HasDynamic    a a,
 
-  HasDynamic    a (SetDynamic (Ctxt (Dynamic a)) a),
-  Dynamic       (SetDynamic (Ctxt (Dynamic a)) a) ~ Ctxt (Dynamic a),
   HasLilypond   (SetDynamic (Ctxt (Dynamic a)) a),
-  Semigroup     (SetDynamic (Ctxt (Dynamic a)) a),
+  Transformable (SetDynamic (Ctxt (Dynamic a)) a),
   HasPart'      (SetDynamic (Ctxt (Dynamic a)) a),
-  Transformable (SetDynamic (Ctxt (Dynamic a)) a)
+  HasDynamic  a (SetDynamic (Ctxt (Dynamic a)) a),
+  Dynamic       (SetDynamic (Ctxt (Dynamic a)) a) ~ Ctxt (Dynamic a),
+
+  Semigroup     (SetDynamic (Ctxt (Dynamic a)) a)
   )
 
 
 addDynCon2 :: (
   HasDynamic a a, HasDynamic a b, 
-  Dynamic b ~ Ctxt (Dynamic a),
   HasPart' a,
   Ord (Part a),
   Transformable a,
+  Dynamic b ~ Ctxt (Dynamic a),
   b ~ SetDynamic (Ctxt (Dynamic a)) a
   
   ) => Score a -> Score b
