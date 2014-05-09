@@ -239,21 +239,6 @@ instance Ord a => Ord (Segment a) where
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = tabulated
 
-{-
--- |
--- A behavior that gives the current time, i.e. the identity function
---
-timeS :: Floating a => Segment a
-timeS = realToFrac^.segment
-
-sineS :: Floating a => Segment a
-#ifdef INCLUDE_LIFTED
-sineS = sin (timeS*tau)
-#else
-sineS = undefined
-#endif
--}
-
 apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2))
   = view stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)

@@ -152,7 +152,3 @@ unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
 unsafeTrack = _Wrapped
 {-# INLINE unsafeTrack #-}
 
---
--- TODO
--- Implement meta-data
---
