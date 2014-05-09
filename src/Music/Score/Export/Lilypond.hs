@@ -466,7 +466,7 @@ toLilypond sc =
                 . second (voiceToLilypond barTimeSigs barDurations . temporaryClefFix . toMVoice)
 
                 -- Meta-event expansion
-                 . uncurry addClefs . second addDynCon2 . second simultaneous{-extra!-}
+                 . uncurry addClefs . second addDynCon2
                 )
 
         . extractParts' $ sc

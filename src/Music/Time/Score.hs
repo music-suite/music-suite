@@ -57,9 +57,9 @@ module Music.Time.Score (
 
       -- ** Simultaneous notes
       simult,
-      mapSimultaneous,
       simultaneous,
-      simultaneous',
+      -- mapSimultaneous,
+      -- simultaneous',
   ) where
 
 import           Data.AffineSpace
