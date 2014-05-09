@@ -415,7 +415,7 @@ tremolo = setTrem
 -- Attach the given text to the first note in the score.
 --
 text :: (HasPhrases' s a, HasText a) => String -> s -> s
-text s = over (phrases'.headV) (addText "Dissonances")
+text s = over (phrases'.headV) (addText s)
 -- text s = mapPhraseWise3 (addText s) id id
 
 -- |
