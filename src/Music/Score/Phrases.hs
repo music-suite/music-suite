@@ -38,13 +38,6 @@ module Music.Score.Phrases (
     HasPhrases',
     phrases,
     phrases',
-
-    -- * Utility (TODO move)
-    headV,
-    middleV,
-    lastV,
-    eventsV,
-    unsafeEventsV,
   ) where
 
 import Data.Maybe
@@ -181,23 +174,8 @@ instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b wh
 -- instance (Transformable a, Transformable b) => Snoc (Phrase a) (Phrase b) a b where
   -- _Snoc = prism' pure (preview lastV)
 
--- TODO make Voice/Phrase an instance of Cons/Snoc and remove these
-headV :: Traversal' (Phrase a) a
-headV = (eventsV._head._2)
 
-middleV :: Traversal' (Phrase a) a
-middleV = (eventsV._middle.traverse._2)
-
-lastV :: Traversal' (Phrase a) a
-lastV = (eventsV._last._2)
-
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
--- Traverse writing to all elements *except* first and last
-_middle = _tail._init
-
-
-
-
+-- TODO move
 
 -- |
 -- Group contigous sequences matching/not-matching the predicate.

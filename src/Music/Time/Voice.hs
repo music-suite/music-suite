@@ -37,13 +37,25 @@ module Music.Time.Voice (
     -- ** Substructure
     voice,
     stretcheds,
-    eventsV,
-    
+    eventsV,    
     singleStretched,
 
     -- *** Unsafe operations
     unsafeStretcheds,
     unsafeEventsV,
+
+    -- *** Separating rhythms and values
+    rhythmV,
+    valuesV,
+    rotateRhythm,
+    rotateValues,
+    reverseRhythm,
+    reverseValues,
+
+    -- *** First and last elements
+    headV,
+    middleV,
+    lastV,
 
     -- ** Fusion
     fuse,
@@ -56,15 +68,8 @@ module Music.Time.Voice (
     zipVoiceWith',
     zipVoiceWithNoScale,
 
+    -- * Context
     withContext,
-    
-    -- ** Separating rhythms and values
-    vrhythm,
-    vvalues,
-    rotateRhythm,
-    rotateValues,
-    reverseRhythm,
-    reverseValues,
   ) where
 
 import           Data.AffineSpace
@@ -298,14 +303,14 @@ fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy 
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
 withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
-withContext = over vvalues withPrevNext
+withContext = over valuesV withPrevNext
 
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
 
 -- TODO more elegant definition using indexed traversal or similar?
-vrhythm :: Lens' (Voice a) [Duration]
-vrhythm = lens getDurs (flip setDurs)
+rhythmV :: Lens' (Voice a) [Duration]
+rhythmV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
     getDurs = map fst . view eventsV
@@ -316,8 +321,8 @@ vrhythm = lens getDurs (flip setDurs)
     durToVoice d = stretch d $ pure ()
 
 -- TODO more elegant definition using indexed traversal or similar?
-vvalues :: Lens (Voice a) (Voice b) [a] [b]
-vvalues = lens getValues (flip setValues)
+valuesV :: Lens (Voice a) (Voice b) [a] [b]
+valuesV = lens getValues (flip setValues)
   where
     getValues :: Voice a -> [a]
     getValues = map snd . view eventsV
@@ -328,16 +333,16 @@ vvalues = lens getValues (flip setValues)
     listToVoice = mconcat . map pure
 
 rotateRhythm :: Int -> Voice a -> Voice a
-rotateRhythm n = over vrhythm (rotate n)
+rotateRhythm n = over rhythmV (rotate n)
 
 rotateValues :: Int -> Voice a -> Voice a
-rotateValues n = over vvalues (rotate n)
+rotateValues n = over valuesV (rotate n)
 
 reverseRhythm :: Voice a -> Voice a
-reverseRhythm = over vrhythm reverse
+reverseRhythm = over rhythmV reverse
 
 reverseValues :: Voice a -> Voice a
-reverseValues = over vvalues reverse
+reverseValues = over valuesV reverse
 
 
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
@@ -354,3 +359,17 @@ zipVoiceWith' f g
 -- Separate safe/unsafe Isos (see voiceList...)
 --
 
+
+-- TODO make Voice/Voice an instance of Cons/Snoc and remove these
+headV :: Traversal' (Voice a) a
+headV = (eventsV._head._2)
+
+middleV :: Traversal' (Voice a) a
+middleV = (eventsV._middle.traverse._2)
+
+lastV :: Traversal' (Voice a) a
+lastV = (eventsV._last._2)
+
+_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
+-- Traverse writing to all elements *except* first and last
+_middle = _tail._init
