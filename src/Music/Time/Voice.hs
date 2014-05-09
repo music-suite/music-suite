@@ -1,7 +1,6 @@
 
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -17,6 +16,7 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -37,7 +37,7 @@ module Music.Time.Voice (
     -- ** Substructure
     voice,
     stretcheds,
-    eventsV,    
+    eventsV,
     singleStretched,
 
     -- *** Unsafe operations
@@ -201,11 +201,6 @@ instance VectorSpace (Voice a) where
   type Scalar (Voice a) = Duration
   d *^ s = d `stretch` s
 
-{-
-instance HasMeta (Voice a) where
-  meta = _Wrapped . _1
--}
-
 
 -- |
 -- Create a score from a list of notes.
@@ -290,7 +285,7 @@ voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . ma
 --
 fuse :: Eq a => Voice a -> Voice a
 fuse = fuseBy (==)
-  
+
 fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
@@ -308,7 +303,10 @@ withContext = over valuesV withPrevNext
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
 
--- TODO more elegant definition using indexed traversal or similar?
+--
+-- TODO more elegant definition of rhythmV and valuesV using indexed traversal or similar?
+--
+
 rhythmV :: Lens' (Voice a) [Duration]
 rhythmV = lens getDurs (flip setDurs)
   where
@@ -320,7 +318,6 @@ rhythmV = lens getDurs (flip setDurs)
 
     durToVoice d = stretch d $ pure ()
 
--- TODO more elegant definition using indexed traversal or similar?
 valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
@@ -359,8 +356,10 @@ zipVoiceWith' f g
 -- Separate safe/unsafe Isos (see voiceList...)
 --
 
-
+-- 
 -- TODO make Voice/Voice an instance of Cons/Snoc and remove these
+--
+
 headV :: Traversal' (Voice a) a
 headV = (eventsV._head._2)
 
@@ -370,6 +369,6 @@ middleV = (eventsV._middle.traverse._2)
 lastV :: Traversal' (Voice a) a
 lastV = (eventsV._last._2)
 
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
 -- Traverse writing to all elements *except* first and last
+_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
 _middle = _tail._init
