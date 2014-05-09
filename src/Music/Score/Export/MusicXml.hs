@@ -137,6 +137,9 @@ instance (Tiable d, HasMusicXml a) => HasMusicXml (DynamicT d a) where
 --                 Nothing          -> mempty
 --                 Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
 -- 
+
+instance (Tiable d, HasMusicXml a) => HasMusicXml (ArticulationT d a) where
+  getMusicXml d (ArticulationT (_,a)) = getMusicXml d a
 -- instance HasMusicXml a => HasMusicXml (ArticulationT a) where
 --     getMusicXml d (ArticulationT (((Any es, Any us, Any bs), (Sum al, Sum sl)), a)) = notate $ getMusicXml d a
 --         where
