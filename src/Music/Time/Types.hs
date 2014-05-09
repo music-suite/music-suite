@@ -56,27 +56,26 @@ module Music.Time.Types (
         -- *** Accessing spans
         range,
         delta,
+        showRange,
+        showDelta,
 
         -- ** Points in spans
         -- TODO move
         isProper,
-
+        isBefore,
         inside,
-        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
         encloses,
         overlaps,
         -- union
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
 
+        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
+
         -- ** Properties
         delayOnly,
         stretchOnly,
         -- Proper spans are always bounded and closed
-
-        -- ** Utility
-        showRange,
-        showDelta,
   ) where
 
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -283,12 +282,6 @@ instance Show Span where
   show = showRange
   -- Which form should we use?
 
-showRange :: Span -> String
-showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
-
-showDelta :: Span -> String
-showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
-
 -- |
 -- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
 -- be the identity transformation.
@@ -354,6 +347,18 @@ range = iso _range $ uncurry (<->)
 --
 delta :: Iso' Span (Time, Duration)
 delta = iso _delta Delta
+
+-- |
+-- Show a span in range notation, i.e. @t1 \<-\> t2@.
+--
+showRange :: Span -> String
+showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
+
+-- |
+-- Show a span in range notation, i.e. @t >-> d@.
+--
+showDelta :: Span -> String
+showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
 
 -- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
