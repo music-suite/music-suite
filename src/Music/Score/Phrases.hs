@@ -48,6 +48,7 @@ module Music.Score.Phrases (
   ) where
 
 import Data.Maybe
+import Data.Ord
 import qualified Data.List as List
 import Control.Lens
 import Control.Applicative
@@ -154,7 +155,11 @@ singleMVoice :: Transformable a => Prism (Score a) (Score b) (MVoice a) (MVoice 
 singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: Transformable a => Score a -> MVoice a
-    scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. events)
+    scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . 
+      -- TODO
+      List.sortBy (comparing (^._1)) 
+      -- end TODO
+      . (^. events)
       where
         throwTime (t,d,x) = (d,x)
         addRests = concat . snd . List.mapAccumL g 0
