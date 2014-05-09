@@ -23,21 +23,26 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- This module provides phrase-wise traversal.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Phrases (
-    Phrase,
-
-    MVoice,
-    PVoice,
-    mvoicePVoice,
-    unsafeMvoicePVoice,
-    singleMVoice,
-
+    -- * HasPhrases class
     HasPhrases(..),
     HasPhrases',
     phrases,
     phrases',
+    
+    -- * Phrase types etc
+    Phrase,
+    MVoice,
+    PVoice,
+    
+    -- ** Utility
+    mvoicePVoice,
+    unsafeMvoicePVoice,
+    singleMVoice,
   ) where
 
 import Data.Maybe
@@ -56,8 +61,25 @@ import Music.Score.Convert
 import Music.Time
 
 
+-- |
+-- For a phrase, we simply use a voice without rests.
+--
+-- To represent a sequence of phrases we provide two equivalent representations:
+--
+-- * 'MVoice' is a sequence of notes/chords or rests. All consecutive non-rests consitute a phrase.
+--
+-- * 'PVoice' is a sequence of phrases or durations.
+--
 type Phrase a = Voice a
+
+-- |
+-- A sequence of phrases or rests, represented as notes or rests.
+--
 type MVoice a = Voice (Maybe a)
+
+-- |
+-- A sequence of phrases or rests, represented with explicit phrase structure.
+--
 type PVoice a = [Either Duration (Phrase a)]
 
 
@@ -76,16 +98,22 @@ instance (HasPart' a, Transformable a, Ord (Part a)) => HasPhrases (Score a) a w
   mvoices = extracted . each . singleMVoice
 -}
 
+-- |
+-- Classes that provide a phrase traversal.
+--
 class HasPhrases s t a b | s -> a, t -> b, s b -> t, t a -> s where
   mvoices :: Traversal s t (MVoice a) (MVoice b)
 
+-- | Traverses all phrases in a voice.
 instance HasPhrases (MVoice a) (MVoice b) a b where
   mvoices = id
 
+  -- | Traverses all phrases in a voice.
 instance HasPhrases (PVoice a) (PVoice b) a b where
   -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
   mvoices = from unsafeMvoicePVoice
 
+-- | Traverses all phrases in each voice, using 'extracted'.
 instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) => 
   HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
