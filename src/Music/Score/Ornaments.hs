@@ -68,6 +68,7 @@ import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Score.Phrases
 
 class HasTremolo a where
     setTrem :: Int -> a -> a
@@ -413,8 +414,9 @@ tremolo = setTrem
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (HasParts' a, HasText a) => String -> Score a -> Score a
-text s = mapPhraseWise3 (addText s) id id
+text :: (HasPhrases' s a, Transformable a, HasText a) => String -> s -> s
+text s = over (phrases'.headV) (addText "Dissonances")
+-- text s = mapPhraseWise3 (addText s) id id
 
 -- |
 -- Add a slide between the first and the last note.
