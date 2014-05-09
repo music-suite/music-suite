@@ -414,20 +414,20 @@ tremolo = setTrem
 -- |
 -- Attach the given text to the first note in the score.
 --
-text :: (HasPhrases' s a, Transformable a, HasText a) => String -> s -> s
+text :: (HasPhrases' s a, HasText a) => String -> s -> s
 text s = over (phrases'.headV) (addText "Dissonances")
 -- text s = mapPhraseWise3 (addText s) id id
 
 -- |
 -- Add a slide between the first and the last note.
 --
-slide :: (HasParts' a, HasSlide a) => Score a -> Score a
+slide :: (HasPhrases' s a, HasSlide a) => s -> s
 slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
 
 -- |
 -- Add a glissando between the first and the last note.
 --
-glissando :: (HasParts' a, HasSlide a) => Score a -> Score a
+glissando :: (HasPhrases' s a, HasSlide a) => s -> s
 glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
 
 -- |
@@ -445,10 +445,9 @@ harmonic n = setNatural True . setHarmonic n
 artificial :: HasHarmonic a => a -> a
 artificial =  setNatural False . setHarmonic 3
 
-
-mapPhraseWise3 :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapPhraseWise3 f _ _ = fmap f
--- TODO
+-- TODO allow polymorphic update
+mapPhraseWise3 :: HasPhrases' s a => (a -> a) -> (a -> a) -> (a -> a) -> s -> s
+mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
 
 
 -- TODO replace with (^?!), extract or similar

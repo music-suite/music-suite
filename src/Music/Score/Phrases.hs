@@ -93,7 +93,7 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
   mvoices = from unsafeMvoicePVoice
 
-instance (HasPart' a, {-HasPart a b, -}Transformable a, Ord (Part a)) => 
+instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) => 
   HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
 
@@ -151,10 +151,10 @@ unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
 
 -- TODO failure
 -- TODO why Transformable?
-singleMVoice :: Transformable a => Prism (Score a) (Score b) (MVoice a) (MVoice b)
+singleMVoice :: {-Transformable a =>-} Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = iso scoreToVoice voiceToScore'
   where
-    scoreToVoice :: Transformable a => Score a -> MVoice a
+    scoreToVoice :: {-Transformable a =>-} Score a -> MVoice a
     scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . 
       -- TODO
       List.sortBy (comparing (^._1)) 
@@ -182,13 +182,13 @@ instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b wh
   -- _Snoc = prism' pure (preview lastV)
 
 -- TODO make Voice/Phrase an instance of Cons/Snoc and remove these
-headV :: Transformable a => Traversal' (Phrase a) a
+headV :: Traversal' (Phrase a) a
 headV = (eventsV._head._2)
 
-middleV :: Transformable a => Traversal' (Phrase a) a
+middleV :: Traversal' (Phrase a) a
 middleV = (eventsV._middle.traverse._2)
 
-lastV :: Transformable a => Traversal' (Phrase a) a
+lastV :: Traversal' (Phrase a) a
 lastV = (eventsV._last._2)
 
 _middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
