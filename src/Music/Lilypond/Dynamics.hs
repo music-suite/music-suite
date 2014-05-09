@@ -57,6 +57,7 @@ instance IsDynamics Dynamics where
         2.5    -> FF
         3.5    -> FFF
         4.5    -> FFFF
-    fromDynamics _ = error "fromDynamics: Unsupported literal for MusicXml.Dynamics"
+        x      -> error $ "Lilypond.Dynamics: Strange value " ++ show x
+    fromDynamics _ = error "Lilypond.Dynamics: Unsupported literal"
 
 
