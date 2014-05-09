@@ -162,7 +162,7 @@ singleMVoice = iso scoreToVoice voiceToScore'
             g u (t, d, x)
               | u == t    = (t .+^ d, [(t, d, Just x)])
               | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-              | otherwise = error "addRests: Strange prevTime"
+              | otherwise = error "singleMVoice: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
     voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. getStretched) . fmap return

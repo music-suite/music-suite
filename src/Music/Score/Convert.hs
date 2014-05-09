@@ -105,7 +105,7 @@ scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^
                g u (t, d, x)
                    | u == t    = (t .+^ d, [(t, d, Just x)])
                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-                   | otherwise = error "addRests: Strange prevTime"
+                   | otherwise = error "scoreToVoice: Strange prevTime"
 {-# DEPRECATED scoreToVoice "" #-}
 
 -- |
