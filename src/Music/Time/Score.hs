@@ -554,6 +554,8 @@ getValue (t,d,a) = a
 getSpan :: (Time, Duration, a) -> Span
 getSpan (t,d,a) = t >-> d
 
+-- TODO identical to: lens simultaneous' (flip $ mapSimultaneous . const)
+-- wrap in something to preserve meta
 simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simult = lens simultaneous' (flip $ mapSimultaneous . const)
+simult = iso simultaneous' mscatter
 
