@@ -114,7 +114,9 @@ class (HasBackend b, Functor s) => HasBackendScore b s where
   -- exportScore b = fmap Identity
 
 class (HasBackend b) => HasBackendEvent b a where
-  exportNote :: b -> BackendContext b a -> BackendEvent b
+  exportNote  :: b -> BackendContext b a   -> BackendEvent b
+  exportChord :: b -> BackendContext b [a] -> BackendEvent b
+  exportChord = error "Not implemented"
 
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendEvent b
   -- exportNote' b x = exportNote b (Identity x)
@@ -186,13 +188,13 @@ instance HasBackendScore Ly Voice where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
 
 instance HasBackendEvent Ly a => HasBackendEvent Ly [a] where
-  exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
-  -- TODO this is wrong, we want to use Lilypond.chord, not scat...
+  -- exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
+  exportNote b = exportChord b
 
 instance HasBackendEvent Ly Integer where
   -- exportNote _ (LyContext d [])  = (^*realToFrac (d*4)) . Lilypond.rest
   exportNote _ (LyContext d x) = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond $ x
-  -- exportNote _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond $ xs
+  exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond $ xs
 
 
 instance HasBackendEvent Ly Int where 
