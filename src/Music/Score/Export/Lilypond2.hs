@@ -13,7 +13,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Main where
+module Music.Score.Export.Lilypond2 where
 
 import Music.Pitch.Literal
 import Music.Score hiding (
@@ -23,6 +23,8 @@ import Music.Score hiding (
 import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
 import           Music.Score.Export.Common
+import Data.Ratio
+import Data.Maybe
 
 {-
   Assume that Music is a type function that returns the underlying music
@@ -57,6 +59,10 @@ import           Music.Score.Export.Common
   clef
 -}
 
+-- TODO remove this somehow
+type HasOrdPart a = (HasPart' a, Ord (Part a), Transformable a)
+
+
 
 
 class Functor (BackendScore b) => HasBackend b where
@@ -78,7 +84,7 @@ class Functor (BackendScore b) => HasBackend b where
   finalizeExport :: b -> BackendScore b (BackendNoteRest b) -> BackendMusic b
   
 class (HasBackend b, Functor s) => HasBackendScore b s where
-  exportScore :: b -> s a -> BackendScore b (BackendContext b a)
+  exportScore :: HasOrdPart a => b -> s a -> BackendScore b (BackendContext b a)
   -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
   -- exportScore b = fmap Identity
 
@@ -88,7 +94,7 @@ class (HasBackend b) => HasBackendNoteRest b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNoteRest b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasBackendScore b s, HasBackendNoteRest b a) => b -> s a -> BackendMusic b
+export :: (HasOrdPart a, HasBackendScore b s, HasBackendNoteRest b a) => b -> s a -> BackendMusic b
 export b = finalizeExport b . export'
   where
     -- These commute except for BackendContext
@@ -124,12 +130,11 @@ instance HasBackendNoteRest Foo a => HasBackendNoteRest Foo (DynamicT (Sum Int) 
 
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasBackendNoteRest Ly a, HasBackendScore Ly s) => s a -> String
+toLilypondString :: (HasOrdPart a, HasBackendNoteRest Ly a, HasBackendScore Ly s) => s a -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasBackendNoteRest Ly a, HasBackendScore Ly s) => s a -> Lilypond.Music
+toLilypond :: (HasOrdPart a, HasBackendNoteRest Ly a, HasBackendScore Ly s) => s a -> Lilypond.Music
 toLilypond = export (undefined::Ly)
-
 
 data Ly
 data LyScore a = LyScore [[a]] deriving (Functor, Eq, Show)
@@ -141,8 +146,10 @@ instance HasBackend Ly where
   type BackendMusic Ly = Lilypond.Music
   finalizeExport _ (LyScore xs) = pcatLilypond . fmap scatLilypond $ xs
 
--- instance HasBackendScore Ly Score where
-  -- exportScore _ v = 
+
+instance HasBackendScore Ly Score where
+  -- exportScore b s = exportScore b ((^?! phrases) s)
+  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ s)
 instance HasBackendScore Ly Voice where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d [x]) $ view eventsV v]
 
@@ -150,6 +157,59 @@ instance HasBackendNoteRest Ly Integer where
   -- exportNote _ (LyContext d [])  = (^*realToFrac (d*4)) . Lilypond.rest
   exportNote _ (LyContext d [x]) = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond $ x
   exportNote _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond $ xs
+
+
+instance HasBackendNoteRest Ly Int where 
+  exportNote b = exportNote b . fmap toInteger
+
+instance HasBackendNoteRest Ly Float where 
+  exportNote b = exportNote b . fmap (toInteger . round)
+
+instance HasBackendNoteRest Ly Double where 
+  exportNote b = exportNote b . fmap (toInteger . round)
+
+instance Integral a => HasBackendNoteRest Ly (Ratio a) where 
+  exportNote b = exportNote b . fmap (toInteger . round)
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (Behavior a) where
+  exportNote b = exportNote b . fmap (! 0)
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (Sum a) where
+  exportNote b = exportNote b . fmap getSum
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (Product a) where
+  exportNote b = exportNote b . fmap getProduct
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (PartT n a) where
+  exportNote b = exportNote b . fmap (snd . getPartT)
+
+-- TODO ties
+-- TODO dynamics
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (DynamicT n a) where
+  exportNote b = exportNote b . fmap (snd . getDynamicT)
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (ArticulationT n a) where
+  exportNote b = exportNote b . fmap (snd . getArticulationT)
+  
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (TremoloT a) where
+  exportNote b (LyContext d [(TremoloT (n, x))]) = exportNote b $ LyContext d [x] -- TODO many
+    -- where
+    -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
+    -- getL d (TremoloT (Max n, x)) = notate $ getLilypond newDur x
+    --     where
+    --         scale   = 2^n
+    --         newDur  = (d `min` (1/4)) / scale
+    --         repeats = d / newDur
+    --         notate = Lilypond.Tremolo (round repeats)
+
+instance HasBackendNoteRest Ly a => HasBackendNoteRest Ly (TextT a) where
+  exportNote b (LyContext d [(TextT (n, x))]) = notate n (exportNote b $ LyContext d [x]) -- TODO many
+    where
+      notate ts = foldr (.) id (fmap Lilypond.addText ts)
+
+-- TODO harmonic
+-- TODO slide
+-- TODO clef
 
 
 
@@ -186,4 +246,4 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 
-main = putStrLn $ toLilypondString $ (pure (-1) :: Voice Integer) <> d <> e
+main = putStrLn $ toLilypondString $ scat [c,d,e::Score Integer]^*(2/4)
