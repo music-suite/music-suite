@@ -69,7 +69,27 @@ type HasOrdPart a = (a ~ a)
 
 
 
-
+-- |
+-- This class defines types and functions for exporting music in a very general way.
+--
+-- The backend type @b@ is just a type level tag to identify a specific backend,
+-- typically defines as an empty data declaration:
+--
+-- @
+-- data Foo
+-- instance HasBackend Foo where
+--   type BackendMusic Foo = ...
+-- @
+--
+-- The actual conversion is handled by the subclasses 'HasBackendScore' and 'HasBackendEvent',
+-- which converts the time structure, and the contained music respectively. In general, parametricity ensures
+-- that structure and content are handled completely separately. However, it is often necessary to
+-- alter the events based on their surrounding context: for examples the beginning and end of spanners
+-- and beams depend on surrounding notes. Thus, the 'BackendContext' type allow 'HasBackendScore' instances
+-- to provide context for 'HasBackendEvent' instances.
+--
+--
+--
 class Functor (BackendScore b) => HasBackend b where
   -- | The full music representation
   type BackendMusic b :: *
