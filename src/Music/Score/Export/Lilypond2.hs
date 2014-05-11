@@ -15,7 +15,15 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module Music.Score.Export.Lilypond2 where
+module Music.Score.Export.Lilypond2 (
+    HasBackend(..),
+    HasBackendScore(..),
+    HasBackendEvent(..),
+    export,
+    Ly,
+    toLilypondString,
+    toLilypond,
+  ) where
 
 import Music.Pitch.Literal
 import Music.Score hiding (
@@ -72,22 +80,26 @@ type HasOrdPart a = (a ~ a)
 -- |
 -- This class defines types and functions for exporting music in a very general way.
 --
--- The backend type @b@ is just a type level tag to identify a specific backend,
--- typically defines as an empty data declaration:
+-- The backend type @b@ is just a type level tag to identify a specific backend.
+--
+--
+-- The actual conversion is handled by the subclasses 'HasBackendScore' and
+-- 'HasBackendEvent', which converts the time structure, and the contained music
+-- respectively. In general, parametricity ensures that structure and content are handled
+-- completely separately. 
+--
+-- It is often necessary to
+-- alter the events based on their surrounding context: for examples the beginning and end
+-- of spanners and beams depend on surrounding notes. Thus, the 'BackendContext' type
+-- allow 'HasBackendScore' instances to provide context for 'HasBackendEvent' instances.
+--
+-- -- The tag is typically defined as an empty data declaration:
 --
 -- @
 -- data Foo
 -- instance HasBackend Foo where
 --   type BackendMusic Foo = ...
 -- @
---
--- The actual conversion is handled by the subclasses 'HasBackendScore' and 'HasBackendEvent',
--- which converts the time structure, and the contained music respectively. In general, parametricity ensures
--- that structure and content are handled completely separately. However, it is often necessary to
--- alter the events based on their surrounding context: for examples the beginning and end of spanners
--- and beams depend on surrounding notes. Thus, the 'BackendContext' type allow 'HasBackendScore' instances
--- to provide context for 'HasBackendEvent' instances.
---
 --
 --
 class Functor (BackendScore b) => HasBackend b where
@@ -154,6 +166,13 @@ instance HasBackendEvent Foo a => HasBackendEvent Foo (DynamicT (Sum Int) a) whe
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
 -- main = print $ export (undefined::Foo) [DynamicT (Sum 4::Sum Int,3::Int), pure 1]
+
+
+
+
+
+
+
 
 
 
@@ -253,6 +272,54 @@ instance HasBackendEvent Ly a => HasBackendEvent Ly (TextT a) where
 
 
 
+{-
+-- |
+-- Convert a voice score to a list of bars.
+--
+voiceToLilypond :: HasLilypond15 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
+--
+-- This is where notation of a single voice takes place
+--      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
+--      * barToLilypond is specific: it handles quantization and notation
+--
+    where
+        -- FIXME compounds
+        setBarTimeSig Nothing x = x
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
+
+
+barToLilypond :: HasLilypond15 a => [(Duration, Maybe a)] -> Lilypond
+barToLilypond bar = case (fmap rewrite . quantize) bar of
+    Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToLilypond rh
+
+rhythmToLilypond = uncurry ($) . rhythmToLilypond2
+
+
+
+-- rhythmToLilypond2 :: HasLilypond15 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
+rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
+rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
+-- TODO propagate
+rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilypond $ extract1 $ map rhythmToLilypond2 $ rs
+rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
+    where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+
+-- noteRestToLilypond2 :: HasLilypond15 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
+noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
+noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
+
+-- extract first value of type b
+-- extract1 :: [(b, a)] -> (Maybe b, [a])
+extract1 []         = (Nothing, [])
+extract1 ((p,x):xs) = (Just p, x : fmap snd xs)
+
+
+-}
+
+
+
 
 
 
@@ -284,4 +351,8 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 
-main = putStrLn $ toLilypondString $ simultaneous $ scat [c,d,e::Score [Integer]] <> fs
+main = putStrLn $ show $ view notes $ simultaneous 
+  $ text "Hello"
+  $ (scat [c,d,e::Score (PartT Int (TextT [Integer]))])^*(1/1)
+
+
