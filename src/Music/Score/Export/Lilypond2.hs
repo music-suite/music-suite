@@ -206,6 +206,12 @@ instance HasBackendScore Ly Score where
 instance HasBackendScore Ly Voice where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
 
+
+voiceToLilypond :: [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+voiceToLilypond = undefined
+
+
+
 instance HasBackendEvent Ly a => HasBackendEvent Ly [a] where
   -- exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
   exportNote b = exportChord b
