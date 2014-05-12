@@ -216,8 +216,13 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
 
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation b (Score a) = Score (SetArticulation b a)
--- instance HasArticulations a b => HasArticulations (Score a) (Score b) where
--- instance HasArticulation a b => HasArticulation (Score a) (Score b) where
+instance HasArticulations a b => HasArticulations (Score a) (Score b) where
+  articulations = 
+    _Wrapped . _2   -- into NScore
+    . _Wrapped
+    . traverse 
+    . _Wrapped      -- this needed?
+    . whilstL articulations
 
 type instance Articulation (TremoloT a)        = Articulation a
 type instance SetArticulation g (TremoloT a)   = TremoloT (SetArticulation g a)
