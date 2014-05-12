@@ -18,7 +18,7 @@
 module Music.Score.Export.Lilypond2 (
     HasBackend(..),
     HasBackendScore(..),
-    HasBackendEvent(..),
+    HasBackendNotes(..),
     export,
     Ly,
     toLilypondString,
@@ -84,14 +84,14 @@ type HasOrdPart a = (a ~ a)
 --
 --
 -- The actual conversion is handled by the subclasses 'HasBackendScore' and
--- 'HasBackendEvent', which converts the time structure, and the contained music
+-- 'HasBackendNotes', which converts the time structure, and the contained music
 -- respectively. In general, parametricity ensures that structure and content are handled
 -- completely separately. 
 --
 -- It is often necessary to
 -- alter the events based on their surrounding context: for examples the beginning and end
 -- of spanners and beams depend on surrounding notes. Thus, the 'BackendContext' type
--- allow 'HasBackendScore' instances to provide context for 'HasBackendEvent' instances.
+-- allow 'HasBackendScore' instances to provide context for 'HasBackendNotes' instances.
 --
 -- -- The tag is typically defined as an empty data declaration:
 --
@@ -109,7 +109,7 @@ class Functor (BackendScore b) => HasBackend b where
   -- | Score, voice and time structure, with output handled by 'HasBackendScore' 
   type BackendScore b :: * -> *
 
-  -- | Notes, chords and rests, with output handled by 'HasBackendEvent' 
+  -- | Notes, chords and rests, with output handled by 'HasBackendNotes' 
   type BackendEvent b :: *
 
   -- | This type may be used to pass context from 'exportScore' to 'exportNote'.
@@ -125,7 +125,7 @@ class (HasBackend b, Functor s) => HasBackendScore b s where
   -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
   -- exportScore b = fmap Identity
 
-class (HasBackend b) => HasBackendEvent b a where
+class (HasBackend b) => HasBackendNotes b a where
   exportNote  :: b -> BackendContext b a   -> BackendEvent b
   exportChord :: b -> BackendContext b [a] -> BackendEvent b
   exportChord = error "Not implemented"
@@ -133,7 +133,7 @@ class (HasBackend b) => HasBackendEvent b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendEvent b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasOrdPart a, HasBackendScore b s, HasBackendEvent b a) => b -> s a -> BackendMusic b
+export :: (HasOrdPart a, HasBackendScore b s, HasBackendNotes b a) => b -> s a -> BackendMusic b
 export b = finalizeExport b . export'
   where
     -- These commute except for BackendContext
@@ -157,12 +157,12 @@ instance HasBackend Foo where
   finalizeExport _ = concat
 instance HasBackendScore Foo [] where
   exportScore _ = fmap Identity
-instance HasBackendEvent Foo a => HasBackendEvent Foo [a] where
+instance HasBackendNotes Foo a => HasBackendNotes Foo [a] where
   -- exportNote b (Identity ps) = concatMap (exportNote b . Identity) ps
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
-instance HasBackendEvent Foo Int where
+instance HasBackendNotes Foo Int where
   exportNote _ (Identity p) = [(mempty ,p)]
-instance HasBackendEvent Foo a => HasBackendEvent Foo (DynamicT (Sum Int) a) where
+instance HasBackendNotes Foo a => HasBackendNotes Foo (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
 -- main = print $ export (undefined::Foo) [DynamicT (Sum 4::Sum Int,3::Int), pure 1]
@@ -179,10 +179,10 @@ instance HasBackendEvent Foo a => HasBackendEvent Foo (DynamicT (Sum Int) a) whe
 
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasOrdPart a, HasBackendEvent Ly a, HasBackendScore Ly s) => s a -> String
+toLilypondString :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s) => s a -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasOrdPart a, HasBackendEvent Ly a, HasBackendScore Ly s) => s a -> Lilypond.Music
+toLilypond :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s) => s a -> Lilypond.Music
 toLilypond = export (undefined::Ly)
 
 data Ly
@@ -212,49 +212,49 @@ voiceToLilypond = undefined
 
 
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly [a] where
+instance HasBackendNotes Ly a => HasBackendNotes Ly [a] where
   -- exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
   exportNote b = exportChord b
 
-instance HasBackendEvent Ly Integer where
+instance HasBackendNotes Ly Integer where
   -- exportNote _ (LyContext d [])  = (^*realToFrac (d*4)) . Lilypond.rest
   exportNote _ (LyContext d x) = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond $ x
   exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond $ xs
 
 
-instance HasBackendEvent Ly Int where 
+instance HasBackendNotes Ly Int where 
   exportNote b = exportNote b . fmap toInteger
 
-instance HasBackendEvent Ly Float where 
+instance HasBackendNotes Ly Float where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance HasBackendEvent Ly Double where 
+instance HasBackendNotes Ly Double where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance Integral a => HasBackendEvent Ly (Ratio a) where 
+instance Integral a => HasBackendNotes Ly (Ratio a) where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (Behavior a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (Behavior a) where
   exportNote b = exportNote b . fmap (! 0)
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (Sum a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (Sum a) where
   exportNote b = exportNote b . fmap getSum
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (Product a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (Product a) where
   exportNote b = exportNote b . fmap getProduct
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (PartT n a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 -- TODO ties
 -- TODO dynamics
-instance HasBackendEvent Ly a => HasBackendEvent Ly (DynamicT n a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (DynamicT n a) where
   exportNote b = exportNote b . fmap (snd . getDynamicT)
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (ArticulationT n a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
-instance HasBackendEvent Ly a => HasBackendEvent Ly (TremoloT a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (TremoloT a) where
   exportNote b (LyContext d (TremoloT (n, x))) = exportNote b $ LyContext d x -- TODO many
     -- where
     -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
@@ -265,7 +265,7 @@ instance HasBackendEvent Ly a => HasBackendEvent Ly (TremoloT a) where
     --         repeats = d / newDur
     --         notate = Lilypond.Tremolo (round repeats)
 
-instance HasBackendEvent Ly a => HasBackendEvent Ly (TextT a) where
+instance HasBackendNotes Ly a => HasBackendNotes Ly (TextT a) where
   exportNote b (LyContext d (TextT (n, x))) = notate n (exportNote b $ LyContext d x) -- TODO many
     where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
