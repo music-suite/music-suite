@@ -94,7 +94,6 @@ instance HasPitch a b => HasPitch (PartT p a) (PartT p b) where
 instance HasPitches a b => HasPitches (PartT p a) (PartT p b) where
   pitches = _Wrapped . _2 . pitches
 
-
 type instance Pitch (DynamicT p a) = Pitch a
 type instance SetPitch b (DynamicT p a) = DynamicT p (SetPitch b a)
 
@@ -110,7 +109,6 @@ instance HasPitch a b => HasPitch (ArticulationT p a) (ArticulationT p b) where
   pitch = _Wrapped . _2 . pitch
 instance HasPitches a b => HasPitches (ArticulationT p a) (ArticulationT p b) where
   pitches = _Wrapped . _2 . pitches
-
 
 
 
@@ -130,6 +128,15 @@ instance HasDynamic a b => HasDynamic (ArticulationT p a) (ArticulationT p b) wh
 instance HasDynamics a b => HasDynamics (ArticulationT p a) (ArticulationT p b) where
   dynamics = _Wrapped . _2 . dynamics
 
+
+
+type instance Articulation (PartT p a) = Articulation a
+type instance SetArticulation b (PartT p a) = PartT p (SetArticulation b a)
+
+instance HasArticulation a b => HasArticulation (PartT p a) (PartT p b) where
+  articulation = _Wrapped . _2 . articulation
+instance HasArticulations a b => HasArticulations (PartT p a) (PartT p b) where
+  articulations = _Wrapped . _2 . articulations
 
 -- -------------------------------------------------------------------------------------
 
