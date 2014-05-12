@@ -255,23 +255,37 @@ instance (HasArticulations a b) => HasArticulations (TieT a) (TieT b) where
 instance (HasArticulation a b) => HasArticulation (TieT a) (TieT b) where
   articulation = _Wrapped . articulation
 
--- instance (HasArticulations a b) => HasArticulations (SlideT a) (SlideT b) where
-  -- articulations = _Wrapped . articulations
--- instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
-  -- articulation = _Wrapped . articulations  
+instance (HasArticulations a b) => HasArticulations (SlideT a) (SlideT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
+  articulation = _Wrapped . articulation
                                                 
 
 type family Accentuation (a :: *) :: *
 
 type family Separation (a :: *) :: *
 
+type instance Accentuation () = ()
+type instance Separation   () = ()
+type instance Accentuation (Double, Double) = Double
+type instance Separation   (Double, Double) = Double
+
+-- TODO move
+instance VectorSpace () where
+  type Scalar () = ()
+  _ *^ _ = ()
+instance AffineSpace () where
+  type Diff () = ()  
+  _ .-. _ = ()
+  _ .+^ _ = ()
+
 -- |
 -- Class of types that can be transposed, inverted and so on.
 --
 type Articulated a
   = (HasArticulations a a, 
-     AffineSpace (Accentuation a), 
-     AffineSpace (Separation a))
+     AffineSpace (Accentuation (Articulation a)), 
+     AffineSpace (Separation (Articulation a)))
 
 
 -- accent = error "Not implemented: accent"

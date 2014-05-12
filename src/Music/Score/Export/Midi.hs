@@ -142,11 +142,9 @@ instance HasMidi a => HasMidi (PartT n a) where
     getMidi (PartT (_,a))                           = getMidi a
 instance HasMidi a => HasMidi (DynamicT d a) where
     getMidi (DynamicT (_,a))                        = getMidi a
--- instance HasMidi a => HasMidi (ArticulationT a) where
---     getMidi (ArticulationT (_,a))                   = getMidi a
--- 
--- instance HasMidi a => HasMidi (ChordT a) where
---     getMidi = pcat . fmap getMidi . getChordT
+instance HasMidi a => HasMidi (ArticulationT d a) where
+    getMidi (ArticulationT (_,a))                   = getMidi a
+
 instance HasMidi a => HasMidi [a] where
     getMidi = pcat . fmap getMidi
 instance HasMidi a => HasMidi (TieT a) where
