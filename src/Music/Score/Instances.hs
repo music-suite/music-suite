@@ -199,14 +199,18 @@ instance Alterable a => Alterable (Score a) where
     flatten = fmap flatten
 deriving instance Alterable a => Alterable (TieT a)
 deriving instance Alterable a => Alterable (PartT n a)
+deriving instance Alterable a => Alterable (DynamicT n a)
+deriving instance Alterable a => Alterable (ArticulationT n a)
 
 instance Augmentable a => Augmentable (Score a) where
     augment = fmap augment
     diminish = fmap diminish
 deriving instance Augmentable a => Augmentable (TieT a)
 deriving instance Augmentable a => Augmentable (PartT n a)
--- 
--- 
+deriving instance Augmentable a => Augmentable (DynamicT n a)
+deriving instance Augmentable a => Augmentable (ArticulationT n a)
+
+
 -- -------------------------------------------------------------------------------------
 -- -- Num, Integral, Enum and Bounded
 -- -------------------------------------------------------------------------------------
