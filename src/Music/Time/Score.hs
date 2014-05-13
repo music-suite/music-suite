@@ -362,7 +362,9 @@ score = from unsafeNotes
 -- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
 --
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = _Wrapped . _2 . _Wrapped
+notes = _Wrapped . _2 . _Wrapped . sorted
+  where
+    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
 -- notes = unsafeNotes
 {-# INLINE notes #-}
 
@@ -415,10 +417,13 @@ notes = _Wrapped . _2 . _Wrapped
 -- See also the safe (but more restricted) 'notes' and 'score'.
 --
 unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeNotes = _Wrapped . noMeta . _Wrapped
+unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
   where
     noMeta = iso extract return
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
+
+    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
+
 {-# INLINE unsafeNotes #-}
 
 -- unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
