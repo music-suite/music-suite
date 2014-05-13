@@ -513,7 +513,7 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
 --      * barToLilypond is specific: it handles quantization and notation
 --
     where
-        -- FIXME compounds
+        -- TODO compounds
         setBarTimeSig Nothing x = x
         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
 

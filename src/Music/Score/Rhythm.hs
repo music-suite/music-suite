@@ -126,7 +126,7 @@ instance AdditiveGroup (Rhythm a) where
 instance VectorSpace (Rhythm a) where
     type Scalar (Rhythm a) = Duration
     a *^ Beat d x = Beat (a*d) x
-    -- FIXME how does this preserve the invariant?
+    -- TODO how does this preserve the invariant?
 
 Beat d x `subDur` d' = Beat (d-d') x
 
@@ -325,7 +325,7 @@ bound' d = do
     modifyState $ modifyTimeSub (subtract d)
     let (b,c) = toTied $ getBeatValue a
 
-    -- FIXME doesn't know order
+    -- TODO doesn't know order
     return $ Group [Beat (getBeatDuration a) b, Beat d c]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
