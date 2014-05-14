@@ -43,8 +43,8 @@ module Music.Time.Meta (
 
         -- * Meta-values
         Meta,
-        addMeta,
-        runMeta,
+        toMeta,
+        fromMeta,
         HasMeta(..),
         applyMeta,
   ) where
@@ -139,16 +139,16 @@ instance HasMeta Meta where
 -- The API still works, but all parts are merged together
 --
 
-addMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
-addMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
+toMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
+toMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
     where
         key = ty ++ pt
         pt = ""
         -- pt = show $ fmap getPart partId
         ty = show $ typeOf (undefined :: b)
 
-runMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> Meta -> Maybe b
-runMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
+fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> Meta -> Maybe b
+fromMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
     where
         key = ty ++ pt       

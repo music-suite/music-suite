@@ -490,8 +490,8 @@ toLilypond sc =
         barDurations =                 getBarDurations      $ timeSigsV
 
 
-        -- getTimeSignatures def       =           fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
-        -- getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . runMeta (Nothing::Maybe Int) . getScoreMeta
+        -- getTimeSignatures def       =           fmap (fromMaybe def . unOptionFirst) . fromMeta (Nothing::Maybe Int) . getScoreMeta
+        -- getTimeSignatureChanges def = updates . fmap (fromMaybe def . unOptionFirst) . fromMeta (Nothing::Maybe Int) . getScoreMeta
 
         addStaff = Lilypond.New "Staff" Nothing
         addPartName partName x = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ show partName)

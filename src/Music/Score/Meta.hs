@@ -56,7 +56,7 @@ module Music.Score.Meta (
         -- * Meta-events
         addMetaNote,
         addGlobalMetaNote,
-        runMetaReactive,
+        fromMetaReactive,
 
         metaAt,
         metaAtStart,
@@ -373,13 +373,13 @@ onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
 
 -}
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b{-, HasPart' b-}) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ addMeta (Just y) $ noteToReactive x) y
+addMetaNote x y = (applyMeta $ toMeta (Just y) $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ addMeta (Nothing::Maybe Int) $ noteToReactive x
+addGlobalMetaNote x = applyMeta $ toMeta (Nothing::Maybe Int) $ noteToReactive x
 
-runMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
-runMetaReactive part = fromMaybe mempty . runMeta part
+fromMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
+fromMetaReactive part = fromMaybe mempty . fromMeta part
 
 
 
@@ -407,7 +407,7 @@ mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2
 -- Each "update chunk" of the meta-info is processed separately
 
 runScoreMeta :: forall a b . ({-HasPart' a, -}IsAttribute b) => Score a -> Reactive b
-runScoreMeta = runMetaReactive (Nothing :: Maybe a) . (view meta)
+runScoreMeta = fromMetaReactive (Nothing :: Maybe a) . (view meta)
 
 metaAt :: ({-HasPart' a, -}IsAttribute b) => Time -> Score a -> b
 metaAt x = (`atTime` x) . runScoreMeta
@@ -424,7 +424,7 @@ withMeta f x = withMeta' (Just x) f x
 withMeta' :: ({-HasPart' c, -}IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
     m = (view meta) x
-    r = runMetaReactive part m
+    r = fromMetaReactive part m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a, t), bs, (u, c)) ->
@@ -444,7 +444,7 @@ withMetaAtStart' :: (IsAttribute b{-, HasPart' p-}) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' partId f x = let
     m = (view meta) x
-    in f (runMetaReactive partId m `atTime` _onset x) x
+    in f (fromMetaReactive partId m `atTime` _onset x) x
 
 
 
