@@ -207,7 +207,7 @@ singleMVoice = iso scoreToVoice voiceToScore'
               | otherwise = error "singleMVoice: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
-    voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. getStretched) . fmap return
+    voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchedValue) . fmap return
 
     voiceToScore' :: MVoice a -> Score a
     voiceToScore' = mcatMaybes . voiceToScore

@@ -36,7 +36,7 @@ module Music.Time.Note (
     note,
     -- fromNote,
     event,
-    getNote,
+    noteValue,
   ) where
 
 import           Data.AffineSpace
@@ -86,7 +86,7 @@ import           Music.Time.Util (tripped, through)
 -- type Note a = (Span, a)
 -- @
 --
-newtype Note a = Note { _getNote :: (Span, a) }
+newtype Note a = Note { _noteValue :: (Span, a) }
   deriving (Typeable)
 
 deriving instance Eq a => Eq (Note a)
@@ -105,12 +105,12 @@ deriving instance Monad Note
 deriving instance Applicative Note
 
 -- instance ComonadEnv Span Note where
-  -- ask = getNoteSpan
+  -- ask = noteValueSpan
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso _getNote Note
+  _Wrapped' = iso _noteValue Note
 
 instance Rewrapped (Note a) (Note b)
 
@@ -143,15 +143,15 @@ note = _Unwrapped
 -- |
 -- View the value in the note.
 --
-getNote :: (Transformable a, Transformable b) =>
+noteValue :: (Transformable a, Transformable b) =>
   Lens
     (Note a) (Note b)
     a b
-getNote = lens runNote (flip $ mapNote . const)
+noteValue = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
-{-# INLINE getNote #-}
+{-# INLINE noteValue #-}
 
 fromNote = from note
 

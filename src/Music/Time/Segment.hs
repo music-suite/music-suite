@@ -357,7 +357,7 @@ concatS = mconcat . map concatSegment . view notes
 --
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
 concatB = concatS . fmap (view focusing)
--- Or (more generally): mconcat.toListOf (notes.each.getNote)
+-- Or (more generally): mconcat.toListOf (notes.each.noteValue)
 
 
 -- |
@@ -370,7 +370,7 @@ concatB = concatS . fmap (view focusing)
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded . getNote) . {-pure-}bounding mempty
+    get = view (from bounded . noteValue) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 
 

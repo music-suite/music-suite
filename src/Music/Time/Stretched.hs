@@ -33,7 +33,7 @@ module Music.Time.Stretched (
     -- * Music.Time.Stretched
     Stretched,
     stretched,
-    getStretched,
+    stretchedValue,
   ) where
 
 import           Data.AffineSpace
@@ -72,7 +72,7 @@ import           Data.Typeable
 -- type Stretched = (Duration, a)
 -- @
 --
-newtype Stretched a = Stretched { _getStretched :: (Duration, a) }
+newtype Stretched a = Stretched { _stretchedValue :: (Duration, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
@@ -89,7 +89,7 @@ deriving instance Typeable1 Stretched
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
-  _Wrapped' = iso _getStretched Stretched
+  _Wrapped' = iso _stretchedValue Stretched
 
 instance Rewrapped (Stretched a) (Stretched b)
 
@@ -118,11 +118,11 @@ stretched = _Unwrapped
 -- |
 -- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
-getStretched :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-getStretched = lens runStretched (flip $ _stretched . const)
+stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+stretchedValue = lens runStretched (flip $ _stretched . const)
   where
     _stretched f (Stretched (d,x)) = Stretched (d, f `whilst` stretching d $ x)
-{-# INLINE getStretched #-}
+{-# INLINE stretchedValue #-}
 
 runStretched :: Transformable a => Stretched a -> a
 runStretched = uncurry stretch . view _Wrapped

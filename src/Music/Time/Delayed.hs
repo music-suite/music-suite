@@ -33,7 +33,7 @@ module Music.Time.Delayed (
     -- * Music.Time.Delayed
     Delayed,
     delayed,
-    getDelayed,
+    delayedValue,
   ) where
 
 import           Data.AffineSpace
@@ -77,7 +77,7 @@ import           Data.Typeable
 -- type Delayed a = (Time, a)
 -- @
 --
-newtype Delayed a = Delayed   { _getDelayed :: (Time, a) }
+newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
   deriving (Eq, {-Ord, -}{-Show, -}
             Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable, Typeable)
@@ -87,7 +87,7 @@ deriving instance Show a => Show (Delayed a)
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
-  _Wrapped' = iso _getDelayed Delayed
+  _Wrapped' = iso _delayedValue Delayed
 
 instance Rewrapped (Delayed a) (Delayed b)
 
@@ -116,14 +116,14 @@ delayed = _Unwrapped
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-getDelayed :: (Transformable a, Transformable b)
+delayedValue :: (Transformable a, Transformable b)
   => Lens
       (Delayed a) (Delayed b)
       a b
-getDelayed = lens runDelayed (flip $ _delayed . const)
+delayedValue = lens runDelayed (flip $ _delayed . const)
   where
     _delayed f (Delayed (t,x)) = Delayed (t, f `whilst` delaying (t .-. 0) $ x)
-{-# INLINE getDelayed #-}
+{-# INLINE delayedValue #-}
 
 
 runDelayed :: Transformable a => Delayed a -> a
