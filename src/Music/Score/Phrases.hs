@@ -75,6 +75,9 @@ type Phrase a = Voice a
 -- |
 -- A sequence of phrases or rests, represented as notes or rests.
 --
+-- Each consecutive sequence of non-rest elements is considered to be a phrase.
+-- For an explicit representation of the phrase structure, see 'mvoicePVoice'.
+--
 type MVoice a = Voice (Maybe a)
 
 -- |
@@ -128,18 +131,31 @@ phrasesS = extracted . each . singleMVoice . mvoicePVoice . each . _Right
 
 More generally:
 -}
+
+-- |
+-- A simple generic phrase-traversal.
+--
 phrases' :: HasPhrases' s a => Traversal' s (Phrase a)
 phrases' = phrases
 
+-- |
+-- A generic phrase-traversal.
+--
 phrases :: HasPhrases s t a b => Traversal s t (Phrase a) (Phrase b)
 phrases = mvoices . mvoicePVoice . each . _Right
 
-
+-- |
+-- View an 'MVoice' as a 'PVoice'.
+--
 mvoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 mvoicePVoice = unsafeMvoicePVoice
+-- TODO meta
 
--- TODO only up to meta-data (as it uses unsafeEventsV)...
--- This is not a problem if we restrict it to a traversal
+-- |
+-- View an 'MVoice' as a 'PVoice' and vice versa.
+--
+-- This a valid 'Iso' up to meta-data equivalence.
+--
 unsafeMvoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
   where
