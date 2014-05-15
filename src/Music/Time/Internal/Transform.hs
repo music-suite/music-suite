@@ -22,6 +22,9 @@ module Music.Time.Internal.Transform (
       -- * Music.Time.Transform
       -- * The Transformable class
       Transformable(..),
+      itransform,
+      transformed,
+      
       -- ** Apply under a transformation
       whilst,
       whilstM,
@@ -146,6 +149,12 @@ instance Transformable a => Transformable (Sum a) where
 
 instance Transformable a => Transformable (Product a) where
   transform s = fmap (transform s)
+
+itransform :: Transformable a => Span -> a -> a
+itransform s = transform (negateV s)
+
+transformed :: Transformable a => Span -> Iso' a a
+transformed s = iso (transform s) (itransform s)
 
 --
 -- TODO

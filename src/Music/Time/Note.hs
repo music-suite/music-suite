@@ -150,6 +150,7 @@ noteValue :: (Transformable a, Transformable b) =>
 noteValue = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
+    -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
 {-# INLINE noteValue #-}
 

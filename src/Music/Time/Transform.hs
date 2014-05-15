@@ -34,6 +34,8 @@ module Music.Time.Transform (
 
       -- * The Transformable class
       Transformable(..),
+      itransform,
+      transformed,
 
       -- ** Apply under a transformation
       whilst,
