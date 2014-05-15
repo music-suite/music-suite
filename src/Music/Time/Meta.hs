@@ -143,7 +143,7 @@ toMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
     key = ty ++ pt
     pt = ""
     -- pt = show $ fmap getPart partId
-     ty = show $ typeOf (undefined :: b)
+    ty = show $ typeOf (undefined :: b)
 
 fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> Meta -> Maybe b
 fromMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s

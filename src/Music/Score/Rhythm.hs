@@ -32,8 +32,8 @@ import           Prelude             hiding (concat, concatMap, foldl, foldr,
                                       mapM, maximum, minimum, sum)
 
 import           Control.Applicative
-import           Control.Lens        ((^.))
 import           Control.Arrow       hiding (left)
+import           Control.Lens        ((^.))
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either
 import           Data.Foldable
@@ -55,12 +55,12 @@ import           Music.Score.Util
 import           Music.Time
 
 data Rhythm a
-    = Beat       Duration a                    -- d is divisible by 2
-    | Group      [Rhythm a]                    --
-    | Dotted     Int (Rhythm a)                -- n > 0.
-    | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
-    deriving (Eq, Show, Functor, Foldable)
-    -- RInvTuplet  Duration (Rhythm a)
+  = Beat       Duration a                    -- d is divisible by 2
+  | Group      [Rhythm a]                    --
+  | Dotted     Int (Rhythm a)                -- n > 0.
+  | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
+  deriving (Eq, Show, Functor, Foldable)
+  -- RInvTuplet  Duration (Rhythm a)
 
 getBeatValue :: Rhythm a -> a
 getBeatValue (Beat d a) = a
@@ -91,42 +91,42 @@ realize (Tuplet n r)    = n `stretch` realize r
 
 rhythmToTree :: Rhythm a -> Tree String
 rhythmToTree = go
-    where
-        go (Beat d a)     = Node ("" ++ showD d) []
-        go (Group rs)     = Node ("") (fmap rhythmToTree rs)
-        go (Dotted n r)   = Node (replicate n '.') [rhythmToTree r]
-        go (Tuplet n r)   = Node ("*^ " ++ showD n) [rhythmToTree r]
-        showD = (\x -> show (numerator x) ++ "/" ++ show (denominator x)) . toRational
+  where
+    go (Beat d a)     = Node ("" ++ showD d) []
+    go (Group rs)     = Node ("") (fmap rhythmToTree rs)
+    go (Dotted n r)   = Node (replicate n '.') [rhythmToTree r]
+    go (Tuplet n r)   = Node ("*^ " ++ showD n) [rhythmToTree r]
+    showD = (\x -> show (numerator x) ++ "/" ++ show (denominator x)) . toRational
 
 drawRhythm :: Show a => Rhythm a -> String
 drawRhythm = drawTree . rhythmToTree
 
 instance Semigroup (Rhythm a) where
-    (<>) = mappend
+  (<>) = mappend
 
 -- Catenates using 'Group'
 instance Monoid (Rhythm a) where
-    mempty = Group []
-    Group as `mappend` Group bs   =  Group (as <> bs)
-    r        `mappend` Group bs   =  Group ([r] <> bs)
-    Group as `mappend` r          =  Group (as <> [r])
-    a        `mappend` b          =  Group [a, b]
+  mempty = Group []
+  Group as `mappend` Group bs   =  Group (as <> bs)
+  r        `mappend` Group bs   =  Group ([r] <> bs)
+  Group as `mappend` r          =  Group (as <> [r])
+  a        `mappend` b          =  Group [a, b]
 
 instance HasDuration (Rhythm a) where
-    _duration (Beat d _)        = d
-    _duration (Dotted n a)      = _duration a * dotMod n
-    _duration (Tuplet c a)      = _duration a * c
-    _duration (Group as)        = sum (fmap _duration as)
+  _duration (Beat d _)        = d
+  _duration (Dotted n a)      = _duration a * dotMod n
+  _duration (Tuplet c a)      = _duration a * c
+  _duration (Group as)        = sum (fmap _duration as)
 
 instance AdditiveGroup (Rhythm a) where
-    zeroV   = error "No zeroV for (Rhythm a)"
-    (^+^)   = error "No ^+^ for (Rhythm a)"
-    negateV = error "No negateV for (Rhythm a)"
+  zeroV   = error "No zeroV for (Rhythm a)"
+  (^+^)   = error "No ^+^ for (Rhythm a)"
+  negateV = error "No negateV for (Rhythm a)"
 
 instance VectorSpace (Rhythm a) where
-    type Scalar (Rhythm a) = Duration
-    a *^ Beat d x = Beat (a*d) x
-    -- TODO how does this preserve the invariant?
+  type Scalar (Rhythm a) = Duration
+  a *^ Beat d x = Beat (a*d) x
+  -- TODO how does this preserve the invariant?
 
 Beat d x `subDur` d' = Beat (d-d') x
 
@@ -150,14 +150,13 @@ Beat d x `subDur` d' = Beat (d-d') x
 -}
 
 rewrite :: Rhythm a -> Rhythm a
-
 rewrite = rewriteR . rewrite1
 
 rewriteR = go where
-    go (Beat d a)     = Beat d a
-    go (Group rs)     = Group (fmap (rewriteR . rewrite1) rs)
-    go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
-    go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
+  go (Beat d a)     = Beat d a
+  go (Group rs)     = Group (fmap (rewriteR . rewrite1) rs)
+  go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
+  go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
 
 rewrite1 = splitTuplet . tupletDot . singleGroup
 
@@ -175,24 +174,24 @@ tupletDot orig                                                       = orig
 -- TODO this should only happen if the tuplet lenght is longer than a beat
 splitTuplet :: Rhythm a -> Rhythm a
 splitTuplet orig@(Tuplet n (Group xs)) = case trySplit xs of
-    Nothing       -> orig
-    Just (as, bs) -> Tuplet n (Group as) <> Tuplet n (Group bs)
+  Nothing       -> orig
+  Just (as, bs) -> Tuplet n (Group as) <> Tuplet n (Group bs)
 splitTuplet orig = orig
 
 {-
 -- TODO bad instance
 instance HasDuration a => HasDuration [a] where
-    _duration = sum . fmap _duration
+  _duration = sum . fmap _duration
 -}
 
 trySplit :: [Rhythm a] -> Maybe ([Rhythm a], [Rhythm a])
 trySplit = firstJust . fmap g . splits
-    where
-        g (part1, part2)
-            | (sum . fmap _duration) part1 == (sum . fmap _duration) part2 = Just (part1, part2)
-            | otherwise                        = Nothing
-        splits xs = List.inits xs `zip` List.tails xs
-        firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
+  where
+      g (part1, part2)
+          | (sum . fmap _duration) part1 == (sum . fmap _duration) part2 = Just (part1, part2)
+          | otherwise                        = Nothing
+      splits xs = List.inits xs `zip` List.tails xs
+      firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
 
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
@@ -200,8 +199,8 @@ quantize = quantize' (atEnd rhythm)
 
 testQuantize :: [Duration] -> IO ()
 testQuantize x = case fmap rewrite $ quantize' (atEnd rhythm) $ fmap (\x -> (x,())) $ x of
-    Left e -> error e
-    Right x -> putStrLn $ drawRhythm x
+  Left e -> error e
+  Right x -> putStrLn $ drawRhythm x
 
 
 konstNumDotsAllowed :: [Int]
@@ -219,19 +218,19 @@ konstMaxTupletNest = 1
 
 data RhythmContext = RhythmContext {
 
-        -- Time scaling of the current note (from dots and tuplets).
-        timeMod    :: Duration,
+      -- Time scaling of the current note (from dots and tuplets).
+      timeMod    :: Duration,
 
-        -- Time subtracted from the current rhythm (from ties).
-        timeSub    :: Duration,
+      -- Time subtracted from the current rhythm (from ties).
+      timeSub    :: Duration,
 
-        -- Number of tuplets above the current note (default 0).
-        tupleDepth :: Int
-    }
+      -- Number of tuplets above the current note (default 0).
+      tupleDepth :: Int
+  }
 
 instance Monoid RhythmContext where
-    mempty = RhythmContext { timeMod = 1, timeSub = 0, tupleDepth = 0 }
-    a `mappend` _ = a
+  mempty = RhythmContext { timeMod = 1, timeSub = 0, tupleDepth = 0 }
+  a `mappend` _ = a
 
 modifyTimeMod :: (Duration -> Duration) -> RhythmContext -> RhythmContext
 modifyTimeMod f (RhythmContext tm ts td) = RhythmContext (f tm) ts td
@@ -267,9 +266,9 @@ rhythmNoBound = Group <$> many1 rhythm'
 
 rhythm' :: Tiable a => RhythmParser a (Rhythm a)
 rhythm' = mzero
-    <|> beat
-    <|> dotted
-    <|> tuplet
+  <|> beat
+  <|> dotted
+  <|> tuplet
 
 -- Matches a beat divisible by 2 (notated)
 -- beat :: Tiable a => RhythmParser a (Rhythm a)
@@ -280,10 +279,10 @@ rhythm' = mzero
 
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
-    RhythmContext tm ts _ <- getState
-    match' $ \d x ->
-        let d2 = d / tm - ts
-        in (d2, x) `assuming` (d - ts > 0 && isDivisibleBy 2 d2)
+  RhythmContext tm ts _ <- getState
+  match' $ \d x ->
+      let d2 = d / tm - ts
+      in (d2, x) `assuming` (d - ts > 0 && isDivisibleBy 2 d2)
 
 
 -- | Matches a dotted rhythm
@@ -304,10 +303,10 @@ tuplet = msum . fmap tuplet' $ konstTuplets
 
 dotted' :: Tiable a => Int -> RhythmParser a (Rhythm a)
 dotted' n = do
-    modifyState $ modifyTimeMod (* dotMod n)
-    a <- beat
-    modifyState $ modifyTimeMod (/ dotMod n)
-    return (Dotted n a)
+  modifyState $ modifyTimeMod (* dotMod n)
+  a <- beat
+  modifyState $ modifyTimeMod (/ dotMod n)
+  return (Dotted n a)
 
 -- | Return the scaling applied to a note with the given number of dots (i.e. 3/2, 7/4 etc).
 dotMod :: Int -> Duration
@@ -316,30 +315,30 @@ dotMod n = dotMods !! (n-1)
 -- [3/2, 7/4, 15/8, 31/16 ..]
 dotMods :: [Duration]
 dotMods = zipWith (/) (fmap pred $ drop 2 times2) (drop 1 times2)
-    where
-        times2 = iterate (*2) 1
+  where
+      times2 = iterate (*2) 1
 
 bound' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 bound' d = do
-    modifyState $ modifyTimeSub (+ d)
-    a <- beat
-    modifyState $ modifyTimeSub (subtract d)
-    let (b,c) = toTied $ getBeatValue a
+  modifyState $ modifyTimeSub (+ d)
+  a <- beat
+  modifyState $ modifyTimeSub (subtract d)
+  let (b,c) = toTied $ getBeatValue a
 
-    -- TODO doesn't know order
-    return $ Group [Beat (getBeatDuration a) b, Beat d c]
+  -- TODO doesn't know order
+  return $ Group [Beat (getBeatDuration a) b, Beat d c]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
 tuplet' d = do
-    RhythmContext _ _ depth <- getState
-    onlyIf (depth < konstMaxTupletNest) $ do
-        modifyState $ modifyTimeMod (* d)
-                    . modifyTupleDepth succ
-        a <- rhythmNoBound
-        modifyState $ modifyTimeMod (/ d)
-                    . modifyTupleDepth pred
-        return (Tuplet d a)
+  RhythmContext _ _ depth <- getState
+  onlyIf (depth < konstMaxTupletNest) $ do
+      modifyState $ modifyTimeMod (* d)
+                  . modifyTupleDepth succ
+      a <- rhythmNoBound
+      modifyState $ modifyTimeMod (/ d)
+                  . modifyTupleDepth pred
+      return (Tuplet d a)
 
 
 -------------------------------------------------------------------------------------
@@ -355,32 +354,32 @@ tuplet' d = do
 -- Matches a (_duration, value) pair iff the predicate matches, returns beat
 match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
-    where
-        show x        = ""
-        next pos _ _  = updatePosChar pos 'x'
-        test (d,x)    = if p d x then Just (Beat d x) else Nothing
+  where
+      show x        = ""
+      next pos _ _  = updatePosChar pos 'x'
+      test (d,x)    = if p d x then Just (Beat d x) else Nothing
 
 -- Matches a (_duration, value) pair iff the predicate matches, returns beat
 match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
 match' f = tokenPrim show next test
-    where
-        show x        = ""
-        next pos _ _  = updatePosChar pos 'x'
-        test (d,x)    = case f d x of
-            Nothing     -> Nothing
-            Just (d,x)  -> Just $ Beat d x
+  where
+      show x        = ""
+      next pos _ _  = updatePosChar pos 'x'
+      test (d,x)    = case f d x of
+          Nothing     -> Nothing
+          Just (d,x)  -> Just $ Beat d x
 
 -- |
 -- Succeed only if the entire input is consumed.
 --
 atEnd :: RhythmParser a b -> RhythmParser a b
 atEnd p = do
-    x <- p
-    notFollowedBy' anyToken' <?> "end of input"
-    return x
-    where
-        notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
-        anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
+  x <- p
+  notFollowedBy' anyToken' <?> "end of input"
+  return x
+  where
+      notFollowedBy' p = try $ (try p >> unexpected "") <|> return ()
+      anyToken'        = tokenPrim (const "") (\pos _ _ -> pos) Just
 
 onlyIf :: MonadPlus m => Bool -> m b -> m b
 onlyIf b p = if b then p else mzero
@@ -390,11 +389,9 @@ assuming :: a -> Bool -> Maybe a
 assuming x b = if b then Just x else Nothing
 
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseR k n
-    | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
-logBaseR k n
-    | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
-logBaseR k n                         = logBase (fromRational k) (fromRational n)
+logBaseR k n | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
+logBaseR k n | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
+logBaseR k n | otherwise                             = logBase (fromRational k) (fromRational n)
 
 
 divides     = isDivisibleBy
