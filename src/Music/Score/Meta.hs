@@ -27,32 +27,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta (
-  module Music.Time.Meta,
-
---         -- * Basic
---         -- note,
---         -- rest,
---         -- noteRest,
---         removeRests,
--- 
---         -- * Mapping over events
---         mapEvents,
--- 
---         -- * Filtering events
--- 
---         -- ** Editing
---         filterEvents,
---         mapFilterEvents,
--- 
--- {-
---         -- * Editing
---         before,
---         after,
---         split,
---         slice,
---         splice,
--- -}
--- 
+        module Music.Time.Meta,
+        
         -- * Meta-events
         addMetaNote,
         addGlobalMetaNote,
@@ -64,43 +40,6 @@ module Music.Score.Meta (
         withGlobalMeta,
         withMetaAtStart,
         withGlobalMetaAtStart,
-
-
-
-
-        -- -- ** Map over phrases
-        --  mapFirst,
-        --  mapLast,
-        --  mapPhrase,
-        --  mapPhraseSingle,
-        -- 
-        --  -- * Parts
-        --  -- ** Extracting parts
-        --  filterPart,
-        --  extractParts,
-        --  extractParts',
-        -- 
-        --  -- ** Map over parts
-        --  -- mapPart,
-        --  mapParts,
-        --  mapAllParts,
-        --  -- modifyParts,
-        -- 
-         -- ** Part composition
-         (</>),
-         rcat,
-        --  -- moveParts,
-        --  -- moveToPart,
-        -- 
-        --  -- * Zippers
-        --  -- apply,
-        --  -- snapshot,
-        --  -- snapshotWith,
-        -- 
-        --  -- ** Single-part versions
-        --  applySingle,
-        --  -- snapshotSingle,
-        --  -- snapshotWithSingle,
    ) where
 
 import           Control.Applicative
@@ -127,167 +66,6 @@ import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
-
-{-
--- | Create a score containing a note at time zero and duration one. This is an alias for 'return'.
-note :: Monad m => a -> m a
-note = return
-
--- | Create a score containing a rest at time zero and duration one. This is an alias for @'return' 'Nothing'@.
-rest :: MonadPlus m => m (Maybe a)
-rest = return Nothing
-
--- | Create a note or a rest at time zero and duration one. This is an alias for 'mfromMaybe'.
-noteRest :: MonadPlus m => Maybe a -> m a
-noteRest = mfromMaybe
-
--- | Remove all rests from a score. This is an alias for 'mcatMaybes'.
-removeRests :: MonadPlus m => m (Maybe a) -> m a
-removeRests = mcatMaybes
-
--- | Retain only the notes whose /offset/ does not fall after the given time.
-before :: Time -> Score a -> Score a
-before u = filterEvents (\t d _ -> t .+^ d <= u)
-
--- | Retain only the notes whose /onset/ does not fall before the given time.
-after :: Time -> Score a -> Score a
-after u = filterEvents (\t d _ -> u <= t)
-
--- | Returns notes whose /onset/ and /offset/ fall between the given times.
-slice :: Time -> Time -> Score a -> Score a
-slice u v = filterEvents (\t d _ -> u <= t && t .+^ d <= v)
-
--- | Split a score into events whose onsets
-split :: Time -> Score a -> (Score a, Score a)
-split t a = (before t a, after t a)
-
--- | Split a score into three parts
-splice :: Time -> Duration -> Score a -> (Score a, Score a, Score a)
-splice t d a = tripr (before t a, split (t .+^ d) a)
-
-
-
-
-
--- |
--- Map over the first, and remaining notes in each part.
---
--- If a part has only one notes, the first function is applied.
--- If a part has no notes, it is returned unchanged.
---
-mapFirst :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
-mapFirst f g = mapPhrase f g g
-
--- |
--- Map over the last, and preceding notes in each part.
---
--- If a part has only one notes, the first function is applied.
--- If a part has no notes, it is returned unchanged.
---
-mapLast :: HasPart' a => (a -> b) -> (a -> b) -> Score a -> Score b
-mapLast f g = mapPhrase g g f
-
--- |
--- Map over the first, middle and last note in each part.
---
--- If a part has fewer than three notes the first takes precedence over the last,
--- and last takes precedence over the middle.
---
-mapPhrase :: HasPart' a => (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapPhrase f g h = mapAllParts (fmap $ mapPhraseSingle f g h)
-
--- |
--- Equivalent to 'mapPhrase' for single-part scores.
---
--- Fails if the score contains overlapping events.
---
--- > (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
---
-mapPhraseSingle :: (a -> b) -> (a -> b) -> (a -> b) -> Score a -> Score b
-mapPhraseSingle f g h = mapAll (mapFTL (_3 %~ f) (_3 %~ g) (_3 %~ h))
-
-
-
--- |
--- Map over all events in a score.
---
-mapAll :: ([(Time, Duration, a)] -> [(Time, Duration, b)]) -> Score a -> Score b
-mapAll f = saveMeta $ over events f
-    where
-        saveMeta f x = (meta .~) ((view meta) x) $ f x
-
-
--}
-
---------------------------------------------------------------------------------
--- Parts
---------------------------------------------------------------------------------
-{-
-
--- |
--- Filter a score to include only those events whose parts match a given predicate.
---
-filterPart :: HasPart' a => (Part a -> Bool) -> Score a -> Score a
-filterPart p = mfilter (p . getPart)
-
-filterPartIs :: HasPart' a => Part a -> Score a -> Score a
-filterPartIs = filterPart <$> (==)
-
--- |
--- Extract parts from the a score.
---
--- The parts are returned in the order defined the associated 'Ord' instance part type.
---
-extractParts :: HasPart' a => Score a -> [Score a]
-extractParts x = filterPartIs <$> getParts x <*> return x
-
--- |
--- Extract parts from the a score and include the part name.
---
--- The parts are returned in the order defined the associated 'Ord' instance part type.
---
-extractParts' :: HasPart' a => Score a -> [(Part a, Score a)]
-extractParts' x = getParts x `zip` extractParts x
-
-
--- |
--- Map over a specific part in the given score.
---
-mapPart         :: (Enum (Part a), HasPart' a) => Part a -> (Score a -> Score a) -> Score a -> Score a
-
--- |
--- Map over all parts in the given score.
---
--- > (Score a -> Score a) -> Score a -> Score a
---
-mapParts        :: HasPart' a => (Score a -> Score b) -> Score a -> Score b
-
--- |
--- Map over all parts in the given score.
---
--- > ([Score a] -> [Score a]) -> Score a -> Score a
---
-mapAllParts     :: HasPart' a => ([Score a] -> [Score b]) -> Score a -> Score b
-
-
-mapPart n f     = mapAllParts (zipWith ($) (replicate (fromEnum n) id ++ [f] ++ repeat id))
-mapParts f      = mapAllParts (fmap f)
-mapAllParts f   = mconcat . f . extractParts
-
--- |
--- Modify all parts in the given score.
---
--- > (Part -> Part) -> Score a -> Score a
---
-modifyParts :: HasPart' a => (Part a -> Part a) -> Score a -> Score a
-modifyParts n = fmap (modifyPart n)
--}
-
-
-
---------------------------------------------------------------------------------
--- Part composition
---------------------------------------------------------------------------------
 
 infixr 6 </>
 
@@ -319,59 +97,6 @@ moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
 
 
-{-
-
--------------------------------------------------------------------------------------
--- Zippers
-
--- |
--- Apply a time-varying function to all events in score.
---
-apply :: HasPart' a => Voice (Score a -> Score b) -> Score a -> Score b
-apply x = mapAllParts (fmap $ applySingle x)
-
--- |
--- Apply a time-varying function to all events in score.
---
-applySingle :: Voice (Score a -> Score b) -> Score a -> Score b
-applySingle fs = notJoin . fmap (uncurry ($)) . sample fs
-    where
-        notJoin   = mconcat . Foldable.toList
-        sample fs = snapshotSingle (voiceToScore fs)
-
--- |
--- Get all notes that start during a given note.
---
-snapshot :: HasPart' b => Score a -> Score b -> Score (a, Score b)
-snapshot x = mapAllParts (fmap $ snapshotSingle x)
-
-snapshotWith :: HasPart' b => (a -> Score b -> c) -> Score a -> Score b -> Score c
-snapshotWith f x = mapAllParts (fmap $ snapshotWithSingle f x)
-
--- |
--- Get all notes that start during a given note.
---
-snapshotSingle :: Score a -> Score b -> Score (a, Score b)
-snapshotSingle = snapshotWithSingle (,)
-
-snapshotWithSingle :: (a -> Score b -> c) -> Score a -> Score b -> Score c
-snapshotWithSingle g as bs = mapEvents ( \t d a -> g a (onsetIn t d bs) ) as
-
--- |
--- Filter out events that has its onset in the given time interval (inclusive start).
--- For example, onset in 1 2 filters events such that (1 <= onset x < 3)
---
-onsetIn :: Time -> Duration -> Score a -> Score a
-onsetIn a b = mapAll $ filterOnce (\(t,d,x) -> a <= t && t < a .+^ b)
--- We could also have used mfilter. filterOnce is more lazy,
--- but depends on the events being sorted
-
-
-
-
-
-
--}
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b{-, HasPart' b-}) => Note a -> b -> b
 addMetaNote x y = (applyMeta $ toMeta (Just y) $ noteToReactive x) y
 
@@ -380,11 +105,6 @@ addGlobalMetaNote x = applyMeta $ toMeta (Nothing::Maybe Int) $ noteToReactive x
 
 fromMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
 fromMetaReactive part = fromMaybe mempty . fromMeta part
-
-
-
-
-
 
 
 
