@@ -184,6 +184,7 @@ instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
   TODO clefs
   TODO part names
   TODO quantization
+  TODO staff groups
 -}
 
 data Ly
