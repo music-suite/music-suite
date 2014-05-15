@@ -31,6 +31,8 @@ import Music.Score hiding (
   toLilypond,
   toLilypondString
   )
+
+import qualified Codec.Midi                as Midi
 import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
 import           Music.Score.Export.Common
@@ -137,15 +139,7 @@ class (HasBackend b) => HasBackendNote b a where
 export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
-    -- These commute except for BackendContext
-
-    -- There seems to be a bug in ghc 7.6.3 that allow us to rearrange the two
-    -- composed functions, event though the precence of (BackendContext b) clearly
-    -- prevents this:
     export' = fmap (exportNote b) . exportScore b
-    
-    -- The offending version:
-    -- export' = exportScore b . fmap (exportNote b)
 
 
 
