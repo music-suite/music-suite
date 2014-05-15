@@ -362,7 +362,7 @@ spellLilypond' p = Lilypond.Pitch (
 -- main = putStrLn $ show $ view notes $ simultaneous 
 main = putStrLn $ toLilypondString $ simultaneous
   $ over pitches' (+ 2)
-  -- $ text "Hello"
+  --  $ text "Hello"
   $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Integer]))])^*(1/1)
 
 
