@@ -119,8 +119,9 @@ class (HasParts s t) => HasPart s t where
 -- Class of types that provide a part traversal.
 --
 class (Transformable (Part s),
-       Transformable (Part t),
-       SetPart (Part t) s ~ t) => HasParts s t where
+       Transformable (Part t)
+       -- , SetPart (Part t) s ~ t
+       ) => HasParts s t where
 
   -- | Part type.
   parts :: Traversal s t (Part s) (Part t)
@@ -245,9 +246,8 @@ extracted :: (Ord (Part a), HasPart' a{-, HasPart a b-}) => Iso (Score a) (Score
 extracted = iso extractParts mconcat
 -- extracted :: (Ord (Part a), HasPart' a) => Iso' (Score a) [Score a]
 
--- TODO what to use instead of elements to select parts?
-extracted' :: (Ord (Part a), HasPart' a) => Iso' (Score a) [(Part a, Score a)]
-extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts)
+extracted' :: (Ord (Part a), Ord (Part b), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
+extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts')
 
 
 
