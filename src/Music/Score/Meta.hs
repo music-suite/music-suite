@@ -29,6 +29,10 @@
 module Music.Score.Meta (
         module Music.Time.Meta,
         
+        -- TODO move
+        (</>),
+        rcat,
+        
         -- * Meta-events
         addMetaNote,
         addGlobalMetaNote,
@@ -95,6 +99,8 @@ moveParts x = parts %~ (successor x)
 --
 moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
 moveToPart v = moveParts (fromEnum v)
+
+
 
 
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b{-, HasPart' b-}) => Note a -> b -> b
