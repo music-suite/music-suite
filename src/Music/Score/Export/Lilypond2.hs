@@ -45,6 +45,7 @@ import Data.Ratio
 import Data.Maybe
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable, sequenceA)
+import Music.Time.Internal.Transform (whilstLD) -- TODO move
 
 {-
   Assume that Music is a type function that returns the underlying music
@@ -264,6 +265,23 @@ instance HasBackend Midi where
       endDelta    = 10000
 
 
+type instance Part (Voice a) = Part a
+type instance SetPart g (Voice a) = Voice (SetPart g a)
+
+-- TODO move
+instance (HasParts a b) => HasParts (Voice a) (Voice b) where
+  parts = 
+    _Wrapped
+    . traverse 
+    . _Wrapped      -- this needed?
+    . whilstLD parts
+
+instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) a where
+  exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
+    where
+      voiceToScore :: Voice a -> Score a
+      voiceToScore = error "TODO"
+
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) a where
   exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' xs)
 
@@ -367,7 +385,7 @@ instance HasBackend Ly where
   finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
 
 
-instance (Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
+instance (HasPart' a, Ord (Part a), Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
   -- TODO extract, ties etc
   exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
 
