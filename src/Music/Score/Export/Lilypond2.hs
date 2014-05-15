@@ -19,7 +19,7 @@
 module Music.Score.Export.Lilypond2 (
     HasBackend(..),
     HasBackendScore(..),
-    HasBackendNotes(..),
+    HasBackendNote(..),
     export,
     Ly,
     toLilypondString,
@@ -85,14 +85,14 @@ type HasOrdPart a = (a ~ a)
 --
 --
 -- The actual conversion is handled by the subclasses 'HasBackendScore' and
--- 'HasBackendNotes', which converts the time structure, and the contained music
+-- 'HasBackendNote', which converts the time structure, and the contained music
 -- respectively. In general, parametricity ensures that structure and content are handled
 -- completely separately. 
 --
 -- It is often necessary to
 -- alter the events based on their surrounding context: for examples the beginning and end
 -- of spanners and beams depend on surrounding notes. Thus, the 'BackendContext' type
--- allow 'HasBackendScore' instances to provide context for 'HasBackendNotes' instances.
+-- allow 'HasBackendScore' instances to provide context for 'HasBackendNote' instances.
 --
 -- -- The tag is typically defined as an empty data declaration:
 --
@@ -110,7 +110,7 @@ class Functor (BackendScore b) => HasBackend b where
   -- | Score, voice and time structure, with output handled by 'HasBackendScore' 
   type BackendScore b :: * -> *
 
-  -- | Notes, chords and rests, with output handled by 'HasBackendNotes' 
+  -- | Notes, chords and rests, with output handled by 'HasBackendNote' 
   type BackendEvent b :: *
 
   -- | This type may be used to pass context from 'exportScore' to 'exportNote'.
@@ -126,7 +126,7 @@ class (HasBackend b) => HasBackendScore b s a | s -> a where
   -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
   -- exportScore b = fmap Identity
 
-class (HasBackend b) => HasBackendNotes b a where
+class (HasBackend b) => HasBackendNote b a where
   exportNote  :: b -> BackendContext b a   -> BackendEvent b
   exportChord :: b -> BackendContext b [a] -> BackendEvent b
   exportChord = error "Not implemented"
@@ -134,7 +134,7 @@ class (HasBackend b) => HasBackendNotes b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendEvent b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNotes b a) => b -> s -> BackendMusic b
+export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
     -- These commute except for BackendContext
@@ -158,12 +158,12 @@ instance HasBackend Foo where
   finalizeExport _ = concat
 instance HasBackendScore Foo [a] a where
   exportScore _ = fmap Identity
-instance HasBackendNotes Foo a => HasBackendNotes Foo [a] where
+instance HasBackendNote Foo a => HasBackendNote Foo [a] where
   -- exportNote b (Identity ps) = concatMap (exportNote b . Identity) ps
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
-instance HasBackendNotes Foo Int where
+instance HasBackendNote Foo Int where
   exportNote _ (Identity p) = [(mempty ,p)]
-instance HasBackendNotes Foo a => HasBackendNotes Foo (DynamicT (Sum Int) a) where
+instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
 -- main = print $ export (undefined::Foo) [DynamicT (Sum 4::Sum Int,3::Int), pure 1]
@@ -179,26 +179,26 @@ instance HasBackendNotes Foo a => HasBackendNotes Foo (DynamicT (Sum Int) a) whe
 
 
 
--- type Lilypond = Lilypond.Music
-toLilypondString :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s a) => s -> String
-toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
-toLilypond = export (undefined::Ly)
+{-
+  TODO clefs
+  TODO part names
+  TODO quantization
+-}
 
 data Ly
 data LyScore a = LyScore [[a]] deriving (Functor, Eq, Show)
 data LyContext a = LyContext Duration a deriving (Functor, Foldable, Traversable, Eq, Show)
 instance Monoid Lilypond.Music where
-  mempty = pcatLilypond []
-  mappend x y = pcatLilypond [x,y]
+  mempty = pcatLy []
+  mappend x y = pcatLy [x,y]
 
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
   type BackendContext Ly = LyContext
   type BackendEvent Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
-  finalizeExport _ (LyScore xs) = pcatLilypond . fmap scatLilypond $ xs
+  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
 
 
 instance (Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
@@ -214,49 +214,48 @@ voiceToLilypond = undefined
 
 
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly [a] where
+instance HasBackendNote Ly a => HasBackendNote Ly [a] where
   -- exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
   exportNote b = exportChord b
 
-instance HasBackendNotes Ly Integer where
-  -- exportNote _ (LyContext d [])  = (^*realToFrac (d*4)) . Lilypond.rest
-  exportNote _ (LyContext d x) = (^*realToFrac (d*4)) . Lilypond.note  . spellLilypond $ x
-  exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLilypond $ xs
+instance HasBackendNote Ly Integer where
+  -- TODO rest
+  exportNote _ (LyContext d x) = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
+  exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
 
-
-instance HasBackendNotes Ly Int where 
+instance HasBackendNote Ly Int where 
   exportNote b = exportNote b . fmap toInteger
 
-instance HasBackendNotes Ly Float where 
+instance HasBackendNote Ly Float where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance HasBackendNotes Ly Double where 
+instance HasBackendNote Ly Double where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance Integral a => HasBackendNotes Ly (Ratio a) where 
+instance Integral a => HasBackendNote Ly (Ratio a) where 
   exportNote b = exportNote b . fmap (toInteger . round)
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (Behavior a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (Behavior a) where
   exportNote b = exportNote b . fmap (! 0)
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (Sum a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (Sum a) where
   exportNote b = exportNote b . fmap getSum
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (Product a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (Product a) where
   exportNote b = exportNote b . fmap getProduct
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (PartT n a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
--- TODO ties
--- TODO dynamics
-instance HasBackendNotes Ly a => HasBackendNotes Ly (DynamicT n a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT n a) where
   exportNote b = exportNote b . fmap (snd . getDynamicT)
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (ArticulationT n a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
-instance HasBackendNotes Ly a => HasBackendNotes Ly (TremoloT a) where
+
+
+instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
   exportNote b (LyContext d (TremoloT (n, x))) = exportNote b $ LyContext d x -- TODO many
     -- where
     -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
@@ -267,14 +266,40 @@ instance HasBackendNotes Ly a => HasBackendNotes Ly (TremoloT a) where
     --         repeats = d / newDur
     --         notate = Lilypond.Tremolo (round repeats)
 
-instance HasBackendNotes Ly a => HasBackendNotes Ly (TextT a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
   exportNote b (LyContext d (TextT (n, x))) = notate n (exportNote b $ LyContext d x) -- TODO many
     where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
--- TODO harmonic
--- TODO slide
--- TODO clef
+instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
+  exportNote b = exportNote b . fmap (snd . getHarmonicT)
+
+instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
+  exportNote b = exportNote b . fmap (snd . getSlideT)
+
+instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
+  exportNote b = exportNote b . fmap (snd . getTieT)
+
+-- type Lilypond = Lilypond.Music
+toLilypondString :: (HasOrdPart a, HasBackendNote Ly a, HasBackendScore Ly s a) => s -> String
+toLilypondString = show . Pretty.pretty . toLilypond
+
+toLilypond :: (HasOrdPart a, HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
+toLilypond = export (undefined::Ly)
+
+
+
+
+-- TODO tests
+-- main = putStrLn $ show $ view notes $ simultaneous 
+main = putStrLn $ toLilypondString $ simultaneous
+  $ over pitches' (+ 2)
+  --  $ text "Hello"
+  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Integer]))])^*(1/8)
+
+
+
+
 
 
 
@@ -294,7 +319,7 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
     where
         -- TODO compounds
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
 
 
 barToLilypond :: HasLilypond15 a => [(Duration, Maybe a)] -> Lilypond
@@ -310,7 +335,7 @@ rhythmToLilypond = uncurry ($) . rhythmToLilypond2
 rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
 rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
 -- TODO propagate
-rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilypond $ extract1 $ map rhythmToLilypond2 $ rs
+rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLy $ extract1 $ map rhythmToLilypond2 $ rs
 rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
@@ -331,24 +356,24 @@ extract1 ((p,x):xs) = (Just p, x : fmap snd xs)
 
 
 
-pcatLilypond :: [Lilypond] -> Lilypond
-pcatLilypond = pcatLilypond' False
+pcatLy :: [Lilypond] -> Lilypond
+pcatLy = pcatLy' False
 
-pcatLilypond' :: Bool -> [Lilypond] -> Lilypond
-pcatLilypond' p = foldr Lilypond.simultaneous e
+pcatLy' :: Bool -> [Lilypond] -> Lilypond
+pcatLy' p = foldr Lilypond.simultaneous e
     where
         e = Lilypond.Simultaneous p []
 
-scatLilypond :: [Lilypond] -> Lilypond
-scatLilypond = foldr Lilypond.sequential e
+scatLy :: [Lilypond] -> Lilypond
+scatLy = foldr Lilypond.sequential e
     where
         e = Lilypond.Sequential []
 
-spellLilypond :: Integer -> Lilypond.Note
-spellLilypond a = Lilypond.NotePitch (spellLilypond' a) Nothing
+spellLy :: Integer -> Lilypond.Note
+spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
 
-spellLilypond' :: Integer -> Lilypond.Pitch
-spellLilypond' p = Lilypond.Pitch (
+spellLy' :: Integer -> Lilypond.Pitch
+spellLy' p = Lilypond.Pitch (
     toEnum $ fromIntegral pc,
     fromIntegral alt,
     fromIntegral oct
@@ -357,12 +382,5 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 
-
-
--- main = putStrLn $ show $ view notes $ simultaneous 
-main = putStrLn $ toLilypondString $ simultaneous
-  $ over pitches' (+ 2)
-  --  $ text "Hello"
-  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Integer]))])^*(1/1)
 
 
