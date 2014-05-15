@@ -21,6 +21,8 @@ module Music.Score.Export.Lilypond2 (
     HasBackendScore(..),
     HasBackendNote(..),
     export,
+    Midi,
+    toMidi,
     Ly,
     toLilypondString,
     toLilypond,
@@ -251,22 +253,32 @@ instance HasBackendNote Midi Int where
 instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
 
+instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
+  exportNote b (Identity (ArticulationT (_, x))) = fmap id $ exportNote b (Identity x)
+
 instance HasBackendNote Midi a => HasBackendNote Midi (PartT n a) where
+  -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TremoloT a) where
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getTremoloT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getTextT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getHarmonicT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getSlideT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getTieT)
 
 mkMidiNote :: Int -> Score Midi.Message
