@@ -29,7 +29,10 @@ module Music.Score.Export.Lilypond2 (
 import Music.Pitch.Literal
 import Music.Score hiding (
   toLilypond,
-  toLilypondString
+  toLilypondString,
+  toMidi,
+  HasMidiProgram(..),
+  HasMidiPart(..),
   )
 
 import qualified Codec.Midi                as Midi
@@ -166,6 +169,98 @@ instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
 
 
 
+-- | Class of part types with an associated MIDI program number.
+class HasMidiProgram a where
+    getMidiChannel :: a -> Midi.Channel
+    getMidiProgram :: a -> Midi.Preset
+    getMidiChannel _ = 0
+
+instance HasMidiProgram () where
+    getMidiProgram _ = 0
+instance HasMidiProgram Double where
+    getMidiProgram = fromIntegral . floor
+instance HasMidiProgram Float where
+    getMidiProgram = fromIntegral . floor
+instance HasMidiProgram Int where
+    getMidiProgram = id
+instance HasMidiProgram Integer where
+    getMidiProgram = fromIntegral
+instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
+    getMidiProgram = fromIntegral . floor
+
+type HasMidiPart a = (HasPart' a, Ord (Part a), HasMidiProgram (Part a))
+
+data Midi
+instance HasBackend Midi where
+  type BackendScore   Midi    = Score
+  type BackendContext Midi    = Identity
+  type BackendEvent   Midi    = Score Midi.Message
+  type BackendMusic   Midi    = Score Midi.Message
+  finalizeExport _ = join
+
+
+-- toMidi2 :: (HasMidiPart a, HasMidi a) => Score (Score Midi.Message) -> Midi.Midi
+-- toMidi2 score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
+--     where
+--         -- Each track needs TrackEnd
+--         -- We place it long after last event just in case (necessary?)
+--         endDelta        = 10000
+--         fileType        = Midi.MultiTrack
+--         divisions       = 1024
+--         divisions'      = Midi.TicksPerBeat divisions
+--         controlTrack    = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+--         eventTracks     = fmap ({-(<> [(endDelta, Midi.TrackEnd)]) .-} uncurry setProgramChannel . fmap scoreToMTrack)
+--                                 $ extractParts' score
+-- 
+--         -- setProgramChannel :: Part a -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+--         setProgramChannel p = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setC ch))
+--             where
+--                 ch = getMidiChannel p
+--                 prg = getMidiProgram p
+-- 
+--         scoreToMTrack :: HasMidi a => Score a -> Midi.Track Midi.Ticks
+--         scoreToMTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
+
+
+instance HasBackendScore Midi (Score a) a where
+  exportScore _ = fmap Identity
+instance HasBackendNote Midi a => HasBackendNote Midi [a] where
+  exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
+instance HasBackendNote Midi Int where
+  exportNote _ (Identity pv) = mkMidiNote pv
+    where
+      mkMidiNote :: Int -> Score Midi.Message
+      mkMidiNote p = mempty
+          |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64) 
+          |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
+instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
+  exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (PartT n a) where
+  exportNote b = exportNote b . fmap (snd . getPartT)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (TremoloT a) where
+  exportNote b = exportNote b . fmap (snd . getTremoloT)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
+  exportNote b = exportNote b . fmap (snd . getTextT)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
+  exportNote b = exportNote b . fmap (snd . getHarmonicT)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
+  exportNote b = exportNote b . fmap (snd . getSlideT)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
+  exportNote b = exportNote b . fmap (snd . getTieT)
+
+
+setV :: Midi.Velocity -> Midi.Message -> Midi.Message
+setV = error "TODO"
+setC :: Midi.Channel -> Midi.Message -> Midi.Message
+setC = error "TODO"
+
+
 
 
 
@@ -248,8 +343,6 @@ instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT n a) where
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
-
-
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
   exportNote b (LyContext d (TremoloT (n, x))) = exportNote b $ LyContext d x -- TODO many
     -- where
