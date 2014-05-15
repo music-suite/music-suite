@@ -203,20 +203,22 @@ instance HasBackend Midi where
   -- TODO assuming that we have now converted each part to a track and set the part
   -- FIXME
   finalizeExport _ (MidiScore trs) = let 
-    mainTracks    = fmap translMidiTrack trs
+    mainTracks    = fmap (translMidiTrack . fmap join) trs
     controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
-    in  Midi.Midi fileType divisions' (controlTrack : mainTracks) 
+    in  
+    Midi.Midi fileType divisions' (controlTrack : mainTracks) 
+    
     where
       -- Each track needs TrackEnd
       -- We place it a long time after last event just in case (necessary?)
       addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
       addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
 
-      translMidiTrack :: ((Midi.Channel, Midi.Preset), Score (Score Midi.Message)) -> [(Int, Midi.Message)]
-      translMidiTrack ((ch,p),(x)) = addTrackEnd $ setProgramChannel ch p $ scoreToMidiTrack (join x::(Score Midi.Message))
+      translMidiTrack :: ((Midi.Channel, Midi.Preset), Score (Midi.Message)) -> [(Int, Midi.Message)]
+      translMidiTrack ((ch, p), x) = addTrackEnd $ setProgramChannel ch p $ scoreToMidiTrack $ x
 
       setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
-      setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setC ch))
+      setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
 
       scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
       scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
@@ -263,10 +265,28 @@ mkMidiNote p = mempty
     |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
 
 setV :: Midi.Velocity -> Midi.Message -> Midi.Message
-setV = error "TODO"
+setV v = go
+  where
+    go (Midi.NoteOff c k _)       = Midi.NoteOff c k v
+    go (Midi.NoteOn c k _)        = Midi.NoteOn c k v
+    go (Midi.KeyPressure c k _)   = Midi.KeyPressure c k v
+    go (Midi.ControlChange c n v) = Midi.ControlChange c n v
+    go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
+    go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
+    go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
+    go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
 
 setC :: Midi.Channel -> Midi.Message -> Midi.Message
-setC = error "TODO"
+setC c = go
+  where
+    go (Midi.NoteOff _ k v)       = Midi.NoteOff c k v
+    go (Midi.NoteOn _ k v)        = Midi.NoteOn c k v
+    go (Midi.KeyPressure _ k v)   = Midi.KeyPressure c k v
+    go (Midi.ControlChange _ n v) = Midi.ControlChange c n v
+    go (Midi.ProgramChange _ p)   = Midi.ProgramChange c p
+    go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
+    go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
+    go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
 toMidi :: (HasOrdPart a, HasBackendNote Midi a, HasBackendScore Midi s a) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
