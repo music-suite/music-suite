@@ -78,8 +78,8 @@ import Data.Traversable (Traversable, sequenceA)
 -}
 
 -- TODO remove this somehow
--- type HasOrdPart a = (HasPart' a, Ord (Part a), Transformable a)
-type HasOrdPart a = (a ~ a)
+type HasOrdPart a = (HasPart' a, Ord (Part a))
+-- type HasOrdPart a = (a ~ a)
 
 
 
@@ -191,48 +191,51 @@ instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
 type HasMidiPart a = (HasPart' a, Ord (Part a), HasMidiProgram (Part a))
 
 data Midi
+data MidiScore  a = MidiScore [((Midi.Channel, Midi.Preset), Score a)] 
+  deriving Functor
+
 instance HasBackend Midi where
-  type BackendScore   Midi    = Score
   type BackendContext Midi    = Identity
+  type BackendScore   Midi    = MidiScore
   type BackendEvent   Midi    = Score Midi.Message
-  type BackendMusic   Midi    = Score Midi.Message
-  finalizeExport _ = join
+  type BackendMusic   Midi    = Midi.Midi
+
+  -- TODO assuming that we have now converted each part to a track and set the part
+  -- FIXME
+  finalizeExport _ (MidiScore trs) = let 
+    mainTracks    = fmap translMidiTrack trs
+    controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+    in  Midi.Midi fileType divisions' (controlTrack : mainTracks) 
+    where
+      -- Each track needs TrackEnd
+      -- We place it a long time after last event just in case (necessary?)
+      addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
+      addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
+
+      translMidiTrack :: ((Midi.Channel, Midi.Preset), Score (Score Midi.Message)) -> [(Int, Midi.Message)]
+      translMidiTrack ((ch,p),(x)) = addTrackEnd $ setProgramChannel ch p $ scoreToMidiTrack (join x::(Score Midi.Message))
+
+      setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+      setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setC ch))
+
+      scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
+      scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
+      
+      fileType    = Midi.MultiTrack
+      divisions   = 1024
+      divisions'  = Midi.TicksPerBeat divisions
+      endDelta    = 10000
 
 
--- toMidi2 :: (HasMidiPart a, HasMidi a) => Score (Score Midi.Message) -> Midi.Midi
--- toMidi2 score = Midi.Midi fileType divisions' (controlTrack : eventTracks)
---     where
---         -- Each track needs TrackEnd
---         -- We place it long after last event just in case (necessary?)
---         endDelta        = 10000
---         fileType        = Midi.MultiTrack
---         divisions       = 1024
---         divisions'      = Midi.TicksPerBeat divisions
---         controlTrack    = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
---         eventTracks     = fmap ({-(<> [(endDelta, Midi.TrackEnd)]) .-} uncurry setProgramChannel . fmap scoreToMTrack)
---                                 $ extractParts' score
--- 
---         -- setProgramChannel :: Part a -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
---         setProgramChannel p = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap (setC ch))
---             where
---                 ch = getMidiChannel p
---                 prg = getMidiProgram p
--- 
---         scoreToMTrack :: HasMidi a => Score a -> Midi.Track Midi.Ticks
---         scoreToMTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
+instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) a where
+  exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' xs)
 
-
-instance HasBackendScore Midi (Score a) a where
-  exportScore _ = fmap Identity
 instance HasBackendNote Midi a => HasBackendNote Midi [a] where
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
+
 instance HasBackendNote Midi Int where
   exportNote _ (Identity pv) = mkMidiNote pv
-    where
-      mkMidiNote :: Int -> Score Midi.Message
-      mkMidiNote p = mempty
-          |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64) 
-          |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
+
 instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
 
@@ -254,11 +257,19 @@ instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
 instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
   exportNote b = exportNote b . fmap (snd . getTieT)
 
+mkMidiNote :: Int -> Score Midi.Message
+mkMidiNote p = mempty
+    |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64) 
+    |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
 
 setV :: Midi.Velocity -> Midi.Message -> Midi.Message
 setV = error "TODO"
+
 setC :: Midi.Channel -> Midi.Message -> Midi.Message
 setC = error "TODO"
+
+toMidi :: (HasOrdPart a, HasBackendNote Midi a, HasBackendScore Midi s a) => s -> Midi.Midi
+toMidi = export (undefined::Midi)
 
 
 
