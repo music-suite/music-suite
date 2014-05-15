@@ -73,6 +73,13 @@ import qualified Data.List              as List
 
 infixr 6 </>
 
+
+-- |
+-- Concatenate parts.
+--
+rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
+rcat = List.foldr (</>) mempty
+
 -- |
 -- Similar to '<>', but increases parts in the second part to prevent collision.
 --
@@ -82,24 +89,30 @@ a </> b = a <> moveParts offset b
         -- max voice in a + 1
         offset = succ $ maximum' 0 $ fmap fromEnum $ toListOf parts a
 
--- |
--- Concatenate parts.
---
-rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
-rcat = List.foldr (</>) mempty
+        -- |
+        -- Move down one voice (all parts).
+        --
+        moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
+        moveParts x = parts %~ (successor x)
 
--- |
--- Move down one voice (all parts).
---
-moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-moveParts x = parts %~ (successor x)
+        -- |
+        -- Move top-part to the specific voice (other parts follow).
+        --
+        moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
+        moveToPart v = moveParts (fromEnum v)
 
--- |
--- Move top-part to the specific voice (other parts follow).
---
-moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-moveToPart v = moveParts (fromEnum v)
 
+        iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
+        iterating f g n
+            | n <  0 = f . iterating f g (n + 1)
+            | n == 0 = id
+            | n >  0 = g . iterating f g (n - 1)
+
+        successor :: (Integral b, Enum a) => b -> a -> a
+        successor n = iterating pred succ (fromIntegral n)
+
+        maximum' :: (Ord a, Foldable t) => a -> t a -> a
+        maximum' z = option z getMax . foldMap (Option . Just . Max)
 
 
 
@@ -184,27 +197,4 @@ activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x
         turnOn  = switchR start
         turnOff = switchR stop
 
-
--------------------------------------------------------------------------------------
-
-
--- partial2 :: (a -> b -> Bool)      -> a -> b -> Maybe b
--- partial3 :: (a -> b -> c -> Bool) -> a -> b -> c -> Maybe c
--- partial2 f = curry  (fmap snd  . partial (uncurry f))
--- partial3 f = curry3 (fmap (^. _3) . partial (uncurry3 f))
-
-iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
-iterating f g n
-    | n <  0 = f . iterating f g (n + 1)
-    | n == 0 = id
-    | n >  0 = g . iterating f g (n - 1)
-
-successor :: (Integral b, Enum a) => b -> a -> a
-successor n = iterating pred succ (fromIntegral n)
-
-maximum' :: (Ord a, Foldable t) => a -> t a -> a
-maximum' z = option z getMax . foldMap (Option . Just . Max)
-
-minimum' :: (Ord a, Foldable t) => a -> t a -> a
-minimum' z = option z getMin . foldMap (Option . Just . Min)
 
