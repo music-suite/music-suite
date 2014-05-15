@@ -9,6 +9,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
@@ -120,8 +121,8 @@ class Functor (BackendScore b) => HasBackend b where
 
   finalizeExport :: b -> BackendScore b (BackendEvent b) -> BackendMusic b
   
-class (HasBackend b, Functor s) => HasBackendScore b s where
-  exportScore :: HasOrdPart a => b -> s a -> BackendScore b (BackendContext b a)
+class (HasBackend b) => HasBackendScore b s a | s -> a where
+  exportScore :: b -> s -> BackendScore b (BackendContext b a)
   -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
   -- exportScore b = fmap Identity
 
@@ -133,7 +134,7 @@ class (HasBackend b) => HasBackendNotes b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendEvent b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasOrdPart a, HasBackendScore b s, HasBackendNotes b a) => b -> s a -> BackendMusic b
+export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNotes b a) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
     -- These commute except for BackendContext
@@ -155,7 +156,7 @@ instance HasBackend Foo where
   type BackendEvent Foo     = [(Sum Int, Int)]
   type BackendMusic Foo     = [(Sum Int, Int)]
   finalizeExport _ = concat
-instance HasBackendScore Foo [] where
+instance HasBackendScore Foo [a] a where
   exportScore _ = fmap Identity
 instance HasBackendNotes Foo a => HasBackendNotes Foo [a] where
   -- exportNote b (Identity ps) = concatMap (exportNote b . Identity) ps
@@ -179,10 +180,10 @@ instance HasBackendNotes Foo a => HasBackendNotes Foo (DynamicT (Sum Int) a) whe
 
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s) => s a -> String
+toLilypondString :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s a) => s -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s) => s a -> Lilypond.Music
+toLilypond :: (HasOrdPart a, HasBackendNotes Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
 toLilypond = export (undefined::Ly)
 
 data Ly
@@ -200,10 +201,11 @@ instance HasBackend Ly where
   finalizeExport _ (LyScore xs) = pcatLilypond . fmap scatLilypond $ xs
 
 
-instance HasBackendScore Ly Score where
-  -- exportScore b s = exportScore b ((^?! phrases) s)
-  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ s)
-instance HasBackendScore Ly Voice where
+instance (Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
+
+  -- TODO extract, ties etc
+  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
+instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
 
 
@@ -357,8 +359,10 @@ spellLilypond' p = Lilypond.Pitch (
 
 
 
-main = putStrLn $ show $ view notes $ simultaneous 
-  $ text "Hello"
-  $ (scat [c,d,e::Score (PartT Int (TextT [Integer]))])^*(1/1)
+-- main = putStrLn $ show $ view notes $ simultaneous 
+main = putStrLn $ toLilypondString $ simultaneous
+  $ over pitches' (+ 2)
+  -- $ text "Hello"
+  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Integer]))])^*(1/1)
 
 
