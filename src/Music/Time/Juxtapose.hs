@@ -27,16 +27,17 @@ module Music.Time.Juxtapose (
        -- * Align without composition
         lead,
         follow,
-        -- * Align and compose
+
+        -- * Standard composition
         after,
         before,
         during,
-        sustain,
-        palindrome,
-        
-        -- ** Composition operators
         (|>),
         (<|),
+
+        -- ** More exotic
+        sustain,
+        palindrome,
 
         -- ** Catenation
         scat,
