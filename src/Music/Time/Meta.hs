@@ -11,7 +11,6 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -51,7 +50,7 @@ module Music.Time.Meta (
 
 -- import           Control.Applicative
 -- import           Control.Arrow
-import           Control.Lens hiding (transform)
+import           Control.Lens              hiding (transform)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
@@ -71,16 +70,16 @@ import           Data.Void
 
 -- import           Music.Score.Part
 import           Music.Score.Util
-import           Music.Time.Transform
 import           Music.Time.Reverse
 import           Music.Time.Split
+import           Music.Time.Transform
 
 type IsAttribute a = (Typeable a, Monoid' a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
-    Attribute  :: IsAttribute a => a -> Attribute
-    TAttribute :: (Transformable a, IsAttribute a) => a -> Attribute
+  Attribute  :: IsAttribute a => a -> Attribute
+  TAttribute :: (Transformable a, IsAttribute a) => a -> Attribute
 
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
@@ -95,44 +94,43 @@ unwrapTAttr :: (Transformable a, IsAttribute a) => Attribute -> Maybe a
 unwrapTAttr (TAttribute a) = cast a
 
 instance Semigroup Attribute where
-    (Attribute a1) <> a2 = case unwrapAttr a2 of
-        -- Nothing  -> a2
-        Nothing  -> error "Attribute.(<>) mismatch"
-        Just a2' -> Attribute (a1 <> a2')
-    (TAttribute a1) <> a2 = case unwrapTAttr a2 of
-        -- Nothing  -> a2
-        Nothing  -> error "Attribute.(<>) mismatch"
-        Just a2' -> TAttribute (a1 <> a2')
+  (Attribute a1) <> a2 = case unwrapAttr a2 of
+    -- Nothing  -> a2
+    Nothing  -> error "Attribute.(<>) mismatch"
+    Just a2' -> Attribute (a1 <> a2')
+  (TAttribute a1) <> a2 = case unwrapTAttr a2 of
+    -- Nothing  -> a2
+    Nothing  -> error "Attribute.(<>) mismatch"
+    Just a2' -> TAttribute (a1 <> a2')
 
 instance Transformable Attribute where
-    transform _ (Attribute a) = Attribute a
-    transform s (TAttribute a) = TAttribute (transform s a)
+  transform _ (Attribute a) = Attribute a
+  transform s (TAttribute a) = TAttribute (transform s a)
 
--- instance HasDuration Attribute where
-  -- _duration = error "Not implemented (HasDuration Attribute)"
 instance Splittable Attribute where
   split = error "Not implemented (Splittable Attribute)"
+
 instance Reversible Attribute where
   rev = error "Not implemented (Reversible Attribute)"
 
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String Attribute)
-    deriving (Transformable, Reversible, Splittable)
+  deriving (Transformable, Reversible, Splittable)
 
 instance Semigroup Meta where
-    Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
+  Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
 
 -- | The empty meta contains no attributes; composition of metas is
 --   a union of attributes; if the two metas have attributes of the
 --   same type they are combined according to their semigroup
 --   structure.
 instance Monoid Meta where
-    mempty = Meta Map.empty
-    mappend = (<>)
+  mempty = Meta Map.empty
+  mappend = (<>)
 
 instance HasMeta Meta where
-    meta = ($)
-    
+  meta = ($)
+
 --
 -- TODO
 -- Temporarily disabling part specific meta-events
@@ -141,27 +139,28 @@ instance HasMeta Meta where
 
 toMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
 toMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
-    where
-        key = ty ++ pt
-        pt = ""
-        -- pt = show $ fmap getPart partId
-        ty = show $ typeOf (undefined :: b)
+  where
+    key = ty ++ pt
+    pt = ""
+    -- pt = show $ fmap getPart partId
+     ty = show $ typeOf (undefined :: b)
 
 fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> Meta -> Maybe b
 fromMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
-    where
-        key = ty ++ pt       
-        pt = ""
-        -- pt = show $ fmap getPart partId
-        ty = show . typeOf $ (undefined :: b)
+  where
+    key = ty ++ pt
+    pt = ""
+    -- pt = show $ fmap getPart partId
+    ty = show . typeOf $ (undefined :: b)
 
 
 -- | Type class for things which have meta-information.
 class HasMeta a where
-    -- | Apply meta-information by combining it (on the left) with the
-    --   existing meta-information.
-    meta :: Lens' a Meta
+  -- | Apply meta-information by combining it (on the left) with the
+  --   existing meta-information.
+  meta :: Lens' a Meta
 
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = (meta <>~ m)
+

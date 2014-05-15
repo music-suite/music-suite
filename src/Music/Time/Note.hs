@@ -63,7 +63,7 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
-import           Music.Time.Util (tripped, through)
+import           Music.Time.Util        (through, tripped)
 
 -- |
 -- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance
@@ -157,7 +157,7 @@ noteValue = lens runNote (flip $ mapNote . const)
 fromNote = from note
 
 -- |
--- View a note as an events, i.e. a time-duration-value triplet. 
+-- View a note as an events, i.e. a time-duration-value triplet.
 --
 event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
 event = from note . bimapping delta id . tripped

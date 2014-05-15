@@ -73,8 +73,8 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
 
-import           Music.Time.Meta
 import           Music.Time.Juxtapose   (scat)
+import           Music.Time.Meta
 import           Music.Time.Note
 import           Music.Time.Reverse
 import           Music.Time.Split
@@ -450,7 +450,7 @@ reifyScore :: Score a -> Score (Note a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- |
--- View a score as a list of events, i.e. time-duration-value triplets. 
+-- View a score as a list of events, i.e. time-duration-value triplets.
 --
 -- This is a convenient combination of 'notes' and 'event'.
 --

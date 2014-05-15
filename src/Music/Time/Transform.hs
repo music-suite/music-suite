@@ -39,8 +39,6 @@ module Music.Time.Transform (
 
       -- ** Apply under a transformation
       whilst,
-      -- whilstStretch,
-      -- whilstDelay,
       spanned,
       on,
       conjugate,

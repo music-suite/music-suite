@@ -356,7 +356,7 @@ zipVoiceWith' f g
 -- Separate safe/unsafe Isos (see voiceList...)
 --
 
--- 
+--
 -- TODO make Voice/Voice an instance of Cons/Snoc and remove these
 --
 
