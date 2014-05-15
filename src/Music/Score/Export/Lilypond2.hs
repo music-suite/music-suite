@@ -188,16 +188,22 @@ instance HasMidiProgram Integer where
 instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
     getMidiProgram = fromIntegral . floor
 
-type HasMidiPart a = (HasPart' a, Ord (Part a), HasMidiProgram (Part a))
-
 data Midi
-data MidiScore  a = MidiScore [((Midi.Channel, Midi.Preset), Score a)] 
+
+type MidiContext  = Identity
+type MidiEvent    = Score Midi.Message
+
+data MidiScore a
+  = MidiScore 
+    [((Midi.Channel, 
+       Midi.Preset), 
+      Score a)] 
   deriving Functor
 
 instance HasBackend Midi where
-  type BackendContext Midi    = Identity
+  type BackendContext Midi    = MidiContext
   type BackendScore   Midi    = MidiScore
-  type BackendEvent   Midi    = Score Midi.Message
+  type BackendEvent   Midi    = MidiEvent
   type BackendMusic   Midi    = Midi.Midi
 
   -- TODO assuming that we have now converted each part to a track and set the part
@@ -215,7 +221,11 @@ instance HasBackend Midi where
       addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
 
       translMidiTrack :: ((Midi.Channel, Midi.Preset), Score (Midi.Message)) -> [(Int, Midi.Message)]
-      translMidiTrack ((ch, p), x) = addTrackEnd $ setProgramChannel ch p $ scoreToMidiTrack $ x
+      translMidiTrack ((ch, p), x) = id
+        $ addTrackEnd 
+        $ setProgramChannel ch p 
+        $ scoreToMidiTrack 
+        $ x
 
       setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
       setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
