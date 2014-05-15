@@ -190,11 +190,18 @@ instance HasMidiProgram Integer where
 instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
     getMidiProgram = fromIntegral . floor
 
+
+-- | A token to represent the Midi backend.
 data Midi
 
-type MidiContext  = Identity
-type MidiEvent    = Score Midi.Message
+-- | We do not need to pass any context to the event generator.
+type MidiContext = Identity
 
+-- | Every note may give rise to a number of messages. We represent this as a score of messages.
+type MidiEvent = Score Midi.Message
+
+-- | A Midi file consist of a number of tracks. 
+--   Channel and preset info is passed on from exportScore to finalizeExport using this type.
 data MidiScore a
   = MidiScore 
     [((Midi.Channel, 
@@ -205,16 +212,14 @@ data MidiScore a
 instance HasBackend Midi where
   type BackendContext Midi    = MidiContext
   type BackendScore   Midi    = MidiScore
-  type BackendNote   Midi    = MidiEvent
+  type BackendNote    Midi    = MidiEvent
   type BackendMusic   Midi    = Midi.Midi
 
-  -- TODO assuming that we have now converted each part to a track and set the part
-  -- FIXME
   finalizeExport _ (MidiScore trs) = let 
-    mainTracks    = fmap (translMidiTrack . fmap join) trs
     controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+    mainTracks    = fmap (translMidiTrack . fmap join) trs
     in  
-    Midi.Midi fileType divisions' (controlTrack : mainTracks) 
+    Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks) 
     
     where
       -- Each track needs TrackEnd
@@ -234,10 +239,11 @@ instance HasBackend Midi where
 
       scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
       scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
-      
+
+      -- Hardcoded values for Midi export
+      -- We always generate MultiTrack (type 1) files with division 1024
       fileType    = Midi.MultiTrack
       divisions   = 1024
-      divisions'  = Midi.TicksPerBeat divisions
       endDelta    = 10000
 
 
