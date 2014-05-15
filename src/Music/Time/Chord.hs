@@ -116,13 +116,6 @@ instance Reversible a => Reversible (Chord a) where
 -- instance HasMeta (Chord a) where
   -- meta = error "Not implemented: meta"
 
--- TODO
--- type instance Pitch (Chord a) = Pitch a
--- type instance SetPitch g (Chord a) = Chord (SetPitch g a)
--- instance (HasPitches a b) => HasPitches (Chord a) (Chord b) where
---   pitches = _Wrapped . traverse . from chordEv . _Wrapped . whilstLT pitches
-
-
 chord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
 chord = _Wrapped
 

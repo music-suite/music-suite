@@ -104,9 +104,15 @@ palindrome a = a `after` rev a
 infixr 6 |>
 infixr 6 <|
 
+-- |
+-- An infix alias for 'after'.
+--
 (|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (|>) = after
 
+-- |
+-- An infix alias for 'before'.
+--
 (<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (<|) = before
 

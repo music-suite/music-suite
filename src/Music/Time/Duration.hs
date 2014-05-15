@@ -103,4 +103,5 @@ duration = lens _duration (flip stretchTo)
 --
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
+{-# INLINE stretchTo #-}
 
