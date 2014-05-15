@@ -86,43 +86,56 @@ type HasOrdPart a = (HasPart' a, Ord (Part a))
 
 
 -- |
--- This class defines types and functions for exporting music in a very general way.
+-- This class defines types and functions for exporting music. It provides the
+-- primitive types and methods used to implement 'export'.
 --
 -- The backend type @b@ is just a type level tag to identify a specific backend.
---
+-- It is typically defined as an empty data declaration.
 --
 -- The actual conversion is handled by the subclasses 'HasBackendScore' and
 -- 'HasBackendNote', which converts the time structure, and the contained music
--- respectively. In general, parametricity ensures that structure and content are handled
--- completely separately. 
+-- respectively. Thus structure and content are handled separately. 
 --
--- It is often necessary to
--- alter the events based on their surrounding context: for examples the beginning and end
--- of spanners and beams depend on surrounding notes. Thus, the 'BackendContext' type
--- allow 'HasBackendScore' instances to provide context for 'HasBackendNote' instances.
---
--- -- The tag is typically defined as an empty data declaration:
+-- It is often necessary to alter the events based on their surrounding context: for
+-- examples the beginning and end of spanners and beams depend on surrounding notes. 
+-- The 'BackendContext' type allow 'HasBackendScore' instances to provide context for 
+-- 'HasBackendNote' instances.
 --
 -- @
 -- data Foo
+-- 
 -- instance HasBackend Foo where
---   type BackendMusic Foo = ...
--- @
+--   type BackendScore Foo     = []
+--   type BackendContext Foo   = Identity
+--   type BackendNote Foo      = [(Sum Int, Int)]
+--   type BackendMusic Foo     = [(Sum Int, Int)]
+--   finalizeExport _ = concat
+-- 
+-- instance HasBackendScore Foo [a] a where
+--   exportScore _ = fmap Identity
+-- 
+-- instance HasBackendNote Foo a => HasBackendNote Foo [a] where
+--   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
+-- 
+-- instance HasBackendNote Foo Int where
+--   exportNote _ (Identity p) = [(mempty ,p)]
+-- 
+-- instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
+--   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
+-- -- @
 --
 --
 class Functor (BackendScore b) => HasBackend b where
-  -- | The full music representation
+  -- | External music representation
   type BackendMusic b :: *
-
-  -- | Score, voice and time structure, with output handled by 'HasBackendScore' 
-  type BackendScore b :: * -> *
 
   -- | Notes, chords and rests, with output handled by 'HasBackendNote' 
   type BackendNote b :: *
 
+  -- | Score, voice and time structure, with output handled by 'HasBackendScore' 
+  type BackendScore b :: * -> *
+
   -- | This type may be used to pass context from 'exportScore' to 'exportNote'.
-  --   Often will typically include duration, onset or surrounding notes.
-  --
   --   If the note export is not context-sensitive, 'Identity' can be used.
   type BackendContext b :: * -> *
 
@@ -141,7 +154,7 @@ class (HasBackend b) => HasBackendNote b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNote b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
+export :: (HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
     export' = fmap (exportNote b) . exportScore b
@@ -149,19 +162,23 @@ export b = finalizeExport b . export'
 
 
 data Foo
+
 instance HasBackend Foo where
   type BackendScore Foo     = []
   type BackendContext Foo   = Identity
-  type BackendNote Foo     = [(Sum Int, Int)]
+  type BackendNote Foo      = [(Sum Int, Int)]
   type BackendMusic Foo     = [(Sum Int, Int)]
   finalizeExport _ = concat
+
 instance HasBackendScore Foo [a] a where
   exportScore _ = fmap Identity
+
 instance HasBackendNote Foo a => HasBackendNote Foo [a] where
-  -- exportNote b (Identity ps) = concatMap (exportNote b . Identity) ps
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
+
 instance HasBackendNote Foo Int where
   exportNote _ (Identity p) = [(mempty ,p)]
+
 instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
@@ -316,7 +333,7 @@ setC c = go
     go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
     go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
-toMidi :: (HasOrdPart a, HasBackendNote Midi a, HasBackendScore Midi s a) => s -> Midi.Midi
+toMidi :: (HasBackendNote Midi a, HasBackendScore Midi s a) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
 
 
@@ -430,10 +447,10 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
   exportNote b = exportNote b . fmap (snd . getTieT)
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasOrdPart a, HasBackendNote Ly a, HasBackendScore Ly s a) => s -> String
+toLilypondString :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasOrdPart a, HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
+toLilypond :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
 toLilypond = export (undefined::Ly)
 
 
