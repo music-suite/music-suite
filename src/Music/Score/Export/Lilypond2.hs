@@ -118,7 +118,7 @@ class Functor (BackendScore b) => HasBackend b where
   type BackendScore b :: * -> *
 
   -- | Notes, chords and rests, with output handled by 'HasBackendNote' 
-  type BackendEvent b :: *
+  type BackendNote b :: *
 
   -- | This type may be used to pass context from 'exportScore' to 'exportNote'.
   --   Often will typically include duration, onset or surrounding notes.
@@ -126,7 +126,7 @@ class Functor (BackendScore b) => HasBackend b where
   --   If the note export is not context-sensitive, 'Identity' can be used.
   type BackendContext b :: * -> *
 
-  finalizeExport :: b -> BackendScore b (BackendEvent b) -> BackendMusic b
+  finalizeExport :: b -> BackendScore b (BackendNote b) -> BackendMusic b
   
 class (HasBackend b) => HasBackendScore b s a | s -> a where
   exportScore :: b -> s -> BackendScore b (BackendContext b a)
@@ -134,11 +134,11 @@ class (HasBackend b) => HasBackendScore b s a | s -> a where
   -- exportScore b = fmap Identity
 
 class (HasBackend b) => HasBackendNote b a where
-  exportNote  :: b -> BackendContext b a   -> BackendEvent b
-  exportChord :: b -> BackendContext b [a] -> BackendEvent b
+  exportNote  :: b -> BackendContext b a   -> BackendNote b
+  exportChord :: b -> BackendContext b [a] -> BackendNote b
   exportChord = error "Not implemented"
 
-  -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendEvent b
+  -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNote b
   -- exportNote' b x = exportNote b (Identity x)
 
 export :: (HasOrdPart a, HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
@@ -152,7 +152,7 @@ data Foo
 instance HasBackend Foo where
   type BackendScore Foo     = []
   type BackendContext Foo   = Identity
-  type BackendEvent Foo     = [(Sum Int, Int)]
+  type BackendNote Foo     = [(Sum Int, Int)]
   type BackendMusic Foo     = [(Sum Int, Int)]
   finalizeExport _ = concat
 instance HasBackendScore Foo [a] a where
@@ -205,7 +205,7 @@ data MidiScore a
 instance HasBackend Midi where
   type BackendContext Midi    = MidiContext
   type BackendScore   Midi    = MidiScore
-  type BackendEvent   Midi    = MidiEvent
+  type BackendNote   Midi    = MidiEvent
   type BackendMusic   Midi    = Midi.Midi
 
   -- TODO assuming that we have now converted each part to a track and set the part
@@ -339,21 +339,23 @@ instance Monoid Lilypond.Music where
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
   type BackendContext Ly = LyContext
-  type BackendEvent Ly = Lilypond.Music
+  type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
   finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
 
 
 instance (Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
-
   -- TODO extract, ties etc
   exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
+
 instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
 
 
 voiceToLilypond :: [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
 voiceToLilypond = undefined
+
+
 
 
 
