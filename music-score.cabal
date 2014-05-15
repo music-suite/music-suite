@@ -77,9 +77,7 @@ library
                         Music.Time.Bound
                         Music.Time.Meta
                         
-                        Music.Score.Rhythm
                         Music.Score
-                        Music.Score.Convert
                         Music.Score.Ties
                         Music.Score.Part
                         Music.Score.Phrases
@@ -107,10 +105,12 @@ library
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
+                        Music.Score.Rhythm
                         -- -- Need to expose these to allow GHCI development
                         Music.Time.Util
                         Music.Time.Internal.Transform
                         Music.Score.Util
+                        Music.Score.Convert
                         Music.Score.Export.Common 
                         Music.Score.Instances
     -- other-modules:      

@@ -172,6 +172,7 @@ tupletDot orig@(Tuplet ((unRatio.realToFrac) -> (2,3)) (Dotted 1 x)) = x
 tupletDot orig                                                       = orig
 
 -- | Splits a tuplet iff it contans a group which can be split into two halves of exactly the same size.
+-- TODO this should only happen if the tuplet lenght is longer than a beat
 splitTuplet :: Rhythm a -> Rhythm a
 splitTuplet orig@(Tuplet n (Group xs)) = case trySplit xs of
     Nothing       -> orig
