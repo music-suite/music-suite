@@ -218,13 +218,11 @@ type MidiContext = Identity
 -- | Every note may give rise to a number of messages. We represent this as a score of messages.
 type MidiEvent = Score Midi.Message
 
+type MidiInstr = (Midi.Channel, Midi.Preset)
+
 -- | A Midi file consist of a number of tracks. 
 --   Channel and preset info is passed on from exportScore to finalizeExport using this type.
-data MidiScore a
-  = MidiScore 
-    [((Midi.Channel, 
-       Midi.Preset), 
-      Score a)] 
+data MidiScore a = MidiScore [(MidiInstr, Score a)] 
   deriving Functor
 
 instance HasBackend Midi where
@@ -235,22 +233,22 @@ instance HasBackend Midi where
 
   finalizeExport _ (MidiScore trs) = let 
     controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
-    mainTracks    = fmap (translMidiTrack . fmap join) trs
+    mainTracks    = fmap (uncurry translMidiTrack . fmap join) trs
     in  
     Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks) 
     
     where
-      -- Each track needs TrackEnd
-      -- We place it a long time after last event just in case (necessary?)
-      addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
-      addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
-
-      translMidiTrack :: ((Midi.Channel, Midi.Preset), Score (Midi.Message)) -> [(Int, Midi.Message)]
-      translMidiTrack ((ch, p), x) = id
+      translMidiTrack :: MidiInstr -> Score (Midi.Message) -> [(Int, Midi.Message)]
+      translMidiTrack (ch, p) x = id
         $ addTrackEnd 
         $ setProgramChannel ch p 
         $ scoreToMidiTrack 
         $ x
+
+      -- Each track needs TrackEnd
+      -- We place it a long time after last event just in case (necessary?)
+      addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
+      addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
 
       setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
       setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
@@ -371,7 +369,11 @@ toMidi = export (undefined::Midi)
 -}
 
 data Ly
-data LyScore a = LyScore [[a]] deriving (Functor, Eq, Show)
+
+data LyScore a = LyScore [LyStaff a] deriving (Functor, Eq, Show)
+type LyStaff a = [a]
+-- type LyBar a = a
+
 data LyContext a = LyContext Duration a deriving (Functor, Foldable, Traversable, Eq, Show)
 instance Monoid Lilypond.Music where
   mempty = pcatLy []
