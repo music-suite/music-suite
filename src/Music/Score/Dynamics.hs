@@ -136,7 +136,7 @@ class (HasDynamics s t) => HasDynamic s t where
 --
 class (Transformable (Dynamic s),
        Transformable (Dynamic t)
-       ,SetDynamic (Dynamic t) s ~ t
+       , SetDynamic (Dynamic t) s ~ t
        ) => HasDynamics s t where
 
   -- | Dynamic type.

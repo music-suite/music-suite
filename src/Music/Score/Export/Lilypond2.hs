@@ -27,8 +27,6 @@ module Music.Score.Export.Lilypond2 (
     Ly,
     toLilypondString,
     toLilypond,
-    -- Ct,
-    CtxtDyn,
   ) where
 
 import Music.Pitch.Literal
@@ -381,68 +379,24 @@ instance Monoid Lilypond.Music where
   mempty = pcatLy []
   mappend x y = pcatLy [x,y]
 
-ex2 :: Ly -> LyScore Lilypond.Music -> Lilypond.Music
-ex2 _ = undefined
-
--- ex1 :: (CtxtDyn a b, Tiable b) => Ly -> Score a -> LyScore (LyContext b)
--- ex1 _ = undefined
--- ex1 _ = fex2 . fmap beginTie . addDynCon2
-
-fex2 :: Score b -> LyScore (LyContext b)
-fex2 = undefined
-
-
-
-
-
-
-
--- foo ::Score (PartT Int (DynamicT (Sum Double) Integer))
--- bar :: Score (PartT Int (DynamicT (Ctxt (Sum Double)) Integer))
--- foo = c
--- bar = addDynCon foo
-
-
--- type instance Dynamic (Ctxt a) = Ctxt a
--- type CtxtDyn' a = SetDynamic (Ct (Dynamic a)) a
-type CtxtDyn a b = (Dynamic b ~ Ctxt (Dynamic a))
-
-type HasDynamicCtxt a b = (HasDynamic a b, SetDynamic (Ctxt (Dynamic a)) a ~ b)
-
-
--- data Ct a = Ct (Maybe a, a, Maybe a)
--- type instance Dynamic (Ct a) = Ct a
-
--- addDynCon2 :: () => Score a -> Score (CtxtDyn a)
-addDynCon2 :: (HasPart' a, Ord (Part a), HasDynamic a a, HasDynamicCtxt a b) => Score a -> Score b
-addDynCon2 = undefined
--- addDynCon2 = over (phrases.vdynamic) ({-fmap Ct .-} withContext)
-
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
   type BackendContext Ly = LyContext
   type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
   -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
-  finalizeExport = ex2
+  finalizeExport = undefined
 
--- instance (HasPart' a, Ord (Part a), HasDynamicCtxt a b, Tiable b, HasDynamic a a, HasDynamic a b, Transformable a, Semigroup a) => HasBackendScore Ly (Score a) b where
---   exportScore b = fex2 . fmap beginTie . addDynCon2 . simultaneous
+instance (HasPart' a, Ord (Part a), HasDynamics a a, Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt Double, Articulation a ~ Ctxt (Double, Double)) 
+  => HasBackendScore Ly (Score a) ({-SetDynamic DynamicNotation-} a) where
+  exportScore b = LyScore . return . fmap (LyContext 1) . toListOf traverse {-. over dynamics dynamicDisplay-}
+  
+foo = undefined
+foo :: Score (DynamicT (Ctxt Double) ())
+foo' = over dynamics dynamicDisplay foo
 
-instance (HasPart' a, Ord (Part a), Tiable a, Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
-  exportScore b = undefined
-
-
-
-instance HasBackendScore Ly (Voice a) a where
-  exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
-
-
-voiceToLilypond :: [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
-voiceToLilypond = undefined
-
-
-
+-- TODO move
+instance Transformable DynamicNotation
 
 
 instance HasBackendNote Ly a => HasBackendNote Ly [a] where
