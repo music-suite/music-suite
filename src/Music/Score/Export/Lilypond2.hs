@@ -369,7 +369,6 @@ toMidi = export (undefined::Midi)
 -}
 
 data Ly
-
 data LyScore a = LyScore [LyStaff a] deriving (Functor, Eq, Show)
 type LyStaff a = [a]
 -- type LyBar a = a
@@ -379,17 +378,24 @@ instance Monoid Lilypond.Music where
   mempty = pcatLy []
   mappend x y = pcatLy [x,y]
 
+ex2 :: Ly -> LyScore Lilypond.Music -> Lilypond.Music
+ex2 = undefined
+
+ex1 :: Tiable a => Ly -> Score a -> LyScore (LyContext a)
+ex1 = undefined
+
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
   type BackendContext Ly = LyContext
   type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
-  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
+  -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
+  finalizeExport = ex2
 
-
-instance (HasPart' a, Ord (Part a), Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
+instance (HasPart' a, Ord (Part a), Transformable a, Semigroup a, Tiable a) => HasBackendScore Ly (Score a) a where
   -- TODO extract, ties etc
-  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
+  -- exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
+  exportScore = ex1
 
 instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
@@ -433,6 +439,8 @@ instance HasBackendNote Ly a => HasBackendNote Ly (Product a) where
   exportNote b = exportNote b . fmap getProduct
 
 instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
+  -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
+  -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT n a) where
@@ -570,3 +578,59 @@ spellLy' p = Lilypond.Pitch (
 
 
 
+
+
+newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], ShowDyn) }
+instance Wrapped DynamicNotation where
+  type Unwrapped DynamicNotation = ([CrescDim], ShowDyn)
+  _Wrapped' = iso getDynamicNotation DynamicNotation
+
+
+fixLevel :: Double -> Double
+fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
+
+data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
+
+instance Monoid CrescDim where
+  mempty = NoCrescDim
+  mappend a _ = a
+
+type ShowDyn  = Bool
+
+mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
+mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
+
+extractCtxt :: Ctxt a -> a
+extractCtxt (_,x,_) = x
+
+-- Given a dynamic value and its context, decide:
+--   
+--   1) Whether we should begin or end a crescendo or diminuendo
+--   2) Whether we should display the current dynamic value
+--   
+dynamicDisplay :: (Ord a, Real a) => Ctxt a -> DynamicNotation
+dynamicDisplay x = DynamicNotation $ case x of
+  (Nothing, y, Nothing) -> ([], True)
+  (Nothing, y, Just z ) -> case (y `compare` z) of
+    LT      -> ([BeginCresc], True)
+    EQ      -> ([],           True)
+    GT      -> ([BeginDim],   True)
+  (Just x,  y, Just z ) -> case (x `compare` y, y `compare` z) of
+    (LT,LT) -> ([NoCrescDim], False)
+    (LT,EQ) -> ([EndCresc],   True)
+    (EQ,LT) -> ([BeginCresc], False{-True-})
+
+    (GT,GT) -> ([NoCrescDim], False)
+    (GT,EQ) -> ([EndDim],     True)
+    (EQ,GT) -> ([BeginDim],   False{-True-})
+
+    (EQ,EQ) -> ([],                   False)
+    (LT,GT) -> ([EndCresc, BeginDim], True)
+    (GT,LT) -> ([EndDim, BeginCresc], True)
+
+
+  (Just x,  y, Nothing) -> case (x `compare` y) of
+    LT      -> ([EndCresc],   True)
+    EQ      -> ([],           False)
+    GT      -> ([EndDim],     True)
+                                      
