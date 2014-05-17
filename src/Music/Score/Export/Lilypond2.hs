@@ -27,7 +27,7 @@ module Music.Score.Export.Lilypond2 (
     Ly,
     toLilypondString,
     toLilypond,
-    Ct,
+    -- Ct,
     CtxtDyn,
   ) where
 
@@ -404,15 +404,15 @@ fex2 = undefined
 
 
 -- type instance Dynamic (Ctxt a) = Ctxt a
-type CtxtDyn' a = SetDynamic (Ct (Dynamic a)) a
-type CtxtDyn a b = (Dynamic b ~ Ct (Dynamic a))
+-- type CtxtDyn' a = SetDynamic (Ct (Dynamic a)) a
+type CtxtDyn a b = (Dynamic b ~ Ctxt (Dynamic a))
 
-data Ct a = Ct (Maybe a, a, Maybe a)
-type instance Dynamic (Ct a) = Ct a
+-- data Ct a = Ct (Maybe a, a, Maybe a)
+-- type instance Dynamic (Ct a) = Ct a
 
 -- addDynCon2 :: () => Score a -> Score (CtxtDyn a)
 addDynCon2 :: (HasPart' a, Ord (Part a), HasDynamic a a, HasDynamic a b, CtxtDyn a b) => Score a -> Score b
-addDynCon2 = over (phrases.vdynamic) (fmap Ct . withContext)
+addDynCon2 = over (phrases.vdynamic) ({-fmap Ct .-} withContext)
 
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
