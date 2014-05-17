@@ -189,8 +189,10 @@ instance (HasLilypond a) => HasLilypond (DynamicT (Ctxt DynType) a) where
       notate ctxt = notateDD (extractCtxt ctxt) (dynamicDisplay ctxt)
 
 notateDD :: (Ord a, Real a) => a -> ([CrescDim], ShowDyn) -> Lilypond -> Lilypond
-notateDD lvl (cds, showLevel) = (composed $ fmap notateCrescDim cds) . notateLevel
-  where         
+notateDD lvl (cds, showLevel) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
+  where
+    -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
+    rcomposed = composed . reverse         
     notateCrescDim x = case x of
       NoCrescDim -> id
       BeginCresc -> Lilypond.beginCresc
