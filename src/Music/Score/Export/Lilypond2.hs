@@ -240,9 +240,9 @@ instance HasBackend Midi where
     where
       translMidiTrack :: MidiInstr -> Score (Midi.Message) -> [(Int, Midi.Message)]
       translMidiTrack (ch, p) x = id
-        $ addTrackEnd 
-        $ setProgramChannel ch p 
-        $ scoreToMidiTrack 
+        $ addTrackEnd 
+        $ setProgramChannel ch p 
+        $ scoreToMidiTrack 
         $ x
 
       -- Each track needs TrackEnd
@@ -290,10 +290,10 @@ instance HasBackendNote Midi Int where
   exportNote _ (Identity pv) = mkMidiNote pv
 
 instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
-  exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
+  exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
-  exportNote b (Identity (ArticulationT (_, x))) = fmap id $ exportNote b (Identity x)
+  exportNote b (Identity (ArticulationT (_, x))) = fmap id $ exportNote b (Identity x)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
@@ -389,7 +389,7 @@ instance HasBackend Ly where
 
 instance (HasPart' a, Ord (Part a), Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
   -- TODO extract, ties etc
-  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
+  exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
 
 instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
