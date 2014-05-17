@@ -143,8 +143,9 @@ class Functor (BackendScore b) => HasBackend b where
 
   finalizeExport :: b -> BackendScore b (BackendNote b) -> BackendMusic b
   
-class (HasBackend b) => HasBackendScore b s a | s -> a where
-  exportScore :: b -> s -> BackendScore b (BackendContext b a)
+class (HasBackend b) => HasBackendScore b s where
+  type ScoreEvent b s :: *
+  exportScore :: b -> s -> BackendScore b (BackendContext b (ScoreEvent b s))
   -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
   -- exportScore b = fmap Identity
 
@@ -156,7 +157,7 @@ class (HasBackend b) => HasBackendNote b a where
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNote b
   -- exportNote' b x = exportNote b (Identity x)
 
-export :: (HasBackendScore b s a, HasBackendNote b a) => b -> s -> BackendMusic b
+export :: (HasBackendScore b s, HasBackendNote b (ScoreEvent b s)) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
     export' = fmap (exportNote b) . exportScore b
@@ -172,7 +173,8 @@ instance HasBackend Foo where
   type BackendMusic Foo     = [(Sum Int, Int)]
   finalizeExport _ = concat
 
-instance HasBackendScore Foo [a] a where
+instance HasBackendScore Foo [a] where
+  type ScoreEvent Foo [a] = a
   exportScore _ = fmap Identity
 
 instance HasBackendNote Foo a => HasBackendNote Foo [a] where
@@ -275,13 +277,15 @@ instance (HasParts a b) => HasParts (Voice a) (Voice b) where
     . _Wrapped      -- this needed?
     . whilstLD parts
 
-instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) a where
+instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) where
+  type ScoreEvent Midi (Voice a) = a
   exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
     where
       voiceToScore :: Voice a -> Score a
       voiceToScore = error "TODO"
 
-instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) a where
+instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
+  type ScoreEvent Midi (Score a) = a
   exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' xs)
 
 instance HasBackendNote Midi a => HasBackendNote Midi [a] where
@@ -350,7 +354,7 @@ setC c = go
     go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
     go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
-toMidi :: (HasBackendNote Midi a, HasBackendScore Midi s a) => s -> Midi.Midi
+toMidi :: (HasBackendNote Midi (ScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
 
 
@@ -374,7 +378,7 @@ data LyScore a = LyScore [LyStaff a] deriving (Functor, Eq, Show)
 type LyStaff a = [a]
 -- type LyBar a = a
 
-data LyContext a = LyContext Duration a deriving (Functor, Foldable, Traversable, Eq, Show)
+data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
 instance Monoid Lilypond.Music where
   mempty = pcatLy []
   mappend x y = pcatLy [x,y]
@@ -387,15 +391,22 @@ instance HasBackend Ly where
   -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
   finalizeExport = undefined
 
-instance (HasPart' a, Ord (Part a), HasDynamics a a, Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt Double, Articulation a ~ Ctxt (Double, Double)) 
-  => HasBackendScore Ly (Score a) ({-SetDynamic DynamicNotation-} a) where
-  exportScore b = LyScore . return . fmap (LyContext 1) . toListOf traverse {-. over dynamics dynamicDisplay-}
+instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt (Sum Double) ) 
+  => HasBackendScore Ly (Score a) where
+  type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
+  exportScore b = LyScore . return . fmap (LyContext 1) . toListOf traverse . fmap Just . fmap beginTie . over dynamics dynamicDisplay . view (extracted.element 0)
+
   
 foo = undefined
 foo :: Score (DynamicT (Ctxt Double) ())
 foo' = over dynamics dynamicDisplay foo
 
 -- TODO move
+instance Tiable DynamicNotation where
+  -- TODO important!
+instance Num a => Num (Sum a) where
+instance Real a => Real (Sum a) where
+  toRational (Sum x) = toRational x
 instance Transformable DynamicNotation
 
 
@@ -405,8 +416,8 @@ instance HasBackendNote Ly a => HasBackendNote Ly [a] where
 
 instance HasBackendNote Ly Integer where
   -- TODO rest
-  exportNote _ (LyContext d x) = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
-  exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
+  exportNote _ (LyContext d (Just x)) = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
+  -- exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
 
 instance HasBackendNote Ly Int where 
   exportNote b = exportNote b . fmap toInteger
@@ -441,7 +452,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
-  exportNote b (LyContext d (TremoloT (n, x))) = exportNote b $ LyContext d x -- TODO many
+  exportNote b (LyContext d (Just (TremoloT (n, x)))) = exportNote b $ LyContext d (Just x) -- TODO many
     -- where
     -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
     -- getL d (TremoloT (Max n, x)) = notate $ getLilypond newDur x
@@ -452,7 +463,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
     --         notate = Lilypond.Tremolo (round repeats)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  exportNote b (LyContext d (TextT (n, x))) = notate n (exportNote b $ LyContext d x) -- TODO many
+  exportNote b (LyContext d (Just (TextT (n, x)))) = notate n (exportNote b $ LyContext d (Just x)) -- TODO many
     where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
@@ -466,10 +477,10 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
   exportNote b = exportNote b . fmap (snd . getTieT)
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> String
+toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
+toLilypond :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> Lilypond.Music
 toLilypond x = export (undefined::Ly) x
 
 aScore :: Score a -> Score a
@@ -481,10 +492,11 @@ aScore = id
 
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
+main = putStrLn $ toLilypondString $ music
 music = simultaneous
   $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Double]))])^*(1/8)
+  $ (scat [c<>cs,d,e::Score (PartT Int (ArticulationT () (DynamicT (Maybe (Sum Double), Sum Double, Maybe (Sum Double)) [Double])))])^*(1/8)
 
 
 
@@ -575,7 +587,7 @@ spellLy' p = Lilypond.Pitch (
 
 
 
-
+type instance Dynamic DynamicNotation = DynamicNotation
 newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], ShowDyn) }
 instance Wrapped DynamicNotation where
   type Unwrapped DynamicNotation = ([CrescDim], ShowDyn)
