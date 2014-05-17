@@ -1,5 +1,6 @@
 
 
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE RankNTypes #-}
@@ -30,23 +31,34 @@ module Music.Score.Export.Lilypond2 (
   ) where
 
 import Music.Pitch.Literal
+import Music.Dynamics.Literal
 import Music.Score hiding (
   toLilypond,
   toLilypondString,
   toMidi,
   HasMidiProgram(..),
   HasMidiPart(..),
+  writeLilypond,
+  writeLilypond',
+  LilypondOptions,
+  Inline,
+  showLilypond,
+  openLilypond,
+  openLilypond',
   )
 
 import qualified Codec.Midi                as Midi
 import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
 import           Music.Score.Export.Common
+import           System.Process
+import Data.Default
 import Data.Ratio
 import Data.Maybe
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable, sequenceA)
 import Music.Time.Internal.Transform (whilstLD) -- TODO move
+import Music.Time.Util (composed)
 
 {-
   Assume that Music is a type function that returns the underlying music
@@ -394,7 +406,11 @@ instance HasBackend Ly where
 instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt (Sum Double) ) 
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
-  exportScore b = LyScore . return . fmap (LyContext 0.5) . toListOf traverse . fmap Just . fmap (fst.toTied) . over dynamics dynamicDisplay . view (extracted.element 0) . simultaneous
+  exportScore b = LyScore . return . fmap (LyContext 2) 
+    . toListOf traverse . fmap Just . {-fmap (fst.toTied)-}id 
+    . over dynamics dynamicDisplay 
+    . view (extracted.element 0) 
+    . simultaneous
 
   
 foo = undefined
@@ -403,12 +419,13 @@ foo' = over dynamics dynamicDisplay foo
 
 -- TODO move
 instance Tiable DynamicNotation where
+  toTied (DynamicNotation (beginEnd, marks)) = (DynamicNotation (beginEnd, marks), DynamicNotation (mempty, Nothing))
   -- TODO important!
 instance Num a => Num (Sum a) where
 instance Real a => Real (Sum a) where
   toRational (Sum x) = toRational x
-instance Transformable DynamicNotation
-
+instance Transformable DynamicNotation where
+  transform _ = id
 
 instance HasBackendNote Ly a => HasBackendNote Ly [a] where
   exportNote b = exportChord b
@@ -448,7 +465,26 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
-  exportNote b = exportNote b . fmap (snd . getDynamicT)
+  exportNote b (LyContext d (Just (DynamicT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x) -- TODO many
+    where
+      notate dynNot x = notateDD dynNot x
+
+notateDD :: DynamicNotation -> Lilypond -> Lilypond
+notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
+  where
+    -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
+    rcomposed = composed . reverse         
+    notateCrescDim x = case x of
+      NoCrescDim -> id
+      BeginCresc -> Lilypond.beginCresc
+      EndCresc   -> Lilypond.endCresc
+      BeginDim   -> Lilypond.beginDim
+      EndDim     -> Lilypond.endDim
+    
+    -- TODO these literals are not so nice...
+    notateLevel = case showLevel of
+       Nothing -> id
+       Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
@@ -494,12 +530,24 @@ aScore = id
 
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
-main = putStrLn $ toLilypondString $ music
-music = id
+main = openLilypond $ music
+music = (addDynCon.simultaneous)
   -- $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [d<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (Maybe (Sum Double), Sum Double, Maybe (Sum Double)) [Double])))])^*(1/8)
+  $ level _f
+  $ (scat [c<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (Sum Double) [Double])))])^*(1/8)
 
+deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
+instance VectorSpace a => VectorSpace (Sum a) where
+  type Scalar (Sum a) = Scalar a
+  s *^ Sum v = Sum (s *^ v)
+instance AffineSpace a => AffineSpace (Sum a) where
+  type Diff (Sum a) = Sum (Diff a)
+  Sum p .-. Sum q = Sum (p .-. q)
+  Sum p .+^ Sum v = Sum (p .+^ v)
+  
+instance IsDynamics a => IsDynamics (Sum a) where
+  fromDynamics = Sum . fromDynamics
 instance HasPitches a b => HasPitches (Sum a) (Sum b) where
   pitches = _Wrapped . pitches
 instance IsPitch a => IsPitch (Sum a) where
@@ -595,9 +643,10 @@ spellLy' p = Lilypond.Pitch (
 
 
 type instance Dynamic DynamicNotation = DynamicNotation
-newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], ShowDyn) }
+-- TODO generalize level
+newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
 instance Wrapped DynamicNotation where
-  type Unwrapped DynamicNotation = ([CrescDim], ShowDyn)
+  type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
   _Wrapped' = iso getDynamicNotation DynamicNotation
 
 
@@ -610,7 +659,8 @@ instance Monoid CrescDim where
   mempty = NoCrescDim
   mappend a _ = a
 
-type ShowDyn  = Bool
+-- TODO use any
+-- type ShowDyn = Bool
 
 mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
 mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
@@ -624,7 +674,7 @@ extractCtxt (_,x,_) = x
 --   2) Whether we should display the current dynamic value
 --   
 dynamicDisplay :: (Ord a, Real a) => Ctxt a -> DynamicNotation
-dynamicDisplay x = DynamicNotation $ case x of
+dynamicDisplay x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
   (Nothing, y, Nothing) -> ([], True)
   (Nothing, y, Just z ) -> case (y `compare` z) of
     LT      -> ([BeginCresc], True)
@@ -634,18 +684,108 @@ dynamicDisplay x = DynamicNotation $ case x of
     (LT,LT) -> ([NoCrescDim], False)
     (LT,EQ) -> ([EndCresc],   True)
     (EQ,LT) -> ([BeginCresc], False{-True-})
-
+  
     (GT,GT) -> ([NoCrescDim], False)
     (GT,EQ) -> ([EndDim],     True)
     (EQ,GT) -> ([BeginDim],   False{-True-})
-
+  
     (EQ,EQ) -> ([],                   False)
     (LT,GT) -> ([EndCresc, BeginDim], True)
     (GT,LT) -> ([EndDim, BeginCresc], True)
-
-
+  
+  
   (Just x,  y, Nothing) -> case (x `compare` y) of
     LT      -> ([EndCresc],   True)
     EQ      -> ([],           False)
-    GT      -> ([EndDim],     True)
+    GT      -> ([EndDim],     True)   
                                       
+                                      
+
+
+
+
+
+
+-- |
+-- Convert a score to a Lilypond representaiton and print it on the standard output.
+--
+-- showLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
+showLilypond = putStrLn . toLilypondString
+
+-- |
+-- Convert a score to a Lilypond representation and write to a file.
+--
+-- writeLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
+writeLilypond = writeLilypond' def
+
+data LilypondOptions
+    = LyInlineFormat
+    | LyScoreFormat
+instance Default LilypondOptions where
+    def = LyInlineFormat
+
+-- |
+-- Convert a score to a Lilypond representation and write to a file.
+--
+-- writeLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypondString sc
+    where
+        title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
+        composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
+
+        lyFilePrefix = case options of
+            LyInlineFormat -> lyInlinePrefix
+            LyScoreFormat  -> lyScorePrefix
+
+        lyInlinePrefix = mempty                                        ++
+            "%%% Generated by music-score %%%\n"                       ++
+            "\\include \"lilypond-book-preamble.ly\"\n"                ++
+            "\\paper {\n"                                              ++
+            "  #(define dump-extents #t)\n"                            ++
+            "\n"                                                       ++
+            "  indent = 0\\mm\n"                                       ++
+            "  line-width = 210\\mm - 2.0 * 0.4\\in\n"                 ++
+            "  ragged-right = ##t\n"                                   ++
+            "  force-assignment = #\"\"\n"                             ++
+            "  line-width = #(- line-width (* mm  3.000000))\n"        ++
+            "}\n"                                                      ++
+            "\\header {\n"                                             ++
+            "  title = \"" ++ title ++ "\"\n"                          ++
+            "  composer = \"" ++ composer ++ "\"\n"                    ++
+            "}\n"                                                      ++
+            "\\layout {\n"                                             ++
+            "}"                                                        ++
+            "\n\n"
+
+        lyScorePrefix = mempty                                         ++
+            "\\paper {"                                                ++
+            "  indent = 0\\mm"                                         ++
+            "  line-width = 210\\mm - 2.0 * 0.4\\in"                   ++
+            "}"                                                        ++
+            "\\header {\n"                                             ++
+            "  title = \"" ++ title ++ "\"\n"                          ++
+            "  composer = \"" ++ composer ++ "\"\n"                    ++
+            "}\n"                                                      ++
+            "\\layout {"                                               ++
+            "}" ++
+            "\n\n"
+
+
+-- |
+-- Typeset a score using Lilypond and open it.
+--
+-- /Note/ This is simple wrapper around 'writeLilypond' that may not work well on all platforms.
+--
+-- openLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
+openLilypond = openLilypond' def
+
+-- openLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> Score a -> IO ()
+openLilypond' options sc = do
+    writeLilypond' options "test.ly" sc
+    runLilypond
+    cleanLilypond
+    openLilypond''
+
+runLilypond    = void $ runCommand "lilypond -f pdf test.ly 2>/dev/null" >>= waitForProcess
+cleanLilypond  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
+openLilypond'' = void $ runCommand $ openCommand ++ " test.pdf"
