@@ -407,12 +407,16 @@ fex2 = undefined
 -- type CtxtDyn' a = SetDynamic (Ct (Dynamic a)) a
 type CtxtDyn a b = (Dynamic b ~ Ctxt (Dynamic a))
 
+type HasDynamicCtxt a b = (HasDynamic a b, SetDynamic (Ctxt (Dynamic a)) a ~ b)
+
+
 -- data Ct a = Ct (Maybe a, a, Maybe a)
 -- type instance Dynamic (Ct a) = Ct a
 
 -- addDynCon2 :: () => Score a -> Score (CtxtDyn a)
-addDynCon2 :: (HasPart' a, Ord (Part a), HasDynamic a a, HasDynamic a b, CtxtDyn a b) => Score a -> Score b
-addDynCon2 = over (phrases.vdynamic) ({-fmap Ct .-} withContext)
+addDynCon2 :: (HasPart' a, Ord (Part a), HasDynamic a a, HasDynamicCtxt a b) => Score a -> Score b
+addDynCon2 = undefined
+-- addDynCon2 = over (phrases.vdynamic) ({-fmap Ct .-} withContext)
 
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
@@ -422,9 +426,13 @@ instance HasBackend Ly where
   -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
   finalizeExport = ex2
 
-instance (HasPart' a, Ord (Part a), CtxtDyn a b, Tiable b, HasDynamic a a, HasDynamic a b) => HasBackendScore Ly (Score a) b where
-  exportScore b = fex2 . fmap beginTie . addDynCon2
-  
+-- instance (HasPart' a, Ord (Part a), HasDynamicCtxt a b, Tiable b, HasDynamic a a, HasDynamic a b, Transformable a, Semigroup a) => HasBackendScore Ly (Score a) b where
+--   exportScore b = fex2 . fmap beginTie . addDynCon2 . simultaneous
+
+instance (HasPart' a, Ord (Part a), Tiable a, Transformable a, Semigroup a) => HasBackendScore Ly (Score a) a where
+  exportScore b = undefined
+
+
 
 instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
@@ -508,20 +516,22 @@ toLilypondString :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
 toLilypond :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
-toLilypond = export (undefined::Ly)
-    
+toLilypond x = export (undefined::Ly) x
+
+aScore :: Score a -> Score a
+aScore = id    
 
 
 
 
--- 
--- -- TODO tests
--- -- main = putStrLn $ show $ view notes $ simultaneous 
--- main = putStrLn $ toLilypondString $ simultaneous
---   $ over pitches' (+ 2)
---   --  $ text "Hello"
---   $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Double]))])^*(1/8)
--- 
+
+-- TODO tests
+-- main = putStrLn $ show $ view notes $ simultaneous 
+music = simultaneous
+  $ over pitches' (+ 2)
+  --  $ text "Hello"
+  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Double]))])^*(1/8)
+
 
 
 
