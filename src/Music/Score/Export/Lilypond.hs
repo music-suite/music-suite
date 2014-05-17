@@ -188,7 +188,9 @@ instance (HasLilypond a) => HasLilypond (DynamicT (Ctxt DynType) a) where
     where
       notate ctxt = notateDD (extractCtxt ctxt) (dynamicDisplay ctxt)
 
-notateDD :: (Ord a, Real a) => a -> ([CrescDim], ShowDyn) -> Lilypond -> Lilypond
+type DynamicNotation = ([CrescDim], ShowDyn)
+
+notateDD :: (Ord a, Real a) => a -> DynamicNotation -> Lilypond -> Lilypond
 notateDD lvl (cds, showLevel) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
   where
     -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
@@ -229,7 +231,7 @@ extractCtxt (_,x,_) = x
 --   1) Whether we should begin or end a crescendo or diminuendo
 --   2) Whether we should display the current dynamic value
 --   
-dynamicDisplay :: (Ord a, Real a) => Ctxt a -> ([CrescDim], ShowDyn)
+dynamicDisplay :: (Ord a, Real a) => Ctxt a -> DynamicNotation
 dynamicDisplay x = case x of
   (Nothing, y, Nothing) -> ([], True)
   (Nothing, y, Just z ) -> case (y `compare` z) of
