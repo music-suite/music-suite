@@ -65,7 +65,11 @@ module Music.Score.Dynamics (
         fadeOut,
 
         DynamicT(..),
+        
+        -- * Context
+        -- TODO move
         Ctxt,
+        vdynamic,
         addDynCon,
 
         -- -- * Dynamics representation
@@ -131,8 +135,9 @@ class (HasDynamics s t) => HasDynamic s t where
 -- Class of types that provide a dynamic traversal.
 --
 class (Transformable (Dynamic s),
-       Transformable (Dynamic t),
-       SetDynamic (Dynamic t) s ~ t) => HasDynamics s t where
+       Transformable (Dynamic t)
+       ,SetDynamic (Dynamic t) s ~ t
+       ) => HasDynamics s t where
 
   -- | Dynamic type.
   dynamics :: Traversal s t (Dynamic s) (Dynamic t)

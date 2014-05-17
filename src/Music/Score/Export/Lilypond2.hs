@@ -21,11 +21,14 @@ module Music.Score.Export.Lilypond2 (
     HasBackendScore(..),
     HasBackendNote(..),
     export,
+    HasMidiProgram,
     Midi,
     toMidi,
     Ly,
     toLilypondString,
     toLilypond,
+    Ct,
+    CtxtDyn,
   ) where
 
 import Music.Pitch.Literal
@@ -379,10 +382,37 @@ instance Monoid Lilypond.Music where
   mappend x y = pcatLy [x,y]
 
 ex2 :: Ly -> LyScore Lilypond.Music -> Lilypond.Music
-ex2 = undefined
+ex2 _ = undefined
 
-ex1 :: Tiable a => Ly -> Score a -> LyScore (LyContext a)
-ex1 = undefined
+-- ex1 :: (CtxtDyn a b, Tiable b) => Ly -> Score a -> LyScore (LyContext b)
+-- ex1 _ = undefined
+-- ex1 _ = fex2 . fmap beginTie . addDynCon2
+
+fex2 :: Score b -> LyScore (LyContext b)
+fex2 = undefined
+
+
+
+
+
+
+
+-- foo ::Score (PartT Int (DynamicT (Sum Double) Integer))
+-- bar :: Score (PartT Int (DynamicT (Ctxt (Sum Double)) Integer))
+-- foo = c
+-- bar = addDynCon foo
+
+
+-- type instance Dynamic (Ctxt a) = Ctxt a
+type CtxtDyn' a = SetDynamic (Ct (Dynamic a)) a
+type CtxtDyn a b = (Dynamic b ~ Ct (Dynamic a))
+
+data Ct a = Ct (Maybe a, a, Maybe a)
+type instance Dynamic (Ct a) = Ct a
+
+-- addDynCon2 :: () => Score a -> Score (CtxtDyn a)
+addDynCon2 :: (HasPart' a, Ord (Part a), HasDynamic a a, HasDynamic a b, CtxtDyn a b) => Score a -> Score b
+addDynCon2 = over (phrases.vdynamic) (fmap Ct . withContext)
 
 instance HasBackend Ly where
   type BackendScore Ly = LyScore
@@ -392,10 +422,9 @@ instance HasBackend Ly where
   -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
   finalizeExport = ex2
 
-instance (HasPart' a, Ord (Part a), Transformable a, Semigroup a, Tiable a) => HasBackendScore Ly (Score a) a where
-  -- TODO extract, ties etc
-  -- exportScore b s = exportScore b (fmap fromJust $ (^?! singleMVoice) $ simultaneous $ s)
-  exportScore = ex1
+instance (HasPart' a, Ord (Part a), CtxtDyn a b, Tiable b, HasDynamic a a, HasDynamic a b) => HasBackendScore Ly (Score a) b where
+  exportScore b = fex2 . fmap beginTie . addDynCon2
+  
 
 instance HasBackendScore Ly (Voice a) a where
   exportScore _ v = LyScore [map (\(d,x) -> LyContext d x) $ view eventsV v]
@@ -480,17 +509,19 @@ toLilypondString = show . Pretty.pretty . toLilypond
 
 toLilypond :: (HasBackendNote Ly a, HasBackendScore Ly s a) => s -> Lilypond.Music
 toLilypond = export (undefined::Ly)
+    
 
 
 
 
--- TODO tests
--- main = putStrLn $ show $ view notes $ simultaneous 
-main = putStrLn $ toLilypondString $ simultaneous
-  $ over pitches' (+ 2)
-  --  $ text "Hello"
-  $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Integer]))])^*(1/8)
-
+-- 
+-- -- TODO tests
+-- -- main = putStrLn $ show $ view notes $ simultaneous 
+-- main = putStrLn $ toLilypondString $ simultaneous
+--   $ over pitches' (+ 2)
+--   --  $ text "Hello"
+--   $ (scat [c<>cs,d,e::Score (PartT Int (TextT [Double]))])^*(1/8)
+-- 
 
 
 
@@ -573,6 +604,7 @@ spellLy' p = Lilypond.Pitch (
     fromIntegral oct
     )
     where (pc,alt,oct) = spellPitch (p + 72)
+
 
 
 
