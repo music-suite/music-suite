@@ -152,7 +152,7 @@ class (HasBackend b) => HasBackendScore b s where
 class (HasBackend b) => HasBackendNote b a where
   exportNote  :: b -> BackendContext b a   -> BackendNote b
   exportChord :: b -> BackendContext b [a] -> BackendNote b
-  exportChord = error "Not implemented"
+  exportChord = error "Not implemented: exportChord"
 
   -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNote b
   -- exportNote' b x = exportNote b (Identity x)
@@ -388,13 +388,13 @@ instance HasBackend Ly where
   type BackendContext Ly = LyContext
   type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
-  -- finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
-  finalizeExport = undefined
+  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
+  -- finalizeExport = error "No finalizeExport"
 
 instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt (Sum Double) ) 
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
-  exportScore b = LyScore . return . fmap (LyContext 1) . toListOf traverse . fmap Just . fmap beginTie . over dynamics dynamicDisplay . view (extracted.element 0)
+  exportScore b = LyScore . return . fmap (LyContext 0.5) . toListOf traverse . fmap Just . fmap (fst.toTied) . over dynamics dynamicDisplay . view (extracted.element 0) . simultaneous
 
   
 foo = undefined
@@ -411,22 +411,24 @@ instance Transformable DynamicNotation
 
 
 instance HasBackendNote Ly a => HasBackendNote Ly [a] where
-  -- exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
   exportNote b = exportChord b
 
 instance HasBackendNote Ly Integer where
   -- TODO rest
-  exportNote _ (LyContext d (Just x)) = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
-  -- exportChord _ (LyContext d xs)  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
+  exportNote _ (LyContext d (Just x))    = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
+  exportChord _ (LyContext d (Just xs))  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
 
 instance HasBackendNote Ly Int where 
   exportNote b = exportNote b . fmap toInteger
+  exportChord b = exportChord b . fmap (fmap (toInteger))
 
 instance HasBackendNote Ly Float where 
   exportNote b = exportNote b . fmap (toInteger . round)
+  exportChord b = exportChord b . fmap (fmap (toInteger . round))
 
 instance HasBackendNote Ly Double where 
   exportNote b = exportNote b . fmap (toInteger . round)
+  exportChord b = exportChord b . fmap (fmap (toInteger . round))
 
 instance Integral a => HasBackendNote Ly (Ratio a) where 
   exportNote b = exportNote b . fmap (toInteger . round)
@@ -445,7 +447,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   -- TODO use Comonad.extract
   exportNote b = exportNote b . fmap (snd . getPartT)
 
-instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT n a) where
+instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
   exportNote b = exportNote b . fmap (snd . getDynamicT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
@@ -493,12 +495,17 @@ aScore = id
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
 main = putStrLn $ toLilypondString $ music
-music = simultaneous
-  $ over pitches' (+ 2)
+music = id
+  -- $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [c<>cs,d,e::Score (PartT Int (ArticulationT () (DynamicT (Maybe (Sum Double), Sum Double, Maybe (Sum Double)) [Double])))])^*(1/8)
+  $ (scat [d<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (Maybe (Sum Double), Sum Double, Maybe (Sum Double)) [Double])))])^*(1/8)
 
-
+instance HasPitches a b => HasPitches (Sum a) (Sum b) where
+  pitches = _Wrapped . pitches
+instance IsPitch a => IsPitch (Sum a) where
+  fromPitch = Sum . fromPitch
+type instance Pitch (Sum a) = Pitch a
+type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
 
 
