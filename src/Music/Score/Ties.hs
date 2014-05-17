@@ -100,6 +100,7 @@ instance Rewrapped (TieT a) (TieT b)
 
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }
+instance Tiable Char        where { beginTie = id ; endTie = id }
 instance Tiable Int         where { beginTie = id ; endTie = id }
 instance Tiable Integer     where { beginTie = id ; endTie = id }
 instance Tiable ()          where { beginTie = id ; endTie = id }
@@ -259,8 +260,8 @@ splitDurFor remDur (x : xs) = case splitDur remDur x of
 
 tsplitDurFor :: Duration -> [Duration] -> ([(Duration,Char)], [(Duration,Char)])
 tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x,'_')) xs
-instance Tiable Char where
-  toTied _ = ('(',')')
+-- instance Tiable Char where
+  -- toTied _ = ('(',')')
 
 -- |
 -- Split a note if it is longer than the given duration. Returns the first part of the
