@@ -228,7 +228,7 @@ instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
 -- | A token to represent the Midi backend.
 data Midi
 
--- | We do not need to pass any context to the event generator.
+-- | We do not need to pass any context to the note export.
 type MidiContext = Identity
 
 -- | Every note may give rise to a number of messages. We represent this as a score of messages.
@@ -386,12 +386,22 @@ toMidi = export (undefined::Midi)
   TODO staff groups
 -}
 
+
+-- | A token to represent the Lilypond backend.
 data Ly
+
+-- | Hierachical representation of a Lilypond score.
+{-
+  TODO rewrite so that:
+    - Each bar may include voices/layers (a la Sibelius)
+    - Each part may generate more than one staff (for piano etc)
+-}
 data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Show)
 data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
 data LyBar   a = LyBar   { getLyBar   :: [a]         } deriving (Functor, Eq, Show)
--- type LyBar a = a
 
+-- | Context passed to the note export.
+--   Includes duration and note/rest distinction.
 data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
 instance Monoid Lilypond.Music where
   mempty = pcatLy []
