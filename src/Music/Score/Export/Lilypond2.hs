@@ -447,8 +447,9 @@ exportPart p = id
   -- Score b
   . over dynamics dynamicDisplay
 
+-- TODO quantization
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies [1..]{-TODO-}
+exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies (repeat 1){-TODO-}
   where
     -- TODO rename
     -- unMVoice :: MVoice a -> [(Duration, Maybe a)]
@@ -518,6 +519,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
+  -- TODO Nothing
   exportNote b (LyContext d (Just (DynamicT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x) -- TODO many
     where
       notate dynNot x = notateDD dynNot x
@@ -565,7 +567,13 @@ instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
   exportNote b = exportNote b . fmap (snd . getSlideT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
-  exportNote b = exportNote b . fmap (snd . getTieT)
+  -- TODO Nothing
+  exportNote b (LyContext d (Just (TieT ((Any ta, Any tb), x)))) = notate (exportNote b $ LyContext d (Just x)) -- TODO many
+        where
+            notate | ta && tb                      = id . Lilypond.beginTie
+                   | tb                            = Lilypond.beginTie
+                   | ta                            = id
+                   | otherwise                     = Lilypond.beginTie
 
 -- type Lilypond = Lilypond.Music
 toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> String
@@ -583,11 +591,26 @@ aScore = id
 
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
-main = openLilypond $ music
+main = do
+  showLilypond $ music
+  openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [level _f $ c<>d,cs,ds,level ff fs,level _p a_,level pp gs_,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(2/1)
+  $ (scat [
+    level _f $ c<>d,
+    cs,
+    level _f ds,
+    level ff fs,
+    level _f a_,
+    level pp gs_,
+    d,
+    e
+    ::Score MyNote])^*(2/1)
+
+type MyNote = (PartT Int (TieT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))
+open :: Score MyNote -> IO ()
+open = openLilypond . addDynCon . simultaneous
 
 newtype OptAvg a = OptAvg 
   -- (Option (Average a))
