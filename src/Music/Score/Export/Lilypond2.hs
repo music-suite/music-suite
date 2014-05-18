@@ -380,14 +380,6 @@ toMidi = export (undefined::Midi)
 
 
 
-{-
-  TODO clefs
-  TODO part names
-  TODO quantization
-  TODO staff groups
--}
-
-
 -- | A token to represent the Lilypond backend.
 data Ly
 
@@ -415,6 +407,8 @@ instance HasBackend Ly where
   type BackendContext Ly = LyContext
   type BackendNote Ly    = LyMusic
   type BackendMusic Ly   = LyMusic
+  -- TODO staff names etc
+  -- TODO clefs
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
@@ -449,7 +443,7 @@ exportPart p = id
 
 -- TODO quantization
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies (repeat 1){-TODO-}
+exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies (repeat 1){-TODO get proper bar length-}
   where
     -- TODO rename
     -- unMVoice :: MVoice a -> [(Duration, Maybe a)]
@@ -669,56 +663,6 @@ getAverage (Average (Sum n, Sum x)) = x / fromInteger n
 instance (Show a, Fractional a) => Show (Average a) where
   show n = "Average {getAverage = " ++ show (getAverage n) ++ "}"
 
-
-
-
-
-
-{-
--- |
--- Convert a voice score to a list of bars.
---
-voiceToLilypond :: HasLilypond15 a => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
-voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
---
--- This is where notation of a single voice takes place
---      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
---      * barToLilypond is specific: it handles quantization and notation
---
-    where
-        -- TODO compounds
-        setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
-
-
-barToLilypond :: HasLilypond15 a => [(Duration, Maybe a)] -> Lilypond
-barToLilypond bar = case (fmap rewrite . quantize) bar of
-    Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
-    Right rh -> rhythmToLilypond rh
-
-rhythmToLilypond = uncurry ($) . rhythmToLilypond2
-
-
-
--- rhythmToLilypond2 :: HasLilypond15 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
-rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
-rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
--- TODO propagate
-rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLy $ extract1 $ map rhythmToLilypond2 $ rs
-rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
-    where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
-
--- noteRestToLilypond2 :: HasLilypond15 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
-noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
-noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
-
--- extract first value of type b
--- extract1 :: [(b, a)] -> (Maybe b, [a])
-extract1 []         = (Nothing, [])
-extract1 ((p,x):xs) = (Just p, x : fmap snd xs)
-
-
--}
 
 
 
