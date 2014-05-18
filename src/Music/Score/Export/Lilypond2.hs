@@ -388,7 +388,7 @@ toMidi = export (undefined::Midi)
 
 data Ly
 data LyScore a = LyScore [LyStaff a] deriving (Functor, Eq, Show)
-type LyStaff a = [a]
+data LyStaff a = LyStaff { getLyStaff :: [a] } deriving (Functor, Eq, Show)
 -- type LyBar a = a
 
 data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
@@ -401,18 +401,26 @@ instance HasBackend Ly where
   type BackendContext Ly = LyContext
   type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
-  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
+  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ fmap getLyStaff xs
   -- finalizeExport = error "No finalizeExport"
 
 instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a
   , Dynamic a ~ Ctxt (OptAvg r), Real r ) 
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
-  exportScore b = LyScore . return . fmap (LyContext 2) 
-    . toListOf traverse . fmap Just . {-fmap (fst.toTied)-}id 
-    . over dynamics dynamicDisplay 
-    . view (extracted.element 0) 
+  exportScore b x = LyScore 
+    . map (uncurry exportPart) 
+    . extractParts' 
     . simultaneous
+    $ x
+    where
+
+exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation) 
+  => Part a -> Score a -> LyStaff (LyContext b)
+exportPart p = id
+  . LyStaff
+  . fmap (LyContext 1) . toListOf traverse . fmap Just . {-fmap (fst.toTied)-}id 
+  . over dynamics dynamicDisplay
 
   
 -- foo = undefined
@@ -530,8 +538,7 @@ main = openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ level _f
-  $ (scat [c<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(1/8)
+  $ (scat [level _f $ c<>d,cs,ds,level ff fs,level _p a_,level pp gs_,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(1/8)
 
 newtype OptAvg a = OptAvg 
   -- (Option (Average a))
