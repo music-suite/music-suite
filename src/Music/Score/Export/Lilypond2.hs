@@ -404,7 +404,8 @@ instance HasBackend Ly where
   finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ xs
   -- finalizeExport = error "No finalizeExport"
 
-instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a, Dynamic a ~ Ctxt (Sum Double) ) 
+instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a
+  , Dynamic a ~ Ctxt (OptAvg r), Real r ) 
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
   exportScore b = LyScore . return . fmap (LyContext 2) 
@@ -530,7 +531,27 @@ music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
   $ level _f
-  $ (scat [c<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (Sum Double) [Double])))])^*(1/8)
+  $ (scat [c<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(1/8)
+
+newtype OptAvg a = OptAvg 
+  -- (Option (Average a))
+  (Sum a)
+  deriving (Semigroup, Monoid, Real, Ord, Num, Eq, Transformable, IsDynamics)
+deriving instance AdditiveGroup a => AdditiveGroup (OptAvg a)
+instance VectorSpace a => VectorSpace (OptAvg a) where
+  type Scalar (OptAvg a) = Scalar a
+  s *^ OptAvg v = OptAvg (s *^ v)
+instance AffineSpace a => AffineSpace (OptAvg a) where
+  type Diff (OptAvg a) = OptAvg (Diff a)
+  OptAvg p .-. OptAvg q = OptAvg (p .-. q)
+  OptAvg p .+^ OptAvg v = OptAvg (p .+^ v)
+
+
+
+
+
+
+
 
 deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
 instance VectorSpace a => VectorSpace (Sum a) where
