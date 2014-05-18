@@ -50,7 +50,7 @@ import Music.Score hiding (
 import qualified Codec.Midi                as Midi
 import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
-import           Music.Score.Export.Common
+import           Music.Score.Export.Common hiding (MVoice)
 import           System.Process
 import Data.Default
 import Data.Ratio
@@ -60,6 +60,7 @@ import qualified Data.Foldable
 import Data.Traversable (Traversable, sequenceA)
 import Music.Time.Internal.Transform (whilstLD) -- TODO move
 import Music.Time.Util (composed)
+-- import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 
 {-
   Assume that Music is a type function that returns the underlying music
@@ -407,11 +408,13 @@ instance Monoid Lilypond.Music where
   mempty = pcatLy []
   mappend x y = pcatLy [x,y]
 
+type LyMusic = Lilypond.Music
+
 instance HasBackend Ly where
-  type BackendScore Ly = LyScore
+  type BackendScore Ly   = LyScore
   type BackendContext Ly = LyContext
-  type BackendNote Ly = Lilypond.Music
-  type BackendMusic Ly = Lilypond.Music
+  type BackendNote Ly    = LyMusic
+  type BackendMusic Ly   = LyMusic
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
@@ -434,17 +437,37 @@ instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynam
     $ x
     where
 
-exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation) 
+exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, Tiable b) 
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
   -- LyStaff (LyContext b)
   . exportStaff
+  -- Voice b
+  . view singleMVoice
   -- Score b
   . over dynamics dynamicDisplay
 
-exportStaff :: Score a -> LyStaff (LyContext a)
-exportStaff = LyStaff . fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
+exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
+exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies [1..]{-TODO-}
+  where
+    -- TODO rename
+    -- unMVoice :: MVoice a -> [(Duration, Maybe a)]
+    -- unMVoice = unvoice
+    
+    -- TODO rename
+    splitTies :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
+    splitTies = voiceToBars'
+    
 -- Get notes, assume no rests, assume duration 1, put each note in single bar
+
+addStaff :: LyMusic -> LyMusic
+addStaff = Lilypond.New "Staff" Nothing
+
+addPartName :: String -> [LyMusic] -> [LyMusic]
+addPartName partName xs = longName : shortName : xs
+  where
+    longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ partName)
+    shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ partName)
 
 
 
@@ -564,7 +587,7 @@ main = openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [level _f $ c<>d,cs,ds,level ff fs,level _p a_,level pp gs_,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(1/8)
+  $ (scat [level _f $ c<>d,cs,ds,level ff fs,level _p a_,level pp gs_,d,e::Score (PartT Int (ArticulationT () (DynamicT (OptAvg Double) [Double])))])^*(2/1)
 
 newtype OptAvg a = OptAvg 
   -- (Option (Average a))
