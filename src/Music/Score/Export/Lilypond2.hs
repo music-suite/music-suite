@@ -422,7 +422,6 @@ instance HasBackend Ly where
     . fmap (getLyStaff)
     -- [Staff]
     . getLyScore
-  -- finalizeExport = error "No finalizeExport"
 
 instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a
   , Dynamic a ~ Ctxt (OptAvg r), Real r ) 
@@ -438,13 +437,13 @@ instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynam
 exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation) 
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
-  . fox
-  -- . fmap (LyContext 1) . toListOf traverse . fmap Just 
+  -- LyStaff (LyContext b)
+  . exportStaff
   -- Score b
   . over dynamics dynamicDisplay
 
-fox :: Score a -> LyStaff (LyContext a)
-fox = LyStaff . fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
+exportStaff :: Score a -> LyStaff (LyContext a)
+exportStaff = LyStaff . fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
 -- Get notes, assume no rests, assume duration 1, put each note in single bar
 
 
