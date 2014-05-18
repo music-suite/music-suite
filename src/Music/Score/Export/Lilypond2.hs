@@ -56,6 +56,7 @@ import Data.Default
 import Data.Ratio
 import Data.Maybe
 import Data.Foldable (Foldable)
+import qualified Data.Foldable
 import Data.Traversable (Traversable, sequenceA)
 import Music.Time.Internal.Transform (whilstLD) -- TODO move
 import Music.Time.Util (composed)
@@ -413,19 +414,13 @@ instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynam
     . simultaneous
 
   
-foo = undefined
-foo :: Score (DynamicT (Ctxt Double) ())
-foo' = over dynamics dynamicDisplay foo
+-- foo = undefined
+-- foo :: Score (DynamicT (Ctxt Double) ())
+-- foo' = over dynamics dynamicDisplay foo
 
 -- TODO move
-instance Tiable DynamicNotation where
-  toTied (DynamicNotation (beginEnd, marks)) = (DynamicNotation (beginEnd, marks), DynamicNotation (mempty, Nothing))
-  -- TODO important!
-instance Num a => Num (Sum a) where
-instance Real a => Real (Sum a) where
-  toRational (Sum x) = toRational x
-instance Transformable DynamicNotation where
-  transform _ = id
+deriving instance Num a => Num (Sum a)
+deriving instance Real a => Real (Sum a)
 
 instance HasBackendNote Ly a => HasBackendNote Ly [a] where
   exportNote b = exportChord b
@@ -532,7 +527,7 @@ aScore = id
 -- main = putStrLn $ show $ view notes $ simultaneous 
 main = openLilypond $ music
 music = (addDynCon.simultaneous)
-  -- $ over pitches' (+ 2)
+  --  $ over pitches' (+ 2)
   --  $ text "Hello"
   $ level _f
   $ (scat [c<>d,d,e::Score (PartT Int (ArticulationT () (DynamicT (Sum Double) [Double])))])^*(1/8)
@@ -555,6 +550,24 @@ instance IsPitch a => IsPitch (Sum a) where
 type instance Pitch (Sum a) = Pitch a
 type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
+
+
+
+-- Or use type (NonEmpty a -> a)
+average :: Fractional a => [a] -> Maybe a
+average = fmap getAverage . getOption . Data.Foldable.foldMap (Option . Just . avg)
+
+newtype Average a = Average (Sum Integer, Sum a)
+  deriving (Semigroup, Eq, Ord)
+
+avg :: a -> Average a
+avg x = Average (1, Sum x)
+
+getAverage :: Fractional a => Average a -> a
+getAverage (Average (Sum n, Sum x)) = x / fromInteger n
+
+instance (Show a, Fractional a) => Show (Average a) where
+  show n = "Average {getAverage = " ++ show (getAverage n) ++ "}"
 
 
 
@@ -642,13 +655,20 @@ spellLy' p = Lilypond.Pitch (
 
 
 
-type instance Dynamic DynamicNotation = DynamicNotation
 -- TODO generalize level
 newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
+
+type instance Dynamic DynamicNotation = DynamicNotation
+
 instance Wrapped DynamicNotation where
   type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
   _Wrapped' = iso getDynamicNotation DynamicNotation
 
+instance Transformable DynamicNotation where
+  transform _ = id
+instance Tiable DynamicNotation where
+  toTied (DynamicNotation (beginEnd, marks)) = (DynamicNotation (beginEnd, marks), DynamicNotation (mempty, Nothing))
+  -- TODO important!
 
 fixLevel :: Double -> Double
 fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
