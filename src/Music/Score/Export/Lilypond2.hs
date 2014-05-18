@@ -428,14 +428,13 @@ instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynam
 exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation) 
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
-  . LyStaff
   . fox
   -- . fmap (LyContext 1) . toListOf traverse . fmap Just 
   -- Score b
   . over dynamics dynamicDisplay
 
-fox :: Traversable t => t a -> [LyBar (LyContext a)]
-fox = fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
+fox :: Score a -> LyStaff (LyContext a)
+fox = LyStaff . fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
 -- Get notes, assume no rests, assume duration 1, put each note in single bar
 
 
