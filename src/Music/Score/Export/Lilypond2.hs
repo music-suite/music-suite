@@ -412,7 +412,7 @@ instance HasBackend Ly where
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
-    . fmap (scatLy . concat)
+    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . concat)
     -- [[[Note]]]
     . fmap (fmap getLyBar)
     -- [[Bar]] 
@@ -420,8 +420,17 @@ instance HasBackend Ly where
     -- [Staff]
     . getLyScore
 
-instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a
-  , Dynamic a ~ Ctxt (OptAvg r), Real r ) 
+-- TODO simplify
+instance (
+  HasPart' a, Ord (Part a), 
+  Semigroup a,
+  Transformable a, 
+  Tiable a, 
+  Tiable (SetDynamic DynamicNotation a), 
+  Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, 
+  HasDynamics a (SetDynamic DynamicNotation a),
+  Dynamic a ~ Ctxt (OptAvg r), Real r
+  ) 
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
   exportScore b x = LyScore 
@@ -457,6 +466,10 @@ exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies (r
 
 addStaff :: LyMusic -> LyMusic
 addStaff = Lilypond.New "Staff" Nothing
+
+-- TODO
+addClef :: () -> LyMusic -> LyMusic
+addClef () x = Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
 
 addPartName :: String -> [LyMusic] -> [LyMusic]
 addPartName partName xs = longName : shortName : xs
