@@ -387,8 +387,9 @@ toMidi = export (undefined::Midi)
 -}
 
 data Ly
-data LyScore a = LyScore [LyStaff a] deriving (Functor, Eq, Show)
-data LyStaff a = LyStaff { getLyStaff :: [a] } deriving (Functor, Eq, Show)
+data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Show)
+data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
+data LyBar   a = LyBar   { getLyBar   :: [a]         } deriving (Functor, Eq, Show)
 -- type LyBar a = a
 
 data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
@@ -401,7 +402,16 @@ instance HasBackend Ly where
   type BackendContext Ly = LyContext
   type BackendNote Ly = Lilypond.Music
   type BackendMusic Ly = Lilypond.Music
-  finalizeExport _ (LyScore xs) = pcatLy . fmap scatLy $ fmap getLyStaff xs
+  finalizeExport _ = id
+    pcatLy
+    -- [LyMusic]
+    . fmap (scatLy . concat)
+    -- [[[Note]]]
+    . fmap (fmap getLyBar)
+    -- [[Bar]] 
+    . fmap (getLyStaff)
+    -- [Staff]
+    . getLyScore
   -- finalizeExport = error "No finalizeExport"
 
 instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, HasDynamics a (SetDynamic DynamicNotation a),Tiable a, Transformable a, Semigroup a
@@ -411,7 +421,7 @@ instance (HasPart' a, Ord (Part a), Tiable (SetDynamic DynamicNotation a), Dynam
   exportScore b x = LyScore 
     . map (uncurry exportPart) 
     . extractParts' 
-    . simultaneous
+    . simultaneous -- Needed?
     $ x
     where
 
@@ -419,8 +429,16 @@ exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dyna
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
   . LyStaff
-  . fmap (LyContext 1) . toListOf traverse . fmap Just . {-fmap (fst.toTied)-}id 
+  . fox
+  -- . fmap (LyContext 1) . toListOf traverse . fmap Just 
+  -- Score b
   . over dynamics dynamicDisplay
+
+fox :: Traversable t => t a -> [LyBar (LyContext a)]
+fox = fmap ((LyBar . return) . LyContext 1 . Just)  . toListOf traverse
+-- Get notes, assume no rests, assume duration 1, put each note in single bar
+
+
 
   
 -- foo = undefined
