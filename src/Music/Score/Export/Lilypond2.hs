@@ -1,5 +1,6 @@
 
 
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -200,7 +201,6 @@ instance HasBackendNote Foo Int where
 instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
--- main = print $ export (undefined::Foo) [DynamicT (Sum 4::Sum Int,3::Int), pure 1]
 
 
 
@@ -425,7 +425,6 @@ instance (
   HasPart' a, Ord (Part a), 
   Semigroup a,
   Transformable a, 
-  Tiable a, 
   Tiable (SetDynamic DynamicNotation a), 
   Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation, 
   HasDynamics a (SetDynamic DynamicNotation a),
@@ -548,6 +547,70 @@ notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $
        Nothing -> id
        Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
+-- TODO move
+
+deriving instance IsPitch a => IsPitch (ColorT a)
+deriving instance IsDynamics a => IsDynamics (ColorT a)
+deriving instance Transformable a => Transformable (ColorT a)
+deriving instance Reversible a => Reversible (ColorT a)
+-- deriving instance Alterable a => Alterable (ColorT a)
+-- deriving instance Augmentable a => Augmentable (ColorT a)
+-- TODO use Data.Color, not string
+class HasColor a where
+    setColor :: String -> a -> a
+
+newtype ColorT a = ColorT { getColorT :: ([String], a) }
+    deriving (Eq, Show, Ord, Functor, Foldable, {-Typeable, -}Applicative, Monad)
+instance HasColor a => HasColor (b, a) where
+    setColor       s                                 = fmap (setColor s)
+instance HasColor a => HasColor [a] where
+    setColor       s                                 = fmap (setColor s)
+instance HasColor a => HasColor (Score a) where
+    setColor       s                                 = fmap (setColor s)
+instance HasColor a => HasColor (PartT n a) where
+    setColor       s                                 = fmap (setColor s)
+instance HasColor a => HasColor (TieT a) where
+    setColor       s                                 = fmap (setColor s)
+
+-- | Unsafe: Do not use 'Wrapped' instances
+instance Wrapped (ColorT a) where
+  type Unwrapped (ColorT a) = ([String], a)
+  _Wrapped' = iso getColorT ColorT
+instance Rewrapped (ColorT a) (ColorT b)
+instance HasColor (ColorT a) where
+    setColor s (ColorT (t,x)) = ColorT ([s],x)
+instance Semigroup a => Semigroup (ColorT a) where
+    (<>) = liftA2 (<>)
+type instance Pitch (ColorT a)        = Pitch a
+type instance SetPitch g (ColorT a)   = ColorT (SetPitch g a)
+instance (HasPitches a b) => HasPitches (ColorT a) (ColorT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (ColorT a) (ColorT b) where
+  pitch = _Wrapped . pitch
+type instance Dynamic (ColorT a)        = Dynamic a
+type instance SetDynamic g (ColorT a)   = ColorT (SetDynamic g a)
+instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
+  dynamic = _Wrapped . dynamic
+instance Tiable a => Tiable (ColorT a) where
+    toTied (ColorT (n,a))                         = (ColorT (n,b), ColorT (n,c)) where (b,c) = toTied a
+
+
+instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
+  exportNote b (LyContext d (Just (ColorT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x) -- TODO many
+    where
+      notate []      = id
+      -- TODO this syntax will probably change in future Lilypond versions!
+      notate (color:_) = \x -> Lilypond.Sequential [
+        Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ color),
+        x,
+        Lilypond.Revert "NoteHead#' color"
+        ]
+
+
+
+
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
@@ -604,18 +667,18 @@ main = do
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ (scat [
-    level _f $ c<>d,
+  $ times 2 (scat [
+    setColor "blue" $ level _f $ c<>d,
     cs,
-    level _f ds,
+    setColor "red" $ level _f ds,
     level ff fs,
     level _f a_,
     level pp gs_,
     d,
     e
-    ::Score MyNote])^*(2/1)
+    ::Score MyNote])^*(2.75)
 
-type MyNote = (PartT Int (TieT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))
+type MyNote = (PartT Int (TieT (ColorT (ArticulationT () (DynamicT (OptAvg Double) [Double])))))
 open :: Score MyNote -> IO ()
 open = openLilypond . addDynCon . simultaneous
 
