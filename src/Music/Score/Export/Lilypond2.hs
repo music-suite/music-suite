@@ -459,8 +459,11 @@ exportPart p = id
   . over dynamics dynamicDisplay
 
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . map (view $ unsafeEventsV) . splitTies (repeat 1){-TODO get proper bar length-}
-  where
+exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper bar length-}
+  where                      
+    exportBar :: MVoice a -> LyBar (LyContext a)
+    exportBar = LyBar . map (uncurry LyContext) . view unsafeEventsV
+    
     -- TODO rename
     splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
     splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
