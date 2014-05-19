@@ -61,6 +61,7 @@ import qualified Data.Foldable
 import Data.Traversable (Traversable, sequenceA)
 import Music.Time.Internal.Transform (whilstLD) -- TODO move
 import Music.Time.Util (composed)
+import Data.Colour.Names as Color
 -- import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 
 {-
@@ -548,16 +549,22 @@ notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $
        Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
-  exportNote b (LyContext d (Just (ColorT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x) -- TODO many
+  exportNote b (LyContext d (Just (ColorT (col, x)))) = notate col $ exportNote b $ LyContext d (Just x) -- TODO many
     where
-      notate []      = id
+      notate (Option Nothing)             = id
+      notate (Option (Just (Last color))) = \x -> Lilypond.Sequential [
       -- TODO this syntax will probably change in future Lilypond versions!
-      notate (color:_) = \x -> Lilypond.Sequential [
-        Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ color),
+        Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ colorName color),
         x,
         Lilypond.Revert "NoteHead#' color"
         ]
 
+      -- TODO handle any color
+      colorName c
+        | c == Color.black = "black"
+        | c == Color.red   = "red"
+        | c == Color.blue  = "blue"
+        | otherwise        = error "Unkown color"
 
 
 
@@ -618,9 +625,9 @@ music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
   $ times 2 (scat [
-    setColor "blue" $ level _f $ c<>d,
+    setColor Color.blue $ level _f $ c<>d,
     cs,
-    setColor "red" $ level _f ds,
+    setColor Color.red $ level _f ds,
     level ff fs,
     level _f a_,
     level pp gs_,

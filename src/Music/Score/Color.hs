@@ -49,7 +49,9 @@ import           Data.AffineSpace
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.VectorSpace              hiding (Sum)
+-- import           Data.VectorSpace              hiding (Sum)
+import           Data.Colour
+import qualified Data.Colour.Names as C
 
 import           Music.Score.Part
 import           Music.Time
@@ -57,6 +59,8 @@ import           Music.Time.Internal.Transform
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
 import           Music.Score.Ornaments
 import           Music.Score.Part
 import           Music.Score.Phrases
@@ -66,14 +70,14 @@ deriving instance IsPitch a => IsPitch (ColorT a)
 deriving instance IsDynamics a => IsDynamics (ColorT a)
 deriving instance Transformable a => Transformable (ColorT a)
 deriving instance Reversible a => Reversible (ColorT a)
--- deriving instance Alterable a => Alterable (ColorT a)
--- deriving instance Augmentable a => Augmentable (ColorT a)
+deriving instance Alterable a => Alterable (ColorT a)
+deriving instance Augmentable a => Augmentable (ColorT a)
 -- TODO use Data.Color, not string
 class HasColor a where
-    setColor :: String -> a -> a
+    setColor :: Colour Double -> a -> a
 
-newtype ColorT a = ColorT { getColorT :: ([String], a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, {-Typeable, -}Applicative, Monad)
+newtype ColorT a = ColorT { getColorT :: (Option (Last (Colour Double)), a) }
+    deriving (Eq, {-Ord,-} Show, Functor, Foldable, {-Typeable, -}Applicative, Monad)
 instance HasColor a => HasColor (b, a) where
     setColor       s                                 = fmap (setColor s)
 instance HasColor a => HasColor [a] where
@@ -87,11 +91,15 @@ instance HasColor a => HasColor (TieT a) where
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ColorT a) where
-  type Unwrapped (ColorT a) = ([String], a)
+  type Unwrapped (ColorT a) = (Option (Last (Colour Double)), a)
   _Wrapped' = iso getColorT ColorT
 instance Rewrapped (ColorT a) (ColorT b)
+
 instance HasColor (ColorT a) where
-    setColor s (ColorT (t,x)) = ColorT ([s],x)
+  setColor s (ColorT (t,x)) = ColorT (t <> wrap s,x)
+    where
+      wrap = Option . Just . Last
+
 instance Semigroup a => Semigroup (ColorT a) where
     (<>) = liftA2 (<>)
 instance Tiable a => Tiable (ColorT a) where

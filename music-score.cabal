@@ -39,6 +39,7 @@ library
                         contravariant           >= 0.4.4 && < 1,
                         nats,          
                         semigroupoids,
+                        colour                  >= 2.3.3 && < 3.0,
                         HCodecs                 >= 0.3 && < 0.4,
                         vector-space,
                         vector-space-points     == 0.1.3,
