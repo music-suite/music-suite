@@ -202,6 +202,7 @@ data Music
     | Context String (Maybe String) Music           -- ^ Context expression.
     | Set String Value                            
     | Override String Value
+    | Revert String
     deriving (Eq, Show)
 
 foldMusic :: (Music -> Music) -> Music -> Music
@@ -234,6 +235,7 @@ foldMusic' f g h = go
         go m@(Tempo _ _)          = g m
         go m@(Set _ _)            = g m
         go m@(Override _ _)       = g m
+        go m@(Revert _)           = g m
         go (Sequential ms)      = Sequential (fmap h ms)                          
         go (Simultaneous b ms)  = Simultaneous b (fmap h ms)                     
         go (Repeat b i m qmm)   = Repeat b i m (fmap (h *** h) qmm)  
@@ -307,6 +309,9 @@ instance Pretty Music where
 
     pretty (Override name val) =
         "\\override" <+> string name <+> "=" <+> pretty val
+
+    pretty (Revert name) =
+        "\\revert" <+> string name
 
     -- pretty _                        = notImpl "Unknown music expression"
 
