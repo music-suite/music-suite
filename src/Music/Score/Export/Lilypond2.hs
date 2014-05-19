@@ -399,7 +399,7 @@ data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Sh
 data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
 
 -- | A bar is a sequential composition of chords/notes/rests.
-data LyBar   a = LyBar   { getLyBar   :: [a]         } deriving (Functor, Eq, Show)
+data LyBar   a = LyBar   { getLyBar   :: Rhythm a    } deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
 --   Includes duration and note/rest distinction.
@@ -420,13 +420,16 @@ instance HasBackend Ly where
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
-    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . concat)
-    -- [[[Note]]]
+    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map (scatLy . view rhythmList))
     . fmap (fmap getLyBar)
     -- [[Bar]] 
     . fmap (getLyStaff)
     -- [Staff]
     . getLyScore
+
+-- TODO remove
+rhythmList :: Iso' (Rhythm a) [a]
+rhythmList = undefined
 
 -- TODO simplify
 instance (
@@ -462,7 +465,7 @@ exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
 exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper bar length-}
   where                      
     exportBar :: MVoice a -> LyBar (LyContext a)
-    exportBar = LyBar . map (uncurry LyContext) . view unsafeEventsV
+    exportBar = LyBar . view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
     
     -- TODO rename
     splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
@@ -486,23 +489,24 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper ba
 --         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
 
 
-barToLilypond :: (Tiable a) => MVoice a -> Lilypond
-barToLilypond bar = case (fmap rewrite . quantize . view unsafeEventsV) bar of
-    Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
-    Right rh -> rhythmToLilypond rh
+-- barToLilypond :: (Tiable a, a ~ Int) => MVoice a -> Lilypond
+-- barToLilypond bar = case (fmap rewrite . quantize . view unsafeEventsV) bar of
+--     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
+--     Right rh -> rhythmToLilypond rh
+--   where              
 
-rhythmToLilypond :: () => Rhythm (Maybe a) -> Lilypond
+rhythmToLilypond :: (a ~ LyMusic) => Rhythm (Maybe a) -> Lilypond
 rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
 rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
 rhythmToLilypond (Group rs)            = scatLy $ map rhythmToLilypond rs
 rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLilypond :: () => Duration -> Maybe a -> Lilypond
+noteRestToLilypond :: (a ~ LyMusic) => Duration -> Maybe a -> Lilypond
 noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
 noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ toLy d p  
   where
-    toLy :: b -> a -> LyMusic
+    toLy :: Duration -> LyMusic -> LyMusic
     toLy = error "FIXME"
 
 
