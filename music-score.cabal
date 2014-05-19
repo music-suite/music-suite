@@ -97,6 +97,7 @@ library
                         Music.Score.Articulation
                         Music.Score.Dynamics
                         Music.Score.Ornaments
+                        Music.Score.Color
                         Music.Score.Export.Abc
                         Music.Score.Export.Lilypond
                         Music.Score.Export.Lilypond2

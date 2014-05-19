@@ -54,6 +54,7 @@ import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Ornaments
+import           Music.Score.Color
 import           Music.Score.Rhythm
 import           Music.Score.Ties
 import           Music.Score.Util
@@ -138,6 +139,21 @@ instance HasArticulation a b => HasArticulation (PartT p a) (PartT p b) where
 instance HasArticulations a b => HasArticulations (PartT p a) (PartT p b) where
   articulations = _Wrapped . _2 . articulations
 
+-- TODO move up?
+type instance Pitch (ColorT a)        = Pitch a
+type instance SetPitch g (ColorT a)   = ColorT (SetPitch g a)
+instance (HasPitches a b) => HasPitches (ColorT a) (ColorT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (ColorT a) (ColorT b) where
+  pitch = _Wrapped . pitch
+type instance Dynamic (ColorT a)        = Dynamic a
+type instance SetDynamic g (ColorT a)   = ColorT (SetDynamic g a)
+instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
+  dynamic = _Wrapped . dynamic
+
+
 -- -------------------------------------------------------------------------------------
 
 deriving instance HasTremolo a => HasTremolo (PartT n a)
@@ -186,6 +202,7 @@ instance Tiable a => Tiable (SlideT a) where
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)
+
 
 
 

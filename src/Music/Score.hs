@@ -34,6 +34,7 @@ module Music.Score (
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
         module Music.Score.Ornaments,
+        module Music.Score.Color,
 
         -- ** Miscellaneous
         module Music.Score.Ties,
@@ -110,6 +111,7 @@ import           Music.Score.Meta.Tempo
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
 import           Music.Score.Ornaments
+import           Music.Score.Color
 import           Music.Score.Phrases
 import           Music.Score.Part
 import           Music.Score.Pitch
