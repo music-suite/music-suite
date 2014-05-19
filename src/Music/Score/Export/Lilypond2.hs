@@ -485,12 +485,6 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper ba
 --         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
 
 
--- barToLilypond :: (Tiable a, a ~ Int) => MVoice a -> Lilypond
--- barToLilypond bar = case (fmap rewrite . quantize . view unsafeEventsV) bar of
---     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
---     Right rh -> rhythmToLilypond rh
---   where              
-
 -- TODO remove
 rhythmList :: Iso' (Rhythm a) [a]
 rhythmList = undefined
