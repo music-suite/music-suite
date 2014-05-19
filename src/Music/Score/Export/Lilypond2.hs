@@ -420,16 +420,12 @@ instance HasBackend Ly where
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
-    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map (scatLy . view rhythmList))
+    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map scatRhythm)
     . fmap (fmap getLyBar)
     -- [[Bar]] 
     . fmap (getLyStaff)
     -- [Staff]
     . getLyScore
-
--- TODO remove
-rhythmList :: Iso' (Rhythm a) [a]
-rhythmList = undefined
 
 -- TODO simplify
 instance (
@@ -464,8 +460,8 @@ exportPart p = id
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
 exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper bar length-}
   where                      
-    exportBar :: MVoice a -> LyBar (LyContext a)
-    exportBar = LyBar . view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
+    exportBar :: Tiable a => MVoice a -> LyBar (LyContext a)
+    exportBar = LyBar . toRhythm
     
     -- TODO rename
     splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
@@ -494,6 +490,19 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper ba
 --     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
 --     Right rh -> rhythmToLilypond rh
 --   where              
+
+-- TODO remove
+rhythmList :: Iso' (Rhythm a) [a]
+rhythmList = undefined
+
+-- XXX What about chords, rests and durations?
+scatRhythm :: Rhythm Lilypond -> Lilypond
+-- scatRhythm = scatLy . view rhythmList
+scatRhythm = rhythmToLilypond . fmap Just
+
+toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
+-- toRhythm = view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
+toRhythm = fmap (LyContext 1) . rewrite . (\(Right x) -> x) . quantize . view unsafeEventsV
 
 rhythmToLilypond :: (a ~ LyMusic) => Rhythm (Maybe a) -> Lilypond
 rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
