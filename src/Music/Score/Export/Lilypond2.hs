@@ -487,16 +487,16 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper ba
 
 -- TODO remove
 rhythmList :: Iso' (Rhythm a) [a]
-rhythmList = undefined
+rhythmList = iso ( map (\(Beat _ x) -> x) . (\(Group x) -> x)) (Group . fmap (Beat 1))
 
 -- XXX What about chords, rests and durations?
 scatRhythm :: Rhythm Lilypond -> Lilypond
--- scatRhythm = scatLy . view rhythmList
-scatRhythm = rhythmToLilypond . fmap Just
+scatRhythm = scatLy . view rhythmList
+-- scatRhythm = rhythmToLilypond . fmap Just
 
 toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
--- toRhythm = view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
-toRhythm = fmap (LyContext 1) . rewrite . (\(Right x) -> x) . quantize . view unsafeEventsV
+toRhythm = view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
+-- toRhythm = fmap (LyContext 1) . rewrite . (\(Right x) -> x) . quantize . view unsafeEventsV
 
 rhythmToLilypond :: (a ~ LyMusic) => Rhythm (Maybe a) -> Lilypond
 rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
