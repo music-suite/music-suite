@@ -2,23 +2,13 @@
 
 
 {-# LANGUAGE CPP                        #-}
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -30,7 +20,6 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -48,34 +37,30 @@
 module Music.Score.Color (
         -- ** HasColor class
         HasColor(..),
-        -- * Manipulating color        
+        -- * Manipulating color
 
-        -- * Representation        
+        -- * Representation
         ColorT(..),
   ) where
 
 import           Control.Applicative
-import Control.Lens hiding (above, below, transform)
+import           Control.Lens                  hiding (above, below, transform)
 import           Data.AffineSpace
-import           Data.VectorSpace        hiding (Sum)
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.VectorSpace              hiding (Sum)
 
-import Music.Time
-import Music.Time.Internal.Transform
--- import           Music.Dynamics.Literal
--- import           Music.Pitch.Literal
--- import           Music.Score.Combinators
 import           Music.Score.Part
--- import           Music.Score.Score
+import           Music.Time
+import           Music.Time.Internal.Transform
 
-import Music.Score.Part
-import Music.Score.Ornaments -- TODO
-import Music.Score.Ties -- TODO
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Ornaments
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Score.Ties
 
 deriving instance IsPitch a => IsPitch (ColorT a)
 deriving instance IsDynamics a => IsDynamics (ColorT a)
