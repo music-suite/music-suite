@@ -19,6 +19,7 @@
 module Music.Lilypond.Value (
         Value,
         toValue,
+        toLiteralValue,
   ) where
 
 import Data.String
@@ -39,7 +40,7 @@ import Music.Pitch.Literal
 -- > \set Staff.instrumentName = "Violin I"
 -- > \set Staff.instrumentName = 2
 --
-data Value = forall a . Show a => Value a
+data Value = forall a . Show a => Value a | Literal String
 
 instance IsString Value where
     fromString = toValue
@@ -64,9 +65,16 @@ instance Show Value where
 instance Eq Value where
     a == b  = show a == show b
 
+instance Pretty Value where
+  pretty (Value x)   = (string . show) x
+  pretty (Literal x) = string x
+
 toValue :: Show a => a -> Value
 toValue = Value
 
+-- | As 'toValue', but not quoting strings. Handy for scheme literals such as @#red@.
+toLiteralValue :: String -> Value
+toLiteralValue = Literal
 
 
 noOverloading :: String -> a

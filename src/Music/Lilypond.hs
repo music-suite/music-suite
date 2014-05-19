@@ -31,6 +31,7 @@ module Music.Lilypond (
         -- ** Attributes
         Value,
         toValue,
+        toLiteralValue,
 
         -- ** Articulation and dynamics
         PostEvent(..),
@@ -200,6 +201,7 @@ data Music
     | New String (Maybe String) Music               -- ^ New expression.
     | Context String (Maybe String) Music           -- ^ Context expression.
     | Set String Value                            
+    | Override String Value
     deriving (Eq, Show)
 
 foldMusic :: (Music -> Music) -> Music -> Music
@@ -231,6 +233,7 @@ foldMusic' f g h = go
         go m@(Breathe _)          = g m
         go m@(Tempo _ _)          = g m
         go m@(Set _ _)            = g m
+        go m@(Override _ _)       = g m
         go (Sequential ms)      = Sequential (fmap h ms)                          
         go (Simultaneous b ms)  = Simultaneous b (fmap h ms)                     
         go (Repeat b i m qmm)   = Repeat b i m (fmap (h *** h) qmm)  
@@ -300,7 +303,10 @@ instance Pretty Music where
         "\\context" <+> string typ <+> pretty name <+> pretty x
 
     pretty (Set name val) =
-        "\\set" <+> string name <+> "=" <+> (string . show) val
+        "\\set" <+> string name <+> "=" <+> pretty val
+
+    pretty (Override name val) =
+        "\\override" <+> string name <+> "=" <+> pretty val
 
     -- pretty _                        = notImpl "Unknown music expression"
 
