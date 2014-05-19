@@ -108,11 +108,12 @@ spellPitch p = (
 type MVoice a = Voice (Maybe a)
 
 toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
-toMVoice = scoreToVoice . simultaneous    
+toMVoice = scoreToVoice . simultaneous
 
 unvoice :: Voice b -> [(Duration, b)]
 unvoice = toListOf (stretcheds . traverse . from stretched)
 -- unvoice = fmap (^. from stretched) . (^. stretcheds)
+{-# DEPRECATED unvoice "Use 'unsafeEventsV'" #-}
 
 
 openCommand :: String

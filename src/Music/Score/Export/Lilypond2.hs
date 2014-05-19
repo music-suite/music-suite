@@ -48,6 +48,7 @@ import Music.Score hiding (
   openLilypond',
   )
 
+import Control.Arrow ((***))
 import qualified Codec.Midi                as Midi
 import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
@@ -60,7 +61,7 @@ import Data.Foldable (Foldable)
 import qualified Data.Foldable
 import Data.Traversable (Traversable, sequenceA)
 import Music.Time.Internal.Transform (whilstLD) -- TODO move
-import Music.Time.Util (composed)
+import Music.Time.Util (composed, unRatio)
 import Data.Colour.Names as Color
 -- import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 
@@ -390,8 +391,14 @@ data Ly
     - Each bar may include voices/layers (a la Sibelius)
     - Each part may generate more than one staff (for piano etc)
 -}
+
+-- | A score is a parallel composition of staves.
 data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Show)
+
+-- | A staff is a sequential composition of bars.
 data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
+
+-- | A bar is a sequential composition of chords/notes/rests.
 data LyBar   a = LyBar   { getLyBar   :: [a]         } deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
@@ -440,6 +447,7 @@ instance (
     $ x
     where
 
+-- | Export a score as a single staff. Overlapping notes will cause an error.
 exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, Tiable b) 
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
@@ -450,17 +458,57 @@ exportPart p = id
   -- Score b
   . over dynamics dynamicDisplay
 
--- TODO quantization
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . splitTies (repeat 1){-TODO get proper bar length-}
+exportStaff = LyStaff . map LyBar . map (map $ uncurry LyContext) . map (view $ unsafeEventsV) . splitTies (repeat 1){-TODO get proper bar length-}
   where
     -- TODO rename
-    -- unMVoice :: MVoice a -> [(Duration, Maybe a)]
-    -- unMVoice = unvoice
-    
-    -- TODO rename
-    splitTies :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-    splitTies = voiceToBars'
+    splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
+    splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
+
+
+
+-- -- |
+-- -- Convert a voice score to a list of bars.
+-- --
+-- voiceToLilypond :: () => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
+-- voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
+-- --
+-- -- This is where notation of a single voice takes place
+-- --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
+-- --      * barToLilypond is specific: it handles quantization and notation
+-- --
+--     where
+--         -- TODO compounds
+--         setBarTimeSig Nothing x = x
+--         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
+
+
+barToLilypond :: (Tiable a) => MVoice a -> Lilypond
+barToLilypond bar = case (fmap rewrite . quantize . view unsafeEventsV) bar of
+    Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
+    Right rh -> rhythmToLilypond rh
+
+rhythmToLilypond :: () => Rhythm (Maybe a) -> Lilypond
+rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
+rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
+rhythmToLilypond (Group rs)            = scatLy $ map rhythmToLilypond rs
+rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
+    where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+
+noteRestToLilypond :: () => Duration -> Maybe a -> Lilypond
+noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
+noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ toLy d p  
+  where
+    toLy :: b -> a -> LyMusic
+    toLy = error "FIXME"
+
+
+
+
+
+
+
+
     
 -- Get notes, assume no rests, assume duration 1, put each note in single bar
 
