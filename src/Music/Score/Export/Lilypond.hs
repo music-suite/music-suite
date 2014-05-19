@@ -527,34 +527,35 @@ barToLilypond bar = case (fmap rewrite . quantize) bar of
     Left e   -> error $ "barToLilypond: Could not quantize this bar: " ++ show e
     Right rh -> rhythmToLilypond rh
 
-rhythmToLilypond = uncurry ($) . rhythmToLilypond2
+-- rhythmToLilypond = uncurry ($) . rhythmToLilypond2
 
--- rhythmToLilypond :: HasLilypond2 a => Rhythm (Maybe a) -> Lilypond
--- rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
--- rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
--- rhythmToLilypond (Group rs)            = scatLilypond $ map rhythmToLilypond rs
--- rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
---     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
---
--- noteRestToLilypond :: HasLilypond2 a => Duration -> Maybe a -> Lilypond
--- noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
--- noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
-
-
-
-rhythmToLilypond2 :: HasLilypond15 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
-rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
-rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
-
--- TODO propagate
-rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilypond $ extract1 $ map rhythmToLilypond2 $ rs
-
-rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
+rhythmToLilypond :: HasLilypond15 a => Rhythm (Maybe a) -> Lilypond
+rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
+rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
+rhythmToLilypond (Group rs)            = scatLilypond $ map rhythmToLilypond rs
+rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLilypond2 :: HasLilypond15 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
-noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
-noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
+noteRestToLilypond :: HasLilypond15 a => Duration -> Maybe a -> Lilypond
+noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
+noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ getLilypond d p
+
+
+
+-- rhythmToLilypond2 :: HasLilypond15 a => Rhythm (Maybe a) -> (Lilypond -> Lilypond, Lilypond)
+-- rhythmToLilypond2 (Beat d x)            = noteRestToLilypond2 d x
+-- rhythmToLilypond2 (Dotted n (Beat d x)) = noteRestToLilypond2 (dotMod n * d) x
+-- 
+-- -- TODO propagate
+-- rhythmToLilypond2 (Group rs)            = first (maybe id id) $ second scatLilypond $ extract1 $ map rhythmToLilypond2 $ rs
+-- 
+-- rhythmToLilypond2 (Tuplet m r)          = second (Lilypond.Times (realToFrac m)) $ (rhythmToLilypond2 r)
+--     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+-- 
+-- noteRestToLilypond2 :: HasLilypond15 a => Duration -> Maybe a -> (Lilypond -> Lilypond, Lilypond)
+-- noteRestToLilypond2 d Nothing  = ( id, Lilypond.rest^*(realToFrac d*4) )
+-- noteRestToLilypond2 d (Just p) = second Lilypond.removeSingleChords $ getLilypondWithPrefix d p
+
 
 -- extract first value of type b
 extract1 :: [(b, a)] -> (Maybe b, [a])
