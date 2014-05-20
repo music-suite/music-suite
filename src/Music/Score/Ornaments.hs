@@ -53,6 +53,7 @@ module Music.Score.Ornaments (
   ) where
 
 import           Control.Applicative
+import           Control.Comonad
 import           Control.Lens hiding (transform)
 import           Data.Foldable
 import           Data.Foldable
@@ -85,7 +86,7 @@ instance HasTremolo a => HasTremolo (Score a) where
 
 
 newtype TremoloT a = TremoloT { getTremoloT :: (Max Word, a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 -- 
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
 -- Preferably we would use Natural but unfortunately this is not an instance of Bounded
@@ -133,19 +134,19 @@ instance Floating a => Floating (TremoloT a) where
 
 instance Enum a => Enum (TremoloT a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (TremoloT a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (TremoloT a) where
-    toRational = toRational . get1
+    toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
     quot = liftA2 quot
     rem = liftA2 rem
-    toInteger = toInteger . get1
+    toInteger = toInteger . extract
 
 
 
@@ -158,7 +159,7 @@ class HasText a where
     addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: ([String], a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 instance HasText a => HasText (b, a) where
     addText       s                                 = fmap (addText s)
@@ -212,19 +213,19 @@ instance Floating a => Floating (TextT a) where
 
 instance Enum a => Enum (TextT a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (TextT a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (TextT a) where
-    toRational = toRational . get1
+    toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (TextT a) where
     quot = liftA2 quot
     rem = liftA2 rem
-    toInteger = toInteger . get1
+    toInteger = toInteger . extract
 
 
 
@@ -236,7 +237,7 @@ class HasHarmonic a where
 
 -- (isNatural, overtone series index where 0 is fundamental)
 newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Any, Sum Int), a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
     setNatural b = fmap (setNatural b)
@@ -294,19 +295,19 @@ instance Floating a => Floating (HarmonicT a) where
 
 instance Enum a => Enum (HarmonicT a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (HarmonicT a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
-    toRational = toRational . get1
+    toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
     quot = liftA2 quot
     rem = liftA2 rem
-    toInteger = toInteger . get1
+    toInteger = toInteger . extract
                                         
 
 
@@ -338,7 +339,7 @@ instance HasSlide a => HasSlide (Score a) where
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
+    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (SlideT a) where
@@ -391,19 +392,19 @@ instance Floating a => Floating (SlideT a) where
 
 instance Enum a => Enum (SlideT a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (SlideT a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (SlideT a) where
-    toRational = toRational . get1
+    toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
     quot = liftA2 quot
     rem = liftA2 rem
-    toInteger = toInteger . get1
+    toInteger = toInteger . extract
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
@@ -448,11 +449,6 @@ artificial =  setNatural False . setHarmonic 3
 -- TODO allow polymorphic update
 mapPhraseWise3 :: HasPhrases' s a => (a -> a) -> (a -> a) -> (a -> a) -> s -> s
 mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
-
-
--- TODO replace with (^?!), extract or similar
-get1 = head . toList
-
 
 
 
