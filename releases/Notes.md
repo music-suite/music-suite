@@ -44,8 +44,6 @@
 ## 1.7
 
 
-* Adds `.music` file parsing and conversion
-
 * Adds many new time-based types
 
     * Separates time- and score-types in in `Music.Time` and `Music.Score` hierarchy
@@ -76,7 +74,11 @@
 
 * Adds polymorphic update of pitch, dynamics and articulation
 
-* Adds phrase-wise traversal
+* Adds colored noteheads to Lilypond backend
+
+* Adds `.music` file parsing and conversion
+
+* Adds phrase-wise traversals
 
 * Adds test suite
 
