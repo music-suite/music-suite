@@ -541,13 +541,13 @@ augmentIntervals = error "Not implemented: augmentIntervals"
 -- |
 -- Return the highest pitch in the given music.
 -- 
-highestPitch :: (Ord (Pitch a), HasPitches a a) => a -> Pitch a
+highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
 highestPitch = maximum . toListOf pitches'
 
 -- |
 -- Return the lowest pitch in the given music.
 -- 
-lowestPitch :: (HasPitches' a, Ord (Pitch a), ) => a -> Pitch a
+lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
 lowestPitch = maximum . toListOf pitches'
 
 -- |
