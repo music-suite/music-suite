@@ -93,6 +93,7 @@ import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens            hiding (Level, transform)
 import           Control.Monad
+import           Control.Comonad
 import Data.Functor.Couple
 import           Data.AffineSpace
 import           Data.Foldable
@@ -363,131 +364,12 @@ fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
 
 
 
-{-
-class HasDynamic a where
-    setBeginCresc   :: Bool -> a -> a
-    setEndCresc     :: Bool -> a -> a
-    setBeginDim     :: Bool -> a -> a
-    setEndDim       :: Bool -> a -> a
-    setLevel        :: Double -> a -> a
 
--- end cresc/dim, level, begin cresc/dim
-newtype DynamicT a = DynamicT { getDynamicT :: (((Any, Any), Option (First Double), (Any, Any)), a) }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad)
-
-instance HasDynamic (DynamicT a) where
-    setBeginCresc (Any -> bc) (DynamicT (((ec,ed),l,(_ ,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
-    setEndCresc   (Any -> ec) (DynamicT (((_ ,ed),l,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
-    setBeginDim   (Any -> bd) (DynamicT (((ec,ed),l,(bc,_ )),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
-    setEndDim     (Any -> ed) (DynamicT (((ec,_ ),l,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
-    setLevel      ((Option . Just . First) -> l ) (DynamicT (((ec,ed),_,(bc,bd)),a))   = DynamicT (((ec,ed),l,(bc,bd)),a)
-
-instance HasDynamic b => HasDynamic (a, b) where
-    setBeginCresc n = fmap (setBeginCresc n)
-    setEndCresc   n = fmap (setEndCresc n)
-    setBeginDim   n = fmap (setBeginDim n)
-    setEndDim     n = fmap (setEndDim n)
-    setLevel      n = fmap (setLevel n)
-
-
-
---------------------------------------------------------------------------------
--- Dynamics
---------------------------------------------------------------------------------
-
--- |
--- Represents dynamics over a duration.
---
-data Level a
-    = Level  a
-    | Change a a
-    deriving (Eq, Show)
-
-instance Fractional a => IsDynamics (Level a) where
-    fromDynamics (DynamicsL (Just a, Nothing)) = Level (realToFrac a)
-    fromDynamics (DynamicsL (Just a, Just b)) = Change (realToFrac a) (realToFrac b)
-    fromDynamics x = error $ "fromDynamics: Invalid dynamics literal " ++ show x
-
-
--- |
--- Apply a dynamic level over the score.
---
-dynamics :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
-dynamics d a = (duration a `stretchTo` d) `dynamics'` a
-
-dynamicSingle :: HasDynamic a => Score (Level Double) -> Score a -> Score a
-dynamicSingle d a  = (duration a `stretchTo` d) `dynamicsSingle'` a
-
--- |
--- Apply a dynamic level over a voice.
---
-dynamicVoice :: HasDynamic a => Score (Level Double) -> Voice (Maybe a) -> Voice (Maybe a)
-dynamicVoice d = s coreToVoice . dynamicSingle d . removeRests . v oiceToScore
-
-
-dynamics' :: (HasDynamic a, HasPart' a) => Score (Level Double) -> Score a -> Score a
-dynamics' ds = mapAllParts (fmap $ dynamicsSingle' ds)
-
-dynamicsSingle' :: HasDynamic a => Score (Level Double) -> Score a -> Score a
-dynamicsSingle' ds = applyDynSingle (fmap fromJust $ s coreToVoice ds)
-
-
-applyDynSingle :: HasDynamic a => Voice (Level Double) -> Score a -> Score a
-applyDynSingle ds = applySingle ds3
-    where
-        -- ds2 :: Voice (Dyn2 Double)
-        ds2 = mapValuesVoice dyn2 ds
-        -- ds3 :: Voice (Score a -> Score a)
-        ds3 = fmap g ds2
-
-        g (ec,ed,l,bc,bd) = id
-                . (if ec then mapFirstSingle (setEndCresc     True) else id)
-                . (if ed then mapFirstSingle (setEndDim       True) else id)
-                . (if bc then mapFirstSingle (setBeginCresc   True) else id)
-                . (if bd then mapFirstSingle (setBeginDim     True) else id)
-                . maybe id (mapFirstSingle . setLevel) l
-        mapFirstSingle f = mapPhraseSingle f id id
-
--- end cresc, end dim, level, begin cresc, begin dim
-type LevelDiff a = (Bool, Bool, Maybe a, Bool, Bool)
-
-dyn2 :: Ord a => [Level a] -> [LevelDiff a]
-dyn2 = snd . List.mapAccumL g (Nothing, False, False) -- level, cresc, dim
-    where
-        g (Nothing, False, False) (Level b)     = ((Just b,  False, False), (False, False, Just b,  False, False))
-        g (Nothing, False, False) (Change b c)  = ((Just b,  b < c, b > c), (False, False, Just b,  b < c, b > c))
-
-        g (Just a , cr, dm) (Level b)
-            | a == b                            = ((Just b,  False, False), (cr,    dm,    Nothing, False, False))
-            | a /= b                            = ((Just b,  False, False), (cr,    dm,    Just b,  False, False))
-        g (Just a , cr, dm) (Change b c)
-            | a == b                            = ((Just b,  b < c, b > c), (cr,    dm,    Nothing, b < c, b > c))
-            | a /= b                            = ((Just b,  b < c, b > c), (cr,    dm,    Just b,  b < c, b > c))
-
-
-
-mapValuesVoice :: ([a] -> [b]) -> Voice a -> Voice b
-mapValuesVoice f = (^. voice) . uncurry zip . second f . unzip . (^. from voice)
-
-
-
-
-cresc :: IsDynamics a => Double -> Double -> a
-cresc a b = fromDynamics $ DynamicsL (Just a, Just b)
-
-dim :: IsDynamics a => Double -> Double -> a
-dim a b = fromDynamics $ DynamicsL (Just a, Just b)
-
-
-resetDynamics :: HasDynamic c => c -> c
-resetDynamics = setBeginCresc False . setEndCresc False . setBeginDim False . setEndDim False
-
--}
 
 
 newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
   deriving (Eq, Ord, Show, Typeable, Functor, 
-    Applicative, {-Comonad,-} Monad, Transformable, Monoid, Semigroup)
+    Applicative, Monad, Comonad, Transformable, Monoid, Semigroup)
 
 instance (Monoid n, Num a) => Num (DynamicT n a) where
     (+) = liftA2 (+)
@@ -519,19 +401,19 @@ instance (Monoid n, Floating a) => Floating (DynamicT n a) where
 
 instance (Monoid n, Enum a) => Enum (DynamicT n a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (DynamicT n a) where
---     toRational = toRational . get1
+--     toRational = toRational . extract
 -- 
 -- instance (Monoid n, Real a, Enum a, Integral a) => Integral (DynamicT n a) where
 --     quot = liftA2 quot
 --     rem = liftA2 rem
---     toInteger = toInteger . get1  
+--     toInteger = toInteger . extract  
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (DynamicT p a) where
@@ -574,7 +456,4 @@ addDynCon = over (phrases.vdynamic) withContext
 
 type Ctxt a = (Maybe a, a, Maybe a)
 
-
--- TODO use extract
-get1 (DynamicT (_,x)) = x
 
