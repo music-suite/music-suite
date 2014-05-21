@@ -56,7 +56,7 @@ import           Data.Void
 -- import           Music.Score.Combinators (mapFirst)
 -- import           Music.Score.Meta
 import           Music.Score.Meta.Clef
-import           Music.Score.Ornaments   (HasText, text)
+-- import           Music.Score.Text        (HasText, text)
 import           Music.Score.Part
 import           Music.Score.Ties
 import           Music.Score.Util

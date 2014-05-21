@@ -117,8 +117,11 @@ import           Music.Score.Part
 -- import           Music.Score.Score
 
 import Music.Score.Part
-import Music.Score.Ornaments -- TODO
-import Music.Score.Ties -- TODO
+import Music.Score.Slide
+import Music.Score.Tremolo
+import Music.Score.Text
+import Music.Score.Harmonics
+import Music.Score.Ties
 import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Score.Phrases

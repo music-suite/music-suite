@@ -98,7 +98,10 @@ library
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
-                        Music.Score.Ornaments
+                        Music.Score.Slide
+                        Music.Score.Tremolo
+                        Music.Score.Text
+                        Music.Score.Harmonics
                         Music.Score.Color
                         Music.Score.Export.Abc
                         Music.Score.Export.Lilypond

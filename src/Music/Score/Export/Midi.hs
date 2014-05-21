@@ -70,7 +70,10 @@ import           Music.Score.Articulation
 import           Music.Score.Meta
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
-import           Music.Score.Ornaments
+import           Music.Score.Slide
+import           Music.Score.Tremolo
+import           Music.Score.Text
+import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm

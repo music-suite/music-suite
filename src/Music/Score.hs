@@ -33,7 +33,10 @@ module Music.Score (
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
         module Music.Score.Articulation,
-        module Music.Score.Ornaments,
+        module Music.Score.Slide,
+        module Music.Score.Tremolo,
+        module Music.Score.Text,
+        module Music.Score.Harmonics,
         module Music.Score.Color,
 
         -- ** Miscellaneous
@@ -110,7 +113,10 @@ import           Music.Score.Meta.RehearsalMark
 import           Music.Score.Meta.Tempo
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
-import           Music.Score.Ornaments
+import           Music.Score.Slide
+import           Music.Score.Tremolo
+import           Music.Score.Text
+import           Music.Score.Harmonics
 import           Music.Score.Color
 import           Music.Score.Phrases
 import           Music.Score.Part

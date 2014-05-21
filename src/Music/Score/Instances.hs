@@ -54,7 +54,10 @@ import           Music.Score.Articulation
 import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Ornaments
+import           Music.Score.Slide
+import           Music.Score.Tremolo
+import           Music.Score.Text
+import           Music.Score.Harmonics
 import           Music.Score.Color
 import           Music.Score.Rhythm
 import           Music.Score.Ties
@@ -204,6 +207,43 @@ deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)
 
+
+
+deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
+deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
+deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
+deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
+deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
+deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
+
+deriving instance IsPitch a => IsPitch (TremoloT a)
+deriving instance IsDynamics a => IsDynamics (TremoloT a)
+deriving instance IsPitch a => IsPitch (TextT a)
+deriving instance IsDynamics a => IsDynamics (TextT a)
+deriving instance IsPitch a => IsPitch (HarmonicT a)
+deriving instance IsDynamics a => IsDynamics (HarmonicT a)
+deriving instance IsPitch a => IsPitch (SlideT a)
+deriving instance IsDynamics a => IsDynamics (SlideT a)
+
+deriving instance Transformable a => Transformable (SlideT a)
+deriving instance Transformable a => Transformable (HarmonicT a)
+deriving instance Transformable a => Transformable (TextT a)
+deriving instance Transformable a => Transformable (TremoloT a)
+
+deriving instance Reversible a => Reversible (SlideT a)
+deriving instance Reversible a => Reversible (HarmonicT a)
+deriving instance Reversible a => Reversible (TextT a)
+deriving instance Reversible a => Reversible (TremoloT a)
+
+deriving instance Alterable a => Alterable (SlideT a)
+deriving instance Alterable a => Alterable (HarmonicT a)
+deriving instance Alterable a => Alterable (TextT a)
+deriving instance Alterable a => Alterable (TremoloT a)
+
+deriving instance Augmentable a => Augmentable (SlideT a)
+deriving instance Augmentable a => Augmentable (HarmonicT a)
+deriving instance Augmentable a => Augmentable (TextT a)
+deriving instance Augmentable a => Augmentable (TremoloT a)
 
 
 

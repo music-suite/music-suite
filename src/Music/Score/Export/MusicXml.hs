@@ -68,7 +68,10 @@ import           Music.Score.Meta
 import           Music.Score.Meta.Clef
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
-import           Music.Score.Ornaments
+import           Music.Score.Slide
+import           Music.Score.Tremolo
+import           Music.Score.Text
+import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
