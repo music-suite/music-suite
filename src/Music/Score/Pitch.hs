@@ -133,6 +133,7 @@ module Music.Score.Pitch (
 import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
 import Control.Applicative
 import Control.Lens hiding (above, below, transform)
+import Data.Functor.Couple
 import Data.Semigroup
 import Data.String
 import Data.Typeable
@@ -382,6 +383,8 @@ instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior
 instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
 
+type instance Pitch (Couple c a)        = Pitch a
+type instance SetPitch g (Couple c a)   = Couple c (SetPitch g a)
 type instance Pitch (TremoloT a)        = Pitch a
 type instance SetPitch g (TremoloT a)   = TremoloT (SetPitch g a)
 type instance Pitch (TextT a)           = Pitch a
@@ -392,6 +395,11 @@ type instance Pitch (TieT a)            = Pitch a
 type instance SetPitch g (TieT a)       = TieT (SetPitch g a)
 type instance Pitch (SlideT a)          = Pitch a
 type instance SetPitch g (SlideT a)     = SlideT (SetPitch g a)
+
+instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (Couple c a) (Couple c b) where
+  pitch = _Wrapped . pitch
 
 instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
   pitches = _Wrapped . pitches

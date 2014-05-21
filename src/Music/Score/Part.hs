@@ -78,6 +78,7 @@ import           Control.Applicative
 import Control.Lens hiding (parts, transform)
 import           Control.Comonad
 import           Control.Monad.Plus
+import Data.Functor.Couple
 import           Data.Default
 import           Data.Foldable
 import qualified Data.List           as List

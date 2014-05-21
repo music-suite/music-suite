@@ -100,6 +100,7 @@ module Music.Score.Articulation (
   ) where
 
 import           Control.Applicative
+import Data.Functor.Couple
 import Control.Lens hiding (above, below, transform)
 import           Data.AffineSpace
 import           Data.VectorSpace        hiding (Sum)
@@ -224,6 +225,8 @@ instance HasArticulations a b => HasArticulations (Score a) (Score b) where
     . _Wrapped      -- this needed?
     . whilstL articulations
 
+type instance Articulation (Couple c a)        = Articulation a
+type instance SetArticulation g (Couple c a)   = Couple c (SetArticulation g a)
 type instance Articulation (TremoloT a)        = Articulation a
 type instance SetArticulation g (TremoloT a)   = TremoloT (SetArticulation g a)
 type instance Articulation (TextT a)           = Articulation a
@@ -234,6 +237,11 @@ type instance Articulation (TieT a)            = Articulation a
 type instance SetArticulation g (TieT a)       = TieT (SetArticulation g a)
 type instance Articulation (SlideT a)          = Articulation a
 type instance SetArticulation g (SlideT a)     = SlideT (SetArticulation g a)
+
+instance (HasArticulations a b) => HasArticulations (Couple c a) (Couple c b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (Couple c a) (Couple c b) where
+  articulation = _Wrapped . articulation
 
 instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
   articulations = _Wrapped . articulations

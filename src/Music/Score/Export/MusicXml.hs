@@ -44,6 +44,7 @@ import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens                 hiding (rewrite)
 import           Control.Monad                hiding (mapM)
+import           Data.Functor.Couple
 import           Data.Function                (on)
 import           Data.Maybe
 import           Data.Monoid.WithSemigroup
@@ -158,7 +159,7 @@ instance (Tiable d, HasMusicXml a) => HasMusicXml (ArticulationT d a) where
 --             nbs    = if bs then Xml.beginSlur else id
 
 instance HasMusicXml a => HasMusicXml (TremoloT a) where
-    getMusicXml d (TremoloT (Max n, x))      = notate $ getMusicXml d x
+    getMusicXml d (TremoloT (Couple (Max n, x)))      = notate $ getMusicXml d x
         where
             notate = case n of
                 0 -> id

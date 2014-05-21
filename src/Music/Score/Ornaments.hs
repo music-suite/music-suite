@@ -55,6 +55,7 @@ module Music.Score.Ornaments (
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens hiding (transform)
+import           Data.Functor.Couple
 import           Data.Foldable
 import           Data.Foldable
 import           Data.Ratio
@@ -77,6 +78,9 @@ class HasTremolo a where
 instance HasTremolo a => HasTremolo (b, a) where
     setTrem n = fmap (setTrem n)
 
+instance HasTremolo a => HasTremolo (Couple b a) where
+    setTrem n = fmap (setTrem n)
+
 instance HasTremolo a => HasTremolo [a] where
     setTrem n = fmap (setTrem n)
 
@@ -85,7 +89,7 @@ instance HasTremolo a => HasTremolo (Score a) where
 
 
 
-newtype TremoloT a = TremoloT { getTremoloT :: (Max Word, a) }
+newtype TremoloT a = TremoloT { getTremoloT :: Couple (Max Word) a }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 -- 
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
@@ -94,59 +98,65 @@ newtype TremoloT a = TremoloT { getTremoloT :: (Max Word, a) }
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TremoloT a) where
-  type Unwrapped (TremoloT a) = (Max Word, a)
+  type Unwrapped (TremoloT a) = Couple (Max Word) a
   _Wrapped' = iso getTremoloT TremoloT
 
 instance Rewrapped (TremoloT a) (TremoloT b)
 
 instance HasTremolo (TremoloT a) where
-    setTrem n (TremoloT (_,x)) = TremoloT (Max $ fromIntegral n,x)
+    setTrem n (TremoloT (Couple (_,x))) = TremoloT (Couple (Max $ fromIntegral n,x))
 
 -- Lifted instances
-
-instance Num a => Num (TremoloT a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (TremoloT a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
-
-instance Floating a => Floating (TremoloT a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
-
-instance Enum a => Enum (TremoloT a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
-
-instance Bounded a => Bounded (TremoloT a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
-
-instance (Num a, Ord a, Real a) => Real (TremoloT a) where
-    toRational = toRational . extract
-
-instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
-    quot = liftA2 quot
-    rem = liftA2 rem
-    toInteger = toInteger . extract
+deriving instance Num a => Num (TremoloT a)
+deriving instance Fractional a => Fractional (TremoloT a)
+deriving instance Floating a => Floating (TremoloT a)
+deriving instance Enum a => Enum (TremoloT a)
+deriving instance Bounded a => Bounded (TremoloT a)
+deriving instance (Num a, Ord a, Real a) => Real (TremoloT a)
+deriving instance (Real a, Enum a, Integral a) => Integral (TremoloT a)
+-- instance Num a => Num (TremoloT a) where
+--     (+) = liftA2 (+)
+--     (*) = liftA2 (*)
+--     (-) = liftA2 (-)
+--     abs = fmap abs
+--     signum = fmap signum
+--     fromInteger = pure . fromInteger
+-- 
+-- instance Fractional a => Fractional (TremoloT a) where
+--     recip        = fmap recip
+--     fromRational = pure . fromRational
+-- 
+-- instance Floating a => Floating (TremoloT a) where
+--     pi    = pure pi
+--     sqrt  = fmap sqrt
+--     exp   = fmap exp
+--     log   = fmap log
+--     sin   = fmap sin
+--     cos   = fmap cos
+--     asin  = fmap asin
+--     atan  = fmap atan
+--     acos  = fmap acos
+--     sinh  = fmap sinh
+--     cosh  = fmap cosh
+--     asinh = fmap asinh
+--     atanh = fmap atanh
+--     acosh = fmap acos
+-- 
+-- instance Enum a => Enum (TremoloT a) where
+--     toEnum = pure . toEnum
+--     fromEnum = fromEnum . extract
+-- 
+-- instance Bounded a => Bounded (TremoloT a) where
+--     minBound = pure minBound
+--     maxBound = pure maxBound
+-- 
+-- instance (Num a, Ord a, Real a) => Real (TremoloT a) where
+--     toRational = toRational . extract
+-- 
+-- instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
+--     quot = liftA2 quot
+--     rem = liftA2 rem
+--     toInteger = toInteger . extract  
 
 
 
@@ -162,6 +172,9 @@ newtype TextT a = TextT { getTextT :: ([String], a) }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 instance HasText a => HasText (b, a) where
+    addText       s                                 = fmap (addText s)
+
+instance HasText a => HasText (Couple b a) where
     addText       s                                 = fmap (addText s)
 
 instance HasText a => HasText [a] where
@@ -243,6 +256,10 @@ instance HasHarmonic a => HasHarmonic (b, a) where
     setNatural b = fmap (setNatural b)
     setHarmonic n = fmap (setHarmonic n)
 
+instance HasHarmonic a => HasHarmonic (Couple b a) where
+    setNatural b = fmap (setNatural b)
+    setHarmonic n = fmap (setHarmonic n)
+
 instance HasHarmonic a => HasHarmonic [a] where
     setNatural b = fmap (setNatural b)
     setHarmonic n = fmap (setHarmonic n)
@@ -319,6 +336,12 @@ class HasSlide a where
     setEndSlide   :: Bool -> a -> a
 
 instance HasSlide a => HasSlide (b, a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
+
+instance HasSlide a => HasSlide (Couple b a) where
     setBeginGliss n = fmap (setBeginGliss n)
     setBeginSlide n = fmap (setBeginSlide n)
     setEndGliss   n = fmap (setEndGliss n)
@@ -451,6 +474,12 @@ mapPhraseWise3 :: HasPhrases' s a => (a -> a) -> (a -> a) -> (a -> a) -> s -> s
 mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
 
 
+deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
+deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
+deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
+deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
+deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
+deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
 
 deriving instance IsPitch a => IsPitch (TremoloT a)
 deriving instance IsDynamics a => IsDynamics (TremoloT a)

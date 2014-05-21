@@ -51,6 +51,7 @@ import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens                 hiding (rewrite)
 import           Control.Monad                hiding (mapM)
+import           Data.Functor.Couple
 import           Data.AffineSpace
 import           Data.Default
 import           Data.Foldable
@@ -300,8 +301,8 @@ instance (Tiable n, HasLilypond a) => HasLilypond (ArticulationT n a) where
 --             nbs    = if bs then Lilypond.beginSlur else id
 -- 
 instance HasLilypond a => HasLilypond (TremoloT a) where
-    getLilypond d (TremoloT (Max 0, x)) = getLilypond d x
-    getLilypond d (TremoloT (Max n, x)) = notate $ getLilypond newDur x
+    getLilypond d (TremoloT (Couple (Max 0, x))) = getLilypond d x
+    getLilypond d (TremoloT (Couple (Max n, x))) = notate $ getLilypond newDur x
         where
             scale   = 2^n
             newDur  = (d `min` (1/4)) / scale

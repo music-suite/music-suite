@@ -51,6 +51,7 @@ library
                         parsec
     exposed-modules:	  Data.Clipped
                         Data.PairMonad
+                        Data.Functor.Couple
                         Data.Functor.Rep.Lens
                         Control.Monad.Compose
 

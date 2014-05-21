@@ -168,9 +168,9 @@ deriving instance HasSlide a => HasSlide (TieT a)
 deriving instance HasText a => HasText (TieT a)
 
 instance Tiable a => Tiable (TremoloT a) where
-    toTied (TremoloT (n,a))                         = (TremoloT (n,b), TremoloT (n,c)) where (b,c) = toTied a
+    toTied = unzipR . fmap toTied
 
-type instance Part (TremoloT a)                          = Part a
+type instance Part (TremoloT a) = Part a
 deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
 deriving instance HasSlide a => HasSlide (TremoloT a)
 deriving instance HasText a => HasText (TremoloT a)

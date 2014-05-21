@@ -39,6 +39,7 @@ import           Prelude                   hiding (concat, concatMap, foldl,
                                             foldr, mapM, maximum, minimum, sum)
 
 import           Control.Applicative
+import           Control.Comonad
 import           Control.Arrow
 import           Control.Lens              hiding ((|>))
 import           Control.Monad             hiding (mapM)
@@ -150,7 +151,7 @@ instance HasMidi a => HasMidi [a] where
 instance HasMidi a => HasMidi (TieT a) where
     getMidi (TieT (_,a))                            = getMidi a
 instance HasMidi a => HasMidi (TremoloT a) where
-    getMidi (TremoloT (_,a))                        = getMidi a
+    getMidi = getMidi . extract
 instance HasMidi a => HasMidi (TextT a) where
     getMidi (TextT (_,a))                           = getMidi a
 instance HasMidi a => HasMidi (HarmonicT a) where

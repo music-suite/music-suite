@@ -93,6 +93,7 @@ import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens            hiding (Level, transform)
 import           Control.Monad
+import Data.Functor.Couple
 import           Data.AffineSpace
 import           Data.Foldable
 import qualified Data.List               as List
@@ -255,6 +256,8 @@ instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamics (Behav
 instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamic (Behavior a) b where
   dynamic = ($)
 
+type instance Dynamic (Couple c a)        = Dynamic a
+type instance SetDynamic g (Couple c a)   = Couple c (SetDynamic g a)
 type instance Dynamic (TremoloT a)        = Dynamic a
 type instance SetDynamic g (TremoloT a)   = TremoloT (SetDynamic g a)
 type instance Dynamic (TextT a)           = Dynamic a
@@ -265,6 +268,11 @@ type instance Dynamic (TieT a)            = Dynamic a
 type instance SetDynamic g (TieT a)       = TieT (SetDynamic g a)
 type instance Dynamic (SlideT a)          = Dynamic a
 type instance SetDynamic g (SlideT a)     = SlideT (SetDynamic g a)
+
+instance (HasDynamics a b) => HasDynamics (Couple c a) (Couple c b) where
+  dynamics = _Wrapped . dynamics
+instance (HasDynamic a b) => HasDynamic (Couple c a) (Couple c b) where
+  dynamic = _Wrapped . dynamic
 
 instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
   dynamics = _Wrapped . dynamics

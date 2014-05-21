@@ -54,6 +54,7 @@ import qualified Music.Lilypond as Lilypond
 import qualified Text.Pretty                  as Pretty
 import           Music.Score.Export.Common hiding (MVoice)
 import           System.Process
+import           Data.Functor.Couple
 import Data.Default
 import Data.Ratio
 import Data.Maybe
@@ -323,7 +324,7 @@ instance HasBackendNote Midi a => HasBackendNote Midi (PartT n a) where
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TremoloT a) where
   -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getTremoloT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getTremoloT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
   -- TODO use Comonad.extract
@@ -630,7 +631,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
-  exportNote b (LyContext d (Just (TremoloT (n, x)))) = exportNote b $ LyContext d (Just x) -- TODO many
+  exportNote b (LyContext d (Just (TremoloT (Couple (n, x))))) = exportNote b $ LyContext d (Just x) -- TODO many
     -- where
     -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
     -- getL d (TremoloT (Max n, x)) = notate $ getLilypond newDur x
