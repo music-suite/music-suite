@@ -1,7 +1,6 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}

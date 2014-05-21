@@ -1,7 +1,6 @@
 
 
 
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RankNTypes                 #-}
