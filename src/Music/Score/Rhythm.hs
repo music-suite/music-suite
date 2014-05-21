@@ -33,7 +33,7 @@ import           Prelude             hiding (concat, concatMap, foldl, foldr,
 
 import           Control.Applicative
 import           Control.Arrow       hiding (left)
-import           Control.Lens        ((^.))
+import           Control.Lens        ((^.), over, _Left)
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either
 import           Data.Foldable
@@ -251,7 +251,7 @@ modifyTupleDepth f (RhythmContext tm ts td) = RhythmContext tm ts (f td)
 type RhythmParser a b = Parsec [(Duration, a)] RhythmContext b
 
 quantize' :: Tiable a => RhythmParser a b -> [(Duration, a)] -> Either String b
-quantize' p = left show . runParser p mempty ""
+quantize' p = over _Left show . runParser p mempty ""
 
 
 
@@ -401,7 +401,3 @@ divisibleBy = flip isDivisibleBy
 -- Only works for simple n such as 2 or 3, TODO determine
 isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
-
-
-left f (Left x)  = Left (f x)
-left f (Right y) = Right y
