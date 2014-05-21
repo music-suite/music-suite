@@ -34,8 +34,8 @@ module Music.Time.Internal.Transform (
       whilstStretch,
       whilstDelay,
       spanned,
-      on,
-      conjugate,
+      onS,
+      conjugateS,
 
       -- ** Specific transformations
       delay,
@@ -326,8 +326,8 @@ whilstDelay     = flip (flip whilst . delaying . (.-. 0))
 whilstStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 whilstStretch = flip (flip whilst . stretching)
 
-conjugate :: Span -> Span -> Span
-conjugate t1 t2  = negateV t1 <> t2 <> t1
+conjugateS :: Span -> Span -> Span
+conjugateS t1 t2  = negateV t1 <> t2 <> t1
 
 
 -- |
@@ -345,8 +345,8 @@ spanned s = flip whilstM (negateV s)
 -- l `on` (2 \<-> 3)
 -- @
 --
-on :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
-f `on` s = spanned s . f
+onS :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
+f `onS` s = spanned s . f
 -- TODO name
 
 -- TODO move!

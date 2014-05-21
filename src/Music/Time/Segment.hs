@@ -364,7 +364,7 @@ concatB = concatS . fmap (view focusing)
 -- View part of a 'Behavior' as a 'Segment'.
 --
 -- @
--- 'line' & 'focusing' ``on`` (2 '<->' 3) '*~' 0
+-- 'line' & 'focusing' ``onS`` (2 '<->' 3) '*~' 0
 -- @
 --
 focusing :: Lens' (Behavior a) (Segment a)

@@ -40,8 +40,8 @@ module Music.Time.Transform (
       -- ** Apply under a transformation
       whilst,
       spanned,
-      on,
-      conjugate,
+      onS,
+      conjugateS,
 
       -- ** Specific transformations
       delay,
