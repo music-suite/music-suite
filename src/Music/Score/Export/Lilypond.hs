@@ -315,7 +315,7 @@ instance HasLilypond a => HasLilypond (TextT a) where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasLilypond a => HasLilypond (HarmonicT a) where
-    getLilypond d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getLilypond d x
+    getLilypond d (HarmonicT (Couple ((view _Wrapped' -> isNat, view _Wrapped' -> n),x))) = notate isNat n $ getLilypond d x
         where
             notate _     0 = id
             notate True  n = notateNatural n

@@ -332,7 +332,7 @@ instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
 
 instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
   -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getHarmonicT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
   -- TODO use Comonad.extract
@@ -647,7 +647,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
-  exportNote b = exportNote b . fmap (snd . getHarmonicT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
   exportNote b = exportNote b . fmap (snd . getSlideT)

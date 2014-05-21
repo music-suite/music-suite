@@ -167,7 +167,7 @@ class HasHarmonic a where
     setHarmonic :: Int -> a -> a
 
 -- (isNatural, overtone series index where 0 is fundamental)
-newtype HarmonicT a = HarmonicT { getHarmonicT :: ((Any, Sum Int), a) }
+newtype HarmonicT a = HarmonicT { getHarmonicT :: Couple (Any, Sum Int) a }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 instance HasHarmonic a => HasHarmonic (b, a) where
@@ -189,61 +189,23 @@ instance HasHarmonic a => HasHarmonic (Score a) where
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (HarmonicT a) where
-  type Unwrapped (HarmonicT a) = ((Any, Sum Int), a)
+  type Unwrapped (HarmonicT a) = Couple (Any, Sum Int) a
   _Wrapped' = iso getHarmonicT HarmonicT
 
 instance Rewrapped (HarmonicT a) (HarmonicT b)
 
 instance HasHarmonic (HarmonicT a) where
-    setNatural b (HarmonicT ((_,n),x)) = HarmonicT ((Any b,n),x)
-    setHarmonic n (HarmonicT ((nat,_),x)) = HarmonicT ((nat,Sum n),x)
+    setNatural  b = over (_Wrapped'._Wrapped') $ \((_,n),x)   -> ((Any b,n),x)
+    setHarmonic n = over (_Wrapped'._Wrapped') $ \((nat,_),x) -> ((nat,Sum n),x)
 
 -- Lifted instances
-
-instance Num a => Num (HarmonicT a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (HarmonicT a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
-
-instance Floating a => Floating (HarmonicT a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
-
-instance Enum a => Enum (HarmonicT a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
-
-instance Bounded a => Bounded (HarmonicT a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
-
-instance (Num a, Ord a, Real a) => Real (HarmonicT a) where
-    toRational = toRational . extract
-
-instance (Real a, Enum a, Integral a) => Integral (HarmonicT a) where
-    quot = liftA2 quot
-    rem = liftA2 rem
-    toInteger = toInteger . extract
-                                        
+deriving instance Num a => Num (HarmonicT a)
+deriving instance Fractional a => Fractional (HarmonicT a)
+deriving instance Floating a => Floating (HarmonicT a)
+deriving instance Enum a => Enum (HarmonicT a)
+deriving instance Bounded a => Bounded (HarmonicT a)
+deriving instance (Num a, Ord a, Real a) => Real (HarmonicT a)
+deriving instance (Real a, Enum a, Integral a) => Integral (HarmonicT a)
 
 
 

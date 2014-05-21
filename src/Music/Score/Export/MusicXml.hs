@@ -171,7 +171,7 @@ instance HasMusicXml a => HasMusicXml (TextT a) where
             notate ts a = mconcat (fmap Xml.text ts) <> a
 
 instance HasMusicXml a => HasMusicXml (HarmonicT a) where
-    getMusicXml d (HarmonicT ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)) = notate isNat n $ getMusicXml d x
+    getMusicXml d (HarmonicT (Couple ((view _Wrapped' -> isNat, view _Wrapped' -> n),x))) = notate isNat n $ getMusicXml d x
         where
             notate _     0 = id
             notate True  n = notateNatural n
