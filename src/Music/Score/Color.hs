@@ -50,23 +50,23 @@ import           Data.Semigroup
 import           Data.Typeable
 -- import           Data.VectorSpace              hiding (Sum)
 import           Data.Colour
-import qualified Data.Colour.Names as C
+import qualified Data.Colour.Names             as C
 
 import           Music.Score.Part
 import           Music.Time
 import           Music.Time.Internal.Transform
 
 import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
+import           Music.Pitch.Literal
 import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Score.Slide
+import           Music.Score.Text
 import           Music.Score.Ties
+import           Music.Score.Tremolo
 
 deriving instance IsPitch a => IsPitch (ColorT a)
 deriving instance IsDynamics a => IsDynamics (ColorT a)

@@ -33,7 +33,7 @@ import           Prelude             hiding (concat, concatMap, foldl, foldr,
 
 import           Control.Applicative
 import           Control.Arrow       hiding (left)
-import           Control.Lens        ((^.), over, _Left)
+import           Control.Lens        (over, (^.), _Left)
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either
 import           Data.Foldable

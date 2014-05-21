@@ -1,5 +1,4 @@
 
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -7,8 +6,9 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -37,23 +37,23 @@ module Music.Score.Tremolo (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens hiding (transform)
+import           Control.Lens            hiding (transform)
+import           Data.Foldable
+import           Data.Foldable
 import           Data.Functor.Couple
-import           Data.Foldable
-import           Data.Foldable
 import           Data.Ratio
-import           Data.Word
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Word
 
 -- import           Music.Score.Combinators
-import           Music.Score.Part
-import           Music.Time
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Time
 
 class HasTremolo a where
     setTrem :: Int -> a -> a
@@ -74,10 +74,10 @@ instance HasTremolo a => HasTremolo (Score a) where
 
 newtype TremoloT a = TremoloT { getTremoloT :: Couple (Max Word) a }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
--- 
+--
 -- We use Word instead of Int to get (mempty = Max 0), as (Max.mempty = Max minBound)
 -- Preferably we would use Natural but unfortunately this is not an instance of Bounded
--- 
+--
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TremoloT a) where

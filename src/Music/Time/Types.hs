@@ -416,7 +416,7 @@ a `encloses` b = startTime b `inside` a && stopTime b `inside` a
 overlaps :: Span -> Span -> Bool
 a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
--- | 
+-- |
 -- Whether the first given span occurs before the second span.
 --
 isBefore :: Span -> Span -> Bool

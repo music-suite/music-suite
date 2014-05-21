@@ -1,5 +1,4 @@
 
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -7,8 +6,9 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -38,23 +38,23 @@ module Music.Score.Slide (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens hiding (transform)
+import           Control.Lens            hiding (transform)
+import           Data.Foldable
+import           Data.Foldable
 import           Data.Functor.Couple
-import           Data.Foldable
-import           Data.Foldable
 import           Data.Ratio
-import           Data.Word
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Word
 
 -- import           Music.Score.Combinators
-import           Music.Score.Part
-import           Music.Time
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Time
 
 
 class HasSlide a where
@@ -135,7 +135,7 @@ glissando :: (HasPhrases' s a, HasSlide a) => s -> s
 glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
   where
     mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
-    
+
 
 
 

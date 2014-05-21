@@ -1,21 +1,12 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -73,27 +64,27 @@ module Music.Score.Part (
   ) where
 
 import           Control.Applicative
-import Control.Lens hiding (parts, transform)
 import           Control.Comonad
+import           Control.Lens                  hiding (parts, transform)
 import           Control.Monad.Plus
-import Data.Functor.Couple
 import           Data.Default
 import           Data.Foldable
-import qualified Data.List           as List
-import           Data.Ord            (comparing)
+import           Data.Functor.Couple
+import qualified Data.List                     as List
+import qualified Data.List                     as List
+import           Data.Ord                      (comparing)
 import           Data.PairMonad
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Traversable
 import           Data.Typeable
-import qualified Data.List as List
 
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Ties
+import           Music.Score.Util              (through)
 import           Music.Time
 import           Music.Time.Internal.Transform
-import           Music.Score.Ties
-import           Music.Score.Util (through)
-import           Music.Pitch.Literal
-import           Music.Dynamics.Literal
 
 
 -- |
@@ -237,7 +228,7 @@ extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
 filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
 filterPart p = mfilter (\x -> p (x ^. part))
-                                                    
+
 extractParts' :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
 extractParts' x = zip (allParts x) (extractParts x)
 
@@ -251,7 +242,7 @@ extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts')
 
 
 newtype PartT n a = PartT { getPartT :: (n, a) }
-  deriving (Eq, Ord, Show, Typeable, Functor, 
+  deriving (Eq, Ord, Show, Typeable, Functor,
     Applicative, Comonad, Monad, Transformable)
 
 -- | Unsafe: Do not use 'Wrapped' instances
@@ -301,10 +292,10 @@ type instance Part (Score a) = Part a
 type instance SetPart g (Score a) = Score (SetPart g a)
 
 instance (HasParts a b) => HasParts (Score a) (Score b) where
-  parts = 
+  parts =
     _Wrapped . _2   -- into NScore
     . _Wrapped
-    . traverse 
+    . traverse
     . _Wrapped      -- this needed?
     . whilstL parts
 

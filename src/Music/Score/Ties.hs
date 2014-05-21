@@ -1,6 +1,4 @@
 
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -8,6 +6,8 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -38,23 +38,23 @@ module Music.Score.Ties (
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens hiding (transform)
+import           Control.Lens            hiding (transform)
 import           Control.Monad
 import           Control.Monad.Plus
-import           Data.Functor.Adjunction (unzipR)
 import           Data.AffineSpace
 import           Data.Default
 import           Data.Foldable           hiding (concat)
+import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List               as List
 import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.VectorSpace hiding (Sum)
+import           Data.VectorSpace        hiding (Sum)
 
-import           Music.Time
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Time
 
 -- |
 -- Class of types that can be tied. Ties are added to a score by splitting a single note
@@ -116,10 +116,10 @@ instance Tiable a => Tiable [a] where
 instance Tiable a => Tiable (Behavior a) where
   toTied = unzipR . fmap toTied
 
--- 
+--
 -- There is no (HasPart ChordT) instance, so PartT must be outside ChordT in the stack
 -- This restriction assures all chord notes are in the same part
--- 
+--
 instance Tiable a => Tiable (c, a) where
   toTied = unzipR . fmap toTied
 
@@ -188,14 +188,14 @@ instance (Num a, Ord a, Real a) => Real (TieT a) where
 instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   quot = liftA2 quot
   rem = liftA2 rem
-  toInteger = toInteger . get1  
+  toInteger = toInteger . get1
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTiesVoice :: Tiable a => Voice a -> Voice a
-splitTiesVoice = (^. voice) . map (^. stretched) 
-  . concat . snd . List.mapAccumL g 0 
+splitTiesVoice = (^. voice) . map (^. stretched)
+  . concat . snd . List.mapAccumL g 0
   . map (^. from stretched) . (^. stretcheds)
   where
     g t (d, x) = (t + d, occs)

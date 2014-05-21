@@ -28,11 +28,11 @@
 
 module Music.Score.Meta (
         module Music.Time.Meta,
-        
+
         -- TODO move
         (</>),
         rcat,
-        
+
         -- * Meta-events
         addMetaNote,
         addGlobalMetaNote,
@@ -48,24 +48,24 @@ module Music.Score.Meta (
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens           hiding (perform, parts)
+import           Control.Lens           hiding (parts, perform)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable (..))
-import           Data.Ord
 import           Data.Maybe
+import           Data.Ord
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
 
-import           Music.Time.Meta
 import           Music.Score.Part
 import           Music.Score.Util
 import           Music.Time
+import           Music.Time.Meta
 import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable

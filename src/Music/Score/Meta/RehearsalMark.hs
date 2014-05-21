@@ -38,7 +38,7 @@ module Music.Score.Meta.RehearsalMark (
 
 
 import           Control.Arrow
-import           Control.Lens (view)
+import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Default
 import           Data.Foldable             (Foldable)

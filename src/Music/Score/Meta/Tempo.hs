@@ -72,7 +72,7 @@ import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Time hiding (time)
+import           Music.Time                hiding (time)
 
 type Bpm       = Duration
 type NoteValue = Duration

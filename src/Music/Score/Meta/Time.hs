@@ -52,8 +52,8 @@ module Music.Score.Meta.Time (
   ) where
 
 import           Control.Arrow
+import           Control.Lens              (view)
 import           Control.Monad.Plus
-import Control.Lens (view)
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -76,7 +76,7 @@ import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Util
-import           Music.Time hiding (time)
+import           Music.Time                hiding (time)
 
 -- |
 -- A time signature is a sequence of beat numbers and a note value (i.e. an expression on the

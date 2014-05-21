@@ -44,8 +44,8 @@ import           Control.Applicative
 import           Control.Arrow
 import           Control.Lens                 hiding (rewrite)
 import           Control.Monad                hiding (mapM)
-import           Data.Functor.Couple
 import           Data.Function                (on)
+import           Data.Functor.Couple
 import           Data.Maybe
 import           Data.Monoid.WithSemigroup
 import           Data.Ord                     (comparing)
@@ -59,25 +59,25 @@ import           Music.Pitch.Literal
 import           Music.Score.Articulation
 -- import           Music.Score.Chord
 import           Music.Score.Clef
-import           Music.Score.Convert (reactiveToVoice')
+import           Music.Score.Convert          (reactiveToVoice')
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
+import           Music.Score.Harmonics
 import           Music.Score.Instances
-import           Music.Score.Meta.Attribution
 import           Music.Score.Meta
+import           Music.Score.Meta.Attribution
 import           Music.Score.Meta.Clef
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
-import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
+import           Music.Score.Slide
+import           Music.Score.Text
 import           Music.Score.Ties
+import           Music.Score.Tremolo
 import           Music.Score.Util
-import           Music.Time hiding (time)
+import           Music.Time                   hiding (time)
 
 import qualified Codec.Midi                   as Midi
 import qualified Data.List                    as List
@@ -140,7 +140,7 @@ instance (Tiable d, HasMusicXml a) => HasMusicXml (DynamicT d a) where
 --             nl     = case l of
 --                 Nothing          -> mempty
 --                 Just (First lvl) -> Xml.dynamic (fromDynamics (DynamicsL (Just lvl, Nothing)))
--- 
+--
 
 instance (Tiable d, HasMusicXml a) => HasMusicXml (ArticulationT d a) where
   getMusicXml d (ArticulationT (_,a)) = getMusicXml d a
@@ -278,7 +278,7 @@ toMusicXml sc =
         title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart sc
         composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart sc
 
-        timeSigs = fmap swap $ unvoice $ fuse 
+        timeSigs = fmap swap $ unvoice $ fuse
           $ reactiveToVoice' (0 <-> _offset sc) $ getTimeSignatures def sc
           where
             def = 4/4
@@ -307,7 +307,7 @@ mvoiceToMusicXml barTimeSigs barDurations = addStartInfo . zipWith setBarTimeSig
         addStartInfo :: [Xml.Music] -> [Xml.Music]
         addStartInfo []     = []
         addStartInfo (x:xs) = (startInfo <> x):xs
-        
+
         startInfo :: Xml.Music
         startInfo = mempty
             <> Xml.defaultKey
@@ -350,9 +350,9 @@ type HasMusicXml2 a = (HasMusicXml a, Transformable a)
 {-
 foo
   :: (Semigroup a, Transformable a, HasClef a, HasMusicXml a) =>
-     [Maybe TimeSignature] 
-      -> [Duration] 
-      -> Score a 
+     [Maybe TimeSignature]
+      -> [Duration]
+      -> Score a
       -> [XmlMusic]
 foo barTimeSigs barDurations  = mvoiceToMusicXml barTimeSigs barDurations . temporaryClefFix . toMVoice
   where

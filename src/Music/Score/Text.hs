@@ -1,5 +1,4 @@
 
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -7,8 +6,9 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -37,23 +37,23 @@ module Music.Score.Text (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens hiding (transform)
+import           Control.Lens            hiding (transform)
+import           Data.Foldable
+import           Data.Foldable
 import           Data.Functor.Couple
-import           Data.Foldable
-import           Data.Foldable
 import           Data.Ratio
-import           Data.Word
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Word
 
 -- import           Music.Score.Combinators
-import           Music.Score.Part
-import           Music.Time
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Time
 
 
 

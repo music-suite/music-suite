@@ -48,7 +48,7 @@ module Music.Score.Meta.Title (
   ) where
 
 import           Control.Arrow
-import           Control.Lens (view)
+import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F

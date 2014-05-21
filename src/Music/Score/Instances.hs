@@ -30,13 +30,13 @@ module Music.Score.Instances () where
 
 import           Control.Applicative
 import           Control.Comonad
+import           Control.Lens             hiding (part, transform)
 import           Control.Monad
-import           Control.Lens hiding (transform, part)
 import           Data.AffineSpace
-import           Data.Functor.Couple
-import           Data.Functor.Adjunction (unzipR)
 import           Data.Default
 import           Data.Foldable
+import           Data.Functor.Adjunction  (unzipR)
+import           Data.Functor.Couple
 import qualified Data.List                as List
 import           Data.Maybe
 import           Data.Ratio
@@ -45,26 +45,26 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-import           Music.Pitch.Augmentable
 import           Music.Pitch.Alterable
-import           Music.Time
-import           Music.Score.Meta
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
 import           Music.Score.Articulation
+import           Music.Score.Color
 import           Music.Score.Dynamics
+import           Music.Score.Harmonics
+import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
-import           Music.Score.Harmonics
-import           Music.Score.Color
 import           Music.Score.Rhythm
+import           Music.Score.Slide
+import           Music.Score.Text
 import           Music.Score.Ties
+import           Music.Score.Tremolo
 import           Music.Score.Util
+import           Music.Time
 
 -- -------------------------------------------------------------------------------------
--- 
+--
 -- instance Semigroup a => Semigroup (DynamicT a) where
 --     DynamicT (d1, x1) <> DynamicT (d2, x2) = DynamicT (d1 <> d2, x1 <> x2)
 instance Semigroup a => Semigroup (SlideT a) where
@@ -272,7 +272,7 @@ deriving instance Augmentable a => Augmentable (ArticulationT n a)
 -- -------------------------------------------------------------------------------------
 -- -- Num, Integral, Enum and Bounded
 -- -------------------------------------------------------------------------------------
--- 
+--
 -- PartT
 
 instance (Enum v, Eq v, Num a) => Num (PartT v a) where
@@ -298,10 +298,10 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
     PartT (v,a) `quotRem` PartT (_,b) = (PartT (v,q), PartT (v,r)) where (q,r) = a `quotRem` b
     toInteger (PartT (v,a)) = toInteger a
 
--- 
+--
 -- TODO suspect instances
 -- We should remove both these after replacing [] by Chord in Preludes
--- 
+--
 instance Enum a => Enum [a] where
     toEnum a       = [toEnum a]
     fromEnum ([a]) = fromEnum a
@@ -310,7 +310,7 @@ instance Bounded a => Bounded [a] where
     minBound = [minBound]
     maxBound = [maxBound]
 
-                                  
+
 
 -- TODO move
 -- TODO derive more of these?

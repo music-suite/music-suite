@@ -41,7 +41,7 @@ module Music.Score.Meta.Barline (
 
 
 import           Control.Arrow
-import           Control.Lens (view)
+import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Default
 import           Data.Foldable             (Foldable)

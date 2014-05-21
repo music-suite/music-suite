@@ -73,8 +73,8 @@ where
 import           Control.Applicative
 import           Control.Lens                   hiding (Level, above, below,
                                                  inside, parts, reversed,
-                                                 rewrite, transform, (<.>),
-                                                 (<|), (|>), simple)
+                                                 rewrite, simple, transform,
+                                                 (<.>), (<|), (|>))
 import           Control.Monad                  hiding (mapM)
 import           Control.Monad.Plus
 import           Data.AffineSpace
@@ -93,11 +93,13 @@ import           Music.Time                     hiding (time)
 
 import           Music.Score.Articulation
 import           Music.Score.Clef
+import           Music.Score.Color
 import           Music.Score.Dynamics
 import           Music.Score.Export.Abc
 import           Music.Score.Export.Lilypond
 import           Music.Score.Export.Midi
 import           Music.Score.Export.MusicXml
+import           Music.Score.Harmonics
 import           Music.Score.Import.Abc
 import           Music.Score.Import.Lilypond
 import           Music.Score.Import.Midi
@@ -113,13 +115,11 @@ import           Music.Score.Meta.RehearsalMark
 import           Music.Score.Meta.Tempo
 import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
-import           Music.Score.Harmonics
-import           Music.Score.Color
-import           Music.Score.Phrases
 import           Music.Score.Part
+import           Music.Score.Phrases
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
+import           Music.Score.Slide
+import           Music.Score.Text
 import           Music.Score.Ties
+import           Music.Score.Tremolo

@@ -1,5 +1,4 @@
 
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -7,8 +6,9 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -38,23 +38,23 @@ module Music.Score.Harmonics (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens hiding (transform)
+import           Control.Lens            hiding (transform)
+import           Data.Foldable
+import           Data.Foldable
 import           Data.Functor.Couple
-import           Data.Foldable
-import           Data.Foldable
 import           Data.Ratio
-import           Data.Word
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Word
 
 -- import           Music.Score.Combinators
-import           Music.Score.Part
-import           Music.Time
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Time
 
 
 -- 0 for none, positive for natural, negative for artificial
@@ -91,8 +91,8 @@ instance Wrapped (HarmonicT a) where
 instance Rewrapped (HarmonicT a) (HarmonicT b)
 
 instance HasHarmonic (HarmonicT a) where
-    setNatural  b = over (_Wrapped'._Wrapped') $ \((_,n),x)   -> ((Any b,n),x)
-    setHarmonic n = over (_Wrapped'._Wrapped') $ \((nat,_),x) -> ((nat,Sum n),x)
+    setNatural  b = over (_Wrapped'._Wrapped') $ \((_,n),x)   -> ((Any b,n),x)
+    setHarmonic n = over (_Wrapped'._Wrapped') $ \((nat,_),x) -> ((nat,Sum n),x)
 
 -- Lifted instances
 deriving instance Num a => Num (HarmonicT a)

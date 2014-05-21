@@ -16,7 +16,7 @@
 module Music.Time (
         -- * Prerequisites
     module Data.Functor.Rep.Lens,
-    
+
     -- * Basic types
     module Music.Time.Types,
 
@@ -44,25 +44,25 @@ module Music.Time (
     module Music.Time.Reactive,
   ) where
 
-import Data.Functor.Rep
-import Data.Functor.Rep.Lens
+import           Data.Functor.Rep
+import           Data.Functor.Rep.Lens
 
-import Music.Time.Types
-import Music.Time.Transform
-import Music.Time.Duration
-import Music.Time.Position
-import Music.Time.Split
-import Music.Time.Reverse
-import Music.Time.Juxtapose
-import Music.Time.Rest
+import           Music.Time.Duration
+import           Music.Time.Juxtapose
+import           Music.Time.Position
+import           Music.Time.Rest
+import           Music.Time.Reverse
+import           Music.Time.Split
+import           Music.Time.Transform
+import           Music.Time.Types
 
-import Music.Time.Stretched
-import Music.Time.Delayed
-import Music.Time.Note
-import Music.Time.Voice
-import Music.Time.Chord
-import Music.Time.Track
-import Music.Time.Score
-import Music.Time.Segment
-import Music.Time.Behavior
-import Music.Time.Reactive
+import           Music.Time.Behavior
+import           Music.Time.Chord
+import           Music.Time.Delayed
+import           Music.Time.Note
+import           Music.Time.Reactive
+import           Music.Time.Score
+import           Music.Time.Segment
+import           Music.Time.Stretched
+import           Music.Time.Track
+import           Music.Time.Voice

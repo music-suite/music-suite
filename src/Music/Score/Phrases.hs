@@ -1,6 +1,6 @@
 
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
@@ -33,32 +33,32 @@ module Music.Score.Phrases (
     HasPhrases',
     phrases,
     phrases',
-    
+
     -- * Phrase types etc
     Phrase,
     MVoice,
     PVoice,
-    
+
     -- ** Utility
     mvoicePVoice,
     unsafeMvoicePVoice,
     singleMVoice,
   ) where
 
-import Data.Maybe
-import Data.Ord
-import qualified Data.List as List
-import Control.Lens
-import Control.Applicative
-import Data.AffineSpace
-import Data.Semigroup
-import Control.Monad.Plus
-import Control.Exception (assert)
+import           Control.Applicative
+import           Control.Exception   (assert)
+import           Control.Lens
+import           Control.Monad.Plus
+import           Data.AffineSpace
+import qualified Data.List           as List
+import           Data.Maybe
+import           Data.Ord
+import           Data.Semigroup
 
-import Music.Score.Part
+import           Music.Score.Part
 -- import Music.Score.Util (tripl, untripl, through)
-import Music.Score.Convert
-import Music.Time
+import           Music.Score.Convert
+import           Music.Time
 
 
 -- |
@@ -117,7 +117,7 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   mvoices = from unsafeMvoicePVoice
 
 -- | Traverses all phrases in each voice, using 'extracted'.
-instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) => 
+instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) =>
   HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
 
@@ -192,9 +192,9 @@ singleMVoice :: {-Transformable a =>-} Prism (Score a) (Score b) (MVoice a) (MVo
 singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: {-Transformable a =>-} Score a -> MVoice a
-    scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . 
+    scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests .
       -- TODO
-      List.sortBy (comparing (^._1)) 
+      List.sortBy (comparing (^._1))
       -- end TODO
       . (^. events)
       where

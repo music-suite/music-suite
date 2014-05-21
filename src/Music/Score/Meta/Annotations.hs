@@ -45,8 +45,8 @@ import           Data.Typeable
 import           Data.Void
 
 import           Music.Score.Meta
-import           Music.Score.Text    (HasText, text)
 import           Music.Score.Part
+import           Music.Score.Text    (HasText, text)
 import           Music.Time
 import           Music.Time.Reactive
 

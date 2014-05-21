@@ -49,8 +49,8 @@ import           Data.Traversable
 import           Data.Typeable
 import           Data.VectorSpace
 
-import           Music.Score.Convert (scoreToVoice, reactiveToVoice')
 import           Music.Score.Articulation
+import           Music.Score.Convert      (reactiveToVoice', scoreToVoice)
 import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
@@ -63,15 +63,15 @@ import qualified Data.List                as List
 import qualified Data.Map                 as Map
 import qualified Music.Lilypond           as Lilypond
 import qualified Music.MusicXml.Simple    as Xml
-import qualified Text.Pretty              as Pretty
 import qualified System.Info              as Info
+import qualified Text.Pretty              as Pretty
 
+import           Control.Exception
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Util
 import           System.IO.Unsafe
 import           System.Process
-import           Control.Exception
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
@@ -123,13 +123,13 @@ openCommand = case Info.os of
 
 {-
 -- TODO any version and/or OS
-hasMuseScore = do 
+hasMuseScore = do
   result <- try (readProcess "ls" ["/Applications/MuseScore.app"] "")
   return $ case result of
     Left e   -> (e::SomeException) `assumed` False
     Right _ ->  True
 
-hasSibelius = do 
+hasSibelius = do
   result <- try (readProcess "ls" ["/Applications/Sibelius 7.app"] "")
   return $ case result of
     Left e   -> (e::SomeException) `assumed` False

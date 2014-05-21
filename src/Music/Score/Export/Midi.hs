@@ -39,8 +39,8 @@ import           Prelude                   hiding (concat, concatMap, foldl,
                                             foldr, mapM, maximum, minimum, sum)
 
 import           Control.Applicative
-import           Control.Comonad
 import           Control.Arrow
+import           Control.Comonad
 import           Control.Lens              hiding ((|>))
 import           Control.Monad             hiding (mapM)
 import           Control.Monad.Plus
@@ -59,7 +59,7 @@ import           Data.Traversable
 import           Data.Typeable
 import           Data.VectorSpace
 
-import Codec.Midi hiding (Track)
+import           Codec.Midi                hiding (Track)
 -- import           Control.Reactive          hiding (Event)
 -- import qualified Control.Reactive          as R
 -- import           Control.Reactive.Midi
@@ -67,17 +67,17 @@ import Codec.Midi hiding (Track)
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
-import           Music.Score.Meta
 import           Music.Score.Dynamics
 import           Music.Score.Export.Common
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
 import           Music.Score.Harmonics
+import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Score.Rhythm
+import           Music.Score.Slide
+import           Music.Score.Text
 import           Music.Score.Ties
+import           Music.Score.Tremolo
 import           Music.Time
 
 import qualified Codec.Midi                as Midi
