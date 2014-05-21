@@ -114,52 +114,6 @@ deriving instance Enum a => Enum (TremoloT a)
 deriving instance Bounded a => Bounded (TremoloT a)
 deriving instance (Num a, Ord a, Real a) => Real (TremoloT a)
 deriving instance (Real a, Enum a, Integral a) => Integral (TremoloT a)
--- instance Num a => Num (TremoloT a) where
---     (+) = liftA2 (+)
---     (*) = liftA2 (*)
---     (-) = liftA2 (-)
---     abs = fmap abs
---     signum = fmap signum
---     fromInteger = pure . fromInteger
--- 
--- instance Fractional a => Fractional (TremoloT a) where
---     recip        = fmap recip
---     fromRational = pure . fromRational
--- 
--- instance Floating a => Floating (TremoloT a) where
---     pi    = pure pi
---     sqrt  = fmap sqrt
---     exp   = fmap exp
---     log   = fmap log
---     sin   = fmap sin
---     cos   = fmap cos
---     asin  = fmap asin
---     atan  = fmap atan
---     acos  = fmap acos
---     sinh  = fmap sinh
---     cosh  = fmap cosh
---     asinh = fmap asinh
---     atanh = fmap atanh
---     acosh = fmap acos
--- 
--- instance Enum a => Enum (TremoloT a) where
---     toEnum = pure . toEnum
---     fromEnum = fromEnum . extract
--- 
--- instance Bounded a => Bounded (TremoloT a) where
---     minBound = pure minBound
---     maxBound = pure maxBound
--- 
--- instance (Num a, Ord a, Real a) => Real (TremoloT a) where
---     toRational = toRational . extract
--- 
--- instance (Real a, Enum a, Integral a) => Integral (TremoloT a) where
---     quot = liftA2 quot
---     rem = liftA2 rem
---     toInteger = toInteger . extract  
-
-
-
 
 
 
@@ -168,7 +122,7 @@ deriving instance (Real a, Enum a, Integral a) => Integral (TremoloT a)
 class HasText a where
     addText :: String -> a -> a
 
-newtype TextT a = TextT { getTextT :: ([String], a) }
+newtype TextT a = TextT { getTextT :: Couple [String] a }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 instance HasText a => HasText (b, a) where
@@ -186,59 +140,23 @@ instance HasText a => HasText (Score a) where
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TextT a) where
-  type Unwrapped (TextT a) = ([String], a)
+  type Unwrapped (TextT a) = Couple [String] a
   _Wrapped' = iso getTextT TextT
 
 instance Rewrapped (TextT a) (TextT b)
 
 instance HasText (TextT a) where
-    addText      s (TextT (t,x))                    = TextT (t ++ [s],x)
+    addText      s (TextT (Couple (t,x)))                    = TextT (Couple (t ++ [s],x))
 
 -- Lifted instances
+deriving instance Num a => Num (TextT a)
+deriving instance Fractional a => Fractional (TextT a)
+deriving instance Floating a => Floating (TextT a)
+deriving instance Enum a => Enum (TextT a)
+deriving instance Bounded a => Bounded (TextT a)
+deriving instance (Num a, Ord a, Real a) => Real (TextT a)
+deriving instance (Real a, Enum a, Integral a) => Integral (TextT a)
 
-instance Num a => Num (TextT a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (TextT a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
-
-instance Floating a => Floating (TextT a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
-
-instance Enum a => Enum (TextT a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
-
-instance Bounded a => Bounded (TextT a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
-
-instance (Num a, Ord a, Real a) => Real (TextT a) where
-    toRational = toRational . extract
-
-instance (Real a, Enum a, Integral a) => Integral (TextT a) where
-    quot = liftA2 quot
-    rem = liftA2 rem
-    toInteger = toInteger . extract
 
 
 

@@ -328,7 +328,7 @@ instance HasBackendNote Midi a => HasBackendNote Midi (TremoloT a) where
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
   -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getTextT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getTextT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
   -- TODO use Comonad.extract
@@ -642,7 +642,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
     --         notate = Lilypond.Tremolo (round repeats)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  exportNote b (LyContext d (Just (TextT (n, x)))) = notate n (exportNote b $ LyContext d (Just x)) -- TODO many
+  exportNote b (LyContext d (Just (TextT (Couple (n, x))))) = notate n (exportNote b $ LyContext d (Just x)) -- TODO many
     where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
 

@@ -33,6 +33,7 @@ import           Control.Comonad
 import           Control.Monad
 import           Control.Lens hiding (transform, part)
 import           Data.AffineSpace
+import           Data.Functor.Couple
 import           Data.Functor.Adjunction (unzipR)
 import           Data.Default
 import           Data.Foldable
@@ -179,7 +180,7 @@ deriving instance HasText a => HasText (TremoloT a)
 -- TextT
 
 instance Tiable a => Tiable (TextT a) where
-    toTied (TextT (n,a))                            = (TextT (n,b), TextT (mempty,c)) where (b,c) = toTied a
+    toTied (TextT (Couple (n,a))) = (TextT (Couple (n,b)), TextT (Couple (mempty,c))) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
 deriving instance HasSlide a => HasSlide (TextT a)
@@ -188,7 +189,7 @@ deriving instance HasSlide a => HasSlide (TextT a)
 -- HarmonicT
 
 instance Tiable a => Tiable (HarmonicT a) where
-    toTied (HarmonicT (n,a))                        = (HarmonicT (n,b), HarmonicT (n,c)) where (b,c) = toTied a
+  toTied = unzipR . fmap toTied
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
 deriving instance HasSlide a => HasSlide (HarmonicT a)
 deriving instance HasText a => HasText (HarmonicT a)
@@ -198,7 +199,7 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 
 instance Tiable a => Tiable (SlideT a) where
-    toTied (SlideT (v,x)) = (SlideT (v,a), SlideT (v,b)) where (a,b) = toTied x
+  toTied = unzipR . fmap toTied
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
 deriving instance HasText a => HasText (SlideT a)

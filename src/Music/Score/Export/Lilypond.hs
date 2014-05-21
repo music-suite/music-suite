@@ -310,7 +310,7 @@ instance HasLilypond a => HasLilypond (TremoloT a) where
             notate = Lilypond.Tremolo (round repeats)
 
 instance HasLilypond a => HasLilypond (TextT a) where
-    getLilypond d (TextT (s,x)) = notate s $ getLilypond d x
+    getLilypond d (TextT (Couple (s,x))) = notate s $ getLilypond d x
         where
             notate ts = foldr (.) id (fmap Lilypond.addText ts)
 

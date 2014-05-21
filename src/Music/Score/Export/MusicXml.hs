@@ -166,7 +166,7 @@ instance HasMusicXml a => HasMusicXml (TremoloT a) where
                 n -> Xml.tremolo (fromIntegral n)
 
 instance HasMusicXml a => HasMusicXml (TextT a) where
-    getMusicXml d (TextT (s,x))                     = notate s $ getMusicXml d x
+    getMusicXml d (TextT (Couple (s,x)))                     = notate s $ getMusicXml d x
         where
             notate ts a = mconcat (fmap Xml.text ts) <> a
 
