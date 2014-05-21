@@ -184,7 +184,7 @@ instance HasMusicXml a => HasMusicXml (HarmonicT a) where
             notateArtificial n = id -- TODO
 
 instance HasMusicXml a => HasMusicXml (SlideT a) where
-    getMusicXml d (SlideT (((eg,es),(bg,bs)),a))    = notate $ getMusicXml d a
+    getMusicXml d (SlideT (Couple (((eg,es),(bg,bs)),a))) = notate $ getMusicXml d a
         where
             notate = neg . nes . nbg . nbs
             neg    = if view _Wrapped' eg then Xml.endGliss else id

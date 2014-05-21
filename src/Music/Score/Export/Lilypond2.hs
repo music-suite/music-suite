@@ -336,7 +336,7 @@ instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
 
 instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
   -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getSlideT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
   -- TODO use Comonad.extract
@@ -650,7 +650,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
   exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
-  exportNote b = exportNote b . fmap (snd . getSlideT)
+  exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
   -- TODO Nothing

@@ -241,21 +241,21 @@ instance HasSlide a => HasSlide (Score a) where
 
 
 -- (eg,es,a,bg,bs)
-newtype SlideT a = SlideT { getSlideT :: (((Any, Any), (Any, Any)), a) }
+newtype SlideT a = SlideT { getSlideT :: Couple ((Any, Any), (Any, Any)) a }
     deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (SlideT a) where
-  type Unwrapped (SlideT a) = (((Any, Any), (Any, Any)), a)
+  type Unwrapped (SlideT a) = Couple ((Any, Any), (Any, Any)) a
   _Wrapped' = iso getSlideT SlideT
 
 instance Rewrapped (SlideT a) (SlideT b)
 
 _bg, _bs, _eg, _es :: Lens' (SlideT a) Any
-_bg = _Wrapped' . _1 . _2 . _1
-_bs = _Wrapped' . _1 . _2 . _2
-_eg = _Wrapped' . _1 . _1 . _1
-_es = _Wrapped' . _1 . _1 . _2
+_bg = (_Wrapped'._Wrapped') . _1 . _2 . _1
+_bs = (_Wrapped'._Wrapped') . _1 . _2 . _2
+_eg = (_Wrapped'._Wrapped') . _1 . _1 . _1
+_es = (_Wrapped'._Wrapped') . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
     setBeginGliss x = _bg .~ Any x
@@ -264,50 +264,13 @@ instance HasSlide (SlideT a) where
     setEndSlide   x = _es .~ Any x
 
 -- Lifted instances
-
-instance Num a => Num (SlideT a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
-
-instance Fractional a => Fractional (SlideT a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
-
-instance Floating a => Floating (SlideT a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
-
-instance Enum a => Enum (SlideT a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
-
-instance Bounded a => Bounded (SlideT a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
-
-instance (Num a, Ord a, Real a) => Real (SlideT a) where
-    toRational = toRational . extract
-
-instance (Real a, Enum a, Integral a) => Integral (SlideT a) where
-    quot = liftA2 quot
-    rem = liftA2 rem
-    toInteger = toInteger . extract
+deriving instance Num a => Num (SlideT a)
+deriving instance Fractional a => Fractional (SlideT a)
+deriving instance Floating a => Floating (SlideT a)
+deriving instance Enum a => Enum (SlideT a)
+deriving instance Bounded a => Bounded (SlideT a)
+deriving instance (Num a, Ord a, Real a) => Real (SlideT a)
+deriving instance (Real a, Enum a, Integral a) => Integral (SlideT a)
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.
