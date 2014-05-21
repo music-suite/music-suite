@@ -150,9 +150,23 @@ instance Transformable a => Transformable (Sum a) where
 instance Transformable a => Transformable (Product a) where
   transform s = fmap (transform s)
 
+-- | 
+-- Apply the inverse of the given transformation.
+--
+-- @
+-- 'itransform' s = 'transform' ('negateV' s)
+-- @
+--
 itransform :: Transformable a => Span -> a -> a
 itransform s = transform (negateV s)
 
+-- | 
+-- View the given value in the context of the given transformation.
+--
+-- @
+-- 'over' ('transformed' s) = (``whilst`` s)
+-- @
+--
 transformed :: Transformable a => Span -> Iso' a a
 transformed s = iso (transform s) (itransform s)
 

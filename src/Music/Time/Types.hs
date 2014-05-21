@@ -406,17 +406,20 @@ inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
 -- |
--- Whether the given
+-- Whether the first given span encloses the second span.
 --
 encloses :: Span -> Span -> Bool
 a `encloses` b = startTime b `inside` a && stopTime b `inside` a
 
 -- |
--- Whether the given
+-- Whether the given span overlaps.
 --
 overlaps :: Span -> Span -> Bool
 a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
+-- | 
+-- Whether the first given span occurs before the second span.
+--
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (startTime a `max` stopTime a) <= (startTime b `min` stopTime b)
 
