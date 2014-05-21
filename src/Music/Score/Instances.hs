@@ -270,85 +270,7 @@ instance Bounded a => Bounded [a] where
     minBound = [minBound]
     maxBound = [maxBound]
 
-
-
-
--- TODO replace with (^?!), extract or similar
-get1 = head . toList
-
-fmaps :: Functor f => (a -> (b, c)) -> f a -> (f b, f c)
-fmaps f x = ((fst . f) <$> x, (snd . f) <$> x)
-
-liftsA2 :: Applicative f => (a -> b -> (c, d)) -> f a -> f b -> (f a, f b)
-liftsA2 f x y = (fst <$> ((,) <$> x <*> y), snd <$> ((,) <$> x <*> y))
-
-
-
-
--- 
--- 
--- -- DynamicT
--- 
--- -- end cresc/dim, level, begin cresc/dim
--- -- newtype DynamicT a = DynamicT { getDynamicT :: (Bool, Bool, Maybe Double, a, Bool, Bool) }
--- 
--- instance Tiable a => Tiable (DynamicT a) where
---     toTied (DynamicT (l, a)) = (DynamicT (l, b), DynamicT (mempty, c)) where (b,c) = toTied a
--- 
--- deriving instance HasTremolo a => HasTremolo (DynamicT a)
--- deriving instance HasHarmonic a => HasHarmonic (DynamicT a)
--- deriving instance HasSlide a => HasSlide (DynamicT a)
--- deriving instance HasText a => HasText (DynamicT a)
--- 
--- 
--- -- ArticulationT
--- 
--- -- end slur, cont slur, acc level, stacc level, begin slur
--- -- newtype ArticulationT a = ArticulationT { getArticulationT :: (Bool, Bool, Int, Int, a, Bool) }
--- 
--- 
--- instance Tiable a => Tiable (ArticulationT a) where
---     toTied (ArticulationT (v,a)) = (ArticulationT (v,b), ArticulationT (v,c)) where (b,c) = toTied a
--- 
--- deriving instance HasTremolo a => HasTremolo (ArticulationT a)
--- deriving instance HasHarmonic a => HasHarmonic (ArticulationT a)
--- deriving instance HasSlide a => HasSlide (ArticulationT a)
--- deriving instance HasText a => HasText (ArticulationT a)
--- 
--- -- TremoloT
--- 
-
--- instance IsPitch a => IsPitch (DynamicT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (DynamicT a) where
---     fromDynamics = return . fromDynamics
--- 
--- instance IsPitch a => IsPitch (ArticulationT a) where
---     fromPitch = pure . fromPitch
--- instance IsDynamics a => IsDynamics (ArticulationT a) where
---     fromDynamics = return . fromDynamics
--- 
--- instance Transformable a => Transformable (DynamicT a) where
---     transform s = fmap (transform s)
--- instance Transformable a => Transformable (ArticulationT a) where
---     transform s = fmap (transform s)
---
--- instance Reversible a => Reversible (DynamicT a) where
---     rev = fmap rev
--- instance Reversible a => Reversible (ArticulationT a) where
---     rev = fmap rev
-
--- instance Alterable a => Alterable (ArticulationT a) where
---     sharpen = fmap sharpen
---     flatten = fmap flatten
--- 
--- instance Augmentable a => Augmentable (DynamicT a) where
---     augment = fmap augment
---     diminish = fmap diminish
--- 
--- instance Augmentable a => Augmentable (ArticulationT a) where
---     augment = fmap augment
---     diminish = fmap diminish
+                                  
 
 -- TODO move
 -- TODO derive more of these?
@@ -369,13 +291,6 @@ instance Fractional a => Fractional (Product a) where
 instance Real a => Real (Product a) where
   toRational (Product x) = toRational x
 
-
-
-
--- type instance Part (DynamicT d a) = Part a
--- type instance SetPart b (DynamicT d a) = DynamicT d (SetPart b a)
--- deriving instance HasParts a b => HasParts (DynamicT d a) (DynamicT d b) 
--- deriving instance HasPart a b => HasPart (DynamicT d a) (DynamicT d b) 
 
 
 -- TODO use wrapper type and replace withContext
