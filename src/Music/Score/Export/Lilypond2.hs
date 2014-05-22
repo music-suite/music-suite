@@ -421,7 +421,7 @@ instance HasBackend Ly where
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
-    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map scatRhythm)
+    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map rhythmToLilypond)
     . fmap (fmap getLyBar)
     -- [[Bar]] 
     . fmap (getLyStaff)
@@ -459,7 +459,7 @@ exportPart p = id
   . over dynamics dynamicDisplay
 
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper bar length-}
+exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-FIXME get proper bar length-}
   where                      
     exportBar :: Tiable a => MVoice a -> LyBar (LyContext a)
     exportBar = LyBar . toRhythm
@@ -469,54 +469,30 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-TODO get proper ba
     splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
 
 
-
--- -- |
--- -- Convert a voice score to a list of bars.
--- --
--- voiceToLilypond :: () => [Maybe TimeSignature] -> [Duration] -> Voice (Maybe a) -> [Lilypond]
--- voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . fmap barToLilypond . voiceToBars' barDurations
--- --
--- -- This is where notation of a single voice takes place
--- --      * voiceToBars is generic for most notations outputs: it handles bar splitting and ties
--- --      * barToLilypond is specific: it handles quantization and notation
--- --
---     where
---         -- TODO compounds
---         setBarTimeSig Nothing x = x
---         setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLy [Lilypond.Time m n, x]
-
-
--- TODO remove
-rhythmList :: Iso' (Rhythm a) [a]
-rhythmList = iso ( map (\(Beat _ x) -> x) . (\(Group x) -> x)) (Group . fmap (Beat 1))
-
--- XXX What about chords, rests and durations?
-scatRhythm :: Rhythm Lilypond -> Lilypond
-scatRhythm = scatLy . view rhythmList
--- scatRhythm = rhythmToLilypond . fmap Just
-
 toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
-toRhythm = view (from rhythmList) . map (uncurry LyContext) . view unsafeEventsV
--- toRhythm = fmap (LyContext 1) . rewrite . (\(Right x) -> x) . quantize . view unsafeEventsV
+toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
+  where
+    -- FIXME handle quantization errors
+    fromRight (Right x) = x
 
-rhythmToLilypond :: (a ~ LyMusic) => Rhythm (Maybe a) -> Lilypond
-rhythmToLilypond (Beat d x)            = noteRestToLilypond d x
-rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond (dotMod n * d) x
+    mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
+    mapWithDur f = go
+      where
+        go (Beat d x)            = Beat d (f d x)
+        go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+        go (Group rs)            = Group $ fmap (mapWithDur f) rs
+        go (Tuplet m r)          = Tuplet m (mapWithDur f r)
+
+rhythmToLilypond :: Rhythm LyMusic -> Lilypond
+rhythmToLilypond (Beat d x)            = noteRestToLilypond x
+rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond x
 rhythmToLilypond (Group rs)            = scatLy $ map rhythmToLilypond rs
 rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
-    where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+  where 
+    (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-noteRestToLilypond :: (a ~ LyMusic) => Duration -> Maybe a -> Lilypond
-noteRestToLilypond d Nothing  = Lilypond.rest^*(realToFrac d*4)
-noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ toLy d p  
-  where
-    toLy :: Duration -> LyMusic -> LyMusic
-    toLy = error "FIXME"
-
-
-
-
-
+noteRestToLilypond :: LyMusic -> Lilypond
+noteRestToLilypond = Lilypond.removeSingleChords
 
 
 
@@ -526,7 +502,6 @@ noteRestToLilypond d (Just p) = Lilypond.removeSingleChords $ toLy d p
 addStaff :: LyMusic -> LyMusic
 addStaff = Lilypond.New "Staff" Nothing
 
--- TODO
 addClef :: () -> LyMusic -> LyMusic
 addClef () x = Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
 
@@ -538,12 +513,7 @@ addPartName partName xs = longName : shortName : xs
 
 
 
-  
--- foo = undefined
--- foo :: Score (DynamicT (Ctxt Double) ())
--- foo' = over dynamics dynamicDisplay foo
-
--- TODO move
+  -- TODO move
 deriving instance Num a => Num (Sum a)
 deriving instance Real a => Real (Sum a)
 
@@ -551,9 +521,11 @@ instance HasBackendNote Ly a => HasBackendNote Ly [a] where
   exportNote b = exportChord b
 
 instance HasBackendNote Ly Integer where
-  -- TODO rest
-  exportNote _ (LyContext d (Just x))    = (^*realToFrac (d*4)) . Lilypond.note  . spellLy $ x
-  exportChord _ (LyContext d (Just xs))  = (^*realToFrac (d*4)) . Lilypond.chord . fmap spellLy $ xs
+  -- TODO can we get rid of exportChord alltogether and just use LyContext?
+  exportNote  _ (LyContext d Nothing)    = (^*realToFrac (4*d)) $ Lilypond.rest
+  exportNote  _ (LyContext d (Just x))   = (^*realToFrac (4*d)) $ Lilypond.note $ spellLy $ x
+  exportChord _ (LyContext d Nothing)    = (^*realToFrac (4*d)) $ Lilypond.rest
+  exportChord _ (LyContext d (Just xs))  = (^*realToFrac (4*d)) $ Lilypond.chord $ fmap spellLy $ xs
 
 instance HasBackendNote Ly Int where 
   exportNote b = exportNote b . fmap toInteger
@@ -585,30 +557,31 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
-  -- TODO Nothing
-  exportNote b (LyContext d (Just (DynamicT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x) -- TODO many
+  -- FIXME handle Nothing
+  exportNote b (LyContext d (Just (DynamicT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x)
     where
       notate dynNot x = notateDD dynNot x
 
-notateDD :: DynamicNotation -> Lilypond -> Lilypond
-notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
-  where
-    -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
-    rcomposed = composed . reverse         
-    notateCrescDim x = case x of
-      NoCrescDim -> id
-      BeginCresc -> Lilypond.beginCresc
-      EndCresc   -> Lilypond.endCresc
-      BeginDim   -> Lilypond.beginDim
-      EndDim     -> Lilypond.endDim
+      notateDD :: DynamicNotation -> Lilypond -> Lilypond
+      notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
+        where
+          -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
+          rcomposed = composed . reverse         
+          notateCrescDim x = case x of
+            NoCrescDim -> id
+            BeginCresc -> Lilypond.beginCresc
+            EndCresc   -> Lilypond.endCresc
+            BeginDim   -> Lilypond.beginDim
+            EndDim     -> Lilypond.endDim
     
-    -- TODO these literals are not so nice...
-    notateLevel = case showLevel of
-       Nothing -> id
-       Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+          -- TODO these literals are not so nice...
+          notateLevel = case showLevel of
+             Nothing -> id
+             Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
-  exportNote b (LyContext d (Just (ColorT (col, x)))) = notate col $ exportNote b $ LyContext d (Just x) -- TODO many
+  -- FIXME handle Nothing
+  exportNote b (LyContext d (Just (ColorT (col, x)))) = notate col $ exportNote b $ LyContext d (Just x)
     where
       notate (Option Nothing)             = id
       notate (Option (Just (Last color))) = \x -> Lilypond.Sequential [
@@ -617,32 +590,47 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
         x,
         Lilypond.Revert "NoteHead#' color"
         ]
-
+      
       -- TODO handle any color
       colorName c
         | c == Color.black = "black"
         | c == Color.red   = "red"
         | c == Color.blue  = "blue"
-        | otherwise        = error "Unkown color"
-
+        | otherwise        = error "Unkown color"  
 
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
-  exportNote b (LyContext d (Just (TremoloT (Couple (n, x))))) = exportNote b $ LyContext d (Just x) -- TODO many
-    -- where
-    -- getL d (TremoloT (Max 0, x)) = exportNote b (LyContext d [x])
-    -- getL d (TremoloT (Max n, x)) = notate $ getLilypond newDur x
-    --     where
-    --         scale   = 2^n
-    --         newDur  = (d `min` (1/4)) / scale
-    --         repeats = d / newDur
-    --         notate = Lilypond.Tremolo (round repeats)
+  -- FIXME handle Nothing
+  exportNote b = \(LyContext d (Just (TremoloT (Couple (Max n, x))))) ->
+    (fst $ notate n d) $ exportNote b $ LyContext (snd $ notate n d) (Just x)
+    where                                    
+      -- newDur = d
+      -- notate = id
+      notate n d = (Lilypond.Tremolo (round $ repeats), newDur)
+        where
+          scale   = 2^n
+          newDur  = (d `min` (1/4)) / scale
+          repeats = d / newDur
+
+fox
+  :: (n -> Duration -> (music -> music, Duration))
+     -> (b -> (n, a))
+     -> t
+     -> (LyContext a -> music)
+     -> LyContext b -> music
+fox notate unwr exportNote b = \(LyContext d (Just ((unwr -> (n, x))))) ->
+            (fst $ notate n d) $ b $ LyContext (snd $ notate n d) (Just x)
+
+
+eith :: Iso' (a -> c, b -> c) (Either a b -> c)
+eith = iso (uncurry either) (\f -> (f . Left, f . Right))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  exportNote b (LyContext d (Just (TextT (Couple (n, x))))) = notate n (exportNote b $ LyContext d (Just x)) -- TODO many
+  -- FIXME handle Nothing
+  exportNote b (LyContext d (Just (TextT (Couple (n, x))))) = notate n (exportNote b $ LyContext d (Just x))
     where
       notate ts = foldr (.) id (fmap Lilypond.addText ts)
 
@@ -653,8 +641,8 @@ instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
   exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
-  -- TODO Nothing
-  exportNote b (LyContext d (Just (TieT ((Any ta, Any tb), x)))) = notate (exportNote b $ LyContext d (Just x)) -- TODO many
+  -- FIXME handle Nothing
+  exportNote b (LyContext d (Just (TieT ((Any ta, Any tb), x)))) = notate (exportNote b $ LyContext d (Just x))
         where
             notate | ta && tb                      = id . Lilypond.beginTie
                    | tb                            = Lilypond.beginTie
@@ -683,18 +671,24 @@ main = do
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ times 2 (scat [
+  $ timesPadding 2 0 (scat [
     setColor Color.blue $ level _f $ c<>d,
     cs,
-    setColor Color.red $ level _f ds,
+    level _f ds,
     level ff fs,
     level _f a_,
     level pp gs_,
-    d,
-    e
-    ::Score MyNote])^*(2.75)
+    tremolo 2 d,
+    tremolo 3 e
+    ::Score MyNote])^*(1+4/5)
 
-type MyNote = (PartT Int (TieT (ColorT (ArticulationT () (DynamicT (OptAvg Double) [Double])))))
+timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
+
+type MyNote = (PartT Int (TieT (ColorT (TremoloT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))))
+
+-- TODO move
+deriving instance HasTremolo a => HasTremolo (ColorT a)
+
 open :: Score MyNote -> IO ()
 open = openLilypond . addDynCon . simultaneous
 
@@ -804,7 +798,7 @@ instance Transformable DynamicNotation where
   transform _ = id
 instance Tiable DynamicNotation where
   toTied (DynamicNotation (beginEnd, marks)) = (DynamicNotation (beginEnd, marks), DynamicNotation (mempty, Nothing))
-  -- TODO important!
+  -- Note: important!
 
 fixLevel :: Double -> Double
 fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
@@ -814,9 +808,6 @@ data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
 instance Monoid CrescDim where
   mempty = NoCrescDim
   mappend a _ = a
-
--- TODO use any
--- type ShowDyn = Bool
 
 mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
 mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
