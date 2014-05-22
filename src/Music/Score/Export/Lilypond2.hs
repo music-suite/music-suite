@@ -549,6 +549,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (Product a) where
 instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
   exportNote b = exportNote b . fmap extract
+  exportChord b = exportChord b . fmap (fmap extract)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
   exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap extract nx)
@@ -614,19 +615,6 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
         newDur  = (d `min` (1/4)) / scale
         repeats = d / newDur
         in (Lilypond.Tremolo (round $ repeats), newDur)
-
-fox
-  :: (n -> Duration -> (music -> music, Duration))
-     -> (b -> (n, a))
-     -> t
-     -> (LyContext a -> music)
-     -> LyContext b -> music
-fox notate unwr exportNote b = \(LyContext d (Just ((unwr -> (n, x))))) ->
-            (fst $ notate n d) $ b $ LyContext (snd $ notate n d) (Just x)
-
-
-eith :: Iso' (a -> c, b -> c) (Either a b -> c)
-eith = iso (uncurry either) (\f -> (f . Left, f . Right))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
   exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap extract nx))
