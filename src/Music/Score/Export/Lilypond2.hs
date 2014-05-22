@@ -1,5 +1,6 @@
 
 
+{-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DefaultSignatures          #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -78,6 +79,8 @@ deriving instance Comonad ColorT
 
 -- TODO move
 deriving instance HasTremolo a => HasTremolo (ColorT a)
+deriving instance HasHarmonic a => HasHarmonic (ColorT a)
+deriving instance HasSlide a => HasSlide (ColorT a)
 
 
 {-
@@ -572,7 +575,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) w
              Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
-  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap extract nx)
+  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
     where
       notate Nothing = id
       notate (Just (ColorT (col, x))) = notate' col
@@ -597,8 +600,8 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
-  exportNote b = \(LyContext d nx) ->
-    (fst $ notate nx d) $ exportNote b $ LyContext (snd $ notate nx d) (fmap extract nx)
+  exportNote b = \(LyContext d x) ->
+    (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
     where
       -- newDur = d
       -- notate = id
@@ -611,26 +614,45 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
         in (Lilypond.Tremolo (round $ repeats), newDur)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap extract nx))
+  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
     where
       notate (Just (TextT (Couple (ts, _)))) = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
-  exportNote b = exportNote b . fmap extract
+  -- exportNote b = exportNote b . fmap extract
+  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+    where
+      notate Nothing = id
+      notate (Just (HarmonicT (Couple ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)))) = notate' isNat n
+
+      notate' _     0 = id
+      notate' True  n = notateNatural n
+      notate' False n = notateArtificial n
+
+      notateNatural n = Lilypond.addFlageolet -- addOpen?
+
+      notateArtificial n = id -- TODO
+      
 
 instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
-  exportNote b = exportNote b . fmap extract
+  -- exportNote b = exportNote b . fmap extract
+  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+    where
+      notate Nothing = id
+      notate (Just (SlideT (Couple (((eg,es),(bg,bs)),a)))) =
+        if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
+      
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
-  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap extract nx))
-        where
-            notate Nothing = id
-            notate (Just (TieT ((Any ta, Any tb),_))) = notate' ta tb
-            notate' ta tb
-              | ta && tb                      = id . Lilypond.beginTie
-              | tb                            = Lilypond.beginTie
-              | ta                            = id
-              | otherwise                     = Lilypond.beginTie
+  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+    where
+      notate Nothing = id
+      notate (Just (TieT ((Any ta, Any tb),_))) = notate' ta tb
+      notate' ta tb
+        | ta && tb                      = id . Lilypond.beginTie
+        | tb                            = Lilypond.beginTie
+        | ta                            = id
+        | otherwise                     = Lilypond.beginTie
 
 -- type Lilypond = Lilypond.Music
 toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> String
@@ -658,7 +680,7 @@ music = (addDynCon.simultaneous)
   --  $ text "Hello"
   $ compress 1 $ sj </> sj^*2 </> sj^*4
   where
-    sj = timesPadding 2 1 (scat [
+    sj = timesPadding 2 1 $ harmonic 1 (scat [
       setColor Color.blue $ level _f $ c<>d,
       cs,
       level _f ds,
@@ -671,8 +693,7 @@ music = (addDynCon.simultaneous)
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
-type MyNote = (PartT Int (TieT (ColorT (TremoloT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))))
-
+type MyNote = (PartT Int (TieT (ColorT (TremoloT (HarmonicT (SlideT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))))))
 
 
 
