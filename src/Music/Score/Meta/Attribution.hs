@@ -22,6 +22,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides meta-data attribution for composer, lyricist etc.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Attribution (

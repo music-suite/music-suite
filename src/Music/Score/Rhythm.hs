@@ -16,6 +16,14 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides rhythmical quantization.
+--
+-- You generally need not worry about this module, as quantization is handled
+-- automatically by 'HasBackendScore' instances.
+--
+-- /Warning/ This modules is poorly named and will probably be split or moved
+-- soon.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Rhythm (

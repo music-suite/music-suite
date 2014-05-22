@@ -22,8 +22,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides functions for manipulating ornaments (and miscellaneous stuff to be
--- given its own module soon...).
+-- Provides a way of adding text to notes.
 --
 -------------------------------------------------------------------------------------
 

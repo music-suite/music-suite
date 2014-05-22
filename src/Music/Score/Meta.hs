@@ -24,6 +24,8 @@
 --
 -- Combinators for manipulating scores and related structures.
 --
+-- /Warning/ This module is experimental.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta (

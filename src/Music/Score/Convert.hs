@@ -20,10 +20,11 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides conversion betwen temporal container types.
+-- Provides conversion betwen temporal container.
+--
+-- /Warning/ This module will be removed soon.
 --
 -------------------------------------------------------------------------------------
-
 
 module Music.Score.Convert (
         voiceToScore,

@@ -22,6 +22,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides fermatas.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Fermata (

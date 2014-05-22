@@ -22,6 +22,10 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides special barlines as meta-data.
+--
+-- (Ordinary barlines are generated automatically, see also "Music.Score.Meta.Time").
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Barline (

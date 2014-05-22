@@ -25,6 +25,8 @@
 --
 -- This module provides phrase-wise traversal.
 --
+-- /Warning/ This module is experimental.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Phrases (

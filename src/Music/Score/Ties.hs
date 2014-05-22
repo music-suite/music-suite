@@ -21,7 +21,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a representation for tied notes, and a way to split a single note
+-- Provides a representation for tied notes, and a class to split a single note
 -- into a pair of tied notes.
 --
 -------------------------------------------------------------------------------------

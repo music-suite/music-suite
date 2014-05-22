@@ -30,8 +30,9 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides colored note heads.
+--
 -------------------------------------------------------------------------------------
-
 
 module Music.Score.Color (
         -- ** HasColor class

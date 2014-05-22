@@ -22,10 +22,9 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides annotations
+-- Provides a basic way annotating scores.
 --
 -------------------------------------------------------------------------------------
-
 
 module Music.Score.Meta.Annotations (
         Annotation,

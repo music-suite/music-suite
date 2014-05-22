@@ -23,6 +23,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides key signature meta-data.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Key (

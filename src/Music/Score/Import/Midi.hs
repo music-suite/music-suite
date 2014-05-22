@@ -5,6 +5,21 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Provides MIDI import.
+--
+-- /Warning/ Experimental module.
+--
+-------------------------------------------------------------------------------------
 module Music.Score.Import.Midi (
         IsMidi(..),
         fromMidi,

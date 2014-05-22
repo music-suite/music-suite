@@ -23,6 +23,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides time signatures and related meta-data.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Time (

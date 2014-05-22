@@ -27,8 +27,6 @@
 --
 -- Behaviors, or time-varying values.
 --
--- TODO integrate better in the library
---
 -------------------------------------------------------------------------------------
 
 module Music.Time.Behavior (

@@ -22,6 +22,10 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides tempo meta-data.
+--
+-- /Warning/ This is not supported by any backends yet.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.RehearsalMark (

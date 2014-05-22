@@ -22,6 +22,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides various forms of title, subtitle etc. and related meta-data.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Title (

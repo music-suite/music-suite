@@ -25,6 +25,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- /Warning/ This module is experimental.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Time.Chord (

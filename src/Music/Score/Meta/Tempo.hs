@@ -23,6 +23,8 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides tempo meta-data.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Tempo (

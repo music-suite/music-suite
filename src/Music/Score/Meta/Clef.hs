@@ -22,6 +22,10 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
+-- Provides clefs as meta-data.
+--
+-- /Warning/ Experimental module.
+--
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta.Clef (

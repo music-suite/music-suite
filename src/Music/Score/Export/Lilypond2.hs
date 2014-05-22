@@ -678,7 +678,7 @@ main = do
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ compress 1 $ sj </> sj^*2 </> sj^*4
+  $ compress 1 $ sj -- </> sj^*2 </> sj^*4
   where
     sj = timesPadding 2 1 $ harmonic 1 (scat [
       setColor Color.blue $ level _f $ c<>d,
@@ -689,7 +689,7 @@ music = (addDynCon.simultaneous)
       level pp gs_,
       tremolo 2 d,
       tremolo 3 e
-      ::Score MyNote])^*(1+4/10)
+      ::Score MyNote])^*(1+1/13)
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
