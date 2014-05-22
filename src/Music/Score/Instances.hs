@@ -183,7 +183,7 @@ deriving instance HasText a => HasText (TremoloT a)
 -- TextT
 
 instance Tiable a => Tiable (TextT a) where
-    toTied (TextT (Couple (n,a))) = (TextT (Couple (n,b)), TextT (Couple (mempty,c))) where (b,c) = toTied a
+  toTied (TextT (Couple (n,a))) = (TextT (Couple (n,b)), TextT (Couple (mempty,c))) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
 deriving instance HasSlide a => HasSlide (TextT a)
@@ -192,7 +192,8 @@ deriving instance HasSlide a => HasSlide (TextT a)
 -- HarmonicT
 
 instance Tiable a => Tiable (HarmonicT a) where
-  toTied = unzipR . fmap toTied
+  -- toTied = unzipR . fmap toTied
+  toTied (HarmonicT (Couple (n,a))) = (HarmonicT (Couple (n,b)), HarmonicT (Couple (mempty,c))) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
 deriving instance HasSlide a => HasSlide (HarmonicT a)
 deriving instance HasText a => HasText (HarmonicT a)
