@@ -82,6 +82,28 @@ deriving instance HasTremolo a => HasTremolo (ColorT a)
 deriving instance HasHarmonic a => HasHarmonic (ColorT a)
 deriving instance HasSlide a => HasSlide (ColorT a)
 
+deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
+instance VectorSpace a => VectorSpace (Sum a) where
+  type Scalar (Sum a) = Scalar a
+  s *^ Sum v = Sum (s *^ v)
+instance AffineSpace a => AffineSpace (Sum a) where
+  type Diff (Sum a) = Sum (Diff a)
+  Sum p .-. Sum q = Sum (p .-. q)
+  Sum p .+^ Sum v = Sum (p .+^ v)
+
+instance IsDynamics a => IsDynamics (Sum a) where
+  fromDynamics = Sum . fromDynamics
+instance HasPitches a b => HasPitches (Sum a) (Sum b) where
+  pitches = _Wrapped . pitches
+instance IsPitch a => IsPitch (Sum a) where
+  fromPitch = Sum . fromPitch
+type instance Pitch (Sum a) = Pitch a
+type instance SetPitch b (Sum a) = Sum (SetPitch b a)
+
+
+
+
+
 
 {-
   Assume that Music is a type function that returns the underlying music
@@ -713,33 +735,6 @@ instance AffineSpace a => AffineSpace (OptAvg a) where
   type Diff (OptAvg a) = OptAvg (Diff a)
   OptAvg p .-. OptAvg q = OptAvg (p .-. q)
   OptAvg p .+^ OptAvg v = OptAvg (p .+^ v)
-
-
-
-
-
-
-
-
-deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
-instance VectorSpace a => VectorSpace (Sum a) where
-  type Scalar (Sum a) = Scalar a
-  s *^ Sum v = Sum (s *^ v)
-instance AffineSpace a => AffineSpace (Sum a) where
-  type Diff (Sum a) = Sum (Diff a)
-  Sum p .-. Sum q = Sum (p .-. q)
-  Sum p .+^ Sum v = Sum (p .+^ v)
-
-instance IsDynamics a => IsDynamics (Sum a) where
-  fromDynamics = Sum . fromDynamics
-instance HasPitches a b => HasPitches (Sum a) (Sum b) where
-  pitches = _Wrapped . pitches
-instance IsPitch a => IsPitch (Sum a) where
-  fromPitch = Sum . fromPitch
-type instance Pitch (Sum a) = Pitch a
-type instance SetPitch b (Sum a) = Sum (SetPitch b a)
-
-
 
 
 -- Or use type (NonEmpty a -> a)
