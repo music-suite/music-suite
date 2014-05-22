@@ -495,11 +495,6 @@ rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmTo
 noteRestToLilypond :: LyMusic -> Lilypond
 noteRestToLilypond = Lilypond.removeSingleChords
 
-fib 0 = 0
-fib 1 = 1
-fib n = fib (n-1) + fib (n-2)
-
-
 
     
 -- Get notes, assume no rests, assume duration 1, put each note in single bar
