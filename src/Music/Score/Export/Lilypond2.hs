@@ -552,11 +552,11 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportChord b = exportChord b . fmap (fmap extract)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
-  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap extract nx)
+  exportNote b (LyContext d x) = notate (fmap (^.dynamic) x) $ exportNote b $ LyContext d (fmap extract x)
     where
       notate Nothing = id
-      notate (Just (DynamicT (n, _))) = notateDD n
-
+      notate (Just (n)) = notateDD n
+      
       notateDD :: DynamicNotation -> Lilypond -> Lilypond
       notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
         where
