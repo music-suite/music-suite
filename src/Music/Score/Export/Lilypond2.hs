@@ -473,6 +473,7 @@ toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
 toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
   where
     -- FIXME handle quantization errors
+    fromRight (Left e)  = error $ "Quantization failed: " ++ e 
     fromRight (Right x) = x
 
     mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
@@ -493,6 +494,10 @@ rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmTo
 
 noteRestToLilypond :: LyMusic -> Lilypond
 noteRestToLilypond = Lilypond.removeSingleChords
+
+fib 0 = 0
+fib 1 = 1
+fib n = fib (n-1) + fib (n-2)
 
 
 
@@ -557,10 +562,10 @@ instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   exportNote b = exportNote b . fmap (snd . getPartT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
-  -- FIXME handle Nothing
-  exportNote b (LyContext d (Just (DynamicT (n, x)))) = notate n $ exportNote b $ LyContext d (Just x)
+  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap (snd . getDynamicT) nx)
     where
-      notate dynNot x = notateDD dynNot x
+      notate Nothing = id
+      notate (Just (DynamicT (n, _))) = notateDD n
 
       notateDD :: DynamicNotation -> Lilypond -> Lilypond
       notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
@@ -580,11 +585,13 @@ instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) w
              Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
-  -- FIXME handle Nothing
-  exportNote b (LyContext d (Just (ColorT (col, x)))) = notate col $ exportNote b $ LyContext d (Just x)
+  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap (snd . getColorT) nx)
     where
-      notate (Option Nothing)             = id
-      notate (Option (Just (Last color))) = \x -> Lilypond.Sequential [
+      notate Nothing = id
+      notate (Just (ColorT (col, x))) = notate' col
+      
+      notate' (Option Nothing)             = id
+      notate' (Option (Just (Last color))) = \x -> Lilypond.Sequential [
       -- TODO this syntax will probably change in future Lilypond versions!
         Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ colorName color),
         x,
@@ -603,17 +610,18 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
   exportNote b = exportNote b . fmap (snd . getArticulationT)
   
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
-  -- FIXME handle Nothing
-  exportNote b = \(LyContext d (Just (TremoloT (Couple (Max n, x))))) ->
-    (fst $ notate n d) $ exportNote b $ LyContext (snd $ notate n d) (Just x)
+  exportNote b = \(LyContext d nx) ->
+    (fst $ notate nx d) $ exportNote b $ LyContext (snd $ notate nx d) (fmap (snd . getCouple . getTremoloT) nx)
     where                                    
       -- newDur = d
       -- notate = id
-      notate n d = (Lilypond.Tremolo (round $ repeats), newDur)
-        where
-          scale   = 2^n
-          newDur  = (d `min` (1/4)) / scale
-          repeats = d / newDur
+      notate Nothing d = (id, d)
+      notate (Just n') d = let 
+        n = getMax . fst . getCouple . getTremoloT $ n' 
+        scale   = 2^n
+        newDur  = (d `min` (1/4)) / scale
+        repeats = d / newDur
+        in (Lilypond.Tremolo (round $ repeats), newDur)
 
 fox
   :: (n -> Duration -> (music -> music, Duration))
@@ -629,10 +637,9 @@ eith :: Iso' (a -> c, b -> c) (Either a b -> c)
 eith = iso (uncurry either) (\f -> (f . Left, f . Right))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  -- FIXME handle Nothing
-  exportNote b (LyContext d (Just (TextT (Couple (n, x))))) = notate n (exportNote b $ LyContext d (Just x))
+  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap (snd . getCouple . getTextT) nx))
     where
-      notate ts = foldr (.) id (fmap Lilypond.addText ts)
+      notate (Just (TextT (Couple (ts, _)))) = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
   exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
@@ -641,13 +648,15 @@ instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
   exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
-  -- FIXME handle Nothing
-  exportNote b (LyContext d (Just (TieT ((Any ta, Any tb), x)))) = notate (exportNote b $ LyContext d (Just x))
-        where
-            notate | ta && tb                      = id . Lilypond.beginTie
-                   | tb                            = Lilypond.beginTie
-                   | ta                            = id
-                   | otherwise                     = Lilypond.beginTie
+  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap (snd . getTieT) nx))
+        where       
+            notate Nothing = id
+            notate (Just (TieT ((Any ta, Any tb),_))) = notate' ta tb
+            notate' ta tb 
+              | ta && tb                      = id . Lilypond.beginTie
+              | tb                            = Lilypond.beginTie
+              | ta                            = id
+              | otherwise                     = Lilypond.beginTie
 
 -- type Lilypond = Lilypond.Music
 toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> String
@@ -666,21 +675,23 @@ aScore = id
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
 main = do
-  showLilypond $ music
+  -- showLilypond $ music
   openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
-  $ timesPadding 2 0 (scat [
-    setColor Color.blue $ level _f $ c<>d,
-    cs,
-    level _f ds,
-    level ff fs,
-    level _f a_,
-    level pp gs_,
-    tremolo 2 d,
-    tremolo 3 e
-    ::Score MyNote])^*(1+4/5)
+  $ compress 1 $ sj </> sj^*2 </> sj^*4
+  where 
+    sj = timesPadding 2 1 (scat [
+      setColor Color.blue $ level _f $ c<>d,
+      cs,
+      level _f ds,
+      level ff fs,
+      level _f a_,
+      level pp gs_,
+      tremolo 2 d,
+      tremolo 3 e
+      ::Score MyNote])^*(1+4/10)
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
