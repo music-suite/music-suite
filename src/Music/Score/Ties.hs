@@ -38,6 +38,7 @@ module Music.Score.Ties (
 
 import           Control.Applicative
 import           Control.Arrow
+import           Control.Comonad
 import           Control.Lens            hiding (transform)
 import           Control.Monad
 import           Control.Monad.Plus
@@ -89,7 +90,7 @@ class Tiable a where
   toTied a = (beginTie a, endTie a)
 
 newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
-  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad)
+  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TieT a) where
@@ -176,19 +177,19 @@ instance Floating a => Floating (TieT a) where
 
 instance Enum a => Enum (TieT a) where
   toEnum = pure . toEnum
-  fromEnum = fromEnum . get1
+  fromEnum = fromEnum . extract
 
 instance Bounded a => Bounded (TieT a) where
   minBound = pure minBound
   maxBound = pure maxBound
 
 instance (Num a, Ord a, Real a) => Real (TieT a) where
-  toRational = toRational . get1
+  toRational = toRational . extract
 
 instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   quot = liftA2 quot
   rem = liftA2 rem
-  toInteger = toInteger . get1
+  toInteger = toInteger . extract
 
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -274,8 +275,4 @@ splitDur maxDur (d,a)
   | maxDur <= 0 = error "splitDur: maxDur must be > 0"
   | d <= maxDur =  ((d, a), Nothing)
   | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
-
-
--- TODO use extract
-get1 (TieT (_,x)) = x
 

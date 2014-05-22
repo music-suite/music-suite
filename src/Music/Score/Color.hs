@@ -48,7 +48,6 @@ import           Data.AffineSpace
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
--- import           Data.VectorSpace              hiding (Sum)
 import           Data.Colour
 import qualified Data.Colour.Names             as C
 

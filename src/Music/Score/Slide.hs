@@ -137,14 +137,3 @@ glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
     mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
 
 
-
-
-
-
-
-
-
-
-
-
-

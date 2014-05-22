@@ -327,7 +327,6 @@ rhythmToMusicXml (Group rs)            = mconcat $ map rhythmToMusicXml rs
 rhythmToMusicXml (Dotted n (Beat d x)) = noteRestToMusicXml (dotMod n * d) x
 rhythmToMusicXml (Tuplet m r)          = Xml.tuplet b a (rhythmToMusicXml r)
     where (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
-
 noteRestToMusicXml :: HasMusicXml2 a => Duration -> Maybe a -> XmlMusic
 noteRestToMusicXml d Nothing  = setDefaultVoice $ Xml.rest $ realToFrac d
 noteRestToMusicXml d (Just p) = setDefaultVoice $ getMusicXml d p
@@ -347,14 +346,4 @@ spellMusicXml p = (
 type HasPart2 a = (HasPart' a, Ord (Part a), Show (Part a))
 type HasMusicXml2 a = (HasMusicXml a, Transformable a)
 
-{-
-foo
-  :: (Semigroup a, Transformable a, HasClef a, HasMusicXml a) =>
-     [Maybe TimeSignature]
-      -> [Duration]
-      -> Score a
-      -> [XmlMusic]
-foo barTimeSigs barDurations  = mvoiceToMusicXml barTimeSigs barDurations . temporaryClefFix . toMVoice
-  where
-    temporaryClefFix = over (_Wrapped._head.traverse.traverse) $ applyClef GClef
--}
+

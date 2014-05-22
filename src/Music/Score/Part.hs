@@ -299,4 +299,3 @@ instance (HasParts a b) => HasParts (Score a) (Score b) where
     . _Wrapped      -- this needed?
     . whilstL parts
 
-

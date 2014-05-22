@@ -99,28 +99,25 @@ module Music.Score.Articulation (
   ) where
 
 import           Control.Applicative
-import Data.Functor.Couple
-import Control.Lens hiding (above, below, transform)
+import           Control.Comonad
+import           Data.Functor.Couple
+import           Control.Lens hiding (above, below, transform)
 import           Data.AffineSpace
 import           Data.VectorSpace        hiding (Sum)
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
 
-import Music.Time
-import Music.Time.Internal.Transform
--- import           Music.Dynamics.Literal
--- import           Music.Pitch.Literal
--- import           Music.Score.Combinators
+import           Music.Time
+import           Music.Time.Internal.Transform
 import           Music.Score.Part
--- import           Music.Score.Score
 
-import Music.Score.Part
-import Music.Score.Slide
-import Music.Score.Tremolo
-import Music.Score.Text
-import Music.Score.Harmonics
-import Music.Score.Ties
+import           Music.Score.Part
+import           Music.Score.Slide
+import           Music.Score.Tremolo
+import           Music.Score.Text
+import           Music.Score.Harmonics
+import           Music.Score.Ties
 import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
 import           Music.Score.Phrases
@@ -460,13 +457,14 @@ resetArticulation :: HasArticulation c => c -> c
 resetArticulation = setBeginSlur False . setContSlur False . setEndSlur False . setAccLevel 0 . setStaccLevel 0
 
 -- Safe for tuple-like types
-get1 = head . toList
+extract = head . toList
 
 -}
 
 newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
   deriving (Eq, Ord, Show, Typeable, Functor, 
-    Applicative, {-Comonad,-} Monad, Transformable, Monoid, Semigroup)
+    Applicative, Monad, Comonad, 
+    Transformable, Monoid, Semigroup)
 
 instance (Monoid n, Num a) => Num (ArticulationT n a) where
     (+) = liftA2 (+)
@@ -498,19 +496,19 @@ instance (Monoid n, Floating a) => Floating (ArticulationT n a) where
 
 instance (Monoid n, Enum a) => Enum (ArticulationT n a) where
     toEnum = pure . toEnum
-    fromEnum = fromEnum . get1
+    fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
     minBound = pure minBound
     maxBound = pure maxBound
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (ArticulationT n a) where
---     toRational = toRational . get1
+--     toRational = toRational . extract
 -- 
 -- instance (Monoid n, Real a, Enum a, Integral a) => Integral (ArticulationT n a) where
 --     quot = liftA2 quot
 --     rem = liftA2 rem
---     toInteger = toInteger . get1  
+--     toInteger = toInteger . extract  
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ArticulationT p a) where
@@ -536,7 +534,4 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
 
-
- -- TODO use extract
-get1 (ArticulationT (_,x)) = x
 

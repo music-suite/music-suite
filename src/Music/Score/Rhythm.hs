@@ -401,3 +401,4 @@ divisibleBy = flip isDivisibleBy
 -- Only works for simple n such as 2 or 3, TODO determine
 isDivisibleBy :: Duration -> Duration -> Bool
 isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
