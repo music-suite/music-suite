@@ -48,6 +48,7 @@ import Music.Score hiding (
   openLilypond',
   )
 
+import Control.Comonad (Comonad(..), extract)
 import Control.Arrow ((***))
 import qualified Codec.Midi                as Midi
 import qualified Music.Lilypond as Lilypond
@@ -319,28 +320,22 @@ instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
 
 instance HasBackendNote Midi a => HasBackendNote Midi (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getPartT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TremoloT a) where
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getCouple . getTremoloT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TextT a) where
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getCouple . getTextT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Midi a => HasBackendNote Midi (HarmonicT a) where
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getTieT)
+  exportNote b = exportNote b . fmap extract
 
 mkMidiNote :: Int -> Score Midi.Message
 mkMidiNote p = mempty
@@ -553,11 +548,10 @@ instance HasBackendNote Ly a => HasBackendNote Ly (Product a) where
 
 instance HasBackendNote Ly a => HasBackendNote Ly (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
-  -- TODO use Comonad.extract
-  exportNote b = exportNote b . fmap (snd . getPartT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) where
-  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap (snd . getDynamicT) nx)
+  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap extract nx)
     where
       notate Nothing = id
       notate (Just (DynamicT (n, _))) = notateDD n
@@ -579,8 +573,11 @@ instance HasBackendNote Ly a => HasBackendNote Ly (DynamicT DynamicNotation a) w
              Nothing -> id
              Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
+-- TODO move
+deriving instance Comonad ColorT
+
 instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
-  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap (snd . getColorT) nx)
+  exportNote b (LyContext d nx) = notate nx $ exportNote b $ LyContext d (fmap extract nx)
     where
       notate Nothing = id
       notate (Just (ColorT (col, x))) = notate' col
@@ -602,11 +599,11 @@ instance HasBackendNote Ly a => HasBackendNote Ly (ColorT a) where
 
 
 instance HasBackendNote Ly a => HasBackendNote Ly (ArticulationT n a) where
-  exportNote b = exportNote b . fmap (snd . getArticulationT)
+  exportNote b = exportNote b . fmap extract
   
 instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
   exportNote b = \(LyContext d nx) ->
-    (fst $ notate nx d) $ exportNote b $ LyContext (snd $ notate nx d) (fmap (snd . getCouple . getTremoloT) nx)
+    (fst $ notate nx d) $ exportNote b $ LyContext (snd $ notate nx d) (fmap extract nx)
     where                                    
       -- newDur = d
       -- notate = id
@@ -632,18 +629,18 @@ eith :: Iso' (a -> c, b -> c) (Either a b -> c)
 eith = iso (uncurry either) (\f -> (f . Left, f . Right))
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
-  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap (snd . getCouple . getTextT) nx))
+  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap extract nx))
     where
       notate (Just (TextT (Couple (ts, _)))) = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
-  exportNote b = exportNote b . fmap (snd . getCouple . getHarmonicT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Ly a => HasBackendNote Ly (SlideT a) where
-  exportNote b = exportNote b . fmap (snd . getCouple . getSlideT)
+  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
-  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap (snd . getTieT) nx))
+  exportNote b (LyContext d nx) = notate nx $ (exportNote b $ LyContext d (fmap extract nx))
         where       
             notate Nothing = id
             notate (Just (TieT ((Any ta, Any tb),_))) = notate' ta tb
@@ -670,7 +667,7 @@ aScore = id
 -- TODO tests
 -- main = putStrLn $ show $ view notes $ simultaneous 
 main = do
-  -- showLilypond $ music
+  showLilypond $ music
   openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
@@ -701,7 +698,7 @@ open = openLilypond . addDynCon . simultaneous
 newtype OptAvg a = OptAvg 
   -- (Option (Average a))
   (Sum a)
-  deriving (Semigroup, Monoid, Real, Ord, Num, Eq, Transformable, IsDynamics)
+  deriving (Show, Semigroup, Monoid, Real, Ord, Num, Eq, Transformable, IsDynamics)
 deriving instance AdditiveGroup a => AdditiveGroup (OptAvg a)
 instance VectorSpace a => VectorSpace (OptAvg a) where
   type Scalar (OptAvg a) = Scalar a
