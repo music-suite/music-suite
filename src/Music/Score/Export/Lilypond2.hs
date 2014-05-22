@@ -81,6 +81,7 @@ deriving instance Comonad ColorT
 deriving instance HasTremolo a => HasTremolo (ColorT a)
 deriving instance HasHarmonic a => HasHarmonic (ColorT a)
 deriving instance HasSlide a => HasSlide (ColorT a)
+deriving instance HasText a => HasText (ColorT a)
 
 deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
 instance VectorSpace a => VectorSpace (Sum a) where
@@ -638,6 +639,7 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TremoloT a) where
 instance HasBackendNote Ly a => HasBackendNote Ly (TextT a) where
   exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
     where
+      notate Nothing = id
       notate (Just (TextT (Couple (ts, _)))) = foldr (.) id (fmap Lilypond.addText ts)
 
 instance HasBackendNote Ly a => HasBackendNote Ly (HarmonicT a) where
@@ -695,7 +697,7 @@ aScore = id
 
 -- main = putStrLn $ show $ view notes $ simultaneous
 main = do
-  showLilypond $ music
+  -- showLilypond $ music
   openLilypond $ music
 music = (addDynCon.simultaneous)
   --  $ over pitches' (+ 2)
@@ -708,14 +710,14 @@ music = (addDynCon.simultaneous)
       level _f ds,
       level ff fs,
       level _f a_,
-      level pp gs_,
+      text "pizz" $ level pp gs_,
       tremolo 2 d,
       tremolo 3 e
       ::Score MyNote])^*(1+4/5)
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
-type MyNote = (PartT Int (TieT (ColorT (TremoloT (HarmonicT (SlideT (ArticulationT () (DynamicT (OptAvg Double) [Double]))))))))
+type MyNote = (PartT Int (TieT (ColorT (TextT (TremoloT (HarmonicT (SlideT (ArticulationT () (DynamicT (OptAvg Double) [Double])))))))))
 
 
 
