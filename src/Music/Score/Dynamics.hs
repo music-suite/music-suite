@@ -15,19 +15,8 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
-
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -64,7 +53,7 @@ module Music.Score.Dynamics (
         fadeOut,
 
         DynamicT(..),
-        
+
         -- * Context
         -- TODO move
         Ctxt,
@@ -77,44 +66,44 @@ module Music.Score.Dynamics (
         -- dynamics,
         -- dynamicVoice,
         -- dynamicSingle,
-        -- 
+        --
         -- -- * Dynamic transformations
         -- -- ** Crescendo and diminuendo
         -- Level(..),
         -- cresc,
         -- dim,
-        -- 
+        --
         -- -- ** Miscellaneous
-        -- resetDynamics,  
+        -- resetDynamics,
   ) where
 
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Lens            hiding (Level, transform)
-import           Control.Monad
 import           Control.Comonad
-import Data.Functor.Couple
+import           Control.Lens                  hiding (Level, transform)
+import           Control.Monad
 import           Data.AffineSpace
 import           Data.Foldable
-import qualified Data.List               as List
+import           Data.Functor.Couple
+import qualified Data.List                     as List
 import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.VectorSpace        hiding (Sum)
+import           Data.VectorSpace              hiding (Sum)
 
-import           Music.Time
-import           Music.Score.Util (through)
-import Music.Time.Internal.Transform
-import Music.Score.Part
-import Music.Score.Slide
-import Music.Score.Tremolo
-import Music.Score.Text
-import Music.Score.Harmonics
-import Music.Score.Ties
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Harmonics
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Score.Slide
+import           Music.Score.Text
+import           Music.Score.Ties
+import           Music.Score.Tremolo
+import           Music.Score.Util              (through)
+import           Music.Time
+import           Music.Time.Internal.Transform
 
 
 -- |
@@ -245,10 +234,10 @@ instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
   dynamics = traverse . dynamics
 
 instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
-  dynamics = 
+  dynamics =
     _Wrapped . _2   -- into NScore
     . _Wrapped
-    . traverse 
+    . traverse
     . _Wrapped      -- this needed?
     . whilstL dynamics
 
@@ -312,7 +301,7 @@ type Level a = Diff (Dynamic a)
 -- |
 -- Class of types that can be transposed.
 --
-type Attenuable a 
+type Attenuable a
   = (HasDynamics a a,
      VectorSpace (Level a), AffineSpace (Dynamic a),
      {-IsLevel (Level a), -} IsDynamics (Dynamic a))
@@ -341,10 +330,10 @@ volume a = dynamics *~ a
 level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
-compressor :: Attenuable a => 
+compressor :: Attenuable a =>
   Dynamic a           -- ^ Threshold
   -> Scalar (Level a) -- ^ Ratio
-  -> a 
+  -> a
   -> a
 compressor = error "Not implemented: compressor"
 
@@ -370,7 +359,7 @@ fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
 
 
 newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
-  deriving (Eq, Ord, Show, Typeable, Functor, 
+  deriving (Eq, Ord, Show, Typeable, Functor,
     Applicative, Monad, Comonad, Transformable, Monoid, Semigroup)
 
 instance (Monoid n, Num a) => Num (DynamicT n a) where
@@ -411,11 +400,11 @@ instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (DynamicT n a) where
 --     toRational = toRational . extract
--- 
+--
 -- instance (Monoid n, Real a, Enum a, Integral a) => Integral (DynamicT n a) where
 --     quot = liftA2 quot
 --     rem = liftA2 rem
---     toInteger = toInteger . extract  
+--     toInteger = toInteger . extract
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (DynamicT p a) where
@@ -438,21 +427,21 @@ instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
 
 deriving instance Reversible a => Reversible (DynamicT p a)
 instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
-  toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2)) 
-    where 
+  toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2))
+    where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
 
 -- |
 -- View just the dynamices in a voice.
--- 
-vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) => 
-  Lens 
-    (Voice a) (Voice b) 
+--
+vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) =>
+  Lens
+    (Voice a) (Voice b)
     (Voice (Dynamic a)) (Voice (Dynamic b))
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
 -- vdynamic = through dynamic dynamic
- 
+
 addDynCon :: (HasPhrases s t a b, HasDynamic a a, HasDynamic a b, Dynamic a ~ d, Dynamic b ~ Ctxt d) => s -> t
 addDynCon = over (phrases.vdynamic) withContext
 

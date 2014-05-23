@@ -16,19 +16,6 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
-
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -56,7 +43,7 @@ module Music.Score.Articulation (
         HasArticulation(..),
         articulation',
         articulations',
-        -- * Manipulating articulation        
+        -- * Manipulating articulation
         Articulated,
         accent,
         marcato,
@@ -71,11 +58,11 @@ module Music.Score.Articulation (
         portato,
         legato,
         spiccato,
-        
+
         -- -- * Representation
         -- HasArticulation(..),
         -- ArticulationT(..),
-        -- 
+        --
         -- -- * Transformations
         -- -- ** Accents
         -- accent,
@@ -84,7 +71,7 @@ module Music.Score.Articulation (
         -- marcatoLast,
         -- accentAll,
         -- marcatoAll,
-        -- 
+        --
         -- -- ** Phrasing
         -- tenuto,
         -- separated,
@@ -94,33 +81,33 @@ module Music.Score.Articulation (
         -- spiccato,
         -- -- ** Miscellaneous
         -- resetArticulation,
-        
+
         ArticulationT(..),
   ) where
 
 import           Control.Applicative
 import           Control.Comonad
-import           Data.Functor.Couple
-import           Control.Lens hiding (above, below, transform)
+import           Control.Lens                  hiding (above, below, transform)
 import           Data.AffineSpace
-import           Data.VectorSpace        hiding (Sum)
 import           Data.Foldable
+import           Data.Functor.Couple
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.VectorSpace              hiding (Sum)
 
+import           Music.Score.Part
 import           Music.Time
 import           Music.Time.Internal.Transform
-import           Music.Score.Part
 
-import           Music.Score.Part
-import           Music.Score.Slide
-import           Music.Score.Tremolo
-import           Music.Score.Text
-import           Music.Score.Harmonics
-import           Music.Score.Ties
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Harmonics
+import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Score.Slide
+import           Music.Score.Text
+import           Music.Score.Ties
+import           Music.Score.Tremolo
 
 
 
@@ -166,14 +153,14 @@ articulations' :: (HasArticulations s t, s ~ t) => Traversal' s (Articulation s)
 articulations' = articulations
 
 #define PRIM_ARTICULATION_INSTANCE(TYPE)       \
-                                          \
+                                               \
 type instance Articulation TYPE = TYPE;        \
 type instance SetArticulation a TYPE = a;      \
-                                          \
+                                               \
 instance (Transformable a, a ~ Articulation a) \
   => HasArticulation TYPE a where {            \
   articulation = ($)              } ;          \
-                                          \
+                                               \
 instance (Transformable a, a ~ Articulation a) \
   => HasArticulations TYPE a where {           \
   articulations = ($)               } ;        \
@@ -217,10 +204,10 @@ instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
 type instance Articulation (Score a) = Articulation a
 type instance SetArticulation b (Score a) = Score (SetArticulation b a)
 instance HasArticulations a b => HasArticulations (Score a) (Score b) where
-  articulations = 
+  articulations =
     _Wrapped . _2   -- into NScore
     . _Wrapped
-    . traverse 
+    . traverse
     . _Wrapped      -- this needed?
     . whilstL articulations
 
@@ -266,7 +253,7 @@ instance (HasArticulations a b) => HasArticulations (SlideT a) (SlideT b) where
   articulations = _Wrapped . articulations
 instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
   articulation = _Wrapped . articulation
-                                                
+
 
 type family Accentuation (a :: *) :: *
 
@@ -282,7 +269,7 @@ instance VectorSpace () where
   type Scalar () = ()
   _ *^ _ = ()
 instance AffineSpace () where
-  type Diff () = ()  
+  type Diff () = ()
   _ .-. _ = ()
   _ .+^ _ = ()
 
@@ -290,8 +277,8 @@ instance AffineSpace () where
 -- Class of types that can be transposed, inverted and so on.
 --
 type Articulated a
-  = (HasArticulations a a, 
-     AffineSpace (Accentuation (Articulation a)), 
+  = (HasArticulations a a,
+     AffineSpace (Accentuation (Articulation a)),
      AffineSpace (Separation (Articulation a)))
 
 
@@ -301,7 +288,7 @@ type Articulated a
 -- marcatoLast = error "Not implemented: marcatoLast"
 -- accentAll = error "Not implemented: accentAll"
 -- marcatoAll = error "Not implemented: marcatoAll"
--- 
+--
 -- tenuto = error "Not implemented: tenuto"
 -- separated = error "Not implemented: separated"
 -- staccato = error "Not implemented: staccato"
@@ -355,8 +342,8 @@ spiccato = id
 
 
 newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
-  deriving (Eq, Ord, Show, Typeable, Functor, 
-    Applicative, Monad, Comonad, 
+  deriving (Eq, Ord, Show, Typeable, Functor,
+    Applicative, Monad, Comonad,
     Transformable, Monoid, Semigroup)
 
 instance (Monoid n, Num a) => Num (ArticulationT n a) where
@@ -397,11 +384,11 @@ instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (ArticulationT n a) where
 --     toRational = toRational . extract
--- 
+--
 -- instance (Monoid n, Real a, Enum a, Integral a) => Integral (ArticulationT n a) where
 --     quot = liftA2 quot
 --     rem = liftA2 rem
---     toInteger = toInteger . extract  
+--     toInteger = toInteger . extract
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ArticulationT p a) where
@@ -422,8 +409,8 @@ deriving instance (IsInterval a, Monoid n) => IsInterval (ArticulationT n a)
 
 deriving instance Reversible a => Reversible (ArticulationT p a)
 instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
-  toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2)) 
-    where 
+  toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2))
+    where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
 
