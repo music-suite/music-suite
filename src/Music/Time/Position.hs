@@ -63,8 +63,8 @@ module Music.Time.Position (
 
       -- * Internal
       -- TODO hide...
-      _placeAt,
-      _era,
+      _setEra,
+      _getEra,
   ) where
 
 
@@ -135,9 +135,9 @@ instance (HasPosition a, HasDuration a) => HasPosition [a] where
   _onset  = foldr min 0 . fmap _onset
   _offset = foldr max 0 . fmap _offset
 
-_era :: HasPosition a => a -> Span
-_era x = _onset x <-> _offset x
-{-# INLINE _era #-}
+_getEra :: HasPosition a => a -> Span
+_getEra x = _onset x <-> _offset x
+{-# INLINE _getEra #-}
 
 -- |
 -- Position of the given value.
@@ -213,14 +213,14 @@ placeAt p t x = (t .-. x `_position` p) `delay` x
 --
 -- @placeAt s t@ places the given thing so that @x^.place = s@
 --
-_placeAt :: (HasPosition a, Transformable a) => Span -> a -> a
-_placeAt s x = transform (s ^-^ view era x) x
+_setEra :: (HasPosition a, Transformable a) => Span -> a -> a
+_setEra s x = transform (s ^-^ view era x) x
 
 -- |
 -- A lens to the position
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
-era = lens _era (flip _placeAt)
+era = lens _getEra (flip _setEra)
 {-# INLINE era #-}
 
 

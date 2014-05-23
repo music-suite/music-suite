@@ -120,7 +120,7 @@ getAttribution (Attribution a) k = join $ k `Map.lookup` (fmap (fmap getLast . g
 
 -- | Set the given attribution in the given score.
 attribute :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Attribution -> a -> a
-attribute a x = attributeDuring (_era x) a x
+attribute a x = attributeDuring (_getEra x) a x
 
 -- | Set the given attribution in the given part of a score.
 attributeDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Attribution -> a -> a
@@ -128,7 +128,7 @@ attributeDuring s a = addGlobalMetaNote (view note (s, a))
 
 -- | Set composer of the given score.
 composer :: (HasMeta a, {-HasPart' a, -}HasPosition a) => String -> a -> a
-composer t x = composerDuring (_era x) t x
+composer t x = composerDuring (_getEra x) t x
 
 -- | Set composer of the given part of a score.
 composerDuring :: (HasMeta a{-, HasPart' a-}) => Span -> String -> a -> a
@@ -136,7 +136,7 @@ composerDuring s x = attributeDuring s ("composer" `attribution` x)
 
 -- | Set lyricist of the given score.
 lyricist :: (HasMeta a, {-HasPart' a, -}HasPosition a) => String -> a -> a
-lyricist t x = lyricistDuring (_era x) t x
+lyricist t x = lyricistDuring (_getEra x) t x
 
 -- | Set lyricist of the given part of a score.
 lyricistDuring :: (HasMeta a{-, HasPart' a-}) => Span -> String -> a -> a
@@ -144,7 +144,7 @@ lyricistDuring s x = attributeDuring s ("lyricist" `attribution` x)
 
 -- | Set arranger of the given score.
 arranger :: (HasMeta a, {-HasPart' a, -}HasPosition a) => String -> a -> a
-arranger t x = arrangerDuring (_era x) t x
+arranger t x = arrangerDuring (_getEra x) t x
 
 -- | Set arranger of the given part of a score.
 arrangerDuring :: (HasMeta a{-, HasPart' a-}) => Span -> String -> a -> a

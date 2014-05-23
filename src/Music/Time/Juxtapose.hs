@@ -46,7 +46,7 @@ module Music.Time.Juxtapose (
         times,
   ) where
 
-
+import           Control.Lens hiding ((|>), (<|))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Monoid.WithSemigroup
@@ -144,8 +144,8 @@ pcat = Prelude.foldr (<>) mempty
 -- 'Score' a -> 'Score' a -> 'Score' a
 -- @
 --
-during :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-y `during`  x = _placeAt (_era x) y
+during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
+y `during` x = set era (view era x) y
 
 -- |
 -- Like '<>', but scaling the second agument to the duration of the first.
@@ -155,7 +155,7 @@ y `during`  x = _placeAt (_era x) y
 -- @
 --
 sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
-x `sustain` y   = x <> y `during` x
+x `sustain` y = x <> y `during` x
 
 -- |
 -- Repeat exact amount of times.
@@ -165,7 +165,7 @@ x `sustain` y   = x <> y `during` x
 -- @
 --
 times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
-times n   = scat . replicate n
+times n = scat . replicate n
 
 {-
 

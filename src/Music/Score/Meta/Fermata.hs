@@ -79,7 +79,7 @@ data FermataType = StandardFermata | LongFermata | VeryLongFermata
 
 -- | Add a fermata over the whole score.
 fermata :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Fermata -> a -> a
-fermata c x = fermataDuring (_era x) c x
+fermata c x = fermataDuring (_getEra x) c x
 
 -- | Add a fermata to the given score.
 fermataDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Fermata -> a -> a

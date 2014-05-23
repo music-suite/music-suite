@@ -158,7 +158,7 @@ tempoToDuration (Tempo _ _ x) = x
 
 -- | Set the tempo of the given score.
 tempo :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Tempo -> a -> a
-tempo c x = tempoDuring (_era x) c x
+tempo c x = tempoDuring (_getEra x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Tempo -> a -> a
@@ -198,14 +198,14 @@ mkNote s x = view note (s, x)
 renderTempo :: Score a -> Score a
 renderTempo sc =
     flip composed sc $ fmap renderTempoScore
-        $ tempoRegions (_era sc)
-        $ tempoRegions0 (_era sc)
+        $ tempoRegions (_getEra sc)
+        $ tempoRegions0 (_getEra sc)
         $ getTempoChanges defTempo sc
 
 renderTempoTest :: Score a -> [TempoRegion]
 renderTempoTest sc = id
-    $ tempoRegions (_era sc)
-    $ tempoRegions0 (_era sc)
+    $ tempoRegions (_getEra sc)
+    $ tempoRegions0 (_getEra sc)
     $ getTempoChanges defTempo sc
 
 
