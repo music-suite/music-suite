@@ -29,7 +29,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Bound (
-    Bound(..), -- TODO
+    -- * Bound type
+    Bound(..),
+    
+    -- * Construction
     bounds,
     bounding,
     -- trim,

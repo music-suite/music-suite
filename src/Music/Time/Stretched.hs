@@ -29,8 +29,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Stretched (
-    -- * Music.Time.Stretched
+    -- * Stretched values
     Stretched,
+
+    -- * Construction
     stretched,
     stretchedValue,
   ) where

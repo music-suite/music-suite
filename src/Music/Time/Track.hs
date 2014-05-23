@@ -29,13 +29,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Track (
-    -- * Music.Time.Track
+    -- * Track type
+    
     Track,
-    -- ** Substructure
+
+    -- * Construction
     track,
     delayeds,
     singleDelayed,
-    -- ** TODO
 
   ) where
 

@@ -35,7 +35,6 @@
 module Music.Time.Position (
       module Music.Time.Duration,
 
-      -- * Music.Time.Position
       -- * The HasPosition class
       HasPosition(..),
       -- * Inspecting position

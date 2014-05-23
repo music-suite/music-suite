@@ -35,15 +35,21 @@ module Music.Time.Meta (
         -- * Attributes
         IsAttribute,
         Attribute,
+        
+        -- ** Creating attributes
         wrapAttr,
-        unwrapAttr,
         wrapTAttr,
+        unwrapAttr,
         unwrapTAttr,
 
-        -- * Meta-values
+        -- * Meta-data
         Meta,
+
+        -- ** Creating meta-data
         toMeta,
         fromMeta,
+
+        -- ** The HasMeta class
         HasMeta(..),
         applyMeta,
   ) where

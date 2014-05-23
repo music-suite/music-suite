@@ -30,11 +30,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Chord (
-    -- * Music.Time.Chord
+    -- * Chord type
     Chord,
-    -- ** Substructure
+    -- * Construction
     chord,
-    -- ** TODO
 
   ) where
 

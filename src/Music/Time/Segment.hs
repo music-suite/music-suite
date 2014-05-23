@@ -57,7 +57,7 @@ module Music.Time.Segment (
     sine,
     cosine,
 
-    -- * Music.Time.Segment
+    -- * Segment type
     Segment,
     -- ** Examples
     -- $XXmusicTimeSegmentExamples

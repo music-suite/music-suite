@@ -29,9 +29,13 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Delayed (
-    -- * Music.Time.Delayed
+    -- * Delayed type
     Delayed,
+
+    -- * Construction
     delayed,
+
+    -- ** Inspecting delayed values
     delayedValue,
   ) where
 

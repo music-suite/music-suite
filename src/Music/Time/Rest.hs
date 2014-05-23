@@ -32,7 +32,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Rest (
-    rest,
+      -- * Rests
+      rest,
   ) where
 
 import           Control.Applicative

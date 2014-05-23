@@ -30,23 +30,29 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Score (
-      -- * Music.Time.Score
+      -- * Score type
       Score,
 
-      -- ** Substructure
+      -- * Construction
       score,
+      
+      -- ** Extracting notes and events
       notes,
       events,
       -- voices,
+      
+      -- ** Pattern matching
       singleNote,
-      -- singleVoice,
 
-      -- *** Unsafe operations
+      -- ** Unsafe versions
       unsafeNotes,
       unsafeEvents,
-      -- unsafeVoices,
 
-      -- ** Special traversals
+      -- * Simultaneous values
+      simult,
+      simultaneous,
+
+      -- * Traversing
       mapWithSpan,
       filterWithSpan,
       mapFilterWithSpan,
@@ -54,9 +60,6 @@ module Music.Time.Score (
       filterEvents,
       mapFilterEvents,
 
-      -- ** Simultaneous notes
-      simult,
-      simultaneous,
   ) where
 
 import           Data.AffineSpace
@@ -402,20 +405,26 @@ notes = _Wrapped . _2 . _Wrapped . sorted
 -- |
 -- View a score as a list of notes.
 --
--- This operation is /unsafe/ as it is only isomorphic up to meta-data equivalence,
--- i.e. it only works for values @x@ such that @'view' 'meta' x == 'mempty'@.
---
--- See also the safe (but more restricted) 'notes' and 'score'.
+-- This only an isomorphism up to meta-data. See also the safe (but more restricted)
+-- 'notes' and 'score'.
 --
 unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
 unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
   where
+    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
     noMeta = iso extract return
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 
-    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
-
 {-# INLINE unsafeNotes #-}
+
+-- |
+-- View a score as a list of events.
+--
+-- This only an isomorphism up to meta-data. See also the safe (but more restricted)
+-- 'notes' and 'score'.
+--
+unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeEvents = iso _getScore _score
 
 -- |
 -- View a score as a single note.
@@ -447,9 +456,6 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 --
 events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = notes . through event event
-
-unsafeEvents :: {-Transformable a => -}Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeEvents = iso _getScore _score
 
 _score :: [(Time, Duration, a)] -> Score a
 _score = mconcat . fmap (uncurry3 event)

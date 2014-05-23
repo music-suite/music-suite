@@ -33,11 +33,14 @@
 module Music.Time.Reverse (
         module Music.Time.Position,
 
-        -- * Music.Time.Reverse
         -- * The Reversible class
         Reversible(..),
+
+        -- * Reversed values
         reversed,
         revDefault,
+
+        -- * Utility
         NoReverse(..),
   ) where
 

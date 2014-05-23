@@ -30,10 +30,11 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Note (
-    -- * Music.Time.Note
+    -- * Note type
     Note,
+
+    -- * Construction
     note,
-    -- fromNote,
     event,
     noteValue,
   ) where
@@ -133,27 +134,19 @@ instance Reversible (Note a) where
 -- |
 -- View a note as a pair of the original value and the transformation (and vice versa).
 --
-note :: ({-Transformable a, Transformable b-}) =>
-  Iso
-    (Span, a) (Span, b)
-    (Note a) (Note b)
+note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
 note = _Unwrapped
 
 -- |
 -- View the value in the note.
 --
-noteValue :: (Transformable a, Transformable b) =>
-  Lens
-    (Note a) (Note b)
-    a b
+noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 noteValue = lens runNote (flip $ mapNote . const)
   where
     runNote = uncurry transform . view _Wrapped
     -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
 {-# INLINE noteValue #-}
-
-fromNote = from note
 
 -- |
 -- View a note as an events, i.e. a time-duration-value triplet.

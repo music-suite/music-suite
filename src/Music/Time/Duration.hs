@@ -25,10 +25,10 @@
 module Music.Time.Duration (
       module Music.Time.Transform,
 
-      -- * Music.Time.Duration
       -- * The HasDuration class
       HasDuration(..),
-      -- * Stretching to absolute duration
+
+      -- * Absolute duration
       duration,
       stretchTo,
   ) where

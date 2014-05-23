@@ -30,7 +30,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Voice (
-    -- * Music.Time.Voice
+    -- * Voice type
     Voice,
 
     -- ** Substructure

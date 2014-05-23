@@ -38,11 +38,11 @@ module Music.Time.Juxtapose (
         sustain,
         palindrome,
 
-        -- ** Catenation
+        -- * Catenation
         scat,
         pcat,
 
-        -- ** Repetition
+        -- * Repetition
         times,
   ) where
 

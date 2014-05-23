@@ -44,13 +44,18 @@ module Music.Score.Part (
         HasParts',
         part',
         parts',
-        -- * Manipulating parts (TODO)
+
+        -- * Listing parts
+        allParts,
+
+        -- * Extracting parts
         extracted,
         extracted',
-        allParts,
         extractPart,
         extractParts,
         extractParts',
+
+        -- * Manipulating parts
 
         -- * Part representation
         PartT(..),

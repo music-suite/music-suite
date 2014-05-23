@@ -27,8 +27,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Reactive (
-      -- * Music.Time.Reactive
+      -- * Reactive type
       Reactive,
+      
+      -- * Construction
       initial,
       final,
       intermediate,
@@ -37,8 +39,12 @@ module Music.Time.Reactive (
       occs,
       atTime,
       splitReactive,
+      
+      -- * Combinators
       switchR,
       trimR,
+
+      -- * Sampling and discretization
       continous,
       continousWith,
       sample,

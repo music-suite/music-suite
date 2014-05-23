@@ -35,7 +35,7 @@ module Music.Time.Behavior (
     -- ** Examples
     behavior,
 
-    -- ** Combinators
+    -- * Combinators
     switch,
     switch',
     -- splice,
@@ -45,14 +45,17 @@ module Music.Time.Behavior (
     -- concatB,
 
     -- * Common behaviors
+    -- ** Oscillators
     line,
+    sawtooth,
+    sine,
+    cosine,
+    
+    -- ** Impulse functions
     unit,
     impulse,
     turnOn,
     turnOff,
-    sawtooth,
-    sine,
-    cosine,
 
   ) where
 
