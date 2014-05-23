@@ -358,7 +358,7 @@ spanned s = flip whilstM (negateV s)
 -- Designed to be used infix, as in
 --
 -- @
--- l `on` (2 \<-> 3)
+-- l ``on`` (2 \<-> 3)
 -- @
 --
 onS :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b

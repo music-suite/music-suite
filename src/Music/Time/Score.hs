@@ -203,12 +203,12 @@ instance IsInterval a => IsInterval (Score a) where
 instance IsDynamics a => IsDynamics (Score a) where
   fromDynamics = pure . fromDynamics
 
--- | Bogus instance, so we can use [c..g] expressions
+-- Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Score a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
--- | Bogus instance, so we can use numeric literals
+-- Bogus instance, so we can use numeric literals
 instance Num a => Num (Score a) where
   fromInteger = return . fromInteger
   abs    = fmap abs
@@ -217,7 +217,7 @@ instance Num a => Num (Score a) where
   (-)    = error "Not implemented"
   (*)    = error "Not implemented"
 
--- | Bogus instance, so we can use c^*2 etc.
+-- Bogus instances, so we can use c^*2 etc.
 instance AdditiveGroup (Score a) where
   zeroV   = error "Not implemented"
   (^+^)   = error "Not implemented"

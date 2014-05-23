@@ -60,7 +60,9 @@ module Music.Time.Position (
       startAt,
       stopAt,
       placeAt,
-      -- TODO
+
+      -- * Internal
+      -- TODO hide...
       _placeAt,
       _era,
   ) where
