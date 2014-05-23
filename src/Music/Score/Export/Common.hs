@@ -54,7 +54,7 @@ import           Music.Score.Convert      (reactiveToVoice', scoreToVoice)
 import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Rhythm
+import           Music.Time.Internal.Quantize
 import           Music.Score.Ties
 import           Music.Time
 

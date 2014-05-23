@@ -71,7 +71,7 @@ import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Rhythm
+import           Music.Time.Internal.Quantize
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties

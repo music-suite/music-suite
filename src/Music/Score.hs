@@ -42,7 +42,6 @@ module Music.Score (
         -- ** Miscellaneous
         module Music.Score.Ties,
         module Music.Score.Phrases,
-        module Music.Score.Rhythm,
         module Music.Score.Clef,
 
         -- ** Meta-information
@@ -118,7 +117,6 @@ import           Music.Score.Meta.Title
 import           Music.Score.Part
 import           Music.Score.Phrases
 import           Music.Score.Pitch
-import           Music.Score.Rhythm
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties

@@ -85,7 +85,7 @@ import           Music.Score.Text
 import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Rhythm
+import           Music.Time.Internal.Quantize
 import           Music.Score.Ties
 import           Music.Score.Util
 import           Music.Time hiding (time)

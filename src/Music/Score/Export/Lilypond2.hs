@@ -57,6 +57,7 @@ import           Music.Score.Export.Common     hiding (MVoice)
 import           Music.Time.Internal.Transform (whilstLD)
 import           Music.Time.Util               (composed, unRatio)
 import           System.Process
+import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 
 

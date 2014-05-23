@@ -55,7 +55,6 @@ import           Music.Score.Harmonics
 import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Rhythm
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties

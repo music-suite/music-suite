@@ -26,7 +26,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Rhythm (
+module Music.Time.Internal.Quantize (
         -- * Rhythm type
         Rhythm(..),
 
