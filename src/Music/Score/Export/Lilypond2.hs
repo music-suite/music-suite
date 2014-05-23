@@ -53,9 +53,9 @@ import           Data.Maybe
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
 import qualified Music.Lilypond                as Lilypond
-import           Music.Score.Export.Common     hiding (MVoice)
+import           Music.Score.Internal.Export   hiding (MVoice)
 import           Music.Time.Internal.Transform (whilstLD)
-import           Music.Time.Util               (composed, unRatio)
+import           Music.Score.Internal.Util     (composed, unRatio)
 import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty

@@ -65,7 +65,7 @@ import           Music.Pitch.Literal
 import           Music.Score.Meta
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           Music.Time
 import           Music.Time.Reactive
 

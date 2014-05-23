@@ -16,7 +16,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Export.Common (
+module Music.Score.Internal.Export (
         voiceToBars',
         -- separateBars,
         spellPitch,
@@ -69,7 +69,7 @@ import qualified Text.Pretty              as Pretty
 import           Control.Exception
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           System.IO.Unsafe
 import           System.Process
 

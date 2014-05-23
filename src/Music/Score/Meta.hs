@@ -65,7 +65,7 @@ import           Data.Traversable
 import           Data.VectorSpace
 
 import           Music.Score.Part
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           Music.Time
 import           Music.Time.Meta
 import           Music.Time.Reactive

@@ -4,7 +4,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Music.Score.Util where
+module Music.Score.Internal.Util where
 
 {-
     Rules:

@@ -3,7 +3,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Music.Time.Util where
+module Music.Time.Internal.Util where
 
 {-
     Rules:

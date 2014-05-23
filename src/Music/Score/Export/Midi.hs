@@ -68,7 +68,7 @@ import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 import           Music.Score.Dynamics
-import           Music.Score.Export.Common
+import           Music.Score.Internal.Export
 import           Music.Score.Harmonics
 import           Music.Score.Meta
 import           Music.Score.Part

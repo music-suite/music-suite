@@ -82,7 +82,7 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
 
-import           Music.Time.Util        (showRatio)
+import           Music.Time.Internal.Util (showRatio)
 
 
 -- $convert

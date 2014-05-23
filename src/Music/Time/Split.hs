@@ -38,7 +38,7 @@ module Music.Time.Split (
   ) where
 
 import           Music.Time.Position
-import           Music.Time.Util
+import           Music.Time.Internal.Util
 
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,

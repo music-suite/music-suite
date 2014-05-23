@@ -101,7 +101,7 @@ import           Data.Typeable
 import           Data.VectorSpace       hiding (Sum (..))
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import           Music.Time.Util
+import           Music.Time.Internal.Util
 
 
 

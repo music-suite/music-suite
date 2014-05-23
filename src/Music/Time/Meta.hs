@@ -75,7 +75,7 @@ import           Data.Typeable
 import           Data.Void
 
 -- import           Music.Score.Part
-import           Music.Score.Util
+import           Music.Time.Internal.Util
 import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Transform

@@ -73,7 +73,7 @@ import           Music.Score.Articulation
 import           Music.Score.Clef
 import           Music.Score.Meta
 import           Music.Score.Dynamics
-import           Music.Score.Export.Common
+import           Music.Score.Internal.Export
 import           Music.Score.Instances
 import           Music.Score.Meta.Attribution
 import           Music.Score.Meta.Clef
@@ -87,7 +87,7 @@ import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Time.Internal.Quantize
 import           Music.Score.Ties
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           Music.Time hiding (time)
 
 import qualified Codec.Midi                   as Midi

@@ -59,7 +59,6 @@ import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
 import           Music.Score.Tremolo
-import           Music.Score.Util
 import           Music.Time
 
 -- -------------------------------------------------------------------------------------

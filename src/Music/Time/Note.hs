@@ -63,7 +63,7 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
-import           Music.Time.Util        (through, tripped)
+import           Music.Time.Internal.Util (through, tripped)
 
 -- |
 -- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance

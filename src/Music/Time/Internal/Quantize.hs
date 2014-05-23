@@ -59,7 +59,7 @@ import           Text.Parsec         hiding ((<|>))
 import           Text.Parsec.Pos
 
 import           Music.Score.Ties
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           Music.Time
 
 data Rhythm a

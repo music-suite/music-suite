@@ -68,7 +68,7 @@ import qualified Data.Foldable          as Foldable
 import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
-import           Music.Time.Util
+import           Music.Time.Internal.Util
 
 -- |
 -- A 'Track' is a parallel composition of values.

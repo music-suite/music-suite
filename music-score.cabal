@@ -21,8 +21,8 @@ source-repository head
   location:         	git://github.com/music-suite/music-score.git
   
 library                    
-    build-depends:      base				>= 4 && < 5,
-                        lens				>= 4.0 && < 4.1,
+    build-depends:      base				>= 4   && < 5,
+                        lens				>= 4.1 && < 4.2,
                         process,
                         data-default,           
                         containers,       
@@ -109,14 +109,14 @@ library
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
+                        Music.Score.Convert
+                        Music.Score.Instances
                         -- We expose these to allow GHCI development
-                        Music.Time.Util
+                        Music.Time.Internal.Util
                         Music.Time.Internal.Transform
                         Music.Time.Internal.Quantize
-                        Music.Score.Util
-                        Music.Score.Convert
-                        Music.Score.Export.Common 
-                        Music.Score.Instances
+                        Music.Score.Internal.Util
+                        Music.Score.Internal.Export
     hs-source-dirs: 	  src
     default-language: 	Haskell2010
     --ghc-options:        -fwarn-unused-imports

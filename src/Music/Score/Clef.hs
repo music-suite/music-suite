@@ -58,7 +58,7 @@ import           Data.Void
 import           Music.Score.Meta.Clef
 import           Music.Score.Part
 import           Music.Score.Ties
-import           Music.Score.Util
+import           Music.Score.Internal.Util
 import           Music.Time
 
 

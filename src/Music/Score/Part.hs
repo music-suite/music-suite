@@ -86,7 +86,7 @@ import           Data.Typeable
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Ties
-import           Music.Score.Util              (through)
+import           Music.Score.Internal.Util     (through)
 import           Music.Time
 import           Music.Time.Internal.Transform
 

@@ -101,7 +101,7 @@ import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
 import           Music.Score.Tremolo
-import           Music.Score.Util              (through)
+import           Music.Score.Internal.Util     (through)
 import           Music.Time
 import           Music.Time.Internal.Transform
 

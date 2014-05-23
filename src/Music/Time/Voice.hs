@@ -101,7 +101,7 @@ import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import           Music.Time.Util
+import           Music.Time.Internal.Util
 
 -- |
 -- A 'Voice' is a sequential composition of values. Events may not overlap.
