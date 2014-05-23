@@ -31,10 +31,8 @@
 module Music.Time.Behavior (
     -- * Behavior type
     Behavior,
+
     -- ** Examples
-    -- $musicTimeBehaviorExamples
-    -- (!^),
-    -- behavior',
     behavior,
 
     -- ** Combinators
