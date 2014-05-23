@@ -61,7 +61,7 @@ module Music.Time.Voice (
 
     -- * Context
     withContext,
-    
+
     -- * Internal
     -- TODO hide
     headV,
@@ -264,7 +264,7 @@ zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith = zipVoiceWith' (*)
 
 -- |
--- Join the given voices without combining durations. 
+-- Join the given voices without combining durations.
 --
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b

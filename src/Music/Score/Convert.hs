@@ -29,14 +29,8 @@
 module Music.Score.Convert (
         voiceToScore,
         voiceToScore',
-        -- trackToScore,
-        -- trackToScore',
         scoreToVoice,
-        -- reactiveToVoice,
         reactiveToVoice',
-        -- noteToReactive,
-        -- splitReactive,
-        -- activate,
   ) where
 
 import           Control.Applicative

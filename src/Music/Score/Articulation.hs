@@ -59,29 +59,6 @@ module Music.Score.Articulation (
         legato,
         spiccato,
 
-        -- -- * Representation
-        -- HasArticulation(..),
-        -- ArticulationT(..),
-        --
-        -- -- * Transformations
-        -- -- ** Accents
-        -- accent,
-        -- marcato,
-        -- accentLast,
-        -- marcatoLast,
-        -- accentAll,
-        -- marcatoAll,
-        --
-        -- -- ** Phrasing
-        -- tenuto,
-        -- separated,
-        -- staccato,
-        -- portato,
-        -- legato,
-        -- spiccato,
-        -- -- ** Miscellaneous
-        -- resetArticulation,
-
         ArticulationT(..),
   ) where
 

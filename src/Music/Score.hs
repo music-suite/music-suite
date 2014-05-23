@@ -103,7 +103,7 @@ import           Music.Score.Harmonics
 import           Music.Score.Import.Abc
 import           Music.Score.Import.Lilypond
 import           Music.Score.Import.Midi
-import           Music.Score.Instances          ()
+import           Music.Score.Instances
 import           Music.Score.Meta
 import           Music.Score.Meta.Annotations
 import           Music.Score.Meta.Attribution
