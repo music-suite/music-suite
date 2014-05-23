@@ -54,6 +54,7 @@ module Music.Time.Voice (
     reverseValues,
 
     -- ** Zips
+    unzipVoice,
     zipVoice,
     zipVoiceWith,
     zipVoiceWith',
@@ -78,6 +79,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Reverse
 import           Music.Time.Split
@@ -287,6 +289,12 @@ unsafeStretcheds = _Wrapped
 voiceList :: Iso' (Voice a) [(Duration, a)]
 voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
 
+
+-- |
+-- Unzip the given voice. This is specialization of 'unzipR'. 
+--
+unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
+unzipVoice = unzipR
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
