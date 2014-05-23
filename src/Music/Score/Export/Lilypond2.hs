@@ -711,7 +711,7 @@ music = (addDynCon.simultaneous)
       level pp gs_,
       tremolo 2 d,
       tremolo 3 e
-      ::Score MyNote])^*(1+1/13)
+      ::Score MyNote])^*(1+4/5)
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
