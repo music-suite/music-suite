@@ -16,25 +16,7 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE ViewPatterns               #-}
 
-{-# LANGUAGE
-    CPP,
-    DeriveFunctor,
-    DefaultSignatures,
-    DeriveFoldable,
-    DeriveDataTypeable,
-    FlexibleInstances,
-    FlexibleContexts,
-    ConstraintKinds,
-    TypeFamilies,
-    TypeOperators,
-    MultiParamTypeClasses,
-    NoMonomorphismRestriction,
-    UndecidableInstances,
-    RankNTypes,
-    ScopedTypeVariables,
-    GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -51,7 +33,7 @@
 -------------------------------------------------------------------------------------
 
 
-module Music.Score.Pitch (     
+module Music.Score.Pitch (
         -- ** Pitch type functions
         Pitch,
         SetPitch,
@@ -83,29 +65,29 @@ module Music.Score.Pitch (
         fifthsDown,
         fifthsAbove,
         fifthsBelow,
-        
+
         -- * Inspecting pitch
         highestPitch,
         lowestPitch,
         meanPitch,
-        
+
         -- ** Intervals
         augmentIntervals,
-        
-        -- TODO pitchIs, to write filter pitchIs ... etc        
+
+        -- TODO pitchIs, to write filter pitchIs ... etc
         -- TODO gliss etc
-        
+
         -- -- * Accessors
         -- pitch',
         -- pitch,
         -- -- pitch_,
         -- -- pitches',
         -- -- pitches,
-        -- 
+        --
         -- -- * Transformations
         -- -- ** Transformations
         -- inv,
-        -- 
+        --
         -- -- ** Transformations
         -- up,
         -- down,
@@ -113,7 +95,7 @@ module Music.Score.Pitch (
         -- fifthsDown,
         -- octavesUp,
         -- octavesDown,
-        -- 
+        --
         -- -- ** Transformations
         -- -- above,
         -- -- below,
@@ -121,7 +103,7 @@ module Music.Score.Pitch (
         -- fifthsBelow,
         -- octavesAbove,
         -- octavesBelow,
-        -- 
+        --
         -- -- * Pitch representation
         -- Pitch,
         -- Interval,
@@ -135,30 +117,31 @@ module Music.Score.Pitch (
 
   ) where
 
-import Control.Monad (ap, mfilter, join, liftM, MonadPlus(..))
-import Control.Applicative
-import Control.Lens hiding (above, below, transform)
-import Data.Functor.Couple
-import Data.Semigroup
-import Data.String
-import Data.Typeable
-import Data.Foldable (Foldable)
-import Data.Traversable (Traversable)
-import Data.Ratio
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.AffineSpace.Point
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Lens                  hiding (above, below, transform)
+import           Control.Monad                 (MonadPlus (..), ap, join, liftM,
+                                                mfilter)
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable                 (Foldable)
+import           Data.Functor.Couple
+import qualified Data.List                     as List
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.String
+import           Data.Traversable              (Traversable)
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Time
-import Music.Time.Internal.Transform
-import Music.Score.Part
-import Music.Score.Slide
-import Music.Score.Tremolo
-import Music.Score.Text
-import Music.Score.Harmonics
-import Music.Score.Ties
-import Music.Pitch.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Harmonics
+import           Music.Score.Part
+import           Music.Score.Slide
+import           Music.Score.Text
+import           Music.Score.Ties
+import           Music.Score.Tremolo
+import           Music.Time
+import           Music.Time.Internal.Transform
 
 -- |
 -- This type fuction is used to retrive the /pitch type/ for a given concrete type.
@@ -169,7 +152,7 @@ import Music.Pitch.Literal
 -- Pitch Integer ~ Integer
 -- Pitch Double ~ Double
 -- @
--- 
+--
 -- and so on.
 --
 -- For containers, 'Pitch' provides a morphism:
@@ -220,12 +203,12 @@ type family SetPitch (b :: *) (s :: *) :: *
 class HasPitches s t => HasPitch s t where
 
   -- | Access the pitch.
-  --   
+  --
   --   As this is a 'Traversal', you can use all combinators from the lens package,
   --   for example:
   --
   --   @
-  --   'view' 'pitch' :: HasPitch a a 
+  --   'view' 'pitch' :: HasPitch a a
   --   @
   --
   --   @
@@ -245,20 +228,20 @@ class (Transformable (Pitch s),
        SetPitch (Pitch t) s ~ t) => HasPitches s t where
 
   -- | Access all pitches.
-  --   
+  --
   --   As this is a 'Traversal', you can use all combinators from the lens package,
   --   for example:
   --
   --   @
-  --   'lengthOf' 'pitches' :: HasPitches a a => a -> Int 
+  --   'lengthOf' 'pitches' :: HasPitches a a => a -> Int
   --   @
   --
   --   @
-  --   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a 
+  --   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a
   --   @
   --
   --   @
-  --   'over' 'pitches' :: HasPitches a b => a -> b 
+  --   'over' 'pitches' :: HasPitches a b => a -> b
   --   @
   --
   pitches :: Traversal s t (Pitch s) (Pitch t)
@@ -311,6 +294,7 @@ PRIM_PITCH_INSTANCE(Int)
 PRIM_PITCH_INSTANCE(Integer)
 PRIM_PITCH_INSTANCE(Float)
 PRIM_PITCH_INSTANCE(Double)
+
 
 type instance Pitch (c,a)               = Pitch a
 type instance SetPitch b (c,a)          = (c,SetPitch b a)
@@ -377,10 +361,10 @@ instance HasPitches a b => HasPitches (Chord a) (Chord b) where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
-  pitches = 
+  pitches =
     _Wrapped . _2   -- into NScore
     . _Wrapped
-    . traverse 
+    . traverse
     . _Wrapped      -- this needed?
     . whilstL pitches
 
@@ -542,21 +526,21 @@ augmentIntervals = error "Not implemented: augmentIntervals"
 
 -- |
 -- Return the highest pitch in the given music.
--- 
+--
 highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
 highestPitch = maximum . toListOf pitches'
 
 -- |
 -- Return the lowest pitch in the given music.
--- 
+--
 lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
 lowestPitch = maximum . toListOf pitches'
 
 -- |
 -- Return the mean pitch in the given music.
--- 
+--
 meanPitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Pitch a
 meanPitch = mean . toListOf pitches'
   where
-    mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x 
+    mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
 
