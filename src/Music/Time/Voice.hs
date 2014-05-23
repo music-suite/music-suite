@@ -200,27 +200,64 @@ instance VectorSpace (Voice a) where
 
 
 -- |
--- Create a score from a list of notes.
+-- Create a 'Voice' from a list of 'Stretched' values.
 --
--- This is a getter (rather than a function) for consistency:
---
--- @
--- [ (0 '<->' 1, 10)^.'note',
---   (1 '<->' 2, 20)^.'note',
---   (3 '<->' 4, 30)^.'note' ]^.'score'
--- @
+-- This is a 'Getter' (rather than a function) for consistency:
 --
 -- @
--- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
+-- [ (0 '<->' 1, 10)^.'stretched',
+--   (1 '<->' 2, 20)^.'stretched',
+--   (3 '<->' 4, 30)^.'stretched' ]^.'voice'
 -- @
 --
--- Se also 'notes'.
+-- @
+-- 'view' 'voice' $ 'map' ('view' 'stretched') [(0 '<->' 1, 1)]
+-- @
+--
+-- Se also 'stretcheds'.
 --
 voice :: Getter [Stretched a] (Voice a)
 voice = from unsafeStretcheds
 -- voice = to $ flip (set stretcheds) empty
 {-# INLINE voice #-}
 
+-- |
+-- View a 'Voice' as a list of 'Stretched' values.
+--
+-- @
+-- 'view' 'stretcheds'                        :: 'Voice' a -> ['Stretched' a]
+-- 'set'  'stretcheds'                        :: ['Stretched' a] -> 'Voice' a -> 'Voice' a
+-- 'over' 'stretcheds'                        :: (['Stretched' a] -> ['Stretched' b]) -> 'Voice' a -> 'Voice' b
+-- @
+--
+-- @
+-- 'preview'  ('stretcheds' . 'each')           :: 'Voice' a -> 'Maybe' ('Stretched' a)
+-- 'preview'  ('stretcheds' . 'element' 1)      :: 'Voice' a -> 'Maybe' ('Stretched' a)
+-- 'preview'  ('stretcheds' . 'elements' odd)   :: 'Voice' a -> 'Maybe' ('Stretched' a)
+-- @
+--
+-- @
+-- 'set'      ('stretcheds' . 'each')           :: 'Stretched' a -> 'Voice' a -> 'Voice' a
+-- 'set'      ('stretcheds' . 'element' 1)      :: 'Stretched' a -> 'Voice' a -> 'Voice' a
+-- 'set'      ('stretcheds' . 'elements' odd)   :: 'Stretched' a -> 'Voice' a -> 'Voice' a
+-- @
+--
+-- @
+-- 'over'     ('stretcheds' . 'each')           :: ('Stretched' a -> 'Stretched' b) -> 'Voice' a -> 'Voice' b
+-- 'over'     ('stretcheds' . 'element' 1)      :: ('Stretched' a -> 'Stretched' a) -> 'Voice' a -> 'Voice' a
+-- 'over'     ('stretcheds' . 'elements' odd)   :: ('Stretched' a -> 'Stretched' a) -> 'Voice' a -> 'Voice' a
+-- @
+--
+-- @
+-- 'toListOf' ('stretcheds' . 'each')                :: 'Voice' a -> ['Stretched' a]
+-- 'toListOf' ('stretcheds' . 'elements' odd)        :: 'Voice' a -> ['Stretched' a]
+-- 'toListOf' ('stretcheds' . 'each' . 'filtered'
+--              (\\x -> '_duration' x \< 2))  :: 'Voice' a -> ['Stretched' a]
+-- @
+--
+-- This is not an 'Iso', as the note list representation does not contain meta-data.
+-- To construct a score from a note list, use 'score' or @'flip' ('set' 'stretcheds') 'empty'@.
+--
 stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 stretcheds = unsafeStretcheds
 {-# INLINE stretcheds #-}

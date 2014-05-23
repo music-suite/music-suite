@@ -324,7 +324,7 @@ score = from unsafeNotes
 {-# INLINE score #-}
 
 -- |
--- View a score as a list of notes.
+-- View a 'Score' as a list of 'Note' values.
 --
 -- @
 -- 'view' 'notes'                        :: 'Score' a -> ['Note' a]
