@@ -296,12 +296,6 @@ instance Splittable a => Splittable (NScore a) where
   -- TODO
 
 
-
-
-
-
-
-
 -- |
 -- Create a score from a list of notes.
 --
@@ -425,10 +419,6 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
 
 {-# INLINE unsafeNotes #-}
 
--- unsafeVoices :: Iso (Score a) (Score b) [Voice a] [Voice b]
--- unsafeVoices = error "Not implemented: unsafeVoices"
--- {-# INLINE unsafeVoices #-}
-
 -- |
 -- View a score as a single note.
 --
@@ -442,8 +432,8 @@ singleNote = unsafeNotes . single
 -- | Map with the associated time span.
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapNScore f)
--- TODO move
-mapNScore f = over (_Wrapped.traverse) (extend f)
+  where
+    mapNScore f = over (_Wrapped.traverse) (extend f)
 
 reifyScore :: Score a -> Score (Note a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
@@ -500,8 +490,6 @@ filterEvents f = mapFilterEvents (partial3 f)
 -- | Efficient combination of 'mapEvents' and 'filterEvents'.
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
-
-
 
 
 
