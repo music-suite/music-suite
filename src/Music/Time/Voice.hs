@@ -43,32 +43,30 @@ module Music.Time.Voice (
     unsafeStretcheds,
     unsafeEventsV,
 
-    -- *** Separating rhythms and values
-    rhythmV,
-    valuesV,
+    -- ** Fusion
+    fuse,
+    fuseBy,
+
+    -- ** Separating rhythms and values
     rotateRhythm,
     rotateValues,
     reverseRhythm,
     reverseValues,
 
-    -- *** First and last elements
-    headV,
-    middleV,
-    lastV,
-
-    -- ** Fusion
-    fuse,
-    fuseBy,
-
     -- ** Zips
     zipVoice,
     zipVoiceWith,
-    -- dzipVoiceWith,
     zipVoiceWith',
     zipVoiceWithNoScale,
 
     -- * Context
     withContext,
+    
+    -- * Internal
+    -- TODO hide
+    headV,
+    middleV,
+    lastV,
   ) where
 
 import           Data.AffineSpace
@@ -247,14 +245,11 @@ unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeStretcheds = _Wrapped
 {-# INLINE unsafeStretcheds #-}
 
-{-
--- |
--- Voice
---
-voiceNotes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+-- TODO not simple
+-- TODO unsafe (meta...)
+voiceList :: Iso' (Voice a) [(Duration, a)]
+voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
 
--- TODO requires some @Prism (Note a) (Note b) (Stretched a) (Stretched b)@
--}
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.
@@ -269,15 +264,23 @@ zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith = zipVoiceWith' (*)
 
 -- |
+-- Join the given voices without combining durations. 
+--
+zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
+
+-- |
 -- Join the given voices by combining durations and values using the given function.
 --
-dzipVoiceWith :: (Duration -> Duration -> a -> b -> (Duration, c)) -> Voice a -> Voice b -> Voice c
-dzipVoiceWith = error "Not implemented: dzipVoiceWith"
+zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith' f g
+  ((unzip.view eventsV) -> (ad, as))
+  ((unzip.view eventsV) -> (bd, bs))
+  = let cd = zipWith f ad bd
+        cs = zipWith g as bs
+     in view (from unsafeEventsV) (zip cd cs)
 
--- TODO not simple
--- TODO unsafe (meta...)
-voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
+
 
 -- |
 -- Merge consecutive equal notes.
@@ -285,6 +288,9 @@ voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . ma
 fuse :: Eq a => Voice a -> Voice a
 fuse = fuseBy (==)
 
+-- |
+-- Merge consecutive equal notes using the given function.
+--
 fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
@@ -296,11 +302,10 @@ fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy 
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
+
+
 withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
 withContext = over valuesV withPrevNext
-
-zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
 
 --
 -- TODO more elegant definition of rhythmV and valuesV using indexed traversal or similar?
@@ -328,26 +333,30 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
+-- |
+-- Rotate durations by the given number of steps, leaving values intact.
+--
 rotateRhythm :: Int -> Voice a -> Voice a
 rotateRhythm n = over rhythmV (rotate n)
 
+-- |
+-- Rotate values by the given number of steps, leaving durations intact.
+--
 rotateValues :: Int -> Voice a -> Voice a
 rotateValues n = over valuesV (rotate n)
 
+-- |
+-- Reverse durations, leaving values intact.
+--
 reverseRhythm :: Voice a -> Voice a
 reverseRhythm = over rhythmV reverse
 
+-- |
+-- Reverse values, leaving durations intact.
+--
 reverseValues :: Voice a -> Voice a
 reverseValues = over valuesV reverse
 
-
-zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWith' f g
-  ((unzip.view eventsV) -> (ad, as))
-  ((unzip.view eventsV) -> (bd, bs))
-  = let cd = zipWith f ad bd
-        cs = zipWith g as bs
-     in view (from unsafeEventsV) (zip cd cs)
 
 --
 -- TODO

@@ -339,6 +339,9 @@ whilstDelay     = flip (flip whilst . delaying . (.-. 0))
 whilstStretch :: (Transformable a, Transformable b) => (a -> b) -> Duration -> a -> b
 whilstStretch = flip (flip whilst . stretching)
 
+-- |
+-- The conjugate of two spans.
+--
 conjugateS :: Span -> Span -> Span
 conjugateS t1 t2  = negateV t1 <> t2 <> t1
 
