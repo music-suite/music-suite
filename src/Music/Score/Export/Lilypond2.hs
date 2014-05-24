@@ -453,33 +453,33 @@ instance HasBackend Ly where
 
 -- TODO simplify
 instance (
-  -- HasPart' a, Ord (Part a),
-  -- Semigroup a,
-  -- Transformable a,
-  -- Tiable (SetDynamic DynamicNotation a),
-  -- Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation,
-  -- HasDynamics a (SetDynamic DynamicNotation a),
-  -- Dynamic a ~ Ctxt (OptAvg r), Real r
-  
   newDynType ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  newDyn2Type ~ DynamicNotation,
+
   newDyn ~ (SetDynamic newDynType a),
-  newDyn2 ~ (SetDynamic DynamicNotation newDyn),
   SetDynamic DynamicNotation a ~ newDyn2,
-  DynamicNotation ~ Dynamic newDyn2,
   Dynamic newDyn ~ newDynType,
-  HasDynamics newDyn (newDyn2),
-  Tiable newDyn2,
-  HasPart' newDyn,
-  Ord (Part newDyn),
+
+  newDyn2 ~ (SetDynamic newDyn2Type newDyn),
+  Dynamic newDyn2 ~ newDyn2Type,
+
+  HasDynamic' a,
+  HasDynamic a newDyn,
+  HasDynamic newDyn newDyn2,
+
+  Real (Dynamic a),
+  
+  HasPart' newDyn, Ord (Part newDyn),
   Transformable newDyn,
   Semigroup newDyn,
-  HasDynamic a newDyn,
-  HasDynamic' a,
-  Real (Dynamic a),
-  HasPart' a,
-  Ord (Part a),
+  
+  HasPart' a, Ord (Part a),
   Transformable a,
-  Semigroup a
+  Semigroup a,
+
+  Tiable newDyn2,
+  
+  () ~ ()
   )
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
