@@ -1077,14 +1077,26 @@ openLilypond' options sc = do
 -- TODO move 
 deriving instance Show MusicXml.Line
 deriving instance Show MusicXml.ClefSign
+-- deriving instance Eq MusicXml.PartList
+-- deriving instance Show MusicXml.PartList
+-- deriving instance Eq MusicXml.PartListElem
+-- deriving instance Show MusicXml.PartListElem
+-- deriving instance Show MusicXml.GroupBarLines
+-- FIXME bogus
+instance Eq MusicXml.PartList where
+instance Show MusicXml.PartList where
 
 
 
 -- | A token to represent the MusicXml backend.
 data MusicXml
 
-data XScoreInfo = XScoreInfo
+data XScoreInfo = XScoreInfo { scoreTitle :: String,
+                               scoreComposer :: String,
+                               scorePartList :: MusicXml.PartList
+                               }
   deriving (Eq, Show)
+
 
 data XStaffInfo = XStaffInfo { x_staffName :: String, 
                              x_staffClef :: (MusicXml.ClefSign, MusicXml.Line) } 
@@ -1130,9 +1142,9 @@ finalizeScore (XmlScore (info, x))
   . map finalizeStaff $ x
   where
     -- FIXME FIXME FIXME
-    title = error "No title"
-    composer = error "No title"
-    partList = error "No title"
+    title = scoreTitle info
+    composer = scoreComposer info
+    partList = scorePartList info
 
 -- TODO finalizeStaffGroup
 
@@ -1171,12 +1183,12 @@ renderBarMusic = go
 instance (
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
-  HasOrdPart c, Show (Part c), Tiable c
+  HasOrdPart c, Tiable c, Show (Part a)
   )
   => HasBackendScore MusicXml (Score a) where
   type BackendScoreEvent MusicXml (Score a) = SetDynamic DynamicNotation a
   exportScore b score = XmlScore 
-    . (XScoreInfo,)
+    . (XScoreInfo title composer partList,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts'
     . over dynamics notateDynamic 
@@ -1184,12 +1196,14 @@ instance (
     . preserveMeta simultaneous 
     $ score
     where
+      title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score
+      composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart score
+      partList = MusicXml.partList (fmap show $ allParts score)
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
-        Show (Part a), 
         Tiable a
         ) 
         => [Maybe TimeSignature] 
@@ -1201,7 +1215,6 @@ instance (
       exportStaff :: Tiable a 
         => [Maybe TimeSignature] 
         -> [Duration] 
-        -> String -- ^ name
         -> MVoice a 
         -> XmlStaff (XmlContext a)
 
@@ -1215,16 +1228,17 @@ instance (
         -> Rhythm (XmlContext a)
 
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (show part)
+        = exportStaff timeSignatureMarks barDurations
         . view singleMVoice
 
-      exportStaff timeSignatures barDurations name 
+      exportStaff timeSignatures barDurations
         = XmlStaff 
         . addXStaffInfo
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
-          addXStaffInfo  = (,) $ XStaffInfo { x_staffName = name, x_staffClef = error "guess clef" } -- TODO guess clef
+          -- FIXME
+          addXStaffInfo  = (,) $ XStaffInfo { x_staffName = "TODO not used", x_staffClef = (MusicXml.GClef, 2) } -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature
