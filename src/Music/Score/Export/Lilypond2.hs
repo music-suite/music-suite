@@ -159,6 +159,28 @@ type HasOrdPart a = (HasPart' a, Ord (Part a))
 
 
 
+-- TODO move
+mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
+mapWithDur f = go
+  where
+    go (Beat d x)            = Beat d (f d x)
+    go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+    go (Group rs)            = Group $ fmap (mapWithDur f) rs
+    go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
+
+extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
+extractTimeSignatures score = (barTimeSignatures, barDurations)
+  where                                          
+    defaultTimeSignature = time 4 4
+    timeSignatures = fmap swap 
+      $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+      $ getTimeSignatures defaultTimeSignature score
+
+    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
+    barDurations = getBarDurations timeSignatures
+
+
 
 
 
@@ -575,7 +597,7 @@ data ScoreInfo = ScoreInfo
   deriving (Eq, Show)
 
 data StaffInfo = StaffInfo { staffName :: String, 
-                             staffClef :: Lilypond.Clef }
+                             staffClef :: Lilypond.Clef } 
   deriving (Eq, Show)
 
 data BarInfo = BarInfo { barTimeSignature :: Maybe TimeSignature } 
@@ -619,6 +641,8 @@ instance HasBackend Lilypond where
         . map finalizeStaff $ x
         where
           extra = id
+
+      -- TODO finalizeStaffGroup
 
       finalizeStaff :: LyStaff LyMusic -> LyMusic
       finalizeStaff (LyStaff (info, x)) 
@@ -674,9 +698,6 @@ instance (
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
-      extractTimeSignatures 
-        :: Score a 
-        -> ([Maybe TimeSignature], [Duration])
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
@@ -694,59 +715,42 @@ instance (
         -> [Duration] 
         -> String -- ^ name
         -> MVoice a 
-
         -> LyStaff (LyContext a)
+
       exportBar :: Tiable a 
         => Maybe TimeSignature 
         -> MVoice a 
         -> LyBar (LyContext a)
 
-      quantizeBar 
-        :: Tiable a 
+      quantizeBar :: Tiable a 
         => MVoice a 
         -> Rhythm (LyContext a)
-
-      extractTimeSignatures score = (barTimeSignatures, barDurations)
-        where                                          
-          defaultTimeSignature = time 4 4
-          timeSignatures = fmap swap 
-            $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
-            $ getTimeSignatures defaultTimeSignature score
-
-          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-          barDurations = getBarDurations timeSignatures
 
       exportPart timeSignatureMarks barDurations part
         = exportStaff timeSignatureMarks barDurations (show part)
         . view singleMVoice
 
-
       exportStaff timeSignatures barDurations name 
-        = LyStaff . addStaffInfo
-        . zipWith exportBar timeSignatures . splitIntoBars barDurations
+        = LyStaff 
+        . addStaffInfo
+        . zipWith exportBar timeSignatures 
+        . splitIntoBars barDurations
         where         
-          addStaffInfo  = (StaffInfo { staffName = name, staffClef = Lilypond.Alto },) -- TODO guess clef
+          addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = Lilypond.Alto } -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
 
-      exportBar timeSignature = LyBar . addBarInfo . quantizeBar
+      exportBar timeSignature
+        = LyBar 
+        . addBarInfo 
+        . quantizeBar
        where
-         addBarInfo = (BarInfo timeSignature,)
+         addBarInfo = (,) $ BarInfo timeSignature
 
       quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view eventsV
         where
           -- FIXME propagate quantization errors
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e
           handleErrors (Right x) = x
-
-          mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
-          mapWithDur f = go
-            where
-              go (Beat d x)            = Beat d (f d x)
-              go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
-              go (Group rs)            = Group $ fmap (mapWithDur f) rs
-              go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
-
 
 --------------------------------------------------------------------------------
 
@@ -814,7 +818,8 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
     where
       notate :: DynamicNotation -> LyMusic -> LyMusic
       notate (DynamicNotation (crescDims, level)) 
-        = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
+        = rcomposed (fmap notateCrescDim crescDims) 
+        . notateLevel level
 
       notateCrescDim crescDims = case crescDims of
         NoCrescDim -> id
@@ -844,7 +849,8 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
       -- TODO handle any color
       notate (Option Nothing)             = id
       notate (Option (Just (Last color))) = \x -> Lilypond.Sequential [
-        Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ colorName color),
+        Lilypond.Override "NoteHead#' color" 
+          (Lilypond.toLiteralValue $ "#" ++ colorName color),
         x,
         Lilypond.Revert "NoteHead#' color"
         ]
