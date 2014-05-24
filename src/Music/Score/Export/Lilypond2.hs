@@ -233,6 +233,10 @@ export b = finalizeExport b . export'
 
 
 
+
+
+
+
 data NullBackend
 
 instance HasBackend NullBackend where
@@ -860,20 +864,21 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
   -- FIXME it's too late to change duration here as we already quantized
-  exportNote b = exportNote b . fmap extract
+  -- exportNote b = exportNote b . fmap extract
 
-  -- exportNote b = \(LyContext d x) ->
-  --   (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
-  --   where
-  --     -- newDur = d
-  --     -- notate = id
-  --     notate Nothing d = (id, d)
-  --     notate (Just n') d = let
-  --       n = getMax . fst . getCouple . getTremoloT $ n'
-  --       scale   = 2^n
-  --       newDur  = (d `min` (1/4)) / scale
-  --       repeats = d / newDur
-  --       in (Lilypond.Tremolo (round $ repeats), newDur)
+  exportNote b = \(LyContext d x) ->
+    (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
+    where
+      -- newDur = d
+      -- notate = id
+
+      notate Nothing d                               = (id, d)
+      notate (Just (TremoloT (Couple (Max 0, _)))) d = (id, d)
+      notate (Just (TremoloT (Couple (Max n, _)))) d = let
+        scale   = 2^n
+        newDur  = (d `min` (1/4)) / scale
+        repeats = d / newDur
+        in (Lilypond.Tremolo (round $ repeats), newDur)     
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TextT a) where
   exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
