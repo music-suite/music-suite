@@ -1,7 +1,5 @@
 
 
--- {-# LANGUAGE LiberalTypeSynonyms        #-}
--- {-# LANGUAGE ImpredicativeTypes         #-}
 
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
@@ -73,6 +71,8 @@ import qualified Text.Pretty                   as Pretty
 import qualified Data.List
 import Music.Score.Convert (reactiveToVoice') -- TODO
 import Music.Score.Internal.Util (swap, retainUpdates)
+import Music.Score.Export.DynamicNotation
+
 
 
 -- TODO move all this stuff to the appropriate places...
@@ -949,7 +949,7 @@ type MyNote =
                 (SlideT 
                   (ArticulationT () 
                     (DynamicT 
-                      (OptAvg Double) 
+                      (Sum Double) 
                         [Double]
                         )
                         )
@@ -975,6 +975,7 @@ open = openLilypond
 
 -- TODO move stuff below here somewhere
 
+{-
 
 newtype OptAvg a = OptAvg
   -- (Option (Average a))
@@ -1006,6 +1007,7 @@ getAverage (Average (Sum n, Sum x)) = x / fromInteger n
 instance (Show a, Fractional a) => Show (Average a) where
   show n = "Average {getAverage = " ++ show (getAverage n) ++ "}"
 
+-}
 
 
 
@@ -1038,75 +1040,75 @@ spellLy' p = Lilypond.Pitch (
     where (pc,alt,oct) = spellPitch (p + 72)
 
 
-
-
-
-data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
-
-instance Monoid CrescDim where
-  mempty = NoCrescDim
-  mappend a _ = a
-
-newtype DynamicNotation 
-  = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
-
-instance Wrapped DynamicNotation where
-  type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
-  _Wrapped' = iso getDynamicNotation DynamicNotation
-
-instance Rewrapped DynamicNotation DynamicNotation
-
-type instance Dynamic DynamicNotation = DynamicNotation
-
-instance Transformable DynamicNotation where
-  transform _ = id
-
-instance Tiable DynamicNotation where
-  toTied (DynamicNotation (beginEnd, marks)) 
-    = (DynamicNotation (beginEnd, marks), 
-       DynamicNotation (mempty, Nothing))
-
--- Given a dynamic value and its context, decide:
---
---   1) Whether we should begin or end a crescendo or diminuendo
---   2) Whether we should display the current dynamic value
---
-notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
-notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
-  (Nothing, y, Nothing) -> ([], True)
-  (Nothing, y, Just z ) -> case (y `compare` z) of
-    LT      -> ([BeginCresc], True)
-    EQ      -> ([],           True)
-    GT      -> ([BeginDim],   True)
-  (Just x,  y, Just z ) -> case (x `compare` y, y `compare` z) of
-    (LT,LT) -> ([NoCrescDim], False)
-    (LT,EQ) -> ([EndCresc],   True)
-    (EQ,LT) -> ([BeginCresc], False{-True-})
-
-    (GT,GT) -> ([NoCrescDim], False)
-    (GT,EQ) -> ([EndDim],     True)
-    (EQ,GT) -> ([BeginDim],   False{-True-})
-
-    (EQ,EQ) -> ([],                   False)
-    (LT,GT) -> ([EndCresc, BeginDim], True)
-    (GT,LT) -> ([EndDim, BeginCresc], True)
-
-
-  (Just x,  y, Nothing) -> case (x `compare` y) of
-    LT      -> ([EndCresc],   True)
-    EQ      -> ([],           False)
-    GT      -> ([EndDim],     True)
-
-
-
-
-
-
-mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
-mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
-
-extractCtxt :: Ctxt a -> a
-extractCtxt (_,x,_) = x
+-- 
+-- 
+-- 
+-- data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
+-- 
+-- instance Monoid CrescDim where
+--   mempty = NoCrescDim
+--   mappend a _ = a
+-- 
+-- newtype DynamicNotation 
+--   = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
+-- 
+-- instance Wrapped DynamicNotation where
+--   type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
+--   _Wrapped' = iso getDynamicNotation DynamicNotation
+-- 
+-- instance Rewrapped DynamicNotation DynamicNotation
+-- 
+-- type instance Dynamic DynamicNotation = DynamicNotation
+-- 
+-- instance Transformable DynamicNotation where
+--   transform _ = id
+-- 
+-- instance Tiable DynamicNotation where
+--   toTied (DynamicNotation (beginEnd, marks)) 
+--     = (DynamicNotation (beginEnd, marks), 
+--        DynamicNotation (mempty, Nothing))
+-- 
+-- -- Given a dynamic value and its context, decide:
+-- --
+-- --   1) Whether we should begin or end a crescendo or diminuendo
+-- --   2) Whether we should display the current dynamic value
+-- --
+-- notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
+-- notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
+--   (Nothing, y, Nothing) -> ([], True)
+--   (Nothing, y, Just z ) -> case (y `compare` z) of
+--     LT      -> ([BeginCresc], True)
+--     EQ      -> ([],           True)
+--     GT      -> ([BeginDim],   True)
+--   (Just x,  y, Just z ) -> case (x `compare` y, y `compare` z) of
+--     (LT,LT) -> ([NoCrescDim], False)
+--     (LT,EQ) -> ([EndCresc],   True)
+--     (EQ,LT) -> ([BeginCresc], False{-True-})
+-- 
+--     (GT,GT) -> ([NoCrescDim], False)
+--     (GT,EQ) -> ([EndDim],     True)
+--     (EQ,GT) -> ([BeginDim],   False{-True-})
+-- 
+--     (EQ,EQ) -> ([],                   False)
+--     (LT,GT) -> ([EndCresc, BeginDim], True)
+--     (GT,LT) -> ([EndDim, BeginCresc], True)
+-- 
+-- 
+--   (Just x,  y, Nothing) -> case (x `compare` y) of
+--     LT      -> ([EndCresc],   True)
+--     EQ      -> ([],           False)
+--     GT      -> ([EndDim],     True)
+-- 
+-- 
+-- 
+-- 
+-- 
+-- 
+-- mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
+-- mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
+-- 
+-- extractCtxt :: Ctxt a -> a
+-- extractCtxt (_,x,_) = x              
 
 
 

@@ -106,6 +106,7 @@ library
                         Music.Score.Export.Lilypond2
                         Music.Score.Export.MusicXml
                         Music.Score.Export.Midi
+                        Music.Score.Export.DynamicNotation
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
