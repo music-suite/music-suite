@@ -55,19 +55,19 @@ import           Music.Score.Phrases
 import           Music.Time
 
 class HasTremolo a where
-    setTrem :: Int -> a -> a
+  setTrem :: Int -> a -> a
 
 instance HasTremolo a => HasTremolo (b, a) where
-    setTrem n = fmap (setTrem n)
+  setTrem n = fmap (setTrem n)
 
 instance HasTremolo a => HasTremolo (Couple b a) where
-    setTrem n = fmap (setTrem n)
+  setTrem n = fmap (setTrem n)
 
 instance HasTremolo a => HasTremolo [a] where
-    setTrem n = fmap (setTrem n)
+  setTrem n = fmap (setTrem n)
 
 instance HasTremolo a => HasTremolo (Score a) where
-    setTrem n = fmap (setTrem n)
+  setTrem n = fmap (setTrem n)
 
 
 
@@ -86,7 +86,7 @@ instance Wrapped (TremoloT a) where
 instance Rewrapped (TremoloT a) (TremoloT b)
 
 instance HasTremolo (TremoloT a) where
-    setTrem n (TremoloT (Couple (_,x))) = TremoloT (Couple (Max $ fromIntegral n,x))
+  setTrem n (TremoloT (Couple (_,x))) = TremoloT (Couple (Max $ fromIntegral n,x))
 
 -- Lifted instances
 deriving instance Num a => Num (TremoloT a)

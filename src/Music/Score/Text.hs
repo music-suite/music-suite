@@ -57,22 +57,25 @@ import           Music.Time
 
 
 class HasText a where
-    addText :: String -> a -> a
+  addText :: String -> a -> a
 
 newtype TextT a = TextT { getTextT :: Couple [String] a }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (
+    Eq, Show, Ord, Functor, Foldable, Typeable, 
+    Applicative, Monad, Comonad
+    )
 
 instance HasText a => HasText (b, a) where
-    addText       s                                 = fmap (addText s)
+  addText s = fmap (addText s)
 
 instance HasText a => HasText (Couple b a) where
-    addText       s                                 = fmap (addText s)
+  addText s = fmap (addText s)
 
 instance HasText a => HasText [a] where
-    addText       s                                 = fmap (addText s)
+  addText s = fmap (addText s)
 
 instance HasText a => HasText (Score a) where
-    addText       s                                 = fmap (addText s)
+  addText s = fmap (addText s)
 
 
 -- | Unsafe: Do not use 'Wrapped' instances

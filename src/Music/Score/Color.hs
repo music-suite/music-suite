@@ -34,7 +34,9 @@
 module Music.Score.Color (
         -- ** HasColor class
         HasColor(..),
+
         -- * Manipulating color
+        color,
 
         -- * Representation
         ColorT(..),
@@ -109,4 +111,11 @@ instance Tiable a => Tiable (ColorT a) where
   toTied (ColorT (n,a)) = (ColorT (n,b), ColorT (n,c)) 
     where 
       (b,c) = toTied a
+
+
+-- |
+-- Set the number of tremolo divisions for all notes in the score.
+--
+color :: HasColor a => Colour Double -> a -> a
+color = setColor
 
