@@ -1,8 +1,9 @@
 
 
-{-# LANGUAGE LiberalTypeSynonyms        #-}
-{-# LANGUAGE ImpredicativeTypes         #-}
+-- {-# LANGUAGE LiberalTypeSynonyms        #-}
+-- {-# LANGUAGE ImpredicativeTypes         #-}
 
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DefaultSignatures          #-}
@@ -70,7 +71,8 @@ import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
-
+import Music.Score.Convert (reactiveToVoice') -- TODO
+import Music.Score.Internal.Util (swap, retainUpdates)
 
 
 -- TODO move all this stuff to the appropriate places...
@@ -548,7 +550,7 @@ data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Sh
 data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
 
 -- | A bar is a sequential composition of chords/notes/rests.
-data LyBar   a = LyBar   { getLyBar :: Rhythm a    } deriving (Functor, Eq, Show)
+data LyBar   a = LyBar   { getLyBar :: (Maybe TimeSignature, Rhythm a)    } deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
 --   Includes duration and note/rest distinction.
@@ -569,8 +571,12 @@ instance HasBackend Lilypond where
   finalizeExport _ = id
     pcatLy
     -- [LyMusic]
-    . fmap (addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map rhythmToLilypond)
-    . fmap (fmap getLyBar)
+    . fmap (
+      addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map (
+        \(LyBar (timeSig, music)) -> setBarTimeSig timeSig (rhythmToLilypond music)
+        )
+      )
+
     -- [[Bar]]
     . fmap (getLyStaff)
     -- [Staff]
@@ -648,27 +654,63 @@ instance (
   type ScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
   exportScore b = LyScore
     . map (uncurry exportPart)
-    . extractParts'
-    . over dynamics dynamicDisplay . addDynCon 
-    . simultaneous
+    . extractParts' --WithMeta
+    . over dynamics dynamicDisplay 
+    -- TODO preserveMeta is a workaround
+    . preserveMeta addDynCon 
+    . preserveMeta simultaneous 
+
+preserveMeta f x = let m = view meta x in set meta m (f x)
+
+-- -- TODO extractParts' should actually preserve meta, this function is a workaround
+-- extractParts'WithMeta :: (HasPart' a, Ord (Part a)) => Score a -> [(Part a, Score a)]
+-- extractParts'WithMeta sc = over (mapped._2) (set meta met) $ extr
+--   where
+--     met  = sc^.meta
+--     extr = extractParts' sc
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
 exportPart :: Tiable a => Part a -> Score a -> LyStaff (LyContext a)
-exportPart p = id
+exportPart p score = id
   -- LyStaff (LyContext b)
-  . exportStaff
+  . exportStaff timeSignatureMarks barDurations
   -- Voice b
   . view singleMVoice
   -- Score b
-
-exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
-exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-FIXME get proper bar length-}
+  $ score
   where
-    exportBar :: Tiable a => MVoice a -> LyBar (LyContext a)
-    exportBar = LyBar . toRhythm
+    (timeSignatureMarks, barDurations) 
+      = 
+        getTimeSigs score 
+
+
+exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
+exportStaff timeSignatures barDurations 
+  = LyStaff . zipWith exportBar timeSignatures . splitTies barDurations
+  where
+    exportBar :: Tiable a => Maybe TimeSignature -> MVoice a -> LyBar (LyContext a)
+    exportBar timeSignature voice = LyBar (timeSignature, toRhythm voice)
 
     splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
     splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
+
+    voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
+    voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
+    
+
+getTimeSigs :: Score a -> ([Maybe TimeSignature], [Duration])
+getTimeSigs sc = let
+  timeSigs  = getTimeSignatures (time 4 4) sc -- 4/4 is default
+  timeSigsV = fmap swap $ unvoice $ fuse $ reactiveToVoice' (0 <-> _offset sc) timeSigs
+
+  -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+  barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
+  barDurations =                 getBarDurations      $ timeSigsV
+  in (barTimeSigs, barDurations)
+
+setBarTimeSig :: Maybe TimeSignature -> LyMusic -> LyMusic
+setBarTimeSig Nothing x = x
+setBarTimeSig (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
 
 
 toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
@@ -875,29 +917,49 @@ aScore = id
 
 
 
--- main = putStrLn $ show $ view notes $ simultaneous
-main = do
-  -- showLilypond $ music
-  openLilypond $ music
-music = id
-  --  $ over pitches' (+ 2)
-  --  $ text "Hello"
-  $ compress 1 $ sj -- </> sj^*2 </> sj^*4
-  where
-    sj = timesPadding 2 1 $ harmonic 1 (scat [
-      color Color.blue $ level _f $ c <> d,
-      cs,
-      level _f ds,
-      level ff fs,
-      level _f a_,
-      text "pizz" $ level pp gs_,
-      tremolo 2 d,
-      tremolo 3 e
-      ::Score MyNote])^*(1+4/5)
+-- -- main = putStrLn $ show $ view notes $ simultaneous
+-- main = do
+--   -- showLilypond $ music
+--   openLilypond $ music
+-- music = id
+--   --  $ over pitches' (+ 2)
+--   --  $ text "Hello"
+--   $ compress 1 $ sj -- </> sj^*2 </> sj^*4
+--   where
+--     sj = timesPadding 2 1 $ harmonic 1 (scat [
+--       color Color.blue $ level _f $ c <> d,
+--       cs,
+--       level _f ds,
+--       level ff fs,
+--       level _f a_,
+--       text "pizz" $ level pp gs_,
+--       tremolo 2 d,
+--       tremolo 3 e
+--       ::Score MyNote])^*(1+4/5)   
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
-type MyNote = (PartT Int (TieT (ColorT (TextT (TremoloT (HarmonicT (SlideT (ArticulationT () (DynamicT (OptAvg Double) [Double])))))))))
+type MyNote = 
+    (PartT Int 
+      (TieT 
+        (ColorT 
+          (TextT 
+            (TremoloT 
+              (HarmonicT 
+                (SlideT 
+                  (ArticulationT () 
+                    (DynamicT 
+                      (OptAvg Double) 
+                        [Double]
+                        )
+                        )
+                        )
+                        )
+                        )
+                        )
+                        )
+                        )
+                        )
 
 
 
