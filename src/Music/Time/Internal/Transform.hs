@@ -33,7 +33,7 @@ module Music.Time.Internal.Transform (
       whilstStretch,
       whilstDelay,
       spanned,
-      onS,
+      onSpan,
       conjugateS,
 
       -- ** Specific transformations
@@ -358,11 +358,11 @@ spanned s = flip whilstM (negateV s)
 -- Designed to be used infix, as in
 --
 -- @
--- l ``on`` (2 \<-> 3)
+-- l ``onSpan`` (2 \<-> 3)
 -- @
 --
-onS :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
-f `onS` s = spanned s . f
+onSpan :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
+f `onSpan` s = spanned s . f
 -- TODO name
 
 -- TODO move!
