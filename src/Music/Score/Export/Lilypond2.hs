@@ -501,10 +501,11 @@ data Lilypond
 data LyScore a = LyScore { getLyScore :: [LyStaff a] }
   deriving (Functor, Eq, Show)
 
-type StaffInfo = ()
+data StaffInfo = StaffInfo { staffName :: String, staffClef :: Lilypond.Clef }
+  deriving (Eq, Show)
 
 -- | A staff is a sequential composition of bars.
-data LyStaff a = LyStaff { getLyStaff :: [(StaffInfo, LyBar a)] }
+data LyStaff a = LyStaff { getLyStaff :: (StaffInfo, [LyBar a]) }
   deriving (Functor, Eq, Show)
 
 type BarInfo = Maybe TimeSignature
@@ -535,11 +536,9 @@ instance HasBackend Lilypond where
           extra = id
 
       finalizeStaff :: LyStaff LyMusic -> LyMusic
-      finalizeStaff = extra . scatLy . map (finalizeBar . snd) . getLyStaff
+      finalizeStaff (LyStaff (info, x)) = extra . scatLy . map finalizeBar $ x
         where
-          extra = addStaff . addPartName "Foo" . addClef ()
-        -- TODO correct staff names
-        -- TODO correct clefs
+          extra = addStaff . addPartName (staffName info) . addClef (staffClef info)
 
       finalizeBar :: LyBar LyMusic -> LyMusic
       finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm music
@@ -566,8 +565,8 @@ instance HasBackend Lilypond where
           longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
           shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
 
-      addClef :: () -> LyMusic -> LyMusic
-      addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
+      addClef :: Lilypond.Clef -> LyMusic -> LyMusic
+      addClef c x = pcatLy [Lilypond.Clef c, x]
 
 
       setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
@@ -592,7 +591,7 @@ instance (
   HasDynamic3 a a' a'',
   
   Real (Dynamic a),
-  HasPart' a, Ord (Part a),
+  HasPart' a, Ord (Part a), Show (Part a''),
   Transformable a,
   Semigroup a,
 
@@ -614,29 +613,33 @@ instance (
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
-      exportPart :: Tiable a 
+      exportPart :: (
+        Show (Part a), 
+        Tiable a
+        ) 
         => [Maybe TimeSignature] 
         -> [Duration] 
         -> Part a 
         -> Score a 
         -> LyStaff (LyContext a)
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations
+        = exportStaff timeSignatureMarks barDurations (show part)
         . view singleMVoice
 
 
       exportStaff :: Tiable a 
         => [Maybe TimeSignature] 
         -> [Duration] 
+        -> String -- ^ name
         -> MVoice a 
         -> LyStaff (LyContext a)
-      exportStaff timeSignatures barDurations 
+      exportStaff timeSignatures barDurations name 
         = LyStaff 
-        . map addStaffInfo
+        . addStaffInfo
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
-          addStaffInfo  = ((),)
+          addStaffInfo  = (StaffInfo { staffName = name, staffClef = Lilypond.Alto },) -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
           -- TODO rename splitTiesVoiceAt?
 
