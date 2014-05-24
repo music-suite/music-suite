@@ -62,6 +62,7 @@ import qualified Text.Pretty                   as Pretty
 
 
 
+type HasDynamic' a = HasDynamic a a
 
 -- TODO move
 instance (HasParts a b) => HasParts (Voice a) (Voice b) where
@@ -459,56 +460,22 @@ instance (
   -- Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation,
   -- HasDynamics a (SetDynamic DynamicNotation a),
   -- Dynamic a ~ Ctxt (OptAvg r), Real r
-
-  SetDynamic DynamicNotation a
-                        ~ SetDynamic
-                            DynamicNotation
-                            (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-  ,
-  DynamicNotation
-                        ~ Dynamic
-                            (SetDynamic
-                               DynamicNotation
-                               (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
-  ,
-  Dynamic (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-                        ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a))
-
-  ,
-  HasDynamics
-                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-                          (SetDynamic
-                             DynamicNotation
-                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
-
-  ,
-  Tiable
-                          (SetDynamic
-                             DynamicNotation
-                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
-  ,
-  Real (Dynamic a)
-  ,
-  HasPart
-                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-
-  ,
-  Ord
-                          (Part
-                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
-
-  ,
-  Transformable
-                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-  ,
-  Semigroup
-                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-  ,
-  HasDynamic
-                          a (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
-  ,
-  HasDynamic a a,
+  
+  newDynType ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  newDyn ~ (SetDynamic newDynType a),
+  newDyn2 ~ (SetDynamic DynamicNotation newDyn),
+  SetDynamic DynamicNotation a ~ newDyn2,
+  DynamicNotation ~ Dynamic newDyn2,
+  Dynamic newDyn ~ newDynType,
+  HasDynamics newDyn (newDyn2),
+  Tiable newDyn2,
+  HasPart' newDyn,
+  Ord (Part newDyn),
+  Transformable newDyn,
+  Semigroup newDyn,
+  HasDynamic a newDyn,
+  HasDynamic' a,
+  Real (Dynamic a),
   HasPart' a,
   Ord (Part a),
   Transformable a,
@@ -516,12 +483,11 @@ instance (
   )
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
-  exportScore b x = LyScore
+  exportScore b = LyScore
     . map (uncurry exportPart)
     . extractParts'
-    . simultaneous -- Needed?
-    . (addDynCon.simultaneous)
-    $ x
+    . addDynCon 
+    . simultaneous
     where
 
 -- | Export a score as a single staff. Overlapping notes will cause an error.
