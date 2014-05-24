@@ -33,25 +33,33 @@ module Music.Time.Voice (
     -- * Voice type
     Voice,
 
-    -- ** Substructure
+    -- * Construction
     voice,
+
+    -- ** Extracting values
     stretcheds,
     eventsV,
+
+    -- ** Pattern matching
     singleStretched,
 
-    -- *** Unsafe operations
+    -- *** Unsafe versions
     unsafeStretcheds,
     unsafeEventsV,
 
-    -- ** Fusion
+
+    -- * Fusion
     fuse,
     fuseBy,
 
+    -- * Traversing
     -- ** Separating rhythms and values
-    rotateRhythm,
+    withValues,
+    withDurations,
     rotateValues,
-    reverseRhythm,
+    rotateDurations,
     reverseValues,
+    reverseDurations,
 
     -- ** Zips
     unzipVoice,
@@ -272,20 +280,19 @@ unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 unsafeEventsV = iso (map (^.from stretched).(^.stretcheds)) ((^.voice).map (^.stretched))
 {-# INLINE unsafeEventsV #-}
 
-
-
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = unsafeStretcheds . single
-{-# INLINE singleStretched #-}
-
 unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeStretcheds = _Wrapped
 {-# INLINE unsafeStretcheds #-}
 
 -- TODO not simple
 -- TODO unsafe (meta...)
-voiceList :: Iso' (Voice a) [(Duration, a)]
-voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
+__voiceList :: Iso' (Voice a) [(Duration, a)]
+__voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
+
+
+singleStretched :: Prism' (Voice a) (Stretched a)
+singleStretched = unsafeStretcheds . single
+{-# INLINE singleStretched #-}
 
 
 -- |
@@ -338,7 +345,7 @@ fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over __voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     -- Typically, the combination function us just 'head', as we know that group returns
@@ -351,11 +358,11 @@ withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
 withContext = over valuesV withPrevNext
 
 --
--- TODO more elegant definition of rhythmV and valuesV using indexed traversal or similar?
+-- TODO more elegant definition of durationsV and valuesV using indexed traversal or similar?
 --
 
-rhythmV :: Lens' (Voice a) [Duration]
-rhythmV = lens getDurs (flip setDurs)
+durationsV :: Lens' (Voice a) [Duration]
+durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
     getDurs = map fst . view eventsV
@@ -376,11 +383,15 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
+withDurations = over durationsV
+
+withValues    = over valuesV
+
 -- |
 -- Rotate durations by the given number of steps, leaving values intact.
 --
-rotateRhythm :: Int -> Voice a -> Voice a
-rotateRhythm n = over rhythmV (rotate n)
+rotateDurations :: Int -> Voice a -> Voice a
+rotateDurations n = over durationsV (rotate n)
 
 -- |
 -- Rotate values by the given number of steps, leaving durations intact.
@@ -391,8 +402,8 @@ rotateValues n = over valuesV (rotate n)
 -- |
 -- Reverse durations, leaving values intact.
 --
-reverseRhythm :: Voice a -> Voice a
-reverseRhythm = over rhythmV reverse
+reverseDurations :: Voice a -> Voice a
+reverseDurations = over durationsV reverse
 
 -- |
 -- Reverse values, leaving durations intact.
@@ -404,7 +415,7 @@ reverseValues = over valuesV reverse
 --
 -- TODO
 -- Implement meta-data
--- Separate safe/unsafe Isos (see voiceList...)
+-- Separate safe/unsafe Isos (see __voiceList...)
 --
 
 --

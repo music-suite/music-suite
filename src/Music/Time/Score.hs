@@ -36,10 +36,9 @@ module Music.Time.Score (
       -- * Construction
       score,
       
-      -- ** Extracting notes and events
+      -- ** Extracting values
       notes,
       events,
-      -- voices,
       
       -- ** Pattern matching
       singleNote,
@@ -48,7 +47,9 @@ module Music.Time.Score (
       unsafeNotes,
       unsafeEvents,
 
+
       -- * Simultaneous values
+      -- TODO check for overlapping values etc
       simult,
       simultaneous,
 
