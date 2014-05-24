@@ -66,11 +66,14 @@ import           Music.Time
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
     deriving (Functor, Semigroup, Monoid)
 
+
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ClefT a) where
   type Unwrapped (ClefT a) = (Option (Last Clef), a)
   _Wrapped' = iso getClefT ClefT
+
 instance Rewrapped (ClefT a) (ClefT b)
+
 
 instance Monad ClefT where
     return x = ClefT (mempty, x)

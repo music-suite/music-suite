@@ -316,48 +316,47 @@ spiccato :: Articulated a => a -> a
 spiccato = id
 
 
-
-
 newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
-  deriving (Eq, Ord, Show, Typeable, Functor,
-    Applicative, Monad, Comonad,
-    Transformable, Monoid, Semigroup)
+  deriving (
+    Eq, Ord, Show, Typeable, Functor, Applicative, Monad, 
+    Comonad, Transformable, Monoid, Semigroup
+    )
 
 instance (Monoid n, Num a) => Num (ArticulationT n a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  (-) = liftA2 (-)
+  abs = fmap abs
+  signum = fmap signum
+  fromInteger = pure . fromInteger
 
 instance (Monoid n, Fractional a) => Fractional (ArticulationT n a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
+  recip        = fmap recip
+  fromRational = pure . fromRational
 
 instance (Monoid n, Floating a) => Floating (ArticulationT n a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
+  pi    = pure pi
+  sqrt  = fmap sqrt
+  exp   = fmap exp
+  log   = fmap log
+  sin   = fmap sin
+  cos   = fmap cos
+  asin  = fmap asin
+  atan  = fmap atan
+  acos  = fmap acos
+  sinh  = fmap sinh
+  cosh  = fmap cosh
+  asinh = fmap asinh
+  atanh = fmap atanh
+  acosh = fmap acos
 
 instance (Monoid n, Enum a) => Enum (ArticulationT n a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
+  toEnum = pure . toEnum
+  fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
+  minBound = pure minBound
+  maxBound = pure maxBound
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (ArticulationT n a) where
 --     toRational = toRational . extract
@@ -371,20 +370,24 @@ instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
 instance Wrapped (ArticulationT p a) where
   type Unwrapped (ArticulationT p a) = (p, a)
   _Wrapped' = iso getArticulationT ArticulationT
+
 instance Rewrapped (ArticulationT p a) (ArticulationT p' b)
 
 type instance Articulation (ArticulationT p a) = p
 type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
 
-instance (Transformable p, Transformable p') => HasArticulation (ArticulationT p a) (ArticulationT p' a) where
+instance (Transformable p, Transformable p') 
+    => HasArticulation (ArticulationT p a) (ArticulationT p' a) where
   articulation = _Wrapped . _1
-instance (Transformable p, Transformable p') => HasArticulations (ArticulationT p a) (ArticulationT p' a) where
+
+instance (Transformable p, Transformable p') 
+    => HasArticulations (ArticulationT p a) (ArticulationT p' a) where
   articulations = _Wrapped . _1
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (ArticulationT n a)
 deriving instance (IsInterval a, Monoid n) => IsInterval (ArticulationT n a)
-
 deriving instance Reversible a => Reversible (ArticulationT p a)
+
 instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
   toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2))
     where

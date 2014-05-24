@@ -121,18 +121,19 @@ type family SetDynamic (b :: *) (s :: *) :: *
 --
 class (HasDynamics s t) => HasDynamic s t where
 
-  -- |
+  -- | Access a single dynamic.
   dynamic :: Lens s t (Dynamic s) (Dynamic t)
 
 -- |
 -- Class of types that provide a dynamic traversal.
 --
-class (Transformable (Dynamic s),
-       Transformable (Dynamic t)
-       , SetDynamic (Dynamic t) s ~ t
-       ) => HasDynamics s t where
+class (
+  Transformable (Dynamic s),
+  Transformable (Dynamic t), 
+  SetDynamic (Dynamic t) s ~ t
+  ) => HasDynamics s t where
 
-  -- | Dynamic type.
+  -- | Access all dynamics.
   dynamics :: Traversal s t (Dynamic s) (Dynamic t)
 
 -- |
@@ -197,23 +198,31 @@ type instance SetDynamic b (Score a)  = Score (SetDynamic b a)
 
 instance HasDynamic a b => HasDynamic (c, a) (c, b) where
   dynamic = _2 . dynamic
+
 instance HasDynamics a b => HasDynamics (c, a) (c, b) where
   dynamics = traverse . dynamics
 
+
 instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . whilstL dynamics
+
 instance (HasDynamic a b) => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . whilstL dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (Delayed a) (Delayed b) where
   dynamics = _Wrapped . whilstLT dynamics
+
 instance (HasDynamic a b) => HasDynamic (Delayed a) (Delayed b) where
   dynamic = _Wrapped . whilstLT dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (Stretched a) (Stretched b) where
   dynamics = _Wrapped . whilstLD dynamics
+
 instance (HasDynamic a b) => HasDynamic (Stretched a) (Stretched b) where
   dynamic = _Wrapped . whilstLD dynamic
+
 
 instance HasDynamics a b => HasDynamics (Maybe a) (Maybe b) where
   dynamics = traverse . dynamics
@@ -243,9 +252,15 @@ instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
 
 type instance Dynamic      (Behavior a) = Behavior a
 type instance SetDynamic b (Behavior a) = b
-instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamics (Behavior a) b where
+
+instance (
+  Transformable a, Transformable b, b ~ Dynamic b
+  ) => HasDynamics (Behavior a) b where
   dynamics = ($)
-instance (Transformable a, Transformable b, b ~ Dynamic b) => HasDynamic (Behavior a) b where
+
+instance (
+  Transformable a, Transformable b, b ~ Dynamic b
+  ) => HasDynamic (Behavior a) b where
   dynamic = ($)
 
 type instance Dynamic (Couple c a)        = Dynamic a
@@ -261,33 +276,45 @@ type instance SetDynamic g (TieT a)       = TieT (SetDynamic g a)
 type instance Dynamic (SlideT a)          = Dynamic a
 type instance SetDynamic g (SlideT a)     = SlideT (SetDynamic g a)
 
+
 instance (HasDynamics a b) => HasDynamics (Couple c a) (Couple c b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (Couple c a) (Couple c b) where
   dynamic = _Wrapped . dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
   dynamic = _Wrapped . dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (TextT a) (TextT b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (TextT a) (TextT b) where
   dynamic = _Wrapped . dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (HarmonicT a) (HarmonicT b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (HarmonicT a) (HarmonicT b) where
   dynamic = _Wrapped . dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (TieT a) (TieT b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (TieT a) (TieT b) where
   dynamic = _Wrapped . dynamic
 
+
 instance (HasDynamics a b) => HasDynamics (SlideT a) (SlideT b) where
   dynamics = _Wrapped . dynamics
+
 instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
   dynamic = _Wrapped . dynamic
 
@@ -344,17 +371,20 @@ compressor = error "Not implemented: compressor"
 -- |
 -- Fade in.
 --
-fadeIn :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeIn :: (
+  HasPosition a, HasDynamics a a, 
+  Dynamic a ~ Behavior c, Fractional c
+  ) => Duration -> a -> a
 fadeIn d x = x & dynamics *~ (_onset x >-> d `transform` unit)
 
 -- |
 -- Fade in.
 --
-fadeOut :: (HasPosition a, HasDynamics a a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
+fadeOut :: (
+  HasPosition a, HasDynamics a a, 
+  Dynamic a ~ Behavior c, Fractional c
+  ) => Duration -> a -> a
 fadeOut d x = x & dynamics *~ (d <-< _offset x `transform` rev unit)
-
-
-
 
 
 
@@ -363,40 +393,40 @@ newtype DynamicT n a = DynamicT { getDynamicT :: (n, a) }
     Applicative, Monad, Comonad, Transformable, Monoid, Semigroup)
 
 instance (Monoid n, Num a) => Num (DynamicT n a) where
-    (+) = liftA2 (+)
-    (*) = liftA2 (*)
-    (-) = liftA2 (-)
-    abs = fmap abs
-    signum = fmap signum
-    fromInteger = pure . fromInteger
+  (+) = liftA2 (+)
+  (*) = liftA2 (*)
+  (-) = liftA2 (-)
+  abs = fmap abs
+  signum = fmap signum
+  fromInteger = pure . fromInteger
 
 instance (Monoid n, Fractional a) => Fractional (DynamicT n a) where
-    recip        = fmap recip
-    fromRational = pure . fromRational
+  recip        = fmap recip
+  fromRational = pure . fromRational
 
 instance (Monoid n, Floating a) => Floating (DynamicT n a) where
-    pi    = pure pi
-    sqrt  = fmap sqrt
-    exp   = fmap exp
-    log   = fmap log
-    sin   = fmap sin
-    cos   = fmap cos
-    asin  = fmap asin
-    atan  = fmap atan
-    acos  = fmap acos
-    sinh  = fmap sinh
-    cosh  = fmap cosh
-    asinh = fmap asinh
-    atanh = fmap atanh
-    acosh = fmap acos
+  pi    = pure pi
+  sqrt  = fmap sqrt
+  exp   = fmap exp
+  log   = fmap log
+  sin   = fmap sin
+  cos   = fmap cos
+  asin  = fmap asin
+  atan  = fmap atan
+  acos  = fmap acos
+  sinh  = fmap sinh
+  cosh  = fmap cosh
+  asinh = fmap asinh
+  atanh = fmap atanh
+  acosh = fmap acos
 
 instance (Monoid n, Enum a) => Enum (DynamicT n a) where
-    toEnum = pure . toEnum
-    fromEnum = fromEnum . extract
+  toEnum = pure . toEnum
+  fromEnum = fromEnum . extract
 
 instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
-    minBound = pure minBound
-    maxBound = pure maxBound
+  minBound = pure minBound
+  maxBound = pure maxBound
 
 -- instance (Monoid n, Num a, Ord a, Real a) => Real (DynamicT n a) where
 --     toRational = toRational . extract
@@ -410,22 +440,30 @@ instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
 instance Wrapped (DynamicT p a) where
   type Unwrapped (DynamicT p a) = (p, a)
   _Wrapped' = iso getDynamicT DynamicT
+
 instance Rewrapped (DynamicT p a) (DynamicT p' b)
+
 
 type instance Dynamic (DynamicT p a) = p
 type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
 
-instance (Transformable p, Transformable p') => HasDynamic (DynamicT p a) (DynamicT p' a) where
+instance (Transformable p, Transformable p') 
+  => HasDynamic (DynamicT p a) (DynamicT p' a) where
   dynamic = _Wrapped . _1
-instance (Transformable p, Transformable p') => HasDynamics (DynamicT p a) (DynamicT p' a) where
+
+instance (Transformable p, Transformable p') 
+  => HasDynamics (DynamicT p a) (DynamicT p' a) where
   dynamics = _Wrapped . _1
+
 
 deriving instance (IsPitch a, Monoid n) => IsPitch (DynamicT n a)
 deriving instance (IsInterval a, Monoid n) => IsInterval (DynamicT n a)
+
 instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
     fromDynamics l = DynamicT (fromDynamics l, mempty)
 
 deriving instance Reversible a => Reversible (DynamicT p a)
+
 instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
   toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2))
     where
@@ -435,14 +473,16 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
 -- |
 -- View just the dynamices in a voice.
 --
-vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) =>
-  Lens
-    (Voice a) (Voice b)
-    (Voice (Dynamic a)) (Voice (Dynamic b))
+vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) 
+  => Lens (Voice a) (Voice b) (Voice (Dynamic a)) (Voice (Dynamic b))
+
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
 -- vdynamic = through dynamic dynamic
 
-addDynCon :: (HasPhrases s t a b, HasDynamic a a, HasDynamic a b, Dynamic a ~ d, Dynamic b ~ Ctxt d) => s -> t
+addDynCon :: (
+  HasPhrases s t a b, HasDynamic a a, HasDynamic a b, 
+  Dynamic a ~ d, Dynamic b ~ Ctxt d
+  ) => s -> t
 addDynCon = over (phrases.vdynamic) withContext
 
 type Ctxt a = (Maybe a, a, Maybe a)

@@ -192,7 +192,7 @@ splitReactive r = case updates r of
 
 activate :: Note (Reactive a) -> Reactive a -> Reactive a
 activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
-    where
-        turnOn  = switchR start
-        turnOff = switchR stop
+  where
+    turnOn  = switchR start
+    turnOff = switchR stop
 
