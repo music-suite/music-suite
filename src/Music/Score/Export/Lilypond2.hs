@@ -493,13 +493,18 @@ data Lilypond
 
 -- | Hierachical representation of a Lilypond score.
 --   A score is a parallel composition of staves.
-data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Show)
+data LyScore a = LyScore { getLyScore :: [LyStaff a] }
+  deriving (Functor, Eq, Show)
 
 -- | A staff is a sequential composition of bars.
-data LyStaff a = LyStaff { getLyStaff :: [LyBar a]   } deriving (Functor, Eq, Show)
+data LyStaff a = LyStaff { getLyStaff :: [LyBar a] }
+  deriving (Functor, Eq, Show)
+
+type BarInfo = Maybe TimeSignature
 
 -- | A bar is a sequential composition of chords/notes/rests.
-data LyBar   a = LyBar   { getLyBar :: (Maybe TimeSignature, Rhythm a)    } deriving (Functor, Eq, Show)
+data LyBar a = LyBar { getLyBar :: (BarInfo, Rhythm a) } 
+  deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
 --   Includes duration and note/rest distinction.
@@ -517,21 +522,18 @@ instance HasBackend Lilypond where
   type BackendMusic Lilypond   = LyMusic
   -- TODO staff names etc
   -- TODO clefs
-  finalizeExport _ = id
-    pcatLy
-    -- [LyMusic]
-    . fmap (
-      addStaff . {-addPartName "Foo" . -}addClef () . scatLy . map (
-        \(LyBar (timeSig, music)) -> setBarTimeSig timeSig (rhythmToLilypond music)
-        )
-      )
+  finalizeExport _ = finalizeScore
 
-    -- [[Bar]]
-    . fmap (getLyStaff)
-    -- [Staff]
-    . getLyScore
+finalizeScore :: LyScore LyMusic -> Lilypond.Music
+finalizeScore = pcatLy . map finalizeStaff . getLyScore
 
-
+finalizeStaff :: LyStaff LyMusic -> LyMusic
+finalizeStaff =  (
+  addStaff . addPartName "Foo" . addClef () . scatLy . map (
+  \(LyBar (timeSig, music)) -> setBarTimeSig timeSig (rhythmToLilypond music)
+  )
+  . getLyStaff
+  )
 
 {-
   getL (setL a s)   = a
@@ -690,10 +692,10 @@ addStaff :: LyMusic -> LyMusic
 addStaff = Lilypond.New "Staff" Nothing
 
 addClef :: () -> LyMusic -> LyMusic
-addClef () x = Lilypond.Sequential [Lilypond.Clef Lilypond.Alto, x]
+addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
 
-addPartName :: String -> [LyMusic] -> [LyMusic]
-addPartName partName xs = longName : shortName : xs
+addPartName :: String -> LyMusic -> LyMusic
+addPartName partName xs = pcatLy [longName, shortName, xs]
   where
     longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ partName)
     shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ partName)
