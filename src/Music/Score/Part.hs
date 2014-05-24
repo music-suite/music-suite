@@ -224,10 +224,10 @@ extractPartG p x = head $ (\p s -> filterPart (== p) s) <$> [p] <*> return x
 extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
-extractPartsG
-  :: (MonadPlus f,
-      HasParts' (f a), HasPart' a, Part (f a) ~ Part a,
-      Ord (Part a)) => f a -> [f a]
+extractPartsG :: (
+  MonadPlus f, HasParts' (f a), HasPart' a, 
+  Part (f a) ~ Part a, Ord (Part a)
+  ) => f a -> [f a]
 extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 
 filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
@@ -238,7 +238,6 @@ extractParts' x = zip (allParts x) (extractParts x)
 
 extracted :: (Ord (Part a), HasPart' a{-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
--- extracted :: (Ord (Part a), HasPart' a) => Iso' (Score a) [Score a]
 
 extracted' :: (Ord (Part a), Ord (Part b), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
 extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts')
@@ -253,27 +252,31 @@ newtype PartT n a = PartT { getPartT :: (n, a) }
 instance Wrapped (PartT p a) where
   type Unwrapped (PartT p a) = (p, a)
   _Wrapped' = iso getPartT PartT
+
 instance Rewrapped (PartT p a) (PartT p' b)
+
 
 type instance Part (PartT p a) = p
 type instance SetPart p' (PartT p a) = PartT p' a
 
 instance (Transformable p, Transformable p') => HasPart (PartT p a) (PartT p' a) where
   part = _Wrapped . _1
+
 instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a) where
   parts = _Wrapped . _1
 
+
 instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
-    fromPitch l = PartT (toEnum 0, fromPitch l)
+  fromPitch l = PartT (toEnum 0, fromPitch l)
 
 instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
-    fromDynamics l = PartT (toEnum 0, fromDynamics l)
+  fromDynamics l = PartT (toEnum 0, fromDynamics l)
 
 instance Reversible a => Reversible (PartT p a) where
-    rev = fmap rev
+  rev = fmap rev
 
 instance Tiable a => Tiable (PartT n a) where
-    toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
+  toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 
 
 type instance Part                 (Segment a) = Segment (Part a)
