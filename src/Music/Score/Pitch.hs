@@ -131,7 +131,7 @@ import           Data.Semigroup
 import           Data.String
 import           Data.Traversable              (Traversable)
 import           Data.Typeable
-import           Data.VectorSpace
+import           Data.VectorSpace              hiding (Sum)
 
 import           Music.Pitch.Literal
 import           Music.Score.Harmonics
@@ -368,12 +368,21 @@ instance (HasPitches a b) => HasPitches (Score a) (Score b) where
     . _Wrapped      -- this needed?
     . whilstL pitches
 
+
+type instance Pitch (Sum a) = Pitch a
+type instance SetPitch b (Sum a) = Sum (SetPitch b a)
+
+instance HasPitches a b => HasPitches (Sum a) (Sum b) where
+  pitches = _Wrapped . pitches
+
 type instance Pitch      (Behavior a) = Behavior a
 type instance SetPitch b (Behavior a) = b
+
 instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitches (Behavior a) b where
   pitches = ($)
 instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a) b where
   pitch = ($)
+
 
 type instance Pitch (Couple c a)        = Pitch a
 type instance SetPitch g (Couple c a)   = Couple c (SetPitch g a)

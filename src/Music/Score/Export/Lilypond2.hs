@@ -72,34 +72,7 @@ import qualified Data.List
 import Music.Score.Convert (reactiveToVoice') -- TODO
 import Music.Score.Internal.Util (swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
-
-
-
--- TODO move all this stuff to the appropriate places...
-deriving instance Num a => Num (Sum a)
-deriving instance Real a => Real (Sum a)
-type instance Pitch (Sum a) = Pitch a
-type instance SetPitch b (Sum a) = Sum (SetPitch b a)
-
-deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
-instance VectorSpace a => VectorSpace (Sum a) where
-  type Scalar (Sum a) = Scalar a
-  s *^ Sum v = Sum (s *^ v)
-instance AffineSpace a => AffineSpace (Sum a) where
-  type Diff (Sum a) = Sum (Diff a)
-  Sum p .-. Sum q = Sum (p .-. q)
-  Sum p .+^ Sum v = Sum (p .+^ v)
-
-instance IsDynamics a => IsDynamics (Sum a) where
-  fromDynamics = Sum . fromDynamics
-instance HasPitches a b => HasPitches (Sum a) (Sum b) where
-  pitches = _Wrapped . pitches
-instance IsPitch a => IsPitch (Sum a) where
-  fromPitch = Sum . fromPitch
-
-
-
-
+import Data.Semigroup.Instances
 
 
 

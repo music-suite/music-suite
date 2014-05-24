@@ -53,6 +53,7 @@ library
                         Data.PairMonad
                         Data.Functor.Couple
                         Data.Functor.Rep.Lens
+                        Data.Semigroup.Instances
                         Control.Monad.Compose
                         Music.Time
                         Music.Time.Types
