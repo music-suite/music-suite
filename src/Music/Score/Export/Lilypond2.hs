@@ -1121,54 +1121,52 @@ instance HasBackend MusicXml where
   type BackendNote MusicXml    = MusicXml.Music
   type BackendMusic MusicXml   = MusicXml.Score
 
-{-
   finalizeExport _ = finalizeScore
     where
-      finalizeScore :: XmlScore XmlMusic -> MusicXml.Music
-      finalizeScore (XmlScore (info, x)) 
-        = pcatXml 
-        . map finalizeStaff $ x
-        where
-          extra = id
 
-      -- TODO finalizeStaffGroup
+finalizeScore :: XmlScore MusicXml.Music -> MusicXml.Score
+finalizeScore (XmlScore (info, x)) 
+  = MusicXml.fromParts title composer partList 
+  . map finalizeStaff $ x
+  where
+    title = error "No title"
+    composer = error "No title"
+    partList = error "No title"
 
-      finalizeStaff :: XmlStaff XmlMusic -> XmlMusic
-      finalizeStaff (XmlStaff (info, x)) 
-        = addStaff 
-        . addPartName (x_staffName info) 
-        . addClef (x_staffClef info)
-        . scatXml 
-        . map finalizeBar $ x
-        where
-          addStaff                = MusicXml.New "Staff" Nothing
-          addClef c x             = pcatXml [MusicXml.Clef c, x]
-          addPartName partName xs = pcatXml [longName, shortName, xs]
-            where
-              longName  = MusicXml.Set "Staff.instrumentName" (MusicXml.toValue partName)
-              shortName = MusicXml.Set "Staff.shortInstrumentName" (MusicXml.toValue partName)
+-- TODO finalizeStaffGroup
 
-      finalizeBar :: XmlBar XmlMusic -> XmlMusic
-      finalizeBar (XmlBar (XBarInfo timeSignature, x))
-        = maybe id setBarTimeSignature timeSignature 
-        . renderBarMusic $ x
-        where
-          -- TODO key signatures
-          -- TODO rehearsal marks
-          -- TODO bar number change
-          -- TODO compound time signatures
-          setBarTimeSignature (getTimeSignature -> (ms, n)) x = scatXml [MusicXml.Time (sum ms) n, x]
+finalizeStaff :: XmlStaff MusicXml.Music -> [MusicXml.Music]
+finalizeStaff (XmlStaff (info, x)) 
+  = id 
+  -- . addPartName (x_staffName info) 
+  -- . addClef (x_staffClef info)
+  -- . mconcat 
+  . map finalizeBar $ x
+  where
+    -- TODO name
+    -- TODO clef
+    partList = error "partList"-- TODO
+
+finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
+finalizeBar (XmlBar (XBarInfo timeSignature, x))
+  = maybe id setBarTimeSignature timeSignature 
+  . renderBarMusic $ x
+  where
+    -- TODO key signatures
+    -- TODO rehearsal marks
+    -- TODO bar number change
+    -- TODO compound time signatures
+    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]    
           
-      renderBarMusic :: Rhythm XmlMusic -> XmlMusic
-      renderBarMusic = go
-        where
-          go (Beat d x)            = MusicXml.removeSingleChords x
-          go (Dotted n (Beat d x)) = MusicXml.removeSingleChords x
-          go (Group rs)            = scatXml $ map renderBarMusic rs
-          go (Tuplet m r)          = MusicXml.Times (realToFrac m) (renderBarMusic r)
-            where
-              (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
--}
+renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
+renderBarMusic = go
+  where
+    go (Beat d x)            = x
+    go (Dotted n (Beat d x)) = x
+    go (Group rs)            = mconcat $ map renderBarMusic rs
+    go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
+      where
+        (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
 instance (
   HasDynamicNotation a b c,
