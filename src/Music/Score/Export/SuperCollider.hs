@@ -163,6 +163,10 @@ instance HasBackendNote SuperCollider Int where
 instance HasBackendNote SuperCollider Integer where
   exportNote _ (Identity x) = (fromIntegral x + 60, 1)
 
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (Behavior a) where
+  exportNote b = exportNote b . fmap (! 0)
+  exportChord b = exportChord b . fmap (fmap (! 0))
+
 instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (DynamicT b a) where
   exportNote b = exportNote b . fmap extract
   -- exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)

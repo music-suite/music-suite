@@ -171,8 +171,8 @@ instance HasBackend Lilypond where
         . map finalizeBar $ x
         where
           addStaff                = Lilypond.New "Staff" Nothing
-          addClef c x             = pcatLy [Lilypond.Clef c, x]
-          addPartName partName xs = pcatLy [longName, shortName, xs]
+          addClef c x             = scatLy [Lilypond.Clef c, x]
+          addPartName partName xs = scatLy [longName, shortName, xs]
             where
               longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
               shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
@@ -198,6 +198,9 @@ instance HasBackend Lilypond where
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
+-- TODO move
+second f (x, y) = (x, f y)
+
 instance (
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
@@ -208,10 +211,10 @@ instance (
   exportScore b score = LyScore 
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
+    . map (second (over dynamics notateDynamic)) 
+    . map (second (preserveMeta addDynCon))
+    . map (second (preserveMeta simultaneous)) 
     . extractParts'
-    . over dynamics notateDynamic 
-    . preserveMeta addDynCon 
-    . preserveMeta simultaneous 
     $ score
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
@@ -254,7 +257,7 @@ instance (
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
-          addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = Lilypond.Alto } -- TODO guess clef
+          addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = Lilypond.Treble } -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature

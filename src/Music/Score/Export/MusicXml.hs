@@ -195,6 +195,9 @@ renderBarMusic = go
       where
         (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
+-- TODO move
+second f (x, y) = (x, f y)
+
 instance (
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
@@ -205,10 +208,10 @@ instance (
   exportScore b score = XmlScore 
     . (XScoreInfo title composer partList,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
+    . map (second (over dynamics notateDynamic)) 
+    . map (second (preserveMeta addDynCon))
+    . map (second (preserveMeta simultaneous)) 
     . extractParts'
-    . over dynamics notateDynamic 
-    . preserveMeta addDynCon 
-    . preserveMeta simultaneous 
     $ score
     where
       title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score
