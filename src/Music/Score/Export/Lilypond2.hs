@@ -152,16 +152,11 @@ class Functor (BackendScore b) => HasBackend b where
 class (HasBackend b) => HasBackendScore b s where
   type ScoreEvent b s :: *
   exportScore :: b -> s -> BackendScore b (BackendContext b (ScoreEvent b s))
-  -- default exportScore :: (BackendContext b ~ Identity) => b -> s a -> BackendScore b (BackendContext b a)
-  -- exportScore b = fmap Identity
 
 class (HasBackend b) => HasBackendNote b a where
   exportNote  :: b -> BackendContext b a   -> BackendNote b
   exportChord :: b -> BackendContext b [a] -> BackendNote b
   exportChord = error "Not implemented: exportChord"
-
-  -- exportNote' :: (BackendContext b ~ Identity) => b -> a -> BackendNote b
-  -- exportNote' b x = exportNote b (Identity x)
 
 export :: (HasBackendScore b s, HasBackendNote b (ScoreEvent b s)) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
@@ -533,23 +528,54 @@ instance HasBackend Lilypond where
   type BackendNote Lilypond    = LyMusic
   type BackendMusic Lilypond   = LyMusic
   finalizeExport _ = finalizeScore
+    where
+      finalizeScore :: LyScore LyMusic -> Lilypond.Music
+      finalizeScore = extra . pcatLy . map finalizeStaff . getLyScore
+        where
+          extra = id
 
-finalizeScore :: LyScore LyMusic -> Lilypond.Music
-finalizeScore = extra . pcatLy . map finalizeStaff . getLyScore
-  where
-    extra = id
+      finalizeStaff :: LyStaff LyMusic -> LyMusic
+      finalizeStaff = extra . scatLy . map (finalizeBar . snd) . getLyStaff
+        where
+          extra = addStaff . addPartName "Foo" . addClef ()
+        -- TODO correct staff names
+        -- TODO correct clefs
 
-finalizeStaff :: LyStaff LyMusic -> LyMusic
-finalizeStaff = extra . scatLy . map (finalizeBar . snd) . getLyStaff
-  where
-    extra = addStaff . addPartName "Foo" . addClef ()
-  -- TODO correct staff names
-  -- TODO correct clefs
+      finalizeBar :: LyBar LyMusic -> LyMusic
+      finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm music
 
-finalizeBar :: LyBar LyMusic -> LyMusic
-finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm music
+      renderBarRhythm :: Rhythm LyMusic -> LyMusic
+      renderBarRhythm = go
+        where
+          go (Beat d x)            = noteRestToLilypond x
+          go (Dotted n (Beat d x)) = noteRestToLilypond x
+          go (Group rs)            = scatLy $ map renderBarRhythm rs
+          go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarRhythm r)
+            where
+              (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+      -- where
+      noteRestToLilypond = Lilypond.removeSingleChords
 
 
+      addStaff :: LyMusic -> LyMusic
+      addStaff = Lilypond.New "Staff" Nothing
+
+      addPartName :: String -> LyMusic -> LyMusic
+      addPartName partName xs = pcatLy [longName, shortName, xs]
+        where
+          longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
+          shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
+
+      addClef :: () -> LyMusic -> LyMusic
+      addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
+
+
+      setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
+      setBarTimeSignature Nothing x = x
+      setBarTimeSignature (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
+
+
+-- TODO move
 class (
   HasDynamic' a,
   HasDynamic a  a',
@@ -587,114 +613,73 @@ instance (
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
--- | Export a score as a single part. Overlapping notes will cause an error.
-exportPart :: Tiable a 
-  => [Maybe TimeSignature] 
-  -> [Duration] 
-  -> Part a 
-  -> Score a 
-  -> LyStaff (LyContext a)
-exportPart timeSignatureMarks barDurations part
-  = exportStaff timeSignatureMarks barDurations
-  . view singleMVoice
+      -- | Export a score as a single part. Overlapping notes will cause an error.
+      exportPart :: Tiable a 
+        => [Maybe TimeSignature] 
+        -> [Duration] 
+        -> Part a 
+        -> Score a 
+        -> LyStaff (LyContext a)
+      exportPart timeSignatureMarks barDurations part
+        = exportStaff timeSignatureMarks barDurations
+        . view singleMVoice
 
 
-exportStaff :: Tiable a 
-  => [Maybe TimeSignature] 
-  -> [Duration] 
-  -> MVoice a 
-  -> LyStaff (LyContext a)
-exportStaff timeSignatures barDurations 
-  = LyStaff 
-  . map addStaffInfo
-  . zipWith exportBar timeSignatures 
-  . splitIntoBars barDurations
-  where         
-    addStaffInfo  = ((),)
-    splitIntoBars = splitTiesVoiceAt
-    -- TODO rename splitTiesVoiceAt?
+      exportStaff :: Tiable a 
+        => [Maybe TimeSignature] 
+        -> [Duration] 
+        -> MVoice a 
+        -> LyStaff (LyContext a)
+      exportStaff timeSignatures barDurations 
+        = LyStaff 
+        . map addStaffInfo
+        . zipWith exportBar timeSignatures 
+        . splitIntoBars barDurations
+        where         
+          addStaffInfo  = ((),)
+          splitIntoBars = splitTiesVoiceAt
+          -- TODO rename splitTiesVoiceAt?
 
-exportBar :: Tiable a 
-  => Maybe TimeSignature 
-  -> MVoice a 
-  -> LyBar (LyContext a)
-exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
+      exportBar :: Tiable a 
+        => Maybe TimeSignature 
+        -> MVoice a 
+        -> LyBar (LyContext a)
+      exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
 
+      extractTimeSignatures 
+        :: Score a 
+        -> ([Maybe TimeSignature], [Duration])
+      extractTimeSignatures score = (barTimeSignatures, barDurations)
+        where                                          
+          defaultTimeSignature = time 4 4
+          timeSignatures = fmap swap 
+            $ unvoice $ fuse 
+            $ reactiveToVoice' (0 <-> (score^.offset)) 
+            $ getTimeSignatures defaultTimeSignature score
 
---------------------------------------------------------------------------------
--- Called in the exportScore step
---------------------------------------------------------------------------------
+          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
+          barDurations = getBarDurations timeSignatures
 
-extractTimeSignatures 
-  :: Score a 
-  -> ([Maybe TimeSignature], [Duration])
-extractTimeSignatures score = (barTimeSignatures, barDurations)
-  where                                          
-    defaultTimeSignature = time 4 4
-    timeSignatures = fmap swap 
-      $ unvoice $ fuse 
-      $ reactiveToVoice' (0 <-> (score^.offset)) 
-      $ getTimeSignatures defaultTimeSignature score
+      quantizeBar 
+        :: Tiable a 
+        => MVoice a 
+        -> Rhythm (LyContext a)
+      quantizeBar = mapWithDur LyContext . rewrite . fromRight . quantize . view unsafeEventsV
+        where
+          -- FIXME handle quantization errors
+          fromRight (Left e)  = error $ "Quantization failed: " ++ e
+          fromRight (Right x) = x
 
-    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-    barDurations = getBarDurations timeSignatures
-
-quantizeBar 
-  :: Tiable a 
-  => MVoice a 
-  -> Rhythm (LyContext a)
-quantizeBar = mapWithDur LyContext . rewrite . fromRight . quantize . view unsafeEventsV
-  where
-    -- FIXME handle quantization errors
-    fromRight (Left e)  = error $ "Quantization failed: " ++ e
-    fromRight (Right x) = x
-
-    mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
-    mapWithDur f = go
-      where
-        go (Beat d x)            = Beat d (f d x)
-        go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
-        go (Group rs)            = Group $ fmap (mapWithDur f) rs
-        go (Tuplet m r)          = Tuplet m (mapWithDur f r)
+          mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
+          mapWithDur f = go
+            where
+              go (Beat d x)            = Beat d (f d x)
+              go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+              go (Group rs)            = Group $ fmap (mapWithDur f) rs
+              go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
 
 
-
---------------------------------------------------------------------------------
--- Called in the finalize step
---------------------------------------------------------------------------------
-
-renderBarRhythm :: Rhythm LyMusic -> LyMusic
-renderBarRhythm = go
-  where
-    go (Beat d x)            = noteRestToLilypond x
-    go (Dotted n (Beat d x)) = noteRestToLilypond x
-    go (Group rs)            = scatLy $ map renderBarRhythm rs
-    go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarRhythm r)
-      where
-        (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
--- where
-noteRestToLilypond = Lilypond.removeSingleChords
-
-
-addStaff :: LyMusic -> LyMusic
-addStaff = Lilypond.New "Staff" Nothing
-
-addPartName :: String -> LyMusic -> LyMusic
-addPartName partName xs = pcatLy [longName, shortName, xs]
-  where
-    longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
-    shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
-
-addClef :: () -> LyMusic -> LyMusic
-addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
-
-
-setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
-setBarTimeSignature Nothing x = x
-setBarTimeSignature (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
-
---------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond [a] where
@@ -744,25 +729,25 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       notate (Just n) = notate' n
 
       notate' :: DynamicNotation -> LyMusic -> LyMusic
-      notate' (DynamicNotation (cds, showLevel)) = rcomposed (fmap notateCrescDim cds) . notateLevel
-        where
-          -- Use rcomposed as notateDynamic returns "mark" order, not application order
-          rcomposed = composed . reverse
-          
-          notateCrescDim x = case x of
-            NoCrescDim -> id
-            BeginCresc -> Lilypond.beginCresc
-            EndCresc   -> Lilypond.endCresc
-            BeginDim   -> Lilypond.beginDim
-            EndDim     -> Lilypond.endDim
+      notate' (DynamicNotation (crescDims, level)) = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
 
-          -- TODO these literals are not so nice...
-          notateLevel = case showLevel of
-             Nothing -> id
-             Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-          
-          fixLevel :: Double -> Double
-          fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+      -- Use rcomposed as notateDynamic returns "mark" order, not application order
+      rcomposed = composed . reverse
+      
+      notateCrescDim crescDims = case crescDims of
+        NoCrescDim -> id
+        BeginCresc -> Lilypond.beginCresc
+        EndCresc   -> Lilypond.endCresc
+        BeginDim   -> Lilypond.beginDim
+        EndDim     -> Lilypond.endDim
+
+      -- TODO these literals are not so nice...
+      notateLevel showLevel = case showLevel of
+         Nothing -> id
+         Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+      
+      fixLevel :: Double -> Double
+      fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
