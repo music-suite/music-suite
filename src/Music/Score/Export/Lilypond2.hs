@@ -26,11 +26,15 @@ module Music.Score.Export.Lilypond2 (
     HasBackendNote(..),
     export,
 
+    -- * Note lists
     NoteList,
+    toNoteList,
     
+    -- * Supercollider events
     Super,
     toSuper,
 
+    -- * MIDI
     HasMidiProgram,
     Midi,
     toMidi,
@@ -196,8 +200,8 @@ instance HasBackendNote NoteList Int where
 instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
-toNull :: (HasBackendNote NoteList (ScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
-toNull = over (mapped._1) getSum . export (undefined::NoteList)
+toNoteList :: (HasBackendNote NoteList (ScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
+toNoteList = over (mapped._1) getSum . export (undefined::NoteList)
 
 
 
@@ -391,10 +395,10 @@ instance HasBackend Super where
   type BackendNote    Super    = SuperEvent
   type BackendMusic   Super    = String
 
-  finalizeExport _ (SuperScore trs) = parCompTracks $ map exportTrack trs
+  finalizeExport _ (SuperScore trs) = composeTracksInParallel $ map exportTrack trs
     where        
-      parCompTracks :: [String] -> String
-      parCompTracks = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
+      composeTracksInParallel :: [String] -> String
+      composeTracksInParallel = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
       
       exportTrack :: [(Duration, Maybe SuperEvent)] -> String
       exportTrack events = "Pbind("
@@ -923,6 +927,7 @@ writeLilypond = writeLilypond' def
 data LilypondOptions
   = LyInlineFormat
   | LyScoreFormat
+
 instance Default LilypondOptions where
   def = LyInlineFormat
 
@@ -1035,26 +1040,17 @@ music = id
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
 type MyNote = 
-    (PartT Int 
-      (TieT 
-        (ColorT 
-          (TextT 
-            (TremoloT 
-              (HarmonicT 
-                (SlideT 
-                  (ArticulationT () 
-                    (DynamicT 
-                      (Sum Double) 
-                        [Double]
-                        )
-                        )
-                        )
-                        )
-                        )
-                        )
-                        )
-                        )
-                        )
+  (PartT Int 
+    (TieT 
+      (ColorT 
+        (TextT 
+          (TremoloT 
+            (HarmonicT 
+              (SlideT 
+                (ArticulationT () 
+                  (DynamicT 
+                    (Sum Double) 
+                      [Double])))))))))
 
 
 
