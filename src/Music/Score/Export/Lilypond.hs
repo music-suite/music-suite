@@ -523,7 +523,7 @@ voiceToLilypond barTimeSigs barDurations = zipWith setBarTimeSig barTimeSigs . f
     where
         -- TODO compounds
         setBarTimeSig Nothing x = x
-        setBarTimeSig (Just (getTimeSignature -> (sum m, n))) x = scatLilypond [Lilypond.Time m n, x]
+        setBarTimeSig (Just (getTimeSignature -> (m:_, n))) x = scatLilypond [Lilypond.Time m n, x]
 
 
 barToLilypond :: HasLilypond15 a => [(Duration, Maybe a)] -> Lilypond

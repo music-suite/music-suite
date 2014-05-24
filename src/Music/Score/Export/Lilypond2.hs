@@ -76,25 +76,10 @@ import Music.Score.Internal.Util (swap, retainUpdates)
 
 
 -- TODO move all this stuff to the appropriate places...
-
-type HasDynamic' a = HasDynamic a a
-
-instance (HasParts a b) => HasParts (Voice a) (Voice b) where
-  parts =
-    _Wrapped
-    . traverse
-    . _Wrapped      -- this needed?
-    . whilstLD parts
-
 deriving instance Num a => Num (Sum a)
 deriving instance Real a => Real (Sum a)
-
-deriving instance Comonad ColorT
-
-deriving instance HasTremolo a => HasTremolo (ColorT a)
-deriving instance HasHarmonic a => HasHarmonic (ColorT a)
-deriving instance HasSlide a => HasSlide (ColorT a)
-deriving instance HasText a => HasText (ColorT a)
+type instance Pitch (Sum a) = Pitch a
+type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
 deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
 instance VectorSpace a => VectorSpace (Sum a) where
@@ -111,11 +96,7 @@ instance HasPitches a b => HasPitches (Sum a) (Sum b) where
   pitches = _Wrapped . pitches
 instance IsPitch a => IsPitch (Sum a) where
   fromPitch = Sum . fromPitch
-type instance Pitch (Sum a) = Pitch a
-type instance SetPitch b (Sum a) = Sum (SetPitch b a)
 
-type instance Part (Voice a) = Part a
-type instance SetPart g (Voice a) = Voice (SetPart g a)
 
 
 
@@ -671,7 +652,7 @@ instance (
   exportScore b score = LyScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts' --WithMeta
-    . over dynamics dynamicDisplay 
+    . over dynamics notateDynamic 
     -- TODO preserveMeta is a workaround
     . preserveMeta addDynCon 
     . preserveMeta simultaneous 
@@ -819,7 +800,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       notateDD :: DynamicNotation -> LyMusic -> LyMusic
       notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
         where
-          -- Use rcomposed as dynamicDisplay returns "mark" order, not application order
+          -- Use rcomposed as notateDynamic returns "mark" order, not application order
           rcomposed = composed . reverse
           notateCrescDim x = case x of
             NoCrescDim -> id
@@ -1090,8 +1071,8 @@ instance Tiable DynamicNotation where
 --   1) Whether we should begin or end a crescendo or diminuendo
 --   2) Whether we should display the current dynamic value
 --
-dynamicDisplay :: (Ord a, Real a) => Ctxt a -> DynamicNotation
-dynamicDisplay x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
+notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
+notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
   (Nothing, y, Nothing) -> ([], True)
   (Nothing, y, Just z ) -> case (y `compare` z) of
     LT      -> ([BeginCresc], True)

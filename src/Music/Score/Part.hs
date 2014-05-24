@@ -120,6 +120,9 @@ class (Transformable (Part s),
   -- | Part type.
   parts :: Traversal s t (Part s) (Part t)
 
+type HasPart' a  = HasPart a a
+type HasParts' a = HasParts a a
+
 -- |
 -- Part type.
 --
@@ -199,9 +202,6 @@ instance (HasPart a b) => HasPart (Note a) (Note b) where
 
 instance (HasParts a b) => HasParts (Note a) (Note b) where
   parts = _Wrapped . whilstL parts
-
-type HasPart' a = HasPart a a
-type HasParts' a = HasParts a a
 
 -- |
 -- List all the parts
@@ -305,4 +305,15 @@ instance (HasParts a b) => HasParts (Score a) (Score b) where
     . traverse
     . _Wrapped      -- this needed?
     . whilstL parts
+
+type instance Part (Voice a) = Part a
+type instance SetPart g (Voice a) = Voice (SetPart g a)
+
+instance (HasParts a b) => HasParts (Voice a) (Voice b) where
+  parts =
+    _Wrapped
+    . traverse
+    . _Wrapped      -- this needed?
+    . whilstLD parts
+
 

@@ -40,6 +40,8 @@ module Music.Score.Dynamics (
         -- ** Accessing dynamics
         HasDynamics(..),
         HasDynamic(..),
+        HasDynamics',
+        HasDynamic',
         dynamic',
         dynamics',
         -- * Manipulating dynamics
@@ -136,15 +138,14 @@ class (
   -- | Access all dynamics.
   dynamics :: Traversal s t (Dynamic s) (Dynamic t)
 
--- |
--- Dynamic type.
---
+type HasDynamic'  a = HasDynamic  a a
+type HasDynamics' a = HasDynamics a a
+
+-- | Access a single dynamic.
 dynamic' :: (HasDynamic s t, s ~ t) => Lens' s (Dynamic s)
 dynamic' = dynamic
 
--- |
--- Dynamic type.
---
+-- | Access all dynamics.
 dynamics' :: (HasDynamics s t, s ~ t) => Traversal' s (Dynamic s)
 dynamics' = dynamics
 

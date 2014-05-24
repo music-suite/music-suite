@@ -50,6 +50,7 @@ import qualified Data.Colour.Names             as C
 import           Data.Foldable
 import           Data.Semigroup
 import           Data.Typeable
+import           Control.Comonad
 
 import           Music.Score.Part
 import           Music.Time
@@ -82,7 +83,7 @@ instance HasColor a => HasColor (TieT a) where
   setColor s = fmap (setColor s)
 
 newtype ColorT a = ColorT { getColorT :: (Option (Last (Colour Double)), a) }
-  deriving (Eq, {-Ord,-} Show, Functor, Foldable, {-Typeable, -}Applicative, Monad)
+  deriving (Eq, {-Ord,-} Show, Functor, Foldable, {-Typeable,-} Applicative, Monad, Comonad)
 
 deriving instance IsPitch a => IsPitch (ColorT a)
 deriving instance IsDynamics a => IsDynamics (ColorT a)
@@ -90,6 +91,11 @@ deriving instance Transformable a => Transformable (ColorT a)
 deriving instance Reversible a => Reversible (ColorT a)
 deriving instance Alterable a => Alterable (ColorT a)
 deriving instance Augmentable a => Augmentable (ColorT a)
+deriving instance HasTremolo a => HasTremolo (ColorT a)
+deriving instance HasHarmonic a => HasHarmonic (ColorT a)
+deriving instance HasSlide a => HasSlide (ColorT a)
+deriving instance HasText a => HasText (ColorT a)
+
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ColorT a) where
