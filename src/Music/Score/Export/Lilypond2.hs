@@ -517,6 +517,8 @@ instance HasBackendNote Super a => HasBackendNote Super (ColorT a) where
 toSuper :: (HasBackendNote Super (ScoreEvent Super s), HasBackendScore Super s) => s -> String
 toSuper = export (undefined::Super)
 
+openSuper score = do
+  writeFile "test.sc" ("(" ++ toSuper score ++ ").play")
 
 
 
@@ -652,13 +654,19 @@ instance (
   )
   => HasBackendScore Lilypond (Score a) where
   type ScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
-  exportScore b = LyScore
-    . map (uncurry exportPart)
+  exportScore b score = LyScore
+    . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts' --WithMeta
     . over dynamics dynamicDisplay 
     -- TODO preserveMeta is a workaround
     . preserveMeta addDynCon 
     . preserveMeta simultaneous 
+    $ score
+    where
+      (timeSignatureMarks, barDurations) 
+        = 
+          getTimeSigs score 
+    
 
 preserveMeta f x = let m = view meta x in set meta m (f x)
 
@@ -670,18 +678,14 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 --     extr = extractParts' sc
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
-exportPart :: Tiable a => Part a -> Score a -> LyStaff (LyContext a)
-exportPart p score = id
+exportPart :: Tiable a => [Maybe TimeSignature] -> [Duration] -> Part a -> Score a -> LyStaff (LyContext a)
+exportPart timeSignatureMarks barDurations part score = id
   -- LyStaff (LyContext b)
   . exportStaff timeSignatureMarks barDurations
   -- Voice b
   . view singleMVoice
   -- Score b
   $ score
-  where
-    (timeSignatureMarks, barDurations) 
-      = 
-        getTimeSigs score 
 
 
 exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
