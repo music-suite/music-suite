@@ -686,17 +686,17 @@ exportPart p score = id
 
 exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
 exportStaff timeSignatures barDurations 
-  = LyStaff . zipWith exportBar timeSignatures . splitTies barDurations
+  = LyStaff . zipWith exportBar timeSignatures . splitIntoBars barDurations
   where
     exportBar :: Tiable a => Maybe TimeSignature -> MVoice a -> LyBar (LyContext a)
     exportBar timeSignature voice = LyBar (timeSignature, toRhythm voice)
 
-    splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
-    splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
-
-    voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-    voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
-    
+    splitIntoBars :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
+    splitIntoBars ds = map (view $ from unsafeEventsV) . voiceToBars' ds
+    -- TODO clean
+      where
+        voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
+        voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
 
 getTimeSigs :: Score a -> ([Maybe TimeSignature], [Duration])
 getTimeSigs sc = let
@@ -846,18 +846,21 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a
   exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
-  exportNote b = \(LyContext d x) ->
-    (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
-    where
-      -- newDur = d
-      -- notate = id
-      notate Nothing d = (id, d)
-      notate (Just n') d = let
-        n = getMax . fst . getCouple . getTremoloT $ n'
-        scale   = 2^n
-        newDur  = (d `min` (1/4)) / scale
-        repeats = d / newDur
-        in (Lilypond.Tremolo (round $ repeats), newDur)
+  -- FIXME it's too late to change duration here as we already quantized
+  exportNote b = exportNote b . fmap extract
+
+  -- exportNote b = \(LyContext d x) ->
+  --   (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
+  --   where
+  --     -- newDur = d
+  --     -- notate = id
+  --     notate Nothing d = (id, d)
+  --     notate (Just n') d = let
+  --       n = getMax . fst . getCouple . getTremoloT $ n'
+  --       scale   = 2^n
+  --       newDur  = (d `min` (1/4)) / scale
+  --       repeats = d / newDur
+  --       in (Lilypond.Tremolo (round $ repeats), newDur)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TextT a) where
   exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
@@ -898,7 +901,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
         | ta && tb                      = id . Lilypond.beginTie
         | tb                            = Lilypond.beginTie
         | ta                            = id
-        | otherwise                     = Lilypond.beginTie
+        | otherwise                     = id
 
 -- type Lilypond = Lilypond.Music
 toLilypondString :: (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a) => a -> String
@@ -917,25 +920,25 @@ aScore = id
 
 
 
--- -- main = putStrLn $ show $ view notes $ simultaneous
--- main = do
---   -- showLilypond $ music
---   openLilypond $ music
--- music = id
---   --  $ over pitches' (+ 2)
---   --  $ text "Hello"
---   $ compress 1 $ sj -- </> sj^*2 </> sj^*4
---   where
---     sj = timesPadding 2 1 $ harmonic 1 (scat [
---       color Color.blue $ level _f $ c <> d,
---       cs,
---       level _f ds,
---       level ff fs,
---       level _f a_,
---       text "pizz" $ level pp gs_,
---       tremolo 2 d,
---       tremolo 3 e
---       ::Score MyNote])^*(1+4/5)   
+-- main = putStrLn $ show $ view notes $ simultaneous
+main = do
+  -- showLilypond $ music
+  openLilypond $ music
+music = id
+  --  $ over pitches' (+ 2)
+  --  $ text "Hello"
+  $ compress 1 $ sj </> sj^*2 </> sj^*4
+  where
+    sj = timesPadding 2 1 $ harmonic 1 (scat [
+      color Color.blue $ level _f $ c <> d,
+      cs,
+      level _f ds,
+      level ff fs,
+      level _f a_,
+      text "pizz" $ level pp gs_,
+      tremolo 2 d,
+      tremolo 3 e
+      ::Score MyNote])^*(1+3/8)   
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
@@ -967,6 +970,12 @@ type MyNote =
 open :: Score MyNote -> IO ()
 open = openLilypond
 
+
+
+
+-- TODO move stuff below here somewhere
+
+
 newtype OptAvg a = OptAvg
   -- (Option (Average a))
   (Sum a)
@@ -996,6 +1005,7 @@ getAverage (Average (Sum n, Sum x)) = x / fromInteger n
 
 instance (Show a, Fractional a) => Show (Average a) where
   show n = "Average {getAverage = " ++ show (getAverage n) ++ "}"
+
 
 
 
