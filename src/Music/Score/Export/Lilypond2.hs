@@ -26,7 +26,7 @@ module Music.Score.Export.Lilypond2 (
     HasBackendNote(..),
     export,
 
-    NullBackend,
+    NoteList,
     
     Super,
     toSuper,
@@ -106,25 +106,25 @@ import Data.Semigroup.Instances
 -- 'HasBackendNote' instances.
 --
 -- @
--- data NullBackend
+-- data NoteList
 --
--- instance HasBackend NullBackend where
---   type BackendScore NullBackend     = []
---   type BackendContext NullBackend   = Identity
---   type BackendNote NullBackend      = [(Sum Int, Int)]
---   type BackendMusic NullBackend     = [(Sum Int, Int)]
+-- instance HasBackend NoteList where
+--   type BackendScore NoteList     = []
+--   type BackendContext NoteList   = Identity
+--   type BackendNote NoteList      = [(Sum Int, Int)]
+--   type BackendMusic NoteList     = [(Sum Int, Int)]
 --   finalizeExport _ = concat
 --
--- instance HasBackendScore NullBackend [a] a where
+-- instance HasBackendScore NoteList [a] a where
 --   exportScore _ = fmap Identity
 --
--- instance HasBackendNote NullBackend a => HasBackendNote NullBackend [a] where
+-- instance HasBackendNote NoteList a => HasBackendNote NoteList [a] where
 --   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
 --
--- instance HasBackendNote NullBackend Int where
+-- instance HasBackendNote NoteList Int where
 --   exportNote _ (Identity p) = [(mempty ,p)]
 --
--- instance HasBackendNote NullBackend a => HasBackendNote NullBackend (DynamicT (Sum Int) a) where
+-- instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT (Sum Int) a) where
 --   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 -- -- @
 --
@@ -169,28 +169,35 @@ export b = finalizeExport b . export'
 
 
 
+-- |
+-- A simple backend that supports rendering scores to lists of pitch and velocity.
+--
+-- This exists as a sanity check for the 'Backend' classes, and as an example.
+--
+data NoteList
 
-data NullBackend
-
-instance HasBackend NullBackend where
-  type BackendScore NullBackend     = []
-  type BackendContext NullBackend   = Identity
-  type BackendNote NullBackend      = [(Sum Int, Int)]
-  type BackendMusic NullBackend     = [(Sum Int, Int)]
+instance HasBackend NoteList where
+  type BackendScore NoteList     = []
+  type BackendContext NoteList   = Identity
+  type BackendNote NoteList      = [(Sum Int, Int)]
+  type BackendMusic NoteList     = [(Sum Int, Int)]
   finalizeExport _ = concat
 
-instance HasBackendScore NullBackend [a] where
-  type ScoreEvent NullBackend [a] = a
+instance HasBackendScore NoteList [a] where
+  type ScoreEvent NoteList [a] = a
   exportScore _ = fmap Identity
 
-instance HasBackendNote NullBackend a => HasBackendNote NullBackend [a] where
+instance HasBackendNote NoteList a => HasBackendNote NoteList [a] where
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
 
-instance HasBackendNote NullBackend Int where
+instance HasBackendNote NoteList Int where
   exportNote _ (Identity p) = [(mempty ,p)]
 
-instance HasBackendNote NullBackend a => HasBackendNote NullBackend (DynamicT (Sum Int) a) where
+instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
+
+toNull :: (HasBackendNote NoteList (ScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
+toNull = over (mapped._1) getSum . export (undefined::NoteList)
 
 
 
