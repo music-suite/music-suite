@@ -36,12 +36,19 @@ module Music.Score.Export.Lilypond2 (
     
     -- * SuperCollider events
     SuperCollider,
+    HasSuperCollider,
     toSuperCollider,
+    writeSuperCollider,
+    openSuperCollider,
 
     -- * MIDI
     HasMidiProgram,
     Midi,
+    HasMidiNEW,
     toMidi,
+    writeMidi,
+    showMidi,
+    openMidi,
 
     -- * Lilypond
     Lilypond,
@@ -276,15 +283,47 @@ instance HasBackendScore NoteList [a] where
   type BackendScoreEvent NoteList [a] = a
   exportScore _ = fmap Identity
 
+instance HasBackendScore NoteList (Score a) where
+  type BackendScoreEvent NoteList (Score a) = a
+  exportScore _ = fmap Identity . toListOf traverse
+
 instance HasBackendNote NoteList a => HasBackendNote NoteList [a] where
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
 
 instance HasBackendNote NoteList Int where
-  exportNote _ (Identity p) = [(mempty ,p)]
+  exportNote _ (Identity p) = [(mempty, p)]
 
-instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT (Sum Int) a) where
-  exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
+instance HasBackendNote NoteList Double where
+  exportNote _ (Identity p) = [(mempty, round p)]
 
+-- TODO prettier
+instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT b a) where
+  exportNote b = exportNote b . fmap extract 
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (ArticulationT b a) where
+  exportNote b = exportNote b . fmap extract 
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (PartT n a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (TremoloT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (TextT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (HarmonicT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (SlideT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (TieT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote NoteList a => HasBackendNote NoteList (ColorT a) where
+  exportNote b = exportNote b . fmap extract 
+  
 toNoteList :: (HasBackendNote NoteList (BackendScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
 toNoteList = over (mapped._1) getSum . export (undefined::NoteList)
 
@@ -459,11 +498,18 @@ setC c = go
     go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
     go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
-toMidi :: (HasBackendNote Midi (BackendScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
+type HasMidiNEW a = (HasBackendNote Midi (BackendScoreEvent Midi a), HasBackendScore Midi a)
+
+toMidi :: HasMidiNEW a => a -> Midi.Midi
 toMidi = export (undefined::Midi)
 
+writeMidi :: HasMidiNEW a => FilePath -> a -> IO ()
 writeMidi path sc = Midi.exportFile path (toMidi sc)
 
+showMidi :: HasMidiNEW a => a -> IO ()
+showMidi = print . toMidi
+
+openMidi :: HasMidiNEW a => a -> IO ()
 openMidi score = do
     writeMidi "test.mid" score
     void $ runCommand "timidity test.mid" >>= waitForProcess
@@ -579,12 +625,17 @@ instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (TieT a)
 instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (ColorT a) where
   exportNote b = exportNote b . fmap extract
 
+type HasSuperCollider a = (HasBackendNote SuperCollider (BackendScoreEvent SuperCollider a), HasBackendScore SuperCollider a)
 
-toSuperCollider :: (HasBackendNote SuperCollider (BackendScoreEvent SuperCollider s), HasBackendScore SuperCollider s) => s -> String
+toSuperCollider :: HasSuperCollider a => a -> String
 toSuperCollider = export (undefined::SuperCollider)
 
-openSuperCollider score =
-  writeFile "test.sc" ("(" ++ toSuperCollider score ++ ").play")
+writeSuperCollider :: HasSuperCollider a => FilePath -> a -> IO ()
+writeSuperCollider path score =
+  writeFile path ("(" ++ toSuperCollider score ++ ").play")
+
+openSuperCollider :: HasSuperCollider a => a -> IO ()
+openSuperCollider = writeSuperCollider "test.sc"
 
 
 
