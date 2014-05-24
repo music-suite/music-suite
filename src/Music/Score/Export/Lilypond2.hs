@@ -35,9 +35,18 @@ module Music.Score.Export.Lilypond2 (
     Midi,
     toMidi,
 
+    -- * Lilypond
     Lilypond,
-    toLilypondString,
     toLilypond,
+    toLilypondString,    
+    showLilypond,
+    openLilypond,
+    writeLilypond,
+
+    -- ** Options
+    LilypondOptions(..),
+    openLilypond',
+    writeLilypond',
   ) where
 
 import           Music.Dynamics.Literal
@@ -502,18 +511,18 @@ openSuper score = do
 
 
 
-
--- | A token to represent the Lilypond backend.
-data Lilypond
-
--- | Hierachical representation of a Lilypond score.
 {-
   TODO rewrite so that:
     - Each bar may include voices/layers (a la Sibelius)
     - Each part may generate more than one staff (for piano etc)
 -}
 
--- | A score is a parallel composition of staves.
+
+-- | A token to represent the Lilypond backend.
+data Lilypond
+
+-- | Hierachical representation of a Lilypond score.
+--   A score is a parallel composition of staves.
 data LyScore a = LyScore { getLyScore :: [LyStaff a] } deriving (Functor, Eq, Show)
 
 -- | A staff is a sequential composition of bars.
@@ -894,10 +903,15 @@ spellLy' p = Lilypond.Pitch (
 -- End internal
 
 
--- type Lilypond = Lilypond.Music
+-- |
+-- Convert a score to a Lilypond string.
+--
 toLilypondString :: (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a) => a -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
+-- |
+-- Convert a score to a Lilypond representation.
+--
 toLilypond :: (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a) => a -> Lilypond.Music
 toLilypond = export (undefined::Lilypond)
 
@@ -1092,13 +1106,19 @@ instance (Show a, Fractional a) => Show (Average a) where
 -- |
 -- Convert a score to a Lilypond representaiton and print it on the standard output.
 --
--- showLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
+showLilypond
+  :: (HasBackendNote Lilypond (ScoreEvent Lilypond a),
+      HasBackendScore Lilypond a) =>
+     a -> IO ()
 showLilypond = putStrLn . toLilypondString
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
--- writeLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => FilePath -> Score a -> IO ()
+writeLilypond
+  :: (HasBackendNote Lilypond (ScoreEvent Lilypond a),
+      HasBackendScore Lilypond a) =>
+      FilePath -> a -> IO ()
 writeLilypond = writeLilypond' def
 
 data LilypondOptions
@@ -1110,11 +1130,17 @@ instance Default LilypondOptions where
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
 --
--- writeLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> FilePath -> Score a -> IO ()
+writeLilypond'
+  :: (HasBackendNote Lilypond (ScoreEvent Lilypond a),
+      HasBackendScore Lilypond a) =>
+      LilypondOptions -> FilePath -> a -> IO ()
 writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypondString sc
     where
-        title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
-        composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
+        -- title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
+        -- composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
+        title = ""
+        composer = ""
+        -- TODO generalize metaAtStart!
 
         lyFilePrefix = case options of
             LyInlineFormat -> lyInlinePrefix
@@ -1159,10 +1185,16 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
 --
 -- /Note/ This is simple wrapper around 'writeLilypond' that may not work well on all platforms.
 --
--- openLilypond :: (HasLilypond2 a, HasPart2 a, Semigroup a) => Score a -> IO ()
+openLilypond
+  :: (HasBackendNote Lilypond (ScoreEvent Lilypond a),
+      HasBackendScore Lilypond a) =>
+     a -> IO ()
 openLilypond = openLilypond' def
 
--- openLilypond' :: (HasLilypond2 a, HasPart2 a, Semigroup a) => LilypondOptions -> Score a -> IO ()
+openLilypond'
+  :: (HasBackendNote Lilypond (ScoreEvent Lilypond a),
+      HasBackendScore Lilypond a) =>
+     LilypondOptions -> a -> IO ()
 openLilypond' options sc = do
     writeLilypond' options "test.ly" sc
     runLilypond
