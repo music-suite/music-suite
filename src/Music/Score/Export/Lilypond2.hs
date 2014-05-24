@@ -535,7 +535,7 @@ finalizeStaff = extra . scatLy . map finalizeBar . getLyStaff
   -- TODO correct clefs
 
 finalizeBar :: LyBar LyMusic -> LyMusic
-finalizeBar (LyBar (timeSig, music)) = setBarTimeSig timeSig $ rhythmToLilypond $ music
+finalizeBar (LyBar (timeSig, music)) = setBarTimeSig timeSig $ renderBarRhythm $ music
 
 
 {-
@@ -614,43 +614,57 @@ instance (
     . preserveMeta simultaneous 
     $ score
     where
-      (timeSignatureMarks, barDurations) = getTimeSigs score 
+      (timeSignatureMarks, barDurations) = getTimeSignaturesFromMeta score 
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
-exportPart :: Tiable a => [Maybe TimeSignature] -> [Duration] -> Part a -> Score a -> LyStaff (LyContext a)
+exportPart :: Tiable a 
+  => [Maybe TimeSignature] 
+  -> [Duration] 
+  -> Part a 
+  -> Score a 
+  -> LyStaff (LyContext a)
 exportPart timeSignatureMarks barDurations part = id
   . exportStaff timeSignatureMarks barDurations
   . view singleMVoice
 
 
-exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
+exportStaff :: Tiable a 
+  => [Maybe TimeSignature] 
+  -> [Duration] 
+  -> MVoice a 
+  -> LyStaff (LyContext a)
 exportStaff timeSignatures barDurations 
-  = LyStaff . zipWith exportBar timeSignatures . splitIntoBars barDurations
+  = LyStaff 
+  . zipWith exportBar timeSignatures 
+  . splitIntoBars barDurations
   where
-    exportBar :: Tiable a => Maybe TimeSignature -> MVoice a -> LyBar (LyContext a)
-    exportBar timeSignature voice = LyBar (timeSignature, toRhythm voice)
-
     splitIntoBars :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
     splitIntoBars = splitTiesVoiceAt
     -- TODO rename splitTiesVoiceAt?
+
+exportBar :: Tiable a 
+  => Maybe TimeSignature 
+  -> MVoice a 
+  -> LyBar (LyContext a)
+exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
 
 
 --------------------------------------------------------------------------------
 -- Called in the exportScore step
 --------------------------------------------------------------------------------
 
-getTimeSigs :: Score a -> ([Maybe TimeSignature], [Duration])
-getTimeSigs sc = let
-  timeSigs  = getTimeSignatures (time 4 4) sc -- 4/4 is default
-  timeSigsV = fmap swap $ unvoice $ fuse $ reactiveToVoice' (0 <-> _offset sc) timeSigs
+getTimeSignaturesFromMeta :: Score a -> ([Maybe TimeSignature], [Duration])
+getTimeSignaturesFromMeta score = (barTimeSigs, barDurations)
+  where
+    timeSigs  = getTimeSignatures (time 4 4) score -- 4/4 is default
+    timeSigsV = fmap swap $ unvoice $ fuse $ reactiveToVoice' (0 <-> _offset score) timeSigs
 
-  -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-  barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
-  barDurations =                 getBarDurations      $ timeSigsV
-  in (barTimeSigs, barDurations)
+    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+    barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
+    barDurations =                 getBarDurations      $ timeSigsV
 
-toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
-toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
+quantizeBar :: Tiable a => MVoice a -> Rhythm (LyContext a)
+quantizeBar = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
   where
     -- FIXME handle quantization errors
     fromRight (Left e)  = error $ "Quantization failed: " ++ e
@@ -670,13 +684,15 @@ toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize .
 -- Called in the finalize step
 --------------------------------------------------------------------------------
 
-rhythmToLilypond :: Rhythm LyMusic -> LyMusic
-rhythmToLilypond (Beat d x)            = noteRestToLilypond x
-rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond x
-rhythmToLilypond (Group rs)            = scatLy $ map rhythmToLilypond rs
-rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
+renderBarRhythm :: Rhythm LyMusic -> LyMusic
+renderBarRhythm = go
   where
-    (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+    go (Beat d x)            = noteRestToLilypond x
+    go (Dotted n (Beat d x)) = noteRestToLilypond x
+    go (Group rs)            = scatLy $ map renderBarRhythm rs
+    go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarRhythm r)
+      where
+        (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 -- where
 noteRestToLilypond = Lilypond.removeSingleChords
 
