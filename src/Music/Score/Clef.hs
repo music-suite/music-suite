@@ -64,7 +64,7 @@ import           Music.Time
 
 -- Put the given clef in front of the note
 newtype ClefT a = ClefT { getClefT :: (Option (Last Clef), a) }
-    deriving (Functor, Semigroup, Monoid)
+  deriving (Functor, Semigroup, Monoid)
 
 
 -- | Unsafe: Do not use 'Wrapped' instances
@@ -76,34 +76,37 @@ instance Rewrapped (ClefT a) (ClefT b)
 
 
 instance Monad ClefT where
-    return x = ClefT (mempty, x)
-    (>>=) = error "No ClefT.(>>=)"
+  return x = ClefT (mempty, x)
+  (>>=) = error "No ClefT.(>>=)"
+
 
 type instance Part (ClefT a) = Part a
 type instance SetPart b (ClefT a) = ClefT (SetPart b a)
 
+
 instance (HasParts a b) => HasParts (ClefT a) (ClefT b) where
   parts = _Wrapped . parts
+
 instance (HasPart a b) => HasPart (ClefT a) (ClefT b) where
   part = _Wrapped . part
 
 
 instance Transformable a => Transformable (ClefT a) where
-    transform s = over (_Wrapped . _2) $ transform s
+  transform s = over (_Wrapped . _2) $ transform s
   
 instance Tiable a => Tiable (ClefT a) where
-    toTied (ClefT (clef,a)) = (ClefT (clef,b), ClefT (mempty,c)) where (b,c) = toTied a
+  toTied (ClefT (clef,a)) = (ClefT (clef,b), ClefT (mempty,c)) where (b,c) = toTied a
 
 class HasClef a where
-    applyClef :: Clef -> a -> a
+  applyClef :: Clef -> a -> a
 
 instance HasClef (ClefT a) where
-    applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
+  applyClef c (ClefT (_,a)) = ClefT (Option $ Just $ Last c,a)
 
 instance HasClef a => HasClef (b,a) where
-    applyClef c = fmap (applyClef c)
+  applyClef c = fmap (applyClef c)
 
 instance (HasPart' a, HasClef a) => HasClef (Score a) where
-    applyClef c = id -- TODO
-    -- applyClef c = mapFirst (applyClef c) id
+  applyClef c = id -- TODO
+  -- applyClef c = mapFirst (applyClef c) id
 
