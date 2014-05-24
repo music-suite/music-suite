@@ -17,6 +17,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Internal.Export (
+        extractTimeSignatures,
         voiceToBars',
         -- separateBars,
         spellPitch,
@@ -56,6 +57,7 @@ import           Music.Score.Part
 import           Music.Score.Pitch
 import           Music.Time.Internal.Quantize
 import           Music.Score.Ties
+import           Music.Score.Meta.Time
 import           Music.Time
 
 import qualified Codec.Midi               as Midi
@@ -72,6 +74,18 @@ import           Music.Pitch.Literal
 import           Music.Score.Internal.Util
 import           System.IO.Unsafe
 import           System.Process
+
+extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
+extractTimeSignatures score = (barTimeSignatures, barDurations)
+  where                                          
+    defaultTimeSignature = time 4 4
+    timeSignatures = fmap swap 
+      $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+      $ getTimeSignatures defaultTimeSignature score
+
+    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
+    barDurations = getBarDurations timeSignatures
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]

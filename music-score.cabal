@@ -103,10 +103,12 @@ library
                         Music.Score.Harmonics
                         Music.Score.Color
                         Music.Score.Export.Abc
-                        Music.Score.Export.Lilypond
-                        Music.Score.Export.Lilypond2
-                        Music.Score.Export.MusicXml
+                        Music.Score.Export.Backend
+                        Music.Score.Export.NoteList
                         Music.Score.Export.Midi
+                        Music.Score.Export.SuperCollider
+                        Music.Score.Export.Lilypond
+                        Music.Score.Export.MusicXml
                         Music.Score.Export.DynamicNotation
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond

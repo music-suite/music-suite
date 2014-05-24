@@ -29,6 +29,7 @@
 module Music.Time.Internal.Quantize (
         -- * Rhythm type
         Rhythm(..),
+        mapWithDur,
 
         -- * Quantization
         quantize,
@@ -108,6 +109,14 @@ rhythmToTree = go
 
 drawRhythm :: Show a => Rhythm a -> String
 drawRhythm = drawTree . rhythmToTree
+
+mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
+mapWithDur f = go
+  where
+    go (Beat d x)            = Beat d (f d x)
+    go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+    go (Group rs)            = Group $ fmap (mapWithDur f) rs
+    go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
 
 instance Semigroup (Rhythm a) where
   (<>) = mappend
