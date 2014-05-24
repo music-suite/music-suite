@@ -472,7 +472,6 @@ instance HasBackend Super where
           ampls   = map (fmap snd . snd) events
           
 
--- TODO allow rests, by passing \rest (or Rest) instead of the pitch
 instance () => HasBackendScore Super (Voice (Maybe a)) where
   type ScoreEvent Super (Voice (Maybe a)) = a
   exportScore _ xs = fmap Identity $ SuperScore [view eventsV xs]
@@ -679,14 +678,9 @@ instance (
           getTimeSigs score 
     
 
+preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
 preserveMeta f x = let m = view meta x in set meta m (f x)
 
--- -- TODO extractParts' should actually preserve meta, this function is a workaround
--- extractParts'WithMeta :: (HasPart' a, Ord (Part a)) => Score a -> [(Part a, Score a)]
--- extractParts'WithMeta sc = over (mapped._2) (set meta met) $ extr
---   where
---     met  = sc^.meta
---     extr = extractParts' sc
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
 exportPart :: Tiable a => [Maybe TimeSignature] -> [Duration] -> Part a -> Score a -> LyStaff (LyContext a)
@@ -984,6 +978,9 @@ type MyNote =
 
 open :: Score MyNote -> IO ()
 open = openLilypond
+
+
+
 
 
 
