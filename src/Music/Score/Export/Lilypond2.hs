@@ -869,6 +869,7 @@ instance Integral a => HasBackendNote Lilypond (Ratio a) where
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (Behavior a) where
   exportNote b = exportNote b . fmap (! 0)
+  exportChord b = exportChord b . fmap (fmap (! 0))
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (Sum a) where
   exportNote b = exportNote b . fmap getSum
@@ -1378,6 +1379,7 @@ instance Integral a => HasBackendNote MusicXml (Ratio a) where
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (Behavior a) where
   exportNote b = exportNote b . fmap (! 0)
+  exportChord b = exportChord b . fmap (fmap (! 0))
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (Sum a) where
   exportNote b = exportNote b . fmap getSum
@@ -1394,7 +1396,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicN
   exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
     where
       notate (DynamicNotation (crescDims, level)) 
-        = rcomposed (fmap notateCrescDim crescDims) 
+        = composed (fmap notateCrescDim crescDims) 
         . notateLevel level
 
       notateCrescDim crescDims = case crescDims of
@@ -1412,8 +1414,8 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicN
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
-      -- Use rcomposed as notateDynamic returns "mark" order, not application order
-      rcomposed = composed . reverse
+      -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
+      -- rcomposed = composed . reverse
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT n a) where
   exportNote b = exportNote b . fmap extract
@@ -1548,7 +1550,7 @@ spellMusicXml p = (
 
 -- main = putStrLn $ show $ view notes $ simultaneous
 main = do
-  -- showLilypond music
+  openLilypond music
   openMusicXml music
 music =
   --  over pitches' (+ 2) $
@@ -1578,10 +1580,8 @@ type MyNote =
               (SlideT 
                 (ArticulationT () 
                   (DynamicT 
-                    (Sum Double) 
-                      [Double])))))))))
-
-
+                    (Sum (Double)) 
+                      [Behavior Double])))))))))
 
 
 open :: Score MyNote -> IO ()
