@@ -582,59 +582,55 @@ instance HasBackend Ly where
 
 {-
   getL (setL a s)   = a
-  setL a (setL b s) = setL a s
   setL (getL s) s   = s
+  setL a (setL b s) = setL a s
 -}
-type HasDynamicX s a b = (
+type HasDynamicX s t a b = (
 
   -- with ImpredicativeTypes:
   -- forall a .
    Dynamic (SetDynamic a s) ~ a,
 
+  -- SetDynamic (Dynamic t) s ~ t, -- difference?  
+  SetDynamic (Dynamic t) s ~ t,
+
   -- with ImpredicativeTypes:
   -- forall a b .
   SetDynamic a (SetDynamic b s) ~ SetDynamic a s,
   
-  -- SetDynamic (Dynamic t) s ~ t, -- difference?  
-  SetDynamic (Dynamic s) s ~ s,
   () ~ ()
   )
 
 -- TODO simplify
 instance (
-  a'Dyn ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
-  a''Dyn ~ DynamicNotation,
-  Dynamic a'  ~ a'Dyn,
-  Dynamic a'' ~ a''Dyn,
+  ad' ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  ad'' ~ DynamicNotation,
+  Dynamic a'  ~ ad',
+  Dynamic a'' ~ ad'',
 
-  -- HasDynamicX s a'Dyn a''Dyn,
+  -- HasDynamicX s ad' ad'',
 
   -- We can read update the dynamics in a
   HasDynamic' a,
   -- We can add context to the dynamics in a
   HasDynamic a a',
   -- We can can replace the contextual dynamics with a notation
-  -- We know from superclasses that a'' is a' with a''Dyn as dynamics
+  -- We know from superclasses that a'' is a' with ad'' as dynamics
   --  i.e. that   
   HasDynamic a' a'',
 
+{-
+  -- GetSet a X ad' X
+  Dynamic (SetDynamic ad' a) ~ ad',
 
-  -- XXX Follows from (HasDynamic a a') and (HasDynamic a' a'')
-  -- SetDynamic a'Dyn  a  ~ a'  ,
-  -- SetDynamic a''Dyn a' ~ a'' ,
-  
-  -- SetSet law specified
-  SetDynamic a''Dyn (SetDynamic a'Dyn a) ~ SetDynamic a''Dyn a,
+  -- SetGet a a' X X
+  SetDynamic (Dynamic a') a ~ a',
 
-  -- GetSet law specifid
-  Dynamic (SetDynamic a'Dyn a) ~ a'Dyn,
-  
-  -- This follows from the SetSet law
-  -- SetDynamic a''Dyn a  ~ a'',
-  
-  -- Should follow from the GetSet law 
+  -- SetSet a X ad' ad''
+  SetDynamic ad'' (SetDynamic ad' a) ~ SetDynamic ad'' a,
+-}
 
-
+  HasDynamicX a a'' ad' ad'',
 
   Real (Dynamic a),
   
@@ -655,19 +651,11 @@ instance (
   exportScore b = LyScore
     . map (uncurry exportPart)
     . extractParts'
-    . over dynamics dynamicDisplay
-    . addDynCon 
+    . over dynamics dynamicDisplay . addDynCon 
     . simultaneous
 
--- | Export a score as a single staff. Overlapping notes will cause an error.
--- exportPart :: (
---   HasDynamics (Score a) (Score b), 
---   Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, 
---   Real d, 
---   Tiable b,
---   () ~ ()
---   )
---   => Part a -> Score a -> LyStaff (LyContext b)
+-- | Export a score as a single part. Overlapping notes will cause an error.
+exportPart :: Tiable a => Part a -> Score a -> LyStaff (LyContext a)
 exportPart p = id
   -- LyStaff (LyContext b)
   . exportStaff
