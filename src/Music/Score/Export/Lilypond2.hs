@@ -27,7 +27,7 @@ module Music.Score.Export.Lilypond2 (
     HasBackendNote(..),
     export,
 
-    Foo,
+    NullBackend,
     
     Super,
     toSuper,
@@ -173,25 +173,25 @@ type instance SetPart g (Voice a) = Voice (SetPart g a)
 -- 'HasBackendNote' instances.
 --
 -- @
--- data Foo
+-- data NullBackend
 --
--- instance HasBackend Foo where
---   type BackendScore Foo     = []
---   type BackendContext Foo   = Identity
---   type BackendNote Foo      = [(Sum Int, Int)]
---   type BackendMusic Foo     = [(Sum Int, Int)]
+-- instance HasBackend NullBackend where
+--   type BackendScore NullBackend     = []
+--   type BackendContext NullBackend   = Identity
+--   type BackendNote NullBackend      = [(Sum Int, Int)]
+--   type BackendMusic NullBackend     = [(Sum Int, Int)]
 --   finalizeExport _ = concat
 --
--- instance HasBackendScore Foo [a] a where
+-- instance HasBackendScore NullBackend [a] a where
 --   exportScore _ = fmap Identity
 --
--- instance HasBackendNote Foo a => HasBackendNote Foo [a] where
+-- instance HasBackendNote NullBackend a => HasBackendNote NullBackend [a] where
 --   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
 --
--- instance HasBackendNote Foo Int where
+-- instance HasBackendNote NullBackend Int where
 --   exportNote _ (Identity p) = [(mempty ,p)]
 --
--- instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
+-- instance HasBackendNote NullBackend a => HasBackendNote NullBackend (DynamicT (Sum Int) a) where
 --   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 -- -- @
 --
@@ -233,26 +233,26 @@ export b = finalizeExport b . export'
 
 
 
-data Foo
+data NullBackend
 
-instance HasBackend Foo where
-  type BackendScore Foo     = []
-  type BackendContext Foo   = Identity
-  type BackendNote Foo      = [(Sum Int, Int)]
-  type BackendMusic Foo     = [(Sum Int, Int)]
+instance HasBackend NullBackend where
+  type BackendScore NullBackend     = []
+  type BackendContext NullBackend   = Identity
+  type BackendNote NullBackend      = [(Sum Int, Int)]
+  type BackendMusic NullBackend     = [(Sum Int, Int)]
   finalizeExport _ = concat
 
-instance HasBackendScore Foo [a] where
-  type ScoreEvent Foo [a] = a
+instance HasBackendScore NullBackend [a] where
+  type ScoreEvent NullBackend [a] = a
   exportScore _ = fmap Identity
 
-instance HasBackendNote Foo a => HasBackendNote Foo [a] where
+instance HasBackendNote NullBackend a => HasBackendNote NullBackend [a] where
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps
 
-instance HasBackendNote Foo Int where
+instance HasBackendNote NullBackend Int where
   exportNote _ (Identity p) = [(mempty ,p)]
 
-instance HasBackendNote Foo a => HasBackendNote Foo (DynamicT (Sum Int) a) where
+instance HasBackendNote NullBackend a => HasBackendNote NullBackend (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
 
