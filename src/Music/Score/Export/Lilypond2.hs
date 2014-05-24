@@ -828,6 +828,10 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
           notateLevel = case showLevel of
              Nothing -> id
              Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+          
+          fixLevel :: Double -> Double
+          fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
+
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
   exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
@@ -919,8 +923,12 @@ toLilypondString = show . Pretty.pretty . toLilypond
 toLilypond :: (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a) => a -> Lilypond.Music
 toLilypond = export (undefined::Lilypond)
 
-aScore :: Score a -> Score a
-aScore = id
+
+
+
+
+
+
 
 
 
@@ -1053,34 +1061,30 @@ spellLy' p = Lilypond.Pitch (
 
 
 
-newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
-
-type instance Dynamic DynamicNotation = DynamicNotation
-
-instance Wrapped DynamicNotation where
-  type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
-  _Wrapped' = iso getDynamicNotation DynamicNotation
-
-instance Transformable DynamicNotation where
-  transform _ = id
-instance Tiable DynamicNotation where
-  toTied (DynamicNotation (beginEnd, marks)) = (DynamicNotation (beginEnd, marks), DynamicNotation (mempty, Nothing))
-  -- Note: important!
-
-fixLevel :: Double -> Double
-fixLevel x = (fromIntegral $ round (x - 0.5)) + 0.5
-
 data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
 
 instance Monoid CrescDim where
   mempty = NoCrescDim
   mappend a _ = a
 
-mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
-mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
+newtype DynamicNotation 
+  = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
 
-extractCtxt :: Ctxt a -> a
-extractCtxt (_,x,_) = x
+instance Wrapped DynamicNotation where
+  type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
+  _Wrapped' = iso getDynamicNotation DynamicNotation
+
+instance Rewrapped DynamicNotation DynamicNotation
+
+type instance Dynamic DynamicNotation = DynamicNotation
+
+instance Transformable DynamicNotation where
+  transform _ = id
+
+instance Tiable DynamicNotation where
+  toTied (DynamicNotation (beginEnd, marks)) 
+    = (DynamicNotation (beginEnd, marks), 
+       DynamicNotation (mempty, Nothing))
 
 -- Given a dynamic value and its context, decide:
 --
@@ -1117,6 +1121,12 @@ dynamicDisplay x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $
 
 
 
+
+mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
+mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
+
+extractCtxt :: Ctxt a -> a
+extractCtxt (_,x,_) = x
 
 
 
