@@ -34,9 +34,9 @@ module Music.Score.Export.Lilypond2 (
     NoteList,
     toNoteList,
     
-    -- * Supercollider events
-    Super,
-    toSuper,
+    -- * SuperCollider events
+    SuperCollider,
+    toSuperCollider,
 
     -- * MIDI
     HasMidiProgram,
@@ -441,35 +441,35 @@ toMidi = export (undefined::Midi)
 
 
 
--- | A token to represent the Super backend.
-data Super
+-- | A token to represent the SuperCollider backend.
+data SuperCollider
 
 -- | Pass duration to the note export.
-type SuperContext = Identity--SuperContext Duration a deriving (Functor, Foldable, Traversable)
+type ScContext = Identity--ScContext Duration a deriving (Functor, Foldable, Traversable)
 
 -- | Just \dur, \midinote, \db for now
-type SuperEvent = (Double, Double)
+type ScEvent = (Double, Double)
 
 -- | Score is just a list of parallel voices.
-data SuperScore a = SuperScore [[(Duration, Maybe a)]]
+data ScScore a = ScScore [[(Duration, Maybe a)]]
   deriving (Functor)
 
-instance Monoid (SuperScore a) where
-  mempty = SuperScore mempty
-  SuperScore a `mappend` SuperScore b = SuperScore (a `mappend` b)
+instance Monoid (ScScore a) where
+  mempty = ScScore mempty
+  ScScore a `mappend` ScScore b = ScScore (a `mappend` b)
 
-instance HasBackend Super where
-  type BackendContext Super    = SuperContext
-  type BackendScore   Super    = SuperScore
-  type BackendNote    Super    = SuperEvent
-  type BackendMusic   Super    = String
+instance HasBackend SuperCollider where
+  type BackendContext SuperCollider    = ScContext
+  type BackendScore   SuperCollider    = ScScore
+  type BackendNote    SuperCollider    = ScEvent
+  type BackendMusic   SuperCollider    = String
 
-  finalizeExport _ (SuperScore trs) = composeTracksInParallel $ map exportTrack trs
+  finalizeExport _ (ScScore trs) = composeTracksInParallel $ map exportTrack trs
     where        
       composeTracksInParallel :: [String] -> String
       composeTracksInParallel = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
       
-      exportTrack :: [(Duration, Maybe SuperEvent)] -> String
+      exportTrack :: [(Duration, Maybe ScEvent)] -> String
       exportTrack events = "Pbind("
         ++ "\\dur, Pseq(" ++ show durs ++ ")"
         ++ ", "
@@ -480,7 +480,7 @@ instance HasBackend Super where
             . Data.List.intercalate ", " 
             . map (maybe "\\rest" show) 
   
-          -- events :: SuperEvent
+          -- events :: ScEvent
           durs    :: [Double]
           pitches :: [Maybe Double]
           ampls   :: [Maybe Double]
@@ -489,63 +489,63 @@ instance HasBackend Super where
           ampls   = map (fmap snd . snd) events
           
 
-instance () => HasBackendScore Super (Voice (Maybe a)) where
-  type BackendScoreEvent Super (Voice (Maybe a)) = a
-  exportScore _ xs = Identity <$> SuperScore [view eventsV xs]
+instance () => HasBackendScore SuperCollider (Voice (Maybe a)) where
+  type BackendScoreEvent SuperCollider (Voice (Maybe a)) = a
+  exportScore _ xs = Identity <$> ScScore [view eventsV xs]
 
-instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
-  type BackendScoreEvent Super (Score a) = a
+instance (HasPart' a, Ord (Part a)) => HasBackendScore SuperCollider (Score a) where
+  type BackendScoreEvent SuperCollider (Score a) = a
   exportScore b = mconcat
     . map (exportScore b . view singleMVoice)
     . extractParts
   
-instance HasBackendNote Super a => HasBackendNote Super [a] where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider [a] where
   exportNote b ps = head $ map (exportNote b) $ sequenceA ps
 
-instance HasBackendNote Super Double where
+instance HasBackendNote SuperCollider Double where
   exportNote _ (Identity x) = (x + 60, 1)
 
-instance HasBackendNote Super Int where
+instance HasBackendNote SuperCollider Int where
   exportNote _ (Identity x) = (fromIntegral x + 60, 1)
 
-instance HasBackendNote Super Integer where
+instance HasBackendNote SuperCollider Integer where
   exportNote _ (Identity x) = (fromIntegral x + 60, 1)
 
-instance HasBackendNote Super a => HasBackendNote Super (DynamicT b a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (DynamicT b a) where
   exportNote b = exportNote b . fmap extract
   -- exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
 
-instance HasBackendNote Super a => HasBackendNote Super (ArticulationT b a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (ArticulationT b a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (PartT n a) where
-  -- Part structure is handled by HasSuperBackendScore instances, so this is just an identity
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (PartT n a) where
+  -- Part structure is handled by HasSuperColliderBackendScore instances, so this is just an identity
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (TremoloT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (TremoloT a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (TextT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (TextT a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (HarmonicT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (HarmonicT a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (SlideT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (SlideT a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (TieT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (TieT a) where
   exportNote b = exportNote b . fmap extract
 
-instance HasBackendNote Super a => HasBackendNote Super (ColorT a) where
+instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (ColorT a) where
   exportNote b = exportNote b . fmap extract
 
 
-toSuper :: (HasBackendNote Super (BackendScoreEvent Super s), HasBackendScore Super s) => s -> String
-toSuper = export (undefined::Super)
+toSuperCollider :: (HasBackendNote SuperCollider (BackendScoreEvent SuperCollider s), HasBackendScore SuperCollider s) => s -> String
+toSuperCollider = export (undefined::SuperCollider)
 
-openSuper score =
-  writeFile "test.sc" ("(" ++ toSuper score ++ ").play")
+openSuperCollider score =
+  writeFile "test.sc" ("(" ++ toSuperCollider score ++ ").play")
 
 
 
