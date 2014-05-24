@@ -520,20 +520,23 @@ instance HasBackend Lilypond where
   type BackendContext Lilypond = LyContext
   type BackendNote Lilypond    = LyMusic
   type BackendMusic Lilypond   = LyMusic
-  -- TODO staff names etc
-  -- TODO clefs
   finalizeExport _ = finalizeScore
 
 finalizeScore :: LyScore LyMusic -> Lilypond.Music
-finalizeScore = pcatLy . map finalizeStaff . getLyScore
+finalizeScore = extra . pcatLy . map finalizeStaff . getLyScore
+  where
+    extra = id
 
 finalizeStaff :: LyStaff LyMusic -> LyMusic
-finalizeStaff =  (
-  addStaff . addPartName "Foo" . addClef () . scatLy . map (
-  \(LyBar (timeSig, music)) -> setBarTimeSig timeSig (rhythmToLilypond music)
-  )
-  . getLyStaff
-  )
+finalizeStaff = extra . scatLy . map finalizeBar . getLyStaff
+  where
+    extra = addStaff . addPartName "Foo" . addClef ()
+  -- TODO correct staff names
+  -- TODO correct clefs
+
+finalizeBar :: LyBar LyMusic -> LyMusic
+finalizeBar (LyBar (timeSig, music)) = setBarTimeSig timeSig $ rhythmToLilypond $ music
+
 
 {-
   getL (setL a s)   = a
