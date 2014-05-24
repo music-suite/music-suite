@@ -1285,7 +1285,6 @@ instance HasBackendNote MusicXml Integer where
   -- getMusicXml      d = (`Xml.note` realToFrac d)  . spellMusicXml . fromIntegral
   -- getMusicXmlChord d = (`Xml.chord` realToFrac d) . fmap (spellMusicXml . fromIntegral)
 
-  {-
 
 instance HasBackendNote MusicXml Int where
   exportNote b = exportNote b . fmap toInteger
@@ -1315,6 +1314,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
   exportNote b = exportNote b . fmap extract
   exportChord b = exportChord b . fmap (fmap extract)
+  {-
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicNotation a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
@@ -1341,10 +1341,11 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicN
 
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
-
+-}
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT n a) where
   exportNote b = exportNote b . fmap extract
 
+  {-
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
     where
@@ -1363,56 +1364,59 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
         | c == Color.red   = "red"
         | c == Color.blue  = "blue"
         | otherwise        = error "MusicXml backend: Unkown color"
-
+-}
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TremoloT a) where
-  -- TODO can this instance use the new shorter idiom?
-  exportNote b (XmlContext d x) =
-    fst (notate x d) $ exportNote b $ XmlContext (snd $ notate x d) (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTremoloT . sequenceA
     where
-      notate Nothing d                               = (id, d)
-      notate (Just (TremoloT (Couple (Max 0, _)))) d = (id, d)
-      notate (Just (TremoloT (Couple (Max n, _)))) d = let
-        scale   = 2^n
-        newDur  = (d `min` (1/4)) / scale
-        repeats = d / newDur
-        in (MusicXml.Tremolo (round repeats), newDur)     
-
+      notate (Max n) = case n of
+        0 -> id
+        n -> MusicXml.tremolo (fromIntegral n)
+    
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TextT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
     where
-      notate texts = composed (fmap MusicXml.addText texts)
+      notate texts a = mconcat (fmap MusicXml.text texts) <> a
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (HarmonicT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
+  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
     where
-      notate (Any isNat, Sum n) = case (isNat, n) of
-        (_,     0) -> id
-        (True,  n) -> notateNatural n
-        (False, n) -> notateArtificial n
-      notateNatural n = MusicXml.addFlageolet -- addOpen?
+      notateX (Any isNat, Sum n) = notate isNat n
+
+      notate _     0 = id
+      notate True  n = notateNatural n
+      notate False n = notateArtificial n
+
+      -- notateNatural n = Xml.harmonic -- openString?
+      notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
+      -- Most programs do not recognize the harmonic tag
+      -- We set a single diamond notehead instead, which can be manually replaced
       notateArtificial n = id -- TODO
+      
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (SlideT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getSlideT . sequenceA
+  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getSlideT . sequenceA
     where
-      notate ((Any eg, Any es),(Any bg, Any bs))
-        | bg  = MusicXml.beginGlissando
-        | bs  = MusicXml.beginGlissando
-        | otherwise = id
+      notateX ((eg,es),(bg,bs)) = notate
+          where
+              notate = neg . nes . nbg . nbs
+              neg    = if view _Wrapped' eg then MusicXml.endGliss else id
+              nes    = if view _Wrapped' es then MusicXml.endSlide else id
+              nbg    = if view _Wrapped' bg then MusicXml.beginGliss else id
+              nbs    = if view _Wrapped' bs then MusicXml.beginSlide else id
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
     where
       notate (Any ta, Any tb)
-        | ta && tb  = MusicXml.beginTie
+        | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
         | tb        = MusicXml.beginTie
-        | ta        = id
+        | ta        = MusicXml.endTie
         | otherwise = id
 
 
 
 
-
+{-
 
 -- Internal stuff
 pcatXml :: [MusicXml.Music] -> MusicXml.Music
