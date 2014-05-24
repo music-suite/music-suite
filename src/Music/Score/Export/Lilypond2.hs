@@ -608,31 +608,19 @@ instance (
   type ScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
   exportScore b score = LyScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
-    . extractParts' --WithMeta
+    . extractParts'
     . over dynamics notateDynamic 
     . preserveMeta addDynCon 
     . preserveMeta simultaneous 
     $ score
     where
-      (timeSignatureMarks, barDurations) 
-        = 
-          getTimeSigs score 
-    
-
--- TODO This function is a workaround
--- Whenever it is used, we should make the original function preserve meta instead
-preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
-preserveMeta f x = let m = view meta x in set meta m (f x)
-
+      (timeSignatureMarks, barDurations) = getTimeSigs score 
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
 exportPart :: Tiable a => [Maybe TimeSignature] -> [Duration] -> Part a -> Score a -> LyStaff (LyContext a)
 exportPart timeSignatureMarks barDurations part = id
-  -- LyStaff (LyContext b)
   . exportStaff timeSignatureMarks barDurations
-  -- Voice b
   . view singleMVoice
-  -- Score b
 
 
 exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
@@ -646,6 +634,11 @@ exportStaff timeSignatures barDurations
     splitIntoBars = splitTiesVoiceAt
     -- TODO rename splitTiesVoiceAt?
 
+
+--------------------------------------------------------------------------------
+-- Called in the exportScore step
+--------------------------------------------------------------------------------
+
 getTimeSigs :: Score a -> ([Maybe TimeSignature], [Duration])
 getTimeSigs sc = let
   timeSigs  = getTimeSignatures (time 4 4) sc -- 4/4 is default
@@ -655,11 +648,6 @@ getTimeSigs sc = let
   barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
   barDurations =                 getBarDurations      $ timeSigsV
   in (barTimeSigs, barDurations)
-
-setBarTimeSig :: Maybe TimeSignature -> LyMusic -> LyMusic
-setBarTimeSig Nothing x = x
-setBarTimeSig (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
-
 
 toRhythm :: Tiable a => MVoice a -> Rhythm (LyContext a)
 toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
@@ -676,6 +664,12 @@ toRhythm = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize .
         go (Group rs)            = Group $ fmap (mapWithDur f) rs
         go (Tuplet m r)          = Tuplet m (mapWithDur f r)
 
+
+
+--------------------------------------------------------------------------------
+-- Called in the finalize step
+--------------------------------------------------------------------------------
+
 rhythmToLilypond :: Rhythm LyMusic -> LyMusic
 rhythmToLilypond (Beat d x)            = noteRestToLilypond x
 rhythmToLilypond (Dotted n (Beat d x)) = noteRestToLilypond x
@@ -683,19 +677,12 @@ rhythmToLilypond (Group rs)            = scatLy $ map rhythmToLilypond rs
 rhythmToLilypond (Tuplet m r)          = Lilypond.Times (realToFrac m) (rhythmToLilypond r)
   where
     (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
-
-noteRestToLilypond :: LyMusic -> LyMusic
+-- where
 noteRestToLilypond = Lilypond.removeSingleChords
 
 
-
--- Get notes, assume no rests, assume duration 1, put each note in single bar
-
 addStaff :: LyMusic -> LyMusic
 addStaff = Lilypond.New "Staff" Nothing
-
-addClef :: () -> LyMusic -> LyMusic
-addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
 
 addPartName :: String -> LyMusic -> LyMusic
 addPartName partName xs = pcatLy [longName, shortName, xs]
@@ -703,8 +690,16 @@ addPartName partName xs = pcatLy [longName, shortName, xs]
     longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue $ partName)
     shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue $ partName)
 
+addClef :: () -> LyMusic -> LyMusic
+addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
 
 
+setBarTimeSig :: Maybe TimeSignature -> LyMusic -> LyMusic
+setBarTimeSig Nothing x = x
+setBarTimeSig (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond [a] where
   exportNote b = exportChord b
@@ -1060,3 +1055,10 @@ open = do
   -- showLilypond
   openLilypond
 
+
+
+
+-- TODO This function is a workaround
+-- Whenever it is used, we should make the original function preserve meta instead
+preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
+preserveMeta f x = let m = view meta x in set meta m (f x)
