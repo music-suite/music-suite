@@ -1,0 +1,33 @@
+
+
+zipVoiceWithNoScale
+    This is actually an important function!
+Add safe version
+     -- Merge voices iff they have identical durations, return Nothing otherwise.
+     mergeVoices :: Voice a -> Voice b -> Maybe (Voice (a,b))
+     -- Can be used to implement:
+     (Voice a) x N -> Maybe (Voice (a x N))
+     
+
+stretcheds?
+eventsV
+singleStretched
+notes
+events
+singleNote
+rest
+noteValue etc.
+
+splitTiesVoice -> splitTies
+splitTiesVoiceAt -> splitTiesAt
+vdynamic
+addDynCon
+
+itransform -> inverseTransform ??
+delayTime -> delayRelativeOrigin
+line -> time?, linear? (linear k m = k x + m)
+
+
+Note/Chord/Rest
+    vs
+Placed/Delayed/Stretched
