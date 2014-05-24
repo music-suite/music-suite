@@ -21,14 +21,14 @@ source-repository head
   location:             git://github.com/music-suite/music-parts.git
   
 library                    
-    build-depends:      base                    >= 4 && < 5,
+    build-depends:      base                    >= 4 &&   < 5,
+                        lens				            >= 4.1 && < 4.2,
+                        semigroups              >= 0.13.0.1 && < 1,
                         time,
                         random,
-                        semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
                         data-default,
                         adjunctions,
-                        lens,
                         roman-numerals
     exposed-modules:    Music.Parts
                         -- Music.Parts.Strings
