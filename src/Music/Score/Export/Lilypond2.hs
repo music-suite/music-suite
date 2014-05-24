@@ -81,7 +81,9 @@ import           Music.Pitch.Literal
 import           Music.Score                   hiding (HasMidiPart (..),
                                                 HasMidiProgram (..), 
                                                 Inline,
-                                                toMidi, 
+                                                toMidi,
+                                                writeMidi,
+                                                
                                                 LilypondOptions, 
                                                 toLilypond, 
                                                 toLilypondString,
@@ -386,8 +388,22 @@ instance HasBackendNote Midi a => HasBackendNote Midi [a] where
 instance HasBackendNote Midi Int where
   exportNote _ (Identity pv) = mkMidiNote pv
 
+instance HasBackendNote Midi Integer where
+  exportNote _ (Identity pv) = mkMidiNote (fromIntegral pv)
+
+instance HasBackendNote Midi Float where
+  exportNote b = exportNote b . fmap (toInteger . round)
+  exportChord b = exportChord b . fmap (fmap (toInteger . round))
+
+instance HasBackendNote Midi Double where
+  exportNote b = exportNote b . fmap (toInteger . round)
+  exportChord b = exportChord b . fmap (fmap (toInteger . round))
+
 instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (Sum v, x))) = setV v <$> exportNote b (Identity x)
+
+instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Double) a) where
+  exportNote b (Identity (DynamicT (Sum v, x))) = setV ({-round $ v*127-}64) <$> exportNote b (Identity x)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
   exportNote b (Identity (ArticulationT (_, x))) = exportNote b (Identity x)
@@ -446,6 +462,11 @@ setC c = go
 toMidi :: (HasBackendNote Midi (BackendScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
 
+writeMidi path sc = Midi.exportFile path (toMidi sc)
+
+openMidi score = do
+    writeMidi "test.mid" score
+    void $ runCommand "timidity test.mid" >>= waitForProcess
 
 
 
@@ -1477,7 +1498,7 @@ spellMusicXml p = (
 -- main = putStrLn $ show $ view notes $ simultaneous
 main = do
   -- showLilypond music
-  openLilypond music
+  openMusicXml music
 music =
   --  over pitches' (+ 2) $
   --  text "Hello" $
