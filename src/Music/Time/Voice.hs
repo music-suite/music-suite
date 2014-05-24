@@ -383,8 +383,12 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
+-- |
+-- Transform the durations, leaving values intact.
 withDurations = over durationsV
 
+-- |
+-- Transform the values, leaving durations intact.
 withValues    = over valuesV
 
 -- |
