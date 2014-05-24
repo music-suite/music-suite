@@ -452,13 +452,67 @@ instance HasBackend Ly where
 
 -- TODO simplify
 instance (
-  HasPart' a, Ord (Part a),
-  Semigroup a,
+  -- HasPart' a, Ord (Part a),
+  -- Semigroup a,
+  -- Transformable a,
+  -- Tiable (SetDynamic DynamicNotation a),
+  -- Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation,
+  -- HasDynamics a (SetDynamic DynamicNotation a),
+  -- Dynamic a ~ Ctxt (OptAvg r), Real r
+
+  SetDynamic DynamicNotation a
+                        ~ SetDynamic
+                            DynamicNotation
+                            (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+  ,
+  DynamicNotation
+                        ~ Dynamic
+                            (SetDynamic
+                               DynamicNotation
+                               (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
+  ,
+  Dynamic (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+                        ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a))
+
+  ,
+  HasDynamics
+                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+                          (SetDynamic
+                             DynamicNotation
+                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
+
+  ,
+  Tiable
+                          (SetDynamic
+                             DynamicNotation
+                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
+  ,
+  Real (Dynamic a)
+  ,
+  HasPart
+                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+
+  ,
+  Ord
+                          (Part
+                             (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a))
+
+  ,
+  Transformable
+                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+  ,
+  Semigroup
+                          (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+  ,
+  HasDynamic
+                          a (SetDynamic (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)) a)
+  ,
+  HasDynamic a a,
+  HasPart' a,
+  Ord (Part a),
   Transformable a,
-  Tiable (SetDynamic DynamicNotation a),
-  Dynamic (SetDynamic DynamicNotation a) ~ DynamicNotation,
-  HasDynamics a (SetDynamic DynamicNotation a),
-  Dynamic a ~ Ctxt (OptAvg r), Real r
+  Semigroup a
   )
   => HasBackendScore Ly (Score a) where
   type ScoreEvent Ly (Score a) = SetDynamic DynamicNotation a
@@ -466,11 +520,18 @@ instance (
     . map (uncurry exportPart)
     . extractParts'
     . simultaneous -- Needed?
+    . (addDynCon.simultaneous)
     $ x
     where
 
 -- | Export a score as a single staff. Overlapping notes will cause an error.
-exportPart :: (Real d, HasDynamics (Score a) (Score b), Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, Tiable b)
+exportPart :: (
+  HasDynamics (Score a) (Score b), 
+  Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, 
+  Real d, 
+  Tiable b,
+  () ~ ()
+  )
   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
   -- LyStaff (LyContext b)
@@ -680,11 +741,11 @@ instance HasBackendNote Ly a => HasBackendNote Ly (TieT a) where
         | otherwise                     = Lilypond.beginTie
 
 -- type Lilypond = Lilypond.Music
-toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> String
+toLilypondString :: (HasBackendNote Ly (ScoreEvent Ly a), HasBackendScore Ly a) => a -> String
 toLilypondString = show . Pretty.pretty . toLilypond
 
-toLilypond :: (HasBackendNote Ly (ScoreEvent Ly s), HasBackendScore Ly s) => s -> Lilypond.Music
-toLilypond x = export (undefined::Ly) x
+toLilypond :: (HasBackendNote Ly (ScoreEvent Ly a), HasBackendScore Ly a) => a -> Lilypond.Music
+toLilypond = export (undefined::Ly)
 
 aScore :: Score a -> Score a
 aScore = id
@@ -700,7 +761,7 @@ aScore = id
 main = do
   -- showLilypond $ music
   openLilypond $ music
-music = (addDynCon.simultaneous)
+music = id
   --  $ over pitches' (+ 2)
   --  $ text "Hello"
   $ compress 1 $ sj -- </> sj^*2 </> sj^*4
@@ -724,7 +785,7 @@ type MyNote = (PartT Int (TieT (ColorT (TextT (TremoloT (HarmonicT (SlideT (Arti
 
 
 open :: Score MyNote -> IO ()
-open = openLilypond . addDynCon . simultaneous
+open = openLilypond
 
 newtype OptAvg a = OptAvg
   -- (Option (Average a))
