@@ -40,7 +40,7 @@ module Music.Time.Transform (
       whilst,
       spanned,
       onS,
-      conjugateS,
+      -- conjugateS,
 
       -- * Specific transformations
       -- ** Transformations

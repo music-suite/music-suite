@@ -139,3 +139,15 @@ glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
     mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
 
 
+headV :: Traversal' (Voice a) a
+headV = (eventsV._head._2)
+
+middleV :: Traversal' (Voice a) a
+middleV = (eventsV._middle.traverse._2)
+
+lastV :: Traversal' (Voice a) a
+lastV = (eventsV._last._2)
+
+-- Traverse writing to all elements *except* first and last
+_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
+_middle = _tail._init

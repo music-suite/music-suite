@@ -63,11 +63,9 @@ module Music.Time.Voice (
     -- * Context
     withContext,
 
-    -- * Internal
-    -- TODO hide
-    headV,
-    middleV,
-    lastV,
+    -- headV,
+    -- middleV,
+    -- lastV,
   ) where
 
 import           Data.AffineSpace

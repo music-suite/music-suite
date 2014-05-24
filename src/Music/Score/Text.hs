@@ -101,3 +101,15 @@ text :: (HasPhrases' s a, HasText a) => String -> s -> s
 text s = over (phrases'.headV) (addText s)
 
 
+headV :: Traversal' (Voice a) a
+headV = (eventsV._head._2)
+
+middleV :: Traversal' (Voice a) a
+middleV = (eventsV._middle.traverse._2)
+
+lastV :: Traversal' (Voice a) a
+lastV = (eventsV._last._2)
+
+-- Traverse writing to all elements *except* first and last
+_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
+_middle = _tail._init
