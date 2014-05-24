@@ -1,5 +1,8 @@
 
 
+{-# LANGUAGE LiberalTypeSynonyms        #-}
+{-# LANGUAGE ImpredicativeTypes         #-}
+
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DefaultSignatures          #-}
@@ -450,43 +453,15 @@ instance HasBackend Super where
       parCompTracks = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
       
       exportTrack :: [SuperEvent] -> String
-      exportTrack events =
-        "Pbind(\\dur, Pseq(" ++ show durs ++ "), "
-        ++ "\\midinote, Pseq(" ++ show pitches ++ "))"
+      exportTrack events = "Pbind("
+        ++ "\\dur, Pseq(" ++ show durs ++ ")"
+        ++ ", "
+        ++ "\\midinote, Pseq(" ++ show pitches ++ ")"
+        ++ ")"
         where
           (durs, pitches, ampls) = unzip3 events
-      
-    -- controlTrack  = [(0, Super.TempoChange 1000000), (endDelta, Super.TrackEnd)]
-    -- mainTracks    = fmap (uncurry translSuperTrack . fmap join) trs
-    -- in
-    -- Super.Super fileType (Super.TicksPerBeat divisions) (controlTrack : mainTracks)
-    -- 
-    -- where
-    --   translSuperTrack :: SuperInstr -> Score (Super.Message) -> [(Int, Super.Message)]
-    --   translSuperTrack (ch, p) x = id
-    --     $ addTrackEnd
-    --     $ setProgramChannel ch p
-    --     $ scoreToSuperTrack
-    --     $ x
-    -- 
-    --   -- Each track needs TrackEnd
-    --   -- We place it a long time after last event just in case (necessary?)
-    --   addTrackEnd :: [(Int, Super.Message)] -> [(Int, Super.Message)]
-    --   addTrackEnd = (<> [(endDelta, Super.TrackEnd)])
-    -- 
-    --   setProgramChannel :: Super.Channel -> Super.Preset -> Super.Track Super.Ticks -> Super.Track Super.Ticks
-    --   setProgramChannel ch prg = ([(0, Super.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
-    -- 
-    --   scoreToSuperTrack :: Score Super.Message -> Super.Track Super.Ticks
-    --   scoreToSuperTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
-    -- 
-    --   -- Hardcoded values for Super export
-    --   -- We always generate MultiTrack (type 1) files with division 1024
-    --   fileType    = Super.MultiTrack
-    --   divisions   = 1024
-    --   endDelta    = 10000   
 
-
+-- TODO allow rests, by passing \rest (or Rest) instead of the pitch
 instance () => HasBackendScore Super (Voice a) where
   type ScoreEvent Super (Voice a) = a
   exportScore _ xs = SuperScore [map (\(d,x) -> SuperContext d x) $ view eventsV xs] -- TODO
@@ -497,15 +472,6 @@ instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
     . map (exportScore b . fmap fromJust . view singleMVoice)
     . extractParts
   
---   exportScore _ xs = SuperScore [((getSuperChannel (xs^?!parts), getSuperProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
---     where
---       voiceToScore :: Voice a -> Score a
---       voiceToScore = error "TODO"
--- 
--- instance (HasPart' a, Ord (Part a), HasSuperProgram (Part a)) => HasBackendScore Super (Score a) where
---   type ScoreEvent Super (Score a) = a
---   exportScore _ xs = SuperScore (map (\(p,sc) -> ((getSuperChannel p, getSuperProgram p), fmap Identity sc)) $ extractParts' xs)
--- 
 instance HasBackendNote Super a => HasBackendNote Super [a] where
   exportNote b ps = head $ map (exportNote b) $ sequenceA ps
 
@@ -612,33 +578,75 @@ instance HasBackend Ly where
     -- [Staff]
     . getLyScore
 
+
+
+{-
+  getL (setL a s)   = a
+  setL a (setL b s) = setL a s
+  setL (getL s) s   = s
+-}
+type HasDynamicX s a b = (
+
+  -- with ImpredicativeTypes:
+  -- forall a .
+   Dynamic (SetDynamic a s) ~ a,
+
+  -- with ImpredicativeTypes:
+  -- forall a b .
+  SetDynamic a (SetDynamic b s) ~ SetDynamic a s,
+  
+  -- SetDynamic (Dynamic t) s ~ t, -- difference?  
+  SetDynamic (Dynamic s) s ~ s,
+  () ~ ()
+  )
+
 -- TODO simplify
 instance (
-  newDynType ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
-  newDyn2Type ~ DynamicNotation,
+  a'Dyn ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  a''Dyn ~ DynamicNotation,
+  Dynamic a'  ~ a'Dyn,
+  Dynamic a'' ~ a''Dyn,
 
-  newDyn ~ (SetDynamic newDynType a),
-  SetDynamic DynamicNotation a ~ newDyn2,
-  Dynamic newDyn ~ newDynType,
+  -- HasDynamicX s a'Dyn a''Dyn,
 
-  newDyn2 ~ (SetDynamic newDyn2Type newDyn),
-  Dynamic newDyn2 ~ newDyn2Type,
-
+  -- We can read update the dynamics in a
   HasDynamic' a,
-  HasDynamic a newDyn,
-  HasDynamic newDyn newDyn2,
+  -- We can add context to the dynamics in a
+  HasDynamic a a',
+  -- We can can replace the contextual dynamics with a notation
+  -- We know from superclasses that a'' is a' with a''Dyn as dynamics
+  --  i.e. that   
+  HasDynamic a' a'',
+
+
+  -- XXX Follows from (HasDynamic a a') and (HasDynamic a' a'')
+  -- SetDynamic a'Dyn  a  ~ a'  ,
+  -- SetDynamic a''Dyn a' ~ a'' ,
+  
+  -- SetSet law specified
+  SetDynamic a''Dyn (SetDynamic a'Dyn a) ~ SetDynamic a''Dyn a,
+
+  -- GetSet law specifid
+  Dynamic (SetDynamic a'Dyn a) ~ a'Dyn,
+  
+  -- This follows from the SetSet law
+  -- SetDynamic a''Dyn a  ~ a'',
+  
+  -- Should follow from the GetSet law 
+
+
 
   Real (Dynamic a),
-  
-  HasPart' newDyn, Ord (Part newDyn),
-  Transformable newDyn,
-  Semigroup newDyn,
   
   HasPart' a, Ord (Part a),
   Transformable a,
   Semigroup a,
 
-  Tiable newDyn2,
+  HasPart' a'', Ord (Part a''),
+  Transformable a',
+  Semigroup a',
+  
+  Tiable a'',
   
   () ~ ()
   )
@@ -647,25 +655,25 @@ instance (
   exportScore b = LyScore
     . map (uncurry exportPart)
     . extractParts'
+    . over dynamics dynamicDisplay
     . addDynCon 
     . simultaneous
 
 -- | Export a score as a single staff. Overlapping notes will cause an error.
-exportPart :: (
-  HasDynamics (Score a) (Score b), 
-  Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, 
-  Real d, 
-  Tiable b,
-  () ~ ()
-  )
-  => Part a -> Score a -> LyStaff (LyContext b)
+-- exportPart :: (
+--   HasDynamics (Score a) (Score b), 
+--   Dynamic a ~ Ctxt d, Dynamic b ~ DynamicNotation, 
+--   Real d, 
+--   Tiable b,
+--   () ~ ()
+--   )
+--   => Part a -> Score a -> LyStaff (LyContext b)
 exportPart p = id
   -- LyStaff (LyContext b)
   . exportStaff
   -- Voice b
   . view singleMVoice
   -- Score b
-  . over dynamics dynamicDisplay
 
 exportStaff :: Tiable a => MVoice a -> LyStaff (LyContext a)
 exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-FIXME get proper bar length-}
@@ -893,7 +901,7 @@ music = id
   $ compress 1 $ sj -- </> sj^*2 </> sj^*4
   where
     sj = timesPadding 2 1 $ harmonic 1 (scat [
-      setColor Color.blue $ level _f $ c<>d,
+      color Color.blue $ level _f $ c <> d,
       cs,
       level _f ds,
       level ff fs,
