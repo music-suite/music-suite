@@ -428,13 +428,13 @@ toMidi = export (undefined::Midi)
 data Super
 
 -- | Pass duration to the note export.
-data SuperContext a = SuperContext Duration a deriving (Functor, Foldable, Traversable)
+type SuperContext = Identity--SuperContext Duration a deriving (Functor, Foldable, Traversable)
 
 -- | Just \dur, \midinote, \db for now
-type SuperEvent = (Double, Double, Double)
+type SuperEvent = (Double, Double)
 
 -- | Score is just a list of parallel voices.
-data SuperScore a = SuperScore [[a]]
+data SuperScore a = SuperScore [[(Duration, Maybe a)]]
   deriving (Functor)
 
 instance Monoid (SuperScore a) where
@@ -452,37 +452,48 @@ instance HasBackend Super where
       parCompTracks :: [String] -> String
       parCompTracks = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
       
-      exportTrack :: [SuperEvent] -> String
+      exportTrack :: [(Duration, Maybe SuperEvent)] -> String
       exportTrack events = "Pbind("
         ++ "\\dur, Pseq(" ++ show durs ++ ")"
         ++ ", "
-        ++ "\\midinote, Pseq(" ++ show pitches ++ ")"
+        ++ "\\midinote, Pseq(" ++ showRestList pitches ++ ")"
         ++ ")"
         where
-          (durs, pitches, ampls) = unzip3 events
+          showRestList xs = (\x -> "[" ++ x ++ "]") . Data.List.intercalate ", " $ flip map xs $ \x -> case x of
+            Nothing -> "\\rest"
+            Just x  -> show x
+  
+          -- events :: SuperEvent
+          durs :: [Double]
+          pitches :: [Maybe Double]
+          ampls :: [Maybe Double]
+          durs    = map (realToFrac . fst) events
+          pitches = map (fmap fst . snd) events
+          ampls   = map (fmap snd . snd) events
+          
 
 -- TODO allow rests, by passing \rest (or Rest) instead of the pitch
-instance () => HasBackendScore Super (Voice a) where
-  type ScoreEvent Super (Voice a) = a
-  exportScore _ xs = SuperScore [map (\(d,x) -> SuperContext d x) $ view eventsV xs]
+instance () => HasBackendScore Super (Voice (Maybe a)) where
+  type ScoreEvent Super (Voice (Maybe a)) = a
+  exportScore _ xs = fmap Identity $ SuperScore [view eventsV xs]
 
 instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
   type ScoreEvent Super (Score a) = a
   exportScore b = mconcat
-    . map (exportScore b . fmap fromJust . view singleMVoice)
+    . map (exportScore b . view singleMVoice)
     . extractParts
   
 instance HasBackendNote Super a => HasBackendNote Super [a] where
   exportNote b ps = head $ map (exportNote b) $ sequenceA ps
 
 instance HasBackendNote Super Double where
-  exportNote _ (SuperContext d x) = (realToFrac d, x + 60, 1)
+  exportNote _ (Identity x) = (x + 60, 1)
 
 instance HasBackendNote Super Int where
-  exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
+  exportNote _ (Identity x) = (fromIntegral x + 60, 1)
 
 instance HasBackendNote Super Integer where
-  exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
+  exportNote _ (Identity x) = (fromIntegral x + 60, 1)
 
 instance HasBackendNote Super a => HasBackendNote Super (DynamicT b a) where
   exportNote b = exportNote b . fmap extract
