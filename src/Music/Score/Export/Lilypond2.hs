@@ -62,25 +62,18 @@ module Music.Score.Export.Lilypond2 (
     writeLilypond',
 
 
-    -- -- * MusicXml
-    -- MusicXml,
-    -- HasMusicXmlNEW,
-    -- 
-    -- -- ** Converting to MusicXml
-    -- toMusicXml,
-    -- toMusicXmlString,    
-    -- 
-    -- -- ** MusicXml I/O
-    -- showMusicXml,
-    -- openMusicXml,
-    -- writeMusicXml,
-    -- 
-    -- -- ** Customize MusicXml backend
-    -- MusicXmlOptions(..),
-    -- openMusicXml',
-    -- writeMusicXml',   
-
-
+    -- * MusicXml
+    MusicXml,
+    HasMusicXmlNEW,
+    
+    -- ** Converting to MusicXml
+    toMusicXml,
+    toMusicXmlString,    
+    
+    -- ** MusicXml I/O
+    showMusicXml,
+    openMusicXml,
+    writeMusicXml,
   ) where
 
 import           Music.Dynamics.Literal
@@ -1122,13 +1115,11 @@ data XmlContext a = XmlContext Duration (Maybe a)
   -- mempty      = pcatXml []
   -- mappend x y = pcatXml [x,y]
 
-type XmlMusic = MusicXml.Music
-
 instance HasBackend MusicXml where
   type BackendScore MusicXml   = XmlScore
   type BackendContext MusicXml = XmlContext
-  type BackendNote MusicXml    = XmlMusic
-  type BackendMusic MusicXml   = XmlMusic
+  type BackendNote MusicXml    = MusicXml.Music
+  type BackendMusic MusicXml   = MusicXml.Score
 
 {-
   finalizeExport _ = finalizeScore
@@ -1177,6 +1168,7 @@ instance HasBackend MusicXml where
           go (Tuplet m r)          = MusicXml.Times (realToFrac m) (renderBarMusic r)
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+-}
 
 instance (
   HasDynamicNotation a b c,
@@ -1234,7 +1226,7 @@ instance (
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
-          addXStaffInfo  = (,) $ XStaffInfo { x_staffName = name, x_staffClef = MusicXml.Alto } -- TODO guess clef
+          addXStaffInfo  = (,) $ XStaffInfo { x_staffName = name, x_staffClef = error "guess clef" } -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature
@@ -1271,7 +1263,6 @@ instance (
       
 -}
 
--}
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml [a] where
   exportNote = exportChord
 
@@ -1314,39 +1305,38 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (PartT n a) where
   -- Part structure is handled by HasMidiBackendScore instances, so this is just an identity
   exportNote b = exportNote b . fmap extract
   exportChord b = exportChord b . fmap (fmap extract)
-  {-
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicNotation a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
     where
-      notate :: DynamicNotation -> XmlMusic -> XmlMusic
       notate (DynamicNotation (crescDims, level)) 
         = rcomposed (fmap notateCrescDim crescDims) 
         . notateLevel level
 
       notateCrescDim crescDims = case crescDims of
         NoCrescDim -> id
-        BeginCresc -> MusicXml.beginCresc
-        EndCresc   -> MusicXml.endCresc
-        BeginDim   -> MusicXml.beginDim
-        EndDim     -> MusicXml.endDim
+        BeginCresc -> (<>) MusicXml.beginCresc
+        EndCresc   -> (<>) MusicXml.endCresc
+        BeginDim   -> (<>) MusicXml.beginDim
+        EndDim     -> (<>) MusicXml.endDim
 
       -- TODO these literals are not so nice...
       notateLevel showLevel = case showLevel of
          Nothing -> id
-         Just lvl -> MusicXml.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
       
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
--}
+
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT n a) where
   exportNote b = exportNote b . fmap extract
 
-  {-
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
+  exportNote b = exportNote b . fmap extract
+{-
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
     where
       -- TODO This syntax will change in future MusicXml versions
@@ -1413,48 +1403,19 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
         | ta        = MusicXml.endTie
         | otherwise = id
 
-
-
-
-{-
-
--- Internal stuff
-pcatXml :: [MusicXml.Music] -> MusicXml.Music
-pcatXml = pcatXml' False
-
-pcatXml' :: Bool -> [MusicXml.Music] -> MusicXml.Music
-pcatXml' p = foldr MusicXml.simultaneous (MusicXml.Simultaneous p [])
-
-scatXml :: [MusicXml.Music] -> MusicXml.Music
-scatXml = foldr MusicXml.sequential (MusicXml.Sequential [])
-
-spellXml :: Integer -> MusicXml.Note
-spellXml a = MusicXml.NotePitch (spellXml' a) Nothing
-
-spellXml' :: Integer -> MusicXml.Pitch
-spellXml' p = MusicXml.Pitch (
-  toEnum $ fromIntegral pc,
-  fromIntegral alt,
-  fromIntegral oct
-  )
-  where (pc,alt,oct) = spellPitch (p + 72)
--- End internal
-
-
 type HasMusicXmlNEW a = (HasBackendNote MusicXml (BackendScoreEvent MusicXml a), HasBackendScore MusicXml a)
 
 -- |
 -- Convert a score to a MusicXml string.
 --
 toMusicXmlString :: HasMusicXmlNEW a => a -> String
-toMusicXmlString = show . Pretty.pretty . toMusicXml
+toMusicXmlString = MusicXml.showXml . toMusicXml
 
 -- |
 -- Convert a score to a MusicXml representation.
 --
-toMusicXml :: HasMusicXmlNEW a => a -> MusicXml.Music
+toMusicXml :: HasMusicXmlNEW a => a -> MusicXml.Score
 toMusicXml = export (undefined::MusicXml)
-
 
 -- |
 -- Convert a score to a MusicXml representaiton and print it on the standard output.
@@ -1466,64 +1427,7 @@ showMusicXml = putStrLn . toMusicXmlString
 -- Convert a score to a MusicXml representation and write to a file.
 --
 writeMusicXml :: HasMusicXmlNEW a => FilePath -> a -> IO ()
-writeMusicXml = writeMusicXml' def
-
-data MusicXmlOptions
-  = XmlInlineFormat
-  | XmlScoreFormat
-
-instance Default MusicXmlOptions where
-  def = XmlInlineFormat
-
--- |
--- Convert a score to a MusicXml representation and write to a file.
---
-writeMusicXml' :: HasMusicXmlNEW a => MusicXmlOptions -> FilePath -> a -> IO ()
-writeMusicXml' options path sc = writeFile path $ (lyFilePrefix ++) $ toMusicXmlString sc
-  where
-    -- title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
-    -- composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
-    title = ""
-    composer = ""
-    -- TODO generalize metaAtStart!
-
-    lyFilePrefix = case options of
-        XmlInlineFormat -> lyInlinePrefix
-        XmlScoreFormat  -> lyScorePrefix
-
-    lyInlinePrefix = mempty                                        ++
-        "%%% Generated by music-score %%%\n"                       ++
-        "\\include \"lilypond-book-preamble.ly\"\n"                ++
-        "\\paper {\n"                                              ++
-        "  #(define dump-extents #t)\n"                            ++
-        "\n"                                                       ++
-        "  indent = 0\\mm\n"                                       ++
-        "  line-width = 210\\mm - 2.0 * 0.4\\in\n"                 ++
-        "  ragged-right = ##t\n"                                   ++
-        "  force-assignment = #\"\"\n"                             ++
-        "  line-width = #(- line-width (* mm  3.000000))\n"        ++
-        "}\n"                                                      ++
-        "\\header {\n"                                             ++
-        "  title = \"" ++ title ++ "\"\n"                          ++
-        "  composer = \"" ++ composer ++ "\"\n"                    ++
-        "}\n"                                                      ++
-        "\\layout {\n"                                             ++
-        "}"                                                        ++
-        "\n\n"
-
-    lyScorePrefix = mempty                                         ++
-        "\\paper {"                                                ++
-        "  indent = 0\\mm"                                         ++
-        "  line-width = 210\\mm - 2.0 * 0.4\\in"                   ++
-        "}"                                                        ++
-        "\\header {\n"                                             ++
-        "  title = \"" ++ title ++ "\"\n"                          ++
-        "  composer = \"" ++ composer ++ "\"\n"                    ++
-        "}\n"                                                      ++
-        "\\layout {"                                               ++
-        "}" ++
-        "\n\n"
-
+writeMusicXml path = writeFile path . toMusicXmlString
 
 -- |
 -- Typeset a score using MusicXml and open it.
@@ -1531,26 +1435,11 @@ writeMusicXml' options path sc = writeFile path $ (lyFilePrefix ++) $ toMusicXml
 -- (This is simple wrapper around 'writeMusicXml' that may not work well on all platforms.)
 --
 openMusicXml :: HasMusicXmlNEW a => a -> IO ()
-openMusicXml = openMusicXml' def
+openMusicXml sc = do
+    writeMusicXml "test.xml" sc
+    -- TODO find out which program to use etc...
+    void $ rawSystem "open" ["-a", "Sibelius 7", "test.xml"]
 
--- |
--- Typeset a score using MusicXml and open it.
---
--- (This is simple wrapper around 'writeMusicXml' that may not work well on all platforms.)
---
-openMusicXml' :: HasMusicXmlNEW a => MusicXmlOptions -> a -> IO ()
-openMusicXml' options sc = do
-  writeMusicXml' options "test.ly" sc
-  runMusicXml >> cleanMusicXml >> runOpen
-    where    
-      runMusicXml = void $ runCommand 
-        "lilypond -f pdf test.ly"  >>= waitForProcess
-      cleanMusicXml = void $ runCommand 
-        "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-      runOpen = void $ runCommand 
-        $ openCommand ++ " test.pdf"
-
--}
 
 -- Internal
 spellMusicXml :: Integer -> MusicXml.Pitch
