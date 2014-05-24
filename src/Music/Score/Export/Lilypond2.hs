@@ -1129,6 +1129,7 @@ finalizeScore (XmlScore (info, x))
   = MusicXml.fromParts title composer partList 
   . map finalizeStaff $ x
   where
+    -- FIXME FIXME FIXME
     title = error "No title"
     composer = error "No title"
     partList = error "No title"
@@ -1145,7 +1146,6 @@ finalizeStaff (XmlStaff (info, x))
   where
     -- TODO name
     -- TODO clef
-    partList = error "partList"-- TODO
 
 finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
 finalizeBar (XmlBar (XBarInfo timeSignature, x))
