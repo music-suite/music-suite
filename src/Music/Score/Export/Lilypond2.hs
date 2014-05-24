@@ -21,6 +21,9 @@
 {-# LANGUAGE UndecidableInstances       #-}
 
 module Music.Score.Export.Lilypond2 (
+    HasDynamic3,
+    HasDynamicNotation,
+
     HasBackend(..),
     HasBackendScore(..),
     HasBackendNote(..),
@@ -629,16 +632,21 @@ class (
   HasDynamic a  a''
   ) => HasDynamic3 a a' a'' where
 
-instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) => HasDynamic3 MyNote (b) (c)
+instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) 
+  => HasDynamic3 MyNote b c
 
--- TODO simplify
-instance (
+type HasDynamicNotation a b c = (
   HasDynamic3 a b c,
   Dynamic b  ~ Ctxt (Dynamic a),
   Dynamic c ~ DynamicNotation,
-  
-  Real (Dynamic a),
-  
+  Real (Dynamic a)
+ )
+
+
+-- TODO simplify
+instance (
+  HasDynamicNotation a b c,
+
   HasPart' a, Ord (Part a),
   Transformable a,
   Semigroup a,
@@ -1061,7 +1069,7 @@ music =
       text "pizz" $ level pp gs_,
       tremolo 2 d,
       tremolo 3 e
-      ::Score MyNote])^*(1+3/8)   
+      ::Score MyNote])^*(1+3/5)   
 
 timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
 
