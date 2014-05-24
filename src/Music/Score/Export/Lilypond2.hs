@@ -550,60 +550,22 @@ finalizeBar :: LyBar LyMusic -> LyMusic
 finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm music
 
 
-{-
-  getL (setL a s)   = a
-  setL (getL s) s   = s
-  setL a (setL b s) = setL a s
--}
-type HasDynamicX s t a b = (
+class (
+  HasDynamic' a,
+  HasDynamic a  a',
+  HasDynamic a' a'',
+  HasDynamic a  a''
+  ) => HasDynamic3 a a' a'' where
 
-  -- with ImpredicativeTypes:
-  -- forall a .
-   Dynamic (SetDynamic a s) ~ a,
-
-  -- SetDynamic (Dynamic t) s ~ t, -- difference?  
-  SetDynamic (Dynamic t) s ~ t,
-
-  -- with ImpredicativeTypes:
-  -- forall a b .
-  SetDynamic a (SetDynamic b s) ~ SetDynamic a s,
-  
-  () ~ ()
-  )   
+instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) => HasDynamic3 MyNote (b) (c)
 
 -- TODO simplify
 instance (
-  ad' ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
-  ad'' ~ DynamicNotation,
-  Dynamic a'  ~ ad',
-  Dynamic a'' ~ ad'',
-
-  -- HasDynamicX s ad' ad'',
-
-  -- We can read update the dynamics in a
-  HasDynamic' a,
-  -- We can add context to the dynamics in a
-  HasDynamic a a',
-  -- We can can replace the contextual dynamics with a notation
-  -- We know from superclasses that a'' is a' with ad'' as dynamics
-  --  i.e. that   
-  HasDynamic a' a'',
-
-{-
-  -- GetSet a X ad' X
-  Dynamic (SetDynamic ad' a) ~ ad',
-
-  -- SetGet a a' X X
-  SetDynamic (Dynamic a') a ~ a',
-
-  -- SetSet a X ad' ad''
-  SetDynamic ad'' (SetDynamic ad' a) ~ SetDynamic ad'' a,
--}
-
-  HasDynamicX a a'' ad' ad'',
-
-  Real (Dynamic a),
+  Dynamic a'  ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  Dynamic a'' ~ DynamicNotation,
+  HasDynamic3 a a' a'',
   
+  Real (Dynamic a),
   HasPart' a, Ord (Part a),
   Transformable a,
   Semigroup a,
@@ -612,10 +574,7 @@ instance (
   Transformable a',
   Semigroup a',
   
-  Tiable a'',
-  
-  () ~ ()
-  )
+  Tiable a'')
   => HasBackendScore Lilypond (Score a) where
   type ScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
   exportScore b score = LyScore

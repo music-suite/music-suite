@@ -37,6 +37,8 @@ module Music.Score.Dynamics (
         -- ** Dynamic type functions
         Dynamic,
         SetDynamic,
+        DynamicLensLaws_,
+        DynamicLensLaws,
         -- ** Accessing dynamics
         HasDynamics(..),
         HasDynamic(..),
@@ -126,13 +128,22 @@ class (HasDynamics s t) => HasDynamic s t where
   -- | Access a single dynamic.
   dynamic :: Lens s t (Dynamic s) (Dynamic t)
 
+
+type DynamicLensLaws_ s t a b = (
+  Dynamic (SetDynamic a s) ~ a,
+  SetDynamic (Dynamic t) s ~ t,
+  SetDynamic a (SetDynamic b s) ~ SetDynamic a s
+  )
+type DynamicLensLaws s t = DynamicLensLaws_ s t (Dynamic s) (Dynamic t)
+
 -- |
 -- Class of types that provide a dynamic traversal.
 --
 class (
   Transformable (Dynamic s),
   Transformable (Dynamic t), 
-  SetDynamic (Dynamic t) s ~ t
+  -- SetDynamic (Dynamic t) s ~ t
+  DynamicLensLaws s t
   ) => HasDynamics s t where
 
   -- | Access all dynamics.
@@ -154,11 +165,11 @@ dynamics' = dynamics
 type instance Dynamic TYPE = TYPE;        \
 type instance SetDynamic a TYPE = a;      \
                                           \
-instance (Transformable a, a ~ Dynamic a) \
+instance (Transformable a, a ~ Dynamic a, SetDynamic TYPE a ~ TYPE) \
   => HasDynamic TYPE a where {            \
   dynamic = ($)              } ;          \
                                           \
-instance (Transformable a, a ~ Dynamic a) \
+instance (Transformable a, a ~ Dynamic a, SetDynamic TYPE a ~ TYPE) \
   => HasDynamics TYPE a where {           \
   dynamics = ($)               } ;        \
 
@@ -255,12 +266,12 @@ type instance Dynamic      (Behavior a) = Behavior a
 type instance SetDynamic b (Behavior a) = b
 
 instance (
-  Transformable a, Transformable b, b ~ Dynamic b
+  Transformable a, Transformable b, b ~ Dynamic b, SetDynamic (Behavior a) b ~ Behavior a
   ) => HasDynamics (Behavior a) b where
   dynamics = ($)
 
 instance (
-  Transformable a, Transformable b, b ~ Dynamic b
+  Transformable a, Transformable b, b ~ Dynamic b, SetDynamic (Behavior a) b ~ Behavior a
   ) => HasDynamic (Behavior a) b where
   dynamic = ($)
 
