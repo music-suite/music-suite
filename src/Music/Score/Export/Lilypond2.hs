@@ -863,9 +863,6 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a
   exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
-  -- FIXME it's too late to change duration here as we already quantized
-  -- exportNote b = exportNote b . fmap extract
-
   exportNote b = \(LyContext d x) ->
     (fst $ notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
     where
