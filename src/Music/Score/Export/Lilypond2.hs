@@ -373,6 +373,9 @@ instance HasBackendNote Midi a => HasBackendNote Midi (SlideT a) where
 instance HasBackendNote Midi a => HasBackendNote Midi (TieT a) where
   exportNote b = exportNote b . fmap extract
 
+instance HasBackendNote Midi a => HasBackendNote Midi (ColorT a) where
+  exportNote b = exportNote b . fmap extract
+
 mkMidiNote :: Int -> Score Midi.Message
 mkMidiNote p = mempty
     |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
@@ -422,7 +425,7 @@ toMidi = export (undefined::Midi)
 data Super
 
 -- | Pass duration to the note export.
-data SuperContext a = SuperContext Duration a deriving Functor
+data SuperContext a = SuperContext Duration a deriving (Functor, Foldable, Traversable)
 
 -- | Just \dur, \midinote, \db for now
 type SuperEvent = (Double, Double, Double)
@@ -503,8 +506,11 @@ instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
 --   type ScoreEvent Super (Score a) = a
 --   exportScore _ xs = SuperScore (map (\(p,sc) -> ((getSuperChannel p, getSuperProgram p), fmap Identity sc)) $ extractParts' xs)
 -- 
--- instance HasBackendNote Super a => HasBackendNote Super [a] where
-  -- exportNote b ps = head $ map (exportNote b) $ sequenceA ps
+instance HasBackendNote Super a => HasBackendNote Super [a] where
+  exportNote b ps = head $ map (exportNote b) $ sequenceA ps
+
+instance HasBackendNote Super Double where
+  exportNote _ (SuperContext d x) = (realToFrac d, x + 60, 1)
 
 instance HasBackendNote Super Int where
   exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
@@ -512,7 +518,7 @@ instance HasBackendNote Super Int where
 instance HasBackendNote Super Integer where
   exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
 
-instance HasBackendNote Super a => HasBackendNote Super (DynamicT (Sum Int) a) where
+instance HasBackendNote Super a => HasBackendNote Super (DynamicT b a) where
   exportNote b = exportNote b . fmap extract
   -- exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
 
@@ -536,6 +542,9 @@ instance HasBackendNote Super a => HasBackendNote Super (SlideT a) where
   exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Super a => HasBackendNote Super (TieT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (ColorT a) where
   exportNote b = exportNote b . fmap extract
 
 
