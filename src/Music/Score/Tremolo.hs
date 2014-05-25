@@ -86,7 +86,7 @@ instance Wrapped (TremoloT a) where
 instance Rewrapped (TremoloT a) (TremoloT b)
 
 instance HasTremolo (TremoloT a) where
-  setTrem n (TremoloT (Couple (_,x))) = TremoloT (Couple (Max $ fromIntegral n,x))
+  setTrem n = set (_Wrapped . _Wrapped . _1) (Max $ fromIntegral n)
 
 -- Lifted instances
 deriving instance Num a => Num (TremoloT a)
