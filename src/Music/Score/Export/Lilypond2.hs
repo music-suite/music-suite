@@ -73,9 +73,10 @@ import qualified Data.List
 
 
 
+-- TODO move all this stuff to the appropriate places...
+
 type HasDynamic' a = HasDynamic a a
 
--- TODO move
 instance (HasParts a b) => HasParts (Voice a) (Voice b) where
   parts =
     _Wrapped
@@ -83,14 +84,11 @@ instance (HasParts a b) => HasParts (Voice a) (Voice b) where
     . _Wrapped      -- this needed?
     . whilstLD parts
 
-  -- TODO move
 deriving instance Num a => Num (Sum a)
 deriving instance Real a => Real (Sum a)
 
--- TODO move
 deriving instance Comonad ColorT
 
--- TODO move
 deriving instance HasTremolo a => HasTremolo (ColorT a)
 deriving instance HasHarmonic a => HasHarmonic (ColorT a)
 deriving instance HasSlide a => HasSlide (ColorT a)
@@ -339,7 +337,7 @@ instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a)
   exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
     where
       voiceToScore :: Voice a -> Score a
-      voiceToScore = error "TODO"
+      voiceToScore = error "FIXME"
 
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
   type ScoreEvent Midi (Score a) = a
@@ -464,7 +462,7 @@ instance HasBackend Super where
 -- TODO allow rests, by passing \rest (or Rest) instead of the pitch
 instance () => HasBackendScore Super (Voice a) where
   type ScoreEvent Super (Voice a) = a
-  exportScore _ xs = SuperScore [map (\(d,x) -> SuperContext d x) $ view eventsV xs] -- TODO
+  exportScore _ xs = SuperScore [map (\(d,x) -> SuperContext d x) $ view eventsV xs]
 
 instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
   type ScoreEvent Super (Score a) = a
@@ -669,7 +667,6 @@ exportStaff = LyStaff . map exportBar . splitTies (repeat 1){-FIXME get proper b
     exportBar :: Tiable a => MVoice a -> LyBar (LyContext a)
     exportBar = LyBar . toRhythm
 
-    -- TODO rename
     splitTies :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
     splitTies ds = map (view $ from unsafeEventsV) . voiceToBars' ds
 
@@ -838,7 +835,6 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (HarmonicT a) wher
       notate' False n = notateArtificial n
 
       notateNatural n = Lilypond.addFlageolet -- addOpen?
-
       notateArtificial n = id -- TODO
       
 
@@ -973,9 +969,6 @@ spellLy' p = Lilypond.Pitch (
 
 
 
-
-
--- TODO generalize level
 newtype DynamicNotation = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
 
 type instance Dynamic DynamicNotation = DynamicNotation
