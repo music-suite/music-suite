@@ -23,9 +23,16 @@ module Music.Score.Export.Lilypond2 (
     HasBackendScore(..),
     HasBackendNote(..),
     export,
+
+    Foo,
+    
+    Super,
+    toSuper,
+
     HasMidiProgram,
     Midi,
     toMidi,
+
     Ly,
     toLilypondString,
     toLilypond,
@@ -59,6 +66,7 @@ import           Music.Score.Internal.Util     (composed, unRatio)
 import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
+import qualified Data.List
 
 
 
@@ -102,6 +110,9 @@ instance IsPitch a => IsPitch (Sum a) where
   fromPitch = Sum . fromPitch
 type instance Pitch (Sum a) = Pitch a
 type instance SetPitch b (Sum a) = Sum (SetPitch b a)
+
+type instance Part (Voice a) = Part a
+type instance SetPart g (Voice a) = Voice (SetPart g a)
 
 
 
@@ -320,9 +331,6 @@ instance HasBackend Midi where
       endDelta    = 10000
 
 
-type instance Part (Voice a) = Part a
-type instance SetPart g (Voice a) = Voice (SetPart g a)
-
 instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) where
   type ScoreEvent Midi (Voice a) = a
   exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
@@ -396,6 +404,150 @@ setC c = go
 
 toMidi :: (HasBackendNote Midi (ScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- | A token to represent the Super backend.
+data Super
+
+-- | Pass duration to the note export.
+data SuperContext a = SuperContext Duration a deriving Functor
+
+-- | Just \dur, \midinote, \db for now
+type SuperEvent = (Double, Double, Double)
+
+-- | Score is just a list of parallel voices.
+data SuperScore a = SuperScore [[a]]
+  deriving (Functor)
+
+instance Monoid (SuperScore a) where
+  mempty = SuperScore mempty
+  SuperScore a `mappend` SuperScore b = SuperScore (a `mappend` b)
+
+instance HasBackend Super where
+  type BackendContext Super    = SuperContext
+  type BackendScore   Super    = SuperScore
+  type BackendNote    Super    = SuperEvent
+  type BackendMusic   Super    = String
+
+  finalizeExport _ (SuperScore trs) = parCompTracks $ map exportTrack trs
+    where        
+      parCompTracks :: [String] -> String
+      parCompTracks = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
+      
+      exportTrack :: [SuperEvent] -> String
+      exportTrack events =
+        "Pbind(\\dur, Pseq(" ++ show durs ++ "), "
+        ++ "\\midinote, Pseq(" ++ show pitches ++ "))"
+        where
+          (durs, pitches, ampls) = unzip3 events
+      
+    -- controlTrack  = [(0, Super.TempoChange 1000000), (endDelta, Super.TrackEnd)]
+    -- mainTracks    = fmap (uncurry translSuperTrack . fmap join) trs
+    -- in
+    -- Super.Super fileType (Super.TicksPerBeat divisions) (controlTrack : mainTracks)
+    -- 
+    -- where
+    --   translSuperTrack :: SuperInstr -> Score (Super.Message) -> [(Int, Super.Message)]
+    --   translSuperTrack (ch, p) x = id
+    --     $ addTrackEnd
+    --     $ setProgramChannel ch p
+    --     $ scoreToSuperTrack
+    --     $ x
+    -- 
+    --   -- Each track needs TrackEnd
+    --   -- We place it a long time after last event just in case (necessary?)
+    --   addTrackEnd :: [(Int, Super.Message)] -> [(Int, Super.Message)]
+    --   addTrackEnd = (<> [(endDelta, Super.TrackEnd)])
+    -- 
+    --   setProgramChannel :: Super.Channel -> Super.Preset -> Super.Track Super.Ticks -> Super.Track Super.Ticks
+    --   setProgramChannel ch prg = ([(0, Super.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
+    -- 
+    --   scoreToSuperTrack :: Score Super.Message -> Super.Track Super.Ticks
+    --   scoreToSuperTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
+    -- 
+    --   -- Hardcoded values for Super export
+    --   -- We always generate MultiTrack (type 1) files with division 1024
+    --   fileType    = Super.MultiTrack
+    --   divisions   = 1024
+    --   endDelta    = 10000   
+
+
+instance () => HasBackendScore Super (Voice a) where
+  type ScoreEvent Super (Voice a) = a
+  exportScore _ xs = SuperScore [map (\(d,x) -> SuperContext d x) $ view eventsV xs] -- TODO
+
+instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
+  type ScoreEvent Super (Score a) = a
+  exportScore b = mconcat
+    . map (exportScore b . fmap fromJust . view singleMVoice)
+    . extractParts
+  
+--   exportScore _ xs = SuperScore [((getSuperChannel (xs^?!parts), getSuperProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
+--     where
+--       voiceToScore :: Voice a -> Score a
+--       voiceToScore = error "TODO"
+-- 
+-- instance (HasPart' a, Ord (Part a), HasSuperProgram (Part a)) => HasBackendScore Super (Score a) where
+--   type ScoreEvent Super (Score a) = a
+--   exportScore _ xs = SuperScore (map (\(p,sc) -> ((getSuperChannel p, getSuperProgram p), fmap Identity sc)) $ extractParts' xs)
+-- 
+-- instance HasBackendNote Super a => HasBackendNote Super [a] where
+  -- exportNote b ps = head $ map (exportNote b) $ sequenceA ps
+
+instance HasBackendNote Super Int where
+  exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
+
+instance HasBackendNote Super Integer where
+  exportNote _ (SuperContext d x) = (realToFrac d, fromIntegral x + 60, 1)
+
+instance HasBackendNote Super a => HasBackendNote Super (DynamicT (Sum Int) a) where
+  exportNote b = exportNote b . fmap extract
+  -- exportNote b (Identity (DynamicT (Sum v, x))) = fmap (setV v) $ exportNote b (Identity x)
+
+instance HasBackendNote Super a => HasBackendNote Super (ArticulationT b a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (PartT n a) where
+  -- Part structure is handled by HasSuperBackendScore instances, so this is just an identity
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (TremoloT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (TextT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (HarmonicT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (SlideT a) where
+  exportNote b = exportNote b . fmap extract
+
+instance HasBackendNote Super a => HasBackendNote Super (TieT a) where
+  exportNote b = exportNote b . fmap extract
+
+
+toSuper :: (HasBackendNote Super (ScoreEvent Super s), HasBackendScore Super s) => s -> String
+toSuper = export (undefined::Super)
+
+
+
+
+
+
+
 
 
 
@@ -488,7 +640,6 @@ instance (
     . extractParts'
     . addDynCon 
     . simultaneous
-    where
 
 -- | Export a score as a single staff. Overlapping notes will cause an error.
 exportPart :: (
