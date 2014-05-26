@@ -667,7 +667,9 @@ exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
 -- Called in the exportScore step
 --------------------------------------------------------------------------------
 
-extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
+extractTimeSignatures 
+  :: Score a 
+  -> ([Maybe TimeSignature], [Duration])
 extractTimeSignatures score = (barTimeSignatures, barDurations)
   where                                          
     defaultTimeSignature = time 4 4
@@ -677,10 +679,13 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
       $ getTimeSignatures defaultTimeSignature score
 
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSignatures  = retainUpdates $ getBarTimeSignatures $ timeSignatures
-    barDurations       = getBarDurations $ timeSignatures
+    barTimeSignatures = retainUpdates $ getBarTimeSignatures $ timeSignatures
+    barDurations = getBarDurations $ timeSignatures
 
-quantizeBar :: Tiable a => MVoice a -> Rhythm (LyContext a)
+quantizeBar 
+  :: Tiable a 
+  => MVoice a 
+  -> Rhythm (LyContext a)
 quantizeBar = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
   where
     -- FIXME handle quantization errors
