@@ -1008,12 +1008,10 @@ openLilypond = openLilypond' def
 openLilypond' :: HasLilypondNEW a => LilypondOptions -> a -> IO ()
 openLilypond' options sc = do
   writeLilypond' options "test.ly" sc
-  runLilypond
-  cleanLilypond
-  runOpen
+  runLilypond >> cleanLilypond >> runOpen
     where    
-      runLilypond = void $ runCommand "lilypond -f pdf test.ly" 
-        >>= waitForProcess
+      runLilypond = void $ runCommand 
+        "lilypond -f pdf test.ly"  >>= waitForProcess
       cleanLilypond = void $ runCommand 
         "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
       runOpen = void $ runCommand 
