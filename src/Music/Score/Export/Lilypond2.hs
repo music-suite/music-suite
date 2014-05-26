@@ -763,14 +763,15 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (PartT n a) where
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicNotation a) where
   exportNote b (LyContext d x) = notate (fmap (^.dynamic) x) $ exportNote b $ LyContext d (fmap extract x)
     where
-      notate Nothing = id
-      notate (Just (n)) = notateDD n
+      notate Nothing  = id
+      notate (Just n) = notate' n
 
-      notateDD :: DynamicNotation -> LyMusic -> LyMusic
-      notateDD (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
+      notate' :: DynamicNotation -> LyMusic -> LyMusic
+      notate' (DynamicNotation (cds, showLevel)) = (rcomposed $ fmap notateCrescDim $ cds) . notateLevel
         where
           -- Use rcomposed as notateDynamic returns "mark" order, not application order
           rcomposed = composed . reverse
+          
           notateCrescDim x = case x of
             NoCrescDim -> id
             BeginCresc -> Lilypond.beginCresc
@@ -806,7 +807,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
         | c == Color.black = "black"
         | c == Color.red   = "red"
         | c == Color.blue  = "blue"
-        | otherwise        = error "Unkown color"
+        | otherwise        = error "Lilypond backend: Unkown color"
 
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
@@ -864,6 +865,34 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
         | tb                            = Lilypond.beginTie
         | ta                            = id
         | otherwise                     = id
+
+
+-- Internal stuff
+pcatLy :: [Lilypond.Music] -> Lilypond.Music
+pcatLy = pcatLy' False
+
+pcatLy' :: Bool -> [Lilypond.Music] -> Lilypond.Music
+pcatLy' p = foldr Lilypond.simultaneous e
+    where
+        e = Lilypond.Simultaneous p []
+
+scatLy :: [Lilypond.Music] -> Lilypond.Music
+scatLy = foldr Lilypond.sequential e
+    where
+        e = Lilypond.Sequential []
+
+spellLy :: Integer -> Lilypond.Note
+spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
+
+spellLy' :: Integer -> Lilypond.Pitch
+spellLy' p = Lilypond.Pitch (
+    toEnum $ fromIntegral pc,
+    fromIntegral alt,
+    fromIntegral oct
+    )
+    where (pc,alt,oct) = spellPitch (p + 72)
+-- End internal
+
 
 -- type Lilypond = Lilypond.Music
 toLilypondString :: (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a) => a -> String
@@ -934,7 +963,9 @@ type MyNote =
 
 
 open :: Score MyNote -> IO ()
-open = openLilypond
+open = do
+  -- showLilypond
+  openLilypond
 
 
 
@@ -984,29 +1015,6 @@ instance (Show a, Fractional a) => Show (Average a) where
 
 
 
-pcatLy :: [Lilypond.Music] -> Lilypond.Music
-pcatLy = pcatLy' False
-
-pcatLy' :: Bool -> [Lilypond.Music] -> Lilypond.Music
-pcatLy' p = foldr Lilypond.simultaneous e
-    where
-        e = Lilypond.Simultaneous p []
-
-scatLy :: [Lilypond.Music] -> Lilypond.Music
-scatLy = foldr Lilypond.sequential e
-    where
-        e = Lilypond.Sequential []
-
-spellLy :: Integer -> Lilypond.Note
-spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
-
-spellLy' :: Integer -> Lilypond.Pitch
-spellLy' p = Lilypond.Pitch (
-    toEnum $ fromIntegral pc,
-    fromIntegral alt,
-    fromIntegral oct
-    )
-    where (pc,alt,oct) = spellPitch (p + 72)
 
 
 -- 
@@ -1161,8 +1169,10 @@ openLilypond' options sc = do
     cleanLilypond
     openLilypond''
 
-runLilypond    = void $ runCommand "lilypond -f pdf test.ly 2>/dev/null" >>= waitForProcess
+runLilypond    = void $ runCommand "lilypond -f pdf test.ly " >>= waitForProcess
 cleanLilypond  = void $ runCommand "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
-openLilypond'' = void $ runCommand $ openCommand ++ " test.pdf"
+openLilypond'' = do
+  putStrLn $ "Waiting for Lilypond..."
+  void $ runCommand $ openCommand ++ " test.pdf"
 
 
