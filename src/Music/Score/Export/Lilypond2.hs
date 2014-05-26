@@ -507,8 +507,10 @@ data Lilypond
 data LyScore a = LyScore { getLyScore :: [LyStaff a] }
   deriving (Functor, Eq, Show)
 
+type StaffInfo = ()
+
 -- | A staff is a sequential composition of bars.
-data LyStaff a = LyStaff { getLyStaff :: [LyBar a] }
+data LyStaff a = LyStaff { getLyStaff :: [(StaffInfo, LyBar a)] }
   deriving (Functor, Eq, Show)
 
 type BarInfo = Maybe TimeSignature
@@ -539,14 +541,14 @@ finalizeScore = extra . pcatLy . map finalizeStaff . getLyScore
     extra = id
 
 finalizeStaff :: LyStaff LyMusic -> LyMusic
-finalizeStaff = extra . scatLy . map finalizeBar . getLyStaff
+finalizeStaff = extra . scatLy . map finalizeBar . map snd . getLyStaff
   where
     extra = addStaff . addPartName "Foo" . addClef ()
   -- TODO correct staff names
   -- TODO correct clefs
 
 finalizeBar :: LyBar LyMusic -> LyMusic
-finalizeBar (LyBar (timeSig, music)) = setBarTimeSig timeSig $ renderBarRhythm $ music
+finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm $ music
 
 
 {-
@@ -625,7 +627,7 @@ instance (
     . preserveMeta simultaneous 
     $ score
     where
-      (timeSignatureMarks, barDurations) = getTimeSignaturesFromMeta score 
+      (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
 exportPart :: Tiable a 
@@ -646,10 +648,11 @@ exportStaff :: Tiable a
   -> LyStaff (LyContext a)
 exportStaff timeSignatures barDurations 
   = LyStaff 
+  . map addStaffInfo
   . zipWith exportBar timeSignatures 
   . splitIntoBars barDurations
-  where
-    splitIntoBars :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
+  where         
+    addStaffInfo  = ((),)
     splitIntoBars = splitTiesVoiceAt
     -- TODO rename splitTiesVoiceAt?
 
@@ -664,15 +667,18 @@ exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
 -- Called in the exportScore step
 --------------------------------------------------------------------------------
 
-getTimeSignaturesFromMeta :: Score a -> ([Maybe TimeSignature], [Duration])
-getTimeSignaturesFromMeta score = (barTimeSigs, barDurations)
-  where
-    timeSigs  = getTimeSignatures (time 4 4) score -- 4/4 is default
-    timeSigsV = fmap swap $ unvoice $ fuse $ reactiveToVoice' (0 <-> _offset score) timeSigs
+extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
+extractTimeSignatures score = (barTimeSignatures, barDurations)
+  where                                          
+    defaultTimeSignature = time 4 4
+    timeSignatures = fmap swap 
+      $ unvoice $ fuse 
+      $ reactiveToVoice' (0 <-> (score^.offset)) 
+      $ getTimeSignatures defaultTimeSignature score
 
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSigs  = retainUpdates $ getBarTimeSignatures $ timeSigsV
-    barDurations =                 getBarDurations      $ timeSigsV
+    barTimeSignatures  = retainUpdates $ getBarTimeSignatures $ timeSignatures
+    barDurations       = getBarDurations $ timeSignatures
 
 quantizeBar :: Tiable a => MVoice a -> Rhythm (LyContext a)
 quantizeBar = mapWithDur (\d x -> LyContext d x) . rewrite . fromRight . quantize . view unsafeEventsV
@@ -721,9 +727,9 @@ addClef :: () -> LyMusic -> LyMusic
 addClef () x = pcatLy [Lilypond.Clef Lilypond.Baritone, x]
 
 
-setBarTimeSig :: Maybe TimeSignature -> LyMusic -> LyMusic
-setBarTimeSig Nothing x = x
-setBarTimeSig (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
+setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
+setBarTimeSignature Nothing x = x
+setBarTimeSignature (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
