@@ -640,7 +640,6 @@ instance (
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts' --WithMeta
     . over dynamics notateDynamic 
-    -- TODO preserveMeta is a workaround
     . preserveMeta addDynCon 
     . preserveMeta simultaneous 
     $ score
@@ -650,6 +649,8 @@ instance (
           getTimeSigs score 
     
 
+-- TODO This function is a workaround
+-- Whenever it is used, we should make the original function preserve meta instead
 preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
 preserveMeta f x = let m = view meta x in set meta m (f x)
 
