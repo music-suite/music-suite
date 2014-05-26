@@ -642,13 +642,12 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 
 -- | Export a score as a single part. Overlapping notes will cause an error.
 exportPart :: Tiable a => [Maybe TimeSignature] -> [Duration] -> Part a -> Score a -> LyStaff (LyContext a)
-exportPart timeSignatureMarks barDurations part score = id
+exportPart timeSignatureMarks barDurations part = id
   -- LyStaff (LyContext b)
   . exportStaff timeSignatureMarks barDurations
   -- Voice b
   . view singleMVoice
   -- Score b
-  $ score
 
 
 exportStaff :: Tiable a => [Maybe TimeSignature] -> [Duration] -> MVoice a -> LyStaff (LyContext a)
@@ -659,11 +658,8 @@ exportStaff timeSignatures barDurations
     exportBar timeSignature voice = LyBar (timeSignature, toRhythm voice)
 
     splitIntoBars :: Tiable a => [Duration] -> MVoice a -> [MVoice a]
-    splitIntoBars ds = map (view $ from unsafeEventsV) . voiceToBars' ds
-    -- TODO clean
-      where
-        voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-        voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
+    splitIntoBars = splitTiesVoiceAt
+    -- TODO rename splitTiesVoiceAt?
 
 getTimeSigs :: Score a -> ([Maybe TimeSignature], [Duration])
 getTimeSigs sc = let
