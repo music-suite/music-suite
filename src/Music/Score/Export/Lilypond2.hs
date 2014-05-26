@@ -258,11 +258,10 @@ instance HasBackend Midi where
 
     where
       translMidiTrack :: MidiInstr -> Score (Midi.Message) -> [(Int, Midi.Message)]
-      translMidiTrack (ch, p) x = id
-        $ addTrackEnd
-        $ setProgramChannel ch p
-        $ scoreToMidiTrack
-        $ x
+      translMidiTrack (ch, p) = id
+        . addTrackEnd
+        . setProgramChannel ch p
+        . scoreToMidiTrack
 
       -- Each track needs TrackEnd
       -- We place it a long time after last event just in case (necessary?)
