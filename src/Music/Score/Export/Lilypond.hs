@@ -81,6 +81,7 @@ import           Music.Score.Meta.Time
 import           Music.Score.Meta.Title
 import           Music.Score.Slide
 import           Music.Score.Tremolo
+import           Music.Score.Color
 import           Music.Score.Text
 import           Music.Score.Harmonics
 import           Music.Score.Part
@@ -303,6 +304,9 @@ instance (Tiable n, HasLilypond a) => HasLilypond (ArticulationT n a) where
 --                 2    -> Lilypond.addStaccatissimo
 --             nbs    = if bs then Lilypond.beginSlur else id
 -- 
+instance HasLilypond a => HasLilypond (ColorT a) where
+    getLilypond d (ColorT (_, x)) = getLilypond d x
+
 instance HasLilypond a => HasLilypond (TremoloT a) where
     getLilypond d (TremoloT (Couple (Max 0, x))) = getLilypond d x
     getLilypond d (TremoloT (Couple (Max n, x))) = notate $ getLilypond newDur x
