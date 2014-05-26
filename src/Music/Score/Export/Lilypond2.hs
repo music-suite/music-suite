@@ -407,14 +407,15 @@ instance HasBackend Super where
         ++ "\\midinote, Pseq(" ++ showRestList pitches ++ ")"
         ++ ")"
         where
-          showRestList xs = (\x -> "[" ++ x ++ "]") . Data.List.intercalate ", " $ flip map xs $ \x -> case x of
-            Nothing -> "\\rest"
-            Just x  -> show x
+          showRestList = id
+            . (\x -> "[" ++ x ++ "]") 
+            . Data.List.intercalate ", " 
+            . map (maybe "\\rest" show) 
   
           -- events :: SuperEvent
-          durs :: [Double]
+          durs    :: [Double]
           pitches :: [Maybe Double]
-          ampls :: [Maybe Double]
+          ampls   :: [Maybe Double]
           durs    = map (realToFrac . fst) events
           pitches = map (fmap fst . snd) events
           ampls   = map (fmap snd . snd) events
