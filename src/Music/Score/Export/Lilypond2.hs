@@ -578,51 +578,47 @@ instance HasBackend Lilypond where
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
-      finalizeScore (LyScore (info, x)) = extra 
-        . pcatLy 
+      finalizeScore (LyScore (info, x)) 
+        = pcatLy 
         . map finalizeStaff $ x
         where
           extra = id
 
       finalizeStaff :: LyStaff LyMusic -> LyMusic
-      finalizeStaff (LyStaff (info, x)) = extra 
+      finalizeStaff (LyStaff (info, x)) 
+        = addStaff 
+        . addPartName (staffName info) 
+        . addClef (staffClef info)
         . scatLy 
         . map finalizeBar $ x
         where
-          extra = addStaff . addPartName (staffName info) . addClef (staffClef info)
+          addStaff                = Lilypond.New "Staff" Nothing
+          addClef c x             = pcatLy [Lilypond.Clef c, x]
+          addPartName partName xs = pcatLy [longName, shortName, xs]
+            where
+              longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
+              shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
 
       finalizeBar :: LyBar LyMusic -> LyMusic
-      finalizeBar (LyBar (BarInfo timeSignature, x)) = 
-        setBarTimeSignature timeSignature 
+      finalizeBar (LyBar (BarInfo timeSignature, x))
+        = maybe id setBarTimeSignature timeSignature 
         . renderBarMusic $ x
-
+        where
+          -- TODO key signatures
+          -- TODO rehearsal marks
+          -- TODO bar number change
+          -- TODO compound time signatures
+          setBarTimeSignature (getTimeSignature -> (ms, n)) x = scatLy [Lilypond.Time (sum ms) n, x]
+          
       renderBarMusic :: Rhythm LyMusic -> LyMusic
       renderBarMusic = go
         where
-          go (Beat d x)            = noteRestToLilypond x
-          go (Dotted n (Beat d x)) = noteRestToLilypond x
+          go (Beat d x)            = Lilypond.removeSingleChords x
+          go (Dotted n (Beat d x)) = Lilypond.removeSingleChords x
           go (Group rs)            = scatLy $ map renderBarMusic rs
           go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarMusic r)
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
-      -- where
-      noteRestToLilypond = Lilypond.removeSingleChords
-
-      addStaff :: LyMusic -> LyMusic
-      addStaff = Lilypond.New "Staff" Nothing
-
-      addPartName :: String -> LyMusic -> LyMusic
-      addPartName partName xs = pcatLy [longName, shortName, xs]
-        where
-          longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
-          shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
-
-      addClef :: Lilypond.Clef -> LyMusic -> LyMusic
-      addClef c x = pcatLy [Lilypond.Clef c, x]
-
-      setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
-      setBarTimeSignature Nothing x = x
-      setBarTimeSignature (Just (getTimeSignature -> (ms, n))) x = scatLy [Lilypond.Time (sum ms) n, x]
 
 
 -- TODO move
@@ -637,9 +633,9 @@ instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic Dynami
 
 -- TODO simplify
 instance (
-  Dynamic a'  ~ Ctxt (Dynamic a),
-  Dynamic a'' ~ DynamicNotation,
-  HasDynamic3 a a' a'',
+  HasDynamic3 a b c,
+  Dynamic b  ~ Ctxt (Dynamic a),
+  Dynamic c ~ DynamicNotation,
   
   Real (Dynamic a),
   
@@ -647,8 +643,8 @@ instance (
   Transformable a,
   Semigroup a,
 
-  HasPart' a'', Ord (Part a''), Show (Part a''),
-  Tiable a''
+  HasPart' c, Ord (Part c), Show (Part c),
+  Tiable c
   )
   => HasBackendScore Lilypond (Score a) where
   type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
@@ -666,18 +662,6 @@ instance (
       extractTimeSignatures 
         :: Score a 
         -> ([Maybe TimeSignature], [Duration])
-      extractTimeSignatures score = (barTimeSignatures, barDurations)
-        where                                          
-          defaultTimeSignature = time 4 4
-          timeSignatures = fmap swap 
-            $ unvoice 
-            $ fuse 
-            $ reactiveToVoice' (0 <-> (score^.offset)) 
-            $ getTimeSignatures defaultTimeSignature score
-
-          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-          barDurations = getBarDurations timeSignatures
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
@@ -689,41 +673,56 @@ instance (
         -> Part a 
         -> Score a 
         -> LyStaff (LyContext a)
-      exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (show part)
-        . view singleMVoice
-
 
       exportStaff :: Tiable a 
         => [Maybe TimeSignature] 
         -> [Duration] 
         -> String -- ^ name
         -> MVoice a 
-        -> LyStaff (LyContext a)
-      exportStaff timeSignatures barDurations name 
-        = LyStaff 
-        . addStaffInfo
-        . zipWith exportBar timeSignatures 
-        . splitIntoBars barDurations
-        where         
-          addStaffInfo  = (StaffInfo { staffName = name, staffClef = Lilypond.Alto },) -- TODO guess clef
-          splitIntoBars = splitTiesVoiceAt
 
+        -> LyStaff (LyContext a)
       exportBar :: Tiable a 
         => Maybe TimeSignature 
         -> MVoice a 
         -> LyBar (LyContext a)
-      exportBar timeSignature music = LyBar (BarInfo timeSignature, quantizeBar music)
 
       quantizeBar 
         :: Tiable a 
         => MVoice a 
         -> Rhythm (LyContext a)
-      quantizeBar = mapWithDur LyContext . rewrite . fromRight . quantize . view unsafeEventsV
+
+      extractTimeSignatures score = (barTimeSignatures, barDurations)
+        where                                          
+          defaultTimeSignature = time 4 4
+          timeSignatures = fmap swap 
+            $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+            $ getTimeSignatures defaultTimeSignature score
+
+          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
+          barDurations = getBarDurations timeSignatures
+
+      exportPart timeSignatureMarks barDurations part
+        = exportStaff timeSignatureMarks barDurations (show part)
+        . view singleMVoice
+
+
+      exportStaff timeSignatures barDurations name 
+        = LyStaff . addStaffInfo
+        . zipWith exportBar timeSignatures . splitIntoBars barDurations
+        where         
+          addStaffInfo  = (StaffInfo { staffName = name, staffClef = Lilypond.Alto },) -- TODO guess clef
+          splitIntoBars = splitTiesVoiceAt
+
+      exportBar timeSignature = LyBar . addBarInfo . quantizeBar
+       where
+         addBarInfo = (BarInfo timeSignature,)
+
+      quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view eventsV
         where
-          -- FIXME handle quantization errors
-          fromRight (Left e)  = error $ "Quantization failed: " ++ e
-          fromRight (Right x) = x
+          -- FIXME propagate quantization errors
+          handleErrors (Left e)  = error $ "Quantization failed: " ++ e
+          handleErrors (Right x) = x
 
           mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
           mapWithDur f = go
@@ -735,6 +734,25 @@ instance (
 
 
 --------------------------------------------------------------------------------
+
+{-
+  Note:
+    We want all note transformers to be applicative morphisms, i.e.
+      
+      notate (pure x)   = pure (notate x)
+
+    Specifically
+      notate (mempty,x) = id . notate x
+
+  Note:
+    We use these idioms:
+      exportNote b = exportNote b . fmap extract
+      exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
+
+   The latter looks a lot like cotraverse. Generalization?
+   
+      
+-}
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond [a] where
   exportNote = exportChord
@@ -777,13 +795,10 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (PartT n a) where
   exportChord b = exportChord b . fmap (fmap extract)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicNotation a) where
-  exportNote b (LyContext d x) = notate (fmap (^.dynamic) x) $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
     where
-      notate Nothing  = id
-      notate (Just n) = notate' n
-
-      notate' :: DynamicNotation -> LyMusic -> LyMusic
-      notate' (DynamicNotation (crescDims, level)) = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
+      notate :: DynamicNotation -> LyMusic -> LyMusic
+      notate (DynamicNotation (crescDims, level)) = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
 
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
@@ -808,20 +823,17 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a
   exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
-  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
     where
-      notate Nothing = id
-      notate (Just (ColorT (col, x))) = notate' col
-
-      notate' (Option Nothing)             = id
-      notate' (Option (Just (Last color))) = \x -> Lilypond.Sequential [
-      -- This syntax will change in future Lilypond versions
+      -- TODO This syntax will change in future Lilypond versions
+      -- TODO handle any color
+      notate (Option Nothing)             = id
+      notate (Option (Just (Last color))) = \x -> Lilypond.Sequential [
         Lilypond.Override "NoteHead#' color" (Lilypond.toLiteralValue $ "#" ++ colorName color),
         x,
         Lilypond.Revert "NoteHead#' color"
         ]
 
-      -- TODO handle any color
       colorName c
         | c == Color.black = "black"
         | c == Color.red   = "red"
@@ -830,6 +842,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
 
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
+  -- TODO can this instance use the new shorter idiom?
   exportNote b (LyContext d x) =
     fst (notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
     where
@@ -842,45 +855,39 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
         in (Lilypond.Tremolo (round repeats), newDur)     
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TextT a) where
-  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
     where
-      notate Nothing = id
-      notate (Just (TextT (Couple (ts, _)))) = foldr (.) id (fmap Lilypond.addText ts)
+      notate texts = composed (fmap Lilypond.addText texts)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (HarmonicT a) where
-  -- exportNote b = exportNote b . fmap extract
-  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
     where
-      notate Nothing = id
-      notate (Just (HarmonicT (Couple ((view _Wrapped' -> isNat, view _Wrapped' -> n),x)))) = notate' isNat n
-
-      notate' _     0 = id
-      notate' True  n = notateNatural n
-      notate' False n = notateArtificial n
-
+      notate (Any isNat, Sum n) = case (isNat, n) of
+        (_,     0) -> id
+        (True,  n) -> notateNatural n
+        (False, n) -> notateArtificial n
       notateNatural n = Lilypond.addFlageolet -- addOpen?
       notateArtificial n = id -- TODO
-      
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (SlideT a) where
-  -- exportNote b = exportNote b . fmap extract
-  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getSlideT . sequenceA
     where
-      notate Nothing = id
-      notate (Just (SlideT (Couple (((eg,es),(bg,bs)),a)))) =
-        if view _Wrapped' bg || view _Wrapped' bs then Lilypond.beginGlissando else id
-      
+      notate ((Any eg, Any es),(Any bg, Any bs))
+        | bg || bs  = Lilypond.beginGlissando
+        | otherwise = id
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
-  exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
+  exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
     where
-      notate Nothing = id
-      notate (Just (TieT ((Any ta, Any tb),_))) = notate' ta tb
-      notate' ta tb
-        | ta && tb                      = Lilypond.beginTie
-        | tb                            = Lilypond.beginTie
-        | ta                            = id
-        | otherwise                     = id
+      notate (Any ta, Any tb)
+        | ta && tb  = Lilypond.beginTie
+        | tb        = Lilypond.beginTie
+        | ta        = id
+        | otherwise = id
+
+
+
+
 
 
 -- Internal stuff
