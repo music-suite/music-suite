@@ -501,6 +501,9 @@ openSuper score =
 -- | A token to represent the Lilypond backend.
 data Lilypond
 
+data ScoreInfo = ScoreInfo
+  deriving (Eq, Show)
+
 data StaffInfo = StaffInfo { staffName :: String, staffClef :: Lilypond.Clef }
   deriving (Eq, Show)
 
@@ -509,7 +512,7 @@ data BarInfo = BarInfo { barTimeSignature :: Maybe TimeSignature }
 
 -- | Hierachical representation of a Lilypond score.
 --   A score is a parallel composition of staves.
-data LyScore a = LyScore { getLyScore :: [LyStaff a] }
+data LyScore a = LyScore { getLyScore :: (ScoreInfo, [LyStaff a]) }
   deriving (Functor, Eq, Show)
 
 -- | A staff is a sequential composition of bars.
@@ -539,7 +542,7 @@ instance HasBackend Lilypond where
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
-      finalizeScore = extra . pcatLy . map finalizeStaff . getLyScore
+      finalizeScore = extra . pcatLy . map finalizeStaff . snd . getLyScore
         where
           extra = id
 
@@ -607,7 +610,8 @@ instance (
   )
   => HasBackendScore Lilypond (Score a) where
   type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
-  exportScore b score = LyScore
+  exportScore b score = LyScore 
+    . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts'
     . over dynamics notateDynamic 
@@ -758,6 +762,9 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
 
+instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
+  exportNote b = exportNote b . fmap extract
+
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
   exportNote b (LyContext d x) = notate x $ exportNote b $ LyContext d (fmap extract x)
     where
@@ -779,9 +786,6 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
         | c == Color.blue  = "blue"
         | otherwise        = error "Lilypond backend: Unkown color"
 
-
-instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
-  exportNote b = exportNote b . fmap extract
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
   exportNote b (LyContext d x) =
