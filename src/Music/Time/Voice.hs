@@ -270,14 +270,12 @@ stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 stretcheds = unsafeStretcheds
 {-# INLINE stretcheds #-}
 
--- TODO meta-data
 eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 eventsV = unsafeEventsV
 {-# INLINE eventsV #-}
-  --(stretcheds.through (from stretched) (from stretched))
 
 unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeEventsV = iso (map (^.from stretched).(^.stretcheds)) ((^.voice).map (^.stretched))
+unsafeEventsV = iso (map (^.from stretched) . (^.stretcheds)) ((^.voice) . map (^.stretched))
 {-# INLINE unsafeEventsV #-}
 
 unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
@@ -324,8 +322,6 @@ zipVoiceWith' f g
         cs = zipWith g as bs
      in view (from unsafeEventsV) (zip cd cs)
 
-
-
 -- |
 -- Merge consecutive equal notes.
 --
@@ -338,6 +334,9 @@ fuse = fuseBy (==)
 fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
+-- |
+-- Merge consecutive equal notes using the given equality predicate and merge function.
+--
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
 fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
@@ -345,7 +344,6 @@ fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectin
     -- Typically, the combination function us just 'head', as we know that group returns
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
-
 
 
 withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
@@ -379,11 +377,13 @@ valuesV = lens getValues (flip setValues)
 
 -- |
 -- Transform the durations, leaving values intact.
+withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
 withDurations = over durationsV
 
 -- |
 -- Transform the values, leaving durations intact.
-withValues    = over valuesV
+withValues :: ([a] -> [b]) -> Voice a -> Voice b
+withValues = over valuesV
 
 -- |
 -- Rotate durations by the given number of steps, leaving values intact.

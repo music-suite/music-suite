@@ -271,9 +271,7 @@ slerp2 f i a b
 -- This can be used to safely turn a behavior into a segment and vice
 -- versa. Often 'focusing' is more convenient to use.
 --
-bounded' :: Iso'
-  (Note (Segment a))
-  (Bound (Behavior a))
+bounded' :: Iso' (Note (Segment a)) (Bound (Behavior a))
 bounded' = bounded
 
 -- |
@@ -282,11 +280,7 @@ bounded' = bounded
 -- This can be used to safely turn a behavior into a segment and vice
 -- versa. Often 'focusing' is more convenient to use.
 --
-bounded :: Iso
-  (Note (Segment a))
-  (Note (Segment b))
-  (Bound (Behavior a))
-  (Bound (Behavior b))
+bounded :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
 bounded = iso ns2bb bb2ns
   where
     bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)

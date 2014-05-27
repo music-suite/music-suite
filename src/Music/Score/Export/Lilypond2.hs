@@ -667,7 +667,6 @@ instance (
         where         
           addStaffInfo  = (StaffInfo { staffName = name, staffClef = Lilypond.Alto },) -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
-          -- TODO rename splitTiesVoiceAt?
 
       exportBar :: Tiable a 
         => Maybe TimeSignature 

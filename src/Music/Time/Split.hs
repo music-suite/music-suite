@@ -89,12 +89,10 @@ instance (Ord k, Splittable a) => Splittable (Map k a) where
   split d = unzipR . Map.map (split d)
 
 
-takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
-takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
-  where
-    takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
-
---     > Data.List.mapAccumL (\x t -> swap $ split t x) (0 <-> 10) (replicate 10 2)
+-- takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
+-- takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
+--   where
+--     takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
 
 chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
 chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
