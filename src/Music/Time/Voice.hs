@@ -284,12 +284,6 @@ unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeStretcheds = _Wrapped
 {-# INLINE unsafeStretcheds #-}
 
--- TODO not simple
--- TODO unsafe (meta...)
-__voiceList :: Iso' (Voice a) [(Duration, a)]
-__voiceList = iso (map (view (from stretched)) . view stretcheds) (view voice . map (view stretched))
-
-
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = unsafeStretcheds . single
 {-# INLINE singleStretched #-}
@@ -345,7 +339,7 @@ fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over __voiceList $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     -- Typically, the combination function us just 'head', as we know that group returns
@@ -419,7 +413,6 @@ reverseValues = over valuesV reverse
 --
 -- TODO
 -- Implement meta-data
--- Separate safe/unsafe Isos (see __voiceList...)
 --
 
 --
