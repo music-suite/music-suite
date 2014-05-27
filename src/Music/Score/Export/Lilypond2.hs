@@ -56,17 +56,51 @@ module Music.Score.Export.Lilypond2 (
     LilypondOptions(..),
     openLilypond',
     writeLilypond',
+
+
+    -- -- * MusicXml
+    -- MusicXml,
+    -- HasMusicXmlNEW,
+    -- 
+    -- -- ** Converting to MusicXml
+    -- toMusicXml,
+    -- toMusicXmlString,    
+    -- 
+    -- -- ** MusicXml I/O
+    -- showMusicXml,
+    -- openMusicXml,
+    -- writeMusicXml,
+    -- 
+    -- -- ** Customize MusicXml backend
+    -- MusicXmlOptions(..),
+    -- openMusicXml',
+    -- writeMusicXml',   
+
+
   ) where
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score                   hiding (HasMidiPart (..),
-                                                HasMidiProgram (..), Inline,
-                                                LilypondOptions, openLilypond,
-                                                openLilypond', showLilypond,
-                                                toLilypond, toLilypondString,
-                                                toMidi, writeLilypond,
-                                                writeLilypond', Lilypond)
+                                                HasMidiProgram (..), 
+                                                Inline,
+                                                toMidi, 
+                                                LilypondOptions, 
+                                                toLilypond, 
+                                                toLilypondString,
+                                                writeLilypond,
+                                                openLilypond,
+                                                showLilypond,
+
+                                                toMusicXml, 
+                                                toMusicXmlString,
+                                                writeMusicXml,
+                                                openMusicXml,
+                                                showMusicXml,
+
+                                                openLilypond', 
+                                                writeLilypond', 
+                                                Lilypond)
 
 import qualified Codec.Midi                    as Midi
 import           Control.Arrow                 ((***))
@@ -544,17 +578,23 @@ instance HasBackend Lilypond where
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
-      finalizeScore = extra . pcatLy . map finalizeStaff . snd . getLyScore
+      finalizeScore (LyScore (info, x)) = extra 
+        . pcatLy 
+        . map finalizeStaff $ x
         where
           extra = id
 
       finalizeStaff :: LyStaff LyMusic -> LyMusic
-      finalizeStaff (LyStaff (info, x)) = extra . scatLy . map finalizeBar $ x
+      finalizeStaff (LyStaff (info, x)) = extra 
+        . scatLy 
+        . map finalizeBar $ x
         where
           extra = addStaff . addPartName (staffName info) . addClef (staffClef info)
 
       finalizeBar :: LyBar LyMusic -> LyMusic
-      finalizeBar (LyBar (BarInfo timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarMusic music
+      finalizeBar (LyBar (BarInfo timeSignature, x)) = 
+        setBarTimeSignature timeSignature 
+        . renderBarMusic $ x
 
       renderBarMusic :: Rhythm LyMusic -> LyMusic
       renderBarMusic = go
@@ -973,6 +1013,18 @@ openLilypond' options sc = do
         "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
       runOpen = void $ runCommand 
         $ openCommand ++ " test.pdf"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
