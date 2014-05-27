@@ -4,8 +4,7 @@ Cross-package development used to be a cubersome task in Haskell, but fortunatel
 
 There is a also utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks relating to the Music Suite source directories such as cloning, pushing, pulling and status checking. This program has been granted some knowledge of the names and internal dependencies of the Music Suite packages and it designed to be used with `cabal` and `git`.
 
-This document describes how to install and use `music-util` to manage the Music Suite sources. It assumes that you are a member of the [Github organization](https://github.com/music-suite) with at least Read access to the libraries. Note that `music-util` always sets up a development verison of the suite in a dedicated sandbox, regardless of any global installations of the Suite that you may already have. If you want to delete the development version, simple remove the source directory with the sandbox (see below).
-
+This document describes how to install and use `music-util` to manage the Music Suite sources. It assumes that you are a member of the [Github organization](https://github.com/music-suite) with at least Read access to the libraries. Note that `music-util` always sets up a development verison of the suite in a dedicated sandbox, regardless of any global installations of the Suite that you may already have.
 
 ## Setup
 
