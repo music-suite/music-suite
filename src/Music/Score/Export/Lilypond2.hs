@@ -670,7 +670,8 @@ instance (
         where                                          
           defaultTimeSignature = time 4 4
           timeSignatures = fmap swap 
-            $ unvoice $ fuse 
+            $ unvoice 
+            $ fuse 
             $ reactiveToVoice' (0 <-> (score^.offset)) 
             $ getTimeSignatures defaultTimeSignature score
 
