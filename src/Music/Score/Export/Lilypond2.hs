@@ -21,6 +21,7 @@
 {-# LANGUAGE UndecidableInstances       #-}
 
 module Music.Score.Export.Lilypond2 (
+    HasOrdPart,
     HasDynamic3,
     HasDynamicNotation,
 
@@ -128,6 +129,38 @@ import Music.Score.Convert (reactiveToVoice') -- TODO
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
 import Data.Semigroup.Instances
+
+
+
+
+
+
+
+
+
+-- TODO move
+class (
+  HasDynamic' a,
+  HasDynamic a  a',
+  HasDynamic a' a'',
+  HasDynamic a  a''
+  ) => HasDynamic3 a a' a'' where
+
+instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) 
+  => HasDynamic3 MyNote b c
+
+type HasDynamicNotation a b c = (
+  HasDynamic3 a b c,
+  Dynamic b  ~ Ctxt (Dynamic a),
+  Dynamic c ~ DynamicNotation,
+  Real (Dynamic a)
+ )
+type HasOrdPart a = (HasPart' a, Ord (Part a))
+
+
+
+
+
 
 
 -- |
@@ -623,36 +656,10 @@ instance HasBackend Lilypond where
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
-
--- TODO move
-class (
-  HasDynamic' a,
-  HasDynamic a  a',
-  HasDynamic a' a'',
-  HasDynamic a  a''
-  ) => HasDynamic3 a a' a'' where
-
-instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) 
-  => HasDynamic3 MyNote b c
-
-type HasDynamicNotation a b c = (
-  HasDynamic3 a b c,
-  Dynamic b  ~ Ctxt (Dynamic a),
-  Dynamic c ~ DynamicNotation,
-  Real (Dynamic a)
- )
-
-
--- TODO simplify
 instance (
   HasDynamicNotation a b c,
-
-  HasPart' a, Ord (Part a),
-  Transformable a,
-  Semigroup a,
-
-  HasPart' c, Ord (Part c), Show (Part c),
-  Tiable c
+  HasOrdPart a, Transformable a, Semigroup a,
+  HasOrdPart c, Show (Part c), Tiable c
   )
   => HasBackendScore Lilypond (Score a) where
   type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
@@ -881,7 +888,8 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (SlideT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getSlideT . sequenceA
     where
       notate ((Any eg, Any es),(Any bg, Any bs))
-        | bg || bs  = Lilypond.beginGlissando
+        | bg  = Lilypond.beginGlissando
+        | bs  = Lilypond.beginGlissando
         | otherwise = id
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
