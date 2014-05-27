@@ -150,15 +150,15 @@ class Functor (BackendScore b) => HasBackend b where
   finalizeExport :: b -> BackendScore b (BackendNote b) -> BackendMusic b
 
 class (HasBackend b) => HasBackendScore b s where
-  type ScoreEvent b s :: *
-  exportScore :: b -> s -> BackendScore b (BackendContext b (ScoreEvent b s))
+  type BackendScoreEvent b s :: *
+  exportScore :: b -> s -> BackendScore b (BackendContext b (BackendScoreEvent b s))
 
 class (HasBackend b) => HasBackendNote b a where
   exportNote  :: b -> BackendContext b a   -> BackendNote b
   exportChord :: b -> BackendContext b [a] -> BackendNote b
   exportChord = error "Not implemented: exportChord"
 
-export :: (HasBackendScore b s, HasBackendNote b (ScoreEvent b s)) => b -> s -> BackendMusic b
+export :: (HasBackendScore b s, HasBackendNote b (BackendScoreEvent b s)) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
     export' = fmap (exportNote b) . exportScore b
@@ -183,7 +183,7 @@ instance HasBackend NoteList where
   finalizeExport _ = concat
 
 instance HasBackendScore NoteList [a] where
-  type ScoreEvent NoteList [a] = a
+  type BackendScoreEvent NoteList [a] = a
   exportScore _ = fmap Identity
 
 instance HasBackendNote NoteList a => HasBackendNote NoteList [a] where
@@ -195,7 +195,7 @@ instance HasBackendNote NoteList Int where
 instance HasBackendNote NoteList a => HasBackendNote NoteList (DynamicT (Sum Int) a) where
   exportNote b (Identity (DynamicT (d,ps))) = set (mapped._1) d $ exportNote b (Identity ps)
 
-toNoteList :: (HasBackendNote NoteList (ScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
+toNoteList :: (HasBackendNote NoteList (BackendScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
 toNoteList = over (mapped._1) getSum . export (undefined::NoteList)
 
 
@@ -205,22 +205,27 @@ toNoteList = over (mapped._1) getSum . export (undefined::NoteList)
 
 -- | Class of part types with an associated MIDI program number.
 class HasMidiProgram a where
-    getMidiChannel :: a -> Midi.Channel
-    getMidiProgram :: a -> Midi.Preset
-    getMidiChannel _ = 0
+  getMidiChannel :: a -> Midi.Channel
+  getMidiProgram :: a -> Midi.Preset
+  getMidiChannel _ = 0
 
 instance HasMidiProgram () where
-    getMidiProgram _ = 0
+  getMidiProgram _ = 0
+
 instance HasMidiProgram Double where
-    getMidiProgram = fromIntegral . floor
+  getMidiProgram = fromIntegral . floor
+
 instance HasMidiProgram Float where
-    getMidiProgram = fromIntegral . floor
+  getMidiProgram = fromIntegral . floor
+
 instance HasMidiProgram Int where
-    getMidiProgram = id
+  getMidiProgram = id
+
 instance HasMidiProgram Integer where
-    getMidiProgram = fromIntegral
+  getMidiProgram = fromIntegral
+
 instance (Integral a, HasMidiProgram a) => HasMidiProgram (Ratio a) where
-    getMidiProgram = fromIntegral . floor
+  getMidiProgram = fromIntegral . floor
 
 
 -- | A token to represent the Midi backend.
@@ -240,8 +245,8 @@ data MidiScore a = MidiScore [(MidiInstr, Score a)]
   deriving Functor
 
 instance HasBackend Midi where
-  type BackendContext Midi    = MidiContext
   type BackendScore   Midi    = MidiScore
+  type BackendContext Midi    = MidiContext
   type BackendNote    Midi    = MidiEvent
   type BackendMusic   Midi    = Midi.Midi
 
@@ -276,7 +281,7 @@ instance HasBackend Midi where
 
 
 instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) where
-  type ScoreEvent Midi (Voice a) = a
+  type BackendScoreEvent Midi (Voice a) = a
   -- exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap <$> voiceToScore xs)]
   exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
     where
@@ -284,7 +289,7 @@ instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a)
       voiceToScore = error "FIXME"
 
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
-  type ScoreEvent Midi (Score a) = a
+  type BackendScoreEvent Midi (Score a) = a
   exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' xs)
 
 instance HasBackendNote Midi a => HasBackendNote Midi [a] where
@@ -350,7 +355,7 @@ setC c = go
     go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
     go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
-toMidi :: (HasBackendNote Midi (ScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
+toMidi :: (HasBackendNote Midi (BackendScoreEvent Midi s), HasBackendScore Midi s) => s -> Midi.Midi
 toMidi = export (undefined::Midi)
 
 
@@ -415,11 +420,11 @@ instance HasBackend Super where
           
 
 instance () => HasBackendScore Super (Voice (Maybe a)) where
-  type ScoreEvent Super (Voice (Maybe a)) = a
+  type BackendScoreEvent Super (Voice (Maybe a)) = a
   exportScore _ xs = Identity <$> SuperScore [view eventsV xs]
 
 instance (HasPart' a, Ord (Part a)) => HasBackendScore Super (Score a) where
-  type ScoreEvent Super (Score a) = a
+  type BackendScoreEvent Super (Score a) = a
   exportScore b = mconcat
     . map (exportScore b . view singleMVoice)
     . extractParts
@@ -466,7 +471,7 @@ instance HasBackendNote Super a => HasBackendNote Super (ColorT a) where
   exportNote b = exportNote b . fmap extract
 
 
-toSuper :: (HasBackendNote Super (ScoreEvent Super s), HasBackendScore Super s) => s -> String
+toSuper :: (HasBackendNote Super (BackendScoreEvent Super s), HasBackendScore Super s) => s -> String
 toSuper = export (undefined::Super)
 
 openSuper score =
@@ -496,19 +501,20 @@ openSuper score =
 -- | A token to represent the Lilypond backend.
 data Lilypond
 
+data StaffInfo = StaffInfo { staffName :: String, staffClef :: Lilypond.Clef }
+  deriving (Eq, Show)
+
+data BarInfo = BarInfo { barTimeSignature :: Maybe TimeSignature }
+  deriving (Eq, Show)
+
 -- | Hierachical representation of a Lilypond score.
 --   A score is a parallel composition of staves.
 data LyScore a = LyScore { getLyScore :: [LyStaff a] }
   deriving (Functor, Eq, Show)
 
-data StaffInfo = StaffInfo { staffName :: String, staffClef :: Lilypond.Clef }
-  deriving (Eq, Show)
-
 -- | A staff is a sequential composition of bars.
 data LyStaff a = LyStaff { getLyStaff :: (StaffInfo, [LyBar a]) }
   deriving (Functor, Eq, Show)
-
-type BarInfo = Maybe TimeSignature
 
 -- | A bar is a sequential composition of chords/notes/rests.
 data LyBar a = LyBar { getLyBar :: (BarInfo, Rhythm a) } 
@@ -517,8 +523,9 @@ data LyBar a = LyBar { getLyBar :: (BarInfo, Rhythm a) }
 -- | Context passed to the note export.
 --   Includes duration and note/rest distinction.
 data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
+
 instance Monoid Lilypond.Music where
-  mempty = pcatLy []
+  mempty      = pcatLy []
   mappend x y = pcatLy [x,y]
 
 type LyMusic = Lilypond.Music
@@ -528,6 +535,7 @@ instance HasBackend Lilypond where
   type BackendContext Lilypond = LyContext
   type BackendNote Lilypond    = LyMusic
   type BackendMusic Lilypond   = LyMusic
+
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
@@ -541,20 +549,19 @@ instance HasBackend Lilypond where
           extra = addStaff . addPartName (staffName info) . addClef (staffClef info)
 
       finalizeBar :: LyBar LyMusic -> LyMusic
-      finalizeBar (LyBar (timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarRhythm music
+      finalizeBar (LyBar (BarInfo timeSignature, music)) = setBarTimeSignature timeSignature $ renderBarMusic music
 
-      renderBarRhythm :: Rhythm LyMusic -> LyMusic
-      renderBarRhythm = go
+      renderBarMusic :: Rhythm LyMusic -> LyMusic
+      renderBarMusic = go
         where
           go (Beat d x)            = noteRestToLilypond x
           go (Dotted n (Beat d x)) = noteRestToLilypond x
-          go (Group rs)            = scatLy $ map renderBarRhythm rs
-          go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarRhythm r)
+          go (Group rs)            = scatLy $ map renderBarMusic rs
+          go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarMusic r)
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
       -- where
       noteRestToLilypond = Lilypond.removeSingleChords
-
 
       addStaff :: LyMusic -> LyMusic
       addStaff = Lilypond.New "Staff" Nothing
@@ -567,7 +574,6 @@ instance HasBackend Lilypond where
 
       addClef :: Lilypond.Clef -> LyMusic -> LyMusic
       addClef c x = pcatLy [Lilypond.Clef c, x]
-
 
       setBarTimeSignature :: Maybe TimeSignature -> LyMusic -> LyMusic
       setBarTimeSignature Nothing x = x
@@ -586,22 +592,21 @@ instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic Dynami
 
 -- TODO simplify
 instance (
-  Dynamic a'  ~ (Maybe (Dynamic a), Dynamic a, Maybe (Dynamic a)),
+  Dynamic a'  ~ Ctxt (Dynamic a),
   Dynamic a'' ~ DynamicNotation,
   HasDynamic3 a a' a'',
   
   Real (Dynamic a),
-  HasPart' a, Ord (Part a), Show (Part a''),
+  
+  HasPart' a, Ord (Part a),
   Transformable a,
   Semigroup a,
 
-  HasPart' a'', Ord (Part a''),
-  Transformable a',
-  Semigroup a',
-  
-  Tiable a'')
+  HasPart' a'', Ord (Part a''), Show (Part a''),
+  Tiable a''
+  )
   => HasBackendScore Lilypond (Score a) where
-  type ScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
+  type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
   exportScore b score = LyScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . extractParts'
@@ -611,6 +616,21 @@ instance (
     $ score
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
+
+      extractTimeSignatures 
+        :: Score a 
+        -> ([Maybe TimeSignature], [Duration])
+      extractTimeSignatures score = (barTimeSignatures, barDurations)
+        where                                          
+          defaultTimeSignature = time 4 4
+          timeSignatures = fmap swap 
+            $ unvoice $ fuse 
+            $ reactiveToVoice' (0 <-> (score^.offset)) 
+            $ getTimeSignatures defaultTimeSignature score
+
+          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
+          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
+          barDurations = getBarDurations timeSignatures
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
@@ -647,22 +667,7 @@ instance (
         => Maybe TimeSignature 
         -> MVoice a 
         -> LyBar (LyContext a)
-      exportBar timeSignature music = LyBar (timeSignature, quantizeBar music)
-
-      extractTimeSignatures 
-        :: Score a 
-        -> ([Maybe TimeSignature], [Duration])
-      extractTimeSignatures score = (barTimeSignatures, barDurations)
-        where                                          
-          defaultTimeSignature = time 4 4
-          timeSignatures = fmap swap 
-            $ unvoice $ fuse 
-            $ reactiveToVoice' (0 <-> (score^.offset)) 
-            $ getTimeSignatures defaultTimeSignature score
-
-          -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-          barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-          barDurations = getBarDurations timeSignatures
+      exportBar timeSignature music = LyBar (BarInfo timeSignature, quantizeBar music)
 
       quantizeBar 
         :: Tiable a 
@@ -855,7 +860,7 @@ spellLy' p = Lilypond.Pitch (
 -- End internal
 
 
-type HasLilypondNEW a = (HasBackendNote Lilypond (ScoreEvent Lilypond a), HasBackendScore Lilypond a)
+type HasLilypondNEW a = (HasBackendNote Lilypond (BackendScoreEvent Lilypond a), HasBackendScore Lilypond a)
 
 -- |
 -- Convert a score to a Lilypond string.
