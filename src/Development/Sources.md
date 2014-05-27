@@ -79,6 +79,6 @@ To push to a repo you need to make a fork. For example with the `music-pitch` pa
 $ cd $MUSIC_SUITE_DIR/music-pitch && git remote add fork <paste-url-here>
 ~~~
 
-You can then push using `git push fork master`. Note that you can [set this up as the standard push location](http://sleepycoders.blogspot.se/2012/05/different-git-push-pullfetch-urls.html).
+You can then push using `git push fork master`. You can also [set this up as the standard push location](http://sleepycoders.blogspot.se/2012/05/different-git-push-pullfetch-urls.html).
 
 
