@@ -73,7 +73,7 @@ To push to a repo you need to make a fork. For example with the `music-pitch` pa
 - Press the Fork button
 
 - In the newly forked repo, find the Clone URL frame, press SSH and then copy the URL 
-(which should start with git@github.com:username)
+(which should look like git@github.com:username)
 
 ~~~{.bash}
 $ cd $MUSIC_SUITE_DIR/music-pitch && git remote add fork <paste-url-here>
