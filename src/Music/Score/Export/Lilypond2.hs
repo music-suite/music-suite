@@ -813,11 +813,9 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
   exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
     where
       notate :: DynamicNotation -> LyMusic -> LyMusic
-      notate (DynamicNotation (crescDims, level)) = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
+      notate (DynamicNotation (crescDims, level)) 
+        = rcomposed (fmap notateCrescDim crescDims) . notateLevel level
 
-      -- Use rcomposed as notateDynamic returns "mark" order, not application order
-      rcomposed = composed . reverse
-      
       notateCrescDim crescDims = case crescDims of
         NoCrescDim -> id
         BeginCresc -> Lilypond.beginCresc
@@ -832,6 +830,10 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+
+      -- Use rcomposed as notateDynamic returns "mark" order, not application order
+      rcomposed = composed . reverse
+      
 
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
