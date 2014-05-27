@@ -504,10 +504,11 @@ data Lilypond
 data ScoreInfo = ScoreInfo
   deriving (Eq, Show)
 
-data StaffInfo = StaffInfo { staffName :: String, staffClef :: Lilypond.Clef }
+data StaffInfo = StaffInfo { staffName :: String, 
+                             staffClef :: Lilypond.Clef }
   deriving (Eq, Show)
 
-data BarInfo = BarInfo { barTimeSignature :: Maybe TimeSignature }
+data BarInfo = BarInfo { barTimeSignature :: Maybe TimeSignature } 
   deriving (Eq, Show)
 
 -- | Hierachical representation of a Lilypond score.
@@ -525,7 +526,8 @@ data LyBar a = LyBar { getLyBar :: (BarInfo, Rhythm a) }
 
 -- | Context passed to the note export.
 --   Includes duration and note/rest distinction.
-data LyContext a = LyContext Duration (Maybe a) deriving (Functor, Foldable, Traversable, Eq, Show)
+data LyContext a = LyContext Duration (Maybe a)
+  deriving (Functor, Foldable, Traversable, Eq, Show)
 
 instance Monoid Lilypond.Music where
   mempty      = pcatLy []
