@@ -833,8 +833,6 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
 
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
-      
-
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
   exportNote b = exportNote b . fmap extract
@@ -856,7 +854,6 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
         | c == Color.red   = "red"
         | c == Color.blue  = "blue"
         | otherwise        = error "Lilypond backend: Unkown color"
-
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
   -- TODO can this instance use the new shorter idiom?
