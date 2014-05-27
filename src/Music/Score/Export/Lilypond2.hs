@@ -34,7 +34,7 @@ module Music.Score.Export.Lilypond2 (
     NoteList,
     toNoteList,
     
-    -- * SuperCollider events
+    -- * SuperCollider patterns
     SuperCollider,
     HasSuperCollider,
     toSuperCollider,
