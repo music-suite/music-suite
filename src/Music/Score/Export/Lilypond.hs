@@ -305,7 +305,7 @@ instance (Tiable n, HasLilypond a) => HasLilypond (ArticulationT n a) where
 --             nbs    = if bs then Lilypond.beginSlur else id
 -- 
 instance HasLilypond a => HasLilypond (ColorT a) where
-    getLilypond d (ColorT (_, x)) = getLilypond d x
+    getLilypond d (ColorT (Couple (_, x))) = getLilypond d x
 
 instance HasLilypond a => HasLilypond (TremoloT a) where
     getLilypond d (TremoloT (Couple (Max 0, x))) = getLilypond d x

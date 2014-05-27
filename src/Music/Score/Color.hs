@@ -48,6 +48,7 @@ import           Data.AffineSpace
 import           Data.Colour
 import qualified Data.Colour.Names             as C
 import           Data.Foldable
+import           Data.Functor.Couple
 import           Data.Semigroup
 import           Data.Typeable
 import           Control.Comonad
@@ -82,31 +83,28 @@ instance HasColor a => HasColor (PartT n a) where
 instance HasColor a => HasColor (TieT a) where
   setColor s = fmap (setColor s)
 
-newtype ColorT a = ColorT { getColorT :: (Option (Last (Colour Double)), a) }
+newtype ColorT a = ColorT { getColorT :: Couple (Option (Last (Colour Double))) a }
   deriving (Eq, {-Ord,-} Show, Functor, Foldable, {-Typeable,-} Applicative, Monad, Comonad)
 
-deriving instance IsPitch a => IsPitch (ColorT a)
-deriving instance IsDynamics a => IsDynamics (ColorT a)
-deriving instance Transformable a => Transformable (ColorT a)
-deriving instance Reversible a => Reversible (ColorT a)
-deriving instance Alterable a => Alterable (ColorT a)
-deriving instance Augmentable a => Augmentable (ColorT a)
-deriving instance HasTremolo a => HasTremolo (ColorT a)
-deriving instance HasHarmonic a => HasHarmonic (ColorT a)
-deriving instance HasSlide a => HasSlide (ColorT a)
-deriving instance HasText a => HasText (ColorT a)
-
+-- Lifted instances
+deriving instance Num a => Num (ColorT a)
+deriving instance Fractional a => Fractional (ColorT a)
+deriving instance Floating a => Floating (ColorT a)
+deriving instance Enum a => Enum (ColorT a)
+deriving instance Bounded a => Bounded (ColorT a)
+-- deriving instance (Num a, Ord a, Real a) => Real (ColorT a)
+-- deriving instance (Real a, Enum a, Integral a) => Integral (ColorT a)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ColorT a) where
-  type Unwrapped (ColorT a) = (Option (Last (Colour Double)), a)
+  type Unwrapped (ColorT a) = Couple (Option (Last (Colour Double))) a
   _Wrapped' = iso getColorT ColorT
 
 instance Rewrapped (ColorT a) (ColorT b)
 
 
 instance HasColor (ColorT a) where
-  setColor s (ColorT (t,x)) = ColorT (t <> wrap s,x)
+  setColor s (ColorT (Couple (t,x))) = ColorT $ Couple (t <> wrap s,x)
     where
       wrap = Option . Just . Last
 
@@ -114,7 +112,7 @@ instance Semigroup a => Semigroup (ColorT a) where
   (<>) = liftA2 (<>)
 
 instance Tiable a => Tiable (ColorT a) where
-  toTied (ColorT (n,a)) = (ColorT (n,b), ColorT (n,c)) 
+  toTied (ColorT (Couple (n,a))) = (ColorT $ Couple (n,b), ColorT $ Couple (n,c)) 
     where 
       (b,c) = toTied a
 

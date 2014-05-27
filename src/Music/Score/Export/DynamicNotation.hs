@@ -81,6 +81,12 @@ instance Tiable DynamicNotation where
     = (DynamicNotation (beginEnd, marks), 
        DynamicNotation (mempty, Nothing))
 
+instance Monoid DynamicNotation where
+  mempty = DynamicNotation ([], Nothing)
+  DynamicNotation ([], Nothing) `mappend` y = y
+  x `mappend` DynamicNotation ([], Nothing) = x
+  x `mappend` y = x
+
 -- Given a dynamic value and its context, decide:
 --
 --   1) Whether we should begin or end a crescendo or diminuendo
