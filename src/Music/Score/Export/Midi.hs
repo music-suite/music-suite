@@ -58,8 +58,9 @@ import Data.Semigroup.Instances
 import Data.Functor.Identity
 import Data.Semigroup
 import Control.Monad
-import Data.VectorSpace hiding (Sum)
+import Data.VectorSpace hiding (Sum(..))
 import Data.AffineSpace
+import Control.Lens (over)
 import Control.Lens.Operators hiding ((|>))
 
 import Music.Time
@@ -188,9 +189,28 @@ instance HasBackendNote Midi a => HasBackendNote Midi (Behavior a) where
   exportNote b = exportNote b . fmap (! 0)
   exportChord b = exportChord b . fmap (fmap (! 0))
 
-instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT b a) where
+
+instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Product Double) a) where
   -- TODO
-  exportNote b (Identity (DynamicT (_, x))) = setV ({-round $ v*127-}64) <$> exportNote b (Identity x)
+  -- We have not standarized dynamic levels
+  -- Assume for now -6.5 to 6.5 where (-3.5 is ppp, -0.5 is mp, 0.5 is mf, 3.5 is fff etc)
+  exportNote b (Identity (DynamicT (Product d, x))) = setV (dynLevel d) <$> exportNote b (Identity x)
+
+
+dynLevel :: Double -> Midi.Velocity
+dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1,1) (x/3.5)
+  where
+    f = id
+    -- f x = (x^3)
+    inRange (m,n) x = (m `max` x) `min` n
+  
+
+-- instance (Transformable d, HasBackendNote Midi (DynamicT d a)) => HasBackendNote Midi (DynamicT (Product d) a) where
+--   exportNote b = exportNote b . fmap (over dynamic getProduct)
+-- 
+-- instance (Transformable d, HasBackendNote Midi (DynamicT d a)) => HasBackendNote Midi (DynamicT (Sum d) a) where
+--   exportNote b = exportNote b . fmap (over dynamic getSum)
+
 
 instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
   exportNote b (Identity (ArticulationT (_, x))) = exportNote b (Identity x)
