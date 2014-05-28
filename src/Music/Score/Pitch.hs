@@ -267,8 +267,8 @@ pitches' = pitches
 
 
 -- TODO flip name of this and Literal.fromPitch (or call that fromPitchL)
-fromPitch' :: (HasPitch' a, IsPitch a) => Pitch a -> a
-fromPitch' x = c & pitch' .~ x
+fromPitch' :: (HasPitches' a, IsPitch a) => Pitch a -> a
+fromPitch' x = c & pitches' .~ x
 {-# INLINE fromPitch' #-}
 
 
