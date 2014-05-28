@@ -41,45 +41,32 @@
 
 * Examples
 
-## 1.7
+## 1.7.0
 
-
-* Adds many new time-based types
-
+* Adds many new time-based types:
     * Separates time- and score-types in in `Music.Time` and `Music.Score` hierarchy
-
-    * Adds delayed and stretched values
-
-    * Adds segments
+    * Adds `Delayed`, `Stretched` and `Bound`
+    * Adds `Segment` for behaviors without a position
+    * Improves interface to `Behavior` (and `Segment`)
+    * Adds `Chord`
+    * Adds laws for, `Transformable`, `Reversible` and `Splittable`
     
-    * Improves interface to `Behavior` (and `Segment`) in terms of `Representable` from `adjunctions`
+* Completely new interface to parts, pitches, dynamics and articulations supporting
+  polymorphic updates of all parameters.
 
-    * Adds chord type
+* Adds colored noteheads
 
-    * Adds time-varying pitch, dynamics and articulation
+* Adds `.music` file parsing and conversion: `music2ly`, `music2musicxml` etc.
 
-    * Adds laws for `Reversible` and `Splittable`
-    
-* Garbage-collect API:
+* Adds phrase-wise traversals (experimental feature)
 
-    * Merges classes `Delayable` and `Stretchable` into `Transformable`
-
-    * Merges classes `HasOnset` and `HasOffset` etc. into `HasPosition`
-
-    * Proper implementation of `Span`, as a real abelian group.
-
-    * Replaces all ad-hoc conversion functions with lenses, isos and prisms
-    
-    * Changes API to use lenses more thoroughly, i.e. `place :: (HasPosition a, Transformable a) => Lens' a Span`.
-
-* Adds polymorphic update of pitch, dynamics and articulation
-
-* Adds colored noteheads to Lilypond backend
-
-* Adds `.music` file parsing and conversion
-
-* Adds phrase-wise traversals
-
-* Adds test suite
+* Adds regression tests
 
 * Adds more examples
+
+* Garbage-collect API:
+    * Merges classes `Delayable` and `Stretchable` into `Transformable`
+    * Merges classes `HasOnset` and `HasOffset` etc. into `HasPosition`
+    * Proper implementation of `Span`, as a real abelian group.
+    * Changes API to use lenses more thoroughly
+
