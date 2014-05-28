@@ -106,31 +106,30 @@ instance Show MusicXml.PartList where
 -- | A token to represent the MusicXml backend.
 data MusicXml
 
-data XScoreInfo = XScoreInfo { scoreTitle :: String,
+data ScoreInfo = ScoreInfo { scoreTitle :: String,
                                scoreComposer :: String,
                                scorePartList :: MusicXml.PartList
                                }
   deriving (Eq, Show)
 
 
-data XStaffInfo = XStaffInfo { x_staffName :: String, 
-                             x_staffClef :: (MusicXml.ClefSign, MusicXml.Line) } 
+data StaffInfo = StaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line) } 
   deriving (Eq, Show)
 
-data XBarInfo = XBarInfo { x_barTimeSignature :: Maybe TimeSignature } 
+data BarInfo = BarInfo { x_barTimeSignature :: Maybe TimeSignature } 
   deriving (Eq, Show)
 
 -- | Hierachical representation of a MusicXml score.
 --   A score is a parallel composition of staves.
-data XmlScore a = XmlScore { getXmlScore :: (XScoreInfo, [XmlStaff a]) }
+data XmlScore a = XmlScore { getXmlScore :: (ScoreInfo, [XmlStaff a]) }
   deriving (Functor, Eq, Show)
 
 -- | A staff is a sequential composition of bars.
-data XmlStaff a = XmlStaff { getXmlStaff :: (XStaffInfo, [XmlBar a]) }
+data XmlStaff a = XmlStaff { getXmlStaff :: (StaffInfo, [XmlBar a]) }
   deriving (Functor, Eq, Show)
 
 -- | A bar is a sequential composition of chords/notes/rests.
-data XmlBar a = XmlBar { getXmlBar :: (XBarInfo, Rhythm a) } 
+data XmlBar a = XmlBar { getXmlBar :: (BarInfo, Rhythm a) } 
   deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
@@ -166,14 +165,19 @@ finalizeScore (XmlScore (info, x))
 finalizeStaff :: XmlStaff MusicXml.Music -> [MusicXml.Music]
 finalizeStaff (XmlStaff (info, x)) 
   = id 
-  -- . addPartName (x_staffName info) 
-  -- . addClef (x_staffClef info)
-  -- . mconcat
+  -- Staff name is not added here as MusicXML uses a separate part list
   . addStartInfo
+  . addClef (staffClef info)
   . map finalizeBar $ x
   where
     -- TODO name
     -- TODO clef
+
+    -- Both of these stick to the first bar
+    -- TODO clean
+    addClef :: (MusicXml.ClefSign, MusicXml.Line) -> [MusicXml.Music] -> [MusicXml.Music]
+    addClef _                []     = []
+    addClef (clefSign, line) (x:xs) = (MusicXml.clef clefSign line <> x):xs
 
     addStartInfo :: [MusicXml.Music] -> [MusicXml.Music]
     addStartInfo []     = []
@@ -181,14 +185,14 @@ finalizeStaff (XmlStaff (info, x))
 
     startInfo :: MusicXml.Music
     startInfo = mempty
-        <> MusicXml.defaultKey
         <> MusicXml.defaultDivisions
+        <> MusicXml.defaultKey
         <> MusicXml.metronome (1/4) 60
         -- <> Xml.commonTime
 
 
 finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
-finalizeBar (XmlBar (XBarInfo timeSignature, x))
+finalizeBar (XmlBar (BarInfo timeSignature, x))
   = maybe id setBarTimeSignature timeSignature 
   . renderBarMusic $ x
   where
@@ -222,7 +226,7 @@ instance (
   => HasBackendScore MusicXml (Score a) where
   type BackendScoreEvent MusicXml (Score a) = SetDynamic DynamicNotation a
   exportScore b score = XmlScore 
-    . (XScoreInfo title composer partList,)
+    . (ScoreInfo title composer partList,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
@@ -267,20 +271,20 @@ instance (
 
       exportStaff timeSignatures barDurations
         = XmlStaff 
-        . addXStaffInfo
+        . addStaffInfo
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
           -- FIXME
-          addXStaffInfo  = (,) $ XStaffInfo { x_staffName = "TODO not used", x_staffClef = (MusicXml.GClef, 2) } -- TODO guess clef
+          addStaffInfo  = (,) $ StaffInfo { staffClef = (MusicXml.GClef, 2) } -- TODO guess clef
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature
         = XmlBar 
-        . addXBarInfo 
+        . addBarInfo 
         . quantizeBar
        where
-         addXBarInfo = (,) $ XBarInfo timeSignature
+         addBarInfo = (,) $ BarInfo timeSignature
 
       quantizeBar = mapWithDur XmlContext . rewrite . handleErrors . quantize . view eventsV
         where
