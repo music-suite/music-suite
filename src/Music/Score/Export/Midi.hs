@@ -184,11 +184,13 @@ instance HasBackendNote Midi Double where
   exportNote b = exportNote b . fmap (toInteger . round)
   exportChord b = exportChord b . fmap (fmap (toInteger . round))
 
-instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Int) a) where
-  exportNote b (Identity (DynamicT (Sum v, x))) = setV v <$> exportNote b (Identity x)
+instance HasBackendNote Midi a => HasBackendNote Midi (Behavior a) where
+  exportNote b = exportNote b . fmap (! 0)
+  exportChord b = exportChord b . fmap (fmap (! 0))
 
-instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Double) a) where
-  exportNote b (Identity (DynamicT (Sum v, x))) = setV ({-round $ v*127-}64) <$> exportNote b (Identity x)
+instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT b a) where
+  -- TODO
+  exportNote b (Identity (DynamicT (_, x))) = setV ({-round $ v*127-}64) <$> exportNote b (Identity x)
 
 instance HasBackendNote Midi a => HasBackendNote Midi (ArticulationT b a) where
   exportNote b (Identity (ArticulationT (_, x))) = exportNote b (Identity x)

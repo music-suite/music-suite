@@ -148,12 +148,20 @@ instance (HasPitches a b) => HasPitches (ColorT a) (ColorT b) where
   pitches = _Wrapped . pitches
 instance (HasPitch a b) => HasPitch (ColorT a) (ColorT b) where
   pitch = _Wrapped . pitch
+
 type instance Dynamic (ColorT a)        = Dynamic a
 type instance SetDynamic g (ColorT a)   = ColorT (SetDynamic g a)
 instance (HasDynamics a b) => HasDynamics (ColorT a) (ColorT b) where
   dynamics = _Wrapped . dynamics
 instance (HasDynamic a b) => HasDynamic (ColorT a) (ColorT b) where
   dynamic = _Wrapped . dynamic
+
+type instance Articulation (ColorT a)        = Articulation a
+type instance SetArticulation g (ColorT a)   = ColorT (SetArticulation g a)
+instance (HasArticulations a b) => HasArticulations (ColorT a) (ColorT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (ColorT a) (ColorT b) where
+  articulation = _Wrapped . articulation
 
 
 -- -------------------------------------------------------------------------------------
