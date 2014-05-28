@@ -437,16 +437,16 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
 type HasMusicXml a = (HasBackendNote MusicXml (BackendScoreEvent MusicXml a), HasBackendScore MusicXml a)
 
 -- |
--- Convert a score to a MusicXml string.
---
-toMusicXmlString :: HasMusicXml a => a -> String
-toMusicXmlString = MusicXml.showXml . toMusicXml
-
--- |
 -- Convert a score to a MusicXml representation.
 --
 toMusicXml :: HasMusicXml a => a -> MusicXml.Score
 toMusicXml = export (undefined::MusicXml)
+
+-- |
+-- Convert a score to a MusicXml string.
+--
+toMusicXmlString :: HasMusicXml a => a -> String
+toMusicXmlString = MusicXml.showXml . toMusicXml
 
 -- |
 -- Convert a score to a MusicXml representaiton and print it on the standard output.
