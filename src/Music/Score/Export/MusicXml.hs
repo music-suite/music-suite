@@ -168,11 +168,24 @@ finalizeStaff (XmlStaff (info, x))
   = id 
   -- . addPartName (x_staffName info) 
   -- . addClef (x_staffClef info)
-  -- . mconcat 
+  -- . mconcat
+  . addStartInfo
   . map finalizeBar $ x
   where
     -- TODO name
     -- TODO clef
+
+    addStartInfo :: [MusicXml.Music] -> [MusicXml.Music]
+    addStartInfo []     = []
+    addStartInfo (x:xs) = (startInfo <> x):xs
+
+    startInfo :: MusicXml.Music
+    startInfo = mempty
+        <> MusicXml.defaultKey
+        <> MusicXml.defaultDivisions
+        <> MusicXml.metronome (1/4) 60
+        -- <> Xml.commonTime
+
 
 finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
 finalizeBar (XmlBar (XBarInfo timeSignature, x))
@@ -188,12 +201,15 @@ finalizeBar (XmlBar (XBarInfo timeSignature, x))
 renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
 renderBarMusic = go
   where
-    go (Beat d x)            = x
-    go (Dotted n (Beat d x)) = x
+    go (Beat d x)            = setDefaultVoice x
+    go (Dotted n (Beat d x)) = setDefaultVoice x
     go (Group rs)            = mconcat $ map renderBarMusic rs
     go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
       where
         (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+
+setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+setDefaultVoice = MusicXml.setVoice 1
 
 -- TODO move
 second f (x, y) = (x, f y)
