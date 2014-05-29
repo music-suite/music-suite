@@ -19,6 +19,7 @@
 
 module Music.Score.Export.MusicXml (
     -- * MusicXml backend
+    HasMusicXmlInstrument(..),
     MusicXml,
     XmlContext(..),
     HasMusicXml,
@@ -86,6 +87,15 @@ import Music.Score.Ties
 import Music.Score.Export.Backend
 import Music.Score.Meta.Time
 import Music.Score.Phrases
+
+
+-- | 
+-- Extract instrument info as per "Music.Part"
+-- This is really crude, needs rethinking!
+--
+class HasMusicXmlInstrument a where
+  getMusicXmlClef :: a -> Int
+
 
 
 
@@ -221,7 +231,7 @@ second f (x, y) = (x, f y)
 instance (
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
-  HasOrdPart c, Tiable c, Show (Part a)
+  HasOrdPart c, Tiable c, Show (Part a), HasMusicXmlInstrument (Part a)
   )
   => HasBackendScore MusicXml (Score a) where
   type BackendScoreEvent MusicXml (Score a) = SetDynamic DynamicNotation a
@@ -242,7 +252,8 @@ instance (
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
-        Tiable a
+        Tiable a,
+        HasMusicXmlInstrument (Part a)
         ) 
         => [Maybe TimeSignature] 
         -> [Duration] 
@@ -253,6 +264,7 @@ instance (
       exportStaff :: Tiable a 
         => [Maybe TimeSignature] 
         -> [Duration] 
+        -> Int    -- ^ clef, as per Music.Parts
         -> MVoice a 
         -> XmlStaff (XmlContext a)
 
@@ -266,17 +278,20 @@ instance (
         -> Rhythm (XmlContext a)
 
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations
+        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part)
         . view singleMVoice
 
-      exportStaff timeSignatures barDurations
+      exportStaff timeSignatures barDurations clefId 
         = XmlStaff 
         . addStaffInfo
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
         where         
-          -- FIXME
-          addStaffInfo  = (,) $ StaffInfo { staffClef = (MusicXml.GClef, 2) } -- TODO guess clef
+          clef = case clefId of
+            0 -> (MusicXml.GClef, 2)
+            1 -> (MusicXml.CClef, 3)
+            2 -> (MusicXml.FClef, 4)
+          addStaffInfo  = (,) $ StaffInfo { staffClef = clef }
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature

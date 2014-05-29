@@ -19,6 +19,7 @@
 
 module Music.Score.Export.Lilypond (
     -- * Lilypond backend
+    HasLilypondInstrument(..),
     Lilypond,
     LyContext(..),
     HasLilypond,
@@ -97,8 +98,12 @@ import Music.Score.Phrases
 
 
 
-
-
+-- | 
+-- Extract instrument info as per "Music.Part"
+-- This is really crude, needs rethinking!
+--
+class HasLilypondInstrument a where
+  getLilypondClef :: a -> Int
 
 
 {-
@@ -204,7 +209,7 @@ second f (x, y) = (x, f y)
 instance (
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
-  HasOrdPart c, Show (Part c), Tiable c
+  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c), Tiable c
   )
   => HasBackendScore Lilypond (Score a) where
   type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
@@ -222,7 +227,8 @@ instance (
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
-        Show (Part a), 
+        Show (Part a),
+        HasLilypondInstrument (Part a),
         Tiable a
         ) 
         => [Maybe TimeSignature] 
@@ -235,6 +241,7 @@ instance (
         => [Maybe TimeSignature] 
         -> [Duration] 
         -> String -- ^ name
+        -> Int    -- ^ clef, as per Music.Parts
         -> MVoice a 
         -> LyStaff (LyContext a)
 
@@ -248,16 +255,20 @@ instance (
         -> Rhythm (LyContext a)
 
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (show part)
+        = exportStaff timeSignatureMarks barDurations (show part) (getLilypondClef part)
         . view singleMVoice
 
-      exportStaff timeSignatures barDurations name 
+      exportStaff timeSignatures barDurations name clefId 
         = LyStaff 
         . addStaffInfo
         . zipWith exportBar timeSignatures 
         . splitIntoBars barDurations
-        where         
-          addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = Lilypond.Treble } -- TODO guess clef
+        where
+          clef = case clefId of
+            0 -> Lilypond.Treble
+            1 -> Lilypond.Alto
+            2 -> Lilypond.Bass
+          addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = clef }
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature
