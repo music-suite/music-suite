@@ -34,6 +34,8 @@ module Music.Time.Split (
 
       -- * The Splittable class
       Splittable(..),
+      splitAbs,
+      
       chunks,
   ) where
 
@@ -61,14 +63,19 @@ import           Data.VectorSpace        hiding (Sum (..))
 -- of the given duration and the rest.
 --
 -- For positioned values succh as 'Note', split cuts a value relative to its onset.
+-- To split at an absolute position, see 'splitAbs'.
 --
 --
 -- Law
 --
 -- @
 -- '_duration' ('beginning' t x) + '_duration' ('ending' t x) = '_duration' x
--- '_duration' ('beginning' t x) = t ``min`` '_duration' x
+-- '_duration' ('beginning' t x) = t ``min`` '_duration' x                    iff t >= 0
+-- '_duration' ('ending' t x)    = '_duration' x - (t ``min`` '_duration' x)    iff t >= 0
 -- @
+--
+-- (Note that any of these three laws can be derived from the other two, so it is
+-- sufficient to prove two!).
 --
 class Splittable a where
   split      :: Duration -> a -> (a, a)
@@ -77,13 +84,18 @@ class Splittable a where
   split   d x = (beginning d x, ending d x)
   beginning d = fst . split d
   ending    d = snd . split d
+-- TODO rename beginning/ending to fstSplit/sndSplit or similar
 
 instance Splittable Duration where
-  split x y = (x `min` y, y ^-^ (x `min` y))
+  -- Directly from the laws
+  -- Guard against t < 0
+  split t x = (t' `min` x, x ^-^ (t' `min` x))
+    where t' = t `max` 0
 
 instance Splittable Span where
-  -- split d (view range -> (t1, t2)) = (t1 <-> (t1 .+^ d), (t1 .+^ d) <-> t2)
-  split d' (view delta -> (t, d)) = let (d1, d2) = split d' d in (t >-> d1, (t.+^d1) >-> d2)
+  -- Splitting a span splits the duration
+  split pos (view delta -> (t, d)) = (t >-> d1, (t .+^ d1) >-> d2)
+    where (d1, d2) = split pos d
 
 instance (Ord k, Splittable a) => Splittable (Map k a) where
   split d = unzipR . Map.map (split d)
@@ -98,4 +110,9 @@ chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
 chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
+
+
+splitAbs :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
+splitAbs t x = split (t .-. _onset x) x
+
 

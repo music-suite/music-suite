@@ -73,6 +73,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Juxtapose   (scat)
 import           Music.Time.Meta
@@ -181,8 +182,10 @@ instance Reversible a => Reversible (Score a) where
   rev (Score (m,x)) = Score (rev m, rev x)
 
 instance Splittable a => Splittable (Score a) where
-  -- split (Score (m,x)) = unzipR $ Score (split m, split x)
-  split = error "No Score.split"
+  split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
+    where
+      (m1, m2) = split t m
+      (x1, x2) = split t x
 
 instance HasPosition (Score a) where
   _onset (Score (_,x))    = _onset x
@@ -294,8 +297,14 @@ instance HasDuration (NScore a) where
   _duration x = _offset x .-. _onset x
 
 instance Splittable a => Splittable (NScore a) where
-  split = undefined
-  -- TODO
+  split t (NScore notes) = over both (NScore . mfilter (not . isEmptyNote)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) notes
+    where
+      -- TODO move
+      isEmptyNote :: Note a -> Bool
+      isEmptyNote = isEmptySpan . view era
+      
+      isEmptySpan :: Span -> Bool
+      isEmptySpan (view range -> (t, u)) = t == u
 
 
 -- |
