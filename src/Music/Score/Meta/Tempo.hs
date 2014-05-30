@@ -106,7 +106,17 @@ instance Show Tempo where
             showR (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 instance Default Tempo where
-    def = metronome (1/1) 60
+    def = mempty
+
+instance Semigroup Tempo where
+    (<>) = mappend
+
+instance Monoid Tempo where
+    mempty = metronome (1/1) 60
+    a `mappend` b
+      | a == mempty = b
+      | b == mempty = a
+      | otherwise   = a
 
 -- | Create a tempo from a duration and a number of beats per minute.
 --
