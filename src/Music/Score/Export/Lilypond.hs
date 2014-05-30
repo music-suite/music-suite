@@ -61,7 +61,7 @@ import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
-import Music.Score.Convert (reactiveToVoice') -- TODO
+import Music.Score.Convert (reactiveToVoice', voiceToScore) -- TODO
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
 import Data.Semigroup.Instances
@@ -283,6 +283,16 @@ instance (
           -- FIXME propagate quantization errors
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e
           handleErrors (Right x) = x
+
+-- TODO customize and remove extraction-related constraints
+instance (
+  HasDynamicNotation a b c,
+  HasOrdPart a, Transformable a, Semigroup a,
+  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c), Tiable c
+  )
+  => HasBackendScore Lilypond (Voice a) where
+  type BackendScoreEvent Lilypond (Voice a) = SetDynamic DynamicNotation a
+  exportScore b = exportScore b . voiceToScore
 
 --------------------------------------------------------------------------------
 
