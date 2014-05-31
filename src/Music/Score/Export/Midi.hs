@@ -73,6 +73,8 @@ import Music.Score.Harmonics
 import Music.Score.Slide
 import Music.Score.Color
 import Music.Score.Ties
+import Music.Score.Meta
+import Music.Score.Meta.Tempo
 import Music.Score.Export.Backend
 
 
@@ -166,7 +168,11 @@ instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a)
 
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
   type BackendScoreEvent Midi (Score a) = a
-  exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' xs)
+  exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractParts' $ fixTempo xs)
+    where
+      -- We actually want to extract *all* tempo changes and transform the score appropriately
+      -- For the time being, we assume the whole score has the same tempo
+      fixTempo = stretch (tempoToDuration (metaAtStart xs))
 
 instance HasBackendNote Midi a => HasBackendNote Midi [a] where
   exportNote b ps = mconcat $ map (exportNote b) $ sequenceA ps

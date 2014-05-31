@@ -86,6 +86,7 @@ import Music.Score.Color
 import Music.Score.Ties
 import Music.Score.Export.Backend
 import Music.Score.Meta.Time
+import Music.Score.Meta.Tempo
 import Music.Score.Phrases
 
 
@@ -117,9 +118,10 @@ instance Show MusicXml.PartList where
 data MusicXml
 
 data ScoreInfo = ScoreInfo { scoreTitle :: String,
-                               scoreComposer :: String,
-                               scorePartList :: MusicXml.PartList
-                               }
+                             scoreComposer :: String,
+                             scorePartList :: MusicXml.PartList,
+                             scoreTempo    :: Tempo
+                             }
   deriving (Eq, Show)
 
 
@@ -163,17 +165,17 @@ instance HasBackend MusicXml where
 finalizeScore :: XmlScore MusicXml.Music -> MusicXml.Score
 finalizeScore (XmlScore (info, x)) 
   = MusicXml.fromParts title composer partList 
-  . map finalizeStaff $ x
+  . map (finalizeStaff tempo) $ x
   where
-    -- FIXME FIXME FIXME
-    title = scoreTitle info
+    title    = scoreTitle info
     composer = scoreComposer info
     partList = scorePartList info
+    tempo    = scoreTempo info
 
 -- TODO finalizeStaffGroup
 
-finalizeStaff :: XmlStaff MusicXml.Music -> [MusicXml.Music]
-finalizeStaff (XmlStaff (info, x)) 
+finalizeStaff :: Tempo -> XmlStaff MusicXml.Music -> [MusicXml.Music]
+finalizeStaff tempo (XmlStaff (info, x)) 
   = id 
   -- Staff name is not added here as MusicXML uses a separate part list
   . addStartInfo
@@ -197,8 +199,9 @@ finalizeStaff (XmlStaff (info, x))
     startInfo = mempty
         <> MusicXml.defaultDivisions
         <> MusicXml.defaultKey
-        <> MusicXml.metronome (1/4) 60
+        <> MusicXml.metronome (realToFrac nv) (realToFrac bpm)
         -- <> Xml.commonTime
+    (nv, bpm) = getTempo tempo
 
 
 finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
@@ -236,7 +239,7 @@ instance (
   => HasBackendScore MusicXml (Score a) where
   type BackendScoreEvent MusicXml (Score a) = SetDynamic DynamicNotation a
   exportScore b score = XmlScore 
-    . (ScoreInfo title composer partList,)
+    . (ScoreInfo title composer partList tempo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
@@ -247,6 +250,7 @@ instance (
       title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score
       composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart score
       partList = MusicXml.partList (fmap show $ allParts score)
+      tempo    = (metaAtStart score :: Tempo)
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 
 
 

@@ -172,7 +172,7 @@ tempo c x = tempoDuring (_getEra x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Tempo -> a -> a
-tempoDuring s c = addGlobalMetaNote $ view note (s, (optionFirst c))
+tempoDuring s c = addGlobalMetaNote $ view note (s, c)
 
 
 -- TODO move
@@ -180,6 +180,18 @@ inSpan :: Span -> Time -> Bool
 inSpan (view range -> (t,u)) x = t <= x && x <= u
 
 inSpan' (view range -> (t,u)) x = t <= x && x < u
+
+mkNote s x = view note (s, x)
+
+
+
+-- | Extract all tempi from the given score, using the given default tempo.
+-- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
+-- withTempo f = withGlobalMeta (f . fromMaybe def . fmap getFirst . getOption)
+
+renderTempo :: Score a -> Score a
+renderTempo = error "renderTempo: Not implemented"
+{-
 
 -- | Split a reactive into notes, as well as the values before and after the first/last update
 -- TODO fails if not positive
@@ -197,15 +209,6 @@ reactiveIn s r
             values = [x0] ++ xn
             in zipWith mkNote spans values
 
-mkNote s x = view note (s, x)
-
-
-
--- | Extract all tempi from the given score, using the given default tempo.
--- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
--- withTempo f = withGlobalMeta (f . fromMaybe def . fmap getFirst . getOption)
-
-renderTempo :: Score a -> Score a
 renderTempo sc =
     flip composed sc $ fmap renderTempoScore
         $ tempoRegions (_getEra sc)
@@ -284,6 +287,7 @@ data TempoRegion =
     deriving (Eq, Ord, Show)
 
 tempoRegionNotated (TempoRegion t u _ _) = t <-> u
+-}
 
 -- span :: Iso (Note a) (Note b) Span Span
 
@@ -309,8 +313,8 @@ tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 
 -- TODO consolidate
-optionFirst = Option . Just . First
-unOptionFirst = fmap getFirst . getOption
+-- optionFirst = Option . Just . First
+-- unOptionFirst = fmap getFirst . getOption
 
 -- TODO move
 frl []  = error "frl: No value"
