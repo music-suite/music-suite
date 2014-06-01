@@ -114,10 +114,10 @@ instance Transformable Attribute where
   transform s (TAttribute a) = TAttribute (transform s a)
 
 instance Splittable Attribute where
-  split = error "Not implemented (Splittable Attribute)"
+  split _ x = (x,x)
 
 instance Reversible Attribute where
-  rev = error "Not implemented (Reversible Attribute)"
+  rev = id
 
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta (Map String Attribute)
