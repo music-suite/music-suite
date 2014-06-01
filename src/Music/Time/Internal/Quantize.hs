@@ -35,6 +35,9 @@ module Music.Time.Internal.Quantize (
         quantize,
         rewrite,
         dotMod,
+        
+        -- * Utility
+        drawRhythm
   ) where
 
 import           Prelude             hiding (concat, concatMap, foldl, foldr,
@@ -221,10 +224,10 @@ testQuantize x = case fmap rewrite $ quantize' (atEnd rhythm) $ fmap (\x -> (x,(
 
 
 konstNumDotsAllowed :: [Int]
-konstNumDotsAllowed = [1..2]
+konstNumDotsAllowed = [1..4]
 
 konstBounds :: [Duration]
-konstBounds = [ 1/2, 1/4, 1/8 ]
+konstBounds = [ 1/2, 1/4, 1/8, 1/16 ]
 
 konstTuplets :: [Duration]
 konstTuplets = [ 2/3, 4/5, 4/7, 8/9, 8/11, 8/13, 8/15, 16/17, 16/18, 16/19, 16/21, 16/23 ]
