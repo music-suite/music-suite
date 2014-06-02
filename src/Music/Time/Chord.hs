@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -34,6 +35,7 @@ module Music.Time.Chord (
     Chord,
     -- * Construction
     chord,
+    unsafeChord,
 
   ) where
 
@@ -65,6 +67,10 @@ import qualified Data.Foldable          as Foldable
 import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
+
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+
 
 -- |
 -- A 'Chord' is a parallel composition of values.
@@ -119,4 +125,10 @@ instance Reversible a => Reversible (Chord a) where
 chord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
 chord = _Wrapped
 
+-- TODO names are not consistent with other types
+unsafeChord :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
+unsafeChord = _Wrapped
 
+deriving instance IsPitch a => IsPitch (Chord a)	 
+deriving instance IsInterval a => IsInterval (Chord a)	 
+deriving instance IsDynamics a => IsDynamics (Chord a)
