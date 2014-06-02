@@ -115,10 +115,15 @@ type MidiContext = Identity
 -- | Every note may give rise to a number of messages. We represent this as a score of messages.
 type MidiEvent = Score Midi.Message
 
+-- | The MIDI channel allocation is somewhat simplistic.
+--   We use a dedicated channel and program number for each instrument (there *will* be colissions).
 type MidiInstr = (Midi.Channel, Midi.Preset)
 
 -- | A Midi file consist of a number of tracks.
 --   Channel and preset info is passed on from exportScore to finalizeExport using this type.
+--
+--   TODO also pass meta-info etc.
+--
 data MidiScore a = MidiScore [(MidiInstr, Score a)]
   deriving Functor
 
