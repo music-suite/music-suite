@@ -90,31 +90,32 @@ instance Monoid ArticulationNotation where
   x `mappend` ArticulationNotation ([], []) = x
   x `mappend` y = x
 
-notateArticulation :: (Ord a, a ~ (Product Double, Product Double)) => Ctxt a -> ArticulationNotation
-notateArticulation x = mempty
-  -- = ArticulationNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
-  -- (Nothing, y, Nothing) -> ([], True)
-  -- (Nothing, y, Just z ) -> case (y `compare` z) of
-  --   LT      -> ([BeginCresc], True)
-  --   EQ      -> ([],           True)
-  --   GT      -> ([BeginDim],   True)
-  -- (Just x,  y, Just z ) -> case (x `compare` y, y `compare` z) of
-  --   (LT,LT) -> ([NoCrescDim], False)
-  --   (LT,EQ) -> ([EndCresc],   True)
-  --   (EQ,LT) -> ([BeginCresc], False{-True-})
-  -- 
-  --   (GT,GT) -> ([NoCrescDim], False)
-  --   (GT,EQ) -> ([EndDim],     True)
-  --   (EQ,GT) -> ([BeginDim],   False{-True-})
-  -- 
-  --   (EQ,EQ) -> ([],                   False)
-  --   (LT,GT) -> ([EndCresc, BeginDim], True)
-  --   (GT,LT) -> ([EndDim, BeginCresc], True)
-  -- 
-  -- 
-  -- (Just x,  y, Nothing) -> case (x `compare` y) of
-  --   LT      -> ([EndCresc],   True)
-  --   EQ      -> ([],           False)
-  --   GT      -> ([EndDim],     True)
-  --                                     
+{-
+  TODO these should be lens/methods in Articulated
+-}
+_accentuation = getProduct . fst
+_separation   = getProduct . snd
 
+-- TODO add slurs if separation is below some value...
+
+getSeparationMarks :: Double -> [Mark]
+getSeparationMarks x
+  | x <= 0              = []
+  | 0   < x && x < 0.3  = [Staccato]
+  | 0.3 < x && x < 0.6  = [MoltoStaccato]
+  | otherwise           = []
+
+getAccentMarks :: Double -> [Mark]
+getAccentMarks x
+  | x <= 0              = []
+  | 0   < x && x < 0.3  = [Accent]
+  | 0.3 < x && x < 0.6  = [Marcato]
+  | otherwise           = []
+
+
+notateArticulation :: (Ord a, a ~ (Product Double, Product Double)) => Ctxt a -> ArticulationNotation
+notateArticulation x = ArticulationNotation 
+  (
+  [NoSlur], 
+  getSeparationMarks (_separation $ extractCtxt x) <> getAccentMarks (_accentuation $ extractCtxt x)
+  )
