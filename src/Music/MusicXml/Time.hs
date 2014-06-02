@@ -79,6 +79,9 @@ deriving instance Eq            Tempo
 deriving instance Ord           Tempo
 deriving instance Num           Tempo
 deriving instance Enum          Tempo
+deriving instance Fractional    Tempo
+deriving instance Real          Tempo
+deriving instance RealFrac      Tempo
 deriving instance Show          Tempo
 
 
