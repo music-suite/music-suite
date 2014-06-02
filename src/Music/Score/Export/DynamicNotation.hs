@@ -49,6 +49,8 @@ data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
 
 instance Monoid CrescDim where
   mempty = NoCrescDim
+  mappend NoCrescDim a = a
+  mappend a NoCrescDim = a
   mappend a _ = a
 
 newtype DynamicNotation 

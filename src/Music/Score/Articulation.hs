@@ -244,8 +244,8 @@ type family Separation (a :: *) :: *
 
 type instance Accentuation () = ()
 type instance Separation   () = ()
-type instance Accentuation (Double, Double) = Double
-type instance Separation   (Double, Double) = Double
+type instance Accentuation (a, b) = a
+type instance Separation   (a, b) = b
 
 -- TODO move
 instance VectorSpace () where

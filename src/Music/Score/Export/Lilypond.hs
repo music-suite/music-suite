@@ -75,6 +75,7 @@ import qualified Data.List
 import Music.Score.Convert (reactiveToVoice', voiceToScore) -- TODO
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
+import Music.Score.Export.ArticulationNotation
 import Data.Semigroup.Instances
 
 import Music.Score.Export.Backend
@@ -217,16 +218,109 @@ instance HasBackend Lilypond where
 -- TODO move
 second f (x, y) = (x, f y)
 
-instance (
+type HasArticulation' a = HasArticulation a a
+
+type HasArticulation3 a a' a'' = (
+  HasArticulation' a,
+  HasArticulation a  a',
+  HasArticulation a' a'',
+  HasArticulation a  a''
+  )
+
+type HasArticulationNotation a b c = (
+  HasArticulation3 a b c,
+  Articulation b  ~ Ctxt (Articulation a),
+  Articulation c ~ ArticulationNotation,
+  Real (Articulation a),
+  Part (SetArticulation (Articulation a) a) ~ Part (SetArticulation ArticulationNotation b)
+ )
+
+
+instance (         
+  SetArticulation
+                          ArticulationNotation (SetDynamic DynamicNotation b)
+                        ~ SetArticulation
+                            ArticulationNotation
+                            (SetArticulation
+                               (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                                Articulation (SetDynamic DynamicNotation b),
+                                Maybe (Articulation (SetDynamic DynamicNotation b)))
+                               (SetDynamic DynamicNotation b)),
+  Part
+                        (SetArticulation
+                           ArticulationNotation
+                           (SetArticulation
+                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                               Articulation (SetDynamic DynamicNotation b),
+                               Maybe (Articulation (SetDynamic DynamicNotation b)))
+                              (SetDynamic DynamicNotation b)))
+                      ~ Part (SetDynamic DynamicNotation b),
+  Articulation
+                        (SetArticulation
+                           ArticulationNotation
+                           (SetArticulation
+                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                               Articulation (SetDynamic DynamicNotation b),
+                               Maybe (Articulation (SetDynamic DynamicNotation b)))
+                              (SetDynamic DynamicNotation b)))
+                      ~ ArticulationNotation,
+  Articulation
+                        (SetArticulation
+                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                            Articulation (SetDynamic DynamicNotation b),
+                            Maybe (Articulation (SetDynamic DynamicNotation b)))
+                           (SetDynamic DynamicNotation b))
+                      ~ (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                         Articulation (SetDynamic DynamicNotation b),
+                         Maybe (Articulation (SetDynamic DynamicNotation b))),
+  Tiable
+                        (SetArticulation
+                           ArticulationNotation
+                           (SetArticulation
+                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                               Articulation (SetDynamic DynamicNotation b),
+                               Maybe (Articulation (SetDynamic DynamicNotation b)))
+                              (SetDynamic DynamicNotation b))),
+  HasArticulation
+                        (SetDynamic DynamicNotation b)
+                        (SetArticulation
+                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                            Articulation (SetDynamic DynamicNotation b),
+                            Maybe (Articulation (SetDynamic DynamicNotation b)))
+                           (SetDynamic DynamicNotation b)),
+  HasArticulations
+                        (SetArticulation
+                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                            Articulation (SetDynamic DynamicNotation b),
+                            Maybe (Articulation (SetDynamic DynamicNotation b)))
+                           (SetDynamic DynamicNotation b))
+                        (SetArticulation
+                           ArticulationNotation
+                           (SetArticulation
+                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
+                               Articulation (SetDynamic DynamicNotation b),
+                               Maybe (Articulation (SetDynamic DynamicNotation b)))
+                              (SetDynamic DynamicNotation b))),
+  HasArticulation
+                        (SetDynamic DynamicNotation b) (SetDynamic DynamicNotation b),
+
+
+  -- TODO generalize
+  (Articulation (SetDynamic DynamicNotation b)) ~ (Product Double, Product Double),
+
+  -- HasArticulationNotation c d e,
+
   HasDynamicNotation a b c,
   HasOrdPart a, Transformable a, Semigroup a,
   HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c), Tiable c
   )
   => HasBackendScore Lilypond (Score a) where
-  type BackendScoreEvent Lilypond (Score a) = SetDynamic DynamicNotation a
+  type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
   exportScore b score = LyScore 
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
+    . map (second (over articulations notateArticulation)) 
+    . map (second (preserveMeta addArtCon))
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
@@ -295,6 +389,17 @@ instance (
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e
           handleErrors (Right x) = x
 
+-- TODO move
+addArtCon :: (
+  HasPhrases s t a b, HasArticulation a a, HasArticulation a b, 
+  Articulation a ~ d, Articulation b ~ Ctxt d
+  ) => s -> t
+addArtCon = over (phrases.varticulation) withContext
+varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
+
+
+
+{-
 -- TODO customize and remove extraction-related constraints
 instance (
   HasDynamicNotation a b c,
@@ -304,6 +409,7 @@ instance (
   => HasBackendScore Lilypond (Voice a) where
   type BackendScoreEvent Lilypond (Voice a) = SetDynamic DynamicNotation a
   exportScore b = exportScore b . voiceToScore
+-}
 
 --------------------------------------------------------------------------------
 
@@ -393,9 +499,13 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
 
-instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT n a) where
-  exportNote b = exportNote b . fmap extract
-
+instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT ArticulationNotation a) where
+  exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
+    where
+      notate :: ArticulationNotation -> LyMusic -> LyMusic
+      notate _ = id
+      -- TODO
+    
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
     where

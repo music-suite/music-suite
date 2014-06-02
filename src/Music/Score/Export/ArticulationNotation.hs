@@ -31,7 +31,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Export.ArticulationNotation (
-    CrescDim(..),
+    Slur(..),
+    Mark(..),
     ArticulationNotation(..),
     notateArticulation,
   ) where
@@ -43,23 +44,32 @@ import Music.Score.Articulation
 import Music.Score.Ties
 import Music.Time
 
+-- TODO need NoSlur etc?
 
 data Slur = NoSlur | BeginSlur | EndSlur
   deriving (Eq, Ord, Show)
 
 -- data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
-data Mark = NoMark Staccato | MoltoStaccato | Marcato | Accent | Tenuto
+data Mark = NoMark | Staccato | MoltoStaccato | Marcato | Accent | Tenuto
   deriving (Eq, Ord, Show)
 
-instance Monoid CrescDim where
-  mempty = NoCrescDim
+instance Monoid Slur where
+  mempty = NoSlur
+  mappend NoSlur a = a
+  mappend a NoSlur = a
+  mappend a _ = a
+
+instance Monoid Mark where
+  mempty = NoMark
+  mappend NoMark a = a
+  mappend a NoMark = a
   mappend a _ = a
 
 newtype ArticulationNotation 
-  = ArticulationNotation { getArticulationNotation :: ([Slurs], [Mark]) }
+  = ArticulationNotation { getArticulationNotation :: ([Slur], [Mark]) }
 
 instance Wrapped ArticulationNotation where
-  type Unwrapped ArticulationNotation = ([CrescDim], Maybe Double)
+  type Unwrapped ArticulationNotation = ([Slur], [Mark])
   _Wrapped' = iso getArticulationNotation ArticulationNotation
 
 instance Rewrapped ArticulationNotation ArticulationNotation
@@ -72,16 +82,16 @@ instance Transformable ArticulationNotation where
 instance Tiable ArticulationNotation where
   toTied (ArticulationNotation (beginEnd, marks)) 
     = (ArticulationNotation (beginEnd, marks), 
-       ArticulationNotation (mempty, Nothing))
+       ArticulationNotation (mempty, mempty))
 
 instance Monoid ArticulationNotation where
-  mempty = ArticulationNotation ([], Nothing)
-  ArticulationNotation ([], Nothing) `mappend` y = y
-  x `mappend` ArticulationNotation ([], Nothing) = x
+  mempty = ArticulationNotation ([], [])
+  ArticulationNotation ([], []) `mappend` y = y
+  x `mappend` ArticulationNotation ([], []) = x
   x `mappend` y = x
 
-notateArticulation :: (Ord a, Real a) => Ctxt a -> ArticulationNotation
-notateArticulation x = NoMark
+notateArticulation :: (Ord a, a ~ (Product Double, Product Double)) => Ctxt a -> ArticulationNotation
+notateArticulation x = mempty
   -- = ArticulationNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
   -- (Nothing, y, Nothing) -> ([], True)
   -- (Nothing, y, Just z ) -> case (y `compare` z) of
