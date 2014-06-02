@@ -1,3 +1,4 @@
+
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
@@ -7,8 +8,6 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
--- {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -17,6 +16,25 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- A backend to generate SuperCollider code.
+--
+-- This is a very simple thing that generates /patterns/ (which are basically lazy event 
+-- lists) in the SuperCollider language.
+--
+-- It would of course also be nice to have a backend based the Haskell bindings (see
+-- <http://hackage.haskell.org/package/hsc3>). In that case we could bypass the
+-- SuperCollider language and just use /scsynth/.
+--
 module Music.Score.Export.SuperCollider (
     -- * SuperCollider patterns backend
     SuperCollider,
@@ -61,7 +79,6 @@ import Control.Monad
 import Data.VectorSpace hiding (Sum(..))
 import Data.AffineSpace
 import Control.Lens hiding (rewrite)
--- import Control.Lens.Operators hiding ((|>))
 
 import Music.Time
 import Music.Score.Meta
@@ -79,18 +96,6 @@ import Music.Score.Ties
 import Music.Score.Export.Backend
 import Music.Score.Meta.Time
 import Music.Score.Phrases
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 -- | A token to represent the SuperCollider backend.
@@ -198,9 +203,19 @@ instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (ColorT 
 
 type HasSuperCollider a = (HasBackendNote SuperCollider (BackendScoreEvent SuperCollider a), HasBackendScore SuperCollider a)
 
+-- |
+-- Convert music to a SuperCollider code string.
+--
 toSuperCollider :: HasSuperCollider a => a -> String
 toSuperCollider = export (undefined::SuperCollider)
 
+-- |
+-- Write music as a SuperCollider code string to the given path.
+--
+-- @
+-- writeSuperCollider \"test.sc\" $ scat [c,d,e]
+-- @
+--
 writeSuperCollider :: HasSuperCollider a => FilePath -> a -> IO ()
 writeSuperCollider path score =
   writeFile path ("(" ++ toSuperCollider score ++ ").play")

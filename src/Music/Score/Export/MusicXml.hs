@@ -1,3 +1,4 @@
+
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
@@ -7,8 +8,6 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
--- {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -16,6 +15,18 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-------------------------------------------------------------------------------------
 
 module Music.Score.Export.MusicXml (
     -- * MusicXml backend
@@ -527,15 +538,6 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 -- End internal
 
 
-
-
-
-
--- 
--- 
--- 
--- 
--- 
 -- -- main = putStrLn $ show $ view notes $ simultaneous
 -- main = do
 --   openLilypond music
@@ -576,10 +578,5 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 -- open = do
 --   -- showLilypond
 --   openLilypond
--- 
--- 
--- 
--- 
-
-
+--
 

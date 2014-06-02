@@ -18,6 +18,17 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-------------------------------------------------------------------------------------
 
 module Music.Score.Export.DynamicNotation (
     CrescDim(..),
@@ -25,30 +36,6 @@ module Music.Score.Export.DynamicNotation (
     notateDynamic,
   ) where
 
--- import           Music.Dynamics.Literal
--- import           Music.Pitch.Literal
--- 
--- import qualified Codec.Midi                    as Midi
--- import           Control.Arrow                 ((***))
--- import           Control.Comonad               (Comonad (..), extract)
--- import           Data.Colour.Names             as Color
--- import           Data.Default
--- import           Data.Foldable                 (Foldable)
--- import qualified Data.Foldable
--- import           Data.Functor.Couple
--- import           Data.Maybe
--- import           Data.Ratio
--- import           Data.Traversable              (Traversable, sequenceA)
--- import qualified Music.Lilypond                as Lilypond
--- import           Music.Score.Internal.Export   hiding (MVoice)
--- import           Music.Time.Internal.Transform (whilstLD)
--- import           Music.Score.Internal.Util     (composed, unRatio)
--- import           System.Process
--- import           Music.Time.Internal.Quantize
--- import qualified Text.Pretty                   as Pretty
--- import qualified Data.List
--- import Music.Score.Convert (reactiveToVoice') -- TODO
--- import Music.Score.Internal.Util (swap, retainUpdates)
 import Data.Semigroup
 import Control.Lens -- ()
 import Music.Score.Dynamics
@@ -125,3 +112,4 @@ mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
 
 extractCtxt :: Ctxt a -> a
 extractCtxt (_,x,_) = x
+

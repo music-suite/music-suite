@@ -1,3 +1,4 @@
+
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
@@ -7,8 +8,6 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
--- {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -17,6 +16,20 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- A simple backend that supports rendering scores to lists of pitch and velocity.
+--
+-- This exists as a sanity check for the 'Backend' classes, and as an example.
+--
 module Music.Score.Export.NoteList (
     -- * Note list backend
     NoteList,
@@ -83,17 +96,8 @@ import Music.Score.Meta.Time
 import Music.Score.Phrases
 
 
-
-
-
-
-
-
-
 -- |
--- A simple backend that supports rendering scores to lists of pitch and velocity.
---
--- This exists as a sanity check for the 'Backend' classes, and as an example.
+-- A token to represent the note list backend.
 --
 data NoteList
 
@@ -148,7 +152,10 @@ instance HasBackendNote NoteList a => HasBackendNote NoteList (TieT a) where
 
 instance HasBackendNote NoteList a => HasBackendNote NoteList (ColorT a) where
   exportNote b = exportNote b . fmap extract 
-  
+
+-- |
+-- Export music as a note list.
+--  
 toNoteList :: (HasBackendNote NoteList (BackendScoreEvent NoteList s), HasBackendScore NoteList s) => s -> [(Int, Int)]
 toNoteList = over (mapped._1) getSum . export (undefined::NoteList)
 

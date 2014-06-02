@@ -1,6 +1,4 @@
 
-
-
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE ConstraintKinds            #-}
@@ -10,8 +8,6 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
--- {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -19,6 +15,18 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+
+-------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund 2012-2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-------------------------------------------------------------------------------------
 
 module Music.Score.Export.Backend (
     HasOrdPart,
@@ -177,6 +185,15 @@ class Functor (BackendScore b) => HasBackend b where
 
   finalizeExport :: b -> BackendScore b (BackendNote b) -> BackendMusic b
 
+-- |
+-- A class for musical container types with an external representation.
+--
+-- The first type parameter is simply a token representing the external format,
+-- and the second parameter is the type being represented. In a sense, the first
+-- parameter saves us from defining a separate class for each external representation,
+-- so rather than having `HasMidiScore`, `HasMusicXmlScore` and so on, we have 
+-- 'HasBackendScore' 'Midi', 'HasBackendScore' 'MusicXml' and so on.
+--
 class (HasBackend b) => HasBackendScore b s where
   type BackendScoreEvent b s :: *
   exportScore :: b -> s -> BackendScore b (BackendContext b (BackendScoreEvent b s))
@@ -186,6 +203,11 @@ class (HasBackend b) => HasBackendNote b a where
   exportChord :: b -> BackendContext b [a] -> BackendNote b
   exportChord = error "Not implemented: exportChord"
 
+-- |
+-- This is the primitive music export function.
+--
+-- Backend developers are encouraged to provide wrappers on the form 'toX', 'writeX' etc.
+--
 export :: (HasBackendScore b s, HasBackendNote b (BackendScoreEvent b s)) => b -> s -> BackendMusic b
 export b = finalizeExport b . export'
   where
