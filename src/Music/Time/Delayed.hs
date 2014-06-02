@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -63,6 +64,9 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
+
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
 
 
 -- |
@@ -131,3 +135,8 @@ delayedValue = lens runDelayed (flip $ _delayed . const)
 
 runDelayed :: Transformable a => Delayed a -> a
 runDelayed = uncurry delayTime . view _Wrapped
+
+
+deriving instance IsPitch a => IsPitch (Delayed a)	 
+deriving instance IsInterval a => IsInterval (Delayed a)	 
+deriving instance IsDynamics a => IsDynamics (Delayed a)
