@@ -460,7 +460,9 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
         | ta        = id
         | otherwise = id
 
-
+-- |
+-- Constraint for types that has a Lilypond representation.
+--
 type HasLilypond a = (HasBackendNote Lilypond (BackendScoreEvent Lilypond a), HasBackendScore Lilypond a)
 
 -- |

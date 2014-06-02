@@ -195,9 +195,32 @@ class Functor (BackendScore b) => HasBackend b where
 -- 'HasBackendScore' 'Midi', 'HasBackendScore' 'MusicXml' and so on.
 --
 class (HasBackend b) => HasBackendScore b s where
+
+  -- | Type of events in this score type.
+  --   This is generally just the parameterized type in a container, so we have
+  --   
+  --   @
+  --   BackendScoreEvent (Score a) ~ a
+  --   BackendScoreEvent (Voice a) ~ a
+  --   @
+  --
+  --   and so on.
+  --
+  --   It is defined as a type function so that instances can put constraints on the
+  --   saturated type, rather than being parametric over all note types.
+  --
   type BackendScoreEvent b s :: *
   exportScore :: b -> s -> BackendScore b (BackendContext b (BackendScoreEvent b s))
 
+-- |
+-- A class for musical event types with an external representation.
+--
+-- The first type parameter is simply a token representing the external format,
+-- and the second parameter is the type being represented. In a sense, the first
+-- parameter saves us from defining a separate class for each external representation,
+-- so rather than having `HasMidiNote`, `HasMusicXmlNote` and so on, we have 
+-- 'HasBackendNote' 'Midi', 'HasBackendNote' 'MusicXml' and so on.
+--
 class (HasBackend b) => HasBackendNote b a where
   exportNote  :: b -> BackendContext b a   -> BackendNote b
   exportChord :: b -> BackendContext b [a] -> BackendNote b

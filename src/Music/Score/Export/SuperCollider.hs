@@ -201,6 +201,10 @@ instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (TieT a)
 instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider (ColorT a) where
   exportNote b = exportNote b . fmap extract
 
+
+-- |
+-- Constraint for types that has a SuperCollider representation.
+--
 type HasSuperCollider a = (HasBackendNote SuperCollider (BackendScoreEvent SuperCollider a), HasBackendScore SuperCollider a)
 
 -- |

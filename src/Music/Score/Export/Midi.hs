@@ -287,6 +287,9 @@ setC c = go
     go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
     go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
 
+-- |
+-- Constraint for types that has a MIDI representation.
+--
 type HasMidi a = (HasBackendNote Midi (BackendScoreEvent Midi a), HasBackendScore Midi a)
 
 toMidi :: HasMidi a => a -> Midi.Midi

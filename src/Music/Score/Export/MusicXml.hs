@@ -484,6 +484,9 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
         | ta        = MusicXml.endTie
         | otherwise = id
 
+-- |
+-- Constraint for types that has a MusicXML representation.
+--
 type HasMusicXml a = (HasBackendNote MusicXml (BackendScoreEvent MusicXml a), HasBackendScore MusicXml a)
 
 -- |
