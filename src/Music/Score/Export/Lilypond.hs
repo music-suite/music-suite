@@ -156,9 +156,12 @@ data LyBar a = LyBar { getLyBar :: (BarInfo, Rhythm a) }
 data LyContext a = LyContext Duration (Maybe a)
   deriving (Functor, Foldable, Traversable, Eq, Show)
 
+{-
+TODO move
 instance Monoid Lilypond.Music where
   mempty      = pcatLy []
   mappend x y = pcatLy [x,y]
+-}
 
 type LyMusic = Lilypond.Music
 
@@ -503,8 +506,25 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
   exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
     where
       notate :: ArticulationNotation -> LyMusic -> LyMusic
-      notate _ = id
-      -- TODO
+      notate (ArticulationNotation (slurs, marks))
+        = rcomposed (fmap notateMark marks) 
+        . rcomposed (fmap notateSlur slurs) 
+        
+      notateMark mark = case mark of
+        NoMark         -> id
+        Staccato       -> Lilypond.addStaccato
+        MoltoStaccato  -> Lilypond.addStaccatissimo
+        Marcato        -> Lilypond.addMarcato
+        Accent         -> Lilypond.addAccent
+        Tenuto         -> Lilypond.addTenuto
+
+      notateSlur slurs = case slurs of
+        NoSlur    -> id
+        BeginSlur -> Lilypond.beginSlur
+        EndSlur   -> Lilypond.endSlur
+
+      -- Use rcomposed as notateDynamic returns "mark" order, not application order
+      rcomposed = composed . reverse
     
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
