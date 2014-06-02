@@ -487,31 +487,31 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
 type HasMusicXml a = (HasBackendNote MusicXml (BackendScoreEvent MusicXml a), HasBackendScore MusicXml a)
 
 -- |
--- Convert a score to a MusicXml representation.
+-- Convert a score to a MusicXML score.
 --
 toMusicXml :: HasMusicXml a => a -> MusicXml.Score
 toMusicXml = export (undefined::MusicXml)
 
 -- |
--- Convert a score to a MusicXml string.
+-- Convert a score to a MusicXML string.
 --
 toMusicXmlString :: HasMusicXml a => a -> String
 toMusicXmlString = MusicXml.showXml . toMusicXml
 
 -- |
--- Convert a score to a MusicXml representaiton and print it on the standard output.
+-- Convert a score to MusicXML string and print it on the standard output.
 --
 showMusicXml :: HasMusicXml a => a -> IO ()
 showMusicXml = putStrLn . toMusicXmlString
 
 -- |
--- Convert a score to a MusicXml representation and write to a file.
+-- Convert a score to MusicXML and write to a file.
 --
 writeMusicXml :: HasMusicXml a => FilePath -> a -> IO ()
 writeMusicXml path = writeFile path . toMusicXmlString
 
 -- |
--- Typeset a score using MusicXml and open it.
+-- Typeset a score using MusicXML and open it.
 --
 -- (This is simple wrapper around 'writeMusicXml' that may not work well on all platforms.)
 --

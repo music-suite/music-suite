@@ -220,6 +220,11 @@ writeSuperCollider :: HasSuperCollider a => FilePath -> a -> IO ()
 writeSuperCollider path score =
   writeFile path ("(" ++ toSuperCollider score ++ ").play")
 
+-- |
+-- Write music as a SuperCollider code string and open it.
+--
+-- (This is simple wrapper around 'writeSuperCollider' that may not work well on all platforms.)
+--
 openSuperCollider :: HasSuperCollider a => a -> IO ()
 openSuperCollider = writeSuperCollider "test.sc"
 
