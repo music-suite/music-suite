@@ -105,6 +105,7 @@ import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
 import           Music.Score.Tremolo
+import           Music.Score.Phrases
 import           Music.Time
 import           Music.Time.Internal.Transform
 
@@ -488,15 +489,8 @@ fifthsAbove n = above (_P8^*n)
 fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsBelow n = below (_P8^*n)
 
--- |
-augmentIntervals :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals = error "Not implemented: augmentIntervals"
--- TODO generalize to any type where we can traverse phrases of something that has pitch
 
 
--- TODO augment/diminish intervals (requires phrase traversal)
--- TODO rotatePitch (requires phrase traversal)
--- TODO invert diatonically
 
 -- |
 -- Return the highest pitch in the given music.
@@ -517,4 +511,17 @@ meanPitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Pitch a
 meanPitch = mean . toListOf pitches'
   where
     mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
+
+
+augmentIntervals :: (HasPhrases' s a, Transposable a) => Interval a -> s -> s
+augmentIntervals x = over phrases (augmentIntervals' x)
+
+augmentIntervals' :: Transposable a => Interval a -> Voice a -> Voice a
+augmentIntervals' = error "Not implemented: augmentIntervals"
+-- TODO generalize to any type where we can traverse phrases of something that has pitch
+
+
+-- TODO augment/diminish intervals (requires phrase traversal)
+-- TODO rotatePitch (requires phrase traversal)
+-- TODO invert diatonically
 
