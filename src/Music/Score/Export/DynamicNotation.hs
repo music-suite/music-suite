@@ -37,6 +37,7 @@ module Music.Score.Export.DynamicNotation (
   ) where
 
 import Data.Semigroup
+import Data.Functor.Context
 import Control.Lens -- ()
 import Music.Score.Dynamics
 import Music.Score.Ties
@@ -44,6 +45,7 @@ import Music.Time
 
 
 data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
+  deriving (Eq, Ord, Show)
 
 instance Monoid CrescDim where
   mempty = NoCrescDim
@@ -104,12 +106,3 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     LT      -> ([EndCresc],   True)
     EQ      -> ([],           False)
     GT      -> ([EndDim],     True)
-
-
--- TODO consolidate
-mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
-mapCtxt f (a,b,c) = (fmap f a, f b, fmap f c)
-
-extractCtxt :: Ctxt a -> a
-extractCtxt (_,x,_) = x
-

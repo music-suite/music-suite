@@ -76,6 +76,7 @@ import           Control.Monad
 import           Data.AffineSpace
 import           Data.Foldable
 import           Data.Functor.Couple
+import           Data.Functor.Context
 import qualified Data.List                     as List
 import           Data.Maybe
 import           Data.Ratio
@@ -483,7 +484,4 @@ addDynCon :: (
   Dynamic a ~ d, Dynamic b ~ Ctxt d
   ) => s -> t
 addDynCon = over (phrases.vdynamic) withContext
-
-type Ctxt a = (Maybe a, a, Maybe a)
-
 
