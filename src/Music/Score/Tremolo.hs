@@ -28,10 +28,12 @@
 
 
 module Music.Score.Tremolo (
+
         -- * Tremolo
         HasTremolo(..),
         TremoloT(..),
         tremolo,
+
   ) where
 
 import           Control.Applicative
@@ -45,7 +47,6 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.Word
 
--- import           Music.Score.Combinators
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable

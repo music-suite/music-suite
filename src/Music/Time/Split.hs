@@ -30,13 +30,15 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Split (
-      module Music.Time.Position,
 
-      -- * The Splittable class
-      Splittable(..),
-      splitAbs,
-      
-      chunks,
+        module Music.Time.Position,
+
+        -- * The Splittable class
+        Splittable(..),
+        splitAbs,
+    
+        chunks,
+
   ) where
 
 import           Music.Time.Position

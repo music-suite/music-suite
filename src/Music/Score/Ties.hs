@@ -27,6 +27,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score.Ties (
+
         -- * Tiable class
         Tiable(..),
         TieT(..),
@@ -34,6 +35,7 @@ module Music.Score.Ties (
         -- * Splitting tied notes in scores
         splitTiesVoice,
         splitTiesVoiceAt,
+
   ) where
 
 import           Control.Applicative

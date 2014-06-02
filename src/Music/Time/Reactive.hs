@@ -27,30 +27,30 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Reactive (
-      -- * Reactive type
-      Reactive,
+        -- * Reactive type
+        Reactive,
       
-      -- * Construction
-      initial,
-      final,
-      intermediate,
-      discrete,
-      updates,
-      occs,
-      atTime,
-      splitReactive,
+        -- * Construction
+        initial,
+        final,
+        intermediate,
+        discrete,
+        updates,
+        occs,
+        atTime,
+        splitReactive,
       
-      -- * Combinators
-      switchR,
-      trimR,
+        -- * Combinators
+        switchR,
+        trimR,
 
-      -- * Sampling and discretization
-      continous,
-      continousWith,
-      sample,
-      -- TODO
-      -- window,
-      -- windowed,
+        -- * Sampling and discretization
+        continous,
+        continousWith,
+        sample,
+        -- TODO
+        -- window,
+        -- windowed,   
   ) where
 
 -- Reactive values, or piecewise functions of time.

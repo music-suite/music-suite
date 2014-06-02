@@ -34,11 +34,13 @@
 
 
 module Music.Score.Pitch (
-        -- ** Pitch type functions
+        
+        -- * Pitch type functions
         Pitch,
         SetPitch,
         Interval,
-        -- ** Accessing pitch
+        
+        -- * Accessing pitch
         HasPitches(..),
         HasPitch(..),
         -- ** Simple versions
@@ -46,10 +48,11 @@ module Music.Score.Pitch (
         HasPitch',
         pitch',
         pitches',
-        -- ** Converting pitch to container
+        
+        -- * Converting pitch to container
         fromPitch',
+        
         -- * Manipulating pitch
-        -- ** Transposition
         Transposable,
         up,
         down,
@@ -71,49 +74,11 @@ module Music.Score.Pitch (
         lowestPitch,
         meanPitch,
 
-        -- ** Intervals
+        -- * Intervals
         augmentIntervals,
 
         -- TODO pitchIs, to write filter pitchIs ... etc
         -- TODO gliss etc
-
-        -- -- * Accessors
-        -- pitch',
-        -- pitch,
-        -- -- pitch_,
-        -- -- pitches',
-        -- -- pitches,
-        --
-        -- -- * Transformations
-        -- -- ** Transformations
-        -- inv,
-        --
-        -- -- ** Transformations
-        -- up,
-        -- down,
-        -- fifthsUp,
-        -- fifthsDown,
-        -- octavesUp,
-        -- octavesDown,
-        --
-        -- -- ** Transformations
-        -- -- above,
-        -- -- below,
-        -- fifthsAbove,
-        -- fifthsBelow,
-        -- octavesAbove,
-        -- octavesBelow,
-        --
-        -- -- * Pitch representation
-        -- Pitch,
-        -- Interval,
-        -- HasGetPitch(..),
-        -- HasSetPitch(..),
-        -- HasPitch'(..),
-        -- HasPitch(..),
-        -- HasSetPitch'(..),
-        -- Transposable,
-        -- Transposable1,
 
   ) where
 

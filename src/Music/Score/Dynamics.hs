@@ -32,20 +32,22 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Dynamics (
-        -- ** Dynamic type functions
+
+        -- * Dynamic type functions
         Dynamic,
         SetDynamic,
         DynamicLensLaws_,
         DynamicLensLaws,
-        -- ** Accessing dynamics
+
+        -- * Accessing dynamics
         HasDynamics(..),
         HasDynamic(..),
         HasDynamics',
         HasDynamic',
         dynamic',
         dynamics',
+
         -- * Manipulating dynamics
         Level,
         Attenuable,
@@ -64,21 +66,6 @@ module Music.Score.Dynamics (
         vdynamic,
         addDynCon,
 
-        -- -- * Dynamics representation
-        -- HasDynamic(..),
-        -- DynamicT(..),
-        -- dynamics,
-        -- dynamicVoice,
-        -- dynamicSingle,
-        --
-        -- -- * Dynamic transformations
-        -- -- ** Crescendo and diminuendo
-        -- Level(..),
-        -- cresc,
-        -- dim,
-        --
-        -- -- ** Miscellaneous
-        -- resetDynamics,
   ) where
 
 import           Control.Applicative

@@ -30,14 +30,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Delayed (
-    -- * Delayed type
-    Delayed,
+      -- * Delayed type
+      Delayed,
 
-    -- * Construction
-    delayed,
+      -- * Construction
+      delayed,
 
-    -- ** Inspecting delayed values
-    delayedValue,
+      -- ** Inspecting delayed values
+      delayedValue,
   ) where
 
 import           Data.AffineSpace
@@ -140,3 +140,4 @@ runDelayed = uncurry delayTime . view _Wrapped
 deriving instance IsPitch a => IsPitch (Delayed a)	 
 deriving instance IsInterval a => IsInterval (Delayed a)	 
 deriving instance IsDynamics a => IsDynamics (Delayed a)
+

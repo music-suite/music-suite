@@ -31,20 +31,24 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Articulation (
+
         -- ** Articulation type functions
         Articulation,
         SetArticulation,
         Accentuation,
         Separation,
+
         -- ** Accessing articulation
         HasArticulations(..),
         HasArticulation(..),
         articulation',
         articulations',
+
         -- * Manipulating articulation
         Articulated,
+        
+        -- ** Accents
         accent,
         marcato,
         accentLast,
@@ -52,6 +56,7 @@ module Music.Score.Articulation (
         accentAll,
         marcatoAll,
 
+        -- ** Phrasing and separation
         tenuto,
         separated,
         staccato,
@@ -59,6 +64,7 @@ module Music.Score.Articulation (
         legato,
         spiccato,
 
+        -- * Articulation transformer
         ArticulationT(..),
   ) where
 

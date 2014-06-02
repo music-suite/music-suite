@@ -30,52 +30,54 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Segment (
-    -- * Behavior type
-    Behavior,
-    -- ** Examples
-    -- $musicTimeBehaviorExamples
-    -- (!^),
-    -- behavior',
-    behavior,
 
-    -- ** Combinators
-    switch,
-    switch',
-    splice,
-    trim,
-    trimBefore,
-    trimAfter,
-    concatB,
+        -- * Behavior type
+        Behavior,
+        -- ** Examples
+        -- $musicTimeBehaviorExamples
+        -- (!^),
+        -- behavior',
+        behavior,
 
-    -- * Common behaviors
-    line,
-    unit,
-    impulse,
-    turnOn,
-    turnOff,
-    sawtooth,
-    sine,
-    cosine,
+        -- ** Combinators
+        switch,
+        switch',
+        splice,
+        trim,
+        trimBefore,
+        trimAfter,
+        concatB,
 
-    -- * Segment type
-    Segment,
-    -- ** Examples
-    -- $XXmusicTimeSegmentExamples
-    segment,
+        -- * Common behaviors
+        line,
+        unit,
+        impulse,
+        turnOn,
+        turnOff,
+        sawtooth,
+        sine,
+        cosine,
 
-    -- ** Combinators
-    focusing,
-    apSegments',
-    apSegments,
-    -- concatS,
+        -- * Segment type
+        Segment,
+        -- ** Examples
+        -- $XXmusicTimeSegmentExamples
+        segment,
 
-    Bound,
-    bounds,
-    bounding,
-    trim,
-    splice,
-    bounded',
-    bounded,
+        -- ** Combinators
+        focusing,
+        apSegments',
+        apSegments,
+        -- concatS,
+
+        Bound,
+        bounds,
+        bounding,
+        trim,
+        splice,
+        bounded',
+        bounded,     
+
   ) where
 
 import           Data.AffineSpace

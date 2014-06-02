@@ -30,36 +30,37 @@
 
 module Music.Time.Internal.Transform (
 
-      -- * Music.Time.Transform
-      -- * The Transformable class
-      Transformable(..),
-      itransform,
-      transformed,
+        -- * The Transformable class
+        Transformable(..),
+        itransform,
+        transformed,
 
-      -- ** Apply under a transformation
-      whilst,
-      whilstM,
-      whilstL,
-      whilstLT,
-      whilstLD,
-      whilstStretch,
-      whilstDelay,
-      spanned,
-      onSpan,
-      conjugateS,
+        -- * Apply under a transformation
+        whilst,
+        whilstM,
+        whilstL,
+        whilstLT,
+        whilstLD,
+        whilstStretch,
+        whilstDelay,
+        spanned,
+        onSpan,
+        conjugateS,
 
-      -- ** Specific transformations
-      delay,
-      undelay,
-      stretch,
-      compress,
-      -- *** Applied transformations
-      delaying,
-      undelaying,
-      stretching,
-      compressing,
-      -- *** Utility
-      delayTime,
+        -- * Specific transformations
+        delay,
+        undelay,
+        stretch,
+        compress,
+        -- ** Applied transformations
+        delaying,
+        undelaying,
+        stretching,
+        compressing,
+
+        -- ** Utility
+        delayTime,    
+
   ) where
 
 import           Music.Time.Types

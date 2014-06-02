@@ -57,7 +57,6 @@ import           Data.Ord
 import           Data.Semigroup
 
 import           Music.Score.Part
--- import Music.Score.Internal.Util (tripl, untripl, through)
 import           Music.Score.Convert
 import           Music.Time
 

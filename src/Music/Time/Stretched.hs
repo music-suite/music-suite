@@ -29,12 +29,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Stretched (
-    -- * Stretched values
-    Stretched,
 
-    -- * Construction
-    stretched,
-    stretchedValue,
+        -- * Stretched values
+        Stretched,
+
+        -- * Construction
+        stretched,
+        stretchedValue,   
+
   ) where
 
 import           Data.AffineSpace

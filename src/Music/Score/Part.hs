@@ -32,7 +32,6 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Part (
         -- ** Articulation type functions
         Part,

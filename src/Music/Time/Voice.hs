@@ -30,50 +30,52 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Voice (
-    -- * Voice type
-    Voice,
 
-    -- * Construction
-    voice,
+        -- * Voice type
+        Voice,
 
-    -- ** Extracting values
-    stretcheds,
-    eventsV,
+        -- * Construction
+        voice,
 
-    -- ** Pattern matching
-    singleStretched,
+        -- ** Extracting values
+        stretcheds,
+        eventsV,
 
-    -- *** Unsafe versions
-    unsafeStretcheds,
-    unsafeEventsV,
+        -- ** Pattern matching
+        singleStretched,
+
+        -- *** Unsafe versions
+        unsafeStretcheds,
+        unsafeEventsV,
 
 
-    -- * Fusion
-    fuse,
-    fuseBy,
+        -- * Fusion
+        fuse,
+        fuseBy,
 
-    -- * Traversing
-    -- ** Separating rhythms and values
-    withValues,
-    withDurations,
-    rotateValues,
-    rotateDurations,
-    reverseValues,
-    reverseDurations,
+        -- * Traversing
+        -- ** Separating rhythms and values
+        withValues,
+        withDurations,
+        rotateValues,
+        rotateDurations,
+        reverseValues,
+        reverseDurations,
 
-    -- ** Zips
-    unzipVoice,
-    zipVoice,
-    zipVoiceWith,
-    zipVoiceWith',
-    zipVoiceWithNoScale,
+        -- ** Zips
+        unzipVoice,
+        zipVoice,
+        zipVoiceWith,
+        zipVoiceWith',
+        zipVoiceWithNoScale,
 
-    -- * Context
-    withContext,
+        -- * Context
+        withContext,
 
-    -- headV,
-    -- middleV,
-    -- lastV,
+        -- headV,
+        -- middleV,
+        -- lastV,   
+
   ) where
 
 import           Data.AffineSpace

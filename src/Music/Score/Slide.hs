@@ -31,11 +31,13 @@
 
 
 module Music.Score.Slide (
+
         -- * Slides and glissando
         HasSlide(..),
         SlideT(..),
         slide,
         glissando,
+
   ) where
 
 import           Control.Applicative
@@ -49,7 +51,6 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.Word
 
--- import           Music.Score.Combinators
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
@@ -151,3 +152,4 @@ lastV = (eventsV._last._2)
 -- Traverse writing to all elements *except* first and last
 _middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
 _middle = _tail._init
+

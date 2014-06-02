@@ -23,14 +23,14 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Duration (
-      module Music.Time.Transform,
+        module Music.Time.Transform,
 
-      -- * The HasDuration class
-      HasDuration(..),
+        -- * The HasDuration class
+        HasDuration(..),
 
-      -- * Absolute duration
-      duration,
-      stretchTo,
+        -- * Absolute duration
+        duration,
+        stretchTo,
   ) where
 
 import           Music.Time.Transform

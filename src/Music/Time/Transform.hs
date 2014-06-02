@@ -29,34 +29,36 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Transform (
-      module Music.Time.Types,
 
-      -- * The Transformable class
-      Transformable(..),
-      itransform,
-      transformed,
+        module Music.Time.Types,
 
-      -- * Apply under a transformation
-      whilst,
-      spanned,
-      onSpan,
-      -- conjugateS,
+        -- * The Transformable class
+        Transformable(..),
+        itransform,
+        transformed,
 
-      -- * Specific transformations
-      -- ** Transformations
-      delay,
-      undelay,
-      stretch,
-      compress,
+        -- * Apply under a transformation
+        whilst,
+        spanned,
+        onSpan,
+        -- conjugateS,
 
-      -- ** Transforming values
-      delaying,
-      undelaying,
-      stretching,
-      compressing,
+        -- * Specific transformations
+        -- ** Transformations
+        delay,
+        undelay,
+        stretch,
+        compress,
 
-      -- * Utility
-      delayTime,
+        -- ** Transforming values
+        delaying,
+        undelaying,
+        stretching,
+        compressing,
+
+        -- * Utility
+        delayTime,
+
   ) where
 
 import           Music.Time.Internal.Transform

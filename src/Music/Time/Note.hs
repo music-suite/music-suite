@@ -30,13 +30,13 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Note (
-    -- * Note type
-    Note,
+        -- * Note type
+        Note,
 
-    -- * Construction
-    note,
-    event,
-    noteValue,
+        -- * Construction
+        note,
+        event,
+        noteValue,      
   ) where
 
 import           Data.AffineSpace

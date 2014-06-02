@@ -31,11 +31,12 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Chord (
-    -- * Chord type
-    Chord,
-    -- * Construction
-    chord,
-    unsafeChord,
+
+      -- * Chord type
+      Chord,
+      -- * Construction
+      chord,
+      unsafeChord,
 
   ) where
 
@@ -132,3 +133,4 @@ unsafeChord = _Wrapped
 deriving instance IsPitch a => IsPitch (Chord a)	 
 deriving instance IsInterval a => IsInterval (Chord a)	 
 deriving instance IsDynamics a => IsDynamics (Chord a)
+

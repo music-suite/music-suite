@@ -30,36 +30,36 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Score (
-      -- * Score type
-      Score,
+        -- * Score type
+        Score,
 
-      -- * Construction
-      score,
+        -- * Construction
+        score,
       
-      -- ** Extracting values
-      notes,
-      events,
+        -- ** Extracting values
+        notes,
+        events,
       
-      -- ** Pattern matching
-      singleNote,
+        -- ** Pattern matching
+        singleNote,
 
-      -- ** Unsafe versions
-      unsafeNotes,
-      unsafeEvents,
+        -- ** Unsafe versions
+        unsafeNotes,
+        unsafeEvents,
 
 
-      -- * Simultaneous values
-      -- TODO check for overlapping values etc
-      simult,
-      simultaneous,
+        -- * Simultaneous values
+        -- TODO check for overlapping values etc
+        simult,
+        simultaneous,
 
-      -- * Traversing
-      mapWithSpan,
-      filterWithSpan,
-      mapFilterWithSpan,
-      mapEvents,
-      filterEvents,
-      mapFilterEvents,
+        -- * Traversing
+        mapWithSpan,
+        filterWithSpan,
+        mapFilterWithSpan,
+        mapEvents,
+        filterEvents,
+        mapFilterEvents,
 
   ) where
 

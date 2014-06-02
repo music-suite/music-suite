@@ -28,7 +28,6 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Harmonics (
         -- * Harmonics
         HasHarmonic(..),
@@ -120,12 +119,6 @@ harmonic n = setNatural True . setHarmonic n
 --
 artificial :: HasHarmonic a => a -> a
 artificial =  setNatural False . setHarmonic 3
-
-
-
-
-
-
 
 
 
