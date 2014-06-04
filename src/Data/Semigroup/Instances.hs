@@ -1,6 +1,7 @@
 
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Data.Semigroup.Instances () where
@@ -48,10 +49,14 @@ deriving instance IsDynamics a => IsDynamics (Sum a)
 deriving instance IsDynamics a => IsDynamics (Product a)
 deriving instance IsPitch a => IsPitch (Sum a)
 deriving instance IsPitch a => IsPitch (Product a)
+
+deriving instance Functor Product
 instance Applicative Product where
   pure = Product
   Product f <*> Product x = Product (f x)
-deriving instance Applicative Sum where
+
+deriving instance Functor Sum
+instance Applicative Sum where
   pure = Sum
   Sum f <*> Sum x = Sum (f x)
 
