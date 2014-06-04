@@ -158,8 +158,32 @@ PRIM_ARTICULATION_INSTANCE(Float)
 PRIM_ARTICULATION_INSTANCE(Double)
 
 
-type instance Articulation (c,a) = Articulation a
-type instance SetArticulation b (c,a) = (c,SetArticulation b a)
+type instance Articulation (c,a)              = Articulation a
+type instance SetArticulation b (c,a)         = (c,SetArticulation b a)
+type instance Articulation [a]                = Articulation a
+type instance SetArticulation b [a]           = [SetArticulation b a]
+
+type instance Articulation (Maybe a)          = Articulation a
+type instance SetArticulation b (Maybe a)     = Maybe (SetArticulation b a)
+type instance Articulation (Either c a)       = Articulation a
+type instance SetArticulation b (Either c a)  = Either c (SetArticulation b a)
+
+type instance Articulation (Note a) = Articulation a
+type instance SetArticulation g (Note a) = Note (SetArticulation g a)
+type instance Articulation (Delayed a) = Articulation a
+type instance SetArticulation g (Delayed a) = Delayed (SetArticulation g a)
+type instance Articulation (Stretched a) = Articulation a
+type instance SetArticulation g (Stretched a) = Stretched (SetArticulation g a)
+
+type instance Articulation (Voice a) = Articulation a
+type instance SetArticulation b (Voice a) = Voice (SetArticulation b a)
+type instance Articulation (Chord a) = Articulation a
+type instance SetArticulation b (Chord a) = Chord (SetArticulation b a)
+type instance Articulation (Track a) = Articulation a
+type instance SetArticulation b (Track a) = Track (SetArticulation b a)
+type instance Articulation (Score a) = Articulation a
+type instance SetArticulation b (Score a) = Score (SetArticulation b a)
+
 
 instance HasArticulation a b => HasArticulation (c, a) (c, b) where
   articulation = _2 . articulation
@@ -167,25 +191,45 @@ instance HasArticulation a b => HasArticulation (c, a) (c, b) where
 instance HasArticulations a b => HasArticulations (c, a) (c, b) where
   articulations = traverse . articulations
 
-
-type instance Articulation [a] = Articulation a
-type instance SetArticulation b [a] = [SetArticulation b a]
-
 instance HasArticulations a b => HasArticulations [a] [b] where
   articulations = traverse . articulations
 
+instance HasArticulations a b => HasArticulations (Maybe a) (Maybe b) where
+  articulations = traverse . articulations
 
-type instance Articulation (Note a) = Articulation a
-type instance SetArticulation g (Note a) = Note (SetArticulation g a)
+instance HasArticulations a b => HasArticulations (Either c a) (Either c b) where
+  articulations = traverse . articulations
 
-instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
-  articulation = _Wrapped . whilstL articulation
+
 
 instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstL articulations
 
-type instance Articulation (Score a) = Articulation a
-type instance SetArticulation b (Score a) = Score (SetArticulation b a)
+instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
+  articulation = _Wrapped . whilstL articulation
+
+instance (HasArticulations a b) => HasArticulations (Delayed a) (Delayed b) where
+  articulations = _Wrapped . whilstLT articulations
+
+instance (HasArticulation a b) => HasArticulation (Delayed a) (Delayed b) where
+  articulation = _Wrapped . whilstLT articulation
+
+instance (HasArticulations a b) => HasArticulations (Stretched a) (Stretched b) where
+  articulations = _Wrapped . whilstLD articulations
+
+instance (HasArticulation a b) => HasArticulation (Stretched a) (Stretched b) where
+  articulation = _Wrapped . whilstLD articulation
+
+
+instance HasArticulations a b => HasArticulations (Voice a) (Voice b) where
+  articulations = traverse . articulations
+
+instance HasArticulations a b => HasArticulations (Chord a) (Chord b) where
+  articulations = traverse . articulations
+
+instance HasArticulations a b => HasArticulations (Track a) (Track b) where
+  articulations = traverse . articulations
+
 instance HasArticulations a b => HasArticulations (Score a) (Score b) where
   articulations =
     _Wrapped . _2   -- into NScore

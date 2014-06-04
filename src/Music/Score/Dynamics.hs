@@ -202,6 +202,16 @@ instance HasDynamic a b => HasDynamic (c, a) (c, b) where
 instance HasDynamics a b => HasDynamics (c, a) (c, b) where
   dynamics = traverse . dynamics
 
+instance HasDynamics a b => HasDynamics [a] [b] where
+  dynamics = traverse . dynamics
+
+instance HasDynamics a b => HasDynamics (Maybe a) (Maybe b) where
+  dynamics = traverse . dynamics
+
+instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
+  dynamics = traverse . dynamics
+
+
 
 instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . whilstL dynamics
@@ -223,15 +233,6 @@ instance (HasDynamics a b) => HasDynamics (Stretched a) (Stretched b) where
 instance (HasDynamic a b) => HasDynamic (Stretched a) (Stretched b) where
   dynamic = _Wrapped . whilstLD dynamic
 
-
-instance HasDynamics a b => HasDynamics (Maybe a) (Maybe b) where
-  dynamics = traverse . dynamics
-
-instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
-  dynamics = traverse . dynamics
-
-instance HasDynamics a b => HasDynamics [a] [b] where
-  dynamics = traverse . dynamics
 
 instance HasDynamics a b => HasDynamics (Voice a) (Voice b) where
   dynamics = traverse . dynamics
