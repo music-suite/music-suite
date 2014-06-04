@@ -94,11 +94,17 @@ instance Monoid ArticulationNotation where
 -- TODO add slurs if separation is below some value...
 
 getSeparationMarks :: Double -> [Mark]
-getSeparationMarks x
-  |              x <= (-1) = [] -- slur
-  | (-1) <  x && x <  1    = []
-  | 1    <= x && x <  2    = [Staccato]
-  | 2    <= x              = [MoltoStaccato]
+getSeparationMarks = fst . getSeparationMarks'
+
+hasSlur' :: Double -> Bool
+hasSlur' = snd . getSeparationMarks'
+
+getSeparationMarks' :: Double -> ([Mark], Bool)
+getSeparationMarks' x
+  |              x <= (-1) = ([], True)
+  | (-1) <  x && x <  1    = ([], False)
+  | 1    <= x && x <  2    = ([Staccato], False)
+  | 2    <= x              = ([MoltoStaccato], False)
 
 getAccentMarks :: Double -> [Mark]
 getAccentMarks x
@@ -108,10 +114,18 @@ getAccentMarks x
   | 2    <= x              = [Marcato]
   | otherwise           = []
 
+hasSlur y = hasSlur' (realToFrac $ view separation $ y)
+allMarks y = getSeparationMarks (realToFrac $ view separation $ y) <> getAccentMarks (realToFrac $ view accentuation $ y)
 
 notateArticulation :: (Ord a, a ~ (Sum Double, Sum Double)) => Ctxt a -> ArticulationNotation
-notateArticulation x = ArticulationNotation 
-  (
-  [NoSlur], 
-  getSeparationMarks (getSum $ view separation $ extractCtxt x) <> getAccentMarks (getSum $ view accentuation $ extractCtxt x)
-  )
+notateArticulation (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
+notateArticulation (Just x,  y, Nothing) = ArticulationNotation (if hasSlur x && hasSlur y then [EndSlur] else [], allMarks y)
+notateArticulation (Nothing, y, Just z)  = ArticulationNotation (if hasSlur y && hasSlur z then [BeginSlur] else [], allMarks y)
+notateArticulation (Just x,  y, Just z)  = ArticulationNotation (slur3 x y z, allMarks y)
+  where
+    slur3 x y z = case (hasSlur x, hasSlur y, hasSlur z) of
+      (True, True, True)  -> [{-ContSlur-}]
+      (False, True, True) -> [BeginSlur]
+      (True, True, False) -> [EndSlur]
+      _                   -> []
+
