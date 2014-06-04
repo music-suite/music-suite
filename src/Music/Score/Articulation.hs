@@ -360,23 +360,23 @@ accent = set (articulations . accentuation) 1
 marcato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 marcato = set (articulations . accentuation) 2
 
-accentLast :: Articulated a => a -> a
+accentLast :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 accentLast = id
 
-marcatoLast :: Articulated a => a -> a
+marcatoLast :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 marcatoLast = id
 
-accentAll :: Articulated a => a -> a
+accentAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 accentAll = id
 
-marcatoAll :: Articulated a => a -> a
+marcatoAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 marcatoAll = id
 
 
-tenuto :: Articulated a => a -> a
+tenuto :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 tenuto = id
 
-spiccato :: Articulated a => a -> a
+spiccato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 spiccato = id
 
 legatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
