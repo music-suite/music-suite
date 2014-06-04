@@ -357,23 +357,24 @@ _2' = _2
   
 
 
-accent :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-accent = set (articulations . accentuation) 1
+accent :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+accent = set (phrases . headV . articulations . accentuation) 1
 
-marcato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-marcato = set (articulations . accentuation) 2
+marcato :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+marcato = set (phrases . headV . articulations . accentuation) 2
 
-accentLast :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-accentLast = id
+accentLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+accentLast = set (phrases . lastV . articulations . accentuation) 1
 
-marcatoLast :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-marcatoLast = id
+marcatoLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
+marcatoLast = set (phrases . lastV . articulations . accentuation) 2
 
 accentAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-accentAll = id
+accentAll = set (articulations . accentuation) 1
 
 marcatoAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
-marcatoAll = id
+marcatoAll = set (articulations . accentuation) 2
+
 
 
 tenuto :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
@@ -481,4 +482,17 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
 
+
+headV :: Traversal' (Voice a) a
+headV = (eventsV._head._2)
+
+middleV :: Traversal' (Voice a) a
+middleV = (eventsV._middle.traverse._2)
+
+lastV :: Traversal' (Voice a) a
+lastV = (eventsV._last._2)
+
+-- Traverse writing to all elements *except* first and last
+_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
+_middle = _tail._init
 
