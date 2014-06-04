@@ -178,6 +178,12 @@ instance HasParts Float Float where
 
 type instance Part (c,a) = Part a
 type instance SetPart b (c,a) = (c,SetPart b a)
+type instance Part [a] = Part a
+type instance SetPart b [a] = [SetPart b a]
+type instance Part (Maybe a) = Part a
+type instance SetPart b (Maybe a) = Maybe (SetPart b a)
+type instance Part (Either c a) = Part a
+type instance SetPart b (Either c a) = Either c (SetPart b a)
 
 instance HasPart a b => HasPart (c, a) (c, b) where
   part = _2 . part
@@ -185,11 +191,13 @@ instance HasPart a b => HasPart (c, a) (c, b) where
 instance HasParts a b => HasParts (c, a) (c, b) where
   parts = traverse . parts
 
-
-type instance Part [a] = Part a
-type instance SetPart b [a] = [SetPart b a]
-
 instance HasParts a b => HasParts [a] [b] where
+  parts = traverse . parts
+
+instance HasParts a b => HasParts (Maybe a) (Maybe b) where
+  parts = traverse . parts
+
+instance HasParts a b => HasParts (Either c a) (Either c b) where
   parts = traverse . parts
 
 
