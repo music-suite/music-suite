@@ -58,7 +58,7 @@ module Music.Score.Articulation (
         marcatoAll,
 
         -- ** Phrasing and separation
-        staccatissimo
+        staccatissimo,
         staccato,
         separated,
         portato,
