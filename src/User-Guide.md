@@ -314,7 +314,7 @@ TODO other ways of applying level
 
 ## Articulation
 
-Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[separated], @[spiccato]:
+Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[separated], @[staccatissimo]:
 
 ```music+haskell
 legato (scat [c..g]^/8)
@@ -327,7 +327,7 @@ tenuto (scat [c..g]^/8)
     </>
 separated (scat [c..g]^/8)
     </>
-spiccato (scat [c..g]^/8)
+staccatissimo (scat [c..g]^/8)
 ```
 
 @[accent]
@@ -450,7 +450,7 @@ TODO add explicit rests etc
 @[mcatMaybes] 
 
 ```music+haskell
-mcatMaybes $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
+mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8
 ```
                  
 
@@ -571,13 +571,13 @@ TODO
 
 # Time-based structures
 
-@[Delayable]
+@[Transformable]
 
-@[Stretchable]
+@[Splittable]
 
-@[HasOnset]
+@[Reversible]
 
-@[HasOffset]
+@[HasPosition]
 
 @[HasDuration]
 
