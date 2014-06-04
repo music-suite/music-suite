@@ -221,99 +221,31 @@ instance HasBackend Lilypond where
 -- TODO move
 second f (x, y) = (x, f y)
 
-type HasArticulation3 a a' a'' = (
-  HasArticulation' a,
-  HasArticulation a  a',
-  HasArticulation a' a'',
-  HasArticulation a  a''
+type HasArticulation3 c d e = (
+  HasArticulation' c,
+  HasArticulation c d,
+  HasArticulation d e,
+  HasArticulation c e
   )
 
 type HasArticulationNotation a b c = (
   HasArticulation3 a b c,
   Articulation b  ~ Ctxt (Articulation a),
   Articulation c ~ ArticulationNotation,
-  Real (Articulation a),
-  Part (SetArticulation (Articulation a) a) ~ Part (SetArticulation ArticulationNotation b)
+  -- TODO generalize
+  Articulation a ~ (Sum Double, Sum Double)
  )
 
 
-instance (         
-  SetArticulation
-                          ArticulationNotation (SetDynamic DynamicNotation b)
-                        ~ SetArticulation
-                            ArticulationNotation
-                            (SetArticulation
-                               (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                                Articulation (SetDynamic DynamicNotation b),
-                                Maybe (Articulation (SetDynamic DynamicNotation b)))
-                               (SetDynamic DynamicNotation b)),
-  Part
-                        (SetArticulation
-                           ArticulationNotation
-                           (SetArticulation
-                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                               Articulation (SetDynamic DynamicNotation b),
-                               Maybe (Articulation (SetDynamic DynamicNotation b)))
-                              (SetDynamic DynamicNotation b)))
-                      ~ Part (SetDynamic DynamicNotation b),
-  Articulation
-                        (SetArticulation
-                           ArticulationNotation
-                           (SetArticulation
-                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                               Articulation (SetDynamic DynamicNotation b),
-                               Maybe (Articulation (SetDynamic DynamicNotation b)))
-                              (SetDynamic DynamicNotation b)))
-                      ~ ArticulationNotation,
-  Articulation
-                        (SetArticulation
-                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                            Articulation (SetDynamic DynamicNotation b),
-                            Maybe (Articulation (SetDynamic DynamicNotation b)))
-                           (SetDynamic DynamicNotation b))
-                      ~ (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                         Articulation (SetDynamic DynamicNotation b),
-                         Maybe (Articulation (SetDynamic DynamicNotation b))),
-  Tiable
-                        (SetArticulation
-                           ArticulationNotation
-                           (SetArticulation
-                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                               Articulation (SetDynamic DynamicNotation b),
-                               Maybe (Articulation (SetDynamic DynamicNotation b)))
-                              (SetDynamic DynamicNotation b))),
-  HasArticulation
-                        (SetDynamic DynamicNotation b)
-                        (SetArticulation
-                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                            Articulation (SetDynamic DynamicNotation b),
-                            Maybe (Articulation (SetDynamic DynamicNotation b)))
-                           (SetDynamic DynamicNotation b)),
-  HasArticulations
-                        (SetArticulation
-                           (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                            Articulation (SetDynamic DynamicNotation b),
-                            Maybe (Articulation (SetDynamic DynamicNotation b)))
-                           (SetDynamic DynamicNotation b))
-                        (SetArticulation
-                           ArticulationNotation
-                           (SetArticulation
-                              (Maybe (Articulation (SetDynamic DynamicNotation b)),
-                               Articulation (SetDynamic DynamicNotation b),
-                               Maybe (Articulation (SetDynamic DynamicNotation b)))
-                              (SetDynamic DynamicNotation b))),
-  HasArticulation
-                        (SetDynamic DynamicNotation b) (SetDynamic DynamicNotation b),
-
-
-  -- TODO generalize
-  (Articulation (SetDynamic DynamicNotation b)) ~ (Sum Double, Sum Double),
-
-  -- HasArticulationNotation c d e,
-
+instance (                  
   HasDynamicNotation a b c,
-  HasOrdPart a, Transformable a, Semigroup a,
-  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c), Tiable c
+  HasArticulationNotation c d e,
+  Part e ~ Part c,
+  HasOrdPart a, 
+  Transformable a, 
+  Semigroup a,
+  Tiable e,
+  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c)
   )
   => HasBackendScore Lilypond (Score a) where
   type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
