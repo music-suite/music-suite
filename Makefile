@@ -33,6 +33,7 @@ html: transform
 			) \
 			| $(PANDOC) --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
 		cp ../$(CSS) styles.css && \
+		cp -R ../js js && \
 		cp ../$(MODULE_GRAPH) module-graph.png && \
 	popd
 

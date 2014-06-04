@@ -11,7 +11,7 @@ preview musical scores. See [Import and Export](#import-and-export) for other fo
 
 To install the suite, simply install the Haskell platform, and then run:
 
-    cabal install music-preludes
+    cabal install music-suite
 
 
 ## Writing music
@@ -975,11 +975,9 @@ The Music Suite is indebted to many other previous libraries and computer music 
 It obviously ows a lot to the Haskell libraries that it follows including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite]. The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
 
 
-<!--
-![Modules](module-graph.png)
--->
-
-
+```music-extra
+(ignored)
+```
 
 @@@hslinks@@@
 
