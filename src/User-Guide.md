@@ -41,11 +41,12 @@ c |> d |> e
 
 There are several programs for converting music expressions:
 
-* `music2mid` 
-* `music2musicxml` 
-* `music2ly` 
-* `music2wav` 
+* `music2midi`
+* `music2musicxml`
+* `music2ly`
 * `music2pdf`
+* `music2svg`
+* `music2png`
 
 ### With Haskell files
 
