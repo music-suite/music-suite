@@ -413,25 +413,26 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicN
       -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
       -- rcomposed = composed . reverse
 
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT ArticulationNotation a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
-    where
-      notate (ArticulationNotation (slurs, marks))
-        = composed (fmap notateMark marks)
-        . composed (fmap notateSlur slurs)
-
-      notateMark mark = case mark of
-        NoMark         -> id
-        Staccato       -> MusicXml.staccato
-        MoltoStaccato  -> MusicXml.staccatissimo
-        Marcato        -> MusicXml.strongAccent
-        Accent         -> MusicXml.accent
-        Tenuto         -> MusicXml.tenuto
-
-      notateSlur slurs = case slurs of
-        NoSlur    -> id
-        BeginSlur -> MusicXml.beginSlur
-        EndSlur   -> MusicXml.endSlur
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT b{-ArticulationNotation-} a) where
+  exportNote b = exportNote b . fmap extract
+  -- exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
+  --   where
+  --     notate (ArticulationNotation (slurs, marks))
+  --       = composed (fmap notateMark marks)
+  --       . composed (fmap notateSlur slurs)
+  -- 
+  --     notateMark mark = case mark of
+  --       NoMark         -> id
+  --       Staccato       -> MusicXml.staccato
+  --       MoltoStaccato  -> MusicXml.staccatissimo
+  --       Marcato        -> MusicXml.strongAccent
+  --       Accent         -> MusicXml.accent
+  --       Tenuto         -> MusicXml.tenuto
+  -- 
+  --     notateSlur slurs = case slurs of
+  --       NoSlur    -> id
+  --       BeginSlur -> MusicXml.beginSlur
+  --       EndSlur   -> MusicXml.endSlur
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
   exportNote b = exportNote b . fmap extract
