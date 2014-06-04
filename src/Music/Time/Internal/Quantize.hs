@@ -178,7 +178,7 @@ rewriteR = go where
   go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
   go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
 
-rewrite1 = splitTuplet . tupletDot . singleGroup
+rewrite1 = tupletDot . splitTuplet . singleGroup
 
 
 singleGroup :: Rhythm a -> Rhythm a

@@ -58,11 +58,14 @@ module Music.Score.Articulation (
         marcatoAll,
 
         -- ** Phrasing and separation
-        tenuto,
-        separated,
+        staccatissimo
         staccato,
+        separated,
         portato,
         legato,
+        legatissimo,
+
+        tenuto,
         spiccato,
 
         -- * Articulation transformer
