@@ -1,0 +1,41 @@
+
+name:                   music-suite
+version:                1.7.0
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund <music-suite-discuss@googlegroups.com>
+license:                BSD3
+license-file:           COPYING
+synopsis:               A set of libraries for composition, analysis and manipulation of music.
+category:               Music
+tested-with:            GHC
+build-type:             Custom
+cabal-version:          >= 1.10
+
+description: 
+    This is a meta-library that imports the [Music Suite](see <http://music-suite.github.io/>).
+    .
+    It allows users to install all (stable) libraries in the suite as follows:
+    .
+    > cabal install music-suite
+    .
+    If you wish to install an exerimental package, simply use @cabal install@ on the specific package instead.
+    .
+    <<https://raw.githubusercontent.com/hanshoglund/music-docs/master/music-suite-deps.png>>
+
+source-repository head
+  type:             	git
+  location:         	git://github.com/music-suite/music-suite.git
+
+library
+  build-depends:
+    music-dynamics-literal    == 1.7.0,
+    music-pitch-literal       == 1.7.0,
+    abcnotation               == 1.7.0,
+    musicxml2                 == 1.7.0,
+    lilypond                  == 1.7.0,
+    music-score               == 1.7.0,
+    music-pitch               == 1.7.0,
+    music-dynamics            == 1.7.0,
+    music-articulation        == 1.7.0,
+    music-parts               == 1.7.0,
+    music-preludes            == 1.7.0
