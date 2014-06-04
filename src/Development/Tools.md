@@ -3,6 +3,7 @@
 
 * Haskell Platform (latest release)
 * cabal >= 1.18
+* music-util
 * git
 
 ### For generating documentation
