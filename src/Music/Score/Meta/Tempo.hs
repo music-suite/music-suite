@@ -112,7 +112,7 @@ instance Semigroup Tempo where
     (<>) = mappend
 
 instance Monoid Tempo where
-    mempty = metronome (1/1) 60
+    mempty = metronome (1/4) 120
     a `mappend` b
       | a == mempty = b
       | b == mempty = a
