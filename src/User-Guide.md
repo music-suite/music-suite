@@ -125,7 +125,7 @@ Allthough the actual types are more general, you can think of `c` as an expressi
 of type `Score Note`, and the transformations as functions `Score Note -> Score Note`.
 
 ```music+haskell
-up (perfect octave) . compress 2 . delay 3 $ c
+up _P8 . compress 2 . delay 3 $ c
 ```
 
 
@@ -276,7 +276,7 @@ to alter the size of an interval. For example:
 
 ```music+haskell
 let
-    intervals = [diminish (perfect fifth), (diminish . diminish) (perfect fifth)]
+    intervals = [diminish _P5, (diminish . diminish) _P5]
 in scat $ fmap (`up` c) intervals
 ```
 
@@ -309,10 +309,10 @@ Dynamic values are overloaded in the same way as pitches. The dynamic literals a
 An overview of the dynamic values:
 
 ```music+haskell
-scat $ zipWith dynamics [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
+scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 ```
 
-TODO other ways of applying dynamics
+TODO other ways of applying level
 
 ## Articulation
 
@@ -449,10 +449,10 @@ Similar to chords, there is usually no need to handle rests explicitly.
 
 TODO add explicit rests etc
 
-@[removeRests] 
+@[mcatMaybes] 
 
 ```music+haskell
-removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
+mcatMaybes $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 ```
                  
 
@@ -466,7 +466,6 @@ removeRests $ times 4 (accent g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ```music+haskell
 let
-    rev = id -- TODO
     melody = accent $ legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
 in melody |> rev melody
 ```
@@ -488,33 +487,35 @@ scat [e,d,f,e] <> c
 
 @[anticipate]
 
+<!--
 @[repeated]
 
-```music+haskell
+```music+haskellx
 let 
     m = legato $ scat [c,d,scat [e,d]^/2, c]^/4 
 in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
 ```
+-->
 
 ## Onset and duration
 
 ```music+haskell
 let                
     melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g^*2]
-    pedal  = asScore $ delayTime (onset melody) $ stretch (duration melody) $ c_
+    pedal  = asScore $ delayTime (melody^.onset) $ stretch (melody^.duration) $ c_
 in compress 4 $ melody </> pedal
 ```
 
 ## Pitch
 
-@[inv]
+@[invertPitches]
 
 ```music+haskell
 (scat [c..g]^*(2/5))
     </>
-(inv c $ scat [c..g]^*(2/5))
+(invertPitches c $ scat [c..g]^*(2/5))
     </>
-(inv e $ scat [c..g]^*(2/5))
+(invertPitches e $ scat [c..g]^*(2/5))
 ```
 
 
@@ -612,7 +613,8 @@ stretch (1/2) $ scat [c..e]^/3 |> f |> g^*2
 
 It can be converted into a score by stretching each element and composing in sequence.
 
-```music+haskell
+<!--
+```music+haskellx
 let
     x = [ (1, c),
           (1, d),
@@ -625,6 +627,7 @@ let
 
 in stretch (1/8) $ voiceToScore $ y
 ```
+-->
 
 ## Tracks
 
@@ -632,7 +635,8 @@ A @[Track] is similar to a score, except that it events have no offset or durati
 
 It can be converted into a score by delaying each element and composing in parallel. An explicit duration has to be provided.
 
-```music+haskell
+<!--
+```music+haskellx
 let
     x = [ (0, c), (1, d), (2, e) ]^.track
     y = join $ [ (0, x), 
@@ -641,6 +645,7 @@ let
 
 in trackToScore (1/8) y
 ```
+-->
 
 ## Scores
 
@@ -772,7 +777,7 @@ TODO repeats
 
 To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
 
-```music+haskell
+```music+haskellx
 let
     part1 = clef FClef $ staccato $ scat [c_,g_,c,g_]
     part2 = clef CClef $ staccato $ scat [ab_,eb,d,a]
@@ -782,9 +787,6 @@ in compress 8 $ part1 |> part2 |> part3
 
 To set the clef for a preexisting passage in an existing score, use @[clefDuring].
 
-```music+haskell
-clefDuring (0.25 <-> 0.5) CClef $ clefDuring (0.75 <-> 1) FClef $ compress 8 $ scat [c_..c']
-```
 
 ## Annotations
 
@@ -793,7 +795,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are invisible by default. To show annotations in the generated output, use
 @[showAnnotations].
 
-```music+haskell
+```music+haskellx
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
@@ -865,7 +867,7 @@ The output is fairly complete, with some limitations ([reports][issue-tracker] w
 Beware of the extreme verboseness of XML, for example:
 
 ```haskell
-toXmlString $ asScore $ scat [c,d,e]
+toMusicXmlString $ asScore $ scat [c,d,e]
 ```
 
     <?xml version='1.0' ?>
@@ -985,8 +987,8 @@ in compress 4 cs1 </> subj
 
 TODO about
 
-```music+haskell
-let subj = removeRests $ scat [ 
+```music+haskellx
+let subj = mcatMaybes $ scat [ 
             scat [rest,c,d,e], 
             f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5,
             scat [a,g,f,e,f,e,d]^/2, c^*2 
@@ -997,12 +999,14 @@ in (delay 1.5 . up _P5) subj </> subj
 
 ## Generative music
 
-```music+haskell
+<!--
+```music+haskellx
 let
     row = cycle [c,eb,ab,asPitch g]
     mel = asScore $ scat [d, scat [g,fs]^/2,bb^*2]^/4
 in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
 ```
+-->
 
 ## Viola duo
 
@@ -1024,7 +1028,7 @@ let
     part1 = pres1 |> pres2
     part2 = pres1 |> pres2
 
-in clef CClef $ dynamics pp $ compress 2 $ part1 |> toLydian part2
+in clef CClef $ level pp $ compress 2 $ part1 |> toLydian part2
 ```
 -->
 
@@ -1037,8 +1041,8 @@ let
     bar    = rest^*4
 
     song    = mempty
-    left    = times 4 (times 4 $ removeRests $ triplet g)
-    right   = removeRests $ times 2 (delay 4 motive |> rest^*3)
+    left    = times 4 (times 4 $ mcatMaybes $ triplet g)
+    right   = mcatMaybes $ times 2 (delay 4 motive |> rest^*3)
 
     triplet = group 3
 

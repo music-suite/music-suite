@@ -26,14 +26,14 @@ in stretch (1/8) m
 To transform music, we write a *function*. For example the following function halves all durations and transposes all pitches up a minor sixth:
 
 ```haskell
-up (minor sixth) . compress 2
+up m6 . compress 2
 ```
 
 Applied to the above music we get:
 
 ```music
 let
-    transform = up (minor sixth) . compress 2
+    transform = up m6 . compress 2
     m = staccato (scat [c,d,e,c]^/2) |> ab |> b_ |> legato (d |> c)^*2
 in transform $ stretch (1/8) m
 ```

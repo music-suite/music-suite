@@ -30,5 +30,5 @@ The suite also includes a special program called `music-transf`, which interpret
 Among other things, `music-transf` is useful for generating nice inline musical examples such as this one:
 
 ```music
-legato $ dynamics mp $ stretch (1/16) $ (scat [c,d,e,f]) |> g^*12
+legato $ level mp $ stretch (1/16) $ (scat [c,d,e,f]) |> g^*12
 ```
