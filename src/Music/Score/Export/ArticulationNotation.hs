@@ -41,6 +41,7 @@ import Data.Semigroup
 import Data.Functor.Context
 import Control.Lens -- ()
 import Music.Score.Articulation
+import Music.Score.Instances
 import Music.Score.Ties
 import Music.Time
 
@@ -90,32 +91,27 @@ instance Monoid ArticulationNotation where
   x `mappend` ArticulationNotation ([], []) = x
   x `mappend` y = x
 
-{-
-  TODO these should be lens/methods in Articulated
--}
-_accentuation = getProduct . fst
-_separation   = getProduct . snd
-
 -- TODO add slurs if separation is below some value...
 
 getSeparationMarks :: Double -> [Mark]
 getSeparationMarks x
-  | x <= 0              = []
-  | 0   < x && x < 0.3  = [Staccato]
-  | 0.3 < x && x < 0.6  = [MoltoStaccato]
-  | otherwise           = []
+  |              x <= (-1) = [] -- slur
+  | (-1) <  x && x <  1    = []
+  | 1    <= x && x <  2    = [Staccato]
+  | 2    <= x              = [MoltoStaccato]
 
 getAccentMarks :: Double -> [Mark]
 getAccentMarks x
-  | x <= 0              = []
-  | 0   < x && x < 0.3  = [Accent]
-  | 0.3 < x && x < 0.6  = [Marcato]
+  |              x <= (-1) = []
+  | (-1) <  x && x <  1    = []
+  | 1    <= x && x <  2    = [Accent]
+  | 2    <= x              = [Marcato]
   | otherwise           = []
 
 
-notateArticulation :: (Ord a, a ~ (Product Double, Product Double)) => Ctxt a -> ArticulationNotation
+notateArticulation :: (Ord a, a ~ (Sum Double, Sum Double)) => Ctxt a -> ArticulationNotation
 notateArticulation x = ArticulationNotation 
   (
   [NoSlur], 
-  getSeparationMarks (_separation $ extractCtxt x) <> getAccentMarks (_accentuation $ extractCtxt x)
+  getSeparationMarks (getSum $ view separation $ extractCtxt x) <> getAccentMarks (getSum $ view accentuation $ extractCtxt x)
   )

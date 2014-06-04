@@ -37,7 +37,7 @@ module Music.Score.Dynamics (
         -- * Dynamic type functions
         Dynamic,
         SetDynamic,
-        DynamicLensLaws_,
+        DynamicLensLaws',
         DynamicLensLaws,
 
         -- * Accessing dynamics
@@ -117,12 +117,13 @@ class (HasDynamics s t) => HasDynamic s t where
   dynamic :: Lens s t (Dynamic s) (Dynamic t)
 
 
-type DynamicLensLaws_ s t a b = (
+type DynamicLensLaws' s t a b = (
   Dynamic (SetDynamic a s) ~ a,
   SetDynamic (Dynamic t) s ~ t,
   SetDynamic a (SetDynamic b s) ~ SetDynamic a s
   )
-type DynamicLensLaws s t = DynamicLensLaws_ s t (Dynamic s) (Dynamic t)
+
+type DynamicLensLaws s t = DynamicLensLaws' s t (Dynamic s) (Dynamic t)
 
 -- |
 -- Class of types that provide a dynamic traversal.

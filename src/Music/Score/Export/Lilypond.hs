@@ -221,8 +221,6 @@ instance HasBackend Lilypond where
 -- TODO move
 second f (x, y) = (x, f y)
 
-type HasArticulation' a = HasArticulation a a
-
 type HasArticulation3 a a' a'' = (
   HasArticulation' a,
   HasArticulation a  a',
@@ -309,7 +307,7 @@ instance (
 
 
   -- TODO generalize
-  (Articulation (SetDynamic DynamicNotation b)) ~ (Product Double, Product Double),
+  (Articulation (SetDynamic DynamicNotation b)) ~ (Sum Double, Sum Double),
 
   -- HasArticulationNotation c d e,
 

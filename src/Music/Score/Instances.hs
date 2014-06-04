@@ -42,7 +42,8 @@ import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.VectorSpace
+import           Data.VectorSpace hiding (Sum)
+import           Data.Semigroup.Instances
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
@@ -329,28 +330,6 @@ instance Bounded a => Bounded [a] where
     maxBound = [maxBound]
 
 
-
--- TODO move
--- TODO derive more of these?
-instance Applicative Product where
-  pure = Product
-  Product f <*> Product x = Product (f x)
-deriving instance Floating a => Floating (Product a)
-instance Num a => Num (Product a) where
-  fromInteger = pure . fromInteger
-  abs    = fmap abs
-  signum = fmap signum
-  (+)    = liftA2 (+)
-  (-)    = liftA2 (-)
-  (*)    = liftA2 (*)
-instance Fractional a => Fractional (Product a) where
-  fromRational = pure . fromRational
-  (/) = liftA2 (/)
-instance Real a => Real (Product a) where
-  toRational (Product x) = toRational x
-
-
-
 -- TODO use wrapper type and replace withContext
 type instance Dynamic (a,b,c) = (a,b,c)
 type instance SetDynamic g (a,b,c) = g
@@ -359,15 +338,4 @@ instance Transformable a => Transformable (Maybe a) where
   transform s = fmap (transform s)
 instance (Transformable a, Transformable b, Transformable c) => Transformable (a,b,c) where
   transform s (a,b,c) = (transform s a,transform s b,transform s c)
-
-deriving instance IsDynamics a => IsDynamics (Product a)
-deriving instance AdditiveGroup a => AdditiveGroup (Product a)
-instance VectorSpace a => VectorSpace (Product a) where
-  type Scalar (Product a) = Scalar a
-  x *^ Product y = Product (x *^ y)
-instance AffineSpace a => AffineSpace (Product a) where
-  type Diff (Product a) = Product (Diff a)
-  Product p .-. Product q = Product (p .-. q)
-  Product p .+^ Product v = Product (p .+^ v)
-
 

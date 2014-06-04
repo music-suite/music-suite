@@ -38,16 +38,17 @@ module Music.Score.Articulation (
         SetArticulation,
         Accentuation,
         Separation,
+        Articulated(..),
 
         -- ** Accessing articulation
         HasArticulations(..),
         HasArticulation(..),
+        HasArticulations',
+        HasArticulation',
         articulation',
         articulations',
 
         -- * Manipulating articulation
-        Articulated,
-        
         -- ** Accents
         accent,
         marcato,
@@ -105,6 +106,14 @@ type family Articulation (s :: *) :: *
 --
 type family SetArticulation (b :: *) (s :: *) :: *
 
+type ArticulationLensLaws' s t a b = (
+  Articulation (SetArticulation a s) ~ a,
+  SetArticulation (Articulation t) s ~ t,
+  SetArticulation a (SetArticulation b s) ~ SetArticulation a s
+  )
+
+type ArticulationLensLaws s t = ArticulationLensLaws' s t (Articulation s) (Articulation t)
+
 -- |
 -- Class of types that provide a single articulation.
 --
@@ -118,10 +127,13 @@ class (HasArticulations s t) => HasArticulation s t where
 --
 class (Transformable (Articulation s),
        Transformable (Articulation t),
-       SetArticulation (Articulation t) s ~ t) => HasArticulations s t where
+       ArticulationLensLaws s t) => HasArticulations s t where
 
   -- | Articulation type.
   articulations :: Traversal s t (Articulation s) (Articulation t)
+
+type HasArticulation'  a = HasArticulation  a a
+type HasArticulations' a = HasArticulations a a
 
 -- |
 -- Articulation type.
@@ -140,11 +152,11 @@ articulations' = articulations
 type instance Articulation TYPE = TYPE;        \
 type instance SetArticulation a TYPE = a;      \
                                                \
-instance (Transformable a, a ~ Articulation a) \
+instance (Transformable a, a ~ Articulation a, SetArticulation TYPE a ~ TYPE) \
   => HasArticulation TYPE a where {            \
   articulation = ($)              } ;          \
                                                \
-instance (Transformable a, a ~ Articulation a) \
+instance (Transformable a, a ~ Articulation a, SetArticulation TYPE a ~ TYPE) \
   => HasArticulations TYPE a where {           \
   articulations = ($)               } ;        \
 
@@ -283,7 +295,6 @@ instance (HasArticulation a b) => HasArticulation (SlideT a) (SlideT b) where
 
 
 type family Accentuation (a :: *) :: *
-
 type family Separation (a :: *) :: *
 
 type instance Accentuation () = ()
@@ -291,48 +302,63 @@ type instance Separation   () = ()
 type instance Accentuation (a, b) = a
 type instance Separation   (a, b) = b
 
+
+-- |
+-- Class of types that can be transposed, inverted and so on.
+--
+class (
+  Fractional (Accentuation a),
+  Fractional (Separation a),
+  AffineSpace (Accentuation a),
+  AffineSpace (Separation a)
+  ) => Articulated a where
+    accentuation :: Lens' a (Accentuation a)
+    separation   :: Lens' a (Separation a)
+
+
 -- TODO move
+instance Num () where
+  _ + _ = ()
+  _ - _ = ()
+  _ * _ = ()
+  signum _ = ()
+  abs _ = ()
+  fromInteger _ = ()
+
+instance Fractional () where
+  _ / _ = ()
+  fromRational _ = ()
+
 instance VectorSpace () where
   type Scalar () = ()
   _ *^ _ = ()
+
 instance AffineSpace () where
   type Diff () = ()
   _ .-. _ = ()
   _ .+^ _ = ()
 
--- |
--- Class of types that can be transposed, inverted and so on.
---
-type Articulated a
-  = (HasArticulations a a,
-     AffineSpace (Accentuation (Articulation a)),
-     AffineSpace (Separation (Articulation a)))
+instance Articulated () where
+  accentuation = id
+  separation   = id
+
+instance (AffineSpace a, AffineSpace b, Fractional a, Fractional b) => Articulated (a, b) where
+  accentuation = _1'
+  separation   = _2'
+
+_1' :: Lens' (a, b) a
+_1' = _1
+
+_2' :: Lens' (a, b) b
+_2' = _2
+  
 
 
--- accent = error "Not implemented: accent"
--- marcato = error "Not implemented: marcato"
--- accentLast = error "Not implemented: accentLast"
--- marcatoLast = error "Not implemented: marcatoLast"
--- accentAll = error "Not implemented: accentAll"
--- marcatoAll = error "Not implemented: marcatoAll"
---
--- tenuto = error "Not implemented: tenuto"
--- separated = error "Not implemented: separated"
--- staccato = error "Not implemented: staccato"
--- portato = error "Not implemented: portato"
--- legato = error "Not implemented: legato"
--- spiccato = error "Not implemented: spiccato"
+accent :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+accent = set (articulations . accentuation) 1
 
---
--- TODO use phrase-wise traversal here
--- The constraint becomes (HasVoices a b, Articulated b) ... or similar
---
-
-accent :: Articulated a => a -> a
-accent = id
-
-marcato :: Articulated a => a -> a
-marcato = id
+marcato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+marcato = set (articulations . accentuation) 2
 
 accentLast :: Articulated a => a -> a
 accentLast = id
@@ -350,20 +376,28 @@ marcatoAll = id
 tenuto :: Articulated a => a -> a
 tenuto = id
 
-separated :: Articulated a => a -> a
-separated = id
-
-staccato :: Articulated a => a -> a
-staccato = id
-
-portato :: Articulated a => a -> a
-portato = id
-
-legato :: Articulated a => a -> a
-legato = id
-
 spiccato :: Articulated a => a -> a
 spiccato = id
+
+legatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+legatissimo = set (articulations . separation) (-2)
+
+legato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+legato = set (articulations . separation) (-1)
+
+separated :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+separated = set (articulations . separation) 0
+
+portato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+portato = set (articulations . separation) 0.5
+
+staccato :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+staccato = set (articulations . separation) 1
+
+staccatissimo :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
+staccatissimo = set (articulations . separation) 2
+
+
 
 
 newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
