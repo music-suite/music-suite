@@ -283,9 +283,6 @@ in scat $ fmap (`up` c) intervals
 You can add pitches and intervals using the @[.-.] and @[.+^] operators. To memorize these
 operators, think of pitches and points `.` and intervals as vectors `^`.
 
-```music+haskellx
-setPitch (c .+^ m3) $ return c_
-```
 
 
 ### Qualified pitch and interval names
@@ -777,16 +774,9 @@ TODO repeats
 
 To set the clef for a whole passage, use @[clef]. The clef is used by most notation backends and ignored by audio backends.
 
-```music+haskellx
-let
-    part1 = clef FClef $ staccato $ scat [c_,g_,c,g_]
-    part2 = clef CClef $ staccato $ scat [ab_,eb,d,a]
-    part3 = clef GClef $ staccato $ accentLast $ scat [g,fs,e,d]
-in compress 8 $ part1 |> part2 |> part3
-```
-
 To set the clef for a preexisting passage in an existing score, use @[clefDuring].
 
+TODO example
 
 ## Annotations
 
@@ -795,7 +785,7 @@ Annotations are simply textual values attached to a specific section of the scor
 Annotations are invisible by default. To show annotations in the generated output, use
 @[showAnnotations].
 
-```music+haskellx
+```music+haskell
 showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 ```
 
@@ -971,90 +961,10 @@ This feature could of course also be used to convert Sibelius scores to other fo
 
 TODO
 
+
 # Examples
 
-Some more involved examples:
-
-## Counterpoint
-
-
-```music+haskell
-let                      
-    subj = asScore $ scat [ c,       d,        f,          e           ]
-    cs1  = asScore $ scat [ g,f,e,g, f,a,g,d', c',b,c',d', e',g',f',e' ]
-in compress 4 cs1 </> subj
-```
-
-TODO about
-
-```music+haskellx
-let subj = mcatMaybes $ scat [ 
-            scat [rest,c,d,e], 
-            f^*1.5, scat[g,f]^/4, scat [e,a,d], g^*1.5,
-            scat [a,g,f,e,f,e,d]^/2, c^*2 
-        ]^/8
-
-in (delay 1.5 . up _P5) subj </> subj
-```
-
-## Generative music
-
-<!--
-```music+haskellx
-let
-    row = cycle [c,eb,ab,asPitch g]
-    mel = asScore $ scat [d, scat [g,fs]^/2,bb^*2]^/4
-in (take 25 $ row) `repeated` (\p -> up (asPitch p .-. c) mel)
-```
--->
-
-## Viola duo
-
-<!--
-```music+haskellx
-let
-    toLydian = mapPitch' (\p -> if p == c then cs else p)
-
-    subj1 = (^/2) $
-        (legato.accent) (b_ |> c) |> (legato.accent) (c |> b_^*2)
-            |> legato (scat [b_, c, d])
-            |> b_ |> c |> b_^*2
-        |> legato (scat [e, d, b_, c]) |> b_^*2
-        |> scat [d, e, b_] |> c^*2 |> b_
-
-    pres1 = subj1^*(2/2)
-    pres2 = subj1^*(2/2) </> delay 2 (subj1^*(3/2))
-
-    part1 = pres1 |> pres2
-    part2 = pres1 |> pres2
-
-in clef CClef $ level pp $ compress 2 $ part1 |> toLydian part2
-```
--->
-
-<!--
-### Schubert
-
-```music+haskellx
-let
-    motive = (legato $ stretchTo 2 $ scat [g,a,bb,c',d',eb']) |> staccato (scat [d', bb, g])
-    bar    = rest^*4
-
-    song    = mempty
-    left    = times 4 (times 4 $ mcatMaybes $ triplet g)
-    right   = mcatMaybes $ times 2 (delay 4 motive |> rest^*3)
-
-    triplet = group 3
-
-    a `x` b = a^*(3/4) |> b^*(1/4)
-    a `l` b = (a |> b)^/2
-
-in  stretch (1/4) $ song </> left </> down _P8 right      
-```
--->
-
-
-
+See the [examples](https://github.com/music-suite/music-preludes/tree/master/examples) directory in `music-preludes`.
 
 
 ### Acknowledgements
