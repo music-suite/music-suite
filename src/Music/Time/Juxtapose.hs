@@ -49,7 +49,7 @@ module Music.Time.Juxtapose (
 import           Control.Lens hiding ((|>), (<|))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Monoid.WithSemigroup
+-- import           Data.Monoid.WithSemigroup
 import           Data.Semigroup
 import           Data.VectorSpace
 

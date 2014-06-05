@@ -64,7 +64,7 @@ import qualified Data.List                 as List
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Maybe
-import           Data.Monoid.WithSemigroup
+-- import           Data.Monoid.WithSemigroup
 import           Data.Semigroup
 import           Data.Set                  (Set)
 import qualified Data.Set                  as Set
@@ -80,7 +80,7 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Transform
 
-type IsAttribute a = (Typeable a, Monoid' a)
+type IsAttribute a = (Typeable a, Monoid a, Semigroup a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
