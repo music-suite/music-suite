@@ -1,6 +1,6 @@
 
 name:                   music-sibelius
-version:                1.6.2
+version:                1.7
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
 license:                BSD3
@@ -27,9 +27,9 @@ library
                         monadplus,
                         unordered-containers,
                         bytestring,
-                        music-score              == 1.6.2,
-                        music-pitch-literal      == 1.6.2,
-                        music-preludes           == 1.6.2,
+                        music-score              == 1.7,
+                        music-pitch-literal      == 1.7,
+                        music-preludes           == 1.7,
                         aeson
     exposed-modules:    Music.Sibelius
                         Music.Score.Import.Sibelius
