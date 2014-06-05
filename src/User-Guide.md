@@ -439,7 +439,7 @@ TODO how part separation works w.r.t. division etc
 
 @[simultaneous]
 
-@[mapSimultaneous]
+@[simult]
 
 ## Rests
 
