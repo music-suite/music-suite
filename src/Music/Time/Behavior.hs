@@ -78,7 +78,7 @@ import           Control.Lens                  hiding (Indexable, Level, above,
                                                 reversed, transform, (<|), (|>))
 
 import           Data.Distributive
-import           Data.Functor.Rep
+import           Data.Functor.Rep as R
 import           Data.Functor.Rep.Lens
 import           Data.Typeable
 import           Music.Time.Bound
@@ -224,7 +224,7 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 -- @
 --
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-behavior = tabulated
+behavior = R.tabulated
 
 -- |
 -- View a time function as a behavior.
@@ -249,7 +249,7 @@ unbehavior = from behavior
 -- A behavior that
 --
 line' :: Behavior Time
-line' = id ^. tabulated
+line' = id ^. R.tabulated
 
 -- |
 -- A behavior that gives the current time, i.e. the identity function
@@ -258,7 +258,7 @@ line' = id ^. tabulated
 -- for convenience.
 --
 line :: Fractional a => Behavior a
-line = realToFrac ^. tabulated
+line = realToFrac ^. R.tabulated
 --
 -- > f t = t
 --
