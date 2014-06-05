@@ -1,6 +1,6 @@
 
 name:                   music-dynamics
-version:                1.6.2
+version:                1.7
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -27,7 +27,7 @@ library
                         random,
                         semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
-                        music-dynamics-literal  == 1.6.2
+                        music-dynamics-literal  == 1.7
     exposed-modules:    Music.Dynamics
                         Music.Dynamics.Absolute
                         Music.Dynamics.Common
