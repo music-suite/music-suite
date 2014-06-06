@@ -891,6 +891,7 @@ logBaseR k n                         = logBase (fromRational k) (fromRational n)
 isDivisibleBy :: (Real a, Real b) => a -> b -> Bool
 isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
+equalTo :: Eq a => a -> a -> Bool
 equalTo  = (==)
 
 infixl <=>
