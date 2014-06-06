@@ -83,7 +83,6 @@ module Music.Time.Segment (
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Clipped
-import           Data.Functor.Rep.Lens
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
@@ -107,7 +106,7 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
 import           Data.Distributive
-import           Data.Functor.Rep
+import           Data.Functor.Rep as R
 import           Data.Functor.Rep.Lens
 import           Data.Maybe
 import           Data.Typeable
@@ -238,7 +237,7 @@ instance Reversible (Segment a) where
 -- View a segment as a time function and vice versa.
 --
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
-segment = tabulated
+segment = R.tabulated
 
 apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2))
@@ -287,8 +286,8 @@ bounded = iso ns2bb bb2ns
   where
     bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
     ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
-    s2b = under tabulated (. realToFrac)
-    b2s = under tabulated (. realToFrac)
+    s2b = under R.tabulated (. realToFrac)
+    b2s = under R.tabulated (. realToFrac)
 
 --
 -- Note that the isomorhism only works because of 'Bound' being abstract.
