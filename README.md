@@ -7,6 +7,6 @@ It allows users to install all (stable) libraries in the suite as follows:
 
     cabal install music-suite
     
-If you wish to install an exerimental package, simply use `cabal install` on the specific package instead.
+If you wish to install an experimental package, simply use `cabal install` on the specific package instead.
 
 ![overview](https://raw.githubusercontent.com/hanshoglund/music-docs/master/music-suite-deps.png)
