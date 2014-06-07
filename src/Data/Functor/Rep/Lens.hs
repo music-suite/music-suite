@@ -17,6 +17,7 @@ import Data.Functor.Rep
 
 infixl 6 !
 
+{-
 -- |
 -- The isomorpism between a representable functor and its representation.
 --
@@ -26,5 +27,5 @@ infixl 6 !
 --
 tabulated :: (Representable f, Representable g) => Iso (Rep f -> a) (Rep g -> b) (f a) (g b)
 tabulated = iso tabulate index
-
+-}
 
