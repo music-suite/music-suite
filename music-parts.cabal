@@ -22,13 +22,14 @@ source-repository head
   
 library                    
     build-depends:      base                    >= 4 &&   < 5,
-                        lens				            >= 4.1.2 && < 4.2,
+                        aeson                   >= 0.7.0.6 && < 1,
+                        lens				            >= 4.2 && < 4.3,
                         semigroups              >= 0.13.0.1 && < 1,
                         time,
                         random,
                         semigroupoids,
                         data-default,
-                        adjunctions,
+                        adjunctions             >= 4.1 && < 5,
                         roman-numerals
     exposed-modules:    Music.Parts
                         -- Music.Parts.Strings
