@@ -69,7 +69,7 @@ import           Data.Semigroup
 import           Data.Set                      (Set)
 import qualified Data.Set                      as Set
 import           Data.VectorSpace
-import           Prelude                       hiding (trimAfter)
+import           Prelude
 
 import           Control.Applicative
 import           Control.Arrow                 (first, second, (&&&), (***))
