@@ -95,6 +95,41 @@ module Music.Parts (
         cello,
         doubleBass,
 
+        -- ** Ensembles
+        piccoloFlutes,
+        flutes,
+        oboes,
+        clarinets,
+        bassoons,
+
+        flutes1,
+        flutes2,
+        oboes1,
+        oboes2,
+        clarinets1,
+        clarinets2,
+
+        horns,
+        highHorns,
+        lowHorns,
+        trumpets,
+        trombones,
+        trumpets1,
+        trumpets2,
+        trombones1, 
+        trombones2,
+        tubas,
+
+        violins,
+        violins1,
+        violins2,
+        violas,
+        cellos,
+        doubleBasses,
+
+        harp,
+        harp,
+
         -- ** Default values
         defaultClef,
         defaultMidiProgram,
@@ -726,3 +761,34 @@ instance Default BasicPart where
 
 instance Show BasicPart where
     show _ = ""
+
+
+piccoloFlutes = tutti piccoloFlute
+flutes = tutti flute
+oboes = tutti oboe
+clarinets = tutti clarinet
+bassoons = tutti bassoon
+
+[flutes1, flutes2] = divide 2 flutes
+[oboes1, oboes2] = divide 2 oboes
+[clarinets1, clarinets2] = divide 2 clarinets
+
+
+horns = tutti horn
+highHorns = zipWith (!!) (repeat $ divide 4 horns) [0,2]
+lowHorns = zipWith (!!) (repeat $ divide 4 horns) [1,3]
+trumpets = tutti trumpet
+trombones = tutti trombone
+[trumpets1, trumpets2] = divide 2 trumpets
+[trombones1, trombones2] = divide 2 trombones
+tubas = tutti tuba
+
+violins = tutti violin
+[violins1, violins2] = divide 2 violins
+violas = tutti viola
+cellos = tutti cello
+doubleBasses = tutti doubleBass
+
+harp' = StdInstrument 46
+harp = tutti harp'
+ 
