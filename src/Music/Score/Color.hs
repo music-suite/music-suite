@@ -37,6 +37,8 @@ module Music.Score.Color (
 
         -- * Manipulating color
         color,
+        colorRed,
+        colorBlue,
 
         -- * Representation
         ColorT(..),
@@ -123,3 +125,5 @@ instance Tiable a => Tiable (ColorT a) where
 color :: HasColor a => Colour Double -> a -> a
 color = setColor
 
+colorRed = color C.red
+colorBlue = color C.blue
