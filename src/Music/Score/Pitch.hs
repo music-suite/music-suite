@@ -68,6 +68,11 @@ module Music.Score.Pitch (
         fifthsDown,
         fifthsAbove,
         fifthsBelow,
+        -- ** Utility
+        _15va,
+        _8va,
+        _8vb,
+        _15vb,
 
         -- * Inspecting pitch
         highestPitch,
@@ -489,6 +494,17 @@ fifthsAbove n = above (_P8^*n)
 fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsBelow n = below (_P8^*n)
 
+-- | Shorthand for @'octavesUp' 2@.
+_15va = octavesUp 2
+
+-- | Shorthand for @'octavesUp' 1@.
+_8va  = octavesUp 1
+
+-- | Shorthand for @'octavesDown' 1@.
+_8vb  = octavesDown 1
+
+-- | Shorthand for @'octavesDown' 2@.
+_15vb = octavesDown 2
 
 
 
