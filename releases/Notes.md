@@ -45,17 +45,23 @@
 
 - Representation: 
 
+    - API cleaning
+        - Proper separation of time containers (now in the `Music.Time` hierarchy) and the rest (in `Music.Score`)
+        - Merges classes `Delayable` and `Stretchable` into `Transformable`
+        - Merges classes `HasOnset` and `HasOffset` etc. into `HasPosition`
+        - Proper implementation of `Span`, as a real abelian group.
+        - Changes API to use lenses more thoroughly
+
     - Adds laws for `Transformable`, `Reversible` and `Splittable`
 
-    - Many new time-based containers: 
+    - `Behavior` and `Reactive` now use `Representable` from adjunctions as the main interface
+
+    - Adds many new time-based containers: 
         - `Segment` for values varying over an unknown time span
         - `Bound` for restricting time boundaries
         - `Delayed` and `Stretched`, representing values in the context of a delay or stretch transformation
         - `Chord` representing center-aligned parallel compositions (in contrast to `Track`, which represents
            left-aligned parallel compositions).
-
-    - Better interface to `Behavior` and `Reactive`
-        - Cleaner API, using `Representable` from adjunctions as the main interface
 
     - Completely new interface to the *aspect classes* (parts, pitches, dynamics and articulations):
         - Now separates classes with a single pitches/dynamic values etc (i.e. notes) from classes with
@@ -67,6 +73,8 @@
     - Improves representation of dynamics and articulation
     
     - Adds *phrasewise traversals* of scores and voices (experimental)
+
+    - Adds colored noteheads (`ColorT` transformer)
 
 - Backends and notation:
 
@@ -88,15 +96,6 @@
         - NEW EXECUTABLE: music2png
         - NEW EXECUTABLE: music2svg
 
-* Adds colored noteheads
+- Adds regression tests
 
-* Adds regression tests
-
-* Adds more examples
-
-* Garbage-collect API:
-    * Merges classes `Delayable` and `Stretchable` into `Transformable`
-    * Merges classes `HasOnset` and `HasOffset` etc. into `HasPosition`
-    * Proper implementation of `Span`, as a real abelian group.
-    * Changes API to use lenses more thoroughly
-
+- Adds more examples
