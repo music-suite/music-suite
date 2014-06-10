@@ -495,15 +495,19 @@ fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsBelow n = below (_P8^*n)
 
 -- | Shorthand for @'octavesUp' 2@.
+_15va :: Transposable a => Scalar (Interval a) -> a -> a
 _15va = octavesUp 2
 
 -- | Shorthand for @'octavesUp' 1@.
+_8va :: Transposable a => Scalar (Interval a) -> a -> a
 _8va  = octavesUp 1
 
 -- | Shorthand for @'octavesDown' 1@.
+_8vb :: Transposable a => Scalar (Interval a) -> a -> a
 _8vb  = octavesDown 1
 
 -- | Shorthand for @'octavesDown' 2@.
+_15vb :: Transposable a => Scalar (Interval a) -> a -> a
 _15vb = octavesDown 2
 
 
