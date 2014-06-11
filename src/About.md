@@ -68,6 +68,8 @@ If you are interested in contributing to the Suite, please join the Github organ
 
 - The [source code on Github](https://github.com/music-suite)
 
+- For more examples, see [music-preludes/examples](https://github.com/music-suite/music-preludes/tree/master/examples) directory. You can download this directory from Hackage using `cabal unpack music-preludes`.
+
 - For bug reports, please use the relevant Github tracker, i.e. for `music-score` use <https://github.com/music-suite/music-score/issues>
 
 - For questions, feedback and general discussion, see [the Google discussion group](http://groups.google.com/d/forum/music-suite-discuss)
