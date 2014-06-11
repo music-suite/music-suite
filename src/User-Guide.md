@@ -248,7 +248,7 @@ Here is an overview of all pitch notations:
 
 ```haskell
 sharpen c             == c sharp       == cs
-flatten d             == d flat        == ds
+flatten d             == d flat        == db
 (sharpen . sharpen) c == c doubleSharp == css
 (flatten . flatten) d == d doubleFlat  == dss
 ```
