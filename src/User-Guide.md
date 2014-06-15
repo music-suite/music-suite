@@ -938,7 +938,7 @@ toMusicXmlString $ asScore $ scat [c,d,e]
 
 ## ABC Notation
 
-ABC notation (for use with [abcjs](http://code.google.com/p/abcjs/) or similar engines) is still experimental.
+ABC notation (for use with [abcjs](https://github.com/paulrosen/abcjs) or similar engines) is still experimental.
 
 ## Guido
 
