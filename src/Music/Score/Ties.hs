@@ -91,6 +91,8 @@ class Tiable a where
   toTied    :: a -> (a, a)
   toTied a = (beginTie a, endTie a)
 
+
+
 newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
   deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
