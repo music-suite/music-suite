@@ -339,3 +339,10 @@ instance Transformable a => Transformable (Maybe a) where
 instance (Transformable a, Transformable b, Transformable c) => Transformable (a,b,c) where
   transform s (a,b,c) = (transform s a,transform s b,transform s c)
 
+
+-- TODO place for this?
+-- For use with single-note scores etc
+instance Tiable a => Tiable (Score a) where
+  beginTie = fmap beginTie
+  endTie   = fmap endTie
+
