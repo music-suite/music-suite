@@ -254,6 +254,7 @@ instance (
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . map (second (over articulations notateArticulation)) 
     . map (second (preserveMeta addArtCon))
+    . map (second (over (phrases) removeCloseDynMarks))
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
@@ -330,6 +331,11 @@ addArtCon :: (
 addArtCon = over (phrases.varticulation) withContext
 varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
 
+-- TODO this require a phrase traversal with offset
+-- Something along the lines of:
+-- type TVoice = Track (Voice a)
+removeCloseDynMarks :: a -> a
+removeCloseDynMarks = id
 
 
 {-
