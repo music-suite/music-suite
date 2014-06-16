@@ -178,7 +178,7 @@ rewriteR = go where
   go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
   go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
 
-rewrite1 = tupletDot . splitTuplet . singleGroup
+rewrite1 = tupletDot . splitTupletIfLongEnough . singleGroup
 
 
 singleGroup :: Rhythm a -> Rhythm a
@@ -190,8 +190,11 @@ tupletDot :: Rhythm a -> Rhythm a
 tupletDot orig@(Tuplet ((unRatio.realToFrac) -> (2,3)) (Dotted 1 x)) = x
 tupletDot orig                                                       = orig
 
+splitTupletIfLongEnough :: Rhythm a -> Rhythm a
+splitTupletIfLongEnough r = if _duration r > (1/4) then splitTuplet r else r
+-- TODO should compare against beat duration, not just (1/4)
+
 -- | Splits a tuplet iff it contans a group which can be split into two halves of exactly the same size.
--- TODO this should only happen if the tuplet lenght is longer than a beat
 splitTuplet :: Rhythm a -> Rhythm a
 splitTuplet orig@(Tuplet n (Group xs)) = case trySplit xs of
   Nothing       -> orig
