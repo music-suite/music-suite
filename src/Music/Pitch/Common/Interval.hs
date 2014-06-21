@@ -61,7 +61,7 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
-        octaves,
+--        octaves,
         isNegative,
         isPositive,
         isNonNegative,
@@ -70,18 +70,18 @@ module Music.Pitch.Common.Interval (
         isLeap,
 
         -- *** Simple and compound intervals
-        isSimple,
-        isCompound,
-        separate,
-        simple,
+--        isSimple,
+--        isCompound,
+--        separate,
+--        simple,
 
         -- *** Inversion
         invert,
 
         -- * Utility
-        asInterval,
-        intervalDiff,
-        mkInterval',
+--        asInterval,
+--        intervalDiff,
+--        mkInterval',
   ) where
 
 import Data.Maybe
@@ -96,7 +96,7 @@ import qualified Data.List as List
 
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
-import Music.Pitch.Literal
+-- import Music.Pitch.Literal
 import Music.Pitch.Common.Semitones
 
 -- |
@@ -108,46 +108,40 @@ import Music.Pitch.Common.Semitones
 -- The quality of a compound interval is the quality of the simple interval on
 -- which it is based.
 --
+-- Note that (Augmented 0) and (Diminished 0) are superfluous identity
+-- values, use Perfect instead. Augmented and Diminished must also
+-- take only positive arguments.
+
 data Quality
     = Major
     | Minor
     | Perfect
-    | Augmented Integer
-    | Diminished Integer
+    | Augmented Int
+    | Diminished Int
     deriving (Eq, Ord, Show)
 
 instance HasQuality Quality where
     quality = id
 
--- There is no instance for (Augmentable Quality) as we can not distinguish 
--- between m/M and P in cases like (augment $ Diminished 1) or 
--- (diminish $ Augmented 1).
 
--- instance Augmentable Quality where
---     augment = go
---         where
---             go (Diminished 0)   = error "Diminished 0"
---             go (Diminished 1)   = Minor -- Or perfect
---             go (Diminished n)   = Diminished (n - 1)
+-- | Augmentable Quality instance
 -- 
---             go Minor            = Major
---             go Perfect          = Augmented 1
---             go Major            = Augmented 1
--- 
---             go (Augmented 0)    = error "Augmented 0"
---             go (Augmented n)    = Augmented (n + 1)
---     diminish = go
---         where
---             go (Diminished 0)   = error "Diminished 0"
---             go (Diminished n)   = Diminished (n + 1)
--- 
---             go Major            = Minor
---             go Perfect          = Diminished 1
---             go Minor            = Diminished 1
--- 
---             go (Augmented 0)    = error "Augmented 0"
---             go (Augmented 1)    = Major -- or Perfect (?)
---             go (Augmented n)    = Augmented (n - 1)
+-- This Augmentable instance exists solely for use of the getQuality
+-- function, which ensures that there is never any ambiguity around
+-- diminished/augmented intervals turning into major/minor/perfect
+-- intervals.
+
+instance Augmentable Quality where
+  augment Major = Augmented 1
+  augment Minor = Major
+  augment Perfect = Augmented 1
+  augment (Augmented n) = Augmented (n + 1)
+  augment (Diminished n) = Diminished (n - 1)
+  diminish Major = Minor
+  diminish Minor = Diminished 1
+  diminish Perfect = Diminished 1
+  diminish (Augmented n) = Augmented (n - 1)
+  diminish (Diminished n) = Diminished (n + 1)
 
 class HasQuality a where
     quality :: a -> Quality
@@ -198,38 +192,38 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
--- Convert an offset to a quality.
---
--- This is different for perfect and imperfect interals:
---
---      Imperfect   Perfect
---      ===         ===
--- -3   dd          ddd
--- -2   d           dd
--- -1   m           d
---  0   M           P
---  1   a           a
---  2   aa          aa
---
-diffToQuality :: Bool -> Int -> Quality
-diffToQuality = go
-    where
-        go True  0   = Perfect
-        go True  n   = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate n)
-        go False 0    = Major
-        go False (-1) = Minor
-        go False n    = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate $ n + 1)
-
-qualityToDiff :: Bool -> Quality -> Int
-qualityToDiff perfect = go
-    where
-        go (Diminished n)   = fromIntegral $ negate $ if perfect then n else n + 1
-        go Minor            = fromIntegral $ -1
-        go Perfect          = fromIntegral $ 0
-        go Major            = fromIntegral $ 0
-        go (Augmented n)    = fromIntegral $ n
-
-
+-- -- Convert an offset to a quality.
+-- --
+-- -- This is different for perfect and imperfect interals:
+-- --
+-- --      Imperfect   Perfect
+-- --      ===         ===
+-- -- -3   dd          ddd
+-- -- -2   d           dd
+-- -- -1   m           d
+-- --  0   M           P
+-- --  1   a           a
+-- --  2   aa          aa
+-- --
+-- diffToQuality :: Bool -> Int -> Quality
+-- diffToQuality = go
+--     where
+--         go True  0   = Perfect
+--         go True  n   = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate n)
+--         go False 0    = Major
+--         go False (-1) = Minor
+--         go False n    = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate $ n + 1)
+-- 
+-- qualityToDiff :: Bool -> Quality -> Int
+-- qualityToDiff perfect = go
+--     where
+--         go (Diminished n)   = fromIntegral $ negate $ if perfect then n else n + 1
+--         go Minor            = fromIntegral $ -1
+--         go Perfect          = fromIntegral $ 0
+--         go Major            = fromIntegral $ 0
+--         go (Augmented n)    = fromIntegral $ n
+-- 
+-- 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
 --
@@ -239,7 +233,7 @@ qualityToDiff perfect = go
 --
 -- > number (a + b) = number a + number b - 1
 --
-newtype Number = Number { getNumber :: Integer }
+newtype Number = Number { getNumber :: Int }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
     
 instance Show Number where { show = show . getNumber }
@@ -341,7 +335,7 @@ class HasNumber a where
 -- > m3 ^+^ _M3 = _P5
 -- > d5 ^+^ _M6 = m10
 --
--- The scalar type of 'Interval' is 'Integer', using '^*' to stack intervals of a certain
+-- The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain
 -- type on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a
 -- major ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
 -- (arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
@@ -356,44 +350,52 @@ class HasNumber a where
 -- > _P4 == perfect fourth   == interval Perfect 5
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
+
+-- newtype Interval = Interval { getInterval :: (
+--             Int,        -- octaves, may be negative
+--             Int,        -- diatonic remainder (positive) [0..6]
+--             Int         -- chromatic remainder (positive) [0..11]
+--     ) }
+--     deriving (Eq, Ord, Typeable)
+
 newtype Interval = Interval { getInterval :: (
-            Int,        -- octaves, may be negative
-            Int,        -- diatonic remainder (positive) [0..6]
-            Int         -- chromatic remainder (positive) [0..11]
+            Int,        -- number of A1
+            Int        -- number of d2
     ) }
     deriving (Eq, Ord, Typeable)
+
 
 instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval
-    abs a         = if isNegative a then negate a else a
-    a * b         = fromIntegral (semitones a) `stackInterval` b
-    signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
-    fromInteger 0 = _P1
-
-    -- fromInteger n = n `stackInterval` m2
-    fromInteger n = case fromInteger n `divMod` 12 of
-        (octave, chromatic) -> Interval (octave, sharpSpelling chromatic, chromatic)
-        where
-            -- Copied from Spellings (TODO factor out these)
-            sharpSpelling = go
-                where
-                    go 0  = 0
-                    go 1  = 0
-                    go 2  = 1
-                    go 3  = 1
-                    go 4  = 2
-                    go 5  = 3
-                    go 6  = 3
-                    go 7  = 4
-                    go 8  = 4
-                    go 9  = 5
-                    go 10 = 5
-                    go 11 = 6
+--     abs a         = if isNegative a then negate a else a
+--     a * b         = fromIntegral (semitones a) `stackInterval` b
+--     signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
+--     fromInteger 0 = _P1
+-- 
+--     -- fromInteger n = n `stackInterval` m2
+--     fromInteger n = case fromInteger n `divMod` 12 of
+--         (octave, chromatic) -> Interval (octave, sharpSpelling chromatic, chromatic)
+--         where
+--             -- Copied from Spellings (TODO factor out these)
+--             sharpSpelling = go
+--                 where
+--                     go 0  = 0
+--                     go 1  = 0
+--                     go 2  = 1
+--                     go 3  = 1
+--                     go 4  = 2
+--                     go 5  = 3
+--                     go 6  = 3
+--                     go 7  = 4
+--                     go 8  = 4
+--                     go 9  = 5
+--                     go 10 = 5
+--                     go 11 = 6
         
 instance Show Interval where
-    show a | isNegative a = "-" ++ showQuality (quality a) ++ show (abs $ number a)
-           | otherwise    =        showQuality (quality a) ++ show (abs $ number a)
+    show a | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+           | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
            where
                showQuality Major            = "_M"
                showQuality Minor            = "m"
@@ -414,41 +416,45 @@ instance AdditiveGroup Interval where
     negateV = negateInterval
 
 instance VectorSpace Interval where
-    type Scalar Interval = Integer
+    type Scalar Interval = Int
     (*^) = stackInterval
 
-instance HasQuality Interval where
-    quality (Interval (o, d, c))
-        | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
-        | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+-- instance HasQuality Interval where
+--     quality (Interval (o, d, c))
+--         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+--         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
 
-instance HasNumber Interval where
-    number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
-        where
-            inc a = if a >= 0 then succ a else pred a
+-- instance HasNumber Interval where
+--     number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
+--         where
+--             inc a = if a >= 0 then succ a else pred a
 
 instance Augmentable Interval where
-    augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
-    diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
+--     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
+--     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
+    augment i = i ^+^ _A1
+    diminish i = i ^-^ _A1
 
 -- |
 -- Returns the non-simple part of an interval.
 --
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 --
-octaves = fst . separate
+
+-- octaves = fst . separate
 
 instance HasSemitones Interval where
-    semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
+--    semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
+    semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
 
-instance IsInterval Interval where
-    fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
+-- instance IsInterval Interval where
+--     fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
 
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Interval'.
 --
-asInterval :: Interval -> Interval
-asInterval = id
+-- asInterval :: Interval -> Interval
+-- asInterval = id
 
 -- |
 -- Creates an interval from a quality and number.
@@ -457,15 +463,50 @@ asInterval = id
 -- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
-mkInterval :: Quality -> Number -> Interval
-mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
-    where
-        (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
 
-mkInterval' :: Int -> Int -> Interval
-mkInterval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
-    where
-        (octave, diatonic) = (number - 1) `divMod` 7
+-- mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
+--     where
+--         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
+-- 
+-- mkInterval' :: Int -> Int -> Interval
+-- mkInterval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
+--     where
+--         (octave, diatonic) = (number - 1) `divMod` 7
+
+_P1 = Interval (0, 0)
+_A1 = Interval (1, 0)
+_d2 = Interval (0, 1)
+_P8 = Interval (12, 7)
+
+mkInterval :: Quality -> Number -> Interval
+
+mkInterval Perfect (Number 1) = _P1 -- our identity
+mkInterval (Augmented 1) (Number 1) = _A1
+mkInterval (Diminished 1) (Number 2) = _d2 -- ...and our two basis vectors
+
+mkInterval Minor (Number 2) = _d2 ^+^ _A1
+mkInterval Major (Number 2) = (mkInterval Minor (Number 2)) + _A1
+mkInterval Minor (Number 3) = (mkInterval Major (Number 2)) + (mkInterval Minor (Number 2))
+mkInterval Major (Number 3) = (mkInterval Major (Number 2)) + (mkInterval Major (Number 2))
+mkInterval Perfect (Number 4) = (mkInterval Major (Number 3)) + (mkInterval Minor (Number 2))
+mkInterval Perfect (Number 5) = (mkInterval Perfect (Number 4)) + (mkInterval Major (Number 2))
+mkInterval Minor (Number 6) = (mkInterval Perfect (Number 5)) + (mkInterval Minor (Number 2))
+mkInterval Major (Number 6) = (mkInterval Perfect (Number 5)) + (mkInterval Major (Number 2))
+mkInterval Minor (Number 7) = (mkInterval Major (Number 6)) + (mkInterval Minor (Number 2))
+mkInterval Major (Number 7) = (mkInterval Major (Number 6)) + (mkInterval Major (Number 2))
+
+mkInterval q (Number n) = if n > 0
+                          then (mkInterval q (Number (n - 7))) ^+^ _P8
+                          else (mkInterval q (Number (n + 7))) ^-^ _P8
+
+
+mkInterval (Diminished 0) n = (mkInterval Perfect n)
+mkInterval (Augmented 0) n = (mkInterval Perfect n)
+
+mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ _A1
+mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ _A1
+
+
 
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
@@ -506,47 +547,49 @@ invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
 
 negateInterval :: Interval -> Interval
-negateInterval (Interval (o, 0, 0))    = Interval (negate o, 0, 0)
-negateInterval (Interval (oa, da, ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
+-- negateInterval (Interval (o, 0, 0))    = Interval (negate o, 0, 0)
+-- negateInterval (Interval (oa, da, ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
+negateInterval (Interval (a, d)) = Interval (-a, -d)
 
 addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
-    = Interval (oa + ob + carry, steps, chroma)
-    where
-        (carry, steps) = (da + db) `divMod` 7
-        chroma         = trunc (ca + cb)
-        trunc          = if carry > 0 then (`mod` 12) else id
+addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
+-- addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
+--     = Interval (oa + ob + carry, steps, chroma)
+--     where
+--         (carry, steps) = (da + db) `divMod` 7
+--         chroma         = trunc (ca + cb)
+--         trunc          = if carry > 0 then (`mod` 12) else id
 
-stackInterval :: Integer -> Interval -> Interval
+stackInterval :: Int -> Interval -> Interval
 stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
                   | otherwise = negate $ stackInterval (negate n) a
 
-intervalDiff :: Interval -> Int
-intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
+-- intervalDiff :: Interval -> Int
+-- intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
 
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
 -- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
 --
-separate :: Interval -> (Octaves, Interval)
-separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
+-- separate :: Interval -> (Octaves, Interval)
+-- separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
 
 -- |
 -- Returns the simple part of an interval.
 --
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 --
-simple :: Interval -> Interval
-simple = snd . separate
+-- simple :: Interval -> Interval
+-- simple = snd . separate
 
 -- |
 -- Returns whether the given interval is simple.
 --
 -- A simple interval is a non-negative interval spanning less than one octave.
 --
-isSimple :: Interval -> Bool
-isSimple x = octaves x == 0
+-- isSimple :: Interval -> Bool
+-- isSimple x = octaves x == 0
 
 -- |
 -- Returns whether the given interval is compound.
@@ -554,26 +597,28 @@ isSimple x = octaves x == 0
 -- A compound interval is either a negative interval, or a positive interval spanning
 -- more than octave.
 --
-isCompound :: Interval -> Bool
-isCompound x = octaves x /= 0
+-- isCompound :: Interval -> Bool
+-- isCompound x = octaves x /= 0
 
 -- |
 -- Returns whether the given interval is negative.
 --
-isNegative :: Interval -> Bool
-isNegative x = octaves x < 0
+-- isNegative :: Interval -> Bool
+isNegative (Interval (a, d)) = d < 0
 
 -- |
 -- Returns whether the given interval is positive.
 --
 isPositive :: Interval -> Bool
-isPositive x = octaves x >= 0 && not (isPerfectUnison x)
+-- isPositive x = octaves x >= 0 && not (isPerfectUnison x)
+isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
 
 -- |
 -- Returns whether the given interval is non-negative. This implies that it is either positive or a perfect unison.
 --
 isNonNegative :: Interval -> Bool
-isNonNegative x = octaves x >= 0
+-- isNonNegative x = octaves x >= 0
+isNonNegative (Interval (a, d)) = d >= 0
 
 -- |
 -- Returns whether the given interval a perfect unison.
@@ -589,7 +634,8 @@ isPerfectUnison = (== perfect unison)
 -- semitones.
 --
 isStep :: Interval -> Bool
-isStep x = isSimple (abs x) && number (abs x) <= 2
+-- isStep x = isSimple (abs x) && number (abs x) <= 2
+isStep (Interval (a, d)) = (abs d) <= 2
 
 -- |
 -- Returns whether the given interval is a leap (larger than a second).
@@ -599,7 +645,8 @@ isStep x = isSimple (abs x) && number (abs x) <= 2
 -- semitones.
 --
 isLeap :: Interval -> Bool
-isLeap x = isCompound (abs x) || number (abs x) > 2
+-- isLeap x = isCompound (abs x) || number (abs x) > 2
+isLeap (Interval (a, d)) = (abs d) > 2
 
 
 -- |
@@ -614,7 +661,8 @@ isLeap x = isCompound (abs x) || number (abs x) > 2
 -- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
-invert = simple . negate
+-- invert = simple . negate
+invert i = _P8 - i
 
 
 
@@ -638,7 +686,61 @@ diatonicToChromatic = go
         go 5 = 9
         go 6 = 11
 
-{-# DEPRECATED intervalDiff "This should be hidden" #-}
-{-# DEPRECATED mkInterval'  "This should be hidden "#-}
+-- {-# DEPRECATED intervalDiff "This should be hidden" #-}
+-- {-# DEPRECATED mkInterval'  "This should be hidden "#-}
 
 replicate' n = replicate (fromIntegral n)
+
+-- |
+-- Extracting the 'number' from an interval vector.
+--
+-- Note that (a, d) is a representation of the interval (a * A1) + (d
+-- * d2), so the 'number' part of the interval must be stored entirely
+-- in the d * d2 part (adding a unison, perfect or otherwise, can
+-- never increase the number of the interval)
+-- 
+extractNumber :: Interval -> Number
+extractNumber (Interval (a, d)) = Number (d + 1)
+
+
+-- |
+-- Extracting the 'quality' from an interval vector.
+--
+-- This is much more finicky, as the A1 and d2 intervals interact in a
+-- complex way to produce the perfect/major/minor/etc. intervals that
+-- we are used to reading.
+
+extractQuality :: Interval -> Quality
+extractQuality (Interval (a, d))
+  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (0, 0) = Perfect
+  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (1, 1) = Minor
+  | (a, d) == (2, 1) = Major
+  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (3, 2) = Minor
+  | (a, d) == (4, 2) = Major
+  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (5, 3) = Perfect
+  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (7, 4) = Perfect
+  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (8, 5) = Minor
+  | (a, d) == (9, 5) = Major
+  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (10, 6) = Minor
+  | (a, d) == (11, 6) = Major
+  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (12, 7) = Perfect
+  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
+-- note: these last two cases *have* to be this way round, otherwise
+-- infinite loop occurs.
+  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
+  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
