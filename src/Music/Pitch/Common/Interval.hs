@@ -61,7 +61,7 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
---        octaves,
+        octaves,
         isNegative,
         isPositive,
         isNonNegative,
@@ -70,10 +70,10 @@ module Music.Pitch.Common.Interval (
         isLeap,
 
         -- *** Simple and compound intervals
---        isSimple,
---        isCompound,
---        separate,
---        simple,
+        isSimple,
+        isCompound,
+        separate,
+        simple,
 
         -- *** Inversion
         invert,
@@ -419,19 +419,13 @@ instance VectorSpace Interval where
     type Scalar Interval = Int
     (*^) = stackInterval
 
--- instance HasQuality Interval where
---     quality (Interval (o, d, c))
---         | o >= 0    =                 diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
---         | otherwise = invertQuality $ diffToQuality (isPerfectNumber d) (c - diatonicToChromatic d)
+instance HasQuality Interval where
+  quality i = extractQuality i
 
--- instance HasNumber Interval where
---     number (Interval (o, d, c)) = fromIntegral $ inc $ o * 7 + d
---         where
---             inc a = if a >= 0 then succ a else pred a
+instance HasNumber Interval where
+  number i = extractNumber i
 
 instance Augmentable Interval where
---     augment  (Interval (o, d, c)) = Interval (o, d, c + 1)
---     diminish (Interval (o, d, c)) = Interval (o, d, c - 1)
     augment i = i ^+^ _A1
     diminish i = i ^-^ _A1
 
@@ -440,11 +434,9 @@ instance Augmentable Interval where
 --
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 --
-
--- octaves = fst . separate
+octaves i = intervalDiv i _P8
 
 instance HasSemitones Interval where
---    semitones (Interval (o, d, c)) = fromIntegral $ o * 12 + c
     semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
 
 -- instance IsInterval Interval where
@@ -480,32 +472,60 @@ _P8 = Interval (12, 7)
 
 mkInterval :: Quality -> Number -> Interval
 
-mkInterval Perfect (Number 1) = _P1 -- our identity
-mkInterval (Augmented 1) (Number 1) = _A1
-mkInterval (Diminished 1) (Number 2) = _d2 -- ...and our two basis vectors
+ -- our identity:
+mkInterval Perfect 1 = _P1
+ -- and our two basis vectors:
+mkInterval (Augmented 1) 1 = _A1
+mkInterval (Diminished 1) 2 = _d2
 
-mkInterval Minor (Number 2) = _d2 ^+^ _A1
-mkInterval Major (Number 2) = (mkInterval Minor (Number 2)) + _A1
-mkInterval Minor (Number 3) = (mkInterval Major (Number 2)) + (mkInterval Minor (Number 2))
-mkInterval Major (Number 3) = (mkInterval Major (Number 2)) + (mkInterval Major (Number 2))
-mkInterval Perfect (Number 4) = (mkInterval Major (Number 3)) + (mkInterval Minor (Number 2))
-mkInterval Perfect (Number 5) = (mkInterval Perfect (Number 4)) + (mkInterval Major (Number 2))
-mkInterval Minor (Number 6) = (mkInterval Perfect (Number 5)) + (mkInterval Minor (Number 2))
-mkInterval Major (Number 6) = (mkInterval Perfect (Number 5)) + (mkInterval Major (Number 2))
-mkInterval Minor (Number 7) = (mkInterval Major (Number 6)) + (mkInterval Minor (Number 2))
-mkInterval Major (Number 7) = (mkInterval Major (Number 6)) + (mkInterval Major (Number 2))
+mkInterval (Diminished 1) 2 = _d2
+mkInterval Minor 2 = _d2 ^+^ _A1
+mkInterval Major 2 = (mkInterval Minor 2) ^+^ _A1
+mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ _A1
 
-mkInterval q (Number n) = if n > 0
-                          then (mkInterval q (Number (n - 7))) ^+^ _P8
-                          else (mkInterval q (Number (n + 7))) ^-^ _P8
+mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ _A1
+mkInterval Minor 3 = (mkInterval Major 2) ^+^ (mkInterval Minor 2)
+mkInterval Major 3 = (mkInterval Major 2) ^+^ (mkInterval Major 2)
+mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ _A1
 
+mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ _A1
+mkInterval Perfect 4 = (mkInterval Major 3) ^+^ (mkInterval Minor 2)
+mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ _A1
 
-mkInterval (Diminished 0) n = (mkInterval Perfect n)
-mkInterval (Augmented 0) n = (mkInterval Perfect n)
+mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ _A1
+mkInterval Perfect 5 = (mkInterval Perfect 4) ^+^ (mkInterval Major 2)
+mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ _A1
+
+mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ _A1
+mkInterval Minor 6 = (mkInterval Perfect 5) ^+^ (mkInterval Minor 2)
+mkInterval Major 6 = (mkInterval Perfect 5) ^+^ (mkInterval Major 2)
+mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ _A1
+
+mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ _A1
+mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
+mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
+mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ _A1
+
+mkInterval Minor 1 = error "invalid interval"
+mkInterval Major 1 = error "invalid interval"
+mkInterval Perfect 2 = error "invalid interval"
+mkInterval Perfect 3 = error "invalid interval"
+mkInterval Minor 4 = error "invalid interval"
+mkInterval Major 4 = error "invalid interval"
+mkInterval Minor 5 = error "invalid interval"
+mkInterval Major 5 = error "invalid interval"
+mkInterval Perfect 6 = error "invalid interval"
+mkInterval Perfect 7 = error "invalid interval"
+
+mkInterval (Diminished 0) n = error "(Diminished 0) is not a valid Quality"
+mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
 
 mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ _A1
 mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ _A1
 
+mkInterval q (Number n) = if n > 0
+                          then (mkInterval q (Number (n - 7))) ^+^ _P8
+                          else (mkInterval q (Number (n + 7))) ^-^ _P8
 
 
 -- | Creates a perfect interval.
@@ -572,24 +592,25 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 --
 -- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
 --
--- separate :: Interval -> (Octaves, Interval)
--- separate (Interval (o, d, c)) = (fromIntegral o, Interval (0, d, c))
+separate :: Interval -> (Octaves, Interval)
+separate i = (fromIntegral o, i ^-^ (o *^ _P8))
+  where o = octaves i
 
 -- |
 -- Returns the simple part of an interval.
 --
 -- > (perfect octave)^*x + y = z  iff  y = simple z
 --
--- simple :: Interval -> Interval
--- simple = snd . separate
+simple :: Interval -> Interval
+simple = snd . separate
 
 -- |
 -- Returns whether the given interval is simple.
 --
 -- A simple interval is a non-negative interval spanning less than one octave.
 --
--- isSimple :: Interval -> Bool
--- isSimple x = octaves x == 0
+isSimple :: Interval -> Bool
+isSimple x = octaves x == 0
 
 -- |
 -- Returns whether the given interval is compound.
@@ -597,27 +618,25 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 -- A compound interval is either a negative interval, or a positive interval spanning
 -- more than octave.
 --
--- isCompound :: Interval -> Bool
--- isCompound x = octaves x /= 0
+isCompound :: Interval -> Bool
+isCompound x = octaves x /= 0
 
 -- |
 -- Returns whether the given interval is negative.
 --
--- isNegative :: Interval -> Bool
+isNegative :: Interval -> Bool
 isNegative (Interval (a, d)) = d < 0
 
 -- |
 -- Returns whether the given interval is positive.
 --
 isPositive :: Interval -> Bool
--- isPositive x = octaves x >= 0 && not (isPerfectUnison x)
 isPositive x@(Interval (a, d)) = d >= 0 && not (isPerfectUnison x)
 
 -- |
 -- Returns whether the given interval is non-negative. This implies that it is either positive or a perfect unison.
 --
 isNonNegative :: Interval -> Bool
--- isNonNegative x = octaves x >= 0
 isNonNegative (Interval (a, d)) = d >= 0
 
 -- |
@@ -634,7 +653,6 @@ isPerfectUnison = (== perfect unison)
 -- semitones.
 --
 isStep :: Interval -> Bool
--- isStep x = isSimple (abs x) && number (abs x) <= 2
 isStep (Interval (a, d)) = (abs d) <= 2
 
 -- |
@@ -645,7 +663,6 @@ isStep (Interval (a, d)) = (abs d) <= 2
 -- semitones.
 --
 isLeap :: Interval -> Bool
--- isLeap x = isCompound (abs x) || number (abs x) > 2
 isLeap (Interval (a, d)) = (abs d) > 2
 
 
@@ -661,7 +678,6 @@ isLeap (Interval (a, d)) = (abs d) > 2
 -- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
--- invert = simple . negate
 invert i = _P8 - i
 
 
@@ -744,3 +760,61 @@ extractQuality (Interval (a, d))
 -- infinite loop occurs.
   | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
   | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
+
+
+
+-- | Integer div of intervals: i / di = x, where x is an integer
+intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
+intervalDiv (Interval (a, d)) (Interval (0, 1)) = d
+intervalDiv i di
+  | (i > _P1) = intervalDivPos i di
+  | (i < _P1) = intervalDivNeg i di
+  | otherwise = 0 :: Int
+  where 
+    intervalDivPos i di
+      | (i < _P1) = undefined
+      | (i ^-^ di) < _P1 = 0
+      | otherwise = 1 + (intervalDiv (i ^-^ di) di)
+    intervalDivNeg i di
+      | (i > _P1) = undefined
+      | (i ^+^ di) > _P1 = 0
+      | otherwise = 1 + (intervalDiv (i ^+^ di) di)
+
+-- | Represent an interval i in a new basis (j, k).
+-- 
+-- We want x,y where i = x*j + y*k
+--
+-- e.g., convertBasis _d2 _P5 _P8 == Just (-12,7), as expected.
+
+convertBasis i j k
+  | (p == 0) = Nothing
+  | not $ p `divides` r = Nothing
+  | not $ p `divides` q = Nothing
+  | otherwise = Just (r `div` p, q `div` p)
+  where Interval (m, n) = i
+        Interval (a, b) = j
+        Interval (c, d) = k
+        p = (a*d - b*c)
+        q = (a*n - b*m)
+        r = (d*m - c*n)
+
+
+-- | Same as above, but don't worry if new interval has non-integer
+-- coefficients -- useful when getting a value to use as a frequency
+-- ratio in a tuning system.
+convertBasisFloat i j k
+  | (p == 0) = Nothing
+  | otherwise = Just (r / p, q / p)
+  where Interval (m, n) = i
+        Interval (a, b) = j
+        Interval (c, d) = k
+        p = fromIntegral $ (a*d - b*c)
+        q = fromIntegral $ (a*n - b*m)
+        r = fromIntegral $ (d*m - c*n)
+
+
+x `divides` y = (y `div` x)*x == y
+
+
+
+
