@@ -20,7 +20,7 @@ haddock2
 *-docs
 
 test*
-info/docs
+sketches/docs
 *sandbox.config
 *.hi
 *.o
