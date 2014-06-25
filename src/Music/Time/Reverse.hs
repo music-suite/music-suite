@@ -265,6 +265,7 @@ fromWithRev (WithRev (_,x)) = x
 instance Reversible a => Reversible (WithRev a) where
     rev (WithRev (r,x)) = WithRev (x,r)
 
+-- JUNK
                                          -}
 
 

@@ -320,3 +320,4 @@ frl []  = error "frl: No value"
 frl [x] = error "frl: Just one value"
 frl xs  = (head xs, (tail.init) xs, last xs)
 
+-- JUNK

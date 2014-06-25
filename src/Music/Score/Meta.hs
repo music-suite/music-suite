@@ -189,6 +189,7 @@ withMetaAtStart' partId f x = let
 
 
 
+    -- JUNK
 -- TODO move
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty

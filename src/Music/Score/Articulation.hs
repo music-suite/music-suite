@@ -483,6 +483,8 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
       (d1,d2) = toTied d
 
 
+-- JUNK
+
 headV :: Traversal' (Voice a) a
 headV = (eventsV._head._2)
 

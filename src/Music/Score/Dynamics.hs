@@ -472,6 +472,8 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
 
+-- JUNK
+
 -- |
 -- View just the dynamices in a voice.
 --
