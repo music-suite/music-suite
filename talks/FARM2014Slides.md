@@ -1,28 +1,15 @@
 
 
-## What
+## What?
 
-Music Representation
-  Composition (score generation)
-  Transformations (score to score)
-  Analysis (score searching/matching)
+* Music Representation
+    - Composition (*a → Music*)
+    - Transformations (*Music → Music*)
+    - Analysis (*Music → a*)
 
-TODO move this to end
-Pandoc-like I/O
-  Some import
-    MIDI
-    Sibelius
-    ...
-  Lots of export/backends
-    MIDI
-    OSC
-    SuperCollider
-    Lilypond
-    MusicXML
-    ABCNotation
-    csound-expression (?)
+*Not* primarily audio or real-time use (but see last slide!).
 
-## Philosophy
+## type Music
 
 No closed definition of music/musics!
 
@@ -30,7 +17,7 @@ No closed definition of music/musics!
 
   How can we formalize these common qualities?
 
-## Define/decompose music
+## type Music
 
 Musical *theory*, concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
 
@@ -49,7 +36,7 @@ Music music theories of the word define these, in *roughly* this order of import
     music-preludes
     ...
 
-## Structure vs flatness
+## Structure vs. Flatness
 
 Bars/beats vs free time
 Scale (structure) vs frequency
@@ -63,6 +50,8 @@ For each aspect: Start out with affine space and *add* structure
 
   Music take place in time!
   All other aspects are *organized in time*
+
+  (Work pioneered by FRP, Reactive, Euterpea...)
   
   Events take place (discrete)
     Once (onset)
@@ -80,16 +69,21 @@ For each aspect: Start out with affine space and *add* structure
   
 ## Compare 2D or 3D graphics!
 
-This is 1D!
+View time as a one-dimensional vector space.
+
+An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
+
+Isomorphic to *Time^2^*
+
 We get the linar transformations...
 
-## Other aspects (Pitch as example)
+## Musical aspects: Pitch...
   Pitch vs Interval (linear)
   High-level concepts
   Using Behavior
   Spelling/intonation etc
 
-## Other aspects
+## Musical aspects: ...and the rest
 
 dynamics, parts, articulation, space
 
@@ -104,28 +98,45 @@ Dynamic types, using Reactives a lot (not needed)
 
 ## Design principles
 
-- Open
-  - Parametric when possible
-  - Only make some *core* assumptions (time is free, aspects, meta-data)
-  - User can change both events and time containers
+- Extensible
+    - Only make some *core* assumptions (time is special, other aspect *fetch onto* time)
+    - User can change both events and time containers
 
-- Comprehensive
-  - CMT included
-  - Easily extendible
+- Comprehensive, not complete
+    - Impossible to include *all* music theories!
+    - CMT included
+    - Easily extendible
 
 - Use the "latest"
-  - MPTCs
-  - TypeFamilies!
-  - ContraintKinds!
-  - aeson
-  - vector-space (chosen to have a common core with Diagrams)
+    - MPTCs, TypeFamilies, ContraintKinds
+  - lens, vector-space
 
 
-### Cons of the approach
+## Challenges
 
-- Tricky internal dependency (some musical concepts are simply recursive)
-  Example!
-- Forever incomplete
+- Develop high-level theory while staying general
 - Difficult error messages
+    - Simplified version needed
+- Consolidate with other libraries
+    - Common time/space/linear algebra core?
+- Junk in the backends, should be moved "higher" up in the libraries
 
+## Backends
+
+Pandoc/Diagrams-style flexibility
+
+  Some import
+
+    MIDI
+    Sibelius
+    ...
+  Lots of export/backends
+
+    MIDI
+    OSC
+    SuperCollider
+    Lilypond
+    MusicXML
+    ABCNotation
+    csound-expression (?)
 
