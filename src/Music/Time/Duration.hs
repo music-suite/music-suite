@@ -41,6 +41,7 @@ import           Control.Lens         hiding (Indexable, Level, above, below,
 import           Data.NumInstances    ()
 import           Data.Semigroup       hiding ()
 import           Data.VectorSpace     hiding (Sum (..))
+import           Data.Functor.Contravariant
 
 -- |
 -- Class of values that have a duration.
@@ -96,7 +97,6 @@ instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
   _duration (Left x)  = _duration x
   _duration (Right x) = _duration x
 
-
 -- |
 -- Access the duration.
 --
@@ -110,4 +110,22 @@ duration = lens _duration (flip stretchTo)
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 {-# INLINE stretchTo #-}
+
+{-
+
+-- TODO more general pattern here
+withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
+withDurationR = fmap $ \x -> (_duration x, x)
+
+withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
+withDurationL = contramap $ \x -> (_duration x, x)
+
+mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
+mapWithDuration = over dual withDurationL . uncurry
+  where
+    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
+    dual = iso Op getOp
+
+-}
+
 
