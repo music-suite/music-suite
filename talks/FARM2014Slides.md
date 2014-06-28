@@ -19,7 +19,7 @@ No closed definition of music/musics!
 
 ## type Music
 
-Musical *theory*, concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
+Musical <a style="color:blue">*theory*</a>, concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
 
 Musical *aspects*: time, pitch, dynamics, timbre (instrument/articulation), (space..)
 
