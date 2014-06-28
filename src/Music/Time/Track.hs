@@ -144,6 +144,7 @@ track = from unsafeTrack
 
 delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
 delayeds = unsafeTrack
+{-# INLINE delayeds #-}
 
 singleDelayed :: Prism' (Track a) (Delayed a)
 singleDelayed = unsafeTrack . single
