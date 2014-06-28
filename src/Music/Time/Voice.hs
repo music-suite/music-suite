@@ -160,6 +160,16 @@ instance Wrapped (Voice a) where
 
 instance Rewrapped (Voice a) (Voice b)
 
+instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
+  _Cons = prism (\(s,v) -> (view voice.return $ s) <> v) $ \v -> case view stretcheds v of
+    []      -> Left  mempty
+    (x:xs)  -> Right (x, view voice xs)
+
+instance Snoc (Voice a) (Voice b) (Stretched a) (Stretched b) where
+  _Snoc = prism (\(v,s) -> v <> (view voice.return $ s)) $ \v -> case unsnoc (view stretcheds v) of
+    Nothing      -> Left  mempty
+    Just (xs, x) -> Right (view voice xs, x)
+
 instance Transformable (Voice a) where
   transform s = over _Wrapped' (transform s)
 
@@ -440,22 +450,4 @@ reverseValues = over valuesV reverse
 -- Implement meta-data
 --
 
---
--- TODO make Voice/Voice an instance of Cons/Snoc and remove these
---
 
-headV :: Traversal' (Voice a) a
-headV = (eventsV._head._2)
-
-middleV :: Traversal' (Voice a) a
-middleV = (eventsV._middle.traverse._2)
-
-lastV :: Traversal' (Voice a) a
-lastV = (eventsV._last._2)
-
--- Traverse writing to all elements *except* first and last
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
-_middle = _tail._init
-
-
--- JUNK
