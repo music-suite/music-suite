@@ -75,6 +75,7 @@ module Music.Score.Articulation (
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens                  hiding (above, below, transform)
+import           Control.Lens.Cons.Middle
 import           Data.AffineSpace
 import           Data.Foldable
 import           Data.Functor.Couple
@@ -358,16 +359,16 @@ _2' = _2
 
 
 accent :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
-accent = set (phrases . headV . articulations . accentuation) 1
+accent = set (phrases . _head . articulations . accentuation) 1
 
 marcato :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
-marcato = set (phrases . headV . articulations . accentuation) 2
+marcato = set (phrases . _head . articulations . accentuation) 2
 
 accentLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
-accentLast = set (phrases . lastV . articulations . accentuation) 1
+accentLast = set (phrases . _last . articulations . accentuation) 1
 
 marcatoLast :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s
-marcatoLast = set (phrases . lastV . articulations . accentuation) 2
+marcatoLast = set (phrases . _last . articulations . accentuation) 2
 
 accentAll :: (HasArticulations' s, Articulation s ~ a, Articulated a) => s -> s
 accentAll = set (articulations . accentuation) 1
@@ -481,20 +482,3 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
     where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
-
-
--- JUNK
-
-headV :: Traversal' (Voice a) a
-headV = (eventsV._head._2)
-
-middleV :: Traversal' (Voice a) a
-middleV = (eventsV._middle.traverse._2)
-
-lastV :: Traversal' (Voice a) a
-lastV = (eventsV._last._2)
-
--- Traverse writing to all elements *except* first and last
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
-_middle = _tail._init
-

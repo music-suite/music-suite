@@ -75,9 +75,14 @@ instance HasText a => HasText (Couple b a) where
 instance HasText a => HasText [a] where
   addText s = fmap (addText s)
 
-instance HasText a => HasText (Score a) where
+instance HasText a => HasText (Stretched a) where
   addText s = fmap (addText s)
 
+instance HasText a => HasText (Voice a) where
+  addText s = fmap (addText s)
+
+instance HasText a => HasText (Score a) where
+  addText s = fmap (addText s)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TextT a) where
@@ -87,7 +92,7 @@ instance Wrapped (TextT a) where
 instance Rewrapped (TextT a) (TextT b)
 
 instance HasText (TextT a) where
-    addText      s (TextT (Couple (t,x)))                    = TextT (Couple (t ++ [s],x))
+    addText s (TextT (Couple (t,x))) = TextT (Couple (t ++ [s],x))
 
 -- Lifted instances
 deriving instance Num a => Num (TextT a)
@@ -102,20 +107,6 @@ deriving instance (Real a, Enum a, Integral a) => Integral (TextT a)
 -- Attach the given text to the first note in the score.
 --
 text :: (HasPhrases' s a, HasText a) => String -> s -> s
-text s = over (phrases'.headV) (addText s)
+text s = over (phrases'._head) (addText s)
 
 
-headV :: Traversal' (Voice a) a
-headV = (eventsV._head._2)
-
-middleV :: Traversal' (Voice a) a
-middleV = (eventsV._middle.traverse._2)
-
-lastV :: Traversal' (Voice a) a
-lastV = (eventsV._last._2)
-
--- Traverse writing to all elements *except* first and last
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
-_middle = _tail._init
-
--- JUNK

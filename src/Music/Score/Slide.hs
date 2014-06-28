@@ -43,6 +43,7 @@ module Music.Score.Slide (
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens            hiding (transform)
+import           Control.Lens.Cons.Middle
 import           Data.Foldable
 import           Data.Foldable
 import           Data.Functor.Couple
@@ -90,6 +91,11 @@ instance HasSlide a => HasSlide (Score a) where
     setEndGliss   n = fmap (setEndGliss n)
     setEndSlide   n = fmap (setEndSlide n)
 
+instance HasSlide a => HasSlide (Stretched a) where
+    setBeginGliss n = fmap (setBeginGliss n)
+    setBeginSlide n = fmap (setBeginSlide n)
+    setEndGliss   n = fmap (setEndGliss n)
+    setEndSlide   n = fmap (setEndSlide n)
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT { getSlideT :: Couple ((Any, Any), (Any, Any)) a }
@@ -129,7 +135,7 @@ deriving instance (Real a, Enum a, Integral a) => Integral (SlideT a)
 slide :: (HasPhrases' s a, HasSlide a) => s -> s
 slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
   where
-    mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
+    mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
 
 -- |
 -- Add a glissando between the first and the last note.
@@ -137,20 +143,4 @@ slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
 glissando :: (HasPhrases' s a, HasSlide a) => s -> s
 glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
   where
-    mapPhraseWise3 f g h = over phrases' (over headV f . over middleV g . over lastV h)
-
-
-headV :: Traversal' (Voice a) a
-headV = (eventsV._head._2)
-
-middleV :: Traversal' (Voice a) a
-middleV = (eventsV._middle.traverse._2)
-
-lastV :: Traversal' (Voice a) a
-lastV = (eventsV._last._2)
-
--- Traverse writing to all elements *except* first and last
-_middle :: (Snoc s s a a, Cons s s b b) => Traversal' s s
-_middle = _tail._init
-
--- JUNK
+    mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
