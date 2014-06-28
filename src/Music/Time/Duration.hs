@@ -89,6 +89,13 @@ instance HasDuration a => HasDuration (Min a) where
 instance HasDuration a => HasDuration (Max a) where
   _duration (Max x) = _duration x
 
+-- For HasDuration [a] we assume parallel composition and
+-- use the HasPosition instance, see Music.Time.Position.
+
+instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
+  _duration (Left x)  = _duration x
+  _duration (Right x) = _duration x
+
 
 -- |
 -- Access the duration.
