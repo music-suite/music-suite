@@ -184,12 +184,12 @@ instance IsDynamics a => IsDynamics (Behavior a) where
   fromDynamics = pure . fromDynamics
 
 instance Alterable a => Alterable (Behavior a) where
-    sharpen = fmap sharpen
-    flatten = fmap flatten
+  sharpen = fmap sharpen
+  flatten = fmap flatten
 
 instance Augmentable a => Augmentable (Behavior a) where
-    augment = fmap augment
-    diminish = fmap diminish
+  augment = fmap augment
+  diminish = fmap diminish
 
 instance Eq a => Eq (Behavior a) where
   (==) = error "No fun"
