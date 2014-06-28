@@ -48,6 +48,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.Functor.Couple
 
 import           Music.Time.Reverse
 import           Music.Time.Split
@@ -75,10 +76,12 @@ import           Data.Typeable
 -- type Stretched = (Duration, a)
 -- @
 --
-newtype Stretched a = Stretched { _stretchedValue :: (Duration, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}
-            Applicative, Monad, {-Comonad, -}
+newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
+  deriving (Applicative, Monad, {-Comonad, -}
             Functor,  Foldable, Traversable)
+
+-- TODO move
+deriving instance Traversable (Couple a)
 
 -- >>> stretch 2 $ (5,1)^.stretched
 -- (10,1)^.stretched
@@ -87,12 +90,21 @@ newtype Stretched a = Stretched { _stretchedValue :: (Duration, a) }
 -- (5,1)^.stretched
 --
 
+deriving instance Eq  a => Eq  (Stretched a)
+deriving instance Num a => Num (Stretched a)
+deriving instance Fractional a => Fractional (Stretched a)
+deriving instance Floating a => Floating (Stretched a)
+
+deriving instance Ord a => Ord (Stretched a)
+deriving instance Real a => Real (Stretched a)
+deriving instance RealFrac a => RealFrac (Stretched a)
+
 deriving instance Typeable1 Stretched
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
-  _Wrapped' = iso _stretchedValue Stretched
+  _Wrapped' = iso (getCouple . _stretchedValue) (Stretched . Couple)
 
 instance Rewrapped (Stretched a) (Stretched b)
 
@@ -124,7 +136,7 @@ stretched = _Unwrapped
 stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretchedValue = lens runStretched (flip $ _stretched . const)
   where
-    _stretched f (Stretched (d,x)) = Stretched (d, f `whilst` stretching d $ x)
+    _stretched f (Stretched (Couple (d, x))) = Stretched (Couple (d, f `whilst` stretching d $ x))
 {-# INLINE stretchedValue #-}
 
 runStretched :: Transformable a => Stretched a -> a
