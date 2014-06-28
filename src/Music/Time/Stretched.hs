@@ -68,7 +68,8 @@ import           Data.Typeable
 -- |
 -- A 'Stretched' value has a known 'duration', but no 'position'.
 --
--- Placing a value inside 'Stretched' makes it invariante under 'delay'.
+-- Placing a value inside 'Stretched' makes it invariant under 'delay', however the inner
+-- value can still be delayed using @'fmap' 'delay'@.
 --
 -- The semantics are given by
 --

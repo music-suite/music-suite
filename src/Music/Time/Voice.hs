@@ -55,6 +55,7 @@ module Music.Time.Voice (
 
         -- ** Special cases
         fuseRests,
+        coverRests,
 
         -- * Traversing
         -- ** Separating rhythms and values
@@ -157,6 +158,10 @@ instance Monad Voice where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
+instance MonadPlus Voice where
+  mzero = mempty
+  mplus = mappend
+  
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
@@ -384,9 +389,28 @@ fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectin
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
+-- | 
+-- Fuse all rests in the given voice.
+--
+-- The resulting voice will have no consecutive rests.
+--
 fuseRests :: Voice (Maybe a) -> Voice (Maybe a)
 fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
 
+-- | 
+-- Remove all rests in the given voice by prolonging the previous note.
+--
+-- Returns 'Nothing' if and only if the given voice contains rests only.
+--
+coverRests :: Voice (Maybe a) -> Maybe (Voice a)
+coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy merge x)
+  where
+    norm = fuseRests x
+    merge Nothing  Nothing  = error "Voice normalized, so consecutive rests are impossible"
+    merge (Just x) Nothing  = True
+    merge Nothing  (Just x) = True
+    merge (Just x) (Just y) = False
+    hasOnlyRests = all isNothing $ toListOf traverse x -- norm
 
 
 withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
