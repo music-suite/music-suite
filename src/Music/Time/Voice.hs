@@ -53,6 +53,9 @@ module Music.Time.Voice (
         fuse,
         fuseBy,
 
+        -- ** Special cases
+        fuseRests,
+
         -- * Traversing
         -- ** Separating rhythms and values
         withValues,
@@ -74,38 +77,39 @@ module Music.Time.Voice (
 
         -- headV,
         -- middleV,
-        -- lastV,   
+        -- lastV,
 
   ) where
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Functor.Adjunction  (unzipR)
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
 import           Data.VectorSpace
-import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Stretched
 
 import           Control.Applicative
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
 import qualified Data.List
-import           Data.List.NonEmpty     (NonEmpty)
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.List.NonEmpty       (NonEmpty)
+import           Data.Traversable         (Traversable)
+import qualified Data.Traversable         as T
 import           Data.Typeable
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -184,7 +188,7 @@ instance Splittable a => Splittable (Voice a) where
   split t x
     | t <= 0           = (mempty, x)
     | t >= _duration x = (x,      mempty)
-    | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
+    | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
     where
       split' = error "TODO"
 
@@ -192,15 +196,15 @@ instance Splittable a => Splittable (Voice a) where
       -- split' t f = over both mcatMaybes . unzipR . snd . Data.List.mapAccumL go (0::Time)
       --   where
       --     go :: Time -> Stretched a -> (Time, (Maybe (Stretched a), Maybe (Stretched a)))
-      --     go currentOnset (view (from stretched) -> (d,x)) 
+      --     go currentOnset (view (from stretched) -> (d,x))
       --       = let currentOffset = currentOnset .+^ d
       --             theSplit = if t              <= currentOnset           then (Nothing, Just (view stretched (d,x))) else
-      --                        if currentOnset   <  t && t < currentOffset then 
+      --                        if currentOnset   <  t && t < currentOffset then
       --                          let x1 = x
       --                              x2 = x in
       --                          (Just (view stretched (t .-^ currentOnset,x1)), Just (view stretched (d ^-^ (t .-^ currentOnset),x2))) else
       --                        if currentOffset  <= t                      then (Just (view stretched (d,x)), Nothing) else error "Impossible"
-      --           in (currentOnset .+^ d, theSplit)    
+      --           in (currentOnset .+^ d, theSplit)
 
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
@@ -323,7 +327,7 @@ singleStretched = unsafeStretcheds . single
 
 
 -- |
--- Unzip the given voice. This is specialization of 'unzipR'. 
+-- Unzip the given voice. This is specialization of 'unzipR'.
 --
 unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
 unzipVoice = unzipR
@@ -380,9 +384,19 @@ fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectin
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
+fuseRests :: Voice (Maybe a) -> Voice (Maybe a)
+fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
+
+
 
 withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
 withContext = over valuesV withPrevNext
+
+-- TODO expose?
+voiceFromRhythm :: [Duration] -> Voice ()
+voiceFromRhythm = mkVoice . map (, ())
+
+mkVoice = view voice . map (view stretched)
 
 --
 -- TODO more elegant definition of durationsV and valuesV using indexed traversal or similar?
