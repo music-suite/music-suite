@@ -56,11 +56,16 @@ import qualified Codec.Midi                    as Midi
 import           Control.Arrow                 ((***))
 import           Control.Comonad               (Comonad (..), extract)
 import           Control.Applicative
+import           Data.Bifunctor
 import           Data.Colour.Names             as Color
 import           Data.Default
 import           Data.Foldable                 (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple
+import           Data.Functor.Context
+import           Data.Either
+import           Data.Functor.Contravariant
+import           Data.Functor.Adjunction  (unzipR)
 import           Data.Maybe
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
@@ -73,7 +78,7 @@ import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
 import Music.Score.Convert (reactiveToVoice', voiceToScore) -- TODO
-import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
+import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates, withPrevNext)
 import Music.Score.Export.DynamicNotation
 import Music.Score.Export.ArticulationNotation
 import Data.Semigroup.Instances
@@ -86,6 +91,7 @@ import Control.Monad
 import Data.VectorSpace hiding (Sum(..))
 import Data.AffineSpace
 import Control.Lens hiding (rewrite)
+import Control.Lens.Getter (to)
 -- import Control.Lens.Operators hiding ((|>))
 
 import Music.Time
@@ -218,9 +224,6 @@ instance HasBackend Lilypond where
             where
               (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
 
--- TODO move
-second f (x, y) = (x, f y)
-
 type HasArticulation3 c d e = (
   HasArticulation' c,
   HasArticulation c d,
@@ -236,6 +239,12 @@ type HasArticulationNotation a b c = (
   Articulation a ~ (Sum Double, Sum Double)
  )
 
+-- type HasDynamicNotation' a b c = (HasDynamicNotation a b c, 
+--   -- HasDynamics' a,
+--   -- HasDynamics' b,
+--   -- SetDynamic (Dynamic a) a ~ a,
+--   -- SetDynamic (Dynamic b) b ~ b,
+--   )
 
 instance (                  
   HasDynamicNotation a b c,
@@ -254,7 +263,7 @@ instance (
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
     . map (second (over articulations notateArticulation)) 
     . map (second (preserveMeta addArtCon))
-    . map (second (over (phrases) removeCloseDynMarks))
+    . map (second (removeCloseDynMarks))
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
@@ -334,8 +343,131 @@ varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set
 -- TODO this require a phrase traversal with offset
 -- Something along the lines of:
 -- type TVoice = Track (Voice a)
-removeCloseDynMarks :: a -> a
-removeCloseDynMarks = id
+
+-- tphrases' :: HasPhrases' s a => Traversal' s (Time, Phrase a)
+
+
+removeCloseDynMarks :: (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
+removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
+  where
+    f Nothing t    = id
+    f (Just t1) t2 = if (t2 .-. t1) > 1.5 then id else over (_head.mapped) removeDynMark
+
+removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a    
+removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x
+
+-- type PVoice a = [Either Duration (Phrase a)]
+type TVoice a = Track (Phrase a)
+
+-- foo :: HasPhrases' s a => s -> [TVoice a]
+mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -> Phrase a -> Phrase b) -> s -> t
+mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
+
+withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
+withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
+
+
+mVoiceTVoice = mvoicePVoice . pVoiceTVoice
+-- pVoiceTVoice = unsafePVoiceTVoice
+-- TODO
+
+
+pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
+pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
+  where
+    pVoiceToTVoice :: PVoice a -> TVoice a
+    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+
+    -- TODO assert no overlapping
+    tVoiceToPVoice :: TVoice a -> PVoice b -> PVoice a
+    tVoiceToPVoice tv pv = set _rights newPhrases pv
+      where
+        newPhrases = toListOf traverse tv
+
+
+_rights :: Lens [Either a b] [Either a c] [b] [c]
+_rights = lens _rightsGet (flip _rightsSet)
+
+_rightsGet :: [Either a b] -> [b]
+_rightsGet = rights
+
+_rightsSet :: [c] -> [Either a b] -> [Either a c]
+_rightsSet cs = sndMapAccumL f cs
+  where
+    f cs     (Left a)  = (cs, Left a)
+    f (c:cs) (Right b) = (cs, Right c)
+    f []     (Right _) = error "No more cs"
+
+--    :: ([c] -> Either a b -> ([c], Either a c)) -> [c] -> [Either a b] -> [Either a c]
+    
+-- :: ([c] -> Either a b -> ([c], Either a c)) -> [c] -> [Either a b] -> [Either a c]
+
+
+
+sndMapAccumL f z = snd . Data.List.mapAccumL f z
+
+-- unsafePVoiceTVoice :: Iso (PVoice a) (PVoice b) (TVoice a) (TVoice b)
+-- unsafePVoiceTVoice = iso pVoiceToTVoice tVoiceToPVoice
+--   where
+--     pVoiceToTVoice :: PVoice a -> TVoice a
+--     pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+-- 
+--     -- TODO assert no overlapping
+--     tVoiceToPVoice :: TVoice a -> PVoice a
+--     tVoiceToPVoice = undefined   
+
+
+-- pVoiceToTVoice :: (a ~ ()) => PVoice a -> TVoice a
+-- pVoiceToTVoice x = undefined
+--   where
+--     _ = x
+--           :: [           Either Duration (Phrase ())]
+--     _ = withDurationR x 
+--           :: [(Duration, Either Duration (Phrase ()))]
+--     _ = mapZip (offsetPoints (0::Time)) (withDurationR x)
+--           :: [(Time, Either Duration (Phrase ()))]
+--     _ = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+--           :: Track (Phrase ())
+
+
+mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
+mapZip f = uncurry zip . first f . unzipR
+
+-- @length (offsetPoints x xs) = length xs + 1
+-- >>> offsetPoints 0 [1,2,1]
+-- [0,1,2,1]
+-- offsetPoints :: AffineSpace a => Time -> [Duration] -> [Time]
+offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
+offsetPoints = scanl (.+^)
+
+toAbs :: [Duration] -> [Time]
+toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
+
+
+-- TODO move
+
+mkTrack :: [(Time, a)] -> Track a
+mkTrack = view track . map (view delayed)
+
+
+
+withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
+withDurationR = fmap $ \x -> (_duration x, x)
+
+-- TODO generalize and move
+mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
+mapWithDuration = over dual withDurationL . uncurry
+  where
+    withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
+    withDurationL = contramap $ \x -> (_duration x, x)
+  
+    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
+    dual = iso Op getOp
+
+dursToVoice :: [Duration] -> Voice ()
+dursToVoice = mconcat . map (\d -> stretch d $ return ())
+
+-- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
 
 
 {-

@@ -74,6 +74,7 @@ import Music.Score.Part
 
 type HasDynamic3 a a' a'' = (
   HasDynamic' a,
+  HasDynamic' a'',
   HasDynamic a  a',
   HasDynamic a' a'',
   HasDynamic a  a''

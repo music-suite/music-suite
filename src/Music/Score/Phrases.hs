@@ -92,20 +92,6 @@ type PVoice a = [Either Duration (Phrase a)]
 --
 type TVoice a = Track (Phrase a)
 
-{-
-class HasPhrases a b | a -> b where
-  mvoices :: Traversal' a (MVoice b)
-
-instance HasPhrases (MVoice a) a where
-  mvoices = id
-
-instance HasPhrases (PVoice a) a where
-  -- Note: This is actually OK in 'phrases', as that just becomes (id . each . _Right)
-  mvoices = from unsafeMvoicePVoice
-
-instance (HasPart' a, Transformable a, Ord (Part a)) => HasPhrases (Score a) a where
-  mvoices = extracted . each . singleMVoice
--}
 
 -- |
 -- Classes that provide a phrase traversal.
@@ -155,6 +141,7 @@ phrases = mvoices . mvoicePVoice . each . _Right
 --
 mvoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 mvoicePVoice = unsafeMvoicePVoice
+-- TODO rename mVoicePVoice!
 -- TODO meta
 
 -- |
@@ -164,6 +151,7 @@ mvoicePVoice = unsafeMvoicePVoice
 --
 unsafeMvoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
 unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
+-- TODO rename unsafeMVoicePVoice!
   where
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
