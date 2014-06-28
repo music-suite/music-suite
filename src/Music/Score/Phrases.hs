@@ -76,7 +76,7 @@ type Phrase a = Voice a
 -- A sequence of phrases or rests, represented as notes or rests.
 --
 -- Each consecutive sequence of non-rest elements is considered to be a phrase.
--- For an explicit representation of the phrase structure, see 'mvoicePVoice'.
+-- For a more explicit representation of the phrase structure, see 'PVoice'.
 --
 type MVoice a = Voice (Maybe a)
 
@@ -85,6 +85,12 @@ type MVoice a = Voice (Maybe a)
 --
 type PVoice a = [Either Duration (Phrase a)]
 
+-- |
+-- A sequence of phrases or rests, represented as phrases with an explicit onset.
+--
+-- This is only isomorphic to 'MVoice' (and 'PVoice') up to onset equivalence.
+--
+type TVoice a = Track (Phrase a)
 
 {-
 class HasPhrases a b | a -> b where
@@ -213,8 +219,8 @@ singleMVoice = iso scoreToVoice voiceToScore'
     voiceToScore' = mcatMaybes . voiceToScore
 
 
-instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b where
-  _Cons = undefined
+-- instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b where
+  -- _Cons = undefined
 -- instance (Transformable a, Transformable b) => Snoc (Phrase a) (Phrase b) a b where
   -- _Snoc = prism' pure (preview lastV)
 
