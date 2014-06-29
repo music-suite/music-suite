@@ -385,22 +385,20 @@ fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
 fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
+    --
     -- Typically, the combination function us just 'head', as we know that group returns
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
 -- | 
--- Fuse all rests in the given voice.
---
--- The resulting voice will have no consecutive rests.
+-- Fuse all rests in the given voice. The resulting voice will have no consecutive rests.
 --
 fuseRests :: Voice (Maybe a) -> Voice (Maybe a)
 fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
 
 -- | 
--- Remove all rests in the given voice by prolonging the previous note.
---
--- Returns 'Nothing' if and only if the given voice contains rests only.
+-- Remove all rests in the given voice by prolonging the previous note. Returns 'Nothing'
+-- if and only if the given voice contains rests only.
 --
 coverRests :: Voice (Maybe a) -> Maybe (Voice a)
 coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy merge x)
