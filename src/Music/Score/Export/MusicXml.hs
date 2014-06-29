@@ -257,6 +257,7 @@ instance (
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
     . extractParts'
+    . normalizeScore
     $ score
     where
       title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score

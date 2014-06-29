@@ -268,6 +268,7 @@ instance (
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
     . extractParts'
+    . normalizeScore
     $ score
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures score 

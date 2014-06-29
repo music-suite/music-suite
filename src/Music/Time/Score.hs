@@ -53,6 +53,9 @@ module Music.Time.Score (
         simult,
         simultaneous,
 
+        -- * Normalize
+        normalizeScore,
+        
         -- * Traversing
         mapWithSpan,
         filterWithSpan,
@@ -505,6 +508,12 @@ filterEvents f = mapFilterEvents (partial3 f)
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
+-- | Mainly useful for backends.
+normalizeScore :: Score a -> Score a
+normalizeScore = reset . absDurations
+  where
+    reset x = set onset (view onset x `max` 0) x
+    absDurations = over (notes.each.era.delta._2) abs
 
 
 
