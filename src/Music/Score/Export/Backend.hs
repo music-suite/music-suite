@@ -80,17 +80,6 @@ type HasDynamic3 a a' a'' = (
   HasDynamic a  a''
   )
 
--- -- TODO move
--- class (
---   HasDynamic' a,
---   HasDynamic a  a',
---   HasDynamic a' a'',
---   HasDynamic a  a''
---   ) => HasDynamic3 a a' a'' where
--- 
--- instance (b ~  SetDynamic (Ctxt (Dynamic MyNote)) MyNote, c ~ SetDynamic DynamicNotation MyNote) 
---   => HasDynamic3 MyNote b c
-
 type HasDynamicNotation a b c = (
   HasDynamic3 a b c,
   Dynamic b  ~ Ctxt (Dynamic a),
@@ -99,34 +88,6 @@ type HasDynamicNotation a b c = (
   Part (SetDynamic (Dynamic a) a) ~ Part (SetDynamic DynamicNotation b)
  )
 type HasOrdPart a = (HasPart' a, Ord (Part a))
-
-
-
-{-
--- TODO move
-mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
-mapWithDur f = go
-  where
-    go (Beat d x)            = Beat d (f d x)
-    go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
-    go (Group rs)            = Group $ fmap (mapWithDur f) rs
-    go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
-
-extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
-extractTimeSignatures score = (barTimeSignatures, barDurations)
-  where                                          
-    defaultTimeSignature = time 4 4
-    timeSignatures = fmap swap 
-      $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
-      $ getTimeSignatures defaultTimeSignature score
-
-    -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
-    barTimeSignatures = retainUpdates $ getBarTimeSignatures timeSignatures
-    barDurations = getBarDurations timeSignatures
-
-
--}
-
 
 
 
