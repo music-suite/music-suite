@@ -261,12 +261,12 @@ instance (
   exportScore b score = LyScore 
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
-    . map (second (over articulations notateArticulation)) 
-    . map (second (preserveMeta addArtCon))
-    . map (second (removeCloseDynMarks))
-    . map (second (over dynamics notateDynamic)) 
-    . map (second (preserveMeta addDynCon))
-    . map (second (preserveMeta simultaneous)) 
+    . map (second $ over articulations notateArticulation) 
+    . map (second $ preserveMeta addArtCon)
+    . map (second $ removeCloseDynMarks)
+    . map (second $ over dynamics notateDynamic) 
+    . map (second $ preserveMeta addDynCon)
+    . map (second $ preserveMeta simultaneous) 
     . extractParts'
     . normalizeScore
     $ score
@@ -367,11 +367,8 @@ mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAnd
 withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
 withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
 
-
+mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
 mVoiceTVoice = mvoicePVoice . pVoiceTVoice
--- pVoiceTVoice = unsafePVoiceTVoice
--- TODO
-
 
 pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
 pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
@@ -399,12 +396,6 @@ _rightsSet cs = sndMapAccumL f cs
     f (c:cs) (Right b) = (cs, Right c)
     f []     (Right _) = error "No more cs"
 
---    :: ([c] -> Either a b -> ([c], Either a c)) -> [c] -> [Either a b] -> [Either a c]
-    
--- :: ([c] -> Either a b -> ([c], Either a c)) -> [c] -> [Either a b] -> [Either a c]
-
-
-
 sndMapAccumL f z = snd . Data.List.mapAccumL f z
 
 -- unsafePVoiceTVoice :: Iso (PVoice a) (PVoice b) (TVoice a) (TVoice b)
@@ -418,31 +409,8 @@ sndMapAccumL f z = snd . Data.List.mapAccumL f z
 --     tVoiceToPVoice = undefined   
 
 
--- pVoiceToTVoice :: (a ~ ()) => PVoice a -> TVoice a
--- pVoiceToTVoice x = undefined
---   where
---     _ = x
---           :: [           Either Duration (Phrase ())]
---     _ = withDurationR x 
---           :: [(Duration, Either Duration (Phrase ()))]
---     _ = mapZip (offsetPoints (0::Time)) (withDurationR x)
---           :: [(Time, Either Duration (Phrase ()))]
---     _ = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
---           :: Track (Phrase ())
-
-
 mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
 mapZip f = uncurry zip . first f . unzipR
-
--- @length (offsetPoints x xs) = length xs + 1
--- >>> offsetPoints 0 [1,2,1]
--- [0,1,2,1]
--- offsetPoints :: AffineSpace a => Time -> [Duration] -> [Time]
-offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
-offsetPoints = scanl (.+^)
-
-toAbs :: [Duration] -> [Time]
-toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
 
 
 -- TODO move
@@ -470,18 +438,6 @@ dursToVoice = mconcat . map (\d -> stretch d $ return ())
 
 -- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
 
-
-{-
--- TODO customize and remove extraction-related constraints
-instance (
-  HasDynamicNotation a b c,
-  HasOrdPart a, Transformable a, Semigroup a,
-  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c), Tiable c
-  )
-  => HasBackendScore Lilypond (Voice a) where
-  type BackendScoreEvent Lilypond (Voice a) = SetDynamic DynamicNotation a
-  exportScore b = exportScore b . voiceToScore
--}
 
 --------------------------------------------------------------------------------
 

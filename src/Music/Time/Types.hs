@@ -42,6 +42,9 @@ module Music.Time.Types (
         fromTime,
 
         -- $convert
+        offsetPoints,
+        -- TODO name
+        toAbs,
 
         -- * Time spans
         Span,
@@ -82,6 +85,7 @@ import           Data.AffineSpace.Point
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.List (mapAccumL)
 
 import           Music.Time.Internal.Util (showRatio)
 
@@ -216,6 +220,18 @@ toTime = realToFrac
 --
 fromTime :: Fractional a => Time -> a
 fromTime = realToFrac
+
+
+-- @length (offsetPoints x xs) = length xs + 1
+-- >>> offsetPoints 0 [1,2,1]
+-- [0,1,2,1]
+-- offsetPoints :: AffineSpace a => Time -> [Duration] -> [Time]
+offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
+offsetPoints = scanl (.+^)
+
+toAbs :: [Duration] -> [Time]
+toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
+-- TODO use State instead
 
 
 
