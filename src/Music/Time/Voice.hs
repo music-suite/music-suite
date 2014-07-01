@@ -75,11 +75,6 @@ module Music.Time.Voice (
 
         -- * Context
         withContext,
-
-        -- headV,
-        -- middleV,
-        -- lastV,
-
   ) where
 
 import           Data.AffineSpace
