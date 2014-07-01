@@ -180,11 +180,7 @@ instance HasBackend Lilypond where
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
-      finalizeScore (LyScore (info, x)) 
-        = pcatLy 
-        . map finalizeStaff $ x
-        where
-          extra = id
+      finalizeScore (LyScore (info, x)) = pcatLy . map finalizeStaff $ x
 
       -- TODO finalizeStaffGroup
 
@@ -193,8 +189,7 @@ instance HasBackend Lilypond where
         = addStaff 
         . addPartName (staffName info) 
         . addClef (staffClef info)
-        . scatLy 
-        . map finalizeBar $ x
+        . scatLy . map finalizeBar $ x
         where
           addStaff                = Lilypond.New "Staff" Nothing
           addClef c x             = scatLy [Lilypond.Clef c, x]
@@ -205,14 +200,15 @@ instance HasBackend Lilypond where
 
       finalizeBar :: LyBar LyMusic -> LyMusic
       finalizeBar (LyBar (BarInfo timeSignature, x))
-        = maybe id setBarTimeSignature timeSignature 
+        = (setTimeSignature `ifJust` timeSignature) 
         . renderBarMusic $ x
         where
+          ifJust = maybe id          
           -- TODO key signatures
           -- TODO rehearsal marks
           -- TODO bar number change
           -- TODO compound time signatures
-          setBarTimeSignature (getTimeSignature -> (ms, n)) x = scatLy [Lilypond.Time (sum ms) n, x]
+          setTimeSignature (getTimeSignature -> (ms, n)) x = scatLy [Lilypond.Time (sum ms) n, x]
           
       renderBarMusic :: Rhythm LyMusic -> LyMusic
       renderBarMusic = go
@@ -261,11 +257,14 @@ instance (
   exportScore b score = LyScore 
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
+
     . map (second $ over articulations notateArticulation) 
     . map (second $ preserveMeta addArtCon)
+
     . map (second $ removeCloseDynMarks)
     . map (second $ over dynamics notateDynamic) 
     . map (second $ preserveMeta addDynCon)
+
     . map (second $ preserveMeta simultaneous) 
     . extractParts'
     . normalizeScore
@@ -755,11 +754,6 @@ openLilypond' options sc = do
 
 
 
-
-
-
-
--- Internal stuff
 -- TODO This function is a workaround
 -- Whenever it is used, we should make the original function preserve meta instead
 preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
@@ -784,4 +778,4 @@ spellLy' p = Lilypond.Pitch (
   fromIntegral oct
   )
   where (pc,alt,oct) = spellPitch (p + 72)
--- End internal
+
