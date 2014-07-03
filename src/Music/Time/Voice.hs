@@ -69,6 +69,8 @@ module Music.Time.Voice (
         -- ** Zips
         unzipVoice,
         zipVoice,
+        zipVoice3,
+        zipVoice4,
         zipVoiceNoScale,
         zipVoiceNoScale3,
         zipVoiceNoScale4,
@@ -346,6 +348,49 @@ zipVoice :: Voice a -> Voice b -> Voice (a, b)
 zipVoice = zipVoiceWith (,)
 
 -- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+zipVoice3 a b c = zipVoice a (zipVoice b c)
+
+-- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+zipVoice4 a b c d = zipVoice a (zipVoice b (zipVoice c d))
+
+-- |
+-- Join the given voices by multiplying durations and pairing values.
+--
+zipVoice5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
+zipVoice5 a b c d e = zipVoice a (zipVoice b (zipVoice c (zipVoice d e)))
+
+-- |
+-- Join the given voices by pairing values and selecting the first duration.
+--
+zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
+zipVoiceNoScale = zipVoiceWithNoScale (,)
+
+-- |
+-- Join the given voices by pairing values and selecting the first duration.
+--
+zipVoiceNoScale3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+zipVoiceNoScale3 a b c = zipVoiceNoScale a (zipVoiceNoScale b c)
+
+-- |
+-- Join the given voices by pairing values and selecting the first duration.
+--
+zipVoiceNoScale4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c d))
+
+-- |
+-- Join the given voices by pairing values and selecting the first duration.
+--
+zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
+zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
+
+
+-- |
 -- Join the given voices by multiplying durations and combining values using the given function.
 --
 zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
@@ -490,18 +535,6 @@ voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 -- voiceL :: ALens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 
-
-zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
-zipVoiceNoScale = zipVoiceWithNoScale (,)
-
-zipVoiceNoScale3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
-zipVoiceNoScale3 a b c = zipVoiceNoScale a (zipVoiceNoScale b c)
-
-zipVoiceNoScale4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
-zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c d))
-
-zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
-zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
 
 -- TODO not meta-safe
 voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
