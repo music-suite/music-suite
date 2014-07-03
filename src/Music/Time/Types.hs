@@ -58,6 +58,14 @@ module Music.Time.Types (
         showRange,
         showDelta,
 
+        -- ** Properties
+        isForwardSpan,
+        isBackwardSpan,
+        isEmptySpan,
+        delayOnly,
+        stretchOnly,
+        -- Proper spans are always bounded and closed
+
         -- ** Points in spans
         -- TODO move
         isProper,
@@ -70,11 +78,6 @@ module Music.Time.Types (
         -- difference (would actually become a split)
 
         -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
-
-        -- ** Properties
-        delayOnly,
-        stretchOnly,
-        -- Proper spans are always bounded and closed
   ) where
 
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -393,10 +396,23 @@ stretchOnly = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x 
   (0, d) -> Just d
   _      -> Nothing
 
+-- |
+-- Whether the given span has a positive duration, i.e. whether its 'onset' is before its 'offset'.
+--
+isForwardSpan :: Span -> Bool
+isForwardSpan = (> 0) . signum . spanDur
 
--- Same as (onset, offset), defined here for bootstrapping reasons
-startTime  (view range -> (t1, t2)) = t1
-stopTime   (view range -> (t1, t2)) = t2
+-- |
+-- Whether the given span has a negative duration, i.e. whether its 'offset' is before its 'onset'.
+--
+isBackwardSpan :: Span -> Bool
+isBackwardSpan = (< 0) . signum . spanDur
+
+-- |
+-- Whether the given span is empty, i.e. whether its 'onset' and 'offset' are equivalent.
+--
+isEmptySpan :: Span -> Bool
+isEmptySpan = (== 0) . signum . spanDur
 
 
 -- |
@@ -435,3 +451,8 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (startTime a `max` stopTime a) <= (startTime b `min` stopTime b)
 
+
+-- Same as (onset, offset), defined here for bootstrapping reasons
+startTime  (view range -> (t1, t2)) = t1
+stopTime   (view range -> (t1, t2)) = t2
+spanDur    s                        = stopTime s .-. startTime s

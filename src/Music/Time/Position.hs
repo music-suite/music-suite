@@ -43,10 +43,13 @@ module Music.Time.Position (
 
       -- * Specific positions
       onset,
+      midpoint,
       offset,
       preOnset,
-      postOnset,
       postOffset,
+
+      -- ** Deprecated
+      postOnset,
 
       -- * Moving to absolute positions
       startAt,
@@ -160,11 +163,15 @@ preOnset = position (-0.5)
 {-# INLINE preOnset #-}
 
 -- |
--- Post-onset of the given value, or the value between the decay and sustain phases.
+-- Midpoint of the given value, or the value between the decay and sustain phases.
 --
+midpoint :: (HasPosition a, Transformable a) => Lens' a Time
+midpoint = position 0.5
+{-# INLINE midpoint #-}
+
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset = position 0.5
-{-# INLINE postOnset #-}
+{-# DEPRECATED postOnset "Use midpoint" #-}
 
 -- |
 -- Post-offset of the given value, or the value right after the release phase.
