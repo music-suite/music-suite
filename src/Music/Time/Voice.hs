@@ -503,8 +503,12 @@ zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale
 zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
 zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
 
+-- TODO not meta-safe
 voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
-voiceAsList = error "No voiceAsList"
+voiceAsList = iso voiceToList listToVoice
+  where
+    voiceToList = map snd . view eventsV
+    listToVoice = mconcat . fmap pure
 
 listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
 listAsVoice = from voiceAsList
