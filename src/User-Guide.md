@@ -475,7 +475,7 @@ TODO add explicit rests etc
 @[mcatMaybes] 
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8
+mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8 
 ```
                  
 
