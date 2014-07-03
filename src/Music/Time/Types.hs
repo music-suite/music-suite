@@ -378,7 +378,7 @@ delta :: Iso' Span (Time, Duration)
 delta = iso _delta Delta
 
 -- |
--- View a span as a pair of onset and duration.
+-- View a span as a pair of duration and offset.
 --
 codelta :: Iso' Span (Duration, Time)
 codelta = iso _codelta $ uncurry (<-<)
