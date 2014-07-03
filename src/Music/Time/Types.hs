@@ -67,6 +67,8 @@ module Music.Time.Types (
         -- ** Delay and stretch component
         delayComponent,
         stretchComponent,
+        fixedOnsetSpan,
+        fixedDurationSpan,
 
         -- ** Points in spans
         isProper,
@@ -375,23 +377,32 @@ showDelta :: Span -> String
 showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
 
 -- |
+-- Access the delay component in a span.
+--
+delayComponent :: Span -> Time
+delayComponent x = x ^. delta . _1
+
+-- |
+-- Access the stretch component in a span.
+--
+stretchComponent :: Span -> Duration
+stretchComponent x = x ^. delta . _2
+
+-- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
 --
--- To access the delay component in any span, use @'view' ('delta' . e'_1')@
---
-delayComponent :: Prism' Span Time
-delayComponent = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+fixedDurationSpan :: Prism' Span Time
+fixedDurationSpan = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
   (t, 1) -> Just t
   _      -> Nothing
-
 
 -- |
 -- A prism to the subset of 'Span' that performs a stretch but no delay.
 --
--- To access the stretch component in any span, use @'view' ('delta' . '_2')@
+-- To access the stretch component in any span, use @stretchComponent@
 --
-stretchComponent :: Prism' Span Duration
-stretchComponent = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+fixedOnsetSpan :: Prism' Span Duration
+fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
   (0, d) -> Just d
   _      -> Nothing
 
