@@ -73,6 +73,10 @@ library
                         Music.Time.Stretched
                         Music.Time.Delayed
                         Music.Time.Note
+                        Music.Time.Future
+                        Music.Time.Past
+                        Music.Time.Nominal
+                        Music.Time.Graces
                         Music.Time.Track
                         Music.Time.Voice
                         Music.Time.Chord

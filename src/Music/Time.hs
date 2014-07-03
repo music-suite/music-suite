@@ -34,10 +34,16 @@ module Music.Time (
     module Music.Time.Stretched,
     module Music.Time.Delayed,
     module Music.Time.Note,
+    module Music.Time.Future,
+    module Music.Time.Past,
+    module Music.Time.Nominal,
+    module Music.Time.Graces,
+    module Music.Time.Note,
     module Music.Time.Voice,
     module Music.Time.Chord,
     module Music.Time.Track,
     module Music.Time.Score,
+
     -- ** Continous time
     module Music.Time.Segment,
     module Music.Time.Behavior,
@@ -60,6 +66,10 @@ import           Music.Time.Behavior
 import           Music.Time.Chord
 import           Music.Time.Delayed
 import           Music.Time.Note
+import           Music.Time.Future
+import           Music.Time.Past
+import           Music.Time.Nominal
+import           Music.Time.Graces
 import           Music.Time.Reactive
 import           Music.Time.Score
 import           Music.Time.Segment
