@@ -62,8 +62,8 @@ module Music.Time.Types (
         isForwardSpan,
         isBackwardSpan,
         isEmptySpan,
-        delayOnly,
-        stretchOnly,
+        delayComponent,
+        stretchComponent,
         -- Proper spans are always bounded and closed
 
         -- ** Points in spans
@@ -380,8 +380,8 @@ showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
 --
 -- To access the delay component in any span, use @'view' ('delta' . e'_1')@
 --
-delayOnly :: Prism' Span Time
-delayOnly = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+delayComponent :: Prism' Span Time
+delayComponent = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
   (t, 1) -> Just t
   _      -> Nothing
 
@@ -391,8 +391,8 @@ delayOnly = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
 --
 -- To access the stretch component in any span, use @'view' ('delta' . '_2')@
 --
-stretchOnly :: Prism' Span Duration
-stretchOnly = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+stretchComponent :: Prism' Span Duration
+stretchComponent = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
   (0, d) -> Just d
   _      -> Nothing
 
