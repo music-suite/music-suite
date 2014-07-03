@@ -59,15 +59,16 @@ module Music.Time.Types (
         showDelta,
 
         -- ** Properties
+        -- $forwardBackWardEmpty
         isForwardSpan,
         isBackwardSpan,
         isEmptySpan,
+        
+        -- ** Delay and stretch component
         delayComponent,
         stretchComponent,
-        -- Proper spans are always bounded and closed
 
         -- ** Points in spans
-        -- TODO move
         isProper,
         isBefore,
         inside,
@@ -76,8 +77,6 @@ module Music.Time.Types (
         -- union
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
-
-        -- TODO Abjad terminology: contains/curtails/delays/intersects/isCongruentTo
   ) where
 
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -395,6 +394,18 @@ stretchComponent :: Prism' Span Duration
 stretchComponent = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
   (0, d) -> Just d
   _      -> Nothing
+
+--
+-- $forwardBackWardEmpty
+--
+-- A span is either /forward/, /backward/ or /empty/.
+--
+-- >>> any [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
+-- True
+--
+-- >>> all $ map not [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
+-- False
+--
 
 -- |
 -- Whether the given span has a positive duration, i.e. whether its 'onset' is before its 'offset'.
