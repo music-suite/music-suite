@@ -69,12 +69,19 @@ module Music.Time.Voice (
         -- ** Zips
         unzipVoice,
         zipVoice,
+        zipVoiceNoScale,
+        zipVoiceNoScale3,
+        zipVoiceNoScale4,
         zipVoiceWith,
         zipVoiceWith',
         zipVoiceWithNoScale,
 
         -- * Context
         withContext,
+        voiceLens,
+        -- voiceL,
+        voiceAsList,
+        listAsVoice,        
   ) where
 
 import           Data.AffineSpace
@@ -474,6 +481,33 @@ reverseDurations = over durationsV reverse
 --
 reverseValues :: Voice a -> Voice a
 reverseValues = over valuesV reverse
+
+-- Lens "filtered" throuygh a voice
+voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
+voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
+
+-- TODO generalize to any zippable thing
+-- voiceL :: ALens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
+voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
+
+
+zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
+zipVoiceNoScale = zipVoiceWithNoScale (,)
+
+zipVoiceNoScale3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+zipVoiceNoScale3 a b c = zipVoiceNoScale a (zipVoiceNoScale b c)
+
+zipVoiceNoScale4 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+zipVoiceNoScale4 a b c d = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c d))
+
+zipVoiceNoScale5 :: Voice a -> Voice b -> Voice c -> Voice d -> Voice e -> Voice (a, (b, (c, (d, e))))
+zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoScale c (zipVoiceNoScale d e)))
+
+voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
+voiceAsList = error "No voiceAsList"
+
+listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
+listAsVoice = from voiceAsList
 
 
 --
