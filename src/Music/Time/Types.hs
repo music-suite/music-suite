@@ -400,23 +400,23 @@ stretchComponent = prism' (\d -> view (from delta) (0, d)) $ \x -> case view del
 -- Whether the given span has a positive duration, i.e. whether its 'onset' is before its 'offset'.
 --
 isForwardSpan :: Span -> Bool
-isForwardSpan = (> 0) . signum . spanDur
+isForwardSpan = (> 0) . signum . _durationS
 
 -- |
 -- Whether the given span has a negative duration, i.e. whether its 'offset' is before its 'onset'.
 --
 isBackwardSpan :: Span -> Bool
-isBackwardSpan = (< 0) . signum . spanDur
+isBackwardSpan = (< 0) . signum . _durationS
 
 -- |
 -- Whether the given span is empty, i.e. whether its 'onset' and 'offset' are equivalent.
 --
 isEmptySpan :: Span -> Bool
-isEmptySpan = (== 0) . signum . spanDur
+isEmptySpan = (== 0) . signum . _durationS
 
 
 -- |
--- Whether this is a proper span, i.e. whether @'_onset' x '<' 'stopTime' x@.
+-- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
 --
 isProper :: Span -> Bool
 isProper (view range -> (t, u)) = t < u
@@ -437,7 +437,7 @@ inside x (view range -> (t, u)) = t <= x && x <= u
 -- Whether the first given span encloses the second span.
 --
 encloses :: Span -> Span -> Bool
-a `encloses` b = startTime b `inside` a && stopTime b `inside` a
+a `encloses` b = _onsetS b `inside` a && _offsetS b `inside` a
 
 -- |
 -- Whether the given span overlaps.
@@ -449,10 +449,10 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 -- Whether the first given span occurs before the second span.
 --
 isBefore :: Span -> Span -> Bool
-a `isBefore` b = (startTime a `max` stopTime a) <= (startTime b `min` stopTime b)
+a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
 
 -- Same as (onset, offset), defined here for bootstrapping reasons
-startTime  (view range -> (t1, t2)) = t1
-stopTime   (view range -> (t1, t2)) = t2
-spanDur    s                        = stopTime s .-. startTime s
+_onsetS    (view range -> (t1, t2)) = t1
+_offsetS   (view range -> (t1, t2)) = t2
+_durationS s = _offsetS s .-. _onsetS s
