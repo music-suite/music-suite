@@ -39,6 +39,14 @@ should render a file called `foo.pdf` containing the following:
 c |> d |> e
 ```
 
+While a music file ordinarily contains a single expression, it is also possible to write *declarations*. In this case you must provide a single top-level declaration called `example`.
+
+```music+haskell
+type MyType = ()
+
+example = c <> e <> g
+```
+
 There are several programs for converting music expressions:
 
 * `music2midi`
@@ -72,6 +80,23 @@ In this case the resulting program will generate and open a file called
 `test.pdf` containing the output seen above.
 
 Music files and Haskell files using `defaultMain` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
+
+### Interactive use
+
+An advantage of Haskell files is that you can load them into a Haskell interpreter.
+
+TODO configuration
+
+Here is an example `.ghci` file.
+
+```
+:m + Music.Prelude
+:def! open  (\x -> return $ "open  $ asScore $ "++ x)
+:def! play  (\x -> return $ "play  $ asScore $ "++ x)
+:def! write (\x -> return $ "write $ asScore $ "++ x)
+putStrLn "Welcome to the Music Suite!"
+putStrLn "Try :open <music> or :play <music>"
+```
 
 ## Time and duration
 
