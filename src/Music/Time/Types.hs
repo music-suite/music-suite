@@ -55,14 +55,21 @@ module Music.Time.Types (
         -- *** Accessing spans
         range,
         delta,
+        codelta,
         showRange,
         showDelta,
+        showCodelta,
 
         -- ** Properties
         -- $forwardBackWardEmpty
         isForwardSpan,
         isBackwardSpan,
         isEmptySpan,
+
+        -- ** Transformations
+        reverseSpan,
+        reflectSpan,
+        normalizeSpan,
         
         -- ** Delay and stretch component
         delayComponent,
@@ -71,9 +78,11 @@ module Music.Time.Types (
         fixedDurationSpan,
 
         -- ** Points in spans
+        inside,
+
+        -- ** Partial orders
         isProper,
         isBefore,
-        inside,
         encloses,
         overlaps,
         -- union
@@ -247,12 +256,15 @@ toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
 -- Pattern matching over span is possible (with @ViewPatterns@):
 --
 -- @
--- foo ('view' 'range' -> (t1, t2)) = ...
--- foo ('view' 'delta' -> (t, d)) = ...
+-- foo ('view' 'range'   -> (t1, t2)) = ...
+-- foo ('view' 'delta'   -> (t1, d))  = ...
+-- foo ('view' 'codelta' -> (d,  t2)) = ...
 -- @
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
--- onset is translation and duration is scaling. TODO see 'transform' and 'whilst'
+-- onset is translation and duration is scaling.
+--
+-- TODO How to use with 'transform', 'whilst' etc.
 --
 -- The semantics are given by
 --
@@ -263,10 +275,11 @@ toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
 newtype Span = Delta { _delta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
--- You can create a span using the '<->' and '>->' constructors. Note that:
+-- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --
--- > t <-> u = t >-> (u .-. t)
--- > t >-> d = t <-> t .+^ d
+-- > a >-> b = a         <-> (a .+^ b)
+-- > a <-< b = (b .-^ a) <-> b
+-- > a <-> b = a         >-> (b .-. a)
 --
 -- To create and destruct a span (in any of its incarnations), use the provided isomorphisms:
 --
@@ -365,16 +378,30 @@ delta :: Iso' Span (Time, Duration)
 delta = iso _delta Delta
 
 -- |
+-- View a span as a pair of onset and duration.
+--
+codelta :: Iso' Span (Duration, Time)
+codelta = iso _codelta $ uncurry (<-<)
+  where
+    _codelta x = let (t, d) = _delta x in (d, t .+^ d)
+
+-- |
 -- Show a span in range notation, i.e. @t1 \<-\> t2@.
 --
 showRange :: Span -> String
 showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
 
 -- |
--- Show a span in range notation, i.e. @t >-> d@.
+-- Show a span in delta notation, i.e. @t >-> d@.
 --
 showDelta :: Span -> String
 showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
+
+-- |
+-- Show a span in codelta notation, i.e. @t <-< d@.
+--
+showCodelta :: Span -> String
+showCodelta (view codelta -> (d,u)) = show d ++ " <-< " ++ show u
 
 -- |
 -- Access the delay component in a span.
@@ -399,8 +426,6 @@ fixedDurationSpan = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view de
 -- |
 -- A prism to the subset of 'Span' that performs a stretch but no delay.
 --
--- To access the stretch component in any span, use @stretchComponent@
---
 fixedOnsetSpan :: Prism' Span Duration
 fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
   (0, d) -> Just d
@@ -411,10 +436,10 @@ fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta
 --
 -- A span is either /forward/, /backward/ or /empty/.
 --
--- >>> any [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
+-- >>> any id [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
 -- True
 --
--- >>> all $ map not [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
+-- >>> all not [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
 -- False
 --
 
@@ -438,10 +463,30 @@ isEmptySpan = (== 0) . signum . _durationS
 
 
 -- |
+-- Reflect a span about its midpoint.
+--
+reverseSpan :: Span -> Span
+reverseSpan s = reflectSpan (_middleS s) s
+
+-- |
+-- Reflect a span about an arbitrary point.
+--
+reflectSpan :: Time -> Span -> Span
+reflectSpan p = over (range . both) (reflectThrough p)
+
+-- |
+-- Normalize a span, i.e. reverse it if negative, and do nothing otherwise.
+--
+normalizeSpan :: Span -> Span
+normalizeSpan s = if isForwardSpan s then s else reverseSpan s
+-- TODO Duplicate as normalizeNoteSpan
+
+-- |
 -- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
 --
 isProper :: Span -> Bool
 isProper (view range -> (t, u)) = t < u
+{-# DEPRECATED isProper "Use 'isForwardSpan'" #-}
 
 -- |
 -- Whether the given point falls inside the given span (inclusively).
@@ -477,4 +522,6 @@ a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 -- Same as (onset, offset), defined here for bootstrapping reasons
 _onsetS    (view range -> (t1, t2)) = t1
 _offsetS   (view range -> (t1, t2)) = t2
+_middleS  s = _onsetS s .+^ _durationS s / 2
 _durationS s = _offsetS s .-. _onsetS s
+
