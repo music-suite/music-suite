@@ -41,7 +41,6 @@ module Music.Score.Meta.RehearsalMark (
   ) where
 
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Default

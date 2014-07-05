@@ -49,7 +49,6 @@ module Music.Score.Meta.Attribution (
         withAttribution',
   ) where
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)

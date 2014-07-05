@@ -34,7 +34,6 @@ import           Data.Default
 import           Data.Ratio
 
 import           Control.Applicative
-import           Control.Arrow                (first, second, (***), (&&&))
 import qualified Control.Category
 import           Control.Comonad
 import           Control.Comonad.Env

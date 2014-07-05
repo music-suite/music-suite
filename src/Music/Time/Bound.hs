@@ -43,6 +43,7 @@ module Music.Time.Bound (
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Bifunctor
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
@@ -55,7 +56,6 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
@@ -111,7 +111,7 @@ instance Rewrapped (Bound a) (Bound b)
 
 instance Reversible a => Reversible (Bound a) where
   -- rev = over (_Wrapped . each) rev
-  rev = over _Wrapped $ (rev *** rev)
+  rev = over _Wrapped $ (bimap rev rev)
 
 instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
@@ -121,7 +121,7 @@ instance (HasPosition a, Splittable a) => Splittable (Bound a) where
 -- the bounds.
 --
 instance Transformable a => Transformable (Bound a) where
-  transform t = over _Wrapped (transform t *** transform t)
+  transform t = over _Wrapped (transform t `bimap` transform t)
 
 instance (HasPosition a, HasDuration a) => HasDuration (Bound a) where
   _duration x = _offset x .-. _onset x

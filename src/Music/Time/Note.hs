@@ -53,7 +53,6 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -115,7 +114,7 @@ instance Wrapped (Note a) where
 instance Rewrapped (Note a) (Note b)
 
 instance Transformable (Note a) where
-  transform t = over _Wrapped $ first (transform t)
+  transform t = over (_Wrapped . _1) $ transform t
 
 instance HasDuration (Note a) where
   _duration = _duration . ask . view _Wrapped

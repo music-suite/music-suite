@@ -41,6 +41,7 @@ module Music.Time.Stretched (
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Bifunctor
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Ratio
@@ -54,7 +55,6 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Comonad
 import           Control.Comonad.Env
 import           Control.Lens           hiding (Indexable, Level, above, below,

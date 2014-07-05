@@ -101,7 +101,6 @@ import           Music.Time.Stretched
 import           Music.Time.Voice
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))

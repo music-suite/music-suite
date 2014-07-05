@@ -11,6 +11,7 @@
              #-}
 module Data.Functor.Couple where
 
+import Data.Bifunctor
 import Data.Functor.Product
 import Data.Functor.Identity
 import Data.Foldable
@@ -21,7 +22,6 @@ import Data.Typeable
 import Control.Applicative
 import Control.Comonad
 import Data.PairMonad ()
-import Control.Arrow (first)
 import Control.Lens (Wrapped(..), Rewrapped(..), iso)
 
 -- |

@@ -43,7 +43,6 @@ module Music.Score.Meta.Key (
         withKeySignature,
   ) where
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)

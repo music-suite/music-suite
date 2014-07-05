@@ -57,7 +57,6 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 
 import           Control.Applicative
-import           Control.Arrow          (first, second, (&&&), (***))
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))

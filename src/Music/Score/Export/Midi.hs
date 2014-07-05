@@ -41,7 +41,6 @@ module Music.Score.Export.Midi (
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import qualified Codec.Midi                    as Midi
-import           Control.Arrow                 ((***))
 import           Control.Comonad               (Comonad (..), extract)
 import           Control.Applicative
 import           Data.Colour.Names             as Color

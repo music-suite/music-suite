@@ -76,7 +76,6 @@ import           Music.Pitch.Literal
 
 
 import           Control.Applicative
-import           Control.Arrow           (first, second, (&&&), (***))
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,
                                           transform, (<|), (|>))
@@ -162,7 +161,7 @@ updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r `atTime` t)) <$> (List.sort . List.nub) (occs r)
 
 renderR :: Reactive a -> (a, [(Time, a)])
-renderR = initial &&& updates
+renderR x = (initial x, updates x)
 
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')

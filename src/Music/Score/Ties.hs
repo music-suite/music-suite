@@ -39,7 +39,7 @@ module Music.Score.Ties (
   ) where
 
 import           Control.Applicative
-import           Control.Arrow
+import           Data.Bifunctor
 import           Control.Comonad
 import           Control.Lens            hiding (transform)
 import           Control.Monad

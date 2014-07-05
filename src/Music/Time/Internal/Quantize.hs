@@ -44,7 +44,6 @@ import           Prelude             hiding (concat, concatMap, foldl, foldr,
                                       mapM, maximum, minimum, sum)
 
 import           Control.Applicative
-import           Control.Arrow       hiding (left)
 import           Control.Lens        (over, (^.), _Left)
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either

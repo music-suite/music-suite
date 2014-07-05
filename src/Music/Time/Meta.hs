@@ -54,7 +54,9 @@ module Music.Time.Meta (
         -- ** The HasMeta class
         HasMeta(..),
         applyMeta,
-        withMeta,
+        setMeta,
+        setMetaAttr,
+        setMetaTAttr,
         
         AddMeta,
         asAddMeta,
@@ -190,16 +192,17 @@ instance HasMeta b => HasMeta (b, a) where
 
 deriving instance HasMeta b => HasMeta (Couple b a)
 
-withMeta :: HasMeta a => Meta -> a -> a
-withMeta m = set meta m
+-- TODO call withMeta a la Clojure?
+setMeta :: HasMeta a => Meta -> a -> a
+setMeta m = set meta m
 
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
-setMetaAttr :: (IsAttribute b, HasMeta a) =>b -> a -> a
+setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
 setMetaAttr a = applyMeta (to_nonT_Meta a)
 
-setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) =>b -> a -> a
+setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) => b -> a -> a
 setMetaTAttr a = applyMeta (toMeta Nothing a)
 
 

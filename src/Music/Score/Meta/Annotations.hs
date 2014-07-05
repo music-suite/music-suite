@@ -35,7 +35,6 @@ module Music.Score.Meta.Annotations (
         withAnnotations,
   ) where
 
-import           Control.Arrow
 import           Control.Monad.Plus
 import qualified Data.List
 import           Data.Semigroup

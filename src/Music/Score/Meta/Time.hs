@@ -53,9 +53,9 @@ module Music.Score.Meta.Time (
         standardTimeSignature,
   ) where
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
+import           Data.Bifunctor
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List

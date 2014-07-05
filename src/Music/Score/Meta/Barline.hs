@@ -44,7 +44,6 @@ module Music.Score.Meta.Barline (
   ) where
 
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Default

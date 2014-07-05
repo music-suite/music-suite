@@ -47,7 +47,6 @@ module Music.Score.Meta.Tempo (
   ) where
 
 
-import           Control.Arrow
 import           Control.Lens
 import           Control.Monad.Plus
 import           Data.AffineSpace

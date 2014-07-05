@@ -40,7 +40,6 @@ module Music.Score.Meta.Clef (
         withClef,
   ) where
 
-import           Control.Arrow
 import           Control.Lens              (view)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)

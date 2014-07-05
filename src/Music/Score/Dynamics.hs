@@ -69,7 +69,6 @@ module Music.Score.Dynamics (
   ) where
 
 import           Control.Applicative
-import           Control.Arrow
 import           Control.Comonad
 import           Control.Lens                  hiding (Level, transform)
 import           Control.Monad

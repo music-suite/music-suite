@@ -49,10 +49,10 @@ module Music.Score.Meta (
    ) where
 
 import           Control.Applicative
-import           Control.Arrow
 import           Control.Lens           hiding (parts, perform)
 import           Control.Monad
 import           Control.Monad.Plus
+import           Data.Bifunctor
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable (..))
@@ -139,9 +139,9 @@ inSpan t' (view range -> (t,u)) = t <= t' && t' < u
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
 mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a
-mapBefore t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 < t) (withTime x) in (f y <> n)
-mapDuring s f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t,x) -> t `inSpan` s) (withTime x) in (f y <> n)
-mapAfter t f x = let (y,n) = (fmap snd *** fmap snd) $ mpartition (\(t2,x) -> t2 >= t) (withTime x) in (f y <> n)
+mapBefore t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -> t2 < t) (withTime x) in (f y <> n)
+mapDuring s f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t,x) -> t `inSpan` s) (withTime x) in (f y <> n)
+mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -> t2 >= t) (withTime x) in (f y <> n)
 
 
 -- Transform the score with the current value of some meta-information

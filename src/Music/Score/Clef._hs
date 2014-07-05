@@ -37,7 +37,6 @@ module Music.Score.Clef (
         HasClef(..),
   ) where
 
-import           Control.Arrow
 import           Control.Lens hiding (transform, parts)
 import           Control.Monad.Plus
 import           Data.Foldable           (Foldable)

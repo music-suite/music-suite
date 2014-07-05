@@ -48,9 +48,9 @@ module Music.Score.Export.MusicXml (
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import qualified Codec.Midi                    as Midi
-import           Control.Arrow                 ((***))
 import           Control.Comonad               (Comonad (..), extract)
 import           Control.Applicative
+import           Data.Bifunctor
 import           Data.Colour.Names             as Color
 import           Data.Default
 import           Data.Foldable                 (Foldable)
@@ -235,13 +235,11 @@ renderBarMusic = go
     go (Group rs)            = mconcat $ map renderBarMusic rs
     go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
       where
-        (a,b) = fromIntegral *** fromIntegral $ unRatio $ realToFrac m
+        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
 setDefaultVoice :: MusicXml.Music -> MusicXml.Music
 setDefaultVoice = MusicXml.setVoice 1
 
--- TODO move
-second f (x, y) = (x, f y)
 
 instance (
   HasDynamicNotation a b c,
@@ -560,46 +558,4 @@ preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
 preserveMeta f x = let m = view meta x in set meta m (f x)
 -- End internal
 
-
--- -- main = putStrLn $ show $ view notes $ simultaneous
--- main = do
---   openLilypond music
---   openMusicXml music
--- music =
---   --  over pitches' (+ 2) $
---   --  text "Hello" $
---   compress 1 $ sj </> sj^*2 </> sj^*4
---   where
---     sj = timesPadding 2 1 $ harmonic 1 (scat [
---       color Color.blue $ level _f $ c <> d,
---       cs,
---       level _f ds,
---       level ff fs,
---       level _f a_,
---       text "pizz" $ level pp gs_,
---       tremolo 2 d,
---       tremolo 3 e
---       ::Score MyNote])^*(1+3/5)   
--- 
--- timesPadding n d x = mcatMaybes $ times n (fmap Just x |> rest^*d)
--- 
--- type MyNote = 
---   (PartT Int 
---     (TieT 
---       (ColorT 
---         (TextT 
---           (TremoloT 
---             (HarmonicT 
---               (SlideT 
---                 (ArticulationT () 
---                   (DynamicT 
---                     (Sum (Double)) 
---                       [Behavior Double])))))))))
--- 
--- 
--- open :: Score MyNote -> IO ()
--- open = do
---   -- showLilypond
---   openLilypond
---
 
