@@ -69,6 +69,7 @@ import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
+import           Data.Functor.Adjunction  (unzipR)
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Maybe
@@ -221,6 +222,37 @@ newtype WithMeta a = WithMeta { getWithMeta :: Twain Meta a }
     HasMeta, Eq, Ord
     )
 
+-- instance FunctorWithIndex i WithMeta where
+  -- imap f = over annotated $ imap f
+-- 
+-- instance FoldableWithIndex Span Score where
+--   ifoldMap f (Score (m,x)) = ifoldMap f x
+-- 
+-- instance TraversableWithIndex Span Score where
+--   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
+
+instance Transformable a => Transformable (WithMeta a) where
+  transform t = over meta (transform t) . over annotated (transform t)
+
+instance Reversible a => Reversible (WithMeta a) where
+  rev = over meta rev . over annotated rev
+
+instance Splittable a => Splittable (WithMeta a) where
+  split t = unzipR . fmap (split t)
+  -- TODO need to split the meta too?
+
+instance HasPosition a => HasPosition (WithMeta a) where
+  _onset    = _onset . extract
+  _offset   = _offset . extract
+  _position = _position . extract
+
+instance HasDuration a => HasDuration (WithMeta a) where
+  _duration = _duration . extract
+
+--
+-- @
+-- over annotated = fmap
+-- @
 annotated :: Iso' a (WithMeta a)
 annotated = iso toWithMeta fromWithMeta
   where
