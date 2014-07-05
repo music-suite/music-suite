@@ -40,14 +40,7 @@ module Music.Time.Voice (
         -- ** Extracting values
         stretcheds,
         eventsV,
-
-        -- ** Pattern matching
         singleStretched,
-
-        -- *** Unsafe versions
-        unsafeStretcheds,
-        unsafeEventsV,
-
 
         -- * Fusion
         fuse,
@@ -83,7 +76,12 @@ module Music.Time.Voice (
         voiceLens,
         -- voiceL,
         voiceAsList,
-        listAsVoice,        
+        listAsVoice,
+
+        -- * Unsafe versions
+        unsafeStretcheds,
+        unsafeEventsV,
+
   ) where
 
 import           Data.AffineSpace
