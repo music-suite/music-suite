@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -22,12 +23,13 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides meta-information.
+-- Provides a way to annotate data-types with transformable meta-information.
 --
--- Each score supports an unlimited number of 'Reactive' meta-values.
+-- Because meta-data is 'Transformable', it often makes sense to use 'Reactive' or 'Voice' wrappers
+-- to represent time-varying information such as time signatures, global volume, arranger of a particular
+-- section etc.
 --
--- This is more or less based on Diagrams styles, which is in turn based
--- on XMonad.
+-- Inspired by Diagrams and Clojure.
 --
 -------------------------------------------------------------------------------------
 
@@ -40,7 +42,7 @@ module Music.Time.Meta (
         wrapAttr,
         wrapTAttr,
         unwrapAttr,
-        unwrapTAttr,
+        -- unwrapTAttr,
 
         -- * Meta-data
         Meta,
@@ -52,10 +54,14 @@ module Music.Time.Meta (
         -- ** The HasMeta class
         HasMeta(..),
         applyMeta,
+        withMeta,
+        
+        AddMeta,
+        asAddMeta,
   ) where
 
--- import           Control.Applicative
--- import           Control.Arrow
+import           Control.Applicative
+import           Control.Comonad
 import           Control.Lens              hiding (transform)
 import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
@@ -73,6 +79,7 @@ import           Data.String
 -- import qualified Data.Traversable          as T
 import           Data.Typeable
 import           Data.Void
+import           Data.Functor.Couple
 
 -- import           Music.Score.Part
 import           Music.Time.Internal.Util
@@ -90,21 +97,24 @@ data Attribute :: * where
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
-unwrapAttr :: IsAttribute a => Attribute -> Maybe a
-unwrapAttr (Attribute a) = cast a
-
 wrapTAttr :: (Transformable a, IsAttribute a) => a -> Attribute
 wrapTAttr = TAttribute
 
-unwrapTAttr :: (Transformable a, IsAttribute a) => Attribute -> Maybe a
-unwrapTAttr (TAttribute a) = cast a
+unwrapAttr :: IsAttribute a => Attribute -> Maybe a
+unwrapAttr (Attribute a)  = cast a
+unwrapAttr (TAttribute a) = cast a
+
+-- Only needed if you want to transform and put back the meta
+-- Maybe not event then?
+-- unwrapTAttr :: (Transformable a, IsAttribute a) => Attribute -> Maybe a
+-- unwrapTAttr (TAttribute a) = cast a
 
 instance Semigroup Attribute where
   (Attribute a1) <> a2 = case unwrapAttr a2 of
     -- Nothing  -> a2
     Nothing  -> error "Attribute.(<>) mismatch"
     Just a2' -> Attribute (a1 <> a2')
-  (TAttribute a1) <> a2 = case unwrapTAttr a2 of
+  (TAttribute a1) <> a2 = case unwrapAttr a2 of
     -- Nothing  -> a2
     Nothing  -> error "Attribute.(<>) mismatch"
     Just a2' -> TAttribute (a1 <> a2')
@@ -134,8 +144,6 @@ instance Monoid Meta where
   mempty = Meta Map.empty
   mappend = (<>)
 
-instance HasMeta Meta where
-  meta = ($)
 
 --
 -- TODO
@@ -151,14 +159,21 @@ toMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
     -- pt = show $ fmap getPart partId
     ty = show $ typeOf (undefined :: b)
 
-fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> Meta -> Maybe b
-fromMeta partId (Meta s) = (unwrapTAttr =<<) $ Map.lookup key s
+fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Maybe b
+fromMeta partId (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
     key = ty ++ pt
     pt = ""
     -- pt = show $ fmap getPart partId
     ty = show . typeOf $ (undefined :: b)
+
+to_nonT_Meta :: forall b . ({-HasPart' a, -}IsAttribute b) => b -> Meta
+to_nonT_Meta a = Meta $ Map.singleton key $ wrapAttr a
+  where
+    key = ty ++ pt
+    pt = ""
+    ty = show $ typeOf (undefined :: b)
 
 
 -- | Type class for things which have meta-information.
@@ -167,6 +182,41 @@ class HasMeta a where
   --   existing meta-information.
   meta :: Lens' a Meta
 
+instance HasMeta Meta where
+  meta = ($)
+
+instance HasMeta b => HasMeta (b, a) where
+  meta = _1 . meta
+
+deriving instance HasMeta b => HasMeta (Couple b a)
+
+withMeta :: HasMeta a => Meta -> a -> a
+withMeta m = set meta m
+
 applyMeta :: HasMeta a => Meta -> a -> a
-applyMeta m = (meta <>~ m)
+applyMeta m = over meta (<> m)
+
+setMetaAttr :: (IsAttribute b, HasMeta a) =>b -> a -> a
+setMetaAttr a = applyMeta (to_nonT_Meta a)
+
+setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) =>b -> a -> a
+setMetaTAttr a = applyMeta (toMeta Nothing a)
+
+
+
+
+-- TODO Better name
+-- TODO deriviations (esp of Eq, Ord, Num)
+newtype AddMeta a = AddMeta { getAddMeta :: Couple Meta a }
+  deriving (HasMeta)
+
+asAddMeta :: Iso' a (AddMeta a)
+asAddMeta = iso toAddMeta fromAddMeta
+  
+toAddMeta :: a -> AddMeta a
+toAddMeta = AddMeta . pure
+
+fromAddMeta :: AddMeta a -> a
+fromAddMeta = extract . getAddMeta
+
 
