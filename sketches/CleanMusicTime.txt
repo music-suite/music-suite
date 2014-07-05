@@ -2,37 +2,41 @@
 
 ## Misc Music.Time API
 
-Remove/clean/consolidate semantics
-Determine future approach to rest/chord as well as naming of Note/Delayed/Stretched
-    Compare applicative composition Const/Id/Pair etc
-    Track vs Chord + names
+- Remove/clean/consolidate semantics
+- Determine future approach to rest/chord as well as naming of Note/Delayed/Stretched
+    - Compare applicative composition Const/Id/Pair etc
+    - Track vs Chord + names
 
-Name of events/eventsV etc
-Name of singleStretched etc
-Hide/move unsafe vesions + assert that everything else works (conceptually) with meta
+- Name of events/eventsV etc
+- Name of singleStretched etc
+- Hide/move unsafe vesions + assert that everything else works (conceptually) with meta
 
-Score simult/simultaneous
-NoReverse vs Nominal vs other "invariant" wrappers
-Remove Position._setEra/_setEra
-More catenation/juxtaposition functions (compare Tidal et al)
-More chord functions
-Separate Behavior/Reactive/Segment better
- x
-New names
-  ?          -> Rest (type Rest a = Duration)
-  Stretched  -> Note
-  Delayed    -> Delayed
-  Note       -> Placed
-                Future
-                Past
-                Nominal (type Nominal = Identity)
-                Graces (type Graces a = (Nominal . Voice $ a, a, Nominal . Voice $ a))
-  Voice      -> Voice
-  Chord      -> Chord
-  Track      -> (remove)
-  -- New hierachical score type
+- Score simult/simultaneous
+- NoReverse vs Nominal vs other "invariant" wrappers
+- Remove Position._setEra/_setEra
+- More catenation/juxtaposition functions (compare Tidal et al)
+- More chord functions
+- Separate Behavior/Reactive/Segment better
+
+- New names
+
+&nbsp;
+
+    ?          -> Rest (type Rest a = Duration)
+    Stretched  -> Note
+    Delayed    -> Delayed
+    Note       -> Placed
+                  Future
+                  Past
+                  Nominal (type Nominal = Identity)
+                  Graces (type Graces a = (Nominal . Voice $ a, a, Nominal . Voice $ a))
+    Voice      -> Voice
+    Chord      -> Chord
+    Track      -> (remove)
+    -- New hierachical score type
+
 
 ## Music.Time internals
 
-Move types upwards to Internals (remove internal bootstrapping functions)
-Factor out/replace whilstLD et al
+- Move types upwards to Internals (remove internal bootstrapping functions)
+- Factor out/replace whilstLD et al
