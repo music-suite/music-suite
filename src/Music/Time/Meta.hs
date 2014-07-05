@@ -25,9 +25,10 @@
 --
 -- Provides a way to annotate data-types with transformable meta-information.
 --
--- Because meta-data is 'Transformable', it often makes sense to use 'Reactive' or 'Voice' wrappers
--- to represent time-varying information such as time signatures, global volume, arranger of a particular
--- section etc.
+-- Because meta-data is 'Transformable', it often makes sense to use 'Reactive' or 'Behavior'
+-- wrappers to represent time-varying information.
+--
+-- See "Music.Score.Meta" for more specific applications.
 --
 -- Inspired by Diagrams and Clojure.
 --
@@ -53,12 +54,12 @@ module Music.Time.Meta (
 
         -- ** The HasMeta class
         HasMeta(..),
-        applyMeta,
         setMeta,
         setMetaAttr,
         setMetaTAttr,
+        applyMeta,
         
-        WithMeta,
+        AddMeta,
         annotated,
   ) where
 
@@ -178,10 +179,9 @@ to_nonT_Meta a = Meta $ Map.singleton key $ wrapAttr a
     ty = show $ typeOf (undefined :: b)
 
 
--- | Type class for things which have meta-information.
+-- | Type class for things which have meta-data.
 class HasMeta a where
-  -- | Apply meta-information by combining it (on the left) with the
-  --   existing meta-information.
+  -- | Access the meta-data.
   meta :: Lens' a Meta
 
 instance Show Meta where
@@ -190,6 +190,14 @@ instance Show Meta where
 instance HasMeta Meta where
   meta = ($)
 
+instance HasMeta a => HasMeta (Maybe a) where
+  meta = lens viewM $ flip setM
+    where
+      viewM Nothing  = mempty
+      viewM (Just x) = view meta x
+      setM m = fmap (set meta m)
+
+-- TODO arguably both of these are wrong
 instance HasMeta b => HasMeta (b, a) where
   meta = _1 . meta
 
@@ -199,6 +207,8 @@ deriving instance HasMeta b => HasMeta (Twain b a)
 setMeta :: HasMeta a => Meta -> a -> a
 setMeta m = set meta m
 
+-- | Apply meta-information by combining it (on the left) with the
+--   existing meta-information.
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
@@ -212,9 +222,14 @@ setMetaTAttr a = applyMeta (toMeta Nothing a)
 
 
 -- TODO Better name
--- TODO deriviations (esp of Eq, Ord, Num)
--- Meta should *not* affect Eq/Ord (as in Clojure)
-newtype WithMeta a = WithMeta { getWithMeta :: Twain Meta a }
+
+-- |
+-- Annotate an arbitrary type with meta-data, preserving instances of
+-- all common type classes.
+--
+-- You can access the meta-data using 'meta', and the annotated value using 'annotated'.
+--
+newtype AddMeta a = AddMeta { getAddMeta :: Twain Meta a }
   deriving (
     Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
     Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
@@ -222,7 +237,7 @@ newtype WithMeta a = WithMeta { getWithMeta :: Twain Meta a }
     HasMeta, Eq, Ord
     )
 
--- instance FunctorWithIndex i WithMeta where
+-- instance FunctorWithIndex i AddMeta where
   -- imap f = over annotated $ imap f
 -- 
 -- instance FoldableWithIndex Span Score where
@@ -231,35 +246,40 @@ newtype WithMeta a = WithMeta { getWithMeta :: Twain Meta a }
 -- instance TraversableWithIndex Span Score where
 --   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
 
-instance Transformable a => Transformable (WithMeta a) where
+instance Transformable a => Transformable (AddMeta a) where
   transform t = over meta (transform t) . over annotated (transform t)
 
-instance Reversible a => Reversible (WithMeta a) where
+instance Reversible a => Reversible (AddMeta a) where
   rev = over meta rev . over annotated rev
 
-instance Splittable a => Splittable (WithMeta a) where
+instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
   -- TODO need to split the meta too?
 
-instance HasPosition a => HasPosition (WithMeta a) where
+instance HasPosition a => HasPosition (AddMeta a) where
   _onset    = _onset . extract
   _offset   = _offset . extract
   _position = _position . extract
 
-instance HasDuration a => HasDuration (WithMeta a) where
+instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract
 
+
+-- |
 --
 -- @
 -- over annotated = fmap
 -- @
-annotated :: Iso' a (WithMeta a)
-annotated = iso toWithMeta fromWithMeta
+-- 
+-- TODO this is as unsafe as the unsafe... methods in Score etc
+-- 
+annotated :: Iso' a (AddMeta a)
+annotated = iso toAddMeta fromAddMeta
   where
-    toWithMeta :: a -> WithMeta a
-    toWithMeta = WithMeta . pure
+    toAddMeta :: a -> AddMeta a
+    toAddMeta = AddMeta . pure
 
-    fromWithMeta :: WithMeta a -> a
-    fromWithMeta = extract . getWithMeta
+    fromAddMeta :: AddMeta a -> a
+    fromAddMeta = extract . getAddMeta
 
 
