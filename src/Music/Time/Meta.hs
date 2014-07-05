@@ -207,6 +207,7 @@ setMetaTAttr a = applyMeta (toMeta Nothing a)
 
 -- TODO Better name
 -- TODO deriviations (esp of Eq, Ord, Num)
+-- Meta should *not* affect Eq/Ord (as in Clojure)
 newtype AddMeta a = AddMeta { getAddMeta :: Couple Meta a }
   deriving (HasMeta)
 
