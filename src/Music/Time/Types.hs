@@ -463,19 +463,24 @@ isEmptySpan = (== 0) . signum . _durationS
 
 
 -- |
--- Reflect a span about its midpoint.
+-- Reflect a span through its midpoint.
 --
 reverseSpan :: Span -> Span
 reverseSpan s = reflectSpan (_middleS s) s
 
 -- |
--- Reflect a span about an arbitrary point.
+-- Reflect a span through an arbitrary point.
 --
 reflectSpan :: Time -> Span -> Span
 reflectSpan p = over (range . both) (reflectThrough p)
 
 -- |
 -- Normalize a span, i.e. reverse it if negative, and do nothing otherwise.
+--
+-- @
+-- _duration s = _duration (normalizeSpan s)
+-- _midpoint s = _midpoint (normalizeSpan s)
+-- @
 --
 normalizeSpan :: Span -> Span
 normalizeSpan s = if isForwardSpan s then s else reverseSpan s

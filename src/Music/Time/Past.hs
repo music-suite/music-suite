@@ -1,6 +1,9 @@
 
 module Music.Time.Past where
 
+import Music.Time.Split
+import Music.Time.Reverse
+
 -- |
 -- Past represents a value occuring /up to/ some point in time.
 --
@@ -9,7 +12,7 @@ module Music.Time.Past where
 newtype Past a = Past { getPast :: (a, Time) }
 
 past :: Past a -> Time -> Maybe a
-past (Past (t, x)) t'
-  | if t' <= t = Just x
+past (Past (x, t)) t'
+  | t' <= t    = Just x
   | otherwise  = Nothing
 
