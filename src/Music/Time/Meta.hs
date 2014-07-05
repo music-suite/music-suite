@@ -58,8 +58,8 @@ module Music.Time.Meta (
         setMetaAttr,
         setMetaTAttr,
         
-        AddMeta,
-        asAddMeta,
+        WithMeta,
+        annotated,
   ) where
 
 import           Control.Applicative
@@ -72,7 +72,6 @@ import qualified Data.List                 as List
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Maybe
--- import           Data.Monoid.WithSemigroup
 import           Data.Semigroup
 import           Data.Set                  (Set)
 import qualified Data.Set                  as Set
@@ -83,18 +82,18 @@ import           Data.Typeable
 import           Data.Void
 import           Data.Functor.Couple
 
--- import           Music.Score.Part
 import           Music.Time.Internal.Util
 import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Transform
 
 type IsAttribute a = (Typeable a, Monoid a, Semigroup a)
+type IsTAttribute a = (Transformable a, IsAttribute a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
   Attribute  :: IsAttribute a => a -> Attribute
-  TAttribute :: (Transformable a, IsAttribute a) => a -> Attribute
+  TAttribute :: IsTAttribute a  => a -> Attribute
 
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
@@ -184,13 +183,16 @@ class HasMeta a where
   --   existing meta-information.
   meta :: Lens' a Meta
 
+instance Show Meta where
+  show _ = "{ meta }"
+
 instance HasMeta Meta where
   meta = ($)
 
 instance HasMeta b => HasMeta (b, a) where
   meta = _1 . meta
 
-deriving instance HasMeta b => HasMeta (Couple b a)
+deriving instance HasMeta b => HasMeta (Twain b a)
 
 -- TODO call withMeta a la Clojure?
 setMeta :: HasMeta a => Meta -> a -> a
@@ -211,16 +213,21 @@ setMetaTAttr a = applyMeta (toMeta Nothing a)
 -- TODO Better name
 -- TODO deriviations (esp of Eq, Ord, Num)
 -- Meta should *not* affect Eq/Ord (as in Clojure)
-newtype AddMeta a = AddMeta { getAddMeta :: Couple Meta a }
-  deriving (HasMeta)
+newtype WithMeta a = WithMeta { getWithMeta :: Twain Meta a }
+  deriving (
+    Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
+    Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
+    Integral, Real, RealFrac,
+    HasMeta, Eq, Ord
+    )
 
-asAddMeta :: Iso' a (AddMeta a)
-asAddMeta = iso toAddMeta fromAddMeta
-  
-toAddMeta :: a -> AddMeta a
-toAddMeta = AddMeta . pure
+annotated :: Iso' a (WithMeta a)
+annotated = iso toWithMeta fromWithMeta
+  where
+    toWithMeta :: a -> WithMeta a
+    toWithMeta = WithMeta . pure
 
-fromAddMeta :: AddMeta a -> a
-fromAddMeta = extract . getAddMeta
+    fromWithMeta :: WithMeta a -> a
+    fromWithMeta = extract . getWithMeta
 
 
