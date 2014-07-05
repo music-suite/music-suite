@@ -388,7 +388,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (PartT n a) where
   exportChord b = exportChord b . fmap (fmap extract)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicNotation a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
+  exportNote b = uncurry notate . getDynamicT . fmap (exportNote b) . sequenceA
     where
       notate :: DynamicNotation -> LyMusic -> LyMusic
       notate (DynamicNotation (crescDims, level))
@@ -414,7 +414,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       rcomposed = composed . reverse
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT ArticulationNotation a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
+  exportNote b = uncurry notate . getArticulationT . fmap (exportNote b) . sequenceA
     where
       notate :: ArticulationNotation -> LyMusic -> LyMusic
       notate (ArticulationNotation (slurs, marks))
@@ -438,7 +438,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
       rcomposed = composed . reverse
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
+  exportNote b = uncurry notate . getCouple . getColorT . fmap (exportNote b) . sequenceA
     where
       -- TODO This syntax will change in future Lilypond versions
       -- TODO handle any color
@@ -470,12 +470,12 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
         in (Lilypond.Tremolo (round repeats), newDur)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TextT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
+  exportNote b = uncurry notate . getCouple . getTextT . fmap (exportNote b) . sequenceA
     where
       notate texts = composed (fmap Lilypond.addText texts)
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (HarmonicT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
+  exportNote b = uncurry notate . getCouple . getHarmonicT . fmap (exportNote b) . sequenceA
     where
       notate (Any isNat, Sum n) = case (isNat, n) of
         (_,     0) -> id
@@ -485,21 +485,39 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (HarmonicT a) wher
       notateArtificial n = id -- TODO
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (SlideT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getSlideT . sequenceA
-    where
-      notate ((Any eg, Any es),(Any bg, Any bs))
-        | bg  = Lilypond.beginGlissando
-        | bs  = Lilypond.beginGlissando
-        | otherwise = id
+  exportNote b  = uncurry notateGliss . getCouple . getSlideT . fmap (exportNote b) . sequenceA
+  exportChord b = uncurry notateGliss . getCouple . getSlideT . fmap (exportChord b) . sequenceA . fmap sequenceA
 
+notateGliss ((Any eg, Any es),(Any bg, Any bs))
+  | bg  = Lilypond.beginGlissando
+  | bs  = Lilypond.beginGlissando
+  | otherwise = id
+
+{-
+  exportNote        :: b -> BC a   -> BN
+  exportChord       :: b -> BC [a] -> BN
+  uncurry notateTie :: ((Any, Any), Lilypond.Music) -> Lilypond.Music
+  
+  BC (TieT a)        sequenceA
+  TieT (BC a)        fmap (exportNote b)
+  TieT BN            notate . getTieT
+  BN
+  
+  BC [TieT a]        fmap sequenceA
+  BC (TieT [a])      sequenceA
+  TieT (BC [a])      fmap (exportChord b)
+  TieT BN            notate . getTieT
+  BN
+-}
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
-    where
-      notate (Any ta, Any tb)
-        | ta && tb  = Lilypond.beginTie
-        | tb        = Lilypond.beginTie
-        | ta        = id
-        | otherwise = id
+  exportNote b  = uncurry notateTie . getTieT . fmap (exportNote b) . sequenceA
+  exportChord b = uncurry notateTie . getTieT . fmap (exportChord b) . sequenceA . fmap sequenceA
+
+notateTie (Any ta, Any tb)
+  | ta && tb  = Lilypond.beginTie
+  | tb        = Lilypond.beginTie
+  | ta        = id
+  | otherwise = id
 
 -- |
 -- Constraint for types that has a Lilypond representation.
