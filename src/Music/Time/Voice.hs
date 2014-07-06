@@ -187,10 +187,6 @@ instance Transformable (Voice a) where
 instance HasDuration (Voice a) where
   _duration = Foldable.sum . fmap _duration . view _Wrapped'
 
--- TODO move
-instance Splittable () where
-  split _ x = (x,x)
-
 instance Splittable a => Splittable (Voice a) where
   split t x
     | t <= 0           = (mempty, x)

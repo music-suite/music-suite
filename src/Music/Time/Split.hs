@@ -88,6 +88,9 @@ class Splittable a where
   ending    d = snd . split d
 -- TODO rename beginning/ending to fstSplit/sndSplit or similar
 
+instance Splittable () where
+  split _ x = (x, x)
+
 instance Splittable Duration where
   -- Directly from the laws
   -- Guard against t < 0
