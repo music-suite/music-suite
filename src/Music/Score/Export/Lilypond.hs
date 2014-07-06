@@ -259,11 +259,10 @@ instance (
 
     . map (second $ preserveMeta simultaneous)
     . extractParts'
-    . normalizeScore
-    $ score
+    $ normScore
     where
-      (timeSignatureMarks, barDurations) = extractTimeSignatures score
-
+      (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
+      normScore = normalizeScore score
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
