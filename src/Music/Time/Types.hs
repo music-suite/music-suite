@@ -93,12 +93,14 @@ module Music.Time.Types (
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
+import           Control.Monad.State.Lazy
+
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.List (mapAccumL)
+import           Data.List (mapAccumL, mapAccumR)
 
 import           Music.Time.Internal.Util (showRatio)
 
@@ -235,6 +237,9 @@ fromTime :: Fractional a => Time -> a
 fromTime = realToFrac
 
 
+
+-- TODO better names for these
+
 -- @length (offsetPoints x xs) = length xs + 1
 -- >>> offsetPoints 0 [1,2,1]
 -- [0,1,2,1]
@@ -242,9 +247,37 @@ fromTime = realToFrac
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
+-- Convert to delta (time to wait before this note)
+toRel :: [Time] -> [Duration]
+toRel = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
+
+-- Convert to delta (time to wait before next note)
+toRelN :: [Time] -> [Duration]
+toRelN [] = []
+toRelN xs = snd $ mapAccumR g (last xs) xs where g prev t = (t, prev .-. t)
+
+-- Convert to delta (time to wait before next note)
+toRelN' :: Time -> [Time] -> [Duration]
+toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
+
+-- 0 x,1 x,1 x,1 x
+  -- x 1,x 1,x 1,x 0
+
+-- Convert from delta (time to wait before this note)
 toAbs :: [Duration] -> [Time]
-toAbs = snd . Data.List.mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
+toAbs = tail . offsetPoints 0
+
+
+
+
 -- TODO use State instead
+
+-- mapAccumL                 ::                   (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
+-- \f -> mapM (runState . f) :: MonadState s m => (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
+mapAccumL2 f = mapM (runState . f)
+
+
+
 
 
 
@@ -466,7 +499,7 @@ isEmptySpan = (== 0) . signum . _durationS
 -- Reflect a span through its midpoint.
 --
 reverseSpan :: Span -> Span
-reverseSpan s = reflectSpan (_middleS s) s
+reverseSpan s = reflectSpan (_midpointS s) s
 
 -- |
 -- Reflect a span through an arbitrary point.
@@ -527,6 +560,23 @@ a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 -- Same as (onset, offset), defined here for bootstrapping reasons
 _onsetS    (view range -> (t1, t2)) = t1
 _offsetS   (view range -> (t1, t2)) = t2
-_middleS  s = _onsetS s .+^ _durationS s / 2
+_midpointS  s = _onsetS s .+^ _durationS s / 2
 _durationS s = _offsetS s .-. _onsetS s
+
+{-
+Two alternative definitions for midpoint:
+
+midpoint x = onset x + duration x / 2
+midpoint x = (onset x + offset x) / 2
+
+Both equivalent. Proof:
+
+  let d = b - a
+  (a + b)/2 = a + d/2
+  (a + b)/2 = a + (b - a)/2
+  a/2 + b/2 = a + b/2 - a/2
+  a/2 + b/2 - a = b/2 - a/2
+  b/2 - a/2 = b/2 - a/2
+-}
+
 
