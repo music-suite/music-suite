@@ -155,29 +155,22 @@ instance Monoid Meta where
 -- The API still works, but all parts are merged together
 --
 
-toTMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
-toTMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
+toTMeta :: forall a. IsTAttribute a => a -> Meta
+toTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
-    key = ty ++ pt
-    pt = ""
-    -- pt = show $ fmap getPart partId
-    ty = show $ typeOf (undefined :: b)
+    key = show $ typeOf (undefined :: b)
 
-fromMeta :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Maybe b
-fromMeta partId (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
+fromMeta :: forall b. IsAttribute a => Meta -> Maybe a
+fromMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
-    key = ty ++ pt
-    pt = ""
-    -- pt = show $ fmap getPart partId
-    ty = show . typeOf $ (undefined :: b)
+    key = show . typeOf $ (undefined :: b)
 
-toMeta :: forall b . ({-HasPart' a, -}IsAttribute b) => b -> Meta
+-- Also works with transformabel attributes
+toMeta :: forall a. IsAttribute a => a -> Meta
 toMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
-    key = ty ++ pt
-    pt = ""
-    ty = show $ typeOf (undefined :: b)
+    key = show $ typeOf (undefined :: b)
 
 
 -- | Type class for things which have meta-data.
