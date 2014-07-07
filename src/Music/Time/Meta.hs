@@ -50,6 +50,7 @@ module Music.Time.Meta (
 
         -- ** Creating meta-data
         toMeta,
+        toTMeta,
         fromMeta,
 
         -- ** The HasMeta class
@@ -154,8 +155,8 @@ instance Monoid Meta where
 -- The API still works, but all parts are merged together
 --
 
-toMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
-toMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
+toTMeta :: forall a b . ({-HasPart' a, -}IsAttribute b, Transformable b) => Maybe a -> b -> Meta
+toTMeta partId a = Meta $ Map.singleton key $ wrapTAttr a
   where
     key = ty ++ pt
     pt = ""
@@ -171,8 +172,8 @@ fromMeta partId (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
     -- pt = show $ fmap getPart partId
     ty = show . typeOf $ (undefined :: b)
 
-to_nonT_Meta :: forall b . ({-HasPart' a, -}IsAttribute b) => b -> Meta
-to_nonT_Meta a = Meta $ Map.singleton key $ wrapAttr a
+toMeta :: forall b . ({-HasPart' a, -}IsAttribute b) => b -> Meta
+toMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
     key = ty ++ pt
     pt = ""
@@ -213,10 +214,10 @@ applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
 setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
-setMetaAttr a = applyMeta (to_nonT_Meta a)
+setMetaAttr a = applyMeta (toMeta a)
 
 setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) => b -> a -> a
-setMetaTAttr a = applyMeta (toMeta Nothing a)
+setMetaTAttr a = applyMeta (toTMeta Nothing a)
 
 
 

@@ -119,10 +119,10 @@ a </> b = a <> moveParts offset b
 
 
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b{-, HasPart' b-}) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ toMeta (Just y) $ noteToReactive x) y
+addMetaNote x y = (applyMeta $ toTMeta (Just y) $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ toMeta (Nothing::Maybe Int) $ noteToReactive x
+addGlobalMetaNote x = applyMeta $ toTMeta (Nothing::Maybe Int) $ noteToReactive x
 
 fromMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
 fromMetaReactive part = fromMaybe mempty . fromMeta part
