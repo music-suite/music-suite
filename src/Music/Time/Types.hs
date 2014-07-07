@@ -104,9 +104,10 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
 import           Data.List (mapAccumL, mapAccumR)
+import           Data.Ratio
 
 import           Music.Time.Internal.Util (showRatio)
-
+-- import           Data.Fixed
 
 -- $convert
 --
@@ -120,16 +121,19 @@ import           Music.Time.Internal.Util (showRatio)
 -- for 'Fractional' and 'RealFrac'.
 --
 type TimeBase = Rational
--- type TimeBase = Fixed E12
+{-
+type TimeBase = Fixed E12
 
--- instance HasResolution a => AdditiveGroup (Fixed a) where
---   zeroV = 0
---   negateV = negate
---   (^+^) = (+)
+instance HasResolution a => AdditiveGroup (Fixed a) where
+  zeroV = 0
+  negateV = negate
+  (^+^) = (+)
 
 -- Can be enabled for experimental time representation
--- deriving instance Floating Time
--- deriving instance Floating Duration
+instance Floating TimeBase where
+deriving instance Floating Time
+deriving instance Floating Duration
+-}
 
 
 -- |
@@ -591,9 +595,12 @@ Both equivalent. Proof:
   let d = b - a
   (a + b)/2 = a + d/2
   (a + b)/2 = a + (b - a)/2
-  a/2 + b/2 = a + b/2 - a/2
-  a/2 + b/2 - a = b/2 - a/2
-  b/2 - a/2 = b/2 - a/2
+  a + b     = 2a + (b - a)
+  a + b     = a + b
 -}
+
+-- TODO move
+fraction :: (RealFrac a, Integral b) => Iso' a (b, b) 
+fraction = iso (\(toRational -> a) -> (fromIntegral $ numerator a, fromIntegral $ denominator a)) (\(a,b) -> fromIntegral a / fromIntegral b)
 
 
