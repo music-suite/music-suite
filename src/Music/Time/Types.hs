@@ -299,6 +299,12 @@ mapAccumL2 f = mapM (runState . f)
 --
 -- TODO How to use with 'transform', 'whilst' etc.
 --
+-- @
+-- a \'<->' b = (a, b)^.'from' 'range'
+-- a '>->' b = (a, b)^.'from' 'delta'
+-- a '<-<' b = (a, b)^.'from' 'codelta'
+-- @
+--
 -- The semantics are given by
 --
 -- @
@@ -392,9 +398,6 @@ t <-> u = t >-> (u .-. t)
 (<-<) :: Duration -> Time -> Span
 a <-< b = (b .-^ a) <-> b
 
-
--- > (<->) = curry $ view $ from range
--- > (>->) = curry $ view $ from delta
 
 -- |
 -- View a span as pair of onset and offset.
@@ -557,6 +560,7 @@ isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
 
+-- TODO resolve this so we can use actual onset/offset etc in the above definitions
 -- Same as (onset, offset), defined here for bootstrapping reasons
 _onsetS    (view range -> (t1, t2)) = t1
 _offsetS   (view range -> (t1, t2)) = t2
