@@ -158,19 +158,19 @@ instance Monoid Meta where
 toTMeta :: forall a. IsTAttribute a => a -> Meta
 toTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
-    key = show $ typeOf (undefined :: b)
+    key = show $ typeOf (undefined :: a)
 
-fromMeta :: forall b. IsAttribute a => Meta -> Maybe a
+fromMeta :: forall a. IsAttribute a => Meta -> Maybe a
 fromMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
-    key = show . typeOf $ (undefined :: b)
+    key = show . typeOf $ (undefined :: a)
 
 -- Also works with transformabel attributes
 toMeta :: forall a. IsAttribute a => a -> Meta
 toMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
-    key = show $ typeOf (undefined :: b)
+    key = show $ typeOf (undefined :: a)
 
 
 -- | Type class for things which have meta-data.
@@ -210,7 +210,7 @@ setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
 setMetaAttr a = applyMeta (toMeta a)
 
 setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) => b -> a -> a
-setMetaTAttr a = applyMeta (toTMeta Nothing a)
+setMetaTAttr a = applyMeta (toTMeta a)
 
 
 
