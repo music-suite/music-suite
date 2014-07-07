@@ -520,10 +520,18 @@ normalizeScore = reset . absDurations
 
 
 eras :: Transformable a => Score a -> [Span]
-eras = toListOf (notes . era)
+-- eras = toListOf (notes . era)
+eras sc = fmap getSpan . (^. events) $ sc
+  where
+    getSpan :: (Time, Duration, a) -> Span
+    getSpan (t,d,a) = t >-> d
+-- Must use this version of list due to a regression
+-- Probably due to notes and events returning elements in different order (TODO fix!)
 
 chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view notes
+
+
 
 simultaneous' :: Transformable a => Score a -> Score [a]
 simultaneous' sc = (^. from unsafeEvents) vs
