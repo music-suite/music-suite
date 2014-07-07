@@ -119,13 +119,13 @@ a </> b = a <> moveParts offset b
 
 
 addMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ toTMeta $ noteToReactive x) y
+addMetaNote x y = (applyMeta $ wrapTMeta $ noteToReactive x) y
 
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ toTMeta $ noteToReactive x
+addGlobalMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 
 fromMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
-fromMetaReactive part = fromMaybe mempty . fromMeta
+fromMetaReactive part = fromMaybe mempty . unwrapMeta
 
 
 

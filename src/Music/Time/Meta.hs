@@ -37,6 +37,8 @@
 module Music.Time.Meta (
         -- * Attributes
         IsAttribute,
+        IsTAttribute,
+        
         Attribute,
         
         -- ** Creating attributes
@@ -49,9 +51,9 @@ module Music.Time.Meta (
         Meta,
 
         -- ** Creating meta-data
-        toMeta,
-        toTMeta,
-        fromMeta,
+        wrapMeta,
+        wrapTMeta,
+        unwrapMeta,
 
         -- ** The HasMeta class
         HasMeta(..),
@@ -101,7 +103,7 @@ data Attribute :: * where
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
-wrapTAttr :: (Transformable a, IsAttribute a) => a -> Attribute
+wrapTAttr :: IsTAttribute a => a -> Attribute
 wrapTAttr = TAttribute
 
 unwrapAttr :: IsAttribute a => Attribute -> Maybe a
@@ -155,20 +157,20 @@ instance Monoid Meta where
 -- The API still works, but all parts are merged together
 --
 
-toTMeta :: forall a. IsTAttribute a => a -> Meta
-toTMeta a = Meta $ Map.singleton key $ wrapTAttr a
+wrapTMeta :: forall a. IsTAttribute a => a -> Meta
+wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
     key = show $ typeOf (undefined :: a)
 
-fromMeta :: forall a. IsAttribute a => Meta -> Maybe a
-fromMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
+unwrapMeta :: forall a. IsAttribute a => Meta -> Maybe a
+unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
     key = show . typeOf $ (undefined :: a)
 
 -- Also works with transformabel attributes
-toMeta :: forall a. IsAttribute a => a -> Meta
-toMeta a = Meta $ Map.singleton key $ wrapAttr a
+wrapMeta :: forall a. IsAttribute a => a -> Meta
+wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
     key = show $ typeOf (undefined :: a)
 
@@ -207,10 +209,10 @@ applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
 setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
-setMetaAttr a = applyMeta (toMeta a)
+setMetaAttr a = applyMeta (wrapMeta a)
 
-setMetaTAttr :: (IsAttribute b, Transformable b, HasMeta a) => b -> a -> a
-setMetaTAttr a = applyMeta (toTMeta a)
+setMetaTAttr :: (IsTAttribute b, HasMeta a) => b -> a -> a
+setMetaTAttr a = applyMeta (wrapTMeta a)
 
 
 
