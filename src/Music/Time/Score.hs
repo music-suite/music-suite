@@ -437,6 +437,21 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
 --
 unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 unsafeEvents = iso _getScore _score
+  where
+    _score :: [(Time, Duration, a)] -> Score a
+    _score = mconcat . fmap (uncurry3 event)
+      where
+        event t d x   = (delay (t .-. 0) . stretch d) (return x)
+
+    _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
+    _getScore =
+      fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
+      List.sortBy (Ord.comparing fst) .
+      Foldable.toList .
+      fmap (view $ from note) .
+      reifyScore
+    
+
 
 -- |
 -- View a score as a single note.
@@ -469,18 +484,6 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = notes . through event event
 
-_score :: [(Time, Duration, a)] -> Score a
-_score = mconcat . fmap (uncurry3 event)
-  where
-    event t d x   = (delay (t .-. 0) . stretch d) (return x)
-
-_getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
-_getScore =
-  fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
-  List.sortBy (Ord.comparing fst) .
-  Foldable.toList .
-  fmap (view $ from note) .
-  reifyScore
 
 
 -- | Map over the values in a score.
@@ -517,17 +520,10 @@ normalizeScore = reset . absDurations
 
 
 eras :: Transformable a => Score a -> [Span]
-eras sc = fmap getSpan . (^. events) $ sc
+eras = toListOf (notes . era)
 
 chordEvents :: Transformable a => Span -> Score a -> [a]
-chordEvents era sc = fmap getValue . filter (\ev -> getSpan ev == era) . (^. events) $ sc
-
-getValue :: (Time, Duration, a) -> a
-getValue (t,d,a) = a
-
-getSpan :: (Time, Duration, a) -> Span
-getSpan (t,d,a) = t >-> d
-
+chordEvents s = fmap extract . filter ((== s) . view era) . view notes
 
 simultaneous' :: Transformable a => Score a -> Score [a]
 simultaneous' sc = (^. from unsafeEvents) vs
