@@ -24,6 +24,8 @@
 
     ?          -> Rest (type Rest a = Duration)
     Stretched  -> Note
+    Chord      -> Chord
+
     Delayed    -> Delayed
     Note       -> Placed
                   Future
@@ -31,7 +33,6 @@
                   Nominal (type Nominal = Identity)
                   Graces (type Graces a = (Nominal . Voice $ a, a, Nominal . Voice $ a))
     Voice      -> Voice
-    Chord      -> Chord
     Track      -> (remove)
     -- New hierachical score type
 
