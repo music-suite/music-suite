@@ -55,6 +55,7 @@ module Music.Time.Score (
 
         -- * Normalize
         normalizeScore,
+        printEras,
         
         -- * Traversing
         mapWithSpan,
@@ -517,16 +518,11 @@ normalizeScore = reset . absDurations
     reset x = set onset (view onset x `max` 0) x
     absDurations = over (notes.each.era.delta._2) abs
 
-
+printEras :: Score a -> IO ()
+printEras = mapM_ print . toListOf (notes.each.era)
 
 eras :: Transformable a => Score a -> [Span]
--- eras = toListOf (notes . era)
-eras sc = fmap getSpan . (^. events) $ sc
-  where
-    getSpan :: (Time, Duration, a) -> Span
-    getSpan (t,d,a) = t >-> d
--- Must use this version of list due to a regression
--- Probably due to notes and events returning elements in different order (TODO fix!)
+eras = toListOf (notes . each . era)
 
 chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view notes
