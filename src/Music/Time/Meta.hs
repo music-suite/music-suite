@@ -61,7 +61,8 @@ module Music.Time.Meta (
         setMetaAttr,
         setMetaTAttr,
         applyMeta,
-        
+
+        -- ** Add meta-data to arbitrary types
         AddMeta,
         annotated,
   ) where
@@ -92,7 +93,10 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Transform
 
+-- | Class of values that can be wrapped.
 type IsAttribute a = (Typeable a, Monoid a, Semigroup a)
+
+-- | Class of values that can be wrapped.
 type IsTAttribute a = (Transformable a, IsAttribute a)
 
 -- | An existential wrapper type to hold attributes.
@@ -100,12 +104,16 @@ data Attribute :: * where
   Attribute  :: IsAttribute a => a -> Attribute
   TAttribute :: IsTAttribute a  => a -> Attribute
 
+-- | Convert something to an attribute.
 wrapAttr :: IsAttribute a => a -> Attribute
 wrapAttr = Attribute
 
+-- | Convert something from an attribute.
 wrapTAttr :: IsTAttribute a => a -> Attribute
 wrapTAttr = TAttribute
 
+-- | Convert something from an attribute.
+--   Also works with transformable attributes
 unwrapAttr :: IsAttribute a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
 unwrapAttr (TAttribute a) = cast a
@@ -157,18 +165,21 @@ instance Monoid Meta where
 -- The API still works, but all parts are merged together
 --
 
+-- | Convert something to meta-data.
 wrapTMeta :: forall a. IsTAttribute a => a -> Meta
 wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
     key = show $ typeOf (undefined :: a)
 
+-- | Convert something from meta-data.
 unwrapMeta :: forall a. IsAttribute a => Meta -> Maybe a
 unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
     key = show . typeOf $ (undefined :: a)
 
--- Also works with transformabel attributes
+-- | Convert something from meta-data.
+--   Also works with transformable attributes
 wrapMeta :: forall a. IsAttribute a => a -> Meta
 wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
