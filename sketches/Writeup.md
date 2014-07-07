@@ -57,4 +57,10 @@
 - "High-level" stuff
     - Quantization, form/structure, rhythms, instrumentation, counterpoint, harmony
     - Which package?
+
+- Split Clefs etc to separate package
+    music-clef, music-symbols?
+  
+
+
    
