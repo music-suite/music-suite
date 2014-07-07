@@ -124,7 +124,7 @@ addMetaNote x y = (applyMeta $ toTMeta $ noteToReactive x) y
 addGlobalMetaNote :: forall a b . (IsAttribute a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ toTMeta $ noteToReactive x
 
-fromMetaReactive :: forall a b . ({-HasPart' a, -}IsAttribute b) => Maybe a -> Meta -> Reactive b
+fromMetaReactive :: forall a b . IsAttribute b => Maybe a -> Meta -> Reactive b
 fromMetaReactive part = fromMaybe mempty . fromMeta part
 
 
@@ -147,22 +147,22 @@ mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-runScoreMeta :: forall a b . ({-HasPart' a, -}IsAttribute b) => Score a -> Reactive b
+runScoreMeta :: forall a b . (IsAttribute b) => Score a -> Reactive b
 runScoreMeta = fromMetaReactive (Nothing :: Maybe a) . (view meta)
 
-metaAt :: ({-HasPart' a, -}IsAttribute b) => Time -> Score a -> b
+metaAt :: (IsAttribute b) => Time -> Score a -> b
 metaAt x = (`atTime` x) . runScoreMeta
 
-metaAtStart :: ({-HasPart' a, -}IsAttribute b) => Score a -> b
+metaAtStart :: (IsAttribute b) => Score a -> b
 metaAtStart x = _onset x `metaAt` x
 
 withGlobalMeta :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMeta = withMeta' (Nothing :: Maybe Int)
 
-withMeta :: (IsAttribute a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta :: (IsAttribute a) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = withMeta' (Just x) f x
 
-withMeta' :: ({-HasPart' c, -}IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
+withMeta' :: (IsAttribute a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
 withMeta' part f x = let
     m = (view meta) x
     r = fromMetaReactive part m
@@ -178,10 +178,10 @@ withMeta' part f x = let
 withGlobalMetaAtStart :: IsAttribute a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
 
-withMetaAtStart :: (IsAttribute a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart :: (IsAttribute a) => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
-withMetaAtStart' :: (IsAttribute b{-, HasPart' p-}) =>
+withMetaAtStart' :: (IsAttribute b) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
 withMetaAtStart' partId f x = let
     m = (view meta) x
