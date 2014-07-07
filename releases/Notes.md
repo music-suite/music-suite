@@ -99,3 +99,12 @@
 - Adds regression tests
 
 - Adds more examples
+
+# 1.7.1 (forthcoming)
+
+- API CHANGES
+  - Renames stretchOnly etc to stretchComponent
+  - Renames postOnset (the point between onset and offset) to midpoint
+
+
+
