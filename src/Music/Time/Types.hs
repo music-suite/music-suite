@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -94,6 +95,8 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
 import           Control.Monad.State.Lazy
+import           Data.Aeson (ToJSON(..))
+import qualified Data.Aeson as JSON
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
@@ -150,6 +153,9 @@ newtype Duration = Duration { getDuration :: TimeBase }
 instance Show Duration where
   show = showRatio . realToFrac
 
+instance ToJSON Duration where
+  toJSON = JSON.Number . realToFrac
+
 instance InnerSpace Duration where
   (<.>) = (*)
 
@@ -204,6 +210,9 @@ newtype Time = Time { getTime :: TimeBase }
 
 instance Show Time where
   show = showRatio . realToFrac
+
+instance ToJSON Time where
+  toJSON = JSON.Number . realToFrac
 
 deriving instance AdditiveGroup Time
 
@@ -349,6 +358,10 @@ instance Show Span where
   -- show = showDelta
   show = showRange
   -- Which form should we use?
+
+instance ToJSON Span where
+  toJSON (view range -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
+
 
 -- |
 -- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
