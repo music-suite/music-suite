@@ -117,7 +117,8 @@ import           Music.Pitch.Literal
 
 -- |
 --
--- A 'Segment' is a value varying over some unknown time span.
+-- A 'Segment' is a value varying over some unknown time span. 
+-- Intuitively, a 'Segment' is to a 'Behavior' what a /ray/ is to a /line/.
 --
 -- To give a segment an explicit duration, use 'Stretched' 'Segment'.
 --
