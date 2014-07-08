@@ -345,3 +345,8 @@ instance Tiable a => Tiable (Score a) where
   beginTie = fmap beginTie
   endTie   = fmap endTie
 
+instance Transformable a => Transformable (Ctxt a) where
+  transform s = fmap (transform s)
+
+
+
