@@ -196,10 +196,10 @@ instance HasMeta a => HasMeta (Maybe a) where
       setM m = fmap (set meta m)
 
 -- TODO Both of these are wrong
-instance HasMeta b => HasMeta (b, a) where
-  meta = _1 . meta
+instance HasMeta a => HasMeta (b, a) where
+  meta = _2 . meta
 
-instance HasMeta b => HasMeta (Twain b a) where
+instance HasMeta a => HasMeta (Twain b a) where
   meta = _Wrapped . meta
 
 -- TODO call withMeta a la Clojure?
@@ -230,8 +230,19 @@ newtype AddMeta a = AddMeta { getAddMeta :: Twain Meta a }
     Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
     Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
     Integral, Real, RealFrac,
-    HasMeta, Eq, Ord
+    Eq, Ord
     )
+
+instance Wrapped (AddMeta a) where
+  type Unwrapped (AddMeta a) = Twain Meta a
+  _Wrapped' = iso getAddMeta AddMeta
+
+instance Rewrapped (AddMeta a) (AddMeta b)
+
+instance HasMeta (AddMeta a) where
+  -- twain, pair, element
+  meta = _Wrapped . _Wrapped . _1
+
 
 -- instance FunctorWithIndex i AddMeta where
   -- imap f = over annotated $ imap f
