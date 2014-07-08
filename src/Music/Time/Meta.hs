@@ -119,18 +119,11 @@ unwrapAttr :: IsAttribute a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
 unwrapAttr (TAttribute a) = cast a
 
--- Only needed if you want to transform and put back the meta
--- Maybe not event then?
--- unwrapTAttr :: (Transformable a, IsAttribute a) => Attribute -> Maybe a
--- unwrapTAttr (TAttribute a) = cast a
-
 instance Semigroup Attribute where
   (Attribute a1) <> a2 = case unwrapAttr a2 of
-    -- Nothing  -> a2
     Nothing  -> error "Attribute.(<>) mismatch"
     Just a2' -> Attribute (a1 <> a2')
   (TAttribute a1) <> a2 = case unwrapAttr a2 of
-    -- Nothing  -> a2
     Nothing  -> error "Attribute.(<>) mismatch"
     Just a2' -> TAttribute (a1 <> a2')
 
