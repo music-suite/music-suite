@@ -84,7 +84,7 @@ instance Monoid DynamicNotation where
 --   2) Whether we should display the current dynamic value
 --
 notateDynamic :: (Ord a, Real a) => Ctxt a -> DynamicNotation
-notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case x of
+notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ extractCtxt x) else Nothing) $ case getCtxt x of
   (Nothing, y, Nothing) -> ([], True)
   (Nothing, y, Just z ) -> case (y `compare` z) of
     LT      -> ([BeginCresc], True)

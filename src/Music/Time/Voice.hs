@@ -87,6 +87,7 @@ module Music.Time.Voice (
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Functor.Adjunction  (unzipR)
+import           Data.Functor.Context
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
 import           Data.Maybe
@@ -452,14 +453,14 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy m
     hasOnlyRests = all isNothing $ toListOf traverse x -- norm
 
 
-withContext :: Voice a -> Voice (Maybe a, a, Maybe a)
-withContext = over valuesV withPrevNext
+withContext :: Voice a -> Voice (Ctxt a)
+withContext = over valuesV (fmap Ctxt . withPrevNext)
 
 -- TODO expose?
 voiceFromRhythm :: [Duration] -> Voice ()
-voiceFromRhythm = mkVoice . map (, ())
+voiceFromRhythm = mkVoice . fmap (, ())
 
-mkVoice = view voice . map (view stretched)
+mkVoice = view voice . fmap (view stretched)
 
 --
 -- TODO more elegant definition of durationsV and valuesV using indexed traversal or similar?

@@ -118,14 +118,16 @@ hasSlur y = hasSlur' (realToFrac $ view separation $ y)
 allMarks y = getSeparationMarks (realToFrac $ view separation $ y) <> getAccentMarks (realToFrac $ view accentuation $ y)
 
 notateArticulation :: (Ord a, a ~ (Sum Double, Sum Double)) => Ctxt a -> ArticulationNotation
-notateArticulation (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
-notateArticulation (Just x,  y, Nothing) = ArticulationNotation (if hasSlur x && hasSlur y then [EndSlur] else [], allMarks y)
-notateArticulation (Nothing, y, Just z)  = ArticulationNotation (if hasSlur y && hasSlur z then [BeginSlur] else [], allMarks y)
-notateArticulation (Just x,  y, Just z)  = ArticulationNotation (slur3 x y z, allMarks y)
+notateArticulation (getCtxt -> x) = go x
   where
-    slur3 x y z = case (hasSlur x, hasSlur y, hasSlur z) of
-      (True, True, True)  -> [{-ContSlur-}]
-      (False, True, True) -> [BeginSlur]
-      (True, True, False) -> [EndSlur]
-      _                   -> []
+    go (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
+    go (Just x,  y, Nothing) = ArticulationNotation (if hasSlur x && hasSlur y then [EndSlur] else [], allMarks y)
+    go (Nothing, y, Just z)  = ArticulationNotation (if hasSlur y && hasSlur z then [BeginSlur] else [], allMarks y)
+    go (Just x,  y, Just z)  = ArticulationNotation (slur3 x y z, allMarks y)
+      where
+        slur3 x y z = case (hasSlur x, hasSlur y, hasSlur z) of
+          (True, True, True)  -> [{-ContSlur-}]
+          (False, True, True) -> [BeginSlur]
+          (True, True, False) -> [EndSlur]
+          _                   -> []
 
