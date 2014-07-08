@@ -94,8 +94,6 @@ deriving instance Fractional a => Fractional (ColorT a)
 deriving instance Floating a => Floating (ColorT a)
 deriving instance Enum a => Enum (ColorT a)
 deriving instance Bounded a => Bounded (ColorT a)
--- deriving instance (Num a, Ord a, Real a) => Real (ColorT a)
--- deriving instance (Real a, Enum a, Integral a) => Integral (ColorT a)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ColorT a) where
@@ -127,3 +125,4 @@ color = setColor
 
 colorRed = color C.red
 colorBlue = color C.blue
+

@@ -606,9 +606,8 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
 
 
 -- |
--- Typeset a score using Lilypond and open it.
---
--- (This is simple wrapper around 'writeLilypond' that may not work well on all platforms.)
+-- Typeset a score using Lilypond and open it. (This is simple wrapper around
+-- 'writeLilypond' that may not work well on all platforms.)
 --
 openLilypond :: HasLilypond a => a -> IO ()
 openLilypond = openLilypond' def

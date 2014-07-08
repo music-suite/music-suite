@@ -234,5 +234,4 @@ groupDiff' p (x:xs)
   | p x       = Right (x : List.takeWhile p         xs) : groupDiff' p (List.dropWhile p         xs)
 
 
-
-  -- JUNK
+-- JUNK

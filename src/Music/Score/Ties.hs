@@ -256,7 +256,7 @@ splitDurThen s t x = case splitDur s x of
 splitDurFor :: Tiable a => Duration -> [(Duration, a)] -> ([(Duration, a)], [(Duration, a)])
 splitDurFor remDur []       = ([], [])
 splitDurFor remDur (x : xs) = case splitDur remDur x of
-  (x@(d,_), Nothing)   ->
+  (x@(d,_), Nothing) ->
       if d < remDur then
           first (x:) $ splitDurFor (remDur - d) xs
       else -- d == remDur

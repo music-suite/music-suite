@@ -29,15 +29,12 @@
 --
 -------------------------------------------------------------------------------------
 
-
 module Music.Score.Slide (
-
         -- * Slides and glissando
         HasSlide(..),
         SlideT(..),
         slide,
         glissando,
-
   ) where
 
 import           Control.Applicative
@@ -62,44 +59,44 @@ import           Music.Time
 
 
 class HasSlide a where
-    setBeginGliss :: Bool -> a -> a
-    setBeginSlide :: Bool -> a -> a
-    setEndGliss   :: Bool -> a -> a
-    setEndSlide   :: Bool -> a -> a
+  setBeginGliss :: Bool -> a -> a
+  setBeginSlide :: Bool -> a -> a
+  setEndGliss   :: Bool -> a -> a
+  setEndSlide   :: Bool -> a -> a
 
 instance HasSlide a => HasSlide (b, a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
 
 instance HasSlide a => HasSlide (Couple b a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
 
 instance HasSlide a => HasSlide [a] where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
 
 instance HasSlide a => HasSlide (Score a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
 
 instance HasSlide a => HasSlide (Stretched a) where
-    setBeginGliss n = fmap (setBeginGliss n)
-    setBeginSlide n = fmap (setBeginSlide n)
-    setEndGliss   n = fmap (setEndGliss n)
-    setEndSlide   n = fmap (setEndSlide n)
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
 
 -- (eg,es,a,bg,bs)
 newtype SlideT a = SlideT { getSlideT :: Couple ((Any, Any), (Any, Any)) a }
-    deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+  deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
 -- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (SlideT a) where
@@ -115,10 +112,10 @@ _eg = (_Wrapped'._Wrapped') . _1 . _1 . _1
 _es = (_Wrapped'._Wrapped') . _1 . _1 . _2
 
 instance HasSlide (SlideT a) where
-    setBeginGliss x = _bg .~ Any x
-    setBeginSlide x = _bs .~ Any x
-    setEndGliss   x = _eg .~ Any x
-    setEndSlide   x = _es .~ Any x
+  setBeginGliss x = _bg .~ Any x
+  setBeginSlide x = _bs .~ Any x
+  setEndGliss   x = _eg .~ Any x
+  setEndSlide   x = _es .~ Any x
 
 -- Lifted instances
 deriving instance Num a => Num (SlideT a)
