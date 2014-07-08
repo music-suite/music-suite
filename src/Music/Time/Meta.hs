@@ -99,7 +99,7 @@ import           Music.Time.Transform
 -- | Class of values that can be wrapped.
 type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 
--- | Class of values that can be wrapped.
+-- | Class of values that can be wrapped and transformed.
 type TAttributeClass a = (Transformable a, AttributeClass a)
 
 -- | An existential wrapper type to hold attributes.
