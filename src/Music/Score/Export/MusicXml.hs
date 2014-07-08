@@ -532,9 +532,8 @@ writeMusicXml :: HasMusicXml a => FilePath -> a -> IO ()
 writeMusicXml path = writeFile path . toMusicXmlString
 
 -- |
--- Typeset a score using MusicXML and open it.
---
--- (This is simple wrapper around 'writeMusicXml' that may not work well on all platforms.)
+-- Typeset a score using MusicXML and open it. (This is simple wrapper around
+-- 'writeMusicXml' that may not work well on all platforms.)
 --
 openMusicXml :: HasMusicXml a => a -> IO ()
 openMusicXml sc = do

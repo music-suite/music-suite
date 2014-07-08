@@ -614,9 +614,8 @@ openLilypond :: HasLilypond a => a -> IO ()
 openLilypond = openLilypond' def
 
 -- |
--- Typeset a score using Lilypond and open it.
---
--- (This is simple wrapper around 'writeLilypond' that may not work well on all platforms.)
+-- Typeset a score using Lilypond and open it. (This is simple wrapper around
+-- 'writeLilypond' that may not work well on all platforms.)
 --
 openLilypond' :: HasLilypond a => LilypondOptions -> a -> IO ()
 openLilypond' options sc = do
