@@ -195,7 +195,6 @@ instance HasMeta a => HasMeta (Maybe a) where
       viewM (Just x) = view meta x
       setM m = fmap (set meta m)
 
--- TODO Both of these are wrong
 instance HasMeta a => HasMeta (b, a) where
   meta = _2 . meta
 
