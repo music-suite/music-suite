@@ -15,7 +15,7 @@
 
 -------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund 2012–2014
 --
 -- License     : BSD-style
 --
@@ -23,21 +23,23 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a way to annotate data-types with transformable meta-information.
+-- Provides a way to annotate data-types with 'Transformable' meta-data. See
+-- "Music.Score.Meta" for more specific applications.
 --
--- Because meta-data is 'Transformable', it often makes sense to use 'Reactive' or 'Behavior'
--- wrappers to represent time-varying information.
+-- Inspired by Clojure and Diagram's styles, in turn based on xmonad's @Message@ type,
+-- in turn based on ideas in:
 --
--- See "Music.Score.Meta" for more specific applications.
---
--- Inspired by Diagrams and Clojure.
+-- Simon Marlow.
+-- /An Extensible Dynamically-Typed Hierarchy of Exceptions/.
+-- Proceedings of the 2006 ACM SIGPLAN workshop on
+-- Haskell. <http://research.microsoft.com/apps/pubs/default.aspx?id=67968>.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Time.Meta (
         -- * Attributes
-        IsAttribute,
-        IsTAttribute,
+        AttributeClass,
+        TAttributeClass,
         
         Attribute,
         
@@ -65,7 +67,7 @@ module Music.Time.Meta (
         -- ** Add meta-data to arbitrary types
         AddMeta,
         annotated,
-        fromAnnotated,
+        unannotated,
         unsafeAnnotated
   ) where
 
@@ -95,27 +97,27 @@ import           Music.Time.Split
 import           Music.Time.Transform
 
 -- | Class of values that can be wrapped.
-type IsAttribute a = (Typeable a, Monoid a, Semigroup a)
+type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 
 -- | Class of values that can be wrapped.
-type IsTAttribute a = (Transformable a, IsAttribute a)
+type TAttributeClass a = (Transformable a, AttributeClass a)
 
 -- | An existential wrapper type to hold attributes.
 data Attribute :: * where
-  Attribute  :: IsAttribute a => a -> Attribute
-  TAttribute :: IsTAttribute a  => a -> Attribute
+  Attribute  :: AttributeClass a => a -> Attribute
+  TAttribute :: TAttributeClass a  => a -> Attribute
 
--- | Convert something to an attribute.
-wrapAttr :: IsAttribute a => a -> Attribute
+-- | Wrap up an attribute.
+wrapAttr :: AttributeClass a => a -> Attribute
 wrapAttr = Attribute
 
--- | Convert something from an attribute.
-wrapTAttr :: IsTAttribute a => a -> Attribute
+-- | Wrap up a transformable attribute.
+wrapTAttr :: TAttributeClass a => a -> Attribute
 wrapTAttr = TAttribute
 
 -- | Convert something from an attribute.
 --   Also works with transformable attributes
-unwrapAttr :: IsAttribute a => Attribute -> Maybe a
+unwrapAttr :: AttributeClass a => Attribute -> Maybe a
 unwrapAttr (Attribute a)  = cast a
 unwrapAttr (TAttribute a) = cast a
 
@@ -153,13 +155,13 @@ instance Monoid Meta where
   mappend = (<>)
 
 -- | Convert something to meta-data.
-wrapTMeta :: forall a. IsTAttribute a => a -> Meta
+wrapTMeta :: forall a. TAttributeClass a => a -> Meta
 wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
   where
     key = show $ typeOf (undefined :: a)
 
 -- | Convert something from meta-data.
-unwrapMeta :: forall a. IsAttribute a => Meta -> Maybe a
+unwrapMeta :: forall a. AttributeClass a => Meta -> Maybe a
 unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 -- Note: unwrapAttr should never fail
   where
@@ -167,7 +169,7 @@ unwrapMeta (Meta s) = (unwrapAttr =<<) $ Map.lookup key s
 
 -- | Convert something from meta-data.
 --   Also works with transformable attributes
-wrapMeta :: forall a. IsAttribute a => a -> Meta
+wrapMeta :: forall a. AttributeClass a => a -> Meta
 wrapMeta a = Meta $ Map.singleton key $ wrapAttr a
   where
     key = show $ typeOf (undefined :: a)
@@ -207,16 +209,24 @@ applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
 -- | Update a meta attribute.
-setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
+setMetaAttr :: (AttributeClass b, HasMeta a) => b -> a -> a
 setMetaAttr a = applyMeta (wrapMeta a)
 
 -- | Update a meta attribute.
-setMetaTAttr :: (IsTAttribute b, HasMeta a) => b -> a -> a
+setMetaTAttr :: (TAttributeClass b, HasMeta a) => b -> a -> a
 setMetaTAttr a = applyMeta (wrapTMeta a)
 
 -- |
 -- Annotate an arbitrary type with meta-data, preserving instances of
--- all common type classes.
+-- all common type classes. In particular 'Functor' and 'Applicative' is lifted and
+-- @'Compose' 'AddMeta'@ is semantically equivalent to 'Identity'. 
+
+-- Meta-data is carried along with the annotated value. It defaults to 'mempty'
+-- in 'pure'. When composing values using '<*>', 'liftA2' etc, meta-data is composed
+-- using 'mappend'.
+--
+-- Similar to the approach taken in Clojure, meta-data does not contribute to ordering,
+-- so both 'Eq' and 'Ord' ignore the meta-data.
 --
 -- You can access the meta-data using 'meta', and the annotated value using 'annotated'.
 --
@@ -265,20 +275,35 @@ instance HasPosition a => HasPosition (AddMeta a) where
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract
 
-annotated :: Lens (AddMeta a) (AddMeta b) a b
-annotated = unsafeAnnotated
-
-fromAnnotated :: Getter a (AddMeta a)
-fromAnnotated = from unsafeAnnotated
-
 -- |
 -- Access the annotated value.
 --
 -- @
 -- over annotated = fmap
 -- @
--- 
--- TODO this is as unsafe as the unsafe... methods in Score etc
+--
+annotated :: Lens (AddMeta a) (AddMeta b) a b
+annotated = unsafeAnnotated
+
+-- |
+-- Access the annotated value.
+--
+-- @
+-- view fromAnnotated = pure
+-- @
+--
+unannotated :: Getter a (AddMeta a)
+unannotated = from unsafeAnnotated
+
+-- |
+-- Access the annotated value. This is only an isomorphism up to meta-data
+-- equivalence. In particular @under unsafeAnnotated@ leads to meta-data being
+-- thrown away. See 'annotated' and 'unannotated' for safe (but less general)
+-- definitions.
+--
+-- @
+-- over annotated = fmap
+-- @
 -- 
 unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
 unsafeAnnotated = _Wrapped . extracted
