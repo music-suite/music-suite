@@ -65,12 +65,15 @@ module Music.Time.Meta (
         -- ** Add meta-data to arbitrary types
         AddMeta,
         annotated,
+        fromAnnotated,
+        unsafeAnnotated
   ) where
 
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens              hiding (transform)
 import           Control.Monad.Plus
+import           Data.Functor.Rep -- TODO experimental
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -269,6 +272,12 @@ instance HasPosition a => HasPosition (AddMeta a) where
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract
 
+annotated :: Lens (AddMeta a) (AddMeta b) a b
+annotated = unsafeAnnotated
+
+fromAnnotated :: Getter a (AddMeta a)
+fromAnnotated = from unsafeAnnotated
+
 -- |
 -- Access the annotated value.
 --
@@ -278,13 +287,16 @@ instance HasDuration a => HasDuration (AddMeta a) where
 -- 
 -- TODO this is as unsafe as the unsafe... methods in Score etc
 -- 
-annotated :: Iso' a (AddMeta a)
-annotated = iso toAddMeta fromAddMeta
-  where
-    toAddMeta :: a -> AddMeta a
-    toAddMeta = AddMeta . pure
+unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
+unsafeAnnotated = _Wrapped . extracted
 
-    fromAddMeta :: AddMeta a -> a
-    fromAddMeta = extract . getAddMeta
 
+-- Nice generalizations
+-- TODO move
+
+extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
+extracted = iso extract pure
+
+extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
+extractedRep = iso extractRep pureRep
 
