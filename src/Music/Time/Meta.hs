@@ -82,8 +82,6 @@ import           Data.Semigroup
 import           Data.Set                  (Set)
 import qualified Data.Set                  as Set
 import           Data.String
--- import           Data.Traversable          (Traversable)
--- import qualified Data.Traversable          as T
 import           Data.Typeable
 import           Data.Void
 import           Data.Functor.Couple
@@ -158,13 +156,6 @@ instance Monoid Meta where
   mempty = Meta Map.empty
   mappend = (<>)
 
-
---
--- TODO
--- Temporarily disabling part specific meta-events
--- The API still works, but all parts are merged together
---
-
 -- | Convert something to meta-data.
 wrapTMeta :: forall a. IsTAttribute a => a -> Meta
 wrapTMeta a = Meta $ Map.singleton key $ wrapTAttr a
@@ -204,11 +195,12 @@ instance HasMeta a => HasMeta (Maybe a) where
       viewM (Just x) = view meta x
       setM m = fmap (set meta m)
 
--- TODO arguably both of these are wrong
+-- TODO Both of these are wrong
 instance HasMeta b => HasMeta (b, a) where
   meta = _1 . meta
 
-deriving instance HasMeta b => HasMeta (Twain b a)
+instance HasMeta b => HasMeta (Twain b a) where
+  meta = _Wrapped . meta
 
 -- TODO call withMeta a la Clojure?
 setMeta :: HasMeta a => Meta -> a -> a
@@ -219,16 +211,13 @@ setMeta m = set meta m
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
+-- | Update a meta attribute.
 setMetaAttr :: (IsAttribute b, HasMeta a) => b -> a -> a
 setMetaAttr a = applyMeta (wrapMeta a)
 
+-- | Update a meta attribute.
 setMetaTAttr :: (IsTAttribute b, HasMeta a) => b -> a -> a
 setMetaTAttr a = applyMeta (wrapTMeta a)
-
-
-
-
--- TODO Better name
 
 -- |
 -- Annotate an arbitrary type with meta-data, preserving instances of
@@ -261,7 +250,6 @@ instance Reversible a => Reversible (AddMeta a) where
 
 instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
-  -- TODO need to split the meta too?
 
 instance HasPosition a => HasPosition (AddMeta a) where
   _onset    = _onset . extract
@@ -271,8 +259,8 @@ instance HasPosition a => HasPosition (AddMeta a) where
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract
 
-
 -- |
+-- Access the annotated value.
 --
 -- @
 -- over annotated = fmap
