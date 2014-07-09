@@ -20,7 +20,7 @@
 --
 -- The only difference between 'Twain' and 'Couple' is the handling of 'Eq' and 'Ord':
 -- 'Twain' compares only the second value, while 'Couple' compares both. Thus 'Couple' needs
--- an extra @Ord b@ constraint for all classes.
+-- an extra @Ord b@ constraint for all sub-classes of 'Ord'.
 --
 module Data.Functor.Couple (Twain(..), Couple(..)) where
 
