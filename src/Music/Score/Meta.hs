@@ -124,8 +124,8 @@ addMetaNote x y = (applyMeta $ wrapTMeta $ noteToReactive x) y
 addGlobalMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 
-fromMetaReactive :: forall a b . AttributeClass b => Maybe a -> Meta -> Reactive b
-fromMetaReactive part = fromMaybe mempty . unwrapMeta
+fromMetaReactive :: forall a b . AttributeClass b => Meta -> Reactive b
+fromMetaReactive = fromMaybe mempty . unwrapMeta
 
 
 
@@ -147,25 +147,31 @@ mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-runScoreMeta :: forall a b . AttributeClass b => Score a -> Reactive b
-runScoreMeta = fromMetaReactive (Nothing :: Maybe a) . (view meta)
 
+-- INTERNAL
+runScoreMeta :: forall a b . AttributeClass b => Score a -> Reactive b
+runScoreMeta = fromMetaReactive . (view meta)
+
+-- EXT
 metaAt :: AttributeClass b => Time -> Score a -> b
 metaAt x = (`atTime` x) . runScoreMeta
 
+-- EXT
 metaAtStart :: AttributeClass b => Score a -> b
 metaAtStart x = _onset x `metaAt` x
 
+-- EXT
 withGlobalMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
 withGlobalMeta = withMeta' (Nothing :: Maybe Int)
 
+-- EXT
 withMeta :: (AttributeClass a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = withMeta' (Just x) f x
 
 withMeta' :: ({-HasPart' c, -}AttributeClass a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
-withMeta' part f x = let
+withMeta' _ f x = let
     m = (view meta) x
-    r = fromMetaReactive part m
+    r = fromMetaReactive m
     in case splitReactive r of
         Left  a -> f a x
         Right ((a, t), bs, (u, c)) ->
@@ -183,9 +189,9 @@ withMetaAtStart f x = withMetaAtStart' (Just x) f x
 
 withMetaAtStart' :: (AttributeClass b{-, HasPart' p-}) =>
     Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
-withMetaAtStart' partId f x = let
+withMetaAtStart' _ f x = let
     m = (view meta) x
-    in f (fromMetaReactive partId m `atTime` _onset x) x
+    in f (fromMetaReactive m `atTime` _onset x) x
 
 
 

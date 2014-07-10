@@ -174,7 +174,7 @@ timeSignatureDuring :: (HasMeta a{-, HasPart' a-}) => Span -> TimeSignature -> a
 timeSignatureDuring s c = addGlobalMetaNote $ view note (s, optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive (Nothing::Maybe Int) . (view meta)
+getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive . (view meta)
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . getTimeSignatures def
