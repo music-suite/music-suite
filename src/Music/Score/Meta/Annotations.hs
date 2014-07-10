@@ -76,6 +76,6 @@ showAnnotations' :: (HasPart' a, Ord (Part a), HasText a) => String -> Score a -
 showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
 
 -- | Handle the annotations in a score.
-withAnnotations :: (HasParts' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a
+withAnnotations :: HasText a => ([String] -> Score a -> Score a) -> Score a -> Score a
 withAnnotations f = withMeta (f . getAnnotation)
 

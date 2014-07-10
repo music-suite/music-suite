@@ -118,11 +118,11 @@ isMinorKey :: KeySignature -> Bool
 isMinorKey = not . isMajorKey
 
 -- | Set the key signature of the given score.
-keySignature :: (HasMeta a, {-HasPart' a, -}HasPosition a) => KeySignature -> a -> a
+keySignature :: (HasMeta a, HasPosition a) => KeySignature -> a -> a
 keySignature c x = keySignatureDuring (_getEra x) c x
 
 -- | Set the key signature of the given part of a score.
-keySignatureDuring :: (HasMeta a{-, HasPart' a-}) => Span -> KeySignature -> a -> a
+keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
 keySignatureDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract all key signatures from the given score, using the given default key signature.

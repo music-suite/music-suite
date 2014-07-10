@@ -80,19 +80,19 @@ data BarlineType = StandardBarline | DoubleBarline | FinalBarline
     deriving (Eq, Ord, Show, Typeable)
 
 -- | Add a barline over the whole score.
-barline :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Barline -> a -> a
+barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
 barline c x = barlineDuring (_getEra x) c x
 
 -- | Add a barline over the whole score.
-doubleBarline :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Barline -> a -> a
+doubleBarline :: (HasMeta a, HasPosition a) => Barline -> a -> a
 doubleBarline = undefined
 
 -- | Add a barline over the whole score.
-finalBarline :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Barline -> a -> a
+finalBarline :: (HasMeta a, HasPosition a) => Barline -> a -> a
 finalBarline = undefined
 
 -- | Add a barline to the given score.
-barlineDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Barline -> a -> a
+barlineDuring :: HasMeta a => Span -> Barline -> a -> a
 barlineDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract barlines in from the given score, using the given default barline.

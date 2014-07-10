@@ -165,11 +165,11 @@ tempoToDuration :: Tempo -> Duration
 tempoToDuration (Tempo _ _ x) = x
 
 -- | Set the tempo of the given score.
-tempo :: (HasMeta a, {-HasPart' a, -}HasPosition a) => Tempo -> a -> a
+tempo :: (HasMeta a, HasPosition a) => Tempo -> a -> a
 tempo c x = tempoDuring (_getEra x) c x
 
 -- | Set the tempo of the given part of a score.
-tempoDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Tempo -> a -> a
+tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
 tempoDuring s c = addMetaNote $ view note (s, c)
 
 

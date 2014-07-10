@@ -163,14 +163,14 @@ getTimeSignature :: TimeSignature -> ([Integer], Integer)
 getTimeSignature (TimeSignature x) = x
 
 -- | Set the time signature of the given score.
-timeSignature :: (HasMeta a, {-HasPart' a,-} HasPosition a) => TimeSignature -> a -> a
+timeSignature :: (HasMeta a, HasPosition a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
 
 -- use (_onset x <-> _offset x) instead of (0 <-> _offset x)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
 
 -- | Set the time signature of the given part of a score.
-timeSignatureDuring :: (HasMeta a{-, HasPart' a-}) => Span -> TimeSignature -> a -> a
+timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
 timeSignatureDuring s c = addMetaNote $ view note (s, optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
