@@ -37,15 +37,12 @@ module Music.Score.Meta (
 
         -- * Meta-events
         addMetaNote,
-        addGlobalMetaNote,
         fromMetaReactive,
 
         metaAt,
         metaAtStart,
         withMeta,
-        withGlobalMeta,
         withMetaAtStart,
-        withGlobalMetaAtStart,
    ) where
 
 import           Control.Applicative
@@ -119,10 +116,7 @@ a </> b = a <> moveParts offset b
 
 
 addMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Note a -> b -> b
-addMetaNote x y = (applyMeta $ wrapTMeta $ noteToReactive x) y
-
-addGlobalMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Note a -> b -> b
-addGlobalMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
+addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 
 fromMetaReactive :: forall a b . AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta
@@ -160,16 +154,8 @@ metaAt x = (`atTime` x) . runScoreMeta
 metaAtStart :: AttributeClass b => Score a -> b
 metaAtStart x = _onset x `metaAt` x
 
--- EXT
-withGlobalMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
-withGlobalMeta = withMeta' (Nothing :: Maybe Int)
-
--- EXT
-withMeta :: (AttributeClass a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
-withMeta f x = withMeta' (Just x) f x
-
-withMeta' :: ({-HasPart' c, -}AttributeClass a) => Maybe c -> (a -> Score b -> Score b) -> Score b -> Score b
-withMeta' _ f x = let
+withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta f x = let
     m = (view meta) x
     r = fromMetaReactive m
     in case splitReactive r of
@@ -181,16 +167,9 @@ withMeta' _ f x = let
                 $ mapAfter u (f c)
                 $ x
 
-withGlobalMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
-withGlobalMetaAtStart = withMetaAtStart' (Nothing :: Maybe Int)
-
-withMetaAtStart :: (AttributeClass a{-, HasPart' b-}) => (a -> Score b -> Score b) -> Score b -> Score b
-withMetaAtStart f x = withMetaAtStart' (Just x) f x
-
-withMetaAtStart' :: (AttributeClass b{-, HasPart' p-}) =>
-    Maybe p -> (b -> Score a -> Score a) -> Score a -> Score a
-withMetaAtStart' _ f x = let
-    m = (view meta) x
+withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart f x = let
+    m = view meta x
     in f (fromMetaReactive m `atTime` _onset x) x
 
 

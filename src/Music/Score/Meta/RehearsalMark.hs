@@ -95,8 +95,8 @@ rehearsalMark :: (HasMeta a, {-HasPart' a, -}HasPosition a) => RehearsalMark -> 
 rehearsalMark c x = rehearsalMarkDuring (_getEra x) c x
 
 rehearsalMarkDuring :: (HasMeta a{-, HasPart' a-}) => Span -> RehearsalMark -> a -> a
-rehearsalMarkDuring s x = addGlobalMetaNote $ view note (s, x)
+rehearsalMarkDuring s x = addMetaNote $ view note (s, x)
 
 withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
-withRehearsalMark = withGlobalMeta
+withRehearsalMark = withMeta
 

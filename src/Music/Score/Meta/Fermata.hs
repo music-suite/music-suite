@@ -85,4 +85,4 @@ fermataDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract fermatas in from the given score, using the given default fermata.
 withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a
-withFermata f = withGlobalMeta (maybe id f . fmap getLast . getOption)
+withFermata f = withMeta (maybe id f . fmap getLast . getOption)

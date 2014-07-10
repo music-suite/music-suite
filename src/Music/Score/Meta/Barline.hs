@@ -97,4 +97,4 @@ barlineDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
 
 -- | Extract barlines in from the given score, using the given default barline.
 withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a
-withBarline f = withGlobalMeta (maybe id f . fmap getLast . getOption)
+withBarline f = withMeta (maybe id f . fmap getLast . getOption)

@@ -171,7 +171,7 @@ timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: (HasMeta a{-, HasPart' a-}) => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addGlobalMetaNote $ view note (s, optionFirst c)
+timeSignatureDuring s c = addMetaNote $ view note (s, optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
 getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive . (view meta)
@@ -181,7 +181,7 @@ getTimeSignatureChanges def = updates . getTimeSignatures def
 
 -- | Extract the time signature from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withGlobalMeta (f . fromMaybe def . unOptionFirst)
+withTimeSignature def f = withMeta (f . fromMaybe def . unOptionFirst)
 
 -- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
 --   bar durations.

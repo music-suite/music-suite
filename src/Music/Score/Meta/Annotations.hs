@@ -65,7 +65,7 @@ annotate str x = annotateSpan (0 >-> _duration x) str x
 
 -- | Annotate a part of the score.
 annotateSpan :: Span -> String -> Score a -> Score a
-annotateSpan span str x = addGlobalMetaNote (transform span $ return $ Annotation [str]) x
+annotateSpan span str x = addMetaNote (transform span $ return $ Annotation [str]) x
 
 -- | Show all annotations in the score.
 showAnnotations :: (HasPart' a, Ord (Part a), HasText a) => Score a -> Score a
@@ -77,5 +77,5 @@ showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++
 
 -- | Handle the annotations in a score.
 withAnnotations :: (HasParts' a, HasText a) => ([String] -> Score a -> Score a) -> Score a -> Score a
-withAnnotations f = withGlobalMeta (f . getAnnotation)
+withAnnotations f = withMeta (f . getAnnotation)
 

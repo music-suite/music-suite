@@ -170,7 +170,7 @@ tempo c x = tempoDuring (_getEra x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Tempo -> a -> a
-tempoDuring s c = addGlobalMetaNote $ view note (s, c)
+tempoDuring s c = addMetaNote $ view note (s, c)
 
 
 -- TODO move
@@ -185,7 +185,7 @@ mkNote s x = view note (s, x)
 
 -- | Extract all tempi from the given score, using the given default tempo.
 -- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
--- withTempo f = withGlobalMeta (f . fromMaybe def . fmap getFirst . getOption)
+-- withTempo f = withMeta (f . fromMaybe def . fmap getFirst . getOption)
 
 renderTempo :: Score a -> Score a
 renderTempo = error "renderTempo: Not implemented"

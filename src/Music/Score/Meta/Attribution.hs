@@ -122,7 +122,7 @@ attribute a x = attributeDuring (_getEra x) a x
 
 -- | Set the given attribution in the given part of a score.
 attributeDuring :: (HasMeta a{-, HasPart' a-}) => Span -> Attribution -> a -> a
-attributeDuring s a = addGlobalMetaNote (view note (s, a))
+attributeDuring s a = addMetaNote (view note (s, a))
 
 -- | Set composer of the given score.
 composer :: (HasMeta a, {-HasPart' a, -}HasPosition a) => String -> a -> a
@@ -154,5 +154,5 @@ withAttribution name f = withAttribution' (fromMaybe id . fmap f . flip getAttri
 
 -- | Extract all attribution values from a score.
 withAttribution' :: (Attribution -> Score a -> Score a) -> Score a -> Score a
-withAttribution' = withGlobalMetaAtStart
+withAttribution' = withMetaAtStart
 
