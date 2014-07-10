@@ -162,24 +162,11 @@ instance Transformable a => Transformable (Sum a) where
 instance Transformable a => Transformable (Product a) where
   transform s = fmap (transform s)
 
---
--- TODO
---
--- Should really transform the /second/ element, but this is incompatible with Note/SCcore
---
--- 1) Change this to transform both components
---    Then Note could be defined as   type Note a = (Span, TransfInv a)
---
--- 2) Redefine note as                type Note a = (a, Span)
---
 instance Transformable a => Transformable (b, a) where
-  transform t (s,a) = (s, transform t a)
+  transform t = fmap (transform t)
 
--- |
--- Lists transform by transforming each element.
---
 instance Transformable a => Transformable [a] where
-  transform t = map (transform t)
+  transform t = fmap (transform t)
 
 instance Transformable a => Transformable (Seq a) where
   transform t = fmap (transform t)
