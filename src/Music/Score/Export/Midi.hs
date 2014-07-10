@@ -170,6 +170,13 @@ instance HasBackend Midi where
       fileType    = Midi.MultiTrack
       divisions   = 1024
       endDelta    = 10000
+        where
+          -- | Convert absolute to relative durations.
+          -- TODO replace by something more generic
+          toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
+          toRelative = snd . mapAccumL g 0
+              where
+                  g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
 
 
 instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a) where

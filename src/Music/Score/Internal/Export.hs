@@ -21,7 +21,6 @@ module Music.Score.Internal.Export (
         voiceToBars',
         -- separateBars,
         spellPitch,
-        toRelative,
         MVoice,
         toMVoice,
         unvoice,
@@ -91,12 +90,6 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
 voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
 -- TODO remove prime from name
-
--- | Convert absolute to relative durations.
-toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
-toRelative = snd . mapAccumL g 0
-    where
-        g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
 
 -- | Basic spelling for integral types.
 spellPitch :: Integral a => a -> (a, a, a)

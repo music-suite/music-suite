@@ -251,7 +251,8 @@ fromTime = realToFrac
 
 
 
--- TODO better names for these
+-- TODO terminology
+-- Return the "accumulative sum" of the given vecors
 
 -- @length (offsetPoints x xs) = length xs + 1
 -- >>> offsetPoints 0 [1,2,1]
