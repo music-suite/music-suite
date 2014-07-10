@@ -124,7 +124,7 @@ addMetaNote x y = (applyMeta $ wrapTMeta $ noteToReactive x) y
 addGlobalMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Note a -> b -> b
 addGlobalMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 
-fromMetaReactive :: forall a b . ({-HasPart' a, -}AttributeClass b) => Maybe a -> Meta -> Reactive b
+fromMetaReactive :: forall a b . AttributeClass b => Maybe a -> Meta -> Reactive b
 fromMetaReactive part = fromMaybe mempty . unwrapMeta
 
 
@@ -147,13 +147,13 @@ mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-runScoreMeta :: forall a b . ({-HasPart' a, -}AttributeClass b) => Score a -> Reactive b
+runScoreMeta :: forall a b . AttributeClass b => Score a -> Reactive b
 runScoreMeta = fromMetaReactive (Nothing :: Maybe a) . (view meta)
 
-metaAt :: ({-HasPart' a, -}AttributeClass b) => Time -> Score a -> b
+metaAt :: AttributeClass b => Time -> Score a -> b
 metaAt x = (`atTime` x) . runScoreMeta
 
-metaAtStart :: ({-HasPart' a, -}AttributeClass b) => Score a -> b
+metaAtStart :: AttributeClass b => Score a -> b
 metaAtStart x = _onset x `metaAt` x
 
 withGlobalMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
