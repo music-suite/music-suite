@@ -33,7 +33,7 @@ module Music.Score.Ties (
         TieT(..),
 
         -- * Splitting tied notes in scores
-        splitTiesVoice,
+        -- splitTiesVoice,
         splitTiesVoiceAt,
 
   ) where
@@ -195,6 +195,7 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   rem = liftA2 rem
   toInteger = toInteger . extract
 
+{-
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
@@ -208,6 +209,7 @@ splitTiesVoice = (^. voice) . map (^. stretched)
         (_, barTime) = properFraction t
         remBarTime   = 1 - barTime
         occs         = splitDurThen remBarTime 1 (d,x)
+-}
 
 -- |
 -- Split all voice into bars, using the given bar durations. Music that does not
