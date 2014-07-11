@@ -44,8 +44,12 @@ module Music.Time.Types (
 
         -- $convert
         offsetPoints,
-        -- TODO name
-        toAbs,
+
+        -- TODO names
+        toAbsoluteTime,
+        toRel,
+        toRelN,
+        toRelN',
 
         -- * Time spans
         Span,
@@ -94,7 +98,10 @@ module Music.Time.Types (
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
+--
+import           Control.Applicative.Backwards
 import           Control.Monad.State.Lazy
+--
 import           Data.Aeson (ToJSON(..))
 import qualified Data.Aeson as JSON
 
@@ -264,6 +271,7 @@ offsetPoints = scanl (.+^)
 -- Convert to delta (time to wait before this note)
 toRel :: [Time] -> [Duration]
 toRel = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
+-- toRel xs = fst $ mapAccumL2 g xs 0 where g t prev = (t .-. prev, t)
 
 -- Convert to delta (time to wait before next note)
 toRelN :: [Time] -> [Duration]
@@ -278,8 +286,8 @@ toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
   -- x 1,x 1,x 1,x 0
 
 -- Convert from delta (time to wait before this note)
-toAbs :: [Duration] -> [Time]
-toAbs = tail . offsetPoints 0
+toAbsoluteTime :: [Duration] -> [Time]
+toAbsoluteTime = tail . offsetPoints 0
 
 
 
@@ -288,7 +296,10 @@ toAbs = tail . offsetPoints 0
 
 -- mapAccumL                 ::                   (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
 -- \f -> mapM (runState . f) :: MonadState s m => (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
-mapAccumL2 f = mapM (runState . f)
+
+-- mapAccumL :: (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
+mapAccumL2   :: (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
+mapAccumL2 f = runState . mapM (state . f)
 
 
 

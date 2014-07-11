@@ -138,27 +138,6 @@ trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . map (^. from d
 -}
 
 
--- Convert to delta (time to wait before this note)
-toRel :: [Time] -> [Duration]
-toRel = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
-
--- Convert to delta (time to wait before next note)
-toRelN :: [Time] -> [Duration]
-toRelN [] = []
-toRelN xs = snd $ mapAccumR g (last xs) xs where g prev t = (t, prev .-. t)
-
--- Convert to delta (time to wait before next note)
-toRelN' :: Time -> [Time] -> [Duration]
-toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
-
--- 0 x,1 x,1 x,1 x
-  -- x 1,x 1,x 1,x 0
-
--- Convert from delta (time to wait before this note)
-toAbs :: [Duration] -> [Time]
-toAbs = snd . mapAccumL g 0 where g now d = (now .+^ d, now .+^ d)
-
-
 -- TODO rename during
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
