@@ -47,9 +47,9 @@ module Music.Time.Types (
 
         -- TODO names
         toAbsoluteTime,
-        toRel,
-        toRelN,
-        toRelN',
+        toRelativeTime,
+        toRelativeTimeN,
+        toRelativeTimeN',
 
         -- * Time spans
         Span,
@@ -266,20 +266,28 @@ fromTime = realToFrac
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
--- Convert to delta (time to wait before this note)
-toRel :: [Time] -> [Duration]
-toRel = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
--- toRel xs = fst $ mapAccumL2 g xs 0 where g t prev = (t .-. prev, t)
+-- | Convert to delta (time to wait before this note)
+toRelativeTime :: [Time] -> [Duration]
+toRelativeTime = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
+-- toRelativeTime xs = fst $ mapAccumL2 g xs 0 where g t prev = (t .-. prev, t)
 
--- Convert to delta (time to wait before next note)
-toRelN :: [Time] -> [Duration]
-toRelN [] = []
-toRelN xs = snd $ mapAccumR g (last xs) xs where g prev t = (t, prev .-. t)
+-- | Convert to delta (time to wait before next note)
+toRelativeTimeN :: [Time] -> [Duration]
+toRelativeTimeN [] = []
+toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
--- Convert to delta (time to wait before next note)
-toRelN' :: Time -> [Time] -> [Duration]
-toRelN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
+-- | Convert to delta (time to wait before next note)
+toRelativeTimeN' :: Time -> [Time] -> [Duration]
+toRelativeTimeN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
 
+{-
+TODO consolidate with this beat (used in Midi export)
+
+toRelative = snd . List.mapAccumL g 0
+    where
+        g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
+
+-}
 -- 0 x,1 x,1 x,1 x
   -- x 1,x 1,x 1,x 0
 

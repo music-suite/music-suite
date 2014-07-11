@@ -78,14 +78,14 @@ reactiveToVoice :: Duration -> Reactive a -> Voice a
 reactiveToVoice d r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> 0 < t && t < 0 .+^ d) (occs r)
-        durs  = toRelN' (0 .+^ d) times
+        durs  = toRelativeTimeN' (0 .+^ d) times
 -}
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
 reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> u < t && t < v) (occs r)
-        durs  = toRelN' v times
+        durs  = toRelativeTimeN' v times
 {-# DEPRECATED reactiveToVoice' "" #-}
 
 -- |
