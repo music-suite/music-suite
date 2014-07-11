@@ -323,7 +323,7 @@ mapAccumL2 f = runState . mapM (state . f)
 -- TODO How to use with 'transform', 'whilst' etc.
 --
 -- @
--- a \'<->' b = (a, b)^.'from' 'range'
+-- a '<->' b = (a, b)^.'from' 'range'
 -- a '>->' b = (a, b)^.'from' 'delta'
 -- a '<-<' b = (a, b)^.'from' 'codelta'
 -- @
