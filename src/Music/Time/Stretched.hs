@@ -71,15 +71,16 @@ import           Data.Typeable
 -- Placing a value inside 'Stretched' makes it invariant under 'delay', however the inner
 -- value can still be delayed using @'fmap' 'delay'@.
 --
--- The semantics are given by
+newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
+  deriving (Applicative, Monad, {-Comonad, -}
+            Functor,  Foldable, Traversable)
+
+-- $semantics Stretched
 --
 -- @
 -- type Stretched = (Duration, a)
 -- @
 --
-newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
-  deriving (Applicative, Monad, {-Comonad, -}
-            Functor,  Foldable, Traversable)
 
 -- TODO move
 deriving instance Traversable (Couple a)

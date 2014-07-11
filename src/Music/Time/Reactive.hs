@@ -93,14 +93,14 @@ import           Music.Pitch.Literal
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
 --
--- The semantics are given by
---
--- @
--- type Reactive a = (a, Time, Voice a)
--- @
---
 newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
     deriving (Functor, Semigroup, Monoid, Typeable)
+
+-- $semantics
+--
+-- type Reactive a = (a, Time, Voice a)
+--
+
 --
 -- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
 --

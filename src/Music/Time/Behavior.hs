@@ -105,14 +105,15 @@ import           Music.Pitch.Literal
 --
 -- Use 'focusing' to view a particular 'Segment'.
 --
--- The semantics are given by
+newtype Behavior a  = Behavior { getBehavior :: Time -> a }
+  deriving (Functor, Applicative, Monad, Typeable)
+
+-- $semantics Behavior
 --
 -- @
 -- type Behavior a = 'Time' -> a
 -- @
 --
-newtype Behavior a  = Behavior { getBehavior :: Time -> a }
-  deriving (Functor, Applicative, Monad, Typeable)
 
 --
 -- $musicTimeBehaviorExamples

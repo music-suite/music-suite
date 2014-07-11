@@ -152,14 +152,13 @@ deriving instance Floating Duration
 --
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
--- The semantics are given by
---
--- @
--- type Duration = R
--- @
---
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+
+-- $semantics Duration
+--
+-- type Duration = R
+--
 
 instance Show Duration where
   show = showRatio . realToFrac
@@ -210,14 +209,13 @@ fromDuration = realToFrac
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
 --
--- The semantics are given by
---
--- @
--- type Time = R
--- @
---
 newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+
+-- $semantics Time
+--
+-- type Time = R
+--
 
 instance Show Time where
   show = showRatio . realToFrac
@@ -330,14 +328,13 @@ mapAccumL2 f = runState . mapM (state . f)
 -- a '<-<' b = (a, b)^.'from' 'codelta'
 -- @
 --
--- The semantics are given by
---
--- @
--- type Span = Time x Time
--- @
---
 newtype Span = Delta { _delta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
+
+-- $semantics
+--
+-- type Span = Time x Time
+--
 
 -- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --

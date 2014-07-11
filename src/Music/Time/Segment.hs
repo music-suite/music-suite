@@ -124,17 +124,14 @@ import           Music.Pitch.Literal
 --
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
--- The semantics are given by
+newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
+  deriving (Functor, Applicative, Monad{-, Comonad-})
+
+-- $semantics Segment
 --
 -- @
 -- type Segment a = 'Duration' -> a
 -- @
---
-newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
-  deriving (Functor, Applicative, Monad{-, Comonad-})
-
---
--- TODO constant-optimize a la Conal
 --
 
 -- $musicTimeSegmentExamples

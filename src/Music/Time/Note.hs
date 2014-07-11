@@ -79,14 +79,13 @@ import           Music.Time.Internal.Util (through, tripped)
 -- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
 -- @
 --
--- The semantics are given by
---
--- @
--- type Note a = (Span, a)
--- @
---
 newtype Note a = Note { _noteValue :: (Span, a) }
   deriving (Typeable)
+
+-- $semantics
+--
+-- type Note a = (Span, a)
+--
 
 deriving instance Eq a => Eq (Note a)
 deriving instance Functor Note

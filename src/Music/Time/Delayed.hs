@@ -78,16 +78,17 @@ import           Music.Pitch.Literal
 -- offset of a delayed value may be stretched with respect to the origin. However, in
 -- contrast to a note the /duration/ is not stretched.
 --
--- The semantics are given by
+newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
+  deriving (Eq, {-Ord, -}{-Show, -}
+            Applicative, Monad, {-Comonad, -}
+            Functor,  Foldable, Traversable, Typeable)
+
+-- $semantics Delayed
 --
 -- @
 -- type Delayed a = (Time, a)
 -- @
 --
-newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}
-            Applicative, Monad, {-Comonad, -}
-            Functor,  Foldable, Traversable, Typeable)
 
 deriving instance Show a => Show (Delayed a)
 

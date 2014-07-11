@@ -137,15 +137,14 @@ type ScoreNote a = Note a
 -- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
--- The semantics are given by
---
--- @
--- type Score a = [Note a]
--- @
---
-
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+
+--
+-- $semantics Score
+--
+-- type Score a = [Note a]
+--
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = (Meta, NScore a)

@@ -74,14 +74,15 @@ import           Data.Typeable
 -- outside the bounds. However, we can still access values of a 'Bound' 'Behavior' in a
 -- safe manner using 'trim' or 'splice'.
 --
--- The semantics are given by
+newtype Bound a = Bound { getBound :: (Span, a) }
+  deriving (Functor, Semigroup, Typeable, Eq, Show)
+
+-- $semantics Bound
 --
 -- @
 -- type Bound a = (Time, Time, a)
 -- @
 --
-newtype Bound a = Bound { getBound :: (Span, a) }
-  deriving (Functor, Semigroup, Typeable, Eq, Show)
 
 --
 -- These are both unsafe, as they allow us to define 'unBound'
