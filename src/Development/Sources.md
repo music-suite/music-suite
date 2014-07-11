@@ -4,7 +4,7 @@ Cross-package development used to be a cubersome task in Haskell, but fortunatel
 
 There is a also utility program [`music-util`](https://github.com/music-suite/music-util), created to assist developers with common tasks relating to the Music Suite source directories such as cloning, pushing, pulling and status checking. This program has been granted some knowledge of the names and internal dependencies of the Music Suite packages and it designed to be used with `cabal` and `git`.
 
-This document describes how to install and use `music-util` to manage the Music Suite sources. It assumes that you are a member of the [Github organization](https://github.com/music-suite) with at least Read access to the libraries. Note that `music-util` always sets up a development verison of the suite in a dedicated sandbox, regardless of any global installations of the Suite that you may already have.
+This document describes how to install and use `music-util` to manage the Music Suite sources. Note that `music-util` always sets up a development verison of the suite in a dedicated sandbox, regardless of any global installations of the Suite that you may already have.
 
 ## Setup
 
@@ -65,7 +65,7 @@ You should be able to pull from all packages using
 
 ### Push
 
-To push to a repo you need to make a fork. For example with the `music-pitch` package you would do it as follows:
+To push to a repo you need to be a member of the [Github organization](https://github.com/music-suite). You can then make a fork of a library as follows (in this example I will use `music-pitch`):
 
 - Go to [https://github.com/music-suite/music-pitch](https://github.com/music-suite/music-pitch)
 
