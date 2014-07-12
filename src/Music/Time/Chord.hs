@@ -34,10 +34,24 @@ module Music.Time.Chord (
 
       -- * Chord type
       Chord,
+
       -- * Construction
       chord,
       unsafeChord,
 
+      -- invertC,
+      -- inversions,
+      -- chordToScore,
+      -- arpUp3,
+      -- arpDown3,
+      -- arpUpDown3,
+      -- arpDownUp3,
+      -- alberti3,
+      -- triad,
+      -- mtriad,
+      -- sixthChord,
+      -- sixthFourthChord,
+      -- fromBass,     
   ) where
 
 
@@ -133,3 +147,62 @@ deriving instance IsPitch a => IsPitch (Chord a)
 deriving instance IsInterval a => IsInterval (Chord a)	 
 deriving instance IsDynamics a => IsDynamics (Chord a)
 
+
+{-
+-- |
+-- Invert a chord, i.e. transpose its lowest pitch up one octave.
+--
+-- To access higher-numbered inversions, iterate this function, i.e.
+--
+-- @
+-- 'iterate' 'invertC' ('triad' c) !! 2
+-- @
+--
+invertC :: Transposable a => Chord a -> Chord a
+invertC = over chord (rotlAnd $ up _P8)
+
+-- TODO include transp
+inversions :: Transposable a => Chord a -> [Chord a]
+inversions = iterate invertC
+
+chordToScore :: Chord a -> Score a
+chordToScore = pcat . map pure . toListOf traverse
+
+-- TODO
+unchord =  toListOf traverse
+
+
+arpUp3 :: Chord a -> Score a
+arpUp3 x = scat $ map ((^/16) . pure) [a,b,c]
+  where
+    [a,b,c] = unchord x
+
+arpDown3 :: Chord a -> Score a
+arpDown3 x = scat $ map ((^/16) . pure) [c,b,a]
+  where
+    [a,b,c] = unchord x
+
+arpUpDown3 x = arpUp3 x |> arpDown3 x
+arpDownUp3 x = arpDown3 x |> arpUp3 x
+
+alberti3 :: Chord a -> Score a
+alberti3 x = scat $ map ((^/16) . pure) [a,c,b,c]
+  where
+    [a,b,c] = unchord x
+
+
+
+triad :: Transposable a => a -> Chord a
+triad x = mconcat $ map pure [x, up _M3 x, up _P5 x]
+
+mtriad :: Transposable a => a -> Chord a
+mtriad x = mconcat $ map pure [x, up m3 x, up _P5 x]
+
+sixthChord       = down m3 . invertC . mtriad
+sixthFourthChord = down _P5 . invertC . invertC . triad
+
+
+-- TODO better parsing
+fromBass :: Transposable a => String -> a -> Chord a
+fromBass "" x = triad x
+-}

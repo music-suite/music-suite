@@ -32,20 +32,20 @@
 
 module Music.Time.Types (
 
-        -- * Duration
-        Duration,
-        toDuration,
-        fromDuration,
-
-        -- * Time points
+        -- * Basic types
+        -- ** Time points
         Time,
         toTime,
         fromTime,
 
+        -- ** Duration
+        Duration,
+        toDuration,
+        fromDuration,
+
+        -- ** Convert between time and duration
         -- $convert
         offsetPoints,
-
-        -- TODO names
         toAbsoluteTime,
         toRelativeTime,
         toRelativeTimeN,
@@ -61,9 +61,6 @@ module Music.Time.Types (
         range,
         delta,
         codelta,
-        showRange,
-        showDelta,
-        showCodelta,
 
         -- ** Properties
         -- $forwardBackWardEmpty
@@ -93,6 +90,11 @@ module Music.Time.Types (
         -- union
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
+
+        -- ** Read/Show
+        showRange,
+        showDelta,
+        showCodelta,
   ) where
 
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -259,10 +261,16 @@ fromTime = realToFrac
 -- TODO terminology
 -- Return the "accumulative sum" of the given vecors
 
--- @length (offsetPoints x xs) = length xs + 1
+-- |
+-- @length (offsetPoints x xs) = length xs + 1@
+--
 -- >>> offsetPoints 0 [1,2,1]
 -- [0,1,2,1]
--- offsetPoints :: AffineSpace a => Time -> [Duration] -> [Time]
+--
+-- @
+-- offsetPoints :: 'AffineSpace' a => 'Time' -> ['Duration'] -> ['Time']
+-- @
+--
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
@@ -291,7 +299,7 @@ toRelative = snd . List.mapAccumL g 0
 -- 0 x,1 x,1 x,1 x
   -- x 1,x 1,x 1,x 0
 
--- Convert from delta (time to wait before this note)
+-- | Convert from delta (time to wait before this note)
 toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
