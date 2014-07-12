@@ -39,22 +39,28 @@ should render a file called `foo.pdf` containing the following:
 c |> d |> e
 ```
 
-While a music file ordinarily contains a single expression, it is also possible to write *declarations*. In this case you must provide a single top-level declaration called `example`.
+While most simple music files contains only a single expression, it is also possible to write music files in [declaration style](http://www.haskell.org/haskellwiki/Declaration_vs._expression_style).
+
+In this case you can provide an arbitrary number of top-level declarations, including type, class and instance declarations. You must provide a single top-level declaration called `example` which takes the place of the top-level music expression.
 
 ```music+haskell
-type MyType = ()
+data Foo = Foo
 
-example = c <> e <> g
+instance Eq Foo where
+  Foo == Foo = True
+
+example = chord |> up d5 chord
+  where
+    chord = c <> e <> g
 ```
 
-There are several programs for converting music expressions:
+There are several programs for converting music files:
 
-* `music2midi`
-* `music2musicxml`
-* `music2ly`
-* `music2pdf`
-* `music2svg`
-* `music2png`
+* `music2midi` – converts to MIDI
+* `music2musicxml` – converts to MusicXML
+* `music2ly` – converts to Lilypond input files
+* `music2pdf` – converts to PDF (using Lilypond)
+* `music2png` – converts to PNG (using Lilypond)
 
 ### With Haskell files
 
@@ -971,7 +977,7 @@ TODO
 
 # Acknowledgements
 
-The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
+The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
 It obviously ows a lot to the Haskell libraries that it follows including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite]. The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
 
@@ -988,6 +994,7 @@ It obviously ows a lot to the Haskell libraries that it follows including [Hasko
 
 [issue-tracker]:    https://github.com/hanshoglund/music-score/issues
 
+[pwgl]:             http://www2.siba.fi/PWGL/
 [pandoc]:           http://johnmacfarlane.net/pandoc/
 [haskell-suite]:    https://github.com/haskell-suite
 [music-util-docs]:  https://github.com/hanshoglund/music-util/blob/master/README.md#music-util
