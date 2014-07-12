@@ -592,7 +592,7 @@ TODO
 ## Part composition
 
 
-# Time-based structures
+# Time and structure
 
 @[Transformable]
 
@@ -677,19 +677,17 @@ in trackToScore (1/8) y
 
 # Meta-information
 
-It is often desirable to annotate music with extraneous information, such as title, creator or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*. 
+It is often desirable to annotate music with extraneous information, such as title, creator or, key or time signature. Also, it is often useful to mark scores with structural information such as movement numbers, rehearsal marks or general annotations. In the Music Suite these are grouped together under the common label *meta-information*.
 
-Each type of meta-information is stored separately and can be extracted and transformed depending on its type. Each type of meta-information has a default value which is implicitly chosen if no meta-information of the given type has been entered (for example the default title is empty, the default key signature is C major and so on).
+The notion of meta-data used in the Music Suite is more extensive than just static values: any @[Transformable] container can be wrapped, and the meta-data will be transformed when the annotated value is transformed. This is why meta-data is often variable values, such as @[Reactive] or @[Behavior].
+
+All time structures in the Suite support an arbitrary number of meta-data fields, indexed by type. All meta-information is required to satisfy the `Typeable`, so that meta-data can be packed and unpacked dynamically), and `Monoid`, so that values can be created and composed without having to worry about meta-data. The `mempty` value is implicitly chosen if no meta-information of the given type has been entered: for example the default title is empty, the default time signature is `4/4`. If two values annotated with meta-data are composed, their associated meta-data maps are composed as well, using the `<>` operator on each of the types.
 
 The distinction between ordinary musical data and meta-data is not always clear cut. As a rule of thumb, meta-events are any kind of event that does not directly affect how the represented music sounds when performed. However they might affect the appearance of the musical notation. For example, a *clef* is meta-information, while a *slur* is not. A notable exception to this rule is meta-events affecting tempo such as metronome marks and fermatas, which usually *do* affect the performance of the music.
 
 ## Title
 
-@[title]
-
-@[subtitle]
-
-@[subsubtitle]
+Title, subtitle etc is grouped together as a single type `Title`, thus an arbitrary number of nested titles is supported. The simplest way to add a title is to use the functions @[title], @[subtitle], @[subsubtitle] and so son.
 
 ```music+haskell
 title "Frere Jaques" $ scat [c,d,e,c]^/4
@@ -697,15 +695,7 @@ title "Frere Jaques" $ scat [c,d,e,c]^/4
 
 ## Attribution
 
-@[composer]
-
-@[lyricist]
-
-@[arranger]
-
-@[attribution]
-
-@[attributions]
+Similar to titles, the attribution of the creators of music can be annotated according to description such as @[composer], @[lyricist], @[arranger] etc. More generally, @[attribution] or @[attributions] can be used to embed arbitrary `(profession, name)` mappings.
 
 ```music+haskell
 composer "Anonymous" $ scat [c,d,e,c]
@@ -813,26 +803,27 @@ showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 
 ## Custom meta-information
 
-Meta-information is not restricted to the types described above. In fact, the user can add meta-information of any type that satisfies the `IsAttribute` constraint, including user-defined types. Each type of meta-information is stored separately from other types, and is invisible to the user by default. You might think of each score as having one an infinite set of associated meta-scores, each containing both part-specific and global meta information.
-
-Meta-information is required to implement `Monoid`. The `mempty` value is used as a default value for the type, while the `mappend` function is used to combine the default value and all values added by the user.
-
-@[addMetaNote]
-
-@[withMeta]
-
-@[withMetaAtStart]
+Meta-information is not restricted to the types described above. In fact, the user can add meta-information of any type that satisfies the @[AttributeClass] constraint, including user-defined types. Meta-information is required to implement `Monoid`. The `mempty` value is used as a default value for the type, while the `mappend` function is used to combine the default value and all values added by the user.
 
 Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
 
+<!--
 TODO unexpected results with filter and recompose, solve by using a good Monoid
 Acceptable Monoids are Maybe and Set/Map, but not lists (ordered sets/unique lists OK)
 See issue 103
+-->
+
+@[HasMeta]
+
+@[setMetaAttr]
+
+@[setMetaTAttr]
+
 
 
 # Import and export
 
-The standard distribution (installed as part of `music-preludes`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
+The standard distribution (installed as part of `music-suite`) of the Music Suite includes a variety of input and output formats. There are also some experimental formats, which are distributed in separate packages, these are marked as experimental below.
 
 The conventions for input or output formats is similar to the convention for properties (TODO ref above): for any type `a` and format `T a`, input formats are defined by an *is* constraint, and output format by a *has* constraint. For example, types that can be exported to Lilypond are defined by the constraint `HasLilypond a`, while types that can be imported from MIDI are defined by the constraint `IsMidi a`.
 
@@ -848,14 +839,14 @@ Beware that MIDI input may contain time and pitch values that yield a non-readab
 
 ## Lilypond
 
-All standard representations support Lilypond output. The [lilypond](http://hackage.haskell.org/package/lilypond) package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music.
+All standard representations support Lilypond output. The [lilypond](http://hackage.haskell.org/package/lilypond) package is used for parsing and pretty printing of Lilypond syntax. Lilypond is the recommended way of rendering music notation.
 
-Lilypond input is not available yet but will hopefully be added soon.
+Lilypond input is not available yet but a subset of the Lilypond language will hopefully be added soon.
 
 An example:
 
 ```haskell
-toLyString $ asScore $ scat [c,d,e]
+toLilypondString $ asScore $ scat [c,d,e]
 ```
 
     <<
@@ -978,7 +969,7 @@ This feature could of course also be used to convert Sibelius scores to other fo
 TODO
 
 
-## Acknowledgements
+# Acknowledgements
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
