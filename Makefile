@@ -10,8 +10,8 @@ PANDOC_TEMPLATE=../templates/pandoc-bootstrap-template/template.html
 #PANDOC_TEMPLATE=../templates/music-suite/template.html
 
 PANDOC=pandoc --standalone --toc
-PANDOC_PDF=$(PANDOC) -Tpdf
-PANDOC_HTML=$(PANDOC) -Thtml --toc-depth 2 --css styles.css --template $(PANDOC_TEMPLATE)
+PANDOC_PDF=$(PANDOC) --write=pdf
+PANDOC_HTML=$(PANDOC) --write=html --toc-depth 4 --css styles.css --template $(PANDOC_TEMPLATE)
 
 CABAL_FILES=\
 	../../music-score/music-score.cabal \

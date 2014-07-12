@@ -988,7 +988,7 @@ This feature could of course also be used to convert Sibelius scores to other fo
 TODO
 
 
-### Acknowledgements
+## Acknowledgements
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
