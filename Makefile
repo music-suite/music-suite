@@ -2,7 +2,17 @@
 TRANSFORM    =transf +RTS -N4
 TRANSFORM_PDF=transf --format=pdf
 RESOLVE_LINKS=GHC_PACKAGE_PATH=`music-util package-path` hslinks
-PANDOC=pandoc
+
+
+CSS	       =../templates/pandoc-bootstrap-template/template.css
+PANDOC_TEMPLATE=../templates/pandoc-bootstrap-template/template.html
+#CSS	       =../templates/music-suite/template.css
+#PANDOC_TEMPLATE=../templates/music-suite/template.html
+
+PANDOC=pandoc --standalone --toc
+PANDOC_PDF=$(PANDOC) -Tpdf
+PANDOC_HTML=$(PANDOC) -Thtml --toc-depth 2 --css styles.css --template $(PANDOC_TEMPLATE)
+
 CABAL_FILES=\
 	../../music-score/music-score.cabal \
 	../../music-pitch/music-pitch.cabal \
@@ -15,7 +25,6 @@ CABAL_FILES=\
 SRC=src
 OUT=build
 PAGE=index.html
-CSS=styles.css
 MODULE_GRAPH=module-graph.png
 
 # upload-wiki: transform
@@ -31,8 +40,8 @@ html: transform
 		(cat 	About.md \
 			User-Guide.md \
 			) \
-			| $(PANDOC) --standalone --toc --css styles.css -Thtml -o $(PAGE) && \
-		cp ../$(CSS) styles.css && \
+			| $(PANDOC_HTML) -o $(PAGE) && \
+		cp $(CSS) styles.css && \
 		cp -R ../js js && \
 		cp ../$(MODULE_GRAPH) module-graph.png && \
 	popd
@@ -42,7 +51,7 @@ pdf: transform-pdf
 		(cat 	About.md \
 			User-Guide.md \
 			) \
-			| $(PANDOC) --standalone --toc -Tpdf -o ../test.pdf && \
+			| $(PANDOC_PWD) -o ../test.pdf && \
 	popd
 
 transform: 
