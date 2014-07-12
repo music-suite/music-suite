@@ -2,7 +2,9 @@
 
 ## The Music Suite
 
-The Music Suite is a language for describing, creating, processing or analyzing music. It is [embedded](http://www.haskell.org/haskellwiki/Embedded_domain_specific_language) in the Haskell language, meaning that it is both a language in its own right and a set of Haskell libraries.
+The Music Suite is a language for description, analysis, composition and manipulation of music. It is [embedded][dsl] in the Haskell language, meaning that it is both a language in its own right and a set of Haskell libraries.
+
+The Music Suite defines many common musical structures, which can be combined in many ways to form a suitable representation for almost any kind of music. Standard notation is included as a special case. The Music Suite differs from many other music representation systems in that it allows *continuous* representation of pitch, dynamics and other musical aspects, in addition to the common *discrete* representations. 
 
 <!--
 It is based on the [Haskell][Haskell] language. It is designed with three goals in mind:
@@ -91,4 +93,4 @@ For an introduction, see [User Guide](User-Guide).
 [Euterpea]:     http://haskell.cs.yale.edu/euterpea
 [Diagrams]:     http://projects.haskell.org/diagrams
 [Reactive]:     http://hackage.haskell.org/package/reactive
-
+[dsl]:          http://www.haskell.org/haskellwiki/Embedded_domain_specific_language

@@ -4,9 +4,9 @@
 
 ## Installing the Suite
 
-The Music Suite depends on the [Haskell platform][HaskellPlatform].
+The Music Suite depends on the [Haskell platform][haskell-platform].
 
-While not strictly required, [Lilypond][Lilypond] is highly recommended as it allow you to
+While not strictly required, [Lilypond][lilypond] is highly recommended as it allow you to
 preview musical scores. See [Import and Export](#import-and-export) for other formats.
 
 To install the suite, simply install the Haskell platform, and then run:
@@ -20,7 +20,7 @@ This chapter will cover how to use the Music Suite to generate music. Later on w
 
 One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
 
-Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude.Basic` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
+Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
 
 
 ### With Music files
@@ -39,9 +39,7 @@ should render a file called `foo.pdf` containing the following:
 c |> d |> e
 ```
 
-While most simple music files contains only a single expression, it is also possible to write music files in [declaration style](http://www.haskell.org/haskellwiki/Declaration_vs._expression_style).
-
-In this case you can provide an arbitrary number of top-level declarations, including type, class and instance declarations. You must provide a single top-level declaration called `example` which takes the place of the top-level music expression.
+While most simple music files contains only a single expression, it is also possible to write music files in [declaration style][declaration-style]. In this style you can provide an arbitrary number of top-level declarations, including type, class and instance declarations. You must provide a single top-level declaration called `example` which takes the place of the top-level music expression.
 
 ```music+haskell
 data Foo = Foo
@@ -67,10 +65,10 @@ There are several programs for converting music files:
 Alternatively, you can create a file called `test.hs` (or similar) with the following structure:
 
 ```haskell
-import Music.Prelude.Basic
+import Music.Prelude
 
-main = defaultMain music
-music = c |> d |> e
+example = c |> d |> e
+main = defaultMain example
 ```
 
 Then either execute it using:
@@ -82,8 +80,7 @@ or compile and run it with
     $ ghc --make test
     $ ./test
 
-In this case the resulting program will generate and open a file called
-`test.pdf` containing the output seen above.
+In this case the resulting program will generate and open a file called `test.pdf` containing the output seen above.
 
 Music files and Haskell files using `defaultMain` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
 
@@ -227,7 +224,7 @@ Pitch names in other languages work as well, for example `ut, do, re, mi, fa, so
 German names (using `h` and `b` instead of `b` and `bb`) can be approximated as follows:
 
 ```haskell
-import Music.Preludes.Basic hiding (b)
+import Music.Preludes hiding (b)
 import qualified Music.Pitch.Literal as P
 
 h = P.b
@@ -988,9 +985,9 @@ It obviously ows a lot to the Haskell libraries that it follows including [Hasko
 
 @@@hslinks@@@
 
-[Lilypond]:         http://lilypond.org
-[Timidity]:         http://timidity.sourceforge.net/
-[HaskellPlatform]:  http://www.haskell.org/platform/
+[lilypond]:         http://lilypond.org
+[timidity]:         http://timidity.sourceforge.net/
+[haskell-platform]: http://www.haskell.org/platform/
 
 [issue-tracker]:    https://github.com/hanshoglund/music-score/issues
 
@@ -1015,4 +1012,6 @@ It obviously ows a lot to the Haskell libraries that it follows including [Hasko
 [euterpea]:         http://haskell.cs.yale.edu/euterpea/
 [haskell]:          http://haskell.org
 [pandoc]:           http://johnmacfarlane.net/pandoc/
+
+[declaration-style]: http://www.haskell.org/haskellwiki/Declaration_vs._expression_style
 
