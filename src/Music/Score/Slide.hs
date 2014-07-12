@@ -88,6 +88,12 @@ instance HasSlide a => HasSlide (Score a) where
   setEndGliss   n = fmap (setEndGliss n)
   setEndSlide   n = fmap (setEndSlide n)
 
+instance HasSlide a => HasSlide (Voice a) where
+  setBeginGliss n = fmap (setBeginGliss n)
+  setBeginSlide n = fmap (setBeginSlide n)
+  setEndGliss   n = fmap (setEndGliss n)
+  setEndSlide   n = fmap (setEndSlide n)
+
 instance HasSlide a => HasSlide (Stretched a) where
   setBeginGliss n = fmap (setBeginGliss n)
   setBeginSlide n = fmap (setBeginSlide n)
@@ -130,7 +136,7 @@ deriving instance (Real a, Enum a, Integral a) => Integral (SlideT a)
 -- Add a slide between the first and the last note.
 --
 slide :: (HasPhrases' s a, HasSlide a) => s -> s
-slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
+slide = mapPhraseWise3 (setBeginSlide True) (setBeginSlide True . setEndSlide True) (setEndSlide True)
   where
     mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
 
@@ -138,6 +144,6 @@ slide = mapPhraseWise3 (setBeginSlide True) id (setEndSlide True)
 -- Add a glissando between the first and the last note.
 --
 glissando :: (HasPhrases' s a, HasSlide a) => s -> s
-glissando = mapPhraseWise3 (setBeginGliss True) id (setEndGliss True)
+glissando = mapPhraseWise3 (setBeginGliss True) (setBeginGliss True . setEndGliss True) (setEndGliss True)
   where
     mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
