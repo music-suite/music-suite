@@ -23,7 +23,7 @@ One of the main points of the Music Suite is to avoid committing to a *single*, 
 Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude.Basic` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
 
 
-### With music files
+### With Music files
 
 A piece of music is described by a *expressions* such as this one:
 
@@ -508,8 +508,6 @@ scat [e,d,f,e] <> c
 ```
 
 
-@[anticipate]
-
 <!--
 @[repeated]
 
@@ -747,8 +745,6 @@ composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]^/
 
 @[tempoDuring]
 
-@[withTempo]
-
 @[renderTempo]
 
 ## Fermatas, caesuras and breathing marks
@@ -823,15 +819,9 @@ Meta-information is required to implement `Monoid`. The `mempty` value is used a
 
 @[addMetaNote]
 
-@[addGlobalMetaNote]
-
 @[withMeta]
 
-@[withGlobalMeta]
-
 @[withMetaAtStart]
-
-@[withGlobalMetaAtStart]
 
 Typically, you want to use a monoid similar to `Maybe`, `First` or `Last`, but not one derived from the list type. The reason for this is that meta-scores compose, so that `getMeta (x <> y) = getMeta x <> getMeta y`.
 
