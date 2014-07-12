@@ -494,13 +494,14 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (SlideT a) where
               nbs    = if view _Wrapped' bs then MusicXml.beginSlide else id
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
-    where
-      notate (Any ta, Any tb)
-        | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
-        | tb        = MusicXml.beginTie
-        | ta        = MusicXml.endTie
-        | otherwise = id
+  exportNote b  = uncurry notateTie . getTieT . fmap (exportNote b) . sequenceA
+  exportChord b = uncurry notateTie . getTieT . fmap (exportChord b) . sequenceA . fmap sequenceA
+
+notateTie (Any ta, Any tb)
+  | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
+  | tb        = MusicXml.beginTie
+  | ta        = MusicXml.endTie
+  | otherwise = id
 
 -- |
 -- Constraint for types that has a MusicXML representation.
