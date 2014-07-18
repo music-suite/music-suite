@@ -88,7 +88,7 @@ import           Data.VectorSpace       hiding (Sum (..))
 -- @
 -- transform mempty = id
 -- transform (s \<> t) = transform s . transform t
--- transform (s \<> negateV t) = id
+-- transform (s \<> negateV s) = id
 -- @
 --
 -- Law
