@@ -1,6 +1,5 @@
 
-
-# Getting Started
+# First steps
 
 ## Installing the Suite
 
@@ -13,17 +12,7 @@ To install the suite, simply install the Haskell platform, and then run:
 
     cabal install music-suite
 
-
-## Writing music
-
-This chapter will cover how to use the Music Suite to generate music. Later on we will cover how to *import* and *transform* music.
-
-One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
-
-Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude` module, which is implicitly imported in all the examples below. See [Customizing the Music Representation](#customizing-music-representation) for other examples.
-
-
-### With Music files
+## Using Music files
 
 A piece of music is described by a *expressions* such as this one:
 
@@ -60,7 +49,7 @@ There are several programs for converting music files:
 * `music2pdf` – converts to PDF (using Lilypond)
 * `music2png` – converts to PNG (using Lilypond)
 
-### With Haskell files
+## Using Haskell files
 
 Alternatively, you can create a file called `test.hs` (or similar) with the following structure:
 
@@ -84,7 +73,7 @@ In this case the resulting program will generate and open a file called `test.pd
 
 Music files and Haskell files using `defaultMain` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
 
-### Interactive use
+## Interactive use
 
 An advantage of Haskell files is that you can load them into a Haskell interpreter.
 
@@ -100,6 +89,20 @@ Here is an example `.ghci` file.
 putStrLn "Welcome to the Music Suite!"
 putStrLn "Try :open <music> or :play <music>"
 ```
+
+
+# Writing music
+
+This chapter will cover how to use the Music Suite to *write* music. Later on we will cover how to *import* and *transform* music.
+
+One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
+
+Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude` module, which imported in all music files by default. 
+
+<!--
+See [Customizing the Music Representation](#customizing-music-representation) for other examples.
+-->
+
 
 ## Time and duration
 
@@ -332,6 +335,8 @@ return (c::Note) == (c::Score Note)
 
 Dynamic values are overloaded in the same way as pitches. The dynamic literals are defined in `Music.Dynamics.Literal` and have type `IsDynamics a => a`.
 
+@[level]
+
 An overview of the dynamic values:
 
 ```music+haskell
@@ -484,9 +489,10 @@ mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8
 
 
 
-# Transformations
+<!--
+# Transforming music
 
-## Time
+## Time transformations
 
 @[rev]
 
@@ -509,17 +515,6 @@ in times 4 $ melody
 ```music+haskell
 scat [e,d,f,e] <> c
 ```
-
-
-<!--
-@[repeated]
-
-```music+haskellx
-let 
-    m = legato $ scat [c,d,scat [e,d]^/2, c]^/4 
-in [c,eb,ab,g] `repeated` (\p -> up (asPitch p .-. c) m)
-```
--->
 
 ## Onset and duration
 
@@ -594,6 +589,16 @@ TODO
 
 ## Part composition
 
+-->
+
+# Musical aspects
+
+## Pitch
+## Articulation
+## Dynamics
+## Parts
+## Space
+
 
 # Time and structure
 
@@ -618,11 +623,11 @@ TODO
 
 @[Span]
 
-## Notes
+## Rests, Notes and Chords
 
 @[Note]
 
-## Voice
+## Voices
 
 A @[Voice] represents a single voice of music. It consists of a sequence of values with duration, but no time. 
 
@@ -652,6 +657,10 @@ let
 in stretch (1/8) $ voiceToScore $ y
 ```
 -->
+
+## Segment and Linear
+
+## Behavior and Reactive
 
 ## Tracks
 
@@ -969,14 +978,35 @@ This feature could of course also be used to convert Sibelius scores to other fo
 
 # Customizing music representation
 
+## Adding an new representation
+
+You can use your own representation for all standard musical aspects.
+
 TODO
+
+## Adding a new aspect
+
+It is also possible to make the Suite work with completely *new* aspects.
+
+TODO
+
+## Adding a time structure
+
+TODO
+
+- Create a type of kind `* -> *`.
+- Add instances for the standard classes @[Functor], @[Applicative] and (if possible) @[Monad] or @[Comonad].
+- If your representation supports *parallel* composition it should be a trivial (non-lifted) @[Monoid]. It it also supports sequential composition, it should support @[Transformable] and @[HasPosition].
+- Optionally, add instances for @[Splittable] and @[Reversible].
 
 
 # Acknowledgements
 
 The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
-It obviously ows a lot to the Haskell libraries that it follows including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite]. The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
+The Music Suite obviously ows much to the previous Haskell libraries for music representation, including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite].
+
+The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
 
 
 ```music-extra
@@ -1015,3 +1045,8 @@ It obviously ows a lot to the Haskell libraries that it follows including [Hasko
 
 [declaration-style]: http://www.haskell.org/haskellwiki/Declaration_vs._expression_style
 
+----
+
+*Copyright Hans Jacob Höglund 2012–2013*
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
