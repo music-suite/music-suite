@@ -320,6 +320,7 @@ class (
     separation   :: Lens' a (Separation a)
 
 
+{-
 -- TODO move
 instance Num () where
   _ + _ = ()
@@ -345,6 +346,7 @@ instance AffineSpace () where
 instance Articulated () where
   accentuation = id
   separation   = id
+-}
 
 instance (AffineSpace a, AffineSpace b, Fractional a, Fractional b) => Articulated (a, b) where
   accentuation = _1'
