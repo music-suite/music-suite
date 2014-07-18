@@ -319,7 +319,6 @@ class (
     accentuation :: Lens' a (Accentuation a)
     separation   :: Lens' a (Separation a)
 
-
 {-
 -- TODO move
 instance Num () where
