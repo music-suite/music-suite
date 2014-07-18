@@ -125,7 +125,7 @@ import           Music.Pitch.Literal
 -- To place a segment in a particular time span, use 'Note' 'Segment'.
 --
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
-  deriving (Functor, Applicative, Monad{-, Comonad-})
+  deriving (Functor, Applicative, Monad{-, Comonad-}, Typeable)
 
 -- $semantics Segment
 --
@@ -144,8 +144,8 @@ newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
 instance Show (Segment a) where
   show _ = "<<Segment>>"
 
-deriving instance Typeable1 Segment
-deriving instance Distributive Segment
+instance Distributive Segment where
+  distribute = Segment . distribute . fmap getSegment
 
 instance Representable Segment where
   type Rep Segment = Duration

@@ -143,7 +143,8 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
-deriving instance Distributive Behavior
+instance Distributive Behavior where
+  distribute = Behavior . distribute . fmap getBehavior
 
 instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
