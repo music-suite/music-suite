@@ -60,6 +60,7 @@ library
                         Data.Functor.Context
                         Data.Functor.Rep.Lens
                         Data.Semigroup.Instances
+                        Data.Average
                         Control.Monad.Compose
                         Control.Lens.Cons.Middle
                         Music.Time

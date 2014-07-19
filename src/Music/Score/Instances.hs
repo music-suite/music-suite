@@ -34,6 +34,7 @@ import           Control.Lens             hiding (part, transform)
 import           Control.Monad
 import           Data.AffineSpace
 import           Data.Default
+import           Data.Average
 import           Data.Foldable
 import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Couple
@@ -348,5 +349,16 @@ instance Tiable a => Tiable (Score a) where
 instance Transformable a => Transformable (Ctxt a) where
   transform s = fmap (transform s)
 
+instance Transformable a => Transformable (Average a) where
+  transform s = fmap (transform s)
+
+instance IsPitch a => IsPitch (Average a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Average a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Average a) where
+  fromDynamics = pure . fromDynamics
 
 
