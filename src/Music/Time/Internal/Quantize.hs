@@ -239,7 +239,7 @@ testQuantize x = case fmap rewrite $ quantize' (atEnd rhythm) $ fmap (\x -> (x,(
 
 
 konstNumDotsAllowed :: [Int]
-konstNumDotsAllowed = [1..4]
+konstNumDotsAllowed = [1..2]
 
 konstBounds :: [Duration]
 konstBounds = [ 1/2, 1/4, 1/8, 1/16 ]
