@@ -193,26 +193,25 @@ splitTupletIfLongEnough :: Rhythm a -> Rhythm a
 splitTupletIfLongEnough r = if _duration r > (1/4) then splitTuplet r else r
 -- TODO should compare against beat duration, not just (1/4)
 
--- | Splits a tuplet iff it contans a group which can be split into two halves of exactly the same size.
+-- | Splits a tuplet iff it contans a group which can be split into two halves whose
+--   duration have the ratio 1/2, 1 or 1/2.
 splitTuplet :: Rhythm a -> Rhythm a
 splitTuplet orig@(Tuplet n (Group xs)) = case trySplit xs of
   Nothing       -> orig
   Just (as, bs) -> Tuplet n (Group as) <> Tuplet n (Group bs)
 splitTuplet orig = orig
 
-{-
--- TODO bad instance
-instance HasDuration a => HasDuration [a] where
-  _duration = sum . fmap _duration
--}
-
 trySplit :: [Rhythm a] -> Maybe ([Rhythm a], [Rhythm a])
 trySplit = firstJust . fmap g . splits
   where
-      g (part1, part2)
-          | (sum . fmap _duration) part1 == (sum . fmap _duration) part2 = Just (part1, part2)
-          | otherwise                        = Nothing
-
+    g (part1, part2)
+      | (sum . fmap _duration) part1 `rel` (sum . fmap _duration) part2 = Just (part1, part2)
+      | otherwise = Nothing
+    rel x y
+      | x   == y   = True
+      | x   == y*2 = True
+      | x*2 == y   = True
+      | otherwise  = False
 
 -- |
 -- Given a list, return a list of all possible splits.
