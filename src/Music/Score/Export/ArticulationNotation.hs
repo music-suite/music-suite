@@ -39,6 +39,7 @@ module Music.Score.Export.ArticulationNotation (
 
 import Data.Semigroup
 import Data.Functor.Context
+import Data.Functor.Adjunction (unzipR)
 import Control.Lens -- ()
 import Music.Score.Articulation
 import Music.Score.Instances
@@ -81,9 +82,27 @@ instance Transformable ArticulationNotation where
   transform _ = id
 
 instance Tiable ArticulationNotation where
-  toTied (ArticulationNotation (beginEnd, marks)) 
-    = (ArticulationNotation (beginEnd, marks), 
-       ArticulationNotation (mempty, mempty))
+  toTied (ArticulationNotation (slur, marks)) 
+    = (ArticulationNotation (slur1, marks1), 
+       ArticulationNotation (slur2, marks2))
+    where
+      (marks1, marks2) = splitMarks marks
+      (slur1, slur2)   = splitSlurs slur
+
+      splitSlurs = unzipR . fmap splitSlur
+      splitMarks = unzipR . fmap splitMark
+
+      splitSlur NoSlur    = (mempty,    mempty)
+      splitSlur BeginSlur = (BeginSlur, mempty)
+      splitSlur EndSlur   = (mempty,    EndSlur)
+
+      splitMark NoMark        = (NoMark, mempty)
+      splitMark Staccato      = (Staccato, mempty)
+      splitMark MoltoStaccato = (MoltoStaccato, mempty)
+      splitMark Marcato       = (Marcato, mempty)
+      splitMark Accent        = (Accent, mempty)
+      splitMark Tenuto        = (Tenuto, mempty)
+
 
 instance Monoid ArticulationNotation where
   mempty = ArticulationNotation ([], [])
