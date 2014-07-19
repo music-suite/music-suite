@@ -78,6 +78,24 @@ instance (Fractional a, Num a) => Fractional (Average a) where
 instance (Real a, Fractional a) => Real (Average a) where
   toRational = toRational . average
 
+instance Floating a => Floating (Average a) where
+  pi = pure pi
+  exp = fmap exp
+  sqrt = fmap sqrt
+  log = fmap log
+  sin = fmap sin
+  tan = fmap tan
+  cos = fmap cos
+  asin = fmap asin
+  atan = fmap atan
+  acos = fmap acos
+  sinh = fmap sinh
+  tanh = fmap tanh
+  cosh = fmap cosh
+  asinh = fmap asinh
+  atanh = fmap atanh
+  acosh = fmap acosh
+  
 instance AdditiveGroup a => AdditiveGroup (Average a) where
   zeroV = pure zeroV
   (^+^) = liftA2 (^+^)
