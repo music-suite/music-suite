@@ -32,6 +32,8 @@ module Music.Score.Export.Backend (
     HasOrdPart,
     HasDynamic3,
     HasDynamicNotation,
+    HasArticulation3,
+    HasArticulationNotation,
 
     HasBackend(..),
     HasBackendScore(..),
@@ -60,14 +62,17 @@ import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
-import Music.Score.Convert (reactiveToVoice') -- TODO
+import           Music.Score.Convert (reactiveToVoice') -- TODO
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
+import Music.Score.Export.ArticulationNotation
+import Data.Semigroup
 import Data.Semigroup.Instances
 
 
 import Music.Time
 import Music.Score.Dynamics
+import Music.Score.Articulation
 import Music.Score.Part
 
 
@@ -86,7 +91,23 @@ type HasDynamicNotation a b c = (
   Real (Dynamic a),
   Part (SetDynamic (Dynamic a) a) ~ Part (SetDynamic DynamicNotation b)
  )
+
 type HasOrdPart a = (HasPart' a, Ord (Part a))
+
+type HasArticulation3 c d e = (
+  HasArticulation' c,
+  HasArticulation c d,
+  HasArticulation d e,
+  HasArticulation c e
+  )
+
+type HasArticulationNotation a b c = (
+  HasArticulation3 a b c,
+  Articulation b  ~ Ctxt (Articulation a),
+  Articulation c ~ ArticulationNotation,
+  -- TODO generalize
+  Articulation a ~ (Sum Double, Sum Double)
+ )
 
 
 

@@ -212,28 +212,6 @@ instance HasBackend Lilypond where
             where
               (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
-type HasArticulation3 c d e = (
-  HasArticulation' c,
-  HasArticulation c d,
-  HasArticulation d e,
-  HasArticulation c e
-  )
-
-type HasArticulationNotation a b c = (
-  HasArticulation3 a b c,
-  Articulation b  ~ Ctxt (Articulation a),
-  Articulation c ~ ArticulationNotation,
-  -- TODO generalize
-  Articulation a ~ (Sum Double, Sum Double)
- )
-
--- type HasDynamicNotation' a b c = (HasDynamicNotation a b c,
---   -- HasDynamics' a,
---   -- HasDynamics' b,
---   -- SetDynamic (Dynamic a) a ~ a,
---   -- SetDynamic (Dynamic b) b ~ b,
---   )
-
 instance (
   HasDynamicNotation a b c,
   HasArticulationNotation c d e,
