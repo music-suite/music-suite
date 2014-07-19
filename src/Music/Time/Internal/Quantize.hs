@@ -212,8 +212,21 @@ trySplit = firstJust . fmap g . splits
       g (part1, part2)
           | (sum . fmap _duration) part1 == (sum . fmap _duration) part2 = Just (part1, part2)
           | otherwise                        = Nothing
-      splits xs = List.inits xs `zip` List.tails xs
-      firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
+
+
+-- |
+-- Given a list, return a list of all possible splits.
+--
+-- >>> splits [1,2,3]
+-- [([],[1,2,3]),([1],[2,3]),([1,2],[3]),([1,2,3],[])]
+--
+splits :: [a] -> [([a],[a])]
+splits xs = List.inits xs `zip` List.tails xs
+
+
+-- | Return the first @Just@ value, if any.
+firstJust :: [Maybe a] -> Maybe a
+firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
 
 
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
