@@ -110,8 +110,6 @@ instance Monoid ArticulationNotation where
   x `mappend` ArticulationNotation ([], []) = x
   x `mappend` y = x
 
--- TODO add slurs if separation is below some value...
-
 getSeparationMarks :: Double -> [Mark]
 getSeparationMarks = fst . getSeparationMarks'
 
@@ -133,10 +131,15 @@ getAccentMarks x
   | 2    <= x              = [Marcato]
   | otherwise           = []
 
+hasSlur :: (Real (Separation t), Articulated t) => t -> Bool
 hasSlur y = hasSlur' (realToFrac $ view separation $ y)
-allMarks y = getSeparationMarks (realToFrac $ view separation $ y) <> getAccentMarks (realToFrac $ view accentuation $ y)
 
-notateArticulation :: (Ord a, a ~ (Sum Double, Sum Double)) => Ctxt a -> ArticulationNotation
+allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> [Mark]
+allMarks y = mempty
+  <> getSeparationMarks (realToFrac $ y^.separation) 
+  <> getAccentMarks (realToFrac $ y^.accentuation)
+
+notateArticulation :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x
   where
     go (Nothing, y, Nothing) = ArticulationNotation ([], allMarks y)
