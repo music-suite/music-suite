@@ -1,6 +1,6 @@
 
 name:                   music-score
-version:                1.7
+version:                1.7.1
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -47,10 +47,10 @@ library
                         HCodecs                 >= 0.5 && < 0.6,
                         vector-space            >= 0.8.7 && < 0.9,
                         vector-space-points     >= 0.2 && < 0.3,
-                        musicxml2               == 1.7,
-                        lilypond                == 1.7,
-                        music-pitch-literal     == 1.7,
-                        music-dynamics-literal  == 1.7,
+                        musicxml2               == 1.7.1,
+                        lilypond                == 1.7.1,
+                        music-pitch-literal     == 1.7.1,
+                        music-dynamics-literal  == 1.7.1,
 
                         prettify,
                         parsec
