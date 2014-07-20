@@ -100,8 +100,8 @@
 
 - Adds more examples
 
-# 1.7.1 (forthcoming)
 
+# 1.7.1
 
 - Representation: 
 
