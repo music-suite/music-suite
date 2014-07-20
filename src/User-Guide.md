@@ -57,7 +57,7 @@ Alternatively, you can create a file called `test.hs` (or similar) with the foll
 import Music.Prelude
 
 example = c |> d |> e
-main = defaultMain example
+main = open example
 ```
 
 Then either execute it using:
@@ -71,7 +71,7 @@ or compile and run it with
 
 In this case the resulting program will generate and open a file called `test.pdf` containing the output seen above.
 
-Music files and Haskell files using `defaultMain` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
+Music files and Haskell files using `open` are equivalent in every aspect. In fact, the `music2...` programs are simple utilities that substitutes a single expression into a Haskell module such as the one above and executes the resulting main function.
 
 ## Interactive use
 
