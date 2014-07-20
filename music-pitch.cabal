@@ -1,6 +1,6 @@
 
 name:                   music-pitch
-version:                1.7
+version:                1.7.1
 cabal-version:          >= 1.10
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
@@ -33,7 +33,7 @@ library
                         containers,
                         semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
-                        music-pitch-literal     == 1.7,
+                        music-pitch-literal     == 1.7.1,
                         vector-space            >= 0.8.7 && < 0.9
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
