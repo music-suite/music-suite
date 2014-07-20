@@ -34,7 +34,7 @@ library
                         semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
                         music-pitch-literal     == 1.7,
-                        vector-space
+                        vector-space            >= 0.8.7 && < 0.9
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
                         Music.Pitch.Common
