@@ -102,9 +102,36 @@
 
 # 1.7.1 (forthcoming)
 
-- API CHANGES
+
+- Representation: 
+
+  - Adds Cons and Snoc instances for Voice
+
+  - Now uses Average monoid dynamics, not Sum (when merging chords etc)
+
+  - Generalizes meta-data to arbitrary types
+
+- Backends and notation:
+
+  - Fixes errors in Lilypond output when using negative durations
+
+  - Now supports declarations in music files
+
+- Utility:
+
+  - Fixes miscellaneous quantization problems
+
+  - Fix notation of slurs w.r.t tie splitting
+
+  - Renames note type in Standard prelude to StandardNote
+  
   - Renames stretchOnly etc to stretchComponent
+
   - Renames postOnset (the point between onset and offset) to midpoint
 
+  - Removing obsolete function splitTiesVoice
 
+  - Dependencies: `HCodecs ==> 0.5`, `lens ==> 4.3`, `vector-space-points ==> 0.2`
+
+  - Improves documentation and tests
 
