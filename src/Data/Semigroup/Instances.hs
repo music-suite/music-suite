@@ -16,7 +16,7 @@ import Music.Dynamics.Literal
 
 -- TODO move these to semigroups and music-pitch-literal
 
-#if (__GLASGOW_HASKELL__ < 781)
+#if !MIN_VERSION_base(4,7,0)
 deriving instance Num a => Num (Sum a)
 #endif
 deriving instance Real a => Real (Sum a)
@@ -33,7 +33,7 @@ instance AffineSpace a => AffineSpace (Sum a) where
   Sum p .+^ Sum v = Sum (p .+^ v)
 
 
-#if (__GLASGOW_HASKELL__ < 781)
+#if !MIN_VERSION_base(4,7,0)
 deriving instance Num a => Num (Product a)
 #endif
 deriving instance Real a => Real (Product a)
