@@ -66,7 +66,7 @@ Please note that the Suite is quite usable, parts of it are still experimental, 
 
 ### Contributing to the Suite
 
-If you are interested in contributing to the Suite, please join the Github organization (see the link below). In addition to code, we appreciate contributions in the form of tutorials, examples or musical compositions. Hopefully we may soon have a showcase of works created with Music Suite, like [Diagrams gallery](http://projects.haskell.org/diagrams/gallery.html).
+If you are interested in contributing to the Suite, please join the Github organization (see the link below). In addition to code, we appreciate contributions in the form of tutorials, examples or musical compositions. Hopefully we may soon have a showcase of works created with Music Suite, like the [Diagrams gallery](http://projects.haskell.org/diagrams/gallery.html).
 
 ### More information
 
