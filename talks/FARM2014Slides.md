@@ -23,7 +23,7 @@ Musical <a style="color:blue">*theory*</a>, concepts such as: scales, chords, rh
 
 Musical *aspects*: time, pitch, dynamics, timbre (instrument/articulation), (space..)
 
-Music music theories of the word define these, in *roughly* this order of importance
+Music music theories of the word define these, in some order of importance
 
     music-time
     music-pitch
