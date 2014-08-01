@@ -23,7 +23,7 @@ Musical <a style="color:blue">*theory*</a>, concepts such as: scales, chords, rh
 
 Musical *aspects*: time, pitch, dynamics, timbre (instrument/articulation), (space..)
 
-Music music theories of the word define these, in *roughly* this order of importance
+Music music theories of the word define these, in some order of importance
 
     music-time
     music-pitch
@@ -119,7 +119,7 @@ Dynamic types, using Reactives a lot (not needed)
     - Simplified version needed
 - Consolidate with other libraries
     - Common time/space/linear algebra core?
-- Junk in the backends, should be moved "higher" up in the libraries
+- Junk in the backends (as the internal representation is more general), should be moved "higher" up in the libraries
 
 ## Backends
 
