@@ -52,6 +52,7 @@ import           Data.Foldable                 (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple
 import           Data.Maybe
+import           Data.Average
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
 import qualified Music.Lilypond                as Lilypond
@@ -106,7 +107,8 @@ type HasArticulationNotation a b c = (
   Articulation b  ~ Ctxt (Articulation a),
   Articulation c ~ ArticulationNotation,
   -- TODO generalize
-  Articulation a ~ (Sum Double, Sum Double)
+  -- Articulated (Articulation a), Real (Separation (Articulation a)), Real (Accentuation (Articulation a))
+  Articulation a ~ (Average Double, Average Double)
  )
 
 

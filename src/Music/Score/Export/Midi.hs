@@ -218,11 +218,11 @@ instance HasBackendNote Midi a => HasBackendNote Midi (Behavior a) where
   exportChord b = exportChord b . fmap (fmap (! 0))
 
 
-instance HasBackendNote Midi a => HasBackendNote Midi (DynamicT (Sum Double) a) where
+instance (Real d, HasBackendNote Midi a) => HasBackendNote Midi (DynamicT d a) where
   -- TODO
   -- We have not standarized dynamic levels
   -- Assume for now -6.5 to 6.5 where (-3.5 is ppp, -0.5 is mp, 0.5 is mf, 3.5 is fff etc)
-  exportNote b (Identity (DynamicT (Sum d, x))) = setV (dynLevel d) <$> exportNote b (Identity x)
+  exportNote b (Identity (DynamicT (realToFrac -> d, x))) = setV (dynLevel d) <$> exportNote b (Identity x)
 
 
 dynLevel :: Double -> Midi.Velocity
