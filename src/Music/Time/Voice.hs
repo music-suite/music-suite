@@ -451,7 +451,7 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy m
     merge (Just x) Nothing  = True
     merge Nothing  (Just x) = True
     merge (Just x) (Just y) = False
-    hasOnlyRests = all isNothing $ toListOf traverse x -- norm
+    hasOnlyRests = all isNothing $ toListOf traverse x -- norm
 
 
 withContext :: Voice a -> Voice (Ctxt a)
@@ -523,7 +523,7 @@ reverseDurations = over durationsV reverse
 reverseValues :: Voice a -> Voice a
 reverseValues = over valuesV reverse
 
--- Lens "filtered" throuygh a voice
+-- Lens "filtered" through a voice
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 
