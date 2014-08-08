@@ -53,6 +53,7 @@ import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Average
 import           Data.VectorSpace        hiding (Sum)
 
 import           Music.Dynamics.Literal
@@ -129,6 +130,9 @@ instance Tiable a => Tiable (c, a) where
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Maybe a) where
+  toTied = unzipR . fmap toTied
+
+instance Tiable a => Tiable (Average a) where
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Sum a) where
