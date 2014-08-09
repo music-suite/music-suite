@@ -50,6 +50,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Reverse
 import           Music.Time.Split
@@ -112,7 +113,8 @@ instance Reversible (Delayed a) where
   rev = revDefault
 
 instance Splittable a => Splittable (Delayed a) where
-  -- FIXME
+  -- TODO is this right?
+  split t = unzipR . fmap (split t)
 
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
