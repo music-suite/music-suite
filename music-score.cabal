@@ -62,7 +62,6 @@ library
                         Data.Semigroup.Instances
                         Data.Average
                         Control.Monad.Compose
-                        Control.Lens.Cons.Middle
                         Music.Time
                         Music.Time.Types
                         Music.Time.Transform

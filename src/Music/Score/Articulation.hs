@@ -75,7 +75,6 @@ module Music.Score.Articulation (
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens                  hiding (above, below, transform)
-import           Control.Lens.Cons.Middle
 import           Data.AffineSpace
 import           Data.Foldable
 import           Data.Functor.Couple
@@ -319,44 +318,9 @@ class (
     accentuation :: Lens' a (Accentuation a)
     separation   :: Lens' a (Separation a)
 
-{-
--- TODO move
-instance Num () where
-  _ + _ = ()
-  _ - _ = ()
-  _ * _ = ()
-  signum _ = ()
-  abs _ = ()
-  fromInteger _ = ()
-
-instance Fractional () where
-  _ / _ = ()
-  fromRational _ = ()
-
-instance VectorSpace () where
-  type Scalar () = ()
-  _ *^ _ = ()
-
-instance AffineSpace () where
-  type Diff () = ()
-  _ .-. _ = ()
-  _ .+^ _ = ()
-
-instance Articulated () where
-  accentuation = id
-  separation   = id
--}
-
 instance (AffineSpace a, AffineSpace b, Fractional a, Fractional b) => Articulated (a, b) where
-  accentuation = _1'
-  separation   = _2'
-
-_1' :: Lens' (a, b) a
-_1' = _1
-
-_2' :: Lens' (a, b) b
-_2' = _2
-  
+  accentuation = _1
+  separation   = _2
 
 
 accent :: (HasPhrases' s b, HasArticulations' b, Articulation b ~ a, Articulated a) => s -> s

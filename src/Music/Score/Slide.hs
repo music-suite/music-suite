@@ -40,7 +40,6 @@ module Music.Score.Slide (
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens            hiding (transform)
-import           Control.Lens.Cons.Middle
 import           Data.Foldable
 import           Data.Foldable
 import           Data.Functor.Couple
@@ -138,7 +137,7 @@ deriving instance (Real a, Enum a, Integral a) => Integral (SlideT a)
 slide :: (HasPhrases' s a, HasSlide a) => s -> s
 slide = mapPhraseWise3 (setBeginSlide True) (setBeginSlide True . setEndSlide True) (setEndSlide True)
   where
-    mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
+    mapPhraseWise3 f g h = over phrases' (over _head f . over (_tail . _init) g . over _last h)
 
 -- |
 -- Add a glissando between the first and the last note.
@@ -146,4 +145,4 @@ slide = mapPhraseWise3 (setBeginSlide True) (setBeginSlide True . setEndSlide Tr
 glissando :: (HasPhrases' s a, HasSlide a) => s -> s
 glissando = mapPhraseWise3 (setBeginGliss True) (setBeginGliss True . setEndGliss True) (setEndGliss True)
   where
-    mapPhraseWise3 f g h = over phrases' (over _head f . over _middle g . over _last h)
+    mapPhraseWise3 f g h = over phrases' (over _head f . over (_tail . _init) g . over _last h)
