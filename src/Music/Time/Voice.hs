@@ -197,20 +197,6 @@ instance Splittable a => Splittable (Voice a) where
     where
       split' = error "TODO"
 
-      -- split' :: Time -> (Duration -> a -> (a,a)) -> [Stretched a] -> ([Stretched a], [Stretched a])
-      -- split' t f = over both mcatMaybes . unzipR . snd . Data.List.mapAccumL go (0::Time)
-      --   where
-      --     go :: Time -> Stretched a -> (Time, (Maybe (Stretched a), Maybe (Stretched a)))
-      --     go currentOnset (view (from stretched) -> (d,x))
-      --       = let currentOffset = currentOnset .+^ d
-      --             theSplit = if t              <= currentOnset           then (Nothing, Just (view stretched (d,x))) else
-      --                        if currentOnset   <  t && t < currentOffset then
-      --                          let x1 = x
-      --                              x2 = x in
-      --                          (Just (view stretched (t .-^ currentOnset,x1)), Just (view stretched (d ^-^ (t .-^ currentOnset),x2))) else
-      --                        if currentOffset  <= t                      then (Just (view stretched (d,x)), Nothing) else error "Impossible"
-      --           in (currentOnset .+^ d, theSplit)
-
 instance Reversible a => Reversible (Voice a) where
   rev = over _Wrapped' (fmap rev) -- TODO OK?
 

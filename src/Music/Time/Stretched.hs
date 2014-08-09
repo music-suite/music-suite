@@ -139,9 +139,6 @@ stretchedValue :: (Transformable a, Transformable b) => Lens (Stretched a) (Stre
 stretchedValue = lens runStretched (flip $ _stretched . const)
   where
     _stretched f (Stretched (Couple (d, x))) = Stretched (Couple (d, f `whilst` stretching d $ x))
+    runStretched = uncurry stretch . view _Wrapped
 {-# INLINE stretchedValue #-}
 
-runStretched :: Transformable a => Stretched a -> a
-runStretched = uncurry stretch . view _Wrapped
-
--- JUNK
