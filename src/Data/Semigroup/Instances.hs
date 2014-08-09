@@ -19,6 +19,7 @@ import Music.Dynamics.Literal
 #if !MIN_VERSION_base(4,7,0)
 deriving instance Num a => Num (Sum a)
 #endif
+
 deriving instance Real a => Real (Sum a)
 deriving instance Fractional a => Fractional (Sum a)
 deriving instance AdditiveGroup a => AdditiveGroup (Sum a)
@@ -36,6 +37,7 @@ instance AffineSpace a => AffineSpace (Sum a) where
 #if !MIN_VERSION_base(4,7,0)
 deriving instance Num a => Num (Product a)
 #endif
+
 deriving instance Real a => Real (Product a)
 deriving instance Fractional a => Fractional (Product a)
 deriving instance AdditiveGroup a => AdditiveGroup (Product a)
@@ -48,6 +50,7 @@ instance AffineSpace a => AffineSpace (Product a) where
   type Diff (Product a) = Product (Diff a)
   Product p .-. Product q = Product (p .-. q)
   Product p .+^ Product v = Product (p .+^ v)
+
 
 
 deriving instance IsDynamics a => IsDynamics (Sum a)
