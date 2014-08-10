@@ -455,9 +455,9 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
         | otherwise        = error "MusicXml backend: Unkown color"
 -}
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TremoloT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTremoloT . sequenceA
+  exportNote b = uncurry notate . fmap (exportNote b) . getTremolo . sequenceA
     where
-      notate (Max n) = case n of
+      notate n = case n of
         0 -> id
         n -> MusicXml.tremolo (fromIntegral n)
     

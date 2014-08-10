@@ -31,7 +31,8 @@ module Music.Score.Tremolo (
 
         -- * Tremolo
         HasTremolo(..),
-        TremoloT(..),
+        TremoloT,
+        getTremolo,
         tremolo,
 
   ) where
@@ -97,6 +98,12 @@ deriving instance Enum a => Enum (TremoloT a)
 deriving instance Bounded a => Bounded (TremoloT a)
 deriving instance (Num a, Ord a, Real a) => Real (TremoloT a)
 deriving instance (Real a, Enum a, Integral a) => Integral (TremoloT a)
+
+-- |
+-- Extract tremolo. Useful for backends.
+--
+getTremolo :: TremoloT a -> (Int, a)
+getTremolo (TremoloT (Couple (Max n, a))) = (fromIntegral n, a)
 
 -- |
 -- Set the number of tremolo divisions for all notes in the score.

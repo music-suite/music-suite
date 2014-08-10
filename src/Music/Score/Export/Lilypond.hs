@@ -438,9 +438,9 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
   exportNote b (LyContext d x) =
     fst (notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
     where
-      notate Nothing d                               = (id, d)
-      notate (Just (TremoloT (Couple (Max 0, _)))) d = (id, d)
-      notate (Just (TremoloT (Couple (Max n, _)))) d = let
+      notate Nothing d                       = (id, d)
+      notate (Just (getTremolo -> (0, _))) d = (id, d)
+      notate (Just (getTremolo -> (n, _))) d = let
         scale   = 2^n
         newDur  = (d `min` (1/4)) / scale
         repeats = d / newDur
