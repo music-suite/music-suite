@@ -590,8 +590,11 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 --
 octaves :: Interval -> Octaves
 octaves i 
-  | isNegative i = negate $ octaves' i + 1
-  | otherwise    = octaves' i
+  | isNegative i && not (isOctaveMultiple i) = negate (octaves' i) - 1
+  | isNegative i && isOctaveMultiple i       = negate (octaves' i)
+  | otherwise                                = octaves' i
+
+isOctaveMultiple (Interval (_,d)) = d `mod` 7 == 0
 
 octaves' i = fromIntegral $ intervalDiv i basis_P8
 
