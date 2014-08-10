@@ -47,6 +47,7 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.Word
+import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
@@ -54,6 +55,20 @@ import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
 import           Music.Score.Part
 import           Music.Score.Phrases
+import           Music.Dynamics.Literal
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+import           Music.Score.Articulation
+-- import           Music.Score.Color
+import           Music.Score.Dynamics
+import           Music.Score.Harmonics
+import           Music.Score.Meta
+import           Music.Score.Part
+import           Music.Score.Pitch
+import           Music.Score.Slide
+import           Music.Score.Text
+import           Music.Score.Ties
 import           Music.Time
 
 class HasTremolo a where
@@ -90,6 +105,15 @@ instance Rewrapped (TremoloT a) (TremoloT b)
 instance HasTremolo (TremoloT a) where
   setTrem n = set (_Wrapped . _Wrapped . _1) (Max $ fromIntegral n)
 
+-- TODO these must be moved down:
+deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
+deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
+deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
+deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
+deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
+deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
+
+
 -- Lifted instances
 deriving instance Num a => Num (TremoloT a)
 deriving instance Fractional a => Fractional (TremoloT a)
@@ -98,6 +122,45 @@ deriving instance Enum a => Enum (TremoloT a)
 deriving instance Bounded a => Bounded (TremoloT a)
 deriving instance (Num a, Ord a, Real a) => Real (TremoloT a)
 deriving instance (Real a, Enum a, Integral a) => Integral (TremoloT a)
+
+deriving instance IsPitch a => IsPitch (TremoloT a)
+deriving instance IsDynamics a => IsDynamics (TremoloT a)
+instance Semigroup a => Semigroup (TremoloT a) where
+    (<>) = liftA2 (<>)
+instance Tiable a => Tiable (TremoloT a) where
+    toTied = unzipR . fmap toTied
+type instance Pitch (TremoloT a)        = Pitch a
+type instance SetPitch g (TremoloT a)   = TremoloT (SetPitch g a)
+instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
+  pitches = _Wrapped . pitches
+instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
+  pitch = _Wrapped . pitch
+
+type instance Dynamic (TremoloT a)        = Dynamic a
+type instance SetDynamic g (TremoloT a)   = TremoloT (SetDynamic g a)
+instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
+  dynamics = _Wrapped . dynamics
+
+instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
+  dynamic = _Wrapped . dynamic
+
+type instance Articulation (TremoloT a)        = Articulation a
+type instance SetArticulation g (TremoloT a)   = TremoloT (SetArticulation g a)
+instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) where
+  articulations = _Wrapped . articulations
+instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
+  articulation = _Wrapped . articulation
+
+
+type instance Part (TremoloT a) = Part a
+deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
+deriving instance HasSlide a => HasSlide (TremoloT a)
+deriving instance HasText a => HasText (TremoloT a)
+
+deriving instance Transformable a => Transformable (TremoloT a)
+deriving instance Reversible a => Reversible (TremoloT a)
+deriving instance Alterable a => Alterable (TremoloT a)
+deriving instance Augmentable a => Augmentable (TremoloT a)
 
 -- |
 -- Extract tremolo. Useful for backends.

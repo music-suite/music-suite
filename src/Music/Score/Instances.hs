@@ -78,8 +78,6 @@ instance Semigroup a => Semigroup (HarmonicT a) where
     (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (TextT a) where
     (<>) = liftA2 (<>)
-instance Semigroup a => Semigroup (TremoloT a) where
-    (<>) = liftA2 (<>)
 instance Semigroup a => Semigroup (PartT n a) where
     PartT (v1,x1) <> PartT (v2,x2) = PartT (v1, x1 <> x2)
 
@@ -179,13 +177,6 @@ deriving instance HasHarmonic a => HasHarmonic (TieT a)
 deriving instance HasSlide a => HasSlide (TieT a)
 deriving instance HasText a => HasText (TieT a)
 
-instance Tiable a => Tiable (TremoloT a) where
-    toTied = unzipR . fmap toTied
-
-type instance Part (TremoloT a) = Part a
-deriving instance HasHarmonic a => HasHarmonic (TremoloT a)
-deriving instance HasSlide a => HasSlide (TremoloT a)
-deriving instance HasText a => HasText (TremoloT a)
 
 
 -- TextT
@@ -218,15 +209,7 @@ deriving instance HasText a => HasText (SlideT a)
 
 
 
-deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
-deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
-deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
-deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
-deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
-deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
 
-deriving instance IsPitch a => IsPitch (TremoloT a)
-deriving instance IsDynamics a => IsDynamics (TremoloT a)
 deriving instance IsPitch a => IsPitch (TextT a)
 deriving instance IsDynamics a => IsDynamics (TextT a)
 deriving instance IsPitch a => IsPitch (HarmonicT a)
@@ -248,22 +231,18 @@ deriving instance HasText a => HasText (ColorT a)
 deriving instance Transformable a => Transformable (SlideT a)
 deriving instance Transformable a => Transformable (HarmonicT a)
 deriving instance Transformable a => Transformable (TextT a)
-deriving instance Transformable a => Transformable (TremoloT a)
 
 deriving instance Reversible a => Reversible (SlideT a)
 deriving instance Reversible a => Reversible (HarmonicT a)
 deriving instance Reversible a => Reversible (TextT a)
-deriving instance Reversible a => Reversible (TremoloT a)
 
 deriving instance Alterable a => Alterable (SlideT a)
 deriving instance Alterable a => Alterable (HarmonicT a)
 deriving instance Alterable a => Alterable (TextT a)
-deriving instance Alterable a => Alterable (TremoloT a)
 
 deriving instance Augmentable a => Augmentable (SlideT a)
 deriving instance Augmentable a => Augmentable (HarmonicT a)
 deriving instance Augmentable a => Augmentable (TextT a)
-deriving instance Augmentable a => Augmentable (TremoloT a)
 
 
 

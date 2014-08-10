@@ -114,7 +114,7 @@ import           Music.Score.Part
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
-import           Music.Score.Tremolo
+-- import           Music.Score.Tremolo
 import           Music.Score.Phrases
 import           Music.Time
 import           Music.Time.Internal.Transform
@@ -396,8 +396,7 @@ instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a
 
 type instance Pitch (Couple c a)        = Pitch a
 type instance SetPitch g (Couple c a)   = Couple c (SetPitch g a)
-type instance Pitch (TremoloT a)        = Pitch a
-type instance SetPitch g (TremoloT a)   = TremoloT (SetPitch g a)
+
 type instance Pitch (TextT a)           = Pitch a
 type instance SetPitch g (TextT a)      = TextT (SetPitch g a)
 type instance Pitch (HarmonicT a)       = Pitch a
@@ -411,12 +410,7 @@ instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
   pitches = _Wrapped . pitches
 instance (HasPitch a b) => HasPitch (Couple c a) (Couple c b) where
   pitch = _Wrapped . pitch
-
-instance (HasPitches a b) => HasPitches (TremoloT a) (TremoloT b) where
-  pitches = _Wrapped . pitches
-instance (HasPitch a b) => HasPitch (TremoloT a) (TremoloT b) where
-  pitch = _Wrapped . pitch
-
+  
 instance (HasPitches a b) => HasPitches (TextT a) (TextT b) where
   pitches = _Wrapped . pitches
 instance (HasPitch a b) => HasPitch (TextT a) (TextT b) where

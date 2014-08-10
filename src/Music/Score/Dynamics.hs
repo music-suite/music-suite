@@ -91,7 +91,6 @@ import           Music.Score.Phrases
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
-import           Music.Score.Tremolo
 import           Music.Score.Internal.Util     (through)
 import           Music.Time
 import           Music.Time.Internal.Transform
@@ -266,8 +265,6 @@ instance (
 
 type instance Dynamic (Couple c a)        = Dynamic a
 type instance SetDynamic g (Couple c a)   = Couple c (SetDynamic g a)
-type instance Dynamic (TremoloT a)        = Dynamic a
-type instance SetDynamic g (TremoloT a)   = TremoloT (SetDynamic g a)
 type instance Dynamic (TextT a)           = Dynamic a
 type instance SetDynamic g (TextT a)      = TextT (SetDynamic g a)
 type instance Dynamic (HarmonicT a)       = Dynamic a
@@ -284,12 +281,6 @@ instance (HasDynamics a b) => HasDynamics (Couple c a) (Couple c b) where
 instance (HasDynamic a b) => HasDynamic (Couple c a) (Couple c b) where
   dynamic = _Wrapped . dynamic
 
-
-instance (HasDynamics a b) => HasDynamics (TremoloT a) (TremoloT b) where
-  dynamics = _Wrapped . dynamics
-
-instance (HasDynamic a b) => HasDynamic (TremoloT a) (TremoloT b) where
-  dynamic = _Wrapped . dynamic
 
 
 instance (HasDynamics a b) => HasDynamics (TextT a) (TextT b) where
