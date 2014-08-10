@@ -192,38 +192,6 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
--- -- Convert an offset to a quality.
--- --
--- -- This is different for perfect and imperfect interals:
--- --
--- --      Imperfect   Perfect
--- --      ===         ===
--- -- -3   dd          ddd
--- -- -2   d           dd
--- -- -1   m           d
--- --  0   M           P
--- --  1   a           a
--- --  2   aa          aa
--- --
--- diffToQuality :: Bool -> Int -> Quality
--- diffToQuality = go
---     where
---         go True  0   = Perfect
---         go True  n   = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate n)
---         go False 0    = Major
---         go False (-1) = Minor
---         go False n    = if n > 0 then Augmented (fromIntegral n) else Diminished (fromIntegral $ negate $ n + 1)
--- 
--- qualityToDiff :: Bool -> Quality -> Int
--- qualityToDiff perfect = go
---     where
---         go (Diminished n)   = fromIntegral $ negate $ if perfect then n else n + 1
---         go Minor            = fromIntegral $ -1
---         go Perfect          = fromIntegral $ 0
---         go Major            = fromIntegral $ 0
---         go (Augmented n)    = fromIntegral $ n
--- 
--- 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
 --
@@ -456,15 +424,6 @@ instance HasSemitones Interval where
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
 
--- mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
---     where
---         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
--- 
--- mkInterval' :: Int -> Int -> Interval
--- mkInterval' diff number = Interval (octave, diatonic, diatonicToChromatic diatonic + diff)
---     where
---         (octave, diatonic) = (number - 1) `divMod` 7
-
 _P1 = Interval (0, 0)
 _A1 = Interval (1, 0)
 _d2 = Interval (0, 1)
@@ -567,18 +526,10 @@ invertChromatic :: Num a => a -> a
 invertChromatic c = 12 - c
 
 negateInterval :: Interval -> Interval
--- negateInterval (Interval (o, 0, 0))    = Interval (negate o, 0, 0)
--- negateInterval (Interval (oa, da, ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
 negateInterval (Interval (a, d)) = Interval (-a, -d)
 
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
--- addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
---     = Interval (oa + ob + carry, steps, chroma)
---     where
---         (carry, steps) = (da + db) `divMod` 7
---         chroma         = trunc (ca + cb)
---         trunc          = if carry > 0 then (`mod` 12) else id
 
 stackInterval :: Int -> Interval -> Interval
 stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
@@ -679,7 +630,6 @@ isLeap (Interval (a, d)) = (abs d) > 2
 --
 invert :: Interval -> Interval
 invert i = _P8 - i
-
 
 
 isPerfectNumber :: Int -> Bool
@@ -813,8 +763,5 @@ convertBasisFloat i j k
         r = fromIntegral $ (d*m - c*n)
 
 
-x `divides` y = (y `div` x)*x == y
-
-
-
+x `divides` y = (y `rem` x) == 0
 
