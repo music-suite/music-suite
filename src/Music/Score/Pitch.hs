@@ -414,13 +414,29 @@ type Transposable a
      Num (Scalar (Interval a)))
 
 -- |
--- Transpose up.
+-- Transpose pitch upwards.
+--
+-- Not to be confused with matrix transposition.
+--
+-- >>> up m3 c
+-- eb
+--
+-- >>> up _P5 [c,d,e]
+-- [g,a,b]
 --
 up :: Transposable a => Interval a -> a -> a
 up v = pitches %~ (.+^ v)
 
 -- |
--- Transpose down.
+-- Transpose pitch downwards.
+--
+-- Not to be confused with matrix transposition.
+--
+-- >>> down m3 c
+-- a
+--
+-- >>> down _P5 [c,d,e]
+-- [f_,g_,a_]
 --
 down :: Transposable a => Interval a -> a -> a
 down v = pitches %~ (.-^ v)
@@ -428,11 +444,17 @@ down v = pitches %~ (.-^ v)
 -- |
 -- Add the given interval above.
 --
+-- >>> above _P8 [c]
+-- [c,c']
+--
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above v x = x <> up v x
 
 -- |
 -- Add the given interval below.
+--
+-- >>> below _P8 [c]
+-- [c,c_]
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
 below v x = x <> down v x
@@ -450,11 +472,29 @@ invertPitches p = pitches %~ reflectThrough p
 -- |
 -- Transpose up by the given number of octaves.
 --
+-- >>> octavesUp 2 c
+-- c''
+--
+-- >>> octavesUp 1 [c,d,e]
+-- [c',d',e']
+--
+-- >>> octavesUp (-1) [c,d,e]
+-- [c_,d_,e_]
+--
 octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
 octavesUp n = up (_P8^*n)
 
 -- |
 -- Transpose down by the given number of octaves.
+--
+-- >>> octavesDown 2 c
+-- c__
+--
+-- >>> octavesDown 1 [c,d,e]
+-- [c_,d_,e_]
+--
+-- >>> octavesDown (-1) [c,d,e]
+-- [c',d',e']
 --
 octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
 octavesDown n = down (_P8^*n)
