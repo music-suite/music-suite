@@ -435,11 +435,18 @@ instance HasSemitones Interval where
 instance IsInterval Interval where
     fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
 
--- |
--- This is just the identity function, but is useful to fix the type of 'Interval'.
---
-asInterval :: Interval -> Interval
-asInterval = id
+negateInterval :: Interval -> Interval
+negateInterval (Interval (a, d)) = Interval (-a, -d)
+
+addInterval :: Interval -> Interval -> Interval
+addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
+
+stackInterval :: Integer -> Interval -> Interval
+stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
+                  | otherwise = negate $ stackInterval (negate n) a
+
+intervalDiff :: Interval -> Int
+intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 
 -- |
 -- Creates an interval from a quality and number.
@@ -463,6 +470,7 @@ basis_P1 = Interval (0, 0)
 basis_A1 = Interval (1, 0)
 basis_d2 = Interval (0, 1)
 basis_P8 = Interval (12, 7)
+
 
 mkInterval :: Quality -> Number -> Interval
 
@@ -552,34 +560,6 @@ doublyAugmented  = mkInterval (Augmented 2)
 -- | Creates a doubly diminished interval.
 doublyDiminished :: Number -> Interval
 doublyDiminished = mkInterval (Diminished 2)
-
-
-invertDiatonic :: Num a => a -> a
-invertDiatonic d  = 7  - d
-
-invertChromatic :: Num a => a -> a
-invertChromatic c = 12 - c
-
-negateInterval :: Interval -> Interval
--- negateInterval (Interval (o, 0, 0))    = Interval (negate o, 0, 0)
--- negateInterval (Interval (oa, da, ca)) = Interval (negate (oa + 1), invertDiatonic da, invertChromatic ca)
-negateInterval (Interval (a, d)) = Interval (-a, -d)
-
-addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
--- addInterval (Interval (oa, da,ca)) (Interval (ob, db,cb))
---     = Interval (oa + ob + carry, steps, chroma)
---     where
---         (carry, steps) = (da + db) `divMod` 7
---         chroma         = trunc (ca + cb)
---         trunc          = if carry > 0 then (`mod` 12) else id
-
-stackInterval :: Integer -> Interval -> Interval
-stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
-                  | otherwise = negate $ stackInterval (negate n) a
-
-intervalDiff :: Interval -> Int
-intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 
 {-
 
@@ -699,6 +679,13 @@ isLeap (Interval (a, d)) = (abs d) > 2
 invert :: Interval -> Interval
 invert i = basis_P8 - i
 
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Interval'.
+--
+asInterval :: Interval -> Interval
+asInterval = id
+
+
 
 
 isPerfectNumber :: Int -> Bool
@@ -710,17 +697,13 @@ isPerfectNumber 4 = True
 isPerfectNumber 5 = False
 isPerfectNumber 6 = False
 
--- TODO handle larger numbers
+-- TODO more generic pattern here
 diatonicToChromatic :: Int -> Int
-diatonicToChromatic = go
+diatonicToChromatic d = (octaves*12) + go restDia
     where
-        go 0 = 0
-        go 1 = 2
-        go 2 = 4
-        go 3 = 5
-        go 4 = 7
-        go 5 = 9
-        go 6 = 11
+        -- restDia is always in [0..6]
+        (octaves, restDia) = d `divMod` 7
+        go = ([0,2,4,5,7,9,11] !!)
 
 -- {-# DEPRECATED intervalDiff "This should be hidden" #-}
 -- {-# DEPRECATED mkInterval'  "This should be hidden "#-}
@@ -736,7 +719,9 @@ replicate' n = replicate (fromIntegral n)
 -- never increase the number of the interval)
 -- 
 extractNumber :: Interval -> Number
-extractNumber (Interval (a, d)) = Number (d + 1)
+extractNumber (Interval (a, d))
+  | d >= 0    = Number (d + 1)
+  | otherwise = Number (d - 1)
 
 
 -- |

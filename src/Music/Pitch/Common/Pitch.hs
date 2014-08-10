@@ -209,8 +209,8 @@ instance Alterable Pitch where
     flatten (Pitch a) = Pitch (diminish a)
 
 instance Enum Pitch where
-    toEnum = (c .+^) . perfect . fromIntegral
-    fromEnum = fromIntegral . number . (.-. c)
+    toEnum = Pitch . mkInterval' 0 . fromIntegral
+    fromEnum = fromIntegral . pred . number . (.-. c)
 
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Pitch'.
@@ -235,7 +235,9 @@ mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
 -- @
 --
 name :: Pitch -> Name
-name = toEnum . fromIntegral . pred . number . simple . getPitch
+name x = if 0 <= i && i <= 6 then toEnum i else error "Pitch.name: Bad value"
+  where
+    i = (fromIntegral . pred . number . simple . getPitch) x
 
 -- |
 -- Returns the accidental of a pitch.
