@@ -244,67 +244,67 @@ instance HasNumber Number where number = id
 unison      :: Number
 unison      = 1
 
--- | A synonym for @2@.
+-- | A synonym for @1@.
 prime       :: Number
 prime       = 1
 
--- | A synonym for @3@.
+-- | A synonym for @2@.
 second      :: Number
 second      = 2
 
--- | A synonym for @4@.
+-- | A synonym for @3@.
 third       :: Number
 third       = 3
 
--- | A synonym for @5@.
+-- | A synonym for @4@.
 fourth      :: Number
 fourth      = 4     
 
--- | A synonym for @6@.
+-- | A synonym for @5@.
 fifth       :: Number
 fifth       = 5
 
--- | A synonym for @7@.
+-- | A synonym for @6@.
 sixth       :: Number
 sixth       = 6
 
--- | A synonym for @8@.
+-- | A synonym for @7@.
 seventh     :: Number
 seventh     = 7
 
--- | A synonym for @9@.
+-- | A synonym for @8@.
 octave      :: Number
 octave      = 8
 
--- | A synonym for @10@.
+-- | A synonym for @9@.
 ninth       :: Number
 ninth       = 9
 
--- | A synonym for @11@.
+-- | A synonym for @10@.
 tenth       :: Number
 tenth       = 10
 
--- | A synonym for @12@.
+-- | A synonym for @11@.
 eleventh    :: Number
 eleventh    = 11
 
--- | A synonym for @13@.
+-- | A synonym for @12@.
 twelfth     :: Number
 twelfth     = 12
 
--- | A synonym for @14@.
+-- | A synonym for @12@.
 duodecim    :: Number
 duodecim    = 12
 
--- | A synonym for @15@.
+-- | A synonym for @13@.
 thirteenth  :: Number
 thirteenth  = 13
 
--- | A synonym for @16@.
+-- | A synonym for @14@.
 fourteenth  :: Number
 fourteenth  = 14
 
--- | A synonym for @17@.
+-- | A synonym for @15@.
 fifteenth   :: Number
 fifteenth   = 15
 
@@ -618,7 +618,7 @@ isSimple x = octaves x == 0
 -- Returns whether the given interval is compound.
 --
 -- A compound interval is either a negative interval, or a positive interval spanning
--- more than octave.
+-- one octave or more.
 --
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
