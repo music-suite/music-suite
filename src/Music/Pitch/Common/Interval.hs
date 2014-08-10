@@ -88,7 +88,8 @@ import Data.Maybe
 import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
-import Data.AffineSpace
+-- import Data.AffineSpace
+import Data.Basis
 import Data.Typeable
 import Control.Monad
 import Control.Applicative
@@ -419,6 +420,18 @@ instance VectorSpace Interval where
     type Scalar Interval = Integer
     (*^) = stackInterval
 
+-- TODO move
+data IntervalBasis = Chromatic | Diatonic
+  deriving (Eq, Ord, Show, Enum)
+
+instance HasBasis Interval where
+  type Basis Interval = IntervalBasis
+  basisValue Chromatic = basis_A1
+  basisValue Diatonic  = basis_d2
+  decompose  (Interval (c,d)) = [(Chromatic, fromIntegral c), (Diatonic, fromIntegral d)]
+  decompose' (Interval (c,d)) Chromatic = fromIntegral c
+  decompose' (Interval (c,d)) Diatonic  = fromIntegral d
+
 instance HasQuality Interval where
   quality i = extractQuality i
 
@@ -480,7 +493,7 @@ mkInterval Perfect 1 = basis_P1
 mkInterval (Augmented 1) 1 = basis_A1
 mkInterval (Diminished 1) 2 = basis_d2
 
-mkInterval (Diminished 1) 2 = basis_d2
+-- mkInterval (Diminished 1) 2 = basis_d2
 mkInterval Minor 2 = basis_d2 ^+^ basis_A1
 mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
 mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
@@ -528,6 +541,63 @@ mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 mkInterval q (Number n) = if n > 0
                           then (mkInterval q (Number (n - 7))) ^+^ basis_P8
                           else (mkInterval q (Number (n + 7))) ^-^ basis_P8
+
+
+-- |
+-- Extracting the 'number' from an interval vector.
+--
+-- Note that (a, d) is a representation of the interval (a * A1) + (d
+-- * d2), so the 'number' part of the interval must be stored entirely
+-- in the d * d2 part (adding a unison, perfect or otherwise, can
+-- never increase the number of the interval)
+-- 
+extractNumber :: Interval -> Number
+extractNumber (Interval (a, d))
+  | d >= 0    = Number (d + 1)
+  | otherwise = Number (d - 1)
+
+
+-- |
+-- Extracting the 'quality' from an interval vector.
+--
+-- This is much more finicky, as the A1 and d2 intervals interact in a
+-- complex way to produce the perfect/major/minor/etc. intervals that
+-- we are used to reading.
+
+extractQuality :: Interval -> Quality
+extractQuality (Interval (a, d))
+  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (0, 0) = Perfect
+  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (1, 1) = Minor
+  | (a, d) == (2, 1) = Major
+  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (3, 2) = Minor
+  | (a, d) == (4, 2) = Major
+  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (5, 3) = Perfect
+  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (7, 4) = Perfect
+  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (8, 5) = Minor
+  | (a, d) == (9, 5) = Major
+  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (10, 6) = Minor
+  | (a, d) == (11, 6) = Major
+  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (12, 7) = Perfect
+  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
+-- note: these last two cases *have* to be this way round, otherwise
+-- infinite loop occurs.
+  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
+  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
 
 
 -- | Creates a perfect interval.
@@ -714,61 +784,6 @@ diatonicToChromatic d = (octaves*12) + go restDia
 
 replicate' n = replicate (fromIntegral n)
 
--- |
--- Extracting the 'number' from an interval vector.
---
--- Note that (a, d) is a representation of the interval (a * A1) + (d
--- * d2), so the 'number' part of the interval must be stored entirely
--- in the d * d2 part (adding a unison, perfect or otherwise, can
--- never increase the number of the interval)
--- 
-extractNumber :: Interval -> Number
-extractNumber (Interval (a, d))
-  | d >= 0    = Number (d + 1)
-  | otherwise = Number (d - 1)
-
-
--- |
--- Extracting the 'quality' from an interval vector.
---
--- This is much more finicky, as the A1 and d2 intervals interact in a
--- complex way to produce the perfect/major/minor/etc. intervals that
--- we are used to reading.
-
-extractQuality :: Interval -> Quality
-extractQuality (Interval (a, d))
-  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (0, 0) = Perfect
-  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (1, 1) = Minor
-  | (a, d) == (2, 1) = Major
-  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (3, 2) = Minor
-  | (a, d) == (4, 2) = Major
-  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (5, 3) = Perfect
-  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (7, 4) = Perfect
-  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (8, 5) = Minor
-  | (a, d) == (9, 5) = Major
-  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (10, 6) = Minor
-  | (a, d) == (11, 6) = Major
-  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (12, 7) = Perfect
-  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
--- note: these last two cases *have* to be this way round, otherwise
--- infinite loop occurs.
-  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
-  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
 
 
 
