@@ -61,7 +61,6 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
-        octaves,
         isNegative,
         isPositive,
         isNonNegative,
@@ -74,6 +73,7 @@ module Music.Pitch.Common.Interval (
         isCompound,
         separate,
         simple,
+        octaves,
 
         -- *** Inversion
         invert,
@@ -581,7 +581,8 @@ Prelude Music.Prelude> separate ((-1)*^_P8+m3)
 --
 separate :: Interval -> (Octaves, Interval)
 separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
-  where o = octaves i
+  where
+    o = octaves i
 
 -- |
 -- Returns the non-simple part of an interval.
@@ -680,7 +681,7 @@ isLeap (Interval (a, d)) = (abs d) > 2
 -- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
-invert i = basis_P8 - i
+invert = simple . negate
 
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Interval'.
