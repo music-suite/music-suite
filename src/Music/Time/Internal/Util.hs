@@ -15,7 +15,21 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Internal.Util where
+module Music.Time.Internal.Util (
+  showRatio,
+  list,
+  single,
+  inspecting,
+  inspectingBy,
+  withPrevNext,
+  rotate,
+  tripped,
+  through,
+  uncurry3,
+  partial,
+  partial2,
+  partial3,
+  ) where
 
 {-
     Rules:
