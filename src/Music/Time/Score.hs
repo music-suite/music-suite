@@ -38,6 +38,7 @@ module Music.Time.Score (
       
         -- ** Extracting values
         notes,
+        eras,
         events,
       
         -- ** Pattern matching
@@ -517,11 +518,25 @@ normalizeScore = reset . absDurations
     reset x = set onset (view onset x `max` 0) x
     absDurations = over (notes.each.era.delta._2) abs
 
+-- |
+-- Extract all eras of the given score.
+--
+-- >>> printEras $ scat [c,d,e :: Score Integer]
+-- 0 <-> 1
+-- 1 <-> 2
+-- 2 <-> 3
+--
 printEras :: Score a -> IO ()
-printEras = mapM_ print . toListOf (notes.each.era)
+printEras = mapM_ print . toListOf eras
 
-eras :: Transformable a => Score a -> [Span]
-eras = toListOf (notes . each . era)
+-- |
+-- Print all eras of the given score.
+--
+-- >>> toListOf eras $ scat [c,d,e :: Score Integer]
+-- [0 <-> 1, 1 <-> 2, 2 <-> 3]
+--
+eras :: Traversal' (Score a) Span
+eras = notes . each . era
 
 chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view notes
@@ -534,7 +549,7 @@ simultaneous' sc = (^. from unsafeEvents) vs
     -- es :: [Era]
     -- evs :: [[a]]
     -- vs :: [(Time, Duration, [a])]
-    es  = List.nub $ eras sc
+    es  = List.nub $ toListOf eras sc
     evs = fmap (`chordEvents` sc) es
     vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
 
