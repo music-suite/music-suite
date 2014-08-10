@@ -429,14 +429,6 @@ instance Augmentable Interval where
     augment i = i ^+^ basis_A1
     diminish i = i ^-^ basis_A1
 
--- |
--- Returns the non-simple part of an interval.
---
--- > (perfect octave)^*x + y = z  iff  y = simple z
---
-octaves :: Interval -> Octaves
-octaves i = fromIntegral $ intervalDiv i basis_P8
-
 instance HasSemitones Interval where
     semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
 
@@ -589,6 +581,19 @@ stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
 intervalDiff :: Interval -> Int
 intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 
+{-
+
+Prelude Music.Prelude> separate (2*^_P8+m3)
+(2,m3)
+Prelude Music.Prelude> 
+Prelude Music.Prelude> separate (3*^_P8+m3)
+(3,m3)
+Prelude Music.Prelude> 
+Prelude Music.Prelude> separate (0*^_P8+m3)
+(0,m3)
+Prelude Music.Prelude> separate ((-1)*^_P8+m3)
+
+-}
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
@@ -597,6 +602,18 @@ intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 separate :: Interval -> (Octaves, Interval)
 separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
   where o = octaves i
+
+-- |
+-- Returns the non-simple part of an interval.
+--
+-- > _P8^*octaves x ^+^ simple x = x
+--
+octaves :: Interval -> Octaves
+octaves i 
+  | isNegative i = negate $ octaves' i + 1
+  | otherwise    = octaves' i
+
+octaves' i = fromIntegral $ intervalDiv i basis_P8
 
 -- |
 -- Returns the simple part of an interval.
