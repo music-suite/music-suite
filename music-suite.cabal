@@ -12,13 +12,14 @@ build-type:             Custom
 cabal-version:          >= 1.10
 
 description: 
-    This is a meta-library that imports the Music Suite(see <http://music-suite.github.io/>).
+    This is a package without source code that imports Music Suite(see <http://music-suite.github.io/>).
     .
-    It allows users to install all (stable) libraries in the suite as follows:
+    It exists so that can install all (stable) packages in the suite as follows:
     .
     > cabal install music-suite
     .
-    If you wish to install an exerimental package, simply use @cabal install@ on the specific package instead.
+    If you wish to install an exerimental package, you can simply install it separately after
+    installing @music-suite@.
     .
     <<https://raw.githubusercontent.com/hanshoglund/music-docs/master/music-suite-deps.png>>
 
