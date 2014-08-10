@@ -39,6 +39,7 @@ module Music.Score.Color (
         color,
         colorRed,
         colorBlue,
+        colorBlack,
 
         -- * Representation
         ColorT(..),
@@ -118,11 +119,27 @@ instance Tiable a => Tiable (ColorT a) where
 
 
 -- |
--- Set the number of tremolo divisions for all notes in the score.
+-- Set color of all notes in the score.
 --
 color :: HasColor a => Colour Double -> a -> a
 color = setColor
 
+-- |
+-- Color all notes in the score red.
+--
+colorRed :: HasColor a => a -> a
 colorRed = color C.red
+
+-- |
+-- Color all notes in the score blue.
+--
+colorBlue :: HasColor a => a -> a
 colorBlue = color C.blue
+
+-- |
+-- Color all notes in the score black.
+--
+colorBlack :: HasColor a => a -> a
+colorBlack = color C.black
+
 
