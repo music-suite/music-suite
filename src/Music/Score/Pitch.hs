@@ -463,6 +463,9 @@ type Transposable a
 -- >>> up _P5 [c,d,e]
 -- [g,a,b]
 --
+-- >>> up _P5 [440::Hertz, 442, 810]
+-- [g,a,b]
+--
 up :: Transposable a => Interval a -> a -> a
 up v = pitches %~ (.+^ v)
 {-# INLINE up #-}
