@@ -236,7 +236,7 @@ b = P.bb
 -->
 
 
-You can change octave using `octavesUp` and `octavesDown`:
+You can change octave using @[octavesUp] and @[octavesDown]:
 
 ```music+haskell
 octavesUp 4 c
@@ -259,7 +259,7 @@ Sharps and flats can be added by the functions @[sharp] and @[flat], which are w
 c sharp |> d |> e flat
 ```
 
-You can also use the ordinary (prefix) versions `sharpen` and `flatten`.
+You can also use the ordinary (prefix) versions @[sharpen] and @[flatten].
 
 ```music+haskell
 sharpen c 
@@ -594,6 +594,41 @@ TODO
 # Musical aspects
 
 ## Pitch
+
+@[HasPitch]
+
+@[pitch]
+
+@[pitch']
+
+
+@[HasPitches]
+
+@[pitches]
+
+@[pitches']
+
+@[up]
+
+@[down]
+
+@[above]
+
+@[below]
+
+
+
+@[number]
+@[quality]
+@[name]
+@[accidental]
+@[number]
+@[invert]
+@[simple]
+@[octaves]
+@[asPitch]
+@[asAccidental]
+
 ## Articulation
 ## Dynamics
 ## Parts
