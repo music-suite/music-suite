@@ -40,26 +40,26 @@ module Music.Score.Pitch (
         SetPitch,
         Interval,
         
-        -- * Accessing pitch
-        HasPitches(..),
-        HasPitch(..),
-        -- ** Simple versions
-        HasPitches',
-        HasPitch',
-        pitch',
-        pitches',
-        
-        -- * Converting pitch to container
+        -- ** From pitches
         fromPitch',
         
+        -- * Accessing pitch
+        HasPitch(..),
+        HasPitches(..),
+
+        -- ** Simple versions
+        HasPitch',
+        pitch',
+        HasPitches',
+        pitches',
+        
         -- * Manipulating pitch
-        Transposable,
+        -- Transposable,
+        -- ** Transposition
         up,
         down,
         above,
         below,
-        inv,
-        invertPitches,
         octavesUp,
         octavesDown,
         octavesAbove,
@@ -68,11 +68,14 @@ module Music.Score.Pitch (
         fifthsDown,
         fifthsAbove,
         fifthsBelow,
-        -- ** Utility
         _15va,
         _8va,
         _8vb,
         _15vb,
+
+        -- ** Inversion
+        inv,
+        invertPitches,
 
         -- * Inspecting pitch
         highestPitch,
@@ -85,6 +88,8 @@ module Music.Score.Pitch (
         -- TODO pitchIs, to write filter pitchIs ... etc
         -- TODO gliss etc
 
+        Transposable,
+        
   ) where
 
 import           Control.Applicative
@@ -115,8 +120,18 @@ import           Music.Time
 import           Music.Time.Internal.Transform
 
 -- |
--- This type fuction is used to retrive the /pitch type/ for a given concrete type.
+-- This type fuction is used to access the pitch type for a given type.
 --
+-- @
+-- 'Pitch' (c,a)             ~ 'Pitch' a
+-- 'Pitch' [a]               ~ 'Pitch' a
+-- 'Pitch' ('Note' a)          ~ 'Pitch' a
+-- 'Pitch' ('Voice' a)         ~ 'Pitch' a
+-- 'Pitch' ('Score' a)         ~ 'Pitch' a
+-- @
+--
+type family Pitch (s :: *) :: *
+
 -- For types representing pitch, it is generally 'Identity', i.e
 --
 -- @
@@ -128,23 +143,21 @@ import           Music.Time.Internal.Transform
 --
 -- For containers, 'Pitch' provides a morphism:
 --
--- @
--- 'Pitch' (c,a)             ~ 'Pitch' a
--- 'Pitch' [a]               ~ 'Pitch' a
--- 'Pitch' ('Note' a)          ~ 'Pitch' a
--- 'Pitch' ('Delayed' a)       ~ 'Pitch' a
--- 'Pitch' ('Stretched' a)     ~ 'Pitch' a
--- 'Pitch' ('Voice' a)         ~ 'Pitch' a
--- 'Pitch' ('Chord' a)         ~ 'Pitch' a
--- 'Pitch' ('Track' a)         ~ 'Pitch' a
--- 'Pitch' ('Score' a)         ~ 'Pitch' a
--- @
---
-type family Pitch (s :: *) :: *
 
 -- |
--- This type fuction is used to retrive the /pitch type/ for a given concrete type.
+-- This type fuction is used to update the pitch type for a given type.
+-- The first argument is the new type.
 --
+-- @
+-- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
+-- 'SetPitch' b [a]            ~ ['SetPitch' b a]
+-- 'SetPitch' g ('Note' a)       ~ Note ('SetPitch' g a)
+-- 'SetPitch' g ('Voice' a)      ~ 'Voice' ('SetPitch' g a)
+-- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
+-- @
+--
+type family SetPitch (b :: *) (s :: *) :: *
+
 -- For types representing pitch, it is generally 'Constant', i.e
 --
 -- @
@@ -152,21 +165,8 @@ type family Pitch (s :: *) :: *
 -- SetPitch a Integer ~ a
 -- @
 --
--- For containers, 'Pitch' provides a morphism:
+-- For containers, 'SetPitch' provides a morphism:
 --
--- @
--- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
--- 'SetPitch' b [a]            ~ ['SetPitch' b a]
--- 'SetPitch' g ('Note' a)       ~ Note ('SetPitch' g a)
--- 'SetPitch' g ('Delayed' a)    ~ Delayed ('SetPitch' g a)
--- 'SetPitch' g ('Stretched' a)  ~ Stretched ('SetPitch' g a)
--- 'SetPitch' g ('Voice' a)      ~ 'Voice' ('SetPitch' g a)
--- 'SetPitch' g ('Chord' a)      ~ 'Chord' ('SetPitch' g a)
--- 'SetPitch' g ('Track' a)      ~ 'Track' ('SetPitch' g a)
--- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
--- @
---
-type family SetPitch (b :: *) (s :: *) :: *
 
 -- |
 -- Class of types that provide a single pitch.
@@ -179,14 +179,12 @@ class HasPitches s t => HasPitch s t where
   --   for example:
   --
   --   @
-  --   'view' 'pitch' :: HasPitch a a
-  --   @
-  --
-  --   @
-  --   'over' 'pitch'         :: HasPitch' a => a -> Pitch a
-  --   'pitch' %~ 'succ'      :: HasPitch' a => a -> a
-  --   'pitch' +~ 2         :: (HasPitch' a, Num (Pitch a)) => a -> a
-  --   'pitch' .~ c         :: (HasPitch' a, IsPitch a) => a -> a
+  --   'pitch' %~ 'succ'      :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
+  --   'pitch' +~ 2         :: ('HasPitch'' a, 'Num' ('Pitch' a)) => a -> a
+  --   'pitch' .~ c         :: ('HasPitch'' a, 'IsPitch' a) => a -> a
+  -- 
+  --  'view' 'pitch'         :: 'HasPitches'' a => a -> 'Pitch' a
+  --   'over' 'pitch'         :: 'HasPitches' a b => ('Pitch' a -> 'Pitch' b) -> a -> b
   --   @
   --
   pitch :: Lens s t (Pitch s) (Pitch t)
@@ -204,43 +202,84 @@ class (Transformable (Pitch s),
   --   for example:
   --
   --   @
-  --   'lengthOf' 'pitches' :: HasPitches a a => a -> Int
-  --   @
-  --
-  --   @
-  --   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a
-  --   @
-  --
-  --   @
-  --   'over' 'pitches' :: HasPitches a b => a -> b
+  --   'toListOf' 'pitches' :: HasPitches' a => a -> [Pitch a]
+  --   'over' 'pitches'     :: HasPitches a b => ('Pitch' a -> 'Pitch' b) -> a -> b
   --   @
   --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
+-- | Access the pitch.
+--
+--   As this is a 'Traversal', you can use all combinators from the lens package,
+--   for example:
+--
+--   @
+--   'pitch' %~ 'succ'      :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
+--   'pitch' +~ 2         :: ('HasPitch'' a, 'Num' ('Pitch' a)) => a -> a
+--   'pitch' .~ c         :: ('HasPitch'' a, 'IsPitch' a) => a -> a
+-- 
+--  'view' 'pitch'         :: 'HasPitches'' a => a -> 'Pitch' a
+--   'over' 'pitch'         :: 'HasPitches' a b => ('Pitch' a -> 'Pitch' b) -> a -> b
+--   @
+--
 type HasPitch' a = HasPitch a a
 
+-- | Access all pitches.
+--
+--   As this is a 'Traversal', you can use all combinators from the lens package,
+--   for example:
+--
+--   @
+--   'toListOf' 'pitches' :: HasPitches' a => a -> [Pitch a]
+--   'over' 'pitches'     :: HasPitches a b => ('Pitch' a -> 'Pitch' b) -> a -> b
+--   @
+--
 type HasPitches' a = HasPitches a a
 
 
--- |
--- Pitch type.
+-- | Access the pitch.
+--
+--   As this is a 'Traversal', you can use all combinators from the lens package,
+--   for example:
+--
+--   @
+--   'view' 'pitch'         :: HasPitch' a => a -> Pitch a
+--   'over' 'pitch'         :: HasPitch' a => a -> Pitch a
+--   'pitch' %~ 'succ'      :: HasPitch' a => a -> a
+--   'pitch' +~ 2           :: (HasPitch' a, Num (Pitch a)) => a -> a
+--   'pitch' .~ c           :: (HasPitch' a, IsPitch a) => a -> a
+--   @
 --
 pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
 pitch' = pitch
 {-# INLINE pitch' #-}
 
--- |
--- Pitch type.
+-- | Access all pitches.
+--
+--   As this is a 'Traversal', you can use all combinators from the lens package,
+--   for example:
+--
+--   @
+--   'lengthOf' 'pitches' :: HasPitches a a => a -> Int
+--   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a
+--   'over' 'pitches'     :: HasPitches a b => a -> b
+--   @
 --
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
 
-
--- TODO flip name of this and Literal.fromPitch (or call that fromPitchL)
+-- |
+-- Inject a pitch into some larger type.
+-- 
+-- For containers such as 'Voice' or 'Score', this similar to 'pure' in that
+-- the a single events using the given pitch is created. Other aspects are
+-- set to some default value (usually 'mempty').
+--
 fromPitch' :: (HasPitches' a, IsPitch a) => Pitch a -> a
 fromPitch' x = c & pitches' .~ x
 {-# INLINE fromPitch' #-}
+-- TODO swap name of this and Music.Pitch.Literal.fromPitch (or call that something else, i.e. fromPitchL)
 
 
 #define PRIM_PITCH_INSTANCE(TYPE)       \
@@ -426,6 +465,7 @@ type Transposable a
 --
 up :: Transposable a => Interval a -> a -> a
 up v = pitches %~ (.+^ v)
+{-# INLINE up #-}
 
 -- |
 -- Transpose pitch downwards.
@@ -440,6 +480,7 @@ up v = pitches %~ (.+^ v)
 --
 down :: Transposable a => Interval a -> a -> a
 down v = pitches %~ (.-^ v)
+{-# INLINE down #-}
 
 -- |
 -- Add the given interval above.
@@ -449,6 +490,7 @@ down v = pitches %~ (.-^ v)
 --
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above v x = x <> up v x
+{-# INLINE above #-}
 
 -- |
 -- Add the given interval below.
@@ -458,6 +500,7 @@ above v x = x <> up v x
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
 below v x = x <> down v x
+{-# INLINE below #-}
 
 inv :: Transposable a => Pitch a -> a -> a
 inv = invertPitches
@@ -483,6 +526,7 @@ invertPitches p = pitches %~ reflectThrough p
 --
 octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
 octavesUp n = up (_P8^*n)
+{-# INLINE octavesUp #-}
 
 -- |
 -- Transpose down by the given number of octaves.
@@ -498,59 +542,69 @@ octavesUp n = up (_P8^*n)
 --
 octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
 octavesDown n = down (_P8^*n)
+{-# INLINE octavesDown #-}
 
 -- |
 -- Add the given octave above.
 --
 octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 octavesAbove n = above (_P8^*n)
+{-# INLINE octavesAbove #-}
 
 -- |
 -- Add the given octave below.
 --
 octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 octavesBelow n = below (_P8^*n)
+{-# INLINE octavesBelow #-}
 
 -- |
 -- Transpose up by the given number of fifths.
 --
 fifthsUp :: Transposable a => Scalar (Interval a) -> a -> a
 fifthsUp n = up (_P8^*n)
+{-# INLINE fifthsUp #-}
 
 -- |
 -- Transpose down by the given number of fifths.
 --
 fifthsDown :: Transposable a => Scalar (Interval a) -> a -> a
 fifthsDown n = down (_P8^*n)
+{-# INLINE fifthsDown #-}
 
 -- |
 -- Add the given octave above.
 --
 fifthsAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsAbove n = above (_P8^*n)
+{-# INLINE fifthsAbove #-}
 
 -- |
 -- Add the given octave below.
 --
 fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
 fifthsBelow n = below (_P8^*n)
+{-# INLINE fifthsBelow #-}
 
 -- | Shorthand for @'octavesUp' 2@.
 _15va :: Transposable a => a -> a
 _15va = octavesUp 2
+{-# INLINE _15va #-}
 
 -- | Shorthand for @'octavesUp' 1@.
 _8va :: Transposable a => a -> a
 _8va  = octavesUp 1
+{-# INLINE _8va #-}
 
 -- | Shorthand for @'octavesDown' 1@.
 _8vb :: Transposable a => a -> a
 _8vb  = octavesDown 1
+{-# INLINE _8vb #-}
 
 -- | Shorthand for @'octavesDown' 2@.
 _15vb :: Transposable a => a -> a
 _15vb = octavesDown 2
-
+{-# INLINE _15vb #-}
 
 
 -- |
