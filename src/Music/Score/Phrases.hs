@@ -42,10 +42,10 @@ module Music.Score.Phrases (
     TVoice,
 
     -- ** Utility
-    mvoicePVoice,
+    mVoicePVoice,
     mVoiceTVoice,
     pVoiceTVoice,
-    unsafeMvoicePVoice,
+    unsafeMVoicePVoice,
     singleMVoice,
     mapPhrasesWithPrevAndCurrentOnset,
   ) where
@@ -134,7 +134,7 @@ instance HasPhrases (MVoice a) (MVoice b) a b where
   -- | Traverses all phrases in a voice.
 instance HasPhrases (PVoice a) (PVoice b) a b where
   -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
-  mvoices = from unsafeMvoicePVoice
+  mvoices = from unsafeMVoicePVoice
 
 -- | Traverses all phrases in each voice, using 'extracted'.
 instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) =>
@@ -147,7 +147,7 @@ type HasPhrases' s a = HasPhrases s s a a
 Phrase traversal for score:
 
 phrasesS :: (Ord (Part a), HasPart' a, Transformable a) => Traversal' (Score a) (Phrase a)
-phrasesS = extracted . each . singleMVoice . mvoicePVoice . each . _Right
+phrasesS = extracted . each . singleMVoice . mVoicePVoice . each . _Right
 
 More generally:
 -}
@@ -162,14 +162,13 @@ phrases' = phrases
 -- A generic phrase-traversal.
 --
 phrases :: HasPhrases s t a b => Traversal s t (Phrase a) (Phrase b)
-phrases = mvoices . mvoicePVoice . each . _Right
+phrases = mvoices . mVoicePVoice . each . _Right
 
 -- |
 -- View an 'MVoice' as a 'PVoice'.
 --
-mvoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
-mvoicePVoice = unsafeMvoicePVoice
--- TODO rename mVoicePVoice!
+mVoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
+mVoicePVoice = unsafeMVoicePVoice
 -- TODO meta
 
 -- |
@@ -177,9 +176,8 @@ mvoicePVoice = unsafeMvoicePVoice
 --
 -- This a valid 'Iso' up to meta-data equivalence.
 --
-unsafeMvoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
-unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
--- TODO rename unsafeMVoicePVoice!
+unsafeMVoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
+unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
   where
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
@@ -205,12 +203,8 @@ unsafeMvoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     phraseToVoice = fmap Just
 
 
-
-
-
 -- TODO failure
--- TODO why Transformable?
-singleMVoice :: {-Transformable a =>-} Prism (Score a) (Score b) (MVoice a) (MVoice b)
+singleMVoice :: Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: {-Transformable a =>-} Score a -> MVoice a
@@ -243,7 +237,7 @@ withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
 withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
 
 mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
-mVoiceTVoice = mvoicePVoice . pVoiceTVoice
+mVoiceTVoice = mVoicePVoice . pVoiceTVoice
 
 pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
 pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
@@ -273,17 +267,6 @@ _rightsSet cs = sndMapAccumL f cs
 
 sndMapAccumL f z = snd . List.mapAccumL f z
 
--- unsafePVoiceTVoice :: Iso (PVoice a) (PVoice b) (TVoice a) (TVoice b)
--- unsafePVoiceTVoice = iso pVoiceToTVoice tVoiceToPVoice
---   where
---     pVoiceToTVoice :: PVoice a -> TVoice a
---     pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
---
---     -- TODO assert no overlapping
---     tVoiceToPVoice :: TVoice a -> PVoice a
---     tVoiceToPVoice = undefined
-
-
 mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
 mapZip f = uncurry zip . first f . unzipR
 
@@ -306,16 +289,11 @@ mapWithDuration = over dual withDurationL . uncurry
 dursToVoice :: [Duration] -> Voice ()
 dursToVoice = mconcat . map (\d -> stretch d $ return ())
 
--- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
+{-
+>>> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
 
 
--- instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b where
-  -- _Cons = undefined
--- instance (Transformable a, Transformable b) => Snoc (Phrase a) (Phrase b) a b where
-  -- _Snoc = prism' pure (preview lastV)
-
-
--- TODO move
+-}
 
 -- |
 -- Group contigous sequences matching/not-matching the predicate.
