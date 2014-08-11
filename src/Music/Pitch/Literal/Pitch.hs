@@ -42,8 +42,12 @@ module Music.Pitch.Literal.Pitch (
 
   ) where
 
-import Data.Semigroup
-import Control.Applicative
+import           Control.Applicative
+import           Data.Fixed
+import           Data.Int
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Word
 
 -- Pitch literal, defined as @(class, alteration, octave)@, where
 --
@@ -80,6 +84,21 @@ instance IsPitch a => IsPitch [a] where
 
 instance (Monoid b, IsPitch a) => IsPitch (b, a) where
     fromPitch = pure . fromPitch
+
+instance IsPitch Int where
+    fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Word where
+    fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Float where
+    fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance HasResolution a => IsPitch (Fixed a) where
+    fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance Integral a => IsPitch (Ratio a) where
+    fromPitch x = realToFrac (fromPitch x :: Double)
 
 instance IsPitch Double where
     fromPitch (PitchL (pc, sem, oct)) = fromIntegral $ semitones sem + diatonic pc + oct * 12

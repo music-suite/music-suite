@@ -40,8 +40,11 @@ module Music.Pitch.Literal.Interval (
 
   ) where
 
-import Data.Semigroup
-import Control.Applicative
+import           Control.Applicative
+import           Data.Fixed
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Word
 
 newtype IntervalL = IntervalL (Integer, Integer, Integer)
 -- (octaves, diatonic steps, chromatic steps)
@@ -66,6 +69,21 @@ instance IsInterval a => IsInterval [a] where
 
 instance (Monoid b, IsInterval a) => IsInterval (b, a) where
     fromInterval = pure . fromInterval
+
+instance IsInterval Int where
+    fromInterval x = fromIntegral (fromInterval x :: Integer)
+
+instance IsInterval Word where
+    fromInterval x = fromIntegral (fromInterval x :: Integer)
+
+instance IsInterval Float where
+    fromInterval x = realToFrac (fromInterval x :: Double)
+
+instance HasResolution a => IsInterval (Fixed a) where
+    fromInterval x = realToFrac (fromInterval x :: Double)
+
+instance Integral a => IsInterval (Ratio a) where
+    fromInterval x = realToFrac (fromInterval x :: Double)
 
 instance IsInterval Double where
     fromInterval = fromIntegral . asInteger . fromInterval
