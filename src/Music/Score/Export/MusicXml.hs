@@ -254,7 +254,7 @@ instance (
     . map (second (over dynamics notateDynamic)) 
     . map (second (preserveMeta addDynCon))
     . map (second (preserveMeta simultaneous)) 
-    . extractParts'
+    . extractPartsWithInfo
     . normalizeScore
     $ score
     where

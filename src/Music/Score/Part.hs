@@ -49,10 +49,10 @@ module Music.Score.Part (
 
         -- * Extracting parts
         extracted,
-        extracted',
+        extractedWithInfo,
         extractPart,
         extractParts,
-        extractParts',
+        extractPartsWithInfo,
 
         -- * Manipulating parts
 
@@ -240,14 +240,14 @@ extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
 filterPart :: (MonadPlus f, HasPart a a) => (Part a -> Bool) -> f a -> f a
 filterPart p = mfilter (\x -> p (x ^. part))
 
-extractParts' :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
-extractParts' x = zip (allParts x) (extractParts x)
+extractPartsWithInfo :: (Ord (Part a), HasPart' a) => Score a -> [(Part a, Score a)]
+extractPartsWithInfo x = zip (allParts x) (extractParts x)
 
 extracted :: (Ord (Part a), HasPart' a{-, HasPart a b-}) => Iso (Score a) (Score b) [Score a] [Score b]
 extracted = iso extractParts mconcat
 
-extracted' :: (Ord (Part a), Ord (Part b), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
-extracted' = iso extractParts' $ mconcat . fmap (uncurry $ set parts')
+extractedWithInfo :: (Ord (Part a), Ord (Part b), HasPart' a, HasPart' b) => Iso (Score a) (Score b) [(Part a, Score a)] [(Part b, Score b)]
+extractedWithInfo = iso extractPartsWithInfo $ mconcat . fmap (uncurry $ set parts')
 
 
 

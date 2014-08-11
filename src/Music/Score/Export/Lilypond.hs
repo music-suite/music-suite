@@ -258,7 +258,7 @@ instance (
     . map (second $ preserveMeta simultaneous)
 #endif
 
-    . extractParts'
+    . extractPartsWithInfo
     $ normScore
     where
       (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
