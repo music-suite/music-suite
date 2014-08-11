@@ -88,6 +88,8 @@ module Music.Score.Pitch (
         -- TODO pitchIs, to write filter pitchIs ... etc
         -- TODO gliss etc
 
+        PitchPair,
+        AffinePair,
         Transposable,
         
   ) where
@@ -398,14 +400,16 @@ instance (HasPitch a b) => HasPitch (SlideT a) (SlideT b) where
 --
 type Interval a = Diff (Pitch a)
 
+type PitchPair  v w = (Num (Scalar v), IsInterval v, IsPitch w)
+type AffinePair v w = (VectorSpace v, AffineSpace w)
+
 -- |
 -- Class of types that can be transposed, inverted and so on.
 --
 type Transposable a
-  = (HasPitches a a,
-     VectorSpace (Interval a), AffineSpace (Pitch a),
-     IsInterval (Interval a), IsPitch (Pitch a),
-     Num (Scalar (Interval a)))
+  = (HasPitches' a,
+     AffinePair (Interval a) (Pitch a),
+     PitchPair (Interval a) (Pitch a))
 
 -- |
 -- Transpose pitch upwards.
