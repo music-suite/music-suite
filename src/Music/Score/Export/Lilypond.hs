@@ -1,4 +1,5 @@
 
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE DefaultSignatures         #-}
 {-# LANGUAGE DeriveFoldable            #-}
@@ -102,7 +103,7 @@ import           Music.Time
 import           Music.Time.Internal.Quantize
 
 
-
+#define COMPLEX_POLY_STUFF
 
 
 
@@ -213,6 +214,7 @@ instance HasBackend Lilypond where
               (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
 instance (
+#ifdef COMPLEX_POLY_STUFF
   HasDynamicNotation a b c,
   HasArticulationNotation c d e,
   Part e ~ Part c,
@@ -220,22 +222,28 @@ instance (
   Transformable a,
   Semigroup a,
   Tiable e,
-  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c)
+#endif
+  Tiable a,
+  HasOrdPart a, Show (Part a), HasLilypondInstrument (Part a)
   )
   => HasBackendScore Lilypond (Score a) where
-  type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
+  -- type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
+  type BackendScoreEvent Lilypond (Score a) = a
   exportScore b score = LyScore
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
 
-    . map (second $ over articulations notateArticulation)
-    . map (second $ preserveMeta addArtCon)
+#ifdef COMPLEX_POLY_STUFF
+    -- . map (second $ over articulations notateArticulation)
+    -- . map (second $ preserveMeta addArtCon)
 
-    . map (second $ removeCloseDynMarks)
-    . map (second $ over dynamics notateDynamic)
-    . map (second $ preserveMeta addDynCon)
+    -- . map (second $ removeCloseDynMarks)
+    -- . map (second $ over dynamics notateDynamic)
+    -- . map (second $ preserveMeta addDynCon)
 
-    . map (second $ preserveMeta simultaneous)
+    -- . map (second $ preserveMeta simultaneous)
+#endif
+
     . extractParts'
     $ normScore
     where
@@ -364,6 +372,8 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (PartT n a) where
   exportNote b = exportNote b . fmap extract
   exportChord b = exportChord b . fmap (fmap extract)
 
+
+#ifdef COMPLEX_POLY_STUFF
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicNotation a) where
   exportNote b = uncurry notate . getDynamicT . fmap (exportNote b) . sequenceA
     where
@@ -371,25 +381,30 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       notate (DynamicNotation (crescDims, level))
         = rcomposed (fmap notateCrescDim crescDims)
         . notateLevel level
-
+    
       notateCrescDim crescDims = case crescDims of
         NoCrescDim -> id
         BeginCresc -> Lilypond.beginCresc
         EndCresc   -> Lilypond.endCresc
         BeginDim   -> Lilypond.beginDim
         EndDim     -> Lilypond.endDim
-
+    
       -- TODO these literals are not so nice...
       notateLevel showLevel = case showLevel of
          Nothing -> id
          Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-
+    
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-
+    
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
+#else
+instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT b a) where
+  exportNote b = exportNote b . fmap extract
+#endif
 
+#ifdef COMPLEX_POLY_STUFF
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT ArticulationNotation a) where
   exportNote b = uncurry notate . getArticulationT . fmap (exportNote b) . sequenceA
     where
@@ -397,7 +412,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
       notate (ArticulationNotation (slurs, marks))
         = rcomposed (fmap notateMark marks)
         . rcomposed (fmap notateSlur slurs)
-
+  
       notateMark mark = case mark of
         NoMark         -> id
         Staccato       -> Lilypond.addStaccato
@@ -405,14 +420,18 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
         Marcato        -> Lilypond.addMarcato
         Accent         -> Lilypond.addAccent
         Tenuto         -> Lilypond.addTenuto
-
+  
       notateSlur slurs = case slurs of
         NoSlur    -> id
         BeginSlur -> Lilypond.beginSlur
         EndSlur   -> Lilypond.endSlur
-
+  
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
-      rcomposed = composed . reverse
+      rcomposed = composed . reverse  
+#else
+instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT {-ArticulationNotation-}b a) where
+  exportNote b = exportNote b . fmap extract     
+#endif
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
   exportNote b = uncurry notate . getCouple . getColorT . fmap (exportNote b) . sequenceA
