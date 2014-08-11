@@ -216,7 +216,5 @@ class (HasBackend b) => HasBackendNote b a where
 -- Backend developers are encouraged to provide wrappers on the form 'toX', 'writeX' etc.
 --
 export :: (HasBackendScore b s, HasBackendNote b (BackendScoreEvent b s)) => b -> s -> BackendMusic b
-export b = finalizeExport b . export'
-  where
-    export' = fmap (exportNote b) . exportScore b
+export b = finalizeExport b . fmap (exportNote b) . exportScore b
 

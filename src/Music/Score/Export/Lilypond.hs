@@ -531,17 +531,16 @@ notateTie (Any ta, Any tb)
 type HasLilypond a = (HasBackendNote Lilypond (BackendScoreEvent Lilypond a), HasBackendScore Lilypond a)
 
 -- |
--- Convert a score to a Lilypond string.
---
-toLilypondString :: HasLilypond a => a -> String
-toLilypondString = show . Pretty.pretty . toLilypond
-
--- |
 -- Convert a score to a Lilypond representation.
 --
 toLilypond :: HasLilypond a => a -> LyMusic
 toLilypond = export (undefined::Lilypond)
 
+-- |
+-- Convert a score to a Lilypond string.
+--
+toLilypondString :: HasLilypond a => a -> String
+toLilypondString = show . Pretty.pretty . toLilypond
 
 -- |
 -- Convert a score to a Lilypond representaiton and print it on the standard output.
@@ -664,8 +663,7 @@ openLilypond' options sc = do
 
 -- TODO move
 addArtCon :: (
-  HasPhrases s t a b, HasArticulation a a, HasArticulation a b,
-  Articulation a ~ d, Articulation b ~ Ctxt d
+  HasPhrases s t a b, HasArticulation' a, HasArticulation a b, Articulation a ~ d, Articulation b ~ Ctxt d
   ) => s -> t
 addArtCon = over (phrases.varticulation) withContext
 varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
