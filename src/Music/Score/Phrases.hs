@@ -243,7 +243,7 @@ pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
 pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
   where
     pVoiceToTVoice :: PVoice a -> TVoice a
-    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ firsts (offsetPoints (0::Time)) (withDurationR x)
 
     -- TODO assert no overlapping
     tVoiceToPVoice :: TVoice a -> PVoice b -> PVoice a
@@ -254,21 +254,21 @@ pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
 
 _rights :: Lens [Either a b] [Either a c] [b] [c]
 _rights = lens _rightsGet (flip _rightsSet)
-
-_rightsGet :: [Either a b] -> [b]
-_rightsGet = rights
-
-_rightsSet :: [c] -> [Either a b] -> [Either a c]
-_rightsSet cs = sndMapAccumL f cs
   where
-    f cs     (Left a)  = (cs, Left a)
-    f (c:cs) (Right b) = (cs, Right c)
-    f []     (Right _) = error "No more cs"
+    _rightsGet :: [Either a b] -> [b]
+    _rightsGet = rights
 
-sndMapAccumL f z = snd . List.mapAccumL f z
+    _rightsSet :: [c] -> [Either a b] -> [Either a c]
+    _rightsSet cs = sndMapAccumL f cs
+      where
+        f cs     (Left a)  = (cs, Left a)
+        f (c:cs) (Right b) = (cs, Right c)
+        f []     (Right _) = error "No more cs"
 
-mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
-mapZip f = uncurry zip . first f . unzipR
+    sndMapAccumL f z = snd . List.mapAccumL f z
+
+firsts :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
+firsts f = uncurry zip . first f . unzipR
 
 mkTrack :: [(Time, a)] -> Track a
 mkTrack = view track . map (view delayed)
