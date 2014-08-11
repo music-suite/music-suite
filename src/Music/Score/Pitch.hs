@@ -568,14 +568,14 @@ _15vb = octavesDown 2
 -- |
 -- Return the highest pitch in the given music.
 --
-highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
-highestPitch = maximum . toListOf pitches'
+highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+highestPitch = maximumOf pitches'
 
 -- |
 -- Return the lowest pitch in the given music.
 --
-lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Pitch a
-lowestPitch = maximum . toListOf pitches'
+lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+lowestPitch = minimumOf pitches'
 
 -- |
 -- Return the mean pitch in the given music.
