@@ -70,6 +70,10 @@ module Music.Score.Articulation (
 
         -- * Articulation transformer
         ArticulationT(..),
+
+        -- * Context
+        varticulation,
+        addArtCon,
   ) where
 
 import           Control.Applicative
@@ -81,6 +85,7 @@ import           Data.Functor.Couple
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
+import           Data.Functor.Context
 
 import           Music.Score.Part
 import           Music.Time
@@ -438,3 +443,12 @@ instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
     where
       (a1,a2) = toTied a
       (d1,d2) = toTied d
+
+
+-- TODO move
+addArtCon :: (
+  HasPhrases s t a b, HasArticulation' a, HasArticulation a b, Articulation a ~ d, Articulation b ~ Ctxt d
+  ) => s -> t
+addArtCon = over (phrases.varticulation) withContext
+varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
+

@@ -69,7 +69,7 @@ import Music.Score.Export.DynamicNotation
 import Music.Score.Export.ArticulationNotation
 import Data.Semigroup
 import Data.Semigroup.Instances
-
+import Data.Functor.Context
 
 import Music.Time
 import Music.Score.Dynamics

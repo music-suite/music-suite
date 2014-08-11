@@ -61,8 +61,6 @@ module Music.Score.Dynamics (
         DynamicT(..),
 
         -- * Context
-        -- TODO move
-        Ctxt,
         vdynamic,
         addDynCon,
 

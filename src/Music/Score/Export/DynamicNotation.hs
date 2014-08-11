@@ -34,13 +34,19 @@ module Music.Score.Export.DynamicNotation (
     CrescDim(..),
     DynamicNotation(..),
     notateDynamic,
+    
+    -- * Utility
+    removeCloseDynMarks,
+    removeDynMark,
   ) where
 
 import Data.Semigroup
 import Data.Functor.Context
+import Data.AffineSpace
 import Control.Lens -- ()
 import Music.Score.Dynamics
 import Music.Score.Ties
+import Music.Score.Phrases
 import Music.Time
 
 
@@ -108,3 +114,13 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     LT      -> ([EndCresc],   True)
     EQ      -> ([],           False)
     GT      -> ([EndDim],     True)
+
+
+removeCloseDynMarks :: (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
+removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
+  where
+    f Nothing t    = id
+    f (Just t1) t2 = if (t2 .-. t1) > 1.5 then id else over (_head.mapped) removeDynMark
+
+removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a
+removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x

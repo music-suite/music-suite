@@ -39,26 +39,54 @@ module Music.Score.Phrases (
     Phrase,
     MVoice,
     PVoice,
+    TVoice,
 
     -- ** Utility
     mvoicePVoice,
+    mVoiceTVoice,
+    pVoiceTVoice,
     unsafeMvoicePVoice,
     singleMVoice,
+    mapPhrasesWithPrevAndCurrentOnset,
   ) where
 
 import           Control.Applicative
-import           Control.Exception   (assert)
+import           Control.Applicative
+import           Control.Comonad            (Comonad (..), extract)
+import           Control.Exception          (assert)
 import           Control.Lens
+import           Control.Lens               hiding (rewrite)
+import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
-import qualified Data.List           as List
+import           Data.AffineSpace
+import           Data.Bifunctor
+import           Data.Colour.Names          as Color
+import           Data.Default
+import           Data.Either
+import           Data.Either
+import           Data.Foldable              (Foldable)
+import           Data.Functor.Adjunction    (unzipR)
+import           Data.Functor.Context
+import           Data.Functor.Contravariant
+import           Data.Functor.Couple
+import qualified Data.List                  as List
+import qualified Data.List
+import           Data.Maybe
 import           Data.Maybe
 import           Data.Ord
+import           Data.Ratio
 import           Data.Semigroup
+import           Data.Semigroup
+import           Data.Traversable
+import           Data.Traversable           (Traversable, sequenceA)
+import           Data.VectorSpace           hiding (Sum (..))
+import           System.Process
 
-import           Music.Score.Part
 import           Music.Score.Convert
+import           Music.Score.Part
 import           Music.Time
+import           Music.Time.Internal.Util
 
 
 -- |
@@ -205,6 +233,80 @@ singleMVoice = iso scoreToVoice voiceToScore'
 
     voiceToScore' :: MVoice a -> Score a
     voiceToScore' = mcatMaybes . voiceToScore
+
+
+-- foo :: HasPhrases' s a => s -> [TVoice a]
+mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -> Phrase a -> Phrase b) -> s -> t
+mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
+
+withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
+withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
+
+mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
+mVoiceTVoice = mvoicePVoice . pVoiceTVoice
+
+pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
+pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
+  where
+    pVoiceToTVoice :: PVoice a -> TVoice a
+    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+
+    -- TODO assert no overlapping
+    tVoiceToPVoice :: TVoice a -> PVoice b -> PVoice a
+    tVoiceToPVoice tv pv = set _rights newPhrases pv
+      where
+        newPhrases = toListOf traverse tv
+
+
+_rights :: Lens [Either a b] [Either a c] [b] [c]
+_rights = lens _rightsGet (flip _rightsSet)
+
+_rightsGet :: [Either a b] -> [b]
+_rightsGet = rights
+
+_rightsSet :: [c] -> [Either a b] -> [Either a c]
+_rightsSet cs = sndMapAccumL f cs
+  where
+    f cs     (Left a)  = (cs, Left a)
+    f (c:cs) (Right b) = (cs, Right c)
+    f []     (Right _) = error "No more cs"
+
+sndMapAccumL f z = snd . List.mapAccumL f z
+
+-- unsafePVoiceTVoice :: Iso (PVoice a) (PVoice b) (TVoice a) (TVoice b)
+-- unsafePVoiceTVoice = iso pVoiceToTVoice tVoiceToPVoice
+--   where
+--     pVoiceToTVoice :: PVoice a -> TVoice a
+--     pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
+--
+--     -- TODO assert no overlapping
+--     tVoiceToPVoice :: TVoice a -> PVoice a
+--     tVoiceToPVoice = undefined
+
+
+mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
+mapZip f = uncurry zip . first f . unzipR
+
+mkTrack :: [(Time, a)] -> Track a
+mkTrack = view track . map (view delayed)
+
+withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
+withDurationR = fmap $ \x -> (_duration x, x)
+
+-- TODO generalize and move
+mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
+mapWithDuration = over dual withDurationL . uncurry
+  where
+    withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
+    withDurationL = contramap $ \x -> (_duration x, x)
+
+    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
+    dual = iso Op getOp
+
+dursToVoice :: [Duration] -> Voice ()
+dursToVoice = mconcat . map (\d -> stretch d $ return ())
+
+-- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
 
 
 -- instance (Transformable a, Transformable b) => Cons (Phrase a) (Phrase b) a b where

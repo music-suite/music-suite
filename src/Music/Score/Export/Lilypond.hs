@@ -661,101 +661,11 @@ openLilypond' options sc = do
 
 
 
--- TODO move
-addArtCon :: (
-  HasPhrases s t a b, HasArticulation' a, HasArticulation a b, Articulation a ~ d, Articulation b ~ Ctxt d
-  ) => s -> t
-addArtCon = over (phrases.varticulation) withContext
-varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
-
-removeCloseDynMarks :: (HasPhrases' s a, HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => s -> s
-removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
-  where
-    f Nothing t    = id
-    f (Just t1) t2 = if (t2 .-. t1) > 1.5 then id else over (_head.mapped) removeDynMark
-
-removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a
-removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x
 
 
 
 
 
--- type PVoice a = [Either Duration (Phrase a)]
-type TVoice a = Track (Phrase a)
-
--- foo :: HasPhrases' s a => s -> [TVoice a]
-mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -> Phrase a -> Phrase b) -> s -> t
-mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
-
-withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
-
-mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
-mVoiceTVoice = mvoicePVoice . pVoiceTVoice
-
-pVoiceTVoice :: Lens (PVoice a) (PVoice b) (TVoice a) (TVoice b)
-pVoiceTVoice = lens pVoiceToTVoice (flip tVoiceToPVoice)
-  where
-    pVoiceToTVoice :: PVoice a -> TVoice a
-    pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
-
-    -- TODO assert no overlapping
-    tVoiceToPVoice :: TVoice a -> PVoice b -> PVoice a
-    tVoiceToPVoice tv pv = set _rights newPhrases pv
-      where
-        newPhrases = toListOf traverse tv
-
-
-_rights :: Lens [Either a b] [Either a c] [b] [c]
-_rights = lens _rightsGet (flip _rightsSet)
-
-_rightsGet :: [Either a b] -> [b]
-_rightsGet = rights
-
-_rightsSet :: [c] -> [Either a b] -> [Either a c]
-_rightsSet cs = sndMapAccumL f cs
-  where
-    f cs     (Left a)  = (cs, Left a)
-    f (c:cs) (Right b) = (cs, Right c)
-    f []     (Right _) = error "No more cs"
-
-sndMapAccumL f z = snd . Data.List.mapAccumL f z
-
--- unsafePVoiceTVoice :: Iso (PVoice a) (PVoice b) (TVoice a) (TVoice b)
--- unsafePVoiceTVoice = iso pVoiceToTVoice tVoiceToPVoice
---   where
---     pVoiceToTVoice :: PVoice a -> TVoice a
---     pVoiceToTVoice x = mkTrack $ rights $ map (sequenceA) $ mapZip (offsetPoints (0::Time)) (withDurationR x)
---
---     -- TODO assert no overlapping
---     tVoiceToPVoice :: TVoice a -> PVoice a
---     tVoiceToPVoice = undefined
-
-
-mapZip :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
-mapZip f = uncurry zip . first f . unzipR
-
-mkTrack :: [(Time, a)] -> Track a
-mkTrack = view track . map (view delayed)
-
-withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
-withDurationR = fmap $ \x -> (_duration x, x)
-
--- TODO generalize and move
-mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
-mapWithDuration = over dual withDurationL . uncurry
-  where
-    withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
-    withDurationL = contramap $ \x -> (_duration x, x)
-
-    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
-    dual = iso Op getOp
-
-dursToVoice :: [Duration] -> Voice ()
-dursToVoice = mconcat . map (\d -> stretch d $ return ())
-
--- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
                                                                           
 
 

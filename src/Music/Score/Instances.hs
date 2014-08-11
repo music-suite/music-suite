@@ -45,6 +45,7 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace hiding (Sum)
 import           Data.Semigroup.Instances
+import           Data.Functor.Context
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
