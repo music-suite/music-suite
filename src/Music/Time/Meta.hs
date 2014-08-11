@@ -63,6 +63,7 @@ module Music.Time.Meta (
         setMetaAttr,
         setMetaTAttr,
         applyMeta,
+        preserveMeta,
 
         -- ** Add meta-data to arbitrary types
         AddMeta,
@@ -215,6 +216,11 @@ setMetaAttr a = applyMeta (wrapMeta a)
 -- | Update a meta attribute.
 setMetaTAttr :: (TAttributeClass b, HasMeta a) => b -> a -> a
 setMetaTAttr a = applyMeta (wrapTMeta a)
+
+-- TODO This function is a workaround
+-- Whenever it is used, we should make the original function preserve meta instead
+preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
+preserveMeta f x = let m = view meta x in set meta m (f x)
 
 -- |
 -- Annotate an arbitrary type with meta-data, preserving instances of

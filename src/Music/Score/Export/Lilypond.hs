@@ -679,6 +679,10 @@ removeCloseDynMarks = mapPhrasesWithPrevAndCurrentOnset f
 removeDynMark :: (HasDynamics' a, Dynamic a ~ DynamicNotation, a ~ SetDynamic (Dynamic a) a) => a -> a
 removeDynMark x = set (dynamics' . _Wrapped' . _2) Nothing x
 
+
+
+
+
 -- type PVoice a = [Either Duration (Phrase a)]
 type TVoice a = Track (Phrase a)
 
@@ -756,11 +760,6 @@ dursToVoice = mconcat . map (\d -> stretch d $ return ())
 -- *Music.Score.Export.Lilypond> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
                                                                           
 
-
--- TODO This function is a workaround
--- Whenever it is used, we should make the original function preserve meta instead
-preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
-preserveMeta f x = let m = view meta x in set meta m (f x)
 
 pcatLy :: [Lilypond.Music] -> Lilypond.Music
 pcatLy = pcatLy' False
