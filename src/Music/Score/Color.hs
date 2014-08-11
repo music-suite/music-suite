@@ -96,7 +96,6 @@ deriving instance Floating a => Floating (ColorT a)
 deriving instance Enum a => Enum (ColorT a)
 deriving instance Bounded a => Bounded (ColorT a)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ColorT a) where
   type Unwrapped (ColorT a) = Couple (Option (Last (Colour Double))) a
   _Wrapped' = iso getColorT ColorT

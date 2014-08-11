@@ -255,7 +255,6 @@ newtype PartT n a = PartT { getPartT :: (n, a) }
   deriving (Eq, Ord, Show, Typeable, Functor,
     Applicative, Comonad, Monad, Transformable)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (PartT p a) where
   type Unwrapped (PartT p a) = (p, a)
   _Wrapped' = iso getPartT PartT

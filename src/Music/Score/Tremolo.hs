@@ -107,7 +107,6 @@ newtype TremoloT a = TremoloT { getTremoloT :: Couple (Max Word) a }
 -- Preferably we would use Natural but unfortunately this is not an instance of Bounded
 --
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TremoloT a) where
   type Unwrapped (TremoloT a) = Couple (Max Word) a
   _Wrapped' = iso getTremoloT TremoloT

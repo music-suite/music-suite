@@ -247,7 +247,6 @@ instance HasMeta (Score a) where
 newtype NScore a = NScore { getNScore :: [ScoreNote a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (NScore a) where
   type Unwrapped (NScore a) = [ScoreNote a]
   _Wrapped' = iso getNScore NScore

@@ -412,7 +412,6 @@ instance (Monoid n, Bounded a) => Bounded (ArticulationT n a) where
 --     rem = liftA2 rem
 --     toInteger = toInteger . extract
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (ArticulationT p a) where
   type Unwrapped (ArticulationT p a) = (p, a)
   _Wrapped' = iso getArticulationT ArticulationT

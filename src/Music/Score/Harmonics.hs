@@ -84,8 +84,6 @@ instance HasHarmonic a => HasHarmonic (Score a) where
   setNatural b = fmap (setNatural b)
   setHarmonic n = fmap (setHarmonic n)
 
-
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (HarmonicT a) where
   type Unwrapped (HarmonicT a) = Couple (Any, Sum Int) a
   _Wrapped' = iso getHarmonicT HarmonicT

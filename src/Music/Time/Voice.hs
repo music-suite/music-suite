@@ -166,7 +166,6 @@ instance MonadPlus Voice where
   mzero = mempty
   mplus = mappend
   
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
   _Wrapped' = iso getVoice Voice

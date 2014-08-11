@@ -93,7 +93,6 @@ newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
 
 deriving instance Show a => Show (Delayed a)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
   _Wrapped' = iso _delayedValue Delayed

@@ -103,7 +103,6 @@ newtype Bound a = Bound { getBound :: (Span, a) }
 -- set (namely [(t, t)^.from range | t <- {Time} ]).
 --
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Bound a) where
   type Unwrapped (Bound a) = (Span, a)
   _Wrapped' = iso getBound Bound

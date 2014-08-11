@@ -113,7 +113,6 @@ instance Monad Chord where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Chord a) where
   type Unwrapped (Chord a) = (ChordList (ChordEv a))
   _Wrapped' = iso getChord Chord

@@ -103,7 +103,6 @@ deriving instance RealFrac a => RealFrac (Stretched a)
 
 deriving instance Typeable1 Stretched
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
   _Wrapped' = iso (getCouple . _stretchedValue) (Stretched . Couple)

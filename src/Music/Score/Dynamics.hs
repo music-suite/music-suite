@@ -428,7 +428,6 @@ instance (Monoid n, Bounded a) => Bounded (DynamicT n a) where
 --     rem = liftA2 rem
 --     toInteger = toInteger . extract
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (DynamicT p a) where
   type Unwrapped (DynamicT p a) = (p, a)
   _Wrapped' = iso getDynamicT DynamicT

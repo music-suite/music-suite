@@ -84,7 +84,6 @@ instance HasText a => HasText (Voice a) where
 instance HasText a => HasText (Score a) where
   addText s = fmap (addText s)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (TextT a) where
   type Unwrapped (TextT a) = Couple [String] a
   _Wrapped' = iso getTextT TextT

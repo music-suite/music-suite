@@ -103,7 +103,6 @@ instance HasSlide a => HasSlide (Stretched a) where
 newtype SlideT a = SlideT { getSlideT :: Couple ((Any, Any), (Any, Any)) a }
   deriving (Eq, Show, Ord, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (SlideT a) where
   type Unwrapped (SlideT a) = Couple ((Any, Any), (Any, Any)) a
   _Wrapped' = iso getSlideT SlideT

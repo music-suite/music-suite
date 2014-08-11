@@ -113,7 +113,6 @@ instance Monad Track where
   return = view _Unwrapped . return . return
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Track a) where
   type Unwrapped (Track a) = (TrackList (TrackEv a))
   _Wrapped' = iso getTrack Track

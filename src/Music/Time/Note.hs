@@ -105,7 +105,6 @@ deriving instance Applicative Note
 -- instance ComonadEnv Span Note where
   -- ask = noteValueSpan
 
--- | Unsafe: Do not use 'Wrapped' instances
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
   _Wrapped' = iso _noteValue Note
