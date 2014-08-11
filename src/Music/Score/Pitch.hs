@@ -179,12 +179,12 @@ class HasPitches s t => HasPitch s t where
   --   for example:
   --
   --   @
-  --   'pitch' %~ 'succ'      :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
-  --   'pitch' +~ 2         :: ('HasPitch'' a, 'Num' ('Pitch' a)) => a -> a
-  --   'pitch' .~ c         :: ('HasPitch'' a, 'IsPitch' a) => a -> a
-  -- 
-  --  'view' 'pitch'         :: 'HasPitches'' a => a -> 'Pitch' a
-  --   'over' 'pitch'         :: 'HasPitches' a b => ('Pitch' a -> 'Pitch' b) -> a -> b
+  --   'pitch' .~ c    :: ('HasPitch'' a, 'IsPitch' a)      => a -> a
+  --   'pitch' +~ 2    :: ('HasPitch'' a, 'Num' ('Pitch' a))  => a -> a
+  --   'pitch' %~ 'succ' :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
+  --   'view' 'pitch'    :: 'HasPitches'' a                 => a -> 'Pitch' a
+  --   'set'  'pitch'    :: 'HasPitches' a b                => 'Pitch' b -> a -> b
+  --   'over' 'pitch'    :: 'HasPitches' a b                => ('Pitch' a -> 'Pitch' b) -> a -> b
   --   @
   --
   pitch :: Lens s t (Pitch s) (Pitch t)
@@ -202,68 +202,33 @@ class (Transformable (Pitch s),
   --   for example:
   --
   --   @
-  --   'toListOf' 'pitches' :: HasPitches' a => a -> [Pitch a]
-  --   'over' 'pitches'     :: HasPitches a b => ('Pitch' a -> 'Pitch' b) -> a -> b
+  --   'toListOf' 'pitches'  :: 'HasPitches'' a                  => a -> ['Pitch' a]
+  --   'allOf' 'pitches'     :: ('HasPitches'' a)                => ('Pitch' a -> 'Bool') -> a -> 'Bool'
+  --   'maximumOf' 'pitches' :: ('HasPitches'' a, 'Ord' ('Pitch' a)) => a -> 'Maybe' ('Pitch' a)
+  --   'set'  'pitches'      :: 'HasPitches' a b                 => 'Pitch' b -> a -> b
+  --   'over' 'pitches'      :: 'HasPitches' a b                 => ('Pitch' a -> 'Pitch' b) -> a -> b
   --   @
   --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
--- | Access the pitch.
---
---   As this is a 'Traversal', you can use all combinators from the lens package,
---   for example:
---
---   @
---   'pitch' %~ 'succ'      :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
---   'pitch' +~ 2         :: ('HasPitch'' a, 'Num' ('Pitch' a)) => a -> a
---   'pitch' .~ c         :: ('HasPitch'' a, 'IsPitch' a) => a -> a
--- 
---  'view' 'pitch'         :: 'HasPitches'' a => a -> 'Pitch' a
---   'over' 'pitch'         :: 'HasPitches' a b => ('Pitch' a -> 'Pitch' b) -> a -> b
---   @
---
 type HasPitch' a = HasPitch a a
 
--- | Access all pitches.
---
---   As this is a 'Traversal', you can use all combinators from the lens package,
---   for example:
---
---   @
---   'toListOf' 'pitches' :: HasPitches' a => a -> [Pitch a]
---   'over' 'pitches'     :: HasPitches a b => ('Pitch' a -> 'Pitch' b) -> a -> b
---   @
---
 type HasPitches' a = HasPitches a a
 
 
--- | Access the pitch.
+-- | 
+-- Access the pitch.
 --
---   As this is a 'Traversal', you can use all combinators from the lens package,
---   for example:
---
---   @
---   'view' 'pitch'         :: HasPitch' a => a -> Pitch a
---   'over' 'pitch'         :: HasPitch' a => a -> Pitch a
---   'pitch' %~ 'succ'      :: HasPitch' a => a -> a
---   'pitch' +~ 2           :: (HasPitch' a, Num (Pitch a)) => a -> a
---   'pitch' .~ c           :: (HasPitch' a, IsPitch a) => a -> a
---   @
+-- Same as 'pitch', but without polymorphic update.
 --
 pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
 pitch' = pitch
 {-# INLINE pitch' #-}
 
--- | Access all pitches.
---
---   As this is a 'Traversal', you can use all combinators from the lens package,
---   for example:
---
---   @
---   'lengthOf' 'pitches' :: HasPitches a a => a -> Int
---   'toListOf' 'pitches' :: HasPitches' a => a -> Pitch a
---   'over' 'pitches'     :: HasPitches a b => a -> b
---   @
+-- | 
+-- Access all pitches.
+-- 
+-- Same as 'pitches', but without polymorphic update.
 --
 pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
 pitches' = pitches
@@ -271,10 +236,6 @@ pitches' = pitches
 
 -- |
 -- Inject a pitch into some larger type.
--- 
--- For containers such as 'Voice' or 'Score', this similar to 'pure' in that
--- the a single events using the given pitch is created. Other aspects are
--- set to some default value (usually 'mempty').
 --
 fromPitch' :: (HasPitches' a, IsPitch a) => Pitch a -> a
 fromPitch' x = c & pitches' .~ x
