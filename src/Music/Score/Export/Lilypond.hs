@@ -241,16 +241,20 @@ instance (
 
   exportScore b score = LyScore
     . (ScoreInfo,)
+    -- Store time signatures etc for later use by finalizeScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
 
 #ifdef COMPLEX_POLY_STUFF
+    -- Notate articulation
     . map (second $ over articulations notateArticulation)
     . map (second $ preserveMeta addArtCon)
 
+    -- Notate dynamics
     . map (second $ removeCloseDynMarks)
     . map (second $ over dynamics notateDynamic)
     . map (second $ preserveMeta addDynCon)
 
+    -- Merge simultaneous chords
     . map (second $ preserveMeta simultaneous)
 #endif
 
@@ -465,39 +469,21 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
   -- TODO can this instance use the new shorter idiom?
   exportNote b (LyContext d x) =
-    fst (notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
-    where
-      notate Nothing d                       = (id, d)
-      notate (Just (runTremoloT -> (0, _))) d = (id, d)
-      notate (Just (runTremoloT -> (n, _))) d = let
-        scale   = 2^n
-        newDur  = (d `min` (1/4)) / scale
-        repeats = d / newDur
-        in (Lilypond.Tremolo (round repeats), newDur)
+    fst (notateTremolo x d) $ exportNote b $ LyContext (snd $ notateTremolo x d) (fmap extract x)
+
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TextT a) where
-  exportNote b = uncurry notate . getCouple . getTextT . fmap (exportNote b) . sequenceA
+  exportNote b = uncurry notateText . getCouple . getTextT . fmap (exportNote b) . sequenceA
     where
-      notate texts = composed (fmap Lilypond.addText texts)
+
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (HarmonicT a) where
-  exportNote b = uncurry notate . getCouple . getHarmonicT . fmap (exportNote b) . sequenceA
-    where
-      notate (Any isNat, Sum n) = case (isNat, n) of
-        (_,     0) -> id
-        (True,  n) -> notateNatural n
-        (False, n) -> notateArtificial n
-      notateNatural n = Lilypond.addFlageolet -- addOpen?
-      notateArtificial n = id -- TODO
+  exportNote b = uncurry notateHarmonic . getCouple . getHarmonicT . fmap (exportNote b) . sequenceA
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (SlideT a) where
   exportNote b  = uncurry notateGliss . getCouple . getSlideT . fmap (exportNote b) . sequenceA
   exportChord b = uncurry notateGliss . getCouple . getSlideT . fmap (exportChord b) . sequenceA . fmap sequenceA
 
-notateGliss ((Any eg, Any es),(Any bg, Any bs))
-  | bg  = Lilypond.beginGlissando
-  | bs  = Lilypond.beginGlissando
-  | otherwise = id
 
 {-
   exportNote        :: b -> BC a   -> BN
@@ -519,6 +505,35 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TieT a) where
   exportNote b  = uncurry notateTie . getTieT . fmap (exportNote b) . sequenceA
   exportChord b = uncurry notateTie . getTieT . fmap (exportChord b) . sequenceA . fmap sequenceA
 
+
+notateTremolo :: RealFrac b => Maybe (TremoloT a) -> b -> (LyMusic -> LyMusic, b)
+notateTremolo Nothing d                        = (id, d)
+notateTremolo (Just (runTremoloT -> (0, _))) d = (id, d)
+notateTremolo (Just (runTremoloT -> (n, _))) d = let
+  scale   = 2^n
+  newDur  = (d `min` (1/4)) / scale
+  repeats = d / newDur
+  in (Lilypond.Tremolo (round repeats), newDur)
+
+notateText :: [String] -> LyMusic -> LyMusic
+notateText texts = composed (fmap Lilypond.addText texts)
+
+notateHarmonic :: (Eq t, Num t) => (Any, Sum t) -> LyMusic -> LyMusic
+notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
+  (_,     0) -> id
+  (True,  n) -> notateNatural n
+  (False, n) -> notateArtificial n
+  where
+    notateNatural n = Lilypond.addFlageolet -- addOpen?
+    notateArtificial n = id -- TODO
+
+notateGliss :: ((Any, Any), (Any, Any)) -> LyMusic -> LyMusic
+notateGliss ((Any eg, Any es),(Any bg, Any bs))
+  | bg  = Lilypond.beginGlissando
+  | bs  = Lilypond.beginGlissando
+  | otherwise = id
+
+notateTie :: (Any, Any) -> LyMusic -> LyMusic
 notateTie (Any ta, Any tb)
   | ta && tb  = Lilypond.beginTie
   | tb        = Lilypond.beginTie
