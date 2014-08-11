@@ -158,8 +158,8 @@ data LyContext a = LyContext Duration (Maybe a)
 {-
 TODO move
 instance Monoid Lilypond.Music where
-  mempty      = pcatLy []
-  mappend x y = pcatLy [x,y]
+  mempty      = pcatL []
+  mappend x y = pcatL [x,y]
 -}
 
 type LyMusic = Lilypond.Music
@@ -173,7 +173,7 @@ instance HasBackend Lilypond where
   finalizeExport _ = finalizeScore
     where
       finalizeScore :: LyScore LyMusic -> Lilypond.Music
-      finalizeScore (LyScore (info, x)) = pcatLy . map finalizeStaff $ x
+      finalizeScore (LyScore (info, x)) = pcatL . map finalizeStaff $ x
 
       -- TODO finalizeStaffGroup
 
@@ -182,11 +182,11 @@ instance HasBackend Lilypond where
         = addStaff
         . addPartName (staffName info)
         . addClef (staffClef info)
-        . scatLy . map finalizeBar $ x
+        . scatL . map finalizeBar $ x
         where
           addStaff                = Lilypond.New "Staff" Nothing
-          addClef c x             = scatLy [Lilypond.Clef c, x]
-          addPartName partName xs = scatLy [longName, shortName, xs]
+          addClef c x             = scatL [Lilypond.Clef c, x]
+          addPartName partName xs = scatL [longName, shortName, xs]
             where
               longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
               shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
@@ -201,14 +201,14 @@ instance HasBackend Lilypond where
           -- TODO rehearsal marks
           -- TODO bar number change
           -- TODO compound time signatures
-          setTimeSignature (getTimeSignature -> (ms, n)) x = scatLy [Lilypond.Time (sum ms) n, x]
+          setTimeSignature (getTimeSignature -> (ms, n)) x = scatL [Lilypond.Time (sum ms) n, x]
 
       renderBarMusic :: Rhythm LyMusic -> LyMusic
       renderBarMusic = go
         where
           go (Beat d x)            = Lilypond.removeSingleChords x
           go (Dotted n (Beat d x)) = Lilypond.removeSingleChords x
-          go (Group rs)            = scatLy $ map renderBarMusic rs
+          go (Group rs)            = scatL $ map renderBarMusic rs
           go (Tuplet m r)          = Lilypond.Times (realToFrac m) (renderBarMusic r)
             where
               (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
@@ -347,10 +347,10 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond [a] where
 instance HasBackendNote Lilypond Integer where
   -- TODO can we get rid of exportChord alltogether and just use LyContext?
   exportNote  _ (LyContext d Nothing)    = (^*realToFrac (4*d)) Lilypond.rest
-  exportNote  _ (LyContext d (Just x))   = (^*realToFrac (4*d)) $ Lilypond.note $ spellLy x
+  exportNote  _ (LyContext d (Just x))   = (^*realToFrac (4*d)) $ Lilypond.note $ spellL x
 
   exportChord _ (LyContext d Nothing)    = (^*realToFrac (4*d)) Lilypond.rest
-  exportChord _ (LyContext d (Just xs))  = (^*realToFrac (4*d)) $ Lilypond.chord $ fmap spellLy xs
+  exportChord _ (LyContext d (Just xs))  = (^*realToFrac (4*d)) $ Lilypond.chord $ fmap spellL xs
 
 instance HasBackendNote Lilypond Int where
   exportNote b = exportNote b . fmap toInteger
@@ -761,20 +761,20 @@ dursToVoice = mconcat . map (\d -> stretch d $ return ())
                                                                           
 
 
-pcatLy :: [Lilypond.Music] -> Lilypond.Music
-pcatLy = pcatLy' False
+pcatL :: [Lilypond.Music] -> Lilypond.Music
+pcatL = pcatL' False
 
-pcatLy' :: Bool -> [Lilypond.Music] -> Lilypond.Music
-pcatLy' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
+pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
+pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
 
-scatLy :: [Lilypond.Music] -> Lilypond.Music
-scatLy = foldr Lilypond.sequential (Lilypond.Sequential [])
+scatL :: [Lilypond.Music] -> Lilypond.Music
+scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
 
-spellLy :: Integer -> Lilypond.Note
-spellLy a = Lilypond.NotePitch (spellLy' a) Nothing
+spellL :: Integer -> Lilypond.Note
+spellL a = Lilypond.NotePitch (spellL' a) Nothing
 
-spellLy' :: Integer -> Lilypond.Pitch
-spellLy' p = Lilypond.Pitch (
+spellL' :: Integer -> Lilypond.Pitch
+spellL' p = Lilypond.Pitch (
   toEnum $ fromIntegral pc,
   fromIntegral alt,
   fromIntegral oct

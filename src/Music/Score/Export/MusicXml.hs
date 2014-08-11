@@ -551,11 +551,5 @@ spellMusicXml p = (
     fromIntegral oct
     )
     where (pc,alt,oct) = spellPitch (p + 60)
-
--- TODO This function is a workaround
--- Whenever it is used, we should make the original function preserve meta instead
-preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
-preserveMeta f x = let m = view meta x in set meta m (f x)
 -- End internal
-
 
