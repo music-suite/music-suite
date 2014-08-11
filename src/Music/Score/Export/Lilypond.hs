@@ -157,7 +157,7 @@ data LyContext a = LyContext Duration (Maybe a)
 
 {-
 TODO move
-instance Monoid Lilypond.Music where
+instance Monoid LyMusic where
   mempty      = pcatL []
   mappend x y = pcatL [x,y]
 -}
@@ -172,7 +172,7 @@ instance HasBackend Lilypond where
 
   finalizeExport _ = finalizeScore
     where
-      finalizeScore :: LyScore LyMusic -> Lilypond.Music
+      finalizeScore :: LyScore LyMusic -> LyMusic
       finalizeScore (LyScore (info, x)) = pcatL . map finalizeStaff $ x
 
       -- TODO finalizeStaffGroup
@@ -502,7 +502,7 @@ notateGliss ((Any eg, Any es),(Any bg, Any bs))
 {-
   exportNote        :: b -> BC a   -> BN
   exportChord       :: b -> BC [a] -> BN
-  uncurry notateTie :: ((Any, Any), Lilypond.Music) -> Lilypond.Music
+  uncurry notateTie :: ((Any, Any), LyMusic) -> LyMusic
   
   BC (TieT a)        sequenceA
   TieT (BC a)        fmap (exportNote b)
@@ -539,7 +539,7 @@ toLilypondString = show . Pretty.pretty . toLilypond
 -- |
 -- Convert a score to a Lilypond representation.
 --
-toLilypond :: HasLilypond a => a -> Lilypond.Music
+toLilypond :: HasLilypond a => a -> LyMusic
 toLilypond = export (undefined::Lilypond)
 
 
@@ -761,13 +761,13 @@ dursToVoice = mconcat . map (\d -> stretch d $ return ())
                                                                           
 
 
-pcatL :: [Lilypond.Music] -> Lilypond.Music
+pcatL :: [LyMusic] -> LyMusic
 pcatL = pcatL' False
 
-pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
+pcatL' :: Bool -> [LyMusic] -> LyMusic
 pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
 
-scatL :: [Lilypond.Music] -> Lilypond.Music
+scatL :: [LyMusic] -> LyMusic
 scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
 
 spellL :: Integer -> Lilypond.Note
