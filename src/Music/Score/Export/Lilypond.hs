@@ -103,7 +103,7 @@ import           Music.Time
 import           Music.Time.Internal.Quantize
 
 
-#define COMPLEX_POLY_STUFF
+#define COMPLEX_POLY_STUFF 1
 
 
 
@@ -225,23 +225,25 @@ instance (
 #endif
   Tiable a,
   HasOrdPart a, Show (Part a), HasLilypondInstrument (Part a)
-  )
-  => HasBackendScore Lilypond (Score a) where
-  -- type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
+  ) => HasBackendScore Lilypond (Score a) where
+#ifdef COMPLEX_POLY_STUFF
+  type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
+#else
   type BackendScoreEvent Lilypond (Score a) = a
+#endif
   exportScore b score = LyScore
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
 
 #ifdef COMPLEX_POLY_STUFF
-    -- . map (second $ over articulations notateArticulation)
-    -- . map (second $ preserveMeta addArtCon)
+    . map (second $ over articulations notateArticulation)
+    . map (second $ preserveMeta addArtCon)
 
-    -- . map (second $ removeCloseDynMarks)
-    -- . map (second $ over dynamics notateDynamic)
-    -- . map (second $ preserveMeta addDynCon)
+    . map (second $ removeCloseDynMarks)
+    . map (second $ over dynamics notateDynamic)
+    . map (second $ preserveMeta addDynCon)
 
-    -- . map (second $ preserveMeta simultaneous)
+    . map (second $ preserveMeta simultaneous)  
 #endif
 
     . extractParts'
@@ -458,8 +460,8 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (TremoloT a) where
     fst (notate x d) $ exportNote b $ LyContext (snd $ notate x d) (fmap extract x)
     where
       notate Nothing d                       = (id, d)
-      notate (Just (getTremolo -> (0, _))) d = (id, d)
-      notate (Just (getTremolo -> (n, _))) d = let
+      notate (Just (runTremoloT -> (0, _))) d = (id, d)
+      notate (Just (runTremoloT -> (n, _))) d = let
         scale   = 2^n
         newDur  = (d `min` (1/4)) / scale
         repeats = d / newDur

@@ -28,13 +28,13 @@
 
 
 module Music.Score.Tremolo (
-
         -- * Tremolo
         HasTremolo(..),
-        TremoloT,
-        getTremolo,
         tremolo,
 
+        -- ** Tremolo note transformer
+        TremoloT,
+        runTremoloT,
   ) where
 
 import           Control.Applicative
@@ -86,8 +86,16 @@ instance HasTremolo a => HasTremolo [a] where
 instance HasTremolo a => HasTremolo (Score a) where
   setTrem n = fmap (setTrem n)
 
+-- |
+-- Set the number of tremolo divisions for all notes in the score.
+--
+tremolo :: HasTremolo a => Int -> a -> a
+tremolo = setTrem
 
--- TODO these must be moved:
+
+
+
+-- TODO these must be moved upwards
 deriving instance (Monoid b, IsPitch a) => IsPitch (Couple b a)
 deriving instance (Monoid b, IsDynamics a) => IsDynamics (Couple b a)
 deriving instance (Monoid b, Transformable a) => Transformable (Couple b a)
@@ -96,7 +104,6 @@ deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
 deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
 instance Tiable a => Tiable (Couple b a) where
   toTied = unzipR . fmap toTied
-  
 
 
 
@@ -160,17 +167,9 @@ instance (HasArticulations a b) => HasArticulations (TremoloT a) (TremoloT b) wh
 instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) where
   articulation = _Wrapped . articulation
 
--- type instance Part (TremoloT a) = Part a
-
 -- |
--- Extract tremolo. Useful for backends.
+-- Get the number of tremolo divisions.
 --
-getTremolo :: TremoloT a -> (Int, a)
-getTremolo (TremoloT (Couple (Max n, a))) = (fromIntegral n, a)
-
--- |
--- Set the number of tremolo divisions for all notes in the score.
---
-tremolo :: HasTremolo a => Int -> a -> a
-tremolo = setTrem
+runTremoloT :: TremoloT a -> (Int, a)
+runTremoloT (TremoloT (Couple (Max n, a))) = (fromIntegral n, a)
 
