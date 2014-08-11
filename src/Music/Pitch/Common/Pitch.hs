@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
 --
 -- License     : BSD-style
 --
