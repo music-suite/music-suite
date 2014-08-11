@@ -221,14 +221,16 @@ instance (
   HasOrdPart a,
   Transformable a,
   Semigroup a,
-  Tiable e,
-  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c)
+  Tiable e, HasOrdPart c, Show (Part c), 
+  HasLilypondInstrument (Part c),
+  Satisfied
   )
   => HasBackendScore Lilypond (Score a) where
 #else
 instance (
-  Tiable a,
-  HasOrdPart a, Show (Part a), HasLilypondInstrument (Part a)
+  Tiable a, HasOrdPart a, Show (Part a), 
+  HasLilypondInstrument (Part a),
+  Satisfied
   )
   => HasBackendScore Lilypond (Score a) where
 #endif
@@ -703,4 +705,11 @@ spellL' p = Lilypond.Pitch (
   fromIntegral oct
   )
   where (pc,alt,oct) = spellPitch (p + 72)
+
+-- | A constraint that is always satisfied.
+type Satisfied = (() ~ ())
+
+-- | A constraint that is never satisfied.
+type Unsatisfied = (() ~ Bool)
+
 
