@@ -213,8 +213,8 @@ instance HasBackend Lilypond where
             where
               (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
-instance (
 #ifdef COMPLEX_POLY_STUFF
+instance (
   HasDynamicNotation a b c,
   HasArticulationNotation c d e,
   Part e ~ Part c,
@@ -222,15 +222,23 @@ instance (
   Transformable a,
   Semigroup a,
   Tiable e,
-#endif
+  HasOrdPart c, Show (Part c), HasLilypondInstrument (Part c)
+  )
+  => HasBackendScore Lilypond (Score a) where
+#else
+instance (
   Tiable a,
   HasOrdPart a, Show (Part a), HasLilypondInstrument (Part a)
-  ) => HasBackendScore Lilypond (Score a) where
+  )
+  => HasBackendScore Lilypond (Score a) where
+#endif
+
 #ifdef COMPLEX_POLY_STUFF
   type BackendScoreEvent Lilypond (Score a) = SetArticulation ArticulationNotation (SetDynamic DynamicNotation a)
 #else
   type BackendScoreEvent Lilypond (Score a) = a
 #endif
+
   exportScore b score = LyScore
     . (ScoreInfo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
@@ -243,7 +251,7 @@ instance (
     . map (second $ over dynamics notateDynamic)
     . map (second $ preserveMeta addDynCon)
 
-    . map (second $ preserveMeta simultaneous)  
+    . map (second $ preserveMeta simultaneous)
 #endif
 
     . extractParts'
@@ -383,22 +391,22 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (DynamicT DynamicN
       notate (DynamicNotation (crescDims, level))
         = rcomposed (fmap notateCrescDim crescDims)
         . notateLevel level
-    
+
       notateCrescDim crescDims = case crescDims of
         NoCrescDim -> id
         BeginCresc -> Lilypond.beginCresc
         EndCresc   -> Lilypond.endCresc
         BeginDim   -> Lilypond.beginDim
         EndDim     -> Lilypond.endDim
-    
+
       -- TODO these literals are not so nice...
       notateLevel showLevel = case showLevel of
          Nothing -> id
          Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-    
+
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-    
+
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
       rcomposed = composed . reverse
 #else
@@ -414,7 +422,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
       notate (ArticulationNotation (slurs, marks))
         = rcomposed (fmap notateMark marks)
         . rcomposed (fmap notateSlur slurs)
-  
+
       notateMark mark = case mark of
         NoMark         -> id
         Staccato       -> Lilypond.addStaccato
@@ -422,14 +430,14 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
         Marcato        -> Lilypond.addMarcato
         Accent         -> Lilypond.addAccent
         Tenuto         -> Lilypond.addTenuto
-  
+
       notateSlur slurs = case slurs of
         NoSlur    -> id
         BeginSlur -> Lilypond.beginSlur
         EndSlur   -> Lilypond.endSlur
-  
+
       -- Use rcomposed as notateDynamic returns "mark" order, not application order
-      rcomposed = composed . reverse  
+      rcomposed = composed . reverse
 #else
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT {-ArticulationNotation-}b a) where
   exportNote b = exportNote b . fmap extract     
