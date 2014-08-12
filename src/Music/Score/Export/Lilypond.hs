@@ -75,9 +75,7 @@ import           Data.VectorSpace                        hiding (Sum (..))
 import           System.Process
 import qualified Text.Pretty                             as Pretty
 
-
 import           Music.Dynamics.Literal
-import qualified Music.Lilypond                          as Lilypond
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 import           Music.Score.Color
@@ -101,6 +99,13 @@ import           Music.Score.Ties
 import           Music.Score.Tremolo
 import           Music.Time
 import           Music.Time.Internal.Quantize
+
+import qualified Music.Lilypond                          as Lilypond
+
+
+
+
+
 
 
 #define COMPLEX_POLY_STUFF 1

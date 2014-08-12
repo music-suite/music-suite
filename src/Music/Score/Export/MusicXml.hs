@@ -1,20 +1,20 @@
 
-{-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DefaultSignatures          #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE DefaultSignatures         #-}
+{-# LANGUAGE DeriveFoldable            #-}
+{-# LANGUAGE DeriveFunctor             #-}
+{-# LANGUAGE DeriveTraversable         #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE StandaloneDeriving        #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -34,75 +34,75 @@ module Music.Score.Export.MusicXml (
     MusicXml,
     XmlContext(..),
     HasMusicXml,
-    
+
     -- ** Converting to MusicXml
     toMusicXml,
-    toMusicXmlString,    
-    
+    toMusicXmlString,
+
     -- ** MusicXml I/O
     showMusicXml,
     openMusicXml,
     writeMusicXml,
   ) where
 
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-import qualified Codec.Midi                    as Midi
-import           Control.Comonad               (Comonad (..), extract)
+import qualified Codec.Midi                              as Midi
 import           Control.Applicative
+import           Control.Comonad                         (Comonad (..), extract)
+import           Control.Lens                            hiding (rewrite)
+import           Control.Monad
+import           Data.AffineSpace
 import           Data.Bifunctor
-import           Data.Colour.Names             as Color
+import           Data.Colour.Names                       as Color
 import           Data.Default
-import           Data.Foldable                 (Foldable)
+import           Data.Foldable                           (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple
+import           Data.Functor.Identity
+import qualified Data.List
 import           Data.Maybe
 import           Data.Ratio
-import           Data.Traversable              (Traversable, sequenceA)
-import qualified Music.Lilypond                as Lilypond
-import qualified Music.MusicXml.Simple         as MusicXml
-import           Music.Score.Internal.Export   hiding (MVoice)
-import           Music.Time.Internal.Transform (whilstLD)
+import           Data.Semigroup
+import           Data.Semigroup.Instances
+import           Data.Traversable                        (Traversable,
+                                                          sequenceA)
+import           Data.VectorSpace                        hiding (Sum (..))
 import           System.Process
+
+
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Score.Articulation
+import           Music.Score.Color
+import           Music.Score.Convert                     (reactiveToVoice')
+import           Music.Score.Dynamics
+import           Music.Score.Export.ArticulationNotation
+import           Music.Score.Export.Backend
+import           Music.Score.Export.DynamicNotation
+import           Music.Score.Harmonics
+import           Music.Score.Internal.Export             hiding (MVoice)
+import           Music.Score.Internal.Util               (composed,
+                                                          retainUpdates, swap,
+                                                          unRatio)
+import           Music.Score.Meta
+import           Music.Score.Meta.Attribution
+import           Music.Score.Meta.Tempo
+import           Music.Score.Meta.Time
+import           Music.Score.Meta.Title
+import           Music.Score.Part
+import           Music.Score.Phrases
+import           Music.Score.Slide
+import           Music.Score.Text
+import           Music.Score.Ties
+import           Music.Score.Tremolo
+import           Music.Time
 import           Music.Time.Internal.Quantize
-import qualified Text.Pretty                   as Pretty
-import qualified Data.List
-import Music.Score.Convert (reactiveToVoice') -- TODO
-import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
-import Music.Score.Export.DynamicNotation
-import Music.Score.Export.ArticulationNotation
-import Data.Semigroup.Instances
+import           Music.Time.Internal.Transform           (whilstLD)
 
-import Music.Score.Export.Backend
-
-import Data.Functor.Identity
-import Data.Semigroup
-import Control.Monad
-import Data.VectorSpace hiding (Sum(..))
-import Data.AffineSpace
-import Control.Lens hiding (rewrite)
--- import Control.Lens.Operators hiding ((|>))
-
-import Music.Time
-import Music.Score.Meta
-import Music.Score.Meta.Title
-import Music.Score.Meta.Attribution
-import Music.Score.Dynamics
-import Music.Score.Articulation
-import Music.Score.Part
-import Music.Score.Tremolo
-import Music.Score.Text
-import Music.Score.Harmonics
-import Music.Score.Slide
-import Music.Score.Color
-import Music.Score.Ties
-import Music.Score.Export.Backend
-import Music.Score.Meta.Time
-import Music.Score.Meta.Tempo
-import Music.Score.Phrases
+import qualified Text.Pretty                             as Pretty
+import qualified Music.MusicXml.Simple                   as MusicXml
 
 
--- | 
+-- |
 -- Extract instrument info as per "Music.Part"
 -- This is really crude, needs rethinking!
 --
@@ -112,7 +112,7 @@ class HasMusicXmlInstrument a where
 
 
 
--- TODO move 
+-- TODO move
 deriving instance Show MusicXml.Line
 deriving instance Show MusicXml.ClefSign
 -- deriving instance Eq MusicXml.PartList
@@ -129,7 +129,7 @@ instance Show MusicXml.PartList where
 -- | A token to represent the MusicXml backend.
 data MusicXml
 
-data ScoreInfo = ScoreInfo { scoreTitle :: String,
+data ScoreInfo = ScoreInfo { scoreTitle    :: String,
                              scoreComposer :: String,
                              scorePartList :: MusicXml.PartList,
                              scoreTempo    :: Tempo
@@ -137,10 +137,10 @@ data ScoreInfo = ScoreInfo { scoreTitle :: String,
   deriving (Eq, Show)
 
 
-data StaffInfo = StaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line) } 
+data StaffInfo = StaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line) }
   deriving (Eq, Show)
 
-data BarInfo = BarInfo { x_barTimeSignature :: Maybe TimeSignature } 
+data BarInfo = BarInfo { x_barTimeSignature :: Maybe TimeSignature }
   deriving (Eq, Show)
 
 -- | Hierachical representation of a MusicXml score.
@@ -153,7 +153,7 @@ data XmlStaff a = XmlStaff { getXmlStaff :: (StaffInfo, [XmlBar a]) }
   deriving (Functor, Eq, Show)
 
 -- | A bar is a sequential composition of chords/notes/rests.
-data XmlBar a = XmlBar { getXmlBar :: (BarInfo, Rhythm a) } 
+data XmlBar a = XmlBar { getXmlBar :: (BarInfo, Rhythm a) }
   deriving (Functor, Eq, Show)
 
 -- | Context passed to the note export.
@@ -175,8 +175,8 @@ instance HasBackend MusicXml where
     where
 
 finalizeScore :: XmlScore MusicXml.Music -> MusicXml.Score
-finalizeScore (XmlScore (info, x)) 
-  = MusicXml.fromParts title composer partList 
+finalizeScore (XmlScore (info, x))
+  = MusicXml.fromParts title composer partList
   . map (finalizeStaff tempo) $ x
   where
     title    = scoreTitle info
@@ -187,8 +187,8 @@ finalizeScore (XmlScore (info, x))
 -- TODO finalizeStaffGroup
 
 finalizeStaff :: Tempo -> XmlStaff MusicXml.Music -> [MusicXml.Music]
-finalizeStaff tempo (XmlStaff (info, x)) 
-  = id 
+finalizeStaff tempo (XmlStaff (info, x))
+  = id
   -- Staff name is not added here as MusicXML uses a separate part list
   . addStartInfo
   . addClef (staffClef info)
@@ -218,15 +218,15 @@ finalizeStaff tempo (XmlStaff (info, x))
 
 finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
 finalizeBar (XmlBar (BarInfo timeSignature, x))
-  = maybe id setBarTimeSignature timeSignature 
+  = maybe id setBarTimeSignature timeSignature
   . renderBarMusic $ x
   where
     -- TODO key signatures
     -- TODO rehearsal marks
     -- TODO bar number change
     -- TODO compound time signatures
-    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]    
-          
+    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
+
 renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
 renderBarMusic = go
   where
@@ -248,12 +248,12 @@ instance (
   )
   => HasBackendScore MusicXml (Score a) where
   type BackendScoreEvent MusicXml (Score a) = SetDynamic DynamicNotation a
-  exportScore b score = XmlScore 
+  exportScore b score = XmlScore
     . (ScoreInfo title composer partList tempo,)
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
-    . map (second (over dynamics notateDynamic)) 
+    . map (second (over dynamics notateDynamic))
     . map (second (preserveMeta addDynCon))
-    . map (second (preserveMeta simultaneous)) 
+    . map (second (preserveMeta simultaneous))
     . extractPartsWithInfo
     . normalizeScore
     $ score
@@ -262,46 +262,46 @@ instance (
       composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart score
       partList = MusicXml.partList (fmap show $ allParts score)
       tempo    = (metaAtStart score :: Tempo)
-      (timeSignatureMarks, barDurations) = extractTimeSignatures score 
+      (timeSignatureMarks, barDurations) = extractTimeSignatures score
 
 
       -- | Export a score as a single part. Overlapping notes will cause an error.
       exportPart :: (
         Tiable a,
         HasMusicXmlInstrument (Part a)
-        ) 
-        => [Maybe TimeSignature] 
-        -> [Duration] 
-        -> Part a 
-        -> Score a 
+        )
+        => [Maybe TimeSignature]
+        -> [Duration]
+        -> Part a
+        -> Score a
         -> XmlStaff (XmlContext a)
 
-      exportStaff :: Tiable a 
-        => [Maybe TimeSignature] 
-        -> [Duration] 
+      exportStaff :: Tiable a
+        => [Maybe TimeSignature]
+        -> [Duration]
         -> Int    -- ^ clef, as per Music.Parts
-        -> MVoice a 
+        -> MVoice a
         -> XmlStaff (XmlContext a)
 
-      exportBar :: Tiable a 
-        => Maybe TimeSignature 
-        -> MVoice a 
+      exportBar :: Tiable a
+        => Maybe TimeSignature
+        -> MVoice a
         -> XmlBar (XmlContext a)
 
-      quantizeBar :: Tiable a 
-        => MVoice a 
+      quantizeBar :: Tiable a
+        => MVoice a
         -> Rhythm (XmlContext a)
 
       exportPart timeSignatureMarks barDurations part
         = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part)
         . view singleMVoice
 
-      exportStaff timeSignatures barDurations clefId 
-        = XmlStaff 
+      exportStaff timeSignatures barDurations clefId
+        = XmlStaff
         . addStaffInfo
-        . zipWith exportBar timeSignatures 
+        . zipWith exportBar timeSignatures
         . splitIntoBars barDurations
-        where         
+        where
           clef = case clefId of
             0 -> (MusicXml.GClef, 2)
             1 -> (MusicXml.CClef, 3)
@@ -310,11 +310,11 @@ instance (
           splitIntoBars = splitTiesVoiceAt
 
       exportBar timeSignature
-        = XmlBar 
-        . addBarInfo 
+        = XmlBar
+        . addBarInfo
         . quantizeBar
        where
-         addBarInfo = (,) $ BarInfo timeSignature
+         addBarInfo = (,) $ BarInfo timeSignature
 
       quantizeBar = mapWithDur XmlContext . rewrite . handleErrors . quantize . view eventsV
         where
@@ -327,7 +327,7 @@ instance (
 {-
   Note:
     We want all note transformers to be applicative morphisms, i.e.
-      
+
       notate (pure x)   = pure (notate x)
 
     Specifically
@@ -339,8 +339,8 @@ instance (
       exportNote b = uncurry notate . fmap (exportNote b) . getTieT . sequenceA
 
    The latter looks a lot like cotraverse. Generalization?
-   
-      
+
+
 -}
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml [a] where
@@ -349,7 +349,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml [a] where
 instance HasBackendNote MusicXml Integer where
   -- TODO can we get rid of exportChord alltogether and just use XmlContext?
   exportNote  _ (XmlContext d Nothing)    = MusicXml.rest (realToFrac d)
-  exportNote  _ (XmlContext d (Just x))   = (`MusicXml.note` realToFrac d)  . spellMusicXml . fromIntegral $ x
+  exportNote  _ (XmlContext d (Just x))   = (`MusicXml.note` realToFrac d)  . spellMusicXml . fromIntegral $ x
 
   exportChord _ (XmlContext d Nothing)    = MusicXml.rest (realToFrac d)
   exportChord _ (XmlContext d (Just xs))  = (`MusicXml.chord` realToFrac d) . fmap (spellMusicXml . fromIntegral) $ xs
@@ -390,8 +390,8 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (PartT n a) where
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicNotation a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
     where
-      notate (DynamicNotation (crescDims, level)) 
-        = composed (fmap notateCrescDim crescDims) 
+      notate (DynamicNotation (crescDims, level))
+        = composed (fmap notateCrescDim crescDims)
         . notateLevel level
 
       notateCrescDim crescDims = case crescDims of
@@ -405,7 +405,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicN
       notateLevel showLevel = case showLevel of
          Nothing -> id
          Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-      
+
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
@@ -419,7 +419,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT b{-
   --     notate (ArticulationNotation (slurs, marks))
   --       = composed (fmap notateMark marks)
   --       . composed (fmap notateSlur slurs)
-  -- 
+  --
   --     notateMark mark = case mark of
   --       NoMark         -> id
   --       Staccato       -> MusicXml.staccato
@@ -427,7 +427,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT b{-
   --       Marcato        -> MusicXml.strongAccent
   --       Accent         -> MusicXml.accent
   --       Tenuto         -> MusicXml.tenuto
-  -- 
+  --
   --     notateSlur slurs = case slurs of
   --       NoSlur    -> id
   --       BeginSlur -> MusicXml.beginSlur
@@ -442,7 +442,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
       -- TODO handle any color
       notate (Option Nothing)             = id
       notate (Option (Just (Last color))) = \x -> MusicXml.Sequential [
-        MusicXml.Override "NoteHead#' color" 
+        MusicXml.Override "NoteHead#' color"
           (MusicXml.toLiteralValue $ "#" ++ colorName color),
         x,
         MusicXml.Revert "NoteHead#' color"
@@ -460,7 +460,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TremoloT a) where
       notate n = case n of
         0 -> id
         n -> MusicXml.tremolo (fromIntegral n)
-    
+
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TextT a) where
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
     where
@@ -480,7 +480,7 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (HarmonicT a) wher
       -- Most programs do not recognize the harmonic tag
       -- We set a single diamond notehead instead, which can be manually replaced
       notateArtificial n = id -- TODO
-      
+
 
 instance HasBackendNote MusicXml a => HasBackendNote MusicXml (SlideT a) where
   exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getSlideT . sequenceA

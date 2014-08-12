@@ -406,10 +406,11 @@ type AffinePair v w = (VectorSpace v, AffineSpace w)
 -- |
 -- Class of types that can be transposed, inverted and so on.
 --
-type Transposable a
-  = (HasPitches' a,
-     AffinePair (Interval a) (Pitch a),
-     PitchPair (Interval a) (Pitch a))
+type Transposable a = (
+  HasPitches' a,
+  AffinePair (Interval a) (Pitch a),
+  PitchPair (Interval a) (Pitch a)
+  )
 
 -- |
 -- Transpose pitch upwards.
