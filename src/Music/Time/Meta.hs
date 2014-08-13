@@ -26,13 +26,7 @@
 -- Provides a way to annotate data-types with 'Transformable' meta-data. See
 -- "Music.Score.Meta" for more specific applications.
 --
--- Inspired by Clojure and Diagram's styles, in turn based on xmonad's @Message@ type,
--- in turn based on ideas in:
---
--- Simon Marlow.
--- /An Extensible Dynamically-Typed Hierarchy of Exceptions/.
--- Proceedings of the 2006 ACM SIGPLAN workshop on
--- Haskell. <http://research.microsoft.com/apps/pubs/default.aspx?id=67968>.
+-- Inspired by Clojure meta-data and Diagrams styles.
 --
 -------------------------------------------------------------------------------------
 
@@ -59,10 +53,12 @@ module Music.Time.Meta (
 
         -- ** The HasMeta class
         HasMeta(..),
+        getMeta,
+        mapMeta,
         setMeta,
+        applyMeta,
         setMetaAttr,
         setMetaTAttr,
-        applyMeta,
         preserveMeta,
 
         -- ** Add meta-data to arbitrary types
@@ -200,12 +196,19 @@ instance HasMeta a => HasMeta (b, a) where
 instance HasMeta a => HasMeta (Twain b a) where
   meta = _Wrapped . meta
 
--- TODO call withMeta a la Clojure?
-setMeta :: HasMeta a => Meta -> a -> a
-setMeta m = set meta m
+-- | Extract meta-data.
+getMeta :: HasMeta a => a -> Meta
+getMeta = view meta
 
--- | Apply meta-information by combining it (on the left) with the
---   existing meta-information.
+-- | Update meta-data.
+setMeta :: HasMeta a => Meta -> a -> a
+setMeta = set meta
+
+-- | Map over meta-data.
+mapMeta :: HasMeta a => (Meta -> Meta) -> a -> a
+mapMeta = over meta
+
+-- | Apply meta-information by combining it with existing meta-information.
 applyMeta :: HasMeta a => Meta -> a -> a
 applyMeta m = over meta (<> m)
 
@@ -217,8 +220,7 @@ setMetaAttr a = applyMeta (wrapMeta a)
 setMetaTAttr :: (TAttributeClass b, HasMeta a) => b -> a -> a
 setMetaTAttr a = applyMeta (wrapTMeta a)
 
--- TODO This function is a workaround
--- Whenever it is used, we should make the original function preserve meta instead
+-- | Apply a function without affecting meta-data.
 preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
 preserveMeta f x = let m = view meta x in set meta m (f x)
 

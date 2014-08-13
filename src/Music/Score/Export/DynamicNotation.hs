@@ -108,8 +108,6 @@ notateDynamic x = DynamicNotation $ over _2 (\t -> if t then Just (realToFrac $ 
     (EQ,EQ) -> ([],                   False)
     (LT,GT) -> ([EndCresc, BeginDim], True)
     (GT,LT) -> ([EndDim, BeginCresc], True)
-
-
   (Just x,  y, Nothing) -> case (x `compare` y) of
     LT      -> ([EndCresc],   True)
     EQ      -> ([],           False)
