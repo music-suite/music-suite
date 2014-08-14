@@ -50,7 +50,7 @@ module Music.Lilypond (
         Duration(..),
         -- ** Pitch
         Pitch(..),
-        PitchClass(..),
+        PitchName(..),
         Accidental(..),
         Octaves(..),
 

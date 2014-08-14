@@ -15,7 +15,7 @@
 
 module Music.Lilypond.Pitch (
         Pitch(..),
-        PitchClass(..),
+        PitchName(..),
         Accidental(..),
         Octaves(..),
         Mode(..),
@@ -25,10 +25,10 @@ module Music.Lilypond.Pitch (
 import Text.Pretty hiding (Mode)
 import Music.Pitch.Literal
 
-data PitchClass = C | D | E | F | G | A | B
+data PitchName = C | D | E | F | G | A | B
     deriving (Eq, Ord, Show, Enum)
 
-newtype Pitch = Pitch { getPitch :: (PitchClass, Accidental, Octaves) }
+newtype Pitch = Pitch { getPitch :: (PitchName, Accidental, Octaves) }
     deriving (Eq, Ord, Show)
 
 instance Pretty Pitch where
