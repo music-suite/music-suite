@@ -450,6 +450,7 @@ forward d = Music . single $ MusicForward d
 -- > rest (dotted eight)
 --
 rest :: NoteVal -> Music
+-- rest = rest'
 rest dur = case dots of
     0 -> rest' dur'
     1 -> rest' dur' <> rest' (dur' / 2)
