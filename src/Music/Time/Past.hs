@@ -1,7 +1,9 @@
 
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE CPP #-}
 
 module Music.Time.Past where
 
@@ -32,23 +34,34 @@ type Positive = Natural
 -- TODO use positive
 -- newtype Ordered a = Ordered { getOrdered :: Set.Set (a, Positive) }
 -- OR
-newtype Ordered a = Ordered { getOrdered :: Map.Map a Positive }
+newtype Ordered a = Ordered { getOrdered :: {-Ord a =>-} Map.Map a Positive }
+  deriving ({-, Foldable, Traversable-})
+
+instance (Ord a) => Eq (Ordered a) where
+  Ordered a == Ordered b = a == b
+
+instance Ord a => Ord (Ordered a) where
+  Ordered a < Ordered b = a < b
+
+-- | Alas, not a functor
+_map :: (Ord a, Ord b) => (a -> b) -> Ordered a -> Ordered b
+_map f (Ordered m) = Ordered (Map.mapKeys f m)
 
 _toList :: Ordered a -> [a]
 _toList (Ordered xs) = concatMap (uncurry $ flip $ replicate . fromIntegral) $ Map.toList xs
 
-_fromList :: Ord a => [a] -> Ordered a
-_fromList = fromMaybe (error "_fromList: Not sorted") . _safeFromList
+_unsafeFromList :: Ord a => [a] -> Ordered a
+_unsafeFromList = fromMaybe (error "_unsafeFromList: Not sorted") . _fromList
 
 -- Safe (but slow) conversion from lists to ordered lists
-_safeFromList :: Ord a => [a] -> Maybe (Ordered a)
-_safeFromList xs
+_fromList :: Ord a => [a] -> Maybe (Ordered a)
+_fromList xs
   | xs /= sort xs = Nothing
   | otherwise     = Just $ Ordered $ Map.fromList $ map (\x -> (head x, fromIntegral $ length x)) $ group xs
 
 -- Safe (but slow) prism from lists to ordered lists
 ordered :: Ord a => Prism' [a] (Ordered a)
-ordered = prism' _toList _safeFromList
+ordered = prism' _toList _fromList
 {-
   where
     prism' bs sma = prism bs (\s -> maybe (Left s) Right (sma s))
@@ -56,27 +69,35 @@ ordered = prism' _toList _safeFromList
 -}
 
 unsafeOrdered :: Ord a => Iso' [a] (Ordered a)
-unsafeOrdered = iso _fromList _toList
+unsafeOrdered = iso _unsafeFromList _toList
 {-
   where
     iso sa bt = dimap sa (fmap bt)
 -}
-    
-    
 
+_elem :: Ord a => a -> Ordered a -> Bool
+_elem k = (> 0) . _occs k    
+    
+_occs :: Ord a => a -> Ordered a -> Int
+_occs k = maybe 0 fromIntegral . Map.lookup k . getOrdered
+
+_null :: Ordered k -> Bool
 _null = Map.null . getOrdered
+
+_length :: Ordered a -> Int
 _length = length . _toList
 -- _elem x (Ordered xs) = x
 
 
 -- TODO move
+#ifndef GHCI
 instance Comonad Min where
   extract (Min x) = x
   duplicate (Min x) = Min (Min x)
 instance Comonad Max where
   extract (Max x) = x
   duplicate (Max x) = Max (Max x)
-
+#endif
 
 
 
