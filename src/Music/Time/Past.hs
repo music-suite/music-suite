@@ -153,5 +153,9 @@ firstTrue = listToMaybe . join . fmap maybeToList
 pastSeg :: Past (Segment a) -> Behavior (Maybe a)
 pastSeg = undefined
 
+-- | Project a segment starting from the given point.
+futureSeg :: Future (Segment a) -> Behavior (Maybe a)
+futureSeg = undefined
+
 
 
