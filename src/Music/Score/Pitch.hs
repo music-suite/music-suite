@@ -124,6 +124,8 @@ import           Music.Time.Internal.Transform
 -- |
 -- This type fuction is used to access the pitch type for a given type.
 --
+type family Pitch (s :: *) :: *
+--
 -- @
 -- 'Pitch' (c,a)             ~ 'Pitch' a
 -- 'Pitch' [a]               ~ 'Pitch' a
@@ -132,8 +134,6 @@ import           Music.Time.Internal.Transform
 -- 'Pitch' ('Score' a)         ~ 'Pitch' a
 -- @
 --
-type family Pitch (s :: *) :: *
-
 -- For types representing pitch, it is generally 'Identity', i.e
 --
 -- @
@@ -150,6 +150,8 @@ type family Pitch (s :: *) :: *
 -- This type fuction is used to update the pitch type for a given type.
 -- The first argument is the new type.
 --
+type family SetPitch (b :: *) (s :: *) :: *
+--
 -- @
 -- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
 -- 'SetPitch' b [a]            ~ ['SetPitch' b a]
@@ -158,8 +160,6 @@ type family Pitch (s :: *) :: *
 -- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
 -- @
 --
-type family SetPitch (b :: *) (s :: *) :: *
-
 -- For types representing pitch, it is generally 'Constant', i.e
 --
 -- @
