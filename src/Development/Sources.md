@@ -29,7 +29,7 @@ Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory w
 $ echo "export MUSIC_SUITE_DIR=/path/to/suite" >> ~/.profile
 ~~~
 
-Run the setup script. This will clone all source repos and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default.
+Run the setup script. This will clone all source repositories and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default. It then proceeds to install the libraries and all their dependencies, which may take several minutes.
 
 ~~~{.bash}
 $ music-util setup
