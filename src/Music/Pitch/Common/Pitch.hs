@@ -35,7 +35,9 @@ module Music.Pitch.Common.Pitch (
         Name(..),
 
         -- * Pitch
-        Pitch,    
+        Pitch,
+        Pitch(..),
+        
         mkPitch,
         name,
         accidental,

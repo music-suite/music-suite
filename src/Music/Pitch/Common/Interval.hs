@@ -49,6 +49,7 @@ module Music.Pitch.Common.Interval (
         
         -- ** Intervals
         Interval,
+        Interval(..),
 
         -- *** Creating intervals
         mkInterval,
@@ -82,6 +83,18 @@ module Music.Pitch.Common.Interval (
         asInterval,
        intervalDiff,
        mkInterval',
+
+       -- Converting basis
+       convertBasis,
+       convertBasisFloat,
+       intervalDiv,
+
+       -- useful basis values
+       basis_P1,
+       basis_A1,
+       basis_d2,
+       basis_P8,
+       basis_P5
   ) where
 
 import Data.Maybe
@@ -450,6 +463,7 @@ mkInterval' diff diatonic = Interval (diatonicToChromatic diatonic + diff, diato
 basis_P1 = Interval (0, 0)
 basis_A1 = Interval (1, 0)
 basis_d2 = Interval (0, 1)
+basis_P5 = Interval (7, 4)
 basis_P8 = Interval (12, 7)
 
 

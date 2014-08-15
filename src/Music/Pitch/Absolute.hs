@@ -1,5 +1,5 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -20,6 +20,7 @@
 
 module Music.Pitch.Absolute (
         Hertz(..),
+        FreqRatio(..),
         -- Octaves,
         Cents,
         Fifths,
@@ -32,6 +33,9 @@ module Music.Pitch.Absolute (
 import Data.Maybe
 import Data.Either
 import Data.Semigroup
+import Data.VectorSpace
+import Data.AdditiveGroup
+import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
 
@@ -41,6 +45,12 @@ import Music.Pitch.Literal
 -- Absolute frequency in Hertz.    
 -- 
 newtype Hertz = Hertz { getHertz :: Double }
+    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+
+-- | 
+-- A ratio between two different (Hertz) frequencies.
+-- 
+newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- | 
@@ -83,6 +93,20 @@ instance Monoid Hertz       where { mempty  = 1 ; mappend = (*) }
 instance Monoid Octaves     where { mempty  = 0 ; mappend = (+) }
 instance Monoid Fifths      where { mempty  = 0 ; mappend = (+) }
 instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
+
+instance AdditiveGroup FreqRatio where
+    zeroV   = 1
+    (^+^)   = (*)
+    negateV f = 1 / f
+
+instance VectorSpace FreqRatio where
+    type Scalar FreqRatio = Double
+    (*^) x f = FreqRatio ((getFreqRatio f) ** x)
+
+instance AffineSpace Hertz where
+  type Diff Hertz = FreqRatio
+  (.-.) f1 f2 = FreqRatio $ (getHertz f1) / (getHertz f2)
+  (.+^) p f = Hertz $ (getHertz p) * (getFreqRatio f)
 
 class HasFrequency a where
     frequency :: a -> Hertz
