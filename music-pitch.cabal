@@ -35,8 +35,10 @@ library
                         semigroupoids,
                         music-pitch-literal     == 1.7.1,
                         vector-space            >= 0.8.7 && < 0.9
+                        -- type-level              >= 0.2.4 && < 3.0
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
+                        Music.Pitch.Equal
                         Music.Pitch.Common
                         Music.Pitch.Common.Interval
                         Music.Pitch.Common.Pitch

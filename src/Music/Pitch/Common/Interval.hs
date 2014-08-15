@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
 --
 -- License     : BSD-style
 --
@@ -61,7 +61,6 @@ module Music.Pitch.Common.Interval (
         doublyDiminished,
 
         -- *** Inspecting intervals
-        octaves,
         isNegative,
         isPositive,
         isNonNegative,
@@ -74,6 +73,7 @@ module Music.Pitch.Common.Interval (
         isCompound,
         separate,
         simple,
+        octaves,
 
         -- *** Inversion
         invert,
@@ -88,7 +88,8 @@ import Data.Maybe
 import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
-import Data.AffineSpace
+-- import Data.AffineSpace
+import Data.Basis
 import Data.Typeable
 import Control.Monad
 import Control.Applicative
@@ -212,67 +213,67 @@ instance HasNumber Number where number = id
 unison      :: Number
 unison      = 1
 
--- | A synonym for @2@.
+-- | A synonym for @1@.
 prime       :: Number
 prime       = 1
 
--- | A synonym for @3@.
+-- | A synonym for @2@.
 second      :: Number
 second      = 2
 
--- | A synonym for @4@.
+-- | A synonym for @3@.
 third       :: Number
 third       = 3
 
--- | A synonym for @5@.
+-- | A synonym for @4@.
 fourth      :: Number
 fourth      = 4     
 
--- | A synonym for @6@.
+-- | A synonym for @5@.
 fifth       :: Number
 fifth       = 5
 
--- | A synonym for @7@.
+-- | A synonym for @6@.
 sixth       :: Number
 sixth       = 6
 
--- | A synonym for @8@.
+-- | A synonym for @7@.
 seventh     :: Number
 seventh     = 7
 
--- | A synonym for @9@.
+-- | A synonym for @8@.
 octave      :: Number
 octave      = 8
 
--- | A synonym for @10@.
+-- | A synonym for @9@.
 ninth       :: Number
 ninth       = 9
 
--- | A synonym for @11@.
+-- | A synonym for @10@.
 tenth       :: Number
 tenth       = 10
 
--- | A synonym for @12@.
+-- | A synonym for @11@.
 eleventh    :: Number
 eleventh    = 11
 
--- | A synonym for @13@.
+-- | A synonym for @12@.
 twelfth     :: Number
 twelfth     = 12
 
--- | A synonym for @14@.
+-- | A synonym for @12@.
 duodecim    :: Number
 duodecim    = 12
 
--- | A synonym for @15@.
+-- | A synonym for @13@.
 thirteenth  :: Number
 thirteenth  = 13
 
--- | A synonym for @16@.
+-- | A synonym for @14@.
 fourteenth  :: Number
 fourteenth  = 14
 
--- | A synonym for @17@.
+-- | A synonym for @15@.
 fifteenth   :: Number
 fifteenth   = 15
 
@@ -387,6 +388,18 @@ instance VectorSpace Interval where
     type Scalar Interval = Integer
     (*^) = stackInterval
 
+-- TODO move
+data IntervalBasis = Chromatic | Diatonic
+  deriving (Eq, Ord, Show, Enum)
+
+instance HasBasis Interval where
+  type Basis Interval = IntervalBasis
+  basisValue Chromatic = basis_A1
+  basisValue Diatonic  = basis_d2
+  decompose  (Interval (c,d)) = [(Chromatic, fromIntegral c), (Diatonic, fromIntegral d)]
+  decompose' (Interval (c,d)) Chromatic = fromIntegral c
+  decompose' (Interval (c,d)) Diatonic  = fromIntegral d
+
 instance HasQuality Interval where
   quality i = extractQuality i
 
@@ -403,11 +416,18 @@ instance HasSemitones Interval where
 instance IsInterval Interval where
     fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
 
--- |
--- This is just the identity function, but is useful to fix the type of 'Interval'.
---
-asInterval :: Interval -> Interval
-asInterval = id
+negateInterval :: Interval -> Interval
+negateInterval (Interval (a, d)) = Interval (-a, -d)
+
+addInterval :: Interval -> Interval -> Interval
+addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
+
+stackInterval :: Integer -> Interval -> Interval
+stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
+                  | otherwise = negate $ stackInterval (negate n) a
+
+intervalDiff :: Interval -> Int
+intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 
 -- |
 -- Creates an interval from a quality and number.
@@ -431,6 +451,7 @@ basis_P1 = Interval (0, 0)
 basis_A1 = Interval (1, 0)
 basis_d2 = Interval (0, 1)
 basis_P8 = Interval (12, 7)
+
 
 mkInterval :: Quality -> Number -> Interval
 
@@ -489,6 +510,63 @@ mkInterval q (Number n) = if n > 0
                           else (mkInterval q (Number (n + 7))) ^-^ basis_P8
 
 
+-- |
+-- Extracting the 'number' from an interval vector.
+--
+-- Note that (a, d) is a representation of the interval (a * A1) + (d
+-- * d2), so the 'number' part of the interval must be stored entirely
+-- in the d * d2 part (adding a unison, perfect or otherwise, can
+-- never increase the number of the interval)
+-- 
+extractNumber :: Interval -> Number
+extractNumber (Interval (a, d))
+  | d >= 0    = Number (d + 1)
+  | otherwise = Number (d - 1)
+
+
+-- |
+-- Extracting the 'quality' from an interval vector.
+--
+-- This is much more finicky, as the A1 and d2 intervals interact in a
+-- complex way to produce the perfect/major/minor/etc. intervals that
+-- we are used to reading.
+
+extractQuality :: Interval -> Quality
+extractQuality (Interval (a, d))
+  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (0, 0) = Perfect
+  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (1, 1) = Minor
+  | (a, d) == (2, 1) = Major
+  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (3, 2) = Minor
+  | (a, d) == (4, 2) = Major
+  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (5, 3) = Perfect
+  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (7, 4) = Perfect
+  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (8, 5) = Minor
+  | (a, d) == (9, 5) = Major
+  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (10, 6) = Minor
+  | (a, d) == (11, 6) = Major
+  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
+  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
+  | (a, d) == (12, 7) = Perfect
+  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
+-- note: these last two cases *have* to be this way round, otherwise
+-- infinite loop occurs.
+  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
+  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
+
+
 -- | Creates a perfect interval.
 --   If given an inperfect number, constructs a major interval.
 perfect :: Number -> Interval
@@ -520,26 +598,6 @@ doublyAugmented  = mkInterval (Augmented 2)
 doublyDiminished :: Number -> Interval
 doublyDiminished = mkInterval (Diminished 2)
 
-
-invertDiatonic :: Num a => a -> a
-invertDiatonic d  = 7  - d
-
-invertChromatic :: Num a => a -> a
-invertChromatic c = 12 - c
-
-negateInterval :: Interval -> Interval
-negateInterval (Interval (a, d)) = Interval (-a, -d)
-
-addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
-
-stackInterval :: Integer -> Interval -> Interval
-stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
-                  | otherwise = negate $ stackInterval (negate n) a
-
-intervalDiff :: Interval -> Int
-intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
-
 {-
 
 Prelude Music.Prelude> separate (2*^_P8+m3)
@@ -560,7 +618,8 @@ Prelude Music.Prelude> separate ((-1)*^_P8+m3)
 --
 separate :: Interval -> (Octaves, Interval)
 separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
-  where o = octaves i
+  where
+    o = octaves i
 
 -- |
 -- Returns the non-simple part of an interval.
@@ -569,8 +628,11 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 --
 octaves :: Interval -> Octaves
 octaves i 
-  | isNegative i = negate $ octaves' i + 1
-  | otherwise    = octaves' i
+  | isNegative i && not (isOctaveMultiple i) = negate (octaves' i) - 1
+  | isNegative i && isOctaveMultiple i       = negate (octaves' i)
+  | otherwise                                = octaves' i
+
+isOctaveMultiple (Interval (_,d)) = d `mod` 7 == 0
 
 octaves' i = fromIntegral $ intervalDiv i basis_P8
 
@@ -594,7 +656,7 @@ isSimple x = octaves x == 0
 -- Returns whether the given interval is compound.
 --
 -- A compound interval is either a negative interval, or a positive interval spanning
--- more than octave.
+-- one octave or more.
 --
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
@@ -656,7 +718,14 @@ isLeap (Interval (a, d)) = (abs d) > 2
 -- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
-invert i = basis_P8 - i
+invert = simple . negate
+
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Interval'.
+--
+asInterval :: Interval -> Interval
+asInterval = id
+
 
 
 isPerfectNumber :: Int -> Bool
@@ -668,76 +737,19 @@ isPerfectNumber 4 = True
 isPerfectNumber 5 = False
 isPerfectNumber 6 = False
 
--- TODO handle larger numbers
+-- TODO more generic pattern here
 diatonicToChromatic :: Int -> Int
-diatonicToChromatic = go
+diatonicToChromatic d = (octaves*12) + go restDia
     where
-        go 0 = 0
-        go 1 = 2
-        go 2 = 4
-        go 3 = 5
-        go 4 = 7
-        go 5 = 9
-        go 6 = 11
+        -- restDia is always in [0..6]
+        (octaves, restDia) = d `divMod` 7
+        go = ([0,2,4,5,7,9,11] !!)
 
 -- {-# DEPRECATED intervalDiff "This should be hidden" #-}
 -- {-# DEPRECATED mkInterval'  "This should be hidden "#-}
 
 replicate' n = replicate (fromIntegral n)
 
--- |
--- Extracting the 'number' from an interval vector.
---
--- Note that (a, d) is a representation of the interval (a * A1) + (d
--- * d2), so the 'number' part of the interval must be stored entirely
--- in the d * d2 part (adding a unison, perfect or otherwise, can
--- never increase the number of the interval)
--- 
-extractNumber :: Interval -> Number
-extractNumber (Interval (a, d)) = Number (d + 1)
-
-
--- |
--- Extracting the 'quality' from an interval vector.
---
--- This is much more finicky, as the A1 and d2 intervals interact in a
--- complex way to produce the perfect/major/minor/etc. intervals that
--- we are used to reading.
-
-extractQuality :: Interval -> Quality
-extractQuality (Interval (a, d))
-  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (0, 0) = Perfect
-  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (1, 1) = Minor
-  | (a, d) == (2, 1) = Major
-  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (3, 2) = Minor
-  | (a, d) == (4, 2) = Major
-  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (5, 3) = Perfect
-  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (7, 4) = Perfect
-  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (8, 5) = Minor
-  | (a, d) == (9, 5) = Major
-  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (10, 6) = Minor
-  | (a, d) == (11, 6) = Major
-  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (12, 7) = Perfect
-  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
--- note: these last two cases *have* to be this way round, otherwise
--- infinite loop occurs.
-  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
-  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
 
 
 

@@ -3,7 +3,7 @@
 
 ------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
 --
 -- License     : BSD-style
 --
@@ -113,10 +113,13 @@ class HasSteps a where
 --
 -- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
 -- not have an unequivocal spelling. To convert these to an interval, a
--- 'Spelling' must be provided as in:
+-- 'Spelling' must be provided:
 --
--- > spell sharps tritone == augmented fourth
--- > spell flats  tritone == diminished fifth
+-- >>> spell usingSharps tritone
+-- _A4
+--
+-- >>> spell usingFlats  tritone
+-- d5
 --
 newtype Semitones = Semitones { getSemitones :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
@@ -135,12 +138,14 @@ class HasSemitones a where
     -- The number of semitones is negative if and only if the interval is
     -- negative.
     --
-    -- Examples:
-    --
-    -- > semitones (perfect unison)  =  0
-    -- > semitones tritone           =  6
-    -- > semitones d5                =  6
-    -- > semitones (-_P8)            =  -12
+    -- >>> semitones (perfect unison)
+    -- 0
+    -- >>> semitones tritone
+    -- 6
+    -- >>> semitones d5
+    -- 6
+    -- >>> semitones (-_P8)
+    -- -12
     --
     semitones :: a -> Semitones
 
