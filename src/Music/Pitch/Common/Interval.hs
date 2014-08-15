@@ -79,9 +79,9 @@ module Music.Pitch.Common.Interval (
         invert,
 
         -- * Utility
---        asInterval,
---        intervalDiff,
---        mkInterval',
+        asInterval,
+       intervalDiff,
+       mkInterval',
   ) where
 
 import Data.Maybe
@@ -96,7 +96,7 @@ import qualified Data.List as List
 
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
--- import Music.Pitch.Literal
+import Music.Pitch.Literal
 import Music.Pitch.Common.Semitones
 
 -- |
@@ -327,8 +327,8 @@ class HasNumber a where
 --     deriving (Eq, Ord, Typeable)
 
 newtype Interval = Interval { getInterval :: (
-            Int,        -- number of A1
-            Int        -- number of d2
+            Int,        -- number of A1, i.e. chromatic steps
+            Int        -- number of d2, i.e. diatonic steps
     ) }
     deriving (Eq, Ord, Typeable)
 
@@ -384,7 +384,7 @@ instance AdditiveGroup Interval where
     negateV = negateInterval
 
 instance VectorSpace Interval where
-    type Scalar Interval = Int
+    type Scalar Interval = Integer
     (*^) = stackInterval
 
 instance HasQuality Interval where
@@ -394,27 +394,20 @@ instance HasNumber Interval where
   number i = extractNumber i
 
 instance Augmentable Interval where
-    augment i = i ^+^ _A1
-    diminish i = i ^-^ _A1
-
--- |
--- Returns the non-simple part of an interval.
---
--- > (perfect octave)^*x + y = z  iff  y = simple z
---
-octaves i = intervalDiv i _P8
+    augment i = i ^+^ basis_A1
+    diminish i = i ^-^ basis_A1
 
 instance HasSemitones Interval where
     semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
 
--- instance IsInterval Interval where
---     fromInterval (IntervalL (o,d,c)) = Interval (fromIntegral o, fromIntegral d, fromIntegral c)
+instance IsInterval Interval where
+    fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
 
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Interval'.
 --
--- asInterval :: Interval -> Interval
--- asInterval = id
+asInterval :: Interval -> Interval
+asInterval = id
 
 -- |
 -- Creates an interval from a quality and number.
@@ -424,46 +417,55 @@ instance HasSemitones Interval where
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
 
-_P1 = Interval (0, 0)
-_A1 = Interval (1, 0)
-_d2 = Interval (0, 1)
-_P8 = Interval (12, 7)
+-- mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
+--     where
+--         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
+-- 
+mkInterval' 
+  :: Int        -- ^ Difference in chromatic steps (?).
+  -> Int        -- ^ Number of diatonic steps (NOT interval number).
+  -> Interval
+mkInterval' diff diatonic = Interval (diatonicToChromatic diatonic + diff, diatonic)
+
+basis_P1 = Interval (0, 0)
+basis_A1 = Interval (1, 0)
+basis_d2 = Interval (0, 1)
+basis_P8 = Interval (12, 7)
 
 mkInterval :: Quality -> Number -> Interval
 
  -- our identity:
-mkInterval Perfect 1 = _P1
+mkInterval Perfect 1 = basis_P1
  -- and our two basis vectors:
-mkInterval (Augmented 1) 1 = _A1
-mkInterval (Diminished 1) 2 = _d2
+mkInterval (Augmented 1) 1 = basis_A1
+mkInterval (Diminished 1) 2 = basis_d2
 
-mkInterval (Diminished 1) 2 = _d2
-mkInterval Minor 2 = _d2 ^+^ _A1
-mkInterval Major 2 = (mkInterval Minor 2) ^+^ _A1
-mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ _A1
+mkInterval Minor 2 = basis_d2 ^+^ basis_A1
+mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
+mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
 
-mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ _A1
+mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ basis_A1
 mkInterval Minor 3 = (mkInterval Major 2) ^+^ (mkInterval Minor 2)
 mkInterval Major 3 = (mkInterval Major 2) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ _A1
+mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ basis_A1
 
-mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ _A1
+mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ basis_A1
 mkInterval Perfect 4 = (mkInterval Major 3) ^+^ (mkInterval Minor 2)
-mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ _A1
+mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ basis_A1
 
-mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ _A1
+mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ basis_A1
 mkInterval Perfect 5 = (mkInterval Perfect 4) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ _A1
+mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ basis_A1
 
-mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ _A1
+mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ basis_A1
 mkInterval Minor 6 = (mkInterval Perfect 5) ^+^ (mkInterval Minor 2)
 mkInterval Major 6 = (mkInterval Perfect 5) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ _A1
+mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ basis_A1
 
-mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ _A1
+mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ basis_A1
 mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
 mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ _A1
+mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ basis_A1
 
 mkInterval Minor 1 = error "invalid interval"
 mkInterval Major 1 = error "invalid interval"
@@ -479,12 +481,12 @@ mkInterval Perfect 7 = error "invalid interval"
 mkInterval (Diminished 0) n = error "(Diminished 0) is not a valid Quality"
 mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
 
-mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ _A1
-mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ _A1
+mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ basis_A1
+mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 
 mkInterval q (Number n) = if n > 0
-                          then (mkInterval q (Number (n - 7))) ^+^ _P8
-                          else (mkInterval q (Number (n + 7))) ^-^ _P8
+                          then (mkInterval q (Number (n - 7))) ^+^ basis_P8
+                          else (mkInterval q (Number (n + 7))) ^-^ basis_P8
 
 
 -- | Creates a perfect interval.
@@ -531,21 +533,46 @@ negateInterval (Interval (a, d)) = Interval (-a, -d)
 addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
 
-stackInterval :: Int -> Interval -> Interval
+stackInterval :: Integer -> Interval -> Interval
 stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
                   | otherwise = negate $ stackInterval (negate n) a
 
--- intervalDiff :: Interval -> Int
--- intervalDiff (Interval (o, d, c)) = c - diatonicToChromatic d
+intervalDiff :: Interval -> Int
+intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 
+{-
+
+Prelude Music.Prelude> separate (2*^_P8+m3)
+(2,m3)
+Prelude Music.Prelude> 
+Prelude Music.Prelude> separate (3*^_P8+m3)
+(3,m3)
+Prelude Music.Prelude> 
+Prelude Music.Prelude> separate (0*^_P8+m3)
+(0,m3)
+Prelude Music.Prelude> separate ((-1)*^_P8+m3)
+
+-}
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
 -- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
 --
 separate :: Interval -> (Octaves, Interval)
-separate i = (fromIntegral o, i ^-^ (o *^ _P8))
+separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
   where o = octaves i
+
+-- |
+-- Returns the non-simple part of an interval.
+--
+-- > _P8^*octaves x ^+^ simple x = x
+--
+octaves :: Interval -> Octaves
+octaves i 
+  | isNegative i = negate $ octaves' i + 1
+  | otherwise    = octaves' i
+
+octaves' i = fromIntegral $ intervalDiv i basis_P8
 
 -- |
 -- Returns the simple part of an interval.
@@ -629,7 +656,7 @@ isLeap (Interval (a, d)) = (abs d) > 2
 -- * The inversion of a compound interval is the inversion of its simple component.
 --
 invert :: Interval -> Interval
-invert i = _P8 - i
+invert i = basis_P8 - i
 
 
 isPerfectNumber :: Int -> Bool
@@ -641,6 +668,7 @@ isPerfectNumber 4 = True
 isPerfectNumber 5 = False
 isPerfectNumber 6 = False
 
+-- TODO handle larger numbers
 diatonicToChromatic :: Int -> Int
 diatonicToChromatic = go
     where
@@ -717,24 +745,24 @@ extractQuality (Interval (a, d))
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
 intervalDiv (Interval (a, d)) (Interval (0, 1)) = d
 intervalDiv i di
-  | (i > _P1) = intervalDivPos i di
-  | (i < _P1) = intervalDivNeg i di
+  | (i > basis_P1) = intervalDivPos i di
+  | (i < basis_P1) = intervalDivNeg i di
   | otherwise = 0 :: Int
   where 
     intervalDivPos i di
-      | (i < _P1) = undefined
-      | (i ^-^ di) < _P1 = 0
+      | (i < basis_P1) = undefined
+      | (i ^-^ di) < basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^-^ di) di)
     intervalDivNeg i di
-      | (i > _P1) = undefined
-      | (i ^+^ di) > _P1 = 0
+      | (i > basis_P1) = undefined
+      | (i ^+^ di) > basis_P1 = 0
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
 -- | Represent an interval i in a new basis (j, k).
 -- 
 -- We want x,y where i = x*j + y*k
 --
--- e.g., convertBasis _d2 _P5 _P8 == Just (-12,7), as expected.
+-- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
 
 convertBasis i j k
   | (p == 0) = Nothing

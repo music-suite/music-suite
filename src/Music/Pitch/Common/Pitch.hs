@@ -222,7 +222,7 @@ asPitch = id
 -- Creates a pitch from name accidental.
 --
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name + 1)
+mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
 
 -- |
 -- Returns the name of a pitch.
@@ -252,7 +252,7 @@ middleC = c
 
 instance IsPitch Pitch where
     fromPitch (PitchL (c, a, o)) =
-        Pitch $ mkInterval' (qual a) (c + 1)
+        Pitch $ mkInterval' (qual a) c
             ^+^
             (perfect octave^* fromIntegral o)
         where
