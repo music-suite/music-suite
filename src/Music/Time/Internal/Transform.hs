@@ -262,7 +262,7 @@ compress = transform . compressing
 --
 delayTime :: Transformable a => Time -> a -> a
 delayTime t = delay (t .-. 0)
-
+{-# DEPRECATED delayTime "Use the full form (delay . (.-. 0))" #-}
 
 
 --

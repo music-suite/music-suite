@@ -137,7 +137,8 @@ delayedValue = lens runDelayed (flip $ _delayed . const)
 
 runDelayed :: Transformable a => Delayed a -> a
 runDelayed = uncurry delayTime . view _Wrapped
-
+  where
+    delayTime t = delay (t .-. 0)
 
 deriving instance IsPitch a => IsPitch (Delayed a)	 
 deriving instance IsInterval a => IsInterval (Delayed a)	 
