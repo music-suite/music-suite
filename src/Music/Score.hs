@@ -23,7 +23,6 @@ module Music.Score (
         module Data.VectorSpace,
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
-        module Data.Average,
 
         module Music.Time,
         -- module Music.Score.Combinators,
@@ -91,7 +90,6 @@ import           Data.Semigroup
 import           Data.Traversable
 import           Data.Typeable
 import           Data.VectorSpace               hiding (Sum, getSum)
-import           Data.Average
 
 import           Music.Time                     hiding (time)
 

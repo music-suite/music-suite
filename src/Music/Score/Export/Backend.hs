@@ -52,7 +52,7 @@ import           Data.Foldable                 (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple
 import           Data.Maybe
-import           Data.Average
+import           Data.Monoid.Average
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
 import qualified Music.Lilypond                as Lilypond

@@ -53,7 +53,7 @@ import           Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
-import           Data.Average
+import           Data.Monoid.Average
 import           Data.VectorSpace        hiding (Sum)
 
 import           Music.Dynamics.Literal
