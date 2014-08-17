@@ -13,8 +13,9 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Dynamics.Common -- (
--- )
+module Music.Dynamics.Common (
+  Dynamics,
+)
 where
 
 import Data.Maybe
@@ -22,4 +23,6 @@ import Data.Either
 import Data.Semigroup
 import Control.Monad
 import Control.Applicative
+import Data.Monoid.Average
 
+type Dynamics = Average Double
