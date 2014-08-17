@@ -13,8 +13,9 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Articulation -- (
--- )
+module Music.Articulation (
+  Articulation,
+)
 where
 
 import Data.Maybe
@@ -22,7 +23,9 @@ import Data.Either
 import Data.Semigroup
 import Control.Monad
 import Control.Applicative
+import Data.Monoid.Average
 
+type Articulation = (Average Double, Average Double)
 
 {-
 
