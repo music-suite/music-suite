@@ -17,9 +17,13 @@
 
 module Music.Pitch.Literal.Interval (
 
+        -- * IsInterval class
         IsInterval(..),
         IntervalL(..),
 
+        -- * Literal values
+        
+        -- ** Simple intervals
         d1,  _P1,  _A1,
         d2,   m2,  _M2,  _A2,
         d3,   m3,  _M3,  _A3,
@@ -28,6 +32,7 @@ module Music.Pitch.Literal.Interval (
         d6,   m6,  _M6,  _A6,
         d7,   m7,  _M7,  _A7,
 
+        -- ** One-octave compounds
         d8,  _P8,  _A8,
         d9,   m9,  _M9,  _A9,
         d10,  m10, _M10, _A10,
@@ -36,6 +41,7 @@ module Music.Pitch.Literal.Interval (
         d13,  m13, _M13, _A13,
         d14,  m14, _M14, _A14,
 
+        -- ** Two-octave compounds
         d15, _P15,  _A15,
 
   ) where

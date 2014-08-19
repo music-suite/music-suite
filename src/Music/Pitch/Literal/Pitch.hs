@@ -17,25 +17,33 @@
 
 module Music.Pitch.Literal.Pitch (
 
+        -- * IsPitch class
         IsPitch(..),
         PitchL(..),
-
+        
+        -- * Literal values
+        
+        -- ** Two octaves up
         cs'', ds'', es'', fs'', gs'', as'', bs'',
         c'' , d'' , e'' , f'' , g'' , a'' , b'' ,
         cb'', db'', eb'', fb'', gb'', ab'', bb'',
 
+        -- ** One octave up
         cs' , ds' , es' , fs' , gs' , as' , bs' ,
         c'  , d'  , e'  , f'  , g'  , a'  , b'  ,
         cb' , db' , eb' , fb' , gb' , ab' , bb' ,
 
+        -- ** Standard octave
         cs  , ds  , es  , fs  , gs  , as  , bs  ,
         c   , d   , e   , f   , g   , a   , b   ,
         cb  , db  , eb  , fb  , gb  , ab  , bb  ,
 
+        -- ** One octave down
         cs_ , ds_ , es_ , fs_ , gs_ , as_ , bs_ ,
         c_  , d_  , e_  , f_  , g_  , a_  , b_  ,
         cb_ , db_ , eb_ , fb_ , gb_ , ab_ , bb_ ,
 
+        -- ** Two octaves down
         cs__, ds__, es__, fs__, gs__, as__, bs__,
         c__ , d__ , e__ , f__ , g__ , a__ , b__ ,
         cb__, db__, eb__, fb__, gb__, ab__, bb__
