@@ -79,6 +79,12 @@ import           Data.VectorSpace        hiding (Sum (..))
 -- (Note that any of these three laws can be derived from the other two, so it is
 -- sufficient to prove two!).
 --
+-- >>> (\x -> fmap (flip split x) [-2,-1,0,0.5,1,2]) $ (1::Duration)
+-- [(0,1),(0,1),(0,1),((1/2),(1/2)),(1,0),(1,0)]
+--
+-- >>> (\x -> fmap (flip split x) [-2,-1,0,0.5,1,2]) $ (0<->1)
+-- [(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> (1/2),(1/2) <-> 1),(0 <-> 1,1 <-> 1),(0 <-> 1,1 <-> 1)]
+--
 class Splittable a where
   split      :: Duration -> a -> (a, a)
   beginning  :: Duration -> a -> a
