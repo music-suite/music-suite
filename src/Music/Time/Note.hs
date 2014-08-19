@@ -128,7 +128,7 @@ instance HasPosition (Note a) where
 instance Splittable a => Splittable (Note a) where
   -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)
   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (d / _duration s) v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    (1 - (d / _duration s)) v)
+  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    (d / _duration s) v)
 
 instance Reversible (Note a) where
   rev = revDefault
