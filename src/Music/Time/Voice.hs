@@ -533,4 +533,177 @@ listAsVoice = from voiceAsList
 -- Implement meta-data
 --
 
+-- List functions
+headV, lastV :: Voice a -> Maybe (Stretched a)
+headV = preview _head
+lastV = preview _head
+
+tailV, initV :: Voice a -> Maybe (Voice a)
+tailV = preview _tail
+initV = preview _init
+
+consV :: Stretched a -> Voice a -> Voice a
+unconsV :: Voice a -> Maybe (Stretched a, Voice a)
+consV = cons
+unconsV = uncons
+
+snocV :: Voice a -> Stretched a -> Voice a
+unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
+snocV = snoc
+unsnocV = unsnoc
+
+nullV :: Voice a -> Bool
+nullV = nullOf eventsV
+
+lengthV :: Voice a -> Int
+lengthV = lengthOf eventsV
+
+mapV :: (a -> b) -> Voice a -> Voice b
+mapV = fmap
+
+
+-- Voice-specific
+
+sameDurations           :: Voice a -> Voice b -> Bool
+sameDurations = undefined
+
+mergeIfSameDuration     :: Voice a -> Voice b -> Maybe (Voice (a, b))
+mergeIfSameDuration = undefined
+
+mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
+mergeIfSameDurationWith = undefined
+
+-- splitAt :: [Duration] -> Voice a -> [Voice a]
+-- splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+
+splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
+splitLatterToAssureSameDuration = undefined
+
+splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
+splitLatterToAssureSameDurationWith = undefined
+
+polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
+polyToHomophonic = undefined
+
+polyToHomophonicForce :: [Voice a] -> Voice [a]
+polyToHomophonicForce = undefined
+
+homoToPolyphonic      :: Voice [a] -> [Voice a]
+homoToPolyphonic = undefined
+
+joinVoice             :: Voice (Voice a) -> a
+joinVoice = undefined
+
+changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
+changeCrossing = undefined
+
+changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
+changeCrossingBy = undefined
+
+processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
+processExactOverlaps = undefined
+
+processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
+processExactOverlaps' = undefined
+
+onsetsRelative    :: Time -> Voice a -> [Time]
+onsetsRelative = undefined
+
+offsetsRelative   :: Time -> Voice a -> [Time]
+offsetsRelative = undefined
+
+midpointsRelative :: Time -> Voice a -> [Time]
+midpointsRelative = undefined
+
+erasRelative      :: Time -> Voice a -> [Span]
+erasRelative = undefined
+
+onsetMap  :: Time -> Voice a -> Map Time a
+onsetMap = undefined
+
+offsetMap :: Time -> Voice a -> Map Time a
+offsetMap = undefined
+
+midpointMap :: Time -> Voice a -> Map Time a
+midpointMap = undefined
+
+eraMap :: Time -> Voice a -> Map Span a
+eraMap = undefined
+
+durations :: Voice a -> [Duration]
+durations = undefined
+
+-- values :: Voice a -> [a] -- Same as Foldable.toList
+-- values = undefined
+
+
+
+{-
+
+sameDurations           :: Voice a -> Voice b -> Bool
+mergeIfSameDuration     :: Voice a -> Voice b -> Maybe (Voice (a, b))
+mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
+splitAt :: [Duration] -> Voice a -> [Voice a]
+-- splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
+splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
+polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
+polyToHomophonicForce :: [Voice a] -> Voice [a]
+homoToPolyphonic      :: Voice [a] -> [Voice a]
+joinVoice             :: Voice (Voice a) -> a
+changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
+changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
+processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
+processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
+onsetsRelative    :: Time -> Voice a -> [Time]
+offsetsRelative   :: Time -> Voice a -> [Time]
+midpointsRelative :: Time -> Voice a -> [Time]
+erasRelative      :: Time -> Voice a -> [Span]
+onsetMap  :: Time -> Voice a -> Map Time a
+offsetMap :: Time -> Voice a -> Map Time a
+midpointMap :: Time -> Voice a -> Map Time a
+eraMap :: Time -> Voice a -> Map Span a
+durations :: Voice a -> [Duration]
+values    :: Voice a -> [a] -- Same as Foldable.toList
+isPossiblyInfinite :: Voice a -> Bool
+hasMelodicDissonanceWith :: (a -> a -> Bool) -> Voice a -> Bool
+hasIntervalWith :: AffineSpace a => (Diff a -> Bool) -> Voice a -> Bool
+hasDurationWith :: (Duration -> Bool) -> Voice a -> Bool
+reifyVoice :: Voice a -> Voice (Duration, a)
+mapWithIndex :: (Int -> a -> b) -> Voice a -> Voice b
+mapWithDuration :: (Duration -> a -> b) -> Voice a -> Voice b
+mapWithIndexAndDuration :: (Int -> Duration -> a -> b) -> Voice a -> Voice b
+_ :: Iso (Voice ()) [Duration]
+asingleton' :: Prism (Voice a) (Duration, a)
+asingleton :: Prism (Voice a) a
+separateVoicesWith :: (a -> k) -> Voice a -> Map k (Voice a)
+freeVoiceR :: (forall a. -> [a] -> a)          -> Voice a -> (a, Duration)
+freeVoiceRNoDur :: ([a] -> a)          -> Voice a -> a
+freeVoice  :: (forall a. -> [a] -> [a])        -> Voice a -> Voice a
+freeVoice2 :: (forall a. -> [a] -> [a] -> [a]) -> Voice a -> Voice a -> Voice a
+empty :: Voice a
+singleton :: a -> Voice a
+cons :: a -> Voice a -> Voice a
+snoc :: Voice a -> a -> Voice a
+append :: Voice a -> Voice a -> Voice a
+ap :: Voice (a -> b) -> Voice a -> Voice b
+apDur :: Voice (Duration -> Duration -> a -> b) -> Voice a -> Voice b
+intersperse :: Duration -> a -> Voice a -> Voice a
+-- intercalate :: Voice a -> Voice (Voice a) -> Voice a
+subsequences :: Voice a -> [Voice a]
+permutations :: Voice a -> [Voice a]
+iterate :: (a -> a) -> a -> Voice a
+repeat :: a -> Voice a
+replicate :: Int -> a -> Voice a
+unfoldr :: (b -> Maybe (a, b)) -> b -> Voice a
+Differences between Voice and Chord (except the obviously different composition styles):
+  - Voice is a Monoid, Chord just a Semigroup (??)
+  - TODO represent spanners using (Voice a, Map (Int,Int) s)
+  Arguably this should be part of Voice
+  TODO the MVoice/TVoice stuff
+newtype MVoice = Voice (Maybe a)
+newtype PVoice = [Either Duration (Voice a)]
+expandRepeats :: [Voice (Variant a)] -> Voice a
+
+-}
 
