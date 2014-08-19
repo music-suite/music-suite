@@ -95,6 +95,7 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set                 (Set)
 import qualified Data.Set                 as Set
+import           Data.String
 import           Data.VectorSpace
 
 import           Music.Time.Reverse
@@ -201,6 +202,9 @@ instance Reversible a => Reversible (Voice a) where
 
 
 -- Lifted instances
+
+instance IsString a => IsString (Voice a) where
+  fromString = pure . fromString
 
 instance IsPitch a => IsPitch (Voice a) where
   fromPitch = pure . fromPitch
@@ -381,7 +385,7 @@ zipVoiceWith = zipVoiceWith' (*)
 -- Join the given voices without combining durations.
 --
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWithNoScale f a b = zipVoiceWith' (\x y -> x) f a b
+zipVoiceWithNoScale = zipVoiceWith' const
 
 -- |
 -- Join the given voices by combining durations and values using the given function.
@@ -564,20 +568,29 @@ mapV = fmap
 
 -- Voice-specific
 
-sameDurations           :: Voice a -> Voice b -> Bool
-sameDurations = undefined
+sameDurations :: Voice a -> Voice b -> Bool
+sameDurations a b = view durationsV a == view durationsV b
 
-mergeIfSameDuration     :: Voice a -> Voice b -> Maybe (Voice (a, b))
-mergeIfSameDuration = undefined
+mergeIfSameDuration :: Voice a -> Voice b -> Maybe (Voice (a, b))
+mergeIfSameDuration = mergeIfSameDurationWith (,)
 
 mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
-mergeIfSameDurationWith = undefined
+mergeIfSameDurationWith f a b
+  | sameDurations a b = Just $ zipVoiceWithNoScale f a b
+  | otherwise         = Nothing
 
 -- splitAt :: [Duration] -> Voice a -> [Voice a]
 -- splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
 
+-- |
+-- Split all notes of the latter voice at the onset/offset of the former.
+--
+-- >>> ["a",(2,"b")^.stretched,"c"]^.voice
+--
 splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
-splitLatterToAssureSameDuration = undefined
+splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
+  where
+    dup x = (x,x)
 
 splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
 splitLatterToAssureSameDurationWith = undefined
@@ -591,8 +604,8 @@ polyToHomophonicForce = undefined
 homoToPolyphonic      :: Voice [a] -> [Voice a]
 homoToPolyphonic = undefined
 
-joinVoice             :: Voice (Voice a) -> a
-joinVoice = undefined
+joinVoice :: Voice (Voice a) -> Voice a
+joinVoice = join
 
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossing = undefined
