@@ -24,8 +24,6 @@
 --
 -- Provides a representation of harmonics. 
 --
--- /Warning/ This module is experimental.
---
 -------------------------------------------------------------------------------------
 
 module Music.Score.Harmonics (

@@ -25,8 +25,6 @@
 -- Provides a representation of musical /slides/, commonly known as /glissando/ or
 -- /portamento/. 
 --
--- /Warning/ This module is experimental.
---
 -------------------------------------------------------------------------------------
 
 module Music.Score.Slide (
