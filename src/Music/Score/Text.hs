@@ -28,12 +28,11 @@
 
 
 module Music.Score.Text (
-
         -- * Text
         HasText(..),
         TextT(..),
         text,
-
+        textLast,
   ) where
 
 import           Control.Applicative
@@ -103,9 +102,17 @@ deriving instance (Num a, Ord a, Real a) => Real (TextT a)
 deriving instance (Real a, Enum a, Integral a) => Integral (TextT a)
 
 -- |
--- Attach the given text to the first note in the score.
+-- Attach the given text to the first note.
 --
 text :: (HasPhrases' s a, HasText a) => String -> s -> s
-text s = over (phrases'._head) (addText s)
+text s = over (phrases' . _head) (addText s)
+
+-- |
+-- Attach the given text to the last note.
+--
+textLast :: (HasPhrases' s a, HasText a) => String -> s -> s
+textLast s = over (phrases' . _last) (addText s)
+
+
 
 
