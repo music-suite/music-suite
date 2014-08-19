@@ -86,9 +86,6 @@ newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
 -- @
 --
 
--- TODO move
-deriving instance Traversable (Couple a)
-
 -- >>> stretch 2 $ (5,1)^.stretched
 -- (10,1)^.stretched
 --
@@ -100,7 +97,6 @@ deriving instance Eq  a => Eq  (Stretched a)
 deriving instance Num a => Num (Stretched a)
 deriving instance Fractional a => Fractional (Stretched a)
 deriving instance Floating a => Floating (Stretched a)
-
 deriving instance Ord a => Ord (Stretched a)
 deriving instance Real a => Real (Stretched a)
 deriving instance RealFrac a => RealFrac (Stretched a)

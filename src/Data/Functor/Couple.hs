@@ -41,7 +41,7 @@ import Control.Lens (Wrapped(..), Rewrapped(..), iso)
 -- A variant of pair/writer with lifted instances for the numeric classes, using 'Applicative'.
 --
 newtype Twain b a = Twain { getTwain :: (b, a) }
-  deriving (Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
+  deriving (Show, Functor, Traversable, Foldable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
 
 instance Wrapped (Twain b a) where
   type Unwrapped (Twain b a) = (b, a)
@@ -116,7 +116,7 @@ instance (Monoid b, RealFrac a) => RealFrac (Twain b a) where
 -- A variant of pair/writer with lifted instances for the numeric classes, using 'Applicative'.
 --
 newtype Couple b a = Couple { getCouple :: (b, a) }
-  deriving (Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
+  deriving (Show, Functor, Foldable, Traversable, Typeable, Applicative, Monad, Comonad, Semigroup, Monoid)
 
 instance Wrapped (Couple b a) where
   type Unwrapped (Couple b a) = (b, a)
