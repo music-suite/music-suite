@@ -73,6 +73,8 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
                                          transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Semigroup
@@ -170,6 +172,9 @@ instance Transformable a => Transformable [a] where
 
 instance Transformable a => Transformable (Seq a) where
   transform t = fmap (transform t)
+
+instance (Ord a, Transformable a) => Transformable (Set a) where
+  transform t = Set.map (transform t)
 
 instance (Ord k, Transformable a) => Transformable (Map k a) where
   transform t = Map.map (transform t)
