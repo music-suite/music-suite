@@ -64,6 +64,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.String
 
 import           Music.Time.Delayed
 import           Music.Time.Reverse
@@ -141,6 +142,9 @@ chord = _Wrapped
 -- TODO names are not consistent with other types
 unsafeChord :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
 unsafeChord = _Wrapped
+
+instance IsString a => IsString (Chord a) where
+  fromString = pure . fromString
 
 deriving instance IsPitch a => IsPitch (Chord a)	 
 deriving instance IsInterval a => IsInterval (Chord a)	 

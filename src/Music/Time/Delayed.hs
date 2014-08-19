@@ -50,10 +50,8 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.String
 import           Data.Functor.Adjunction  (unzipR)
-
-import           Music.Time.Reverse
-import           Music.Time.Split
 
 import           Control.Applicative
 import           Control.Comonad
@@ -68,6 +66,8 @@ import           Data.Typeable
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Reverse
+import           Music.Time.Split
 
 
 -- |
@@ -115,6 +115,20 @@ instance Splittable a => Splittable (Delayed a) where
   -- TODO is this right?
   split t = unzipR . fmap (split t)
 
+-- Lifted instances
+
+instance IsString a => IsString (Delayed a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Delayed a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Delayed a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Delayed a) where
+  fromDynamics = pure . fromDynamics
+
 -- |
 -- View a delayed value as a pair of a the original value and a delay time.
 --
@@ -140,7 +154,4 @@ runDelayed = uncurry delayTime . view _Wrapped
   where
     delayTime t = delay (t .-. 0)
 
-deriving instance IsPitch a => IsPitch (Delayed a)	 
-deriving instance IsInterval a => IsInterval (Delayed a)	 
-deriving instance IsDynamics a => IsDynamics (Delayed a)
 

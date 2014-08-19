@@ -69,6 +69,7 @@ import           Data.Semigroup
 import           Data.Set                      (Set)
 import qualified Data.Set                      as Set
 import           Data.VectorSpace
+import           Data.String
 import           Prelude
 
 import           Control.Applicative
@@ -174,6 +175,9 @@ instance Real a => Real (Behavior a) where
 
 -- #ifdef INCLUDE_LIFTED
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
+
+instance IsString a => IsString (Behavior a) where
+  fromString = pure . fromString
 
 instance IsPitch a => IsPitch (Behavior a) where
   fromPitch = pure . fromPitch

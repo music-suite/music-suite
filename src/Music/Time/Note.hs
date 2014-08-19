@@ -47,10 +47,8 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
+import           Data.String
 import           Data.VectorSpace
-
-import           Music.Time.Reverse
-import           Music.Time.Split
 
 import           Control.Applicative
 import           Control.Comonad
@@ -62,7 +60,14 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
+
+import           Music.Pitch.Literal
+import           Music.Dynamics.Literal
 import           Music.Time.Internal.Util (through, tripped)
+
+import           Music.Time.Reverse
+import           Music.Time.Split
+
 
 -- |
 -- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance
@@ -127,6 +132,20 @@ instance Splittable a => Splittable (Note a) where
 
 instance Reversible (Note a) where
   rev = revDefault
+
+-- Lifted instances
+
+instance IsString a => IsString (Note a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Note a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Note a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Note a) where
+  fromDynamics = pure . fromDynamics
 
 -- |
 -- View a note as a pair of the original value and the transformation (and vice versa).

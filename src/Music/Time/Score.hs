@@ -78,6 +78,7 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.String
 import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Juxtapose   (scat)
@@ -201,6 +202,9 @@ instance HasDuration (Score a) where
 
 
 -- Lifted instances
+
+instance IsString a => IsString (Score a) where
+  fromString = pure . fromString
 
 instance IsPitch a => IsPitch (Score a) where
   fromPitch = pure . fromPitch

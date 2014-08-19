@@ -49,10 +49,8 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
+import           Data.String
 import           Data.Functor.Couple
-
-import           Music.Time.Reverse
-import           Music.Time.Split
 
 import           Control.Applicative
 import           Control.Comonad
@@ -64,6 +62,12 @@ import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
 import           Data.PairMonad
 import           Data.Typeable
+
+import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
+import           Music.Time.Reverse
+import           Music.Time.Split
+
 
 -- |
 -- A 'Stretched' value has a known 'duration', but no 'position'.
@@ -123,6 +127,20 @@ instance Splittable a => Splittable (Stretched a) where
   ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
 
 deriving instance Show a => Show (Stretched a)
+
+-- Lifted instances
+
+instance IsString a => IsString (Stretched a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Stretched a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Stretched a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Stretched a) where
+  fromDynamics = pure . fromDynamics
 
 -- |
 -- View a stretched value as a pair of the original value and a stretch factor.
