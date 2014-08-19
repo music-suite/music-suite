@@ -122,7 +122,8 @@ instance Splittable a => Splittable (Stretched a) where
   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
   ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
 
-deriving instance Show a => Show (Stretched a)
+instance (Show a, Transformable a) => Show (Stretched a) where
+  show x = show (x^.from stretched) ++ "^.stretched"
 
 -- Lifted instances
 

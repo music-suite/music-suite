@@ -124,7 +124,10 @@ import           Music.Time.Internal.Util
 -- A 'Voice' is a sequential composition of values. Events may not overlap.
 --
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Eq)
+
+instance (Show a, Transformable a) => Show (Voice a) where
+  show x = show (x^.stretcheds) ++ "^.voice"
 
 --
 -- $semantics Voice

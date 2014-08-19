@@ -91,7 +91,8 @@ newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
 -- @
 --
 
-deriving instance Show a => Show (Delayed a)
+instance (Show a, Transformable a) => Show (Delayed a) where
+  show x = show (x^.from delayed) ++ "^.delayed"
 
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
