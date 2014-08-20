@@ -95,6 +95,8 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set                 (Set)
 import qualified Data.Set                 as Set
+import           Data.Sequence            (Seq)
+import qualified Data.Sequence            as Seq
 import           Data.String
 import           Data.VectorSpace
 
@@ -150,9 +152,14 @@ type VoiceList = []
 
 -- Can use any type as long as voiceEv provides an Iso
 type VoiceEv a = Stretched a
+-- type VoiceEv a = ((),Stretched a)
 
 voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
 voiceEv = id
+-- voiceEv = iso add remove
+--   where
+--     add x = ((),x)
+--     remove ((),x) = x
 
 instance Applicative Voice where
   pure  = return
