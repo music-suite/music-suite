@@ -192,12 +192,11 @@ instance Splittable a => Splittable (Score a) where
       (x1, x2) = split t x
 
 instance HasPosition (Score a) where
-  _onset (Score (_,x))    = _onset x
-  _offset (Score (_,x))   = _offset x
-  _position (Score (_,x)) = _position x
+  _position = _position . snd . view _Wrapped' . normalizeScore'
+  -- TODO clean up in terms of AddMeta and optimize
 
 instance HasDuration (Score a) where
-  _duration (Score (_,x)) = _duration x
+  _duration x = _offset x .-. _onset x
 
 
 
@@ -519,10 +518,18 @@ mapFilterEvents f = mcatMaybes . mapEvents f
 
 -- | Mainly useful for backends.
 normalizeScore :: Score a -> Score a
-normalizeScore = reset . absDurations
+normalizeScore = reset . normalizeScore'
   where
     reset x = set onset (view onset x `max` 0) x
-    absDurations = over (notes.each.era.delta._2) abs
+
+normalizeScore' = over (notes . each . era) normalizeSpan
+-- TODO version that reverses the values where appropriate
+-- Use over (notes . each) normalizeNote or similar
+
+-- normalizeScore = reset . absDurations
+--   where
+--     reset x = set onset (view onset x `max` 0) x
+--     absDurations = over (notes.each.era.delta._2) abs
 
 -- |
 -- Extract all eras of the given score.

@@ -35,6 +35,7 @@ module Music.Time.Chord (
 
       -- * Construction
       chord,
+      unchord,
       unsafeChord,
 
       -- invertC,
@@ -134,8 +135,11 @@ instance Reversible a => Reversible (Chord a) where
 -- instance HasMeta (Chord a) where
   -- meta = error "Not implemented: meta"
 
-chord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
-chord = _Wrapped
+chord :: Getter [Delayed a] (Chord a)
+chord = from unsafeChord
+
+unchord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
+unchord = _Wrapped
 
 -- TODO names are not consistent with other types
 unsafeChord :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
