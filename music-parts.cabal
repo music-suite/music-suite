@@ -53,5 +53,11 @@ library
                         -- Music.Parts.Instrument.Percussion
                         -- Music.Parts.Instrument.Rhythm
                         -- Music.Parts.Instrument.Other
+                        
+                        -- TODO a way to classify parts
+                        -- so we know what goes on which staff, what kind of bracket to generate etc
+                        
+                        -- TODO some sub-subdivision (not for player allocation, but hand/finger)
+                        
     hs-source-dirs:     src
     default-language:   Haskell2010
