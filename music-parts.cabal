@@ -30,11 +30,28 @@ library
                         adjunctions             >= 4.1 && < 5,
                         roman-numerals
     exposed-modules:    Music.Parts
+                        -- Music.Parts.Basic
+                        -- -- TODO choral voicings etc
+                        -- -- TODO use single type or many? How to do "subtyping"
+                        -- -- Prisms, TFs, something else?
+                        -- 
+                        -- -- TODO require pitch dep
+                        -- Music.Parts.Range
+                        -- 
+                        -- Music.Parts.Division
+                        -- Music.Parts.Subpart
                         -- Music.Parts.Strings
                         -- Music.Parts.Woodwind
                         -- Music.Parts.Brass
                         -- Music.Parts.Percussion
                         -- Music.Parts.Rhythm
                         -- Music.Parts.Other
+                        -- Music.Parts.Instrument
+                        -- Music.Parts.Instrument.Strings
+                        -- Music.Parts.Instrument.Woodwind
+                        -- Music.Parts.Instrument.Brass
+                        -- Music.Parts.Instrument.Percussion
+                        -- Music.Parts.Instrument.Rhythm
+                        -- Music.Parts.Instrument.Other
     hs-source-dirs:     src
     default-language:   Haskell2010
