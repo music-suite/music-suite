@@ -9,7 +9,7 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Provides overloaded pitch literals.
+-- Provides relative dynamics.
 --
 -------------------------------------------------------------------------------------
 
