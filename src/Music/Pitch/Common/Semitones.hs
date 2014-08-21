@@ -11,7 +11,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides semitone, octave and step representaiton of intervals.
+-- Provides semitone, octave and step representation of intervals.
 --
 -------------------------------------------------------------------------------------
 

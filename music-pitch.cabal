@@ -14,11 +14,6 @@ build-type:             Simple
 description: 
     This package provides various representations of musical pitch.
     .
-    Note that this package is independent of @music-score@ and vice versa.
-    This is a deliberate design choice: the user should be free to combine any
-    pitch representation with any time structure. Normally you will include
-    both packages through @music-preludes@.
-    .
     This library is part of the Music Suite, see
     <http://music-suite.github.io>.
 
@@ -34,7 +29,8 @@ library
                         semigroups              >= 0.13.0.1 && < 1,
                         semigroupoids,
                         music-pitch-literal     == 1.7.1,
-                        vector-space            >= 0.8.7 && < 0.9
+                        vector-space            >= 0.8.7 && < 0.9,
+                        type-unary              >= 0.2.16 && < 1.0
                         -- type-level              >= 0.2.4 && < 3.0
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
