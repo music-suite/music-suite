@@ -20,13 +20,11 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides conversion betwen temporal container.
---
--- /Warning/ This module will be removed soon.
+-- Provides miscellaneous conversions.
 --
 -------------------------------------------------------------------------------------
 
-module Music.Score.Convert (
+module Music.Time.Internal.Convert (
         voiceToScore,
         voiceToScore',
         scoreToVoice,
@@ -47,9 +45,7 @@ import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
 
-import           Music.Score.Part
 import           Music.Time
-import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List

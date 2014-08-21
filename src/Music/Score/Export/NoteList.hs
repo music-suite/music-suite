@@ -57,7 +57,6 @@ import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
-import Music.Score.Convert (reactiveToVoice') -- TODO
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
 import Music.Score.Export.DynamicNotation
 import Data.Semigroup.Instances

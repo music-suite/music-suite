@@ -81,9 +81,9 @@ import           Data.Traversable           (Traversable, sequenceA)
 import           Data.VectorSpace           hiding (Sum (..))
 import           System.Process
 
-import           Music.Score.Convert
 import           Music.Score.Part
 import           Music.Time
+import           Music.Time.Internal.Convert
 import           Music.Time.Internal.Util
 
 

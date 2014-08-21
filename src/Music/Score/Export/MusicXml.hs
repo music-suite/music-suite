@@ -73,7 +73,7 @@ import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
 import           Music.Score.Color
-import           Music.Score.Convert                     (reactiveToVoice')
+import           Music.Time.Internal.Convert             (reactiveToVoice')
 import           Music.Score.Dynamics
 import           Music.Score.Export.ArticulationNotation
 import           Music.Score.Export.Backend

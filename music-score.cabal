@@ -123,9 +123,9 @@ library
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
-                        Music.Score.Convert
                         Music.Score.Instances
                         -- We expose these to allow GHCI development
+                        Music.Time.Internal.Convert
                         Music.Time.Internal.Util
                         Music.Time.Internal.Transform
                         Music.Time.Internal.Quantize

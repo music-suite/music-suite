@@ -50,7 +50,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 
 import           Music.Score.Articulation
-import           Music.Score.Convert      (reactiveToVoice', scoreToVoice)
+import           Music.Time.Internal.Convert
 import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
