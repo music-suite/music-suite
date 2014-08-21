@@ -309,14 +309,14 @@ rhythm' = mzero
 -- beat = do
 --     RhythmContext tm ts _ <- getState
 --     (\d -> (d^/tm) `subDur` ts) <$> match (\d _ ->
---         d - ts > 0  &&  isDivisibleBy 2 (d / tm - ts))
+--         d - ts > 0  &&  isPowerOf 2 (d / tm - ts))
 
 beat :: Tiable a => RhythmParser a (Rhythm a)
 beat = do
   RhythmContext tm ts _ <- getState
   match' $ \d x ->
       let d2 = d / tm - ts
-      in (d2, x) `assuming` (d - ts > 0 && isDivisibleBy 2 d2)
+      in (d2, x) `assuming` (d - ts > 0 && isPowerOf2 d2)
 
 
 -- | Matches a dotted rhythm
@@ -422,17 +422,29 @@ onlyIf b p = if b then p else mzero
 assuming :: a -> Bool -> Maybe a
 assuming x b = if b then Just x else Nothing
 
+
+{-
+isDivisibleBy2 :: RealFrac a => a -> Bool
+isDivisibleBy2 x = isInt x && even (round x)
+
+isInt :: RealFrac a => a -> Bool
+isInt x = x == fromInteger (round x)
+-}
+
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
 logBaseR k n | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
 logBaseR k n | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n | otherwise                             = logBase (fromRational k) (fromRational n)
 
 
-divides     = isDivisibleBy
-divisibleBy = flip isDivisibleBy
+-- divides     = isDivisibleBy
+-- divisibleBy = flip isDivisibleBy
 
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
-isDivisibleBy :: Duration -> Duration -> Bool
-isDivisibleBy n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+isPowerOf :: Duration -> Duration -> Bool
+isPowerOf n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
+
+isPowerOf2 :: Duration -> Bool
+isPowerOf2 = isPowerOf 2
 
