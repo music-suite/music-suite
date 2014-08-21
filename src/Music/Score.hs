@@ -9,8 +9,6 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a musical score representation.
---
 -------------------------------------------------------------------------------------
 
 module Music.Score (

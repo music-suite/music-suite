@@ -23,9 +23,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides a way to annotate data-types with 'Transformable' meta-data. See
--- "Music.Score.Meta" for more specific applications.
---
+-- Provides a way to annotate data-types with 'Transformable' meta-data.
 -- Inspired by Clojure meta-data and Diagrams styles.
 --
 -------------------------------------------------------------------------------------

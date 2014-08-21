@@ -9,8 +9,6 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Provides generic functions for manipulating time-based structures.
---
 -------------------------------------------------------------------------------------
 
 module Music.Time (

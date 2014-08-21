@@ -24,8 +24,6 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Behaviors, or time-varying values.
---
 -------------------------------------------------------------------------------------
 
 module Music.Time.Behavior (

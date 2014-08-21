@@ -22,8 +22,6 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Combinators for manipulating scores and related structures.
---
 -------------------------------------------------------------------------------------
 
 module Music.Score.Meta (
