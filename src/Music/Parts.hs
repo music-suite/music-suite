@@ -14,7 +14,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- Part representation.
+-- Provides various representaitons of musical instruments, subdivisions and parts.
 --
 -------------------------------------------------------------------------------------
 
