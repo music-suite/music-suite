@@ -9,11 +9,7 @@
 -- Stability   : experimental
 -- Portability : non-portable (TF,GNTD)
 --
--- The "music-pitch" package provides several pitch and interval types. 
---
--- See 'Pitch' and 'Interval' for common
--- representations. If you want to use an alternative represention, import the relevant
--- submodule.
+-- Provides various representations of musical pitches and intervals. 
 --
 -------------------------------------------------------------------------------------
 
