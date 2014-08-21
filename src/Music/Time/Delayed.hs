@@ -30,14 +30,12 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Delayed (
-      -- * Delayed type
-      Delayed,
+        -- * Delayed type
+        Delayed,
 
-      -- * Construction
-      delayed,
-
-      -- ** Inspecting delayed values
-      delayedValue,
+        -- * Construction
+        delayed,
+        delayedValue,
   ) where
 
 import           Data.AffineSpace
