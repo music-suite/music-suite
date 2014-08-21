@@ -650,7 +650,8 @@ openLilypond' options sc = do
   runLilypond >> cleanLilypond >> runOpen
     where
       runLilypond = void $ runCommand
-        "lilypond -f pdf test.ly"  >>= waitForProcess
+        -- "lilypond -f pdf test.ly"  >>= waitForProcess
+        "lilypond -f pdf test.ly 2>/dev/null"  >>= waitForProcess
       cleanLilypond = void $ runCommand
         "rm -f test-*.tex test-*.texi test-*.count test-*.eps test-*.pdf test.eps"
       runOpen = void $ runCommand
