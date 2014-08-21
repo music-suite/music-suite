@@ -37,21 +37,22 @@ module Music.Time.Position (
 
       -- * The HasPosition class
       HasPosition(..),
-      -- * Inspecting position
+
+      -- * Era
       era,
+
+      -- * Position
       position,
 
-      -- * Specific positions
+      -- ** Specific positions
       onset,
       midpoint,
       offset,
       preOnset,
       postOffset,
-
-      -- ** Deprecated
       postOnset,
 
-      -- * Moving to absolute positions
+      -- * Moving
       startAt,
       stopAt,
       placeAt,

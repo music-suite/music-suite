@@ -36,27 +36,23 @@ module Music.Time.Transform (
         Transformable(..),
         itransform,
         transformed,
-
-        -- * Apply under a transformation
         whilst,
         spanned,
         onSpan,
-        -- conjugateS,
+        conjugateS,
 
         -- * Specific transformations
         -- ** Transformations
-        delay,
-        undelay,
-        stretch,
-        compress,
-
-        -- ** Transforming values
         delaying,
         undelaying,
         stretching,
         compressing,
 
-        -- * Utility
+        -- ** Transforming values
+        delay,
+        undelay,
+        stretch,
+        compress,
         delayTime,
 
   ) where

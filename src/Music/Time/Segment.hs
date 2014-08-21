@@ -37,18 +37,11 @@ module Music.Time.Segment (
         -- $musicTimeBehaviorExamples
         -- (!^),
         -- behavior',
+
+        -- * Construction
         behavior,
 
-        -- ** Combinators
-        switch,
-        switch',
-        splice,
-        trim,
-        trimBefore,
-        trimAfter,
-        concatB,
-
-        -- * Common behaviors
+        -- ** Common versions
         line,
         unit,
         impulse,
@@ -58,21 +51,35 @@ module Music.Time.Segment (
         sine,
         cosine,
 
+        -- ** Combine
+        switch,
+        switch',
+        splice,
+        trim,
+        trimBefore,
+        trimAfter,
+        concatB,
+
         -- * Segment type
         Segment,
         -- ** Examples
         -- $XXmusicTimeSegmentExamples
+
+        -- * Construction
         segment,
 
-        -- ** Combinators
+        -- * Combine
         focusing,
         apSegments',
         apSegments,
         -- concatS,
 
+        -- * Bound type
         Bound,
+        -- * Query        
         bounds,
         bounding,
+        -- * Combine
         trim,
         splice,
         bounded',

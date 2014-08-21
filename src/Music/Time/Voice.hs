@@ -46,11 +46,11 @@ module Music.Time.Voice (
         fuse,
         fuseBy,
 
-        -- ** Special cases
+        -- ** Fuse rests
         fuseRests,
         coverRests,
 
-        -- * Traversing
+        -- * Traversal
         -- ** Separating rhythms and values
         withValues,
         withDurations,

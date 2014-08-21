@@ -36,7 +36,7 @@ module Music.Time.Reverse (
         -- * The Reversible class
         Reversible(..),
 
-        -- * Reversed values
+        -- * Reversing
         reversed,
         revDefault,
 
@@ -167,6 +167,7 @@ instance Reversible a => Reversible (b, a) where
 revDefault :: (HasPosition a, Transformable a) => a -> a
 -- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
 revDefault x = stretch (-1) x
+
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
   deriving (Typeable, Eq, Ord, Show)

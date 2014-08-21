@@ -29,8 +29,8 @@
 module Music.Time.Reactive (
         -- * Reactive type
         Reactive,
-      
-        -- * Construction
+
+        -- * Query
         initial,
         final,
         intermediate,
@@ -38,19 +38,24 @@ module Music.Time.Reactive (
         updates,
         occs,
         atTime,
-        splitReactive,
+
+        -- * Construction
       
-        -- * Combinators
+        -- * Combine
         switchR,
         trimR,
 
-        -- * Sampling and discretization
+        -- * Split
+        splitReactive,
+
+        -- * Sampling
         continous,
         continousWith,
         sample,
         -- TODO
         -- window,
         -- windowed,   
+
   ) where
 
 -- Reactive values, or piecewise functions of time.

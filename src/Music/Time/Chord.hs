@@ -38,7 +38,7 @@ module Music.Time.Chord (
       unchord,
       unsafeChord,
 
-      -- invertC,
+      -- invertChord,
       -- inversions,
       -- chordToScore,
       -- arpUp3,

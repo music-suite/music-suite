@@ -35,27 +35,23 @@
 
 module Music.Score.Pitch (
         
-        -- * Pitch type functions
+        -- * Pitch type
         Pitch,
         SetPitch,
         Interval,
         
-        -- ** From pitches
-        fromPitch',
-        
-        -- * Accessing pitch
+        -- * HasPitch classes
         HasPitch(..),
         HasPitches(..),
+        fromPitch',
 
         -- ** Simple versions
         HasPitch',
-        pitch',
         HasPitches',
+        pitch',
         pitches',
         
-        -- * Manipulating pitch
-        -- Transposable,
-        -- ** Transposition
+        -- * Transposition
         up,
         down,
         above,
@@ -73,17 +69,17 @@ module Music.Score.Pitch (
         _8vb,
         _15vb,
 
-        -- ** Inversion
+        -- * Inversion
         inv,
         invertPitches,
 
-        -- * Inspecting pitch
+        -- * Folds
         highest,
         lowest,
         meanPitch,
 
-        -- * Intervals
-        augmentIntervals,
+        -- -- * Intervals
+        -- augmentIntervals,
 
         -- TODO pitchIs, to write filter pitchIs ... etc
         -- TODO gliss etc

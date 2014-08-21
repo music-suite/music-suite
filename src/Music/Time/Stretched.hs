@@ -29,7 +29,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Stretched (
-        -- * Stretched values
+        -- * Stretched type
         Stretched,
 
         -- * Construction

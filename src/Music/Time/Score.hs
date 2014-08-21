@@ -33,32 +33,16 @@ module Music.Time.Score (
         -- * Score type
         Score,
 
+        -- * Query
+
         -- * Construction
         score,
-      
-        -- ** Extracting values
         notes,
         eras,
         events,
-      
-        -- ** Pattern matching
         singleNote,
 
-        -- ** Unsafe versions
-        unsafeNotes,
-        unsafeEvents,
-
-
-        -- * Simultaneous values
-        -- TODO check for overlapping values etc
-        simult,
-        simultaneous,
-
-        -- * Normalize
-        normalizeScore,
-        printEras,
-        
-        -- * Traversing
+        -- * Traversal
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
@@ -66,6 +50,19 @@ module Music.Time.Score (
         filterEvents,
         mapFilterEvents,
 
+        -- * Simultaneous
+        -- TODO check for overlapping values etc
+        simult,
+        simultaneous,
+
+        -- * Normalize
+        normalizeScore,
+        printEras,
+
+        -- * Unsafe versions
+        unsafeNotes,
+        unsafeEvents,
+        
   ) where
 
 import           Data.AffineSpace
@@ -465,6 +462,7 @@ unsafeEvents = iso _getScore _score
 singleNote :: Prism' (Score a) (Note a)
 singleNote = unsafeNotes . single
 {-# INLINE singleNote #-}
+{-# DEPRECATED singleNote "Use 'unsafeNotes . single'" #-}
 -- TODO make prism fail if score contains meta-data
 -- (or else second prism law is not satisfied)
 
