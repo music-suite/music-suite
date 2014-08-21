@@ -86,7 +86,29 @@ module Music.Time.Types (
         isProper,
         isBefore,
         encloses,
+        properlyEncloses,
         overlaps,
+        
+        afterOnset,
+        strictlyAfterOnset,
+        beforeOnset,
+        strictlyBeforeOnset,
+        afterOffset,
+        strictlyAfterOffset,
+        beforeOffset,
+        strictlyBeforeOffset,
+        
+        startsWhenStarts,
+        startsWhenStops,
+        stopsWhenStops,
+        stopsWhenStarts,
+        
+        startsBefore,
+        startsLater,
+        stopsAtTheSameTime,
+        stopsBefore,
+        stopsLater,
+        
         -- union
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
@@ -130,6 +152,7 @@ import           Music.Time.Internal.Util (showRatio)
 -- for 'Fractional' and 'RealFrac'.
 --
 type TimeBase = Rational
+-- type TimeBase = Fixed E12
 {-
 type TimeBase = Fixed E12
 
@@ -265,7 +288,7 @@ fromTime = realToFrac
 -- @length (offsetPoints x xs) = length xs + 1@
 --
 -- >>> offsetPoints 0 [1,2,1]
--- [0,1,2,1]
+-- [0,1,3,4]
 --
 -- @
 -- offsetPoints :: 'AffineSpace' a => 'Time' -> ['Duration'] -> ['Time']
@@ -422,6 +445,10 @@ instance AdditiveGroup Span where
 -- (b .-^ a) <-> b = a <-< b
 --
 
+infixl 6 <->
+infixl 6 >->
+infixl 6 <-<
+
 -- |
 -- @t \<-\> u@ represents the span between @t@ and @u@.
 --
@@ -571,14 +598,27 @@ isProper :: Span -> Bool
 isProper (view range -> (t, u)) = t < u
 {-# DEPRECATED isProper "Use 'isForwardSpan'" #-}
 
+infixl 5 `inside`
+infixl 5 `encloses`
+infixl 5 `properlyEncloses`
+infixl 5 `overlaps`
+-- infixl 5 `encloses`
+-- infixl 5 `encloses`
+-- infixl 5 `encloses`
+
 -- |
 -- Whether the given point falls inside the given span (inclusively).
 --
 -- Designed to be used infix, for example
 --
--- @
--- 0.5 ``inside`` (1 '<->' 2)
--- @
+-- >>> 0.5 `inside` 1 <-> 2
+-- False
+--
+-- >>> 1.5 `inside` 1 <-> 2
+-- True
+--
+-- >>> 1 `inside` 1 <-> 2
+-- True
 --
 inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
@@ -586,8 +626,133 @@ inside x (view range -> (t, u)) = t <= x && x <= u
 -- |
 -- Whether the first given span encloses the second span.
 --
+-- >>> 0 <-> 3 `encloses` 1 <-> 2
+-- True
+--
+-- >>> 0 <-> 2 `encloses` 1 <-> 2
+-- True
+--
+-- >>> 1 <-> 3 `encloses` 1 <-> 2
+-- True
+--
+-- >>> 1 <-> 2 `encloses` 1 <-> 2
+-- True
+--
 encloses :: Span -> Span -> Bool
 a `encloses` b = _onsetS b `inside` a && _offsetS b `inside` a
+
+-- |
+-- Whether the first given span encloses the second span.
+--
+-- >>> 0 <-> 3 `properlyEncloses` 1 <-> 2
+-- True
+--
+-- >>> 0 <-> 2 `properlyEncloses` 1 <-> 2
+-- True
+--
+-- >>> 1 <-> 3 `properlyEncloses` 1 <-> 2
+-- True
+--
+-- >>> 1 <-> 2 `properlyEncloses` 1 <-> 2
+-- False
+--
+properlyEncloses :: Span -> Span -> Bool
+a `properlyEncloses` b = a `encloses` b && a /= b
+
+
+
+-- TODO more intuitive param order
+
+afterOnset :: Time -> Span -> Bool
+t `afterOnset` s = t >= _onsetS s
+
+strictlyAfterOnset :: Time -> Span -> Bool
+t `strictlyAfterOnset` s = t > _onsetS s
+
+beforeOnset :: Time -> Span -> Bool
+t `beforeOnset` s = t <= _onsetS s
+
+strictlyBeforeOnset :: Time -> Span -> Bool
+t `strictlyBeforeOnset` s = t < _onsetS s
+
+afterOffset :: Time -> Span -> Bool
+t `afterOffset` s = t >= _offsetS s
+
+strictlyAfterOffset :: Time -> Span -> Bool
+t `strictlyAfterOffset` s = t > _offsetS s
+
+beforeOffset :: Time -> Span -> Bool
+t `beforeOffset` s = t <= _offsetS s
+
+strictlyBeforeOffset :: Time -> Span -> Bool
+t `strictlyBeforeOffset` s = t < _offsetS s
+
+
+-- Param order OK
+
+-- Name?
+startsWhenStarts :: Span -> Span -> Bool
+a `startsWhenStarts` b = _onsetS a == _onsetS b
+
+-- Name?
+startsWhenStops :: Span -> Span -> Bool
+a `startsWhenStops` b = _onsetS a == _offsetS b
+
+-- Name?
+stopsWhenStops :: Span -> Span -> Bool
+a `stopsWhenStops` b = _offsetS a == _offsetS b
+
+-- Name?
+stopsWhenStarts :: Span -> Span -> Bool
+a `stopsWhenStarts` b = _offsetS a == _onsetS b
+
+
+startsBefore :: Span -> Span -> Bool
+a `startsBefore` b = _onsetS a < _onsetS b
+
+startsLater :: Span -> Span -> Bool
+a `startsLater` b = _onsetS a > _onsetS b
+
+stopsAtTheSameTime :: Span -> Span -> Bool
+a `stopsAtTheSameTime` b = _offsetS a == _offsetS b
+
+stopsBefore :: Span -> Span -> Bool
+a `stopsBefore` b = _offsetS a < _offsetS b
+
+stopsLater :: Span -> Span -> Bool
+a `stopsLater` b = _offsetS a > _offsetS b
+
+{-
+contains
+curtails
+delays
+happensDuring
+intersects
+trisects
+isCongruentTo
+overlapsAllOf
+overlapsOnlyOnsetOf
+overlapsOnlyOffsetOf
+overlapsOnsetOf
+overlapsOffsetOf
+
+
+
+-}
+
+-- timespantools.timespan_2_starts_during_timespan_1
+-- timespantools.timespan_2_starts_when_timespan_1_starts
+-- timespantools.timespan_2_starts_when_timespan_1_stops
+-- timespantools.timespan_2_stops_after_timespan_1_starts
+-- timespantools.timespan_2_stops_after_timespan_1_stops
+-- timespantools.timespan_2_stops_before_timespan_1_starts
+-- timespantools.timespan_2_stops_before_timespan_1_stops
+-- timespantools.timespan_2_stops_during_timespan_1
+-- timespantools.timespan_2_stops_when_timespan_1_starts
+-- timespantools.timespan_2_stops_when_timespan_1_stops
+-- timespantools.timespan_2_trisects_timespan_1     
+
+
 
 -- |
 -- Whether the given span overlaps.
