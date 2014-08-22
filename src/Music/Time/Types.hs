@@ -287,8 +287,8 @@ fromTime = realToFrac
 -- |
 -- @length (offsetPoints x xs) = length xs + 1@
 --
--- >>> offsetPoints 0 [1,2,1]
--- [0,1,3,4]
+-- >>> offsetPoints (0 ::Double) [1,2,1]
+-- [0.0,1.0,3.0,4.0]
 --
 -- @
 -- offsetPoints :: 'AffineSpace' a => 'Time' -> ['Duration'] -> ['Time']
@@ -394,16 +394,16 @@ newtype Span = Delta { _delta :: (Time, Duration) }
 -- $musicTimeSpanIsos
 --
 -- >>> (2 <-> 3)^.range
--- > (2, 3)
--- >
--- >>> hs> (2 <-> 3)^.delta
--- > (2, 1)
--- >
--- >>> hs> (10 >-> 5)^.range
--- > (10, 15)
--- >
--- >>> hs> (10 >-> 5)^.delta
--- > (10, 5)
+-- (2,3)
+--
+-- >>> (2 <-> 3)^.delta
+-- (2,1)
+--
+-- >>> (10 >-> 5)^.range
+-- (10,15)
+--
+-- >>> (10 >-> 5)^.delta
+-- (10,5)
 --
 
 instance Show Span where
@@ -541,11 +541,8 @@ fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta
 --
 -- A span is either /forward/, /backward/ or /empty/.
 --
--- >>> any id [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
--- True
---
--- >>> all not [isForwardSpan x, isBackwardSpan x, isEmptySpan x]
--- False
+-- @any id [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == True@
+-- @all not [isForwardSpan x, isBackwardSpan x, isEmptySpan x] == False@
 --
 
 -- |

@@ -181,8 +181,8 @@ instance Reversible (NoReverse a) where
 -- |
 -- View the reverse of a value.
 --
--- >>> [1,2,3] & reversed %~ sort
--- > [3,2,1]
+-- >>> [1,2,3] & reversed %~ Data.List.sort
+-- [3,2,1]
 --
 reversed :: Reversible a => Iso' a a
 reversed = iso rev rev

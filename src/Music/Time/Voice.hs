@@ -597,6 +597,7 @@ mergeIfSameDurationWith f a b
 -- Split all notes of the latter voice at the onset/offset of the former.
 --
 -- >>> ["a",(2,"b")^.stretched,"c"]^.voice
+-- [(1,"a")^.stretched,(2,"b")^.stretched,(1,"c")^.stretched]^.voice
 --
 splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
 splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
@@ -614,9 +615,6 @@ polyToHomophonicForce = undefined
 
 homoToPolyphonic      :: Voice [a] -> [Voice a]
 homoToPolyphonic = undefined
-
-joinVoice :: Voice (Voice a) -> Voice a
-joinVoice = join
 
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossing = undefined

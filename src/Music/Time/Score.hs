@@ -544,7 +544,7 @@ printEras = mapM_ print . toListOf eras
 -- Print all eras of the given score.
 --
 -- >>> toListOf eras $ scat [c,d,e :: Score Integer]
--- [0 <-> 1, 1 <-> 2, 2 <-> 3]
+-- [0 <-> 1,1 <-> 2,2 <-> 3]
 --
 eras :: Traversal' (Score a) Span
 eras = notes . each . era

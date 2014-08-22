@@ -416,10 +416,10 @@ type Transposable a = (
 -- >>> up m3 c
 -- eb
 --
--- >>> up _P5 [c,d,e]
+-- >>> up _P5 [c,d,e :: Pitch]
 -- [g,a,b]
 --
--- >>> up _P5 [440::Hertz, 442, 810]
+-- >>> up _P5 [440 :: Hertz, 442, 810]
 -- [g,a,b]
 --
 up :: Transposable a => Interval a -> a -> a
