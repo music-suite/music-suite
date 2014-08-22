@@ -96,7 +96,6 @@ import           Music.Score.Ties
 import           Music.Score.Tremolo
 import           Music.Time
 import           Music.Time.Internal.Quantize
-import           Music.Time.Internal.Transform           (whilstLD)
 
 import qualified Text.Pretty                             as Pretty
 import qualified Music.MusicXml.Simple                   as MusicXml

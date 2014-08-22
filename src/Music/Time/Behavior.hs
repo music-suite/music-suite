@@ -349,7 +349,7 @@ focusingOn s = flip whilstM (negateV s) . focusing
 -}
 
 -- focusing `on` s == focusingOn s
-f `on` s = flip whilstM (negateV s) . f
+f `on` s = transformed (negateV s) . f
 
 -- |
 -- Instantly switch from one behavior to another.

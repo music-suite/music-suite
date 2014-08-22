@@ -55,7 +55,6 @@ import           Data.Traversable              (Traversable, sequenceA)
 import qualified Music.Lilypond                as Lilypond
 import qualified Music.MusicXml.Simple         as MusicXml
 import           Music.Score.Internal.Export   hiding (MVoice)
-import           Music.Time.Internal.Transform (whilstLD)
 import           System.Process
 import           Music.Time.Internal.Quantize
 import qualified Text.Pretty                   as Pretty

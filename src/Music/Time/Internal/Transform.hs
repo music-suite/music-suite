@@ -30,14 +30,16 @@
 
 module Music.Time.Internal.Transform (
 
+        module Music.Time.Types,
+
         -- * The Transformable class
         Transformable(..),
         itransform,
         transformed,
+        itransformed,
 
         -- * Apply under a transformation
         whilst,
-        whilstM,
         whilstL,
         whilstLT,
         whilstLD,
@@ -48,18 +50,18 @@ module Music.Time.Internal.Transform (
         conjugateS,
 
         -- * Specific transformations
-        delay,
-        undelay,
-        stretch,
-        compress,
-        -- ** Applied transformations
+        -- ** Transformations
         delaying,
         undelaying,
         stretching,
         compressing,
 
-        -- ** Utility
-        delayTime,    
+        -- ** Transforming values
+        delay,
+        undelay,
+        stretch,
+        compress,
+        delayTime,
 
   ) where
 
@@ -73,13 +75,14 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
                                          transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
 import           Data.Map               (Map)
 import qualified Data.Map               as Map
 import           Data.Semigroup
+import           Data.Semigroup.Instances ()
 import           Data.Sequence          (Seq)
 import qualified Data.Sequence          as Seq
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum (..))
 
 -- |
@@ -200,20 +203,45 @@ itransform s = transform (negateV s)
 -- |
 -- View the given value in the context of the given transformation.
 --
--- @
--- 'over' ('transformed' s) = (``whilst`` s)
--- @
---
-transformed :: Transformable a => Span -> Iso' a a
+transformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
 transformed s = iso (transform s) (itransform s)
 
 
+-- |
+-- Transforms a lens of to a 'Transformable' type to act inside a transformation.
+--
+itransformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
+itransformed s = transformed (negateV s)
+
+spanned = itransformed
+{-# DEPRECATED spanned "Use itransformed" #-}
+
+-- |
+-- Apply a function under transformation.
+--
+-- Designed to be used infix, as in
+--
+-- @
+-- 'stretch' 2 ``whilst`` 'delaying' 2
+-- @
+--
+whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
+-- f `whilst` t = transform (negateV t) . f . transform t
+f `whilst` t = over (transformed t) f
+
+
+delayed :: (Transformable a, Transformable b) => Time -> Iso a b a b
+delayed = transformed . delayingTime
+
+stretched :: (Transformable a, Transformable b) => Duration -> Iso a b a b
+stretched = transformed . stretching
 
 -- |
 -- A transformation that moves a value forward in time.
 --
 delaying :: Duration -> Span
 delaying x = (0 .+^ x) >-> 1
+delayingTime x = x >-> 1
 
 -- |
 -- A transformation that stretches (augments) a value by the given factor.
@@ -266,8 +294,7 @@ compress = transform . compressing
 -- the value is starting at time zero.
 --
 delayTime :: Transformable a => Time -> a -> a
-delayTime t = delay (t .-. 0)
-{-# DEPRECATED delayTime "Use the full form (delay . (.-. 0))" #-}
+delayTime = transform . delayingTime
 
 
 --
@@ -292,47 +319,72 @@ delayTime t = delay (t .-. 0)
 --
 -- Perhaps we should call the inline version `whilst`, as in @f `whilst` delaying 2@?
 
-
--- |
--- Apply a function under transformation.
---
--- Designed to be used infix, as in
---
--- @
--- 'stretch' 2 ``whilst`` 'delaying' 2
--- @
---
-whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
-f `whilst` t = transform (negateV t) . f . transform t
-
--- |
--- Apply a morphism under transformation (monadic version).
---
-
-whilstM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
-f `whilstM` t = fmap (transform (negateV t)) . f . transform t
-
 {-
--- |
--- Apply a morphism under transformation (co-monadic version).
---
-whilstW :: (Functor f, Transformable a, Transformable b) => (f a -> b) -> Span -> f a -> b
-f `whilstW` t = transform (negateV t) . f . fmap (transform t)
+
+-- flip whilstM is a lens
+flip whilstM :: (Functor f, Transformable a, Transformable b) => (a -> f b) -> Span -> a -> f b
+s `flip whilstM` f = fmap (transform (negateV t)) . f . transform t
+
+-- is this the same as transformed?
+
+
+From lens:
+  iso sa bt = dimap sa (fmap bt)
+From profunctor:
+  dimap ab cd bc = cd . bc . ab
+  dimap ab cd    = \f -> cd . f . ab
+  
+
+flip whilstM = transformed
+flip whilstM = \s -> iso (transform s) (itransform s)
+flip whilstM = \s -> dimap (transform s) (fmap $ itransform s)
+flip whilstM = \s f -> (fmap $ itransform s) . f . transform s
+flip (\f t -> fmap (transform (negateV t)) . f . transform t) = \s f -> (fmap $ itransform s) . f . transform s
+
+\t f -> fmap (transform (negateV t)) . f . transform t 
+=
+\t f -> (fmap $ itransform t) . f . transform t
+
+\t f -> fmap (itransform t) . f . transform t 
+=
+\t f -> fmap (itransform t) . f . transform t
+
+
+
+
+Something similar to whilstL* is being used in Note/Delayed/Stretched
+Are they the same?
+
+whilstL l f (s,a)  = (s,) <$> (l $ transformed s f) a
+whilstL id f (s,a) = (s,) <$> (transformed s f) a
+whilstL id         = \f (s,a) -> (s,) <$> (transformed s f) a
+
+whilstL id
+  :: (Transformable a, Transformable b, Functor f) =>
+     (a -> f b) -> (Span, a) -> f (Span, b)
+
 -}
+
+dofoo :: Functor f => (s -> r -> a -> f b) -> r -> (s, a) -> f (s, b)
+dofoo q f (s,a) = (s,) <$> (q s f) a
+
+
+dobar q l f (s,a) = (s,) <$> (l $ q s f) a
+
 whilstL :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
   -> LensLike f (Span,s) (Span,t) a b
-whilstL  l f (s,a) = (s,) <$> (l $ f `whilstM` s) a
+whilstL = dobar transformed
 
 whilstLT :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
   -> LensLike f (Time,s) (Time,t) a b
-whilstLT l f (t,a) = (t,) <$> (l $ f `whilstM` (t >-> 1)) a
+whilstLT = dobar delayed
 
 whilstLD :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
   -> LensLike f (Duration,s) (Duration,t) a b
-whilstLD l f (d,a) = (d,) <$> (l $ f `whilstM` (0 >-> d)) a
+whilstLD = dobar stretched
 
 
 -- |
@@ -357,12 +409,6 @@ conjugateS t1 t2  = negateV t1 <> t2 <> t1
 -- |
 -- Transforms a lens of to a 'Transformable' type to act inside a transformation.
 --
-spanned :: (Transformable a, Transformable b) => Span -> Lens a b a b
-spanned s = flip whilstM (negateV s)
-
--- |
--- Transforms a lens of to a 'Transformable' type to act inside a transformation.
---
 -- Designed to be used infix, as in
 --
 -- @
@@ -373,7 +419,5 @@ onSpan :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f
 f `onSpan` s = spanned s . f
 -- TODO name
 
--- TODO move!
-deriving instance Functor Sum
-deriving instance Functor Product
-
+-- deriving instance Functor Sum
+-- deriving instance Functor Product
