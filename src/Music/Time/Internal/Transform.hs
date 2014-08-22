@@ -41,6 +41,7 @@ module Music.Time.Internal.Transform (
         -- * Apply under a transformation
         whilst,
         whilstL,
+        whilstL2,
         whilstLT,
         whilstLD,
         whilstStretch,
@@ -222,7 +223,7 @@ spanned = itransformed
 -- Designed to be used infix, as in
 --
 -- @
--- 'stretch' 2 ``whilst`` 'delaying' 2
+-- 'stretch' 2 `whilst` 'delaying' 2
 -- @
 --
 whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
@@ -365,16 +366,34 @@ whilstL id
 
 -}
 
-dofoo :: Functor f => (s -> r -> a -> f b) -> r -> (s, a) -> f (s, b)
-dofoo q f (s,a) = (s,) <$> (q s f) a
+-- dofoo
+  -- :: Functor f => (t -> t2) -> (a1 -> a) -> (t2 -> f a1) -> (t1, t) -> f (t1, a)
+dofoo v w = \f (s,a) -> (s,) <$> w s <$> f ((v s) a)
 
 
-dobar q l f (s,a) = (s,) <$> (l $ q s f) a
+
+dobar :: (Functor f) 
+
+  => 
+  (sp -> (s -> f t) -> (s -> f t)) 
+  -> ((s -> f t) -> a -> f b)
+  -> (s -> f t)  -> ((sp, a) -> f (sp, b))
+
+dobar q l = \f (s,a) -> (s,) <$> (l (q s f)) a
+
+-- whilstL2 :: (Transformable a, Transformable b) => Lens (Span, a) (Span, b) a b
+whilstL2 = dofoo (transform) (transform . negateV)
 
 whilstL :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
   -> LensLike f (Span,s) (Span,t) a b
-whilstL = dobar transformed
+  -- whilstL l = whilstL2 . l
+whilstL l = dobar transformed l
+
+{-
+If we could rewrite (whilstL l) as (whilstLXX . l)
+
+-}
 
 whilstLT :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
@@ -412,10 +431,11 @@ conjugateS t1 t2  = negateV t1 <> t2 <> t1
 -- Designed to be used infix, as in
 --
 -- @
--- l ``onSpan`` (2 \<-> 3)
+-- l `onSpan` (2 \<-> 3)
 -- @
 --
-onSpan :: (Transformable a, Functor f) => LensLike' f a b -> Span -> LensLike' f a b
+onSpan :: (Transformable s, Transformable t, Functor f) 
+  => LensLike f s t a b -> Span -> LensLike f s t a b
 f `onSpan` s = spanned s . f
 -- TODO name
 
