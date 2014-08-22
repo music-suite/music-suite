@@ -28,7 +28,8 @@ library
                         semigroupoids,
                         data-default,
                         adjunctions             >= 4.1 && < 5,
-                        roman-numerals
+                        roman-numerals,
+                        music-pitch             == 1.7.1
     exposed-modules:    Music.Parts
                         -- Music.Parts.Basic
                         -- -- TODO choral voicings etc
