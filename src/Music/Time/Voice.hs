@@ -328,6 +328,7 @@ unsafeStretcheds = _Wrapped
 singleStretched :: Prism' (Voice a) (Stretched a)
 singleStretched = unsafeStretcheds . single
 {-# INLINE singleStretched #-}
+{-# DEPRECATED singleStretched "Use 'unsafeStretcheds . single'" #-}
 
 
 -- |
