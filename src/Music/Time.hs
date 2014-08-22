@@ -36,7 +36,6 @@ module Music.Time (
     module Music.Time.Past,
     module Music.Time.Nominal,
     module Music.Time.Graces,
-    module Music.Time.Note,
     module Music.Time.Voice,
     module Music.Time.Chord,
     module Music.Time.Track,
@@ -74,3 +73,4 @@ import           Music.Time.Segment
 import           Music.Time.Stretched
 import           Music.Time.Track
 import           Music.Time.Voice
+

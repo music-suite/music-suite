@@ -66,7 +66,7 @@ import           Music.Time.Split
 -- Move a value so that
 --
 -- @
--- '_offset' (a ``lead`` b) = '_onset' b
+-- '_offset' (a `lead` b) = '_onset' b
 -- @
 --
 --
@@ -77,7 +77,7 @@ a `lead` b   = placeAt 1 (b `_position` 0) a
 -- Move a value so that
 --
 -- @
--- '_offset' a = '_onset' (a ``follow`` b)
+-- '_offset' a = '_onset' (a `follow` b)
 -- @
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b

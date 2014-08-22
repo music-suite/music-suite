@@ -339,7 +339,7 @@ turnOff = switch 0 1 0
 -- This can be used to modify a behavior in a specific range, as in
 --
 -- @
--- 'line' & 'focusing' ``on`` (2 '<->' 3) '+a~' 1
+-- 'line' & 'focusing' `on` (2 '<->' 3) '+a~' 1
 -- 'line' & 'focusingOn' (2 '<->' 3) '+~' 1
 -- @
 --

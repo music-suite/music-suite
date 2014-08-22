@@ -90,7 +90,7 @@ import           Data.VectorSpace       hiding (Sum (..))
 -- @
 --
 -- @
--- 'rev' s ``transform`` a = 'rev' (s ``transform`` a)
+-- 'rev' s `transform` a = 'rev' (s `transform` a)
 -- @
 --
 -- or equivalently,

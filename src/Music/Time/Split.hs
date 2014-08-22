@@ -73,8 +73,8 @@ import           Data.VectorSpace        hiding (Sum (..))
 --
 -- @
 -- '_duration' ('beginning' t x) + '_duration' ('ending' t x) = '_duration' x
--- '_duration' ('beginning' t x) = t ``min`` '_duration' x                    iff t >= 0
--- '_duration' ('ending' t x)    = '_duration' x - (t ``min`` '_duration' x)    iff t >= 0
+-- '_duration' ('beginning' t x) = t `min` '_duration' x                    iff t >= 0
+-- '_duration' ('ending' t x)    = '_duration' x - (t `min` '_duration' x)    iff t >= 0
 -- @
 --
 -- (Note that any of these three laws can be derived from the other two, so it is

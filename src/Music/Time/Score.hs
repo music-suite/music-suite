@@ -167,6 +167,7 @@ instance MonadPlus Score where
   mzero = mempty
   mplus = mappend
 
+{-
 instance FunctorWithIndex Span Score where
   imap f = over (_Wrapped._2) $ imap f
 
@@ -175,6 +176,7 @@ instance FoldableWithIndex Span Score where
 
 instance TraversableWithIndex Span Score where
   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
+-}
 
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)
@@ -272,6 +274,7 @@ instance MonadPlus NScore where
   mzero = mempty
   mplus = mappend
 
+{-
 instance FunctorWithIndex Span NScore where
   imap = undefined
   -- TODO
@@ -283,6 +286,7 @@ instance FoldableWithIndex Span NScore where
 instance TraversableWithIndex Span NScore where
   itraverse = undefined
   -- TODO
+-}
 
 instance Transformable (NScore a) where
   transform t (NScore xs) = NScore (fmap (transform t) xs)
