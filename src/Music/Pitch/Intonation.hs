@@ -47,13 +47,26 @@ makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
 tuneAbsolute :: IntoneInterval Interval -> (Pitch, Hertz) -> Pitch -> Hertz
 tuneAbsolute t (b, f) p = f .+^ (t i) where i = p .-. b
 
-pythagorean = synTune (basis_P8, 2) (basis_P5, 3/2)
+-- Standard syntonic (meantone) tunings, with P8 = 2
 
-twelveToneEqual = synTune (basis_P8, 2) (basis_d2, 1)
+pureOctaveWith = synTune (_P8, 2)
 
-nineteenToneEqual = synTune (basis_P8, 2) (_dd2, 1) where _dd2 = Interval (-1, 1)
+pythagorean = pureOctaveWith (_P5, 3/2)
 
-quarterCommaMeanTone = synTune (basis_P8, 2) (_M3, 5/4)
+quarterCommaMeantone = pureOctaveWith (_M3, 5/4)
+
+schismaticMeantone = pureOctaveWith (8 *^ _P4, 10)
+
+-- TET tunings, i.e. where P8 = 2 and (some other interval) = 1
+
+tetTune i = pureOctaveWith (i, 1)
+
+fiveToneEqual = tetTune m2
+sevenToneEqual = tetTune _A1
+twelveToneEqual = tetTune d2
+nineteenToneEqual = tetTune dd2 where dd2 = d2 ^-^ _A1
+thirtyOneToneEqual = tetTune dddd3 where dddd3 = m3 ^-^ (4 *^ _A1)
+fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 -- (!)
 
 standardTuning :: Intonation Pitch
 standardTuning = tuneAbsolute twelveToneEqual (a, 440)
