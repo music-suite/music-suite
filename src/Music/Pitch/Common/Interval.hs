@@ -417,14 +417,14 @@ instance HasNumber Interval where
   number i = extractNumber i
 
 instance Augmentable Interval where
-    augment i = i ^+^ basis_A1
-    diminish i = i ^-^ basis_A1
+  augment i = i ^+^ basis_A1
+  diminish i = i ^-^ basis_A1
 
 instance HasSemitones Interval where
-    semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
+  semitones (Interval (a, d)) = fromIntegral a -- assuming "semitone" == A1
 
 instance IsInterval Interval where
-    fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
+  fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
 
 negateInterval :: Interval -> Interval
 negateInterval (Interval (a, d)) = Interval (-a, -d)
