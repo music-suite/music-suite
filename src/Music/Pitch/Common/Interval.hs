@@ -760,6 +760,7 @@ replicate' n = replicate (fromIntegral n)
 
 
 -- | Integer div of intervals: i / di = x, where x is an integer
+intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
 intervalDiv (Interval (a, d)) (Interval (0, 1)) = d
 intervalDiv i di
@@ -782,6 +783,11 @@ intervalDiv i di
 --
 -- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
 
+convertBasis
+  :: Interval 
+  -> Interval 
+  -> Interval 
+  -> Maybe (Int, Int)
 convertBasis i j k
   | (p == 0) = Nothing
   | not $ p `divides` r = Nothing
@@ -798,6 +804,11 @@ convertBasis i j k
 -- | Same as above, but don't worry if new interval has non-integer
 -- coefficients -- useful when getting a value to use as a frequency
 -- ratio in a tuning system.
+convertBasisFloat :: (Fractional t, Eq t)
+  => Interval 
+  -> Interval 
+  -> Interval 
+  -> Maybe (t, t)
 convertBasisFloat i j k
   | (p == 0) = Nothing
   | otherwise = Just (r / p, q / p)
@@ -809,5 +820,6 @@ convertBasisFloat i j k
         r = fromIntegral $ (d*m - c*n)
 
 
+divides :: Integral a => a -> a -> Bool
 x `divides` y = (y `rem` x) == 0
 
