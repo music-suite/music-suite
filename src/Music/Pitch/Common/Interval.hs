@@ -46,9 +46,8 @@ module Music.Pitch.Common.Interval (
         thirteenth,
         fourteenth,
         fifteenth,  
-        
+
         -- ** Intervals
-        Interval,
         Interval(..),
 
         -- *** Creating intervals
@@ -81,20 +80,25 @@ module Music.Pitch.Common.Interval (
 
         -- * Utility
         asInterval,
-       intervalDiff,
-       mkInterval',
 
-       -- Converting basis
-       convertBasis,
-       convertBasisFloat,
-       intervalDiv,
-
-       -- useful basis values
-       basis_P1,
-       basis_A1,
-       basis_d2,
-       basis_P8,
-       basis_P5
+        -- * Basis values
+        IntervalBasis(..),
+       
+        -- ** Converting basis
+        convertBasis,
+        convertBasisFloat,
+        intervalDiv,
+        
+        -- ** Basis values (TODO cleanup)
+        basis_P1,
+        basis_A1,
+        basis_d2,
+        basis_P8,
+        basis_P5,
+        
+        -- ** Utility
+        intervalDiff,
+        mkInterval',
   ) where
 
 import Data.Maybe
@@ -332,14 +336,6 @@ class HasNumber a where
 -- > _P4 == perfect fourth   == interval Perfect 5
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
-
--- newtype Interval = Interval { getInterval :: (
---             Int,        -- octaves, may be negative
---             Int,        -- diatonic remainder (positive) [0..6]
---             Int         -- chromatic remainder (positive) [0..11]
---     ) }
---     deriving (Eq, Ord, Typeable)
-
 newtype Interval = Interval { getInterval :: (
             Int,        -- number of A1, i.e. chromatic steps
             Int        -- number of d2, i.e. diatonic steps
@@ -376,14 +372,15 @@ instance Num Interval where
 --                     go 11 = 6
         
 instance Show Interval where
-    show a | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
-           | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
-           where
-               showQuality Major            = "_M"
-               showQuality Minor            = "m"
-               showQuality Perfect          = "_P"
-               showQuality (Augmented n)    = "_" ++ replicate' n 'A'
-               showQuality (Diminished n)   = replicate' n 'd'
+  show a
+    | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+    | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+    where
+      showQuality Major            = "_M"
+      showQuality Minor            = "m"
+      showQuality Perfect          = "_P"
+      showQuality (Augmented n)    = "_" ++ replicate' n 'A'
+      showQuality (Diminished n)   = replicate' n 'd'
 
 instance Semigroup Interval where
     (<>)    = addInterval
@@ -449,11 +446,6 @@ intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 -- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
-
--- mkInterval quality number = mkInterval' (qualityToDiff (isPerfectNumber diatonic) quality) (fromIntegral number)
---     where
---         (_, diatonic) = (fromIntegral $ number - 1) `divMod` 7
--- 
 mkInterval' 
   :: Int        -- ^ Difference in chromatic steps (?).
   -> Int        -- ^ Number of diatonic steps (NOT interval number).
@@ -740,8 +732,7 @@ invert = simple . negate
 asInterval :: Interval -> Interval
 asInterval = id
 
-
-
+{-
 isPerfectNumber :: Int -> Bool
 isPerfectNumber 0 = True
 isPerfectNumber 1 = False
@@ -750,6 +741,7 @@ isPerfectNumber 3 = True
 isPerfectNumber 4 = True
 isPerfectNumber 5 = False
 isPerfectNumber 6 = False
+-}
 
 -- TODO more generic pattern here
 diatonicToChromatic :: Int -> Int
