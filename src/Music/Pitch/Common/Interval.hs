@@ -346,7 +346,7 @@ newtype Interval = Interval { getInterval :: (
 instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval
---     abs a         = if isNegative a then negate a else a
+    abs a         = if isNegative a then negate a else a
 --     a * b         = fromIntegral (semitones a) `stackInterval` b
 --     signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
 --     fromInteger 0 = _P1
