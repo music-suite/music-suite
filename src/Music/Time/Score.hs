@@ -190,6 +190,7 @@ instance Splittable a => Splittable (Score a) where
       (m1, m2) = split t m
       (x1, x2) = split t x
 
+-- TODO move these two "implementations" to NScore
 instance HasPosition (Score a) where
   _position = _position . snd . view _Wrapped' . normalizeScore'
   -- TODO clean up in terms of AddMeta and optimize
