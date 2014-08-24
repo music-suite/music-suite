@@ -16,6 +16,7 @@
 module Music.Pitch.Alterable (
         -- * Alterable class
         Alterable(..),
+        alter,
   ) where
 
 import Data.Ratio
@@ -62,3 +63,17 @@ instance Alterable a => Alterable [a] where
 instance Alterable a => Alterable (b, a) where
     sharpen = fmap sharpen
     flatten = fmap flatten
+
+{-
+sharpened :: Alterable a => Iso' a a
+sharpened = iso sharpen flatten
+
+flattened :: Alterable a => Iso' a a
+flattened = iso flatten sharpen
+-}
+
+alter :: Alterable a => Int -> a -> a
+alter n x
+  | n < 0  = iterate flatten x !! n
+  | n == 0 = x
+  | n > 0  = iterate sharpen x !! n
