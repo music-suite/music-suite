@@ -5,7 +5,7 @@ author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
 license:                BSD3
 license-file:           COPYING
-synopsis:               To be written.
+synopsis:               Interaction with Sibelius.
 category:               Music
 tested-with:            GHC
 build-type:             Simple
