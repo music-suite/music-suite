@@ -6,7 +6,7 @@ author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
 license-file:           COPYING
-synopsis:               Abstract representation of musical pitch.
+synopsis:               Musical pitch representation.
 category:               Music
 tested-with:            GHC
 build-type:             Simple
