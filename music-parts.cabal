@@ -5,7 +5,7 @@ author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
 license-file:           COPYING
-synopsis:               To be written.
+synopsis:               Musical instruments, parts and playing techniques.
 category:               Music
 tested-with:            GHC
 build-type:             Simple
