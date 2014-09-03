@@ -104,7 +104,7 @@ See [Customizing the Music Representation](#customizing-music-representation) fo
 -->
 
 
-## Time and duration
+## Time and Duration
 
 A single note can be entered by its name. This will render a note in the middle octave with a duration of one. Note that note values and durations correspond exactly, a duration of `1` is a whole note, a duration of `1/2` is a half note, and so on.
 
@@ -648,15 +648,13 @@ TODO
 @[HasDuration]
 
 
-## Time and duration
+## Time, duration and span
 
-@[Time]
+Time points and vectors are represented by two types @[Time] and @[Duration]. The difference between these types is similar to the distinction between points and vectors in ordinary geometry. One way of thinking about time vs. duration is that duration are always *relative* (i.e. the duration between the start of two notes), while *time* is absolute.
 
-@[Duration]
+Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
 
-## Spans
-
-@[Span]
+The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[range], @[delta] and @[codelta], which are *isomorphisms* using the definition from the `lens` package.
 
 ## Rests, Notes and Chords
 
@@ -664,7 +662,7 @@ TODO
 
 ## Voices
 
-A @[Voice] represents a single voice of music. It consists of a sequence of values with duration, but no time. 
+A @[Voice] represents a single voice of music. It consists of a sequence of values with duration. 
 
 ```music+haskell
 stretch (1/4) $ scat [c..a]^/2 |> b |> c'^*4
