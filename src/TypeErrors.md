@@ -16,16 +16,18 @@ Utility functions `asScore` etc
 
 ### Use :info, not :type
 
-### Understand basic lenses
-
-The `lens` library is famously huge. The concepts you need to use Music Suite are
-`Lens`, `Prism`, `Iso` and `Traversal`.
-
-The most common error in code that uses lenses is mixing up a lenses with functions, i.e. writing `duration` when you mean `view duration`. This will give you an error that looks something like this:
-
-    Couldn't match expected type `Duration' with actual type `a0 -> f0 a0'
-
-### Get an intuition for what the classes and type functions do
+### Understand Semigroup, Monoid, Applicative and Monad
 
 Standard classes, TypeClassopedia
 etc.
+
+### Understand lenses, prisms, isos and traversals (intuitively)
+
+The `lens` library uses state-of-the art Haskell to provide a very generic way of accessing nested structure. 
+
+The concepts you need to use Music Suite are
+`Lens`, `Prism`, `Iso` and `Traversal`.
+
+The most common error in code that uses lenses is mixing up a lenses with functions, i.e. writing `duration x` when you mean `x^.duration` (or `view duration x`). This will give you an error that looks something like this:
+
+    Couldn't match expected type `Duration' with actual type `a0 -> f0 a0'
