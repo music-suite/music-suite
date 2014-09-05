@@ -154,21 +154,7 @@ Examples:
 
 ## Time types
 
-  (Work pioneered by FRP, Reactive, Euterpea...)
-  
-  Events take place (discrete)
-    Once (onset)
-      Time
-    During a span (onset and offset)
-      Time x Duration
-      Span
-  Events develop (continous)
-    Through a local span (Segment)
-    Thoughout (Behavior)
-  Structure
-    Reactive
-    Voice
-    Bounds
+(Work pioneered by FRP, Reactive, Euterpea...)
   
 ## Time types
 
@@ -183,10 +169,18 @@ Compare 2D or 3D graphics!
 
 
 ## Aspects types: Pitch...
-  Pitch vs Interval (linear)
-  High-level concepts
-  Using Behavior
-  Spelling/intonation etc
+
+* Defined in `music-pitch`
+
+* Main hierarchies are `Music.Pitch.Absolute` `Music.Pitch.Common`
+    
+    - Former defines `Frequency`
+
+    - Latter defines `Pitch` and `Interval`
+      <br /><a style="font-size:80%">Defined as *(Diatonic ⨯ Chromatic)*</a>
+
+* Pitches and intervals form an affine/vector space pair
+
 
 ## Aspects types: ...etc
 
