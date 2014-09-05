@@ -1,20 +1,6 @@
 
 # Design overview
 
-<!--
-To develop the Music Suite you need the following tools:
-
-* Pandoc
-* Transf
-* Hslinks
-* Lilypond
-
-Most of these can be installed using `cabal install`.
-
-There is a utility program called `music-util`, which simplifies the kind of cross-package development used throughout the Music Suite. This can be installed in the same manner as the packages, i.e. `cabal install music-util`. See [its documentation][music-util-docs] for an overview of the things it can do.
-
--->
-
 TODO
 
 The Music Suite consists of a number of packages. These can be divided into two categories: 
@@ -55,22 +41,4 @@ The most important thing to notice here is that each musical aspects is independ
 
 The literals are kept in separate package because one often wishes to overload the time structures point-wise. For example given the literal `eb :: IsPitch a => a`, we want to interpret it as the pitch e flat (according to some representation), or a note/voice/score where the pitch is e flat and all other parameters have default values.
 
- 
-## Status
-
-	musicxml2				Stable
-	lilypond				Stable
-	abcnotation				Unstable
-	music-pitch-literal		Stable
-	music-dynamics-literal	Stable
-	music-score				Major rewrite going on, soon to be stable
-	music-pitch				Stable, needs rewrite
-	music-part				Unstable
-	music-dynamics			Unstable
-	music-articulation		Unstable
-	music-preludes			Always changing to reflect upstream development.
-	
-## License
-
-The whole Suite is BSD3.
 
