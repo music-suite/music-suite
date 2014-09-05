@@ -101,9 +101,12 @@ Aspects tend to be largely orthogonal (for example pitch and dynamics).
 -->
 We provide multiple versions of all aspects <a style="color:crimson">*except*</a> time.
 
+<!--
 - Reduces complexity as time is so fundamental.
+-->
 
 
+<!--
 ## type Music = <a style="color:crimson">?</a>
 
 The suite provides two types of types
@@ -118,6 +121,7 @@ Examples:
 - <a style="color:crimson">*(Pitch ⨯ Dynamic)*</a>
 - <a style="color:black">*Time ➝ (Pitch ⨯ Dynamic)*</a>
 - <a style="color:black">*(Pitch ⨯ Time ➝ Dynamic)*</a>
+-->
 
 ## Library layout
 
@@ -136,13 +140,17 @@ Examples:
 
 ## Structure vs. Freedom
 
-Bars/beats vs free time
-Scale (structure) vs frequency
-Fixed dynamic levels vs amplitude
+- Why not simply use the largest type?
 
-Discrete and continuos are complimentary!
+    - type *Pitch* = *Frequency* (*Hz*)
+    - type *Dynamics* = *Amplitude* (*dB*)
+    etc.
 
-For each aspect: Start out with a free affine space and *add* structure
+- Restricting the space in which we are working empowers the type system
+
+- A more high-level concept can be *performance-dependent*, for example pitch vs. frequency
+
+- For each aspect: Start out with a free affine space and *add* structure
 
 ## Time types
 
