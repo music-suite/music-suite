@@ -26,7 +26,7 @@
 
 No closed definition of music(s)
 
-- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the music.
 
 - Usually those of Western classical/popular music.
   <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
@@ -37,7 +37,7 @@ No closed definition of music(s)
 
 No closed definition of music(s)
 
-- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the music.
 
 - Usually those of Western classical/popular music.
   <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
@@ -64,7 +64,7 @@ Musical <a style="color:blue">*aspects*</a>
 
 - Pitch, time, dynamics, timbre (instrument/articulation), (space..)
 
-Musical cultures rank these differently!
+Musical cultures treat (and rank) aspects differently!
 
 <!--
 - Western classical places emphasis on pitch/harmony.
@@ -162,7 +162,9 @@ For each aspect: Start out with a free affine space and *add* structure
     Voice
     Bounds
   
-## Compare 2D or 3D graphics!
+## Time types
+
+Compare 2D or 3D graphics!
 
 - View time as a one-dimensional <a style="color:blue">affine space</a>.
     - Separate *Time* (points) and *Duration* (vectors)
@@ -172,18 +174,28 @@ For each aspect: Start out with a free affine space and *add* structure
     - Isomorphic to *Time^2^* or *(Time ⨯ Duration)*
 
 
-## Musical aspects: Pitch...
+## Aspects types: Pitch...
   Pitch vs Interval (linear)
   High-level concepts
   Using Behavior
   Spelling/intonation etc
 
-## Musical aspects: ...and the rest
+## Aspects types: ...etc
 
-dynamics, parts, articulation, space
+- Dynamics
+- Parts
+- Articulation
+- Space
+
+### More exotic
+
+- Specific playing techniques (string tremolo, harmonics etc)
+- Tremolo and trills
+- Percussion
 
 ## Accessing aspects
 
+<!--
 - Edward Kmetts's `lens` gives us the vocabulary:
 
 Name |&nbsp;| Meaning
@@ -199,10 +211,45 @@ Lens s t a b      |&nbsp;| (s ➝ a) ➝ (s ➝ b ➝ t)
 Prism s t a b     |&nbsp;| (b ➝ t) ➝ (s ➝ Either t a)
 Iso s t a b       |&nbsp;| (s ➝ a) (b ➝ t)
 Traversal s t a b |&nbsp;| Applicative f ⟹ (a ➝ f b) ➝ s ➝ (f t)
+-->
+
+Based on `lens` vocabulary:
+
+- `HasPitches` provides a traversal `pitches`
+  <br/><a style="font-size:80%">Scores, voices, chords etc</a>
+
+- `HasPitch` provides a lens `pitch` 
+  <br/><a style="font-size:80%">Actual pitch types, notes etc</a>
+
+- Whenever `pitch` exists it is the same as `pitches`
+
+Similar for all other aspects.
+
+Allows polymorphic updating of aspects.
+
+## Literals
+
+Pitches
+
+- c, cs, d, ds...
+
+Dynamic values
+
+- m, mf, sfz...
+
+In the style of `OverloadedStrings`.
 
 ## Meta-information
 
-Dynamic types, using Reactives a lot (not needed)
+A system to annotate all time types with arbitrary values.
+
+- Uses `Typeable` wrappers, same as Diagrams' styles.
+
+- Backends can ignore meta-data they don't understand.
+
+Used for most things that does not affect how the music sounds:
+
+- Key and time signatures, barlines, repeats, rehearsal marks etc.
 
 
 <!--
@@ -227,15 +274,15 @@ Dynamic types, using Reactives a lot (not needed)
 ### Import
 
 - MIDI
-- Sibelius
+- <a style="color:crimson">Sibelius</a>
 
 ### Export
 
 - MIDI
 - Lilypond
 - MusicXML
-- SuperCollider
-
+- <a style="color:crimson">ABC Notation</a>
+- <a style="color:crimson">SuperCollider</a>
 
 ## Challenges
 
