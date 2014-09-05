@@ -1,40 +1,75 @@
+% <a style="color:">Music Suite</a>
+% <a style="color:crimson">music-suite.github.io</a>
+% <a style="color:blue">Hans Höglund</a> <br/><br/> <img src="farm2014/images/logo3.svg"/>
+
+## Music Suite
+
+- What is music?
+
+- Fundamentally it is <a style="color:blue">*sound*</a>, but we want a more structured representation.
+
+## Music Suite
+
+- What is music?
+
+- Fundamentally it is <a style="color:blue">*sound*</a>, but we want a more structured representation.
+
+### Can be used for ... of music
+
+-|-|-|-|-|-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|*Composition*  |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a style="color:crimson">*a*</a>     | &nbsp;➝&nbsp; |  <a style="color:blue">*Music*</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|*Manipulation* |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a style="color:blue">*Music*</a> | &nbsp;➝&nbsp; | <a style="color:blue">*Music*</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|*Analysis*     |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a style="color:blue">*Music*</a> | &nbsp;➝&nbsp; | <a style="color:crimson">*b*</a>
 
 
-## What?
+## type Music = <a style="color:crimson">?</a>
 
-* Music Representation
-    - Composition (*a → Music*)
-    - Transformations (*Music → Music*)
-    - Analysis (*Music → a*)
+- No closed definition of music(s)
+    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions and on the user
 
-*Not* primarily audio or real-time use (but see last slide!).
+    - Usually a Western classical/popular music context is assumed.
+      <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
 
-## type Music
+## type Music = <a style="color:crimson">?</a>
 
-No closed definition of music/musics!
+- No closed definition of music(s)
+    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions and on the user
 
-*But* there are many common elements in musics!
+    - Usually a Western classical/popular music context is assumed.
+      <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
 
-  How can we formalize these common qualities?
+- <a style="color:crimson">*But*</a> there are many common elements in music!
+    - How can we formalize these common qualities?
 
-## type Music
+## type Music = <a style="color:crimson">?</a>
 
-Musical <a style="color:blue">*theory*</a>, concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
+Musical <a style="color:blue">*theory*</a>
 
-Musical *aspects*: time, pitch, dynamics, timbre (instrument/articulation), (space..)
+- Concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
 
-Music music theories of the word define these, in some order of importance
+Musical <a style="color:blue">*aspects*</a>
 
-    music-time
-    music-pitch
-    music-dynamics
-    music-articulation
-    music-parts
-    music-space
-    
-    music-score
-    music-preludes
-    ...
+- Time, pitch, dynamics, timbre (instrument/articulation), (space..)
+
+Musical cultures rank these differently!
+
+<!--
+- Western classical places emphasis on pitch/harmony.
+- Jazz places more emphasis on time/rhythm.
+-->
+
+## Basic API layout
+
+### Aspects
+
+- music-dynamics
+- music-pitch
+- etc.
+
+### Special
+
+- music-score
+- music-preludes
 
 ## Structure vs. Flatness
 
@@ -69,13 +104,13 @@ For each aspect: Start out with affine space and *add* structure
   
 ## Compare 2D or 3D graphics!
 
-View time as a one-dimensional vector space.
+- View time as a one-dimensional <a style="color:blue">affine space</a>.
+    - Separate *Time* (points) and *Duration* (vectors)
 
-An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
+- An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
+    - This type is called *Span*
+    - Isomorphic to *Time^2^* or *(Time ⨯ Duration)*
 
-Isomorphic to *Time^2^*
-
-We get the linar transformations...
 
 ## Musical aspects: Pitch...
   Pitch vs Interval (linear)
@@ -89,13 +124,28 @@ dynamics, parts, articulation, space
 
 ## Accessing aspects
 
-The overloaded lenses etc
+- Edward Kmetts's `lens` gives us the vocabulary:
+
+Name |&nbsp;| Meaning
+-|-|-
+Lens' s a      |&nbsp;| (s ➝ a) ➝ (s ➝ a ➝ s) 
+Prism' s a     |&nbsp;| (a ➝ s) ➝ (s ➝ Maybe a)
+Iso' s a       |&nbsp;| (s ➝ a) (a ➝ s)
+Traversal' s a |&nbsp;| Applicative f ⟹ (a ➝ f a) ➝ s ➝ (f s)
+
+Name |&nbsp;| Meaning
+-|-|-
+Lens s t a b      |&nbsp;| (s ➝ a) ➝ (s ➝ b ➝ t) 
+Prism s t a b     |&nbsp;| (b ➝ t) ➝ (s ➝ Either t a)
+Iso s t a b       |&nbsp;| (s ➝ a) (b ➝ t)
+Traversal s t a b |&nbsp;| Applicative f ⟹ (a ➝ f b) ➝ s ➝ (f t)
 
 ## Meta-information
 
 Dynamic types, using Reactives a lot (not needed)
 
 
+<!--
 ## Design principles
 
 - Extensible
@@ -110,6 +160,21 @@ Dynamic types, using Reactives a lot (not needed)
 - Use the "latest"
     - MPTCs, TypeFamilies, ContraintKinds
   - lens, vector-space
+-->
+
+## Backends
+
+### Import
+
+- MIDI
+- Sibelius
+
+### Export
+
+- MIDI
+- Lilypond
+- MusicXML
+- SuperCollider
 
 
 ## Challenges
@@ -121,22 +186,12 @@ Dynamic types, using Reactives a lot (not needed)
     - Common time/space/linear algebra core?
 - Junk in the backends (as the internal representation is more general), should be moved "higher" up in the libraries
 
-## Backends
 
-Pandoc/Diagrams-style flexibility
+<!--
+### Wanted
 
-  Some import
-
-    MIDI
-    Sibelius
-    ...
-  Lots of export/backends
-
-    MIDI
     OSC
-    SuperCollider
-    Lilypond
-    MusicXML
     ABCNotation
-    csound-expression (?)
+    csound-expression
+-->
 

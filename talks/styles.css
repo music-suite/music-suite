@@ -1,17 +1,18 @@
 html { 
-         background-image:url('ricepaper.png');
+         background-image:url('farm2014/images/bg2.jpg');
         background-repeat:repeat;
         }
 body { 
 /*        border-radius: 5px;*/
         margin: 5px;
-        background-color: rgba(255,255,255,0.7);
+/*        background-color: rgba(255,255,255,0.7);*/
         }
 /* A section is a slide. It's size is 800x600, and this will never change */
 section {
 /*    font-family: Arial, serif;*/
     font-family: Baskerville;
-    font-size: 20pt;
+    font-size: 20pt;   
+    color: #222;
   }
 address, blockquote, dl, fieldset, form, h1, h2, h3, h4, h5, h6, hr, ol, p, pre, table, ul, dl { padding: 10px 20px 10px 20px; }
 h1, h2, h3 {
