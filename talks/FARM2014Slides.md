@@ -24,28 +24,29 @@
 
 ## type Music = <a style="color:crimson">?</a>
 
-- No closed definition of music(s)
+No closed definition of music(s)
 
-    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
 
-    - Usually those of Western classical/popular music.
-      <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
+- Usually those of Western classical/popular music.
+  <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
 
-    - Difficult to work with other kinds of music.
+- Difficult to work with other kinds of music.
 
 ## type Music = <a style="color:crimson">?</a>
 
-- No closed definition of music(s)
+No closed definition of music(s)
 
-    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+- Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
 
-    - Usually those of Western classical/popular music.
-      <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
+- Usually those of Western classical/popular music.
+  <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
 
-    - Difficult to work with other kinds of music.
+- Difficult to work with other kinds of music.
 
-- But there <a style="color:crimson">*are*</a> many common elements in music!
-    - How can we formalize these common qualities?
+But there <a style="color:crimson">*are*</a> many common elements in music!
+
+- How can we formalize these common qualities?
 
 ## type Music = <a style="color:crimson">?</a>
 
@@ -70,6 +71,54 @@ Musical cultures rank these differently!
 - Jazz places more emphasis on time/rhythm.
 -->
 
+## type Music = <a style="color:crimson">?</a>
+
+Time is special
+
+- Music take place in time!
+- All other aspects are <a style="color:blue">*organized in time*</a>
+
+## type Music = <a style="color:crimson">?</a>
+
+Time is special
+
+- Music take place in time!
+- All other aspects are <a style="color:blue">*organized in time*</a>
+
+In other words, aspects may depend on time, but not the other way around.
+
+## type Music = <a style="color:crimson">?</a>
+
+Time is special
+
+- Music take place in time!
+- All other aspects are <a style="color:blue">*organized in time*</a>
+
+In other words, aspects may depend on time, but not the other way around.
+
+<!--
+Aspects tend to be largely orthogonal (for example pitch and dynamics).
+-->
+We provide multiple versions of all aspects <a style="color:crimson">*except*</a> time.
+
+- Reduces complexity as time is so fundamental.
+
+
+## type Music = <a style="color:crimson">?</a>
+
+The suite provides two types of types
+
+- <a style="color:blue">*Time types*</a> of kind `* ➝ *`
+- <a style="color:crimson">*Aspects types*</a> of kind `*`
+
+Examples:
+
+- <a style="color:blue">*∀a . (Time ⨯ a)*</a>
+- <a style="color:blue">*∀a. Time ➝ a* </a>
+- <a style="color:crimson">*(Pitch ⨯ Dynamic)*</a>
+- <a style="color:black">*Time ➝ (Pitch ⨯ Dynamic)*</a>
+- <a style="color:black">*(Pitch ⨯ Time ➝ Dynamic)*</a>
+
 ## Library layout
 
 ### Aspects
@@ -85,7 +134,7 @@ Musical cultures rank these differently!
 - music-preludes
 - music-suite
 
-## Structure vs. Flatness
+## Structure vs. Freedom
 
 Bars/beats vs free time
 Scale (structure) vs frequency
@@ -93,12 +142,9 @@ Fixed dynamic levels vs amplitude
 
 Discrete and continuos are complimentary!
 
-For each aspect: Start out with affine space and *add* structure
+For each aspect: Start out with a free affine space and *add* structure
 
-## Time is special!
-
-  Music take place in time!
-  All other aspects are *organized in time*
+## Time types
 
   (Work pioneered by FRP, Reactive, Euterpea...)
   
@@ -194,11 +240,18 @@ Dynamic types, using Reactives a lot (not needed)
 ## Challenges
 
 - Develop high-level theory while staying general
+
 - Difficult error messages
+
     - Simplified version needed
+
 - Consolidate with other libraries
+
     - Common time/space/linear algebra core?
+
+<!--
 - Junk in the backends (as the internal representation is more general), should be moved "higher" up in the libraries
+-->
 
 
 <!--
