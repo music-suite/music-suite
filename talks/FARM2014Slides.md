@@ -14,7 +14,7 @@
 
 - Fundamentally it is <a style="color:blue">*sound*</a>, but we want a more structured representation.
 
-### Can be used for ... of music
+- A Haskell library for ... of music
 
 -|-|-|-|-|-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|*Composition*  |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| <a style="color:crimson">*a*</a>     | &nbsp;➝&nbsp; |  <a style="color:blue">*Music*</a>
@@ -25,31 +25,43 @@
 ## type Music = <a style="color:crimson">?</a>
 
 - No closed definition of music(s)
-    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions and on the user
 
-    - Usually a Western classical/popular music context is assumed.
+    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+
+    - Usually those of Western classical/popular music.
       <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
+
+    - Difficult to work with other kinds of music.
 
 ## type Music = <a style="color:crimson">?</a>
 
 - No closed definition of music(s)
-    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions and on the user
 
-    - Usually a Western classical/popular music context is assumed.
+    - Music making software <a style="color:blue">*necessarily*</a> impose restrictions on the user.
+
+    - Usually those of Western classical/popular music.
       <br/><a style="font-size:80%">Diatonic/chromatic scale, 3/4 and 4/4 time signatures, etc.</a>
 
-- <a style="color:crimson">*But*</a> there are many common elements in music!
+    - Difficult to work with other kinds of music.
+
+- But there <a style="color:crimson">*are*</a> many common elements in music!
     - How can we formalize these common qualities?
 
 ## type Music = <a style="color:crimson">?</a>
 
 Musical <a style="color:blue">*theory*</a>
 
-- Concepts such as: scales, chords, rhythm/metrics, harmony, counterpoint
+- Scales, chords, rhythm, harmony, counterpoint
+
+## type Music = <a style="color:crimson">?</a>
+
+Musical <a style="color:blue">*theory*</a>
+
+- Scales, chords, rhythm, harmony, counterpoint
 
 Musical <a style="color:blue">*aspects*</a>
 
-- Time, pitch, dynamics, timbre (instrument/articulation), (space..)
+- Pitch, time, dynamics, timbre (instrument/articulation), (space..)
 
 Musical cultures rank these differently!
 
@@ -58,18 +70,20 @@ Musical cultures rank these differently!
 - Jazz places more emphasis on time/rhythm.
 -->
 
-## Basic API layout
+## Library layout
 
 ### Aspects
 
-- music-dynamics
 - music-pitch
+- music-dynamics
+- music-articulation
 - etc.
 
 ### Special
 
-- music-score
+- music-score (really <a style="color:crimson">*time*</a>)
 - music-preludes
+- music-suite
 
 ## Structure vs. Flatness
 
