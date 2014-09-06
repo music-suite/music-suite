@@ -148,38 +148,51 @@ Examples:
 
 - Restricting the space in which we are working empowers the type system
 
-- A more high-level concept can be *performance-dependent*, for example pitch vs. frequency
+- A more high-level concept can be <a style="color:blue">*performance-dependent*</a>, for example pitch vs. frequency
 
-- For each aspect: Start out with a free affine space and *add* structure
+- For each aspect: Start out with a free affine space and <a style="color:crimson">*add*</a> structure
 
+<!--
 ## Time types
 
 (Work pioneered by FRP, Reactive, Euterpea...)
   
+-->
+
 ## Time types
 
-Compare 2D or 3D graphics!
+Compare graphics (2D or 3D)!
 
-- View time as a one-dimensional <a style="color:blue">affine space</a>.
+- View time as an 1D <a style="color:blue">affine space</a>.
     - Separate *Time* (points) and *Duration* (vectors)
 
-- An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
-    - This type is called *Span*
-    - Isomorphic to *Time^2^* or *(Time ⨯ Duration)*
+- Time and duration form an <a style="color:crimson">affine/vector</a> space pair.
+
+## Time types
+
+An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
+
+- This type is called *Span*
+- Isomorphic to *Time^2^* or *(Time ⨯ Duration)*
+
+Generalises time transformations `delay` and `stretch`
+
+    class Transformable a where
+        transform :: Span -> a -> a
 
 
 ## Aspects types: Pitch...
 
-* Defined in `music-pitch`
+Defined in `music-pitch`
 
-* Main hierarchies are `Music.Pitch.Absolute` `Music.Pitch.Common`
+Main hierarchies are `Music.Pitch.Absolute` `Music.Pitch.Common`
     
-    - Former defines `Frequency`
+- Former defines `Frequency`
 
-    - Latter defines `Pitch` and `Interval`
-      <br /><a style="font-size:80%">Defined as *(Diatonic ⨯ Chromatic)*</a>
+- Latter defines `Pitch` and `Interval`
+  <br /><a style="font-size:80%">Defined as *(Diatonic ⨯ Chromatic)*</a>
 
-* Pitches and intervals form an affine/vector space pair
+Pitches and intervals form an affine/vector space pair
 
 
 ## Aspects types: ...etc
