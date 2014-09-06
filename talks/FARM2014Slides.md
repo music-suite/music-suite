@@ -180,7 +180,40 @@ Generalises time transformations `delay` and `stretch`
     class Transformable a where
         transform :: Span -> a -> a
 
+## Time types
 
+-|-|-
+*type Note    a* | = | *(Duration, a)*
+*type Delayed a* | = | *(Time, a)*
+*type Placed  a* | = | *(Span, a)*
+&nbsp;||
+*type Voice   a* | = | *[Note a]*
+*type Score   a* | = | *[Voice a]*
+*type Track   a* | = | *[Placed a]*
+&nbsp;||
+*type Behavior a* | = | *Time -> a*
+
+
+<!--
+  Old        | New        | Semantics
+  -----------|------------|--------------------
+  Time | Time | Point in time space
+  Duration | Duration | Vector in time space
+  Span | Span |  `Time^2`
+             | Rest       | Container with just duration (like Duration but `* -> *`)
+  Stretched  | Note       | Container with duration and value
+  Delayed    | Delayed    | Container with offset and value
+  Note       | Placed     | Containe with offset, duration and value
+             | Future     | Value starting at a point in time
+             | Past       | Value ending at a point in  time
+             | Nominal    | Value whose duration is ignored
+             | Graces     | Value with optional nominal pre- and post events
+  Voice      | Voice      | Sequential composition of notes
+  Chord      | Chord      | Parallel composition of notes
+  Score      | Track      | Set of values with arbitrary span (possibly overlapping)
+  Track      |            | 
+        | Score     | Parallel composition of voices of chords.
+-->
 ## Aspects types: Pitch...
 
 Defined in `music-pitch`
