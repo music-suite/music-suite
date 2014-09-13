@@ -175,10 +175,33 @@ An affine transformation is simply *(Product~Duration~ ⨯ Sum~Time~)*
 - This type is called *Span*
 - Isomorphic to *Time^2^* or *(Time ⨯ Duration)*
 
-Generalises time transformations `delay` and `stretch`
+Generalizes time transformations `delay` and `stretch`
 
     class Transformable a where
         transform :: Span -> a -> a
+
+## Time types
+
+    class Transformable a where
+        transform :: Span -> a -> a
+
+- *transform mempty = id*
+- *transform (s ∘ t) = transform s ∘ transform t*
+- *transform (s ∘ negateV s) = id*
+
+## Time types
+
+    class HasPosition a where
+        _position :: a -> Duration -> Time
+        _onset, _offset :: a -> Time  
+
+    class HasDuration a where
+        _duration :: a -> Duration
+
+- *onset (delay n a)       = n + onset a*
+- *offset (delay n a)      = n + offset a*
+- *duration (stretch n a)  = n \* duration a*
+- *duration (compress n a) = duration a / n*
 
 ## Time types
 
@@ -194,26 +217,6 @@ Generalises time transformations `delay` and `stretch`
 *type Behavior a* | = | *Time -> a*
 
 
-<!--
-  Old        | New        | Semantics
-  -----------|------------|--------------------
-  Time | Time | Point in time space
-  Duration | Duration | Vector in time space
-  Span | Span |  `Time^2`
-             | Rest       | Container with just duration (like Duration but `* -> *`)
-  Stretched  | Note       | Container with duration and value
-  Delayed    | Delayed    | Container with offset and value
-  Note       | Placed     | Containe with offset, duration and value
-             | Future     | Value starting at a point in time
-             | Past       | Value ending at a point in  time
-             | Nominal    | Value whose duration is ignored
-             | Graces     | Value with optional nominal pre- and post events
-  Voice      | Voice      | Sequential composition of notes
-  Chord      | Chord      | Parallel composition of notes
-  Score      | Track      | Set of values with arbitrary span (possibly overlapping)
-  Track      |            | 
-        | Score     | Parallel composition of voices of chords.
--->
 ## Aspects types: Pitch...
 
 Defined in `music-pitch`
