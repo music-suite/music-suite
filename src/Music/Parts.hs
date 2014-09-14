@@ -408,7 +408,8 @@ gmInstrName = fmap get . (`lookup` gmInstrs)
 -}
 gmInstrs :: [(Int, (Int, Double, Int, String))]
 gmInstrs = [
-    (0, (0,  5.0, 0,  "Acoustic Grand Piano")),
+    -- (0, (0,  5.0, 0,  "Acoustic Grand Piano")),
+    (0, (0,  5.0, 0,  "Piano")),
     (1, (0,  5.0, 0,  "Bright Acoustic Piano")),
     (2, (0,  5.0, 0,  "Electric Grand Piano")),
     (3, (0,  5.0, 0,  "Honky-tonk Piano")),
