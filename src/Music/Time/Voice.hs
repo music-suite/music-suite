@@ -52,6 +52,8 @@ module Music.Time.Voice (
 
         -- * Traversal
         -- ** Separating rhythms and values
+        valuesV,
+        durationsV,
         withValues,
         withDurations,
         rotateValues,
@@ -65,6 +67,7 @@ module Music.Time.Voice (
         zipVoice3,
         zipVoice4,
         zipVoiceNoScale,
+        -- FIXME compose with (lens assoc unassoc) for the 3 and 4 versions
         zipVoiceNoScale3,
         zipVoiceNoScale4,
         zipVoiceWith,
