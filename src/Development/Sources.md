@@ -9,14 +9,16 @@ This document describes how to install and use `music-util` to manage the Music 
 
 ## Setup
 
+<!--
 Upgrade `cabal-install` to a 1.18 or later to get support for sandboxes. This will hopefully be in the Haskell Platform soon, but for now you have to upgrade manually like this:
 
 ~~~{.bash}
 $ cabal update
 $ cabal install cabal-install
 ~~~
+-->
 
-Install the utility program (note that this does *not* install the rest of the suite):
+First, assure that you have the latest version of the Haskell Platform. Then install `music-util` (which does *not* depend on the other packages):
 
 ~~~{.bash}
 $ cabal install music-util
@@ -28,7 +30,7 @@ Assure that the environment variable `MUSIC_SUITE_DIR` is set to the directory w
 $ echo "export MUSIC_SUITE_DIR=/path/to/suite" >> ~/.profile
 ~~~
 
-Run the setup script. This will clone all source repos and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default.
+Run the setup script. This will clone all source repositories and setup a sandbox in `$MUSIC_SUITE_DIR/music-sandbox`. All source directories are configured to use the sandbox by default. It then proceeds to install the libraries and all their dependencies, which may take several minutes.
 
 ~~~{.bash}
 $ music-util setup
