@@ -30,6 +30,7 @@ library
                         semigroupoids,
                         music-pitch-literal     == 1.7.1,
                         vector-space            >= 0.8.7 && < 0.9,
+                        nats,
                         type-unary              >= 0.2.16 && < 1.0
                         -- type-level              >= 0.2.4 && < 3.0
     exposed-modules:    Music.Pitch
@@ -41,6 +42,8 @@ library
                         Music.Pitch.Common.Semitones
                         Music.Pitch.Common.Spell
                         Music.Pitch.Common.Harmony
+                        Music.Pitch.StaffLines
+                        Music.Pitch.Clef
                         Music.Pitch.Tokawa
                         Music.Pitch.Intonation
     hs-source-dirs:     src
