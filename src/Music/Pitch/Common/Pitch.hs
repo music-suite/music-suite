@@ -237,7 +237,10 @@ mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
 -- @
 --
 name :: Pitch -> Name
-name x = if 0 <= i && i <= 6 then toEnum i else error ("Pitch.name: Bad value " ++ show i)
+name x               
+  | i == 7           = toEnum 0 -- Arises for flat C etc.
+  | 0 <= i && i <= 6 = toEnum i
+  | otherwise        = error $ "Pitch.name: Bad value " ++ show i
   where
     i = (fromIntegral . pred . number . simple . getPitch) x
 
