@@ -30,8 +30,7 @@ module Music.Parts (
         module Music.Parts.Solo,
         
         -- * Instruments
-        Instrument(..),
-        -- TODO hide impl
+        module Music.Parts.Instrument,
 
         -- * Parts
         Part(..),
@@ -155,6 +154,7 @@ import           Music.Parts.Basic
 import           Music.Parts.Subpart
 import           Music.Parts.Division
 import           Music.Parts.Solo
+import           Music.Parts.Instrument
 
 {- $terminology
 
@@ -176,27 +176,6 @@ vocal music, but some concetps may be useful in electronic music as well.
 
 
 
-
--- | An 'Instrument' represents the set of all instruments of a given type.
-data Instrument
-    = StdInstrument Int
-    | OtherInstrument String
-    deriving (Eq)
-
-instance Show Instrument where
-    show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
-    show (OtherInstrument str) = str
-instance Enum Instrument where
-    toEnum = StdInstrument
-    fromEnum (StdInstrument x) = x
-    fromEnum (OtherInstrument _) = error "Instrument.fromEnum used on unknown instrument"
-
-instance Ord Instrument where
-    StdInstrument x `compare` StdInstrument y = gmScoreOrder x `compare` gmScoreOrder y
-
--- | This instance is quite arbitrary but very handy.
-instance Default Instrument where
-    def = StdInstrument 0
 
 
 -- | A part is a subdivided group of instruments of a given type.
