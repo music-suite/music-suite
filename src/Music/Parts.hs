@@ -1,8 +1,7 @@
 
-{-# LANGUAGE
-    GeneralizedNewtypeDeriving,
-    DeriveDataTypeable,
-    TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -22,7 +21,7 @@ module Music.Parts (
         -- * Terminology
         -- $terminology
 
-        
+
         -- * Subparts
         Division,
         divisions,
@@ -41,17 +40,17 @@ module Music.Parts (
         containsSubpart,
         solo,
         tutti,
-        
+
         -- ** Instruments etc
         piccoloFlute,
         flute,
         altoFlute,
         bassFlute,
-        
+
         oboe,
         corAnglais,
         heckelphone,
-        
+
         ebClarinet,
         clarinet,
         aClarinet,
@@ -61,10 +60,10 @@ module Music.Parts (
         altoSax,
         tenorSax,
         baritoneSax,
-        
+
         bassoon,
         contraBassoon,
-        
+
         horn,
         piccoloTrumpet,
         trumpet,
@@ -74,10 +73,10 @@ module Music.Parts (
         trombone,
         bassTrombone,
         tuba,
-        
+
         timpani,
         piano,
-        
+
         celesta,
         glockenspiel,
         vibraphone,
@@ -86,10 +85,10 @@ module Music.Parts (
         xylorimba,
         tubularBells,
         dulcimer,
-        
+
         accordion,
         harmonica,
-        
+
         violin,
         viola,
         cello,
@@ -116,7 +115,7 @@ module Music.Parts (
         trombones,
         trumpets1,
         trumpets2,
-        trombones1, 
+        trombones1,
         trombones2,
         tubas,
 
@@ -137,21 +136,23 @@ module Music.Parts (
 
 
         -- * Basic
-        -- TODO move
-        BasicPart,
+        module Music.Parts.Basic
 
   ) where
 
-import Data.Default
-import Data.Semigroup
-import Data.Typeable
-import Data.Maybe
-import Data.Traversable (traverse)
-import Control.Lens (toListOf)
-import Data.Functor.Adjunction (unzipR)
-import Control.Applicative
-import Text.Numeral.Roman (toRoman)
+import           Control.Applicative
+import           Control.Lens                    (toListOf)
+import           Data.Default
+import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.Semigroup.Option.Instances
+import           Data.Traversable                (traverse)
+import           Data.Typeable
+import           Text.Numeral.Roman              (toRoman)
+
+import           Music.Parts.Basic
 
 {- $terminology
 
@@ -170,7 +171,7 @@ vocal music, but some concetps may be useful in electronic music as well.
     separately, so i.e. /Violin solo II/ (as in a double concerto) is distinct from /Violin II/.
 
 -}
-    
+
 
 
 {-
@@ -178,10 +179,10 @@ vocal music, but some concetps may be useful in electronic music as well.
         - Classification:
             - Type: (i.e. woodwind)
             - Family: (i.e. saxophone)
-            - Range: (i.e. tenor)            
+            - Range: (i.e. tenor)
         - Range (i.e. [c_:e'])
         - Transposition:
-            sounding = written .+^ transp 
+            sounding = written .+^ transp
         - Suggested clefs
 -}
 
@@ -206,7 +207,7 @@ showDivision  = show . succ . fst . getDivision
 divisions :: Int -> [Division]
 divisions n = [Division (x,n) | x <- [0..n-1]]
 
--- | Divide a part into @n@ subparts.
+-- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]
 divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [x])) $ divisions n
 
@@ -216,7 +217,7 @@ divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [
 --
 -- The empty subpart (also known as 'def') represents all the players of the group,
 -- or in the context of 'Part', all players of the given instrument.
--- 
+--
 newtype Subpart = Subpart [Division]
     deriving (Eq, Ord, Default, Semigroup, Monoid)
 
@@ -227,13 +228,13 @@ instance Show Subpart where
             mapFR f g (x:xs) = f x : fmap g xs
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
-data Instrument 
+data Instrument
     = StdInstrument Int
-    | OtherInstrument String
+    | OtherInstrument String
     deriving (Eq)
 
-instance Show Instrument where      
-    show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
+instance Show Instrument where
+    show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
     show (OtherInstrument str) = str
 instance Enum Instrument where
     toEnum = StdInstrument
@@ -243,17 +244,17 @@ instance Enum Instrument where
 instance Ord Instrument where
     StdInstrument x `compare` StdInstrument y = gmScoreOrder x `compare` gmScoreOrder y
 
--- | This instance is quite arbitrary but very handy.
+-- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
     def = StdInstrument 0
 
 data Solo
     = Solo
-    | Tutti
+    | Tutti
     deriving (Eq, Show, Ord, Enum)
 
 instance Default Solo where
-    def = Tutti 
+    def = Tutti
 
 
 -- | A part is a subdivided group of instruments of a given type.
@@ -285,12 +286,12 @@ instance Semigroup Part where
 instance Default Part where
   def = Part def def def
 
--- | 
--- @a \`containsPart\` b@ holds if the set of players represented by a is an improper subset of the 
+-- |
+-- @a \`containsPart\` b@ holds if the set of players represented by a is an improper subset of the
 -- set of players represented by b.
 containsPart :: Part -> Part -> Bool
-Part solo1 instr1 subp1 `containsPart` Part solo2 instr2 subp2 = 
-        solo1 == solo2 
+Part solo1 instr1 subp1 `containsPart` Part solo2 instr2 subp2 =
+        solo1 == solo2
         && instr1 == instr2
         && subp1 `containsSubpart` subp2
 
@@ -398,8 +399,8 @@ gmInstrName = fmap get . (`lookup` gmInstrs)
 {-
     Score order:
         Woodwinds:      1
-        Brass:          2 
-        Timpani:        3 
+        Brass:          2
+        Timpani:        3
         Percussion:     4
         Keyboard/Harp   5
         Singers         6
@@ -613,7 +614,7 @@ gmPerc = [
 
 
 
--- 
+--
 -- data Section
 --     = Woodwind
 --     | Brass
@@ -621,16 +622,16 @@ gmPerc = [
 --     | Keyboard
 --     | Voices
 --     | Strings
--- 
+--
 -- data VoicePart
 --     = Soprano
 --     | MezzoSoprano
---     | Alto
+--     | Alto
 --     | Tenor
 --     | Baritone
 --     | Bass
--- 
--- 
+--
+--
 -- data GMInstrumentType
 --     = GMPiano
 --     | GMChromaticPercussion
@@ -645,22 +646,22 @@ gmPerc = [
 --     | GMSynthLead
 --     | GMSynthPad
 --     | GMSynthEffects
---     | GMEthnic
+--     | GMEthnic
 --     | GMPercussive
---     | GMSoundEffects   
+--     | GMSoundEffects
 
 
-    
+
 {-
     ## Terminology: Voice vs Part
-    
+
     A voice is a container of notes (non-overlapping)
-    
+
     A part is an identifier for a set of singers/musicians AND all the notes in a score
     designated for this set of performers. Part extraction has the type
-    
+
         extractParts :: HasPart a => Score a -> [Score a]
-    
+
     I.e. in a score for piano and ensemble, certain notes may be *in the piano part*, i.e.
     designated for the piano. Typically, a part is monophonic or polyphonic. A monophonic
     part is a voice, i.e.
@@ -670,10 +671,10 @@ gmPerc = [
 
         -- | Fails for polyphonic scores.
         scoreToVoice :: Score a -> Voice (Maybe a)
-    
+
     A polyphonic score contains several voices, i.e.
 
-        scoreToVoices :: Score a -> [Voice (Maybe a)]  
+        scoreToVoices :: Score a -> [Voice (Maybe a)]
 
 
     A part is any type a that satisfies (Ord a, Show a).
@@ -682,8 +683,8 @@ gmPerc = [
         class HasPartName a where
             partName :: a -> String
             partAbbr :: a -> String
-    
-    
+
+
     These contraints are used when printing scores (to get the order of the parts and their name).
 
         Vln1, Vln2 etc.
@@ -710,57 +711,48 @@ gmPerc = [
 
     partGroup :: (Part -> [Group] -> a) -> Group -> a
     tree :: (a -> [Tree a] -> b) -> Tree a -> b
-    
-    
+
+
     data MyPart
         = Fl
-        | Sop
+        | Sop
         | Vl1
-        | Vl2
+        | Vl2
         | Pno
 
 -}
 -- TODO move
-instance Num a => Num (Option a) where
-  (+)       = liftA2 (+)
-  (-)       = liftA2 (-)
-  (*)       = liftA2 (*)
-  abs       = fmap abs
-  signum    = fmap signum
-  fromInteger = pure . fromInteger
-instance Integral a => Integral (Option a) where
-  quotRem x y = unzipR $ liftA2 quotRem x y
-  toInteger = toInteger . get where get = (head.toListOf traverse)
-instance Real a => Real (Option a) where
-  toRational = toRational . get where get = (head.toListOf traverse)
-instance Enum a => Enum (Option a) where
-  fromEnum = fromEnum . get where get = (head.toListOf traverse)
-  toEnum = pure . toEnum
-
-instance Num a => Num (First a) where
-  (+)       = liftA2 (+)
-  (-)       = liftA2 (-)
-  (*)       = liftA2 (*)
-  abs       = fmap abs
-  signum    = fmap signum
-  fromInteger = pure . fromInteger
-instance Integral a => Integral (First a) where
-  quotRem x y = unzipR $ liftA2 quotRem x y
-  toInteger = toInteger . get where get = (head.toListOf traverse)
-instance Real a => Real (First a) where
-  toRational = toRational . get where get = (head.toListOf traverse)
--- instance Enum a => Enum (First a) where
-  -- toEnum = toEnum . get where get = (head.toListOf traverse)
-  -- fromEnum = pure . fromEnum
-
-newtype BasicPart = BasicPart { getBasicPart :: Option (First Integer) }
-    deriving (Eq, Ord, Num, Integral, Real, Enum, Typeable, Semigroup, Monoid)
-
-instance Default BasicPart where
-  def = mempty
-
-instance Show BasicPart where
-    show _ = ""
+-- instance Num a => Num (Option a) where
+--   (+)       = liftA2 (+)
+--   (-)       = liftA2 (-)
+--   (*)       = liftA2 (*)
+--   abs       = fmap abs
+--   signum    = fmap signum
+--   fromInteger = pure . fromInteger
+-- instance Integral a => Integral (Option a) where
+--   quotRem x y = unzipR $ liftA2 quotRem x y
+--   toInteger = toInteger . get where get = (head.toListOf traverse)
+-- instance Real a => Real (Option a) where
+--   toRational = toRational . get where get = (head.toListOf traverse)
+-- instance Enum a => Enum (Option a) where
+--   fromEnum = fromEnum . get where get = (head.toListOf traverse)
+--   toEnum = pure . toEnum
+--
+-- instance Num a => Num (First a) where
+--   (+)       = liftA2 (+)
+--   (-)       = liftA2 (-)
+--   (*)       = liftA2 (*)
+--   abs       = fmap abs
+--   signum    = fmap signum
+--   fromInteger = pure . fromInteger
+-- instance Integral a => Integral (First a) where
+--   quotRem x y = unzipR $ liftA2 quotRem x y
+--   toInteger = toInteger . get where get = (head.toListOf traverse)
+-- instance Real a => Real (First a) where
+--   toRational = toRational . get where get = (head.toListOf traverse)
+-- -- instance Enum a => Enum (First a) where
+--   -- toEnum = toEnum . get where get = (head.toListOf traverse)
+--   -- fromEnum = pure . fromEnum
 
 
 piccoloFlutes = tutti piccoloFlute

@@ -30,8 +30,12 @@ library
                         adjunctions             >= 4.1 && < 5,
                         roman-numerals,
                         music-pitch             == 1.7.1
-    exposed-modules:    Music.Parts
-                        -- Music.Parts.Basic
+    exposed-modules:    Data.Semigroup.Option.Instances
+                        
+                        Music.Parts
+                        
+                        Music.Parts.Basic
+                        
                         -- -- TODO choral voicings etc
                         -- -- TODO use single type or many? How to do "subtyping"
                         -- -- Prisms, TFs, something else?
