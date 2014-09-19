@@ -42,9 +42,11 @@ library
                         -- 
                         -- -- TODO require pitch dep
                         -- Music.Parts.Range
-                        -- 
+
                         Music.Parts.Division
                         Music.Parts.Subpart
+                        Music.Parts.Solo
+                        
                         -- Music.Parts.Strings
                         -- Music.Parts.Woodwind
                         -- Music.Parts.Brass

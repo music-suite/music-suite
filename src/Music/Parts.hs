@@ -25,13 +25,15 @@ module Music.Parts (
         -- * Subparts
         module Music.Parts.Division,
         module Music.Parts.Subpart,
+
+        -- * Solo vs. tutti
+        module Music.Parts.Solo,
         
         -- * Instruments
         Instrument(..),
         -- TODO hide impl
 
         -- * Parts
-        Solo(..),
         Part(..),
         divide,
         containsPart,
@@ -152,6 +154,7 @@ import           Text.Numeral.Roman              (toRoman)
 import           Music.Parts.Basic
 import           Music.Parts.Subpart
 import           Music.Parts.Division
+import           Music.Parts.Solo
 
 {- $terminology
 
@@ -194,14 +197,6 @@ instance Ord Instrument where
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
     def = StdInstrument 0
-
-data Solo
-    = Solo
-    | Tutti
-    deriving (Eq, Show, Ord, Enum)
-
-instance Default Solo where
-    def = Tutti
 
 
 -- | A part is a subdivided group of instruments of a given type.
