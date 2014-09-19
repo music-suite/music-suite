@@ -5,7 +5,7 @@
 
 ------------------------------------------------------------------------------------
 -- |
--- Copyright   : (c) Hans Hoglund 2012
+-- Copyright   : (c) Hans Hoglund 2012-2015
 --
 -- License     : BSD-style
 --
@@ -23,11 +23,9 @@ module Music.Parts (
 
 
         -- * Subparts
-        Division,
-        divisions,
-        getDivision,
-        Subpart,
-
+        module Music.Parts.Division,
+        module Music.Parts.Subpart,
+        
         -- * Instruments
         Instrument(..),
         -- TODO hide impl
@@ -37,7 +35,6 @@ module Music.Parts (
         Part(..),
         divide,
         containsPart,
-        containsSubpart,
         solo,
         tutti,
 
@@ -153,6 +150,8 @@ import           Data.Typeable
 import           Text.Numeral.Roman              (toRoman)
 
 import           Music.Parts.Basic
+import           Music.Parts.Subpart
+import           Music.Parts.Division
 
 {- $terminology
 
@@ -174,58 +173,6 @@ vocal music, but some concetps may be useful in electronic music as well.
 
 
 
-{-
-    For each part we want to know:
-        - Classification:
-            - Type: (i.e. woodwind)
-            - Family: (i.e. saxophone)
-            - Range: (i.e. tenor)
-        - Range (i.e. [c_:e'])
-        - Transposition:
-            sounding = written .+^ transp
-        - Suggested clefs
--}
-
--- |
--- A division represents a subset of a finite group of performers.
---
--- For example a group may be divided into three equal divisions,
--- designated @(0, 3)@, @(1, 3)@ and @(2, 3)@ respectively.
---
-newtype Division = Division { getDivision :: (Int, Int) }
-    deriving (Eq, Ord, Show)
-instance Default Division where
-    def = Division (0,1)
-
-showDivisionR :: Division -> String
-showDivisionR = toRoman . succ . fst . getDivision
-
-showDivision :: Division -> String
-showDivision  = show . succ . fst . getDivision
-
--- | Get all possible divisions for a given divisor in ascending order.
-divisions :: Int -> [Division]
-divisions n = [Division (x,n) | x <- [0..n-1]]
-
--- | Divide a part into @n@ subparts.
-divide :: Int -> Part -> [Part]
-divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [x])) $ divisions n
-
--- |
--- A subpart is a potentially infinite sequence of divisions, each typically
--- designated using a new index type, i.e. @I.1.2@.
---
--- The empty subpart (also known as 'def') represents all the players of the group,
--- or in the context of 'Part', all players of the given instrument.
---
-newtype Subpart = Subpart [Division]
-    deriving (Eq, Ord, Default, Semigroup, Monoid)
-
-instance Show Subpart where
-    show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
-        where
-            mapFR f g []     = []
-            mapFR f g (x:xs) = f x : fmap g xs
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
@@ -295,8 +242,9 @@ Part solo1 instr1 subp1 `containsPart` Part solo2 instr2 subp2 =
         && instr1 == instr2
         && subp1 `containsSubpart` subp2
 
-containsSubpart :: Subpart -> Subpart -> Bool
-Subpart x `containsSubpart` Subpart y = y `Data.List.isPrefixOf` x
+-- | Divide a part into @n@ subparts.
+divide :: Int -> Part -> [Part]
+divide n (Part solo instr subp) = fmap (\x -> Part solo instr (subp <> Subpart [x])) $ divisions n
 
 solo instr      = Part Solo instr def
 tutti instr     = Part Tutti instr def
