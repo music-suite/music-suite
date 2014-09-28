@@ -20,7 +20,7 @@
 
 module Music.Pitch.Absolute (
         Hertz(..),
-        FreqRatio(..),
+        -- FreqRatio(..),
         -- Octaves,
         Cents,
         Fifths,
@@ -47,11 +47,13 @@ import Music.Pitch.Literal
 newtype Hertz = Hertz { getHertz :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
+{-
 -- | 
 -- A ratio between two different (Hertz) frequencies.
 -- 
 newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+-}
 
 -- | 
 -- Number of pure octaves.
@@ -94,6 +96,7 @@ instance Monoid Octaves     where { mempty  = 0 ; mappend = (+) }
 instance Monoid Fifths      where { mempty  = 0 ; mappend = (+) }
 instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
 
+{-
 instance AdditiveGroup FreqRatio where
     zeroV   = 1
     (^+^)   = (*)
@@ -107,6 +110,20 @@ instance AffineSpace Hertz where
   type Diff Hertz = FreqRatio
   (.-.) f1 f2 = FreqRatio $ (getHertz f1) / (getHertz f2)
   (.+^) p f = Hertz $ (getHertz p) * (getFreqRatio f)
+-}
+instance AdditiveGroup Hertz where
+    zeroV   = 1
+    (^+^)   = (*)
+    negateV f = 1 / f
+
+instance VectorSpace Hertz where
+    type Scalar Hertz = Hertz
+    (*^) x f = Hertz ((getHertz f) ** getHertz x)
+
+instance AffineSpace Hertz where
+  type Diff Hertz = Hertz
+  (.-.) = (-)
+  (.+^) = (+)
 
 class HasFrequency a where
     frequency :: a -> Hertz
