@@ -13,8 +13,31 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Intonation -- (
--- )
+module Music.Pitch.Intonation (
+      Intonation,
+      IntoneInterval,
+
+      tuneAbsolute,
+      -- makeBasis,
+      synTune,
+      tetTune,
+      pureOctaveWith,
+
+      -- * Specific tunings
+      pythagorean,
+      quarterCommaMeantone,
+      schismaticMeantone,
+      fiveToneEqual,
+      sevenToneEqual,
+      twelveToneEqual,
+      nineteenToneEqual,
+      thirtyOneToneEqual,
+      fiftyThreeToneEqual,
+
+      -- * Specific intonations
+      standardTuning,
+      -- standardIntonation,
+)
 where
 
 import Data.Maybe
@@ -24,6 +47,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
+
 import Music.Pitch.Absolute
 import Music.Pitch.Literal
 import Music.Pitch.Common.Interval
