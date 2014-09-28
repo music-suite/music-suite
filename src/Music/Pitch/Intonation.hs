@@ -17,7 +17,7 @@ module Music.Pitch.Intonation (
       Intonation,
       Tuning,
 
-      tuneAbsolute,
+      intone,
       -- makeBasis,
       synTune,
       tetTune,
@@ -67,10 +67,12 @@ makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
   Just (x, y) -> (x *^ r1) ^+^ (y *^ r2)
   Nothing -> error ("Cannot use intervals " ++ (show i1) ++ " and " ++ (show i2) ++ " as basis pair to represent " ++ (show i))
 
+-- | Turn a tuning into an intonation.
+intone :: (Pitch, Hertz) -> Tuning Interval -> Intonation Pitch
+intone (b, f) t p = f .+^ (t i) where i = p .-. b
+-- More generally:
+-- intone :: AffineSpace p => (p, Hertz) -> Tuning (Diff p) -> Intonation p
 
--- tuneAbsolute :: AffineSpace p => (p, Hertz) -> Tuning (Diff p) -> Intonation p
-tuneAbsolute ::                     (Pitch, Hertz) -> Tuning Interval -> Intonation Pitch
-tuneAbsolute (b, f) t p = f .+^ (t i) where i = p .-. b
 
 -- Standard syntonic (meantone) tunings, with P8 = 2
 
@@ -109,4 +111,4 @@ fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 
 
 -- | Modern standard intonation, i.e. 12-TET with @a = 440 Hz@.
 standardIntonation :: Intonation Pitch
-standardIntonation = tuneAbsolute (a, 440) twelveToneEqual
+standardIntonation = intone (a, 440) twelveToneEqual
