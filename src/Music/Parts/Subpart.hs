@@ -38,7 +38,7 @@ import Music.Parts.Division
 -- A subpart is a potentially infinite sequence of divisions, each typically
 -- designated using a new index type, i.e. @I.1.2@.
 --
--- The empty subpart (also known as 'def') represents all the players of the group,
+-- The empty subpart (also known as 'mempty') represents all the players of the group,
 -- or in the context of 'Part', all players of the given instrument.
 --
 newtype Subpart = Subpart [Division]
