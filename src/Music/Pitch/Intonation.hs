@@ -68,8 +68,9 @@ makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
   Nothing -> error ("Cannot use intervals " ++ (show i1) ++ " and " ++ (show i2) ++ " as basis pair to represent " ++ (show i))
 
 
-tuneAbsolute :: Tuning Interval -> (Pitch, Hertz) -> Pitch -> Hertz
-tuneAbsolute t (b, f) p = f .+^ (t i) where i = p .-. b
+-- tuneAbsolute :: AffineSpace p => (p, Hertz) -> Tuning (Diff p) -> Intonation p
+tuneAbsolute ::                     (Pitch, Hertz) -> Tuning Interval -> Intonation Pitch
+tuneAbsolute (b, f) t p = f .+^ (t i) where i = p .-. b
 
 -- Standard syntonic (meantone) tunings, with P8 = 2
 
@@ -106,5 +107,6 @@ thirtyOneToneEqual = tetTune dddd3 where dddd3 = m3 ^-^ (4 *^ _A1)
 fiftyThreeToneEqual :: Tuning Interval
 fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 -- (!)
 
+-- | Modern standard intonation, i.e. 12-TET with @a = 440 Hz@.
 standardIntonation :: Intonation Pitch
-standardIntonation = tuneAbsolute twelveToneEqual (a, 440)
+standardIntonation = tuneAbsolute (a, 440) twelveToneEqual
