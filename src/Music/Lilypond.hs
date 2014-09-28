@@ -35,6 +35,7 @@ module Music.Lilypond (
 
         -- ** Articulation and dynamics
         PostEvent(..),
+        ChordPostEvent(..),
 
         -- ** Text
         Articulation(..),
