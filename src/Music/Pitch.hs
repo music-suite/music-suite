@@ -47,10 +47,12 @@ module Music.Pitch (
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
+import Data.AffineSpace.Point
 
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Alterable
 import Music.Pitch.Common
 import Music.Pitch.Literal
+import Music.Pitch.Intonation
 
