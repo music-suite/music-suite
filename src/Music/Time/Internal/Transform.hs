@@ -220,11 +220,8 @@ spanned = itransformed
 -- |
 -- Apply a function under transformation.
 --
--- Designed to be used infix, as in
---
--- @
--- 'stretch' 2 `whilst` 'delaying' 2
--- @
+-- >>> stretch 2 `whilst` delaying 2 $ (1 <-> 2)
+-- 4 <-> 6
 --
 whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
 -- f `whilst` t = transform (negateV t) . f . transform t

@@ -37,9 +37,9 @@ module Music.Time.Transform (
         itransform,
         transformed,
         whilst,
-        spanned,
-        onSpan,
-        conjugateS,
+        -- spanned,
+        -- onSpan,
+        -- conjugateS,
 
         -- * Specific transformations
         -- ** Transformations
