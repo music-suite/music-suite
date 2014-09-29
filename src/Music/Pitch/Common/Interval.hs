@@ -347,9 +347,9 @@ instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval
     abs a         = if isNegative a then negate a else a
-    (*)           = "Music.Pitch.Common.Interval: no overloading for (*)"
-    signum        = "Music.Pitch.Common.Interval: no overloading for signum"
-    fromInteger   = "Music.Pitch.Common.Interval: no overloading for fromInteger"
+    (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
+    signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
+    fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
         
 instance Show Interval where
   show a

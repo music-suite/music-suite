@@ -194,9 +194,9 @@ instance Num Pitch where
     Pitch a + Pitch b = Pitch (a + b)
     negate (Pitch a)  = Pitch (negate a)
     abs (Pitch a)     = Pitch (abs a)
-    (*)           = "Music.Pitch.Common.Pitch: no overloading for (*)"
-    signum        = "Music.Pitch.Common.Pitch: no overloading for signum"
-    fromInteger   = "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+    (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
+    signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
+    fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
 
 instance AffineSpace Pitch where
     type Diff Pitch     = Interval
