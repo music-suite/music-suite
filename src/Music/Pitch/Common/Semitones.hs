@@ -185,11 +185,21 @@ infix 4 /:=
 -- |
 -- Enharmonic equivalence.
 --
+-- >>> asInterval _A2 == m3
+-- False
+-- >>> asInterval _A2 =:= m3
+-- True
+--
 (=:=) :: HasSemitones a => a -> a -> Bool
 a =:= b = semitones a == semitones b
 
 -- |
 -- Enharmonic non-equivalence.
+--
+-- >>> asInterval _A2 /= m3
+-- True
+-- >>> asInterval _A2 /:= m3
+-- False
 --
 (/:=) :: HasSemitones a => a -> a -> Bool
 a /:= b = semitones a /= semitones b
