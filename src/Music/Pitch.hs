@@ -18,6 +18,7 @@ module Music.Pitch (
         module Data.Semigroup,
         module Data.VectorSpace,
         module Data.AffineSpace,
+        module Data.AffineSpace.Point,
 
         -- * Pitch representation
         
@@ -35,6 +36,9 @@ module Music.Pitch (
         -- --   Includes representation of common practice pitches and intervals such as /c sharp/, 
         -- --   /diminished second/ and so on.
         module Music.Pitch.Common,
+
+        -- * Intonation
+        module Music.Pitch.Intonation,
         
         -- * Pitch literals
         module Music.Pitch.Literal,
