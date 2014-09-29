@@ -136,3 +136,39 @@
     - Improves documentation and tests
 
 
+# 1.7.2
+
+## music-score
+
+- Compability with 2014.2.0.0
+- Improves representation of Dynamics and Articulation using new Average monoid
+- Fixes several broken Music.Time instances
+- Hides internal representation of tremolo/slide etc.
+- Adds predicates for working with time intervals (Spans)
+- Adds pick-up meta data
+
+## music-pitch
+
+- Completely new implementation by Edward Lilley, faster and more elegant
+- Adds support for various tuning systems, including pythagorean and various forms of equal temperament
+- Adds clef representation
+
+## music-preludes
+
+- Adds more Scheme examples
+- Clean up code in several examples
+- music2... now emits correct line numbers in error messages
+- Preludes now export Articulation
+
+## music-parts
+
+- Splits up the previous large module into a submodule structure
+- music-parts now depends on music-pitch (for instrument ranges etc)
+
+## music-docs
+
+- Misc
+
+## lilypond
+
+- Misc
