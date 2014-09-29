@@ -1,3 +1,6 @@
 
-module Music.Time.Future where
+module Music.Time.Future (
+    module Music.Time.Past
+) where
 
+import Music.Time.Past
