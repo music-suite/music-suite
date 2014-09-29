@@ -42,6 +42,16 @@ module Music.Score.Meta.Tempo (
         tempo,
         tempoDuring,
 
+        -- ** Common tempi
+        presto,
+        allegro,
+        allegretto,
+        moderato,
+        andante,
+        adagio,
+        largo,
+        lento,
+        
         -- * Extracting tempo
         renderTempo,
   ) where
@@ -308,6 +318,16 @@ tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 
 -}
+
+presto     = metronome (1/4) 125
+allegro    = metronome (1/4) 115
+allegretto = metronome (1/4) 105
+moderato   = metronome (1/4) 95
+andante    = metronome (1/4) 85
+adagio     = metronome (1/4) 65
+largo      = metronome (1/4) 55
+lento      = metronome (1/4) 45
+
 
 
 -- TODO consolidate
