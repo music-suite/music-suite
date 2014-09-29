@@ -315,7 +315,7 @@ instance (
             1 -> Lilypond.Alto
             2 -> Lilypond.Bass
           addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = clef }
-          splitIntoBars = splitTiesVoiceAt
+          splitIntoBars = splitTiesAt
 
       exportBar timeSignature
         = LyBar

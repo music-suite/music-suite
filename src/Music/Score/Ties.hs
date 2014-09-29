@@ -33,8 +33,8 @@ module Music.Score.Ties (
         TieT(..),
 
         -- * Splitting tied notes in scores
-        -- splitTiesVoice,
-        splitTiesVoiceAt,
+        -- splitTies,
+        splitTiesAt,
 
   ) where
 
@@ -202,8 +202,8 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
-splitTiesVoice :: Tiable a => Voice a -> Voice a
-splitTiesVoice = (^. voice) . map (^. stretched)
+splitTies :: Tiable a => Voice a -> Voice a
+splitTies = (^. voice) . map (^. stretched)
   . concat . snd . List.mapAccumL g 0
   . map (^. from stretched) . (^. stretcheds)
   where
@@ -220,18 +220,18 @@ splitTiesVoice = (^. voice) . map (^. stretched)
 --
 -- Notes that cross a barlines are split into tied notes.
 --
-splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
-splitTiesVoiceAt barDurs x = fmap ((^. voice) . map (^. stretched)) $ splitTiesVoiceAt' barDurs ((map (^. from stretched) . (^. stretcheds)) x)
+splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+splitTiesAt barDurs x = fmap ((^. voice) . map (^. stretched)) $ splitTiesAt' barDurs ((map (^. from stretched) . (^. stretcheds)) x)
 
-splitTiesVoiceAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
-splitTiesVoiceAt' []  _  =  []
-splitTiesVoiceAt' _  []  =  []
-splitTiesVoiceAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
+splitTiesAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
+splitTiesAt' []  _  =  []
+splitTiesAt' _  []  =  []
+splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
   (barOccs, [])       -> barOccs : []
-  (barOccs, restOccs) -> barOccs : splitTiesVoiceAt' rbarDur restOccs
+  (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
 
-tsplitTiesVoiceAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesVoiceAt barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs . ((^. voice) . map (^. stretched)) . fmap (\x -> (x,'_'))
+tsplitTiesAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
+tsplitTiesAt barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesAt barDurs . ((^. voice) . map (^. stretched)) . fmap (\x -> (x,'_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.

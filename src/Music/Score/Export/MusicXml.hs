@@ -306,7 +306,7 @@ instance (
             1 -> (MusicXml.CClef, 3)
             2 -> (MusicXml.FClef, 4)
           addStaffInfo  = (,) $ StaffInfo { staffClef = clef }
-          splitIntoBars = splitTiesVoiceAt
+          splitIntoBars = splitTiesAt
 
       exportBar timeSignature
         = XmlBar

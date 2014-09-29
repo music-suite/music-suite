@@ -594,7 +594,7 @@ mergeIfSameDurationWith f a b
   | otherwise         = Nothing
 
 -- splitAt :: [Duration] -> Voice a -> [Voice a]
--- splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+-- splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
 
 -- |
 -- Split all notes of the latter voice at the onset/offset of the former.
@@ -669,7 +669,7 @@ sameDurations           :: Voice a -> Voice b -> Bool
 mergeIfSameDuration     :: Voice a -> Voice b -> Maybe (Voice (a, b))
 mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
 splitAt :: [Duration] -> Voice a -> [Voice a]
--- splitTiesVoiceAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
+-- splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
 splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
 splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
 polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])

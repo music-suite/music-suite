@@ -88,7 +88,7 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesVoiceAt barDurs
+voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesAt barDurs
 -- TODO remove prime from name
 
 -- | Basic spelling for integral types.
