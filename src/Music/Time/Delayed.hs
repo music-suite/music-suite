@@ -1,21 +1,11 @@
 
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -41,24 +31,24 @@ module Music.Time.Delayed (
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Bifunctor
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Functor.Adjunction (unzipR)
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
 import           Data.Ratio
 import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
+import           Data.Set                (Set)
+import qualified Data.Set                as Set
 import           Data.String
-import           Data.Functor.Adjunction  (unzipR)
+import           Data.VectorSpace
 
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
+import           Control.Lens            hiding (Indexable, Level, above, below,
+                                          index, inside, parts, reversed,
+                                          transform, (<|), (|>))
+import           Data.Foldable           (Foldable)
+import qualified Data.Foldable           as Foldable
 import           Data.PairMonad
 import           Data.Typeable
 
@@ -78,9 +68,15 @@ import           Music.Time.Split
 -- contrast to a note the /duration/ is not stretched.
 --
 newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
-  deriving (Eq, {-Ord, -}{-Show, -}
-            Applicative, Monad, {-Comonad, -}
-            Functor,  Foldable, Traversable, Typeable)
+  deriving (Eq,
+            Ord,
+            Functor,
+            Applicative,
+            Monad,
+            -- Comonad,
+            Foldable,
+            Traversable,
+            Typeable)
 
 -- $semantics Delayed
 --

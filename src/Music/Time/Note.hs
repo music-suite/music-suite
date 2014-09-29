@@ -1,20 +1,12 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
@@ -36,33 +28,33 @@ module Music.Time.Note (
         -- * Construction
         note,
         event,
-        noteValue,      
+        noteValue,
   ) where
 
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
 import           Data.Ratio
 import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
 import           Data.String
 import           Data.VectorSpace
 
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Comonad.Env
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
 import           Data.PairMonad
 import           Data.Typeable
 
-import           Music.Pitch.Literal
 import           Music.Dynamics.Literal
+import           Music.Pitch.Literal
 import           Music.Time.Internal.Util (through, tripped)
 
 import           Music.Time.Reverse

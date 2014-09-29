@@ -1,20 +1,11 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -74,8 +65,21 @@ import           Music.Time.Split
 -- value can still be delayed using @'fmap' 'delay'@.
 --
 newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
-  deriving (Applicative, Monad, {-Comonad, -}
-            Functor,  Foldable, Traversable)
+  deriving (Eq,
+            Num,
+            Fractional,
+            Floating,
+            Ord,
+            Real,
+            RealFrac,
+            Functor,
+            Applicative,
+            Monad,
+            -- Comonad,
+            Foldable,
+            Traversable,
+            Typeable
+            )
 
 -- $semantics Stretched
 --
@@ -90,16 +94,6 @@ newtype Stretched a = Stretched { _stretchedValue :: Couple Duration a }
 -- >>> delay 2 $ (5,1)^.stretched
 -- (5,1)^.stretched
 --
-
-deriving instance Eq  a => Eq  (Stretched a)
-deriving instance Num a => Num (Stretched a)
-deriving instance Fractional a => Fractional (Stretched a)
-deriving instance Floating a => Floating (Stretched a)
-deriving instance Ord a => Ord (Stretched a)
-deriving instance Real a => Real (Stretched a)
-deriving instance RealFrac a => RealFrac (Stretched a)
-
-deriving instance Typeable1 Stretched
 
 instance Wrapped (Stretched a) where
   type Unwrapped (Stretched a) = (Duration, a)
