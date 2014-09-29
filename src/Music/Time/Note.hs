@@ -77,18 +77,12 @@ import           Music.Time.Split
 -- @
 --
 newtype Note a = Note { _noteValue :: (Span, a) }
-  deriving (Typeable)
-
--- $semantics
---
--- type Note a = (Span, a)
---
-
-deriving instance Eq a => Eq (Note a)
-deriving instance Functor Note
-deriving instance Foldable Note
-deriving instance Traversable Note
-deriving instance Comonad Note
+  deriving (Eq,
+            Functor,
+            Foldable,
+            Traversable,
+            -- Comonad,
+            Typeable)
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
