@@ -12,10 +12,21 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Music.Pitch.Clef where
+module Music.Pitch.Clef (
+      ClefSymbol,
+      OctaveAdjustment,
+      Clef,
+      symbolName,
+      symbolPitch,
+      positionPitch,
+      pitchPosition,
+  ) where
+
+import Data.Typeable
 
 import Music.Pitch.StaffLines
-import Data.Typeable
+import Music.Pitch.Common
+import Music.Pitch.Literal
 
 data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
     deriving (Eq, Ord, Show, Typeable)
@@ -23,6 +34,37 @@ data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
 type OctaveAdjustment = Integer
 
 type Clef = (ClefSymbol, OctaveAdjustment, StaffLines)
+
+symbolName :: ClefSymbol -> String
+symbolName GClef = "G clef"
+symbolName CClef = "C clef"
+symbolName FClef = "F clef"
+symbolName PercClef = "Percussion clef"
+symbolName NeutralClef = "Neutral clef"
+
+symbolPitch :: ClefSymbol -> Maybe Pitch
+symbolPitch GClef = Just g
+symbolPitch CClef = Just c
+symbolPitch FClef = Just f
+symbolPitch _     = Nothing
+
+-- TODO consolidate with common
+pitchPosition :: Clef -> Pitch -> Maybe StaffLines
+pitchPosition (s,o,l) x = undefined
+  where
+    numbersPerOctave = 7
+    referencePitch = symbolPitch s :: Maybe Pitch
+
+positionPitch :: Clef -> StaffLines -> Maybe Pitch
+positionPitch (s,o,l) x = fmap (upDiatonic relativePosition) referencePitch
+  where
+    numbersPerOctave = 7
+    referencePitch = symbolPitch s :: Maybe Pitch
+    relativePosition = fromIntegral $ (x - l) + fromIntegral (o*7)
+
+-- TODO implement fully in Pitch.Common.Diatonic
+upDiatonic :: Number -> Pitch -> Pitch
+upDiatonic = error "Not implemented: upDiatonic"
 
 {-
 TODO
