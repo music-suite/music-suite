@@ -25,32 +25,20 @@ module Music.Time.Stretched (
 
         -- * Construction
         stretched,
-        stretchedValue,   
+        stretchedValue,
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Bifunctor
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
-import           Data.String
-import           Data.Functor.Couple
-
 import           Control.Applicative
-import           Control.Comonad
-import           Control.Comonad.Env
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
 import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
-import           Data.PairMonad
+import           Data.String
 import           Data.Typeable
+import           Data.VectorSpace
+import           Data.Bifunctor
+import           Data.Functor.Couple
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -105,7 +93,7 @@ instance Transformable (Stretched a) where
   transform t = over _Wrapped $ first (transform t)
 
 instance HasDuration (Stretched a) where
-  _duration = _duration . ask . view _Wrapped
+  _duration = _duration . fst . view _Wrapped
 
 instance Reversible (Stretched a) where
   rev = stretch (-1)

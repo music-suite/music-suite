@@ -31,32 +31,19 @@ module Music.Time.Note (
         noteValue,
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
-import           Data.String
-import           Data.VectorSpace
-
 import           Control.Applicative
-import           Control.Comonad
-import           Control.Comonad.Env
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
                                            reversed, transform, (<|), (|>))
+import           Data.String
+import           Data.VectorSpace
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
-import           Data.PairMonad
 import           Data.Typeable
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Time.Internal.Util (through, tripped)
-
 import           Music.Time.Reverse
 import           Music.Time.Split
 
@@ -93,9 +80,6 @@ instance (Show a, Transformable a) => Show (Note a) where
 deriving instance Monad Note
 deriving instance Applicative Note
 
--- instance ComonadEnv Span Note where
-  -- ask = noteValueSpan
-
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
   _Wrapped' = iso _noteValue Note
@@ -106,10 +90,10 @@ instance Transformable (Note a) where
   transform t = over (_Wrapped . _1) $ transform t
 
 instance HasDuration (Note a) where
-  _duration = _duration . ask . view _Wrapped
+  _duration = _duration . fst . view _Wrapped
 
 instance HasPosition (Note a) where
-  x `_position` p = ask (view _Wrapped x) `_position` p
+  x `_position` p = fst (view _Wrapped x) `_position` p
 
 instance Splittable a => Splittable (Note a) where
   -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)

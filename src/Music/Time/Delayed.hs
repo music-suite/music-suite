@@ -28,29 +28,20 @@ module Music.Time.Delayed (
         delayedValue,
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Bifunctor
-import           Data.Functor.Adjunction (unzipR)
-import           Data.Map                (Map)
-import qualified Data.Map                as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set                (Set)
-import qualified Data.Set                as Set
-import           Data.String
-import           Data.VectorSpace
-
 import           Control.Applicative
-import           Control.Comonad
-import           Control.Comonad.Env
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,
                                           transform, (<|), (|>))
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Bifunctor
 import           Data.Foldable           (Foldable)
 import qualified Data.Foldable           as Foldable
-import           Data.PairMonad
+import           Data.Functor.Adjunction (unzipR)
+import           Data.Functor.Couple
+import           Data.String
 import           Data.Typeable
+import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -101,7 +92,7 @@ instance HasDuration (Delayed a) where
   _duration x = _offset x .-. _onset x
 
 instance HasPosition (Delayed a) where
-  x `_position` p = ask (view _Wrapped x) `_position` p
+  x `_position` p = fst (view _Wrapped x) `_position` p
 
 instance Reversible (Delayed a) where
   rev = revDefault
