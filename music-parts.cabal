@@ -1,6 +1,6 @@
 
 name:                   music-parts
-version:                1.7.1
+version:                1.7.2
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -29,7 +29,7 @@ library
                         data-default,
                         adjunctions             >= 4.1 && < 5,
                         roman-numerals,
-                        music-pitch             == 1.7.1
+                        music-pitch             == 1.7.2
     exposed-modules:    Data.Semigroup.Option.Instances
                         
                         Music.Parts
