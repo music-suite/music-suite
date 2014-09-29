@@ -1,6 +1,6 @@
 
 name:                   musicxml2
-version:                1.7.1
+version:                1.7.2
 synopsis:               A representation of the MusicXML format.
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
@@ -26,8 +26,8 @@ library
                         type-unary              >= 0.2.16 && < 1.0,
                         reverse-apply,
                         xml,
-                        music-pitch-literal     == 1.7.1,
-                        music-dynamics-literal  == 1.7.1
+                        music-pitch-literal     == 1.7.2,
+                        music-dynamics-literal  == 1.7.2
     exposed-modules:    Music.MusicXml
                         Music.MusicXml.Time
                         Music.MusicXml.Pitch
