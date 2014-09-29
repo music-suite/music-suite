@@ -58,6 +58,7 @@ library
                         Data.Functor.Couple
                         Data.Functor.Context
                         Data.Functor.Rep.Lens
+                        Data.List.Ordered
                         Data.Semigroup.Instances
                         Control.Monad.Compose
                         Music.Time
