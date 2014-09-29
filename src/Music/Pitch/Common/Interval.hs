@@ -342,34 +342,14 @@ newtype Interval = Interval { getInterval :: (
     ) }
     deriving (Eq, Ord, Typeable)
 
-
+-- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
     (+)           = addInterval
     negate        = negateInterval
     abs a         = if isNegative a then negate a else a
---     a * b         = fromIntegral (semitones a) `stackInterval` b
---     signum a      = if isNegative a then (-m2) else (if isPositive a then m2 else _P1)
---     fromInteger 0 = _P1
--- 
---     -- fromInteger n = n `stackInterval` m2
---     fromInteger n = case fromInteger n `divMod` 12 of
---         (octave, chromatic) -> Interval (octave, sharpSpelling chromatic, chromatic)
---         where
---             -- Copied from Spellings (TODO factor out these)
---             sharpSpelling = go
---                 where
---                     go 0  = 0
---                     go 1  = 0
---                     go 2  = 1
---                     go 3  = 1
---                     go 4  = 2
---                     go 5  = 3
---                     go 6  = 3
---                     go 7  = 4
---                     go 8  = 4
---                     go 9  = 5
---                     go 10 = 5
---                     go 11 = 6
+    (*)           = "Music.Pitch.Common.Interval: no overloading for (*)"
+    signum        = "Music.Pitch.Common.Interval: no overloading for signum"
+    fromInteger   = "Music.Pitch.Common.Interval: no overloading for fromInteger"
         
 instance Show Interval where
   show a

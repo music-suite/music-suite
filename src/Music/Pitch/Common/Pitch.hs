@@ -188,8 +188,16 @@ data Name = C | D | E | F | G | A | B
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Pitch = Pitch { getPitch :: Interval }
-    deriving (Eq, Num, Ord, Typeable)
+    deriving (Eq, Ord, Typeable)
     
+instance Num Pitch where
+    Pitch a + Pitch b = Pitch (a + b)
+    negate (Pitch a)  = Pitch (negate a)
+    abs (Pitch a)     = Pitch (abs a)
+    (*)           = "Music.Pitch.Common.Pitch: no overloading for (*)"
+    signum        = "Music.Pitch.Common.Pitch: no overloading for signum"
+    fromInteger   = "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+
 instance AffineSpace Pitch where
     type Diff Pitch     = Interval
     Pitch a .-. Pitch b = a ^-^ b
