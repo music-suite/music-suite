@@ -2,7 +2,6 @@
 
 ## Misc Music.Time API
 
-- Remove/clean/consolidate semantics
 - Determine future approach to rest/chord as well as naming of Note/Delayed/Stretched
     - Compare applicative composition Const/Id/Pair etc
     - Track vs Chord + names
@@ -12,7 +11,6 @@
 - Hide/move unsafe vesions + assert that everything else works (conceptually) with meta
 
 - Score simult/simultaneous
-- NoReverse vs Nominal vs other "invariant" wrappers
 - Remove Position._setEra/_setEra
 - More catenation/juxtaposition functions (compare Tidal et al)
 - More chord functions

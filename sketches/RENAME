@@ -18,13 +18,9 @@ singleNote
 rest
 noteValue etc.
 
-splitTiesVoice -> splitTies
-splitTiesVoiceAt -> splitTiesAt
 vdynamic
 addDynCon
 
-itransform -> inverseTransform ??
-delayTime -> delayRelativeOrigin
 line -> time?, linear? (linear k m = k x + m)
 
 
