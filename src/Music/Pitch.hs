@@ -20,21 +20,10 @@ module Music.Pitch (
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
 
-        -- * Pitch representation
-        
-        -- -- | Augmentation and diminishing, generalized to work on all interval types.
+        -- * Generic representation
         module Music.Pitch.Augmentable,
-
-        -- -- | Alteration, sharps and flats, generalized to work on all pitch types.
         module Music.Pitch.Alterable,
-
-        -- -- | Frequency, cents and other absolute measurements of pitch.
         module Music.Pitch.Absolute,
-
-        -- -- | Pitch and intervals, as defined in Common Music Theory (CMT).
-        -- --
-        -- --   Includes representation of common practice pitches and intervals such as /c sharp/, 
-        -- --   /diminished second/ and so on.
         module Music.Pitch.Common,
 
         -- * Intonation
