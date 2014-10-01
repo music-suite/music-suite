@@ -298,5 +298,4 @@ type Tree a = Free MaybePair a
 newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
    -}
 
--- JUNK
 

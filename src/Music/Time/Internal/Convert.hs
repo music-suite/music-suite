@@ -138,8 +138,6 @@ trackToScore' f = (^. from events) . fmap (\(t,x) -> (t,f x,x)) . map (^. from d
 noteToReactive :: Monoid a => Note a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
--- JUNK
-
 -- | Split a reactive into mkNotes, as well as the values before and after the first/last update
 splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
 splitReactive r = case updates r of

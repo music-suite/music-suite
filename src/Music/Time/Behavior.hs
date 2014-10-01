@@ -379,5 +379,3 @@ tau = 2 * pi
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
-
--- JUNK

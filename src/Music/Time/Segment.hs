@@ -371,5 +371,3 @@ focusing = lens get set
     get = view (from bounded . noteValue) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 
--- JUNK
-

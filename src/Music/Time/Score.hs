@@ -586,4 +586,3 @@ simult = iso simultaneous' mscatter
 -- TODO identical to: lens simultaneous' (flip $ mapSimultaneous . const)
 -- wrap in something to preserve meta
 
--- JUNK
