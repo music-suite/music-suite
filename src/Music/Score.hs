@@ -40,7 +40,6 @@ module Music.Score (
         -- ** Miscellaneous
         module Music.Score.Ties,
         module Music.Score.Phrases,
-        -- module Music.Score.Clef,
 
         -- ** Meta-information
         module Music.Score.Meta,
@@ -92,7 +91,6 @@ import           Data.VectorSpace               hiding (Sum, getSum)
 import           Music.Time                     hiding (time)
 
 import           Music.Score.Articulation
--- import           Music.Score.Clef
 import           Music.Score.Color
 import           Music.Score.Dynamics
 import           Music.Score.Export.Backend
