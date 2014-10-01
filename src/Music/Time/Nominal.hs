@@ -41,7 +41,16 @@ import Music.Time.Split
 import Music.Time.Reverse
 
 newtype Nominal f a = Nominal { getNominal :: f a }
-  deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable, Monad)
+  deriving (
+  	Eq, 
+  	Ord,
+  	Read, 
+  	Show, 
+  	Functor, 
+  	Foldable, 
+  	Traversable, 
+  	Monad
+  )
 
 instance Applicative f => Applicative (Nominal f) where
   pure = Nominal . pure

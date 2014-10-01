@@ -103,7 +103,7 @@ scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^
 -- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchedValue) . fmap return
+voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchee) . fmap return
 {-# DEPRECATED voiceToScore "" #-}
 
 {-

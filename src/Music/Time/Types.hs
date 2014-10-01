@@ -35,13 +35,13 @@ module Music.Time.Types (
         -- * Basic types
         -- ** Time points
         Time,
-        toTime,
-        fromTime,
+        -- toTime,
+        -- fromTime,
 
         -- ** Duration
         Duration,
-        toDuration,
-        fromDuration,
+        -- toDuration,
+        -- fromDuration,
 
         -- ** Convert between time and duration
         -- $convert
@@ -172,13 +172,14 @@ deriving instance Floating Duration
 -- Duration, corresponding to note values in standard notation.
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
+newtype Duration = Duration { getDuration :: TimeBase }
+  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
 --
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
-newtype Duration = Duration { getDuration :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
 -- $semantics Duration
 --
@@ -229,13 +230,14 @@ fromDuration = realToFrac
 -- of the music. Note that time can be negative, representing values occuring before the
 -- reference time.
 --
+newtype Time = Time { getTime :: TimeBase }
+  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
 --
-newtype Time = Time { getTime :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
 -- $semantics Time
 --

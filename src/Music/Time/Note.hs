@@ -32,9 +32,11 @@ module Music.Time.Note (
   ) where
 
 import           Control.Applicative
+import           Control.Comonad
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
                                            reversed, transform, (<|), (|>))
+import           Data.PairMonad
 import           Data.String
 import           Data.VectorSpace
 import           Data.Foldable            (Foldable)
@@ -68,7 +70,7 @@ newtype Note a = Note { _noteValue :: (Span, a) }
             Functor,
             Foldable,
             Traversable,
-            -- Comonad,
+            Comonad,
             Typeable)
 
 instance (Show a, Transformable a) => Show (Note a) where
