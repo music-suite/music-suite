@@ -120,7 +120,7 @@ import Music.Pitch.Common.Semitones
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
 -- diminished. This representation allows for an arbitrary number of
--- augmentation or diminishions, so /augmented/ is represented by @Augmented
+-- augmentations or diminutions, so /augmented/ is represented by @Augmented
 -- 1@, /doubly augmented/ by @Augmented 2@ and so on.
 --
 -- The quality of a compound interval is the quality of the simple interval on
@@ -340,7 +340,17 @@ newtype Interval = Interval { getInterval :: (
             Int,        -- number of A1, i.e. chromatic steps
             Int        -- number of d2, i.e. diatonic steps
     ) }
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Typeable)
+
+-- | Given that intervals are two-dimensional vectors, it's not
+-- possible to order them in general. The best we can do is to rely on
+-- the 'number' of the interval, i.e. thirds are bigger than seconds
+-- etc.
+instance Ord Interval where
+  i > j = (snd . getInterval) i > (snd . getInterval) j
+  i < j = (snd . getInterval) i < (snd . getInterval) j
+  i >= j = (snd . getInterval) i >= (snd . getInterval) j
+  i <= j = (snd . getInterval) i <= (snd . getInterval) j
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
