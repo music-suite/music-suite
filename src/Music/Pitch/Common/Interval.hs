@@ -342,15 +342,12 @@ newtype Interval = Interval { getInterval :: (
     ) }
     deriving (Eq, Typeable)
 
--- | Given that intervals are two-dimensional vectors, it's not
--- possible to order them in general. The best we can do is to rely on
--- the 'number' of the interval, i.e. thirds are bigger than seconds
--- etc.
+-- | Lexicographical ordering, comparing the 'd2' component of the
+-- Interval first, as it's tied to the Number which is expected to be
+-- 'bigger' than the Quality, assuming ordinary tuning systems
 instance Ord Interval where
-  i > j = (snd . getInterval) i > (snd . getInterval) j
-  i < j = (snd . getInterval) i < (snd . getInterval) j
-  i >= j = (snd . getInterval) i >= (snd . getInterval) j
-  i <= j = (snd . getInterval) i <= (snd . getInterval) j
+  compare i j = compare (swap i) (swap j)
+  where swap (Interval (i, j)) = (Interval (j, i))
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
