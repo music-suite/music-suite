@@ -173,3 +173,25 @@ minorTriad :: Transposable a => a -> Chord a
 
 ----------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
