@@ -226,7 +226,9 @@ foo :: NonEmpty (Past a)   -> (Past a, [Event a])
 -- Reactive
 ------------------------------------------------------------------------------------------
 
--- atTime                :: Reactive a -> Time -> a
+indexReactive         :: Reactive a -> Time -> a
+-- No tabulate!
+
 initial               :: Reactive a -> a
 final                 :: Reactive a -> a
 -- intermediate          :: Transformable a => Reactive a -> [Event a]
@@ -258,7 +260,7 @@ join'                 :: Spline a -> Spline a -> Spline a
 instant               :: Spline a
 append                :: Spline a -> Spline a -> Spline a
 
--- append'               :: Note (Spline a) -> Note (Spline a) -> Note (Spline a)
+trimR                 :: Monoid a => Span -> Reactive a -> Reactive a
 -- splitReactive         :: Reactive a -> Either a ((a, Time), [Event a], (Time, a))
 
 ------------------------------------------------------------------------------------------
@@ -266,24 +268,35 @@ append                :: Spline a -> Spline a -> Spline a
 ------------------------------------------------------------------------------------------
 
 behavior              :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+view behavior         :: (Time -> a) -> Behavior a
+indexBehavior         :: Behavior a -> Time -> a
+tabulateBehavior      :: (Time -> a) -> Behavior a
+-- view behavior         :: (Time -> a) -> Behavior a
+-- view (from behavior)  :: Behavior a -> Time -> a
+
 discrete              :: Reactive a -> Behavior a
-impulse               :: Num a => Behavior a
-sample                :: [Time] -> Behavior a -> Reactive a
-bounded               :: Iso (Event (Spline a)) (Event (Spline b)) (Bound (Behavior a)) (Bound (Behavior b))
 continous             :: Reactive (Spline a) -> Behavior a
 continousWith         :: Spline (a -> b) -> Reactive a -> Behavior b
+
+sample                :: [Time] -> Behavior a -> Reactive a
+sample'               :: Time -> [Time] -> Behavior a -> Reactive a
+
+bounded               :: Iso (Event (Spline a)) (Event (Spline b)) (Bound (Behavior a)) (Bound (Behavior b))
+
+
 focusing              :: Functor f => (Spline a -> f (Spline a)) -> Behavior a -> f (Behavior a)
+
 switch                :: Time -> Behavior a -> Behavior a -> Behavior a
 switch'               :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 trim                  :: Monoid b => Bound (Behavior b) -> Behavior b
 trimAfter             :: Monoid a => Time -> Behavior a -> Behavior a
 trimBefore            :: Monoid a => Time -> Behavior a -> Behavior a
-trimR                 :: Monoid a => Span -> Reactive a -> Reactive a
+
+impulse               :: Num a => Behavior a
 turnOff               :: Num a => Behavior a
 turnOn                :: Num a => Behavior a
-unit                  :: Fractional a => Behavior a      
 splice                :: Behavior a -> Bound (Behavior a) -> Behavior a
-
+unit                  :: Fractional a => Behavior a      
 line                  :: Fractional a => Behavior a
 -- cosine                :: Floating a => Behavior a
 -- sine                  :: Floating a => Behavior a
