@@ -47,91 +47,110 @@ newtype Voice a
 (<|)                  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 (|>)                  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 
-after                 :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-afterOffset           :: Time -> Span -> Bool
-afterOnset            :: Time -> Span -> Bool
-apSegments            :: Voice (Segment a) -> Stretched (Segment a)
-apSegments'           :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-atTime                :: Reactive a -> Time -> a
-before                :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-beforeOffset          :: Time -> Span -> Bool
-beforeOnset           :: Time -> Span -> Bool
-behavior              :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-bounded               :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
+------------------------------------------------------------------------------------------
+-- Span
+------------------------------------------------------------------------------------------
+
+delta                 :: Iso' Span (Time, Duration)
+codelta               :: Iso' Span (Duration, Time)
+range                 :: Iso' Span (Time, Time)
+
+normalizeSpan         :: Span -> Span
+reverseSpan           :: Span -> Span
+reflectSpan           :: Time -> Span -> Span
+
+fixedDurationSpan     :: Prism' Span Time
+fixedOnsetSpan        :: Prism' Span Duration
+-- stretchComponent      :: Span -> Duration
+-- delayComponent        :: Span -> Time
+
+inside                :: Time -> Span -> Bool
+encloses              :: Span -> Span -> Bool
+overlaps              :: Span -> Span -> Bool
+properlyEncloses      :: Span -> Span -> Bool
+isBackwardSpan        :: Span -> Bool
+
+isBefore              :: Span -> Span -> Bool
+isEmptySpan           :: Span -> Bool
+isForwardSpan         :: Span -> Bool
+isProper              :: Span -> Bool
+
+-- strictlyAfterOffset   :: Time -> Span -> Bool
+-- strictlyAfterOnset    :: Time -> Span -> Bool
+-- strictlyBeforeOffset  :: Time -> Span -> Bool
+-- strictlyBeforeOnset   :: Time -> Span -> Bool
+-- afterOffset           :: Time -> Span -> Bool
+-- afterOnset            :: Time -> Span -> Bool
+-- beforeOffset          :: Time -> Span -> Bool
+-- beforeOnset           :: Time -> Span -> Bool
+-- startsBefore          :: Span -> Span -> Bool
+-- startsLater           :: Span -> Span -> Bool
+-- startsWhenStarts      :: Span -> Span -> Bool
+-- startsWhenStops       :: Span -> Span -> Bool
+-- stopsAtTheSameTime    :: Span -> Span -> Bool
+-- stopsBefore           :: Span -> Span -> Bool
+-- stopsLater            :: Span -> Span -> Bool
+-- stopsWhenStarts       :: Span -> Span -> Bool
+-- stopsWhenStops        :: Span -> Span -> Bool
+
+showCodelta           :: Span -> String
+showDelta             :: Span -> String
+showRange             :: Span -> String
+
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+
+
 bounding              :: Span -> a -> Bound a
 bounds                :: Time -> Time -> a -> Bound a
-chord                 :: Getter [Delayed a] (Chord a)
+
+
+
+after                 :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+before                :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+
+
+
+
 chunks                :: (Splittable a, HasDuration a) => Duration -> a -> [a]
-codelta               :: Iso' Span (Duration, Time)
+
 compress              :: Transformable a => Duration -> a -> a
 compressing           :: Duration -> Span
-concatB               :: Monoid a => Score (Behavior a) -> Behavior a
-continous             :: Reactive (Segment a) -> Behavior a
-continousWith         :: Segment (a -> b) -> Reactive a -> Behavior b
-cosine                :: Floating a => Behavior a
-coverRests            :: Voice (Maybe a) -> Maybe (Voice a)
+
 delay                 :: Transformable a => Duration -> a -> a
-delayComponent        :: Span -> Time
+
 delayTime             :: Transformable a => Time -> a -> a
 delayed               :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
 delayee               :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 delayeds              :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
 delaying              :: Duration -> Span
-delta                 :: Iso' Span (Time, Duration)
-discrete              :: Reactive a -> Behavior a
+
 duration              :: (Transformable a, HasDuration a) => Lens' a Duration
-durationsV            :: Functor f => ([Duration] -> f [Duration]) -> Voice a -> f (Voice a)
 during                :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-encloses              :: Span -> Span -> Bool
 era                   :: (HasPosition a, Transformable a) => Lens' a Span
-eras                  :: Applicative f => (Span -> f Span) -> Score a -> f (Score a)
-event ::
-  (Profunctor p, Functor f) =>
-  p (Time, Duration, a) (f (Time, Duration, b))
-  -> p (Music.Time.Note.Note a) (f (Music.Time.Note.Note b))
-events                :: Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-eventsV               :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-filterEvents          :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterWithSpan        :: (Span -> a -> Bool) -> Score a -> Score a
-final                 :: Reactive a -> a
-firstTrue             :: [Maybe a] -> Maybe a
-fixedDurationSpan     :: Prism' Span Time
-fixedOnsetSpan        :: Prism' Span Duration
-focusing              :: Functor f => (Segment a -> f (Segment a)) -> Behavior a -> f (Behavior a)
+
+event                 :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+
 follow                :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-fuse                  :: Eq a => Voice a -> Voice a
-fuseBy                :: (a -> a -> Bool) -> Voice a -> Voice a
-fuseRests             :: Voice (Maybe a) -> Voice (Maybe a)
 future                :: Future a -> Time -> Maybe a
 futureSeg             :: Future (Segment a) -> Behavior (Maybe a)
-impulse               :: Num a => Behavior a
+
 indexPast             :: [Past a] -> Time -> Maybe a
-initial               :: Reactive a -> a
-inside                :: Time -> Span -> Bool
-intermediate          :: Transformable a => Reactive a -> [Music.Time.Note.Note a]
-isBackwardSpan        :: Span -> Bool
-isBefore              :: Span -> Span -> Bool
-isEmptySpan           :: Span -> Bool
-isForwardSpan         :: Span -> Bool
-isProper              :: Span -> Bool
+
+
+
 itransform            :: Transformable a => Span -> a -> a
 lead                  :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-line                  :: Fractional a => Behavior a
-mapEvents             :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapFilterEvents       :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan     :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapWithSpan           :: (Span -> a -> b) -> Score a -> Score b
+
 midpoint              :: (HasPosition a, Transformable a) => Lens' a Time
-normalizeScore        :: Score a -> Score a
-normalizeSpan         :: Span -> Span
+
 note                  :: Iso (Span, a) (Span, b) (Note a) (Note b)
 notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-notes                 :: Lens (Score a) (Score b) [Note a] [Note b]
-occs                  :: Reactive a -> [Time]
+
 offset                :: (HasPosition a, Transformable a) => Lens' a Time
 offsetPoints          :: AffineSpace a => a -> [Diff a] -> [a]
 onset                 :: (HasPosition a, Transformable a) => Lens' a Time
-overlaps              :: Span -> Span -> Bool
+
 palindrome            :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 past                  :: Past a -> Time -> Maybe a
 pastSeg               :: Past (Segment a) -> Behavior (Maybe a)
@@ -141,88 +160,127 @@ position              :: (HasPosition a, Transformable a) => Duration -> Lens' a
 postOffset            :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset             :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset              :: (HasPosition a, Transformable a) => Lens' a Time
-printEras             :: Score a -> IO ()
-properlyEncloses      :: Span -> Span -> Bool
-range                 :: Iso' Span (Time, Time)
-reflectSpan           :: Time -> Span -> Span
+
+
+
 rest                  :: Applicative f => f (Maybe a)
 revDefault            :: (HasPosition a, Transformable a) => a -> a
-reverseDurations      :: Voice a -> Voice a
-reverseSpan           :: Span -> Span
-reverseValues         :: Voice a -> Voice a
 reversed              :: Reversible a => Iso' a a
-rotateDurations       :: Int -> Voice a -> Voice a
-rotateValues          :: Int -> Voice a -> Voice a
-sample                :: [Time] -> Behavior a -> Reactive a
-sawtooth              :: RealFrac a => Behavior a
+
 scat                  :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
-score                 :: Getter [Note a] (Score a)
+
 segment               :: Iso (Duration -> a) (Duration -> b) (Segment -> a) (Segment -> b)
-showCodelta           :: Span -> String
-showDelta             :: Span -> String
-showRange             :: Span -> String
-simult                :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simultaneous          :: (Transformable a, Semigroup a) => Score a -> Score a
-sine                  :: Floating a => Behavior a
-splice                :: Behavior a -> Bound (Behavior a) -> Behavior a
-splitAbs              :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
-splitReactive         :: Reactive a -> Either a ((a, Time), [Music.Time.Note.Note a], (Time, a))
-startAt               :: (Transformable a, HasPosition a) => Time -> a -> a
-startsBefore          :: Span -> Span -> Bool
-startsLater           :: Span -> Span -> Bool
-startsWhenStarts      :: Span -> Span -> Bool
-startsWhenStops       :: Span -> Span -> Bool
-stopAt                :: (Transformable a, HasPosition a) => Time -> a -> a
-stopsAtTheSameTime    :: Span -> Span -> Bool
-stopsBefore           :: Span -> Span -> Bool
-stopsLater            :: Span -> Span -> Bool
-stopsWhenStarts       :: Span -> Span -> Bool
-stopsWhenStops        :: Span -> Span -> Bool
-stretch               :: Transformable a => Duration -> a -> a
-stretchComponent      :: Span -> Duration
+apSegments            :: Voice (Segment a) -> Stretched (Segment a)
+apSegments'           :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
+
+
+
 stretchTo             :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretched             :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
-stretcheds            :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 stretchee             :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
 stretching            :: Duration -> Span
-strictlyAfterOffset   :: Time -> Span -> Bool
-strictlyAfterOnset    :: Time -> Span -> Bool
-strictlyBeforeOffset  :: Time -> Span -> Bool
-strictlyBeforeOnset   :: Time -> Span -> Bool
+
 sustain               :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
-switch                :: Time -> Behavior a -> Behavior a -> Behavior a
-switch'               :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-switchR               :: Time -> Reactive a -> Reactive a -> Reactive a
+
 times                 :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
 toAbsoluteTime        :: [Duration] -> [Time]
 toRelativeTime        :: [Time] -> [Duration]
 toRelativeTimeN       :: [Time] -> [Duration]
 toRelativeTimeN'      :: Time -> [Time] -> [Duration]
 transformed           :: (Transformable a, Transformable b) => Span -> Iso a b a b
+
+undelay               :: Transformable a => Duration -> a -> a
+undelaying            :: Duration -> Span
+
+
+
+
+
+
+------------------------------------------------------------------------------------------
+-- Reactive
+------------------------------------------------------------------------------------------
+
+atTime                :: Reactive a -> Time -> a
+final                 :: Reactive a -> a
+initial               :: Reactive a -> a
+intermediate          :: Transformable a => Reactive a -> [Music.Time.Note.Note a]
+occs                  :: Reactive a -> [Time]
+switchR               :: Time -> Reactive a -> Reactive a -> Reactive a
+updates               :: Reactive a -> [(Time, a)]
+
+------------------------------------------------------------------------------------------
+-- Segment
+------------------------------------------------------------------------------------------
+
+sine                  :: Floating a => Behavior a
+splice                :: Behavior a -> Bound (Behavior a) -> Behavior a
+splitAbs              :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
+splitReactive         :: Reactive a -> Either a ((a, Time), [Music.Time.Note.Note a], (Time, a))
+startAt               :: (Transformable a, HasPosition a) => Time -> a -> a
+stopAt                :: (Transformable a, HasPosition a) => Time -> a -> a
+stretch               :: Transformable a => Duration -> a -> a
+
+------------------------------------------------------------------------------------------
+-- Behavior
+------------------------------------------------------------------------------------------
+
+behavior              :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
+cosine                :: Floating a => Behavior a
+discrete              :: Reactive a -> Behavior a
+impulse               :: Num a => Behavior a
+line                  :: Fractional a => Behavior a
+sample                :: [Time] -> Behavior a -> Reactive a
+sawtooth              :: RealFrac a => Behavior a
+bounded               :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
+continous             :: Reactive (Segment a) -> Behavior a
+continousWith         :: Segment (a -> b) -> Reactive a -> Behavior b
+focusing              :: Functor f => (Segment a -> f (Segment a)) -> Behavior a -> f (Behavior a)
+switch                :: Time -> Behavior a -> Behavior a -> Behavior a
+switch'               :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 trim                  :: Monoid b => Bound (Behavior b) -> Behavior b
 trimAfter             :: Monoid a => Time -> Behavior a -> Behavior a
 trimBefore            :: Monoid a => Time -> Behavior a -> Behavior a
 trimR                 :: Monoid a => Span -> Reactive a -> Reactive a
 turnOff               :: Num a => Behavior a
 turnOn                :: Num a => Behavior a
+unit                  :: Fractional a => Behavior a      
+------------------------------------------------------------------------------------------
+-- Chord
+------------------------------------------------------------------------------------------
+
+chord                 :: Getter [Delayed a] (Chord a)
 unchord               :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
-undelay               :: Transformable a => Duration -> a -> a
-undelaying            :: Duration -> Span
-unit                  :: Fractional a => Behavior a
 unsafeChord           :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
-unsafeEvents          :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeEventsV         :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeNotes           :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeStretcheds      :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
-unzipVoice            :: Voice (a, b) -> (Voice a, Voice b)
-updates               :: Reactive a -> [(Time, a)]
-valuesV               :: Functor f => ([a] -> f [b]) -> Voice a -> f (Voice b)
+        
+------------------------------------------------------------------------------------------
+-- Voice
+------------------------------------------------------------------------------------------
+
 voice                 :: Getter [Stretched a] (Voice a)
 voiceAsList           :: Iso (Voice a) (Voice b) [a] [b]
 voiceLens             :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
-withContext           :: Voice a -> Voice (Data.Functor.Context.Ctxt a)
+stretcheds            :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
+unsafeStretcheds      :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
+eventsV               :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafeEventsV         :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+
+durationsV            :: Functor f => ([Duration] -> f [Duration]) -> Voice a -> f (Voice a)
+valuesV               :: Functor f => ([a] -> f [b]) -> Voice a -> f (Voice b)
+reverseDurations      :: Voice a -> Voice a
+reverseValues         :: Voice a -> Voice a
+rotateDurations       :: Int -> Voice a -> Voice a
+rotateValues          :: Int -> Voice a -> Voice a
+
+withContext           :: Voice a -> Voice (Ctxt a)
 withDurations         :: ([Duration] -> [Duration]) -> Voice a -> Voice a
-withValues            :: ([a] -> [b]) -> Voice a -> Voice b
+withValues            :: ([a] -> [b]) -> Voice a -> Voice b     coverRests            :: Voice (Maybe a) -> Maybe (Voice a)
+
+fuse                  :: Eq a => Voice a -> Voice a
+fuseBy                :: (a -> a -> Bool) -> Voice a -> Voice a
+fuseRests             :: Voice (Maybe a) -> Voice (Maybe a)
+
+unzipVoice            :: Voice (a, b) -> (Voice a, Voice b)
 zipVoice              :: Voice a -> Voice b -> Voice (a, b)
 zipVoice3             :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
 zipVoice4             :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
@@ -232,4 +290,26 @@ zipVoiceNoScale4      :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (
 zipVoiceWith          :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith'         :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale   :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+
+------------------------------------------------------------------------------------------
+-- Score (= Track)
+------------------------------------------------------------------------------------------
+
+score                 :: Getter [Note a] (Score a)
+concatB               :: Monoid a => Score (Behavior a) -> Behavior a
+eras                  :: Applicative f => (Span -> f Span) -> Score a -> f (Score a)
+events                :: Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+filterEvents          :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterWithSpan        :: (Span -> a -> Bool) -> Score a -> Score a
+mapEvents             :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapFilterEvents       :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithSpan     :: (Span -> a -> Maybe b) -> Score a -> Score b
+mapWithSpan           :: (Span -> a -> b) -> Score a -> Score b
+normalizeScore        :: Score a -> Score a
+notes                 :: Lens (Score a) (Score b) [Note a] [Note b]
+printEras             :: Score a -> IO ()
+simult                :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
+simultaneous          :: (Transformable a, Semigroup a) => Score a -> Score a
+unsafeEvents          :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeNotes           :: Iso (Score a) (Score b) [Note a] [Note b]
 
