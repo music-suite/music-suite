@@ -3,8 +3,8 @@
 ## Misc Music.Time API
 
 - Determine future approach to rest/chord as well as naming of Note/Delayed/Stretched
+    - Solved, see RENAME and GeneralizeVoiceChordTypes
     - Compare applicative composition Const/Id/Pair etc
-    - Track vs Chord + names
 
 - Name of events/eventsV etc
 - Name of singleStretched etc

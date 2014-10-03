@@ -32,16 +32,16 @@ newtype Future a
 newtype Bound a
 
 newtype Delayed a
-newtype Stretched a
 newtype Note a
+newtype Event a
 
 newtype Chord a
 newtype Voice a
 newtype Track a
-newtype Score a
+newtype Track a
 
 newtype Reactive a
-newtype Segment a
+newtype Spline a
 newtype Behavior a
 
 
@@ -81,12 +81,12 @@ delta                 :: Iso' Span (Time, Duration)
 codelta               :: Iso' Span (Duration, Time)
 range                 :: Iso' Span (Time, Time)
 
+fixedDurationSpan     :: Prism' Span Time
+fixedOnsetSpan        :: Prism' Span Duration
+
 normalizeSpan         :: Span -> Span
 reverseSpan           :: Span -> Span
 reflectSpan           :: Time -> Span -> Span
-
-fixedDurationSpan     :: Prism' Span Time
-fixedOnsetSpan        :: Prism' Span Duration
 
 isEmptySpan           :: Span -> Bool
 -- isForwardSpan         :: Span -> Bool
@@ -195,52 +195,84 @@ sequential            :: (Semigroup a, Monoid a, HasPosition a, Transformable a)
 ------------------------------------------------------------------------------------------
 
 past                  :: Past a -> Time -> Maybe a
-pastSeg               :: Past (Segment a) -> Behavior (Maybe a)
+-- Project a spline (backwards) from a given point
+pastSeg               :: Past (Spline a) -> Behavior (Maybe a)
+-- Given list of past values ordered in time, find the value at the lowest switching time that is (>= given time)
+-- This is Reactive indexing without the final value
 indexPast             :: [Past a] -> Time -> Maybe a
 
 future                :: Future a -> Time -> Maybe a
-futureSeg             :: Future (Segment a) -> Behavior (Maybe a)
+futureSeg             :: Future (Spline a) -> Behavior (Maybe a)
+-- Given list of past values ordered in time, find the value at the highest switching time that is (<= given time)
+-- This is Reactive indexing without the initial value
+indexFuture           :: [Future a] -> Time -> Maybe a 
+
+-- Event that both pastSeg and futureSet do not specify an order for simultaneous occurences
+-- (more than one value may be the lowest/highest at a given point)
+
+-- However futureSet and pastSeg differ "in which spant the switching point is placed" – forward or backward
 
 bounding              :: Span -> a -> Bound a
 bounds                :: Time -> Time -> a -> Bound a
 
+------------------------------------------------------------------------------------------
+
+-- Split a list of futures into notes and the final future
+-- > length (fst foo) = length' foo - 1
+foo :: NonEmpty (Future a) -> ([Event a], Future a)
+foo :: NonEmpty (Past a)   -> (Past a, [Event a])
 
 ------------------------------------------------------------------------------------------
 -- Reactive
 ------------------------------------------------------------------------------------------
 
-atTime                :: Reactive a -> Time -> a
-final                 :: Reactive a -> a
+-- atTime                :: Reactive a -> Time -> a
 initial               :: Reactive a -> a
-intermediate          :: Transformable a => Reactive a -> [Music.Time.Note.Note a]
+final                 :: Reactive a -> a
+-- intermediate          :: Transformable a => Reactive a -> [Event a]
 occs                  :: Reactive a -> [Time]
-switchR               :: Time -> Reactive a -> Reactive a -> Reactive a
+-- ?
 updates               :: Reactive a -> [(Time, a)]
+switchR               :: Time -> Reactive a -> Reactive a -> Reactive a
+
+-- TODO a "double-ended comonad"
 
 ------------------------------------------------------------------------------------------
--- Segment
+-- Spline
 ------------------------------------------------------------------------------------------
 
-segment               :: Iso (Duration -> a) (Duration -> b) (Segment -> a) (Segment -> b)
-apSegments            :: Voice (Segment a) -> Stretched (Segment a)
-apSegments'           :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-splitReactive         :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+-- Just 0 to 1
+type Spline a = Duration -> a
+spline                :: Iso (Duration -> a) (Duration -> b) (Spline -> a) (Spline -> b)
+
+type Segment a = Voice (Spline a)
+segment               :: Iso (Duration -> a) (Duration -> b) (Spline -> a) (Spline -> b)
+
+-- Spline is a Semigroup, Segment is a Monoid
+
+-- Join given percentage of new spline taken up by first spline
+join                  :: Duration -> Spline a -> Spline a -> Spline a
+-- Join with no relative time (both takes up half of the new spline)
+join'                 :: Spline a -> Spline a -> Spline a
+
+instant               :: Spline a
+append                :: Spline a -> Spline a -> Spline a
+
+-- append'               :: Note (Spline a) -> Note (Spline a) -> Note (Spline a)
+-- splitReactive         :: Reactive a -> Either a ((a, Time), [Event a], (Time, a))
 
 ------------------------------------------------------------------------------------------
 -- Behavior
 ------------------------------------------------------------------------------------------
 
 behavior              :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-cosine                :: Floating a => Behavior a
 discrete              :: Reactive a -> Behavior a
 impulse               :: Num a => Behavior a
-line                  :: Fractional a => Behavior a
 sample                :: [Time] -> Behavior a -> Reactive a
-sawtooth              :: RealFrac a => Behavior a
-bounded               :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
-continous             :: Reactive (Segment a) -> Behavior a
-continousWith         :: Segment (a -> b) -> Reactive a -> Behavior b
-focusing              :: Functor f => (Segment a -> f (Segment a)) -> Behavior a -> f (Behavior a)
+bounded               :: Iso (Event (Spline a)) (Event (Spline b)) (Bound (Behavior a)) (Bound (Behavior b))
+continous             :: Reactive (Spline a) -> Behavior a
+continousWith         :: Spline (a -> b) -> Reactive a -> Behavior b
+focusing              :: Functor f => (Spline a -> f (Spline a)) -> Behavior a -> f (Behavior a)
 switch                :: Time -> Behavior a -> Behavior a -> Behavior a
 switch'               :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
 trim                  :: Monoid b => Bound (Behavior b) -> Behavior b
@@ -250,20 +282,24 @@ trimR                 :: Monoid a => Span -> Reactive a -> Reactive a
 turnOff               :: Num a => Behavior a
 turnOn                :: Num a => Behavior a
 unit                  :: Fractional a => Behavior a      
-sine                  :: Floating a => Behavior a
 splice                :: Behavior a -> Bound (Behavior a) -> Behavior a
 
+line                  :: Fractional a => Behavior a
+-- cosine                :: Floating a => Behavior a
+-- sine                  :: Floating a => Behavior a
+-- sawtooth              :: RealFrac a => Behavior a
+
 ------------------------------------------------------------------------------------------
--- Note/Delayed/Stretched
+-- Delayed/Event/Note
 ------------------------------------------------------------------------------------------
 
-event                 :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-note                  :: Iso (Span, a) (Span, b) (Note a) (Note b)
-notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+event                 :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
+placed                :: Iso (Span, a) (Span, b) (Event a) (Event b)
+placee                :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
 delayed               :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
 delayee               :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-stretched             :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
-stretchee             :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+note                  :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
+notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
 
 rest                  :: Applicative f => f (Maybe a)
 
@@ -279,59 +315,68 @@ unsafeChord           :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
 -- Voice
 ------------------------------------------------------------------------------------------
 
-voice                 :: Getter [Stretched a] (Voice a)
-voiceAsList           :: Iso (Voice a) (Voice b) [a] [b]
-voiceLens             :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
-stretcheds            :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-unsafeStretcheds      :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
-eventsV               :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeEventsV         :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+voice                 :: Getter [Note a] (Voice a)
+notes                 :: Lens (Voice a) (Voice b) [Note a] [Note b]
+unsafeNotes           :: Iso (Voice a) (Voice b) [Note a] [Note b]
+-- notes'                :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+-- unsafeNotes'          :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 
-durationsV            :: Functor f => ([Duration] -> f [Duration]) -> Voice a -> f (Voice a)
-valuesV               :: Functor f => ([a] -> f [b]) -> Voice a -> f (Voice b)
-reverseDurations      :: Voice a -> Voice a
-reverseValues         :: Voice a -> Voice a
-rotateDurations       :: Int -> Voice a -> Voice a
-rotateValues          :: Int -> Voice a -> Voice a
+-- Was: voiceLens
+insideVoice           :: Lens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 
+-- durationsV            :: Functor f => ([Duration] -> f [Duration]) -> Voice a -> f (Voice a)
+-- valuesV               :: Functor f => ([a] -> f [b]) -> Voice a -> f (Voice b)
+-- withDurations         :: ([Duration] -> [Duration]) -> Voice a -> Voice a
+-- withValues            :: ([a] -> [b]) -> Voice a -> Voice b
+-- reverseDurations      :: Voice a -> Voice a
+-- reverseValues         :: Voice a -> Voice a
+-- rotateDurations       :: Int -> Voice a -> Voice a
+-- rotateValues          :: Int -> Voice a -> Voice a
+
+-- TODO rename
 withContext           :: Voice a -> Voice (Ctxt a)
-withDurations         :: ([Duration] -> [Duration]) -> Voice a -> Voice a
-withValues            :: ([a] -> [b]) -> Voice a -> Voice b     coverRests            :: Voice (Maybe a) -> Maybe (Voice a)
 
 fuse                  :: Eq a => Voice a -> Voice a
 fuseBy                :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseRests             :: Voice (Maybe a) -> Voice (Maybe a)
+coverRests            :: Voice (Maybe a) -> Maybe (Voice a)
 
+-- TODO contrast these zips to the Applicative instance and Reactive
 unzipVoice            :: Voice (a, b) -> (Voice a, Voice b)
 zipVoice              :: Voice a -> Voice b -> Voice (a, b)
-zipVoice3             :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
-zipVoice4             :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+-- zipVoice3             :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+-- zipVoice4             :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
 zipVoiceNoScale       :: Voice a -> Voice b -> Voice (a, b)
-zipVoiceNoScale3      :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
-zipVoiceNoScale4      :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+-- zipVoiceNoScale3      :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+-- zipVoiceNoScale4      :: Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
 zipVoiceWith          :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith'         :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale   :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 
 ------------------------------------------------------------------------------------------
--- Score (= Track)
+-- Track (Was: Track)
 ------------------------------------------------------------------------------------------
 
-score                 :: Getter [Note a] (Score a)
-concatB               :: Monoid a => Score (Behavior a) -> Behavior a
-eras                  :: Applicative f => (Span -> f Span) -> Score a -> f (Score a)
-events                :: Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-filterEvents          :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterWithSpan        :: (Span -> a -> Bool) -> Score a -> Score a
-mapEvents             :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapFilterEvents       :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan     :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapWithSpan           :: (Span -> a -> b) -> Score a -> Score b
-normalizeScore        :: Score a -> Score a
-notes                 :: Lens (Score a) (Score b) [Note a] [Note b]
-printEras             :: Score a -> IO ()
-simult                :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simultaneous          :: (Transformable a, Semigroup a) => Score a -> Score a
-unsafeEvents          :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeNotes           :: Iso (Score a) (Score b) [Note a] [Note b]
+score                 :: Getter [Event a] (Track a)
+events                :: Lens (Track a) (Track b) [Event a] [Event b]
+unsafeEvents          :: Iso (Track a) (Track b) [(Time, Duration, a)] [(Time, Duration, b)]
+-- events'               :: Lens (Track a) (Track b) [(Time, Duration, a)] [(Time, Duration, b)]
+-- unsafeEvents'         :: Iso (Track a) (Track b) [Event a] [Event b]
+-- eras                  :: Traversal' (Track a) Span
 
+mapWithSpan           :: (Span -> a -> b) -> Track a -> Track b
+filterWithSpan        :: (Span -> a -> Bool) -> Track a -> Track a
+mapFilterWithSpan     :: (Span -> a -> Maybe b) -> Track a -> Track b
+mapEvents'            :: (Time -> Duration -> a -> b) -> Track a -> Track b
+filterEvents'         :: (Time -> Duration -> a -> Bool) -> Track a -> Track a
+mapFilterEvents'      :: (Time -> Duration -> a -> Maybe b) -> Track a -> Track b
+
+-- TODO one has to go
+simult                :: Transformable a => Lens (Track a) (Track b) (Track [a]) (Track [b])
+simultaneous          :: (Transformable a, Semigroup a) => Track a -> Track a
+
+
+-- TODO generalize
+normalizeTrack        :: Track a -> Track a
+concatB               :: Monoid a => Track (Behavior a) -> Behavior a
+printEras             :: Track a -> IO ()
