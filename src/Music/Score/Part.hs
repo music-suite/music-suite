@@ -282,6 +282,7 @@ instance Reversible a => Reversible (PartT p a) where
   rev = fmap rev
 
 instance Tiable a => Tiable (PartT n a) where
+  isTieEndBeginning (PartT (_,a)) = isTieEndBeginning a
   toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 
 

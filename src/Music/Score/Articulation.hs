@@ -439,6 +439,7 @@ deriving instance (IsInterval a, Monoid n) => IsInterval (ArticulationT n a)
 deriving instance Reversible a => Reversible (ArticulationT p a)
 
 instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
+  isTieEndBeginning (ArticulationT (_,a)) = isTieEndBeginning a
   toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2))
     where
       (a1,a2) = toTied a

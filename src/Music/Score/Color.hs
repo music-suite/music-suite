@@ -112,6 +112,7 @@ instance Semigroup a => Semigroup (ColorT a) where
   (<>) = liftA2 (<>)
 
 instance Tiable a => Tiable (ColorT a) where
+  isTieEndBeginning (ColorT (Couple (_,a))) = isTieEndBeginning a
   toTied (ColorT (Couple (n,a))) = (ColorT $ Couple (n,b), ColorT $ Couple (n,c)) 
     where 
       (b,c) = toTied a

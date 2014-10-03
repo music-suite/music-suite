@@ -454,6 +454,7 @@ instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
 deriving instance Reversible a => Reversible (DynamicT p a)
 
 instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
+  isTieEndBeginning (DynamicT (_,a)) = isTieEndBeginning a
   toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2))
     where
       (a1,a2) = toTied a

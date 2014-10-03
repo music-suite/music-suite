@@ -54,7 +54,7 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.Monoid.Average
-import           Data.VectorSpace        hiding (Sum)
+import           Data.VectorSpace        hiding (Sum, getSum)
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -91,6 +91,14 @@ class Tiable a where
   --
   toTied    :: a -> (a, a)
   toTied a = (beginTie a, endTie a)
+  
+  isTieEndBeginning :: a -> (Bool, Bool)
+  
+  isTieBeginning :: a -> Bool
+  isTieBeginning = snd . isTieEndBeginning
+  
+  isTieEnd :: a -> Bool
+  isTieEnd = fst . isTieEndBeginning
 
 
 
@@ -103,16 +111,17 @@ instance Wrapped (TieT a) where
 
 instance Rewrapped (TieT a) (TieT b)
 
-instance Tiable Double      where { beginTie = id ; endTie = id }
-instance Tiable Float       where { beginTie = id ; endTie = id }
-instance Tiable Char        where { beginTie = id ; endTie = id }
-instance Tiable Int         where { beginTie = id ; endTie = id }
-instance Tiable Integer     where { beginTie = id ; endTie = id }
-instance Tiable ()          where { beginTie = id ; endTie = id }
-instance Tiable (Ratio a)   where { beginTie = id ; endTie = id }
+instance Tiable Double      where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable Float       where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable Char        where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable Int         where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable Integer     where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable ()          where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
+instance Tiable (Ratio a)   where { beginTie = id ; endTie = id ; isTieEndBeginning _ = (False, False) }
 
 instance Tiable a => Tiable (TieT a) where
-  toTied (TieT ((prevTie, nextTie), a))   = (TieT ((prevTie, Any True), b), TieT ((Any True, nextTie), c))
+  isTieEndBeginning (TieT (ties, _)) = over both getAny $ ties
+  toTied (TieT ((prevTie, nextTie), a)) = (TieT ((prevTie, Any True), b), TieT ((Any True, nextTie), c))
        where (b,c) = toTied a
 
 instance Tiable a => Tiable [a] where
@@ -126,18 +135,23 @@ instance Tiable a => Tiable (Behavior a) where
 -- This restriction assures all chord notes are in the same part
 --
 instance Tiable a => Tiable (c, a) where
+  isTieEndBeginning = isTieEndBeginning . extract
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Maybe a) where
+  isTieEndBeginning = maybe (False, False) isTieEndBeginning
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Average a) where
+  isTieEndBeginning = isTieEndBeginning . getAverage
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Sum a) where
+  isTieEndBeginning = isTieEndBeginning . getSum
   toTied = unzipR . fmap toTied
 
 instance Tiable a => Tiable (Product a) where
+  isTieEndBeginning = isTieEndBeginning . getProduct
   toTied = unzipR . fmap toTied
 
 -- Lifted instances
