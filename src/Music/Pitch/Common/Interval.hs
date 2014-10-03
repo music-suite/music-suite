@@ -337,8 +337,8 @@ class HasNumber a where
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Interval = Interval { getInterval :: (
-            Int,        -- number of A1, i.e. chromatic steps
-            Int        -- number of d2, i.e. diatonic steps
+            Int,  -- Number of A1, i.e. chromatic steps
+            Int   -- Number of d2, i.e. diatonic steps
     ) }
     deriving (Eq, Typeable)
 
@@ -346,8 +346,8 @@ newtype Interval = Interval { getInterval :: (
 -- Interval first, as it's tied to the Number which is expected to be
 -- 'bigger' than the Quality, assuming ordinary tuning systems
 instance Ord Interval where
-  compare i j = compare (swap i) (swap j)
-  where swap (Interval (i, j)) = (Interval (j, i))
+  Interval a `compare` Interval b = swap a `compare` swap b 
+    where swap (x,y) = (y,x)
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
