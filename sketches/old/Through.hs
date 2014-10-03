@@ -33,5 +33,5 @@ through lens1 lens2 =
   -- \f s -> liftA2 (\a -> runIdentity . (`lens2` a) . const . Identity) s <$> f (getConst <$> lens1 Const <$> s)
   where
     getBP = fmap (view lens1)
-    setBP = liftA2 (over lens2 . const)
+    setBP = liftA2 (set lens2)
 {-# INLINE through #-}

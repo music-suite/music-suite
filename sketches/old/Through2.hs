@@ -1,5 +1,6 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RankNTypes #-}
 
 import Control.Lens
 import Control.Applicative
@@ -44,9 +45,9 @@ goodEx2 = lensLaws l a b c
     c = ((), 34)
     l = thr (lens fst (\(_,y) x -> (x,y)))
 
--- goodEx3 = lensLaws' (\a b -> a () == b ()) (==) l a b c
+-- goodEx3 = lensLaws' (fmap $ \a b -> a () == b ()) (\a b -> a () == b ()) l a b c
 --   where
---     a = (const (31,32))
---     b = (const 33)
---     c = (const 34)
+--     a = (\() -> (31,32))
+--     b = (\() -> 33)
+--     c = (\() -> 34)
 --     l = thr (lens fst (\(_,y) x -> (x,y)))
