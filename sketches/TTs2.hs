@@ -22,30 +22,51 @@ class Splittable a where
   ending :: Duration -> a -> a
 
 
-
-newtype Behavior a
-newtype Bound a
-newtype Chord a
-newtype Delayed a
-newtype Duration
-newtype Future a
-newtype Graces (f :: * -> *) a
-newtype NoReverse a
-newtype Nominal (f :: * -> *) a
-newtype Music.Time.Note.Note a
-newtype Past a
-newtype Reactive a
-newtype Score a
-newtype Segment a
-newtype Span
-newtype Stretched a
 newtype Time
-newtype Track a
+Enum, Eq, Fractional, Num, Ord, Real, RealFrac, Show, VectorSpace, AffineSpace, AdditiveGroup, Semigroup, HasPosition, Transformable, HasDuration, Monoid
+newtype Duration
+newtype Span
+
+newtype Past a
+newtype Future a
+newtype Bound a
+
+newtype Delayed a
+newtype Stretched a
+newtype Note a
+
+newtype Chord a
 newtype Voice a
+newtype Track a
+newtype Score a
+
+newtype Reactive a
+newtype Segment a
+newtype Behavior a
+
+
+newtype NoReverse a
+newtype Graces (f :: * -> *) a
+newtype Nominal (f :: * -> *) a
 
 
 -- For behaviors etc. Is an op because it resembles and generalizes Prelude.(!!)
 (!)                   :: Representable f => f a -> Rep f -> a
+
+
+------------------------------------------------------------------------------------------
+-- Time/Duration
+------------------------------------------------------------------------------------------
+
+-- TODO rename:
+offsetPoints          :: AffineSpace a => a -> [Diff a] -> [a]
+
+-- toTime
+-- toDuration
+toAbsoluteTime        :: [Duration] -> [Time]
+toRelativeTime        :: [Time] -> [Duration]
+toRelativeTimeN       :: [Time] -> [Duration]
+-- toRelativeTimeN'      :: Time -> [Time] -> [Duration]
 
 ------------------------------------------------------------------------------------------
 -- Span
@@ -66,19 +87,16 @@ reflectSpan           :: Time -> Span -> Span
 
 fixedDurationSpan     :: Prism' Span Time
 fixedOnsetSpan        :: Prism' Span Duration
--- stretchComponent      :: Span -> Duration
--- delayComponent        :: Span -> Time
 
+isEmptySpan           :: Span -> Bool
+-- isForwardSpan         :: Span -> Bool
+isBackwardSpan        :: Span -> Bool
 inside                :: Time -> Span -> Bool
 encloses              :: Span -> Span -> Bool
-overlaps              :: Span -> Span -> Bool
 properlyEncloses      :: Span -> Span -> Bool
-isBackwardSpan        :: Span -> Bool
-
-isBefore              :: Span -> Span -> Bool
-isEmptySpan           :: Span -> Bool
-isForwardSpan         :: Span -> Bool
-isProper              :: Span -> Bool
+overlaps              :: Span -> Span -> Bool
+-- isBefore              :: Span -> Span -> Bool
+-- isProper              :: Span -> Bool
 
 -- strictlyAfterOffset   :: Time -> Span -> Bool
 -- strictlyAfterOnset    :: Time -> Span -> Bool
@@ -98,70 +116,66 @@ isProper              :: Span -> Bool
 -- stopsWhenStarts       :: Span -> Span -> Bool
 -- stopsWhenStops        :: Span -> Span -> Bool
 
-showCodelta           :: Span -> String
-showDelta             :: Span -> String
 showRange             :: Span -> String
+showDelta             :: Span -> String
+showCodelta           :: Span -> String
 
 ------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------
 
-itransform            :: Transformable a => Span -> a -> a
+-- + Transformable
+
+-- itransform            :: Transformable a => Span -> a -> a
 transformed           :: (Transformable a, Transformable b) => Span -> Iso a b a b
 
-reversed              :: Reversible a => Iso' a a
-revDefault            :: (HasPosition a, Transformable a) => a -> a
-
-
-duration              :: (Transformable a, HasDuration a) => Lens' a Duration
-
-midpoint              :: (HasPosition a, Transformable a) => Lens' a Time
-startAt               :: (Transformable a, HasPosition a) => Time -> a -> a
-stopAt                :: (Transformable a, HasPosition a) => Time -> a -> a
-
-chunks                :: (Splittable a, HasDuration a) => Duration -> a -> [a]
-splitAbs              :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
-
-during                :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-lead                  :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-follow                :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-after                 :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-before                :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-era                   :: (HasPosition a, Transformable a) => Lens' a Span
-placeAt               :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
-position              :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
-onset                 :: (HasPosition a, Transformable a) => Lens' a Time
-offset                :: (HasPosition a, Transformable a) => Lens' a Time
-postOffset            :: (HasPosition a, Transformable a) => Lens' a Time
-postOnset             :: (HasPosition a, Transformable a) => Lens' a Time
-preOnset              :: (HasPosition a, Transformable a) => Lens' a Time
-
-compress              :: Transformable a => Duration -> a -> a
+delaying              :: Duration -> Span
+undelaying            :: Duration -> Span
+stretching            :: Duration -> Span
 compressing           :: Duration -> Span
 delay                 :: Transformable a => Duration -> a -> a
-delayTime             :: Transformable a => Time -> a -> a
-delaying              :: Duration -> Span
-stretchTo             :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretching            :: Duration -> Span
 undelay               :: Transformable a => Duration -> a -> a
-undelaying            :: Duration -> Span
+stretch               :: Transformable a => Duration -> a -> a
+compress              :: Transformable a => Duration -> a -> a
+-- delayTime             :: Transformable a => Time -> a -> a
 
+-- + HasDuration
+duration              :: (Transformable a, HasDuration a) => Lens' a Duration
+stretchTo             :: (Transformable a, HasDuration a) => Duration -> a -> a
 
+-- + HasPosition
 
+revDefault            :: (HasPosition a, Transformable a) => a -> a
+startAt               :: (HasPosition a, Transformable a) => Time -> a -> a
+stopAt                :: (HasPosition a, Transformable a) => Time -> a -> a
 
+-- TODO remove some
+era                   :: (HasPosition a, Transformable a) => Lens' a Span
+placeAt               :: (HasPosition a, Transformable a) => Duration -> Time -> a -> a
 
+position              :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
+-- onset                 :: (HasPosition a, Transformable a) => Lens' a Time
+-- offset                :: (HasPosition a, Transformable a) => Lens' a Time
+-- midpoint              :: (HasPosition a, Transformable a) => Lens' a Time
+-- postOffset            :: (HasPosition a, Transformable a) => Lens' a Time
+-- postOnset             :: (HasPosition a, Transformable a) => Lens' a Time
+-- preOnset              :: (HasPosition a, Transformable a) => Lens' a Time
 
+-- TODO during = sustain?
+-- during                :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
+-- sustain               :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+-- lead                  :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+-- follow                :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+-- after                 :: (HasPosition a, Transformable a, Semigroup a) => a -> a -> a
+-- before                :: (HasPosition a, Transformable a, Semigroup a) => a -> a -> a
 
+-- + Reversible
+reversed              :: Reversible a => Iso' a a
 
-
-
-
-
-
-offsetPoints          :: AffineSpace a => a -> [Diff a] -> [a]
-palindrome            :: (Semigroup a, Reversible a, HasPosition a) => a -> a
-sustain               :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+-- + Splittable
+chunks                :: (Splittable a, HasDuration a) => Duration -> a -> [a]
+splitAbs              :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
+-- palindrome            :: (Semigroup a, Reversible a, HasPosition a) => a -> a
 times                 :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
-
 
 -- Composition ops (need to change). There are more, but these are fundamental enough.
 (<|)                  :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
@@ -171,28 +185,10 @@ together              :: (Semigroup a, Monoid a) => [a] -> a
 sequential            :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
 
 
-toAbsoluteTime        :: [Duration] -> [Time]
-toRelativeTime        :: [Time] -> [Duration]
-toRelativeTimeN       :: [Time] -> [Duration]
-toRelativeTimeN'      :: Time -> [Time] -> [Duration]
 
 
 
 
-
-------------------------------------------------------------------------------------------
--- Note/Delayed/Stretched
-------------------------------------------------------------------------------------------
-
-event                 :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-note                  :: Iso (Span, a) (Span, b) (Note a) (Note b)
-notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-delayed               :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
-delayee               :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-stretched             :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
-stretchee             :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-
-rest                  :: Applicative f => f (Maybe a)
 
 ------------------------------------------------------------------------------------------
 -- Future/Past/Bound
@@ -229,7 +225,6 @@ segment               :: Iso (Duration -> a) (Duration -> b) (Segment -> a) (Seg
 apSegments            :: Voice (Segment a) -> Stretched (Segment a)
 apSegments'           :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
 splitReactive         :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
-stretch               :: Transformable a => Duration -> a -> a
 
 ------------------------------------------------------------------------------------------
 -- Behavior
@@ -257,6 +252,20 @@ turnOn                :: Num a => Behavior a
 unit                  :: Fractional a => Behavior a      
 sine                  :: Floating a => Behavior a
 splice                :: Behavior a -> Bound (Behavior a) -> Behavior a
+
+------------------------------------------------------------------------------------------
+-- Note/Delayed/Stretched
+------------------------------------------------------------------------------------------
+
+event                 :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+note                  :: Iso (Span, a) (Span, b) (Note a) (Note b)
+notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+delayed               :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
+delayee               :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
+stretched             :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
+stretchee             :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
+
+rest                  :: Applicative f => f (Maybe a)
 
 ------------------------------------------------------------------------------------------
 -- Chord
