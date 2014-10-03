@@ -195,12 +195,15 @@ instance Augmentable a => Augmentable (Behavior a) where
   diminish = fmap diminish
 
 instance Eq a => Eq (Behavior a) where
-  (==) = error "No fun"
+  (==) = error "No overloading for behavior: (<=)"
 
 instance Ord a => Ord (Behavior a) where
-  (<) = error "No fun"
-  max = liftA2 max
-  min = liftA2 min
+  (<=) = error "No overloading for behavior: (<=)"
+  (>=) = error "No overloading for behavior: (<=)"
+  (<)  = error "No overloading for behavior: (<=)"
+  (>)  = error "No overloading for behavior: (<=)"
+  max  = liftA2 max
+  min  = liftA2 min
 
 instance Enum a => Enum (Behavior a) where
   toEnum = pure . toEnum
@@ -348,7 +351,6 @@ focusingOn s = flip whilstM (negateV s) . focusing
 -- or focusing . flip whilstM s
 -}
 
--- focusing `on` s == focusingOn s
 f `on` s = transformed (negateV s) . f
 
 -- |
@@ -374,7 +376,10 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
--- TODO move
+
+-- Internal
+
+tau :: Floating a => a
 tau = 2 * pi
 
 floor' :: RealFrac a => a -> a
