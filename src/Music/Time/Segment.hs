@@ -207,7 +207,6 @@ instance Reversible (Segment a) where
 -- instance (HasPart a a, HasPart a b) => HasPart (Segment a) (Segment b) where
 --   part = through part part
 
--- #ifdef INCLUDE_LIFTED
 -- deriving instance Semigroup a => Semigroup (Segment a)
 -- deriving instance Monoid a => Monoid (Segment a)
 -- deriving instance Num a => Num (Segment a)
@@ -235,7 +234,6 @@ instance Reversible (Segment a) where
 --   (<) = error "No fun"
 --   max = liftA2 max
 --   min = liftA2 min
--- #endif
 
 -- |
 -- View a segment as a time function and vice versa.

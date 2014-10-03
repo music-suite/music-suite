@@ -171,7 +171,6 @@ deriving instance Floating a => Floating (Behavior a)
 instance Real a => Real (Behavior a) where
   toRational = toRational . (! 0)
 
--- #ifdef INCLUDE_LIFTED
 deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance IsString a => IsString (Behavior a) where
@@ -217,7 +216,6 @@ instance AffineSpace a => AffineSpace (Behavior a) where
   type Diff (Behavior a) = Behavior (Diff a)
   (.-.) = liftA2 (.-.)
   (.+^) = liftA2 (.+^)
--- #endif
 
 -- |
 -- View a behavior as a time function and vice versa.
