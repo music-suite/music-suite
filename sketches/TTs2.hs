@@ -127,6 +127,8 @@ showCodelta           :: Span -> String
 
 -- itransform            :: Transformable a => Span -> a -> a
 transformed           :: (Transformable a, Transformable b) => Span -> Iso a b a b
+-- TODO stop using Delayed/Stretch etc for type names, so we can use these names
+-- for specifications of transformed (delayed/stretched etc)
 
 delaying              :: Duration -> Span
 undelaying            :: Duration -> Span
@@ -139,6 +141,7 @@ compress              :: Transformable a => Duration -> a -> a
 -- delayTime             :: Transformable a => Time -> a -> a
 
 -- + HasDuration
+-- TODO stretchTo OK? does it really stretch notes without affecting onset
 duration              :: (Transformable a, HasDuration a) => Lens' a Duration
 stretchTo             :: (Transformable a, HasDuration a) => Duration -> a -> a
 
@@ -306,13 +309,16 @@ line                  :: Fractional a => Behavior a
 -- Delayed/Event/Note
 ------------------------------------------------------------------------------------------
 
-event                 :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
-placed                :: Iso (Span, a) (Span, b) (Event a) (Event b)
-placee                :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
+-- event                 :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
+event                 :: Iso (Span, a) (Span, b) (Event a) (Event b)
+eventee               :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
 delayed               :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
 delayee               :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
 note                  :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 notee                 :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+
+rest                  :: Iso' Duration (Rest a)
+-- notee                 :: (Transformable a, Transformable b) => Lens (Rest a) (Rest b) a b
 
 rest                  :: Applicative f => f (Maybe a)
 
@@ -365,6 +371,15 @@ zipVoiceNoScale       :: Voice a -> Voice b -> Voice (a, b)
 zipVoiceWith          :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith'         :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWithNoScale   :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+
+------------------------------------------------------------------------------------------
+-- TODO chords of voices etc
+
+-- Homohphonic to polyphonic, always safe
+foo :: Voice (Chord a) -> Chord (Voice a)
+foo :: Chord (Voice a) -> Maybe (Voice (Chord a))
+foo :: Prism' (Chord (Voice a)) (Voice (Chord a))
+
 
 ------------------------------------------------------------------------------------------
 -- Track (Was: Track)

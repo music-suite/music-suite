@@ -3,22 +3,21 @@
 
 - Putting the representations ADTs/parsing/printing in separate libraries
 - The overloaded terminology (pitches, intervals, dynamics)
-- The dynamic meta-attributes
-- Including both continuos and discrete components (but not interactivity)
+- Dynamic meta-data
+- Including both continuos and discrete components (but not real-time/reactivity)
 - Using the vector-space library
 - Using the lens library
 - Using standard type-classes 
     - MonadPlus, Monad, Applicative, Monoid, Semigroup, Comonad
-    - Possibly interesting: Bind, Zip, Indexed..., 
 - Going so far in the separation of logical vs. presentational
     - I.e. (aspect/TFs vs meta/Typeable)
 
 ## Possibly good
 
-- Enforcing the separation of aspects vs. structure
+- Enforcing the separation of aspects vs. time
     - Great for modularity
     - Forces us to be explicit in the constraints put on things like pitch.
-    - Nice 3-way separation: structure (fixed/classes), aspects (polymorphic) and meta (dynamic)
+    - Nice 3-way separation: structure (fixed/Music.Time classes), aspects (polymorphic) and meta (dynamic)
 
 - Using flat structures (i.e no hierarchy part -> voice -> subvoice -> phrase etc)
     - We will need these representations along with flat ones
