@@ -329,16 +329,14 @@ toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
 
-
-
--- TODO use State instead
-
--- mapAccumL                 ::                   (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
--- \f -> mapM (runState . f) :: MonadState s m => (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
-
--- mapAccumL :: (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
-mapAccumL2   :: (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
-mapAccumL2 f = runState . mapM (state . f)
+-- -- TODO use State instead
+-- 
+-- -- mapAccumL                 ::                   (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
+-- -- \f -> mapM (runState . f) :: MonadState s m => (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
+-- 
+-- -- mapAccumL :: (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
+-- mapAccumL2   :: (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
+-- mapAccumL2 f = runState . mapM (state . f)
 
 
 
@@ -788,8 +786,5 @@ Both equivalent. Proof:
   a + b     = a + b
 -}
 
--- TODO move
-fraction :: (RealFrac a, Integral b) => Iso' a (b, b) 
-fraction = iso (\(toRational -> a) -> (fromIntegral $ numerator a, fromIntegral $ denominator a)) (\(a,b) -> fromIntegral a / fromIntegral b)
 
 
