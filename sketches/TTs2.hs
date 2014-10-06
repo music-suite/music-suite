@@ -58,6 +58,9 @@ newtype Nominal (f :: * -> *) a
 -- Time/Duration
 ------------------------------------------------------------------------------------------
 
+data Time
+data Duration
+
 -- TODO rename:
 offsetPoints          :: AffineSpace a => a -> [Diff a] -> [a]
 
@@ -71,6 +74,8 @@ toRelativeTimeN       :: [Time] -> [Duration]
 ------------------------------------------------------------------------------------------
 -- Span
 ------------------------------------------------------------------------------------------
+
+type Span = (Time, Duration)
 
 -- Span is common enough to have a literal. Must be 3 to avoid privileging one (though the Show instance does that anyway)
 (<-<)                 :: Duration -> Time -> Span
@@ -197,6 +202,9 @@ sequential            :: (Semigroup a, Monoid a, HasPosition a, Transformable a)
 -- Future/Past/Bound
 ------------------------------------------------------------------------------------------
 
+type Future a = (Min Time, a)
+type Past a = (Max Time, a)
+
 past                  :: Past a -> Time -> Maybe a
 -- Project a spline (backwards) from a given point
 pastSeg               :: Past (Spline a) -> Behavior (Maybe a)
@@ -229,6 +237,8 @@ foo :: NonEmpty (Past a)   -> (Past a, [Event a])
 -- Reactive
 ------------------------------------------------------------------------------------------
 
+type Reactive a = (a, [Future a]) = ([Past a], a)
+
 indexReactive         :: Reactive a -> Time -> a
 -- No tabulate!
 
@@ -247,7 +257,7 @@ switchR               :: Time -> Reactive a -> Reactive a -> Reactive a
 ------------------------------------------------------------------------------------------
 
 -- Just 0 to 1
-type Spline a = Duration -> a
+type Spline a = Duration -> a where {d : Duration, 0 <= d <= 1}
 spline                :: Iso (Duration -> a) (Duration -> b) (Spline -> a) (Spline -> b)
 
 type Segment a = Voice (Spline a)
@@ -269,6 +279,8 @@ trimR                 :: Monoid a => Span -> Reactive a -> Reactive a
 ------------------------------------------------------------------------------------------
 -- Behavior
 ------------------------------------------------------------------------------------------
+
+type Behavior a = Time -> a = Reactive (Spline a) -- ?
 
 behavior              :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
 view behavior         :: (Time -> a) -> Behavior a
@@ -326,6 +338,8 @@ rest                  :: Applicative f => f (Maybe a)
 -- Chord
 ------------------------------------------------------------------------------------------
 
+-- Composition/rendering?
+
 chord                 :: Getter [Delayed a] (Chord a)
 unchord               :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
 unsafeChord           :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
@@ -333,6 +347,8 @@ unsafeChord           :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
 ------------------------------------------------------------------------------------------
 -- Voice
 ------------------------------------------------------------------------------------------
+
+-- Composition/rendering?
 
 voice                 :: Getter [Note a] (Voice a)
 notes                 :: Lens (Voice a) (Voice b) [Note a] [Note b]
@@ -375,11 +391,16 @@ zipVoiceWithNoScale   :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
 ------------------------------------------------------------------------------------------
 -- TODO chords of voices etc
 
+Reactive a 
+
 -- Homohphonic to polyphonic, always safe
 foo :: Voice (Chord a) -> Chord (Voice a)
 foo :: Chord (Voice a) -> Maybe (Voice (Chord a))
 foo :: Prism' (Chord (Voice a)) (Voice (Chord a))
 
+foo :: Note a -> Track a
+foo :: Voice a -> Track a
+foo :: Chord a -> Track a -- TODO how?
 
 ------------------------------------------------------------------------------------------
 -- Track (Was: Track)

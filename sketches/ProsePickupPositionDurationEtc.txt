@@ -1,0 +1,31 @@
+HasPosition vs HasDuration
+
+Rest/Note/Chord
+Voice
+    Duration but no position
+    Delay has no effect
+    Can not have reset/pickup (as this is a concept that has to do with position)
+Delayed a
+    Has duration if a has duration
+    Defines onset?
+Chord = [Delayed a]
+    Two ways of looking at it:
+        1) The time values in delayed "moves" the contained value
+        2) The local origin of the contained value is moved
+
+Think of it as vector/point addition
+Notes and Voices are like vectors: they have no "location"
+    However they might have a notion of a "local origin", typically shorter than itself.
+
+    <-        duration        ->
+    <- pickUp -> | <- putDown ->
+
+    They might also have two origins, one on, one off, a la TPTM.
+    
+    <- pickup -> ON <- sound -> OFF <- putDown ->
+    
+    More generally, they may have an function from "nominal" duration (0 = on, 1 = off)
+    to local duration (i.e. difference between nominal on sounding position).
+    This generalizes what Hudak calls ? in TPTM.
+    
+You can add them up any way.
