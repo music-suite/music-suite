@@ -448,12 +448,11 @@ basis_P8 = Interval (12, 7)
 
 mkInterval :: Quality -> Number -> Interval
 
- -- our identity:
+mkInterval (Diminished 1) 1 = basis_P1 ^-^ basis_A1
 mkInterval Perfect 1 = basis_P1
- -- and our two basis vectors:
 mkInterval (Augmented 1) 1 = basis_A1
-mkInterval (Diminished 1) 2 = basis_d2
 
+mkInterval (Diminished 1) 2 = basis_d2
 mkInterval Minor 2 = basis_d2 ^+^ basis_A1
 mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
 mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
@@ -481,6 +480,10 @@ mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
 mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
 mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ basis_A1
 
+mkInterval q (Number n) = if n > 0
+                          then (mkInterval q (Number (n - 7))) ^+^ basis_P8
+                          else (mkInterval q (Number (n + 7))) ^-^ basis_P8
+
 mkInterval Minor 1 = error "invalid interval"
 mkInterval Major 1 = error "invalid interval"
 mkInterval Perfect 2 = error "invalid interval"
@@ -497,11 +500,6 @@ mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
 
 mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ basis_A1
 mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
-
-mkInterval q (Number n) = if n > 0
-                          then (mkInterval q (Number (n - 7))) ^+^ basis_P8
-                          else (mkInterval q (Number (n + 7))) ^-^ basis_P8
-
 
 -- |
 -- Extracting the 'number' from an interval vector.
