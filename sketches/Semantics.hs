@@ -73,11 +73,14 @@ type Delayed a = (Time, a) -- call offset/pickup etc.?
 --  "a value that is active within its own span"
 type Event a = (Span, a)
 
-type Voice a = [Note a]
-type Track a = [Event a]
+type ~[a] = UnorderedList a
+type #[a] = OrderedList a
 
-
-
+type Voice a = [Note a]  = #[(Duration, a)] = Duration -> Int -> [a] -- ?
+type Track a = [Event a] = ~[(Span, a)]     = Span -> [a]
+-- Unclear: In the Voice case we care about order, in the track case we don't
+-- Why? Duration is a "vector", so we can add them to get several "offsets" (i.e. sequential composition)
+-- Span is a "point"/"transformation" so we can not add them.
 
 
 
@@ -88,6 +91,9 @@ type Track a = [Event a]
 -- This is a Tidal pattern:
 -- It is in fact (semantically) equivalent to a track, except it allows for leak-free infinite structures
 -- by placing it in a Span reader monad (i.e. we know what the system is currently rendering)
-type Pattern a = Span -> Track a
 
+type Pattern a = Span -> Track a
+-- Note that if we use the (Span -> [a]) formulation, we get a double reader monad:
+type Pattern a = Span -> Span -> [a]
+-- Which can of course be reduced to (Span -> [a])
 
