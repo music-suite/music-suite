@@ -145,6 +145,11 @@ instance Show (Behavior a) where
 instance Distributive Behavior where
   distribute = Behavior . distribute . fmap getBehavior
 
+instance Representable Behavior where
+  type Rep Behavior = Time
+  tabulate = Behavior
+  index (Behavior x) = x
+
 instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
     where
@@ -152,26 +157,20 @@ instance Transformable (Behavior a) where
 
 instance Reversible (Behavior a) where
   rev = stretch (-1)
-  -- TODO alternative
+  -- Or: alternative
   -- rev = (stretch (-1) `whilst` undelaying 0.5)
   -- (i.e. revDefault pretending that Behaviors have era (0 <-> 1))
-
-instance Representable Behavior where
-  type Rep Behavior = Time
-  tabulate = Behavior
-  index (Behavior x) = x
 
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
 deriving instance Num a => Num (Behavior a)
 deriving instance Fractional a => Fractional (Behavior a)
 deriving instance Floating a => Floating (Behavior a)
+deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
--- TODO bad instance
+-- TODO bad
 instance Real a => Real (Behavior a) where
   toRational = toRational . (! 0)
-
-deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance IsString a => IsString (Behavior a) where
   fromString = pure . fromString
@@ -241,22 +240,8 @@ behavior = R.tabulated
 unbehavior :: Iso (Behavior a) (Behavior b) (Time -> a) (Time -> b)
 unbehavior = from behavior
 
---
--- @
--- ('const' x)^.'behavior' ! t = x   forall t
--- @
---
---
-
-
 -- |
--- A behavior that
---
-line' :: Behavior Time
-line' = id ^. R.tabulated
-
--- |
--- A behavior that gives the current time, i.e. the identity function
+-- A behavior that gives the current time.
 --
 -- Should really have the type 'Behavior' 'Time', but is provided in a more general form
 -- for convenience.
@@ -276,7 +261,6 @@ unit = switch 0 0 (switch 1 line 1)
 -- > f t | t < 0     = 0
 -- >     | t > 1     = 1
 -- >     | otherwise = t
---
 
 -- |
 -- A behavior that
@@ -309,7 +293,6 @@ impulse :: Num a => Behavior a
 impulse = switch' 0 0 1 0
 -- > f t | t == 0    = 1
 -- >     | otherwise = 0
---
 
 -- |
 -- A behavior that goes from 0 to 1 at time 0.
@@ -322,8 +305,6 @@ turnOn  = switch 0 0 1
 turnOff = switch 0 1 0
 
 --
--- TODO
---
 -- Because the 'Time' type is fixed and unbounded in the current version, we can not
 -- define a generix isomorphism from behaviors to segments. If we change the library to
 -- provide multiple time representations (using TFs or similar), we should provide
@@ -332,25 +313,6 @@ turnOff = switch 0 1 0
 -- > focusOnFullRange :: Bounded Time => Behavior a -> Segment a
 -- > focusingOnFullRange :: Bounded Time => Iso' (Behavior a) (Segment a)
 --
-
-{-
--- |
--- View part of a 'Behavior' as a 'Segment'.
---
--- This can be used to modify a behavior in a specific range, as in
---
--- @
--- 'line' & 'focusing' `on` (2 '<->' 3) '+a~' 1
--- 'line' & 'focusingOn' (2 '<->' 3) '+~' 1
--- @
---
-focusingOn :: Span -> Lens' (Behavior a) (Segment a)
-focusingOn s = flip whilstM (negateV s) . focusing
--- or focusing . flip whilstM s
--}
-
-f `on` s = transformed (negateV s) . f
-
 -- |
 -- Instantly switch from one behavior to another.
 --

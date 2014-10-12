@@ -121,23 +121,15 @@ instance IsDynamics a => IsDynamics (Delayed a) where
 delayed :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
 delayed = _Unwrapped
 
-
 -- |
 -- View a delayed value as a pair of the original value and the transformation (and vice versa).
 --
-delayedValue :: (Transformable a, Transformable b)
-  => Lens
-      (Delayed a) (Delayed b)
-      a b
-delayedValue = lens runDelayed (flip $ _delayed . const)
-  where
-    _delayed f (Delayed (t,x)) = Delayed (t, f `whilst` delaying (t .-. 0) $ x)
-{-# INLINE delayedValue #-}
-
+delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
+delayedValue = lens runDelayed $ flip (mapDelayed . const)
 
 runDelayed :: Transformable a => Delayed a -> a
 runDelayed = uncurry delayTime . view _Wrapped
-  where
-    delayTime t = delay (t .-. 0)
 
+mapDelayed :: (Transformable a, Transformable b) => (a -> b) -> Delayed a -> Delayed b
+mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
 
