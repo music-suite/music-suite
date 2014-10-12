@@ -319,16 +319,23 @@ tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 -}
 
-presto     = metronome (1/4) 125
-allegro    = metronome (1/4) 115
-allegretto = metronome (1/4) 105
-moderato   = metronome (1/4) 95
-andante    = metronome (1/4) 85
-adagio     = metronome (1/4) 65
-largo      = metronome (1/4) 55
-lento      = metronome (1/4) 45
+-- presto     = metronome (1/4) 125
+-- allegro    = metronome (1/4) 115
+-- allegretto = metronome (1/4) 105
+-- moderato   = metronome (1/4) 95
+-- andante    = metronome (1/4) 85
+-- adagio     = metronome (1/4) 65
+-- largo      = metronome (1/4) 55
+-- lento      = metronome (1/4) 45
 
-
+presto      = metronome (1/4) 140
+allegro     = metronome (1/4) 128
+allegretto  = metronome (1/4) 118
+moderato    = metronome (1/4) 98
+andante     = metronome (1/4) 84
+adagio      = metronome (1/4) 64
+largo       = metronome (1/4) 48
+lento       = metronome (1/4) 42
 
 -- TODO consolidate
 -- optionFirst = Option . Just . First
