@@ -81,7 +81,7 @@ data BarlineType = StandardBarline | DoubleBarline | FinalBarline
 
 -- | Add a barline over the whole score.
 barline :: (HasMeta a, HasPosition a) => Barline -> a -> a
-barline c x = barlineDuring (_getEra x) c x
+barline c x = barlineDuring (_era x) c x
 
 -- | Add a barline over the whole score.
 doubleBarline :: (HasMeta a, HasPosition a) => Barline -> a -> a

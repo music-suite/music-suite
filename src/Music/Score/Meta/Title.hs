@@ -120,7 +120,7 @@ getTitleAt (Title t) n = fmap getLast . getOption . t $ n
 
 -- | Set title of the given score.
 title :: (HasMeta a, HasPosition a) => Title -> a -> a
-title t x = titleDuring (_getEra x) t x
+title t x = titleDuring (_era x) t x
 
 -- | Set title of the given part of a score.
 titleDuring :: HasMeta a => Span -> Title -> a -> a
@@ -128,7 +128,7 @@ titleDuring s t = addMetaNote $ view note (s, t)
 
 -- | Set subtitle of the given score.
 subtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
-subtitle t x = subtitleDuring (_getEra x) t x
+subtitle t x = subtitleDuring (_era x) t x
 
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: HasMeta a => Span -> Title -> a -> a
@@ -136,7 +136,7 @@ subtitleDuring s t = addMetaNote $ view note (s, denoteTitle t)
 
 -- | Set subsubtitle of the given score.
 subsubtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
-subsubtitle t x = subsubtitleDuring (_getEra x) t x
+subsubtitle t x = subsubtitleDuring (_era x) t x
 
 -- | Set subsubtitle of the given part of a score.
 subsubtitleDuring :: HasMeta a => Span -> Title -> a -> a

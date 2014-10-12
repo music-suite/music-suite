@@ -92,7 +92,7 @@ instance Show RehearsalMark where
 -- metronome noteVal bpm = Tempo Nothing (Just noteVal) $ 60 / (bpm * noteVal)
 
 rehearsalMark :: (HasMeta a, HasPosition a) => RehearsalMark -> a -> a
-rehearsalMark c x = rehearsalMarkDuring (_getEra x) c x
+rehearsalMark c x = rehearsalMarkDuring (_era x) c x
 
 rehearsalMarkDuring :: HasMeta a => Span -> RehearsalMark -> a -> a
 rehearsalMarkDuring s x = addMetaNote $ view note (s, x)

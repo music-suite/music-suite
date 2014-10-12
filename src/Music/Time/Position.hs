@@ -35,7 +35,7 @@ module Music.Time.Position (
 
       -- * Era
       era,
-      _getEra, -- TODO rename _era
+      _era, -- TODO rename _era
 
       -- * Position
       position,
@@ -126,9 +126,9 @@ instance (HasPosition a, HasDuration a) => HasPosition [a] where
   _onset  = foldr min 0 . fmap _onset
   _offset = foldr max 0 . fmap _offset
 
-_getEra :: HasPosition a => a -> Span
-_getEra x = _onset x <-> _offset x
-{-# INLINE _getEra #-}
+_era :: HasPosition a => a -> Span
+_era x = _onset x <-> _offset x
+{-# INLINE _era #-}
 
 -- |
 -- Position of the given value.
@@ -215,7 +215,7 @@ _setEra s x = transform (s ^-^ view era x) x
 -- A lens to the position
 --
 era :: (HasPosition a, Transformable a) => Lens' a Span
-era = lens _getEra (flip _setEra)
+era = lens _era (flip _setEra)
 {-# INLINE era #-}
 
 

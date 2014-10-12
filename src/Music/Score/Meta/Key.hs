@@ -119,7 +119,7 @@ isMinorKey = not . isMajorKey
 
 -- | Set the key signature of the given score.
 keySignature :: (HasMeta a, HasPosition a) => KeySignature -> a -> a
-keySignature c x = keySignatureDuring (_getEra x) c x
+keySignature c x = keySignatureDuring (_era x) c x
 
 -- | Set the key signature of the given part of a score.
 keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
