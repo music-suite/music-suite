@@ -189,7 +189,8 @@ instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a)
 
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
   type BackendScoreEvent Midi (Score a) = a
-  exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) $ extractPartsWithInfo $ fixTempo xs)
+  exportScore _ xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), fmap Identity sc)) 
+    $ extractPartsWithInfo $ fixTempo $ normalizeScore xs)
     where
       -- We actually want to extract *all* tempo changes and transform the score appropriately
       -- For the time being, we assume the whole score has the same tempo

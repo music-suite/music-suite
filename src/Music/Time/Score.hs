@@ -192,7 +192,7 @@ instance Splittable a => Splittable (Score a) where
 
 -- TODO move these two "implementations" to NScore
 instance HasPosition (Score a) where
-  _position = _position . snd . view _Wrapped' . normalizeScore'
+  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
   -- TODO clean up in terms of AddMeta and optimize
 
 instance HasDuration (Score a) where
@@ -275,20 +275,6 @@ instance MonadPlus NScore where
   mzero = mempty
   mplus = mappend
 
-{-
-instance FunctorWithIndex Span NScore where
-  imap = undefined
-  -- TODO
-
-instance FoldableWithIndex Span NScore where
-  ifoldMap = undefined
-  -- TODO
-
-instance TraversableWithIndex Span NScore where
-  itraverse = undefined
-  -- TODO
--}
-
 instance Transformable (NScore a) where
   transform t (NScore xs) = NScore (fmap (transform t) xs)
 
@@ -296,8 +282,8 @@ instance Reversible a => Reversible (NScore a) where
   rev (NScore xs) = NScore (fmap rev xs)
 
 instance HasPosition (NScore a) where
-  _onset  = safeMinimum . fmap _onset . view _Wrapped'
-  _offset = safeMaximum . fmap _offset . view _Wrapped'
+  _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
+  _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
 
 -- TODO move
 safeMinimum xs = if null xs then 0 else minimum xs
@@ -378,6 +364,7 @@ score = from unsafeNotes
 notes :: Lens (Score a) (Score b) [Note a] [Note b]
 notes = _Wrapped . _2 . _Wrapped . sorted
   where
+    -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
 -- notes = unsafeNotes
 {-# INLINE notes #-}
@@ -549,10 +536,10 @@ printEras = mapM_ print . toListOf eras
 eras :: Traversal' (Score a) Span
 eras = notes . each . era
 
+-- TODO rename and expose this
+-- We have an (Iso (Score a) (TMap Span [a])), with [] as default value
 chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view notes
-
-
 
 simultaneous' :: Transformable a => Score a -> Score [a]
 simultaneous' sc = (^. from unsafeEvents) vs
