@@ -519,28 +519,23 @@ filterEvents f = mapFilterEvents (partial3 f)
 mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 mapFilterEvents f = mcatMaybes . mapEvents f
 
--- | Mainly useful for backends.
+-- | Normalize a score, assuring its events spans are all forward (as by 'isForwardSpan'),
+-- and that its onset is at least zero. Consequently, the onset and offset of each event
+-- in the score is at least zero.
+--
+-- Many backends perform this operation implicitly.
+--
 normalizeScore :: Score a -> Score a
-normalizeScore = reset . normalizeScore'
+normalizeScore = reset . normalizeScoreDurations
   where
     reset x = set onset (view onset x `max` 0) x
+    normalizeScoreDurations = over (notes . each . era) normalizeSpan
 
-normalizeScore' = over (notes . each . era) normalizeSpan
 -- TODO version that reverses the values where appropriate
 -- Use over (notes . each) normalizeNote or similar
 
--- normalizeScore = reset . absDurations
---   where
---     reset x = set onset (view onset x `max` 0) x
---     absDurations = over (notes.each.era.delta._2) abs
-
 -- |
--- Extract all eras of the given score.
---
--- >>> printEras $ scat [c,d,e :: Score Integer]
--- 0 <-> 1
--- 1 <-> 2
--- 2 <-> 3
+-- Print the span of each event, as given by 'eras'.
 --
 printEras :: Score a -> IO ()
 printEras = mapM_ print . toListOf eras
