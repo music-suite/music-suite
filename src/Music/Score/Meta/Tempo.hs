@@ -110,8 +110,10 @@ instance Num Tempo where
 instance Show Tempo where
     show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
         where
-            showR (realToFrac -> (unRatio -> (x, 1))) = show x
-            showR (realToFrac -> (unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
+
+showR = showR' . realToFrac
+showR' ((unRatio -> (x, 1))) = show x
+showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 instance Default Tempo where
     def = mempty

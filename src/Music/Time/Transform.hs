@@ -34,12 +34,8 @@ module Music.Time.Transform (
 
         -- * The Transformable class
         Transformable(..),
-        itransform,
         transformed,
-        whilst,
-        -- spanned,
-        -- onSpan,
-        -- conjugateS,
+        whilst, -- TODO Fairbairn threshold
 
         -- * Specific transformations
         -- ** Transformations
@@ -53,7 +49,8 @@ module Music.Time.Transform (
         undelay,
         stretch,
         compress,
-        delayTime,
+        
+        delayTime, -- TODO Fairbairn threshold
 
   ) where
 

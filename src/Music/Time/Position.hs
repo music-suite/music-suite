@@ -35,6 +35,7 @@ module Music.Time.Position (
 
       -- * Era
       era,
+      _getEra, -- TODO rename _era
 
       -- * Position
       position,
@@ -54,8 +55,7 @@ module Music.Time.Position (
 
       -- * Internal
       -- TODO hide...
-      _setEra,
-      _getEra,
+      -- _setEra,
   ) where
 
 

@@ -5,7 +5,16 @@
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE CPP #-}
 
-module Music.Time.Past where
+module Music.Time.Past (
+        Past(..),
+        Future(..),
+        past,
+        future,
+        indexPast,
+        firstTrue,
+        pastSeg,
+        futureSeg,
+  ) where
 
 import Control.Lens -- DEBUG
 import           Control.Applicative

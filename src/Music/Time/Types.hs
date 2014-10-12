@@ -33,15 +33,8 @@
 module Music.Time.Types (
 
         -- * Basic types
-        -- ** Time points
         Time,
-        -- toTime,
-        -- fromTime,
-
-        -- ** Duration
         Duration,
-        -- toDuration,
-        -- fromDuration,
 
         -- ** Convert between time and duration
         -- $convert
@@ -49,46 +42,46 @@ module Music.Time.Types (
         toAbsoluteTime,
         toRelativeTime,
         toRelativeTimeN,
-        toRelativeTimeN',
+        toRelativeTimeN', -- TODO Fairbairn threshold
 
         -- * Time spans
         Span,
-        -- *** Creating spans
+
+        -- ** Constructing spans
         (<->),
         (>->),
         (<-<),
-        -- *** Accessing spans
-        range,
+
         delta,
+        range,
         codelta,
 
-        -- ** Properties
-        -- $forwardBackWardEmpty
-        isForwardSpan,
-        isBackwardSpan,
-        isEmptySpan,
+        fixedDurationSpan,
+        fixedOnsetSpan,
 
         -- ** Transformations
+        normalizeSpan,
         reverseSpan,
         reflectSpan,
-        normalizeSpan,
         
-        -- ** Delay and stretch component
-        delayComponent,
-        stretchComponent,
-        fixedOnsetSpan,
-        fixedDurationSpan,
+        -- ** Properties
+        isEmptySpan,
+        -- isForwardSpan,
+        isBackwardSpan,        
+
+        -- delayComponent,
+        -- stretchComponent,
 
         -- ** Points in spans
         inside,
 
         -- ** Partial orders
-        isProper,
-        isBefore,
         encloses,
         properlyEncloses,
         overlaps,
-        
+
+        -- *** etc.
+        isBefore,
         afterOnset,
         strictlyAfterOnset,
         beforeOnset,
