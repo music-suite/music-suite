@@ -48,8 +48,6 @@ module Music.Time.Transform (
         undelay,
         stretch,
         compress,
-        
-        delayTime, -- TODO Fairbairn threshold
 
   ) where
 

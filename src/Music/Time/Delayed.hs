@@ -133,3 +133,6 @@ runDelayed = uncurry delayTime . view _Wrapped
 mapDelayed :: (Transformable a, Transformable b) => (a -> b) -> Delayed a -> Delayed b
 mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
 
+delayTime = transform . delayingTime
+delayingTime x = x >-> 1
+
