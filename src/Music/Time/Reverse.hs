@@ -164,7 +164,7 @@ revDefault x = stretch (-1) x
 
 -- Alternative:
 -- revDefault x = (stretch (-1) `whilst` undelaying (_position x 0.5 .-. 0)) x
-
+--   where f `whilst` t = over (transformed t) f
 
 newtype NoReverse a = NoReverse { getNoReverse :: a }
   deriving (Typeable, Eq, Ord, Show)

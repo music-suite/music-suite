@@ -35,7 +35,6 @@ module Music.Time.Transform (
         -- * The Transformable class
         Transformable(..),
         transformed,
-        whilst, -- TODO Fairbairn threshold
 
         -- * Specific transformations
         -- ** Transformations

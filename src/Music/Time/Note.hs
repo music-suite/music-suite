@@ -134,6 +134,7 @@ noteValue = lens runNote (flip $ mapNote . const)
     runNote = uncurry transform . view _Wrapped
     -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
     mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
+    f `whilst` t = over (transformed t) f
 {-# INLINE noteValue #-}
 
 -- |
