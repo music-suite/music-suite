@@ -472,7 +472,7 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 -- @
 --
 events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-events = notes . through event event
+events = notes . _zipList . through event event . from _zipList
 
 
 

@@ -29,6 +29,7 @@ module Music.Time.Internal.Util (
   partial,
   partial2,
   partial3,
+  _zipList,
   ) where
 
 {-
@@ -360,8 +361,12 @@ through :: Applicative f =>
 through lens1 lens2 = lens getter (flip setter)
   where
     getter = fmap (view lens1)
-    setter = liftA2 (over lens2 . const)
+    setter = liftA2 (set lens2)
 {-# INLINE through #-}
+
+_zipList :: Iso [a] [b] (ZipList a) (ZipList b)
+_zipList = iso ZipList getZipList
+
 
 single :: Prism' [a] a
 single = prism' return $ \xs -> case xs of
