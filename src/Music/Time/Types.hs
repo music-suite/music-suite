@@ -66,7 +66,7 @@ module Music.Time.Types (
         
         -- ** Properties
         isEmptySpan,
-        -- isForwardSpan,
+        isForwardSpan,
         isBackwardSpan,        
 
         -- delayComponent,
