@@ -62,11 +62,11 @@ import           Music.Time.Types
 import           Music.Time.Behavior
 import           Music.Time.Chord
 import           Music.Time.Delayed
-import           Music.Time.Note
 import           Music.Time.Future
-import           Music.Time.Past
-import           Music.Time.Nominal
 import           Music.Time.Graces
+import           Music.Time.Nominal
+import           Music.Time.Note
+import           Music.Time.Past
 import           Music.Time.Reactive
 import           Music.Time.Score
 import           Music.Time.Segment

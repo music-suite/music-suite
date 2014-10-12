@@ -1,16 +1,13 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 
@@ -120,7 +117,7 @@ instance Transformable (Reactive a) where
     transform s (Reactive (t,r)) = Reactive (transform s t, transform s r)
 
 instance Reversible (Reactive a) where
-  rev = revDefault
+  rev = stretch (-1)
 
 instance Wrapped (Reactive a) where
     type Unwrapped (Reactive a) = ([Time], Behavior a)
@@ -129,7 +126,12 @@ instance Wrapped (Reactive a) where
 instance Rewrapped (Reactive a) (Reactive b)
 instance Applicative Reactive where
     pure  = pureDefault
+      where
+        pureDefault = view _Unwrapped . pure . pure
+        
     (<*>) = apDefault
+      where
+        (view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)
 
 instance IsPitch a => IsPitch (Reactive a) where
   fromPitch = pure . fromPitch
@@ -149,8 +151,6 @@ instance Augmentable a => Augmentable (Reactive a) where
     diminish = fmap diminish
 
 
-(view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)
-pureDefault = view _Unwrapped . pure . pure
 
 -- |
 -- Get the initial value.

@@ -5,11 +5,8 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TypeFamilies               #-}
-
-
-{-# LANGUAGE RankNTypes               #-}
-
 
 -------------------------------------------------------------------------------------
 -- |
@@ -35,13 +32,13 @@ import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
+import           Data.Bifunctor
 import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
+import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Bifunctor
-import           Data.Functor.Couple
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -120,7 +117,7 @@ stretched = _Unwrapped
 -- View a stretched value as a pair of the original value and the transformation (and vice versa).
 --
 stretchee :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
-stretchee = lens runStretched $ flip (mapStretched . const)
+stretchee = lens runStretched $ flip (mapStretched . const)
 
 runStretched :: Transformable a => Stretched a -> a
 runStretched = uncurry stretch . view _Wrapped
@@ -144,9 +141,9 @@ dep l f = lens getter setter
       (x,_) = view l s
       l2    = f x
       in set (l._2.l2) b s
-    
+
 -}
-    
+
 
 
 

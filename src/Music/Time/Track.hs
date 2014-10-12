@@ -1,20 +1,15 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -133,11 +128,11 @@ safeMaximum xs = if null xs then 0 else maximum xs
 instance HasDuration (Track a) where
   _duration x = _offset x .-. _onset x
 
-instance Splittable a => Splittable (Track a) where
-  -- TODO
+-- instance Splittable a => Splittable (Track a) where
+--   -- TODO
 
-instance Reversible a => Reversible (Track a) where
-  -- TODO
+-- instance Reversible a => Reversible (Track a) where
+--   -- TODO
 
 
 -- |
