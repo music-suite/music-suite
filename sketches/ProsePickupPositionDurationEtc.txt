@@ -44,5 +44,42 @@ TODO
     Finalize our view on Chords, Transformable/HasPosition/HasDuration and their associated laws!
 
 
+PTM
+    data Primitive a = Note a Duration | Rest Duration  -- actual duration
+    data Music = 
+        Prim (Primitive a)
+        Seq (Music a) (Music a)
+        Par (Music a) (Music a)
+        Modify ... (Music a) -- tempo, transposition, instrument, dynamics/phrasing, player
+
+TPTM
+    -- see PTM above
+    data Tile a = Tile Duration Duration (Music a)      -- pre post music, logical duration = post - pre
+
+Lilypond:
+    -- Simplified
+    Music
+        = Chord [Note] Duration
+        | Sequential [Music]
+        | Simultaneous Bool [Music]
+
+Humdrum/GUIDO model:
+    Score = [Voice]                         -- parallel composition
+    Voice = [RestNoteChord]                 -- sequential composition
+    RestNoteChord = ([Pitch], Duration)     -- parallel composition
+
+music21 model:
+    Stream a = [Delayed a]                  -- parallel with offsets
+    Note = (Duration, a)
+    Chord = (Duration, [a])
+    Rest = Duration
+    -- Generally
+    Score = Stream Part -- "parallel"
+    Part = Stream Measure -- "sequential"
+    Measure = Stream Measure -- "parallel"
+    Voice = Stream (Either Rest (Either Note Chord)) -- "sequential"
+    
+Abjad model:
+
 
 
