@@ -1,6 +1,9 @@
 
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -17,17 +20,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Equal (
-    -- Equal,
-    -- toEqual,
-    -- Equal6,
-    -- Equal12,
-    -- Equal17,
-    -- Equal24,
-    -- Equal36,
-    -- -- toEqual',
-    -- unsafeToEqual,
-    -- value,
-    -- size,
+    Equal,
+    Equal6,
+    Equal12,
+    Equal17,
+    Equal24,
+    Equal36,
+    toEqual,
+    unsafeToEqual,
+    fromEqual,
+    size,
     -- cast,
 )
 where
@@ -59,7 +61,7 @@ import TypeUnary.Nat
 -- data Foo = Foo Int deriving Show
 -- 
 
-newtype Equal a = Equal { getEqual :: Int }
+newtype Equal a = Equal { fromEqual :: Int }
 
 deriving instance {-IsNat a =>-} Eq (Equal a)
 deriving instance {-IsNat a =>-} Ord (Equal a)
@@ -69,9 +71,15 @@ instance {-IsNat a =>-} Show (Equal a) where
        showString "Equal " . showsPrec (app_prec+1) x
     where app_prec = 10
 
+instance IsNat a => Num (Equal a) where
+  fromInteger = unsafeToEqual . fromIntegral
+
 -- | Convenience to avoid ScopedTypeVariables etc    
 getSize :: IsNat a => Equal a -> Nat a
 getSize _ = nat 
+
+checkSize :: IsNat a => Equal a -> Maybe (Equal a)
+checkSize x = if 0 <= fromEqual x && fromEqual x < size x then Just x else Nothing
 
 -- 
 -- | Size of this type (value not evaluated).
@@ -84,38 +92,33 @@ getSize _ = nat
 size :: IsNat a => Equal a -> Int
 size = natToZ . getSize
 
--- toEqual :: forall a . IsNat a => Int -> Maybe (Equal a)
--- toEqual n = Just r
---   where
---     r = Equal n
---     s = size (Equal 0 :: Equal a)
+toEqual :: IsNat a => Int -> Maybe (Equal a)
+toEqual = checkSize . Equal
 
--- toEqual' :: IsNat a => Nat a -> Int -> Maybe (Equal a)
--- toEqual' s n = if 0 <= n && n < natToZ s then Just (Equal n) else Nothing
--- 
--- unsafeToEqual :: Int -> Equal a
--- unsafeToEqual n = Equal n
--- 
--- type Equal6  = Equal D6
--- type Equal12 = Equal D12
--- type Equal17 = Equal D17
--- type Equal24 = Equal D24
--- type Equal36 = Equal D36
--- 
--- -- unsafemapValue :: (Int -> Int) -> Equal a -> Equal b
--- -- mapValue
--- 
--- -- b = 24, a = 12, mul = 24/12
--- -- | Safely cast a tempered value to a larger size.
--- --
--- -- >>> cast (unsafeToEqual 1 :: Equal12) :: Equal24
--- -- Equal 2 :: Equal24
--- --
--- cast :: (Pos a, Pos b, Pos c, Div b a c) => Equal a -> Equal b
--- cast = cast' undefined
--- 
--- cast' :: (Pos a, Pos b, Pos c, Div b a c) => Equal c -> Equal a -> Equal b
--- cast' cDummy (Equal a) = Equal (a * size cDummy)
--- 
--- 
--- 
+unsafeToEqual :: IsNat a => Int -> Equal a
+unsafeToEqual n = case toEqual n of
+  Nothing -> error $ "Bad equal: " ++ show n
+  Just x  -> x
+
+type Equal6  = Equal N6
+type Equal12 = Equal N12
+type Equal17 = Equal N17
+type Equal24 = Equal N24
+type Equal36 = Equal N36
+
+type N20 = N10 :*: N2
+type N30 = N10 :*: N3
+type N17 = N10 :+: N7
+type N24 = N20 :+: N4
+type N36 = N30 :+: N6
+
+-- | Safely cast a tempered value to a larger size.
+--
+-- >>> cast (1 :: Equal12) :: Equal24
+-- Equal 2 :: Equal24
+--
+cast :: (IsNat a, IsNat b) => Equal a -> Equal b
+cast = cast' undefined
+
+cast' :: (IsNat a, IsNat b) => Equal b -> Equal a -> Equal b
+cast' bDummy aDummy@(Equal a) = Equal $ (a * size bDummy) `div` size aDummy
