@@ -98,3 +98,40 @@ Abjad model:
     type Chord = [Note]
 
 
+Our model:
+    Primitive: Time/Duration (or Offset/Note, in which case (Time = Offset ()) etc)
+    TODO the "equivalence" of spans/transformations is not always clear-cut, i.e. delayTime
+
+    type Rest a     = Duration
+    type Note a     = (Duration, a)
+    type Chord a    = (Duration, NonEmpty a) --?
+    type Voice a    = [Note a]
+    -- Translation is impossible (they are *vectors*, not *points*)
+    -- Stretching is scalar multiplication
+    -- Dot product? Related to Applicative instance for Voice?
+    -- Sequential composition of these is a form of vector addition
+    -- Splitting is a form of vector subtraction
+    -- What about negative durations in a voice, say?
+    -- Relationship with the inverse semigroup in TPTM? 
+
+    type Span       = (Time, Duration)
+    type Offset   a = (Time, a)
+    type Group a    = [Offset a]
+    type Score a    = Group (Voice a)
+    type Event a    = Offset (Note a)
+    type Track a    = [Event a]
+    -- Parallel composition is a monoid
+    -- Translation is vector+point addition
+    -- Inverse semigroup? (compare TPTM)
+    -- Offset adds the possibility of pickup. How is this related to local onset/offset (esp. the laws?).
+    
+    realise :: Span            -> Track ()
+    realise :: Note a          -> Track a
+    realise :: Voice a         -> Track a
+    realise :: Voice (Chord a) -> Track a
+    realise :: Score a         -> Track a -- TODO recurive sum (similar to PTM)
+    realise :: Score (Group a) -> Track a -- TODO recurive sum (similar to PTM)
+    
+    Overlapping: Rest/Note/Chord/Voice (and compositions/sums thereof) have no overlapping by definition
+    
+
