@@ -1,4 +1,5 @@
 
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 
 -------------------------------------------------------------------------------------
@@ -33,53 +34,64 @@ where
 
 -- {-
 -- 
--- TODO mixing things up here
+-- TODO *avoid* mixing things up here
 -- 
 --   This type implements limited values (useful for interval *steps*)
 --   An ET-interval is just an int, with a type-level size (divMod is "separate")
--- 
--- 
 -- -}
--- 
--- 
--- import Data.Maybe
--- import Data.Either
--- import Data.Semigroup
--- import Control.Monad
--- import Control.Applicative
--- import Music.Pitch.Absolute
+
+import Data.Maybe
+import Data.Either
+import Data.Semigroup
+import Control.Monad
+import Control.Applicative
+import Music.Pitch.Absolute
+
+import TypeUnary.Nat
+
+-- Based on Data.Fixed
+
+  
 -- 
 -- import Data.TypeLevel.Num hiding ((<), (>), (+), (<=), (*))
 -- import qualified Data.TypeLevel.Num as TL
 -- 
 -- data Foo = Foo Int deriving Show
 -- 
--- newtype Equal a = Equal { getEqual :: Pos a => Int }
---   deriving ()
+
+newtype Equal a = Equal { getEqual :: Int }
+
+deriving instance {-IsNat a =>-} Eq (Equal a)
+deriving instance {-IsNat a =>-} Ord (Equal a)
+
+instance {-IsNat a =>-} Show (Equal a) where
+  showsPrec d (Equal x) = showParen (d > app_prec) $
+       showString "Equal " . showsPrec (app_prec+1) x
+    where app_prec = 10
+
+-- | Convenience to avoid ScopedTypeVariables etc    
+getSize :: IsNat a => Equal a -> Nat a
+getSize _ = nat 
+
 -- 
--- instance Pos a => Show (Equal a) where
---   -- show (Equal x) = "(Equal " ++ (show x) ++ ")"
---   showsPrec d (Equal x) = showParen (d > app_prec) $
---        showString "Equal " . showsPrec (app_prec+1) x
---     where app_prec = 10
+-- | Size of this type (value not evaluated).
+-- >>> size (undefined :: Equal N2)
+-- 2
 -- 
--- -- Convenience to avoid ScopedTypeVariables etc    
--- getSize :: Pos a => Equal a -> a
--- getSize = undefined
+-- >>> size (undefined :: Equal N12)
+-- 12
 -- 
--- -- | Value, which is in @[0,size x)@.
--- value :: Pos a => Equal a -> Int
--- value = getEqual
--- 
--- -- | Size of this type (value not evaluated).
--- size :: Pos a => Equal a -> Int
--- size = toInt . getSize
--- 
--- toEqual :: Pos a => Int -> Maybe (Equal a)
--- toEqual = toEqual' undefined
--- 
--- toEqual' :: Pos a => a -> Int -> Maybe (Equal a)
--- toEqual' s n = if 0 <= n && n < toInt s then Just (Equal n) else Nothing
+size :: IsNat a => Equal a -> Int
+size = natToZ . getSize
+
+-- toEqual :: forall a . IsNat a => Int -> Maybe (Equal a)
+-- toEqual n = Just r
+--   where
+--     r = Equal n
+--     s = size (Equal 0 :: Equal a)
+
+-- toEqual' :: IsNat a => Nat a -> Int -> Maybe (Equal a)
+-- toEqual' s n = if 0 <= n && n < natToZ s then Just (Equal n) else Nothing
 -- 
 -- unsafeToEqual :: Int -> Equal a
 -- unsafeToEqual n = Equal n
