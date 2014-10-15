@@ -89,13 +89,6 @@ module Music.Pitch.Common.Interval (
         convertBasisFloat,
         intervalDiv,
         
-        -- ** Basis values (TODO cleanup)
-        basis_P1,
-        basis_A1,
-        basis_d2,
-        basis_P8,
-        basis_P5,
-        
         -- ** Utility
         intervalDiff,
         mkInterval',

@@ -49,7 +49,7 @@ import Control.Monad
 import Control.Applicative
 
 import Music.Pitch.Absolute
-import Music.Pitch.Literal
+import Music.Pitch.Literal as Intervals
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Pitch
 
@@ -59,8 +59,8 @@ type Tuning i = i -> {-FreqRatio-}Hertz
 synTune :: (Interval, {-FreqRatio-}Hertz) -> (Interval, {-FreqRatio-}Hertz) -> Interval -> {-FreqRatio-}Hertz
 synTune (i1, i1rat) (i2, i2rat) (Interval (a1, d2)) =
   ((makeA1 (i1, i1rat) (i2, i2rat)) ^* (fromIntegral a1)) ^+^ ((maked2 (i1, i1rat) (i2, i2rat)) ^* (fromIntegral d2))
-  where makeA1 = makeBasis basis_A1
-        maked2 = makeBasis basis_d2
+  where makeA1 = makeBasis (Intervals._A1 :: Interval)
+        maked2 = makeBasis (Intervals.d2  :: Interval)
 
 makeBasis :: Interval -> (Interval, {-FreqRatio-}Hertz) -> (Interval, {-FreqRatio-}Hertz) -> {-FreqRatio-}Hertz
 makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
