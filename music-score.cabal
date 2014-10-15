@@ -31,7 +31,6 @@ library
                         data-default,
                         average                 >= 0.6 && < 1,
                         semigroups              >= 0.13.0.1 && < 1,
-                        semigroupoids,
                         contravariant           >= 1.2 && < 2,
                         comonad                 >= 4.2.2 && < 5,
                         bifunctors              >= 4.1.1.1 && < 5,
@@ -50,7 +49,6 @@ library
                         lilypond                == 1.7.2,
                         music-pitch-literal     == 1.7.2,
                         music-dynamics-literal  == 1.7.2,
-
                         prettify,
                         parsec
     exposed-modules:    Data.Clipped
