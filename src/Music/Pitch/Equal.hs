@@ -23,6 +23,7 @@ module Music.Pitch.Equal (
     Equal,
     toEqual,
     fromEqual,
+    equalToRatio,
     size,
     cast,
 
@@ -51,7 +52,7 @@ import TypeUnary.Nat
 
 -- Based on Data.Fixed
 
-newtype Equal a = Equal { fromEqual :: Int }
+newtype Equal a = Equal { getEqual :: Int }
 
 deriving instance {-IsNat a =>-} Eq (Equal a)
 deriving instance {-IsNat a =>-} Ord (Equal a)
@@ -107,6 +108,21 @@ size = natToZ . getSize
 -- | Create an equal-temperament value.
 toEqual :: IsNat a => Int -> Equal a
 toEqual = Equal
+
+-- | Extract an equal-temperament value.
+fromEqual :: IsNat a => Equal a -> Int
+fromEqual = getEqual
+
+-- | Convert an equal-temeperament value to a frequency ratio.
+--
+-- >>> equalToRatio (7 :: Equal12)
+-- 1.4983070768766815
+--
+-- >>> equalToRatio (4 :: Equal12)
+-- 1.2599210498948732
+--
+equalToRatio :: IsNat a => Equal a -> Double
+equalToRatio x = 2**(realToFrac (fromEqual x) / realToFrac (size x))
 
 -- | Safely cast a tempered value to another size.
 --
