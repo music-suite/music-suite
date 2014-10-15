@@ -57,12 +57,18 @@ deriving instance {-IsNat a =>-} Eq (Equal a)
 deriving instance {-IsNat a =>-} Ord (Equal a)
 
 instance {-IsNat a =>-} Show (Equal a) where
-  showsPrec d (Equal x) = showParen (d > app_prec) $
-       showString "Equal " . showsPrec (app_prec+1) x
-    where app_prec = 10
+  show (Equal a) = show a
+  -- showsPrec d (Equal x) = showParen (d > app_prec) $
+  --      showString "Equal " . showsPrec (app_prec+1) x
+  --   where app_prec = 10
 
 instance IsNat a => Num (Equal a) where
-  fromInteger = toEqual . fromIntegral
+  Equal a + Equal b = Equal (a + b)
+  Equal a * Equal b = Equal (a * b)
+  negate (Equal a)  = Equal (negate a)
+  abs (Equal a)     = Equal (abs a)
+  signum (Equal a)  = Equal (signum a)
+  fromInteger       = toEqual . fromIntegral
 
 -- Convenience to avoid ScopedTypeVariables etc    
 getSize :: IsNat a => Equal a -> Nat a
@@ -102,10 +108,16 @@ size = natToZ . getSize
 toEqual :: IsNat a => Int -> Equal a
 toEqual = Equal
 
--- | Safely cast a tempered value to a larger size.
+-- | Safely cast a tempered value to another size.
 --
 -- >>> cast (1 :: Equal12) :: Equal24
--- Equal 2 :: Equal24
+-- 2 :: Equal24
+--
+-- >>> cast (8 :: Equal12) :: Equal6
+-- 4 :: Equal6
+--
+-- >>> (2 :: Equal12) + cast (2 :: Equal24)
+-- 3 :: Equal12
 --
 cast :: (IsNat a, IsNat b) => Equal a -> Equal b
 cast = cast' undefined
