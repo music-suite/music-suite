@@ -21,14 +21,13 @@ source-repository head
   location:             git://github.com/music-suite/music-parts.git
   
 library                    
-    build-depends:      base                    >= 4 &&   < 5,
-                        aeson                   >= 0.7.0.6 && < 1,
-                        lens				            >= 4.3.3 && < 4.4,
+    build-depends:      base                    >= 4 &&        < 5,
+                        aeson                   >= 0.7.0.6  && < 1,
+                        lens				    >= 4.3.3    && < 4.4,
                         semigroups              >= 0.13.0.1 && < 1,
-                        semigroupoids,
-                        data-default,
-                        adjunctions             >= 4.1 && < 5,
-                        roman-numerals,
+                        data-default            >= 0.5.3    && < 1,
+                        adjunctions             >= 4.1      && < 5,
+                        roman-numerals          >= 0.5.1.4  && < 1,
                         music-pitch             == 1.7.2
     exposed-modules:    Data.Semigroup.Option.Instances
                         
