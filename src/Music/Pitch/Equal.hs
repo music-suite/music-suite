@@ -35,6 +35,8 @@ module Music.Pitch.Equal (
     Equal36,
 
     -- ** Extra type-level naturals
+    N20,
+    N30,
     N17,
     N24,
     N36,
