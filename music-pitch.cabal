@@ -23,17 +23,13 @@ source-repository head
   
 library                    
     build-depends:      base                    >= 4 && < 5,
-                        time,
-                        random,
                         containers,
                         semigroups              >= 0.13.0.1 && < 1,
-                        semigroupoids,
                         music-pitch-literal     == 1.7.2,
                         vector-space            >= 0.8.7 && < 0.9,
                         vector-space-points     >= 0.2 && < 0.3,
                         nats,
                         type-unary              >= 0.2.16 && < 1.0
-                        -- type-level              >= 0.2.4 && < 3.0
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
                         Music.Pitch.Equal
