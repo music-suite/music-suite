@@ -56,4 +56,5 @@ import Music.Pitch.Common.Names
 import Music.Pitch.Literal
 import Music.Pitch.StaffLines
 import Music.Pitch.Clef
+import Music.Pitch.Intonation
 
