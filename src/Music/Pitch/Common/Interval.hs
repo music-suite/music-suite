@@ -101,7 +101,6 @@ import           Data.Either
 import           Data.Maybe
 import           Data.Semigroup
 import           Data.VectorSpace
--- import Data.AffineSpace
 import           Control.Applicative
 import           Control.Monad
 import           Data.Basis
@@ -127,15 +126,15 @@ import           Music.Pitch.Literal
 -- take only positive arguments.
 
 data Quality
-    = Major
-    | Minor
-    | Perfect
-    | Augmented Int
-    | Diminished Int
-    deriving (Eq, Ord, Show)
+  = Major
+  | Minor
+  | Perfect
+  | Augmented Int
+  | Diminished Int
+  deriving (Eq, Ord, Show)
 
 instance HasQuality Quality where
-    quality = id
+  quality = id
 
 
 -- | Augmentable Quality instance
@@ -158,7 +157,7 @@ instance Augmentable Quality where
   diminish (Diminished n) = Diminished (n + 1)
 
 class HasQuality a where
-    quality :: a -> Quality
+  quality :: a -> Quality
 
 -- |
 -- Invert a quality.
@@ -168,12 +167,12 @@ class HasQuality a where
 --
 invertQuality :: Quality -> Quality
 invertQuality = go
-    where
-        go Major            = Minor
-        go Minor            = Major
-        go Perfect          = Perfect
-        go (Augmented n)    = Diminished n
-        go (Diminished n)   = Augmented n
+  where
+    go Major            = Minor
+    go Minor            = Major
+    go Perfect          = Perfect
+    go (Augmented n)    = Diminished n
+    go (Diminished n)   = Augmented n
 
 
 -- |
@@ -216,7 +215,7 @@ isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 -- > number (a + b) = number a + number b - 1
 --
 newtype Number = Number { getNumber :: Int }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
+  deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show Number where { show = show . getNumber }
 instance HasNumber Number where number = id
@@ -350,39 +349,39 @@ instance Ord Interval where
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
-    (+)           = addInterval
-    negate        = negateInterval
-    abs a         = if isNegative a then negate a else a
-    (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
-    signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
-    fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
+  (+)           = addInterval
+  negate        = negateInterval
+  abs a         = if isNegative a then negate a else a
+  (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
+  signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
+  fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
 
 instance Show Interval where
   show a
-    | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
-    | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+  | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+  | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
     where
       showQuality Major            = "_M"
       showQuality Minor            = "m"
       showQuality Perfect          = "_P"
-      showQuality (Augmented n)    = "_" ++ replicate' n 'A'
-      showQuality (Diminished n)   = replicate' n 'd'
+      showQuality (Augmented n)    = "_" ++ replicate (fromIntegral n) 'A'
+      showQuality (Diminished n)   = replicate (fromIntegral n) 'd'
 
 instance Semigroup Interval where
-    (<>)    = addInterval
+  (<>)    = addInterval
 
 instance Monoid Interval where
-    mempty  = perfect unison
-    mappend = addInterval
+  mempty  = perfect unison
+  mappend = addInterval
 
 instance AdditiveGroup Interval where
-    zeroV   = perfect unison
-    (^+^)   = addInterval
-    negateV = negateInterval
+  zeroV   = perfect unison
+  (^+^)   = addInterval
+  negateV = negateInterval
 
 instance VectorSpace Interval where
-    type Scalar Interval = Integer
-    (*^) = stackInterval
+  type Scalar Interval = Integer
+  (*^) = stackInterval
 
 -- TODO move
 data IntervalBasis = Chromatic | Diatonic
@@ -419,8 +418,9 @@ addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
 
 stackInterval :: Integer -> Interval -> Interval
-stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
-                  | otherwise = negate $ stackInterval (negate n) a
+stackInterval n a
+  | n >= 0    = mconcat $ replicate (fromIntegral n) a
+  | otherwise = negate $ stackInterval (negate n) a
 
 intervalDiff :: Interval -> Int
 intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
@@ -735,14 +735,6 @@ diatonicToChromatic d = (octaves*12) + go restDia
         (octaves, restDia) = d `divMod` 7
         go = ([0,2,4,5,7,9,11] !!)
 
--- {-# DEPRECATED intervalDiff "This should be hidden" #-}
--- {-# DEPRECATED mkInterval'  "This should be hidden "#-}
-
-replicate' n = replicate (fromIntegral n)
-
-
-
-
 -- | Integer div of intervals: i / di = x, where x is an integer
 intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
@@ -777,12 +769,13 @@ convertBasis i j k
   | not $ p `divides` r = Nothing
   | not $ p `divides` q = Nothing
   | otherwise = Just (r `div` p, q `div` p)
-  where Interval (m, n) = i
-        Interval (a, b) = j
-        Interval (c, d) = k
-        p = (a*d - b*c)
-        q = (a*n - b*m)
-        r = (d*m - c*n)
+  where
+    Interval (m, n) = i
+    Interval (a, b) = j
+    Interval (c, d) = k
+    p = (a*d - b*c)
+    q = (a*n - b*m)
+    r = (d*m - c*n)
 
 
 -- | Same as above, but don't worry if new interval has non-integer

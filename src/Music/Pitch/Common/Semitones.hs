@@ -50,7 +50,7 @@ module Music.Pitch.Common.Semitones (
 -- > steps   a = semitones a `mod` 12
 --
 newtype Octaves = Octaves { getOctaves :: Integer }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
+  deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show       Octaves where { show = show . getOctaves }
 instance HasOctaves Octaves where { octaves = id }
@@ -59,19 +59,19 @@ instance HasOctaves Octaves where { octaves = id }
 -- Class of intervals that has a number of 'Octaves'.
 --
 class HasOctaves a where
-    -- |
-    -- Returns the number of octaves spanned by an interval.
-    --
-    -- The number of octaves is negative if and only if the interval is
-    -- negative.
-    --
-    -- Examples:
-    --
-    -- > octaves (perfect unison)  =  0
-    -- > octaves (d5 ^* 4)         =  2
-    -- > octaves (-_P8)            =  -1
-    --
-    octaves :: a -> Octaves
+  -- |
+  -- Returns the number of octaves spanned by an interval.
+  --
+  -- The number of octaves is negative if and only if the interval is
+  -- negative.
+  --
+  -- Examples:
+  --
+  -- > octaves (perfect unison)  =  0
+  -- > octaves (d5 ^* 4)         =  2
+  -- > octaves (-_P8)            =  -1
+  --
+  octaves :: a -> Octaves
 
 
 
@@ -82,9 +82,9 @@ class HasOctaves a where
 -- > steps   a = semitones a `mod` 12
 --
 newtype Steps = Steps { getSteps :: Integer }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
+  deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-instance Show     Steps where { show = show . getSteps }
+instance Show Steps where { show = show . getSteps }
 -- instance HasSteps Steps where { steps = id }
 
 {-
@@ -92,16 +92,16 @@ instance Show     Steps where { show = show . getSteps }
 -- Class of intervals that has a number of 'Steps'.
 --
 class HasSteps a where
-    -- |
-    -- The number of steps is always in the range /0 ≤ x < 12/.
-    --
-    -- Examples:
-    --
-    -- > octaves (perfect unison)  =  0
-    -- > octaves (d5 ^* 4)         =  2
-    -- > octaves (-m7)             =  -1
-    --
-    steps :: a -> Steps
+  -- |
+  -- The number of steps is always in the range /0 ≤ x < 12/.
+  --
+  -- Examples:
+  --
+  -- > octaves (perfect unison)  =  0
+  -- > octaves (d5 ^* 4)         =  2
+  -- > octaves (-m7)             =  -1
+  --
+  steps :: a -> Steps
 -}
 
 
@@ -123,7 +123,7 @@ class HasSteps a where
 -- d5
 --
 newtype Semitones = Semitones { getSemitones :: Integer }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
+  deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show         Semitones where { show = show . getSemitones }
 instance HasSemitones Semitones where { semitones = id }
@@ -133,22 +133,22 @@ instance HasSemitones Semitones where { semitones = id }
 --
 class HasSemitones a where
 
-    -- |
-    -- Returns the number of semitones spanned by an interval.
-    --
-    -- The number of semitones is negative if and only if the interval is
-    -- negative.
-    --
-    -- >>> semitones (perfect unison)
-    -- 0
-    -- >>> semitones tritone
-    -- 6
-    -- >>> semitones d5
-    -- 6
-    -- >>> semitones (-_P8)
-    -- -12
-    --
-    semitones :: a -> Semitones
+  -- |
+  -- Returns the number of semitones spanned by an interval.
+  --
+  -- The number of semitones is negative if and only if the interval is
+  -- negative.
+  --
+  -- >>> semitones (perfect unison)
+  -- 0
+  -- >>> semitones tritone
+  -- 6
+  -- >>> semitones d5
+  -- 6
+  -- >>> semitones (-_P8)
+  -- -12
+  --
+  semitones :: a -> Semitones
 
 
 
