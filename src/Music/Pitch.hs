@@ -25,6 +25,7 @@ module Music.Pitch (
         module Music.Pitch.Alterable,
         module Music.Pitch.Absolute,
         module Music.Pitch.Ambitus,
+        module Music.Pitch.Equal,
 
         -- * Common music theory
         module Music.Pitch.Common,
@@ -46,6 +47,7 @@ import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Alterable
 import Music.Pitch.Ambitus
+import Music.Pitch.Equal
 import Music.Pitch.Common
 import Music.Pitch.Common.Names
 import Music.Pitch.Literal
