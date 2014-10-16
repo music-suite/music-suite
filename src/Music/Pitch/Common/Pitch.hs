@@ -211,11 +211,11 @@ instance Show Pitch where
         where
             showName = fmap Char.toLower . show
             showOctave n
-                | n > 0     = replicate' n '\''
-                | otherwise = replicate' (negate n) '_'
+                | n > 0     = replicate (fromIntegral n) '\''
+                | otherwise = replicate (negate $ fromIntegral n) '_'
             showAccidental n
-                | n > 0     = replicate' n 's'
-                | otherwise = replicate' (negate n) 'b'
+                | n > 0     = replicate (fromIntegral n) 's'
+                | otherwise = replicate (negate $ fromIntegral n) 'b'
 
 instance Alterable Pitch where
     sharpen (Pitch a) = Pitch (augment a)
@@ -279,5 +279,3 @@ instance IsPitch Pitch where
 
 -- midiNumber :: Pitch -> Integer
 -- midiNumber = fromIntegral . semitones . getPitch
-
-replicate' n = replicate (fromIntegral n)
