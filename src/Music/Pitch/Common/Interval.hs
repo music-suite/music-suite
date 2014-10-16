@@ -175,8 +175,10 @@ data Quality
   = Major
   | Minor
   | Perfect
-  | Augmented Positive
-  | Diminished Positive
+  -- TODO we really want to use Positive here, but that requires a
+  -- rewrite of extractQuality below
+  | Augmented Integer
+  | Diminished Integer
   deriving (Eq, Ord, Show)
 
 instance HasQuality Quality where
