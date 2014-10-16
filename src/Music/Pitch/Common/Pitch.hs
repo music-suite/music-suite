@@ -276,6 +276,3 @@ instance IsPitch Pitch where
         where
             qual Nothing  = 0
             qual (Just n) = round n
-
--- midiNumber :: Pitch -> Integer
--- midiNumber = fromIntegral . semitones . getPitch
