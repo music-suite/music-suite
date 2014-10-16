@@ -191,18 +191,20 @@ data Name = C | D | E | F | G | A | B
 newtype Pitch = Pitch { getPitch :: Interval }
   deriving (Eq, Ord, Typeable)
 
-instance Num Pitch where
-  Pitch a + Pitch b = Pitch (a + b)
-  negate (Pitch a)  = Pitch (negate a)
-  abs (Pitch a)     = Pitch (abs a)
-  (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
-  signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
-  fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+instance IsPitch Pitch where
+  fromPitch (PitchL (c, a, o)) =
+    Pitch $ mkInterval' (qual a) c ^+^ (perfect octave^* fromIntegral o)
+    where
+      qual Nothing  = 0
+      qual (Just n) = round n
 
-instance AffineSpace Pitch where
-  type Diff Pitch     = Interval
-  Pitch a .-. Pitch b = a ^-^ b
-  Pitch a .+^ b       = Pitch (a ^+^ b)
+instance Enum Pitch where
+  toEnum = Pitch . mkInterval' 0 . fromIntegral
+  fromEnum = fromIntegral . pred . number . (.-. c)
+
+instance Alterable Pitch where
+  sharpen (Pitch a) = Pitch (augment a)
+  flatten (Pitch a) = Pitch (diminish a)
 
 instance Show Pitch where
   show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
@@ -215,19 +217,18 @@ instance Show Pitch where
         | n > 0     = replicate (fromIntegral n) 's'
         | otherwise = replicate (negate $ fromIntegral n) 'b'
 
-instance Alterable Pitch where
-  sharpen (Pitch a) = Pitch (augment a)
-  flatten (Pitch a) = Pitch (diminish a)
+instance Num Pitch where
+  Pitch a + Pitch b = Pitch (a + b)
+  negate (Pitch a)  = Pitch (negate a)
+  abs (Pitch a)     = Pitch (abs a)
+  (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
+  signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
+  fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
 
-instance Enum Pitch where
-  toEnum = Pitch . mkInterval' 0 . fromIntegral
-  fromEnum = fromIntegral . pred . number . (.-. c)
-
--- |
--- This is just the identity function, but is useful to fix the type of 'Pitch'.
---
-asPitch :: Pitch -> Pitch
-asPitch = id
+instance AffineSpace Pitch where
+  type Diff Pitch     = Interval
+  Pitch a .-. Pitch b = a ^-^ b
+  Pitch a .+^ b       = Pitch (a ^+^ b)
 
 -- |
 -- Creates a pitch from name accidental.
@@ -261,9 +262,9 @@ name x
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
 
-instance IsPitch Pitch where
-  fromPitch (PitchL (c, a, o)) =
-    Pitch $ mkInterval' (qual a) c ^+^ (perfect octave^* fromIntegral o)
-    where
-      qual Nothing  = 0
-      qual (Just n) = round n
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Pitch'.
+--
+asPitch :: Pitch -> Pitch
+asPitch = id
+
