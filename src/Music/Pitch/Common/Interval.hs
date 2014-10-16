@@ -394,11 +394,11 @@ instance Semigroup Interval where
   (<>)    = addInterval
 
 instance Monoid Interval where
-  mempty  = perfect unison
+  mempty  = basis_P1
   mappend = addInterval
 
 instance AdditiveGroup Interval where
-  zeroV   = perfect unison
+  zeroV   = basis_P1
   (^+^)   = addInterval
   negateV = negateInterval
 
@@ -695,7 +695,7 @@ isNonNegative (Interval (a, d)) = d >= 0
 -- Returns whether the given interval a perfect unison.
 --
 isPerfectUnison :: Interval -> Bool
-isPerfectUnison = (== perfect unison)
+isPerfectUnison (Interval (a, d)) = (a,d) == (0,0)
 
 -- |
 -- Returns whether the given interval is a step (a second or smaller).
