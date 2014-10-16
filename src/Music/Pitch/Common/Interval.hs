@@ -139,7 +139,7 @@ instance HasQuality Quality where
 
 -- | Augmentable Quality instance
 --
--- This Augmentable instance exists solely for use of the getQuality
+-- This Augmentable instance exists solely for use of the extractQuality
 -- function, which ensures that there is never any ambiguity around
 -- diminished/augmented intervals turning into major/minor/perfect
 -- intervals.
