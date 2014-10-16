@@ -32,7 +32,7 @@ module Music.Pitch.Common.Pitch (
         isNatural,
         isFlattened,
         isSharpened,
-        isStandard,
+        isStandardAccidental,
 
         -- ** Name
         Name(..),
