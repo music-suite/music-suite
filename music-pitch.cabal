@@ -26,6 +26,7 @@ library
                         containers,
                         semigroups              >= 0.13.0.1 && < 1,
                         music-pitch-literal     == 1.7.2,
+                        data-interval           >= 1.0.0 && < 2,
                         vector-space            >= 0.8.7 && < 0.9,
                         vector-space-points     >= 0.2 && < 0.3,
                         nats,
