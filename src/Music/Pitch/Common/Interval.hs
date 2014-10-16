@@ -358,8 +358,8 @@ instance Num Interval where
 
 instance Show Interval where
   show a
-  | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
-  | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+    | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
+    | otherwise    =        showQuality (extractQuality a) ++ show (abs $ extractNumber a)
     where
       showQuality Major            = "_M"
       showQuality Minor            = "m"
