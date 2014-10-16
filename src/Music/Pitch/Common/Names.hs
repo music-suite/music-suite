@@ -1,11 +1,64 @@
 
 module Music.Pitch.Common.Names where
 
+import Music.Pitch.Literal
+import Music.Pitch.Common.Pitch
+import Music.Pitch.Common.Interval
+import Data.Maybe
+import qualified Data.List
+
 {-
 Original at http://tinyurl.com/ongo4al
 Use convertcsv.com to convert to JSON array
 -}
 
+data Language
+  = English
+  | German
+  | Dutch
+  | Japanese
+  | Italian
+  | French
+  | Spanish
+  | Portuguese
+  | Russian
+  | Romanian
+  | Swedish
+  | NewSwedish
+  deriving (Show, Eq, Ord)
+  
+showPitch :: Language -> Pitch -> String
+showPitch lang pitch = (!! (pitchToIndex + pitchNameOffset)) $ fromMaybe (error "showPitch: Bad lang") $ listToMaybe $ filter (\xs -> head xs == show lang) $ pitchNames
+  where
+    -- TODO normalize dbb etc.
+    pitchToIndex = fromMaybe (error "showPitch: Bad pitch") $ Data.List.findIndex (== pitch) 
+      [cb,c,cs,
+       db,d,ds,
+       eb,e,{-es,-}
+       {-fb,-}f,fs,
+       gb,g,gs,
+       ab,a,as,
+       bb,b,bs]     
+    pitchNameOffset = 3
+
+data Mode = MajorMode | MinorMode
+  deriving (Eq, Ord, Show)
+
+showMode :: Language -> Mode -> String
+showMode lang mode = (!! (modeToIndex + modeNameOffset)) $ fromMaybe (error "showMode: Bad lang") $ listToMaybe $ filter (\xs -> head xs == show lang) $ modeNames
+  where
+    modeToIndex = fromMaybe (error "showPitch: Bad mode") $ Data.List.findIndex (== mode) 
+      [MajorMode,MinorMode]     
+    modeNameOffset = 1
+
+showKey :: Language -> Pitch -> Mode -> String
+showKey lang pitch mode = showPitch lang pitch ++ showSep lang ++ showMode lang mode
+
+showSep :: Language -> String
+showSep lang = fromMaybe (error "showSep: Bad lang") $ Data.List.lookup (show lang) nameModeSeparator
+
+pitchNames :: [[String]]
+-- [[language,_,_,cb,c,cs,db...bs]]
 pitchNames =
   [["English",
     "",
@@ -27,7 +80,8 @@ pitchNames =
     "A",
     "A sharp",
     "B flat",
-    "B"],
+    "B",
+    "B sharp"],
   ["German",
     "",
     "",
@@ -48,7 +102,8 @@ pitchNames =
     "A",
     "Ais",
     "B",
-    "H"],
+    "H",
+    "His"],
     
   ["Dutch",
     "(Netherlands)",
@@ -70,7 +125,8 @@ pitchNames =
     "A",
     "Ais / A kruis",
     "Bes / B mol",
-    "B"],
+    "B",
+    "Bis / B kruis"],
     
   ["Japanese",
     "",
@@ -92,7 +148,8 @@ pitchNames =
     "\12452 (i)",
     "\23344\12452 (ei-i)",
     "\22793\12525 (hen-ro)",
-    "\12525 (ro)"],
+    "\12525 (ro)",
+    ""],
     
   ["Italian",
     "",
@@ -114,7 +171,8 @@ pitchNames =
     "La",
     "La diesis",
     "Si bemolle",
-    "Si"],
+    "Si",
+    "Si diesis"],
     
   ["French",
     "",
@@ -136,7 +194,8 @@ pitchNames =
     "La",
     "La di\232se",
     "Si b\233mol",
-    "Si"],
+    "Si",
+    "Si di\232se"],
     
   ["Spanish",
     "",
@@ -158,7 +217,8 @@ pitchNames =
     "La",
     "La sostenido",
     "Si bemol",
-    "Si"],
+    "Si",
+    "Si sostenido"],
     
   ["Portuguese",
     "",
@@ -180,7 +240,8 @@ pitchNames =
     "L\225",
     "L\225 sustenido",
     "Si bemol",
-    "Si"],
+    "Si",
+    "Si sustenido"],
     
   ["Russian",
     "",
@@ -202,7 +263,8 @@ pitchNames =
     "\1051\1103",
     "\1051\1103-\1076\1080\1077\1079",
     "\1057\1080-\1073\1077\1084\1086\1083\1100",
-    "\1057\1080"],
+    "\1057\1080",
+    ""],
     
   ["Romanian",
     "",
@@ -224,7 +286,8 @@ pitchNames =
     "La",
     "La diez",
     "Si bemol",
-    "Si"],
+    "Si",
+    "Si diez"],
     
   ["Belgian dutch",
     "",
@@ -246,7 +309,8 @@ pitchNames =
     "La",
     "La kruis",
     "Si mol",
-    "Si"],
+    "Si",
+    "Si kruis"],
     
   ["Swedish",
     "",
@@ -268,9 +332,10 @@ pitchNames =
     "A",
     "Aiss",
     "B",
-    "H"],
+    "H",
+    "Hiss"],
     
-  ["New Swedish",
+  ["NewSwedish",
     "",
     "",
     "Cess",
@@ -290,8 +355,10 @@ pitchNames =
     "A",
     "Aiss",
     "Bess",
-    "B"]]
+    "B",
+    "Biss"]]
 
+modeNames :: [[String]] -- [[language,major,minor]]
 modeNames =
   [["English","major","minor"],
   ["German","Dur","Moll"],
@@ -305,20 +372,22 @@ modeNames =
   ["Romanian","major","minor"],
   ["Belgian dutch","groot","klein"],
   ["Swedish","dur","moll"],
+  ["NewSwedish","dur","moll"],
   ["","dur","moll"]]
 
+nameModeSeparator :: [(String, String)] -- [(language,separator)]
 nameModeSeparator =
-  [("English","space"),
-  ("German","hyphen"),
-  ("Dutch","space"),
-  ("Japanese","space"),
-  ("Italian","space"),
-  ("French","space"),
-  ("Spanish","space"),
-  ("Portuguese","space"),
-  ("Russian","space"),
-  ("Romanian","space"),
-  ("Belgian dutch","space"),
-  ("Swedish","hyphen"),
-  ("New Swedish","")]
+  [("English"," "),
+  ("German","-"),
+  ("Dutch"," "),
+  ("Japanese"," "),
+  ("Italian"," "),
+  ("French"," "),
+  ("Spanish"," "),
+  ("Portuguese"," "),
+  ("Russian"," "),
+  ("Romanian"," "),
+  ("Belgian dutch"," "),
+  ("Swedish","-"),
+  ("NewSwedish","-")]
 
