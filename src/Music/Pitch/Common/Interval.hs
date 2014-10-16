@@ -786,12 +786,12 @@ qualityToDiff positive qt q = fromIntegral $ go positive qt q
     go True MajorMinorType (Augmented n)  = 0 + n
     go True MajorMinorType Major          = 0
     go True MajorMinorType Minor          = (-1)
-    go True MajorMinorType (Diminished n) = (-1) - n
+    go True MajorMinorType (Diminished n) = -(1 + n)
 
-    go False MajorMinorType (Augmented n)  = 1 + n
-    go False MajorMinorType Major          = 1
+    go False MajorMinorType (Augmented n)  = -(1 + n)
+    go False MajorMinorType Major          = -1
     go False MajorMinorType Minor          = 0
-    go False MajorMinorType (Diminished n) = 0 - n
+    go False MajorMinorType (Diminished n) = 0 + n
     
     go _ PerfectType (Augmented n)  = 0 + n
     go _ PerfectType Perfect        = 0
