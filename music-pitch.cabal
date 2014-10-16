@@ -39,6 +39,8 @@ library
                         Music.Pitch.Common.Semitones
                         Music.Pitch.Common.Spell
                         Music.Pitch.Common.Harmony
+                        Music.Pitch.Common.Names
+                        Music.Pitch.Ambitus
                         Music.Pitch.StaffLines
                         Music.Pitch.Clef
                         Music.Pitch.Tokawa

@@ -20,11 +20,15 @@ module Music.Pitch (
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
 
-        -- * Generic representation
+        -- * Generic pitch
         module Music.Pitch.Augmentable,
         module Music.Pitch.Alterable,
         module Music.Pitch.Absolute,
+        module Music.Pitch.Ambitus,
+
+        -- * Common music theory
         module Music.Pitch.Common,
+        module Music.Pitch.Common.Names,
 
         -- * Intonation
         module Music.Pitch.Intonation,
@@ -41,7 +45,9 @@ import Data.AffineSpace.Point
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Alterable
+import Music.Pitch.Ambitus
 import Music.Pitch.Common
+import Music.Pitch.Common.Names
 import Music.Pitch.Literal
 import Music.Pitch.Intonation
 
