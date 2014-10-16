@@ -101,8 +101,10 @@ import           Data.Either
 import           Data.Maybe
 import           Data.Semigroup
 import           Data.VectorSpace
+import           Data.AffineSpace.Point (relative)
 import           Control.Applicative
 import           Control.Monad
+import           Control.Lens hiding (simple)
 import           Data.Basis
 import qualified Data.List                    as List
 import           Data.Typeable
@@ -456,60 +458,60 @@ basis_P5 = Interval (7, 4)
 basis_P8 = Interval (12, 7)
 
 
-mkInterval :: Quality -> Number -> Interval
-
-mkInterval (Diminished 1) 1 = basis_P1 ^-^ basis_A1
-mkInterval Perfect 1 = basis_P1
-mkInterval (Augmented 1) 1 = basis_A1
-
-mkInterval (Diminished 1) 2 = basis_d2
-mkInterval Minor 2 = basis_d2 ^+^ basis_A1
-mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
-mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
-
-mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ basis_A1
-mkInterval Minor 3 = (mkInterval Major 2) ^+^ (mkInterval Minor 2)
-mkInterval Major 3 = (mkInterval Major 2) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ basis_A1
-
-mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ basis_A1
-mkInterval Perfect 4 = (mkInterval Major 3) ^+^ (mkInterval Minor 2)
-mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ basis_A1
-
-mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ basis_A1
-mkInterval Perfect 5 = (mkInterval Perfect 4) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ basis_A1
-
-mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ basis_A1
-mkInterval Minor 6 = (mkInterval Perfect 5) ^+^ (mkInterval Minor 2)
-mkInterval Major 6 = (mkInterval Perfect 5) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ basis_A1
-
-mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ basis_A1
-mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
-mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ basis_A1
-
-mkInterval q (Number n) = if n > 0
-                          then (mkInterval q (Number (n - 7))) ^+^ basis_P8
-                          else (mkInterval q (Number (n + 7))) ^-^ basis_P8
-
-mkInterval Minor 1 = error "invalid interval"
-mkInterval Major 1 = error "invalid interval"
-mkInterval Perfect 2 = error "invalid interval"
-mkInterval Perfect 3 = error "invalid interval"
-mkInterval Minor 4 = error "invalid interval"
-mkInterval Major 4 = error "invalid interval"
-mkInterval Minor 5 = error "invalid interval"
-mkInterval Major 5 = error "invalid interval"
-mkInterval Perfect 6 = error "invalid interval"
-mkInterval Perfect 7 = error "invalid interval"
-
-mkInterval (Diminished 0) n = error "(Diminished 0) is not a valid Quality"
-mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
-
-mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ basis_A1
-mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
+-- mkInterval :: Quality -> Number -> Interval
+-- 
+-- mkInterval (Diminished 1) 1 = basis_P1 ^-^ basis_A1
+-- mkInterval Perfect 1 = basis_P1
+-- mkInterval (Augmented 1) 1 = basis_A1
+-- 
+-- mkInterval (Diminished 1) 2 = basis_d2
+-- mkInterval Minor 2 = basis_d2 ^+^ basis_A1
+-- mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
+-- mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
+-- 
+-- mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ basis_A1
+-- mkInterval Minor 3 = (mkInterval Major 2) ^+^ (mkInterval Minor 2)
+-- mkInterval Major 3 = (mkInterval Major 2) ^+^ (mkInterval Major 2)
+-- mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ basis_A1
+-- 
+-- mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ basis_A1
+-- mkInterval Perfect 4 = (mkInterval Major 3) ^+^ (mkInterval Minor 2)
+-- mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ basis_A1
+-- 
+-- mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ basis_A1
+-- mkInterval Perfect 5 = (mkInterval Perfect 4) ^+^ (mkInterval Major 2)
+-- mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ basis_A1
+-- 
+-- mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ basis_A1
+-- mkInterval Minor 6 = (mkInterval Perfect 5) ^+^ (mkInterval Minor 2)
+-- mkInterval Major 6 = (mkInterval Perfect 5) ^+^ (mkInterval Major 2)
+-- mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ basis_A1
+-- 
+-- mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ basis_A1
+-- mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
+-- mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
+-- mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ basis_A1
+-- 
+-- mkInterval q (Number n) = if n > 0
+--                           then (mkInterval q (Number (n - 7))) ^+^ basis_P8
+--                           else (mkInterval q (Number (n + 7))) ^-^ basis_P8
+-- 
+-- mkInterval Minor 1 = error "invalid interval"
+-- mkInterval Major 1 = error "invalid interval"
+-- mkInterval Perfect 2 = error "invalid interval"
+-- mkInterval Perfect 3 = error "invalid interval"
+-- mkInterval Minor 4 = error "invalid interval"
+-- mkInterval Major 4 = error "invalid interval"
+-- mkInterval Minor 5 = error "invalid interval"
+-- mkInterval Major 5 = error "invalid interval"
+-- mkInterval Perfect 6 = error "invalid interval"
+-- mkInterval Perfect 7 = error "invalid interval"
+-- 
+-- mkInterval (Diminished 0) n = error "(Diminished 0) is not a valid Quality"
+-- mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
+-- 
+-- mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ basis_A1
+-- mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 
 -- |
 -- Extracting the 'number' from an interval vector.
@@ -733,7 +735,25 @@ asInterval = id
 
 
 
-{-
+newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
+  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
+
+newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
+  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
+
+diatonicSteps :: Iso' Number DiatonicSteps
+diatonicSteps = iso n2d d2n
+  where
+    n2d n | n > 0  = fromIntegral (n - 1)
+    n2d n | n == 0 = error "diatonicSteps: Invalid number 0"
+    n2d n | n < 0  = fromIntegral (n + 1)
+
+    d2n n | n >= 0 = fromIntegral (n + 1)
+    d2n n | n <  0 = fromIntegral (n - 1)
+
+
+
+
 data QualityType = PerfectType | MajorMinorType
   deriving (Eq, Ord, Read, Show)
 
@@ -767,8 +787,8 @@ qualityToDiff positive qt q = fromIntegral $ go positive qt q
     
     go _ qt q = error $ "qualityToDiff: Unknown interval expression (" ++ show qt ++ ", " ++ show q ++ ")"
 
-mkInterval2 :: Quality -> Number -> Interval
-mkInterval2 q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
+mkInterval :: Quality -> Number -> Interval
+mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
   where
     diff  = qualityToDiff (n > 0) (expectedQualityType n) (q)
     steps = case n `compare` 0 of
@@ -776,6 +796,33 @@ mkInterval2 q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
       EQ -> error "diatonicSteps: Invalid number 0"
       LT -> n + 1
     -- steps = n^.diatonicSteps
+
+
+
+
+
+
+
+_steps :: Lens' Interval DiatonicSteps
+_steps = from interval' . _2
+
+_quality :: Lens' Interval Quality
+_quality = from interval . _1
+
+_number :: Lens' Interval Number 
+_number = from interval . _2
+
+interval :: Iso' (Quality, Number) Interval
+interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
+
+-- Interval as alteration and diatonic steps
+interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
+interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
+  (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
+
+
+{-
+TODO move to Pitch
 
 upDiatonic :: (HasPitches' t, Functor f, Music.Score.Pitch t ~ f Pitch) => Pitch -> DiatonicSteps -> t -> t
 upDiatonic o n = over pitches' (fmap $ upDiatonicP o n)
@@ -796,46 +843,19 @@ downDiatonicP origin n = relative origin $ (_steps -~ n)
 -- Basically, we always invert around c, adding relative only moves the tonic and inverts around c
 invertPitchesDiatonicallyP :: Pitch -> Pitch -> Pitch
 invertPitchesDiatonicallyP origin = relative origin $ (_steps %~ negate)
+-}
 
-newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
-  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
-  deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-_steps :: Lens' Interval DiatonicSteps
-_steps = from interval' . _2
 
-diatonicSteps :: Iso' Number DiatonicSteps
-diatonicSteps = iso n2d d2n
-  where
-    n2d n | n > 0  = fromIntegral (n - 1)
-    n2d n | n == 0 = error "diatonicSteps: Invalid number 0"
-    n2d n | n < 0  = fromIntegral (n + 1)
-
-    d2n n | n >= 0 = fromIntegral (n + 1)
-    d2n n | n <  0 = fromIntegral (n - 1)
-
-_quality :: Lens' Interval Quality
-_quality = from interval . _1
-
-_number :: Lens' Interval Number 
-_number = from interval . _2
-
-interval :: Iso' (Quality, Number) Interval
-interval = iso (uncurry mkInterval2) (\x -> (quality x, number x))
-
--- Interval as alteration and diatonic steps
-interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
-interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
-  (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
+{-
 
 -- -- TODO be "nice"
 -- mkIntervalNice :: Quality -> Number -> Interval
 -- mkIntervalNice q n
---   | expectedQualityType n `elem` qualityTypes q = mkInterval2 q n 
---   | expectedQualityType n == MajorMinorType     = mkInterval2 (toMajorMinorType q) n
---   | expectedQualityType n == PerfectType        = mkInterval2 (toPerfectType q) n
+--   | expectedQualityType n `elem` qualityTypes q = mkInterval q n 
+--   | expectedQualityType n == MajorMinorType     = mkInterval (toMajorMinorType q) n
+--   | expectedQualityType n == PerfectType        = mkInterval (toPerfectType q) n
 
 toMajorMinorType Perfect = Major
 toPerfectType    Major   = Perfect

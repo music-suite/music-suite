@@ -24,6 +24,7 @@ source-repository head
 library                    
     build-depends:      base                    >= 4 && < 5,
                         containers,
+                        lens                    >= 4.3.3 && < 4.4,
                         semigroups              >= 0.13.0.1 && < 1,
                         music-pitch-literal     == 1.7.2,
                         data-interval           >= 1.0.0 && < 2,
