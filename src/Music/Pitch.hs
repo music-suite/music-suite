@@ -20,14 +20,16 @@ module Music.Pitch (
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
 
-        -- * Generic pitch
+        -- * General representation
         module Music.Pitch.Augmentable,
         module Music.Pitch.Alterable,
         module Music.Pitch.Absolute,
         module Music.Pitch.Ambitus,
+
+        -- * Common representation
         module Music.Pitch.Equal,
 
-        -- * Common music theory
+        -- * Common representation
         module Music.Pitch.Common,
         module Music.Pitch.Common.Names,
 
@@ -42,7 +44,6 @@ import Data.Semigroup
 import Data.VectorSpace hiding (Sum, getSum)
 import Data.AffineSpace
 import Data.AffineSpace.Point
-
 import Music.Pitch.Absolute
 import Music.Pitch.Augmentable
 import Music.Pitch.Alterable

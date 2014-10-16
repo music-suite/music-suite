@@ -1,5 +1,6 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -12,76 +13,80 @@
 -- Portability : portable
 --
 -- Absolute pitch representation.
--- 
--- The canonical pitch representation is frequency in Hertz (Hz). For conversion, see
--- 'HasFrequency'.
+--
+-- The canonical pitch representation is frequency in Hertz (Hz).
+--
+-- For conversion, see 'HasFrequency'.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Absolute (
+        -- * Absolute pitch representation
         Hertz(..),
         -- FreqRatio(..),
         -- Octaves,
         Cents,
         Fifths,
+        
+        -- * HasFrequency class
         HasFrequency(..),
         -- octaves,
         fifths,
         cents,
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AdditiveGroup
-import Data.AffineSpace
-import Control.Monad
-import Control.Applicative
+import           Control.Applicative
+import           Control.Monad
+import           Data.AdditiveGroup
+import           Data.AffineSpace
+import           Data.Either
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.VectorSpace
 
-import Music.Pitch.Literal
+import           Music.Pitch.Literal
 
--- | 
--- Absolute frequency in Hertz.    
--- 
+-- |
+-- Absolute frequency in Hertz.
+--
 newtype Hertz = Hertz { getHertz :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 {-
--- | 
+-- |
 -- A ratio between two different (Hertz) frequencies.
--- 
+--
 newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 -}
 
--- | 
+-- |
 -- Number of pure octaves.
 --
 -- Octaves are a logarithmic representation of frequency such that
 --
--- > f * (2/1) = frequency (octaves f + 1)    
--- 
+-- > f * (2/1) = frequency (octaves f + 1)
+--
 newtype Octaves = Octaves { getOctaves :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
--- | 
+-- |
 -- Number of pure octaves.
 --
 -- Cents are a logarithmic representation of frequency such that
 --
--- > f * (2/1) = frequency (cents f + 1200)    
--- 
+-- > f * (2/1) = frequency (cents f + 1200)
+--
 newtype Cents = Cents { getCents :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
--- | 
+-- |
 -- Number of pure fifths.
 --
 -- Fifths are a logarithmic representation of frequency.
 --
--- > f * (3/2) = frequency (fifths f + 1)    
--- 
+-- > f * (3/2) = frequency (fifths f + 1)
+--
 newtype Fifths = Fifths { getFifths :: Hertz }
     deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
@@ -149,14 +154,14 @@ fifths a = Fifths $ logBase (3/2) (frequency a)
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2/1) (frequency a) * 1200
 
--- 
+--
 -- For convenience. TODO problematic for these reasons:
--- 
+--
 --  * Confusing as _P8+m2 is not the same as _P8<>m2
 --  * Does not work with HasPitch (up, down...) etc as we do not have an affine/vector space pair
 --
 -- Can we fix this with newtype wrappers?
--- 
+--
 instance IsInterval Hertz where
   fromInterval (IntervalL (o,d,c)) = (2**fromIntegral o) * (r !! fromIntegral c)
     where

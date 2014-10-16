@@ -9,7 +9,7 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Provides intonation.
+-- Provides intonation, i.e. mappings from relative to absolute pitch.
 --
 -------------------------------------------------------------------------------------
 

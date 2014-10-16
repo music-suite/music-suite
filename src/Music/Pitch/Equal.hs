@@ -14,7 +14,11 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Equal temperament pitch of any size.
+-- Generic equal temperament pitch.
+--
+-- Use the type-level numbers from @type-unary@ to construct an temperement dividing
+-- the octave in any number of steps. Common cases such as 6-TET (whole-tones),
+-- 12-TET (half-tones) and 24-TET (quarter-tones) are provided for convenience.
 --
 -------------------------------------------------------------------------------------
 

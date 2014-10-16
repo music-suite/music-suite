@@ -12,6 +12,20 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Lines and staff positions.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Pitch.StaffLines (
         StaffLines,
         HalfSpaces,
