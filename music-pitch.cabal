@@ -31,6 +31,7 @@ library
                         vector-space            >= 0.8.7 && < 0.9,
                         vector-space-points     >= 0.2 && < 0.3,
                         nats,
+                        positive                >= 0.2 && < 1,
                         type-unary              >= 0.2.16 && < 1.0
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute

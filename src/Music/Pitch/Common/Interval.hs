@@ -53,6 +53,19 @@ module Music.Pitch.Common.Interval (
         -- ** Intervals
         Interval(..),
 
+        ChromaticSteps,
+        DiatonicSteps,
+        diatonicSteps,
+        QualityType(..),
+        expectedQualityType,
+        qualityTypes,
+        qualityToDiff,
+        _steps,
+        _quality,
+        _number,
+        interval,
+        interval',
+
         -- *** Creating intervals
         mkInterval,
         perfect,
@@ -108,6 +121,7 @@ import           Control.Lens hiding (simple)
 import           Data.Basis
 import qualified Data.List                    as List
 import           Data.Typeable
+import           Numeric.Positive
 
 import           Music.Pitch.Absolute
 import           Music.Pitch.Augmentable
@@ -157,16 +171,12 @@ isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 -- The quality of a compound interval is the quality of the simple interval on
 -- which it is based.
 --
--- Note that (Augmented 0) and (Diminished 0) are superfluous identity
--- values, use Perfect instead. Augmented and Diminished must also
--- take only positive arguments.
-
 data Quality
   = Major
   | Minor
   | Perfect
-  | Augmented Int
-  | Diminished Int
+  | Augmented Positive
+  | Diminished Positive
   deriving (Eq, Ord, Show)
 
 instance HasQuality Quality where
