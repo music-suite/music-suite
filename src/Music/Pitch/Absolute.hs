@@ -50,14 +50,14 @@ import           Music.Pitch.Literal
 -- Absolute frequency in Hertz.
 --
 newtype Hertz = Hertz { getHertz :: Double }
-    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 {-
 -- |
 -- A ratio between two different (Hertz) frequencies.
 --
 newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
-    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 -}
 
 -- |
@@ -68,7 +68,7 @@ newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
 -- > f * (2/1) = frequency (octaves f + 1)
 --
 newtype Octaves = Octaves { getOctaves :: Hertz }
-    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure octaves.
@@ -78,7 +78,7 @@ newtype Octaves = Octaves { getOctaves :: Hertz }
 -- > f * (2/1) = frequency (cents f + 1200)
 --
 newtype Cents = Cents { getCents :: Hertz }
-    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 -- |
 -- Number of pure fifths.
@@ -88,7 +88,7 @@ newtype Cents = Cents { getCents :: Hertz }
 -- > f * (3/2) = frequency (fifths f + 1)
 --
 newtype Fifths = Fifths { getFifths :: Hertz }
-    deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 
 instance Semigroup Hertz    where (<>) = (*)
@@ -103,13 +103,13 @@ instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
 
 {-
 instance AdditiveGroup FreqRatio where
-    zeroV   = 1
-    (^+^)   = (*)
-    negateV f = 1 / f
+  zeroV   = 1
+  (^+^)   = (*)
+  negateV f = 1 / f
 
 instance VectorSpace FreqRatio where
-    type Scalar FreqRatio = Double
-    (*^) x f = FreqRatio ((getFreqRatio f) ** x)
+  type Scalar FreqRatio = Double
+  (*^) x f = FreqRatio ((getFreqRatio f) ** x)
 
 instance AffineSpace Hertz where
   type Diff Hertz = FreqRatio
@@ -117,13 +117,13 @@ instance AffineSpace Hertz where
   (.+^) p f = Hertz $ (getHertz p) * (getFreqRatio f)
 -}
 instance AdditiveGroup Hertz where
-    zeroV   = 1
-    (^+^)   = (*)
-    negateV f = 1 / f
+  zeroV   = 1
+  (^+^)   = (*)
+  negateV f = 1 / f
 
 instance VectorSpace Hertz where
-    type Scalar Hertz = Hertz
-    (*^) x f = Hertz ((getHertz f) ** getHertz x)
+  type Scalar Hertz = Hertz
+  (*^) x f = Hertz ((getHertz f) ** getHertz x)
 
 instance AffineSpace Hertz where
   type Diff Hertz = Hertz
@@ -131,19 +131,19 @@ instance AffineSpace Hertz where
   (.+^) = (+)
 
 class HasFrequency a where
-    frequency :: a -> Hertz
+  frequency :: a -> Hertz
 
 instance HasFrequency Hertz where
-    frequency = id
+  frequency = id
 
 instance HasFrequency Octaves where
-    frequency (Octaves f)  = (2/1) ** f
+  frequency (Octaves f) = (2/1) ** f
 
 instance HasFrequency Fifths where
-    frequency (Fifths f)   =  (3/2) ** f
+  frequency (Fifths f)  =  (3/2) ** f
 
 instance HasFrequency Cents where
-    frequency (Cents f)    =  (2/1) ** (f / 1200)
+  frequency (Cents f)   =  (2/1) ** (f / 1200)
 
 octaves :: HasFrequency a => a -> Octaves
 octaves a = Octaves $ logBase (2/1) (frequency a)
