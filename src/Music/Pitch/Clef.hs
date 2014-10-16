@@ -108,6 +108,13 @@ Map this to Pitch.Common
   If 1), do we need to separate G/C/F in ClefSymbol, maybe just put a single constructor for common pitch.
   In that case, maybe a function isStandardClefPitch (i.e. c/f/g) would be appropriate.
 -}
+trebleClef :: Clef
+bassClef :: Clef
+sopranoClef :: Clef
+mezzoSopranoClef :: Clef
+altoClef :: Clef
+tenorClef :: Clef
+baritoneClef :: Clef
 trebleClef        = (GClef, -1 :: ClefOctave, -1 :: ClefLine)
 bassClef          = (FClef, 1  :: ClefOctave, -1 :: ClefLine)
 sopranoClef       = (CClef, 0  :: ClefOctave, -2 :: ClefLine)

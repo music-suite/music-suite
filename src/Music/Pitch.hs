@@ -32,6 +32,8 @@ module Music.Pitch (
         -- * Common representation
         module Music.Pitch.Common,
         module Music.Pitch.Common.Names,
+        module Music.Pitch.StaffLines,
+        module Music.Pitch.Clef,
 
         -- * Intonation
         module Music.Pitch.Intonation,
@@ -52,5 +54,6 @@ import Music.Pitch.Equal
 import Music.Pitch.Common
 import Music.Pitch.Common.Names
 import Music.Pitch.Literal
-import Music.Pitch.Intonation
+import Music.Pitch.StaffLines
+import Music.Pitch.Clef
 
