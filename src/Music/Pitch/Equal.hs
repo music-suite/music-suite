@@ -46,8 +46,11 @@ where
 import Data.Maybe
 import Data.Either
 import Data.Semigroup
+import Data.VectorSpace
+import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
+
 import Music.Pitch.Absolute
 
 import TypeUnary.Nat
@@ -72,6 +75,22 @@ instance IsNat a => Num (Equal a) where
   abs (Equal a)     = Equal (abs a)
   signum (Equal a)  = Equal (signum a)
   fromInteger       = toEqual . fromIntegral
+
+instance IsNat a => Semigroup (Equal a) where
+  (<>)    = (+)
+
+instance IsNat a => Monoid (Equal a) where
+  mempty  = 0
+  mappend = (+)
+
+instance IsNat a => AdditiveGroup (Equal a) where
+  zeroV   = 0
+  (^+^)   = (+)
+  negateV = negate
+
+instance IsNat a => VectorSpace (Equal a) where
+  type Scalar (Equal a) = Equal a
+  (*^) = (*)
 
 -- Convenience to avoid ScopedTypeVariables etc    
 getSize :: IsNat a => Equal a -> Nat a
