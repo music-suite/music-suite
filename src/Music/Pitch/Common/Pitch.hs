@@ -129,9 +129,9 @@ isFlattened = (< 0)
 
 -- | Returns whether this is a standard accidental, i.e.
 --   either a double flat, flat, natural, sharp or double sharp.
-isStandard :: Accidental -> Bool
-isStandard a = abs a < 2
-
+isStandardAccidental :: Accidental -> Bool
+isStandardAccidental a = abs a < 2
+-- was: isStandard
 
 -- |
 -- A pitch name.
