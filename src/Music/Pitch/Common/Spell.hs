@@ -83,21 +83,21 @@ type Spelling = Semitones -> Number
 --
 spell :: HasSemitones a => Spelling -> a -> Interval
 spell spelling x = let
-    -- TODO use Steps etc to remove fromIntegral
-    (octaves, steps) = semitones x `divMod` 12
-    num  = fromIntegral (spelling steps)
-    diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
-    in mkInterval' diff num ^+^ _P8^*(fromIntegral octaves)
+  -- TODO use Steps etc to remove fromIntegral
+  (octaves, steps) = semitones x `divMod` 12
+  num  = fromIntegral (spelling steps)
+  diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
+  in mkInterval' diff num ^+^ _P8^*(fromIntegral octaves)
     where
-        diatonicToChromatic = go
-            where
-                go 0 = 0
-                go 1 = 2
-                go 2 = 4
-                go 3 = 5
-                go 4 = 7
-                go 5 = 9
-                go 6 = 11
+      diatonicToChromatic = go
+        where
+          go 0 = 0
+          go 1 = 2
+          go 2 = 4
+          go 3 = 5
+          go 4 = 7
+          go 5 = 9
+          go 6 = 11
 
 -- |
 -- Flipped version of 'spell'. To be used infix, as in:
@@ -117,19 +117,19 @@ spelled = flip spell
 --
 modally :: Spelling
 modally = go
-    where
-        go 0  = 0
-        go 1  = 0
-        go 2  = 1
-        go 3  = 2
-        go 4  = 2
-        go 5  = 3
-        go 6  = 3
-        go 7  = 4
-        go 8  = 4
-        go 9  = 5
-        go 10 = 6
-        go 11 = 6
+  where
+    go 0  = 0
+    go 1  = 0
+    go 2  = 1
+    go 3  = 2
+    go 4  = 2
+    go 5  = 3
+    go 6  = 3
+    go 7  = 4
+    go 8  = 4
+    go 9  = 5
+    go 10 = 6
+    go 11 = 6
 
 -- |
 -- Spell using sharps. Double sharps and flats are not preserved.
@@ -138,19 +138,19 @@ modally = go
 --
 usingSharps :: Spelling
 usingSharps = go
-    where
-        go 0  = 0
-        go 1  = 0
-        go 2  = 1
-        go 3  = 1
-        go 4  = 2
-        go 5  = 3
-        go 6  = 3
-        go 7  = 4
-        go 8  = 4
-        go 9  = 5
-        go 10 = 5
-        go 11 = 6
+  where
+    go 0  = 0
+    go 1  = 0
+    go 2  = 1
+    go 3  = 1
+    go 4  = 2
+    go 5  = 3
+    go 6  = 3
+    go 7  = 4
+    go 8  = 4
+    go 9  = 5
+    go 10 = 5
+    go 11 = 6
 
 -- |
 -- Spell using flats. Double sharps and flats are not preserved.
@@ -159,17 +159,17 @@ usingSharps = go
 --
 usingFlats :: Spelling
 usingFlats = go
-    where
-        go 0  = 0
-        go 1  = 1
-        go 2  = 1
-        go 3  = 2
-        go 4  = 2
-        go 5  = 3
-        go 6  = 4
-        go 7  = 4
-        go 8  = 5
-        go 9  = 5
-        go 10 = 6
-        go 11 = 6
+  where
+    go 0  = 0
+    go 1  = 1
+    go 2  = 1
+    go 3  = 2
+    go 4  = 2
+    go 5  = 3
+    go 6  = 4
+    go 7  = 4
+    go 8  = 5
+    go 9  = 5
+    go 10 = 6
+    go 11 = 6
 
