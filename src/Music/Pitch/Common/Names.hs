@@ -1,5 +1,12 @@
 
-module Music.Pitch.Common.Names where
+module Music.Pitch.Common.Names (
+      Language(..),
+      Mode(..),
+      showKey,
+      showPitch,
+      showMode,
+      showSep,
+  ) where
 
 import Music.Pitch.Literal
 import Music.Pitch.Common.Pitch
