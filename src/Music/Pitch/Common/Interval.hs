@@ -112,6 +112,40 @@ import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Semitones
 import           Music.Pitch.Literal
 
+-- | Types of value that has an interval quality (mainly 'Interval' and 'Quality' itself).
+class HasQuality a where
+  quality :: a -> Quality
+
+-- |
+-- Returns whether the given quality is perfect.
+--
+isPerfect :: HasQuality a => a -> Bool
+isPerfect a = case quality a of { Perfect -> True ; _ -> False }
+
+-- |
+-- Returns whether the given quality is major.
+--
+isMajor :: HasQuality a => a -> Bool
+isMajor a = case quality a of { Major -> True ; _ -> False }
+
+-- |
+-- Returns whether the given quality is minor.
+--
+isMinor :: HasQuality a => a -> Bool
+isMinor a = case quality a of { Minor -> True ; _ -> False }
+
+-- |
+-- Returns whether the given quality is /augmented/ (including double augmented etc).
+--
+isAugmented :: HasQuality a => a -> Bool
+isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
+
+-- |
+-- Returns whether the given quality is /diminished/ (including double diminished etc).
+--
+isDiminished :: HasQuality a => a -> Bool
+isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
+
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
 -- diminished. This representation allows for an arbitrary number of
@@ -156,9 +190,6 @@ instance Augmentable Quality where
   diminish (Augmented n) = Augmented (n - 1)
   diminish (Diminished n) = Diminished (n + 1)
 
-class HasQuality a where
-  quality :: a -> Quality
-
 -- |
 -- Invert a quality.
 --
@@ -175,35 +206,12 @@ invertQuality = go
     go (Diminished n)   = Augmented n
 
 
--- |
--- Returns whether the given quality is perfect.
---
-isPerfect :: HasQuality a => a -> Bool
-isPerfect a = case quality a of { Perfect -> True ; _ -> False }
 
--- |
--- Returns whether the given quality is major.
---
-isMajor :: HasQuality a => a -> Bool
-isMajor a = case quality a of { Major -> True ; _ -> False }
 
--- |
--- Returns whether the given quality is minor.
---
-isMinor :: HasQuality a => a -> Bool
-isMinor a = case quality a of { Minor -> True ; _ -> False }
 
--- |
--- Returns whether the given quality is /augmented/ (including double augmented etc).
---
-isAugmented :: HasQuality a => a -> Bool
-isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
--- |
--- Returns whether the given quality is /diminished/ (including double diminished etc).
---
-isDiminished :: HasQuality a => a -> Bool
-isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
+
+
 
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
@@ -219,7 +227,6 @@ newtype Number = Number { getNumber :: Int }
 
 instance Show Number where { show = show . getNumber }
 instance HasNumber Number where number = id
-
 
 -- | A synonym for @1@.
 unison      :: Number
@@ -301,6 +308,10 @@ class HasNumber a where
 
 
 
+
+
+
+
 -- |
 -- A musical interval such as minor third, augmented fifth, duodecim etc.
 --
@@ -308,7 +319,7 @@ class HasNumber a where
 -- is distinct from an upward minor third (written @m3@). Note that @_P1@ and @-P1@ are
 -- synynoms.
 --
--- Not to be confused with a mathematical inverval in pitch space, which are called
+-- Not to be confused with a mathematical inverval in pitch space, which is called
 -- 'Ambitus'. Intervals and pitches form an affine-vector space pair with intervals and
 -- /vectors/ and pitches as /points/. To add an interval to a, use '.+^'. To get the
 -- interval between two pitches, use '.-.'.
