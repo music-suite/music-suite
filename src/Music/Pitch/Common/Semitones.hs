@@ -1,5 +1,6 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -35,7 +36,7 @@ module Music.Pitch.Common.Semitones (
         isSemitone,
         isTone,
         isTritone,
-        
+
         -- * Enharmonic equivalence
         (=:=),
         (/:=),
@@ -48,7 +49,7 @@ module Music.Pitch.Common.Semitones (
 -- > octaves a = semitones a `div` 12
 -- > steps   a = semitones a `mod` 12
 --
-newtype Octaves = Octaves { getOctaves :: Integer }     
+newtype Octaves = Octaves { getOctaves :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show       Octaves where { show = show . getOctaves }

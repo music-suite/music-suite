@@ -1,5 +1,7 @@
- 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies #-}
+
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -24,47 +26,47 @@ module Music.Pitch.Common.Spell (
         Spelling,
         spell,
         spelled,
-        
+
         -- ** Standard spellings
         modally,
         usingSharps,
         usingFlats,
   ) where
 
-import Data.VectorSpace
-import Data.AffineSpace
+import           Data.AffineSpace
+import           Data.VectorSpace
 
-import Music.Pitch.Absolute
-import Music.Pitch.Literal
-import Music.Pitch.Alterable
-import Music.Pitch.Augmentable
-import Music.Pitch.Common.Pitch
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Semitones
+import           Music.Pitch.Absolute
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Interval
+import           Music.Pitch.Common.Pitch
+import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Literal
 
 -- $semitonesAndSpellings
 --
 -- TODO document better
 --
 -- The `semitones` function retrieves the number of Semitones in a pitch, for example
--- 
+--
 -- > semitones :: Interval -> Semitones
 -- > semitones major third = 4
--- 
+--
 -- Note that semitones is surjetive. We can define a non-deterministic function `spellings`
--- 
+--
 -- > spellings :: Semitones -> [Interval]
 -- > spellings 4 = [majorThird, diminishedFourth]
 --
 -- /Law/
--- 
+--
 -- > map semitones (spellings a) = replicate n a    for all n > 0
 --
 -- /Lemma/
--- 
+--
 -- > map semitones (spellings a)
 
--- | 
+-- |
 -- A spelling provide a way of notating a semitone interval such as 'tritone'.
 --
 -- Examples:
@@ -101,7 +103,7 @@ spell spelling x = let
 -- Flipped version of 'spell'. To be used infix, as in:
 --
 -- > d5 `spelled` usingSharps
---        
+--
 spelled :: HasSemitones a => a -> Spelling -> Interval
 spelled = flip spell
 
@@ -170,4 +172,4 @@ usingFlats = go
         go 9  = 5
         go 10 = 6
         go 11 = 6
-                         
+

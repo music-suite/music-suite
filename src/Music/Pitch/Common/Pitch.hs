@@ -1,6 +1,9 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, 
-    FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -19,10 +22,10 @@
 module Music.Pitch.Common.Pitch (
         -- * Accidentals
         Accidental,
-        natural, 
-        flat, 
-        sharp, 
-        doubleFlat, 
+        natural,
+        flat,
+        sharp,
+        doubleFlat,
         doubleSharp,
 
         -- ** Inspecting accidentals
@@ -37,30 +40,30 @@ module Music.Pitch.Common.Pitch (
         -- * Pitch
         Pitch,
         Pitch(..),
-        
+
         mkPitch,
         name,
         accidental,
         asPitch
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.Typeable
-import Control.Monad
-import Control.Applicative
-import qualified Data.Char as Char
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Monad
+import           Data.AffineSpace
+import qualified Data.Char                    as Char
+import           Data.Either
+import qualified Data.List                    as List
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Pitch.Absolute
-import Music.Pitch.Literal
-import Music.Pitch.Alterable
-import Music.Pitch.Augmentable
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Semitones
+import           Music.Pitch.Absolute
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Interval
+import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Literal
 
 -- |
 -- An accidental is either flat, natural or sharp.
@@ -68,12 +71,12 @@ import Music.Pitch.Common.Semitones
 -- This representation allows for an arbitrary number of flats or sharps rather than just
 -- single and double.
 --
--- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones, 
+-- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones,
 -- i.e. a double flat is @-2@, natural @0@ and so on.
 --
 newtype Accidental = Accidental { getAccidental :: Integer }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
-    
+
 instance Show Accidental where
     show n | n == 0    = "natural"
            | n == 1    = "sharp"
@@ -87,7 +90,7 @@ instance Alterable Accidental where
     sharpen = succ
     flatten = pred
 
--- | 
+-- |
 -- Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
 --
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
@@ -114,17 +117,17 @@ doubleFlat  = -2
 
 isNatural, isSharpened, isFlattened :: Accidental -> Bool
 
--- | Returns whether this is a natural accidental.
+-- | Returns whether this is a natural accidental.
 isNatural   = (== 0)
 
--- | Returns whether this is a sharp, double sharp etc.
+-- | Returns whether this is a sharp, double sharp etc.
 isSharpened = (> 0)
 
--- | Returns whether this is a flat, double flat etc.
+-- | Returns whether this is a flat, double flat etc.
 isFlattened = (< 0)
 
 
--- | Returns whether this is a standard accidental, i.e.
+-- | Returns whether this is a standard accidental, i.e.
 --   either a double flat, flat, natural, sharp or double sharp.
 isStandard :: Accidental -> Bool
 isStandard a = abs a < 2
@@ -189,7 +192,7 @@ data Name = C | D | E | F | G | A | B
 --
 newtype Pitch = Pitch { getPitch :: Interval }
     deriving (Eq, Ord, Typeable)
-    
+
 instance Num Pitch where
     Pitch a + Pitch b = Pitch (a + b)
     negate (Pitch a)  = Pitch (negate a)
@@ -205,7 +208,7 @@ instance AffineSpace Pitch where
 
 instance Show Pitch where
     show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
-        where        
+        where
             showName = fmap Char.toLower . show
             showOctave n
                 | n > 0     = replicate' n '\''
@@ -245,7 +248,7 @@ mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
 -- @
 --
 name :: Pitch -> Name
-name x               
+name x
   | i == 7           = toEnum 0 -- Arises for flat C etc.
   | 0 <= i && i <= 6 = toEnum i
   | otherwise        = error $ "Pitch.name: Bad value " ++ show i

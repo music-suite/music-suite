@@ -1,6 +1,9 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies,
-             NoMonomorphismRestriction, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -18,7 +21,7 @@
 
 module Music.Pitch.Common.Interval (
         -- * Quality
-        Quality(..),    
+        Quality(..),
         HasQuality(..),
         invertQuality,
         isPerfect,
@@ -29,7 +32,7 @@ module Music.Pitch.Common.Interval (
 
         -- ** Number
         Number,
-        HasNumber(..),   
+        HasNumber(..),
         unison,
         prime,
         second,
@@ -41,11 +44,11 @@ module Music.Pitch.Common.Interval (
         octave,
         ninth,
         tenth,
-        twelfth, 
+        twelfth,
         duodecim,
         thirteenth,
         fourteenth,
-        fifteenth,  
+        fifteenth,
 
         -- ** Intervals
         Interval(..),
@@ -83,32 +86,32 @@ module Music.Pitch.Common.Interval (
 
         -- * Basis values
         IntervalBasis(..),
-       
+
         -- ** Converting basis
         convertBasis,
         convertBasisFloat,
         intervalDiv,
-        
+
         -- ** Utility
         intervalDiff,
         mkInterval',
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
+import           Data.Either
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.VectorSpace
 -- import Data.AffineSpace
-import Data.Basis
-import Data.Typeable
-import Control.Monad
-import Control.Applicative
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Monad
+import           Data.Basis
+import qualified Data.List                    as List
+import           Data.Typeable
 
-import Music.Pitch.Absolute
-import Music.Pitch.Augmentable
-import Music.Pitch.Literal
-import Music.Pitch.Common.Semitones
+import           Music.Pitch.Absolute
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Literal
 
 -- |
 -- Interval quality is either perfect, major, minor, augmented, and
@@ -136,7 +139,7 @@ instance HasQuality Quality where
 
 
 -- | Augmentable Quality instance
--- 
+--
 -- This Augmentable instance exists solely for use of the getQuality
 -- function, which ensures that there is never any ambiguity around
 -- diminished/augmented intervals turning into major/minor/perfect
@@ -159,9 +162,9 @@ class HasQuality a where
 
 -- |
 -- Invert a quality.
--- 
+--
 -- Perfect is unaffected, major becomes minor and vice versa, augmented
--- becomes diminished and vice versa. 
+-- becomes diminished and vice versa.
 --
 invertQuality :: Quality -> Quality
 invertQuality = go
@@ -173,33 +176,33 @@ invertQuality = go
         go (Diminished n)   = Augmented n
 
 
--- | 
+-- |
 -- Returns whether the given quality is perfect.
--- 
+--
 isPerfect :: HasQuality a => a -> Bool
 isPerfect a = case quality a of { Perfect -> True ; _ -> False }
 
--- | 
+-- |
 -- Returns whether the given quality is major.
--- 
+--
 isMajor :: HasQuality a => a -> Bool
 isMajor a = case quality a of { Major -> True ; _ -> False }
 
--- | 
+-- |
 -- Returns whether the given quality is minor.
--- 
+--
 isMinor :: HasQuality a => a -> Bool
 isMinor a = case quality a of { Minor -> True ; _ -> False }
 
--- | 
+-- |
 -- Returns whether the given quality is /augmented/ (including double augmented etc).
--- 
+--
 isAugmented :: HasQuality a => a -> Bool
 isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
--- | 
+-- |
 -- Returns whether the given quality is /diminished/ (including double diminished etc).
--- 
+--
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
@@ -214,8 +217,8 @@ isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 --
 newtype Number = Number { getNumber :: Int }
     deriving (Eq, Ord, Num, Enum, Real, Integral)
-    
-instance Show Number where { show = show . getNumber }
+
+instance Show Number where { show = show . getNumber }
 instance HasNumber Number where number = id
 
 
@@ -237,7 +240,7 @@ third       = 3
 
 -- | A synonym for @4@.
 fourth      :: Number
-fourth      = 4     
+fourth      = 4
 
 -- | A synonym for @5@.
 fifth       :: Number
@@ -297,8 +300,8 @@ class HasNumber a where
     --
     number :: a -> Number
 
-                                                   
-                                                   
+
+
 -- |
 -- A musical interval such as minor third, augmented fifth, duodecim etc.
 --
@@ -342,7 +345,7 @@ newtype Interval = Interval { getInterval :: (
 -- Interval first, as it's tied to the Number which is expected to be
 -- 'bigger' than the Quality, assuming ordinary tuning systems
 instance Ord Interval where
-  Interval a `compare` Interval b = swap a `compare` swap b 
+  Interval a `compare` Interval b = swap a `compare` swap b
     where swap (x,y) = (y,x)
 
 -- | Avoid using '(*)', or 'signum' on intervals.
@@ -353,7 +356,7 @@ instance Num Interval where
     (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
     signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
     fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
-        
+
 instance Show Interval where
   show a
     | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
@@ -429,7 +432,7 @@ intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 -- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
-mkInterval' 
+mkInterval'
   :: Int        -- ^ Difference in chromatic steps (?).
   -> Int        -- ^ Number of diatonic steps (NOT interval number).
   -> Interval
@@ -504,7 +507,7 @@ mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 -- * d2), so the 'number' part of the interval must be stored entirely
 -- in the d * d2 part (adding a unison, perfect or otherwise, can
 -- never increase the number of the interval)
--- 
+--
 extractNumber :: Interval -> Number
 extractNumber (Interval (a, d))
   | d >= 0    = Number (d + 1)
@@ -589,10 +592,10 @@ doublyDiminished = mkInterval (Diminished 2)
 
 Prelude Music.Prelude> separate (2*^_P8+m3)
 (2,m3)
-Prelude Music.Prelude> 
+Prelude Music.Prelude>
 Prelude Music.Prelude> separate (3*^_P8+m3)
 (3,m3)
-Prelude Music.Prelude> 
+Prelude Music.Prelude>
 Prelude Music.Prelude> separate (0*^_P8+m3)
 (0,m3)
 Prelude Music.Prelude> separate ((-1)*^_P8+m3)
@@ -614,7 +617,7 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 -- > _P8^*octaves x ^+^ simple x = x
 --
 octaves :: Interval -> Octaves
-octaves i 
+octaves i
   | isNegative i && not (isOctaveMultiple i) = negate (octaves' i) - 1
   | isNegative i && isOctaveMultiple i       = negate (octaves' i)
   | otherwise                                = octaves' i
@@ -748,7 +751,7 @@ intervalDiv i di
   | (i > basis_P1) = intervalDivPos i di
   | (i < basis_P1) = intervalDivNeg i di
   | otherwise = 0 :: Int
-  where 
+  where
     intervalDivPos i di
       | (i < basis_P1) = undefined
       | (i ^-^ di) < basis_P1 = 0
@@ -759,15 +762,15 @@ intervalDiv i di
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
 -- | Represent an interval i in a new basis (j, k).
--- 
+--
 -- We want x,y where i = x*j + y*k
 --
 -- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
 
 convertBasis
-  :: Interval 
-  -> Interval 
-  -> Interval 
+  :: Interval
+  -> Interval
+  -> Interval
   -> Maybe (Int, Int)
 convertBasis i j k
   | (p == 0) = Nothing
@@ -786,9 +789,9 @@ convertBasis i j k
 -- coefficients -- useful when getting a value to use as a frequency
 -- ratio in a tuning system.
 convertBasisFloat :: (Fractional t, Eq t)
-  => Interval 
-  -> Interval 
-  -> Interval 
+  => Interval
+  -> Interval
+  -> Interval
   -> Maybe (t, t)
 convertBasisFloat i j k
   | (p == 0) = Nothing
