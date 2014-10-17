@@ -42,7 +42,7 @@ import Data.Functor.Context
 import Data.Functor.Adjunction (unzipR)
 import Control.Lens -- ()
 import Music.Score.Articulation
-import Music.Score.Instances
+-- import Music.Score.Instances
 import Music.Score.Ties
 import Music.Time
 
