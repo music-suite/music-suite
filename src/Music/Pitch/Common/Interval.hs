@@ -104,10 +104,6 @@ module Music.Pitch.Common.Interval (
         convertBasis,
         convertBasisFloat,
         intervalDiv,
-
-        -- ** Utility
-        intervalDiff,
-        mkInterval',
   ) where
 
 import           Data.Either

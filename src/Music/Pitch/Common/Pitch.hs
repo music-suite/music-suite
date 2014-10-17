@@ -47,6 +47,7 @@ module Music.Pitch.Common.Pitch (
 
 import           Control.Applicative
 import           Control.Monad
+import           Control.Lens hiding (simple)
 import           Data.AffineSpace
 import qualified Data.Char                    as Char
 import           Data.Either
@@ -193,7 +194,7 @@ newtype Pitch = Pitch { getPitch :: Interval }
 
 instance IsPitch Pitch where
   fromPitch (PitchL (c, a, o)) =
-    Pitch $ mkInterval' (qual a) c ^+^ (perfect octave^* fromIntegral o)
+    Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (perfect octave^* fromIntegral o)
     where
       qual Nothing  = 0
       qual (Just n) = round n
@@ -261,6 +262,8 @@ name x
 --
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
+  where
+    intervalDiff = view (from interval'._1)
 
 -- |
 -- This is just the identity function, but is useful to fix the type of 'Pitch'.

@@ -35,6 +35,7 @@ module Music.Pitch.Common.Spell (
 
 import           Data.AffineSpace
 import           Data.VectorSpace
+import           Control.Lens
 
 import           Music.Pitch.Absolute
 import           Music.Pitch.Alterable
@@ -87,7 +88,7 @@ spell spelling x = let
   (octaves, steps) = semitones x `divMod` 12
   num  = fromIntegral (spelling steps)
   diff = fromIntegral steps - fromIntegral (diatonicToChromatic num)
-  in mkInterval' diff num ^+^ _P8^*(fromIntegral octaves)
+  in (\a b -> (fromIntegral a, fromIntegral b)^.interval') diff num ^+^ _P8^*(fromIntegral octaves)
     where
       diatonicToChromatic = go
         where
