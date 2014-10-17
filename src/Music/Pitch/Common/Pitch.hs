@@ -200,7 +200,7 @@ instance IsPitch Pitch where
       qual (Just n) = round n
 
 instance Enum Pitch where
-  toEnum = Pitch . mkInterval' 0 . fromIntegral
+  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b)^.interval') 0 . fromIntegral
   fromEnum = fromIntegral . pred . number . (.-. c)
 
 instance Alterable Pitch where
@@ -235,7 +235,7 @@ instance AffineSpace Pitch where
 -- Creates a pitch from name accidental.
 --
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (fromIntegral acc) (fromEnum name)
 
 -- |
 -- Returns the name of a pitch.
