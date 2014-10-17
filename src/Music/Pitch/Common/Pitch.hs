@@ -43,11 +43,13 @@ module Music.Pitch.Common.Pitch (
         name,
         accidental,
 
-        -- ** Diatonic pitch
+        -- ** Diatonic and chromatic pitch
         upDiatonicP,
         downDiatonicP,
         upChromaticP,
         downChromaticP,
+        invertDiatonicallyP,
+        invertChromaticallyP,
         
         -- ** Utility
         asPitch
@@ -291,3 +293,11 @@ upDiatonicP origin n = relative origin $ (_steps +~ n)
 
 downDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
 downDiatonicP origin n = relative origin $ (_steps -~ n)
+
+invertDiatonicallyP :: Pitch -> Pitch -> Pitch
+invertDiatonicallyP origin = relative origin $ (_steps %~ negate)
+
+invertChromaticallyP :: Pitch -> Pitch -> Pitch
+invertChromaticallyP origin = relative origin $ (_alteration %~ negate)
+
+
