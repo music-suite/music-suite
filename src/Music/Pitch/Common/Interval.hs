@@ -61,6 +61,7 @@ module Music.Pitch.Common.Interval (
         qualityTypes,
         qualityToDiff,
         _steps,
+        _alteration,
         _quality,
         _number,
         interval,
@@ -810,6 +811,9 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
 
 
 
+
+_alteration :: Lens' Interval ChromaticSteps
+_alteration = from interval' . _1
 
 _steps :: Lens' Interval DiatonicSteps
 _steps = from interval' . _2

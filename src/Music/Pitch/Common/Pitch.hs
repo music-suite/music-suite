@@ -42,6 +42,14 @@ module Music.Pitch.Common.Pitch (
         mkPitch,
         name,
         accidental,
+
+        -- ** Diatonic pitch
+        upDiatonicP,
+        downDiatonicP,
+        upChromaticP,
+        downChromaticP,
+        
+        -- ** Utility
         asPitch
   ) where
 
@@ -49,6 +57,7 @@ import           Control.Applicative
 import           Control.Monad
 import           Control.Lens hiding (simple)
 import           Data.AffineSpace
+import           Data.AffineSpace.Point
 import qualified Data.Char                    as Char
 import           Data.Either
 import qualified Data.List                    as List
@@ -271,3 +280,14 @@ accidental = fromIntegral . intervalDiff . simple . getPitch
 asPitch :: Pitch -> Pitch
 asPitch = id
 
+upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+upChromaticP origin n = relative origin $ (_alteration +~ n)
+
+downChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+downChromaticP origin n = relative origin $ (_alteration -~ n)
+
+upDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+upDiatonicP origin n = relative origin $ (_steps +~ n)
+
+downDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+downDiatonicP origin n = relative origin $ (_steps -~ n)
