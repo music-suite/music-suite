@@ -1,4 +1,6 @@
 
+{-# LANGUAGE ViewPatterns #-}
+
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -47,6 +49,7 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
+import Control.Lens
 
 import Music.Pitch.Absolute
 import Music.Pitch.Literal as Intervals
@@ -57,7 +60,7 @@ type Intonation p = p -> Hertz
 type Tuning i = i -> {-FreqRatio-}Hertz
 
 synTune :: (Interval, {-FreqRatio-}Hertz) -> (Interval, {-FreqRatio-}Hertz) -> Interval -> {-FreqRatio-}Hertz
-synTune (i1, i1rat) (i2, i2rat) (Interval (a1, d2)) =
+synTune (i1, i1rat) (i2, i2rat) (view (from interval') -> (a1, d2)) =
   ((makeA1 (i1, i1rat) (i2, i2rat)) ^* (fromIntegral a1)) ^+^ ((maked2 (i1, i1rat) (i2, i2rat)) ^* (fromIntegral d2))
   where makeA1 = makeBasis (Intervals._A1 :: Interval)
         maked2 = makeBasis (Intervals.d2  :: Interval)

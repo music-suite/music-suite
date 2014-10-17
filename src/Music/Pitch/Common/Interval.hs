@@ -51,7 +51,7 @@ module Music.Pitch.Common.Interval (
         fifteenth,
 
         -- ** Intervals
-        Interval(..),
+        Interval,
 
         ChromaticSteps,
         DiatonicSteps,
