@@ -13,6 +13,7 @@ import           Data.Typeable
 import           Text.Numeral.Roman      (toRoman)
 
 -- TODO move
+-- TODO toInteger/toRational/fromEnum are unsafe
 
 instance Num a => Num (Option a) where
   (+)       = liftA2 (+)
@@ -44,6 +45,3 @@ instance Integral a => Integral (First a) where
   toInteger = toInteger . get where get = (head.toListOf traverse)
 instance Real a => Real (First a) where
   toRational = toRational . get where get = (head.toListOf traverse)
--- instance Enum a => Enum (First a) where
-  -- toEnum = toEnum . get where get = (head.toListOf traverse)
-  -- fromEnum = pure . fromEnum
