@@ -34,6 +34,7 @@ library
                         Music.Parts
                         
                         Music.Parts.Basic
+                        Music.Parts.Voices
                         
                         -- -- TODO choral voicings etc
                         -- -- TODO use single type or many? How to do "subtyping"
