@@ -444,7 +444,7 @@ fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
 -- if and only if the given voice contains rests only.
 --
 coverRests :: Voice (Maybe a) -> Maybe (Voice a)
-coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy merge x)
+coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy merge x)
   where
     norm = fuseRests x
     merge Nothing  Nothing  = error "Voice normalized, so consecutive rests are impossible"
