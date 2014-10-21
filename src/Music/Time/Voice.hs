@@ -455,7 +455,7 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy m
 
 
 withContext :: Voice a -> Voice (Ctxt a)
-withContext = over valuesV (fmap Ctxt . withPrevNext)
+withContext = over valuesV addCtxt
 
 -- TODO expose?
 voiceFromRhythm :: [Duration] -> Voice ()
