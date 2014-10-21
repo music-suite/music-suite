@@ -31,8 +31,6 @@ module Music.Time.Voice (
 
         -- * Construction
         voice,
-
-        -- ** Extracting values
         stretcheds,
         eventsV,
         singleStretched,
@@ -129,15 +127,11 @@ newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
 instance (Show a, Transformable a) => Show (Voice a) where
   show x = show (x^.stretcheds) ++ "^.voice"
 
---
--- $semantics Voice
--- type Voice a = [Stretched a]
---
-
 -- A voice is a list of events with explicit duration. Events can not overlap.
 --
 -- Voice is a 'Monoid' under sequential composition. 'mempty' is the empty part and 'mappend'
 -- appends parts.
+
 --
 -- Voice is a 'Monad'. 'return' creates a part containing a single value of duration
 -- one, and '>>=' transforms the values of a part, allowing the addition and
