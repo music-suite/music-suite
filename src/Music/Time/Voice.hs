@@ -33,7 +33,6 @@ module Music.Time.Voice (
         voice,
         stretcheds,
         eventsV,
-        singleStretched,
 
         -- * Fusion
         fuse,
@@ -47,12 +46,12 @@ module Music.Time.Voice (
         -- ** Separating rhythms and values
         valuesV,
         durationsV,
-        withValues,
-        withDurations,
-        rotateValues,
-        rotateDurations,
-        reverseValues,
-        reverseDurations,
+        -- withValues,
+        -- withDurations,
+        -- rotateValues,
+        -- rotateDurations,
+        -- reverseValues,
+        -- reverseDurations,
 
         -- ** Zips
         unzipVoice,
@@ -68,6 +67,7 @@ module Music.Time.Voice (
         zipVoiceWithNoScale,
 
         -- * Context
+        -- TODO clean
         withContext,
         voiceLens,
         -- voiceL,
