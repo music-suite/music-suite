@@ -115,21 +115,20 @@ instance (Show a, Transformable a) => Show (Stretched a) where
 stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
 stretched = _Unwrapped
 
--- -- |
--- -- View a stretched value as a pair of the original value and the transformation (and vice versa).
--- --
--- stretchee :: (Transformable a, Transformable b) => Lens (Stretched a) (Stretched b) a b
--- stretchee = lens runStretched $ flip (mapStretched . const)
--- 
--- runStretched :: Transformable a => Stretched a -> a
--- runStretched = uncurry stretch . view _Wrapped
--- 
--- mapStretched :: (Transformable b, Transformable a) => (a -> b) -> Stretched a -> Stretched b
--- mapStretched f (Stretched (Couple (d,x))) = Stretched (Couple (d, over (transformed (0 >-> d)) f x))
-
 stretchee :: Transformable a => Lens (Stretched a) (Stretched a) a a
 stretchee = _Wrapped `dep` (transformed . stretching)
 
+durationStretched :: Iso' Duration (Stretched ())
+durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
+
+-- TODO could also be an iso...
+stretchedComplement :: Stretched a -> Stretched a
+stretchedComplement (Stretched (Couple (d,x))) = Stretched $ Couple (negateV d, x)
+-- FIXME negateV is negate not recip
+-- The negateV method should follow (^+^), which is (*) for durations (is this bad?)
+
+
+-- TODO move
 -- dep :: (a ~ b, d ~ c, s ~ t) => Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
 dep :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
 dep l f = lens getter setter
@@ -142,13 +141,4 @@ dep l f = lens getter setter
       (x,_) = view l s
       l2    = f x
       in set (l._2.l2) b s
-
-durationStretched :: Iso' Duration (Stretched ())
-durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
-
--- TODO could also be an iso...
-stretchedComplement :: Stretched a -> Stretched a
-stretchedComplement (Stretched (Couple (d,x))) = Stretched $ Couple (negateV d, x)
--- FIXME negateV is negate not recip
--- The negateV method should follow (^+^), which is (*) for durations (is this bad?)
 
