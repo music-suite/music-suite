@@ -119,7 +119,15 @@ import           Music.Pitch.Literal
 import           Music.Time.Internal.Util
 
 -- |
--- A 'Voice' is a sequential composition of values. Events may not overlap.
+-- A 'Voice' is a sequential composition of non-overlapping stretched values.
+--
+-- Both 'Voice' and 'Stretched' have duration but no position. The difference
+-- is that 'Stretched' sustains a single value throughout its duration, while
+-- a voice may contain multiple values. It is called voice because it is
+-- generalizes the notation of a voice in choral or multi-part instrumental music.
+--
+-- It may be useful to think about 'Voice' and 'Stretched' as vectors in time space
+-- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
 --
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Eq)
