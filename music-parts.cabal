@@ -53,14 +53,16 @@ library
                         -- Music.Parts.Woodwind
                         -- Music.Parts.Brass
                         -- Music.Parts.Percussion
+                        -- Music.Parts.Instrument.Keyboard
                         -- Music.Parts.Rhythm
                         -- Music.Parts.Other
                         
                         Music.Parts.Instrument
-                        -- Music.Parts.Instrument.Strings
-                        -- Music.Parts.Instrument.Woodwind
-                        -- Music.Parts.Instrument.Brass
-                        -- Music.Parts.Instrument.Percussion
+                        Music.Parts.Instrument.Strings
+                        Music.Parts.Instrument.Woodwind
+                        Music.Parts.Instrument.Brass
+                        Music.Parts.Instrument.Percussion
+                        Music.Parts.Instrument.Keyboard
                         -- Music.Parts.Instrument.Rhythm
                         -- Music.Parts.Instrument.Other
                         
