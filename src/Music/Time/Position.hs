@@ -11,6 +11,7 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE CPP                        #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -53,6 +54,11 @@ module Music.Time.Position (
       stopAt,
       placeAt,
 
+      stretchRelative,
+      stretchRelativeOnset,
+      stretchRelativeMidpoint,
+      stretchRelativeOffset,
+      
       -- * Internal
       -- TODO hide...
       -- _setEra,
@@ -119,12 +125,14 @@ instance HasPosition Span where
   _offset   (view range -> (t1, t2)) = t2
   _position (view range -> (t1, t2)) = alerp t1 t2
 
+#ifndef GHCI
 instance (HasPosition a, HasDuration a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
 instance (HasPosition a, HasDuration a) => HasPosition [a] where
   _onset  = foldr min 0 . fmap _onset
   _offset = foldr max 0 . fmap _offset
+#endif
 
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
@@ -217,5 +225,17 @@ _setEra s x = transform (s ^-^ view era x) x
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _setEra)
 {-# INLINE era #-}
+
+stretchRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
+stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (stretch n) x
+
+stretchRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
+stretchRelativeOnset = stretchRelative 0
+
+stretchRelativeMidpoint :: (HasPosition a, Transformable a) => Duration -> a -> a
+stretchRelativeMidpoint = stretchRelative 0.5
+
+stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
+stretchRelativeOffset = stretchRelative 1
 
 
