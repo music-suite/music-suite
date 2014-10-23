@@ -114,6 +114,14 @@ import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
 
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Time/Dur/Span
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
 type TimeBase = Rational
 {-
 type TimeBase = Fixed E12
@@ -414,11 +422,11 @@ Both equivalent. Proof:
   a + b     = a + b
 -}
 
-
-
-
-
-
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Classes
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 class Transformable a where
@@ -544,9 +552,6 @@ a `after` b =  a <> (a `follow` b)
 
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
-
-palindrome :: (Semigroup a, Reversible a, HasPosition a) => a -> a
-palindrome a = a `after` rev a
 
 infixr 6 |>
 infixr 6 <|
@@ -735,59 +740,15 @@ stretchRelativeOffset = stretchRelative 1
 rest :: Applicative f => f (Maybe a)
 rest = pure Nothing
 
-class Transformable a => Reversible a where
-
-  -- | Reverse (retrograde) the given value.
-  rev :: a -> a
-
-instance Reversible () where
-  rev = id
-
-instance Reversible Int where
-  rev = id
-
-instance Reversible Double where
-  rev = id
-
-instance Reversible Integer where
-  rev = id
-
-instance Reversible a => Reversible [a] where
-  rev = reverse . map rev
-
-  -- rev = Seq.reverse . fmap rev
-
-instance (Ord k, Reversible a) => Reversible (Map k a) where
-  rev = Map.map rev
-
-instance Reversible Duration where
-  rev = stretch (-1)
-
-instance Reversible Span where
-  rev = revDefault
-
-instance Reversible a => Reversible (b, a) where
-  rev (s,a) = (s, rev a)
-
-revDefault :: (HasPosition a, Transformable a) => a -> a
-revDefault x = stretch (-1) x
-
-newtype NoReverse a = NoReverse { getNoReverse :: a }
-  deriving (Typeable, Eq, Ord, Show)
-
-instance Transformable (NoReverse a) where
-  transform _ = id
-
-instance Reversible (NoReverse a) where
-  rev = id
-
-reversed :: Reversible a => Iso' a a
-reversed = iso rev rev
 
 
 
 
-
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Delayed/Stretched/Note
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
@@ -819,13 +780,6 @@ instance HasDuration (Delayed a) where
 instance HasPosition (Delayed a) where
   x `_position` p = fst (view _Wrapped x) `_position` p
 
-instance Reversible (Delayed a) where
-  rev = revDefault
-
-instance Splittable a => Splittable (Delayed a) where
-  -- TODO is this right?
-  split t = unzipR . fmap (split t)
-
 instance IsString a => IsString (Delayed a) where
   fromString = pure . fromString
 
@@ -856,394 +810,6 @@ mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
 
 
 
-
-extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
-extracted = iso extract pure
-
-extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
-extractedRep = iso extractRep pureRep
-
-newtype Nominal f a = Nominal { getNominal :: f a }
-  deriving (
-  	Eq,
-  	Ord,
-  	Read,
-  	Show,
-  	Functor,
-  	Foldable,
-  	Traversable,
-  	Monad
-  )
-
-instance Applicative f => Applicative (Nominal f) where
-  pure = Nominal . pure
-  Nominal f <*> Nominal x = Nominal (f <*> x)
-
-instance Transformable (Nominal f a) where
-  transform _ = id
-
-instance Splittable (Nominal f a) where
-  split _ x = (x,x)
-
-instance Reversible (f a) => Reversible (Nominal f a) where
-  rev (Nominal x) = Nominal (rev x)
-
-newtype Note a = Note { _noteValue :: (Span, a) }
-  deriving (Eq,
-            Functor,
-            Foldable,
-            Traversable,
-            Comonad,
-            Typeable)
-
-instance (Show a, Transformable a) => Show (Note a) where
-  show x = show (x^.from note) ++ "^.note"
-
-deriving instance Monad Note
-deriving instance Applicative Note
-
-instance Wrapped (Note a) where
-  type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso _noteValue Note
-
-instance Rewrapped (Note a) (Note b)
-
-instance Transformable (Note a) where
-  transform t = over (_Wrapped . _1) $ transform t
-
-instance HasDuration (Note a) where
-  _duration = _duration . fst . view _Wrapped
-
-instance HasPosition (Note a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
-
-instance Splittable a => Splittable (Note a) where
-  -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)
-  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (d / _duration s) v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    (d / _duration s) v)
-
-instance Reversible (Note a) where
-  rev = revDefault
-
-instance IsString a => IsString (Note a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Note a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Note a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Note a) where
-  fromDynamics = pure . fromDynamics
-
-note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
-note = _Unwrapped
-
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-noteValue = lens runNote (flip $ mapNote . const)
-  where
-    runNote = uncurry transform . view _Wrapped
-    -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
-    mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
-    f `whilst` t = over (transformed t) f
-
-
-event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-event = from note . bimapping delta id . tripped
-
-
-
-
-
-
-
-
-
-
-
-type ScoreNote a = Note a
-
-newtype Score a = Score { getScore' :: (Meta, NScore a) }
-    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
-
-instance Wrapped (Score a) where
-  type Unwrapped (Score a) = (Meta, NScore a)
-  _Wrapped' = iso getScore' Score
-
-instance Rewrapped (Score a) (Score b) where
-
-instance Applicative Score where
-  pure = return
-  (<*>) = ap
-
-instance Monad Score where
-  return = (^. _Unwrapped') . return . return
-  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
-
-instance Alternative Score where
-  empty = mempty
-  (<|>) = mappend
-
-instance MonadPlus Score where
-  mzero = mempty
-  mplus = mappend
-
-{-
-instance FunctorWithIndex Span Score where
-  imap f = over (_Wrapped._2) $ imap f
-
-instance FoldableWithIndex Span Score where
-  ifoldMap f (Score (m,x)) = ifoldMap f x
-
-instance TraversableWithIndex Span Score where
-  itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
--}
-
-instance Transformable (Score a) where
-  transform t (Score (m,x)) = Score (transform t m, transform t x)
-
-instance Reversible a => Reversible (Score a) where
-  rev (Score (m,x)) = Score (rev m, rev x)
-
-instance Splittable a => Splittable (Score a) where
-  split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
-    where
-      (m1, m2) = split t m
-      (x1, x2) = split t x
-
-instance HasPosition (Score a) where
-  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
-  -- TODO clean up in terms of AddMeta and optimize
-
-instance HasDuration (Score a) where
-  _duration x = _offset x .-. _onset x
-
-instance IsString a => IsString (Score a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Score a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Score a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Score a) where
-  fromDynamics = pure . fromDynamics
-
-instance Enum a => Enum (Score a) where
-  toEnum = return . toEnum
-  fromEnum = list 0 (fromEnum . head) . Foldable.toList
-
-instance Num a => Num (Score a) where
-  fromInteger = return . fromInteger
-  abs    = fmap abs
-  signum = fmap signum
-  (+)    = error "Not implemented"
-  (-)    = error "Not implemented"
-  (*)    = error "Not implemented"
-
-instance AdditiveGroup (Score a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
-
-instance VectorSpace (Score a) where
-  type Scalar (Score a) = Duration
-  d *^ s = d `stretch` s
-
-instance HasMeta (Score a) where
-  meta = _Wrapped . _1
-
-newtype NScore a = NScore { getNScore :: [ScoreNote a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
-
-instance (Show a, Transformable a) => Show (Score a) where
-  show x = show (x^.notes) ++ "^.score"
-
-instance Wrapped (NScore a) where
-  type Unwrapped (NScore a) = [ScoreNote a]
-  _Wrapped' = iso getNScore NScore
-
-instance Rewrapped (NScore a) (NScore b)
-
-instance Applicative NScore where
-  pure  = return
-  (<*>) = ap
-
-instance Monad NScore where
-  return = (^. _Unwrapped) . pure . pure
-  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
-
-instance Alternative NScore where
-  empty = mempty
-  (<|>) = mappend
-
-instance MonadPlus NScore where
-  mzero = mempty
-  mplus = mappend
-
-instance Transformable (NScore a) where
-  transform t (NScore xs) = NScore (fmap (transform t) xs)
-
-instance Reversible a => Reversible (NScore a) where
-  rev (NScore xs) = NScore (fmap rev xs)
-
-instance HasPosition (NScore a) where
-  _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
-  _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
-
-safeMinimum xs = if null xs then 0 else minimum xs
-safeMaximum xs = if null xs then 0 else maximum xs
-
-instance HasDuration (NScore a) where
-  _duration x = _offset x .-. _onset x
-
-instance Splittable a => Splittable (NScore a) where
-  split t (NScore notes) = over both (NScore . mfilter (not . isEmptyNote)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) notes
-    where
-      -- TODO move
-      isEmptyNote :: Note a -> Bool
-      isEmptyNote = isEmptySpan . view era
-
-      isEmptySpan :: Span -> Bool
-      isEmptySpan (view range -> (t, u)) = t == u
-
-score :: Getter [Note a] (Score a)
-score = from unsafeNotes
-
-
-notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = _Wrapped . _2 . _Wrapped . sorted
-  where
-    -- TODO should not have to sort...
-    sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
-
-
-unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
-  where
-    sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
-    noMeta = iso extract return
-    -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
-
-
-
-unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeEvents = iso _getScore _score
-  where
-    _score :: [(Time, Duration, a)] -> Score a
-    _score = mconcat . fmap (uncurry3 event)
-      where
-        event t d x   = (delay (t .-. 0) . stretch d) (return x)
-
-    _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
-    _getScore =
-      fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
-      Data.List.sortBy (Data.Ord.comparing fst) .
-      Foldable.toList .
-      fmap (view $ from note) .
-      reifyScore
-
-singleNote :: Prism' (Score a) (Note a)
-singleNote = unsafeNotes . single
-
-
-
-mapScore :: (Note a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped._2) (mapNScore f)
-  where
-    mapNScore f = over (_Wrapped.traverse) (extend f)
-
-reifyScore :: Score a -> Score (Note a)
-reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
-
-events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-events = notes . _zipList . through event event . from _zipList
-
-mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . view (from note))
-
-filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = mapFilterWithSpan (partial2 f)
-
-mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = mcatMaybes . mapWithSpan f
-
-mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapWithSpan (uncurry f . view delta)
-
-filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = mapFilterEvents (partial3 f)
-
-mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = mcatMaybes . mapEvents f
-
-normalizeScore :: Score a -> Score a
-normalizeScore = reset . normalizeScoreDurations
-  where
-    reset x = set onset (view onset x `max` 0) x
-    normalizeScoreDurations = over (notes . each . era) normalizeSpan
-
-printEras :: Score a -> IO ()
-printEras = mapM_ print . toListOf eras
-
-eras :: Traversal' (Score a) Span
-eras = notes . each . era
-
-chordEvents :: Transformable a => Span -> Score a -> [a]
-chordEvents s = fmap extract . filter ((== s) . view era) . view notes
-
-simultaneous' :: Transformable a => Score a -> Score [a]
-simultaneous' sc = (^. from unsafeEvents) vs
-  where
-    -- es :: [Era]
-    -- evs :: [[a]]
-    -- vs :: [(Time, Duration, [a])]
-    es  = Data.List.nub $ toListOf eras sc
-    evs = fmap (`chordEvents` sc) es
-    vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
-
-simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
-simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
-
-simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simult = iso simultaneous' mscatter
-
-
-class Splittable a where
-  split      :: Duration -> a -> (a, a)
-  beginning  :: Duration -> a -> a
-  ending     :: Duration -> a -> a
-  split   d x = (beginning d x, ending d x)
-  beginning d = fst . split d
-  ending    d = snd . split d
-
-instance Splittable () where
-  split _ x = (x, x)
-
-instance Splittable Duration where
-  -- Directly from the laws
-  -- Guard against t < 0
-  split t x = (t' `min` x, x ^-^ (t' `min` x))
-    where t' = t `max` 0
-
-instance Splittable Span where
-  -- Splitting a span splits the duration
-  split pos (view delta -> (t, d)) = (t >-> d1, (t .+^ d1) >-> d2)
-    where (d1, d2) = split pos d
-
-instance (Ord k, Splittable a) => Splittable (Map k a) where
-  split d = unzipR . Map.map (split d)
-
-chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
-chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
-  where
-    chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
-
-splitAbs :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
-splitAbs t x = split (t .-. _onset x) x
-
 newtype Stretched a = Stretched { _stretchee :: Couple Duration a }
   deriving (
     Eq,           Num,      Fractional,   Floating,
@@ -1260,9 +826,6 @@ instance Rewrapped (Stretched a) (Stretched b)
 
 instance Transformable (Stretched a) where
   transform t = over _Wrapped $ first (transform t)
-
-instance Reversible (Stretched a) where
-  rev = stretch (-1)
 
 instance Splittable a => Splittable (Stretched a) where
   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
@@ -1309,6 +872,74 @@ dep l f = lens getter setter
       (x,_) = view l s
       l2    = f x
       in set (l._2.l2) b s
+                                    
+newtype Note a = Note { _noteValue :: (Span, a) }
+  deriving (Eq,
+            Functor,
+            Foldable,
+            Traversable,
+            Comonad,
+            Typeable)
+
+instance (Show a, Transformable a) => Show (Note a) where
+  show x = show (x^.from note) ++ "^.note"
+
+deriving instance Monad Note
+deriving instance Applicative Note
+
+instance Wrapped (Note a) where
+  type Unwrapped (Note a) = (Span, a)
+  _Wrapped' = iso _noteValue Note
+
+instance Rewrapped (Note a) (Note b)
+
+instance Transformable (Note a) where
+  transform t = over (_Wrapped . _1) $ transform t
+
+instance HasDuration (Note a) where
+  _duration = _duration . fst . view _Wrapped
+
+instance HasPosition (Note a) where
+  x `_position` p = fst (view _Wrapped x) `_position` p
+
+instance IsString a => IsString (Note a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Note a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Note a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Note a) where
+  fromDynamics = pure . fromDynamics
+
+note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
+note = _Unwrapped
+
+noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
+noteValue = lens runNote (flip $ mapNote . const)
+  where
+    runNote = uncurry transform . view _Wrapped
+    -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
+    mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
+    f `whilst` t = over (transformed t) f
+
+
+event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+event = from note . bimapping delta id . tripped
+
+
+
+
+
+
+
+
+
+
+
+
 
 newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
@@ -1427,9 +1058,6 @@ instance Splittable a => Splittable (Voice a) where
     | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
     where
       split' = error "TODO"
-
-instance Reversible a => Reversible (Voice a) where
-  rev = over _Wrapped' (fmap rev) -- TODO OK?
 
 instance IsString a => IsString (Voice a) where
   fromString = pure . fromString
@@ -1818,11 +1446,6 @@ instance HasDuration (Chord a) where
 instance Splittable a => Splittable (Chord a) where
   -- TODO
 
-instance Reversible a => Reversible (Chord a) where
-  rev = over _Wrapped' (fmap rev) -- TODO OK?
-
-  -- meta = error "Not implemented: meta"
-
 chord :: Getter [Delayed a] (Chord a)
 chord = from unsafeChord
 
@@ -1883,6 +1506,240 @@ fromBass "" x = triad x
 -}
 
 
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- Score
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+type ScoreNote a = Note a
+
+newtype Score a = Score { getScore' :: (Meta, NScore a) }
+    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+
+instance Wrapped (Score a) where
+  type Unwrapped (Score a) = (Meta, NScore a)
+  _Wrapped' = iso getScore' Score
+
+instance Rewrapped (Score a) (Score b) where
+
+instance Applicative Score where
+  pure = return
+  (<*>) = ap
+
+instance Monad Score where
+  return = (^. _Unwrapped') . return . return
+  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+
+instance Alternative Score where
+  empty = mempty
+  (<|>) = mappend
+
+instance MonadPlus Score where
+  mzero = mempty
+  mplus = mappend
+
+{-
+instance FunctorWithIndex Span Score where
+  imap f = over (_Wrapped._2) $ imap f
+
+instance FoldableWithIndex Span Score where
+  ifoldMap f (Score (m,x)) = ifoldMap f x
+
+instance TraversableWithIndex Span Score where
+  itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
+-}
+
+instance Transformable (Score a) where
+  transform t (Score (m,x)) = Score (transform t m, transform t x)
+
+instance HasPosition (Score a) where
+  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
+  -- TODO clean up in terms of AddMeta and optimize
+
+instance HasDuration (Score a) where
+  _duration x = _offset x .-. _onset x
+
+instance IsString a => IsString (Score a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Score a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Score a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Score a) where
+  fromDynamics = pure . fromDynamics
+
+instance Enum a => Enum (Score a) where
+  toEnum = return . toEnum
+  fromEnum = list 0 (fromEnum . head) . Foldable.toList
+
+instance Num a => Num (Score a) where
+  fromInteger = return . fromInteger
+  abs    = fmap abs
+  signum = fmap signum
+  (+)    = error "Not implemented"
+  (-)    = error "Not implemented"
+  (*)    = error "Not implemented"
+
+instance AdditiveGroup (Score a) where
+  zeroV   = error "Not implemented"
+  (^+^)   = error "Not implemented"
+  negateV = error "Not implemented"
+
+instance VectorSpace (Score a) where
+  type Scalar (Score a) = Duration
+  d *^ s = d `stretch` s
+
+instance HasMeta (Score a) where
+  meta = _Wrapped . _1
+
+newtype NScore a = NScore { getNScore :: [ScoreNote a] }
+  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+instance (Show a, Transformable a) => Show (Score a) where
+  show x = show (x^.notes) ++ "^.score"
+
+instance Wrapped (NScore a) where
+  type Unwrapped (NScore a) = [ScoreNote a]
+  _Wrapped' = iso getNScore NScore
+
+instance Rewrapped (NScore a) (NScore b)
+
+instance Applicative NScore where
+  pure  = return
+  (<*>) = ap
+
+instance Monad NScore where
+  return = (^. _Unwrapped) . pure . pure
+  xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+
+instance Alternative NScore where
+  empty = mempty
+  (<|>) = mappend
+
+instance MonadPlus NScore where
+  mzero = mempty
+  mplus = mappend
+
+instance Transformable (NScore a) where
+  transform t (NScore xs) = NScore (fmap (transform t) xs)
+
+instance HasPosition (NScore a) where
+  _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
+  _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
+
+safeMinimum xs = if null xs then 0 else minimum xs
+safeMaximum xs = if null xs then 0 else maximum xs
+
+instance HasDuration (NScore a) where
+  _duration x = _offset x .-. _onset x
+
+score :: Getter [Note a] (Score a)
+score = from unsafeNotes
+
+
+notes :: Lens (Score a) (Score b) [Note a] [Note b]
+notes = _Wrapped . _2 . _Wrapped . sorted
+  where
+    -- TODO should not have to sort...
+    sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
+
+
+unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
+unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
+  where
+    sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
+    noMeta = iso extract return
+    -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
+
+
+
+unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeEvents = iso _getScore _score
+  where
+    _score :: [(Time, Duration, a)] -> Score a
+    _score = mconcat . fmap (uncurry3 event)
+      where
+        event t d x   = (delay (t .-. 0) . stretch d) (return x)
+
+    _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
+    _getScore =
+      fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
+      Data.List.sortBy (Data.Ord.comparing fst) .
+      Foldable.toList .
+      fmap (view $ from note) .
+      reifyScore
+
+singleNote :: Prism' (Score a) (Note a)
+singleNote = unsafeNotes . single
+
+
+
+mapScore :: (Note a -> b) -> Score a -> Score b
+mapScore f = over (_Wrapped._2) (mapNScore f)
+  where
+    mapNScore f = over (_Wrapped.traverse) (extend f)
+
+reifyScore :: Score a -> Score (Note a)
+reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
+
+events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+events = notes . _zipList . through event event . from _zipList
+
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+mapWithSpan f = mapScore (uncurry f . view (from note))
+
+filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
+filterWithSpan f = mapFilterWithSpan (partial2 f)
+
+mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
+mapFilterWithSpan f = mcatMaybes . mapWithSpan f
+
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapEvents f = mapWithSpan (uncurry f . view delta)
+
+filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterEvents f = mapFilterEvents (partial3 f)
+
+mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterEvents f = mcatMaybes . mapEvents f
+
+normalizeScore :: Score a -> Score a
+normalizeScore = reset . normalizeScoreDurations
+  where
+    reset x = set onset (view onset x `max` 0) x
+    normalizeScoreDurations = over (notes . each . era) normalizeSpan
+
+printEras :: Score a -> IO ()
+printEras = mapM_ print . toListOf eras
+
+eras :: Traversal' (Score a) Span
+eras = notes . each . era
+
+chordEvents :: Transformable a => Span -> Score a -> [a]
+chordEvents s = fmap extract . filter ((== s) . view era) . view notes
+
+simultaneous' :: Transformable a => Score a -> Score [a]
+simultaneous' sc = (^. from unsafeEvents) vs
+  where
+    -- es :: [Era]
+    -- evs :: [[a]]
+    -- vs :: [(Time, Duration, [a])]
+    es  = Data.List.nub $ toListOf eras sc
+    evs = fmap (`chordEvents` sc) es
+    vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
+
+simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
+simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
+
+simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
+simult = iso simultaneous' mscatter
 
 
 --------------------------------------------------------------------------------
@@ -1960,12 +1817,6 @@ instance Representable Segment where
 
 instance Transformable (Segment a) where
   transform _ = id
-
-instance Reversible (Segment a) where
-  -- TODO in terms of Representable
-  rev (Segment f) = Segment (f . unsafeToClipped . r . fromClipped)
-    where
-      r x = (x * (-1)) + 1
 
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = R.tabulated
@@ -2192,9 +2043,6 @@ instance Transformable (Behavior a) where
     where
       f `whilst` s = f . transform (negateV s)
 
-instance Reversible (Behavior a) where
-  rev = stretch (-1)
-
 deriving instance Semigroup a => Semigroup (Behavior a)
 deriving instance Monoid a => Monoid (Behavior a)
 deriving instance Num a => Num (Behavior a)
@@ -2304,10 +2152,6 @@ instance Wrapped (Bound a) where
 
 instance Rewrapped (Bound a) (Bound b)
 
-instance Reversible a => Reversible (Bound a) where
-  -- rev = over (_Wrapped . each) rev
-  rev = over _Wrapped $ (bimap rev rev)
-
 instance (HasPosition a, Splittable a) => Splittable (Bound a) where
   -- TODO
 
@@ -2411,11 +2255,8 @@ instance Transformable Attribute where
 instance Splittable Attribute where
   split _ x = (x,x)
 
-instance Reversible Attribute where
-  rev = id
-
 newtype Meta = Meta (Map String Attribute)
-  deriving (Transformable, Reversible, Splittable)
+  deriving (Transformable, Splittable)
 
 instance Semigroup Meta where
   Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
@@ -2492,9 +2333,6 @@ instance HasMeta (AddMeta a) where
 
 instance Transformable a => Transformable (AddMeta a) where
   transform t = over meta (transform t) . over annotated (transform t)
-
-instance Reversible a => Reversible (AddMeta a) where
-  rev = over meta rev . over annotated rev
 
 instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
@@ -2706,3 +2544,148 @@ inspecting f x y = f x == f y
 
 inspectingBy :: (b -> a) -> (a -> a -> Bool) -> (b -> b -> Bool)
 inspectingBy f e = getEquivalence $ contramap f $ Equivalence e
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Transformable a => Reversible a where
+
+  -- | Reverse (retrograde) the given value.
+  rev :: a -> a
+
+instance Reversible () where
+  rev = id
+
+instance Reversible Int where
+  rev = id
+
+instance Reversible Double where
+  rev = id
+
+instance Reversible Integer where
+  rev = id
+
+instance Reversible a => Reversible [a] where
+  rev = reverse . map rev
+
+  -- rev = Seq.reverse . fmap rev
+
+instance (Ord k, Reversible a) => Reversible (Map k a) where
+  rev = Map.map rev
+
+instance Reversible Duration where
+  rev = stretch (-1)
+
+instance Reversible Span where
+  rev = revDefault
+
+instance Reversible a => Reversible (b, a) where
+  rev (s,a) = (s, rev a)
+
+revDefault :: (HasPosition a, Transformable a) => a -> a
+revDefault x = stretch (-1) x
+
+newtype NoReverse a = NoReverse { getNoReverse :: a }
+  deriving (Typeable, Eq, Ord, Show)
+
+instance Transformable (NoReverse a) where
+  transform _ = id
+
+instance Reversible (NoReverse a) where
+  rev = id
+
+reversed :: Reversible a => Iso' a a
+reversed = iso rev rev
+
+
+
+
+
+
+
+
+
+class Splittable a where
+  split      :: Duration -> a -> (a, a)
+  beginning  :: Duration -> a -> a
+  ending     :: Duration -> a -> a
+  split   d x = (beginning d x, ending d x)
+  beginning d = fst . split d
+  ending    d = snd . split d
+
+instance Splittable () where
+  split _ x = (x, x)
+
+instance Splittable Duration where
+  -- Directly from the laws
+  -- Guard against t < 0
+  split t x = (t' `min` x, x ^-^ (t' `min` x))
+    where t' = t `max` 0
+
+instance Splittable Span where
+  -- Splitting a span splits the duration
+  split pos (view delta -> (t, d)) = (t >-> d1, (t .+^ d1) >-> d2)
+    where (d1, d2) = split pos d
+
+instance (Ord k, Splittable a) => Splittable (Map k a) where
+  split d = unzipR . Map.map (split d)
+
+chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
+chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
+  where
+    chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
+
+splitAbs :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
+splitAbs t x = split (t .-. _onset x) x
+
+
+
+
+
+
+
+
+
+
+
+extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
+extracted = iso extract pure
+
+extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
+extractedRep = iso extractRep pureRep
+
+
+
+
+
+
+
+
+
+newtype Nominal f a = Nominal { getNominal :: f a }
+  deriving (
+  	Eq,
+  	Ord,
+  	Read,
+  	Show,
+  	Functor,
+  	Foldable,
+  	Traversable,
+  	Monad
+  )
+
+instance Applicative f => Applicative (Nominal f) where
+  pure = Nominal . pure
+  Nominal f <*> Nominal x = Nominal (f <*> x)
+
+instance Transformable (Nominal f a) where
+  transform _ = id
