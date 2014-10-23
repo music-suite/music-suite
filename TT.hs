@@ -145,7 +145,6 @@ newtype Span = Delta { _delta :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 instance Show Span where
-  -- show = showDelta
   show = showRange
   -- Which form should we use?
 
@@ -641,12 +640,12 @@ rest = pure Nothing
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
--- Delayed/Stretched/Note
+-- Placed/Note/Event
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 
-newtype Delayed a = Delayed   { _delayee :: (Time, a) }
+newtype Placed a = Placed   { _placee :: (Time, a) }
   deriving (Eq,
             Ord,
             Functor,
@@ -657,52 +656,52 @@ newtype Delayed a = Delayed   { _delayee :: (Time, a) }
             Traversable,
             Typeable)
 
-instance (Show a, Transformable a) => Show (Delayed a) where
-  show x = show (x^.from delayed) ++ "^.delayed"
+instance (Show a, Transformable a) => Show (Placed a) where
+  show x = show (x^.from placed) ++ "^.placed"
 
-instance Wrapped (Delayed a) where
-  type Unwrapped (Delayed a) = (Time, a)
-  _Wrapped' = iso _delayee Delayed
+instance Wrapped (Placed a) where
+  type Unwrapped (Placed a) = (Time, a)
+  _Wrapped' = iso _placee Placed
 
-instance Rewrapped (Delayed a) (Delayed b)
+instance Rewrapped (Placed a) (Placed b)
 
-instance Transformable (Delayed a) where
+instance Transformable (Placed a) where
   transform t = over (_Wrapped . _1) (transform t)
 
-instance HasDuration (Delayed a) where
+instance HasDuration (Placed a) where
   _duration x = _offset x .-. _onset x
 
-instance HasPosition (Delayed a) where
+instance HasPosition (Placed a) where
   x `_position` p = fst (view _Wrapped x) `_position` p
 
-instance IsString a => IsString (Delayed a) where
+instance IsString a => IsString (Placed a) where
   fromString = pure . fromString
 
-instance IsPitch a => IsPitch (Delayed a) where
+instance IsPitch a => IsPitch (Placed a) where
   fromPitch = pure . fromPitch
 
-instance IsInterval a => IsInterval (Delayed a) where
+instance IsInterval a => IsInterval (Placed a) where
   fromInterval = pure . fromInterval
 
-instance IsDynamics a => IsDynamics (Delayed a) where
+instance IsDynamics a => IsDynamics (Placed a) where
   fromDynamics = pure . fromDynamics
 
-delayed :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
-delayed = _Unwrapped
+placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
+placed = _Unwrapped
 
-delayee :: (Transformable a, Transformable b, b ~ a) => Lens (Delayed a) (Delayed b) a b
-delayee = _Wrapped `dependingOn` (transformed . delayingTime)
+placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
+placee = _Wrapped `dependingOn` (transformed . delayingTime)
 -- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
-timeDelayed :: Iso' Time (Delayed ())
-timeDelayed = iso (\t -> (t,())^.delayed) (^.position 0.5) -- arbitrary position
+timePlaced :: Iso' Time (Placed ())
+timePlaced = iso (\t -> (t,())^.placed) (^.position 0.5) -- arbitrary position
 
 
 
 
 
 
-newtype Stretched a = Stretched { _stretchee :: Couple Duration a }
+newtype Note a = Note { _notee :: Couple Duration a }
   deriving (
     Eq,           Num,      Fractional,   Floating,
     Ord,          Real,     RealFrac,     Functor,
@@ -710,79 +709,21 @@ newtype Stretched a = Stretched { _stretchee :: Couple Duration a }
     )
             -- Comonad,
 
-instance Wrapped (Stretched a) where
-  type Unwrapped (Stretched a) = (Duration, a)
-  _Wrapped' = iso (getCouple . _stretchee) (Stretched . Couple)
-
-instance Rewrapped (Stretched a) (Stretched b)
-
-instance Transformable (Stretched a) where
-  transform t = over (_Wrapped . _1) (transform t)
-
-instance Splittable a => Splittable (Stretched a) where
-  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
-
-instance HasDuration (Stretched a) where
-  _duration = _duration . view _Wrapped
-
-instance IsString a => IsString (Stretched a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Stretched a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Stretched a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Stretched a) where
-  fromDynamics = pure . fromDynamics
-
-instance (Show a, Transformable a) => Show (Stretched a) where
-  show x = show (x^.from stretched) ++ "^.stretched"
-
-stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
-stretched = _Unwrapped
-
-stretchee :: Transformable a => Lens (Stretched a) (Stretched a) a a
-stretchee = _Wrapped `dependingOn` (transformed . stretching)
--- TODO Remove (a ~ b) witg better definition of 'dependingOn'
-
-durationStretched :: Iso' Duration (Stretched ())
-durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
-
-stretchedComplement :: Stretched a -> Stretched a
-stretchedComplement (Stretched (Couple (d,x))) = Stretched $ Couple (negateV d, x)
-
-
-newtype Note a = Note { _notee :: (Span, a) }
-  deriving (Eq,
-            Functor,
-            Foldable,
-            Traversable,
-            Comonad,
-            Typeable)
-
-instance (Show a, Transformable a) => Show (Note a) where
-  show x = show (x^.from note) ++ "^.note"
-
-deriving instance Monad Note
-deriving instance Applicative Note
-
 instance Wrapped (Note a) where
-  type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso _notee Note
+  type Unwrapped (Note a) = (Duration, a)
+  _Wrapped' = iso (getCouple . _notee) (Note . Couple)
 
 instance Rewrapped (Note a) (Note b)
 
 instance Transformable (Note a) where
   transform t = over (_Wrapped . _1) (transform t)
 
-instance HasDuration (Note a) where
-  _duration = _duration . fst . view _Wrapped
+instance Splittable a => Splittable (Note a) where
+  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
+  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
 
-instance HasPosition (Note a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
+instance HasDuration (Note a) where
+  _duration = _duration . view _Wrapped
 
 instance IsString a => IsString (Note a) where
   fromString = pure . fromString
@@ -796,18 +737,76 @@ instance IsInterval a => IsInterval (Note a) where
 instance IsDynamics a => IsDynamics (Note a) where
   fromDynamics = pure . fromDynamics
 
-note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
+instance (Show a, Transformable a) => Show (Note a) where
+  show x = show (x^.from note) ++ "^.note"
+
+note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 note = _Unwrapped
 
-notee :: (Transformable a, Transformable b, a ~ b) => Lens (Note a) (Note b) a b
-notee = _Wrapped `dependingOn` (transformed)
+notee :: Transformable a => Lens (Note a) (Note a) a a
+notee = _Wrapped `dependingOn` (transformed . stretching)
 -- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
-spanNote :: Iso' Span (Note ())
-spanNote = iso (\s -> (s,())^.note) (^.era)
+durationNote :: Iso' Duration (Note ())
+durationNote = iso (\d -> (d,())^.note) (^.duration)
 
-_internal_event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-_internal_event = from note . bimapping delta id . tripped
+noteComplement :: Note a -> Note a
+noteComplement (Note (Couple (d,x))) = Note $ Couple (negateV d, x)
+
+
+newtype Event a = Event { _eventee :: (Span, a) }
+  deriving (Eq,
+            Functor,
+            Foldable,
+            Traversable,
+            Comonad,
+            Typeable)
+
+instance (Show a, Transformable a) => Show (Event a) where
+  show x = show (x^.from event) ++ "^.event"
+
+deriving instance Monad Event
+deriving instance Applicative Event
+
+instance Wrapped (Event a) where
+  type Unwrapped (Event a) = (Span, a)
+  _Wrapped' = iso _eventee Event
+
+instance Rewrapped (Event a) (Event b)
+
+instance Transformable (Event a) where
+  transform t = over (_Wrapped . _1) (transform t)
+
+instance HasDuration (Event a) where
+  _duration = _duration . fst . view _Wrapped
+
+instance HasPosition (Event a) where
+  x `_position` p = fst (view _Wrapped x) `_position` p
+
+instance IsString a => IsString (Event a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Event a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Event a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Event a) where
+  fromDynamics = pure . fromDynamics
+
+event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
+event = _Unwrapped
+
+eventee :: (Transformable a, Transformable b, a ~ b) => Lens (Event a) (Event b) a b
+eventee = _Wrapped `dependingOn` (transformed)
+-- TODO Remove (a ~ b) witg better definition of 'dependingOn'
+
+spanEvent :: Iso' Span (Event ())
+spanEvent = iso (\s -> (s,())^.event) (^.era)
+
+_internal_triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
+_internal_triple = from event . bimapping delta id . tripped
 -- TODO remove
 
 
@@ -826,9 +825,9 @@ newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
 
 type TrackList = []
 
-type TrackEv a = Delayed a
+type TrackEv a = Placed a
 
-trackEv :: Iso (Delayed a) (Delayed b) (TrackEv a) (TrackEv b)
+trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
 trackEv = id
 
 instance Applicative Track where
@@ -859,14 +858,14 @@ instance HasPosition (Track a) where
 instance HasDuration (Track a) where
   _duration x = _offset x .-. _onset x
 
-track :: Getter [Delayed a] (Track a)
+track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
 
 
-delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
-delayeds = unsafeTrack
+placeds :: Lens (Track a) (Track b) [Placed a] [Placed b]
+placeds = unsafeTrack
 
-unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
+unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
 unsafeTrack = _Wrapped
 
 
@@ -879,13 +878,13 @@ newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Eq)
 
 instance (Show a, Transformable a) => Show (Voice a) where
-  show x = show (x^.stretcheds) ++ "^.voice"
+  show x = show (x^.notes) ++ "^.voice"
 
 type VoiceList = []
 
-type VoiceEv a = Stretched a
+type VoiceEv a = Note a
 
-voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
+voiceEv :: Iso (Note a) (Note b) (VoiceEv a) (VoiceEv b)
 voiceEv = id
 
 instance Applicative Voice where
@@ -910,13 +909,13 @@ instance Wrapped (Voice a) where
 
 instance Rewrapped (Voice a) (Voice b)
 
-instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
-  _Cons = prism (\(s,v) -> (view voice.return $ s) <> v) $ \v -> case view stretcheds v of
+instance Cons (Voice a) (Voice b) (Note a) (Note b) where
+  _Cons = prism (\(s,v) -> (view voice.return $ s) <> v) $ \v -> case view notes v of
     []      -> Left  mempty
     (x:xs)  -> Right (x, view voice xs)
 
-instance Snoc (Voice a) (Voice b) (Stretched a) (Stretched b) where
-  _Snoc = prism (\(v,s) -> v <> (view voice.return $ s)) $ \v -> case unsnoc (view stretcheds v) of
+instance Snoc (Voice a) (Voice b) (Note a) (Note b) where
+  _Snoc = prism (\(v,s) -> v <> (view voice.return $ s)) $ \v -> case unsnoc (view notes v) of
     Nothing      -> Left  mempty
     Just (xs, x) -> Right (view voice xs, x)
 
@@ -967,24 +966,24 @@ instance VectorSpace (Voice a) where
   type Scalar (Voice a) = Duration
   d *^ s = d `stretch` s
 
-voice :: Getter [Stretched a] (Voice a)
-voice = from unsafeStretcheds
+voice :: Getter [Note a] (Voice a)
+voice = from unsafeNotes
 
 
-stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-stretcheds = unsafeStretcheds
+notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+notes = unsafeNotes
 
 
-_internal_eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-_internal_eventsV = unsafeEventsV
+_internal_triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+_internal_triplesV = unsafeTriplesV
 
 
-unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeEventsV = iso (map (^.from stretched) . (^.stretcheds)) ((^.voice) . map (^.stretched))
+unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
 
-unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
-unsafeStretcheds = _Wrapped
+unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
+unsafeNotes = _Wrapped
 
 
 unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
@@ -1022,11 +1021,11 @@ zipVoiceWithNoScale = zipVoiceWith' const
 
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith' f g
-  ((unzip.view _internal_eventsV) -> (ad, as))
-  ((unzip.view _internal_eventsV) -> (bd, bs))
+  ((unzip.view _internal_triplesV) -> (ad, as))
+  ((unzip.view _internal_triplesV) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
-     in view (from unsafeEventsV) (zip cd cs)
+     in view (from unsafeTriplesV) (zip cd cs)
 
 fuse :: Eq a => Voice a -> Voice a
 fuse = fuseBy (==)
@@ -1035,13 +1034,13 @@ fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
 
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over unsafeTriplesV $ fmap foldEvents . Data.List.groupBy (inspectingBy snd p)
   where
-    -- Add up durations and use a custom function to combine notes
+    -- Add up durations and use a custom function to combine events
     --
     -- Typically, the combination function us just 'head', as we know that group returns
     -- non-empty lists of equal elements.
-    foldNotes (unzip -> (ds, as)) = (sum ds, g as)
+    foldEvents (unzip -> (ds, as)) = (sum ds, g as)
 
 fuseRests :: Voice (Maybe a) -> Voice (Maybe a)
 fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
@@ -1062,13 +1061,13 @@ withContext = over valuesV addCtxt
 voiceFromRhythm :: [Duration] -> Voice ()
 voiceFromRhythm = mkVoice . fmap (, ())
 
-mkVoice = view voice . fmap (view stretched)
+mkVoice = view voice . fmap (view note)
 
 durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view _internal_eventsV
+    getDurs = map fst . view _internal_triplesV
 
     setDurs :: [Duration] -> Voice a -> Voice a
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
@@ -1079,7 +1078,7 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view _internal_eventsV
+    getValues = map snd . view _internal_triplesV
 
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
@@ -1112,13 +1111,13 @@ voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 -- voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
 -- voiceAsList = iso voiceToList listToVoice
 --   where
---     voiceToList = map snd . view _internal_eventsV
+--     voiceToList = map snd . view _internal_triplesV
 --     listToVoice = mconcat . fmap pure
 --
 -- listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
 -- listAsVoice = from voiceAsList
 --
--- headV, lastV :: Voice a -> Maybe (Stretched a)
+-- headV, lastV :: Voice a -> Maybe (Note a)
 -- headV = preview _head
 -- lastV = preview _head
 --
@@ -1126,21 +1125,21 @@ voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 -- tailV = preview _tail
 -- initV = preview _init
 --
--- consV :: Stretched a -> Voice a -> Voice a
--- unconsV :: Voice a -> Maybe (Stretched a, Voice a)
+-- consV :: Note a -> Voice a -> Voice a
+-- unconsV :: Voice a -> Maybe (Note a, Voice a)
 -- consV = cons
 -- unconsV = uncons
 --
--- snocV :: Voice a -> Stretched a -> Voice a
--- unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
+-- snocV :: Voice a -> Note a -> Voice a
+-- unsnocV :: Voice a -> Maybe (Voice a, Note a)
 -- snocV = snoc
 -- unsnocV = unsnoc
 --
 -- nullV :: Voice a -> Bool
--- nullV = nullOf _internal_eventsV
+-- nullV = nullOf _internal_triplesV
 --
 -- lengthV :: Voice a -> Int
--- lengthV = lengthOf _internal_eventsV
+-- lengthV = lengthOf _internal_triplesV
 --
 -- mapV :: (a -> b) -> Voice a -> Voice b
 -- mapV = fmap
@@ -1288,9 +1287,9 @@ newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
 
 type ChordList = []
 
-type ChordEv a = Delayed a
+type ChordEv a = Placed a
 
-chordEv :: Iso (Delayed a) (Delayed b) (ChordEv a) (ChordEv b)
+chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
 chordEv = id
 
 instance Applicative Chord where
@@ -1316,13 +1315,13 @@ instance HasDuration (Chord a) where
 instance Splittable a => Splittable (Chord a) where
   -- TODO
 
-chord :: Getter [Delayed a] (Chord a)
+chord :: Getter [Placed a] (Chord a)
 chord = from unsafeChord
 
-unchord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
+unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
 unchord = _Wrapped
 
-unsafeChord :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
+unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
 unsafeChord = _Wrapped
 
 instance IsString a => IsString (Chord a) where
@@ -1385,7 +1384,7 @@ fromBass "" x = triad x
 --------------------------------------------------------------------------------
 
 
-type ScoreNote a = Note a
+type ScoreEvent a = Event a
 
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
@@ -1469,14 +1468,14 @@ instance VectorSpace (Score a) where
 instance HasMeta (Score a) where
   meta = _Wrapped . _1
 
-newtype NScore a = NScore { getNScore :: [ScoreNote a] }
+newtype NScore a = NScore { getNScore :: [ScoreEvent a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance (Show a, Transformable a) => Show (Score a) where
-  show x = show (x^.notes) ++ "^.score"
+  show x = show (x^.events) ++ "^.score"
 
 instance Wrapped (NScore a) where
-  type Unwrapped (NScore a) = [ScoreNote a]
+  type Unwrapped (NScore a) = [ScoreEvent a]
   _Wrapped' = iso getNScore NScore
 
 instance Rewrapped (NScore a) (NScore b)
@@ -1510,53 +1509,53 @@ safeMaximum xs = if null xs then 0 else maximum xs
 instance HasDuration (NScore a) where
   _duration x = _offset x .-. _onset x
 
-score :: Getter [Note a] (Score a)
-score = from unsafeNotes
+score :: Getter [Event a] (Score a)
+score = from unsafeEvents
 
 
-notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = _Wrapped . _2 . _Wrapped . sorted
+events :: Lens (Score a) (Score b) [Event a] [Event b]
+events = _Wrapped . _2 . _Wrapped . sorted
   where
     -- TODO should not have to sort...
     sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
 
 
-unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
+unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
+unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
     noMeta = iso extract return
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 
-unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeEvents = iso _getScore _score
+unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeTriples = iso _getScore _score
   where
     _score :: [(Time, Duration, a)] -> Score a
-    _score = mconcat . fmap (uncurry3 _internal_event)
+    _score = mconcat . fmap (uncurry3 _internal_triple)
       where
-        _internal_event t d x   = (delay (t .-. 0) . stretch d) (return x)
+        _internal_triple t d x   = (delay (t .-. 0) . stretch d) (return x)
 
     _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
     _getScore =
       fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
       Data.List.sortBy (Data.Ord.comparing fst) .
       Foldable.toList .
-      fmap (view $ from note) .
+      fmap (view $ from event) .
       reifyScore
 
-mapScore :: (Note a -> b) -> Score a -> Score b
+mapScore :: (Event a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapNScore f)
   where
     mapNScore f = over (_Wrapped.traverse) (extend f)
 
-reifyScore :: Score a -> Score (Note a)
+reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
-_internal_events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-_internal_events = notes . _zipList . through _internal_event _internal_event . from _zipList
+_internal_triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+_internal_triples = events . _zipList . through _internal_triple _internal_triple . from _zipList
 
 -- mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
--- mapWithSpan f = mapScore (uncurry f . view (from note))
+-- mapWithSpan f = mapScore (uncurry f . view (from event))
 --
 -- filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 -- filterWithSpan f = mapFilterWithSpan (partial2 f)
@@ -1564,38 +1563,38 @@ _internal_events = notes . _zipList . through _internal_event _internal_event . 
 -- mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 -- mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 --
--- mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
--- mapEvents f = mapWithSpan (uncurry f . view delta)
+-- mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
+-- mapTriples f = mapWithSpan (uncurry f . view delta)
 --
--- filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
--- filterEvents f = mapFilterEvents (partial3 f)
+-- filterTriples   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+-- filterTriples f = mapFilterTriples (partial3 f)
 --
--- mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
--- mapFilterEvents f = mcatMaybes . mapEvents f
+-- mapFilterTriples :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+-- mapFilterTriples f = mcatMaybes . mapTriples f
 --
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
     reset x = set onset (view onset x `max` 0) x
-    normalizeScoreDurations = over (notes . each . era) normalizeSpan
+    normalizeScoreDurations = over (events . each . era) normalizeSpan
 
 -- printEras :: Score a -> IO ()
 -- printEras = mapM_ print . toListOf eras
 --
 -- eras :: Traversal' (Score a) Span
--- eras = notes . each . era
+-- eras = events . each . era
 --
--- chordEvents :: Transformable a => Span -> Score a -> [a]
--- chordEvents s = fmap extract . filter ((== s) . view era) . view notes
+-- chordTriples :: Transformable a => Span -> Score a -> [a]
+-- chordTriples s = fmap extract . filter ((== s) . view era) . view events
 --
 -- simultaneous' :: Transformable a => Score a -> Score [a]
--- simultaneous' sc = (^. from unsafeEvents) vs
+-- simultaneous' sc = (^. from unsafeTriples) vs
 --   where
 --     -- es :: [Era]
 --     -- evs :: [[a]]
 --     -- vs :: [(Time, Duration, [a])]
 --     es  = Data.List.nub $ toListOf eras sc
---     evs = fmap (`chordEvents` sc) es
+--     evs = fmap (`chordTriples` sc) es
 --     vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
 --
 -- simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
@@ -1684,12 +1683,12 @@ instance Transformable (Segment a) where
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = R.tabulated
 
-apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2))
-  = view stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+apSegments' :: Note (Segment a) -> Note (Segment a) -> Note (Segment a)
+apSegments' (view (from note) -> (d1,s1)) (view (from note) -> (d2,s2))
+  = view note (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
-apSegments :: Voice (Segment a) -> Stretched (Segment a)
-apSegments = foldr1 apSegments' . toListOf (stretcheds . each)
+apSegments :: Voice (Segment a) -> Note (Segment a)
+apSegments = foldr1 apSegments' . toListOf (notes . each)
 
 slerp :: Duration -> Segment a -> Segment a -> Segment a
 slerp i a b
@@ -1704,14 +1703,14 @@ slerp2 f i a b
       EQ -> (a ! 1) `f` (b ! 1)
       GT -> b ! ((t-i)/(1-i))
 
-bounded' :: Iso' (Note (Segment a)) (Bound (Behavior a))
+bounded' :: Iso' (Event (Segment a)) (Bound (Behavior a))
 bounded' = bounded
 
-bounded :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
+bounded :: Iso (Event (Segment a)) (Event (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
 bounded = iso ns2bb bb2ns
   where
-    bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
-    ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
+    bb2ns (Bound (s, x)) = view event (s, b2s $ transform (negateV s) $ x)
+    ns2bb (view (from event) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
     s2b = under R.tabulated (. realToFrac)
     b2s = under R.tabulated (. realToFrac)
 
@@ -1731,11 +1730,11 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     fromLast = getLast . fromJust . getOption
     -- fromJust is safe here, as toLast is used to create the Maybe wrapper
 
-concatSegment :: Monoid a => Note (Segment a) -> Behavior a
+concatSegment :: Monoid a => Event (Segment a) -> Behavior a
 concatSegment = trim . view bounded
 
 concatS :: Monoid a => Score (Segment a) -> Behavior a
-concatS = mconcat . map concatSegment . view notes
+concatS = mconcat . map concatSegment . view events
 
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
 concatB = concatS . fmap (view focusing)
@@ -1743,7 +1742,7 @@ concatB = concatS . fmap (view focusing)
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded . notee) . {-pure-}bounding mempty
+    get = view (from bounded . eventee) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 
 
@@ -1814,15 +1813,15 @@ renderR x = (initial x, updates x)
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
-splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+splitReactive :: Reactive a -> Either a ((a, Time), [Event a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap mkNote $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap mkEvent $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
-        mkNote (t,u,x) = (t <-> u, x)^.note
+        mkEvent (t,u,x) = (t <-> u, x)^.event
 
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
@@ -1859,9 +1858,9 @@ switchR t (Reactive (tx, bx)) (Reactive (ty, by)) = Reactive $ (,)
 trimR :: Monoid a => Span -> Reactive a -> Reactive a
 trimR (view range -> (t, u)) x = switchR t mempty (switchR u x mempty)
 
-intermediate :: Transformable a => Reactive a -> [Note a]
+intermediate :: Transformable a => Reactive a -> [Event a]
 intermediate (updates -> []) = []
-intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.note) $ withNext $ xs
+intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.event) $ withNext $ xs
   where
     withNext xs = zip xs (tail xs)
 
@@ -1972,8 +1971,8 @@ line = realToFrac ^. R.tabulated
 unit :: Fractional a => Behavior a
 unit = switch 0 0 (switch 1 line 1)
 
-interval :: (Fractional a, Transformable a) => Time -> Time -> Note (Behavior a)
-interval t u = (t <-> u, line) ^. note
+interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
+interval t u = (t <-> u, line) ^. event
 
 sine :: Floating a => Behavior a
 sine = sin (line*tau)
@@ -2049,14 +2048,14 @@ bounding (view range -> (t, u)) = bounds t u
 
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
+reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelativeTimeN' v times
 
 
         scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-        scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. _internal_events)
+        scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. _internal_triples)
             where
                throwTime (t,d,x) = (d,x)
                addRests = concat . snd . mapAccumL g 0
@@ -2068,7 +2067,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
 
 
         voiceToScore :: Voice a -> Score a
-        voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchee) . fmap return
+        voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
 
 
         {-
