@@ -17,6 +17,8 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 import           Control.Applicative
+import           Control.Applicative
+import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens               hiding (Indexable, Level, above,
                                              below, index, inside, parts,
@@ -30,84 +32,35 @@ import           Control.Monad.Plus
 import           Data.Aeson                 (ToJSON (..))
 import qualified Data.Aeson                 as JSON
 import           Data.AffineSpace
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
 import           Data.AffineSpace.Point
 import           Data.Bifunctor
 import           Data.Clipped
+import           Data.Distributive
 import           Data.Foldable              (Foldable)
 import qualified Data.Foldable              as Foldable
+import           Data.Functor.Adjunction    (unzipR)
 import           Data.Functor.Context
+import           Data.Functor.Contravariant
+import           Data.Functor.Couple
+import           Data.Functor.Rep           as R
+import           Data.Functor.Rep.Lens
 import           Data.List                  (mapAccumL, mapAccumR)
 import qualified Data.List
 import qualified Data.List.NonEmpty         as NonEmpty
 import           Data.Map                   (Map)
-import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
-import qualified Data.Map                   as Map
-import           Data.Maybe                 (fromJust, isNothing)
-import           Data.Maybe                 (listToMaybe, maybeToList)
+import           Data.Maybe                 (fromJust, isNothing, listToMaybe,
+                                             maybeToList)
+import           Data.NumInstances          ()
 import           Data.Ord                   (comparing)
 import           Data.Ratio
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Semigroup
 import           Data.Semigroup
 import           Data.Set                   (Set)
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
 import qualified Data.Set                   as Set
 import           Data.String
 import           Data.Traversable           (Traversable)
-import qualified Data.Traversable           as T
-import           Data.Typeable
-import           Data.Typeable
-
-import           Control.Applicative
-import           Control.Lens               hiding (Indexable, Level, above,
-                                             below, index, inside, parts,
-                                             reversed, transform, (<|), (|>))
-import           Control.Lens               hiding (Indexable, Level, above,
-                                             below, index, inside, parts,
-                                             reversed, transform, (<|), (|>))
-import           Data.AffineSpace
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.AffineSpace.Point
-import           Data.Bifunctor
-import           Data.Foldable              (Foldable)
-import qualified Data.Foldable              as Foldable
-import           Data.Functor.Adjunction    (unzipR)
-import           Data.Functor.Contravariant
-import           Data.Functor.Couple
-import           Data.Map                   (Map)
-import qualified Data.Map                   as Map
-import           Data.NumInstances          ()
-import           Data.Ratio
-import           Data.Semigroup             hiding ()
-import           Data.Semigroup
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
-import           Data.String
-import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace           hiding (Sum (..))
-import           Music.Dynamics.Literal
-import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
-import           Music.Pitch.Literal
-import           Prelude
-
-import           Control.Applicative
-import           Control.Lens               hiding (Indexable, Level, above,
-                                             below, index, inside, parts,
-                                             reversed, transform, (<|), (|>))
-
-import           Data.Distributive
-import           Data.Functor.Rep           as R
-import           Data.Functor.Rep.Lens
-import           Data.Typeable
-
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
@@ -159,12 +112,6 @@ instance Monoid Duration where
   mappend = (*^)
  -- TODO use some notion of norm rather than 1
 
-toDuration :: Real a => a -> Duration
-toDuration = realToFrac
-
-fromDuration :: Fractional a => Duration -> a
-fromDuration = realToFrac
-
 newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
@@ -189,12 +136,6 @@ instance Monoid Time where
   mempty  = zeroV
   mappend = (^+^)
   mconcat = sumV
-
-toTime :: Real a => a -> Time
-toTime = realToFrac
-
-fromTime :: Fractional a => Time -> a
-fromTime = realToFrac
 
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
@@ -498,7 +439,7 @@ instance (Transformable a, Transformable b) => Transformable (a -> b) where
   transform t = (`whilst` negateV t)
     where
     f `whilst` t = over (transformed t) f
-    
+
 transformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
 transformed s = iso (transform s) (transform $ negateV s)
 
@@ -862,7 +803,7 @@ dep l f = lens getter setter
       (x,_) = view l s
       l2    = f x
       in set (l._2.l2) b s
-                                    
+
 newtype Note a = Note { _noteValue :: (Span, a) }
   deriving (Eq,
             Functor,
@@ -1198,19 +1139,19 @@ valuesV = lens getValues (flip setValues)
 
 -- withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
 -- withDurations = over durationsV
--- 
+--
 -- withValues :: ([a] -> [b]) -> Voice a -> Voice b
 -- withValues = over valuesV
--- 
+--
 -- rotateDurations :: Int -> Voice a -> Voice a
 -- rotateDurations n = over durationsV (rotate n)
--- 
+--
 -- rotateValues :: Int -> Voice a -> Voice a
 -- rotateValues n = over valuesV (rotate n)
--- 
+--
 -- reverseDurations :: Voice a -> Voice a
 -- reverseDurations = over durationsV reverse
--- 
+--
 -- reverseValues :: Voice a -> Voice a
 -- reverseValues = over valuesV reverse
 
@@ -1224,34 +1165,34 @@ voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 --   where
 --     voiceToList = map snd . view eventsV
 --     listToVoice = mconcat . fmap pure
--- 
+--
 -- listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
 -- listAsVoice = from voiceAsList
--- 
+--
 -- headV, lastV :: Voice a -> Maybe (Stretched a)
 -- headV = preview _head
 -- lastV = preview _head
--- 
+--
 -- tailV, initV :: Voice a -> Maybe (Voice a)
 -- tailV = preview _tail
 -- initV = preview _init
--- 
+--
 -- consV :: Stretched a -> Voice a -> Voice a
 -- unconsV :: Voice a -> Maybe (Stretched a, Voice a)
 -- consV = cons
 -- unconsV = uncons
--- 
+--
 -- snocV :: Voice a -> Stretched a -> Voice a
 -- unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
 -- snocV = snoc
 -- unsnocV = unsnoc
--- 
+--
 -- nullV :: Voice a -> Bool
 -- nullV = nullOf eventsV
--- 
+--
 -- lengthV :: Voice a -> Int
 -- lengthV = lengthOf eventsV
--- 
+--
 -- mapV :: (a -> b) -> Voice a -> Voice b
 -- mapV = fmap
 
@@ -1667,22 +1608,22 @@ events = notes . _zipList . through event event . from _zipList
 
 -- mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
 -- mapWithSpan f = mapScore (uncurry f . view (from note))
--- 
+--
 -- filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 -- filterWithSpan f = mapFilterWithSpan (partial2 f)
--- 
+--
 -- mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 -- mapFilterWithSpan f = mcatMaybes . mapWithSpan f
--- 
+--
 -- mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
 -- mapEvents f = mapWithSpan (uncurry f . view delta)
--- 
+--
 -- filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
 -- filterEvents f = mapFilterEvents (partial3 f)
--- 
+--
 -- mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
 -- mapFilterEvents f = mcatMaybes . mapEvents f
--- 
+--
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
@@ -1691,13 +1632,13 @@ normalizeScore = reset . normalizeScoreDurations
 
 -- printEras :: Score a -> IO ()
 -- printEras = mapM_ print . toListOf eras
--- 
+--
 -- eras :: Traversal' (Score a) Span
 -- eras = notes . each . era
--- 
+--
 -- chordEvents :: Transformable a => Span -> Score a -> [a]
 -- chordEvents s = fmap extract . filter ((== s) . view era) . view notes
--- 
+--
 -- simultaneous' :: Transformable a => Score a -> Score [a]
 -- simultaneous' sc = (^. from unsafeEvents) vs
 --   where
@@ -1707,14 +1648,14 @@ normalizeScore = reset . normalizeScoreDurations
 --     es  = Data.List.nub $ toListOf eras sc
 --     evs = fmap (`chordEvents` sc) es
 --     vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
--- 
+--
 -- simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 -- simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
--- 
+--
 -- simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
 -- simult = iso simultaneous' mscatter
--- 
---                                          
+--
+--
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
