@@ -9,12 +9,11 @@ For beginners the best one is Learn You a Haskell:
 
 http://www.haskell.org/haskellwiki/Tutorials
 
-There are also many books introducing composition. Many deal with general properties of melody and harmony, others specifically with writing for classical instruments whether in a traditional or modern styles, some are written with recorded music in mind, and yet other countless tutorials deal with the increasingly XXX art of creating music on  a computer – popular or experimental.
+There are also many books introducing musical composition. Many deal with general properties of melody and harmony, others specifically with writing for classical instruments whether in a traditional or modern styles, some are written with recorded music in mind, and yet other countless tutorials deal with the now ubiquitous art of creating music on  a computer – popular, classical or experimental.
 
-Why is functional programming and musical composition related? For a start they are both (as Paul Graham famously pointed out) about creating things. But functional programming is especially suited to creative arts, a it is a programming style encourage us to think about computing in terms of relationships rather than actions. Actually, functional programming is not programming in the customary sense of the word at all, because it is not *technical* but *structural*. You don't need to know anything about computer hardware, operating systems or file formats to be a functional programmer, they only thing you need is a desire to express yourself and possibly an understanding of basic logic and arithmetic.
+Why is functional programming and musical composition related? For a start they are both (as Paul Graham famously pointed out) about creating things. But functional programming is especially suited to creative arts, a it is a style of writing that encourage us to think in terms of relationships rather than actions. One might go as far as to say that it is not programming at all, at least not in the customary sense of the word, because it is *structural* rather than *technical*. You don't need to know anything about computers to write functional programs, the only thing you need is a desire to express yourself and a rational mind.
 
-The Haskell language that we use here is in part infamous for introducing "difficult" words such as "Monad", "Semigroup" and "Functor". However initially, we should not worry too much about these words at all as their meaning will be completely clear by understanding exactly how they apply to what we actually want to do: music.
-
+The Haskell language that we use here is in part infamous for introducing "difficult" words such as "Monad", "Semigroup" and "Functor". However initially, we should not worry too much about these words, as they are not essential to the language, and because it is generally a bad idea to learn about abstract and general concepts without first developing a un understanding of it practical use.
 
 ## (H+M) Musical expressions
 
