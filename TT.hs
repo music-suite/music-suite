@@ -134,12 +134,6 @@ newtype Duration = Duration { getDuration :: TimeBase }
 instance Show Duration where
   show = showRatio . realToFrac
 
-instance ToJSON Duration where
-  toJSON = JSON.Number . realToFrac
-
-instance InnerSpace Duration where
-  (<.>) = (*)
-
 instance AdditiveGroup Duration where
   zeroV = 0
   (^+^) = (+)
@@ -168,9 +162,6 @@ newtype Time = Time { getTime :: TimeBase }
 
 instance Show Time where
   show = showRatio . realToFrac
-
-instance ToJSON Time where
-  toJSON = JSON.Number . realToFrac
 
 deriving instance AdditiveGroup Time
 
@@ -230,9 +221,6 @@ instance Show Span where
   -- show = showDelta
   show = showRange
   -- Which form should we use?
-
-instance ToJSON Span where
-  toJSON (view range -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
 
 instance Semigroup Span where
   (<>) = (^+^)
@@ -794,7 +782,7 @@ instance Reversible (NoReverse a) where
   rev = id
 
 reversed :: Reversible a => Iso' a a
-reversed = iso rev rev                   
+reversed = iso rev rev
 
 
 
@@ -867,143 +855,7 @@ mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
 
 
 
-type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 
-type TAttributeClass a = (Transformable a, AttributeClass a)
-
-data Attribute :: * where
-  Attribute  :: AttributeClass a => a -> Attribute
-  TAttribute :: TAttributeClass a  => a -> Attribute
-
-wrapAttr :: AttributeClass a => a -> Attribute
-wrapAttr = Attribute
-
-wrapTAttr :: TAttributeClass a => a -> Attribute
-wrapTAttr = TAttribute
-
-unwrapAttr :: AttributeClass a => Attribute -> Maybe a
-unwrapAttr (Attribute a)  = cast a
-unwrapAttr (TAttribute a) = cast a
-
-instance Semigroup Attribute where
-  (Attribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
-    Just a2' -> Attribute (a1 <> a2')
-  (TAttribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
-    Just a2' -> TAttribute (a1 <> a2')
-
-instance Transformable Attribute where
-  transform _ (Attribute a) = Attribute a
-  transform s (TAttribute a) = TAttribute (transform s a)
-
-instance Splittable Attribute where
-  split _ x = (x,x)
-
-instance Reversible Attribute where
-  rev = id
-
-newtype Meta = Meta (Map String Attribute)
-  deriving (Transformable, Reversible, Splittable)
-
-instance Semigroup Meta where
-  Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
-
-instance Monoid Meta where
-  mempty = Meta Map.empty
-  mappend = (<>)
-
-class HasMeta a where
-  -- | Access the meta-data.
-  meta :: Lens' a Meta
-
-instance Show Meta where
-  show _ = "{ meta }"
-
-instance HasMeta Meta where
-  meta = ($)
-
-instance HasMeta a => HasMeta (Maybe a) where
-  meta = lens viewM $ flip setM
-    where
-      viewM Nothing  = mempty
-      viewM (Just x) = view meta x
-      setM m = fmap (set meta m)
-
-instance HasMeta a => HasMeta (b, a) where
-  meta = _2 . meta
-
-instance HasMeta a => HasMeta (Twain b a) where
-  meta = _Wrapped . meta
-
-getMeta :: HasMeta a => a -> Meta
-getMeta = view meta
-
-setMeta :: HasMeta a => Meta -> a -> a
-setMeta = set meta
-
-mapMeta :: HasMeta a => (Meta -> Meta) -> a -> a
-mapMeta = over meta
-
-applyMeta :: HasMeta a => Meta -> a -> a
-applyMeta m = over meta (<> m)
-{-
-
-setMetaAttr :: (AttributeClass b, HasMeta a) => b -> a -> a
-setMetaAttr a = applyMeta (wrapMeta a)
-
-setMetaTAttr :: (TAttributeClass b, HasMeta a) => b -> a -> a
-setMetaTAttr a = applyMeta (wrapTMeta a)
-
-preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
-preserveMeta f x = let m = view meta x in set meta m (f x)
--}
-
-newtype AddMeta a = AddMeta { getAddMeta :: Twain Meta a }
-  deriving (
-    Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
-    Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
-    Integral, Real, RealFrac,
-    Eq, Ord
-    )
-
-instance Wrapped (AddMeta a) where
-  type Unwrapped (AddMeta a) = Twain Meta a
-  _Wrapped' = iso getAddMeta AddMeta
-
-instance Rewrapped (AddMeta a) (AddMeta b)
-
-instance HasMeta (AddMeta a) where
-  -- twain, pair, element
-  meta = _Wrapped . _Wrapped . _1
-
-  -- imap f = over annotated $ imap f
-
-instance Transformable a => Transformable (AddMeta a) where
-  transform t = over meta (transform t) . over annotated (transform t)
-
-instance Reversible a => Reversible (AddMeta a) where
-  rev = over meta rev . over annotated rev
-
-instance Splittable a => Splittable (AddMeta a) where
-  split t = unzipR . fmap (split t)
-
-instance HasPosition a => HasPosition (AddMeta a) where
-  _onset    = _onset . extract
-  _offset   = _offset . extract
-  _position = _position . extract
-
-instance HasDuration a => HasDuration (AddMeta a) where
-  _duration = _duration . extract
-
-annotated :: Lens (AddMeta a) (AddMeta b) a b
-annotated = unsafeAnnotated
-
-unannotated :: Getter a (AddMeta a)
-unannotated = from unsafeAnnotated
-
-unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
-unsafeAnnotated = _Wrapped . extracted
 
 extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
 extracted = iso extract pure
@@ -2523,6 +2375,146 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
 
 
 
+
+
+
+type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
+
+type TAttributeClass a = (Transformable a, AttributeClass a)
+
+data Attribute :: * where
+  Attribute  :: AttributeClass a => a -> Attribute
+  TAttribute :: TAttributeClass a  => a -> Attribute
+
+wrapAttr :: AttributeClass a => a -> Attribute
+wrapAttr = Attribute
+
+wrapTAttr :: TAttributeClass a => a -> Attribute
+wrapTAttr = TAttribute
+
+unwrapAttr :: AttributeClass a => Attribute -> Maybe a
+unwrapAttr (Attribute a)  = cast a
+unwrapAttr (TAttribute a) = cast a
+
+instance Semigroup Attribute where
+  (Attribute a1) <> a2 = case unwrapAttr a2 of
+    Nothing  -> error "Attribute.(<>) mismatch"
+    Just a2' -> Attribute (a1 <> a2')
+  (TAttribute a1) <> a2 = case unwrapAttr a2 of
+    Nothing  -> error "Attribute.(<>) mismatch"
+    Just a2' -> TAttribute (a1 <> a2')
+
+instance Transformable Attribute where
+  transform _ (Attribute a) = Attribute a
+  transform s (TAttribute a) = TAttribute (transform s a)
+
+instance Splittable Attribute where
+  split _ x = (x,x)
+
+instance Reversible Attribute where
+  rev = id
+
+newtype Meta = Meta (Map String Attribute)
+  deriving (Transformable, Reversible, Splittable)
+
+instance Semigroup Meta where
+  Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
+
+instance Monoid Meta where
+  mempty = Meta Map.empty
+  mappend = (<>)
+
+class HasMeta a where
+  -- | Access the meta-data.
+  meta :: Lens' a Meta
+
+instance Show Meta where
+  show _ = "{ meta }"
+
+instance HasMeta Meta where
+  meta = ($)
+
+instance HasMeta a => HasMeta (Maybe a) where
+  meta = lens viewM $ flip setM
+    where
+      viewM Nothing  = mempty
+      viewM (Just x) = view meta x
+      setM m = fmap (set meta m)
+
+instance HasMeta a => HasMeta (b, a) where
+  meta = _2 . meta
+
+instance HasMeta a => HasMeta (Twain b a) where
+  meta = _Wrapped . meta
+
+getMeta :: HasMeta a => a -> Meta
+getMeta = view meta
+
+setMeta :: HasMeta a => Meta -> a -> a
+setMeta = set meta
+
+mapMeta :: HasMeta a => (Meta -> Meta) -> a -> a
+mapMeta = over meta
+
+applyMeta :: HasMeta a => Meta -> a -> a
+applyMeta m = over meta (<> m)
+{-
+
+setMetaAttr :: (AttributeClass b, HasMeta a) => b -> a -> a
+setMetaAttr a = applyMeta (wrapMeta a)
+
+setMetaTAttr :: (TAttributeClass b, HasMeta a) => b -> a -> a
+setMetaTAttr a = applyMeta (wrapTMeta a)
+
+preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
+preserveMeta f x = let m = view meta x in set meta m (f x)
+-}
+
+newtype AddMeta a = AddMeta { getAddMeta :: Twain Meta a }
+  deriving (
+    Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
+    Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
+    Integral, Real, RealFrac,
+    Eq, Ord
+    )
+
+instance Wrapped (AddMeta a) where
+  type Unwrapped (AddMeta a) = Twain Meta a
+  _Wrapped' = iso getAddMeta AddMeta
+
+instance Rewrapped (AddMeta a) (AddMeta b)
+
+instance HasMeta (AddMeta a) where
+  -- twain, pair, element
+  meta = _Wrapped . _Wrapped . _1
+
+  -- imap f = over annotated $ imap f
+
+instance Transformable a => Transformable (AddMeta a) where
+  transform t = over meta (transform t) . over annotated (transform t)
+
+instance Reversible a => Reversible (AddMeta a) where
+  rev = over meta rev . over annotated rev
+
+instance Splittable a => Splittable (AddMeta a) where
+  split t = unzipR . fmap (split t)
+
+instance HasPosition a => HasPosition (AddMeta a) where
+  _onset    = _onset . extract
+  _offset   = _offset . extract
+  _position = _position . extract
+
+instance HasDuration a => HasDuration (AddMeta a) where
+  _duration = _duration . extract
+
+annotated :: Lens (AddMeta a) (AddMeta b) a b
+annotated = unsafeAnnotated
+
+unannotated :: Getter a (AddMeta a)
+unannotated = from unsafeAnnotated
+
+unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
+unsafeAnnotated = _Wrapped . extracted
 
 
 
