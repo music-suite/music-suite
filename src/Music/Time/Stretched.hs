@@ -84,7 +84,7 @@ instance Rewrapped (Stretched a) (Stretched b)
 -- (5,1)^.stretched
 --
 instance Transformable (Stretched a) where
-  transform t = over _Wrapped $ first (transform t)
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance Reversible (Stretched a) where
   rev = stretch (-1)

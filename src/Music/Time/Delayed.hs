@@ -86,7 +86,7 @@ instance Wrapped (Delayed a) where
 instance Rewrapped (Delayed a) (Delayed b)
 
 instance Transformable (Delayed a) where
-  transform t = over _Wrapped $ first (transform t)
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance HasDuration (Delayed a) where
   _duration x = _offset x .-. _onset x

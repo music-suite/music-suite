@@ -89,7 +89,7 @@ instance Wrapped (Note a) where
 instance Rewrapped (Note a) (Note b)
 
 instance Transformable (Note a) where
-  transform t = over (_Wrapped . _1) $ transform t
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance HasDuration (Note a) where
   _duration = _duration . fst . view _Wrapped

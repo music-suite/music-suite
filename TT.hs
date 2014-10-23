@@ -772,7 +772,7 @@ instance Wrapped (Delayed a) where
 instance Rewrapped (Delayed a) (Delayed b)
 
 instance Transformable (Delayed a) where
-  transform t = over _Wrapped $ first (transform t)
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance HasDuration (Delayed a) where
   _duration x = _offset x .-. _onset x
@@ -825,7 +825,7 @@ instance Wrapped (Stretched a) where
 instance Rewrapped (Stretched a) (Stretched b)
 
 instance Transformable (Stretched a) where
-  transform t = over _Wrapped $ first (transform t)
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance Splittable a => Splittable (Stretched a) where
   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
@@ -894,7 +894,7 @@ instance Wrapped (Note a) where
 instance Rewrapped (Note a) (Note b)
 
 instance Transformable (Note a) where
-  transform t = over (_Wrapped . _1) $ transform t
+  transform t = over (_Wrapped . _1) (transform t)
 
 instance HasDuration (Note a) where
   _duration = _duration . fst . view _Wrapped
