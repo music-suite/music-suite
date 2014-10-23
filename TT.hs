@@ -450,41 +450,6 @@ delayTime :: Transformable a => Time -> a -> a
 delayTime = transform . delayingTime
 
 
-lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
-a `lead` b   = placeAt 1 (b `_position` 0) a
-
-follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
-a `follow` b = placeAt 0 (a `_position` 1) b
-
-after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-a `after` b =  a <> (a `follow` b)
-
-before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
-a `before` b =  (a `lead` b) <> b
-
-infixr 6 |>
-infixr 6 <|
-
-(|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
-(|>) = after
-
-(<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
-(<|) = before
-
-scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
-scat = Prelude.foldr (|>) mempty
-
-pcat :: (Semigroup a, Monoid a) => [a] -> a
-pcat = Prelude.foldr (<>) mempty
-
-during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
-y `during` x = set era (view era x) y
-
-sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
-x `sustain` y = x <> y `during` x
-
-times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
-times n = scat . replicate n
 
 
 
@@ -619,6 +584,48 @@ stretchRelativeMidpoint = stretchRelative 0.5
 
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
+
+
+
+
+
+
+lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+a `lead` b   = placeAt 1 (b `_position` 0) a
+
+follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+a `follow` b = placeAt 0 (a `_position` 1) b
+
+after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `after` b =  a <> (a `follow` b)
+
+before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
+a `before` b =  (a `lead` b) <> b
+
+infixr 6 |>
+infixr 6 <|
+
+(|>) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+(|>) = after
+
+(<|) :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+(<|) = before
+
+scat :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => [a] -> a
+scat = Prelude.foldr (|>) mempty
+
+pcat :: (Semigroup a, Monoid a) => [a] -> a
+pcat = Prelude.foldr (<>) mempty
+
+during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
+y `during` x = set era (view era x) y
+
+sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
+x `sustain` y = x <> y `during` x
+
+times :: (Semigroup a, Monoid a, HasPosition a, Transformable a) => Int -> a -> a
+times n = scat . replicate n
+
 
 
 
