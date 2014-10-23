@@ -741,25 +741,13 @@ stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
 stretched = _Unwrapped
 
 stretchee :: Transformable a => Lens (Stretched a) (Stretched a) a a
-stretchee = _Wrapped `dep` (transformed . stretching)
+stretchee = _Wrapped `dependingOn` (transformed . stretching)
 
 durationStretched :: Iso' Duration (Stretched ())
 durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
 
 stretchedComplement :: Stretched a -> Stretched a
 stretchedComplement (Stretched (Couple (d,x))) = Stretched $ Couple (negateV d, x)
-
-dep :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
-dep l f = lens getter setter
-  where
-    getter s = let
-      (x,a) = view l s
-      l2    = f x
-      in view l2 a
-    setter s b = let
-      (x,_) = view l s
-      l2    = f x
-      in set (l._2.l2) b s
 
 newtype Note a = Note { _noteValue :: (Span, a) }
   deriving (Eq,
@@ -2570,3 +2558,23 @@ instance Applicative f => Applicative (Nominal f) where
 
 instance Transformable (Nominal f a) where
   transform _ = id
+
+
+
+
+
+
+
+
+dependingOn :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
+dependingOn l f = lens getter setter
+  where
+    getter s = let
+      (x,a) = view l s
+      l2    = f x
+      in view l2 a
+    setter s b = let
+      (x,_) = view l s
+      l2    = f x
+      in set (l._2.l2) b s
+
