@@ -496,21 +496,11 @@ instance (Ord k, Transformable a) => Transformable (Map k a) where
 
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
   transform t = (`whilst` negateV t)
-
-itransform :: Transformable a => Span -> a -> a
-itransform s = transform (negateV s)
-
+    where
+    f `whilst` t = over (transformed t) f
+    
 transformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
-transformed s = iso (transform s) (itransform s)
-
-itransformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
-itransformed s = transformed (negateV s)
-
-spanned = itransformed
-
-
-whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
-f `whilst` t = over (transformed t) f
+transformed s = iso (transform s) (transform $ negateV s)
 
 delaying :: Duration -> Span
 delaying x = (0 .+^ x) >-> 1
@@ -986,11 +976,6 @@ track = from unsafeTrack
 delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
 delayeds = unsafeTrack
 
-
-singleDelayed :: Prism' (Track a) (Delayed a)
-singleDelayed = unsafeTrack . single
-
-
 unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
 unsafeTrack = _Wrapped
 
@@ -1112,11 +1097,6 @@ unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
 unsafeStretcheds = _Wrapped
 
 
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = unsafeStretcheds . single
-
-
-
 unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
 unzipVoice = unzipR
 
@@ -1216,64 +1196,64 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
-withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
-withDurations = over durationsV
-
-withValues :: ([a] -> [b]) -> Voice a -> Voice b
-withValues = over valuesV
-
-rotateDurations :: Int -> Voice a -> Voice a
-rotateDurations n = over durationsV (rotate n)
-
-rotateValues :: Int -> Voice a -> Voice a
-rotateValues n = over valuesV (rotate n)
-
-reverseDurations :: Voice a -> Voice a
-reverseDurations = over durationsV reverse
-
-reverseValues :: Voice a -> Voice a
-reverseValues = over valuesV reverse
+-- withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
+-- withDurations = over durationsV
+-- 
+-- withValues :: ([a] -> [b]) -> Voice a -> Voice b
+-- withValues = over valuesV
+-- 
+-- rotateDurations :: Int -> Voice a -> Voice a
+-- rotateDurations n = over durationsV (rotate n)
+-- 
+-- rotateValues :: Int -> Voice a -> Voice a
+-- rotateValues n = over valuesV (rotate n)
+-- 
+-- reverseDurations :: Voice a -> Voice a
+-- reverseDurations = over durationsV reverse
+-- 
+-- reverseValues :: Voice a -> Voice a
+-- reverseValues = over valuesV reverse
 
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 
 voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 
-voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
-voiceAsList = iso voiceToList listToVoice
-  where
-    voiceToList = map snd . view eventsV
-    listToVoice = mconcat . fmap pure
-
-listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
-listAsVoice = from voiceAsList
-
-headV, lastV :: Voice a -> Maybe (Stretched a)
-headV = preview _head
-lastV = preview _head
-
-tailV, initV :: Voice a -> Maybe (Voice a)
-tailV = preview _tail
-initV = preview _init
-
-consV :: Stretched a -> Voice a -> Voice a
-unconsV :: Voice a -> Maybe (Stretched a, Voice a)
-consV = cons
-unconsV = uncons
-
-snocV :: Voice a -> Stretched a -> Voice a
-unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
-snocV = snoc
-unsnocV = unsnoc
-
-nullV :: Voice a -> Bool
-nullV = nullOf eventsV
-
-lengthV :: Voice a -> Int
-lengthV = lengthOf eventsV
-
-mapV :: (a -> b) -> Voice a -> Voice b
-mapV = fmap
+-- voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
+-- voiceAsList = iso voiceToList listToVoice
+--   where
+--     voiceToList = map snd . view eventsV
+--     listToVoice = mconcat . fmap pure
+-- 
+-- listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
+-- listAsVoice = from voiceAsList
+-- 
+-- headV, lastV :: Voice a -> Maybe (Stretched a)
+-- headV = preview _head
+-- lastV = preview _head
+-- 
+-- tailV, initV :: Voice a -> Maybe (Voice a)
+-- tailV = preview _tail
+-- initV = preview _init
+-- 
+-- consV :: Stretched a -> Voice a -> Voice a
+-- unconsV :: Voice a -> Maybe (Stretched a, Voice a)
+-- consV = cons
+-- unconsV = uncons
+-- 
+-- snocV :: Voice a -> Stretched a -> Voice a
+-- unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
+-- snocV = snoc
+-- unsnocV = unsnoc
+-- 
+-- nullV :: Voice a -> Bool
+-- nullV = nullOf eventsV
+-- 
+-- lengthV :: Voice a -> Int
+-- lengthV = lengthOf eventsV
+-- 
+-- mapV :: (a -> b) -> Voice a -> Voice b
+-- mapV = fmap
 
 sameDurations :: Voice a -> Voice b -> Bool
 sameDurations a b = view durationsV a == view durationsV b
@@ -1658,8 +1638,6 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
     noMeta = iso extract return
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 
-
-
 unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 unsafeEvents = iso _getScore _score
   where
@@ -1676,11 +1654,6 @@ unsafeEvents = iso _getScore _score
       fmap (view $ from note) .
       reifyScore
 
-singleNote :: Prism' (Score a) (Note a)
-singleNote = unsafeNotes . single
-
-
-
 mapScore :: (Note a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapNScore f)
   where
@@ -1692,56 +1665,56 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 events = notes . _zipList . through event event . from _zipList
 
-mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . view (from note))
-
-filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
-filterWithSpan f = mapFilterWithSpan (partial2 f)
-
-mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
-mapFilterWithSpan f = mcatMaybes . mapWithSpan f
-
-mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapWithSpan (uncurry f . view delta)
-
-filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = mapFilterEvents (partial3 f)
-
-mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = mcatMaybes . mapEvents f
-
+-- mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+-- mapWithSpan f = mapScore (uncurry f . view (from note))
+-- 
+-- filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
+-- filterWithSpan f = mapFilterWithSpan (partial2 f)
+-- 
+-- mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
+-- mapFilterWithSpan f = mcatMaybes . mapWithSpan f
+-- 
+-- mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+-- mapEvents f = mapWithSpan (uncurry f . view delta)
+-- 
+-- filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+-- filterEvents f = mapFilterEvents (partial3 f)
+-- 
+-- mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+-- mapFilterEvents f = mcatMaybes . mapEvents f
+-- 
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
     reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (notes . each . era) normalizeSpan
 
-printEras :: Score a -> IO ()
-printEras = mapM_ print . toListOf eras
-
-eras :: Traversal' (Score a) Span
-eras = notes . each . era
-
-chordEvents :: Transformable a => Span -> Score a -> [a]
-chordEvents s = fmap extract . filter ((== s) . view era) . view notes
-
-simultaneous' :: Transformable a => Score a -> Score [a]
-simultaneous' sc = (^. from unsafeEvents) vs
-  where
-    -- es :: [Era]
-    -- evs :: [[a]]
-    -- vs :: [(Time, Duration, [a])]
-    es  = Data.List.nub $ toListOf eras sc
-    evs = fmap (`chordEvents` sc) es
-    vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
-
-simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
-simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
-
-simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simult = iso simultaneous' mscatter
-
-
+-- printEras :: Score a -> IO ()
+-- printEras = mapM_ print . toListOf eras
+-- 
+-- eras :: Traversal' (Score a) Span
+-- eras = notes . each . era
+-- 
+-- chordEvents :: Transformable a => Span -> Score a -> [a]
+-- chordEvents s = fmap extract . filter ((== s) . view era) . view notes
+-- 
+-- simultaneous' :: Transformable a => Score a -> Score [a]
+-- simultaneous' sc = (^. from unsafeEvents) vs
+--   where
+--     -- es :: [Era]
+--     -- evs :: [[a]]
+--     -- vs :: [(Time, Duration, [a])]
+--     es  = Data.List.nub $ toListOf eras sc
+--     evs = fmap (`chordEvents` sc) es
+--     vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
+-- 
+-- simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
+-- simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
+-- 
+-- simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
+-- simult = iso simultaneous' mscatter
+-- 
+--                                          
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
