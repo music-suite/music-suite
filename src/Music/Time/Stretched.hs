@@ -49,7 +49,9 @@ import           Music.Time.Split
 
 
 -- |
--- A 'Stretched' value has a known 'duration', but no 'position'.
+-- A value 'Stretched' value, representing a suspended stretch of some 'Transformable'
+-- value. We can access the value in bothits original and stretched form using 'stretched'
+-- and 'stretchee', respectively.
 --
 -- Placing a value inside 'Stretched' makes it invariant under 'delay', however the inner
 -- value can still be delayed using @'fmap' 'delay'@.
