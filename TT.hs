@@ -459,8 +459,8 @@ delayTime = transform . delayingTime
 class HasDuration a where
   _duration :: a -> Duration
 
-instance HasDuration Time where
-  _duration = 0
+-- instance HasDuration Time where
+  -- _duration = 0
 
 instance HasDuration Duration where
   _duration = id
@@ -517,8 +517,8 @@ class HasDuration a => HasPosition a where
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
-instance HasPosition Time where
-  _position = const
+-- instance HasPosition Time where
+  -- _position = const
 
 instance HasPosition Span where
   -- Override as an optimization:
@@ -668,11 +668,11 @@ instance Rewrapped (Placed a) (Placed b)
 instance Transformable (Placed a) where
   transform t = over (_Wrapped . _1) (transform t)
 
-instance HasDuration (Placed a) where
-  _duration x = _offset x .-. _onset x
+-- instance HasDuration (Placed a) where
+  -- _duration x = _offset x .-. _onset x
 
-instance HasPosition (Placed a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
+-- instance HasPosition (Placed a) where
+  -- x `_position` p = fst (view _Wrapped x) `_position` p
 
 instance IsString a => IsString (Placed a) where
   fromString = pure . fromString
@@ -693,8 +693,8 @@ placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b
 placee = _Wrapped `dependingOn` (transformed . delayingTime)
 -- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
-timePlaced :: Iso' Time (Placed ())
-timePlaced = iso (\t -> (t,())^.placed) (^.position 0.5) -- arbitrary position
+-- timePlaced :: Iso' Time (Placed ())
+-- timePlaced = iso (\t -> (t,())^.placed) (^.position 0.5) -- arbitrary position
 
 
 
@@ -851,12 +851,12 @@ instance Rewrapped (Track a) (Track b)
 instance Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
 
-instance HasPosition (Track a) where
-  _onset  = safeMinimum . fmap _onset . view _Wrapped'
-  _offset = safeMaximum . fmap _offset . view _Wrapped'
+-- instance HasPosition (Track a) where
+--   _onset  = safeMinimum . fmap _onset . view _Wrapped'
+--   _offset = safeMaximum . fmap _offset . view _Wrapped'
 
-instance HasDuration (Track a) where
-  _duration x = _offset x .-. _onset x
+-- instance HasDuration (Track a) where
+  -- _duration x = _offset x .-. _onset x
 
 track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
@@ -1282,55 +1282,55 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 
 
-newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
-
-type ChordList = []
-
-type ChordEv a = Placed a
-
-chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
-chordEv = id
-
-instance Applicative Chord where
-  pure  = return
-  (<*>) = ap
-
-instance Monad Chord where
-  return = view _Unwrapped . return . return
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
-
-instance Wrapped (Chord a) where
-  type Unwrapped (Chord a) = (ChordList (ChordEv a))
-  _Wrapped' = iso getChord Chord
-
-instance Rewrapped (Chord a) (Chord b)
-
-instance Transformable (Chord a) where
-  transform s = over _Wrapped' (transform s)
-
-instance HasDuration (Chord a) where
-  _duration = Foldable.sum . fmap _duration . view _Wrapped'
-
-instance Splittable a => Splittable (Chord a) where
-  -- TODO
-
-chord :: Getter [Placed a] (Chord a)
-chord = from unsafeChord
-
-unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
-unchord = _Wrapped
-
-unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
-unsafeChord = _Wrapped
-
-instance IsString a => IsString (Chord a) where
-  fromString = pure . fromString
-
-deriving instance IsPitch a => IsPitch (Chord a)
-deriving instance IsInterval a => IsInterval (Chord a)
-deriving instance IsDynamics a => IsDynamics (Chord a)
-
+-- newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
+--   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+-- 
+-- type ChordList = []
+-- 
+-- type ChordEv a = Placed a
+-- 
+-- chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
+-- chordEv = id
+-- 
+-- instance Applicative Chord where
+--   pure  = return
+--   (<*>) = ap
+-- 
+-- instance Monad Chord where
+--   return = view _Unwrapped . return . return
+--   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+-- 
+-- instance Wrapped (Chord a) where
+--   type Unwrapped (Chord a) = (ChordList (ChordEv a))
+--   _Wrapped' = iso getChord Chord
+-- 
+-- instance Rewrapped (Chord a) (Chord b)
+-- 
+-- instance Transformable (Chord a) where
+--   transform s = over _Wrapped' (transform s)
+-- 
+-- instance HasDuration (Chord a) where
+--   _duration = Foldable.sum . fmap _duration . view _Wrapped'
+-- 
+-- instance Splittable a => Splittable (Chord a) where
+--   -- TODO
+-- 
+-- chord :: Getter [Placed a] (Chord a)
+-- chord = from unsafeChord
+-- 
+-- unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
+-- unchord = _Wrapped
+-- 
+-- unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
+-- unsafeChord = _Wrapped
+-- 
+-- instance IsString a => IsString (Chord a) where
+--   fromString = pure . fromString
+-- 
+-- deriving instance IsPitch a => IsPitch (Chord a)
+-- deriving instance IsInterval a => IsInterval (Chord a)
+-- deriving instance IsDynamics a => IsDynamics (Chord a)
+--                                                        
 {-
 invertC :: Transposable a => Chord a -> Chord a
 invertC = over chord (rotlAnd $ up _P8)
