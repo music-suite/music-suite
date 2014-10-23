@@ -109,17 +109,35 @@ instance IsDynamics a => IsDynamics (Stretched a) where
 instance (Show a, Transformable a) => Show (Stretched a) where
   show x = show (x^.from stretched) ++ "^.stretched"
 
--- |
--- View a stretched value as a pair of the original value and a stretch factor.
---
+-- | View a stretched value as a pair of the original value and a stretch factor.
 stretched :: Iso (Duration, a) (Duration, b) (Stretched a) (Stretched b)
 stretched = _Unwrapped
 
+-- | Access the stretched value.
+-- Taking a value out carries out the stretch (using the 'Transformable' instance),
+-- while putting a value in carries out the reverse transformation.
+--
+-- >>> view stretchee $ (2,3::Duration)^.stretched
+-- 6
+--
+-- >>> set stretchee 6 $ (2,1::Duration)^.stretched
+-- (2,3)^.stretched
+--
 stretchee :: Transformable a => Lens (Stretched a) (Stretched a) a a
 stretchee = _Wrapped `dep` (transformed . stretching)
 
+-- | A stretched value as a duration carrying an associated value.
+-- Whitness by picking a trivial value.
+--
+-- >>> 2^.durationStretched
+-- (2,())^.stretched
+--
 durationStretched :: Iso' Duration (Stretched ())
 durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
+-- >>> (pure ())^.from durationStretched
+-- 1
+-- >>> (pure () :: Stretched ())^.duration
+-- 1
 
 -- TODO could also be an iso...
 stretchedComplement :: Stretched a -> Stretched a
