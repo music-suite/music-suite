@@ -76,18 +76,6 @@ import           Music.Pitch.Literal
 
 
 type TimeBase = Rational
-{-
-type TimeBase = Fixed E12
-
-instance HasResolution a => AdditiveGroup (Fixed a) where
-  zeroV = 0
-  negateV = negate
-  (^+^) = (+)
-
-instance Floating TimeBase where
-deriving instance Floating Time
-deriving instance Floating Duration
--}
 
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
@@ -149,16 +137,6 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 toRelativeTimeN' :: Time -> [Time] -> [Duration]
 toRelativeTimeN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
-
-{-
-TODO consolidate with this beat (used in Midi export)
-
-toRelative = snd . List.mapAccumL g 0
-    where
-        g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
-
--}
-  -- x 1,x 1,x 1,x 0
 
 toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
@@ -554,15 +532,6 @@ duration = lens _duration (flip stretchTo)
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 
-newtype Graces f a = Graces { getGraces :: (Nominal f a, f a, Nominal f a) }
-  deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
-
-instance Alternative f => Alternative (Nominal f) where
-  empty = Nominal empty
-  Nominal a <|> Nominal b = Nominal (a <|> b)
-
-instance (Applicative f, Alternative f) => Applicative (Graces f) where
-  pure x = Graces (empty, pure x, empty)
 
 
 
@@ -603,34 +572,26 @@ instance (HasPosition a, HasDuration a) => HasPosition [a] where
 _era :: HasPosition a => a -> Span
 _era x = _onset x <-> _offset x
 
-
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
 position d = lens (`_position` d) (flip $ placeAt d)
-
 
 onset :: (HasPosition a, Transformable a) => Lens' a Time
 onset = position 0
 
-
 offset :: (HasPosition a, Transformable a) => Lens' a Time
 offset = position 1
-
 
 preOnset :: (HasPosition a, Transformable a) => Lens' a Time
 preOnset = position (-0.5)
 
-
 midpoint :: (HasPosition a, Transformable a) => Lens' a Time
 midpoint = position 0.5
-
 
 postOnset :: (HasPosition a, Transformable a) => Lens' a Time
 postOnset = position 0.5
 
-
 postOffset :: (HasPosition a, Transformable a) => Lens' a Time
 postOffset = position 1.5
-
 
 startAt :: (Transformable a, HasPosition a) => Time -> a -> a
 startAt t x = (t .-. _onset x) `delay` x
@@ -647,7 +608,6 @@ _setEra s x = transform (s ^-^ view era x) x
 era :: (HasPosition a, Transformable a) => Lens' a Span
 era = lens _era (flip _setEra)
 
-
 stretchRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
 stretchRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (stretch n) x
 
@@ -659,9 +619,6 @@ stretchRelativeMidpoint = stretchRelative 0.5
 
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
-
-
-
 
 
 
@@ -2584,6 +2541,16 @@ extractedRep = iso extractRep pureRep
 
 
 
+
+newtype Graces f a = Graces { getGraces :: (Nominal f a, f a, Nominal f a) }
+  deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+instance Alternative f => Alternative (Nominal f) where
+  empty = Nominal empty
+  Nominal a <|> Nominal b = Nominal (a <|> b)
+
+instance (Applicative f, Alternative f) => Applicative (Graces f) where
+  pure x = Graces (empty, pure x, empty)
 
 newtype Nominal f a = Nominal { getNominal :: f a }
   deriving (
