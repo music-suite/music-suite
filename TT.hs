@@ -101,12 +101,10 @@ instance Monoid Duration where
  -- TODO use some notion of norm rather than 1
 
 newtype Time = Time { getTime :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable, AdditiveGroup)
 
 instance Show Time where
   show = showRatio . realToFrac
-
-deriving instance AdditiveGroup Time
 
 instance VectorSpace Time where
   type Scalar Time = Duration
@@ -212,16 +210,16 @@ fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta
   _      -> Nothing
 
 isForwardSpan :: Span -> Bool
-isForwardSpan = (> 0) . signum . _durationS
+isForwardSpan = (> 0) . signum . _duration
 
 isBackwardSpan :: Span -> Bool
-isBackwardSpan = (< 0) . signum . _durationS
+isBackwardSpan = (< 0) . signum . _duration
 
 isEmptySpan :: Span -> Bool
-isEmptySpan = (== 0) . signum . _durationS
+isEmptySpan = (== 0) . signum . _duration
 
 reverseSpan :: Span -> Span
-reverseSpan s = reflectSpan (_midpointS s) s
+reverseSpan s = reflectSpan (_midpoint s) s
 
 reflectSpan :: Time -> Span -> Span
 reflectSpan p = over (range . both) (reflectThrough p)
@@ -242,61 +240,61 @@ inside :: Time -> Span -> Bool
 inside x (view range -> (t, u)) = t <= x && x <= u
 
 encloses :: Span -> Span -> Bool
-a `encloses` b = _onsetS b `inside` a && _offsetS b `inside` a
+a `encloses` b = _onset b `inside` a && _offset b `inside` a
 
 properlyEncloses :: Span -> Span -> Bool
 a `properlyEncloses` b = a `encloses` b && a /= b
 
 afterOnset :: Time -> Span -> Bool
-t `afterOnset` s = t >= _onsetS s
+t `afterOnset` s = t >= _onset s
 
 strictlyAfterOnset :: Time -> Span -> Bool
-t `strictlyAfterOnset` s = t > _onsetS s
+t `strictlyAfterOnset` s = t > _onset s
 
 beforeOnset :: Time -> Span -> Bool
-t `beforeOnset` s = t <= _onsetS s
+t `beforeOnset` s = t <= _onset s
 
 strictlyBeforeOnset :: Time -> Span -> Bool
-t `strictlyBeforeOnset` s = t < _onsetS s
+t `strictlyBeforeOnset` s = t < _onset s
 
 afterOffset :: Time -> Span -> Bool
-t `afterOffset` s = t >= _offsetS s
+t `afterOffset` s = t >= _offset s
 
 strictlyAfterOffset :: Time -> Span -> Bool
-t `strictlyAfterOffset` s = t > _offsetS s
+t `strictlyAfterOffset` s = t > _offset s
 
 beforeOffset :: Time -> Span -> Bool
-t `beforeOffset` s = t <= _offsetS s
+t `beforeOffset` s = t <= _offset s
 
 strictlyBeforeOffset :: Time -> Span -> Bool
-t `strictlyBeforeOffset` s = t < _offsetS s
+t `strictlyBeforeOffset` s = t < _offset s
 
 startsWhenStarts :: Span -> Span -> Bool
-a `startsWhenStarts` b = _onsetS a == _onsetS b
+a `startsWhenStarts` b = _onset a == _onset b
 
 startsWhenStops :: Span -> Span -> Bool
-a `startsWhenStops` b = _onsetS a == _offsetS b
+a `startsWhenStops` b = _onset a == _offset b
 
 stopsWhenStops :: Span -> Span -> Bool
-a `stopsWhenStops` b = _offsetS a == _offsetS b
+a `stopsWhenStops` b = _offset a == _offset b
 
 stopsWhenStarts :: Span -> Span -> Bool
-a `stopsWhenStarts` b = _offsetS a == _onsetS b
+a `stopsWhenStarts` b = _offset a == _onset b
 
 startsBefore :: Span -> Span -> Bool
-a `startsBefore` b = _onsetS a < _onsetS b
+a `startsBefore` b = _onset a < _onset b
 
 startsLater :: Span -> Span -> Bool
-a `startsLater` b = _onsetS a > _onsetS b
+a `startsLater` b = _onset a > _onset b
 
 stopsAtTheSameTime :: Span -> Span -> Bool
-a `stopsAtTheSameTime` b = _offsetS a == _offsetS b
+a `stopsAtTheSameTime` b = _offset a == _offset b
 
 stopsBefore :: Span -> Span -> Bool
-a `stopsBefore` b = _offsetS a < _offsetS b
+a `stopsBefore` b = _offset a < _offset b
 
 stopsLater :: Span -> Span -> Bool
-a `stopsLater` b = _offsetS a > _offsetS b
+a `stopsLater` b = _offset a > _offset b
 
 {-
 contains
@@ -318,12 +316,12 @@ overlaps :: Span -> Span -> Bool
 a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
 isBefore :: Span -> Span -> Bool
-a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
+a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 
-_onsetS    (view range -> (t1, t2)) = t1
-_offsetS   (view range -> (t1, t2)) = t2
-_midpointS  s = _onsetS s .+^ _durationS s / 2
-_durationS s = _offsetS s .-. _onsetS s
+-- _onset    (view range -> (t1, t2)) = t1
+-- _offset   (view range -> (t1, t2)) = t2
+_midpoint  s = _onset s .+^ _duration s / 2
+-- _duration s = _offset s .-. _onset s
 
 {-
 Two alternative definitions for midpoint:
@@ -665,8 +663,8 @@ instance Wrapped (Placed a) where
 
 instance Rewrapped (Placed a) (Placed b)
 
-instance Transformable (Placed a) where
-  transform t = over (_Wrapped . _1) (transform t)
+instance Transformable a => Transformable (Placed a) where
+  transform t = over (_Wrapped' . _1) (transform t) . over (_Wrapped' . _2) (stretch $ stretchComponent t)
 
 -- instance HasDuration (Placed a) where
   -- _duration x = _offset x .-. _onset x
@@ -674,6 +672,7 @@ instance Transformable (Placed a) where
 -- instance HasPosition (Placed a) where
   -- x `_position` p = fst (view _Wrapped x) `_position` p
 
+{-
 instance IsString a => IsString (Placed a) where
   fromString = pure . fromString
 
@@ -685,6 +684,7 @@ instance IsInterval a => IsInterval (Placed a) where
 
 instance IsDynamics a => IsDynamics (Placed a) where
   fromDynamics = pure . fromDynamics
+-}
 
 placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
@@ -725,6 +725,7 @@ instance Splittable a => Splittable (Note a) where
 instance HasDuration (Note a) where
   _duration = _duration . view _Wrapped
 
+{-
 instance IsString a => IsString (Note a) where
   fromString = pure . fromString
 
@@ -736,6 +737,7 @@ instance IsInterval a => IsInterval (Note a) where
 
 instance IsDynamics a => IsDynamics (Note a) where
   fromDynamics = pure . fromDynamics
+-}
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
@@ -759,14 +761,13 @@ newtype Event a = Event { _eventee :: (Span, a) }
             Functor,
             Foldable,
             Traversable,
+            Monad,
+            Applicative,
             Comonad,
             Typeable)
 
 instance (Show a, Transformable a) => Show (Event a) where
   show x = show (x^.from event) ++ "^.event"
-
-deriving instance Monad Event
-deriving instance Applicative Event
 
 instance Wrapped (Event a) where
   type Unwrapped (Event a) = (Span, a)
@@ -783,6 +784,7 @@ instance HasDuration (Event a) where
 instance HasPosition (Event a) where
   x `_position` p = fst (view _Wrapped x) `_position` p
 
+{-
 instance IsString a => IsString (Event a) where
   fromString = pure . fromString
 
@@ -794,6 +796,7 @@ instance IsInterval a => IsInterval (Event a) where
 
 instance IsDynamics a => IsDynamics (Event a) where
   fromDynamics = pure . fromDynamics
+-}
 
 event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
 event = _Unwrapped
@@ -848,7 +851,7 @@ instance Wrapped (Track a) where
 
 instance Rewrapped (Track a) (Track b)
 
-instance Transformable (Track a) where
+instance Transformable a => Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
 
 -- instance HasPosition (Track a) where
