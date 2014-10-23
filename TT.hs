@@ -646,7 +646,7 @@ rest = pure Nothing
 --------------------------------------------------------------------------------
 
 
-newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
+newtype Delayed a = Delayed   { _delayee :: (Time, a) }
   deriving (Eq,
             Ord,
             Functor,
@@ -662,7 +662,7 @@ instance (Show a, Transformable a) => Show (Delayed a) where
 
 instance Wrapped (Delayed a) where
   type Unwrapped (Delayed a) = (Time, a)
-  _Wrapped' = iso _delayedValue Delayed
+  _Wrapped' = iso _delayee Delayed
 
 instance Rewrapped (Delayed a) (Delayed b)
 
@@ -690,15 +690,12 @@ instance IsDynamics a => IsDynamics (Delayed a) where
 delayed :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
 delayed = _Unwrapped
 
-delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-delayedValue = lens runDelayed $ flip (mapDelayed . const)
+delayee :: (Transformable a, Transformable b, b ~ a) => Lens (Delayed a) (Delayed b) a b
+delayee = _Wrapped `dependingOn` (transformed . delayingTime)
+-- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
-runDelayed :: Transformable a => Delayed a -> a
-runDelayed = uncurry delayTime . view _Wrapped
-
-mapDelayed :: (Transformable a, Transformable b) => (a -> b) -> Delayed a -> Delayed b
-mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
-
+timeDelayed :: Iso' Time (Delayed ())
+timeDelayed = iso (\t -> (t,())^.delayed) (^.position 0.5) -- arbitrary position
 
 
 
@@ -749,6 +746,7 @@ stretched = _Unwrapped
 
 stretchee :: Transformable a => Lens (Stretched a) (Stretched a) a a
 stretchee = _Wrapped `dependingOn` (transformed . stretching)
+-- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
 durationStretched :: Iso' Duration (Stretched ())
 durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
@@ -756,7 +754,8 @@ durationStretched = iso (\d -> (d,())^.stretched) (^.duration)
 stretchedComplement :: Stretched a -> Stretched a
 stretchedComplement (Stretched (Couple (d,x))) = Stretched $ Couple (negateV d, x)
 
-newtype Note a = Note { _noteValue :: (Span, a) }
+
+newtype Note a = Note { _notee :: (Span, a) }
   deriving (Eq,
             Functor,
             Foldable,
@@ -772,7 +771,7 @@ deriving instance Applicative Note
 
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso _noteValue Note
+  _Wrapped' = iso _notee Note
 
 instance Rewrapped (Note a) (Note b)
 
@@ -800,18 +799,16 @@ instance IsDynamics a => IsDynamics (Note a) where
 note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
 note = _Unwrapped
 
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-noteValue = lens runNote (flip $ mapNote . const)
-  where
-    runNote = uncurry transform . view _Wrapped
-    -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
-    mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
-    f `whilst` t = over (transformed t) f
+notee :: (Transformable a, Transformable b, a ~ b) => Lens (Note a) (Note b) a b
+notee = _Wrapped `dependingOn` (transformed)
+-- TODO Remove (a ~ b) witg better definition of 'dependingOn'
 
+spanNote :: Iso' Span (Note ())
+spanNote = iso (\s -> (s,())^.note) (^.era)
 
-event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-event = from note . bimapping delta id . tripped
-
+_internal_event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
+_internal_event = from note . bimapping delta id . tripped
+-- TODO remove
 
 
 
@@ -978,8 +975,8 @@ stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
 stretcheds = unsafeStretcheds
 
 
-eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-eventsV = unsafeEventsV
+_internal_eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+_internal_eventsV = unsafeEventsV
 
 
 unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
@@ -1025,8 +1022,8 @@ zipVoiceWithNoScale = zipVoiceWith' const
 
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith' f g
-  ((unzip.view eventsV) -> (ad, as))
-  ((unzip.view eventsV) -> (bd, bs))
+  ((unzip.view _internal_eventsV) -> (ad, as))
+  ((unzip.view _internal_eventsV) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
      in view (from unsafeEventsV) (zip cd cs)
@@ -1071,7 +1068,7 @@ durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view eventsV
+    getDurs = map fst . view _internal_eventsV
 
     setDurs :: [Duration] -> Voice a -> Voice a
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
@@ -1082,7 +1079,7 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view eventsV
+    getValues = map snd . view _internal_eventsV
 
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
@@ -1115,7 +1112,7 @@ voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 -- voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
 -- voiceAsList = iso voiceToList listToVoice
 --   where
---     voiceToList = map snd . view eventsV
+--     voiceToList = map snd . view _internal_eventsV
 --     listToVoice = mconcat . fmap pure
 --
 -- listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
@@ -1140,10 +1137,10 @@ voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 -- unsnocV = unsnoc
 --
 -- nullV :: Voice a -> Bool
--- nullV = nullOf eventsV
+-- nullV = nullOf _internal_eventsV
 --
 -- lengthV :: Voice a -> Int
--- lengthV = lengthOf eventsV
+-- lengthV = lengthOf _internal_eventsV
 --
 -- mapV :: (a -> b) -> Voice a -> Voice b
 -- mapV = fmap
@@ -1535,9 +1532,9 @@ unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, 
 unsafeEvents = iso _getScore _score
   where
     _score :: [(Time, Duration, a)] -> Score a
-    _score = mconcat . fmap (uncurry3 event)
+    _score = mconcat . fmap (uncurry3 _internal_event)
       where
-        event t d x   = (delay (t .-. 0) . stretch d) (return x)
+        _internal_event t d x   = (delay (t .-. 0) . stretch d) (return x)
 
     _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
     _getScore =
@@ -1555,8 +1552,8 @@ mapScore f = over (_Wrapped._2) (mapNScore f)
 reifyScore :: Score a -> Score (Note a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
-events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-events = notes . _zipList . through event event . from _zipList
+_internal_events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+_internal_events = notes . _zipList . through _internal_event _internal_event . from _zipList
 
 -- mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
 -- mapWithSpan f = mapScore (uncurry f . view (from note))
@@ -1746,7 +1743,7 @@ concatB = concatS . fmap (view focusing)
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded . noteValue) . {-pure-}bounding mempty
+    get = view (from bounded . notee) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 
 
@@ -2059,7 +2056,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
 
 
         scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-        scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. events)
+        scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. _internal_events)
             where
                throwTime (t,d,x) = (d,x)
                addRests = concat . snd . mapAccumL g 0
