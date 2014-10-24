@@ -1426,35 +1426,12 @@ unsafeTriples = iso _getScore _score
       fmap (view $ from event) .
       reifyScore
 
-mapScore :: (Event a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped._2) (mapScore' f)
-  where
-    mapScore' f = over (_Wrapped.traverse) (extend f)
-
 reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
-_internal_triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-_internal_triples = events . _zipList . through _internal_triple _internal_triple . from _zipList
+triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+triples = events . _zipList . through _internal_triple _internal_triple . from _zipList
 
--- mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
--- mapWithSpan f = mapScore (uncurry f . view (from event))
---
--- filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
--- filterWithSpan f = mapFilterWithSpan (partial2 f)
---
--- mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
--- mapFilterWithSpan f = mcatMaybes . mapWithSpan f
---
--- mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
--- mapTriples f = mapWithSpan (uncurry f . view delta)
---
--- filterTriples   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
--- filterTriples f = mapFilterTriples (partial3 f)
---
--- mapFilterTriples :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
--- mapFilterTriples f = mcatMaybes . mapTriples f
---
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
@@ -1900,7 +1877,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `z
 
 
         scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-        scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. _internal_triples)
+        scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. triples)
             where
                throwTime (t,d,x) = (d,x)
                addRests = concat . snd . Data.List.mapAccumL g 0
