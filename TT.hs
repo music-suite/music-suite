@@ -73,7 +73,16 @@ type TimeBase = Rational
 --------------------------------------------------------------------------------
 
 newtype Duration = Duration { getDuration :: TimeBase }
-  deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Num,
+    Enum,
+    Fractional,
+    Real,
+    RealFrac
+    )
 
 instance Show Duration where
   show = showRatio . toRational
@@ -100,7 +109,16 @@ instance VectorSpace Duration where
 --------------------------------------------------------------------------------
 
 newtype Time = Time { getTime :: TimeBase }
-  deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Num,
+    Enum,
+    Fractional,
+    Real,
+    RealFrac
+    )
 
 instance Show Time where
   show    = showRatio . toRational
@@ -148,7 +166,11 @@ toAbsoluteTime = tail . offsetPoints 0
 --------------------------------------------------------------------------------
 
 newtype Span = Span { getSpan :: (Time, Duration) }
-  deriving (Eq, Ord, Typeable)
+  deriving (
+    Eq,
+    Ord,
+    Typeable
+    )
 
 instance Show Span where
   show = showRange
@@ -621,15 +643,17 @@ rest = pure Nothing
 
 
 newtype Placed a = Placed   { _placee :: (Time, a) }
-  deriving (Eq,
-            Ord,
-            Functor,
-            Applicative,
-            Monad,
-            Comonad,
-            Foldable,
-            Traversable,
-            Typeable)
+  deriving (
+    Eq,
+    Ord,
+    Functor,
+    Applicative,
+    Monad,
+    Comonad,
+    Foldable,
+    Traversable,
+    Typeable
+    )
 
 instance (Show a, Transformable a) => Show (Placed a) where
   show x = show (x^.from placed) ++ "^.placed"
@@ -666,9 +690,19 @@ placee = _Wrapped `dependingOn` (transformed . delayingTime)
 
 newtype Note a = Note { _notee :: Couple Duration a }
   deriving (
-    Eq,           Num,      Fractional,   Floating,
-    Ord,          Real,     RealFrac,     Functor,
-    Applicative,  Monad,    Foldable,     Traversable, Typeable
+    Eq,
+    Num,
+    Fractional,
+    Floating,
+    Ord,
+    Real,
+    RealFrac,
+    Functor,
+    Applicative,
+    Monad,
+    Foldable,
+    Traversable,
+    Typeable
     )
             -- Comonad,
 
@@ -706,14 +740,16 @@ noteComplement (Note (Couple (d,x))) = Note $ Couple (negateV d, x)
 
 
 newtype Event a = Event { _eventee :: (Span, a) }
-  deriving (Eq,
-            Functor,
-            Foldable,
-            Traversable,
-            Monad,
-            Applicative,
-            Comonad,
-            Typeable)
+  deriving (
+    Eq,
+    Functor,
+    Foldable,
+    Traversable,
+    Monad,
+    Applicative,
+    Comonad,
+    Typeable
+    )
 
 instance (Show a, Transformable a) => Show (Event a) where
   show x = show (x^.from event) ++ "^.event"
@@ -787,7 +823,15 @@ triple = from event . bimapping delta id . tripped
 
 
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Eq)
+  deriving (
+    Functor, 
+    Foldable, 
+    Traversable, 
+    Semigroup, 
+    Monoid, 
+    Typeable, 
+    Eq
+    )
 
 instance (Show a, Transformable a) => Show (Voice a) where
   show x = show (x^.notes) ++ "^.voice"
@@ -1124,7 +1168,16 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 
 newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+  deriving (
+    Functor, 
+    Foldable, 
+    Traversable, 
+    Semigroup, 
+    Monoid, 
+    Typeable, 
+    Show, 
+    Eq
+    )
 
 type TrackList = []
 
@@ -1175,53 +1228,53 @@ unsafeTrack = _Wrapped
 
 -- newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
 --   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
--- 
+--
 -- type ChordList = []
--- 
+--
 -- type ChordEv a = Placed a
--- 
+--
 -- chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
 -- chordEv = id
--- 
+--
 -- instance Applicative Chord where
 --   pure  = return
 --   (<*>) = ap
--- 
+--
 -- instance Monad Chord where
 --   return = view _Unwrapped . return . return
 --   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
--- 
+--
 -- instance Wrapped (Chord a) where
 --   type Unwrapped (Chord a) = (ChordList (ChordEv a))
 --   _Wrapped' = iso getChord Chord
--- 
+--
 -- instance Rewrapped (Chord a) (Chord b)
--- 
+--
 -- instance Transformable (Chord a) where
 --   transform s = over _Wrapped' (transform s)
--- 
+--
 -- instance HasDuration (Chord a) where
 --   _duration = Foldable.sum . fmap _duration . view _Wrapped'
--- 
+--
 -- instance Splittable a => Splittable (Chord a) where
 --   -- TODO
--- 
+--
 -- chord :: Getter [Placed a] (Chord a)
 -- chord = from unsafeChord
--- 
+--
 -- unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
 -- unchord = _Wrapped
--- 
+--
 -- unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
 -- unsafeChord = _Wrapped
--- 
+--
 -- instance IsString a => IsString (Chord a) where
 --   fromString = pure . fromString
--- 
+--
 -- deriving instance IsPitch a => IsPitch (Chord a)
 -- deriving instance IsInterval a => IsInterval (Chord a)
 -- deriving instance IsDynamics a => IsDynamics (Chord a)
---                                                        
+--
 {-
 invertC :: Transposable a => Chord a -> Chord a
 invertC = over chord (rotlAnd $ up _P8)
@@ -1275,7 +1328,17 @@ fromBass "" x = triad x
 --------------------------------------------------------------------------------
 
 newtype Score' a = Score' { getNScore' :: [ScoreEvent a] }
-  deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+  deriving (
+    Eq,
+    -- Ord,
+    Functor, 
+    Foldable, 
+    Traversable, 
+    Semigroup, 
+    Monoid, 
+    Typeable, 
+    Show
+    )
 
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x^.events) ++ "^.score"
@@ -1322,7 +1385,15 @@ instance HasDuration (Score' a) where
 type ScoreEvent a = Event a
 
 newtype Score a = Score { getScore' :: (Meta, Score' a) }
-    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+    deriving (
+      Functor, 
+      Semigroup, 
+      Monoid, 
+      Foldable, 
+      Traversable, 
+      Typeable
+      {-, Show, Eq, Ord-}
+      )
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = (Meta, Score' a)
