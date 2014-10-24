@@ -4,8 +4,6 @@
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
 -- {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -186,7 +184,7 @@ instance Monoid Span where
   mappend = (^+^)
 
 instance AdditiveGroup Span where
-  zeroV   = 0 <-> 1
+  zeroV                           = 0 <-> 1
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
   negateV (Span (t, d))           = Span (-t ^/ d, recip d)
 
