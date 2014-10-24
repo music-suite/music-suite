@@ -68,6 +68,12 @@ import           Music.Time.Reactive
 data Clef = GClef | CClef | FClef
     deriving (Eq, Ord, Show, Typeable)
 
+instance IsPitch Clef where
+  fromPitch l
+    | l == c    = CClef
+    | l == f    = FClef
+    | otherwise = GClef
+
 -- | Set clef of the given score.
 clef :: (HasMeta a, HasPosition a) => Clef -> a -> a
 clef c x = clefDuring (_era x) c x
