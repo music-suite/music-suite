@@ -66,7 +66,11 @@ import           Music.Pitch.Literal
 --------------------------------------------------------------------------------
 
 
+--------------------------------------------------------------------------------
+
 type TimeBase = Rational
+
+--------------------------------------------------------------------------------
 
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
@@ -92,6 +96,8 @@ instance VectorSpace Duration where
   type Scalar Duration = Duration
   (*^)    = (*)
 
+
+--------------------------------------------------------------------------------
 
 newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
@@ -138,6 +144,8 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
+
+--------------------------------------------------------------------------------
 
 newtype Span = Span { getSpan :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
@@ -223,7 +231,7 @@ isEmptySpan :: Span -> Bool
 isEmptySpan = (== 0) . signum . _duration
 
 reverseSpan :: Span -> Span
-reverseSpan s = reflectSpan (_midpoint s) s
+reverseSpan s = reflectSpan ((view midpoint) s) s
 
 reflectSpan :: Time -> Span -> Span
 reflectSpan p = over (range . both) (reflectThrough p)
@@ -321,26 +329,6 @@ a `overlaps` b = not (a `isBefore` b) && not (b `isBefore` a)
 
 isBefore :: Span -> Span -> Bool
 a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
-
--- _onset    (view range -> (t1, t2)) = t1
--- _offset   (view range -> (t1, t2)) = t2
-_midpoint  s = _onset s .+^ _duration s / 2
--- _duration s = _offset s .-. _onset s
-
-{-
-Two alternative definitions for midpoint:
-
-midpoint x = onset x + duration x / 2
-midpoint x = (onset x + offset x) / 2
-
-Both equivalent. Proof:
-
-  let d = b - a
-  (a + b)/2 = a + d/2
-  (a + b)/2 = a + (b - a)/2
-  a + b     = 2a + (b - a)
-  a + b     = a + b
--}
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -451,12 +439,7 @@ delayTime :: Transformable a => Time -> a -> a
 delayTime = transform . delayingTime
 
 
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 
 class HasDuration a where
   _duration :: a -> Duration
@@ -499,11 +482,7 @@ stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 
 
-
-
-
-
-
+--------------------------------------------------------------------------------
 
 class HasDuration a => HasPosition a where
   -- |
@@ -587,9 +566,7 @@ stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
 
 
-
-
-
+--------------------------------------------------------------------------------
 
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 a `lead` b   = placeAt 1 (b `_position` 0) a
@@ -879,6 +856,29 @@ unsafeTrack = _Wrapped
 
 
 
+-- "Traditional" API using lens
+--
+-- headV, lastV :: Voice a -> Maybe (Note a)
+-- tailV, initV :: Voice a -> Maybe (Voice a)
+-- consV        :: Note a  -> Voice a -> Voice a
+-- unconsV      :: Voice a -> Maybe (Note a, Voice a)
+-- snocV        :: Voice a -> Note a -> Voice a
+-- unsnocV      :: Voice a -> Maybe (Voice a, Note a)
+-- nullV        :: Voice a -> Bool
+-- lengthV      :: Voice a -> Int
+-- mapV         :: (a -> b) -> Voice a -> Voice b
+--
+-- headV    = preview _head
+-- lastV    = preview _head
+-- tailV    = preview _tail
+-- initV    = preview _init
+-- consV    = cons
+-- unconsV  = uncons
+-- snocV    = snoc
+-- unsnocV  = unsnoc
+-- nullV    = nullOf notes
+-- lengthV  = lengthOf notes
+-- mapV     = fmap
 
 
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
@@ -1092,64 +1092,9 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
--- withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
--- withDurations = over durationsV
---
--- withValues :: ([a] -> [b]) -> Voice a -> Voice b
--- withValues = over valuesV
---
--- rotateDurations :: Int -> Voice a -> Voice a
--- rotateDurations n = over durationsV (rotate n)
---
--- rotateValues :: Int -> Voice a -> Voice a
--- rotateValues n = over valuesV (rotate n)
---
--- reverseDurations :: Voice a -> Voice a
--- reverseDurations = over durationsV reverse
---
--- reverseValues :: Voice a -> Voice a
--- reverseValues = over valuesV reverse
-
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 
-voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
-
--- voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
--- voiceAsList = iso voiceToList listToVoice
---   where
---     voiceToList = map snd . view _internal_triplesV
---     listToVoice = mconcat . fmap pure
---
--- listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
--- listAsVoice = from voiceAsList
---
--- headV, lastV :: Voice a -> Maybe (Note a)
--- headV = preview _head
--- lastV = preview _head
---
--- tailV, initV :: Voice a -> Maybe (Voice a)
--- tailV = preview _tail
--- initV = preview _init
---
--- consV :: Note a -> Voice a -> Voice a
--- unconsV :: Voice a -> Maybe (Note a, Voice a)
--- consV = cons
--- unconsV = uncons
---
--- snocV :: Voice a -> Note a -> Voice a
--- unsnocV :: Voice a -> Maybe (Voice a, Note a)
--- snocV = snoc
--- unsnocV = unsnoc
---
--- nullV :: Voice a -> Bool
--- nullV = nullOf _internal_triplesV
---
--- lengthV :: Voice a -> Int
--- lengthV = lengthOf _internal_triplesV
---
--- mapV :: (a -> b) -> Voice a -> Voice b
--- mapV = fmap
 
 sameDurations :: Voice a -> Voice b -> Bool
 sameDurations a b = view durationsV a == view durationsV b
