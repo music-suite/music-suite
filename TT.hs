@@ -2472,3 +2472,23 @@ dependingOn l f = lens getter setter
       l2    = f x
       in set (l._2.l2) b s
 
+
+
+
+
+
+instance IsString a => IsString (Voice a) where
+  fromString = pure . fromString
+
+instance IsPitch a => IsPitch (Voice a) where
+  fromPitch = pure . fromPitch
+
+instance IsInterval a => IsInterval (Voice a) where
+  fromInterval = pure . fromInterval
+
+instance IsDynamics a => IsDynamics (Voice a) where
+  fromDynamics = pure . fromDynamics
+
+
+
+
