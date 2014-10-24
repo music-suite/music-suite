@@ -17,23 +17,15 @@
 {-# LANGUAGE ViewPatterns               #-}
 
 import           Control.Applicative
-import           Control.Applicative
-import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens               hiding (Indexable, Level, above,
-                                             below, index, inside, parts,
-                                             reversed, transform, (<|), (|>))
 import           Control.Lens               hiding (Indexable, Level, above,
                                              below, index, inside, parts,
                                              reversed, transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Aeson                 (ToJSON (..))
-import qualified Data.Aeson                 as JSON
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Bifunctor
 import           Data.Clipped
 import           Data.Distributive
 import           Data.Foldable              (Foldable)
@@ -44,7 +36,6 @@ import           Data.Functor.Contravariant
 import           Data.Functor.Couple
 import           Data.Functor.Rep           as R
 import           Data.Functor.Rep.Lens
-import           Data.List                  (mapAccumL, mapAccumR)
 import qualified Data.List
 import qualified Data.List.NonEmpty         as NonEmpty
 import           Data.Map                   (Map)
@@ -81,11 +72,11 @@ newtype Duration = Duration { getDuration :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
 
 instance Show Duration where
-  show = showRatio . realToFrac
+  show = showRatio . toRational
 
 instance AdditiveGroup Duration where
-  zeroV = 0
-  (^+^) = (+)
+  zeroV   = 0
+  (^+^)   = (+)
   negateV = negate
 
 instance VectorSpace Duration where
@@ -98,13 +89,13 @@ instance Semigroup Duration where
 instance Monoid Duration where
   mempty  = 1
   mappend = (*^)
- -- TODO use some notion of norm rather than 1
+
 
 newtype Time = Time { getTime :: TimeBase }
   deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable, AdditiveGroup)
 
 instance Show Time where
-  show = showRatio . realToFrac
+  show = showRatio . toRational
 
 instance VectorSpace Time where
   type Scalar Time = Duration
@@ -123,23 +114,25 @@ instance Monoid Time where
   mappend = (^+^)
   mconcat = sumV
 
+-- TODO rename these...
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
 toRelativeTime :: [Time] -> [Duration]
-toRelativeTime = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
+toRelativeTime = snd . Data.List.mapAccumL g 0 where g prev t = (t, t .-. prev)
+
+toRelativeTimeN' :: Time -> [Time] -> [Duration]
+toRelativeTimeN' end = snd . Data.List.mapAccumR g end where g prev t = (t, prev .-. t)
 
 toRelativeTimeN :: [Time] -> [Duration]
 toRelativeTimeN [] = []
 toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
-toRelativeTimeN' :: Time -> [Time] -> [Duration]
-toRelativeTimeN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
-
 toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
-newtype Span = Delta { _delta :: (Time, Duration) }
+
+newtype Span = Delta { getSpan :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 instance Show Span where
@@ -174,15 +167,15 @@ a <-< b = (b .-^ a) <-> b
 range :: Iso' Span (Time, Time)
 range = iso _range $ uncurry (<->)
   where
-    _range x = let (t, d) = _delta x in (t, t .+^ d)
+    _range x = let (t, d) = getSpan x in (t, t .+^ d)
 
 delta :: Iso' Span (Time, Duration)
-delta = iso _delta Delta
+delta = iso getSpan Delta
 
 codelta :: Iso' Span (Duration, Time)
 codelta = iso _codelta $ uncurry (<-<)
   where
-    _codelta x = let (t, d) = _delta x in (d, t .+^ d)
+    _codelta x = let (t, d) = getSpan x in (d, t .+^ d)
 
 showRange :: Span -> String
 showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
@@ -1389,11 +1382,11 @@ fromBass "" x = triad x
 
 type ScoreEvent a = Event a
 
-newtype Score a = Score { getScore' :: (Meta, NScore a) }
+newtype Score a = Score { getScore' :: (Meta, Score' a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
 
 instance Wrapped (Score a) where
-  type Unwrapped (Score a) = (Meta, NScore a)
+  type Unwrapped (Score a) = (Meta, Score' a)
   _Wrapped' = iso getScore' Score
 
 instance Rewrapped (Score a) (Score b) where
@@ -1471,45 +1464,45 @@ instance VectorSpace (Score a) where
 instance HasMeta (Score a) where
   meta = _Wrapped . _1
 
-newtype NScore a = NScore { getNScore :: [ScoreEvent a] }
+newtype Score' a = Score' { getNScore' :: [ScoreEvent a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x^.events) ++ "^.score"
 
-instance Wrapped (NScore a) where
-  type Unwrapped (NScore a) = [ScoreEvent a]
-  _Wrapped' = iso getNScore NScore
+instance Wrapped (Score' a) where
+  type Unwrapped (Score' a) = [ScoreEvent a]
+  _Wrapped' = iso getNScore' Score'
 
-instance Rewrapped (NScore a) (NScore b)
+instance Rewrapped (Score' a) (Score' b)
 
-instance Applicative NScore where
+instance Applicative Score' where
   pure  = return
   (<*>) = ap
 
-instance Monad NScore where
+instance Monad Score' where
   return = (^. _Unwrapped) . pure . pure
   xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
-instance Alternative NScore where
+instance Alternative Score' where
   empty = mempty
   (<|>) = mappend
 
-instance MonadPlus NScore where
+instance MonadPlus Score' where
   mzero = mempty
   mplus = mappend
 
-instance Transformable (NScore a) where
-  transform t (NScore xs) = NScore (fmap (transform t) xs)
+instance Transformable (Score' a) where
+  transform t (Score' xs) = Score' (fmap (transform t) xs)
 
-instance HasPosition (NScore a) where
+instance HasPosition (Score' a) where
   _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
   _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
 
 safeMinimum xs = if null xs then 0 else minimum xs
 safeMaximum xs = if null xs then 0 else maximum xs
 
-instance HasDuration (NScore a) where
+instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
 
 score :: Getter [Event a] (Score a)
@@ -1527,7 +1520,7 @@ unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
 unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (Data.List.sortBy (Data.Ord.comparing _onset)) (Data.List.sortBy (Data.Ord.comparing _onset))
-    noMeta = iso extract return
+    noMeta = extracted
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 
 unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
@@ -1547,9 +1540,9 @@ unsafeTriples = iso _getScore _score
       reifyScore
 
 mapScore :: (Event a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped._2) (mapNScore f)
+mapScore f = over (_Wrapped._2) (mapScore' f)
   where
-    mapNScore f = over (_Wrapped.traverse) (extend f)
+    mapScore' f = over (_Wrapped.traverse) (extend f)
 
 reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
@@ -2061,7 +2054,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `z
         scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. _internal_triples)
             where
                throwTime (t,d,x) = (d,x)
-               addRests = concat . snd . mapAccumL g 0
+               addRests = concat . snd . Data.List.mapAccumL g 0
                    where
                        g u (t, d, x)
                            | u == t    = (t .+^ d, [(t, d, Just x)])
