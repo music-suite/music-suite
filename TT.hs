@@ -543,11 +543,12 @@ instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
   _duration (Left x)  = _duration x
   _duration (Right x) = _duration x
 
+stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
+stretchTo d x = (d ^/ _duration x) `stretch` x
+
 duration :: (Transformable a, HasDuration a) => Lens' a Duration
 duration = lens _duration (flip stretchTo)
 
-stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
-stretchTo d x = (d ^/ _duration x) `stretch` x
 
 
 --------------------------------------------------------------------------------
@@ -885,6 +886,14 @@ newtype Event a = Event { _eventee :: (Span, a) }
     Applicative,
     Monad,
     Comonad
+    
+    -- Num,
+    -- Fractional,
+    -- Floating,
+    -- Real,
+    -- RealFrac,
+    
+    
     )
 
 instance (Show a, Transformable a) => Show (Event a) where
