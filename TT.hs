@@ -563,13 +563,6 @@ class HasDuration a => HasPosition a where
   _era :: HasPosition a => a -> Span
   _era x = x `_position` 0 <-> x `_position` 1
   
--- |
--- Return the onset of the given value, or the value between the attack and decay phases.
---
-_onset, _offset :: HasPosition a => a -> Time
-_onset     = (`_position` 0)
-_offset    = (`_position` 1.0)
-
 instance HasPosition Span where
   _era = id
 
@@ -612,6 +605,13 @@ stopAt t x = (t .-. _offset x) `delay` x
 
 placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 placeAt p t x = (t .-. x `_position` p) `delay` x
+
+-- |
+-- Return the onset of the given value, or the value between the attack and decay phases.
+--
+_onset, _offset :: HasPosition a => a -> Time
+_onset     = (`_position` 0)
+_offset    = (`_position` 1.0)
 
 _setEra :: (HasPosition a, Transformable a) => Span -> a -> a
 _setEra s x = transform (s ^-^ view era x) x
@@ -958,7 +958,7 @@ triple = from event . bimapping delta id . tripped
 -- mapV     = fmap
 
 
-newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
+newtype Voice a = Voice { getVoice :: [Note a] }
   deriving (
     Eq,
     Ord,
@@ -973,13 +973,6 @@ newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
 
 instance (Show a, Transformable a) => Show (Voice a) where
   show x = show (x^.notes) ++ "^.voice"
-
-type VoiceList = []
-
-type VoiceEv a = Note a
-
-voiceEv :: Iso (Note a) (Note b) (VoiceEv a) (VoiceEv b)
-voiceEv = id
 
 instance Applicative Voice where
   pure  = return
@@ -998,7 +991,7 @@ instance MonadPlus Voice where
   mplus = mappend
 
 instance Wrapped (Voice a) where
-  type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
+  type Unwrapped (Voice a) = [Note a]
   _Wrapped' = iso getVoice Voice
 
 instance Rewrapped (Voice a) (Voice b)
