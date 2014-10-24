@@ -117,17 +117,6 @@ instance Rewrapped (Track a) (Track b)
 instance Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
 
-instance HasPosition (Track a) where
-  _onset  = safeMinimum . fmap _onset . view _Wrapped'
-  _offset = safeMaximum . fmap _offset . view _Wrapped'
-
--- TODO move
-safeMinimum xs = if null xs then 0 else minimum xs
-safeMaximum xs = if null xs then 0 else maximum xs
-
-instance HasDuration (Track a) where
-  _duration x = _offset x .-. _onset x
-
 -- instance Splittable a => Splittable (Track a) where
 --   -- TODO
 

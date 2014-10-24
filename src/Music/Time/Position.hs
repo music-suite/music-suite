@@ -116,9 +116,6 @@ class HasDuration a => HasPosition a where
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
-instance HasPosition Time where
-  _position = const
-
 instance HasPosition Span where
   -- Override as an optimization:
   _onset    (view range -> (t1, t2)) = t1

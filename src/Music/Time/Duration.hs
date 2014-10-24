@@ -56,9 +56,6 @@ import           Data.Functor.Contravariant
 class HasDuration a where
   _duration :: a -> Duration
 
-instance HasDuration Time where
-  _duration = 0
-
 instance HasDuration Duration where
   _duration = id
 

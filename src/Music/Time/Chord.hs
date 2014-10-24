@@ -118,7 +118,7 @@ instance Transformable (Chord a) where
   transform s = over _Wrapped' (transform s)
 
 instance HasDuration (Chord a) where
-  _duration = Foldable.sum . fmap _duration . view _Wrapped'
+  -- TODO
 
 instance Splittable a => Splittable (Chord a) where
   -- TODO

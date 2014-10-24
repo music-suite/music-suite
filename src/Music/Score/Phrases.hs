@@ -232,7 +232,10 @@ mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
 withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap _onset x) (_onset y)) y) . withPrevNext)
+withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap delayedOnset x) (delayedOnset y)) y) . withPrevNext)
+  where
+    delayedOnset :: Delayed a -> Time
+    delayedOnset = view (from delayed . _1)
 
 mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
 mVoiceTVoice = mVoicePVoice . pVoiceTVoice

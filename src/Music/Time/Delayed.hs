@@ -88,14 +88,8 @@ instance Rewrapped (Delayed a) (Delayed b)
 instance Transformable (Delayed a) where
   transform t = over (_Wrapped . _1) (transform t)
 
-instance HasDuration (Delayed a) where
-  _duration x = _offset x .-. _onset x
-
-instance HasPosition (Delayed a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
-
 instance Reversible (Delayed a) where
-  rev = revDefault
+  rev = id
 
 instance Splittable a => Splittable (Delayed a) where
   -- TODO is this right?
