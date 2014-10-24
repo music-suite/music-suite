@@ -566,9 +566,6 @@ class HasDuration a => HasPosition a where
   _onset     = (`_position` 0)
   _offset    = (`_position` 1.0)
 
--- instance HasPosition Time where
-  -- _position = const
-
 instance HasPosition Span where
   -- Override as an optimization:
   _onset    (view range -> (t1, t2)) = t1
@@ -717,12 +714,6 @@ instance Rewrapped (Placed a) (Placed b)
 
 instance Transformable a => Transformable (Placed a) where
   transform t = over (_Wrapped' . _1) (transform t) . over (_Wrapped' . _2) (stretch $ stretchComponent t)
-
--- instance HasDuration (Placed a) where
-  -- _duration x = _offset x .-. _onset x
-
--- instance HasPosition (Placed a) where
-  -- x `_position` p = fst (view _Wrapped x) `_position` p
 
 placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
@@ -1264,13 +1255,6 @@ instance Rewrapped (Track a) (Track b)
 
 instance Transformable a => Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
-
--- instance HasPosition (Track a) where
---   _onset  = safeMinimum . fmap _onset . view _Wrapped'
---   _offset = safeMaximum . fmap _offset . view _Wrapped'
-
--- instance HasDuration (Track a) where
-  -- _duration x = _offset x .-. _onset x
 
 track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
