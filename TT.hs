@@ -164,7 +164,7 @@ instance Monoid Span where
 instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
   Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
-  negateV (Span (t, d)) = Span (-t ^/ d, recip d)
+  negateV (Span (t, d))           = Span (-t ^/ d, recip d)
 
 instance VectorSpace Span where
   type Scalar Span = Duration
@@ -184,17 +184,13 @@ t <-> u = t >-> (u .-. t)
 a <-< b = (b .-^ a) <-> b
 
 range :: Iso' Span (Time, Time)
-range = iso _range $ uncurry (<->)
-  where
-    _range x = let (t, d) = getSpan x in (t, t .+^ d)
+range = iso (\x -> let (t, d) = getSpan x in (t, t .+^ d)) (uncurry (<->))
 
 delta :: Iso' Span (Time, Duration)
 delta = iso getSpan Span
 
 codelta :: Iso' Span (Duration, Time)
-codelta = iso _codelta $ uncurry (<-<)
-  where
-    _codelta x = let (t, d) = getSpan x in (d, t .+^ d)
+codelta = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
 
 showRange :: Span -> String
 showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
