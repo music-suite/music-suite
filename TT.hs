@@ -70,6 +70,10 @@ type TimeBase = Rational
 
 --------------------------------------------------------------------------------
 
+type LocalDuration = Duration
+
+--------------------------------------------------------------------------------
+
 newtype Duration = Duration { getDuration :: TimeBase }
   deriving (
     Eq,
@@ -101,8 +105,11 @@ instance AdditiveGroup Duration where
   negateV = negate
 
 instance VectorSpace Duration where
-  type Scalar Duration = Duration
+  type Scalar Duration = LocalDuration
   (*^)    = (*)
+
+instance InnerSpace Duration where
+  (<.>) = (*)
 
 
 --------------------------------------------------------------------------------
@@ -136,14 +143,30 @@ instance AdditiveGroup Time where
   negateV = negate
 
 instance VectorSpace Time where
-  type Scalar Time = Duration
+  type Scalar Time = LocalDuration
   Duration x *^ Time y = Time (x * y)
 
 instance AffineSpace Time where
-  type Diff Time = Duration
+  type Diff Time = LocalDuration
   Time x .-. Time y     = Duration (x - y)
   Time x .+^ Duration y = Time     (x + y)
 
+{-
+Vector space API:
+
+affineCombo   :: Time -> [(Time, LocalDuration)] -> Time
+linearCombo   :: [(Duration, LocalDuration)] -> Duration
+
+distance      :: Time -> Time -> LocalDuration -- NOT AVAILABLE because of Floating
+
+lerp          :: Duration -> Duration -> LocalDuration -> Duration
+alerp         :: Time -> Time -> LocalDuration -> Time
+
+magnitude     :: Duration -> LocalDuration
+project       :: Duration -> Duration -> Duration
+normalized    :: Duration -> Duration
+
+-}
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
 -- 
