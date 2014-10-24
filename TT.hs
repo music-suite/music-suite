@@ -561,14 +561,14 @@ class HasDuration a => HasPosition a where
   _position x = alerp a b where (a, b) = (_era x)^.range
 
   _era :: HasPosition a => a -> Span
-  _era x = _onset x <-> _offset x
+  _era x = x `_position` 0 <-> x `_position` 1
   
-  -- |
-  -- Return the onset of the given value, or the value between the attack and decay phases.
-  --
-  _onset, _offset :: a -> Time
-  _onset     = (`_position` 0)
-  _offset    = (`_position` 1.0)
+-- |
+-- Return the onset of the given value, or the value between the attack and decay phases.
+--
+_onset, _offset :: HasPosition a => a -> Time
+_onset     = (`_position` 0)
+_offset    = (`_position` 1.0)
 
 instance HasPosition Span where
   _era = id
@@ -577,8 +577,10 @@ instance (HasPosition a, HasDuration a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
 instance (HasPosition a, HasDuration a) => HasPosition [a] where
-  _onset  = foldr min 0 . fmap _onset
-  _offset = foldr max 0 . fmap _offset
+  _era x = (f x, g x)^.from range
+    where
+      f  = foldr min 0 . fmap _onset
+      g = foldr max 0 . fmap _offset
 
 
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
@@ -1443,9 +1445,11 @@ instance Transformable (Score' a) where
   transform t (Score' xs) = Score' (fmap (transform t) xs)
 
 instance HasPosition (Score' a) where
-  _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
-  _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
-  -- TODO nicer
+  _era x = (f x, g x)^.from range
+    where
+      f  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
+      g = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
+      -- TODO nicer
 
 safeMinimum xs = if null xs then 0 else minimum xs
 safeMaximum xs = if null xs then 0 else maximum xs
