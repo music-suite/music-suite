@@ -65,7 +65,12 @@ module Music.Time.Voice (
         zipVoiceWith,
         zipVoiceWith',
         zipVoiceWithNoScale,
-
+        
+        -- ** Special zips/merge
+        sameDurations,
+        mergeIfSameDuration,
+        mergeIfSameDurationWith,
+        
         -- * Context
         -- TODO clean
         withContext,
