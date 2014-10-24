@@ -13,6 +13,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE TypeOperators              #-}
 
 import           Control.Applicative
 import           Control.Comonad
@@ -719,7 +720,7 @@ rest = pure Nothing
 --------------------------------------------------------------------------------
 
 
-newtype Placed a = Placed   { _placee :: (Time, a) }
+newtype Placed a = Placed   { getPlaced :: Time `Couple` a }
   deriving (
     Eq,
     Ord,
@@ -738,7 +739,7 @@ instance (Show a, Transformable a) => Show (Placed a) where
 
 instance Wrapped (Placed a) where
   type Unwrapped (Placed a) = (Time, a)
-  _Wrapped' = iso _placee Placed
+  _Wrapped' = iso (getCouple . getPlaced) (Placed . Couple)
 
 instance Rewrapped (Placed a) (Placed b)
 
@@ -760,7 +761,7 @@ placee = from placed `dependingOn` (transformed . delayingTime)
 
 
 
-newtype Note a = Note { _notee :: Couple Duration a }
+newtype Note a = Note { getNote :: Duration `Couple` a }
   deriving (
     Eq,
     Ord,
@@ -782,7 +783,7 @@ newtype Note a = Note { _notee :: Couple Duration a }
 
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Duration, a)
-  _Wrapped' = iso (getCouple . _notee) (Note . Couple)
+  _Wrapped' = iso (getCouple . getNote) (Note . Couple)
 
 instance Rewrapped (Note a) (Note b)
 
@@ -874,7 +875,7 @@ chorde = from chord `dependingOn` (transformed . stretching)
 
 
 
-newtype Event a = Event { _eventee :: (Span, a) }
+newtype Event a = Event { getEvent :: Span `Couple` a }
   deriving (
     Eq,
     Ord,
@@ -885,15 +886,13 @@ newtype Event a = Event { _eventee :: (Span, a) }
     Functor,
     Applicative,
     Monad,
-    Comonad
+    Comonad,
     
-    -- Num,
-    -- Fractional,
-    -- Floating,
-    -- Real,
-    -- RealFrac,
-    
-    
+    Num,
+    Fractional,
+    Floating,
+    Real,
+    RealFrac
     )
 
 instance (Show a, Transformable a) => Show (Event a) where
@@ -901,7 +900,7 @@ instance (Show a, Transformable a) => Show (Event a) where
 
 instance Wrapped (Event a) where
   type Unwrapped (Event a) = (Span, a)
-  _Wrapped' = iso _eventee Event
+  _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
 
 instance Rewrapped (Event a) (Event b)
 
