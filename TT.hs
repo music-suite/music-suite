@@ -1102,7 +1102,12 @@ polyToHomophonicForce :: [Voice a] -> Voice [a]
 polyToHomophonicForce = undefined
 
 homoToPolyphonic      :: Voice [a] -> [Voice a]
-homoToPolyphonic = undefined
+homoToPolyphonic xs = case nvoices xs of
+  Nothing -> []
+  Just n  -> fmap (\n -> fmap (!! n) xs) [0..n-1]
+  where                  
+    nvoices :: Voice [a] -> Maybe Int
+    nvoices = maybeMinimum . fmap length . (^.valuesV)
 
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossing = undefined
@@ -1128,20 +1133,20 @@ midpointsRelative = undefined
 erasRelative      :: Time -> Voice a -> [Span]
 erasRelative = undefined
 
-onsetMap  :: Time -> Voice a -> Map Time a
-onsetMap = undefined
-
-offsetMap :: Time -> Voice a -> Map Time a
-offsetMap = undefined
-
-midpointMap :: Time -> Voice a -> Map Time a
-midpointMap = undefined
-
-eraMap :: Time -> Voice a -> Map Span a
-eraMap = undefined
+-- onsetMap  :: Time -> Voice a -> Map Time a
+-- onsetMap = undefined
+-- 
+-- offsetMap :: Time -> Voice a -> Map Time a
+-- offsetMap = undefined
+-- 
+-- midpointMap :: Time -> Voice a -> Map Time a
+-- midpointMap = undefined
+-- 
+-- eraMap :: Time -> Voice a -> Map Span a
+-- eraMap = undefined
 
 durations :: Voice a -> [Duration]
-durations = undefined
+durations = view durationsV
 
 {-
 
@@ -1416,6 +1421,9 @@ instance HasPosition (Score' a) where
 
 safeMinimum xs = if null xs then 0 else minimum xs
 safeMaximum xs = if null xs then 0 else maximum xs
+
+maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
+maybeMaximum xs = if null xs then Nothing else Just (maximum xs)
 
 instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
