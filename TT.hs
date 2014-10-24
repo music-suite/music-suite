@@ -1016,18 +1016,21 @@ instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
+-- TODO confict between AdditiveGroup/VectorSpace vs. Num
+-- Num is lifted in Applicative, AG/VS is based on voices as duration vectors
+
 instance Num a => Num (Voice a) where
   fromInteger = return . fromInteger
   abs    = fmap abs
   signum = fmap signum
-  (+)    = error "Not implemented"
-  (-)    = error "Not implemented"
-  (*)    = error "Not implemented"
+  (+)    = liftA2 (+)
+  (-)    = liftA2 (-)
+  (*)    = liftA2 (*)
 
 instance AdditiveGroup (Voice a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
+  zeroV   = mempty
+  (^+^)   = (<>)
+  negateV = error "Not implemented" -- TODO negate durations
 
 instance VectorSpace (Voice a) where
   type Scalar (Voice a) = Duration
