@@ -1278,79 +1278,6 @@ fromBass "" x = triad x
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
-type ScoreEvent a = Event a
-
-newtype Score a = Score { getScore' :: (Meta, Score' a) }
-    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
-
-instance Wrapped (Score a) where
-  type Unwrapped (Score a) = (Meta, Score' a)
-  _Wrapped' = iso getScore' Score
-
-instance Rewrapped (Score a) (Score b) where
-
-instance Applicative Score where
-  pure = return
-  (<*>) = ap
-
-instance Monad Score where
-  return = (^. _Unwrapped') . return . return
-  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
-
-instance Alternative Score where
-  empty = mempty
-  (<|>) = mappend
-
-instance MonadPlus Score where
-  mzero = mempty
-  mplus = mappend
-
-{-
-instance FunctorWithIndex Span Score where
-  imap f = over (_Wrapped._2) $ imap f
-
-instance FoldableWithIndex Span Score where
-  ifoldMap f (Score (m,x)) = ifoldMap f x
-
-instance TraversableWithIndex Span Score where
-  itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
--}
-
-instance Transformable (Score a) where
-  transform t (Score (m,x)) = Score (transform t m, transform t x)
-
-instance HasPosition (Score a) where
-  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
-  -- TODO clean up in terms of AddMeta and optimize
-
-instance HasDuration (Score a) where
-  _duration x = _offset x .-. _onset x
-
-instance Enum a => Enum (Score a) where
-  toEnum = return . toEnum
-  fromEnum = list 0 (fromEnum . head) . Foldable.toList
-
-instance Num a => Num (Score a) where
-  fromInteger = return . fromInteger
-  abs    = fmap abs
-  signum = fmap signum
-  (+)    = error "Not implemented"
-  (-)    = error "Not implemented"
-  (*)    = error "Not implemented"
-
-instance AdditiveGroup (Score a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
-
-instance VectorSpace (Score a) where
-  type Scalar (Score a) = Duration
-  d *^ s = d `stretch` s
-
-instance HasMeta (Score a) where
-  meta = _Wrapped . _1
-
 newtype Score' a = Score' { getNScore' :: [ScoreEvent a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
@@ -1391,6 +1318,75 @@ safeMaximum xs = if null xs then 0 else maximum xs
 
 instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
+
+
+
+
+
+type ScoreEvent a = Event a
+
+newtype Score a = Score { getScore' :: (Meta, Score' a) }
+    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+
+instance Wrapped (Score a) where
+  type Unwrapped (Score a) = (Meta, Score' a)
+  _Wrapped' = iso getScore' Score
+
+instance Rewrapped (Score a) (Score b) where
+
+instance Applicative Score where
+  pure = return
+  (<*>) = ap
+
+instance Monad Score where
+  return = (^. _Unwrapped') . return . return
+  xs >>= f = (^. _Unwrapped') $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
+
+instance Alternative Score where
+  empty = mempty
+  (<|>) = mappend
+
+instance MonadPlus Score where
+  mzero = mempty
+  mplus = mappend
+
+instance Transformable (Score a) where
+  transform t (Score (m,x)) = Score (transform t m, transform t x)
+
+instance HasPosition (Score a) where
+  _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
+  -- TODO clean up in terms of AddMeta and optimize
+
+instance HasDuration (Score a) where
+  _duration x = _offset x .-. _onset x
+
+instance Enum a => Enum (Score a) where
+  toEnum = return . toEnum
+  fromEnum = list 0 (fromEnum . head) . Foldable.toList
+
+instance Num a => Num (Score a) where
+  fromInteger = return . fromInteger
+  abs    = fmap abs
+  signum = fmap signum
+  (+)    = error "Not implemented"
+  (-)    = error "Not implemented"
+  (*)    = error "Not implemented"
+
+instance AdditiveGroup (Score a) where
+  zeroV   = error "Not implemented"
+  (^+^)   = error "Not implemented"
+  negateV = error "Not implemented"
+
+instance VectorSpace (Score a) where
+  type Scalar (Score a) = Duration
+  d *^ s = d `stretch` s
+
+instance HasMeta (Score a) where
+  meta = _Wrapped . _1
+
+
+
+
 
 score :: Getter [Event a] (Score a)
 score = from unsafeEvents
