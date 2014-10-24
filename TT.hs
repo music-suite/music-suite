@@ -552,13 +552,17 @@ stretchTo d x = (d ^/ _duration x) `stretch` x
 
 --------------------------------------------------------------------------------
 
+-- Minimal _onset,_offset or _era or _position
 class HasDuration a => HasPosition a where
   -- |
   -- Return the onset of the given value, or the value between the attack and decay phases.
   --
   _position :: a -> Duration -> Time
-  _position x = alerp (_onset x) (_offset x)
+  _position x = alerp a b where (a, b) = (_era x)^.range
 
+  _era :: HasPosition a => a -> Span
+  _era x = _onset x <-> _offset x
+  
   -- |
   -- Return the onset of the given value, or the value between the attack and decay phases.
   --
@@ -567,10 +571,7 @@ class HasDuration a => HasPosition a where
   _offset    = (`_position` 1.0)
 
 instance HasPosition Span where
-  -- Override as an optimization:
-  _onset    (view range -> (t1, t2)) = t1
-  _offset   (view range -> (t1, t2)) = t2
-  _position (view range -> (t1, t2)) = alerp t1 t2
+  _era = id
 
 instance (HasPosition a, HasDuration a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
@@ -579,8 +580,6 @@ instance (HasPosition a, HasDuration a) => HasPosition [a] where
   _onset  = foldr min 0 . fmap _onset
   _offset = foldr max 0 . fmap _offset
 
-_era :: HasPosition a => a -> Span
-_era x = _onset x <-> _offset x
 
 position :: (HasPosition a, Transformable a) => Duration -> Lens' a Time
 position d = lens (`_position` d) (flip $ placeAt d)
@@ -719,8 +718,8 @@ placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
 
 placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
-placee = _Wrapped `dependingOn` (transformed . delayingTime)
--- TODO Remove (a ~ b) witg better definition of 'dependingOn'
+placee = from placed `dependingOn` (transformed . delayingTime)
+-- TODO Remove (a ~ b) with better definition of 'dependingOn'
 
 -- timePlaced :: Iso' Time (Placed ())
 -- timePlaced = iso (\t -> (t,())^.placed) (^.position 0.5) -- arbitrary position
@@ -773,14 +772,14 @@ note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 note = _Unwrapped
 
 notee :: Transformable a => Lens (Note a) (Note a) a a
-notee = _Wrapped `dependingOn` (transformed . stretching)
--- TODO Remove (a ~ b) witg better definition of 'dependingOn'
+notee = from note `dependingOn` (transformed . stretching)
+-- TODO Remove (a ~ b) with better definition of 'dependingOn'
 
 durationNote :: Iso' Duration (Note ())
 durationNote = iso (\d -> (d,())^.note) (^.duration)
 
 noteComplement :: Note a -> Note a
-noteComplement (Note (Couple (d,x))) = Note $ Couple (negateV d, x)
+noteComplement = over (from note . _1) negateV
 
 
 newtype Event a = Event { _eventee :: (Span, a) }
@@ -813,14 +812,14 @@ instance HasDuration (Event a) where
   _duration = _duration . fst . view _Wrapped
 
 instance HasPosition (Event a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
+  _era = view (from event . _1)
 
 event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
 event = _Unwrapped
 
 eventee :: (Transformable a, Transformable b, a ~ b) => Lens (Event a) (Event b) a b
-eventee = _Wrapped `dependingOn` (transformed)
--- TODO Remove (a ~ b) witg better definition of 'dependingOn'
+eventee = from event `dependingOn` (transformed)
+-- TODO Remove (a ~ b) with better definition of 'dependingOn'
 
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s,())^.event) (^.era)
@@ -1413,6 +1412,7 @@ instance Transformable (Score' a) where
 instance HasPosition (Score' a) where
   _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
   _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
+  -- TODO nicer
 
 safeMinimum xs = if null xs then 0 else minimum xs
 safeMaximum xs = if null xs then 0 else maximum xs
@@ -2136,9 +2136,8 @@ instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
 
 instance HasPosition a => HasPosition (AddMeta a) where
-  _onset    = _onset . extract
-  _offset   = _offset . extract
   _position = _position . extract
+  _era      = _era . extract
 
 instance HasDuration a => HasDuration (AddMeta a) where
   _duration = _duration . extract
