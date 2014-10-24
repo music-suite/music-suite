@@ -812,6 +812,67 @@ noteComplement :: Note a -> Note a
 noteComplement = over (from note . _1) negateV
 
 
+
+
+-- TODO
+instance Num (NonEmpty.NonEmpty a)
+instance Fractional (NonEmpty.NonEmpty a)
+instance Ord a => Real (NonEmpty.NonEmpty a)
+instance Ord a => RealFrac (NonEmpty.NonEmpty a)
+instance Ord a => Floating (NonEmpty.NonEmpty a)
+instance Transformable a => Transformable (NonEmpty.NonEmpty a) where
+  transform s = fmap (transform s)
+newtype Chord a = Chord { getChord :: Note (NonEmpty.NonEmpty a) }
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Foldable,
+    Traversable,
+
+    Functor,
+    -- Applicative,
+    -- Monad,
+
+    Num,
+    Fractional,
+    Floating,
+    Real,
+    RealFrac
+    )
+--             -- Comonad,
+-- 
+instance Wrapped (Chord a) where
+  type Unwrapped (Chord a) = (Note (NonEmpty.NonEmpty a))
+  _Wrapped' = iso getChord Chord
+
+instance Rewrapped (Chord a) (Chord b)
+
+instance Transformable (Chord a) where
+  transform t = over _Wrapped (transform t)
+
+-- instance Splittable a => Splittable (Chord a) where
+--   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
+--   ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
+-- 
+instance HasDuration (Chord a) where
+  _duration = _duration . view _Wrapped
+
+instance (Show a, Transformable a) => Show (Chord a) where
+  show x = show (x^.from chord) ++ "^.chord"
+-- 
+chord :: (a ~ b) => Iso (Duration, NonEmpty.NonEmpty a) (Duration, NonEmpty.NonEmpty a) (Chord a) (Chord b)
+chord = from (_Wrapped . from note)
+-- 
+chorde :: Transformable a => Lens (Chord a) (Chord a) (NonEmpty.NonEmpty a) (NonEmpty.NonEmpty a)
+chorde = from chord `dependingOn` (transformed . stretching)
+-- -- TODO Remove (a ~ b) with better definition of 'dependingOn'
+-- 
+-- durationChord :: Iso' Duration (Chord ())
+-- durationChord = iso (\d -> (d,())^.note) (^.duration)
+
+
+
 newtype Event a = Event { _eventee :: (Span, a) }
   deriving (
     Eq,
@@ -2517,6 +2578,7 @@ instance Alternative f => Alternative (Nominal f) where
 
 instance (Applicative f, Alternative f) => Applicative (Graces f) where
   pure x = Graces (empty, pure x, empty)
+  (<*>) = undefined
 
 newtype Nominal f a = Nominal { getNominal :: f a }
   deriving (
