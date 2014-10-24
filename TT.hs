@@ -630,6 +630,34 @@ stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
 
 
+
+delayRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
+delayRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (delay n) x
+
+delayRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeOnset = delayRelative 0
+
+delayRelativeMidpoint :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeMidpoint = delayRelative 0.5
+
+delayRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeOffset = delayRelative 1
+
+
+transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
+transformRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (transform n) x
+
+transformRelativeOnset :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeOnset = transformRelative 0
+
+transformRelativeMidpoint :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeMidpoint = transformRelative 0.5
+
+transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeOffset = transformRelative 1
+
+
+
 --------------------------------------------------------------------------------
 
 lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
