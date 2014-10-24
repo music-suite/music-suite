@@ -804,55 +804,6 @@ _internal_triple = from event . bimapping delta id . tripped
 
 
 
-newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
-
-type TrackList = []
-
-type TrackEv a = Placed a
-
-trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
-trackEv = id
-
-instance Applicative Track where
-  pure  = return
-  (<*>) = ap
-
-instance Alternative Track where
-  (<|>) = (<>)
-  empty = mempty
-
-instance Monad Track where
-  return = view _Unwrapped . return . return
-  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
-
-instance Wrapped (Track a) where
-  type Unwrapped (Track a) = (TrackList (TrackEv a))
-  _Wrapped' = iso getTrack Track
-
-instance Rewrapped (Track a) (Track b)
-
-instance Transformable a => Transformable (Track a) where
-  transform s = over _Wrapped' (transform s)
-
--- instance HasPosition (Track a) where
---   _onset  = safeMinimum . fmap _onset . view _Wrapped'
---   _offset = safeMaximum . fmap _offset . view _Wrapped'
-
--- instance HasDuration (Track a) where
-  -- _duration x = _offset x .-. _onset x
-
-track :: Getter [Placed a] (Track a)
-track = from unsafeTrack
-
-
-placeds :: Lens (Track a) (Track b) [Placed a] [Placed b]
-placeds = unsafeTrack
-
-unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
-unsafeTrack = _Wrapped
-
-
 
 
 
@@ -976,18 +927,14 @@ instance VectorSpace (Voice a) where
 voice :: Getter [Note a] (Voice a)
 voice = from unsafeNotes
 
-
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
 notes = unsafeNotes
 
-
-_internal_triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-_internal_triplesV = unsafeTriplesV
-
+triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+triplesV = unsafeTriplesV
 
 unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
-
 
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
@@ -1028,8 +975,8 @@ zipVoiceWithNoScale = zipVoiceWith' const
 
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith' f g
-  ((unzip.view _internal_triplesV) -> (ad, as))
-  ((unzip.view _internal_triplesV) -> (bd, bs))
+  ((unzip.view triplesV) -> (ad, as))
+  ((unzip.view triplesV) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
      in view (from unsafeTriplesV) (zip cd cs)
@@ -1074,7 +1021,7 @@ durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view _internal_triplesV
+    getDurs = map fst . view triplesV
 
     setDurs :: [Duration] -> Voice a -> Voice a
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
@@ -1085,7 +1032,7 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view _internal_triplesV
+    getValues = map snd . view triplesV
 
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
@@ -1231,6 +1178,56 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 -}
 
 
+
+
+
+newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+
+type TrackList = []
+
+type TrackEv a = Placed a
+
+trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
+trackEv = id
+
+instance Applicative Track where
+  pure  = return
+  (<*>) = ap
+
+instance Alternative Track where
+  (<|>) = (<>)
+  empty = mempty
+
+instance Monad Track where
+  return = view _Unwrapped . return . return
+  xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
+
+instance Wrapped (Track a) where
+  type Unwrapped (Track a) = (TrackList (TrackEv a))
+  _Wrapped' = iso getTrack Track
+
+instance Rewrapped (Track a) (Track b)
+
+instance Transformable a => Transformable (Track a) where
+  transform s = over _Wrapped' (transform s)
+
+-- instance HasPosition (Track a) where
+--   _onset  = safeMinimum . fmap _onset . view _Wrapped'
+--   _offset = safeMaximum . fmap _offset . view _Wrapped'
+
+-- instance HasDuration (Track a) where
+  -- _duration x = _offset x .-. _onset x
+
+track :: Getter [Placed a] (Track a)
+track = from unsafeTrack
+
+
+placeds :: Lens (Track a) (Track b) [Placed a] [Placed b]
+placeds = unsafeTrack
+
+unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
+unsafeTrack = _Wrapped
 
 
 
@@ -1530,32 +1527,6 @@ normalizeScore = reset . normalizeScoreDurations
     reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (events . each . era) normalizeSpan
 
--- printEras :: Score a -> IO ()
--- printEras = mapM_ print . toListOf eras
---
--- eras :: Traversal' (Score a) Span
--- eras = events . each . era
---
--- chordTriples :: Transformable a => Span -> Score a -> [a]
--- chordTriples s = fmap extract . filter ((== s) . view era) . view events
---
--- simultaneous' :: Transformable a => Score a -> Score [a]
--- simultaneous' sc = (^. from unsafeTriples) vs
---   where
---     -- es :: [Era]
---     -- evs :: [[a]]
---     -- vs :: [(Time, Duration, [a])]
---     es  = Data.List.nub $ toListOf eras sc
---     evs = fmap (`chordTriples` sc) es
---     vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
---
--- simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
--- simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
---
--- simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
--- simult = iso simultaneous' mscatter
---
---
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
