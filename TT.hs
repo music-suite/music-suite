@@ -77,8 +77,9 @@ newtype Duration = Duration { getDuration :: TimeBase }
     Eq,
     Ord,
     Typeable,
-    Num,
     Enum,
+    
+    Num,
     Fractional,
     Real,
     RealFrac
@@ -113,8 +114,9 @@ newtype Time = Time { getTime :: TimeBase }
     Eq,
     Ord,
     Typeable,
-    Num,
     Enum,
+
+    Num,
     Fractional,
     Real,
     RealFrac
@@ -646,13 +648,14 @@ newtype Placed a = Placed   { _placee :: (Time, a) }
   deriving (
     Eq,
     Ord,
+    Typeable,
+    Foldable,
+    Traversable,
+    
     Functor,
     Applicative,
     Monad,
-    Comonad,
-    Foldable,
-    Traversable,
-    Typeable
+    Comonad    
     )
 
 instance (Show a, Transformable a) => Show (Placed a) where
@@ -691,18 +694,20 @@ placee = _Wrapped `dependingOn` (transformed . delayingTime)
 newtype Note a = Note { _notee :: Couple Duration a }
   deriving (
     Eq,
-    Num,
-    Fractional,
-    Floating,
     Ord,
-    Real,
-    RealFrac,
+    Typeable,
+    Foldable,
+    Traversable,
+
     Functor,
     Applicative,
     Monad,
-    Foldable,
-    Traversable,
-    Typeable
+
+    Num,
+    Fractional,
+    Floating,
+    Real,
+    RealFrac
     )
             -- Comonad,
 
@@ -742,13 +747,15 @@ noteComplement (Note (Couple (d,x))) = Note $ Couple (negateV d, x)
 newtype Event a = Event { _eventee :: (Span, a) }
   deriving (
     Eq,
-    Functor,
+    Ord,
+    Typeable,
     Foldable,
     Traversable,
-    Monad,
+    
+    Functor,
     Applicative,
-    Comonad,
-    Typeable
+    Monad,
+    Comonad
     )
 
 instance (Show a, Transformable a) => Show (Event a) where
@@ -824,13 +831,15 @@ triple = from event . bimapping delta id . tripped
 
 newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
   deriving (
-    Functor, 
+    Eq,
+    Ord,
+    Typeable,
     Foldable, 
     Traversable, 
+
+    Functor, 
     Semigroup, 
-    Monoid, 
-    Typeable, 
-    Eq
+    Monoid 
     )
 
 instance (Show a, Transformable a) => Show (Voice a) where
@@ -1169,14 +1178,15 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
   deriving (
-    Functor, 
+    Eq,
+    Show,
+    Typeable, 
     Foldable, 
     Traversable, 
+
     Semigroup, 
     Monoid, 
-    Typeable, 
-    Show, 
-    Eq
+    Functor
     )
 
 type TrackList = []
@@ -1330,14 +1340,14 @@ fromBass "" x = triad x
 newtype Score' a = Score' { getNScore' :: [ScoreEvent a] }
   deriving (
     Eq,
-    -- Ord,
-    Functor, 
+    Show,
+    Typeable, 
     Foldable, 
     Traversable, 
+
+    Functor, 
     Semigroup, 
-    Monoid, 
-    Typeable, 
-    Show
+    Monoid
     )
 
 instance (Show a, Transformable a) => Show (Score a) where
@@ -1386,13 +1396,16 @@ type ScoreEvent a = Event a
 
 newtype Score a = Score { getScore' :: (Meta, Score' a) }
     deriving (
+      -- Eq,
+      -- Ord,
+      -- Show,
+
       Functor, 
       Semigroup, 
       Monoid, 
       Foldable, 
       Traversable, 
       Typeable
-      {-, Show, Eq, Ord-}
       )
 
 instance Wrapped (Score a) where
