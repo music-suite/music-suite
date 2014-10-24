@@ -6,15 +6,15 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
+-- {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE RankNTypes                 #-}
 
 import           Control.Applicative
 import           Control.Comonad
@@ -69,10 +69,19 @@ import           Music.Pitch.Literal
 type TimeBase = Rational
 
 newtype Duration = Duration { getDuration :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+  deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
 
 instance Show Duration where
   show = showRatio . toRational
+
+-- TODO Semigroup/Monoid instance is almost definately wrong!
+-- It follows that stretched etc. must use (Product Monoid, a restricted version of span or something similar instead)
+instance Semigroup Duration where
+  (<>)    = (*^)
+
+instance Monoid Duration where
+  mempty  = 1
+  mappend = (*^)
 
 instance AdditiveGroup Duration where
   zeroV   = 0
@@ -81,21 +90,26 @@ instance AdditiveGroup Duration where
 
 instance VectorSpace Duration where
   type Scalar Duration = Duration
-  (*^) = (*)
-
-instance Semigroup Duration where
-  (<>) = (*^)
-
-instance Monoid Duration where
-  mempty  = 1
-  mappend = (*^)
+  (*^)    = (*)
 
 
 newtype Time = Time { getTime :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable, AdditiveGroup)
+  deriving (Eq, Ord, Typeable, Num, Enum, Fractional, Real, RealFrac)
 
 instance Show Time where
-  show = showRatio . toRational
+  show    = showRatio . toRational
+
+instance Semigroup Time where
+  (<>)    = (+)
+
+instance Monoid Time where
+  mempty  = 0
+  mappend = (+)
+
+instance AdditiveGroup Time where
+  zeroV   = 0
+  (^+^)   = (+)
+  negateV = negate
 
 instance VectorSpace Time where
   type Scalar Time = Duration
@@ -103,16 +117,9 @@ instance VectorSpace Time where
 
 instance AffineSpace Time where
   type Diff Time = Duration
-  Time x .-. Time y   = Duration (x - y)
-  Time x .+^ Duration y = Time   (x + y)
+  Time x .-. Time y     = Duration (x - y)
+  Time x .+^ Duration y = Time     (x + y)
 
-instance Semigroup Time where
-  (<>) = (^+^)
-
-instance Monoid Time where
-  mempty  = zeroV
-  mappend = (^+^)
-  mconcat = sumV
 
 -- TODO rename these...
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
@@ -132,7 +139,7 @@ toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
 
-newtype Span = Delta { getSpan :: (Time, Duration) }
+newtype Span = Span { getSpan :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
 
 instance Show Span where
@@ -148,8 +155,12 @@ instance Monoid Span where
 
 instance AdditiveGroup Span where
   zeroV   = 0 <-> 1
-  Delta (t1, d1) ^+^ Delta (t2, d2) = Delta (t1 ^+^ d1 *^ t2, d1*d2)
-  negateV (Delta (t, d)) = Delta (-t ^/ d, recip d)
+  Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
+  negateV (Span (t, d)) = Span (-t ^/ d, recip d)
+
+instance VectorSpace Span where
+  type Scalar Span = Duration
+  x *^ Span (t, d) = Span (x*^t, x*^d)
 
 infixl 6 <->
 infixl 6 >->
@@ -159,7 +170,7 @@ infixl 6 <-<
 t <-> u = t >-> (u .-. t)
 
 (>->) :: Time -> Duration -> Span
-(>->) = curry Delta
+(>->) = curry Span
 
 (<-<) :: Duration -> Time -> Span
 a <-< b = (b .-^ a) <-> b
@@ -170,7 +181,7 @@ range = iso _range $ uncurry (<->)
     _range x = let (t, d) = getSpan x in (t, t .+^ d)
 
 delta :: Iso' Span (Time, Duration)
-delta = iso getSpan Delta
+delta = iso getSpan Span
 
 codelta :: Iso' Span (Duration, Time)
 codelta = iso _codelta $ uncurry (<-<)
@@ -2084,31 +2095,37 @@ type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
 
 type TAttributeClass a = (Transformable a, AttributeClass a)
 
-data Attribute :: * where
-  Attribute  :: AttributeClass a => a -> Attribute
-  TAttribute :: TAttributeClass a  => a -> Attribute
+-- data Attribute :: * where
+--   Attribute  :: AttributeClass a => a -> Attribute
+--   TAttribute :: TAttributeClass a  => a -> Attribute
+data Attribute = Attribute
 
 wrapAttr :: AttributeClass a => a -> Attribute
-wrapAttr = Attribute
+-- wrapAttr = Attribute
 
 wrapTAttr :: TAttributeClass a => a -> Attribute
-wrapTAttr = TAttribute
+-- wrapTAttr = TAttribute
 
 unwrapAttr :: AttributeClass a => Attribute -> Maybe a
-unwrapAttr (Attribute a)  = cast a
-unwrapAttr (TAttribute a) = cast a
+-- unwrapAttr (Attribute a)  = cast a
+-- unwrapAttr (TAttribute a) = cast a
+wrapAttr = undefined
+unwrapAttr = undefined
+wrapTAttr = undefined
+unwrapTAttr = undefined
 
 instance Semigroup Attribute where
-  (Attribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
-    Just a2' -> Attribute (a1 <> a2')
-  (TAttribute a1) <> a2 = case unwrapAttr a2 of
-    Nothing  -> error "Attribute.(<>) mismatch"
-    Just a2' -> TAttribute (a1 <> a2')
+  (<>) = undefined
+  -- (Attribute a1) <> a2 = case unwrapAttr a2 of
+  --   Nothing  -> error "Attribute.(<>) mismatch"
+  --   Just a2' -> Attribute (a1 <> a2')
+  -- (TAttribute a1) <> a2 = case unwrapAttr a2 of
+  --   Nothing  -> error "Attribute.(<>) mismatch"
+  --   Just a2' -> TAttribute (a1 <> a2')
 
 instance Transformable Attribute where
-  transform _ (Attribute a) = Attribute a
-  transform s (TAttribute a) = TAttribute (transform s a)
+  -- transform _ (Attribute a) = Attribute a
+  -- transform s (TAttribute a) = TAttribute (transform s a)
 
 instance Splittable Attribute where
   split _ x = (x,x)
