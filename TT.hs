@@ -790,10 +790,6 @@ instance Rewrapped (Note a) (Note b)
 instance Transformable (Note a) where
   transform t = over (_Wrapped . _1) (transform t)
 
-instance Splittable a => Splittable (Note a) where
-  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
-
 instance HasDuration (Note a) where
   _duration = _duration . view _Wrapped
 
@@ -853,10 +849,6 @@ instance Rewrapped (Chord a) (Chord b)
 instance Transformable (Chord a) where
   transform t = over _Wrapped (transform t)
 
--- instance Splittable a => Splittable (Chord a) where
---   beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning d v)
---   ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    d v)
--- 
 instance HasDuration (Chord a) where
   _duration = _duration . view _Wrapped
 
@@ -1020,14 +1012,6 @@ instance Transformable (Voice a) where
 instance HasDuration (Voice a) where
   _duration = Foldable.sum . fmap _duration . view _Wrapped'
 
-instance Splittable a => Splittable (Voice a) where
-  split t x
-    | t <= 0           = (mempty, x)
-    | t >= _duration x = (x,      mempty)
-    | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
-    where
-      split' = error "TODO"
-
 instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
@@ -1063,6 +1047,9 @@ unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
+
+durationsVoice :: Iso' [Duration] (Voice ())
+durationsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
 
 
 unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
@@ -1214,16 +1201,20 @@ processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b ->
 processExactOverlaps' = undefined
 
 onsetsRelative    :: Time -> Voice a -> [Time]
-onsetsRelative = undefined
+onsetsRelative o v = case offsetsRelative o v of
+  [] -> []
+  xs -> o : init xs
 
 offsetsRelative   :: Time -> Voice a -> [Time]
-offsetsRelative = undefined
+offsetsRelative o = fmap (\t -> o .+^ (t .-. 0)) . toAbsoluteTime . (^. durationsV)
 
 midpointsRelative :: Time -> Voice a -> [Time]
-midpointsRelative = undefined
+midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o v)
+  where
+    between p q = alerp p q 0.5
 
-erasRelative      :: Time -> Voice a -> [Span]
-erasRelative = undefined
+erasRelative :: Time -> Voice a -> [Span]
+erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 
 -- onsetMap  :: Time -> Voice a -> Map Time a
 -- onsetMap = undefined
