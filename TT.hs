@@ -630,7 +630,7 @@ newtype Placed a = Placed   { _placee :: (Time, a) }
             Functor,
             Applicative,
             Monad,
-            -- Comonad,
+            Comonad,
             Foldable,
             Traversable,
             Typeable)
@@ -652,20 +652,6 @@ instance Transformable a => Transformable (Placed a) where
 
 -- instance HasPosition (Placed a) where
   -- x `_position` p = fst (view _Wrapped x) `_position` p
-
-{-
-instance IsString a => IsString (Placed a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Placed a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Placed a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Placed a) where
-  fromDynamics = pure . fromDynamics
--}
 
 placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
@@ -705,20 +691,6 @@ instance Splittable a => Splittable (Note a) where
 
 instance HasDuration (Note a) where
   _duration = _duration . view _Wrapped
-
-{-
-instance IsString a => IsString (Note a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Note a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Note a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Note a) where
-  fromDynamics = pure . fromDynamics
--}
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
@@ -764,20 +736,6 @@ instance HasDuration (Event a) where
 
 instance HasPosition (Event a) where
   x `_position` p = fst (view _Wrapped x) `_position` p
-
-{-
-instance IsString a => IsString (Event a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Event a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Event a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Event a) where
-  fromDynamics = pure . fromDynamics
--}
 
 event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
 event = _Unwrapped
@@ -890,18 +848,6 @@ instance Splittable a => Splittable (Voice a) where
     | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
     where
       split' = error "TODO"
-
-instance IsString a => IsString (Voice a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Voice a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Voice a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Voice a) where
-  fromDynamics = pure . fromDynamics
 
 instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
@@ -1381,18 +1327,6 @@ instance HasPosition (Score a) where
 instance HasDuration (Score a) where
   _duration x = _offset x .-. _onset x
 
-instance IsString a => IsString (Score a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Score a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Score a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Score a) where
-  fromDynamics = pure . fromDynamics
-
 instance Enum a => Enum (Score a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
@@ -1837,18 +1771,6 @@ deriving instance AdditiveGroup a => AdditiveGroup (Behavior a)
 
 instance Real a => Real (Behavior a) where
   toRational = toRational . (! 0)
-
-instance IsString a => IsString (Behavior a) where
-  fromString = pure . fromString
-
-instance IsPitch a => IsPitch (Behavior a) where
-  fromPitch = pure . fromPitch
-
-instance IsInterval a => IsInterval (Behavior a) where
-  fromInterval = pure . fromInterval
-
-instance IsDynamics a => IsDynamics (Behavior a) where
-  fromDynamics = pure . fromDynamics
 
 instance Alterable a => Alterable (Behavior a) where
   sharpen = fmap sharpen
