@@ -743,8 +743,8 @@ eventee = _Wrapped `dependingOn` (transformed)
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s,())^.event) (^.era)
 
-_internal_triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
-_internal_triple = from event . bimapping delta id . tripped
+triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
+triple = from event . bimapping delta id . tripped
 -- TODO remove
 
 
@@ -1406,9 +1406,9 @@ unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration,
 unsafeTriples = iso _getScore _score
   where
     _score :: [(Time, Duration, a)] -> Score a
-    _score = mconcat . fmap (uncurry3 _internal_triple)
+    _score = mconcat . fmap (uncurry3 triple)
       where
-        _internal_triple t d x   = (delay (t .-. 0) . stretch d) (return x)
+        triple t d x   = (delay (t .-. 0) . stretch d) (return x)
 
     _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
     _getScore =
@@ -1422,7 +1422,7 @@ reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-triples = events . _zipList . through _internal_triple _internal_triple . from _zipList
+triples = events . _zipList . through triple triple . from _zipList
 
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
