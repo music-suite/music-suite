@@ -592,11 +592,11 @@ gmPerc = [
         isMonophonic :: Score a -> Bool
 
         -- | Fails for polyphonic scores.
-        scoreToVoice :: Score a -> Voice (Maybe a)
+        s_oreToVoice :: Score a -> Voice (Maybe a)
 
     A polyphonic score contains several voices, i.e.
 
-        scoreToVoices :: Score a -> [Voice (Maybe a)]
+        s_oreToVoices :: Score a -> [Voice (Maybe a)]
 
 
     A part is any type a that satisfies (Ord a, Show a).
