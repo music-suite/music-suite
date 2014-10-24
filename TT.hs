@@ -145,22 +145,49 @@ instance AffineSpace Time where
   Time x .+^ Duration y = Time     (x + y)
 
 
--- TODO rename these...
+-- | Lay out a series of vectors from a given point. Return all intermediate points.
+-- 
+-- > lenght xs + 1 == length (offsetPoints p xs)
+-- 
+-- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- [0,1,2,3]
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
+-- | Interpret as durations from 0.
+--
+-- > toAbsoluteTime (toRelativeTime xs) == xs
+--
+-- > lenght xs == length (toRelativeTime xs)
+--
+-- >>> toAbsoluteTime [1,1,1] :: [Time]
+-- [1,2,3]
+toAbsoluteTime :: [Duration] -> [Time]
+toAbsoluteTime = tail . offsetPoints 0
+
+-- | Duration between 0 and first value and so on until the last.
+-- 
+-- > toAbsoluteTime (toRelativeTime xs) == xs
+-- 
+-- > lenght xs == length (toRelativeTime xs)
+-- 
+-- >>> toRelativeTime [1,2,3]
+-- [1,1,1]
 toRelativeTime :: [Time] -> [Duration]
 toRelativeTime = snd . Data.List.mapAccumL g 0 where g prev t = (t, t .-. prev)
 
+-- TODO rename these two...
+
+-- | Duration between values until the last, then up to the given final value.
+-- > lenght xs == length (toRelativeTime xs)
 toRelativeTimeN' :: Time -> [Time] -> [Duration]
 toRelativeTimeN' end = snd . Data.List.mapAccumR g end where g prev t = (t, prev .-. t)
 
+-- Same as toRelativeTimeN' but always returns 0 as the last value...
+-- TODO remove
 toRelativeTimeN :: [Time] -> [Duration]
 toRelativeTimeN [] = []
 toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
-
-toAbsoluteTime :: [Duration] -> [Time]
-toAbsoluteTime = tail . offsetPoints 0
 
 
 --------------------------------------------------------------------------------
