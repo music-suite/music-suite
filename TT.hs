@@ -406,6 +406,18 @@ a `isBefore` b = (_onset a `max` _offset a) <= (_onset b `min` _offset b)
 --------------------------------------------------------------------------------
 
 
+-- Transformable laws:
+-- > transform mempty   = id
+-- > transform (s <> t) = transform s . transform t
+--
+-- Duration law:
+-- > _duration a = _duration (_era a)
+--
+-- Position law:
+-- > _position p (transform s a) = transform s (_position p a)
+--
+-- Lemma:
+-- > _duration (transform s a) = transform s (_duration a)
 class Transformable a where
   transform :: Span -> a -> a
 
@@ -513,9 +525,6 @@ delayTime = transform . delayingTime
 class HasDuration a where
   _duration :: a -> Duration
 
--- instance HasDuration Time where
-  -- _duration = 0
-
 instance HasDuration Duration where
   _duration = id
 
@@ -554,7 +563,7 @@ duration = lens _duration (flip stretchTo)
 
 --------------------------------------------------------------------------------
 
--- Minimal _onset,_offset or _era or _position
+-- Minimal complete def: _onset,_offset or _era or _position
 class HasDuration a => HasPosition a where
   -- |
   -- Return the onset of the given value, or the value between the attack and decay phases.
