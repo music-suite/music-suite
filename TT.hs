@@ -715,8 +715,8 @@ times n = scat . replicate n
 
 
 
-rest :: Applicative f => f (Maybe a)
-rest = pure Nothing
+-- rest :: Applicative f => f (Maybe a)
+-- rest = pure Nothing
 
 
 
@@ -862,17 +862,61 @@ instance HasDuration (Chord a) where
   _duration = _duration . view _Wrapped
 
 instance (Show a, Transformable a) => Show (Chord a) where
-  show x = show (x^.from chord) ++ "^.chord"
--- 
+  show x = show (x^.from chord') ++ "^.chord'"
+
 chord :: (a ~ b) => Iso (Duration, NonEmpty.NonEmpty a) (Duration, NonEmpty.NonEmpty a) (Chord a) (Chord b)
 chord = from (_Wrapped . from note)
--- 
+
+chord' :: (a ~ b) => Iso (Duration, [a]) (Duration, [b]) (Chord a) (Chord b)
+chord' = bimapping id nonEmpty . chord
+
 chorde :: Transformable a => Lens (Chord a) (Chord a) (NonEmpty.NonEmpty a) (NonEmpty.NonEmpty a)
 chorde = from chord `dependingOn` (transformed . stretching)
 -- -- TODO Remove (a ~ b) with better definition of 'dependingOn'
 -- 
 -- durationChord :: Iso' Duration (Chord ())
 -- durationChord = iso (\d -> (d,())^.note) (^.duration)
+
+nonEmpty :: Iso [a] [b] (NonEmpty.NonEmpty a) (NonEmpty.NonEmpty b)
+nonEmpty = iso NonEmpty.fromList NonEmpty.toList
+
+newtype Rest a = Rest { getRest :: Duration }
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Foldable,
+    Traversable,
+
+    Functor
+    -- Applicative,
+    -- Monad,
+
+    -- Num,
+    -- Fractional,
+    -- Floating,
+    -- Real,
+    -- RealFrac
+    )
+
+instance Wrapped (Rest a) where
+  type Unwrapped (Rest a) = Duration
+  _Wrapped' = iso getRest Rest
+
+instance Rewrapped (Rest a) (Rest b)
+
+instance Transformable (Rest a) where
+  transform t = over _Wrapped (transform t)
+
+instance HasDuration (Rest a) where
+  _duration = _duration . view (from rest)
+
+instance (Show a, Transformable a) => Show (Rest a) where
+  show x = show (x^.from rest) ++ "^.rest"
+
+rest :: Iso' Duration (Rest a)
+rest = _Unwrapped
+
 
 
 
