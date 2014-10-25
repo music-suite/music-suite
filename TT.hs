@@ -1354,7 +1354,25 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 -}
 
+newtype AlignedVoice a = AlignedVoice { getAlignedVoice :: (Time, LocalDuration, Voice a) }
 
+alignVoice :: Time -> LocalDuration -> Voice a -> AlignedVoice a
+alignVoice t d a = AlignedVoice (t, d, a)
+
+instance Transformable (AlignedVoice a) where
+  transform s (AlignedVoice (t, d, v)) = AlignedVoice (transform s t, d, transform s v)
+
+instance HasDuration (AlignedVoice a) where
+  _duration (AlignedVoice (_, _, v)) = _duration v
+
+instance HasPosition (AlignedVoice a) where
+  _position (AlignedVoice (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
+    where
+      size = _duration v
+
+-- TODO better API
+renderAlignedVoice :: AlignedVoice a -> Score a
+renderAlignedVoice a@(AlignedVoice (_, _, v)) = startAt (_onset a) $ scat $ map (uncurry stretch) (fmap pure v^.triplesV)
 
 
 
