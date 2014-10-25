@@ -1459,7 +1459,7 @@ fromBass "" x = triad x
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-newtype Score' a = Score' { getNScore' :: [ScoreEvent a] }
+newtype Score' a = Score' { getScore' :: [Event a] }
   deriving (
     Eq,
     Show,
@@ -1476,8 +1476,8 @@ instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x^.events) ++ "^.score"
 
 instance Wrapped (Score' a) where
-  type Unwrapped (Score' a) = [ScoreEvent a]
-  _Wrapped' = iso getNScore' Score'
+  type Unwrapped (Score' a) = [Event a]
+  _Wrapped' = iso getScore' Score'
 
 instance Rewrapped (Score' a) (Score' b)
 
@@ -1519,10 +1519,7 @@ instance HasDuration (Score' a) where
 
 
 
-
-type ScoreEvent a = Event a
-
-newtype Score a = Score { getScore' :: (Meta, Score' a) }
+newtype Score a = Score { getScore :: (Meta, Score' a) }
     deriving (
       -- Eq,
       -- Ord,
@@ -1538,7 +1535,7 @@ newtype Score a = Score { getScore' :: (Meta, Score' a) }
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = (Meta, Score' a)
-  _Wrapped' = iso getScore' Score
+  _Wrapped' = iso getScore Score
 
 instance Rewrapped (Score a) (Score b) where
 
