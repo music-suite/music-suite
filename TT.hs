@@ -1366,7 +1366,11 @@ instance HasDuration (AlignedVoice a) where
   _duration (AlignedVoice (_, _, v)) = _duration v
 
 instance HasPosition (AlignedVoice a) where
-  _position (AlignedVoice (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
+  -- _position (AlignedVoice (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
+  --   where
+  --     size = _duration v
+  _era (AlignedVoice (position, alignment, v)) = 
+    (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
     where
       size = _duration v
 
