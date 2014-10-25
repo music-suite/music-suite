@@ -70,6 +70,7 @@ module Music.Time.Voice (
         sameDurations,
         mergeIfSameDuration,
         mergeIfSameDurationWith,
+        homoToPolyphonic,
         
         -- * Context
         -- TODO clean
@@ -618,8 +619,15 @@ polyToHomophonic = undefined
 polyToHomophonicForce :: [Voice a] -> Voice [a]
 polyToHomophonicForce = undefined
 
+-- | Split a homophonic texture into a polyphonic one. The returned voice list will not
+-- have as many elements as the chord with the fewest number of notes.
 homoToPolyphonic      :: Voice [a] -> [Voice a]
-homoToPolyphonic = undefined
+homoToPolyphonic xs = case nvoices xs of
+  Nothing -> []
+  Just n  -> fmap (\n -> fmap (!! n) xs) [0..n-1]
+  where                  
+    nvoices :: Voice [a] -> Maybe Int
+    nvoices = maybeMinimum . fmap length . (^.valuesV)
 
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossing = undefined
@@ -734,3 +742,5 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 -}
 
+maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
+maybeMaximum xs = if null xs then Nothing else Just (maximum xs)
