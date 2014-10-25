@@ -1354,18 +1354,20 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 -}
 
-newtype AlignedVoice a = AlignedVoice { getAlignedVoice :: (Time, LocalDuration, Voice a) }
+type AlignedVoice a = Aligned (Voice a)
+
+newtype Aligned v = AlignedVoice { getAlignedVoice :: (Time, LocalDuration, v) }
 
 alignVoice :: Time -> LocalDuration -> Voice a -> AlignedVoice a
 alignVoice t d a = AlignedVoice (t, d, a)
 
-instance Transformable (AlignedVoice a) where
+instance Transformable v => Transformable (Aligned v) where
   transform s (AlignedVoice (t, d, v)) = AlignedVoice (transform s t, d, transform s v)
 
-instance HasDuration (AlignedVoice a) where
+instance HasDuration v => HasDuration (Aligned v) where
   _duration (AlignedVoice (_, _, v)) = _duration v
 
-instance HasPosition (AlignedVoice a) where
+instance HasDuration v => HasPosition (Aligned v) where
   -- _position (AlignedVoice (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
   --   where
   --     size = _duration v
