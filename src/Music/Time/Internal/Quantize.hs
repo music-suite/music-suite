@@ -184,7 +184,7 @@ tupletDot orig@(Tuplet ((unRatio.realToFrac) -> (2,3)) (Dotted 1 x)) = x
 tupletDot orig                                                       = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
-splitTupletIfLongEnough r = if _duration r > (1/4) then splitTuplet r else r
+splitTupletIfLongEnough r = if _duration r > (1/2) then splitTuplet r else r
 -- TODO should compare against beat duration, not just (1/4)
 
 -- | Splits a tuplet iff it contans a group which can be split into two halves whose
