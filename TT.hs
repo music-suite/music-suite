@@ -876,6 +876,10 @@ chord' = bimapping id nonEmpty . chord
 
 chorde :: Transformable a => Lens (Chord a) (Chord a) (NonEmpty.NonEmpty a) (NonEmpty.NonEmpty a)
 chorde = from chord `dependingOn` (transformed . stretching)
+
+chorde' :: Transformable a => Lens (Chord a) (Chord a) [a] [a]
+chorde' = chorde . from nonEmpty
+
 -- -- TODO Remove (a ~ b) with better definition of 'dependingOn'
 -- 
 -- durationChord :: Iso' Duration (Chord ())
