@@ -1006,9 +1006,12 @@ triple = from event . bimapping delta id . tripped
 -- unconsV  = uncons
 -- snocV    = snoc
 -- unsnocV  = unsnoc
--- nullV    = nullOf notes
--- lengthV  = lengthOf notes
+-- nullV    = nullOf (notes . each)
+-- lengthV  = lengthOf (notes . each)
 -- mapV     = fmap
+-- over (notes . each) :: (Note a -> Note b) -> Voice a -> Voice b
+-- over (notes . each . from note)
+--  :: ((Duration, a) -> (Duration, b)) -> Voice a -> Voice b
 
 
 newtype Voice a = Voice { getVoice :: [Note a] }
