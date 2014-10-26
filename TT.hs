@@ -1359,29 +1359,33 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 type AlignedVoice a = Aligned (Voice a)
 
-newtype Aligned v = AlignedVoice { getAlignedVoice :: (Time, LocalDuration, v) }
+newtype Aligned v = Aligned { getAligned :: (Time, LocalDuration, v) }
 
-alignVoice :: Time -> LocalDuration -> Voice a -> AlignedVoice a
-alignVoice t d a = AlignedVoice (t, d, a)
+aligned :: Time -> LocalDuration -> v -> Aligned v
+aligned t d a = Aligned (t, d, a)
+
+instance Show a => Show (Aligned a) where
+  show (Aligned (t,d,v)) = "aligned ("++show t++") ("++show d++") ("++ show v++")"
 
 instance Transformable v => Transformable (Aligned v) where
-  transform s (AlignedVoice (t, d, v)) = AlignedVoice (transform s t, d, transform s v)
+  transform s (Aligned (t, d, v)) = Aligned (transform s t, d, transform s v)
 
 instance HasDuration v => HasDuration (Aligned v) where
-  _duration (AlignedVoice (_, _, v)) = _duration v
+  _duration (Aligned (_, _, v)) = _duration v
 
 instance HasDuration v => HasPosition (Aligned v) where
-  -- _position (AlignedVoice (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
+  -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
   --   where
   --     size = _duration v
-  _era (AlignedVoice (position, alignment, v)) = 
+  _era (Aligned (position, alignment, v)) = 
     (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
     where
       size = _duration v
 
 -- TODO better API
+-- compare placeAt etc. above
 renderAlignedVoice :: AlignedVoice a -> Score a
-renderAlignedVoice a@(AlignedVoice (_, _, v)) = startAt (_onset a) $ scat $ map (uncurry stretch) (fmap pure v^.triplesV)
+renderAlignedVoice a@(Aligned (_, _, v)) = startAt (_onset a) $ scat $ map (uncurry stretch) (fmap pure v^.triplesV)
 
 
 
