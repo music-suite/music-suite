@@ -729,7 +729,7 @@ times n = scat . replicate n
 --------------------------------------------------------------------------------
 
 
-newtype Placed a = Placed   { getPlaced :: Time `Couple` a }
+newtype Placed a = Placed { getPlaced :: Time `Couple` a }
   deriving (
     Eq,
     Ord,
