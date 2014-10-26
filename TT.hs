@@ -793,6 +793,9 @@ newtype Note a = Note { getNote :: Duration `Couple` a }
     )
             -- Comonad,
 
+instance (Show a, Transformable a) => Show (Note a) where
+  show x = show (x^.from note) ++ "^.note"
+
 instance Wrapped (Note a) where
   type Unwrapped (Note a) = (Duration, a)
   _Wrapped' = iso (getCouple . getNote) (Note . Couple)
@@ -804,9 +807,6 @@ instance Transformable (Note a) where
 
 instance HasDuration (Note a) where
   _duration = _duration . view (from note)
-
-instance (Show a, Transformable a) => Show (Note a) where
-  show x = show (x^.from note) ++ "^.note"
 
 note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
 note = _Unwrapped
@@ -1112,11 +1112,11 @@ notes = unsafeNotes
 triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 triplesV = unsafeTriplesV
 
-unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
-
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
+
+unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
 durationsVoice :: Iso' [Duration] (Voice ())
 durationsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
@@ -1193,11 +1193,6 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
 
 withContext :: Voice a -> Voice (Ctxt a)
 withContext = over valuesV addCtxt
-
-voiceFromRhythm :: [Duration] -> Voice ()
-voiceFromRhythm = mkVoice . fmap (, ())
-
-mkVoice = view voice . fmap (view note)
 
 durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
