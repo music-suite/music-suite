@@ -6,6 +6,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE RankNTypes                 #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -20,15 +22,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Delayed (
-        -- * Delayed type
-        Delayed,
+        -- * Placed type
+        Placed,
 
         -- * Construction
-        delayed,
-        delayedValue,
+        placed,
+        placee,
   ) where
 
 import           Control.Applicative
+import           Control.Comonad
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,
                                           transform, (<|), (|>))
@@ -50,82 +53,79 @@ import           Music.Time.Split
 
 
 -- |
--- 'Delayed' represents a value with an offset in time.
+-- 'Placed' represents a value with an offset in time.
 --
--- A delayed value has a known 'position', but no 'duration'.
+-- A placed value has a known 'position', but no 'duration'.
 --
--- Placing a value inside 'Delayed' does not make it invariant under 'stretch', as the
--- offset of a delayed value may be stretched with respect to the origin. However, in
+-- Placing a value inside 'Placed' does not make it invariant under 'stretch', as the
+-- offset of a placed value may be stretched with respect to the origin. However, in
 -- contrast to a note the /duration/ is not stretched.
 --
-newtype Delayed a = Delayed   { _delayedValue :: (Time, a) }
-  deriving (Eq,
-            Ord,
-            Functor,
-            Applicative,
-            Monad,
-            -- Comonad,
-            Foldable,
-            Traversable,
-            Typeable)
+newtype Placed a = Placed { getPlaced :: Time `Couple` a }
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Foldable,
+    Traversable,
+    
+    Functor,
+    Applicative,
+    Monad,
+    Comonad    
+    )
 
--- $semantics Delayed
---
--- @
--- type Delayed a = (Time, a)
--- @
---
+instance (Show a, Transformable a) => Show (Placed a) where
+  show x = show (x^.from placed) ++ "^.placed"
 
-instance (Show a, Transformable a) => Show (Delayed a) where
-  show x = show (x^.from delayed) ++ "^.delayed"
+instance Wrapped (Placed a) where
+  type Unwrapped (Placed a) = (Time, a)
+  _Wrapped' = iso (getCouple . getPlaced) (Placed . Couple)
 
-instance Wrapped (Delayed a) where
-  type Unwrapped (Delayed a) = (Time, a)
-  _Wrapped' = iso _delayedValue Delayed
+instance Rewrapped (Placed a) (Placed b)
 
-instance Rewrapped (Delayed a) (Delayed b)
+instance Transformable a => Transformable (Placed a) where
+  transform t = 
+    over (from placed . _1) (transform t) 
+    . 
+    over (from placed . _2) (stretch $ stretchComponent t)
 
-instance Transformable (Delayed a) where
-  transform t = over (_Wrapped . _1) (transform t)
-
-instance Reversible (Delayed a) where
-  rev = id
-
-instance Splittable a => Splittable (Delayed a) where
-  -- TODO is this right?
-  split t = unzipR . fmap (split t)
-
--- Lifted instances
-
-instance IsString a => IsString (Delayed a) where
+instance IsString a => IsString (Placed a) where
   fromString = pure . fromString
 
-instance IsPitch a => IsPitch (Delayed a) where
+instance IsPitch a => IsPitch (Placed a) where
   fromPitch = pure . fromPitch
 
-instance IsInterval a => IsInterval (Delayed a) where
+instance IsInterval a => IsInterval (Placed a) where
   fromInterval = pure . fromInterval
 
-instance IsDynamics a => IsDynamics (Delayed a) where
+instance IsDynamics a => IsDynamics (Placed a) where
   fromDynamics = pure . fromDynamics
 
--- |
--- View a delayed value as a pair of a the original value and a delay time.
---
-delayed :: Iso (Time, a) (Time, b) (Delayed a) (Delayed b)
-delayed = _Unwrapped
+placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
+placed = _Unwrapped
 
--- |
--- View a delayed value as a pair of the original value and the transformation (and vice versa).
---
-delayedValue :: (Transformable a, Transformable b) => Lens (Delayed a) (Delayed b) a b
-delayedValue = lens runDelayed $ flip (mapDelayed . const)
+placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
+-- placee = from placed `dependingOn` (transformed . delayingTime)
+placee = lens runPlaced $ flip (mapPlaced . const)
+  where
+    runPlaced :: Transformable a => Placed a -> a
+    runPlaced = uncurry (\t -> transform (t >-> 1)) . view _Wrapped
 
-runDelayed :: Transformable a => Delayed a -> a
-runDelayed = uncurry delayTime . view _Wrapped
+    mapPlaced :: (Transformable a, Transformable b) => (a -> b) -> Placed a -> Placed b
+    mapPlaced f (Placed (Couple (t,x))) = Placed $ Couple (t, over (transformed (t >-> 1)) f x)
 
-mapDelayed :: (Transformable a, Transformable b) => (a -> b) -> Delayed a -> Delayed b
-mapDelayed f (Delayed (t,x)) = Delayed (t, over (transformed (t >-> 1)) f x)
 
-delayTime t = transform (t >-> 1)
+
+dependingOn :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
+dependingOn l f = lens getter setter
+  where
+    getter s = let
+      (x,a) = view l s
+      l2    = f x
+      in view l2 a
+    setter s b = let
+      (x,_) = view l s
+      l2    = f x
+      in set (l._2.l2) b s
 

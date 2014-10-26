@@ -171,7 +171,7 @@ timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addMetaNote $ view note (s, optionFirst c)
+timeSignatureDuring s c = addMetaNote $ view event (s, optionFirst c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
 getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive . (view meta)

@@ -174,16 +174,16 @@ renderR x = (initial x, updates x)
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
--- | Split a reactive into notes, as well as the values before and after the first/last update
-splitReactive :: Reactive a -> Either a ((a, Time), [Note a], (Time, a))
+-- | Split a reactive into events, as well as the values before and after the first/last update
+splitReactive :: Reactive a -> Either a ((a, Time), [Event a], (Time, a))
 splitReactive r = case updates r of
     []          -> Left  (initial r)
     (t,x):[]    -> Right ((initial r, t), [], (t, x))
-    (t,x):xs    -> Right ((initial r, t), fmap mkNote $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
+    (t,x):xs    -> Right ((initial r, t), fmap mkEvent $ mrights (res $ (t,x):xs), head $ mlefts (res $ (t,x):xs))
 
     where
 
-        mkNote (t,u,x) = (t <-> u, x)^.note
+        mkEvent (t,u,x) = (t <-> u, x)^.event
 
         -- Always returns a 0 or more Right followed by one left
         res :: [(Time, a)] -> [Either (Time, a) (Time, Time, a)]
@@ -227,9 +227,9 @@ trimR (view range -> (t, u)) x = switchR t mempty (switchR u x mempty)
 -- |
 -- Get all intermediate values.
 --
-intermediate :: Transformable a => Reactive a -> [Note a]
+intermediate :: Transformable a => Reactive a -> [Event a]
 intermediate (updates -> []) = []
-intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.note) $ withNext $ xs
+intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.event) $ withNext $ xs
   where
     withNext xs = zip xs (tail xs)
 

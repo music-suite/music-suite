@@ -124,7 +124,7 @@ title t x = titleDuring (_era x) t x
 
 -- | Set title of the given part of a score.
 titleDuring :: HasMeta a => Span -> Title -> a -> a
-titleDuring s t = addMetaNote $ view note (s, t)
+titleDuring s t = addMetaNote $ view event (s, t)
 
 -- | Set subtitle of the given score.
 subtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
@@ -132,7 +132,7 @@ subtitle t x = subtitleDuring (_era x) t x
 
 -- | Set subtitle of the given part of a score.
 subtitleDuring :: HasMeta a => Span -> Title -> a -> a
-subtitleDuring s t = addMetaNote $ view note (s, denoteTitle t)
+subtitleDuring s t = addMetaNote $ view event (s, denoteTitle t)
 
 -- | Set subsubtitle of the given score.
 subsubtitle :: (HasMeta a, HasPosition a) => Title -> a -> a
@@ -140,7 +140,7 @@ subsubtitle t x = subsubtitleDuring (_era x) t x
 
 -- | Set subsubtitle of the given part of a score.
 subsubtitleDuring :: HasMeta a => Span -> Title -> a -> a
-subsubtitleDuring s t = addMetaNote $ view note (s, denoteTitle (denoteTitle t))
+subsubtitleDuring s t = addMetaNote $ view event (s, denoteTitle (denoteTitle t))
 
 -- | Extract the title in from the given score.
 withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a

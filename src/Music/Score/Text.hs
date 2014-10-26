@@ -74,7 +74,7 @@ instance HasText a => HasText (Couple b a) where
 instance HasText a => HasText [a] where
   addText s = fmap (addText s)
 
-instance HasText a => HasText (Stretched a) where
+instance HasText a => HasText (Note a) where
   addText s = fmap (addText s)
 
 instance HasText a => HasText (Voice a) where

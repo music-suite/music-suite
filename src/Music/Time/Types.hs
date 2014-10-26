@@ -57,6 +57,8 @@ module Music.Time.Types (
         range,
         codelta,
 
+        stretchComponent,
+        delayComponent,
         fixedDurationSpan,
         fixedOnsetSpan,
 

@@ -80,7 +80,7 @@ clef c x = clefDuring (_era x) c x
 
 -- | Set clef of the given part of a score.
 clefDuring :: HasMeta a => Span -> Clef -> a -> a
-clefDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
+clefDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 
 -- | Extract the clef in from the given score, using the given default clef.
 withClef :: Clef -> (Clef -> Score a -> Score a) -> Score a -> Score a

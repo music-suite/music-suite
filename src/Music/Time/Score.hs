@@ -31,10 +31,9 @@ module Music.Time.Score (
 
         -- * Construction
         score,
-        notes,
+        events,
         eras,
         triples,
-        singleNote,
 
         -- * Traversal
         mapWithSpan,
@@ -54,7 +53,7 @@ module Music.Time.Score (
         printEras,
 
         -- * Unsafe versions
-        unsafeNotes,
+        unsafeEvents,
         unsafeTriples,
         
   ) where
@@ -103,8 +102,6 @@ import           Music.Time.Internal.Util
 
 
 
-type ScoreNote a = Note a
-
 --   * 'empty' creates an empty score
 --
 --   * 'pure' creates a score containing a single note in the span @0 '<->' 1@
@@ -121,13 +118,13 @@ type ScoreNote a = Note a
 -- |
 -- A 'Score' is a sequential or parallel composition of values, and allows overlapping events
 --
--- You typically create a 'Score' using 'score', 'notes', 'voices', and 'phrases', or the 'Alternative' interface.
+-- You typically create a 'Score' using 'score', 'events', 'voices', and 'phrases', or the 'Alternative' interface.
 --
 -- Score is an instance of 'Transformable', so you can use 'delay' and 'stretch'.
 --
 -- Score is an instance of 'HasPosition', so you can use 'duration', 'onset', 'offset', 'era'.
 --
--- To inspect or deconstruct a score, see 'notes', 'voices', and 'phrases', as
+-- To inspect or deconstruct a score, see 'events', 'voices', and 'phrases', as
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
 newtype Score a = Score { getScore' :: (Meta, NScore a) }
@@ -175,14 +172,14 @@ instance TraversableWithIndex Span Score where
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)
 
-instance Reversible a => Reversible (Score a) where
-  rev (Score (m,x)) = Score (rev m, rev x)
+-- instance Reversible a => Reversible (Score a) where
+  -- rev (Score (m,x)) = Score (rev m, rev x)
 
-instance Splittable a => Splittable (Score a) where
-  split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
-    where
-      (m1, m2) = split t m
-      (x1, x2) = split t x
+-- instance Splittable a => Splittable (Score a) where
+  -- split t (Score (m,x)) = (Score (m1,x1), Score (m2,x2))
+    -- where
+      -- (m1, m2) = split t m
+      -- (x1, x2) = split t x
 
 -- TODO move these two "implementations" to NScore
 instance HasPosition (Score a) where
@@ -241,14 +238,14 @@ instance HasMeta (Score a) where
 
 
 
-newtype NScore a = NScore { getNScore :: [ScoreNote a] }
+newtype NScore a = NScore { getNScore :: [Event a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance (Show a, Transformable a) => Show (Score a) where
-  show x = show (x^.notes) ++ "^.score"
+  show x = show (x^.events) ++ "^.score"
 
 instance Wrapped (NScore a) where
-  type Unwrapped (NScore a) = [ScoreNote a]
+  type Unwrapped (NScore a) = [Event a]
   _Wrapped' = iso getNScore NScore
 
 instance Rewrapped (NScore a) (NScore b)
@@ -272,8 +269,8 @@ instance MonadPlus NScore where
 instance Transformable (NScore a) where
   transform t (NScore xs) = NScore (fmap (transform t) xs)
 
-instance Reversible a => Reversible (NScore a) where
-  rev (NScore xs) = NScore (fmap rev xs)
+-- instance Reversible a => Reversible (NScore a) where
+--   rev (NScore xs) = NScore (fmap rev xs)
 
 instance HasPosition (NScore a) where
   _era x = (f x, g x)^.from range
@@ -288,19 +285,19 @@ safeMaximum xs = if null xs then 0 else maximum xs
 instance HasDuration (NScore a) where
   _duration x = _offset x .-. _onset x
 
-instance Splittable a => Splittable (NScore a) where
-  split t (NScore notes) = over both (NScore . mfilter (not . isEmptyNote)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) notes
-    where
-      -- TODO move
-      isEmptyNote :: Note a -> Bool
-      isEmptyNote = isEmptySpan . view era
-      
-      isEmptySpan :: Span -> Bool
-      isEmptySpan (view range -> (t, u)) = t == u
+-- instance Splittable a => Splittable (NScore a) where
+--   split t (NScore events) = over both (NScore . mfilter (not . isEmptyEvent)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) events
+--     where
+--       -- TODO move
+--       isEmptyEvent :: Event a -> Bool
+--       isEmptyEvent = isEmptySpan . view era
+--       
+--       isEmptySpan :: Span -> Bool
+--       isEmptySpan (view range -> (t, u)) = t == u
 
 
 -- |
--- Create a score from a list of notes.
+-- Create a score from a list of events.
 --
 -- This is a getter (rather than a function) for consistency:
 --
@@ -314,56 +311,56 @@ instance Splittable a => Splittable (NScore a) where
 -- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
 -- @
 --
--- Se also 'notes'.
+-- Se also 'events'.
 --
-score :: Getter [Note a] (Score a)
-score = from unsafeNotes
+score :: Getter [Event a] (Score a)
+score = from unsafeEvents
 {-# INLINE score #-}
 
 -- |
--- View a 'Score' as a list of 'Note' values.
+-- View a 'Score' as a list of 'Event' values.
 --
 -- @
--- 'view' 'notes'                        :: 'Score' a -> ['Note' a]
--- 'set'  'notes'                        :: ['Note' a] -> 'Score' a -> 'Score' a
--- 'over' 'notes'                        :: (['Note' a] -> ['Note' b]) -> 'Score' a -> 'Score' b
--- @
---
--- @
--- 'preview'  ('notes' . 'each')           :: 'Score' a -> 'Maybe' ('Note' a)
--- 'preview'  ('notes' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Note' a)
--- 'preview'  ('notes' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Note' a)
+-- 'view' 'events'                        :: 'Score' a -> ['Event' a]
+-- 'set'  'events'                        :: ['Event' a] -> 'Score' a -> 'Score' a
+-- 'over' 'events'                        :: (['Event' a] -> ['Event' b]) -> 'Score' a -> 'Score' b
 -- @
 --
 -- @
--- 'set'      ('notes' . 'each')           :: 'Note' a -> 'Score' a -> 'Score' a
--- 'set'      ('notes' . 'element' 1)      :: 'Note' a -> 'Score' a -> 'Score' a
--- 'set'      ('notes' . 'elements' odd)   :: 'Note' a -> 'Score' a -> 'Score' a
+-- 'preview'  ('events' . 'each')           :: 'Score' a -> 'Maybe' ('Event' a)
+-- 'preview'  ('events' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Event' a)
+-- 'preview'  ('events' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Event' a)
 -- @
 --
 -- @
--- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' b) -> 'Score' a -> 'Score' b
--- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
--- 'over'     ('notes' . 'elements' odd)   :: ('Note' a -> 'Note' a) -> 'Score' a -> 'Score' a
+-- 'set'      ('events' . 'each')           :: 'Event' a -> 'Score' a -> 'Score' a
+-- 'set'      ('events' . 'element' 1)      :: 'Event' a -> 'Score' a -> 'Score' a
+-- 'set'      ('events' . 'elements' odd)   :: 'Event' a -> 'Score' a -> 'Score' a
 -- @
 --
 -- @
--- 'toListOf' ('notes' . 'each')                :: 'Score' a -> ['Note' a]
--- 'toListOf' ('notes' . 'elements' odd)        :: 'Score' a -> ['Note' a]
--- 'toListOf' ('notes' . 'each' . 'filtered'
---              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Note' a]
+-- 'over'     ('events' . 'each')           :: ('Event' a -> 'Event' b) -> 'Score' a -> 'Score' b
+-- 'over'     ('events' . 'element' 1)      :: ('Event' a -> 'Event' a) -> 'Score' a -> 'Score' a
+-- 'over'     ('events' . 'elements' odd)   :: ('Event' a -> 'Event' a) -> 'Score' a -> 'Score' a
+-- @
+--
+-- @
+-- 'toListOf' ('events' . 'each')                :: 'Score' a -> ['Event' a]
+-- 'toListOf' ('events' . 'elements' odd)        :: 'Score' a -> ['Event' a]
+-- 'toListOf' ('events' . 'each' . 'filtered'
+--              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Event' a]
 -- @
 --
 -- This is not an 'Iso', as the note list representation does not contain meta-data.
--- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
+-- To construct a score from a note list, use 'score' or @'flip' ('set' 'events') 'empty'@.
 --
-notes :: Lens (Score a) (Score b) [Note a] [Note b]
-notes = _Wrapped . _2 . _Wrapped . sorted
+events :: Lens (Score a) (Score b) [Event a] [Event b]
+events = _Wrapped . _2 . _Wrapped . sorted
   where
     -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
--- notes = unsafeNotes
-{-# INLINE notes #-}
+-- events = unsafeEvents
+{-# INLINE events #-}
 
 -- -- |
 -- -- View a score as a list of voices.
@@ -406,25 +403,25 @@ notes = _Wrapped . _2 . _Wrapped . sorted
 -- {-# INLINE voices #-}
 
 -- |
--- View a score as a list of notes.
+-- View a score as a list of events.
 --
 -- This only an isomorphism up to meta-data. See also the safe (but more restricted)
--- 'notes' and 'score'.
+-- 'events' and 'score'.
 --
-unsafeNotes :: Iso (Score a) (Score b) [Note a] [Note b]
-unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
+unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
+unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
     noMeta = iso extract return
     -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
 
-{-# INLINE unsafeNotes #-}
+{-# INLINE unsafeEvents #-}
 
 -- |
 -- View a score as a list of events.
 --
 -- This only an isomorphism up to meta-data. See also the safe (but more restricted)
--- 'notes' and 'score'.
+-- 'events' and 'score'.
 --
 unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 unsafeTriples = iso _getScore _score
@@ -439,7 +436,7 @@ unsafeTriples = iso _getScore _score
       fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
       List.sortBy (Ord.comparing fst) .
       Foldable.toList .
-      fmap (view $ from note) .
+      fmap (view $ from event) .
       reifyScore
     
 
@@ -447,40 +444,39 @@ unsafeTriples = iso _getScore _score
 -- |
 -- View a score as a single note.
 --
-singleNote :: Prism' (Score a) (Note a)
-singleNote = unsafeNotes . single
-{-# INLINE singleNote #-}
-{-# DEPRECATED singleNote "Use 'unsafeNotes . single'" #-}
+singleEvent :: Prism' (Score a) (Event a)
+singleEvent = unsafeEvents . single
+{-# INLINE singleEvent #-}
+{-# DEPRECATED singleEvent "Use 'unsafeEvents . single'" #-}
 -- TODO make prism fail if score contains meta-data
 -- (or else second prism law is not satisfied)
 
 
 -- | Map with the associated time span.
-mapScore :: (Note a -> b) -> Score a -> Score b
+mapScore :: (Event a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapNScore f)
   where
     mapNScore f = over (_Wrapped.traverse) (extend f)
 
-reifyScore :: Score a -> Score (Note a)
+reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- |
 -- View a score as a list of events, i.e. time-duration-value triplets.
 --
--- This is a convenient combination of 'notes' and 'event'.
+-- This is a convenient combination of 'events' and 'event'.
 --
 -- @
--- 'events' = 'notes' . 'through' 'event' 'event'
+-- 'events' = 'events' . 'through' 'event' 'event'
 -- @
 --
 triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-triples = notes . _zipList . through event event . from _zipList
-
+triples = events . _zipList . through triple triple . from _zipList
 
 
 -- | Map over the values in a score.
 mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
-mapWithSpan f = mapScore (uncurry f . view (from note))
+mapWithSpan f = mapScore (uncurry f . view (from event))
 
 -- | Filter the values in a score.
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
@@ -512,10 +508,10 @@ normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
     reset x = set onset (view onset x `max` 0) x
-    normalizeScoreDurations = over (notes . each . era) normalizeSpan
+    normalizeScoreDurations = over (events . each . era) normalizeSpan
 
 -- TODO version that reverses the values where appropriate
--- Use over (notes . each) normalizeNote or similar
+-- Use over (events . each) normalizeEvent or similar
 
 -- |
 -- Print the span of each event, as given by 'eras'.
@@ -530,12 +526,12 @@ printEras = mapM_ print . toListOf eras
 -- [0 <-> 1,1 <-> 2,2 <-> 3]
 --
 eras :: Traversal' (Score a) Span
-eras = notes . each . era
+eras = events . each . era
 
 -- TODO rename and expose this
 -- We have an (Iso (Score a) (TMap Span [a])), with [] as default value
 chordEvents :: Transformable a => Span -> Score a -> [a]
-chordEvents s = fmap extract . filter ((== s) . view era) . view notes
+chordEvents s = fmap extract . filter ((== s) . view era) . view events
 
 simultaneous' :: Transformable a => Score a -> Score [a]
 simultaneous' sc = (^. from unsafeTriples) vs

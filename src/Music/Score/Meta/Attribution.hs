@@ -122,7 +122,7 @@ attribute a x = attributeDuring (_era x) a x
 
 -- | Set the given attribution in the given part of a score.
 attributeDuring :: (HasMeta a) => Span -> Attribution -> a -> a
-attributeDuring s a = addMetaNote (view note (s, a))
+attributeDuring s a = addMetaNote (view event (s, a))
 
 -- | Set composer of the given score.
 composer :: (HasMeta a, HasPosition a) => String -> a -> a

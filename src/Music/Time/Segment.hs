@@ -121,9 +121,9 @@ import           Music.Pitch.Literal
 -- A 'Segment' is a value varying over some unknown time span. 
 -- Intuitively, a 'Segment' is to a 'Behavior' what a /ray/ is to a /line/.
 --
--- To give a segment an explicit duration, use 'Stretched' 'Segment'.
+-- To give a segment an explicit duration, use 'Note' 'Segment'.
 --
--- To place a segment in a particular time span, use 'Note' 'Segment'.
+-- To place a segment in a particular time span, use 'Event' 'Segment'.
 --
 newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
   deriving (Functor, Applicative, Monad{-, Comonad-}, Typeable)
@@ -137,9 +137,9 @@ newtype Segment a = Segment { getSegment :: Clipped Duration -> a }
 
 -- $musicTimeSegmentExamples
 --
--- > foldr1 apSegments' $ map (view stretched) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
+-- > foldr1 apSegments' $ map (view note) $ [(0.5,0::Segment Float), (1, timeS), (2,rev timeS), (3,-1)]
 --
--- > openG $ draw $ (1, timeS :: Segment Float)^.stretched
+-- > openG $ draw $ (1, timeS :: Segment Float)^.note
 --
 
 instance Show (Segment a) where
@@ -235,15 +235,15 @@ instance Reversible (Segment a) where
 segment :: Iso (Duration -> a) (Duration -> b) (Segment a) (Segment b)
 segment = R.tabulated
 
-apSegments' :: Stretched (Segment a) -> Stretched (Segment a) -> Stretched (Segment a)
-apSegments' (view (from stretched) -> (d1,s1)) (view (from stretched) -> (d2,s2))
-  = view stretched (d1+d2, slerp (d1/(d1+d2)) s1 s2)
+apSegments' :: Note (Segment a) -> Note (Segment a) -> Note (Segment a)
+apSegments' (view (from note) -> (d1,s1)) (view (from note) -> (d2,s2))
+  = view note (d1+d2, slerp (d1/(d1+d2)) s1 s2)
 
 -- |
--- Append a voice of segments to a single stretched segment.
+-- Append a voice of segments to a single note segment.
 --
-apSegments :: Voice (Segment a) -> Stretched (Segment a)
-apSegments = foldr1 apSegments' . toListOf (stretcheds . each)
+apSegments :: Voice (Segment a) -> Note (Segment a)
+apSegments = foldr1 apSegments' . toListOf (notes . each)
 
 -- t < i && 0 <= t <= 1   ==> 0 < (t/i) < 1
 -- i     is the fraction of the slerped segment spent in a
@@ -263,30 +263,30 @@ slerp2 f i a b
 
 
 -- |
--- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
+-- View a 'Event' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
 -- This can be used to safely turn a behavior into a segment and vice
 -- versa. Often 'focusing' is more convenient to use.
 --
-bounded' :: Iso' (Note (Segment a)) (Bound (Behavior a))
+bounded' :: Iso' (Event (Segment a)) (Bound (Behavior a))
 bounded' = bounded
 
 -- |
--- View a 'Note' 'Segment' as a 'Bound' 'Behavior' and vice versa.
+-- View a 'Event' 'Segment' as a 'Bound' 'Behavior' and vice versa.
 --
 -- This can be used to safely turn a behavior into a segment and vice
 -- versa. Often 'focusing' is more convenient to use.
 --
-bounded :: Iso (Note (Segment a)) (Note (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
+bounded :: Iso (Event (Segment a)) (Event (Segment b)) (Bound (Behavior a)) (Bound (Behavior b))
 bounded = iso ns2bb bb2ns
   where
-    bb2ns (Bound (s, x)) = view note (s, b2s $ transform (negateV s) $ x)
-    ns2bb (view (from note) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
+    bb2ns (Bound (s, x)) = view event (s, b2s $ transform (negateV s) $ x)
+    ns2bb (view (from event) -> (s, x)) = Bound (s,       transform s           $ s2b $ x)
     s2b = under R.tabulated (. realToFrac)
     b2s = under R.tabulated (. realToFrac)
 
 --
--- Note that the isomorhism only works because of 'Bound' being abstract.
+-- Event that the isomorhism only works because of 'Bound' being abstract.
 -- A function @unBound :: Bound a -> a@ could break the isomorphism
 -- as follows:
 --
@@ -328,7 +328,7 @@ splice constant insert = fmap fromLast $ fmap toLast constant <> trim (fmap (fma
     -- fromJust is safe here, as toLast is used to create the Maybe wrapper
 
 
-concatSegment :: Monoid a => Note (Segment a) -> Behavior a
+concatSegment :: Monoid a => Event (Segment a) -> Behavior a
 concatSegment = trim . view bounded
 
 -- |
@@ -337,8 +337,8 @@ concatSegment = trim . view bounded
 -- See also 'concatB' and 'continous'.
 --
 concatS :: Monoid a => Score (Segment a) -> Behavior a
-concatS = mconcat . map concatSegment . view notes
--- Or: mconcat.fmap trim.toListOf (notes.each.bounded)
+concatS = mconcat . map concatSegment . view events
+-- Or: mconcat.fmap trim.toListOf (events.each.bounded)
 
 -- |
 -- Concatenate a score of (possibly overlapping) segments.
@@ -347,7 +347,7 @@ concatS = mconcat . map concatSegment . view notes
 --
 concatB :: Monoid a => Score (Behavior a) -> Behavior a
 concatB = concatS . fmap (view focusing)
--- Or (more generally): mconcat.toListOf (notes.each.noteValue)
+-- Or (more generally): mconcat.toListOf (events.each.eventee)
 
 
 -- |
@@ -360,6 +360,6 @@ concatB = concatS . fmap (view focusing)
 focusing :: Lens' (Behavior a) (Segment a)
 focusing = lens get set
   where
-    get = view (from bounded . noteValue) . {-pure-}bounding mempty
+    get = view (from bounded . eventee) . {-pure-}bounding mempty
     set x = splice x . (view bounded) . pure
 

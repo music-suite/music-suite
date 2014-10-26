@@ -79,7 +79,7 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
   where                                          
     defaultTimeSignature = time 4 4
     timeSignatures = fmap swap 
-      $ view eventsV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+      $ view triplesV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
       $ getTimeSignatures defaultTimeSignature score
 
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
@@ -88,7 +88,7 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
 
 -- | Convert a voice to a list of bars using the given bar durations.
 voiceToBars' :: Tiable a => [Duration] -> Voice (Maybe a) -> [[(Duration, Maybe a)]]
-voiceToBars' barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesAt barDurs
+voiceToBars' barDurs = fmap (map (^. from note) . (^. notes)) . splitTiesAt barDurs
 -- TODO remove prime from name
 
 -- | Basic spelling for integral types.
@@ -118,8 +118,8 @@ toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
 toMVoice = scoreToVoice . simultaneous
 
 unvoice :: Voice b -> [(Duration, b)]
-unvoice = toListOf (stretcheds . traverse . from stretched)
--- unvoice = fmap (^. from stretched) . (^. stretcheds)
+unvoice = toListOf (notes . traverse . from note)
+-- unvoice = fmap (^. from note) . (^. notes)
 {-# DEPRECATED unvoice "Use 'unsafeEventsV'" #-}
 
 

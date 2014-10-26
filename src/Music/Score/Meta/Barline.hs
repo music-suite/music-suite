@@ -93,7 +93,7 @@ finalBarline = undefined
 
 -- | Add a barline to the given score.
 barlineDuring :: HasMeta a => Span -> Barline -> a -> a
-barlineDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
+barlineDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 
 -- | Extract barlines in from the given score, using the given default barline.
 withBarline :: (Barline -> Score a -> Score a) -> Score a -> Score a

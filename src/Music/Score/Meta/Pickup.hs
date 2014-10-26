@@ -91,7 +91,7 @@ rehearsalMark :: (HasMeta a, HasPosition a) => Pickup -> a -> a
 rehearsalMark c x = rehearsalMarkDuring (_era x) c x
 
 rehearsalMarkDuring :: HasMeta a => Span -> Pickup -> a -> a
-rehearsalMarkDuring s x = addMetaNote $ view note (s, x)
+rehearsalMarkDuring s x = addMetaNote $ view event (s, x)
 
 withPickup :: (Pickup -> Score a -> Score a) -> Score a -> Score a
 withPickup = withMeta

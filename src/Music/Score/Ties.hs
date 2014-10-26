@@ -217,9 +217,9 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
 -- Split all notes that cross a barlines into a pair of tied notes.
 --
 splitTies :: Tiable a => Voice a -> Voice a
-splitTies = (^. voice) . map (^. stretched)
+splitTies = (^. voice) . map (^. note)
   . concat . snd . List.mapAccumL g 0
-  . map (^. from stretched) . (^. stretcheds)
+  . map (^. from note) . (^. notes)
   where
     g t (d, x) = (t + d, occs)
       where
@@ -232,10 +232,10 @@ splitTies = (^. voice) . map (^. stretched)
 -- Split all voice into bars, using the given bar durations. Music that does not
 -- fit into the given durations is discarded.
 --
--- Notes that cross a barlines are split into tied notes.
+-- Events that cross a barlines are split into tied notes.
 --
 splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
-splitTiesAt barDurs x = fmap ((^. voice) . map (^. stretched)) $ splitTiesAt' barDurs ((map (^. from stretched) . (^. stretcheds)) x)
+splitTiesAt barDurs x = fmap ((^. voice) . map (^. note)) $ splitTiesAt' barDurs ((map (^. from note) . (^. notes)) x)
 
 splitTiesAt' :: Tiable a => [Duration] -> [(Duration, a)] -> [[(Duration, a)]]
 splitTiesAt' []  _  =  []
@@ -245,7 +245,7 @@ splitTiesAt' (barDur : rbarDur) occs = case splitDurFor barDur occs of
   (barOccs, restOccs) -> barOccs : splitTiesAt' rbarDur restOccs
 
 tsplitTiesAt :: [Duration] -> [Duration] -> [[(Duration, Char)]]
-tsplitTiesAt barDurs = fmap (map (^. from stretched) . (^. stretcheds)) . splitTiesAt barDurs . ((^. voice) . map (^. stretched)) . fmap (\x -> (x,'_'))
+tsplitTiesAt barDurs = fmap (map (^. from note) . (^. notes)) . splitTiesAt barDurs . ((^. voice) . map (^. note)) . fmap (\x -> (x,'_'))
 
 -- |
 -- Split an event into one chunk of the duration @s@, followed parts shorter than duration @t@.
@@ -261,14 +261,14 @@ splitDurThen s t x = case splitDur s x of
 
 
 -- |
--- Extract as many notes or parts of notes as possible in the given positive duration, and
--- return it with remaining notes.
+-- Extract as many events or parts of events as possible in the given positive duration, and
+-- return it with remaining events.
 --
--- The extracted notes always fit into the given duration, i.e.
+-- The extracted events always fit into the given duration, i.e.
 --
 -- > sum $ fmap duration $ fst $ splitDurFor maxDur xs <= maxDur
 --
--- If there are remaining notes, they always fit exactly, i.e.
+-- If there are remaining events, they always fit exactly, i.e.
 --
 -- > sum $ fmap duration $ fst $ splitDurFor maxDur xs == maxDur  iff  (not $ null $ snd $ splitDurFor maxDur xs)
 --
@@ -288,8 +288,8 @@ tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x,'_')) xs
   -- toTied _ = ('(',')')
 
 -- |
--- Split a note if it is longer than the given duration. Returns the first part of the
--- note (which always <= s) and the rest.
+-- Split a event if it is longer than the given duration. Returns the first part of the
+-- event (which always <= s) and the rest.
 --
 -- > splitDur maxDur (d,a)
 --

@@ -91,7 +91,7 @@ instance HasSlide a => HasSlide (Voice a) where
   setEndGliss   n = fmap (setEndGliss n)
   setEndSlide   n = fmap (setEndSlide n)
 
-instance HasSlide a => HasSlide (Stretched a) where
+instance HasSlide a => HasSlide (Note a) where
   setBeginGliss n = fmap (setBeginGliss n)
   setBeginSlide n = fmap (setBeginSlide n)
   setEndGliss   n = fmap (setEndGliss n)

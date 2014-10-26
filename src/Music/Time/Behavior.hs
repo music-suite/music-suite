@@ -258,8 +258,8 @@ unit = switch 0 0 (switch 1 line 1)
 -- |
 -- A behavior that
 --
-interval :: (Fractional a, Transformable a) => Time -> Time -> Note (Behavior a)
-interval t u = (t <-> u, line) ^. note
+interval :: (Fractional a, Transformable a) => Time -> Time -> Event (Behavior a)
+interval t u = (t <-> u, line) ^. event
 
 -- |
 -- A behavior that

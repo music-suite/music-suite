@@ -76,8 +76,8 @@ getBeatDuration (Beat d a) = d
 getBeatDuration _          = error "getBeatValue: Not a beat"
 
 -- TODO return voice
-realize :: Rhythm a -> [Stretched a]
-realize (Beat d a)      = [(d, a)^.stretched]
+realize :: Rhythm a -> [Note a]
+realize (Beat d a)      = [(d, a)^.note]
 realize (Group rs)      = rs >>= realize
 realize (Dotted n r)    = dotMod n `stretch` realize r
 realize (Tuplet n r)    = n `stretch` realize r

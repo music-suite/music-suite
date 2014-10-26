@@ -180,12 +180,12 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
       map ( bimap voiceToRest voiceToPhrase
-          . bimap (^.from unsafeEventsV) (^.from unsafeEventsV) )
+          . bimap (^.from unsafeTriplesV) (^.from unsafeTriplesV) )
        . groupDiff' (isJust . snd)
-       . view eventsV
+       . view triplesV
 
     voiceToRest :: MVoice a -> Duration
-    voiceToRest = sumOf (eventsV.each._1) . fmap (\x -> assert (isNothing x) x)
+    voiceToRest = sumOf (triplesV.each._1) . fmap (\x -> assert (isNothing x) x)
     -- TODO just _duration
 
     voiceToPhrase :: MVoice a -> Phrase a
@@ -206,7 +206,7 @@ singleMVoice :: Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = iso scoreToVoice voiceToScore'
   where
     scoreToVoice :: {-Transformable a =>-} Score a -> MVoice a
-    scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests .
+    scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
       -- TODO
       List.sortBy (comparing (^._1))
       -- end TODO
@@ -221,7 +221,7 @@ singleMVoice = iso scoreToVoice voiceToScore'
               | otherwise = error "singleMVoice: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
-    voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchee) . fmap return
+    voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
 
     voiceToScore' :: MVoice a -> Score a
     voiceToScore' = mcatMaybes . voiceToScore
@@ -232,10 +232,10 @@ mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
 withPrevAndCurrentOnset :: (Maybe Time -> Time -> a -> b) -> Track a -> Track b
-withPrevAndCurrentOnset f = over delayeds (fmap (\(x,y,z) -> fmap (f (fmap delayedOnset x) (delayedOnset y)) y) . withPrevNext)
+withPrevAndCurrentOnset f = over placeds (fmap (\(x,y,z) -> fmap (f (fmap placedOnset x) (placedOnset y)) y) . withPrevNext)
   where
-    delayedOnset :: Delayed a -> Time
-    delayedOnset = view (from delayed . _1)
+    placedOnset :: Placed a -> Time
+    placedOnset = view (from placed . _1)
 
 mVoiceTVoice :: Lens (MVoice a) (MVoice b) (TVoice a) (TVoice b)
 mVoiceTVoice = mVoicePVoice . pVoiceTVoice
@@ -272,7 +272,7 @@ firsts :: ([a] -> [b]) -> [(a,c)] -> [(b,c)]
 firsts f = uncurry zip . first f . unzipR
 
 mkTrack :: [(Time, a)] -> Track a
-mkTrack = view track . map (view delayed)
+mkTrack = view track . map (view placed)
 
 withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
 withDurationR = fmap $ \x -> (_duration x, x)

@@ -31,16 +31,9 @@ module Music.Time.Voice (
 
         -- * Construction
         voice,
-        stretcheds,
-        eventsV,
-
-        -- * Fusion
-        fuse,
-        fuseBy,
-
-        -- ** Fuse rests
-        fuseRests,
-        coverRests,
+        notes,
+        triplesV,
+        durationsVoice,
 
         -- * Traversal
         -- ** Separating rhythms and values
@@ -65,24 +58,35 @@ module Music.Time.Voice (
         zipVoiceWith,
         zipVoiceWith',
         zipVoiceWithNoScale,
+
+        -- * Fusion
+        fuse,
+        fuseBy,
+
+        -- ** Fuse rests
+        fuseRests,
+        coverRests,
         
-        -- ** Special zips/merge
+        -- * Homophonic/Polyphonic texture
         sameDurations,
         mergeIfSameDuration,
         mergeIfSameDurationWith,
         homoToPolyphonic,
+
+        -- * Points in a voice
+        onsetsRelative,
+        offsetsRelative,
+        midpointsRelative,
+        erasRelative,
         
         -- * Context
         -- TODO clean
         withContext,
         voiceLens,
-        -- voiceL,
-        voiceAsList,
-        listAsVoice,
 
         -- * Unsafe versions
-        unsafeStretcheds,
-        unsafeEventsV,
+        unsafeNotes,
+        unsafeTriplesV,
 
   ) where
 
@@ -125,21 +129,31 @@ import           Music.Pitch.Literal
 import           Music.Time.Internal.Util
 
 -- |
--- A 'Voice' is a sequential composition of non-overlapping stretched values.
+-- A 'Voice' is a sequential composition of non-overlapping note values.
 --
--- Both 'Voice' and 'Stretched' have duration but no position. The difference
--- is that 'Stretched' sustains a single value throughout its duration, while
+-- Both 'Voice' and 'Note' have duration but no position. The difference
+-- is that 'Note' sustains a single value throughout its duration, while
 -- a voice may contain multiple values. It is called voice because it is
 -- generalizes the notation of a voice in choral or multi-part instrumental music.
 --
--- It may be useful to think about 'Voice' and 'Stretched' as vectors in time space
+-- It may be useful to think about 'Voice' and 'Note' as vectors in time space
 -- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
 --
-newtype Voice a = Voice { getVoice :: VoiceList (VoiceEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Eq)
+newtype Voice a = Voice { getVoice :: [Note a] }
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Foldable, 
+    Traversable, 
+
+    Functor, 
+    Semigroup, 
+    Monoid 
+    )
 
 instance (Show a, Transformable a) => Show (Voice a) where
-  show x = show (x^.stretcheds) ++ "^.voice"
+  show x = show (x^.notes) ++ "^.voice"
 
 -- A voice is a list of events with explicit duration. Events can not overlap.
 --
@@ -152,20 +166,6 @@ instance (Show a, Transformable a) => Show (Voice a) where
 -- removal of values under relative duration. Perhaps more intuitively, 'join' scales
 -- each inner part to the duration of the outer part, then removes the
 -- intermediate structure.
-
--- Can use [] or Seq here
-type VoiceList = []
-
--- Can use any type as long as voiceEv provides an Iso
-type VoiceEv a = Stretched a
--- type VoiceEv a = ((),Stretched a)
-
-voiceEv :: Iso (Stretched a) (Stretched b) (VoiceEv a) (VoiceEv b)
-voiceEv = id
--- voiceEv = iso add remove
---   where
---     add x = ((),x)
---     remove ((),x) = x
 
 instance Applicative Voice where
   pure  = return
@@ -184,40 +184,37 @@ instance MonadPlus Voice where
   mplus = mappend
   
 instance Wrapped (Voice a) where
-  type Unwrapped (Voice a) = (VoiceList (VoiceEv a))
+  type Unwrapped (Voice a) = [Note a]
   _Wrapped' = iso getVoice Voice
 
 instance Rewrapped (Voice a) (Voice b)
 
-instance Cons (Voice a) (Voice b) (Stretched a) (Stretched b) where
-  _Cons = prism (\(s,v) -> (view voice.return $ s) <> v) $ \v -> case view stretcheds v of
+instance Cons (Voice a) (Voice b) (Note a) (Note b) where
+  _Cons = prism (\(s,v) -> (view voice.return $ s) <> v) $ \v -> case view notes v of
     []      -> Left  mempty
     (x:xs)  -> Right (x, view voice xs)
 
-instance Snoc (Voice a) (Voice b) (Stretched a) (Stretched b) where
-  _Snoc = prism (\(v,s) -> v <> (view voice.return $ s)) $ \v -> case unsnoc (view stretcheds v) of
+instance Snoc (Voice a) (Voice b) (Note a) (Note b) where
+  _Snoc = prism (\(v,s) -> v <> (view voice.return $ s)) $ \v -> case unsnoc (view notes v) of
     Nothing      -> Left  mempty
     Just (xs, x) -> Right (view voice xs, x)
 
 instance Transformable (Voice a) where
-  transform s = over _Wrapped' (transform s)
+  transform s = over notes (transform s)
 
 instance HasDuration (Voice a) where
-  _duration = Foldable.sum . fmap _duration . view _Wrapped'
-
-instance Splittable a => Splittable (Voice a) where
-  split t x
-    | t <= 0           = (mempty, x)
-    | t >= _duration x = (x,      mempty)
-    | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
-    where
-      split' = error "TODO"
+  _duration = sumOf (notes . each . duration)
 
 instance Reversible a => Reversible (Voice a) where
-  rev = over _Wrapped' (fmap rev) -- TODO OK?
+  rev = over notes reverse . fmap rev
 
-
--- Lifted instances
+-- instance Splittable a => Splittable (Voice a) where
+--   split t x
+--     | t <= 0           = (mempty, x)
+--     | t >= _duration x = (x,      mempty)
+--     | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
+--     where
+--       split' = error "TODO"
 
 instance IsString a => IsString (Voice a) where
   fromString = pure . fromString
@@ -241,15 +238,14 @@ instance Num a => Num (Voice a) where
   fromInteger = return . fromInteger
   abs    = fmap abs
   signum = fmap signum
-  (+)    = error "Not implemented"
+  (+)    = (<>)
   (-)    = error "Not implemented"
   (*)    = error "Not implemented"
 
--- Bogus instances, so we can use c^*2 etc.
 instance AdditiveGroup (Voice a) where
-  zeroV   = error "Not implemented"
-  (^+^)   = error "Not implemented"
-  negateV = error "Not implemented"
+  zeroV   = mempty
+  (^+^)   = (<>)
+  negateV = error "Not implemented" -- TODO negate durations
 
 instance VectorSpace (Voice a) where
   type Scalar (Voice a) = Duration
@@ -257,85 +253,77 @@ instance VectorSpace (Voice a) where
 
 
 -- |
--- Create a 'Voice' from a list of 'Stretched' values.
+-- Create a 'Voice' from a list of 'Note's.
 --
 -- This is a 'Getter' (rather than a function) for consistency:
 --
 -- @
--- [ (0 '<->' 1, 10)^.'stretched',
---   (1 '<->' 2, 20)^.'stretched',
---   (3 '<->' 4, 30)^.'stretched' ]^.'voice'
+-- [ (0 '<->' 1, 10)^.'note',
+--   (1 '<->' 2, 20)^.'note',
+--   (3 '<->' 4, 30)^.'note' ]^.'voice'
 -- @
 --
 -- @
--- 'view' 'voice' $ 'map' ('view' 'stretched') [(0 '<->' 1, 1)]
+-- 'view' 'voice' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
 -- @
 --
--- Se also 'stretcheds'.
+-- Se also 'notes'.
 --
-voice :: Getter [Stretched a] (Voice a)
-voice = from unsafeStretcheds
--- voice = to $ flip (set stretcheds) empty
+voice :: Getter [Note a] (Voice a)
+voice = from unsafeNotes
 {-# INLINE voice #-}
 
 -- |
--- View a 'Voice' as a list of 'Stretched' values.
+-- View a 'Voice' as a list of 'Note' values.
 --
 -- @
--- 'view' 'stretcheds'                        :: 'Voice' a -> ['Stretched' a]
--- 'set'  'stretcheds'                        :: ['Stretched' a] -> 'Voice' a -> 'Voice' a
--- 'over' 'stretcheds'                        :: (['Stretched' a] -> ['Stretched' b]) -> 'Voice' a -> 'Voice' b
--- @
---
--- @
--- 'preview'  ('stretcheds' . 'each')           :: 'Voice' a -> 'Maybe' ('Stretched' a)
--- 'preview'  ('stretcheds' . 'element' 1)      :: 'Voice' a -> 'Maybe' ('Stretched' a)
--- 'preview'  ('stretcheds' . 'elements' odd)   :: 'Voice' a -> 'Maybe' ('Stretched' a)
+-- 'view' 'notes'                        :: 'Voice' a -> ['Note' a]
+-- 'set'  'notes'                        :: ['Note' a] -> 'Voice' a -> 'Voice' a
+-- 'over' 'notes'                        :: (['Note' a] -> ['Note' b]) -> 'Voice' a -> 'Voice' b
 -- @
 --
 -- @
--- 'set'      ('stretcheds' . 'each')           :: 'Stretched' a -> 'Voice' a -> 'Voice' a
--- 'set'      ('stretcheds' . 'element' 1)      :: 'Stretched' a -> 'Voice' a -> 'Voice' a
--- 'set'      ('stretcheds' . 'elements' odd)   :: 'Stretched' a -> 'Voice' a -> 'Voice' a
+-- 'preview'  ('notes' . 'each')           :: 'Voice' a -> 'Maybe' ('Note' a)
+-- 'preview'  ('notes' . 'element' 1)      :: 'Voice' a -> 'Maybe' ('Note' a)
+-- 'preview'  ('notes' . 'elements' odd)   :: 'Voice' a -> 'Maybe' ('Note' a)
 -- @
 --
 -- @
--- 'over'     ('stretcheds' . 'each')           :: ('Stretched' a -> 'Stretched' b) -> 'Voice' a -> 'Voice' b
--- 'over'     ('stretcheds' . 'element' 1)      :: ('Stretched' a -> 'Stretched' a) -> 'Voice' a -> 'Voice' a
--- 'over'     ('stretcheds' . 'elements' odd)   :: ('Stretched' a -> 'Stretched' a) -> 'Voice' a -> 'Voice' a
+-- 'set'      ('notes' . 'each')           :: 'Note' a -> 'Voice' a -> 'Voice' a
+-- 'set'      ('notes' . 'element' 1)      :: 'Note' a -> 'Voice' a -> 'Voice' a
+-- 'set'      ('notes' . 'elements' odd)   :: 'Note' a -> 'Voice' a -> 'Voice' a
 -- @
 --
 -- @
--- 'toListOf' ('stretcheds' . 'each')                :: 'Voice' a -> ['Stretched' a]
--- 'toListOf' ('stretcheds' . 'elements' odd)        :: 'Voice' a -> ['Stretched' a]
--- 'toListOf' ('stretcheds' . 'each' . 'filtered'
---              (\\x -> '_duration' x \< 2))  :: 'Voice' a -> ['Stretched' a]
+-- 'over'     ('notes' . 'each')           :: ('Note' a -> 'Note' b) -> 'Voice' a -> 'Voice' b
+-- 'over'     ('notes' . 'element' 1)      :: ('Note' a -> 'Note' a) -> 'Voice' a -> 'Voice' a
+-- 'over'     ('notes' . 'elements' odd)   :: ('Note' a -> 'Note' a) -> 'Voice' a -> 'Voice' a
+-- @
+--
+-- @
+-- 'toListOf' ('notes' . 'each')                :: 'Voice' a -> ['Note' a]
+-- 'toListOf' ('notes' . 'elements' odd)        :: 'Voice' a -> ['Note' a]
+-- 'toListOf' ('notes' . 'each' . 'filtered'
+--              (\\x -> '_duration' x \< 2))  :: 'Voice' a -> ['Note' a]
 -- @
 --
 -- This is not an 'Iso', as the note list representation does not contain meta-data.
--- To construct a score from a note list, use 'score' or @'flip' ('set' 'stretcheds') 'empty'@.
+-- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
 --
-stretcheds :: Lens (Voice a) (Voice b) [Stretched a] [Stretched b]
-stretcheds = unsafeStretcheds
-{-# INLINE stretcheds #-}
+notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+notes = unsafeNotes
 
-eventsV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-eventsV = unsafeEventsV
-{-# INLINE eventsV #-}
+triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+triplesV = unsafeTriplesV
 
-unsafeEventsV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeEventsV = iso (map (^.from stretched) . (^.stretcheds)) ((^.voice) . map (^.stretched))
-{-# INLINE unsafeEventsV #-}
+unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
+unsafeNotes = _Wrapped
 
-unsafeStretcheds :: Iso (Voice a) (Voice b) [Stretched a] [Stretched b]
-unsafeStretcheds = _Wrapped
-{-# INLINE unsafeStretcheds #-}
+unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
-singleStretched :: Prism' (Voice a) (Stretched a)
-singleStretched = unsafeStretcheds . single
-{-# INLINE singleStretched #-}
-{-# DEPRECATED singleStretched "Use 'unsafeStretcheds . single'" #-}
-
+durationsVoice :: Iso' [Duration] (Voice ())
+durationsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
 
 -- |
 -- Unzip the given voice. This is specialization of 'unzipR'.
@@ -409,11 +397,11 @@ zipVoiceWithNoScale = zipVoiceWith' const
 --
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith' f g
-  ((unzip.view eventsV) -> (ad, as))
-  ((unzip.view eventsV) -> (bd, bs))
+  ((unzip.view triplesV) -> (ad, as))
+  ((unzip.view triplesV) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
-     in view (from unsafeEventsV) (zip cd cs)
+     in view (from unsafeTriplesV) (zip cd cs)
 
 -- |
 -- Merge consecutive equal notes.
@@ -431,7 +419,7 @@ fuseBy p = fuseBy' p head
 -- Merge consecutive equal notes using the given equality predicate and merge function.
 --
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over unsafeEventsV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over unsafeTriplesV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     --
@@ -463,21 +451,13 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
 withContext :: Voice a -> Voice (Ctxt a)
 withContext = over valuesV addCtxt
 
--- TODO expose?
-voiceFromRhythm :: [Duration] -> Voice ()
-voiceFromRhythm = mkVoice . fmap (, ())
-
-mkVoice = view voice . fmap (view stretched)
-
---
--- TODO more elegant definition of durationsV and valuesV using indexed traversal or similar?
---
+-- TODO more elegant definition of durationsV and valuesV?
 
 durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view eventsV
+    getDurs = map fst . view triplesV
 
     setDurs :: [Duration] -> Voice a -> Voice a
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
@@ -488,13 +468,14 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view eventsV
+    getValues = map snd . view triplesV
 
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
 
     listToVoice = mconcat . map pure
 
+{-
 -- |
 -- Transform the durations, leaving values intact.
 withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
@@ -528,62 +509,13 @@ reverseDurations = over durationsV reverse
 --
 reverseValues :: Voice a -> Voice a
 reverseValues = over valuesV reverse
+-}
 
 -- Lens "filtered" through a voice
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 
--- TODO generalize to any zippable thing
--- voiceL :: ALens s t a b -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
-voiceL l = voiceLens (view $ cloneLens l) (set $ cloneLens l)
 
-
--- TODO not meta-safe
-voiceAsList :: Iso (Voice a) (Voice b) [a] [b]
-voiceAsList = iso voiceToList listToVoice
-  where
-    voiceToList = map snd . view eventsV
-    listToVoice = mconcat . fmap pure
-
-listAsVoice :: Iso [a] [b] (Voice a) (Voice b)
-listAsVoice = from voiceAsList
-
-
---
--- TODO
--- Implement meta-data
---
-
--- List functions
-headV, lastV :: Voice a -> Maybe (Stretched a)
-headV = preview _head
-lastV = preview _head
-
-tailV, initV :: Voice a -> Maybe (Voice a)
-tailV = preview _tail
-initV = preview _init
-
-consV :: Stretched a -> Voice a -> Voice a
-unconsV :: Voice a -> Maybe (Stretched a, Voice a)
-consV = cons
-unconsV = uncons
-
-snocV :: Voice a -> Stretched a -> Voice a
-unsnocV :: Voice a -> Maybe (Voice a, Stretched a)
-snocV = snoc
-unsnocV = unsnoc
-
-nullV :: Voice a -> Bool
-nullV = nullOf eventsV
-
-lengthV :: Voice a -> Int
-lengthV = lengthOf eventsV
-
-mapV :: (a -> b) -> Voice a -> Voice b
-mapV = fmap
-
-
--- Voice-specific
 
 sameDurations :: Voice a -> Voice b -> Bool
 sameDurations a b = view durationsV a == view durationsV b
@@ -596,14 +528,11 @@ mergeIfSameDurationWith f a b
   | sameDurations a b = Just $ zipVoiceWithNoScale f a b
   | otherwise         = Nothing
 
--- splitAt :: [Duration] -> Voice a -> [Voice a]
--- splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
-
 -- |
 -- Split all notes of the latter voice at the onset/offset of the former.
 --
--- >>> ["a",(2,"b")^.stretched,"c"]^.voice
--- [(1,"a")^.stretched,(2,"b")^.stretched,(1,"c")^.stretched]^.voice
+-- >>> ["a",(2,"b")^.note,"c"]^.voice
+-- [(1,"a")^.note,(2,"b")^.note,(1,"c")^.note]^.voice
 --
 splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
 splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
@@ -642,16 +571,20 @@ processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b ->
 processExactOverlaps' = undefined
 
 onsetsRelative    :: Time -> Voice a -> [Time]
-onsetsRelative = undefined
+onsetsRelative o v = case offsetsRelative o v of
+  [] -> []
+  xs -> o : init xs
 
 offsetsRelative   :: Time -> Voice a -> [Time]
-offsetsRelative = undefined
+offsetsRelative o = fmap (\t -> o .+^ (t .-. 0)) . toAbsoluteTime . (^. durationsV)
 
 midpointsRelative :: Time -> Voice a -> [Time]
-midpointsRelative = undefined
+midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o v)
+  where
+    between p q = alerp p q 0.5
 
-erasRelative      :: Time -> Voice a -> [Span]
-erasRelative = undefined
+erasRelative :: Time -> Voice a -> [Span]
+erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 
 onsetMap  :: Time -> Voice a -> Map Time a
 onsetMap = undefined

@@ -81,7 +81,7 @@ fermata c x = fermataDuring (_era x) c x
 
 -- | Add a fermata to the given score.
 fermataDuring :: HasMeta a => Span -> Fermata -> a -> a
-fermataDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
+fermataDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 
 -- | Extract fermatas in from the given score, using the given default fermata.
 withFermata :: (Fermata -> Score a -> Score a) -> Score a -> Score a

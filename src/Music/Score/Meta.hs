@@ -111,7 +111,7 @@ a </> b = a <> moveParts offset b
 
 
 
-addMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Note a -> b -> b
+addMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Event a -> b -> b
 addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 
 fromMetaReactive :: forall a b . AttributeClass b => Meta -> Reactive b
@@ -159,7 +159,7 @@ withMeta f x = let
         Right ((a, t), bs, (u, c)) ->
             (meta .~) m
                 $ mapBefore t (f a)
-                $ (composed $ fmap (\(view (from note) -> (s, a)) -> mapDuring s $ f a) $ bs)
+                $ (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs)
                 $ mapAfter u (f c)
                 $ x
 
@@ -172,11 +172,11 @@ withMetaAtStart f x = let
 
     -- JUNK
 -- TODO move
-noteToReactive :: Monoid a => Note a -> Reactive a
+noteToReactive :: Monoid a => Event a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
-activate :: Note (Reactive a) -> Reactive a -> Reactive a
-activate (view (from note) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+activate :: Event (Reactive a) -> Reactive a -> Reactive a
+activate (view (from event) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
         turnOn  = switchR start
         turnOff = switchR stop

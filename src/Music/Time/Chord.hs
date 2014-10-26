@@ -85,7 +85,7 @@ import           Music.Pitch.Literal
 -- A 'Chord' is a parallel composition of values.
 --
 -- @
--- type Chord a = [Delayed a]
+-- type Chord a = [Placed a]
 -- @
 --
 newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
@@ -95,9 +95,9 @@ newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
 type ChordList = []
 
 -- Can use any type as long as chordEv provides an Iso
-type ChordEv a = Delayed a
+type ChordEv a = Placed a
 
-chordEv :: Iso (Delayed a) (Delayed b) (ChordEv a) (ChordEv b)
+chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
 chordEv = id
 
 instance Applicative Chord where
@@ -114,30 +114,30 @@ instance Wrapped (Chord a) where
 
 instance Rewrapped (Chord a) (Chord b)
 
-instance Transformable (Chord a) where
-  transform s = over _Wrapped' (transform s)
+-- instance Transformable (Chord a) where
+--   transform s = over _Wrapped' (transform s)
 
-instance HasDuration (Chord a) where
+-- instance HasDuration (Chord a) where
   -- TODO
 
-instance Splittable a => Splittable (Chord a) where
-  -- TODO
+-- instance Splittable a => Splittable (Chord a) where
+--   -- TODO
 
-instance Reversible a => Reversible (Chord a) where
-  rev = over _Wrapped' (fmap rev) -- TODO OK?
+-- instance Reversible a => Reversible (Chord a) where
+--   rev = over _Wrapped' (fmap rev) -- TODO OK?
 
 -- TODO
 -- instance HasMeta (Chord a) where
   -- meta = error "Not implemented: meta"
 
-chord :: Getter [Delayed a] (Chord a)
+chord :: Getter [Placed a] (Chord a)
 chord = from unsafeChord
 
-unchord :: Lens (Chord a) (Chord b) [Delayed a] [Delayed b]
+unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
 unchord = _Wrapped
 
 -- TODO names are not consistent with other types
-unsafeChord :: Iso (Chord a) (Chord b) [Delayed a] [Delayed b]
+unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
 unsafeChord = _Wrapped
 
 instance IsString a => IsString (Chord a) where

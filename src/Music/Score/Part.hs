@@ -201,13 +201,13 @@ instance HasParts a b => HasParts (Either c a) (Either c b) where
   parts = traverse . parts
 
 
-type instance Part (Note a) = Part a
-type instance SetPart g (Note a) = Note (SetPart g a)
+type instance Part (Event a) = Part a
+type instance SetPart g (Event a) = Event (SetPart g a)
 
-instance (HasPart a b) => HasPart (Note a) (Note b) where
+instance (HasPart a b) => HasPart (Event a) (Event b) where
   part = _Wrapped . whilstL part
 
-instance (HasParts a b) => HasParts (Note a) (Note b) where
+instance (HasParts a b) => HasParts (Event a) (Event b) where
   parts = _Wrapped . whilstL parts
 
 -- |

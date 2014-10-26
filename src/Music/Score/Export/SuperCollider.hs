@@ -124,7 +124,7 @@ instance HasBackend SuperCollider where
       composeTracksInParallel = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
       
       exportTrack :: [(Duration, Maybe ScEvent)] -> String
-      exportTrack events = "Pbind("
+      exportTrack triples = "Pbind("
         ++ "\\dur, Pseq(" ++ show durs ++ ")"
         ++ ", "
         ++ "\\midinote, Pseq(" ++ showRestList pitches ++ ")"
@@ -134,18 +134,18 @@ instance HasBackend SuperCollider where
             . Data.List.intercalate ", " 
             . map (maybe "\\rest" show) 
   
-          -- events :: ScEvent
+          -- triples :: ScEvent
           durs    :: [Double]
           pitches :: [Maybe Double]
           ampls   :: [Maybe Double]
-          durs    = map (realToFrac . fst) events
-          pitches = map (fmap fst . snd) events
-          ampls   = map (fmap snd . snd) events
+          durs    = map (realToFrac . fst) triples
+          pitches = map (fmap fst . snd) triples
+          ampls   = map (fmap snd . snd) triples
           
 
 instance () => HasBackendScore SuperCollider (Voice (Maybe a)) where
   type BackendScoreEvent SuperCollider (Voice (Maybe a)) = a
-  exportScore _ xs = Identity <$> ScScore [view eventsV xs]
+  exportScore _ xs = Identity <$> ScScore [view triplesV xs]
 
 instance (HasPart' a, Ord (Part a)) => HasBackendScore SuperCollider (Score a) where
   type BackendScoreEvent SuperCollider (Score a) = a

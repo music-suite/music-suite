@@ -8,6 +8,8 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE RankNTypes                 #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -22,16 +24,19 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Note (
-        -- * Note type
-        Note,
+        -- * Event type
+        Event,
 
         -- * Construction
-        note,
         event,
-        noteValue,
+        eventee,
+        spanEvent,
+        triple,
+        eventee,
   ) where
 
 import           Control.Applicative
+import           Data.Functor.Couple
 import           Control.Comonad
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
@@ -51,7 +56,7 @@ import           Music.Time.Split
 
 
 -- |
--- A 'Note' is a value with an 'onset' and and 'offset' in time. It is an instance
+-- A 'Event' is a value with an 'onset' and and 'offset' in time. It is an instance
 -- of 'Transformable'.
 --
 -- You can use 'value' to apply a function in the context of the transformation,
@@ -65,83 +70,95 @@ import           Music.Time.Split
 -- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
 -- @
 --
-newtype Note a = Note { _noteValue :: (Span, a) }
-  deriving (Eq,
-            Functor,
-            Foldable,
-            Traversable,
-            Comonad,
-            Typeable)
+newtype Event a = Event { getEvent :: Span `Couple` a }
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Foldable,
+    Traversable,
+    
+    Functor,
+    Applicative,
+    Monad,
+    Comonad,
+    
+    Num,
+    Fractional,
+    Floating,
+    Real,
+    RealFrac
+    )
 
-instance (Show a, Transformable a) => Show (Note a) where
-  show x = show (x^.from note) ++ "^.note"
+instance (Show a, Transformable a) => Show (Event a) where
+  show x = show (x^.from event) ++ "^.event"
 
--- |
--- Note is a 'Monad' and 'Applicative' in the style of pair, with 'return' placing a value
--- at the default span 'mempty' and 'join' composing time transformations.
-deriving instance Monad Note
-deriving instance Applicative Note
+instance Wrapped (Event a) where
+  type Unwrapped (Event a) = (Span, a)
+  _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
 
-instance Wrapped (Note a) where
-  type Unwrapped (Note a) = (Span, a)
-  _Wrapped' = iso _noteValue Note
+instance Rewrapped (Event a) (Event b)
 
-instance Rewrapped (Note a) (Note b)
+instance Transformable (Event a) where
+  transform t = over (from event . _1) (transform t)
 
-instance Transformable (Note a) where
-  transform t = over (_Wrapped . _1) (transform t)
+instance HasDuration (Event a) where
+  _duration = _duration . view (from event . _1)
 
-instance HasDuration (Note a) where
-  _duration = _duration . fst . view _Wrapped
+instance HasPosition (Event a) where
+  _era = view (from event . _1)
 
-instance HasPosition (Note a) where
-  _era = view (from note . _1)
-
-instance Splittable a => Splittable (Note a) where
-  -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)
-  beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (d / _duration s) v)
-  ending    d = over _Wrapped $ \(s, v) -> (ending    d s, ending    (d / _duration s) v)
-
-instance Reversible (Note a) where
-  rev = revDefault
-
--- Lifted instances
-
-instance IsString a => IsString (Note a) where
+instance IsString a => IsString (Event a) where
   fromString = pure . fromString
 
-instance IsPitch a => IsPitch (Note a) where
+instance IsPitch a => IsPitch (Event a) where
   fromPitch = pure . fromPitch
 
-instance IsInterval a => IsInterval (Note a) where
+instance IsInterval a => IsInterval (Event a) where
   fromInterval = pure . fromInterval
 
-instance IsDynamics a => IsDynamics (Note a) where
+instance IsDynamics a => IsDynamics (Event a) where
   fromDynamics = pure . fromDynamics
 
 -- |
--- View a note as a pair of the original value and the transformation (and vice versa).
+-- View a event as a pair of the original value and the transformation (and vice versa).
 --
-note :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Note a) (Note b)
-note = _Unwrapped
+event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
+event = _Unwrapped
 
 -- |
--- View the value in the note.
+-- View the value in the event.
 --
-noteValue :: (Transformable a, Transformable b) => Lens (Note a) (Note b) a b
-noteValue = lens runNote (flip $ mapNote . const)
+eventee :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
+-- eventee = from event `dependingOn` (transformed)
+eventee = lens runEvent (flip $ mapEvent . const)
   where
-    runNote = uncurry transform . view _Wrapped
-    -- setNote f (view (from note) -> (s,x)) = view note (s, itransform s x)
-    mapNote f (view (from note) -> (s,x)) = view note (s, f `whilst` negateV s $ x)
+    runEvent = uncurry transform . view _Wrapped
+    -- setEvent f (view (from event) -> (s,x)) = view event (s, itransform s x)
+    mapEvent f (view (from event) -> (s,x)) = view event (s, f `whilst` negateV s $ x)
     f `whilst` t = over (transformed t) f
-{-# INLINE noteValue #-}
+{-# INLINE eventee #-}
+
+spanEvent :: Iso' Span (Event ())
+spanEvent = iso (\s -> (s,())^.event) (^.era)
 
 -- |
--- View a note as an events, i.e. a time-duration-value triplet.
+-- View a event as an triples, i.e. a time-duration-value triplet.
 --
-event :: Iso (Note a) (Note b) (Time, Duration, a) (Time, Duration, b)
-event = from note . bimapping delta id . tripped
+triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
+triple = from event . bimapping delta id . tripped
 
 
+
+dependingOn :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
+dependingOn l f = lens getter setter
+  where
+    getter s = let
+      (x,a) = view l s
+      l2    = f x
+      in view l2 a
+    setter s b = let
+      (x,_) = view l s
+      l2    = f x
+      in set (l._2.l2) b s
 

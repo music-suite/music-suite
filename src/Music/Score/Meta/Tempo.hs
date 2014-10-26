@@ -182,7 +182,7 @@ tempo c x = tempoDuring (_era x) c x
 
 -- | Set the tempo of the given part of a score.
 tempoDuring :: HasMeta a => Span -> Tempo -> a -> a
-tempoDuring s c = addMetaNote $ view note (s, c)
+tempoDuring s c = addMetaNote $ view event (s, c)
 
 
 -- TODO move

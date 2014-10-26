@@ -52,7 +52,7 @@ import qualified Data.List              as List
 
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ durs `zip` (fmap (r `atTime`) times)
+reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelativeTimeN' v times
@@ -62,7 +62,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
 -- Convert a score to a voice. Fails if the score contain overlapping events.
 --
 scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. triples)
+scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. triples)
     where
        throwTime (t,d,x) = (d,x)
        addRests = concat . snd . mapAccumL g 0
@@ -77,7 +77,7 @@ scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^
 -- Convert a voice to a score.
 --
 voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . (^. stretcheds) where g = (^. stretchee) . fmap return
+voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
 {-# DEPRECATED voiceToScore "" #-}
 
 {-

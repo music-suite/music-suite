@@ -31,8 +31,7 @@ module Music.Time.Track (
 
         -- * Construction
         track,
-        delayeds,
-        singleDelayed,   
+        placeds,
 
   ) where
 
@@ -69,7 +68,7 @@ import           Music.Time.Internal.Util
 -- A 'Track' is a parallel composition of values.
 --
 -- @
--- type Track a = [Delayed a]
+-- type Track a = [Placed a]
 -- @
 --
 newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
@@ -91,9 +90,9 @@ newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
 type TrackList = []
 
 -- Can use any type as long as trackEv provides an Iso
-type TrackEv a = Delayed a
+type TrackEv a = Placed a
 
-trackEv :: Iso (Delayed a) (Delayed b) (TrackEv a) (TrackEv b)
+trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
 trackEv = id
 
 instance Applicative Track where
@@ -114,7 +113,7 @@ instance Wrapped (Track a) where
 
 instance Rewrapped (Track a) (Track b)
 
-instance Transformable (Track a) where
+instance Transformable a => Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
 
 -- instance Splittable a => Splittable (Track a) where
@@ -127,21 +126,17 @@ instance Transformable (Track a) where
 -- |
 -- Create a track from a list of notes.
 --
--- Se also 'delayeds'.
+-- Se also 'placeds'.
 --
-track :: Getter [Delayed a] (Track a)
+track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
 {-# INLINE track #-}
 
-delayeds :: Lens (Track a) (Track b) [Delayed a] [Delayed b]
-delayeds = unsafeTrack
-{-# INLINE delayeds #-}
+placeds :: Lens (Track a) (Track b) [Placed a] [Placed b]
+placeds = unsafeTrack
+{-# INLINE placeds #-}
 
-singleDelayed :: Prism' (Track a) (Delayed a)
-singleDelayed = unsafeTrack . single
-{-# INLINE singleDelayed #-}
-
-unsafeTrack :: Iso (Track a) (Track b) [Delayed a] [Delayed b]
+unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
 unsafeTrack = _Wrapped
 {-# INLINE unsafeTrack #-}
 

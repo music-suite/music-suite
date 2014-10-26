@@ -177,12 +177,12 @@ type instance SetDynamic b (Maybe a)      = Maybe (SetDynamic b a)
 type instance Dynamic (Either c a)        = Dynamic a
 type instance SetDynamic b (Either c a)   = Either c (SetDynamic b a)
 
-type instance Dynamic (Note a)            = Dynamic a
-type instance SetDynamic b (Note a)       = Note (SetDynamic b a)
-type instance Dynamic (Delayed a)         = Dynamic a
-type instance SetDynamic b (Delayed a)    = Delayed (SetDynamic b a)
-type instance Dynamic (Stretched a)       = Dynamic a
-type instance SetDynamic b (Stretched a)  = Stretched (SetDynamic b a)
+type instance Dynamic (Event a)            = Dynamic a
+type instance SetDynamic b (Event a)       = Event (SetDynamic b a)
+type instance Dynamic (Placed a)         = Dynamic a
+type instance SetDynamic b (Placed a)    = Placed (SetDynamic b a)
+type instance Dynamic (Note a)       = Dynamic a
+type instance SetDynamic b (Note a)  = Note (SetDynamic b a)
 
 type instance Dynamic (Voice a)       = Dynamic a
 type instance SetDynamic b (Voice a)  = Voice (SetDynamic b a)
@@ -210,24 +210,24 @@ instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
 
 
 
-instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
+instance (HasDynamics a b) => HasDynamics (Event a) (Event b) where
   dynamics = _Wrapped . whilstL dynamics
 
-instance (HasDynamic a b) => HasDynamic (Note a) (Note b) where
+instance (HasDynamic a b) => HasDynamic (Event a) (Event b) where
   dynamic = _Wrapped . whilstL dynamic
 
 
-instance (HasDynamics a b) => HasDynamics (Delayed a) (Delayed b) where
+instance (HasDynamics a b) => HasDynamics (Placed a) (Placed b) where
   dynamics = _Wrapped . whilstLT dynamics
 
-instance (HasDynamic a b) => HasDynamic (Delayed a) (Delayed b) where
+instance (HasDynamic a b) => HasDynamic (Placed a) (Placed b) where
   dynamic = _Wrapped . whilstLT dynamic
 
 
-instance (HasDynamics a b) => HasDynamics (Stretched a) (Stretched b) where
+instance (HasDynamics a b) => HasDynamics (Note a) (Note b) where
   dynamics = _Wrapped . whilstLD dynamics
 
-instance (HasDynamic a b) => HasDynamic (Stretched a) (Stretched b) where
+instance (HasDynamic a b) => HasDynamic (Note a) (Note b) where
   dynamic = _Wrapped . whilstLD dynamic
 
 

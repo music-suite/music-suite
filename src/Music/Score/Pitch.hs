@@ -125,7 +125,7 @@ type family Pitch (s :: *) :: *
 -- @
 -- 'Pitch' (c,a)             ~ 'Pitch' a
 -- 'Pitch' [a]               ~ 'Pitch' a
--- 'Pitch' ('Note' a)          ~ 'Pitch' a
+-- 'Pitch' ('Event' a)          ~ 'Pitch' a
 -- 'Pitch' ('Voice' a)         ~ 'Pitch' a
 -- 'Pitch' ('Score' a)         ~ 'Pitch' a
 -- @
@@ -151,7 +151,7 @@ type family SetPitch (b :: *) (s :: *) :: *
 -- @
 -- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
 -- 'SetPitch' b [a]            ~ ['SetPitch' b a]
--- 'SetPitch' g ('Note' a)       ~ Note ('SetPitch' g a)
+-- 'SetPitch' g ('Event' a)       ~ Event ('SetPitch' g a)
 -- 'SetPitch' g ('Voice' a)      ~ 'Voice' ('SetPitch' g a)
 -- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
 -- @
@@ -275,12 +275,12 @@ type instance SetPitch b (Maybe a)      = Maybe (SetPitch b a)
 type instance Pitch (Either c a)        = Pitch a
 type instance SetPitch b (Either c a)   = Either c (SetPitch b a)
 
-type instance Pitch (Note a)            = Pitch a
-type instance SetPitch b (Note a)       = Note (SetPitch b a)
-type instance Pitch (Delayed a)         = Pitch a
-type instance SetPitch b (Delayed a)    = Delayed (SetPitch b a)
-type instance Pitch (Stretched a)       = Pitch a
-type instance SetPitch b (Stretched a)  = Stretched (SetPitch b a)
+type instance Pitch (Event a)            = Pitch a
+type instance SetPitch b (Event a)       = Event (SetPitch b a)
+type instance Pitch (Placed a)         = Pitch a
+type instance SetPitch b (Placed a)    = Placed (SetPitch b a)
+type instance Pitch (Note a)       = Pitch a
+type instance SetPitch b (Note a)  = Note (SetPitch b a)
 
 type instance Pitch (Voice a)       = Pitch a
 type instance SetPitch b (Voice a)  = Voice (SetPitch b a)
@@ -296,19 +296,19 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
-instance (HasPitches a b) => HasPitches (Note a) (Note b) where
+instance (HasPitches a b) => HasPitches (Event a) (Event b) where
   pitches = _Wrapped . whilstL pitches
-instance (HasPitch a b) => HasPitch (Note a) (Note b) where
+instance (HasPitch a b) => HasPitch (Event a) (Event b) where
   pitch = _Wrapped . whilstL pitch
 
-instance (HasPitches a b) => HasPitches (Delayed a) (Delayed b) where
+instance (HasPitches a b) => HasPitches (Placed a) (Placed b) where
   pitches = _Wrapped . whilstLT pitches
-instance (HasPitch a b) => HasPitch (Delayed a) (Delayed b) where
+instance (HasPitch a b) => HasPitch (Placed a) (Placed b) where
   pitch = _Wrapped . whilstLT pitch
 
-instance (HasPitches a b) => HasPitches (Stretched a) (Stretched b) where
+instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . whilstLD pitches
-instance (HasPitch a b) => HasPitch (Stretched a) (Stretched b) where
+instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . whilstLD pitch
 
 instance HasPitches a b => HasPitches (Maybe a) (Maybe b) where

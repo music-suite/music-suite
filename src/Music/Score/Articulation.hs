@@ -187,12 +187,12 @@ type instance SetArticulation b (Maybe a)     = Maybe (SetArticulation b a)
 type instance Articulation (Either c a)       = Articulation a
 type instance SetArticulation b (Either c a)  = Either c (SetArticulation b a)
 
+type instance Articulation (Event a) = Articulation a
+type instance SetArticulation g (Event a) = Event (SetArticulation g a)
+type instance Articulation (Placed a) = Articulation a
+type instance SetArticulation g (Placed a) = Placed (SetArticulation g a)
 type instance Articulation (Note a) = Articulation a
 type instance SetArticulation g (Note a) = Note (SetArticulation g a)
-type instance Articulation (Delayed a) = Articulation a
-type instance SetArticulation g (Delayed a) = Delayed (SetArticulation g a)
-type instance Articulation (Stretched a) = Articulation a
-type instance SetArticulation g (Stretched a) = Stretched (SetArticulation g a)
 
 type instance Articulation (Voice a) = Articulation a
 type instance SetArticulation b (Voice a) = Voice (SetArticulation b a)
@@ -221,22 +221,22 @@ instance HasArticulations a b => HasArticulations (Either c a) (Either c b) wher
 
 
 
-instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
+instance (HasArticulations a b) => HasArticulations (Event a) (Event b) where
   articulations = _Wrapped . whilstL articulations
 
-instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
+instance (HasArticulation a b) => HasArticulation (Event a) (Event b) where
   articulation = _Wrapped . whilstL articulation
 
-instance (HasArticulations a b) => HasArticulations (Delayed a) (Delayed b) where
+instance (HasArticulations a b) => HasArticulations (Placed a) (Placed b) where
   articulations = _Wrapped . whilstLT articulations
 
-instance (HasArticulation a b) => HasArticulation (Delayed a) (Delayed b) where
+instance (HasArticulation a b) => HasArticulation (Placed a) (Placed b) where
   articulation = _Wrapped . whilstLT articulation
 
-instance (HasArticulations a b) => HasArticulations (Stretched a) (Stretched b) where
+instance (HasArticulations a b) => HasArticulations (Note a) (Note b) where
   articulations = _Wrapped . whilstLD articulations
 
-instance (HasArticulation a b) => HasArticulation (Stretched a) (Stretched b) where
+instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
   articulation = _Wrapped . whilstLD articulation
 
 

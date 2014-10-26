@@ -123,7 +123,7 @@ keySignature c x = keySignatureDuring (_era x) c x
 
 -- | Set the key signature of the given part of a score.
 keySignatureDuring :: HasMeta a => Span -> KeySignature -> a -> a
-keySignatureDuring s c = addMetaNote $ view note (s, (Option $ Just $ Last c))
+keySignatureDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 
 -- | Extract all key signatures from the given score, using the given default key signature.
 withKeySignature :: KeySignature -> (KeySignature -> Score a -> Score a) -> Score a -> Score a
