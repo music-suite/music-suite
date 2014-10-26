@@ -62,7 +62,7 @@ reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. stretched) $ du
 -- Convert a score to a voice. Fails if the score contain overlapping events.
 --
 scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. events)
+scoreToVoice = (^. voice) . fmap (^. stretched) . fmap throwTime . addRests . (^. triples)
     where
        throwTime (t,d,x) = (d,x)
        addRests = concat . snd . mapAccumL g 0

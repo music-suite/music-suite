@@ -163,7 +163,7 @@ instance HasBackend Midi where
       setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
 
       scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
-      scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. events)
+      scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
 
       -- Hardcoded values for Midi export
       -- We always generate MultiTrack (type 1) files with division 1024

@@ -210,7 +210,7 @@ singleMVoice = iso scoreToVoice voiceToScore'
       -- TODO
       List.sortBy (comparing (^._1))
       -- end TODO
-      . (^. events)
+      . (^. triples)
       where
         throwTime (t,d,x) = (d,x)
         addRests = concat . snd . List.mapAccumL g 0

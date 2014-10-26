@@ -33,7 +33,7 @@ module Music.Time.Score (
         score,
         notes,
         eras,
-        events,
+        triples,
         singleNote,
 
         -- * Traversal
@@ -471,8 +471,8 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 -- 'events' = 'notes' . 'through' 'event' 'event'
 -- @
 --
-events :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-events = notes . _zipList . through event event . from _zipList
+triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+triples = notes . _zipList . through event event . from _zipList
 
 
 
