@@ -1076,6 +1076,9 @@ instance Transformable (Voice a) where
 instance HasDuration (Voice a) where
   _duration = sumOf (notes . each . duration)
 
+instance Reversible a => Reversible (Voice a) where
+  rev = over notes reverse . fmap rev
+
 instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
