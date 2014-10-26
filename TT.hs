@@ -1382,7 +1382,7 @@ renderAlignedVoice a@(AlignedVoice (_, _, v)) = startAt (_onset a) $ scat $ map 
 
 
 
-newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
+newtype Track a = Track { getTrack :: [Placed a] }
   deriving (
     Eq,
     Show,
@@ -1395,11 +1395,7 @@ newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
     Functor
     )
 
-type TrackList = []
-
-type TrackEv a = Placed a
-
-trackEv :: Iso (Placed a) (Placed b) (TrackEv a) (TrackEv b)
+trackEv :: Iso (Placed a) (Placed b) (Placed a) (Placed b)
 trackEv = id
 
 instance Applicative Track where
@@ -1415,7 +1411,7 @@ instance Monad Track where
   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
 
 instance Wrapped (Track a) where
-  type Unwrapped (Track a) = (TrackList (TrackEv a))
+  type Unwrapped (Track a) = ([Placed a])
   _Wrapped' = iso getTrack Track
 
 instance Rewrapped (Track a) (Track b)
@@ -1433,57 +1429,6 @@ placeds = unsafeTrack
 unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
 unsafeTrack = _Wrapped
 
-
-
--- newtype Chord a = Chord { getChord :: ChordList (ChordEv a) }
---   deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
---
--- type ChordList = []
---
--- type ChordEv a = Placed a
---
--- chordEv :: Iso (Placed a) (Placed b) (ChordEv a) (ChordEv b)
--- chordEv = id
---
--- instance Applicative Chord where
---   pure  = return
---   (<*>) = ap
---
--- instance Monad Chord where
---   return = view _Unwrapped . return . return
---   xs >>= f = view _Unwrapped $ (view _Wrapped . f) `mbind` view _Wrapped xs
---
--- instance Wrapped (Chord a) where
---   type Unwrapped (Chord a) = (ChordList (ChordEv a))
---   _Wrapped' = iso getChord Chord
---
--- instance Rewrapped (Chord a) (Chord b)
---
--- instance Transformable (Chord a) where
---   transform s = over _Wrapped' (transform s)
---
--- instance HasDuration (Chord a) where
---   _duration = Foldable.sum . fmap _duration . view _Wrapped'
---
--- instance Splittable a => Splittable (Chord a) where
---   -- TODO
---
--- chord :: Getter [Placed a] (Chord a)
--- chord = from unsafeChord
---
--- unchord :: Lens (Chord a) (Chord b) [Placed a] [Placed b]
--- unchord = _Wrapped
---
--- unsafeChord :: Iso (Chord a) (Chord b) [Placed a] [Placed b]
--- unsafeChord = _Wrapped
---
--- instance IsString a => IsString (Chord a) where
---   fromString = pure . fromString
---
--- deriving instance IsPitch a => IsPitch (Chord a)
--- deriving instance IsInterval a => IsInterval (Chord a)
--- deriving instance IsDynamics a => IsDynamics (Chord a)
---
 {-
 invertC :: Transposable a => Chord a -> Chord a
 invertC = over chord (rotlAnd $ up _P8)
