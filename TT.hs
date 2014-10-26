@@ -753,7 +753,10 @@ instance Wrapped (Placed a) where
 instance Rewrapped (Placed a) (Placed b)
 
 instance Transformable a => Transformable (Placed a) where
-  transform t = over (_Wrapped' . _1) (transform t) . over (_Wrapped' . _2) (stretch $ stretchComponent t)
+  transform t = 
+    over (from placed . _1) (transform t) 
+    . 
+    over (from placed . _2) (stretch $ stretchComponent t)
 
 placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
@@ -797,10 +800,10 @@ instance Wrapped (Note a) where
 instance Rewrapped (Note a) (Note b)
 
 instance Transformable (Note a) where
-  transform t = over (_Wrapped . _1) (transform t)
+  transform t = over (from note . _1) (transform t)
 
 instance HasDuration (Note a) where
-  _duration = _duration . view _Wrapped
+  _duration = _duration . view (from note)
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"
@@ -856,10 +859,11 @@ instance Wrapped (Chord a) where
 instance Rewrapped (Chord a) (Chord b)
 
 instance Transformable (Chord a) where
+  -- transform t = over (from chord) (transform t)
   transform t = over _Wrapped (transform t)
 
 instance HasDuration (Chord a) where
-  _duration = _duration . view _Wrapped
+  _duration = _duration . view (from chord)
 
 instance (Show a, Transformable a) => Show (Chord a) where
   show x = show (x^.from chord') ++ "^.chord'"
@@ -906,7 +910,7 @@ instance Wrapped (Rest a) where
 instance Rewrapped (Rest a) (Rest b)
 
 instance Transformable (Rest a) where
-  transform t = over _Wrapped (transform t)
+  transform t = over (from rest) (transform t)
 
 instance HasDuration (Rest a) where
   _duration = _duration . view (from rest)
@@ -950,10 +954,10 @@ instance Wrapped (Event a) where
 instance Rewrapped (Event a) (Event b)
 
 instance Transformable (Event a) where
-  transform t = over (_Wrapped . _1) (transform t)
+  transform t = over (from event . _1) (transform t)
 
 instance HasDuration (Event a) where
-  _duration = _duration . fst . view _Wrapped
+  _duration = _duration . view (from event . _1)
 
 instance HasPosition (Event a) where
   _era = view (from event . _1)
@@ -1063,10 +1067,10 @@ instance Snoc (Voice a) (Voice b) (Note a) (Note b) where
     Just (xs, x) -> Right (view voice xs, x)
 
 instance Transformable (Voice a) where
-  transform s = over _Wrapped' (transform s)
+  transform s = over notes (transform s)
 
 instance HasDuration (Voice a) where
-  _duration = Foldable.sum . fmap _duration . view _Wrapped'
+  _duration = sumOf (notes . each . duration)
 
 instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
@@ -1424,7 +1428,7 @@ instance Wrapped (Track a) where
 instance Rewrapped (Track a) (Track b)
 
 instance Transformable a => Transformable (Track a) where
-  transform s = over _Wrapped' (transform s)
+  transform s = over placeds (transform s)
 
 track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
