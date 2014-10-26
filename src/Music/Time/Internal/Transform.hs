@@ -34,9 +34,7 @@ module Music.Time.Internal.Transform (
 
         -- * The Transformable class
         Transformable(..),
-        itransform,
         transformed,
-        itransformed,
 
         -- * Apply under a transformation
         whilst,
@@ -46,7 +44,6 @@ module Music.Time.Internal.Transform (
         whilstLD,
         whilstStretch,
         whilstDelay,
-        spanned,
         onSpan,
         conjugateS,
 
@@ -86,36 +83,21 @@ import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum (..))
 
+-- Transformable laws:
+-- > transform mempty   = id
+-- > transform (s <> t) = transform s . transform t
+--
+-- Duration law:
+-- > _duration a = _duration (_era a)
+--
+-- Position law:
+-- > _position p (transform s a) = transform s (_position p a)
+--
+-- Lemma:
+-- > _duration (transform s a) = transform s (_duration a)
+
 -- |
 -- Class of values that can be transformed (i.e. scaled and moved) in time.
---
--- Law
---
--- @
--- transform mempty = id
--- transform (s \<> t) = transform s . transform t
--- transform (s \<> negateV s) = id
--- @
---
--- Law
---
--- @
--- onset (delay n a)       = n ^+. onset a
--- offset (delay n a)      = n ^+. offset a
--- duration (stretch n a)  = n * duration a
--- duration (compress n a) = duration a / n
--- @
---
--- @
--- delay n b ! t    = b ! (t .-^ n)
--- undelay n b ! t  = b ! (t .+^ n)
--- @
---
--- Lemma
---
--- @
--- duration a = duration (delay n a)
--- @
 --
 class Transformable a where
   transform :: Span -> a -> a
@@ -183,39 +165,20 @@ instance (Ord a, Transformable a) => Transformable (Set a) where
 instance (Ord k, Transformable a) => Transformable (Map k a) where
   transform t = Map.map (transform t)
 
--- |
 -- Functions transform by conjugation, i.e. we reverse-transform the argument
 -- and transform the result.
 --
 instance (Transformable a, Transformable b) => Transformable (a -> b) where
   transform t = (`whilst` negateV t)
-
-
--- |
--- Apply the inverse of the given transformation.
---
--- @
--- 'itransform' s = 'transform' ('negateV' s)
--- @
---
-itransform :: Transformable a => Span -> a -> a
-itransform s = transform (negateV s)
+    where
+    f `whilst` t = over (transformed t) f
 
 -- |
 -- View the given value in the context of the given transformation.
 --
 transformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
-transformed s = iso (transform s) (itransform s)
+transformed s = iso (transform s) (transform $ negateV s)
 
-
--- |
--- Transforms a lens of to a 'Transformable' type to act inside a transformation.
---
-itransformed :: (Transformable a, Transformable b) => Span -> Iso a b a b
-itransformed s = transformed (negateV s)
-
-spanned = itransformed
-{-# DEPRECATED spanned "Use itransformed" #-}
 
 -- |
 -- Apply a function under transformation.
@@ -433,7 +396,7 @@ conjugateS t1 t2  = negateV t1 <> t2 <> t1
 --
 onSpan :: (Transformable s, Transformable t, Functor f) 
   => LensLike f s t a b -> Span -> LensLike f s t a b
-f `onSpan` s = spanned s . f
+f `onSpan` s = transformed (negateV s) . f
 -- TODO name
 
 -- deriving instance Functor Sum
