@@ -40,9 +40,9 @@ module Music.Time.Score (
         mapWithSpan,
         filterWithSpan,
         mapFilterWithSpan,
-        mapEvents,
-        filterEvents,
-        mapFilterEvents,
+        mapTriples,
+        filterTriples,
+        mapFilterTriples,
 
         -- * Simultaneous
         -- TODO check for overlapping values etc
@@ -55,7 +55,7 @@ module Music.Time.Score (
 
         -- * Unsafe versions
         unsafeNotes,
-        unsafeEvents,
+        unsafeTriples,
         
   ) where
 
@@ -424,8 +424,8 @@ unsafeNotes = _Wrapped . noMeta . _Wrapped . sorted
 -- This only an isomorphism up to meta-data. See also the safe (but more restricted)
 -- 'notes' and 'score'.
 --
-unsafeEvents :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeEvents = iso _getScore _score
+unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+unsafeTriples = iso _getScore _score
   where
     _score :: [(Time, Duration, a)] -> Score a
     _score = mconcat . fmap (uncurry3 event)
@@ -484,21 +484,21 @@ mapWithSpan f = mapScore (uncurry f . view (from note))
 filterWithSpan :: (Span -> a -> Bool) -> Score a -> Score a
 filterWithSpan f = mapFilterWithSpan (partial2 f)
 
--- | Combination of 'mapEvents' and 'filterEvents'.
+-- | Combination of 'mapTriples' and 'filterTriples'.
 mapFilterWithSpan :: (Span -> a -> Maybe b) -> Score a -> Score b
 mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
 -- | Map over the values in a score.
-mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapEvents f = mapWithSpan (uncurry f . view delta)
+mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapTriples f = mapWithSpan (uncurry f . view delta)
 
 -- | Filter the values in a score.
-filterEvents   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
-filterEvents f = mapFilterEvents (partial3 f)
+filterTriples   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
+filterTriples f = mapFilterTriples (partial3 f)
 
--- | Efficient combination of 'mapEvents' and 'filterEvents'.
-mapFilterEvents :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
-mapFilterEvents f = mcatMaybes . mapEvents f
+-- | Efficient combination of 'mapTriples' and 'filterTriples'.
+mapFilterTriples :: (Time -> Duration -> a -> Maybe b) -> Score a -> Score b
+mapFilterTriples f = mcatMaybes . mapTriples f
 
 -- | Normalize a score, assuring its events spans are all forward (as by 'isForwardSpan'),
 -- and that its onset is at least zero. Consequently, the onset and offset of each event
@@ -536,7 +536,7 @@ chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view notes
 
 simultaneous' :: Transformable a => Score a -> Score [a]
-simultaneous' sc = (^. from unsafeEvents) vs
+simultaneous' sc = (^. from unsafeTriples) vs
   where
     -- es :: [Era]
     -- evs :: [[a]]

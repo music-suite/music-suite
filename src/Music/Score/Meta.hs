@@ -120,8 +120,8 @@ fromMetaReactive = fromMaybe mempty . unwrapMeta
 
 
 withSpan :: Score a -> Score (Span, a)
-withSpan = mapEvents (\t d x -> (t >-> d,x))
-withTime = mapEvents (\t d x -> (t, x))
+withSpan = mapTriples (\t d x -> (t >-> d,x))
+withTime = mapTriples (\t d x -> (t, x))
 
 inSpan t' (view range -> (t,u)) = t <= t' && t' < u
 
