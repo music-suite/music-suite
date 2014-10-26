@@ -276,8 +276,10 @@ instance Reversible a => Reversible (NScore a) where
   rev (NScore xs) = NScore (fmap rev xs)
 
 instance HasPosition (NScore a) where
-  _onset  = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
-  _offset = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
+  _era x = (f x, g x)^.from range
+    where
+      f = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
+      g = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
 
 -- TODO move
 safeMinimum xs = if null xs then 0 else minimum xs

@@ -95,7 +95,7 @@ instance HasDuration (Note a) where
   _duration = _duration . fst . view _Wrapped
 
 instance HasPosition (Note a) where
-  x `_position` p = fst (view _Wrapped x) `_position` p
+  _era = view (from note . _1)
 
 instance Splittable a => Splittable (Note a) where
   -- beginning d = over _Wrapped $ \(s, v) -> (beginning d s, beginning (transform (negateV s) d) v)

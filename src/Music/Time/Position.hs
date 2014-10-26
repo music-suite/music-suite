@@ -36,7 +36,8 @@ module Music.Time.Position (
 
       -- * Era
       era,
-      _era, -- TODO rename _era
+      _onset,
+      _offset,
 
       -- * Position
       position,
@@ -58,10 +59,16 @@ module Music.Time.Position (
       stretchRelativeOnset,
       stretchRelativeMidpoint,
       stretchRelativeOffset,
-      
-      -- * Internal
-      -- TODO hide...
-      -- _setEra,
+
+      delayRelative,
+      delayRelativeOnset,
+      delayRelativeMidpoint,
+      delayRelativeOffset,
+
+      transformRelative,
+      transformRelativeOnset,
+      transformRelativeMidpoint,
+      transformRelativeOffset,
   ) where
 
 
@@ -103,37 +110,26 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
 -- @
 --
 class HasDuration a => HasPosition a where
-  -- |
-  -- Return the onset of the given value, or the value between the attack and decay phases.
-  --
+
   _position :: a -> Duration -> Time
-  _position x = alerp (_onset x) (_offset x)
+  _position x = alerp a b where (a, b) = (_era x)^.range
 
-  -- |
-  -- Return the onset of the given value, or the value between the attack and decay phases.
-  --
-  _onset, _offset :: a -> Time
-  _onset     = (`_position` 0)
-  _offset    = (`_position` 1.0)
-
+  _era :: HasPosition a => a -> Span
+  _era x = x `_position` 0 <-> x `_position` 1
+  
 instance HasPosition Span where
-  -- Override as an optimization:
-  _onset    (view range -> (t1, t2)) = t1
-  _offset   (view range -> (t1, t2)) = t2
-  _position (view range -> (t1, t2)) = alerp t1 t2
+  _era = id
 
 #ifndef GHCI
 instance (HasPosition a, HasDuration a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
 instance (HasPosition a, HasDuration a) => HasPosition [a] where
-  _onset  = foldr min 0 . fmap _onset
-  _offset = foldr max 0 . fmap _offset
+  _era x = (f x, g x)^.from range
+    where
+      f  = foldr min 0 . fmap _onset
+      g = foldr max 0 . fmap _offset
 #endif
-
-_era :: HasPosition a => a -> Span
-_era x = _onset x <-> _offset x
-{-# INLINE _era #-}
 
 -- |
 -- Position of the given value.
@@ -208,6 +204,10 @@ stopAt t x = (t .-. _offset x) `delay` x
 placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 placeAt p t x = (t .-. x `_position` p) `delay` x
 
+_onset, _offset :: HasPosition a => a -> Time
+_onset     = (`_position` 0)
+_offset    = (`_position` 1.0)
+
 -- |
 -- Place a value over the given span.
 --
@@ -234,5 +234,30 @@ stretchRelativeMidpoint = stretchRelative 0.5
 
 stretchRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 stretchRelativeOffset = stretchRelative 1
+
+delayRelative :: (HasPosition a, Transformable a) => Duration -> Duration -> a -> a
+delayRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (delay n) x
+
+delayRelativeOnset :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeOnset = delayRelative 0
+
+delayRelativeMidpoint :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeMidpoint = delayRelative 0.5
+
+delayRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
+delayRelativeOffset = delayRelative 1
+
+
+transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
+transformRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (transform n) x
+
+transformRelativeOnset :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeOnset = transformRelative 0
+
+transformRelativeMidpoint :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeMidpoint = transformRelative 0.5
+
+transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
+transformRelativeOffset = transformRelative 1
 
 
