@@ -96,34 +96,16 @@ instance (HasDuration a, HasDuration b) => HasDuration (Either a b) where
   _duration (Right x) = _duration x
 
 -- |
--- Access the duration.
---
-duration :: (Transformable a, HasDuration a) => Lens' a Duration
-duration = lens _duration (flip stretchTo)
-{-# INLINE duration #-}
-
--- |
 -- Stretch a value to have the given duration.
 --
 stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
 stretchTo d x = (d ^/ _duration x) `stretch` x
 {-# INLINE stretchTo #-}
 
-{-
-
--- TODO more general pattern here
-withDurationR :: (Functor f, HasDuration a) => f a -> f (Duration, a)
-withDurationR = fmap $ \x -> (_duration x, x)
-
-withDurationL :: (Contravariant f, HasDuration a) => f (Duration, a) -> f a
-withDurationL = contramap $ \x -> (_duration x, x)
-
-mapWithDuration :: HasDuration a => (Duration -> a -> b) -> a -> b
-mapWithDuration = over dual withDurationL . uncurry
-  where
-    dual :: Iso (a -> b) (c -> d) (Op b a) (Op d c)
-    dual = iso Op getOp
-
--}
-
+-- |
+-- Access the duration.
+--
+duration :: (Transformable a, HasDuration a) => Lens' a Duration
+duration = lens _duration (flip stretchTo)
+{-# INLINE duration #-}
 
