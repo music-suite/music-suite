@@ -35,6 +35,7 @@ module Music.Time.Types (
         -- * Basic types
         Time,
         Duration,
+        LocalDuration,
 
         -- ** Convert between time and duration
         -- $convert
@@ -115,13 +116,10 @@ module Music.Time.Types (
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
---
 import           Control.Applicative.Backwards
 import           Control.Monad.State.Lazy
---
 import           Data.Aeson (ToJSON(..))
 import qualified Data.Aeson as JSON
-
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Semigroup
@@ -129,7 +127,6 @@ import           Data.Typeable
 import           Data.VectorSpace
 import           Data.List (mapAccumL, mapAccumR)
 import           Data.Ratio
-
 import           Music.Time.Internal.Util (showRatio)
 -- import           Data.Fixed
 
@@ -145,7 +142,7 @@ import           Music.Time.Internal.Util (showRatio)
 -- for 'Fractional' and 'RealFrac'.
 --
 type TimeBase = Rational
--- type TimeBase = Fixed E12
+
 {-
 type TimeBase = Fixed E12
 
@@ -154,11 +151,12 @@ instance HasResolution a => AdditiveGroup (Fixed a) where
   negateV = negate
   (^+^) = (+)
 
--- Can be enabled for experimental time representation
 instance Floating TimeBase where
 deriving instance Floating Time
 deriving instance Floating Duration
 -}
+
+type LocalDuration = Duration
 
 
 -- |
@@ -166,7 +164,17 @@ deriving instance Floating Duration
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
 newtype Duration = Duration { getDuration :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Enum,
+    
+    Num,
+    Fractional,
+    Real,
+    RealFrac
+    )
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
@@ -174,19 +182,18 @@ newtype Duration = Duration { getDuration :: TimeBase }
 -- 'Duration' is invariant under translation so 'delay' has no effect on it.
 --
 
--- $semantics Duration
---
--- type Duration = R
---
-
 instance Show Duration where
-  show = showRatio . realToFrac
+  show = showRatio . toRational
 
 instance ToJSON Duration where
   toJSON = JSON.Number . realToFrac
 
-instance InnerSpace Duration where
-  (<.>) = (*)
+instance Semigroup Duration where
+  (<>) = (*^)
+
+instance Monoid Duration where
+  mempty  = 1
+  mappend = (*^)
 
 instance AdditiveGroup Duration where
   zeroV = 0
@@ -197,25 +204,8 @@ instance VectorSpace Duration where
   type Scalar Duration = Duration
   (*^) = (*)
 
-instance Semigroup Duration where
-  (<>) = (*^)
-
-instance Monoid Duration where
-  mempty  = 1
-  mappend = (*^)
- -- TODO use some notion of norm rather than 1
-
--- |
--- Convert a value to a duration.
---
-toDuration :: Real a => a -> Duration
-toDuration = realToFrac
-
--- |
--- Convert a value to a duration.
---
-fromDuration :: Fractional a => Duration -> a
-fromDuration = realToFrac
+instance InnerSpace Duration where
+  (<.>) = (*)
 
 
 -- |
@@ -224,116 +214,93 @@ fromDuration = realToFrac
 -- reference time.
 --
 newtype Time = Time { getTime :: TimeBase }
-  deriving (Eq, Ord, Num, Enum, Fractional, Real, RealFrac, Typeable)
+  deriving (
+    Eq,
+    Ord,
+    Typeable,
+    Enum,
+
+    Num,
+    Fractional,
+    Real,
+    RealFrac
+    )
 
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two
 -- times to get a duration using '.-.'. 'Time' forms an 'AffineSpace' with 'Duration' as
 -- difference space.
---
-
--- $semantics Time
---
--- type Time = R
---
 
 instance Show Time where
-  show = showRatio . realToFrac
+  show = showRatio . toRational
 
 instance ToJSON Time where
   toJSON = JSON.Number . realToFrac
 
-deriving instance AdditiveGroup Time
+instance Semigroup Time where
+  (<>)    = (+)
+
+instance Monoid Time where
+  mempty  = 0
+  mappend = (+)
+
+instance AdditiveGroup Time where
+  zeroV   = 0
+  (^+^)   = (+)
+  negateV = negate
 
 instance VectorSpace Time where
-  type Scalar Time = Duration
+  type Scalar Time = LocalDuration
   Duration x *^ Time y = Time (x * y)
 
 instance AffineSpace Time where
-  type Diff Time = Duration
-  Time x .-. Time y   = Duration (x - y)
-  Time x .+^ Duration y = Time   (x + y)
+  type Diff Time = LocalDuration
+  Time x .-. Time y     = Duration (x - y)
+  Time x .+^ Duration y = Time     (x + y)
 
-instance Semigroup Time where
-  (<>) = (^+^)
-
-instance Monoid Time where
-  mempty  = zeroV
-  mappend = (^+^)
-  mconcat = sumV
-
--- |
--- Convert a value to a duration.
---
-toTime :: Real a => a -> Time
-toTime = realToFrac
-
--- |
--- Convert a value to a duration.
---
-fromTime :: Fractional a => Time -> a
-fromTime = realToFrac
-
-
-
--- TODO terminology
--- Return the "accumulative sum" of the given vecors
-
--- |
--- @length (offsetPoints x xs) = length xs + 1@
---
--- >>> offsetPoints (0 ::Double) [1,2,1]
--- [0.0,1.0,3.0,4.0]
---
--- @
--- offsetPoints :: 'AffineSpace' a => 'Time' -> ['Duration'] -> ['Time']
--- @
---
+-- | Lay out a series of vectors from a given point. Return all intermediate points.
+-- 
+-- > lenght xs + 1 == length (offsetPoints p xs)
+-- 
+-- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- [0,1,2,3]
 offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
 offsetPoints = scanl (.+^)
 
--- | Convert to delta (time to wait before this note)
-toRelativeTime :: [Time] -> [Duration]
-toRelativeTime = snd . mapAccumL g 0 where g prev t = (t, t .-. prev)
--- toRelativeTime xs = fst $ mapAccumL2 g xs 0 where g t prev = (t .-. prev, t)
-
--- | Convert to delta (time to wait before next note)
-toRelativeTimeN :: [Time] -> [Duration]
-toRelativeTimeN [] = []
-toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
-
--- | Convert to delta (time to wait before next note)
-toRelativeTimeN' :: Time -> [Time] -> [Duration]
-toRelativeTimeN' end xs = snd $ mapAccumR g end xs where g prev t = (t, prev .-. t)
-
-{-
-TODO consolidate with this beat (used in Midi export)
-
-toRelative = snd . List.mapAccumL g 0
-    where
-        g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
-
--}
--- 0 x,1 x,1 x,1 x
-  -- x 1,x 1,x 1,x 0
-
--- | Convert from delta (time to wait before this note)
+-- | Interpret as durations from 0.
+--
+-- > toAbsoluteTime (toRelativeTime xs) == xs
+--
+-- > lenght xs == length (toRelativeTime xs)
+--
+-- >>> toAbsoluteTime [1,1,1] :: [Time]
+-- [1,2,3]
 toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
-
--- -- TODO use State instead
+-- | Duration between 0 and first value and so on until the last.
 -- 
--- -- mapAccumL                 ::                   (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
--- -- \f -> mapM (runState . f) :: MonadState s m => (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
+-- > toAbsoluteTime (toRelativeTime xs) == xs
 -- 
--- -- mapAccumL :: (s -> a -> (s, b)) -> s -> [a] -> (s, [b])
--- mapAccumL2   :: (a -> s -> (b, s)) -> [a] -> s -> ([b], s)
--- mapAccumL2 f = runState . mapM (state . f)
+-- > lenght xs == length (toRelativeTime xs)
+-- 
+-- >>> toRelativeTime [1,2,3]
+-- [1,1,1]
+toRelativeTime :: [Time] -> [Duration]
+toRelativeTime = snd . Data.List.mapAccumL g 0 where g prev t = (t, t .-. prev)
 
+-- TODO rename these two...
 
+-- | Duration between values until the last, then up to the given final value.
+-- > lenght xs == length (toRelativeTime xs)
+toRelativeTimeN' :: Time -> [Time] -> [Duration]
+toRelativeTimeN' end = snd . Data.List.mapAccumR g end where g prev t = (t, prev .-. t)
 
-
+-- Same as toRelativeTimeN' but always returns 0 as the last value...
+-- TODO remove
+toRelativeTimeN :: [Time] -> [Duration]
+toRelativeTimeN [] = []
+toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 
 
@@ -360,13 +327,12 @@ toAbsoluteTime = tail . offsetPoints 0
 -- a '<-<' b = (a, b)^.'from' 'codelta'
 -- @
 --
-newtype Span = Delta { _delta :: (Time, Duration) }
-  deriving (Eq, Ord, Typeable)
-
--- $semantics
---
--- type Span = Time x Time
---
+newtype Span = Span { getSpan :: (Time, Duration) }
+  deriving (
+    Eq,
+    Ord,
+    Typeable
+    )
 
 -- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --
@@ -400,36 +366,27 @@ newtype Span = Delta { _delta :: (Time, Duration) }
 --
 
 instance Show Span where
-  -- show = showDelta
   show = showRange
   -- Which form should we use?
 
 instance ToJSON Span where
   toJSON (view range -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
 
-
--- |
--- 'zeroV' or 'mempty' represents the /unit interval/ @0 \<-\> 1@, which also happens to
--- be the identity transformation.
---
 instance Semigroup Span where
   (<>) = (^+^)
 
--- |
--- '<>' or '^+^' composes transformations, i.e. both time and duration is stretched,
--- and then time is added.
---
 instance Monoid Span where
   mempty  = zeroV
   mappend = (^+^)
 
--- |
--- 'negateV' returns the inverse of a given transformation.
---
 instance AdditiveGroup Span where
-  zeroV   = 0 <-> 1
-  Delta (t1, d1) ^+^ Delta (t2, d2) = Delta (t1 ^+^ d1 *^ t2, d1*d2)
-  negateV (Delta (t, d)) = Delta (-t ^/ d, recip d)
+  zeroV                           = 0 <-> 1
+  Span (t1, d1) ^+^ Span (t2, d2) = Span (t1 ^+^ d1 *^ t2, d1*d2)
+  negateV (Span (t, d))           = Span (-t ^/ d, recip d)
+
+instance VectorSpace Span where
+  type Scalar Span = Duration
+  x *^ Span (t, d) = Span (x*^t, x*^d)
 
 --
 -- a >-> b = a         <-> (a .+^ b)
@@ -452,7 +409,7 @@ t <-> u = t >-> (u .-. t)
 -- @t >-> d@ represents the span between @t@ and @t .+^ d@.
 --
 (>->) :: Time -> Duration -> Span
-(>->) = curry Delta
+(>->) = curry Span
 
 -- |
 -- @d \<-\> t@ represents the span between @t .-^ d@ and @t@.
@@ -465,23 +422,20 @@ a <-< b = (b .-^ a) <-> b
 -- View a span as pair of onset and offset.
 --
 range :: Iso' Span (Time, Time)
-range = iso _range $ uncurry (<->)
-  where
-    _range x = let (t, d) = _delta x in (t, t .+^ d)
+range = iso (\x -> let (t, d) = getSpan x in (t, t .+^ d)) (uncurry (<->))
 
 -- |
 -- View a span as a pair of onset and duration.
 --
+
 delta :: Iso' Span (Time, Duration)
-delta = iso _delta Delta
+delta = iso getSpan Span
 
 -- |
 -- View a span as a pair of duration and offset.
 --
 codelta :: Iso' Span (Duration, Time)
-codelta = iso _codelta $ uncurry (<-<)
-  where
-    _codelta x = let (t, d) = _delta x in (d, t .+^ d)
+codelta = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
 
 -- |
 -- Show a span in range notation, i.e. @t1 \<-\> t2@.
