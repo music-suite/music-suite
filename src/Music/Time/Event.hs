@@ -86,17 +86,31 @@ instance Eq1 AddMeta where
 instance Eq a => Eq1 (Couple a) where
   eq1 = (==)
 instance Ord1 AddMeta where
-instance Eq a => Ord1 (Couple a) where
-instance Num a => Num (Compose f g a) where
-instance Fractional a => Fractional (Compose f g a) where
-instance Floating a => Floating (Compose f g a) where
-instance (Real a, Ord1 f, Ord1 g, Functor f) => Real (Compose f g a) where
-instance (RealFrac a, Ord1 f, Ord1 g, Functor f) => RealFrac (Compose f g a) where
+  compare1 = compare
+instance Ord a => Ord1 (Couple a) where
+  compare1 = compare
+instance Num (f (g a)) => Num (Compose f g a) where
+  Compose a + Compose b = Compose (a + b)
+  Compose a - Compose b = Compose (a - b)
+  Compose a * Compose b = Compose (a * b)
+  signum (Compose a) = Compose (signum a)
+  abs (Compose a) = Compose (abs a)
+  fromInteger = Compose . fromInteger
+instance Fractional (f (g a)) => Fractional (Compose f g a) where
+  Compose a / Compose b = Compose (a / b)
+  fromRational = Compose . fromRational
+instance Floating (f (g a)) => Floating (Compose f g a) where
+  
+instance (Real (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => Real (Compose f g a) where
+  -- TODO
+instance (RealFrac (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => RealFrac (Compose f g a) where
+  -- TODO
 instance (Functor f, Monad f, Monad g, Traversable g) => Monad (Compose f g) where
   return = Compose . return . return
   xs >>= f = Compose $ mbind (getCompose . f) (getCompose xs)
-instance (Comonad f, Comonad g) => Comonad (Compose f g)
-  
+instance (Comonad f, Comonad g) => Comonad (Compose f g) where
+  extract (Compose f) = (extract . extract) f
+  -- TODO duplicate
   
 newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
   deriving (

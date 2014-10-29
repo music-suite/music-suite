@@ -374,7 +374,7 @@ single = prism' return $ \xs -> case xs of
   _   -> Nothing
 {-# INLINE single #-}
 
-tripped :: Iso ((a, b), c) ((c, d), e) (a, b, c) (c, d, e)
+tripped :: Iso ((a, b), c) ((d, e), f) (a, b, c) (d, e, f)
 tripped = iso tripl untripl
 {-# INLINE tripped #-}
 
