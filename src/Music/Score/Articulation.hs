@@ -222,10 +222,10 @@ instance HasArticulations a b => HasArticulations (Either c a) (Either c b) wher
 
 
 instance (HasArticulations a b) => HasArticulations (Event a) (Event b) where
-  articulations = _Wrapped . whilstL articulations
+  articulations = from event . whilstL articulations
 
 instance (HasArticulation a b) => HasArticulation (Event a) (Event b) where
-  articulation = _Wrapped . whilstL articulation
+  articulation = from event . whilstL articulation
 
 instance (HasArticulations a b) => HasArticulations (Placed a) (Placed b) where
   articulations = _Wrapped . whilstLT articulations
@@ -254,7 +254,7 @@ instance HasArticulations a b => HasArticulations (Score a) (Score b) where
     _Wrapped . _2   -- into NScore
     . _Wrapped
     . traverse
-    . _Wrapped      -- this needed?
+    . from event    -- this needed?
     . whilstL articulations
 
 type instance Articulation (Couple c a)        = Articulation a

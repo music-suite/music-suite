@@ -211,10 +211,10 @@ instance HasDynamics a b => HasDynamics (Either c a) (Either c b) where
 
 
 instance (HasDynamics a b) => HasDynamics (Event a) (Event b) where
-  dynamics = _Wrapped . whilstL dynamics
+  dynamics = from event . whilstL dynamics
 
 instance (HasDynamic a b) => HasDynamic (Event a) (Event b) where
-  dynamic = _Wrapped . whilstL dynamic
+  dynamic = from event . whilstL dynamic
 
 
 instance (HasDynamics a b) => HasDynamics (Placed a) (Placed b) where
@@ -245,7 +245,7 @@ instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
     _Wrapped . _2   -- into NScore
     . _Wrapped
     . traverse
-    . _Wrapped      -- this needed?
+    . from event    -- this needed?
     . whilstL dynamics
 
 type instance Dynamic      (Behavior a) = Behavior a

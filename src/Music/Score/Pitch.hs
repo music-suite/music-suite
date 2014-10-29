@@ -297,9 +297,9 @@ instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
 instance (HasPitches a b) => HasPitches (Event a) (Event b) where
-  pitches = _Wrapped . whilstL pitches
+  pitches = from event . whilstL pitches
 instance (HasPitch a b) => HasPitch (Event a) (Event b) where
-  pitch = _Wrapped . whilstL pitch
+  pitch = from event . whilstL pitch
 
 instance (HasPitches a b) => HasPitches (Placed a) (Placed b) where
   pitches = _Wrapped . whilstLT pitches
@@ -334,7 +334,7 @@ instance (HasPitches a b) => HasPitches (Score a) (Score b) where
     _Wrapped . _2   -- into NScore
     . _Wrapped
     . traverse
-    . _Wrapped      -- this needed?
+    . from event    -- this needed?
     . whilstL pitches
 
 

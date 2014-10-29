@@ -514,7 +514,7 @@ reverseValues = over valuesV reverse
 -- Lens "filtered" through a voice
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
-
+-- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
 
 
 sameDurations :: Voice a -> Voice b -> Bool
@@ -527,6 +527,7 @@ mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c
 mergeIfSameDurationWith f a b
   | sameDurations a b = Just $ zipVoiceWithNoScale f a b
   | otherwise         = Nothing
+-- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
 
 -- |
 -- Split all notes of the latter voice at the onset/offset of the former.

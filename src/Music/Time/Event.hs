@@ -107,6 +107,7 @@ newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
     Applicative,
     Monad,
     Comonad,
+    Traversable,
     
     Functor,
     
@@ -127,7 +128,7 @@ instance Transformable (Event a) where
   transform t = over eventSpan (transform t)
 
 instance HasDuration (Event a) where
-  _duration = _duration . view eventSpan
+  _duration = _duration . _era
 
 instance HasPosition (Event a) where
   _era = view eventSpan
@@ -152,9 +153,10 @@ instance (Show a, Transformable a) => Show (Event a) where
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
-event = from unsafeAnnotated . _Unwrapped
+event = from (_Wrapped . unsafeAnnotated)
 -- TODO not safe anymore...
 
+-- safeUnevent = _Wrapped . annotated == from event
 eventSpan :: Lens' (Event a) Span
 eventSpan = from event . _1
 

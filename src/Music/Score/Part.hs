@@ -205,10 +205,10 @@ type instance Part (Event a) = Part a
 type instance SetPart g (Event a) = Event (SetPart g a)
 
 instance (HasPart a b) => HasPart (Event a) (Event b) where
-  part = _Wrapped . whilstL part
+  part = from event . whilstL part
 
 instance (HasParts a b) => HasParts (Event a) (Event b) where
-  parts = _Wrapped . whilstL parts
+  parts = from event . whilstL parts
 
 -- |
 -- List all the parts
@@ -310,7 +310,7 @@ instance (HasParts a b) => HasParts (Score a) (Score b) where
     _Wrapped . _2   -- into NScore
     . _Wrapped
     . traverse
-    . _Wrapped      -- this needed?
+    . from event    -- this needed?
     . whilstL parts
 
 type instance Part (Voice a) = Part a
