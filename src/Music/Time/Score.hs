@@ -267,7 +267,7 @@ instance MonadPlus Score' where
   mplus = mappend
 
 instance Transformable (Score' a) where
-  transform t (Score' xs) = Score' (fmap (transform t) xs)
+  transform t = over (_Wrapped) (transform t)
 
 -- instance Reversible a => Reversible (Score' a) where
 --   rev (Score' xs) = Score' (fmap rev xs)
@@ -277,24 +277,11 @@ instance HasPosition (Score' a) where
     where
       f = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
       g = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
-
--- TODO move
-safeMinimum xs = if null xs then 0 else minimum xs
-safeMaximum xs = if null xs then 0 else maximum xs
+      safeMinimum xs = if null xs then 0 else minimum xs
+      safeMaximum xs = if null xs then 0 else maximum xs
 
 instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
-
--- instance Splittable a => Splittable (Score' a) where
---   split t (Score' events) = over both (Score' . mfilter (not . isEmptyEvent)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) events
---     where
---       -- TODO move
---       isEmptyEvent :: Event a -> Bool
---       isEmptyEvent = isEmptySpan . view era
---       
---       isEmptySpan :: Span -> Bool
---       isEmptySpan (view range -> (t, u)) = t == u
-
 
 -- |
 -- Create a score from a list of events.
@@ -359,7 +346,6 @@ events = _Wrapped . _2 . _Wrapped . sorted
   where
     -- TODO should not have to sort...
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
--- events = unsafeEvents
 {-# INLINE events #-}
 
 -- -- |
@@ -413,9 +399,6 @@ unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
     noMeta = iso extract return
-    -- noMeta = iso (\(_,x) -> x) (\x -> (mempty,x))
-
-{-# INLINE unsafeEvents #-}
 
 -- |
 -- View a score as a list of events.
@@ -439,19 +422,6 @@ unsafeTriples = iso _getScore _score
       fmap (view $ from event) .
       reifyScore
     
-
-
--- |
--- View a score as a single note.
---
-singleEvent :: Prism' (Score a) (Event a)
-singleEvent = unsafeEvents . single
-{-# INLINE singleEvent #-}
-{-# DEPRECATED singleEvent "Use 'unsafeEvents . single'" #-}
--- TODO make prism fail if score contains meta-data
--- (or else second prism law is not satisfied)
-
-
 -- | Map with the associated time span.
 mapScore :: (Event a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapScore' f)
