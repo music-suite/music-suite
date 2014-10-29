@@ -236,7 +236,7 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 --
 -- You can access the meta-data using 'meta', and the annotated value using 'annotated'.
 --
-newtype AddMeta a = AddMeta { getAddMeta :: Twain Meta a }
+newtype AddMeta a = AddMeta { getAddMeta :: Meta `Twain` a }
   deriving (
     Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad,
     Semigroup, Monoid, Num, Fractional, Floating, Enum, Bounded,
