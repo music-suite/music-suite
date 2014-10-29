@@ -38,6 +38,7 @@ library
                         distributive            >= 0.4.4 && < 5,
                         adjunctions             >= 4.2 && < 5,
                         transformers            >= 0.3.0.0 && < 0.5,
+                        transformers-compat     >= 0.3.3.4 && < 0.5,
                         mtl                     >= 2.1.2 && < 2.3,
                         monadplus,
                         NumInstances,
