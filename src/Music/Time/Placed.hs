@@ -8,6 +8,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE TupleSections              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -21,7 +22,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Delayed (
+module Music.Time.Placed (
         -- * Placed type
         Placed,
 
@@ -106,26 +107,8 @@ placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
 
 placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
--- placee = from placed `dependingOn` (transformed . delayingTime)
-placee = lens runPlaced $ flip (mapPlaced . const)
-  where
-    runPlaced :: Transformable a => Placed a -> a
-    runPlaced = uncurry (\t -> transform (t >-> 1)) . view _Wrapped
+placee = from placed `dependingOn` (transformed . delayingTime)
 
-    mapPlaced :: (Transformable a, Transformable b) => (a -> b) -> Placed a -> Placed b
-    mapPlaced f (Placed (Couple (t,x))) = Placed $ Couple (t, over (transformed (t >-> 1)) f x)
-
-
-
-dependingOn :: Lens' s (x,a) -> (x -> Lens' a c) -> Lens' s c
-dependingOn l f = lens getter setter
-  where
-    getter s = let
-      (x,a) = view l s
-      l2    = f x
-      in view l2 a
-    setter s b = let
-      (x,_) = view l s
-      l2    = f x
-      in set (l._2.l2) b s
-
+-- TODO consolidate
+dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
+dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)

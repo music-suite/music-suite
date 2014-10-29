@@ -73,10 +73,10 @@ import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Time.Juxtapose   (scat)
 import           Music.Time.Meta
-import           Music.Time.Note
+import           Music.Time.Event
 import           Music.Time.Reverse
 import           Music.Time.Split
-import           Music.Time.Stretched
+import           Music.Time.Note
 import           Music.Time.Voice
 
 import           Control.Applicative
@@ -129,12 +129,6 @@ import           Music.Time.Internal.Util
 --
 newtype Score a = Score { getScore :: (Meta, Score' a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
-
---
--- $semantics Score
---
--- type Score a = [Note a]
---
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = (Meta, Score' a)

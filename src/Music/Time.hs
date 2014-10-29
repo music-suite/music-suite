@@ -29,9 +29,9 @@ module Music.Time (
 
     -- * Time types
     -- ** Discrete time
-    module Music.Time.Stretched,
-    module Music.Time.Delayed,
     module Music.Time.Note,
+    module Music.Time.Placed,
+    module Music.Time.Event,
     module Music.Time.Future,
     module Music.Time.Past,
     module Music.Time.Nominal,
@@ -61,16 +61,15 @@ import           Music.Time.Types
 
 import           Music.Time.Behavior
 import           Music.Time.Chord
-import           Music.Time.Delayed
+import           Music.Time.Placed
 import           Music.Time.Future
 import           Music.Time.Graces
 import           Music.Time.Nominal
-import           Music.Time.Note
+import           Music.Time.Event
 import           Music.Time.Past
 import           Music.Time.Reactive
 import           Music.Time.Score
 import           Music.Time.Segment
-import           Music.Time.Stretched
+import           Music.Time.Note
 import           Music.Time.Track
 import           Music.Time.Voice
-

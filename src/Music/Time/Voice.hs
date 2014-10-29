@@ -108,7 +108,7 @@ import           Data.VectorSpace
 
 import           Music.Time.Reverse
 import           Music.Time.Split
-import           Music.Time.Stretched
+import           Music.Time.Note
 
 import           Control.Applicative
 import           Control.Lens             hiding (Indexable, Level, above,

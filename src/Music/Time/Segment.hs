@@ -94,11 +94,11 @@ import           Data.VectorSpace
 
 import           Music.Time.Behavior
 import           Music.Time.Bound
-import           Music.Time.Note
+import           Music.Time.Event
 import           Music.Time.Reverse
 import           Music.Time.Score
 import           Music.Time.Split
-import           Music.Time.Stretched
+import           Music.Time.Note
 import           Music.Time.Voice
 
 import           Control.Applicative
@@ -121,7 +121,7 @@ import           Music.Pitch.Literal
 -- A 'Segment' is a value varying over some unknown time span. 
 -- Intuitively, a 'Segment' is to a 'Behavior' what a /ray/ is to a /line/.
 --
--- To give a segment an explicit duration, use 'Note' 'Segment'.
+-- To give a segment an explicit duration, use 'Event' 'Segment'.
 --
 -- To place a segment in a particular time span, use 'Event' 'Segment'.
 --

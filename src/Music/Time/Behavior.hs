@@ -74,7 +74,7 @@ import           Data.Functor.Rep.Lens
 import           Data.Typeable
 import           Music.Time.Bound
 import           Music.Time.Internal.Transform
-import           Music.Time.Note
+import           Music.Time.Event
 import           Music.Time.Reverse
 import           Music.Time.Score
 import           Music.Time.Split
