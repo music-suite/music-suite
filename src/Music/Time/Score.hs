@@ -127,7 +127,7 @@ import           Music.Time.Internal.Util
 -- To inspect or deconstruct a score, see 'events', 'voices', and 'phrases', as
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
-newtype Score a = Score { getScore' :: (Meta, NScore a) }
+newtype Score a = Score { getScore :: (Meta, Score' a) }
     deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
 
 --
@@ -137,8 +137,8 @@ newtype Score a = Score { getScore' :: (Meta, NScore a) }
 --
 
 instance Wrapped (Score a) where
-  type Unwrapped (Score a) = (Meta, NScore a)
-  _Wrapped' = iso getScore' Score
+  type Unwrapped (Score a) = (Meta, Score' a)
+  _Wrapped' = iso getScore Score
 
 instance Rewrapped (Score a) (Score b) where
 
@@ -181,7 +181,7 @@ instance Transformable (Score a) where
       -- (m1, m2) = split t m
       -- (x1, x2) = split t x
 
--- TODO move these two "implementations" to NScore
+-- TODO move these two "implementations" to Score'
 instance HasPosition (Score a) where
   _position = _position . snd . view _Wrapped' {-. normalizeScore'-}
   -- TODO clean up in terms of AddMeta and optimize
@@ -238,41 +238,41 @@ instance HasMeta (Score a) where
 
 
 
-newtype NScore a = NScore { getNScore :: [Event a] }
+newtype Score' a = Score' { getScore' :: [Event a] }
   deriving ({-Eq, -}{-Ord, -}{-Show, -}Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
 
 instance (Show a, Transformable a) => Show (Score a) where
   show x = show (x^.events) ++ "^.score"
 
-instance Wrapped (NScore a) where
-  type Unwrapped (NScore a) = [Event a]
-  _Wrapped' = iso getNScore NScore
+instance Wrapped (Score' a) where
+  type Unwrapped (Score' a) = [Event a]
+  _Wrapped' = iso getScore' Score'
 
-instance Rewrapped (NScore a) (NScore b)
+instance Rewrapped (Score' a) (Score' b)
 
-instance Applicative NScore where
+instance Applicative Score' where
   pure  = return
   (<*>) = ap
 
-instance Monad NScore where
+instance Monad Score' where
   return = (^. _Unwrapped) . pure . pure
   xs >>= f = (^. _Unwrapped) $ mbind ((^. _Wrapped') . f) ((^. _Wrapped') xs)
 
-instance Alternative NScore where
+instance Alternative Score' where
   empty = mempty
   (<|>) = mappend
 
-instance MonadPlus NScore where
+instance MonadPlus Score' where
   mzero = mempty
   mplus = mappend
 
-instance Transformable (NScore a) where
-  transform t (NScore xs) = NScore (fmap (transform t) xs)
+instance Transformable (Score' a) where
+  transform t (Score' xs) = Score' (fmap (transform t) xs)
 
--- instance Reversible a => Reversible (NScore a) where
---   rev (NScore xs) = NScore (fmap rev xs)
+-- instance Reversible a => Reversible (Score' a) where
+--   rev (Score' xs) = Score' (fmap rev xs)
 
-instance HasPosition (NScore a) where
+instance HasPosition (Score' a) where
   _era x = (f x, g x)^.from range
     where
       f = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
@@ -282,11 +282,11 @@ instance HasPosition (NScore a) where
 safeMinimum xs = if null xs then 0 else minimum xs
 safeMaximum xs = if null xs then 0 else maximum xs
 
-instance HasDuration (NScore a) where
+instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
 
--- instance Splittable a => Splittable (NScore a) where
---   split t (NScore events) = over both (NScore . mfilter (not . isEmptyEvent)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) events
+-- instance Splittable a => Splittable (Score' a) where
+--   split t (Score' events) = over both (Score' . mfilter (not . isEmptyEvent)) $ unzip $ map (\x -> splitAbs (0 .+^ t) x) events
 --     where
 --       -- TODO move
 --       isEmptyEvent :: Event a -> Bool
@@ -454,9 +454,9 @@ singleEvent = unsafeEvents . single
 
 -- | Map with the associated time span.
 mapScore :: (Event a -> b) -> Score a -> Score b
-mapScore f = over (_Wrapped._2) (mapNScore f)
+mapScore f = over (_Wrapped._2) (mapScore' f)
   where
-    mapNScore f = over (_Wrapped.traverse) (extend f)
+    mapScore' f = over (_Wrapped.traverse) (extend f)
 
 reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
