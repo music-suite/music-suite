@@ -90,9 +90,6 @@ newtype Event a = Event { getEvent :: Span `Couple` a }
     RealFrac
     )
 
-instance (Show a, Transformable a) => Show (Event a) where
-  show x = show (x^.from event) ++ "^.event"
-
 instance Wrapped (Event a) where
   type Unwrapped (Event a) = (Span, a)
   _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
@@ -100,13 +97,13 @@ instance Wrapped (Event a) where
 instance Rewrapped (Event a) (Event b)
 
 instance Transformable (Event a) where
-  transform t = over (from event . _1) (transform t)
+  transform t = over eventSpan (transform t)
 
 instance HasDuration (Event a) where
-  _duration = _duration . view (from event . _1)
+  _duration = _duration . view eventSpan
 
 instance HasPosition (Event a) where
-  _era = view (from event . _1)
+  _era = view eventSpan
 
 instance IsString a => IsString (Event a) where
   fromString = pure . fromString
@@ -120,24 +117,28 @@ instance IsInterval a => IsInterval (Event a) where
 instance IsDynamics a => IsDynamics (Event a) where
   fromDynamics = pure . fromDynamics
 
--- |
--- View a event as a pair of the original value and the transformation (and vice versa).
---
-event :: ({-Transformable a, Transformable b-}) => Iso (Span, a) (Span, b) (Event a) (Event b)
+instance (Show a, Transformable a) => Show (Event a) where
+  show x = show (x^.from event) ++ "^.event"
+
+-- | View a event as a pair of the original value and the transformation (and vice versa).
+event :: Iso (Span, a) (Span, b) (Event a) (Event b)
 event = _Unwrapped
 
--- |
--- View the value in the event.
---
+eventSpan :: Lens' (Event a) Span
+eventSpan = from event . _1
+
+eventValue :: Lens (Event a) (Event b) a b
+eventValue = from event . _2
+
+-- | View the value in the event.
 eventee :: (Transformable a, Transformable b) => Lens (Event a) (Event b) a b
 eventee = from event `dependingOn` (transformed)
 
+-- | Event as a span with a trivial value.
 spanEvent :: Iso' Span (Event ())
 spanEvent = iso (\s -> (s,())^.event) (^.era)
 
--- |
--- View a event as an triples, i.e. a time-duration-value triplet.
---
+-- | View a event as a @(time, duration, value)@ triple.
 triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
 triple = from event . bimapping delta id . tripped
 

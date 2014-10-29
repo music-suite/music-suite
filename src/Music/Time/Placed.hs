@@ -108,6 +108,8 @@ placed = _Unwrapped
 
 placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
 placee = from placed `dependingOn` (transformed . delayingTime)
+  where
+    delayingTime = (>-> 1)
 
 -- TODO consolidate
 dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
