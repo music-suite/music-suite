@@ -27,6 +27,10 @@ module Music.Pitch.Common.Interval (
         -- ** Creating intervals
         interval,
         interval',
+        _number,
+        _quality,
+        _steps,
+        _alteration,
         
         -- ** Synonyms
         perfect,
