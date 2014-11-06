@@ -25,7 +25,7 @@ qualityToDiff,
 -}
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Number
-import           Music.Pitch.Common.ChromaticSteps
+import           Music.Pitch.Common.Chromatic
 
 -- | Types of value that has an interval quality (mainly 'Interval' and 'Quality' itself).
 class HasQuality a where
