@@ -39,8 +39,8 @@ library
                         Music.Pitch.Common
                         Music.Pitch.Common.Quality
                         Music.Pitch.Common.Number
-                        Music.Pitch.Common.DiatonicSteps
-                        Music.Pitch.Common.ChromaticSteps
+                        Music.Pitch.Common.Diatonic
+                        Music.Pitch.Common.Chromatic
                         Music.Pitch.Common.Interval
                         Music.Pitch.Common.Pitch
                         Music.Pitch.Common.Semitones
