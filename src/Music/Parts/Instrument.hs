@@ -15,20 +15,21 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Parts.Instrument 
-(
-Instrument(..),
--- TODO hide impl
-allowedClefs,
-playableRange,
-comfortableRange,
-instrumentName,
-fullName,
-shortName,
-transposition,
-transpositionString
-)
-where
+module Music.Parts.Instrument (
+        Instrument(..),
+        -- TODO hide impl
+        allowedClefs,
+        playableRange,
+        comfortableRange,
+        playableDynamics,
+
+        -- * Name etc
+        instrumentName,
+        fullName,
+        shortName,
+        transposition,
+        transpositionString
+  ) where
 
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
@@ -38,13 +39,13 @@ import qualified Data.List
 import           Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
+import           Data.Set                        (Set)
 import           Data.Traversable                (traverse)
 import           Data.Typeable
+import           Music.Dynamics                  (Dynamics)
+import           Music.Pitch                     (Ambitus, Clef)
+import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
-import Data.Set (Set)
-import Music.Pitch.Common (Pitch, Interval)
-import Music.Pitch (Ambitus, Clef)
-import Music.Dynamics (Dynamics)
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
@@ -327,9 +328,9 @@ shortName         :: Instrument -> String
 shortName = error "No shortName"
 
 -- sounding .-. written, i.e. -P5 for clarinet
-transposition     :: Instrument -> Interval 
+transposition     :: Instrument -> Interval
 transposition = error "No transposition"
 
-transpositionString :: Instrument -> String 
+transpositionString :: Instrument -> String
 transpositionString = error "No transpositionString"
 
