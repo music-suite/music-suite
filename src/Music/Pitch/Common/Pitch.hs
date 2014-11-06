@@ -71,6 +71,7 @@ import           Data.VectorSpace
 import           Music.Pitch.Absolute
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Interval
 import           Music.Pitch.Common.Semitones
 import           Music.Pitch.Literal
@@ -205,7 +206,7 @@ newtype Pitch = Pitch { getPitch :: Interval }
 
 instance IsPitch Pitch where
   fromPitch (PitchL (c, a, o)) =
-    Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (perfect octave^* fromIntegral o)
+    Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
     where
       qual Nothing  = 0
       qual (Just n) = round n

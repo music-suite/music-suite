@@ -23,6 +23,8 @@ module Music.Pitch.Common.Harmony (
   ) where
 
 import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Number
+import Music.Pitch.Common.Quality
 import Music.Pitch.Literal      
 
 import Data.Semigroup

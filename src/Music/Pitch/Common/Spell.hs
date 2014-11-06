@@ -41,6 +41,7 @@ import           Music.Pitch.Absolute
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Interval
+import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Pitch
 import           Music.Pitch.Common.Semitones
 import           Music.Pitch.Literal
