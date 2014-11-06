@@ -5,7 +5,7 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Music.Pitch.Common.DiatonicSteps where
+module Music.Pitch.Common.Diatonic where
 
 newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)

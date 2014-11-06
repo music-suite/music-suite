@@ -8,7 +8,7 @@
 module Music.Pitch.Common.Number where
 
 import Control.Lens
-import Music.Pitch.Common.DiatonicSteps
+import Music.Pitch.Common.Diatonic
 
 {-
 
