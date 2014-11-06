@@ -21,7 +21,7 @@ module Music.Pitch.Common (
     module Music.Pitch.Common.Quality,
     module Music.Pitch.Common.Number,
     module Music.Pitch.Common.DiatonicSteps,
-    module Music.Pitch.Common.ChromaticSteps,
+    module Music.Pitch.Common.Chromatic,
     module Music.Pitch.Common.Interval,
     module Music.Pitch.Common.Pitch,
 
@@ -46,7 +46,7 @@ import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number
 import Music.Pitch.Common.DiatonicSteps
-import Music.Pitch.Common.ChromaticSteps
+import Music.Pitch.Common.Chromatic
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Spell
