@@ -25,7 +25,8 @@ comfortableRange,
 instrumentName,
 fullName,
 shortName,
-transposition
+transposition,
+transpositionString
 )
 where
 
@@ -43,6 +44,7 @@ import           Text.Numeral.Roman              (toRoman)
 import Data.Set (Set)
 import Music.Pitch.Common (Pitch, Interval)
 import Music.Pitch (Ambitus, Clef)
+import Music.Dynamics (Dynamics)
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
@@ -312,6 +314,9 @@ playableRange = error "No playableRange"
 comfortableRange  :: Instrument -> Ambitus Pitch
 comfortableRange = error "No comfortableRange"
 
+playableDynamics :: Instrument -> Pitch -> Dynamics
+playableDynamics = error "No playableDynamics"
+
 instrumentName              :: Instrument -> String
 instrumentName = error "No name"
 
@@ -325,4 +330,6 @@ shortName = error "No shortName"
 transposition     :: Instrument -> Interval 
 transposition = error "No transposition"
 
+transpositionString :: Instrument -> String 
+transpositionString = error "No transpositionString"
 

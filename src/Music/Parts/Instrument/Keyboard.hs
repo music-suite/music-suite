@@ -6,6 +6,9 @@ module Music.Parts.Instrument.Keyboard (
 
 import Control.Lens
 import Music.Parts.Instrument
+import Data.Set (Set)
+import Music.Pitch.Common (Pitch, Interval)
+import Music.Pitch (Ambitus, Clef)
 
 newtype KeyboardInstrument = KeyboardInstrument Instrument
 
