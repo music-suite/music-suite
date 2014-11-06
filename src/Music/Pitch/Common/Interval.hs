@@ -36,7 +36,7 @@ module Music.Pitch.Common.Interval (
         interval',
 
         -- *** Creating intervals
-        mkInterval,
+        -- mkInterval,
         perfect,
         major,
         minor,
