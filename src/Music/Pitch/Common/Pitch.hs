@@ -74,6 +74,8 @@ import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Interval
 import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Common.ChromaticSteps
+import           Music.Pitch.Common.DiatonicSteps
 import           Music.Pitch.Literal
 
 -- |

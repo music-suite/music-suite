@@ -22,21 +22,13 @@
 module Music.Pitch.Common.Interval (
 
 
-        -- ** Intervals
+        -- * Intervals
         Interval,
-
-        ChromaticSteps,
-        DiatonicSteps,
-        diatonicSteps,
-        _steps,
-        _alteration,
-        _quality,
-        _number,
+        -- ** Creating intervals
         interval,
         interval',
-
-        -- *** Creating intervals
-        -- mkInterval,
+        
+        -- ** Synonyms
         perfect,
         major,
         minor,
@@ -45,7 +37,7 @@ module Music.Pitch.Common.Interval (
         doublyAugmented,
         doublyDiminished,
 
-        -- *** Inspecting intervals
+        -- ** Inspecting intervals
         isNegative,
         isPositive,
         isNonNegative,
@@ -53,7 +45,7 @@ module Music.Pitch.Common.Interval (
         isStep,
         isLeap,
 
-        -- *** Simple and compound intervals
+        -- ** Simple and compound intervals
         isSimple,
         isCompound,
         separate,
