@@ -19,6 +19,13 @@ module Music.Parts.Instrument
 (
 Instrument(..),
 -- TODO hide impl
+allowedClefs,
+playableRange,
+comfortableRange,
+instrumentName,
+fullName,
+shortName,
+transposition
 )
 where
 
@@ -33,6 +40,9 @@ import           Data.Semigroup.Option.Instances
 import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Text.Numeral.Roman              (toRoman)
+import Data.Set (Set)
+import Music.Pitch.Common (Pitch, Interval)
+import Music.Pitch (Ambitus, Clef)
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
@@ -290,4 +300,29 @@ gmPerc = [
     (80, "Mute Triangle"),
     (81, "Open Triangle")
     ]
-             
+
+
+
+allowedClefs      :: Instrument -> Set Clef
+allowedClefs = error "No allowedClefs"
+
+playableRange     :: Instrument -> Ambitus Pitch
+playableRange = error "No playableRange"
+
+comfortableRange  :: Instrument -> Ambitus Pitch
+comfortableRange = error "No comfortableRange"
+
+instrumentName              :: Instrument -> String
+instrumentName = error "No name"
+
+fullName          :: Instrument -> String
+fullName = error "No fullName"
+
+shortName         :: Instrument -> String
+shortName = error "No shortName"
+
+-- sounding .-. written, i.e. -P5 for clarinet
+transposition     :: Instrument -> Interval 
+transposition = error "No transposition"
+
+
