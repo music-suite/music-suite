@@ -27,10 +27,6 @@
 module Music.Score.Meta (
         module Music.Time.Meta,
 
-        -- TODO move
-        (</>),
-        rcat,
-
         -- * Meta-events
         addMetaNote,
         fromMetaReactive,
@@ -65,51 +61,6 @@ import           Music.Time.Reactive
 
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
-
-infixr 6 </>
-
-
--- |
--- Concatenate parts.
---
-rcat :: (HasParts' a, Enum (Part a)) => [Score a] -> Score a
-rcat = List.foldr (</>) mempty
-
--- |
--- Similar to '<>', but increases parts in the second part to prevent collision.
---
-(</>) :: (HasParts' a, Enum (Part a)) => Score a -> Score a -> Score a
-a </> b = a <> moveParts offset b
-    where
-        -- max voice in a + 1
-        offset = succ $ maximum' 0 $ fmap fromEnum $ toListOf parts a
-
-        -- |
-        -- Move down one voice (all parts).
-        --
-        moveParts :: (Integral b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-        moveParts x = parts %~ (successor x)
-
-        -- |
-        -- Move top-part to the specific voice (other parts follow).
-        --
-        moveToPart :: (Enum b, HasParts' a, Enum (Part a)) => b -> Score a -> Score a
-        moveToPart v = moveParts (fromEnum v)
-
-
-        iterating :: (a -> a) -> (a -> a) -> Int -> a -> a
-        iterating f g n
-            | n <  0 = f . iterating f g (n + 1)
-            | n == 0 = id
-            | n >  0 = g . iterating f g (n - 1)
-
-        successor :: (Integral b, Enum a) => b -> a -> a
-        successor n = iterating pred succ (fromIntegral n)
-
-        maximum' :: (Ord a, Foldable t) => a -> t a -> a
-        maximum' z = option z getMax . foldMap (Option . Just . Max)
-
-
 
 addMetaNote :: forall a b . (AttributeClass a, HasMeta b) => Event a -> b -> b
 addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
