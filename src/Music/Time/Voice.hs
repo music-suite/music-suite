@@ -86,7 +86,7 @@ module Music.Time.Voice (
 
         -- * Unsafe versions
         unsafeNotes,
-        unsafeTriplesV,
+        unsafePairs,
 
   ) where
 
@@ -315,13 +315,13 @@ notes = unsafeNotes
 
 -- | View a score as a list of duration-value pairs. Analogous to 'triples'.
 pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-pairs = unsafeTriplesV
+pairs = unsafePairs
 
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
 
-unsafeTriplesV :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafeTriplesV = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
+unsafePairs :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+unsafePairs = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
 durationsVoice :: Iso' [Duration] (Voice ())
 durationsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
@@ -402,7 +402,7 @@ zipVoiceWith' f g
   ((unzip.view pairs) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
-     in view (from unsafeTriplesV) (zip cd cs)
+     in view (from unsafePairs) (zip cd cs)
 
 -- |
 -- Merge consecutive equal notes.
@@ -420,7 +420,7 @@ fuseBy p = fuseBy' p head
 -- Merge consecutive equal notes using the given equality predicate and merge function.
 --
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over unsafeTriplesV $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over unsafePairs $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     --

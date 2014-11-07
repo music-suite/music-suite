@@ -180,7 +180,7 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
       map ( bimap voiceToRest voiceToPhrase
-          . bimap (^.from unsafeTriplesV) (^.from unsafeTriplesV) )
+          . bimap (^.from unsafePairs) (^.from unsafePairs) )
        . groupDiff' (isJust . snd)
        . view pairs
 
