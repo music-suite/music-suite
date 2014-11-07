@@ -14,22 +14,16 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common (
-    -- * Enharmonic representation
     module Music.Pitch.Common.Semitones,
-
-    -- * Non-enharmonic representation
     module Music.Pitch.Common.Quality,
     module Music.Pitch.Common.Number,
     module Music.Pitch.Common.Diatonic,
     module Music.Pitch.Common.Chromatic,
     module Music.Pitch.Common.Interval,
     module Music.Pitch.Common.Pitch,
-
-    -- * Utility
     module Music.Pitch.Common.Spell,
     module Music.Pitch.Common.Harmony,
-)
-where
+  ) where
 
 import Data.Maybe
 import Data.Either
@@ -38,7 +32,6 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Control.Monad
 import Control.Applicative
-import qualified Data.List as List
 
 import Music.Pitch.Absolute
 import Music.Pitch.Literal

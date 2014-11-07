@@ -14,31 +14,20 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch (
-        -- * Prerequisites
         module Data.Semigroup,
         module Data.VectorSpace,
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
-
-        -- * General representation
         module Music.Pitch.Augmentable,
         module Music.Pitch.Alterable,
         module Music.Pitch.Absolute,
         module Music.Pitch.Ambitus,
-
-        -- * Common representation
         module Music.Pitch.Equal,
-
-        -- * Common representation
         module Music.Pitch.Common,
         module Music.Pitch.Common.Names,
         module Music.Pitch.StaffLines,
         module Music.Pitch.Clef,
-
-        -- * Intonation
         module Music.Pitch.Intonation,
-        
-        -- * Pitch literals
         module Music.Pitch.Literal,
   ) where
 
