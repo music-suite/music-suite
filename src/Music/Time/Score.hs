@@ -277,29 +277,19 @@ instance HasPosition (Score' a) where
 instance HasDuration (Score' a) where
   _duration x = _offset x .-. _onset x
 
--- |
--- Create a score from a list of events.
---
--- This is a getter (rather than a function) for consistency:
---
--- @
--- [ (0 '<->' 1, 10)^.'note',
---   (1 '<->' 2, 20)^.'note',
---   (3 '<->' 4, 30)^.'note' ]^.'score'
--- @
---
--- @
--- 'view' 'score' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
--- @
---
--- Se also 'events'.
---
+-- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
 score = from unsafeEvents
 {-# INLINE score #-}
 
--- |
--- View a 'Score' as a list of 'Event' values.
+-- | View a 'Score' as a list of 'Event' values.
+events :: Lens (Score a) (Score b) [Event a] [Event b]
+events = _Wrapped . _2 . _Wrapped . sorted
+  where
+    -- TODO should not have to sort...
+    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
+{-# INLINE events #-}
+
 --
 -- @
 -- 'view' 'events'                        :: 'Score' a -> ['Event' a]
@@ -331,16 +321,6 @@ score = from unsafeEvents
 -- 'toListOf' ('events' . 'each' . 'filtered'
 --              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Event' a]
 -- @
---
--- This is not an 'Iso', as the note list representation does not contain meta-data.
--- To construct a score from a note list, use 'score' or @'flip' ('set' 'events') 'empty'@.
---
-events :: Lens (Score a) (Score b) [Event a] [Event b]
-events = _Wrapped . _2 . _Wrapped . sorted
-  where
-    -- TODO should not have to sort...
-    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
-{-# INLINE events #-}
 
 -- | A score is a list of events up to meta-data. To preserve meta-data, use the more
 -- restricted 'score' and 'events'.
@@ -409,9 +389,6 @@ mapFilterTriples f = mcatMaybes . mapTriples f
 -- | Normalize a score, assuring its events spans are all forward (as by 'isForwardSpan'),
 -- and that its onset is at least zero. Consequently, the onset and offset of each event
 -- in the score is at least zero.
---
--- Many backends perform this operation implicitly.
---
 normalizeScore :: Score a -> Score a
 normalizeScore = reset . normalizeScoreDurations
   where
@@ -454,12 +431,7 @@ simultaneous' sc = (^. from unsafeTriples) vs
 -- overSimult :: Transformable a => (Score [a] -> Score [b]) -> Score a -> Score b
 -- overSimult f = mscatter . f . simultaneous'
 
--- |
--- Merge all simultaneous events using their 'Semigroup' instance.
---
--- Two events /a/ and /b/ are considered simultaneous if and only if they have the same
--- era, that is if @`era` a == `era` b@
---
+-- | Merge all simultaneous events using their 'Semigroup' instance.
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 

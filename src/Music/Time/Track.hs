@@ -66,14 +66,15 @@ import           Music.Time.Internal.Util
 
 -- |
 -- A 'Track' is a parallel composition of values.
+newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
+  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
+-- {-# DEPRECATED Track "Use 'Chord'" #-}
+
 --
 -- @
 -- type Track a = [Placed a]
 -- @
 --
-newtype Track a = Track { getTrack :: TrackList (TrackEv a) }
-  deriving (Functor, Foldable, Traversable, Semigroup, Monoid, Typeable, Show, Eq)
--- {-# DEPRECATED Track "Use 'Chord'" #-}
 
 -- A track is a list of events with explicit onset.
 --
@@ -123,11 +124,7 @@ instance Transformable a => Transformable (Track a) where
 --   -- TODO
 
 
--- |
--- Create a track from a list of notes.
---
--- Se also 'placeds'.
---
+-- | Create a track from a list of notes.
 track :: Getter [Placed a] (Track a)
 track = from unsafeTrack
 {-# INLINE track #-}

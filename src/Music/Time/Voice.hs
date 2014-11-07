@@ -82,7 +82,7 @@ module Music.Time.Voice (
         -- * Context
         -- TODO clean
         withContext,
-        voiceLens,
+        -- voiceLens,
 
         -- * Unsafe versions
         unsafeNotes,
@@ -252,29 +252,15 @@ instance VectorSpace (Voice a) where
   d *^ s = d `stretch` s
 
 
--- |
--- Create a 'Voice' from a list of 'Note's.
---
--- This is a 'Getter' (rather than a function) for consistency:
---
--- @
--- [ (0 '<->' 1, 10)^.'note',
---   (1 '<->' 2, 20)^.'note',
---   (3 '<->' 4, 30)^.'note' ]^.'voice'
--- @
---
--- @
--- 'view' 'voice' $ 'map' ('view' 'note') [(0 '<->' 1, 1)]
--- @
---
--- Se also 'notes'.
---
+-- | Create a 'Voice' from a list of 'Note's.
 voice :: Getter [Note a] (Voice a)
 voice = from unsafeNotes
 {-# INLINE voice #-}
 
--- |
--- View a 'Voice' as a list of 'Note' values.
+-- | View a 'Voice' as a list of 'Note' values.
+notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
+notes = unsafeNotes
+
 --
 -- @
 -- 'view' 'notes'                        :: 'Voice' a -> ['Note' a]
@@ -306,12 +292,6 @@ voice = from unsafeNotes
 -- 'toListOf' ('notes' . 'each' . 'filtered'
 --              (\\x -> '_duration' x \< 2))  :: 'Voice' a -> ['Note' a]
 -- @
---
--- This is not an 'Iso', as the note list representation does not contain meta-data.
--- To construct a score from a note list, use 'score' or @'flip' ('set' 'notes') 'empty'@.
---
-notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
-notes = unsafeNotes
 
 -- | View a score as a list of duration-value pairs. Analogous to 'triples'.
 pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]

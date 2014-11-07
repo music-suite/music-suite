@@ -201,11 +201,6 @@ splitReactive r = case updates r of
                 go [x]      = [(x, Nothing)]
                 go (x:y:rs) = (x, Just y) : withNext (y : rs)
 
-{-# DEPRECATED updates "" #-}
-{-# DEPRECATED occs "" #-}
-{-# DEPRECATED splitReactive "" #-}
-{-# DEPRECATED atTime "" #-}
-
 atTime :: Reactive a -> Time -> a
 atTime = (!) . snd . (^. _Wrapped')
 
@@ -239,24 +234,14 @@ intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.even
 discrete :: Reactive a -> Behavior a
 discrete = continous . fmap pure
 
--- |
--- Realize a 'Reactive' value as an continous behavior.
---
--- See also 'concatSegment' and 'concatB'.
---
+-- | Realize a 'Reactive' value as an continous behavior.
 continous :: Reactive (Segment a) -> Behavior a
 
--- |
--- Realize a 'Reactive' value as an continous behavior.
---
--- See also 'concatSegment' and 'concatB'.
---
+-- | Realize a 'Reactive' value as an continous behavior.
 continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
 continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 
--- |
--- Sample a 'Behavior' into a reactive.
---
+-- | Sample a 'Behavior' into a reactive.
 sample   :: [Time] -> Behavior a -> Reactive a
 
 -- TODO linear approximation

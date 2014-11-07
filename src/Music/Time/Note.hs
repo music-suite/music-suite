@@ -29,7 +29,7 @@ module Music.Time.Note (
         note,
         notee,
         durationNote,
-        noteComplement,
+        -- noteComplement,
   ) where
 
 import           Control.Applicative
