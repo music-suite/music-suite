@@ -425,15 +425,7 @@ mapScore f = over (_Wrapped._2) (mapScore' f)
 reifyScore :: Score a -> Score (Event a)
 reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
--- |
--- View a score as a list of events, i.e. time-duration-value triplets.
---
--- This is a convenient combination of 'events' and 'event'.
---
--- @
--- 'events' = 'events' . 'through' 'event' 'event'
--- @
---
+-- | View a score as a list of time-duration-value triplets.
 triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 triples = events . _zipList . through triple triple . from _zipList
 

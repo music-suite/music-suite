@@ -313,6 +313,7 @@ voice = from unsafeNotes
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
 notes = unsafeNotes
 
+-- | View a score as a list of duration-value pairs. Analogous to 'triples'.
 pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 pairs = unsafeTriplesV
 
@@ -447,12 +448,14 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
     merge (Just x) (Just y) = False
     hasOnlyRests = all isNothing $ toListOf traverse x -- norm
 
-
+-- | Decorate all notes in a voice with their context, i.e. previous and following value
+-- if present.
 withContext :: Voice a -> Voice (Ctxt a)
 withContext = over valuesV addCtxt
 
--- TODO more elegant definition of durationsV and valuesV?
+-- TODO more elegant definition?
 
+-- | A lens to the durations in a voice.
 durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
@@ -464,6 +467,7 @@ durationsV = lens getDurs (flip setDurs)
 
     durToVoice d = stretch d $ pure ()
 
+-- | A lens to the values in a voice.
 valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
@@ -516,13 +520,19 @@ voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Vo
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
 -- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
 
-
+-- | Whether two notes have exactly the same duration pattern.
+-- Two empty voices are considered to have the same duration pattern.
+-- Voices with an non-equal number of notes differ by default.
 sameDurations :: Voice a -> Voice b -> Bool
 sameDurations a b = view durationsV a == view durationsV b
 
+-- | Pair the values of two voices if and only if they have the same duration
+-- pattern (as per 'sameDurations').
 mergeIfSameDuration :: Voice a -> Voice b -> Maybe (Voice (a, b))
 mergeIfSameDuration = mergeIfSameDurationWith (,)
 
+-- | Combine the values of two voices using the given function if and only if they
+-- have the same duration pattern (as per 'sameDurations').
 mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
 mergeIfSameDurationWith f a b
   | sameDurations a b = Just $ zipVoiceWithNoScale f a b
@@ -571,19 +581,23 @@ processExactOverlaps = undefined
 processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
 processExactOverlaps' = undefined
 
+-- | Returns the onsets of all notes in a voice given the onset of the first note.
 onsetsRelative    :: Time -> Voice a -> [Time]
 onsetsRelative o v = case offsetsRelative o v of
   [] -> []
   xs -> o : init xs
 
+-- | Returns the offsets of all notes in a voice given the onset of the first note.
 offsetsRelative   :: Time -> Voice a -> [Time]
 offsetsRelative o = fmap (\t -> o .+^ (t .-. 0)) . toAbsoluteTime . (^. durationsV)
 
+-- | Returns the midpoints of all notes in a voice given the onset of the first note.
 midpointsRelative :: Time -> Voice a -> [Time]
 midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o v)
   where
     between p q = alerp p q 0.5
 
+-- | Returns the eras of all notes in a voice given the onset of the first note.
 erasRelative :: Time -> Voice a -> [Span]
 erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 

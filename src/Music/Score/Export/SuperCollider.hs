@@ -145,7 +145,7 @@ instance HasBackend SuperCollider where
 
 instance () => HasBackendScore SuperCollider (Voice (Maybe a)) where
   type BackendScoreEvent SuperCollider (Voice (Maybe a)) = a
-  exportScore _ xs = Identity <$> ScScore [view triplesV xs]
+  exportScore _ xs = Identity <$> ScScore [view pairs xs]
 
 instance (HasPart' a, Ord (Part a)) => HasBackendScore SuperCollider (Score a) where
   type BackendScoreEvent SuperCollider (Score a) = a
