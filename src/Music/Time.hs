@@ -12,13 +12,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
-        -- * Prerequisites
     module Data.Functor.Rep.Lens,
 
-    -- * Basic types
     module Music.Time.Types,
 
-    -- * Time transformations
     module Music.Time.Transform,
     module Music.Time.Duration,
     module Music.Time.Position,
@@ -27,24 +24,23 @@ module Music.Time (
     module Music.Time.Juxtapose,
     module Music.Time.Rest,
 
-    -- * Time types
-    -- ** Discrete time
-    module Music.Time.Note,
     module Music.Time.Placed,
+    module Music.Time.Note,
     module Music.Time.Event,
-    module Music.Time.Future,
-    module Music.Time.Past,
-    module Music.Time.Nominal,
-    module Music.Time.Graces,
     module Music.Time.Voice,
     module Music.Time.Chord,
     module Music.Time.Track,
     module Music.Time.Score,
 
-    -- ** Continous time
+    module Music.Time.Nominal,
+    module Music.Time.Graces,
+
+    module Music.Time.Future,
+    module Music.Time.Past,
+    module Music.Time.Reactive,
+
     module Music.Time.Segment,
     module Music.Time.Behavior,
-    module Music.Time.Reactive,
   ) where
 
 import           Data.Functor.Rep

@@ -12,7 +12,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score (
-        -- * Prerequisites
         module Control.Lens,
         module Control.Applicative,
         module Control.Monad,
@@ -24,9 +23,6 @@ module Music.Score (
 
         module Music.Time,
         -- module Music.Score.Combinators,
-
-        -- * Music representation
-        -- ** Musical elements
         module Music.Score.Part,
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
@@ -37,11 +33,9 @@ module Music.Score (
         module Music.Score.Harmonics,
         module Music.Score.Color,
 
-        -- ** Miscellaneous
         module Music.Score.Ties,
         module Music.Score.Phrases,
 
-        -- ** Meta-information
         module Music.Score.Meta,
         module Music.Score.Meta.Title,
         module Music.Score.Meta.Attribution,
@@ -54,12 +48,10 @@ module Music.Score (
         module Music.Score.Meta.Tempo,
         module Music.Score.Meta.Annotations,
 
-        -- * Import and export
         module Music.Score.Import.Abc,
         module Music.Score.Import.Lilypond,
         module Music.Score.Import.Midi,
 
-        -- module Music.Score.Export.Abc,
         module Music.Score.Export.Backend,
         module Music.Score.Export.NoteList,
         module Music.Score.Export.Midi,
