@@ -112,7 +112,6 @@ import           Music.Score.Part
 import           Music.Score.Slide
 import           Music.Score.Text
 import           Music.Score.Ties
--- import           Music.Score.Tremolo
 import           Music.Score.Phrases
 import           Music.Time
 import           Music.Time.Internal.Transform

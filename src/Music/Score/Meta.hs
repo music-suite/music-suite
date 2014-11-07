@@ -110,7 +110,6 @@ withTime = mapTriples (\t d x -> (t, x))
 
 inSpan t' (view range -> (t,u)) = t <= t' && t' < u
 
--- TODO clean
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
 mapAfter :: Time -> (Score a -> Score a) -> Score a -> Score a
@@ -122,8 +121,6 @@ mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -
 -- Transform the score with the current value of some meta-information
 -- Each "update chunk" of the meta-info is processed separately
 
-
--- INTERNAL
 runScoreMeta :: forall a b . AttributeClass b => Score a -> Reactive b
 runScoreMeta = fromMetaReactive . (view meta)
 

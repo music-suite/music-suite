@@ -60,7 +60,6 @@ import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
 import           Music.Score.Articulation
--- import           Music.Score.Color
 import           Music.Score.Dynamics
 import           Music.Score.Harmonics
 import           Music.Score.Meta
