@@ -317,9 +317,13 @@ notes = unsafeNotes
 pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 pairs = unsafePairs
 
+-- | A voice is a list of notes up to meta-data. To preserve meta-data, use the more
+-- restricted 'voice' and 'notes'.
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
 
+-- | A score is a list of (duration-value pairs) up to meta-data.
+-- To preserve meta-data, use the more restricted 'pairs'.
 unsafePairs :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 unsafePairs = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 

@@ -342,64 +342,16 @@ events = _Wrapped . _2 . _Wrapped . sorted
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
 {-# INLINE events #-}
 
--- -- |
--- -- View a score as a list of voices.
--- --
--- -- @
--- -- 'view' 'voices'                        :: 'Score' a -> ['Voice' a]
--- -- 'set'  'voices'                        :: ['Voice' a] -> 'Score' a -> 'Score' a
--- -- 'over' 'voices'                        :: (['Voice' a] -> ['Voice' b]) -> 'Score' a -> 'Score' b
--- -- @
--- --
--- -- @
--- -- 'preview'  ('voices' . 'each')           :: 'Score' a -> 'Maybe' ('Voice' a)
--- -- 'preview'  ('voices' . 'element' 1)      :: 'Score' a -> 'Maybe' ('Voice' a)
--- -- 'preview'  ('voices' . 'elements' odd)   :: 'Score' a -> 'Maybe' ('Voice' a)
--- -- @
--- --
--- -- @
--- -- 'set'      ('voices' . 'each')           :: 'Voice' a -> 'Score' a -> 'Score' a
--- -- 'set'      ('voices' . 'element' 1)      :: 'Voice' a -> 'Score' a -> 'Score' a
--- -- 'set'      ('voices' . 'elements' odd)   :: 'Voice' a -> 'Score' a -> 'Score' a
--- -- @
--- --
--- -- @
--- -- 'over'     ('voices' . 'each')           :: ('Voice' a -> 'Voice' b) -> 'Score' a -> 'Score' b
--- -- 'over'     ('voices' . 'element' 1)      :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- -- 'over'     ('voices' . 'elements' odd)   :: ('Voice' a -> 'Voice' a) -> 'Score' a -> 'Score' a
--- -- @
--- --
--- -- @
--- -- 'toListOf' ('voices' . 'each')           :: 'Score' a -> ['Voice' a]
--- -- 'toListOf' ('voices' . 'elements' odd)   :: 'Score' a -> ['Voice' a]
--- -- 'toListOf' ('voices' . 'each' . 'filtered' (\\x -> '_duration' x \< 2)) :: 'Score' a -> ['Voice' a]
--- -- @
--- --
--- -- This is not an 'Iso', as the voice list representation does not contain meta-data.
--- -- To construct a score from a voice list, use 'score' or @'flip' ('set' 'voices') 'empty'@.
--- --
--- voices :: Lens (Score a) (Score b) [Voice a] [Voice b]
--- voices = unsafeVoices
--- {-# INLINE voices #-}
-
--- |
--- View a score as a list of events.
---
--- This only an isomorphism up to meta-data. See also the safe (but more restricted)
--- 'events' and 'score'.
---
+-- | A score is a list of events up to meta-data. To preserve meta-data, use the more
+-- restricted 'score' and 'events'.
 unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
 unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
     noMeta = iso extract return
 
--- |
--- View a score as a list of events.
---
--- This only an isomorphism up to meta-data. See also the safe (but more restricted)
--- 'events' and 'score'.
---
+-- | A score is a list of (time-duration-value triples) up to meta-data.
+-- To preserve meta-data, use the more restricted 'triples'.
 unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
 unsafeTriples = iso _getScore _score
   where
