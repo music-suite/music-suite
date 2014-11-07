@@ -37,6 +37,10 @@ renderAligned :: HasDuration a => (Span -> a -> b) -> Aligned a -> b
 renderAligned f a@(Aligned (_, _, v)) = f (_era a) v
 
 
+
+
+-- Somewhat suspect, see below for clarity...
+
 voiceToScore :: Span -> Voice a -> Score a
 voiceToScore e = set era e . scat . map (uncurry stretch) . view pairs . fmap pure
 
@@ -47,7 +51,9 @@ noteToEvent e = set era e . view notee . fmap pure
 durationToSpan :: Span -> Duration -> Span
 durationToSpan = const
 
--- TODO better API
+
+
+
 -- compare placeAt etc. above
 renderAlignedVoice :: Aligned (Voice a) -> Score a
 renderAlignedVoice = renderAligned voiceToScore
