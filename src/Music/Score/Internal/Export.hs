@@ -79,7 +79,7 @@ extractTimeSignatures score = (barTimeSignatures, barDurations)
   where                                          
     defaultTimeSignature = time 4 4
     timeSignatures = fmap swap 
-      $ view triplesV . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+      $ view pairs . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
       $ getTimeSignatures defaultTimeSignature score
 
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures

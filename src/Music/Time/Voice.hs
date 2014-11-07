@@ -32,7 +32,7 @@ module Music.Time.Voice (
         -- * Construction
         voice,
         notes,
-        triplesV,
+        pairs,
         durationsVoice,
 
         -- * Traversal
@@ -313,8 +313,8 @@ voice = from unsafeNotes
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
 notes = unsafeNotes
 
-triplesV :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-triplesV = unsafeTriplesV
+pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+pairs = unsafeTriplesV
 
 unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
 unsafeNotes = _Wrapped
@@ -397,8 +397,8 @@ zipVoiceWithNoScale = zipVoiceWith' const
 --
 zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
 zipVoiceWith' f g
-  ((unzip.view triplesV) -> (ad, as))
-  ((unzip.view triplesV) -> (bd, bs))
+  ((unzip.view pairs) -> (ad, as))
+  ((unzip.view pairs) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
      in view (from unsafeTriplesV) (zip cd cs)
@@ -457,7 +457,7 @@ durationsV :: Lens' (Voice a) [Duration]
 durationsV = lens getDurs (flip setDurs)
   where
     getDurs :: Voice a -> [Duration]
-    getDurs = map fst . view triplesV
+    getDurs = map fst . view pairs
 
     setDurs :: [Duration] -> Voice a -> Voice a
     setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
@@ -468,7 +468,7 @@ valuesV :: Lens (Voice a) (Voice b) [a] [b]
 valuesV = lens getValues (flip setValues)
   where
     -- getValues :: Voice a -> [a]
-    getValues = map snd . view triplesV
+    getValues = map snd . view pairs
 
     -- setValues :: [a] -> Voice b -> Voice a
     setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs

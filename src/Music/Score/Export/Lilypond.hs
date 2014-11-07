@@ -324,7 +324,7 @@ instance (
        where
          addBarInfo = (,) $ BarInfo timeSignature
 
-      quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view triplesV
+      quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view pairs
         where
           -- FIXME propagate quantization errors
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e

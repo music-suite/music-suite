@@ -182,10 +182,10 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
       map ( bimap voiceToRest voiceToPhrase
           . bimap (^.from unsafeTriplesV) (^.from unsafeTriplesV) )
        . groupDiff' (isJust . snd)
-       . view triplesV
+       . view pairs
 
     voiceToRest :: MVoice a -> Duration
-    voiceToRest = sumOf (triplesV.each._1) . fmap (\x -> assert (isNothing x) x)
+    voiceToRest = sumOf (pairs.each._1) . fmap (\x -> assert (isNothing x) x)
     -- TODO just _duration
 
     voiceToPhrase :: MVoice a -> Phrase a

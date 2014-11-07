@@ -315,7 +315,7 @@ instance (
        where
          addBarInfo = (,) $ BarInfo timeSignature
 
-      quantizeBar = mapWithDur XmlContext . rewrite . handleErrors . quantize . view triplesV
+      quantizeBar = mapWithDur XmlContext . rewrite . handleErrors . quantize . view pairs
         where
           -- FIXME propagate quantization errors
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e
