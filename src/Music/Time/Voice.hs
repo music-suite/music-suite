@@ -487,42 +487,6 @@ valuesV = lens getValues (flip setValues)
 
     listToVoice = mconcat . map pure
 
-{-
--- |
--- Transform the durations, leaving values intact.
-withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
-withDurations = over durationsV
-
--- |
--- Transform the values, leaving durations intact.
-withValues :: ([a] -> [b]) -> Voice a -> Voice b
-withValues = over valuesV
-
--- |
--- Rotate durations by the given number of steps, leaving values intact.
---
-rotateDurations :: Int -> Voice a -> Voice a
-rotateDurations n = over durationsV (rotate n)
-
--- |
--- Rotate values by the given number of steps, leaving durations intact.
---
-rotateValues :: Int -> Voice a -> Voice a
-rotateValues n = over valuesV (rotate n)
-
--- |
--- Reverse durations, leaving values intact.
---
-reverseDurations :: Voice a -> Voice a
-reverseDurations = over durationsV reverse
-
--- |
--- Reverse values, leaving durations intact.
---
-reverseValues :: Voice a -> Voice a
-reverseValues = over valuesV reverse
--}
-
 -- Lens "filtered" through a voice
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
