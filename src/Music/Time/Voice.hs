@@ -404,6 +404,10 @@ zipVoiceWith' f g
         cs = zipWith g as bs
      in view (from unsafePairs) (zip cd cs)
 
+
+-- TODO generalize these to use a Monoidal interface, rather than ([a] -> a)
+-- The use of head (see below) if of course the First monoid
+
 -- |
 -- Merge consecutive equal notes.
 --
@@ -411,7 +415,7 @@ fuse :: Eq a => Voice a -> Voice a
 fuse = fuseBy (==)
 
 -- |
--- Merge consecutive equal notes using the given function.
+-- Merge consecutive notes deemed equal by the given predicate.
 --
 fuseBy :: (a -> a -> Bool) -> Voice a -> Voice a
 fuseBy p = fuseBy' p head
