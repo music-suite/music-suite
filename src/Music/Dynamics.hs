@@ -17,8 +17,6 @@ module Music.Dynamics (
         module Music.Dynamics.Absolute,
         module Music.Dynamics.Common,
         module Music.Dynamics.Balance,
-
-        -- * Dynamic literals
         module Music.Dynamics.Literal,      
   ) where
 
