@@ -68,7 +68,41 @@ addMetaNote x = applyMeta $ wrapTMeta $ noteToReactive x
 fromMetaReactive :: forall a b . AttributeClass b => Meta -> Reactive b
 fromMetaReactive = fromMaybe mempty . unwrapMeta
 
+metaAt :: AttributeClass b => Time -> Score a -> b
+metaAt x = (`atTime` x) . runScoreMeta
 
+metaAtStart :: AttributeClass b => Score a -> b
+metaAtStart x = _onset x `metaAt` x
+
+withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
+withMeta f x = let
+    m = (view meta) x
+    r = fromMetaReactive m
+    in case splitReactive r of
+        Left  a -> f a x
+        Right ((a, t), bs, (u, c)) ->
+            (meta .~) m
+                $ mapBefore t (f a)
+                $ (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs)
+                $ mapAfter u (f c)
+                $ x
+
+withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
+withMetaAtStart f x = let
+    m = view meta x
+    in f (fromMetaReactive m `atTime` _onset x) x
+
+
+
+
+
+
+
+
+
+
+
+-- JUNK
 
 withSpan :: Score a -> Score (Span, a)
 withSpan = mapTriples (\t d x -> (t >-> d,x))
@@ -93,36 +127,6 @@ mapAfter t f x = let (y,n) = (fmap snd `bimap` fmap snd) $ mpartition (\(t2,x) -
 runScoreMeta :: forall a b . AttributeClass b => Score a -> Reactive b
 runScoreMeta = fromMetaReactive . (view meta)
 
--- EXT
-metaAt :: AttributeClass b => Time -> Score a -> b
-metaAt x = (`atTime` x) . runScoreMeta
-
--- EXT
-metaAtStart :: AttributeClass b => Score a -> b
-metaAtStart x = _onset x `metaAt` x
-
-withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
-withMeta f x = let
-    m = (view meta) x
-    r = fromMetaReactive m
-    in case splitReactive r of
-        Left  a -> f a x
-        Right ((a, t), bs, (u, c)) ->
-            (meta .~) m
-                $ mapBefore t (f a)
-                $ (composed $ fmap (\(view (from event) -> (s, a)) -> mapDuring s $ f a) $ bs)
-                $ mapAfter u (f c)
-                $ x
-
-withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
-withMetaAtStart f x = let
-    m = view meta x
-    in f (fromMetaReactive m `atTime` _onset x) x
-
-
-
-    -- JUNK
--- TODO move
 noteToReactive :: Monoid a => Event a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
