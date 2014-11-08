@@ -106,7 +106,7 @@ instance IsDynamics a => IsDynamics (Placed a) where
 placed :: Iso (Time, a) (Time, b) (Placed a) (Placed b)
 placed = _Unwrapped
 
-placee :: (Transformable a, Transformable b, b ~ a) => Lens (Placed a) (Placed b) a b
+placee :: (Transformable a, Transformable b) => Lens (Placed a) (Placed b) a b
 placee = from placed `dependingOn` (transformed . delayingTime)
   where
     delayingTime = (>-> 1)
