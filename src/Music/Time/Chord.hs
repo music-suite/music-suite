@@ -26,12 +26,12 @@
 module Music.Time.Chord (
 
       -- * Chord type
-      Chord,
+      -- Chord,
 
       -- * Construction
-      chord,
-      unchord,
-      unsafeChord,
+      -- chord,
+      -- unchord,
+      -- unsafeChord,
 
       -- invertChord,
       -- inversions,

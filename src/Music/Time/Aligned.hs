@@ -62,7 +62,7 @@ import           Music.Time.Score
 
 -- | 'Aligned' places a vector-like object in space, by fixing a local duration interpolating
 -- the vector to a specific point in time. The aligned value must be an instance of
--- 'HasDuration', with '_duration' providing the size of the vector.
+-- 'HasDuration', with @'view' 'duration'@ providing the size of the vector.
 --
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.

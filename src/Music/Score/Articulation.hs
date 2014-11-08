@@ -196,8 +196,6 @@ type instance SetArticulation g (Note a) = Note (SetArticulation g a)
 
 type instance Articulation (Voice a) = Articulation a
 type instance SetArticulation b (Voice a) = Voice (SetArticulation b a)
-type instance Articulation (Chord a) = Articulation a
-type instance SetArticulation b (Chord a) = Chord (SetArticulation b a)
 type instance Articulation (Track a) = Articulation a
 type instance SetArticulation b (Track a) = Track (SetArticulation b a)
 type instance Articulation (Score a) = Articulation a
@@ -243,8 +241,12 @@ instance (HasArticulation a b) => HasArticulation (Note a) (Note b) where
 instance HasArticulations a b => HasArticulations (Voice a) (Voice b) where
   articulations = traverse . articulations
 
+{-
+type instance Articulation (Chord a) = Articulation a
+type instance SetArticulation b (Chord a) = Chord (SetArticulation b a)
 instance HasArticulations a b => HasArticulations (Chord a) (Chord b) where
   articulations = traverse . articulations
+-}
 
 instance HasArticulations a b => HasArticulations (Track a) (Track b) where
   articulations = traverse . articulations

@@ -186,8 +186,6 @@ type instance SetDynamic b (Note a)  = Note (SetDynamic b a)
 
 type instance Dynamic (Voice a)       = Dynamic a
 type instance SetDynamic b (Voice a)  = Voice (SetDynamic b a)
-type instance Dynamic (Chord a)       = Dynamic a
-type instance SetDynamic b (Chord a)  = Chord (SetDynamic b a)
 type instance Dynamic (Track a)       = Dynamic a
 type instance SetDynamic b (Track a)  = Track (SetDynamic b a)
 type instance Dynamic (Score a)       = Dynamic a
@@ -237,8 +235,12 @@ instance HasDynamics a b => HasDynamics (Voice a) (Voice b) where
 instance HasDynamics a b => HasDynamics (Track a) (Track b) where
   dynamics = traverse . dynamics
 
+{-
+type instance Dynamic (Chord a)       = Dynamic a
+type instance SetDynamic b (Chord a)  = Chord (SetDynamic b a)
 instance HasDynamics a b => HasDynamics (Chord a) (Chord b) where
   dynamics = traverse . dynamics
+-}
 
 instance (HasDynamics a b) => HasDynamics (Score a) (Score b) where
   dynamics =

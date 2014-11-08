@@ -283,8 +283,6 @@ type instance SetPitch b (Note a)  = Note (SetPitch b a)
 
 type instance Pitch (Voice a)       = Pitch a
 type instance SetPitch b (Voice a)  = Voice (SetPitch b a)
-type instance Pitch (Chord a)       = Pitch a
-type instance SetPitch b (Chord a)  = Chord (SetPitch b a)
 type instance Pitch (Track a)       = Pitch a
 type instance SetPitch b (Track a)  = Track (SetPitch b a)
 type instance Pitch (Score a)       = Pitch a
@@ -325,8 +323,12 @@ instance HasPitches a b => HasPitches (Voice a) (Voice b) where
 instance HasPitches a b => HasPitches (Track a) (Track b) where
   pitches = traverse . pitches
 
+{-
+type instance Pitch (Chord a)       = Pitch a
+type instance SetPitch b (Chord a)  = Chord (SetPitch b a)
 instance HasPitches a b => HasPitches (Chord a) (Chord b) where
   pitches = traverse . pitches
+-}
 
 instance (HasPitches a b) => HasPitches (Score a) (Score b) where
   pitches =
