@@ -185,7 +185,7 @@ instance (HasPart' a, HasMidiProgram (Part a)) => HasBackendScore Midi (Voice a)
   exportScore _ xs = MidiScore [((getMidiChannel (xs^?!parts), getMidiProgram (xs^?!parts)), fmap Identity $ voiceToScore xs)]
     where
       voiceToScore :: Voice a -> Score a
-      voiceToScore = error "FIXME"
+      voiceToScore = renderAlignedVoice . aligned (0 :: Time) (0 :: LocalDuration)
 
 instance (HasPart' a, Ord (Part a), HasMidiProgram (Part a)) => HasBackendScore Midi (Score a) where
   type BackendScoreEvent Midi (Score a) = a

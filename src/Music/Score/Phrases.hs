@@ -221,7 +221,7 @@ singleMVoice = iso scoreToVoice voiceToScore'
               | otherwise = error "singleMVoice: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
-    voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
+    voiceToScore = renderAlignedVoice . aligned 0 0
 
     voiceToScore' :: MVoice a -> Score a
     voiceToScore' = mcatMaybes . voiceToScore

@@ -25,9 +25,8 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Internal.Convert (
-        voiceToScore,
         scoreToVoice,
-        reactiveToVoice',
+        reactiveToVoice'
   ) where
 
 import           Control.Applicative
@@ -72,10 +71,8 @@ scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. tri
                    | otherwise = error "scoreToVoice: Strange prevTime"
 {-# DEPRECATED scoreToVoice "" #-}
 
--- |
--- Convert a voice to a score.
---
+{-
 voiceToScore :: Voice a -> Score a
-voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
-{-# DEPRECATED voiceToScore "" #-}
+voiceToScore = renderAlignedVoice . aligned (0 :: Time) (0 :: LocalDuration)
+-}
 

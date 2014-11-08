@@ -23,6 +23,7 @@ module Music.Time (
     module Music.Time.Reverse,
     module Music.Time.Juxtapose,
     module Music.Time.Rest,
+    module Music.Time.Aligned,
 
     module Music.Time.Placed,
     module Music.Time.Note,
@@ -54,6 +55,7 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 import           Music.Time.Transform
 import           Music.Time.Types
+import           Music.Time.Aligned
 
 import           Music.Time.Behavior
 import           Music.Time.Chord
