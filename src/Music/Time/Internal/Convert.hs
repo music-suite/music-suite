@@ -26,7 +26,6 @@
 
 module Music.Time.Internal.Convert (
         voiceToScore,
-        voiceToScore',
         scoreToVoice,
         reactiveToVoice',
   ) where
@@ -79,17 +78,4 @@ scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. tri
 voiceToScore :: Voice a -> Score a
 voiceToScore = scat . fmap g . (^. notes) where g = (^. notee) . fmap return
 {-# DEPRECATED voiceToScore "" #-}
-
-{-
--- | Join voices in a given part into a score.
-voicesToScore :: HasPart a => [(Part a, Voice a)] -> Score a
-voicesToScore = pcat . fmap (voiceToScore . uncurry (\n -> fmap (setPart n)))
--}
-
--- |
--- Convert a voice which may contain rests to a score.
---
-voiceToScore' :: Voice (Maybe a) -> Score a
-voiceToScore' = mcatMaybes . voiceToScore
-{-# DEPRECATED voiceToScore' "" #-}
 
