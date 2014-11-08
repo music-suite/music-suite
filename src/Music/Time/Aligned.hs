@@ -68,6 +68,7 @@ import           Music.Time.Score
 -- or offset, use 0, 0.5 or 1 as the local duration value.
 newtype Aligned v = Aligned { getAligned :: (Time, LocalDuration, v) }
 
+-- | Align the given value so that its local duration occurs at the given time.
 aligned :: Time -> LocalDuration -> v -> Aligned v
 aligned t d a = Aligned (t, d, a)
 
@@ -104,19 +105,25 @@ voiceToScoreInEra e = set era e . scat . map (uncurry stretch) . view pairs . fm
 noteToEventInEra :: Span -> Note a -> Event a
 noteToEventInEra e = set era e . view notee . fmap pure
 
--- TODO not needed..
 durationToSpanInEra :: Span -> Duration -> Span
 durationToSpanInEra = const
 
+-- TODO compare placeAt etc.
 
 
-
--- compare placeAt etc. above
+-- | Convert an aligned voice to a score.
 renderAlignedVoice :: Aligned (Voice a) -> Score a
 renderAlignedVoice = renderAligned voiceToScoreInEra
 
+-- | Convert an aligned note to an event.
 renderAlignedNote :: Aligned (Note a) -> Event a
 renderAlignedNote = renderAligned noteToEventInEra
 
+-- | Convert an aligned duration to a span.
 renderAlignedDuration :: Aligned Duration -> Span
 renderAlignedDuration = renderAligned durationToSpanInEra
+
+
+
+
+
