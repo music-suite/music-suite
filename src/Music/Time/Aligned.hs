@@ -22,7 +22,14 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Aligned where
+module Music.Time.Aligned (
+      Aligned,
+      aligned,
+      renderAligned,
+      renderAlignedVoice,
+      renderAlignedNote,
+      renderAlignedDuration,
+  ) where
 
 import           Control.Applicative
 import           Control.Comonad
