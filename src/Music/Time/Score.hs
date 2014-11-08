@@ -115,8 +115,10 @@ import           Music.Time.Internal.Util
 -- You can also use '<>' and 'mempty' of course.
 --
 
--- |
--- A 'Score' is a sequential or parallel composition of values, and allows overlapping events
+-- | A 'Score' is a sequential or parallel composition of values, and allows overlapping events
+newtype Score a = Score { getScore :: (Meta, Score' a) }
+    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
+
 --
 -- You typically create a 'Score' using 'score', 'events', 'voices', and 'phrases', or the 'Alternative' interface.
 --
@@ -127,8 +129,6 @@ import           Music.Time.Internal.Util
 -- To inspect or deconstruct a score, see 'events', 'voices', and 'phrases', as
 -- well as 'singleNote', 'singleVoice', and 'singlePhrase'
 --
-newtype Score a = Score { getScore :: (Meta, Score' a) }
-    deriving (Functor, Semigroup, Monoid, Foldable, Traversable, Typeable{-, Show, Eq, Ord-})
 
 instance Wrapped (Score a) where
   type Unwrapped (Score a) = (Meta, Score' a)

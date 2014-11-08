@@ -210,10 +210,13 @@ instance InnerSpace Duration where
   (<.>) = (*)
 
 
--- |
--- Time points, representing duration since some known reference time, typically the start
--- of the music. Note that time can be negative, representing values occuring before the
--- reference time.
+-- | 'Time' represents points in time space. The difference between two time points
+-- is a 'Duration', for example in a bar of duration 4/4 (that is 1), the difference
+-- between the first and third beat 1/2.
+--
+-- Time has an origin (zero) which usually represents the beginning of the musical
+-- performance, but this may not always be the case, as the modelled music may be
+-- infinite, or contain a musical pickup. Hence 'Time' values can be negative.
 --
 newtype Time = Time { getTime :: TimeBase }
   deriving (
@@ -307,27 +310,12 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 
 -- |
--- A 'Span' represents an onset and offset in time (or equivalently: an onset and a
--- duration, /or/ a duration and an offset, /or/ a duration and a middle point).
---
--- Pattern matching over span is possible (with @ViewPatterns@):
---
--- @
--- foo ('view' 'range'   -> (t1, t2)) = ...
--- foo ('view' 'delta'   -> (t1, d))  = ...
--- foo ('view' 'codelta' -> (d,  t2)) = ...
--- @
+-- A 'Span' represents a specific time interval, such as the duration of
+-- a note, phrase or musical piece. It can be modelled as two points, or as
+-- a point and a vector.
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
---
--- TODO How to use with 'transform', 'whilst' etc.
---
--- @
--- a '<->' b = (a, b)^.'from' 'range'
--- a '>->' b = (a, b)^.'from' 'delta'
--- a '<-<' b = (a, b)^.'from' 'codelta'
--- @
 --
 newtype Span = Span { getSpan :: (Time, Duration) }
   deriving (
