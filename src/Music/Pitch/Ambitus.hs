@@ -45,3 +45,5 @@ ambitus = iso toA unA . _Unwrapped
     toA = (\(m, n) -> (I.<=..<=) (Finite m) (Finite n))
     unA a = case (I.lowerBound a, I.upperBound a) of
       (Finite m, Finite n) -> (m, n)
+
+
