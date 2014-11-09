@@ -18,6 +18,9 @@
 module Music.Parts.Subpart (
           Subpart(..),
           containsSubpart,
+          properlyContainsSubpart,
+          isSubpartOf,
+          isProperSubpartOf,
   ) where
 
 import           Control.Applicative
@@ -51,5 +54,18 @@ instance Show Subpart where
             mapFR f g (x:xs) = f x : fmap g xs
 
 containsSubpart :: Subpart -> Subpart -> Bool
-Subpart x `containsSubpart` Subpart y = y `Data.List.isPrefixOf` x
+containsSubpart = flip isSubpartOf
+
+properlyContainsSubpart :: Subpart -> Subpart -> Bool
+properlyContainsSubpart = flip isProperSubpartOf
+
+isSubpartOf :: Subpart -> Subpart -> Bool
+Subpart x `isSubpartOf` Subpart y = y `Data.List.isPrefixOf` x
+
+x `isProperSubpartOf` y =
+  x `isSubpartOf` y && x /= y
+
+
+
+
 
