@@ -40,6 +40,7 @@ module Music.Time.Types (
         -- ** Convert between time and duration
         -- $convert
         offsetPoints,
+        pointOffsets,
         toAbsoluteTime,
         toRelativeTime,
         toRelativeTimeN,
@@ -269,8 +270,19 @@ instance AffineSpace Time where
 -- 
 -- >>> offsetPoints 0 [1,1,1] :: [Time]
 -- [0,1,2,3]
-offsetPoints :: AffineSpace a => a -> [Diff a] -> [a]
+offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
 offsetPoints = scanl (.+^)
+
+-- | Calculate the relative difference between vectors.
+-- 
+-- > lenght xs + 1 == length (offsetPoints p xs)
+-- 
+-- >>> offsetPoints 0 [1,1,1] :: [Time]
+-- [0,1,2,3]
+pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
+pointOffsets or = (zeroV :) . snd . mapAccumL g or
+  where
+    g prev p = (p, p .-. prev)
 
 -- | Interpret as durations from 0.
 --
@@ -292,14 +304,16 @@ toAbsoluteTime = tail . offsetPoints 0
 -- >>> toRelativeTime [1,2,3]
 -- [1,1,1]
 toRelativeTime :: [Time] -> [Duration]
-toRelativeTime = snd . Data.List.mapAccumL g 0 where g prev t = (t, t .-. prev)
+toRelativeTime = tail . pointOffsets 0
 
 -- TODO rename these two...
 
 -- | Duration between values until the last, then up to the given final value.
 -- > lenght xs == length (toRelativeTime xs)
 toRelativeTimeN' :: Time -> [Time] -> [Duration]
-toRelativeTimeN' end = snd . Data.List.mapAccumR g end where g prev t = (t, prev .-. t)
+toRelativeTimeN' or = snd . Data.List.mapAccumR g or
+  where
+    g prev p = (p, prev .-. p)
 
 -- Same as toRelativeTimeN' but always returns 0 as the last value...
 -- TODO remove
