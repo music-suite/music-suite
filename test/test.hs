@@ -383,7 +383,7 @@ showScore = putStrLn $ showXml $ score
 openSib :: Score -> IO ()
 openSib score =
     do  writeFile "test.xml" (showXml score)
-        execute "open" ["-a", "/Applications/Sibelius 6.app/Contents/MacOS/Sibelius 6", "test.xml"]
+        execute "open" ["-a", "/Applications/Sibelius 7.app/Contents/MacOS/Sibelius 7", "test.xml"]
 
 openLy :: Score -> IO ()
 openLy score =
