@@ -45,7 +45,7 @@ module Music.Time.Score (
 
         -- * Simultaneous
         -- TODO check for overlapping values etc
-        simult,
+        -- simult,
         simultaneous,
 
         -- * Normalize
@@ -434,9 +434,4 @@ simultaneous' sc = (^. from unsafeTriples) vs
 -- | Merge all simultaneous events using their 'Semigroup' instance.
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
-
-simult :: Transformable a => Lens (Score a) (Score b) (Score [a]) (Score [b])
-simult = iso simultaneous' mscatter
--- TODO identical to: lens simultaneous' (flip $ mapSimultaneous . const)
--- wrap in something to preserve meta
 
