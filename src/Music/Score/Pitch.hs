@@ -270,33 +270,33 @@ PRIM_PITCH_INSTANCE(Float)
 PRIM_PITCH_INSTANCE(Double)
 
 
-type instance Pitch (c,a)               = Pitch a
-type instance SetPitch b (c,a)          = (c,SetPitch b a)
-type instance Pitch [a]                 = Pitch a
-type instance SetPitch b [a]            = [SetPitch b a]
+type instance Pitch (c,a)                 = Pitch a
+type instance SetPitch b (c,a)            = (c,SetPitch b a)
+type instance Pitch [a]                   = Pitch a
+type instance SetPitch b [a]              = [SetPitch b a]
 type instance Music.Score.Pitch (Map k a) = Music.Score.Pitch a
 type instance SetPitch b (Map k a)        = Map k (SetPitch b a)
 type instance Music.Score.Pitch (Seq a)   = Music.Score.Pitch a
 type instance SetPitch b (Seq a)          = Seq (SetPitch b a)
 
-type instance Pitch (Maybe a)           = Pitch a
-type instance SetPitch b (Maybe a)      = Maybe (SetPitch b a)
-type instance Pitch (Either c a)        = Pitch a
-type instance SetPitch b (Either c a)   = Either c (SetPitch b a)
+type instance Pitch (Maybe a)             = Pitch a
+type instance SetPitch b (Maybe a)        = Maybe (SetPitch b a)
+type instance Pitch (Either c a)          = Pitch a
+type instance SetPitch b (Either c a)     = Either c (SetPitch b a)
 
-type instance Pitch (Event a)            = Pitch a
-type instance SetPitch b (Event a)       = Event (SetPitch b a)
-type instance Pitch (Placed a)         = Pitch a
-type instance SetPitch b (Placed a)    = Placed (SetPitch b a)
-type instance Pitch (Note a)       = Pitch a
-type instance SetPitch b (Note a)  = Note (SetPitch b a)
+type instance Pitch (Event a)             = Pitch a
+type instance SetPitch b (Event a)        = Event (SetPitch b a)
+type instance Pitch (Placed a)            = Pitch a
+type instance SetPitch b (Placed a)       = Placed (SetPitch b a)
+type instance Pitch (Note a)              = Pitch a
+type instance SetPitch b (Note a)         = Note (SetPitch b a)
 
-type instance Pitch (Voice a)       = Pitch a
-type instance SetPitch b (Voice a)  = Voice (SetPitch b a)
-type instance Pitch (Track a)       = Pitch a
-type instance SetPitch b (Track a)  = Track (SetPitch b a)
-type instance Pitch (Score a)       = Pitch a
-type instance SetPitch b (Score a)  = Score (SetPitch b a)
+type instance Pitch (Voice a)             = Pitch a
+type instance SetPitch b (Voice a)        = Voice (SetPitch b a)
+type instance Pitch (Track a)             = Pitch a
+type instance SetPitch b (Track a)        = Track (SetPitch b a)
+type instance Pitch (Score a)             = Pitch a
+type instance SetPitch b (Score a)        = Score (SetPitch b a)
 
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
