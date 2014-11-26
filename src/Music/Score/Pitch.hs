@@ -274,9 +274,9 @@ type instance Pitch (c,a)                 = Pitch a
 type instance SetPitch b (c,a)            = (c,SetPitch b a)
 type instance Pitch [a]                   = Pitch a
 type instance SetPitch b [a]              = [SetPitch b a]
-type instance Music.Score.Pitch (Map k a) = Music.Score.Pitch a
+type instance Pitch (Map k a)             = Pitch a
 type instance SetPitch b (Map k a)        = Map k (SetPitch b a)
-type instance Music.Score.Pitch (Seq a)   = Music.Score.Pitch a
+type instance Pitch (Seq a)               = Pitch a
 type instance SetPitch b (Seq a)          = Seq (SetPitch b a)
 
 type instance Pitch (Maybe a)             = Pitch a
