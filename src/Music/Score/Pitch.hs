@@ -105,6 +105,12 @@ import           Data.String
 import           Data.Traversable              (Traversable)
 import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
+import           Data.Set                      (Set)
+import           Data.Map                      (Map)
+import           Data.Sequence                 (Seq)
+import qualified Data.Set as Set
+import qualified Data.Map as Map
+import qualified Data.Sequence as Seq
 
 import           Music.Pitch.Literal
 import           Music.Score.Harmonics
@@ -268,6 +274,10 @@ type instance Pitch (c,a)               = Pitch a
 type instance SetPitch b (c,a)          = (c,SetPitch b a)
 type instance Pitch [a]                 = Pitch a
 type instance SetPitch b [a]            = [SetPitch b a]
+type instance Music.Score.Pitch (Map k a) = Music.Score.Pitch a
+type instance SetPitch b (Map k a)        = Map k (SetPitch b a)
+type instance Music.Score.Pitch (Seq a)   = Music.Score.Pitch a
+type instance SetPitch b (Seq a)          = Seq (SetPitch b a)
 
 type instance Pitch (Maybe a)           = Pitch a
 type instance SetPitch b (Maybe a)      = Maybe (SetPitch b a)
@@ -293,6 +303,15 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
+instance HasPitches a b => HasPitches [a] [b] where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Seq a) (Seq b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Map k a) (Map k b) where
+  pitches = traverse . pitches
+
 instance (HasPitches a b) => HasPitches (Event a) (Event b) where
   pitches = from event . whilstL pitches
 instance (HasPitch a b) => HasPitch (Event a) (Event b) where
@@ -312,9 +331,6 @@ instance HasPitches a b => HasPitches (Maybe a) (Maybe b) where
   pitches = traverse . pitches
 
 instance HasPitches a b => HasPitches (Either c a) (Either c b) where
-  pitches = traverse . pitches
-
-instance HasPitches a b => HasPitches [a] [b] where
   pitches = traverse . pitches
 
 instance HasPitches a b => HasPitches (Voice a) (Voice b) where
