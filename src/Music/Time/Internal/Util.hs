@@ -54,7 +54,7 @@ import qualified Data.Char
 import qualified Data.Monoid
 import qualified Data.List
 import qualified Data.Ratio
-import Data.Functor.Contravariant
+import Data.Functor.Contravariant (Equivalence(..), contramap)
 
 -- | Divide a list into parts of maximum length n.
 -- > category : List

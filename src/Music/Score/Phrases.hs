@@ -65,7 +65,7 @@ import           Data.Either
 import           Data.Foldable              (Foldable)
 import           Data.Functor.Adjunction    (unzipR)
 import           Data.Functor.Context
-import           Data.Functor.Contravariant
+import           Data.Functor.Contravariant (Op(..))
 import           Data.Functor.Couple
 import qualified Data.List                  as List
 import qualified Data.List

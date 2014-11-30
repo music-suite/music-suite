@@ -52,6 +52,9 @@ module Music.Score.Pitch (
         pitches',
         
         -- * Transposition
+        PitchPair,
+        AffinePair,
+        Transposable,
         up,
         down,
         above,
@@ -80,14 +83,8 @@ module Music.Score.Pitch (
 
         -- -- * Intervals
         -- augmentIntervals,
-
         -- TODO pitchIs, to write filter pitchIs ... etc
-        -- TODO gliss etc
-
-        PitchPair,
-        AffinePair,
-        Transposable,
-        
+        -- TODO gliss etc        
   ) where
 
 import           Control.Applicative
