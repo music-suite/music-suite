@@ -1,6 +1,6 @@
 
 name:                   music-suite
-version:                1.7.2
+version:                1.8
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <music-suite-discuss@googlegroups.com>
 license:                BSD3
@@ -30,14 +30,14 @@ source-repository head
 library
   default-language: Haskell2010
   build-depends:
-    music-dynamics-literal    == 1.7.2,
-    music-pitch-literal       == 1.7.2,
-    abcnotation               == 1.7.2,
-    musicxml2                 == 1.7.2,
-    lilypond                  == 1.7.2,
-    music-score               == 1.7.2,
-    music-pitch               == 1.7.2,
-    music-dynamics            == 1.7.2,
-    music-articulation        == 1.7.2,
-    music-parts               == 1.7.2,
-    music-preludes            == 1.7.2
+    music-dynamics-literal    == 1.8,
+    music-pitch-literal       == 1.8,
+    abcnotation               == 1.8,
+    musicxml2                 == 1.8,
+    lilypond                  == 1.8,
+    music-score               == 1.8,
+    music-pitch               == 1.8,
+    music-dynamics            == 1.8,
+    music-articulation        == 1.8,
+    music-parts               == 1.8,
+    music-preludes            == 1.8
