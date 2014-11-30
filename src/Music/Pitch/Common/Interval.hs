@@ -481,23 +481,27 @@ mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
 
 
 
-
+-- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
 _alteration :: Lens' Interval ChromaticSteps
 _alteration = from interval' . _1
 
+-- | View or set the number of chromatic steps in an interval.
 _steps :: Lens' Interval DiatonicSteps
 _steps = from interval' . _2
 
+-- | View or set the quality of an interval.
 _quality :: Lens' Interval Quality
 _quality = from interval . _1
 
+-- | View or set the number component of an interval.
 _number :: Lens' Interval Number 
 _number = from interval . _2
 
+-- | View an interval as a pair of quality and number or vice versa.
 interval :: Iso' (Quality, Number) Interval
 interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 
--- Interval as alteration and diatonic steps
+-- | View an interval as a pair of alteration and diatonic steps or vice versa.
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
   (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
