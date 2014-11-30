@@ -39,7 +39,6 @@ module Music.Score.Meta.Pickup (
 
 import           Control.Lens              (view)
 import           Control.Monad.Plus
-import           Data.Default
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -53,7 +52,6 @@ import           Data.String
 import           Data.Traversable          (Traversable)
 import qualified Data.Traversable          as T
 import           Data.Typeable
-import           Data.Void
 
 import           Music.Pitch.Literal
 import           Music.Score.Meta
@@ -70,14 +68,16 @@ data Pickup = Pickup (Maybe String) Int
     deriving (Eq, Ord, Typeable)
 -- name level(0=standard)
 
+{-
 instance Default Pickup where
     def = Pickup Nothing 0
+-}
 
 instance Semigroup Pickup where
     Pickup n1 l1 <> Pickup n2 l2 = Pickup (n1 <> n2) (l1 `max` l2)
 
 instance Monoid Pickup where
-    mempty  = def
+    mempty  = Pickup Nothing 0
     mappend = (<>)
 
 instance Show Pickup where

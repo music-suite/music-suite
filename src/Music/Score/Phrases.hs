@@ -60,7 +60,6 @@ import           Data.AffineSpace
 import           Data.AffineSpace
 import           Data.Bifunctor
 import           Data.Colour.Names          as Color
-import           Data.Default
 import           Data.Either
 import           Data.Either
 import           Data.Foldable              (Foldable)

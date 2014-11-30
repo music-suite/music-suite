@@ -11,7 +11,6 @@ import Music.Score.Meta.Attribution
 import Music.Score.Meta.Title
 import Music.Score.Meta.Time
 import Music.Score.Meta.Key
--- import Music.Score.Meta.Pickup
 import Music.Score.Meta.Tempo
 import Music.Score.Part
 

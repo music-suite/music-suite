@@ -32,7 +32,6 @@ import           Control.Comonad
 import           Control.Lens             hiding (part, transform)
 import           Control.Monad
 import           Data.AffineSpace
-import           Data.Default
 import           Data.Monoid.Average
 import           Data.Foldable
 import           Data.Functor.Adjunction  (unzipR)

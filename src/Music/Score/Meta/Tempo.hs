@@ -60,7 +60,6 @@ module Music.Score.Meta.Tempo (
 import           Control.Lens
 import           Control.Monad.Plus
 import           Data.AffineSpace
-import           Data.Default
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -75,7 +74,6 @@ import           Data.Traversable          (Traversable)
 import qualified Data.Traversable          as T
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Void
 
 import           Music.Pitch.Literal
 import           Music.Score.Meta
@@ -115,8 +113,10 @@ showR = showR' . realToFrac
 showR' ((unRatio -> (x, 1))) = show x
 showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
+{-
 instance Default Tempo where
     def = mempty
+-}
 
 instance Semigroup Tempo where
     (<>) = mappend

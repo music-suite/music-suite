@@ -42,7 +42,6 @@ module Music.Score.Meta.Fermata (
 
 import           Control.Lens              (view)
 import           Control.Monad.Plus
-import           Data.Default
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -56,7 +55,6 @@ import           Data.String
 import           Data.Traversable          (Traversable)
 import qualified Data.Traversable          as T
 import           Data.Typeable
-import           Data.Void
 
 import           Music.Pitch.Literal
 import           Music.Score.Meta

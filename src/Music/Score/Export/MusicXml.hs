@@ -53,7 +53,6 @@ import           Control.Monad
 import           Data.AffineSpace
 import           Data.Bifunctor
 import           Data.Colour.Names                       as Color
-import           Data.Default
 import           Data.Foldable                           (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple

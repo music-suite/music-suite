@@ -30,7 +30,7 @@ module Data.Clipped (
 
 -----
 import Data.Fixed
-import           Data.Default
+-- import           Data.Default
 import           Data.Ratio
 
 import           Control.Applicative

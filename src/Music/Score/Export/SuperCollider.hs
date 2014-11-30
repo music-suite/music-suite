@@ -50,7 +50,6 @@ import qualified Codec.Midi                    as Midi
 import           Control.Comonad               (Comonad (..), extract)
 import           Control.Applicative
 import           Data.Colour.Names             as Color
-import           Data.Default
 import           Data.Foldable                 (Foldable)
 import qualified Data.Foldable
 import           Data.Functor.Couple

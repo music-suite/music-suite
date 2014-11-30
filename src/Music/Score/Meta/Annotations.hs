@@ -40,7 +40,7 @@ import qualified Data.List
 import           Data.Semigroup
 import           Data.String
 import           Data.Typeable
-import           Data.Void
+-- import           Data.Void
 
 import           Music.Score.Meta
 import           Music.Score.Part

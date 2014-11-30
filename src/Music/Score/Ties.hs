@@ -45,7 +45,7 @@ import           Control.Lens            hiding (transform)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
-import           Data.Default
+-- import           Data.Default
 import           Data.Foldable           hiding (concat)
 import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List               as List

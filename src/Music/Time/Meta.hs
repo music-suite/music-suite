@@ -84,7 +84,7 @@ import           Data.Set                  (Set)
 import qualified Data.Set                  as Set
 import           Data.String
 import           Data.Typeable
-import           Data.Void
+-- import           Data.Void
 import           Data.Functor.Couple
 
 import           Music.Time.Internal.Util

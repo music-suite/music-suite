@@ -43,7 +43,6 @@ module Music.Score.Meta.RehearsalMark (
 
 import           Control.Lens              (view)
 import           Control.Monad.Plus
-import           Data.Default
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
@@ -57,7 +56,6 @@ import           Data.String
 import           Data.Traversable          (Traversable)
 import qualified Data.Traversable          as T
 import           Data.Typeable
-import           Data.Void
 
 import           Music.Pitch.Literal
 import           Music.Score.Meta
@@ -74,14 +72,16 @@ data RehearsalMark = RehearsalMark (Maybe String) Int
     deriving (Eq, Ord, Typeable)
 -- name level(0=standard)
 
+{-
 instance Default RehearsalMark where
     def = RehearsalMark Nothing 0
+-}
 
 instance Semigroup RehearsalMark where
     RehearsalMark n1 l1 <> RehearsalMark n2 l2 = RehearsalMark (n1 <> n2) (l1 `max` l2)
 
 instance Monoid RehearsalMark where
-    mempty  = def
+    mempty  = RehearsalMark Nothing 0
     mappend = (<>)
 
 instance Show RehearsalMark where

@@ -58,7 +58,6 @@ import           Control.Monad
 import           Data.AffineSpace
 import           Data.Bifunctor
 import           Data.Colour.Names                       as Color
-import           Data.Default
 import           Data.Either
 import           Data.Foldable                           (Foldable)
 import           Data.Functor.Adjunction                 (unzipR)
@@ -574,14 +573,15 @@ showLilypond = putStrLn . toLilypondString
 -- Convert a score to a Lilypond representation and write to a file.
 --
 writeLilypond :: HasLilypond a => FilePath -> a -> IO ()
-writeLilypond = writeLilypond' def
+writeLilypond = writeLilypond' mempty
 
 data LilypondOptions
   = LyInlineFormat
   | LyScoreFormat
 
-instance Default LilypondOptions where
-  def = LyInlineFormat
+instance Monoid LilypondOptions where
+  mempty  = LyInlineFormat
+  mappend = const
 
 -- |
 -- Convert a score to a Lilypond representation and write to a file.
@@ -638,7 +638,7 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
 -- 'writeLilypond' that may not work well on all platforms.)
 --
 openLilypond :: HasLilypond a => a -> IO ()
-openLilypond = openLilypond' def
+openLilypond = openLilypond' mempty
 
 -- |
 -- Typeset a score using Lilypond and open it. (This is simple wrapper around

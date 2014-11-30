@@ -42,7 +42,7 @@ import           Control.Lens         hiding (Indexable, Level, above, below,
 import           Data.NumInstances    ()
 import           Data.Semigroup       hiding ()
 import           Data.VectorSpace     hiding (Sum (..))
-import           Data.Functor.Contravariant
+import           Data.Functor.Contravariant ()
 
 -- |
 -- Class of values that have a duration.
