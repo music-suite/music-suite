@@ -181,19 +181,19 @@
 - Adds aligned values
 - Renames the following types:
   
-  Stretched -> Note
-  Delayed -> Placed
-  Note -> Event
+  `Stretched` -> `Note`
+  `Delayed` -> `Placed`
+  `Note` -> `Event`
 
-- The informal (Time, a) and (Time, Duration, a) lenses now
+- The informal `(Time, a)` and `(Time, Duration, a)` lenses now
   have unified names: pairs and triples respectively
 - More unified API for accessing scores, voices etc
-- Adds fuse and fuseBy to Music.Time.Voice
+- Adds `fuse` and `fuseBy` to `Music.Time.Voice`
 - MIDI output now handles non-positive durations better
-- Changes the definition of position/era/onset etc.
-  - Class HasPosition not defines both _position and _era
+- Changes the definition of `position/era/onset` etc.
+  - Class `HasPosition` not defines both `_position` and `_era`
   - Any of the two can be implemented (so old code will still work)
-- Adds a lot of missing instances: HasPitch etc.
+- Adds a lot of missing instances: `HasPitch` etc.
 - Slight clean-up of meta-data API
 - Documentation improvements
 
@@ -203,8 +203,8 @@
 - Adds basic pitch and interval classes based on Musical Set Theory
 - Improve clef and staff line API
 - Add Chromatic/Diatonic steps
-  - Make mkInterval/quality/number into an Iso (interval)
-  - Add new iso for intervals as (diatonic steps, adjustment) pairs (interval')
+  - Make `mkInterval/quality/number` into an `Iso` (interval)
+  - Add new iso for intervals as (diatonic steps, adjustment) pairs `interval'`
 - Adds pitch and interval to text conversions
 - Adds diatonic transposition and inversion
 - Adds generic equal-temperament (12-TET, 24-TET, 36-TET, n-TET) support
