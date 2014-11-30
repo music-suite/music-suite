@@ -22,24 +22,7 @@ c |> d |> e
 
 The simplest way to render this expression is to save it in a file named
 `foo.music` (or similar) and convert it using `music2pdf foo.music`. This
-should render a file called `foo.pdf` containing the following:
-
-```music
-c |> d |> e
-```
-
-While most simple music files contains only a single expression, it is also possible to write music files in [declaration style][declaration-style]. In this style you can provide an arbitrary number of top-level declarations, including type, class and instance declarations. You must provide a single top-level declaration called `example` which takes the place of the top-level music expression.
-
-```music+haskell
-data Foo = Foo
-
-instance Eq Foo where
-  Foo == Foo = True
-
-example = chord |> up d5 chord
-  where
-    chord = c <> e <> g
-```
+should render a file called `foo.pdf`.
 
 There are several programs for converting music files:
 
