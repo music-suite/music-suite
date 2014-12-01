@@ -65,6 +65,7 @@ library
                         Music.Parts.Instrument.Brass
                         Music.Parts.Instrument.Percussion
                         Music.Parts.Instrument.Keyboard
+                        Music.Parts.Instrument.Vocal
                         -- Music.Parts.Instrument.Rhythm
                         -- Music.Parts.Instrument.Other
                         
