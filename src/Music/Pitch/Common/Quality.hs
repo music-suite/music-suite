@@ -5,24 +5,25 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Music.Pitch.Common.Quality where
-{-
--- * Quality
-Quality(..),
-HasQuality(..),
-invertQuality,
-isPerfect,
-isMajor,
-isMinor,
-isAugmented,
-isDiminished,
+module Music.Pitch.Common.Quality (
+    -- * Quality
+    Quality(..),
+    HasQuality(..),
+    invertQuality,
+    isPerfect,
+    isMajor,
+    isMinor,
+    isAugmented,
+    isDiminished,
 
-QualityType(..),
-expectedQualityType,
-qualityTypes,
-qualityToDiff,
+    -- * Quality type
+    QualityType(..),
+    expectedQualityType,
+    qualityTypes,
+    qualityToDiff
 
--}
+) where
+
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Chromatic
