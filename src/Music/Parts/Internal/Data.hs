@@ -351,7 +351,7 @@ defs = [
       _scoreOrder         = 7.4,
       _defaultClef        = 2,
       _longName           = "Contrabass"
-    }
+    },
     -- (44, (0,  7.0, 0,  "Tremolo Strings")),
     -- (45, (0,  7.0, 0,  "Pizzicato Strings")),
     -- (46, (11,  5.9, 0,  "Orchestral Harp")),
@@ -422,33 +422,175 @@ defs = [
     -- (101, (0,  1.0, 0,  "FX 6 (goblins)")),
     -- (102, (0,  1.0, 0,  "FX 7 (echoes)")),
     -- (103, (0,  1.0, 0,  "FX 8 (sci-fi)")),
+    InstrumentDef {
+      _midiProgram        = 104,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Sitar"
+    },
+    InstrumentDef {
+      _midiProgram        = 105,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Banjo"
+    },
+    InstrumentDef {
+      _midiProgram        = 106,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Shamisen"
+    },
+    InstrumentDef {
+      _midiProgram        = 107,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Koto"
+    },
+    InstrumentDef {
+      _midiProgram        = 108,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Kalimba"
+    },
+    InstrumentDef {
+      _midiProgram        = 109,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Bagpipe"
+    },
+    InstrumentDef {
+      _midiProgram        = 110,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Fiddle"
+    },
+    InstrumentDef {
+      _midiProgram        = 111,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Shanai"
+    },
+    InstrumentDef {
+      _midiProgram        = 112,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Tinkle Bell"
+    },
+    InstrumentDef {
+      _midiProgram        = 113,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Agogo"
+    },
+    InstrumentDef {
+      _midiProgram        = 114,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel        = 0,
+      _longName           = "Steel Drums"
+    },
+    InstrumentDef {
+      _midiProgram        = 115,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Woodblock"
+    },
+    InstrumentDef {
+      _midiProgram        = 116,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Taiko Drum"
+    },
+    InstrumentDef {
+      _midiProgram        = 117,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Melodic Tom"
+    },
+    InstrumentDef {
+      _midiProgram        = 118,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Synth Drum"
+    },
+    InstrumentDef {
+      _midiProgram        = 119,
+      _defaultClef        = 0,
+      _scoreOrder         = 1.0,
+      _defaultMidiChannel = 0,
+      _longName           = "Reverse Cymbal"
+    },
+    InstrumentDef {
+      _midiProgram        = 120,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Guitar Fret Noise"
+    },
+    InstrumentDef {
+      _midiProgram        = 121,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Breath Noise"
+    },
+    InstrumentDef {
+      _midiProgram        = 122,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Seashore"
+    },
+    InstrumentDef {
+      _midiProgram        = 123,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Bird Tweet"
+    },
+    InstrumentDef {
+      _midiProgram        = 124,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Telephone Ring"
+    },
+    InstrumentDef {
+      _midiProgram        = 125,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Helicopter"
+    },
+    InstrumentDef {
+      _midiProgram        = 126,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Applause"
+    },
+    InstrumentDef {
+      _midiProgram        = 127,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Gunshot"
+    }
     -- 
-    -- (104, (0,  1.0, 0,  "Sitar")),
-    -- (105, (0,  1.0, 0,  "Banjo")),
-    -- (106, (0,  1.0, 0,  "Shamisen")),
-    -- (107, (0,  1.0, 0,  "Koto")),
-    -- (108, (0,  1.0, 0,  "Kalimba")),
-    -- (109, (0,  1.0, 0,  "Bagpipe")),
-    -- (110, (0,  1.0, 0,  "Fiddle")),
-    -- (111, (0,  1.0, 0,  "Shanai")),
-    -- 
-    -- (112, (0,  1.0, 0,  "Tinkle Bell")),
-    -- (113, (0,  1.0, 0,  "Agogo")),
-    -- (114, (0,  1.0, 0,  "Steel Drums")),
-    -- (115, (0,  1.0, 0,  "Woodblock")),
-    -- (116, (0,  1.0, 0,  "Taiko Drum")),
-    -- (117, (0,  1.0, 0,  "Melodic Tom")),
-    -- (118, (0,  1.0, 0,  "Synth Drum")),
-    -- (119, (0,  1.0, 0,  "Reverse Cymbal")),
-    -- 
-    -- (120, (0,  1.0, 0,  "Guitar Fret Noise")),
-    -- (121, (0,  1.0, 0,  "Breath Noise")),
-    -- (122, (0,  1.0, 0,  "Seashore")),
-    -- (123, (0,  1.0, 0,  "Bird Tweet")),
-    -- (124, (0,  1.0, 0,  "Telephone Ring")),
-    -- (125, (0,  1.0, 0,  "Helicopter")),
-    -- (126, (0,  1.0, 0,  "Applause")),
-    -- (127, (0,  1.0, 0,  "Gunshot"))
     ]
 
 
