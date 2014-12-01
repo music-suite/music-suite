@@ -21,6 +21,7 @@ data InstrumentTopCategory
   | Vocal
   | Strings
   | Other
+  deriving (Show)
 
 
 data InstrumentDef = InstrumentDef {
@@ -35,6 +36,7 @@ data InstrumentDef = InstrumentDef {
     _midiName             :: String,
     _shortName            :: String
     }
+    deriving (Show)
 
 defs = [
     InstrumentDef {
@@ -358,76 +360,437 @@ defs = [
       _defaultClef        = 2,
       _longName           = "Contrabass"
     },
-    -- (44, (0,  7.0, 0,  "Tremolo Strings")),
-    -- (45, (0,  7.0, 0,  "Pizzicato Strings")),
-    -- (46, (11,  5.9, 0,  "Orchestral Harp")),
+    --
+    InstrumentDef {
+      _midiProgram        = 44,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "Tremolo Strings"
+    },
+    InstrumentDef {
+      _midiProgram        = 45,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "Pizzicato Strings"
+    },
+    InstrumentDef {
+      _midiProgram        = 46,
+      _defaultMidiChannel = 11,
+      _scoreOrder         = 5.9,
+      _defaultClef        = 0,
+      _longName           = "Orchestral Harp"
+    },
     -- 
-    -- (47, (8,  2.5, 2,  "Timpani")),
+    InstrumentDef {
+      _midiProgram        = 47,
+      _defaultMidiChannel = 8,
+      _scoreOrder         = 2.5,
+      _defaultClef        = 2,
+      _longName           = "Timpani"
+    },
     -- 
-    -- (48, (0,  7.0, 0,  "String Ensemble 1")),
-    -- (49, (0,  7.0, 0,  "String Ensemble 2")),
-    -- (50, (0,  7.0, 0,  "Synth Strings 1")),
-    -- (51, (0,  7.0, 0,  "Synth Strings 2")),
+    InstrumentDef {
+      _midiProgram        = 48,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "String Ensemble 1"
+    },
+    InstrumentDef {
+      _midiProgram        = 49,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "String Ensemble 2"
+    },
+    InstrumentDef {
+      _midiProgram        = 50,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "Synth Strings 1"
+    },
+    InstrumentDef {
+      _midiProgram        = 51,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 7.0,
+      _defaultClef        = 0,
+      _longName           = "Synth Strings 2"
+    },
     -- 
-    -- (52, (0,  1.0, 0,  "Choir Aahs")),
-    -- (53, (0,  1.0, 0,  "Voice Oohs")),
-    -- (54, (0,  1.0, 0,  "Synth Choir")),
-    -- (55, (0,  1.0, 0,  "Orchestra Hit")),
+    InstrumentDef {
+      _midiProgram        = 52,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Choir Aahs"
+    },
+    InstrumentDef {
+      _midiProgram        = 53,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Voice Oohs"
+    },
+    InstrumentDef {
+      _midiProgram        = 54,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Synth Choir"
+    },
+    InstrumentDef {
+      _midiProgram        = 55,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Orchestra Hit"
+    },
     -- 
-    -- (56, (5,  2.2, 0,  "Trumpet in Bb")),
-    -- (57, (6,  2.3, 2,  "Trombone")),
-    -- (58, (7,  2.4, 2,  "Tuba")),
-    -- (59, (0,  2.2, 0,  "Muted Trumpet")),
-    -- -- (60, (4,  2.1, 0,  "French Horn")),
-    -- (60, (4,  2.1, 0,  "Horn in F")),
-    -- (61, (0,  2.0, 0,  "Brass Section")),
-    -- (62, (0,  2.0, 0,  "Synth Brass 1")),
-    -- (63, (0,  2.0, 0,  "Synth Brass 2")),
+    InstrumentDef {
+      _midiProgram        = 56,
+      _defaultMidiChannel = 5,
+      _scoreOrder         = 2.2,
+      _defaultClef        = 0,
+      _longName           = "Trumpet in Bb"
+    },
+    InstrumentDef {
+      _midiProgram        = 57,
+      _defaultMidiChannel = 6,
+      _scoreOrder         = 2.3,
+      _defaultClef        = 2,
+      _longName           = "Trombone"
+    },
+    InstrumentDef {
+      _midiProgram        = 58,
+      _defaultMidiChannel = 7,
+      _scoreOrder         = 2.4,
+      _defaultClef        = 2,
+      _longName           = "Tuba"
+    },
+    InstrumentDef {
+      _midiProgram        = 59,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 2.2,
+      _defaultClef        = 0,
+      _longName           = "Muted Trumpet"
+    },
+    InstrumentDef {
+      _midiProgram        = 60,
+      _defaultMidiChannel = 4,
+      _scoreOrder         = 2.1,
+      _defaultClef        = 0,
+      _midiName           = "French Horn",
+      _longName           = "Horn in F"
+    },
+    InstrumentDef {
+      _midiProgram        = 61,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 2.0,
+      _defaultClef        = 0,
+      _longName           = "Brass Section"
+    },
+    InstrumentDef {
+      _midiProgram        = 62,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 2.0,
+      _defaultClef        = 0,
+      _longName           = "Synth Brass 1"
+    },
+    InstrumentDef {
+      _midiProgram        = 63,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 2.0,
+      _defaultClef        = 0,
+      _longName           = "Synth Brass 2"
+    },
     -- 
-    -- (64, (0,  1.51, 0,  "Soprano Sax")),
-    -- (65, (0,  1.52, 0,  "Alto Sax")),
-    -- (66, (0,  1.53, 0,  "Tenor Sax")),
-    -- (67, (0,  1.54, 0,  "Baritone Sax")),
-    -- (68, (1,  1.3, 0,  "Oboe")),
-    -- (69, (1,  1.4, 0,  "English Horn")),
-    -- (70, (3,  1.7, 2,  "Bassoon")),
-    -- (71, (2,  1.6, 0,  "Clarinet in Bb")),
+    InstrumentDef {
+      _midiProgram        = 64,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.51,
+      _defaultClef        = 0,
+      _longName           = "Soprano Sax"
+    },
+    InstrumentDef {
+      _midiProgram        = 65,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.52,
+      _defaultClef        = 0,
+      _longName           = "Alto Sax"
+    },
+    InstrumentDef {
+      _midiProgram        = 66,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.53,
+      _defaultClef        = 0,
+      _longName           = "Tenor Sax"
+    },
+    InstrumentDef {
+      _midiProgram        = 67,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.54,
+      _defaultClef        = 0,
+      _longName           = "Baritone Sax"
+    },
+    InstrumentDef {
+      _midiProgram        = 68,
+      _defaultMidiChannel = 1,
+      _scoreOrder         = 1.3,
+      _defaultClef        = 0,
+      _longName           = "Oboe"
+    },
+    InstrumentDef {
+      _midiProgram        = 69,
+      _defaultMidiChannel = 1,
+      _scoreOrder         = 1.4,
+      _defaultClef        = 0,
+      _longName           = "English Horn"
+    },
+    InstrumentDef {
+      _midiProgram        = 70,
+      _defaultMidiChannel = 3,
+      _scoreOrder         = 1.7,
+      _defaultClef        = 2,
+      _longName           = "Bassoon"
+    },
+    InstrumentDef {
+      _midiProgram        = 71,
+      _defaultMidiChannel = 2,
+      _scoreOrder         = 1.6,
+      _defaultClef        = 0,
+      _longName           = "Clarinet in Bb"
+    },
     -- 
-    -- (72, (0,  1.1, 0,  "Piccolo")),
-    -- (73, (0,  1.2, 0,  "Flute")),
-    -- (74, (0,  1.0, 0,  "Recorder")),
-    -- (75, (0,  1.0, 0,  "Pan Flute")),
-    -- (76, (0,  1.0, 0,  "Blown bottle")),
-    -- (77, (0,  1.0, 0,  "Shakuhachi")),
-    -- (78, (0,  1.0, 0,  "Whistle")),
-    -- (79, (0,  1.0, 0,  "Ocarina")),
+    InstrumentDef {
+      _midiProgram        = 72,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.1,
+      _defaultClef        = 0,
+      _longName           = "Piccolo"
+    },
+    InstrumentDef {
+      _midiProgram        = 73,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.2,
+      _defaultClef        = 0,
+      _longName           = "Flute"
+    },
+    InstrumentDef {
+      _midiProgram        = 74,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Recorder"
+    },
+    InstrumentDef {
+      _midiProgram        = 75,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pan Flute"
+    },
+    InstrumentDef {
+      _midiProgram        = 76,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Blown bottle"
+    },
+    InstrumentDef {
+      _midiProgram        = 77,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Shakuhachi"
+    },
+    InstrumentDef {
+      _midiProgram        = 78,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Whistle"
+    },
+    InstrumentDef {
+      _midiProgram        = 79,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Ocarina"
+    },
     -- 
-    -- (80, (0,  1.0, 0,  "Lead 1 (square)")),
-    -- (81, (0,  1.0, 0,  "Lead 2 (sawtooth)")),
-    -- (82, (0,  1.0, 0,  "Lead 3 (calliope)")),
-    -- (83, (0,  1.0, 0,  "Lead 4 (chiff)")),
-    -- (84, (0,  1.0, 0,  "Lead 5 (charang)")),
-    -- (85, (0,  1.0, 0,  "Lead 6 (voice)")),
-    -- (86, (0,  1.0, 0,  "Lead 7 (fifths)")),
-    -- (87, (0,  1.0, 0,  "Lead 8 (bass + lead)")),
+    InstrumentDef {
+      _midiProgram        = 80,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 1 (square)"
+    },
+    InstrumentDef {
+      _midiProgram        = 81,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 2 (sawtooth)"
+    },
+    InstrumentDef {
+      _midiProgram        = 82,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 3 (calliope)"
+    },
+    InstrumentDef {
+      _midiProgram        = 83,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 4 (chiff)"
+    },
+    InstrumentDef {
+      _midiProgram        = 84,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 5 (charang)"
+    },
+    InstrumentDef {
+      _midiProgram        = 85,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 6 (voice)"
+    },
+    InstrumentDef {
+      _midiProgram        = 86,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 7 (fifths)"
+    },
+    InstrumentDef {
+      _midiProgram        = 87,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Lead 8 (bass + lead)"
+    },
     -- 
-    -- (88, (0,  1.0, 0,  "Pad 1 (new age)")),
-    -- (89, (0,  1.0, 0,  "Pad 2 (warm)")),
-    -- (90, (0,  1.0, 0,  "Pad 3 (polysynth)")),
-    -- (91, (0,  1.0, 0,  "Pad 4 (choir)")),
-    -- (92, (0,  1.0, 0,  "Pad 5 (bowed)")),
-    -- (93, (0,  1.0, 0,  "Pad 6 (metallic)")),
-    -- (94, (0,  1.0, 0,  "Pad 7 (halo)")),
-    -- (95, (0,  1.0, 0,  "Pad 8 (sweep)")),
+    InstrumentDef {
+      _midiProgram        = 88,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 1 (new age)"
+    },
+    InstrumentDef {
+      _midiProgram        = 89,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 2 (warm)"
+    },
+    InstrumentDef {
+      _midiProgram        = 90,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 3 (polysynth)"
+    },
+    InstrumentDef {
+      _midiProgram        = 91,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 4 (choir)"
+    },
+    InstrumentDef {
+      _midiProgram        = 92,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 5 (bowed)"
+    },
+    InstrumentDef {
+      _midiProgram        = 93,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 6 (metallic)"
+    },
+    InstrumentDef {
+      _midiProgram        = 94,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 7 (halo)"
+    },
+    InstrumentDef {
+      _midiProgram        = 95,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "Pad 8 (sweep)"
+    },
     -- 
-    -- (96, (0,  1.0, 0,  "FX 1 (rain)")),
-    -- (97, (0,  1.0, 0,  "FX 2 (soundtrack)")),
-    -- (98, (0,  1.0, 0,  "FX 3 (crystal)")),
-    -- (99, (0,  1.0, 0,  "FX 4 (atmosphere)")),
-    -- (100, (0,  1.0, 0,  "FX 5 (brightness)")),
-    -- (101, (0,  1.0, 0,  "FX 6 (goblins)")),
-    -- (102, (0,  1.0, 0,  "FX 7 (echoes)")),
-    -- (103, (0,  1.0, 0,  "FX 8 (sci-fi)")),
+    InstrumentDef {
+      _midiProgram        = 96,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 1 (rain)"
+    },
+    InstrumentDef {
+      _midiProgram        = 97,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 2 (soundtrack)"
+    },
+    InstrumentDef {
+      _midiProgram        = 98,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 3 (crystal)"
+    },
+    InstrumentDef {
+      _midiProgram        = 99,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 4 (atmosphere)"
+    },
+    InstrumentDef {
+      _midiProgram        = 100,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 5 (brightness)"
+    },
+    InstrumentDef {
+      _midiProgram        = 101,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 6 (goblins)"
+    },
+    InstrumentDef {
+      _midiProgram        = 102,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 7 (echoes)"
+    },
+    InstrumentDef {
+      _midiProgram        = 103,
+      _defaultMidiChannel = 0,
+      _scoreOrder         = 1.0,
+      _defaultClef        = 0,
+      _longName           = "FX 8 (sci-fi)"
+    },
     InstrumentDef {
       _midiProgram        = 104,
       _defaultClef        = 0,
@@ -596,166 +959,11 @@ defs = [
       _defaultClef        = 0,
       _longName           = "Gunshot"
     }
-    -- 
     ]
 
 
 
-{-
--- (midi program, (def midi ch, score order, def clef 0=g/1=c/2=f, name))
 
-gmInstrs :: [(Int, (Int, Double, Int, String))]
-gmInstrs = [
-    -- (0, (0,  5.0, 0,  "Acoustic Grand Piano")),
-    (0, (0,  5.0, 0,  "Piano")),
-    (1, (0,  5.0, 0,  "Bright Acoustic Piano")),
-    (2, (0,  5.0, 0,  "Electric Grand Piano")),
-    (3, (0,  5.0, 0,  "Honky-tonk Piano")),
-    (4, (0,  5.0, 0,  "Electric Piano 1")),
-    (5, (0,  5.0, 0,  "Electric Piano 2")),
-    (6, (0,  5.0, 0,  "Harpsichord")),
-    (7, (0,  5.0, 0,  "Clavinet")),
-
-    (8, (0,  5.0, 0,  "Celesta")),
-    (9, (0,  5.0, 0,  "Glockenspiel")),
-    (9, (0,  5.0, 0,  "Music Box")),
-    (11, (0,  4.0, 0,  "Vibraphone")),
-    (12, (0,  4.0, 0,  "Marimba")),
-    (13, (0,  4.0, 0,  "Xylophone")),
-    (14, (0,  4.0, 0,  "Tubular Bells")),
-    (15, (0,  4.0, 0,  "Dulcimer")),
-
-    (16, (0,  5.0, 0,  "Drawbar Organ")),
-    (17, (0,  5.0, 0,  "Percussive Organ")),
-    (18, (0,  5.0, 0,  "Rock Organ")),
-    (19, (0,  5.0, 0,  "Church Organ")),
-    (20, (0,  5.0, 0,  "Reed Organ")),
-    (21, (0,  5.0, 0,  "Accordion")),
-    (22, (0,  5.0, 0,  "Harmonica")),
-    (23, (0,  5.0, 0,  "Tango Accordion")),
-
-    (24, (0,  5.0, 0,  "Acoustic Guitar (nylon)")),
-    (25, (0,  5.0, 0,  "Acoustic Guitar (steel)")),
-    (26, (0,  5.0, 0,  "Electric Guitar (jazz)")),
-    (27, (0,  5.0, 0,  "Electric Guitar (clean)")),
-    (28, (0,  5.0, 0,  "Electric Guitar (muted)")),
-    (29, (0,  5.0, 0,  "Overdriven Guitar")),
-    (30, (0,  5.0, 0,  "Distortion Guitar")),
-    (31, (0,  5.0, 0,  "Guitar Harmonics")),
-
-    (32, (0,  8.0, 2,  "Acoustic Bass")),
-    (33, (0,  8.0, 2,  "Electric Bass (finger)")),
-    (34, (0,  8.0, 2,  "Electric Bass (pick)")),
-    (35, (0,  8.0, 2,  "Fretless Bass")),
-    (36, (0,  8.0, 2,  "Slap Bass 1")),
-    (37, (0,  8.0, 2,  "Slap Bass 2")),
-    (38, (0,  8.0, 2,  "Synth Bass 1")),
-    (39, (0,  8.0, 2,  "Synth Bass 2")),
-
-    (40, (12,  7.1, 0,  "Violin")),
-    (41, (13,  7.2, 1,  "Viola")),
-    -- (42, (0,  1.0, 0,  "Cello")),
-    (42, (14,  7.3, 2,  "Violoncello")),
-    (43, (15,  7.4, 2,  "Contrabass")),
-    (44, (0,  7.0, 0,  "Tremolo Strings")),
-    (45, (0,  7.0, 0,  "Pizzicato Strings")),
-    (46, (11,  5.9, 0,  "Orchestral Harp")),
-
-    (47, (8,  2.5, 2,  "Timpani")),
-
-    (48, (0,  7.0, 0,  "String Ensemble 1")),
-    (49, (0,  7.0, 0,  "String Ensemble 2")),
-    (50, (0,  7.0, 0,  "Synth Strings 1")),
-    (51, (0,  7.0, 0,  "Synth Strings 2")),
-
-    (52, (0,  1.0, 0,  "Choir Aahs")),
-    (53, (0,  1.0, 0,  "Voice Oohs")),
-    (54, (0,  1.0, 0,  "Synth Choir")),
-    (55, (0,  1.0, 0,  "Orchestra Hit")),
-
-    (56, (5,  2.2, 0,  "Trumpet in Bb")),
-    (57, (6,  2.3, 2,  "Trombone")),
-    (58, (7,  2.4, 2,  "Tuba")),
-    (59, (0,  2.2, 0,  "Muted Trumpet")),
-    -- (60, (4,  2.1, 0,  "French Horn")),
-    (60, (4,  2.1, 0,  "Horn in F")),
-    (61, (0,  2.0, 0,  "Brass Section")),
-    (62, (0,  2.0, 0,  "Synth Brass 1")),
-    (63, (0,  2.0, 0,  "Synth Brass 2")),
-
-    (64, (0,  1.51, 0,  "Soprano Sax")),
-    (65, (0,  1.52, 0,  "Alto Sax")),
-    (66, (0,  1.53, 0,  "Tenor Sax")),
-    (67, (0,  1.54, 0,  "Baritone Sax")),
-    (68, (1,  1.3, 0,  "Oboe")),
-    (69, (1,  1.4, 0,  "English Horn")),
-    (70, (3,  1.7, 2,  "Bassoon")),
-    (71, (2,  1.6, 0,  "Clarinet in Bb")),
-
-    (72, (0,  1.1, 0,  "Piccolo")),
-    (73, (0,  1.2, 0,  "Flute")),
-    (74, (0,  1.0, 0,  "Recorder")),
-    (75, (0,  1.0, 0,  "Pan Flute")),
-    (76, (0,  1.0, 0,  "Blown bottle")),
-    (77, (0,  1.0, 0,  "Shakuhachi")),
-    (78, (0,  1.0, 0,  "Whistle")),
-    (79, (0,  1.0, 0,  "Ocarina")),
-
-    (80, (0,  1.0, 0,  "Lead 1 (square)")),
-    (81, (0,  1.0, 0,  "Lead 2 (sawtooth)")),
-    (82, (0,  1.0, 0,  "Lead 3 (calliope)")),
-    (83, (0,  1.0, 0,  "Lead 4 (chiff)")),
-    (84, (0,  1.0, 0,  "Lead 5 (charang)")),
-    (85, (0,  1.0, 0,  "Lead 6 (voice)")),
-    (86, (0,  1.0, 0,  "Lead 7 (fifths)")),
-    (87, (0,  1.0, 0,  "Lead 8 (bass + lead)")),
-
-    (88, (0,  1.0, 0,  "Pad 1 (new age)")),
-    (89, (0,  1.0, 0,  "Pad 2 (warm)")),
-    (90, (0,  1.0, 0,  "Pad 3 (polysynth)")),
-    (91, (0,  1.0, 0,  "Pad 4 (choir)")),
-    (92, (0,  1.0, 0,  "Pad 5 (bowed)")),
-    (93, (0,  1.0, 0,  "Pad 6 (metallic)")),
-    (94, (0,  1.0, 0,  "Pad 7 (halo)")),
-    (95, (0,  1.0, 0,  "Pad 8 (sweep)")),
-
-    (96, (0,  1.0, 0,  "FX 1 (rain)")),
-    (97, (0,  1.0, 0,  "FX 2 (soundtrack)")),
-    (98, (0,  1.0, 0,  "FX 3 (crystal)")),
-    (99, (0,  1.0, 0,  "FX 4 (atmosphere)")),
-    (100, (0,  1.0, 0,  "FX 5 (brightness)")),
-    (101, (0,  1.0, 0,  "FX 6 (goblins)")),
-    (102, (0,  1.0, 0,  "FX 7 (echoes)")),
-    (103, (0,  1.0, 0,  "FX 8 (sci-fi)")),
-
-    (104, (0,  1.0, 0,  "Sitar")),
-    (105, (0,  1.0, 0,  "Banjo")),
-    (106, (0,  1.0, 0,  "Shamisen")),
-    (107, (0,  1.0, 0,  "Koto")),
-    (108, (0,  1.0, 0,  "Kalimba")),
-    (109, (0,  1.0, 0,  "Bagpipe")),
-    (110, (0,  1.0, 0,  "Fiddle")),
-    (111, (0,  1.0, 0,  "Shanai")),
-
-    (112, (0,  1.0, 0,  "Tinkle Bell")),
-    (113, (0,  1.0, 0,  "Agogo")),
-    (114, (0,  1.0, 0,  "Steel Drums")),
-    (115, (0,  1.0, 0,  "Woodblock")),
-    (116, (0,  1.0, 0,  "Taiko Drum")),
-    (117, (0,  1.0, 0,  "Melodic Tom")),
-    (118, (0,  1.0, 0,  "Synth Drum")),
-    (119, (0,  1.0, 0,  "Reverse Cymbal")),
-
-    (120, (0,  1.0, 0,  "Guitar Fret Noise")),
-    (121, (0,  1.0, 0,  "Breath Noise")),
-    (122, (0,  1.0, 0,  "Seashore")),
-    (123, (0,  1.0, 0,  "Bird Tweet")),
-    (124, (0,  1.0, 0,  "Telephone Ring")),
-    (125, (0,  1.0, 0,  "Helicopter")),
-    (126, (0,  1.0, 0,  "Applause")),
-    (127, (0,  1.0, 0,  "Gunshot"))
-    ]
--}
 
 {-
 gmPerc :: [(Int, String)]
