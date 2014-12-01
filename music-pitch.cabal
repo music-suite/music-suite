@@ -48,6 +48,7 @@ library
                         Music.Pitch.Common.Harmony
                         Music.Pitch.Common.Names
                         Music.Pitch.Ambitus
+                        Music.Pitch.Scale
                         Music.Pitch.StaffLines
                         Music.Pitch.Clef
                         Music.Pitch.Tokawa
