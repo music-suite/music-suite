@@ -16,7 +16,10 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Pitch.Ambitus where
+module Music.Pitch.Ambitus (
+    Ambitus,
+    ambitus,
+  ) where
 
 import Data.Interval hiding (Interval, interval)
 import qualified Data.Interval as I
