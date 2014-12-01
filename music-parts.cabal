@@ -74,5 +74,6 @@ library
                         
                         -- TODO some sub-subdivision (not for player allocation, but hand/finger)
                         
+    other-modules:      Music.Parts.Internal.Data
     hs-source-dirs:     src
     default-language:   Haskell2010
