@@ -49,10 +49,10 @@ library
                         Music.Pitch.Common.Names
                         Music.Pitch.Ambitus
                         Music.Pitch.Scale
-                        Music.Pitch.StaffLines
                         Music.Pitch.Clef
-                        Music.Pitch.Tokawa
                         Music.Pitch.Intonation
+    other-modules:      Music.Pitch.StaffLines
+                        Music.Pitch.Tokawa
     hs-source-dirs:     src
     default-language:   Haskell2010
     ghc-options:        -fno-warn-typed-holes
