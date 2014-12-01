@@ -26,7 +26,7 @@ data InstrumentTopCategory
 data InstrumentDef = InstrumentDef {
     _midiProgram          :: Int,
     _defaultMidiChannel   :: Int,
-    _soundIf              :: StandardSoundId,
+    _soundId              :: StandardSoundId,
     _scoreOrder           :: Double,
     _defaultClef          :: Clef,
     _allowedClefs         :: [Clef],
@@ -38,6 +38,7 @@ data InstrumentDef = InstrumentDef {
 
 defs = [
     InstrumentDef {
+      _soundId            = "keyboard.piano",
       _midiProgram        = 0,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -45,13 +46,7 @@ defs = [
       _longName           = "Piano"
     },
     InstrumentDef {
-      _midiProgram        = 0,
-      _defaultMidiChannel = 0,
-      _scoreOrder         = 5.0,
-      _defaultClef        = 0,
-      _longName           = "Piano"
-    },
-    InstrumentDef {
+      _soundId            = "keyboard.piano",
       _midiProgram        = 1,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -59,6 +54,7 @@ defs = [
       _longName           = "Bright Acoustic Piano"
     },
     InstrumentDef {
+      _soundId            = "keyboard.piano.electric",
       _midiProgram        = 2,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -66,6 +62,7 @@ defs = [
       _longName           = "Electric Grand Piano" 
     },
     InstrumentDef {
+      _soundId            = "keyboard.piano.honky-tonk",
       _midiProgram        = 3,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -73,6 +70,7 @@ defs = [
       _longName           = "Honky-tonk Piano"
     },
     InstrumentDef {
+      _soundId            = "keyboard.piano.electric",
       _midiProgram        = 4,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -80,6 +78,7 @@ defs = [
       _longName           = "Electric Piano 1"
     },
     InstrumentDef {
+      _soundId            = "keyboard.piano.electric",
       _midiProgram        = 5,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -87,6 +86,7 @@ defs = [
       _longName           = "Electric Piano 2"
     },
     InstrumentDef {
+      _soundId            = "keyboard.harpsichord",
       _midiProgram        = 6,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -94,6 +94,7 @@ defs = [
       _longName           = "Harpsichord"
     },
     InstrumentDef {
+      _soundId            = "keyboard.electric",
       _midiProgram        = 7,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -101,6 +102,7 @@ defs = [
       _longName           = "Clavinet"
     },
     InstrumentDef {
+      _soundId            = "keyboard.celesta",
       _midiProgram        = 8,
       _defaultMidiChannel = 0,
       _scoreOrder         = 5.0,
@@ -122,6 +124,7 @@ defs = [
       _longName           = "Music Box"
     },
     InstrumentDef {
+      _soundId            = "pitched-percussion.vibraphone",
       _midiProgram        = 11,
       _defaultMidiChannel = 0,
       _scoreOrder         = 4.0,
@@ -129,6 +132,7 @@ defs = [
       _longName           = "Vibraphone"
     },
     InstrumentDef {
+      _soundId            = "pitched-percussion.marimba",
       _midiProgram        = 12,
       _defaultMidiChannel = 0,
       _scoreOrder         = 4.0,
@@ -136,6 +140,7 @@ defs = [
       _longName           = "Marimba"
     },
     InstrumentDef {
+      _soundId            = "pitched-percussion.xylophone",
       _midiProgram        = 13,
       _defaultMidiChannel = 0,
       _scoreOrder         = 4.0,
@@ -143,6 +148,7 @@ defs = [
       _longName           = "Xylophone"
     },
     InstrumentDef {
+      _soundId            = "pitched-percussion.tubular-bells",
       _midiProgram        = 14,
       _defaultMidiChannel = 0,
       _scoreOrder         = 4.0,
