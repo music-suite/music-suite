@@ -50,6 +50,9 @@ module Music.Time.Score (
 
         -- * Normalize
         normalizeScore,
+        removeRests,
+        
+        -- * Utility
         printEras,
 
         -- * Unsafe versions
@@ -394,6 +397,9 @@ normalizeScore = reset . normalizeScoreDurations
   where
     reset x = set onset (view onset x `max` 0) x
     normalizeScoreDurations = over (events . each . era) normalizeSpan
+
+removeRests :: Score (Maybe a) -> Score a
+removeRests = mcatMaybes
 
 -- TODO version that reverses the values where appropriate
 -- Use over (events . each) normalizeEvent or similar
