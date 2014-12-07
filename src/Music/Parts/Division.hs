@@ -17,6 +17,7 @@
 
 module Music.Parts.Division (
         Division,
+        outOf,
         divisions,
         getDivision,
         showDivision,
@@ -56,7 +57,10 @@ import           Text.Numeral.Roman              (toRoman)
 -- designated @(0, 3)@, @(1, 3)@ and @(2, 3)@ respectively.
 --
 newtype Division = Division { getDivision :: (Int, Int) }
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord)
+
+instance Show Division where
+  show (Division (n,m)) = "division " ++ show n ++ show m
 
 instance Default Division where
     def = Division (0,1)
@@ -72,4 +76,11 @@ showDivision  = show . succ . fst . getDivision
 -- | Get all possible divisions for a given divisor in ascending order.
 divisions :: Int -> [Division]
 divisions n = [Division (x,n) | x <- [0..n-1]]
+
+-- | Create a division out of a ratio. Dual of getDivision.
+division :: Int -> Int -> Division
+division n m
+  | n <= 0 || m <= 0 = error "Invalid division"
+  | n <  m           = Division n m
+  | otherwise        = error "Invalid division"
 
