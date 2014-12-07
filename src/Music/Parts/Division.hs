@@ -17,9 +17,9 @@
 
 module Music.Parts.Division (
         Division,
-        outOf,
-        divisions,
+        division,
         getDivision,
+        divisions,
         showDivision,
         showDivisionR,
   ) where
@@ -73,14 +73,15 @@ showDivisionR = toRoman . succ . fst . getDivision
 showDivision :: Division -> String
 showDivision  = show . succ . fst . getDivision
 
--- | Get all possible divisions for a given divisor in ascending order.
-divisions :: Int -> [Division]
-divisions n = [Division (x,n) | x <- [0..n-1]]
-
 -- | Create a division out of a ratio. Dual of getDivision.
 division :: Int -> Int -> Division
 division n m
   | n <= 0 || m <= 0 = error "Invalid division"
-  | n <  m           = Division n m
+  | n <  m           = Division (n, m)
   | otherwise        = error "Invalid division"
+
+-- | Get all possible divisions for a given divisor in ascending order.
+divisions :: Int -> [Division]
+divisions n = [Division (x,n) | x <- [0..n-1]]
+
 
