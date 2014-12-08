@@ -55,6 +55,7 @@ module Music.Time.Meta (
         getMeta,
         mapMeta,
         setMeta,
+        metaTypes,
         applyMeta,
         setMetaAttr,
         setMetaTAttr,
@@ -136,7 +137,7 @@ instance Reversible Attribute where
   rev = id
 
 -- Meta is Transformable because the contents of the map is transformable
-newtype Meta = Meta (Map String Attribute)
+newtype Meta = Meta { _getMeta :: Map String Attribute }
   deriving (Transformable, Reversible, Splittable)
 
 instance Semigroup Meta where
@@ -206,6 +207,11 @@ setMeta = set meta
 -- | Map over meta-data.
 mapMeta :: HasMeta a => (Meta -> Meta) -> a -> a
 mapMeta = over meta
+
+-- | Show the types of meta-data attachd to this value.
+--   Useful for debugging.
+metaTypes :: HasMeta a => a -> [String]
+metaTypes x = Map.keys $ _getMeta $ x^.meta
 
 -- | Apply meta-information by combining it with existing meta-information.
 applyMeta :: HasMeta a => Meta -> a -> a

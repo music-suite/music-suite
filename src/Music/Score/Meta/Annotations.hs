@@ -27,6 +27,7 @@
 
 module Music.Score.Meta.Annotations (
         Annotation,
+        getAnnotation,
         annotate,
         annotateSpan,
         showAnnotations,
@@ -75,6 +76,6 @@ showAnnotations' :: (HasPart' a, Ord (Part a), HasText a) => String -> Score a -
 showAnnotations' prefix = withAnnotations (flip $ \s -> foldr (text . (prefix ++ )) s)
 
 -- | Handle the annotations in a score.
-withAnnotations :: HasText a => ([String] -> Score a -> Score a) -> Score a -> Score a
+withAnnotations :: ([String] -> Score a -> Score a) -> Score a -> Score a
 withAnnotations f = withMeta (f . getAnnotation)
 
