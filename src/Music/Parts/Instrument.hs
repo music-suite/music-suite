@@ -43,7 +43,7 @@ import           Data.Set                        (Set)
 import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Music.Dynamics                  (Dynamics)
-import           Music.Pitch                     (Ambitus, Clef)
+import           Music.Pitch                     (Ambitus, Clef, trebleClef, bassClef)
 import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
 
@@ -308,6 +308,13 @@ gmPerc = [
 
 allowedClefs      :: Instrument -> Set Clef
 allowedClefs = error "No allowedClefs"
+
+data BracketType = Bracket | Brace | SubBracket
+data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
+
+pianoStaff :: StaffLayout
+pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
+
 
 playableRange     :: Instrument -> Ambitus Pitch
 playableRange = error "No playableRange"
