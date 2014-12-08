@@ -5,7 +5,9 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Music.Pitch.Common.Chromatic where
+module Music.Pitch.Common.Chromatic (
+    ChromaticSteps,
+  ) where
 
 
 newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
