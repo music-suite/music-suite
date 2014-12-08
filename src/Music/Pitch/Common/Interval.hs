@@ -427,7 +427,7 @@ isPerfectUnison (Interval (a, d)) = (a,d) == (0,0)
 -- semitones.
 --
 isStep :: Interval -> Bool
-isStep (Interval (a, d)) = (abs d) <= 2
+isStep (Interval (a, d)) = (abs d) <= 1
 
 -- |
 -- Returns whether the given interval is a leap (larger than a second).
@@ -437,7 +437,7 @@ isStep (Interval (a, d)) = (abs d) <= 2
 -- semitones.
 --
 isLeap :: Interval -> Bool
-isLeap (Interval (a, d)) = (abs d) > 2
+isLeap (Interval (a, d)) = (abs d) > 1
 
 
 -- |
