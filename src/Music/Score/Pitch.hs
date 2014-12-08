@@ -427,7 +427,7 @@ type Transposable a = (
 --
 -- Not to be confused with matrix transposition.
 --
--- >>> up m3 c
+-- >>> up m3 (c :: Pitch)
 -- eb
 --
 -- >>> up _P5 [c,d,e :: Pitch]
@@ -445,7 +445,7 @@ up v = pitches %~ (.+^ v)
 --
 -- Not to be confused with matrix transposition.
 --
--- >>> down m3 c
+-- >>> down m3 (c :: Pitch)
 -- a
 --
 -- >>> down _P5 [c,d,e]
@@ -458,7 +458,7 @@ down v = pitches %~ (.-^ v)
 -- |
 -- Add the given interval above.
 --
--- >>> above _P8 [c]
+-- >>> above _P8 [c :: Pitch]
 -- [c,c']
 --
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
@@ -468,7 +468,7 @@ above v x = x <> up v x
 -- |
 -- Add the given interval below.
 --
--- >>> below _P8 [c]
+-- >>> below _P8 [c :: Pitch]
 -- [c,c_]
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
@@ -488,7 +488,7 @@ invertPitches p = pitches %~ reflectThrough p
 -- |
 -- Transpose up by the given number of octaves.
 --
--- >>> octavesUp 2 c
+-- >>> octavesUp 2 (c :: Pitch)
 -- c''
 --
 -- >>> octavesUp 1 [c,d,e]
@@ -504,7 +504,7 @@ octavesUp n = up (_P8^*n)
 -- |
 -- Transpose down by the given number of octaves.
 --
--- >>> octavesDown 2 c
+-- >>> octavesDown 2 (c :: Pitch)
 -- c__
 --
 -- >>> octavesDown 1 [c,d,e]
