@@ -50,3 +50,13 @@ ambitus = iso toA unA . _Unwrapped
       (Finite m, Finite n) -> (m, n)
 
 
+-- | Returns a postive interval (or _P1 for empty ambitus)
+ambitusInterval :: (Num a, Ord a, AffineSpace a) => Ambitus a -> Diff a
+ambitusInterval x = let (m,n) = x^.from ambitus in n .-. m
+
+ambitusLowest :: (Num a, Ord a) => Ambitus a -> a
+ambitusLowest x = let (m,n) = x^.from ambitus in m
+
+ambitusHighest :: (Num a, Ord a) => Ambitus a -> a
+ambitusHighest x = let (m,n) = x^.from ambitus in n
+
