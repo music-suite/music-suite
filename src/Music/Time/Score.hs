@@ -46,6 +46,7 @@ module Music.Time.Score (
         -- * Simultaneous
         -- TODO check for overlapping values etc
         -- simult,
+        hasOverlappingEvents,
         simultaneous,
 
         -- * Normalize
@@ -441,3 +442,22 @@ simultaneous' sc = (^. from unsafeTriples) vs
 simultaneous :: (Transformable a, Semigroup a) => Score a -> Score a
 simultaneous = fmap (sconcat . NonEmpty.fromList) . simultaneous'
 
+
+
+hasOverlappingEvents :: Score a -> Bool
+hasOverlappingEvents = anyDistinctOverlaps . toListOf (events.each.era)
+
+hasDuplicates :: Eq a => [a] -> Bool
+hasDuplicates xs = List.nub xs /= xs
+
+anyDistinctOverlaps :: [Span] -> Bool
+anyDistinctOverlaps xs = hasDuplicates xs || anyOverlaps xs
+  where
+    anyOverlaps = foldr (||) False . combined overlaps
+-- If the span list has duplicates, we have overlaps.
+
+combined :: Eq a => (a -> a -> b) -> [a] -> [b]
+combined f as = mcatMaybes [if x == y then Nothing else Just (x `f` y) | x <- as, y <- as]
+
+squared :: (a -> a -> b) -> [a] -> [b]
+squared f as = [x `f` y | x <- as, y <- as]
