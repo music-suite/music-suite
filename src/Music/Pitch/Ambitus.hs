@@ -19,6 +19,8 @@
 module Music.Pitch.Ambitus (
     Ambitus,
     ambitus,
+    ambitus',
+    mapAmbitus,
     ambitusHighest,
     ambitusLowest,
     ambitusInterval,
@@ -47,13 +49,19 @@ instance Rewrapped (Ambitus a) (Ambitus b)
 instance (Show a, Num a, Ord a) => Show (Ambitus a) where
   show a = show (a^.from ambitus) ++ "^.ambitus"
 
-ambitus :: (Num a, Ord a) => Iso' (a, a) (Ambitus a)
+ambitus :: (Num a, Ord a) => Iso (a, a) (b, b) (Ambitus a) (Ambitus b)
 ambitus = iso toA unA . _Unwrapped
   where
     toA = (\(m, n) -> (I.<=..<=) (Finite m) (Finite n))
     unA a = case (I.lowerBound a, I.upperBound a) of
       (Finite m, Finite n) -> (m, n)
 
+ambitus' :: (Num a, Ord a) => Iso' (a, a) (Ambitus a)
+ambitus' = ambitus
+
+-- | Not a true functor for similar reasons as sets.
+mapAmbitus :: (Ord b, Num b) => (a -> b) -> Ambitus a -> Ambitus b
+mapAmbitus = over (from ambitus . both)
 
 -- | Returns a postive interval (or _P1 for empty ambitus)
 ambitusInterval :: (Num a, Ord a, AffineSpace a) => Ambitus a -> Diff a
