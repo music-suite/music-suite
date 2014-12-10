@@ -19,6 +19,9 @@
 module Music.Pitch.Ambitus (
     Ambitus,
     ambitus,
+    ambitusHighest,
+    ambitusLowest,
+    ambitusInterval,
   ) where
 
 import Data.Interval hiding (Interval, interval)
