@@ -90,6 +90,8 @@ import           Music.Score.Internal.Util               (composed,
                                                           unRatio, withPrevNext)
 import           Music.Score.Meta
 import           Music.Score.Meta.Time
+import           Music.Score.Meta.Title
+import           Music.Score.Meta.Attribution
 import           Music.Score.Part
 import           Music.Score.Phrases
 import           Music.Score.Slide
@@ -591,7 +593,7 @@ writeLilypond' options path sc = writeFile path $ (lyFilePrefix ++) $ toLilypond
   where
     -- title    = fromMaybe "" $ flip getTitleAt 0                  $ metaAtStart sc
     -- composer = fromMaybe "" $ flip getAttribution "composer"     $ metaAtStart sc
-    title = ""
+    title    = ""
     composer = ""
     -- TODO generalize metaAtStart!
 
