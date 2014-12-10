@@ -27,6 +27,8 @@ module Music.Pitch.Ambitus (
 import Data.Interval hiding (Interval, interval)
 import qualified Data.Interval as I
 import Control.Lens
+import Data.VectorSpace
+import Data.AffineSpace
 
 -- | An ambitus is a closed interval (in the mathematical sense).
 -- 
