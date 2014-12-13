@@ -20,7 +20,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Time.Internal.Quantize (
+module Music.Score.Internal.Quantize (
         -- * Rhythm type
         Rhythm(..),
         mapWithDur,

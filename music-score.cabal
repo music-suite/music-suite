@@ -128,7 +128,7 @@ library
                         Music.Time.Internal.Convert
                         Music.Time.Internal.Util
                         Music.Time.Internal.Transform
-                        Music.Time.Internal.Quantize
+                        Music.Score.Internal.Quantize
                         Music.Score.Internal.Instances
                         Music.Score.Internal.Util
                         Music.Score.Internal.Export

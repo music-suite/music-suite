@@ -99,7 +99,7 @@ import           Music.Score.Text
 import           Music.Score.Ties
 import           Music.Score.Tremolo
 import           Music.Time
-import           Music.Time.Internal.Quantize
+import           Music.Score.Internal.Quantize
 
 import qualified Music.Lilypond                          as Lilypond
 

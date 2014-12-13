@@ -54,7 +54,7 @@ import           Music.Time.Internal.Convert
 import           Music.Score.Dynamics
 import           Music.Score.Part
 import           Music.Score.Pitch
-import           Music.Time.Internal.Quantize
+import           Music.Score.Internal.Quantize
 import           Music.Score.Ties
 import           Music.Score.Meta.Time
 import           Music.Time

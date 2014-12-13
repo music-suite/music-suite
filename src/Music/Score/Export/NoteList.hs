@@ -52,7 +52,7 @@ import qualified Music.Lilypond                as Lilypond
 import qualified Music.MusicXml.Simple         as MusicXml
 import           Music.Score.Internal.Export   hiding (MVoice)
 import           System.Process
-import           Music.Time.Internal.Quantize
+import           Music.Score.Internal.Quantize
 import qualified Text.Pretty                   as Pretty
 import qualified Data.List
 import           Music.Score.Internal.Util (composed, unRatio, swap, retainUpdates)
