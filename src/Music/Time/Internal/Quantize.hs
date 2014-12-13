@@ -173,7 +173,7 @@ rewriteR = go where
 
 rewrite1 = tupletDot . splitTupletIfLongEnough . singleGroup
 
-
+-- | Removes single-note groups
 singleGroup :: Rhythm a -> Rhythm a
 singleGroup orig@(Group [x]) = x
 singleGroup orig             = orig
