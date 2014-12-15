@@ -1,4 +1,5 @@
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -78,7 +79,8 @@ import           Music.Time.Meta
 -- @
 --
 
--- TODO
+#ifndef GHCI
+-- TODO move
 instance Traversable AddMeta where
   traverse = annotated
 instance Eq1 AddMeta where
@@ -110,8 +112,10 @@ instance (Functor f, Monad f, Monad g, Traversable g) => Monad (Compose f g) whe
   xs >>= f = Compose $ mbind (getCompose . f) (getCompose xs)
 instance (Comonad f, Comonad g) => Comonad (Compose f g) where
   extract (Compose f) = (extract . extract) f
+  duplicate = error "No Comonad Compose.duplicate (in Music.Time.Event)"
   -- TODO duplicate
-  
+#endif
+    
 newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
   deriving (
     Eq,
