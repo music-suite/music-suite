@@ -41,6 +41,8 @@ module Music.Parts (
         containsPart,
         smallestPart,
         smallestSubpart,
+        largestPart,
+        largestSubpart,
         distinctFrom,
         allDistinct,
         solo,
@@ -228,11 +230,22 @@ smallestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
   | sp1 `smallestSubpart` sp2 == sp1 = p1
   | sp1 `smallestSubpart` sp2 == sp2 = p2
 
-
 smallestSubpart :: Subpart -> Subpart -> Subpart
 smallestSubpart x y
   | x `isProperSubpartOf` y = x
   | y `isProperSubpartOf` x = y
+  -- arbitrarily:
+  | otherwise               = x
+
+largestPart :: Part -> Part -> Part
+largestPart p1@(Part _ _ sp1) p2@(Part _ _ sp2)
+  | sp1 `largestSubpart` sp2 == sp1 = p1
+  | sp1 `largestSubpart` sp2 == sp2 = p2
+
+largestSubpart :: Subpart -> Subpart -> Subpart
+largestSubpart x y
+  | x `isProperSubpartOf` y = y
+  | y `isProperSubpartOf` x = x
   -- arbitrarily:
   | otherwise               = x
 
