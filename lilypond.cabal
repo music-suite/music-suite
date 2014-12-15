@@ -1,6 +1,6 @@
 
 name:                   lilypond
-version:                1.8
+version:                1.8.1
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
 license:                BSD3
@@ -28,8 +28,8 @@ library
                         process                 >= 1.2 && < 1.3,
                         data-default,
                         prettify,
-                        music-pitch-literal     == 1.8,
-                        music-dynamics-literal  == 1.8
+                        music-pitch-literal     == 1.8.1,
+                        music-dynamics-literal  == 1.8.1
     exposed-modules:    Music.Lilypond
                         Music.Lilypond.Pitch
                         Music.Lilypond.Dynamics
