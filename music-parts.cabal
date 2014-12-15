@@ -1,6 +1,6 @@
 
 name:                   music-parts
-version:                1.8
+version:                1.8.1
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -29,8 +29,8 @@ library
                         data-default            >= 0.5.3    && < 1,
                         adjunctions             >= 4.1      && < 5,
                         roman-numerals          >= 0.5.1.4  && < 1,
-                        music-pitch             == 1.8,
-                        music-dynamics          == 1.8
+                        music-pitch             == 1.8.1,
+                        music-dynamics          == 1.8.1
     exposed-modules:    Data.Semigroup.Option.Instances
                         
                         Music.Parts
