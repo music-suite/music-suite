@@ -45,6 +45,7 @@ import           Data.Functor.Classes
 import           Data.Functor.Compose
 import           Control.Monad.Compose
 import           Control.Comonad
+import           Data.Distributive (distribute)
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
                                            reversed, transform, (<|), (|>))
@@ -91,6 +92,7 @@ instance Ord1 AddMeta where
   compare1 = compare
 instance Ord a => Ord1 (Couple a) where
   compare1 = compare
+
 instance Num (f (g a)) => Num (Compose f g a) where
   Compose a + Compose b = Compose (a + b)
   Compose a - Compose b = Compose (a - b)
@@ -115,7 +117,7 @@ instance (Comonad f, Comonad g) => Comonad (Compose f g) where
   duplicate = error "No Comonad Compose.duplicate (in Music.Time.Event)"
   -- TODO duplicate
 #endif
-    
+
 newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
   deriving (
     Eq,
@@ -124,7 +126,7 @@ newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
     Foldable,
     Applicative,
     Monad,
-    Comonad,
+    -- Comonad,
     Traversable,
     
     Functor,
@@ -168,6 +170,11 @@ instance IsDynamics a => IsDynamics (Event a) where
 
 instance (Show a, Transformable a) => Show (Event a) where
   show x = show (x^.from event) ++ "^.event"
+
+instance Comonad Event where
+  extract e   = e^.eventValue
+  duplicate e = set meta (e^.meta) $ (e^.eventSpan,e)^.event
+  
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
