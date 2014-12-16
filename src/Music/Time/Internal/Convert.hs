@@ -42,12 +42,10 @@ import           Data.Semigroup
 import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
-
-import           Music.Time
-
 import qualified Data.Foldable          as Foldable
 import qualified Data.List              as List
 
+import           Music.Time
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
 reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)

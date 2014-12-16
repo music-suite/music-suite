@@ -105,10 +105,6 @@ import           Data.Sequence            (Seq)
 import qualified Data.Sequence            as Seq
 import           Data.String
 import           Data.VectorSpace
-
-import           Music.Time.Juxtapose
-import           Music.Time.Note
-
 import           Control.Applicative
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
@@ -123,8 +119,11 @@ import           Data.List.NonEmpty       (NonEmpty)
 import           Data.Traversable         (Traversable)
 import qualified Data.Traversable         as T
 import           Data.Typeable
+
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Juxtapose
+import           Music.Time.Note
 import           Music.Time.Internal.Util
 
 -- |

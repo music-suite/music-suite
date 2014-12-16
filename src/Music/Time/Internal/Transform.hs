@@ -63,10 +63,7 @@ module Music.Time.Internal.Transform (
 
   ) where
 
-import           Music.Time.Types
-
 import           Data.Ratio
-
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
@@ -82,6 +79,8 @@ import qualified Data.Sequence          as Seq
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum (..))
+
+import           Music.Time.Types
 
 -- Transformable laws:
 -- > transform mempty   = id

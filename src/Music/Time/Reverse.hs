@@ -48,9 +48,6 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
-
-import           Music.Time.Position
-
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
@@ -63,6 +60,8 @@ import           Data.Sequence          (Seq)
 import qualified Data.Sequence          as Seq
 import           Data.Typeable
 import           Data.VectorSpace       hiding (Sum (..))
+
+import           Music.Time.Position
 
 -- |
 -- Class of values that can be reversed (retrograded).

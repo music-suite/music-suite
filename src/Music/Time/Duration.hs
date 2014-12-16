@@ -34,15 +34,14 @@ module Music.Time.Duration (
         stretchTo,
   ) where
 
-import           Music.Time.Transform
-
 import           Control.Lens         hiding (Indexable, Level, above, below,
                                        index, inside, parts, reversed,
                                        transform, (<|), (|>))
 import           Data.NumInstances    ()
 import           Data.Semigroup       hiding ()
 import           Data.VectorSpace     hiding (Sum (..))
--- import           Data.Functor.Contravariant ()
+
+import           Music.Time.Transform
 
 -- |
 -- Class of values that have a duration.

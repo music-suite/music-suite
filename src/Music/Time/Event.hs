@@ -4,15 +4,14 @@
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE FlexibleContexts              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -38,26 +37,27 @@ module Music.Time.Event (
   ) where
 
 import           Control.Applicative
-import           Control.Monad (join, mapM)
-import           Data.Semigroup
-import           Data.Functor.Couple
-import           Data.Functor.Classes
-import           Data.Functor.Compose
-import           Control.Monad.Compose
 import           Control.Comonad
-import           Data.Distributive (distribute)
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
                                            reversed, transform, (<|), (|>))
-import           Data.PairMonad
-import           Data.String
-import           Data.VectorSpace
+import           Control.Monad            (join, mapM)
+import           Control.Monad.Compose
+import           Data.Distributive        (distribute)
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
+import           Data.Functor.Classes
+import           Data.Functor.Compose
+import           Data.Functor.Couple
+import           Data.PairMonad
+import           Data.Semigroup
+import           Data.String
 import           Data.Typeable
+import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+
 import           Music.Time.Internal.Util (through, tripped)
 import           Music.Time.Juxtapose
 import           Music.Time.Meta
@@ -103,7 +103,7 @@ instance Fractional (f (g a)) => Fractional (Compose f g a) where
   Compose a / Compose b = Compose (a / b)
   fromRational = Compose . fromRational
 instance Floating (f (g a)) => Floating (Compose f g a) where
-  
+
 instance (Real (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => Real (Compose f g a) where
   -- TODO
 instance (RealFrac (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => RealFrac (Compose f g a) where
@@ -127,15 +127,15 @@ newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
     Monad,
     -- Comonad,
     Traversable,
-    
+
     Functor,
-    
+
     Num,
     Fractional,
     Floating,
     Real,
     RealFrac
-    )  
+    )
 
 instance Wrapped (Event a) where
   type Unwrapped (Event a) = AddMeta (Span, a)
@@ -173,7 +173,7 @@ instance (Show a, Transformable a) => Show (Event a) where
 instance Comonad Event where
   extract e   = e^.eventValue
   duplicate e = set meta (e^.meta) $ (e^.eventSpan,e)^.event
-  
+
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
@@ -215,43 +215,43 @@ dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
 -- newtype AddMeta1 f a = AddMeta1 { getAddMeta1 :: Twain Meta (f a) }
 --   deriving (
 --     )
--- 
+--
 -- instance Wrapped (AddMeta1 f a) where
 --   type Unwrapped (AddMeta1 f a) = Twain Meta (f a)
 --   _Wrapped' = iso getAddMeta1 AddMeta1
--- 
+--
 -- instance Rewrapped (AddMeta1 f a) (AddMeta1 f b)
--- 
+--
 -- instance HasMeta (AddMeta1 f a) where
 --   -- twain, pair, element
 --   meta = _Wrapped . _Wrapped . _1
--- 
--- 
+--
+--
 -- -- instance FunctorWithIndex i AddMeta1 where
 --   -- imap f = over annotated $ imap f
--- -- 
+-- --
 -- -- instance FoldableWithIndex Span Score where
 -- --   ifoldMap f (Score (m,x)) = ifoldMap f x
--- -- 
+-- --
 -- -- instance TraversableWithIndex Span Score where
 -- --   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
--- 
+--
 -- instance Transformable (f a) => Transformable (AddMeta1 f a) where
 --   transform t = over meta (transform t) . over annotated1 (transform t)
--- 
+--
 -- instance Reversible (f a) => Reversible (AddMeta1 f a) where
 --   rev = over meta rev . over annotated1 rev
--- 
+--
 -- -- instance Splittable a => Splittable (AddMeta1 a) where
 -- --   split t = unzipR . fmap (split t)
--- 
+--
 -- instance HasPosition (f a) => HasPosition (AddMeta1 f a) where
 --   _era = _era . extract
 --   _position = _position . extract
--- 
+--
 -- instance HasDuration (f a) => HasDuration (AddMeta1 f a) where
 --   _duration = _duration . extract
--- 
+--
 -- -- |
 -- -- Access the annotated value.
 -- --
@@ -261,7 +261,7 @@ dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
 -- --
 -- annotated1 :: Lens (AddMeta1 f a) (AddMeta1 f b) (f a) (f b)
 -- annotated1 = unsafeAnnotated1
--- 
+--
 -- -- |
 -- -- Access the annotated value.
 -- --
@@ -271,11 +271,11 @@ dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
 -- --
 -- unannotated1 :: Getter (f a) (AddMeta1 f a)
 -- unannotated1 = from unsafeAnnotated1
--- 
+--
 -- unsafeAnnotated1 :: Iso (AddMeta1 f a) (AddMeta1 f b) (f a) (f b)
 -- unsafeAnnotated1 = _Wrapped . extracted
--- 
+--
 -- unzipR f = (map fst f, map snd f)
--- 
+--
 -- extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
 -- extracted = iso extract pure

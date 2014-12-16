@@ -23,7 +23,7 @@
 module Music.Time.Bound (
     -- * Bound type
     Bound(..),
-    
+
     -- * Construction
     bounds,
     bounding,
@@ -33,6 +33,10 @@ module Music.Time.Bound (
     -- bounded,
   ) where
 
+import           Control.Applicative
+import           Control.Lens           hiding (Indexable, Level, above, below,
+                                         index, inside, parts, reversed,
+                                         transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Bifunctor
@@ -42,15 +46,10 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
+import           Data.Typeable
 import           Data.VectorSpace
 
 import           Music.Time.Juxtapose
-
-import           Control.Applicative
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
-import           Data.Typeable
 
 -- |
 -- 'Bound' restricts the start and stop time of a value, and prevents access to values

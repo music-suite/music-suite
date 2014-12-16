@@ -74,14 +74,6 @@ import qualified Data.Set               as Set
 import           Data.VectorSpace
 import           Data.String
 import           Data.Functor.Adjunction  (unzipR)
-
-import           Music.Time.Juxtapose   (scat)
-import           Music.Time.Meta
-import           Music.Time.Event
-import           Music.Time.Juxtapose
-import           Music.Time.Note
-import           Music.Time.Voice
-
 import           Control.Applicative
 import           Control.Comonad
 import           Control.Lens           hiding (Indexable, Level, above, below,
@@ -99,8 +91,14 @@ import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Data.VectorSpace       hiding (Sum (..))
+
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+-- import           Music.Time.Juxtapose
+import           Music.Time.Meta
+import           Music.Time.Event
+import           Music.Time.Note
+import           Music.Time.Voice
 import           Music.Time.Internal.Util
 
 

@@ -42,7 +42,7 @@ module Music.Time.Behavior (
     sawtooth,
     sine,
     cosine,
-    
+
     -- ** Impulse functions
     unit,
     impulse,
@@ -59,8 +59,8 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set                      (Set)
 import qualified Data.Set                      as Set
-import           Data.VectorSpace
 import           Data.String
+import           Data.VectorSpace
 import           Prelude
 
 import           Control.Applicative
@@ -69,19 +69,20 @@ import           Control.Lens                  hiding (Indexable, Level, above,
                                                 reversed, transform, (<|), (|>))
 
 import           Data.Distributive
-import           Data.Functor.Rep as R
+import           Data.Functor.Rep              as R
 import           Data.Functor.Rep.Lens
 import           Data.Typeable
-import           Music.Time.Bound
-import           Music.Time.Internal.Transform
-import           Music.Time.Event
-import           Music.Time.Score
-import           Music.Time.Juxtapose
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
+
+import           Music.Time.Bound
+import           Music.Time.Event
+import           Music.Time.Internal.Transform
+import           Music.Time.Juxtapose
+import           Music.Time.Score
 
 
 

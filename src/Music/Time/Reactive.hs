@@ -65,17 +65,6 @@ module Music.Time.Reactive (
 -- TODO integrate better in the library
 --
 
-import           Music.Time.Behavior
-import           Music.Time.Bound
-import           Music.Time.Event
-import           Music.Time.Segment
-import           Music.Time.Juxtapose
-
-import           Music.Pitch.Alterable
-import           Music.Pitch.Augmentable
-import           Music.Pitch.Literal
-
-
 import           Control.Applicative
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,
@@ -88,8 +77,18 @@ import           Data.Functor.Rep.Lens
 import qualified Data.List               as List
 import           Data.Semigroup          hiding ()
 import           Data.Typeable
+
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
+
+import           Music.Time.Behavior
+import           Music.Time.Bound
+import           Music.Time.Event
+import           Music.Time.Segment
+import           Music.Time.Juxtapose
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.

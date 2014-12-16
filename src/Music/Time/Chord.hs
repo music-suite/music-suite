@@ -1,15 +1,14 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -45,7 +44,7 @@ module Music.Time.Chord (
       -- mtriad,
       -- sixthChord,
       -- sixthFourthChord,
-      -- fromBass,     
+      -- fromBass,
   ) where
 
 
@@ -57,12 +56,8 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
-import           Data.VectorSpace
 import           Data.String
-
-import           Music.Time.Placed
-import           Music.Time.Juxtapose
-
+import           Data.VectorSpace
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
@@ -78,6 +73,8 @@ import           Data.Typeable
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Juxtapose
+import           Music.Time.Placed
 
 
 -- |
@@ -142,8 +139,8 @@ unsafeChord = _Wrapped
 instance IsString a => IsString (Chord a) where
   fromString = pure . fromString
 
-deriving instance IsPitch a => IsPitch (Chord a)	 
-deriving instance IsInterval a => IsInterval (Chord a)	 
+deriving instance IsPitch a => IsPitch (Chord a)
+deriving instance IsInterval a => IsInterval (Chord a)
 deriving instance IsDynamics a => IsDynamics (Chord a)
 
 

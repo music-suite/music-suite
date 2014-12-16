@@ -91,15 +91,6 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
-
-import           Music.Time.Behavior
-import           Music.Time.Bound
-import           Music.Time.Event
-import           Music.Time.Score
-import           Music.Time.Juxtapose
-import           Music.Time.Note
-import           Music.Time.Voice
-
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
@@ -109,8 +100,16 @@ import           Data.Functor.Rep as R
 import           Data.Functor.Rep.Lens
 import           Data.Maybe
 import           Data.Typeable
+
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Behavior
+import           Music.Time.Bound
+import           Music.Time.Event
+import           Music.Time.Score
+import           Music.Time.Juxtapose
+import           Music.Time.Note
+import           Music.Time.Voice
 
 
 -- TODO Compare Diagram's Trail and Located (and see the conal blog post)

@@ -5,10 +5,10 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -49,11 +49,12 @@ import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+
+import           Music.Time.Event
 import           Music.Time.Juxtapose
 import           Music.Time.Note
-import           Music.Time.Event
-import           Music.Time.Voice
 import           Music.Time.Score
+import           Music.Time.Voice
 
 
 -- type AlignedVoice a = Aligned (Voice a)
@@ -83,7 +84,7 @@ instance HasDuration v => HasPosition (Aligned v) where
   -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
   --   where
   --     size = _duration v
-  _era (Aligned (position, alignment, v)) = 
+  _era (Aligned (position, alignment, v)) =
     (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
     where
       size = _duration v

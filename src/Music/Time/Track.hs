@@ -45,10 +45,6 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace
-
-import           Music.Time.Placed
-import           Music.Time.Juxtapose
-
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
@@ -62,6 +58,9 @@ import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
 import           Music.Time.Internal.Util
+
+import           Music.Time.Placed
+import           Music.Time.Juxtapose
 
 -- |
 -- A 'Track' is a parallel composition of values.

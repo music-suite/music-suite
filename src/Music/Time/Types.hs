@@ -130,6 +130,7 @@ import           Data.Typeable
 import           Data.VectorSpace
 import           Data.List (mapAccumL, mapAccumR)
 import           Data.Ratio
+
 import           Music.Time.Internal.Util (showRatio)
 -- import           Data.Fixed
 

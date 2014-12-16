@@ -80,13 +80,13 @@ import           Data.Semigroup
 import           Data.Set               (Set)
 import qualified Data.Set               as Set
 import           Data.VectorSpace       hiding (Sum)
-
-import           Music.Time.Duration
-import           Music.Time.Internal.Util
-
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
+
+
+import           Music.Time.Duration
+import           Music.Time.Internal.Util
 
 -- |
 -- Class of values that have a position in time.

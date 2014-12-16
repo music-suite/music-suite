@@ -36,9 +36,6 @@ module Music.Time.Split (
 
   ) where
 
-import           Music.Time.Position
-import           Music.Time.Internal.Util
-
 import           Control.Lens            hiding (Indexable, Level, above, below,
                                           index, inside, parts, reversed,
                                           transform, (<|), (|>))
@@ -52,6 +49,9 @@ import           Data.Semigroup          hiding ()
 import           Data.Sequence           (Seq)
 import qualified Data.Sequence           as Seq
 import           Data.VectorSpace        hiding (Sum (..))
+
+import           Music.Time.Position
+import           Music.Time.Internal.Util
 
 -- |
 -- Class of values that can be split.
