@@ -28,9 +28,8 @@ import           Data.Semigroup
 import           Control.Monad
 
 import           Music.Time.Behavior
-import           Music.Time.Reverse
 import           Music.Time.Segment
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 
 -- |
 -- 'Past' represents a value occuring /before and at/ some point in time.

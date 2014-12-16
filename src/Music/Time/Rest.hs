@@ -37,8 +37,7 @@ module Music.Time.Rest (
   ) where
 
 import           Control.Applicative
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 
 rest :: Applicative f => f (Maybe a)
 rest = pure Nothing

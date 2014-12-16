@@ -106,8 +106,7 @@ import qualified Data.Sequence            as Seq
 import           Data.String
 import           Data.VectorSpace
 
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 import           Music.Time.Note
 
 import           Control.Applicative

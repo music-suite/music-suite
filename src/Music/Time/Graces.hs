@@ -35,8 +35,7 @@ import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
 
-import Music.Time.Split
-import Music.Time.Reverse
+import Music.Time.Juxtapose
 import Music.Time.Nominal
 import Music.Time.Voice
 

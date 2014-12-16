@@ -49,9 +49,7 @@ import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
-import           Music.Time.Reverse
 import           Music.Time.Juxtapose
-import           Music.Time.Split
 import           Music.Time.Note
 import           Music.Time.Event
 import           Music.Time.Voice

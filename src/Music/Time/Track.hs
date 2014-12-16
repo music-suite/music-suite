@@ -47,8 +47,7 @@ import qualified Data.Set               as Set
 import           Data.VectorSpace
 
 import           Music.Time.Placed
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,

@@ -68,9 +68,8 @@ module Music.Time.Reactive (
 import           Music.Time.Behavior
 import           Music.Time.Bound
 import           Music.Time.Event
-import           Music.Time.Reverse
 import           Music.Time.Segment
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable

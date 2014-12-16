@@ -89,8 +89,7 @@ import           Data.Typeable
 import           Data.Functor.Couple
 
 import           Music.Time.Internal.Util
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 import           Music.Time.Transform
 
 -- | Class of values that can be wrapped.

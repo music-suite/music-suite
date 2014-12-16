@@ -78,8 +78,7 @@ import           Data.Functor.Adjunction  (unzipR)
 import           Music.Time.Juxtapose   (scat)
 import           Music.Time.Meta
 import           Music.Time.Event
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 import           Music.Time.Note
 import           Music.Time.Voice
 

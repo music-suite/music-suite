@@ -59,8 +59,7 @@ import           Data.Typeable
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Time.Internal.Util (through, tripped)
-import           Music.Time.Reverse
-import           Music.Time.Split
+import           Music.Time.Juxtapose
 import           Music.Time.Meta
 
 
