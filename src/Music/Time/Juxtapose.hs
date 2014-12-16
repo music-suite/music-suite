@@ -21,7 +21,10 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Juxtapose (
-       -- * Align without composition
+        module Music.Time.Split,
+        module Music.Time.Reverse,
+
+        -- * Align without composition
         lead,
         follow,
 
