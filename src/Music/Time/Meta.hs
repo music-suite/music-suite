@@ -90,7 +90,6 @@ import           Data.Functor.Couple
 
 import           Music.Time.Internal.Util
 import           Music.Time.Juxtapose
-import           Music.Time.Transform
 
 -- | Class of values that can be wrapped.
 type AttributeClass a = (Typeable a, Monoid a, Semigroup a)
