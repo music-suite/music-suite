@@ -94,7 +94,7 @@ import           Data.VectorSpace       hiding (Sum (..))
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
--- import           Music.Time.Juxtapose
+import           Music.Time.Juxtapose
 import           Music.Time.Meta
 import           Music.Time.Event
 import           Music.Time.Note
