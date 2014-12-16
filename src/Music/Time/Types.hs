@@ -551,9 +551,6 @@ infixl 5 `inside`
 infixl 5 `encloses`
 infixl 5 `properlyEncloses`
 infixl 5 `overlaps`
--- infixl 5 `encloses`
--- infixl 5 `encloses`
--- infixl 5 `encloses`
 
 -- |
 -- Whether the given point falls inside the given span (inclusively).

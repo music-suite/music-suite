@@ -39,13 +39,9 @@ module Music.Time.Internal.Transform (
         -- * Apply under a transformation
         whilst,
         whilstL,
-        whilstL2,
         whilstLT,
         whilstLD,
-        whilstStretch,
-        whilstDelay,
         onSpan,
-        conjugateS,
 
         -- * Specific transformations
         -- ** Transformations
