@@ -88,7 +88,7 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
       size = v^.duration
 
 -- renderAligned :: AlignedVoice a -> Score a
-renderAligned :: HasDuration a => (Span -> a -> b) -> Aligned a -> b
+renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
 renderAligned f a@(Aligned (_, _, v)) = f (_era a) v
 
 

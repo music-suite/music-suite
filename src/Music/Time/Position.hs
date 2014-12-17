@@ -247,7 +247,6 @@ delayRelativeMidpoint = delayRelative 0.5
 delayRelativeOffset :: (HasPosition a, Transformable a) => Duration -> a -> a
 delayRelativeOffset = delayRelative 1
 
-
 transformRelative :: (HasPosition a, Transformable a) => Duration -> Span -> a -> a
 transformRelative p n x = over (transformed $ undelaying (realToFrac $ x^.position p)) (transform n) x
 
