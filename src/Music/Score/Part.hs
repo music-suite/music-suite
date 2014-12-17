@@ -213,6 +213,15 @@ instance (HasPart a b) => HasPart (Event a) (Event b) where
 instance (HasParts a b) => HasParts (Event a) (Event b) where
   parts = from event . whilstL parts
 
+type instance Part (Note a) = Part a
+type instance SetPart g (Note a) = Note (SetPart g a)
+
+instance (HasPart a b) => HasPart (Note a) (Note b) where
+  part = from note . whilstLD part
+
+instance (HasParts a b) => HasParts (Note a) (Note b) where
+  parts = from note . whilstLD parts
+
 -- |
 -- List all the parts
 --
