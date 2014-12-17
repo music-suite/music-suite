@@ -370,7 +370,7 @@ fadeIn d x = x & dynamics *~ ((x^.onset >-> d) `transform` unit)
 -- Fade in.
 --
 fadeOut :: (HasPosition a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeOut d x = x & dynamics *~ ((d <-< _offset x) `transform` rev unit)
+fadeOut d x = x & dynamics *~ ((d <-< (x^.offset)) `transform` rev unit)
 
 
 
