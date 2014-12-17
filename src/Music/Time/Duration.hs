@@ -49,7 +49,7 @@ import           Music.Time.Transform
 -- Law Duration
 --
 -- @
--- '_duration' x = ('offset' x '.-.' 'onset' x)
+-- x^.duration = (x^.offset '.-.' x^.onset)
 -- @
 --
 class HasDuration a where

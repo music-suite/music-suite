@@ -80,7 +80,7 @@ import           Music.Time.Position
 -- @
 --
 -- @
--- 'abs' ('_duration' x) = _duration ('rev' x)
+-- 'abs' (x^.'duration') = ('rev' x)^.'duration'
 -- @
 --
 -- @

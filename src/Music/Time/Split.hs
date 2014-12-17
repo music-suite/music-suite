@@ -66,9 +66,12 @@ import           Music.Time.Internal.Util
 -- Law
 --
 -- @
--- '_duration' ('beginning' t x) + '_duration' ('ending' t x) = '_duration' x
--- '_duration' ('beginning' t x) = t `min` '_duration' x                    iff t >= 0
--- '_duration' ('ending' t x)    = '_duration' x - (t `min` '_duration' x)    iff t >= 0
+-- ('beginning' t x)^.'duration' + ('ending' t x)^.'duration' = x^.'duration'
+
+-- ('beginning' t x)^.'duration' = t `min` x^.'duration'                    iff t >= 0
+
+-- ('ending' t x)^.'duration'    = x^.'duration' - (t `min` x^.'duration')    iff t >= 0
+
 -- @
 --
 -- (Note that any of these three laws can be derived from the other two, so it is
@@ -108,12 +111,12 @@ instance (Ord k, Splittable a) => Splittable (Map k a) where
 
 
 -- takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
--- takeMWhile d p xs = if _duration xs <= 0 then mempty else takeMWhile' d p xs
+-- takeMWhile d p xs = if xs^.'duration' <= 0 then mempty else takeMWhile' d p xs
 --   where
 --     takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
 
-chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
-chunks d xs = if _duration xs <= 0 then [] else chunks' d xs
+chunks :: (Splittable a, HasDuration a, Transformable a) => Duration -> a -> [a]
+chunks d xs = if xs^.duration <= 0 then [] else chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
 

@@ -67,6 +67,12 @@ data Rhythm a
   deriving (Eq, Show, Functor, Foldable)
   -- RInvTuplet  Duration (Rhythm a)
 
+instance Transformable (Rhythm a) where
+  transform s (Beat d x) = Beat (transform s d) x
+  transform s (Group rs) = Group (fmap (transform s) rs)
+  transform s (Dotted n r) = Dotted n (transform s r) 
+  transform s (Tuplet n r) = Tuplet n (transform s r) 
+
 getBeatValue :: Rhythm a -> a
 getBeatValue (Beat d a) = a
 getBeatValue _          = error "getBeatValue: Not a beat"
@@ -127,9 +133,9 @@ instance Monoid (Rhythm a) where
 
 instance HasDuration (Rhythm a) where
   _duration (Beat d _)        = d
-  _duration (Dotted n a)      = _duration a * dotMod n
-  _duration (Tuplet c a)      = _duration a * c
-  _duration (Group as)        = sum (fmap _duration as)
+  _duration (Dotted n a)      = a^.duration * dotMod n
+  _duration (Tuplet c a)      = a^.duration * c
+  _duration (Group as)        = sum (fmap (^.duration) as)
 
 instance AdditiveGroup (Rhythm a) where
   zeroV   = error "No zeroV for (Rhythm a)"
@@ -184,7 +190,7 @@ tupletDot orig@(Tuplet ((unRatio.realToFrac) -> (2,3)) (Dotted 1 x)) = x
 tupletDot orig                                                       = orig
 
 splitTupletIfLongEnough :: Rhythm a -> Rhythm a
-splitTupletIfLongEnough r = if _duration r > (1/2) then splitTuplet r else r
+splitTupletIfLongEnough r = if r^.duration > (1/2) then splitTuplet r else r
 -- TODO should compare against beat duration, not just (1/4)
 
 -- | Splits a tuplet iff it contans a group which can be split into two halves whose
@@ -199,7 +205,7 @@ trySplit :: [Rhythm a] -> Maybe ([Rhythm a], [Rhythm a])
 trySplit = firstJust . fmap g . splits
   where
     g (part1, part2)
-      | (sum . fmap _duration) part1 `rel` (sum . fmap _duration) part2 = Just (part1, part2)
+      | (sum . fmap (^.duration)) part1 `rel` (sum . fmap (^.duration)) part2 = Just (part1, part2)
       | otherwise = Nothing
     rel x y
       | x   == y   = True
@@ -379,7 +385,7 @@ tuplet' d = do
 -- many2 :: Stream s m t => ParsecT s u m a -> ParsecT s u m [a]
 -- many2 p = do { x <- p; xs <- many1 p; return (x : xs) }
 
--- Matches a (_duration, value) pair iff the predicate matches, returns beat
+-- Matches a (duration, value) pair iff the predicate matches, returns beat
 match :: Tiable a => (Duration -> a -> Bool) -> RhythmParser a (Rhythm a)
 match p = tokenPrim show next test
   where
@@ -387,7 +393,7 @@ match p = tokenPrim show next test
       next pos _ _  = updatePosChar pos 'x'
       test (d,x)    = if p d x then Just (Beat d x) else Nothing
 
--- Matches a (_duration, value) pair iff the predicate matches, returns beat
+-- Matches a (duration, value) pair iff the predicate matches, returns beat
 match' :: Tiable a => (Duration -> a -> Maybe (Duration, b)) -> RhythmParser a (Rhythm b)
 match' f = tokenPrim show next test
   where

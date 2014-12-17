@@ -209,7 +209,7 @@ instance Reversible a => Reversible (Voice a) where
 -- instance Splittable a => Splittable (Voice a) where
 --   split t x
 --     | t <= 0           = (mempty, x)
---     | t >= _duration x = (x,      mempty)
+--     | t >= x^.'duration' = (x,      mempty)
 --     | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
 --     where
 --       split' = error "TODO"
@@ -288,7 +288,7 @@ notes = unsafeNotes
 -- 'toListOf' ('notes' . 'each')                :: 'Voice' a -> ['Note' a]
 -- 'toListOf' ('notes' . 'elements' odd)        :: 'Voice' a -> ['Note' a]
 -- 'toListOf' ('notes' . 'each' . 'filtered'
---              (\\x -> '_duration' x \< 2))  :: 'Voice' a -> ['Note' a]
+--              (\\x -> x^.'duration' \< 2))  :: 'Voice' a -> ['Note' a]
 -- @
 
 -- | View a score as a list of duration-value pairs. Analogous to 'triples'.

@@ -77,17 +77,15 @@ instance Show a => Show (Aligned a) where
 instance Transformable v => Transformable (Aligned v) where
   transform s (Aligned (t, d, v)) = Aligned (transform s t, d, transform s v)
 
-instance HasDuration v => HasDuration (Aligned v) where
-  _duration (Aligned (_, _, v)) = _duration v
+instance (HasDuration v, Transformable v) => HasDuration (Aligned v) where
+  _duration (Aligned (_, _, v)) = v^.duration
 
-instance HasDuration v => HasPosition (Aligned v) where
+instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
   -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
-  --   where
-  --     size = _duration v
   _era (Aligned (position, alignment, v)) =
     (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
     where
-      size = _duration v
+      size = v^.duration
 
 -- renderAligned :: AlignedVoice a -> Score a
 renderAligned :: HasDuration a => (Span -> a -> b) -> Aligned a -> b

@@ -320,7 +320,7 @@ events = _Wrapped . _2 . _Wrapped . sorted
 -- 'toListOf' ('events' . 'each')                :: 'Score' a -> ['Event' a]
 -- 'toListOf' ('events' . 'elements' odd)        :: 'Score' a -> ['Event' a]
 -- 'toListOf' ('events' . 'each' . 'filtered'
---              (\\x -> '_duration' x \< 2))  :: 'Score' a -> ['Event' a]
+--              (\\x -> x^.'duration' \< 2))  :: 'Score' a -> ['Event' a]
 -- @
 
 -- | A score is a list of events up to meta-data. To preserve meta-data, use the more
