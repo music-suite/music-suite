@@ -52,6 +52,7 @@ library
                         parsec
     exposed-modules:    Data.Clipped
                         Data.PairMonad
+                        Data.AffineSpace.Point.Offsets
                         Data.Functor.Couple
                         Data.Functor.Context
                         Data.Functor.Rep.Lens

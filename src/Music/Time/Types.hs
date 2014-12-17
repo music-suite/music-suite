@@ -39,8 +39,6 @@ module Music.Time.Types (
 
         -- ** Convert between time and duration
         -- $convert
-        offsetPoints,
-        pointOffsets,
         toAbsoluteTime,
         toRelativeTime,
         toRelativeTimeN,
@@ -121,6 +119,7 @@ import           Control.Lens                  hiding (Indexable, Level, above,
                                                 below, index, inside, parts,
                                                 reversed, transform, (<|), (|>))
 import           Control.Monad.State.Lazy
+import           Data.AffineSpace.Point.Offsets
 import           Data.Aeson                    (ToJSON (..))
 import qualified Data.Aeson                    as JSON
 import           Data.AffineSpace
@@ -264,26 +263,6 @@ instance AffineSpace Time where
   type Diff Time = LocalDuration
   Time x .-. Time y     = Duration (x - y)
   Time x .+^ Duration y = Time     (x + y)
-
--- | Lay out a series of vectors from a given point. Return all intermediate points.
---
--- > lenght xs + 1 == length (offsetPoints p xs)
---
--- >>> offsetPoints 0 [1,1,1] :: [Time]
--- [0,1,2,3]
-offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
-offsetPoints = scanl (.+^)
-
--- | Calculate the relative difference between vectors.
---
--- > lenght xs + 1 == length (offsetPoints p xs)
---
--- >>> offsetPoints 0 [1,1,1] :: [Time]
--- [0,1,2,3]
-pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
-pointOffsets or = (zeroV :) . snd . mapAccumL g or
-  where
-    g prev p = (p, p .-. prev)
 
 -- | Interpret as durations from 0.
 --

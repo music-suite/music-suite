@@ -41,10 +41,12 @@ module Music.Time (
     module Music.Time.Behavior,
 
     module Data.Functor.Rep.Lens,
+    module Data.AffineSpace.Point.Offsets,
   ) where
 
 import           Data.Functor.Rep
 import           Data.Functor.Rep.Lens
+import           Data.AffineSpace.Point.Offsets
 
 import           Music.Time.Duration
 import           Music.Time.Juxtapose
