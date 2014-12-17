@@ -120,15 +120,16 @@ instance HasPosition Span where
   _era = id
 
 #ifndef GHCI
-instance (HasPosition a, HasDuration a) => HasDuration [a] where
+instance (HasPosition a, Transformable a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
-instance (HasPosition a, HasDuration a) => HasPosition [a] where
+instance (HasPosition a, Transformable a) => HasPosition [a] where
   _era x = (f x, g x)^.from range
     where
       f  = foldr min 0 . fmap _onset
       g = foldr max 0 . fmap _offset
 #endif
+#line 123
 
 -- |
 -- Position of the given value.
@@ -203,7 +204,7 @@ stopAt t x = (t .-. _offset x) `delay` x
 placeAt :: (Transformable a, HasPosition a) => Duration -> Time -> a -> a
 placeAt p t x = (t .-. x `_position` p) `delay` x
 
-_onset, _offset :: HasPosition a => a -> Time
+_onset, _offset :: (HasPosition a, Transformable a) => a -> Time
 _onset     = (`_position` 0)
 _offset    = (`_position` 1.0)
 

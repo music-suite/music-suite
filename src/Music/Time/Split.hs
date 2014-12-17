@@ -121,7 +121,7 @@ chunks d xs = if xs^.duration <= 0 then [] else chunks' d xs
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
 
 
-splitAbs :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
-splitAbs t x = split (t .-. _onset x) x
+splitAbs :: (HasPosition a, Transformable a, Splittable a) => Time -> a -> (a, a)
+splitAbs t x = split (t .-. x^.onset) x
 
 
