@@ -125,19 +125,11 @@ pcat = Prelude.foldr (<>) mempty
 -- |
 -- Move a value so that its era is equal to the era of another value.
 --
--- @
--- 'Score' a -> 'Score' a -> 'Score' a
--- @
---
 during :: (HasPosition a, HasPosition b, Transformable a, Transformable b) => a -> b -> a
 y `during` x = set era (view era x) y
 
 -- |
 -- Like '<>', but scaling the second agument to the duration of the first.
---
--- @
--- 'Score' a -> 'Score' a -> 'Score' a
--- @
 --
 sustain :: (Semigroup a, HasPosition a, Transformable a) => a -> a -> a
 x `sustain` y = x <> y `during` x
