@@ -248,7 +248,7 @@ tempoRegions0 s r = fmap f $ s `reactiveIn` r
         f (view (from note) -> (view delta -> (t,u),x)) = TempoRegion0 t u (tempoToDuration x)
 
 tempoRegions :: Span -> [TempoRegion0] -> [TempoRegion]
-tempoRegions s = snd . List.mapAccumL f (_onset s, _onset s) -- XXX offset?
+tempoRegions s = snd . List.mapAccumL f (s^.onset, s^.onset) -- XXX offset?
     where
         f (nt,st) (TempoRegion0 _ d x) = ((nt .+^ d, st .+^ (d*x)),
             TempoRegion nt (nt .+^ d) st x

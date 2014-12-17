@@ -162,9 +162,9 @@ getTimeSignature (TimeSignature x) = x
 
 -- | Set the time signature of the given score.
 timeSignature :: (HasMeta a, HasPosition a, Transformable a) => TimeSignature -> a -> a
-timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
+timeSignature c x = timeSignatureDuring (0 <-> x^.offset) c x
 
--- use (_onset x <-> _offset x) instead of (0 <-> _offset x)
+-- use (x^.onset <-> x^.offset) instead of (0 <-> x^.offset)
 -- timeSignature' c x = timeSignatureDuring (era x) c x
 
 -- | Set the time signature of the given part of a score.

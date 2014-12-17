@@ -364,7 +364,7 @@ compressor = error "Not implemented: compressor"
 -- Fade in.
 --
 fadeIn :: (HasPosition a, Transformable a, HasDynamics' a, Dynamic a ~ Behavior c, Fractional c) => Duration -> a -> a
-fadeIn d x = x & dynamics *~ ((_onset x >-> d) `transform` unit)
+fadeIn d x = x & dynamics *~ ((x^.onset >-> d) `transform` unit)
 
 -- |
 -- Fade in.

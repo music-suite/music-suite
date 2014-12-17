@@ -182,7 +182,7 @@ instance HasPosition (Score a) where
   -- TODO clean up in terms of AddMeta and optimize
 
 instance HasDuration (Score a) where
-  _duration x = _offset x .-. _onset x
+  _duration x = (^.offset) x .-. (^.onset) x
 
 
 
@@ -270,13 +270,13 @@ instance Transformable (Score' a) where
 instance HasPosition (Score' a) where
   _era x = (f x, g x)^.from range
     where
-      f = safeMinimum . fmap (_onset  . normalizeSpan) . toListOf (_Wrapped . each . era)
-      g = safeMaximum . fmap (_offset . normalizeSpan) . toListOf (_Wrapped . each . era)
+      f = safeMinimum . fmap ((^.onset)  . normalizeSpan) . toListOf (_Wrapped . each . era)
+      g = safeMaximum . fmap ((^.offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
       safeMinimum xs = if null xs then 0 else minimum xs
       safeMaximum xs = if null xs then 0 else maximum xs
 
 instance HasDuration (Score' a) where
-  _duration x = _offset x .-. _onset x
+  _duration x = (^.offset) x .-. (^.onset) x
 
 -- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
@@ -288,7 +288,7 @@ events :: Lens (Score a) (Score b) [Event a] [Event b]
 events = _Wrapped . _2 . _Wrapped . sorted
   where
     -- TODO should not have to sort...
-    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
+    sorted = iso (List.sortBy (Ord.comparing (^.onset))) (List.sortBy (Ord.comparing (^.onset)))
 {-# INLINE events #-}
 
 --
@@ -328,7 +328,7 @@ events = _Wrapped . _2 . _Wrapped . sorted
 unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
 unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
   where
-    sorted = iso (List.sortBy (Ord.comparing _onset)) (List.sortBy (Ord.comparing _onset))
+    sorted = iso (List.sortBy (Ord.comparing (^.onset))) (List.sortBy (Ord.comparing (^.onset)))
     noMeta = iso extract return
 
 -- | A score is a list of (time-duration-value triples) up to meta-data.

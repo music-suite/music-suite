@@ -72,7 +72,7 @@ metaAt :: AttributeClass b => Time -> Score a -> b
 metaAt x = (`atTime` x) . runScoreMeta
 
 metaAtStart :: AttributeClass b => Score a -> b
-metaAtStart x = _onset x `metaAt` x
+metaAtStart x = (x^.onset) `metaAt` x
 
 withMeta :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
 withMeta f x = let
@@ -90,7 +90,7 @@ withMeta f x = let
 withMetaAtStart :: AttributeClass a => (a -> Score b -> Score b) -> Score b -> Score b
 withMetaAtStart f x = let
     m = view meta x
-    in f (fromMetaReactive m `atTime` _onset x) x
+    in f (fromMetaReactive m `atTime` (x^.onset)) x
 
 
 
