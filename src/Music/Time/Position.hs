@@ -33,13 +33,9 @@ module Music.Time.Position (
       -- * The HasPosition class
       HasPosition(..),
 
-      -- * Era
-      era,
-      _onset,
-      _offset,
-
-      -- * Position
+      -- * Position and Era
       position,
+      era,
 
       -- ** Specific positions
       onset,
@@ -54,6 +50,7 @@ module Music.Time.Position (
       stopAt,
       placeAt,
 
+      -- * Transforming relative a position
       stretchRelative,
       stretchRelativeOnset,
       stretchRelativeMidpoint,

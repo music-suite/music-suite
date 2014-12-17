@@ -52,7 +52,7 @@ module Music.Score.Meta.Time (
         standardTimeSignature,
   ) where
 
-import           Control.Lens              (view)
+import           Control.Lens              (view, (^.))
 import           Control.Monad.Plus
 import           Data.Bifunctor
 import           Data.Foldable             (Foldable)
