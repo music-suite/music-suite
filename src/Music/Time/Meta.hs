@@ -8,9 +8,9 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 
@@ -33,9 +33,9 @@ module Music.Time.Meta (
         -- * Attributes
         AttributeClass,
         TAttributeClass,
-        
+
         Attribute,
-        
+
         -- ** Creating attributes
         wrapAttr,
         wrapTAttr,
@@ -70,22 +70,22 @@ module Music.Time.Meta (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens              hiding (transform)
+import           Control.Lens             hiding (transform)
 import           Control.Monad.Plus
-import           Data.Functor.Rep -- TODO experimental
-import           Data.Foldable             (Foldable)
-import qualified Data.Foldable             as F
-import qualified Data.List                 as List
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as F
 import           Data.Functor.Adjunction  (unzipR)
-import           Data.Map                  (Map)
-import qualified Data.Map                  as Map
+import           Data.Functor.Couple
+import           Data.Functor.Rep
+import qualified Data.List                as List
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
 import           Data.Maybe
 import           Data.Semigroup
-import           Data.Set                  (Set)
-import qualified Data.Set                  as Set
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
 import           Data.String
 import           Data.Typeable
-import           Data.Functor.Couple
 
 import           Music.Time.Internal.Util
 import           Music.Time.Juxtapose
@@ -229,7 +229,7 @@ preserveMeta f x = let m = view meta x in set meta m (f x)
 -- |
 -- Annotate an arbitrary type with meta-data, preserving instances of
 -- all common type classes. In particular 'Functor' and 'Applicative' is lifted and
--- @'Compose' 'AddMeta'@ is semantically equivalent to 'Identity'. 
+-- @'Compose' 'AddMeta'@ is semantically equivalent to 'Identity'.
 
 -- Meta-data is carried along with the annotated value. It defaults to 'mempty'
 -- in 'pure'. When composing values using '<*>', 'liftA2' etc, meta-data is composed
@@ -261,10 +261,10 @@ instance HasMeta (AddMeta a) where
 
 -- instance FunctorWithIndex i AddMeta where
   -- imap f = over annotated $ imap f
--- 
+--
 -- instance FoldableWithIndex Span Score where
 --   ifoldMap f (Score (m,x)) = ifoldMap f x
--- 
+--
 -- instance TraversableWithIndex Span Score where
 --   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
 
@@ -313,7 +313,7 @@ unannotated = from unsafeAnnotated
 -- @
 -- over annotated = fmap
 -- @
--- 
+--
 unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
 unsafeAnnotated = _Wrapped . extracted
 

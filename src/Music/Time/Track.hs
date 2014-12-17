@@ -1,15 +1,14 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -36,31 +35,31 @@ module Music.Time.Track (
   ) where
 
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
 import           Control.Applicative
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Data.Traversable         (Traversable)
+import qualified Data.Traversable         as T
 import           Data.Typeable
+import           Data.VectorSpace
 import           Music.Time.Internal.Util
 
-import           Music.Time.Placed
 import           Music.Time.Juxtapose
+import           Music.Time.Placed
 
 -- |
 -- A 'Track' is a parallel composition of values.

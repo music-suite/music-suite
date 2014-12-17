@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -52,54 +52,54 @@ module Music.Time.Score (
         -- * Normalize
         normalizeScore,
         removeRests,
-        
+
         -- * Utility
         printEras,
 
         -- * Unsafe versions
         unsafeEvents,
         unsafeTriples,
-        
+
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import qualified Data.List.NonEmpty     as NonEmpty
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
-import           Data.String
-import           Data.Functor.Adjunction  (unzipR)
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
-import qualified Data.List              as List
-import qualified Data.Ord               as Ord
-import           Data.Semigroup         hiding ()
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
+import           Data.Functor.Adjunction  (unzipR)
+import qualified Data.List                as List
+import qualified Data.List.NonEmpty       as NonEmpty
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import qualified Data.Ord                 as Ord
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Semigroup           hiding ()
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Data.String
+import           Data.Traversable         (Traversable)
+import qualified Data.Traversable         as T
 import           Data.Typeable
-import           Data.VectorSpace       hiding (Sum (..))
+import           Data.VectorSpace
+import           Data.VectorSpace         hiding (Sum (..))
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Event
+import           Music.Time.Internal.Util
 import           Music.Time.Juxtapose
 import           Music.Time.Meta
-import           Music.Time.Event
 import           Music.Time.Note
 import           Music.Time.Voice
-import           Music.Time.Internal.Util
 
 
 
@@ -348,7 +348,7 @@ unsafeTriples = iso _getScore _score
       Foldable.toList .
       fmap (view $ from event) .
       reifyScore
-    
+
 -- | Map with the associated time span.
 mapScore :: (Event a -> b) -> Score a -> Score b
 mapScore f = over (_Wrapped._2) (mapScore' f)

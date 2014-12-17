@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -37,7 +37,7 @@ module Music.Time.Reactive (
         atTime,
 
         -- * Construction
-      
+
         -- * Combine
         switchR,
         trimR,
@@ -51,7 +51,7 @@ module Music.Time.Reactive (
         sample,
         -- TODO
         -- window,
-        -- windowed,   
+        -- windowed,
 
   ) where
 
@@ -79,16 +79,16 @@ import           Data.Semigroup          hiding ()
 import           Data.Typeable
 
 import           Music.Dynamics.Literal
-import           Music.Pitch.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Literal
 import           Music.Pitch.Literal
 
 import           Music.Time.Behavior
 import           Music.Time.Bound
 import           Music.Time.Event
-import           Music.Time.Segment
 import           Music.Time.Juxtapose
+import           Music.Time.Segment
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -126,7 +126,7 @@ instance Applicative Reactive where
     pure  = pureDefault
       where
         pureDefault = view _Unwrapped . pure . pure
-        
+
     (<*>) = apDefault
       where
         (view _Wrapped -> (tf, rf)) `apDefault` (view _Wrapped -> (tx, rx)) = view _Unwrapped (tf <> tx, rf <*> rx)

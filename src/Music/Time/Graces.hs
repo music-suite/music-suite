@@ -1,15 +1,14 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -29,15 +28,15 @@ import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.Foldable         (Foldable)
+import qualified Data.Foldable         as Foldable
+import           Data.Traversable      (Traversable)
+import qualified Data.Traversable      as T
 import           Data.Typeable
 
-import Music.Time.Juxtapose
-import Music.Time.Nominal
-import Music.Time.Voice
+import           Music.Time.Juxtapose
+import           Music.Time.Nominal
+import           Music.Time.Voice
 
 newtype Graces f a = Graces { getGraces :: (Nominal f a, f a, Nominal f a) }
   deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)

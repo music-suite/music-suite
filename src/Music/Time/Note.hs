@@ -6,9 +6,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE TupleSections              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -33,12 +33,12 @@ module Music.Time.Note (
   ) where
 
 import           Control.Applicative
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Data.Bifunctor
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
 import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable

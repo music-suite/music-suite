@@ -1,15 +1,14 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -39,26 +38,26 @@ module Music.Time.Reverse (
         NoReverse(..),
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
 import           Data.AffineSpace
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
 import           Data.AffineSpace.Point
 import           Data.Map               (Map)
+import           Data.Map               (Map)
 import qualified Data.Map               as Map
+import qualified Data.Map               as Map
+import           Data.Ratio
+import           Data.Semigroup
 import           Data.Semigroup         hiding ()
 import           Data.Sequence          (Seq)
 import qualified Data.Sequence          as Seq
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
 import           Data.Typeable
+import           Data.VectorSpace
 import           Data.VectorSpace       hiding (Sum (..))
 
 import           Music.Time.Position

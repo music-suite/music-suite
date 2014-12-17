@@ -1,5 +1,4 @@
 
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -10,6 +9,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE StandaloneDeriving         #-}
@@ -67,11 +67,11 @@ module Music.Time.Types (
         normalizeSpan,
         reverseSpan,
         reflectSpan,
-        
+
         -- ** Properties
         isEmptySpan,
         isForwardSpan,
-        isBackwardSpan,        
+        isBackwardSpan,
 
         -- delayComponent,
         -- stretchComponent,
@@ -94,18 +94,18 @@ module Music.Time.Types (
         strictlyAfterOffset,
         beforeOffset,
         strictlyBeforeOffset,
-        
+
         startsWhenStarts,
         startsWhenStops,
         stopsWhenStops,
         stopsWhenStarts,
-        
+
         startsBefore,
         startsLater,
         stopsAtTheSameTime,
         stopsBefore,
         stopsLater,
-        
+
         -- union
         -- intersection (alt name 'overlap')
         -- difference (would actually become a split)
@@ -116,22 +116,22 @@ module Music.Time.Types (
         showCodelta,
   ) where
 
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
 import           Control.Applicative.Backwards
+import           Control.Lens                  hiding (Indexable, Level, above,
+                                                below, index, inside, parts,
+                                                reversed, transform, (<|), (|>))
 import           Control.Monad.State.Lazy
-import           Data.Aeson (ToJSON(..))
-import qualified Data.Aeson as JSON
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import           Data.List                     (mapAccumL, mapAccumR)
+import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.List (mapAccumL, mapAccumR)
-import           Data.Ratio
 
-import           Music.Time.Internal.Util (showRatio)
+import           Music.Time.Internal.Util      (showRatio)
 -- import           Data.Fixed
 
 -- $convert
@@ -173,7 +173,7 @@ newtype Duration = Duration { getDuration :: TimeBase }
     Ord,
     Typeable,
     Enum,
-    
+
     Num,
     Fractional,
     Real,
@@ -266,18 +266,18 @@ instance AffineSpace Time where
   Time x .+^ Duration y = Time     (x + y)
 
 -- | Lay out a series of vectors from a given point. Return all intermediate points.
--- 
+--
 -- > lenght xs + 1 == length (offsetPoints p xs)
--- 
+--
 -- >>> offsetPoints 0 [1,1,1] :: [Time]
 -- [0,1,2,3]
 offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
 offsetPoints = scanl (.+^)
 
 -- | Calculate the relative difference between vectors.
--- 
+--
 -- > lenght xs + 1 == length (offsetPoints p xs)
--- 
+--
 -- >>> offsetPoints 0 [1,1,1] :: [Time]
 -- [0,1,2,3]
 pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
@@ -297,11 +297,11 @@ toAbsoluteTime :: [Duration] -> [Time]
 toAbsoluteTime = tail . offsetPoints 0
 
 -- | Duration between 0 and first value and so on until the last.
--- 
+--
 -- > toAbsoluteTime (toRelativeTime xs) == xs
--- 
+--
 -- > lenght xs == length (toRelativeTime xs)
--- 
+--
 -- >>> toRelativeTime [1,2,3]
 -- [1,1,1]
 toRelativeTime :: [Time] -> [Duration]
@@ -696,7 +696,7 @@ overlapsOffsetOf
 -- timespantools.timespan_2_stops_during_timespan_1
 -- timespantools.timespan_2_stops_when_timespan_1_starts
 -- timespantools.timespan_2_stops_when_timespan_1_stops
--- timespantools.timespan_2_trisects_timespan_1     
+-- timespantools.timespan_2_trisects_timespan_1
 
 
 

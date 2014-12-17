@@ -1,7 +1,7 @@
 
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE RankNTypes    #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns  #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -35,7 +35,7 @@ module Music.Time.Internal.Util (
 
 {-
     Rules:
-    
+
         * Functions may depend on any module in the lastest Haskell Platform release
         * All functions but those in Prelude must be referred to with their full,
           qualified names (i.e. Data.List.unfoldr).
@@ -45,17 +45,17 @@ module Music.Time.Internal.Util (
             -- | Ordinary Haddock commentary ...
             -- > category: Categories (please use the common Hackage names)
             -- > depends : base (all packages in HP that the function depends on)
-            
+
 -}
 
-import Control.Lens
-import Control.Monad.Plus
-import Control.Applicative
+import           Control.Applicative
+import           Control.Lens
+import           Control.Monad.Plus
 import qualified Data.Char
-import qualified Data.Monoid
+import           Data.Functor.Contravariant (Equivalence (..), contramap)
 import qualified Data.List
+import qualified Data.Monoid
 import qualified Data.Ratio
-import Data.Functor.Contravariant (Equivalence(..), contramap)
 
 -- | Divide a list into parts of maximum length n.
 -- > category : List
@@ -102,7 +102,7 @@ mapIndexed f as = map (uncurry f) (zip is as)
     where
         n  = length as - 1
         is = [0..n]
-        
+
 -- test
 
 -- | Duplicate an element.
@@ -111,7 +111,7 @@ mapIndexed f as = map (uncurry f) (zip is as)
 dup :: a -> (a,a)
 dup x = (x,x)
 
--- | Unfold a partial function. This is a simpler version of 'Data.List.unfoldr'. 
+-- | Unfold a partial function. This is a simpler version of 'Data.List.unfoldr'.
 -- > category: Function, List
 -- > depends: base
 unf :: (a -> Maybe a) -> a -> [a]
@@ -150,8 +150,8 @@ mapFTL f g h = go
         go []    = []
         go [a]   = [f a]
         go [a,b] = [f a, h b]
-        go xs    = [f $ head xs]          ++ 
-                   map g (tail $ init xs) ++ 
+        go xs    = [f $ head xs]          ++
+                   map g (tail $ init xs) ++
                    [h $ last xs]
 
 -- |
@@ -190,7 +190,7 @@ rotr xs = last xs : init xs
 rotated :: Int -> [a] -> [a]
 rotated = go
     where
-        go n as 
+        go n as
             | n >= 0 = iterate rotr as !! n
             | n <  0 = iterate rotl as !! abs n
 
@@ -355,9 +355,9 @@ rotate n xs = drop n' xs ++ take n' xs
 toDouble :: Real a => a -> Double
 toDouble = realToFrac
 
-through :: Applicative f => 
-  Lens' s a 
-  -> Lens s t a b 
+through :: Applicative f =>
+  Lens' s a
+  -> Lens s t a b
   -> Lens (f s) (f t) (f a) (f b)
 through lens1 lens2 = lens getter (flip setter)
   where

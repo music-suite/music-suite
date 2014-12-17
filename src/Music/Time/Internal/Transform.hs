@@ -59,22 +59,22 @@ module Music.Time.Internal.Transform (
 
   ) where
 
-import           Data.Ratio
 import           Control.Applicative
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Ratio
 import           Data.Semigroup
 import           Data.Semigroup.Instances ()
-import           Data.Sequence          (Seq)
-import qualified Data.Sequence          as Seq
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace       hiding (Sum (..))
+import           Data.Sequence            (Seq)
+import qualified Data.Sequence            as Seq
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Data.VectorSpace         hiding (Sum (..))
 
 import           Music.Time.Types
 
@@ -289,7 +289,7 @@ From lens:
 From profunctor:
   dimap ab cd bc = cd . bc . ab
   dimap ab cd    = \f -> cd . f . ab
-  
+
 
 flip whilstM = transformed
 flip whilstM = \s -> iso (transform s) (itransform s)
@@ -297,11 +297,11 @@ flip whilstM = \s -> dimap (transform s) (fmap $ itransform s)
 flip whilstM = \s f -> (fmap $ itransform s) . f . transform s
 flip (\f t -> fmap (transform (negateV t)) . f . transform t) = \s f -> (fmap $ itransform s) . f . transform s
 
-\t f -> fmap (transform (negateV t)) . f . transform t 
+\t f -> fmap (transform (negateV t)) . f . transform t
 =
 \t f -> (fmap $ itransform t) . f . transform t
 
-\t f -> fmap (itransform t) . f . transform t 
+\t f -> fmap (itransform t) . f . transform t
 =
 \t f -> fmap (itransform t) . f . transform t
 
@@ -327,10 +327,10 @@ dofoo v w = \f (s,a) -> (s,) <$> w s <$> f ((v s) a)
 
 
 
-dobar :: (Functor f) 
+dobar :: (Functor f)
 
-  => 
-  (sp -> (s -> f t) -> (s -> f t)) 
+  =>
+  (sp -> (s -> f t) -> (s -> f t))
   -> ((s -> f t) -> a -> f b)
   -> (s -> f t)  -> ((sp, a) -> f (sp, b))
 
@@ -389,7 +389,7 @@ conjugateS t1 t2  = negateV t1 <> t2 <> t1
 -- l `onSpan` (2 \<-> 3)
 -- @
 --
-onSpan :: (Transformable s, Transformable t, Functor f) 
+onSpan :: (Transformable s, Transformable t, Functor f)
   => LensLike f s t a b -> Span -> LensLike f s t a b
 f `onSpan` s = transformed (negateV s) . f
 -- TODO name

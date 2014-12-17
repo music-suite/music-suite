@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -36,22 +36,22 @@ module Music.Time.Split (
 
   ) where
 
-import           Control.Lens            hiding (Indexable, Level, above, below,
-                                          index, inside, parts, reversed,
-                                          transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Functor.Adjunction (unzipR)
+import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Rep
-import           Data.Map                (Map)
-import qualified Data.Map                as Map
-import           Data.Semigroup          hiding ()
-import           Data.Sequence           (Seq)
-import qualified Data.Sequence           as Seq
-import           Data.VectorSpace        hiding (Sum (..))
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Semigroup           hiding ()
+import           Data.Sequence            (Seq)
+import qualified Data.Sequence            as Seq
+import           Data.VectorSpace         hiding (Sum (..))
 
-import           Music.Time.Position
 import           Music.Time.Internal.Util
+import           Music.Time.Position
 
 -- |
 -- Class of values that can be split.

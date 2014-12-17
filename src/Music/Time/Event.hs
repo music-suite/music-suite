@@ -58,7 +58,7 @@ import           Data.VectorSpace
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 
-import           Music.Time.Internal.Util (through, tripped, dependingOn)
+import           Music.Time.Internal.Util (dependingOn, through, tripped)
 import           Music.Time.Juxtapose
 import           Music.Time.Meta
 

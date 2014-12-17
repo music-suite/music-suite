@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -10,7 +10,6 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -30,23 +29,23 @@ import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
-import           Data.Foldable          (Foldable)
-import qualified Data.Foldable          as Foldable
-import           Data.Traversable       (Traversable)
-import qualified Data.Traversable       as T
+import           Data.Foldable         (Foldable)
+import qualified Data.Foldable         as Foldable
+import           Data.Traversable      (Traversable)
+import qualified Data.Traversable      as T
 import           Data.Typeable
 
-import Music.Time.Juxtapose
+import           Music.Time.Juxtapose
 
 newtype Nominal f a = Nominal { getNominal :: f a }
   deriving (
-  	Eq, 
+  	Eq,
   	Ord,
-  	Read, 
-  	Show, 
-  	Functor, 
-  	Foldable, 
-  	Traversable, 
+  	Read,
+  	Show,
+  	Functor,
+  	Foldable,
+  	Traversable,
   	Monad
   )
 

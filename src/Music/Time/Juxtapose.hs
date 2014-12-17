@@ -47,7 +47,7 @@ module Music.Time.Juxtapose (
         times,
   ) where
 
-import           Control.Lens hiding ((|>), (<|))
+import           Control.Lens           hiding ((<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Semigroup
@@ -57,16 +57,9 @@ import           Music.Time.Reverse
 import           Music.Time.Split
 
 
---
--- TODO names
--- Especially 'after' is counter-intuitive
---
-
 -- |
--- Move a value so that
---
 -- @
--- '_offset' (a `lead` b) = '_onset' b
+-- (a `lead` b)^.'offset' = b^.'onset'
 -- @
 --
 --
@@ -74,24 +67,16 @@ lead   :: (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
 a `lead` b   = placeAt 1 (b `_position` 0) a
 
 -- |
--- Move a value so that
---
 -- @
--- '_offset' a = '_onset' (a `follow` b)
+-- a^.'offset' = (a `follow` b)^.'onset'
 -- @
 --
 follow :: (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
 a `follow` b = placeAt 0 (a `_position` 1) b
 
--- |
--- Move a value so that
---
 after :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `after` b =  a <> (a `follow` b)
 
--- |
--- Move a value so that
---
 before :: (Semigroup a, Transformable a, HasPosition a) => a -> a -> a
 a `before` b =  (a `lead` b) <> b
 

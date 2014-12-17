@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -70,45 +70,45 @@ module Music.Time.Segment (
 
         -- * Bound type
         Bound,
-        -- * Query        
+        -- * Query
         bounds,
         bounding,
         -- * Combine
         trim,
         splice,
         bounded',
-        bounded,     
+        bounded,
 
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Clipped
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
                                          transform, (<|), (|>))
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import           Data.Clipped
 import           Data.Distributive
-import           Data.Functor.Rep as R
+import           Data.Functor.Rep       as R
 import           Data.Functor.Rep.Lens
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
 import           Data.Maybe
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
 import           Data.Typeable
+import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 import           Music.Time.Behavior
 import           Music.Time.Bound
 import           Music.Time.Event
-import           Music.Time.Score
 import           Music.Time.Juxtapose
 import           Music.Time.Note
+import           Music.Time.Score
 import           Music.Time.Voice
 
 
@@ -116,7 +116,7 @@ import           Music.Time.Voice
 
 -- |
 --
--- A 'Segment' is a value varying over some unknown time span. 
+-- A 'Segment' is a value varying over some unknown time span.
 -- Intuitively, a 'Segment' is to a 'Behavior' what a /ray/ is to a /line/.
 --
 -- To give a segment an explicit duration, use 'Event' 'Segment'.
@@ -297,7 +297,7 @@ bounded = iso ns2bb bb2ns
 --
 -- @
 -- 'trim'   = 'splice' 'mempty'
--- 'trim' x = 'trimBefore' '_onset' x . 'trimAfter' '_offset' x
+-- 'trim' x = 'trimBefore' (x^.'onset') . 'trimAfter' (x^.'offset')
 -- @
 --
 trim :: Monoid b => Bound (Behavior b) -> Behavior b

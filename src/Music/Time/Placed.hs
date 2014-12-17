@@ -5,10 +5,10 @@
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -33,15 +33,15 @@ module Music.Time.Placed (
 
 import           Control.Applicative
 import           Control.Comonad
-import           Control.Lens            hiding (Indexable, Level, above, below,
-                                          index, inside, parts, reversed,
-                                          transform, (<|), (|>))
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Bifunctor
-import           Data.Foldable           (Foldable)
-import qualified Data.Foldable           as Foldable
-import           Data.Functor.Adjunction (unzipR)
+import           Data.Foldable            (Foldable)
+import qualified Data.Foldable            as Foldable
+import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
@@ -69,11 +69,11 @@ newtype Placed a = Placed { getPlaced :: Time `Couple` a }
     Typeable,
     Foldable,
     Traversable,
-    
+
     Functor,
     Applicative,
     Monad,
-    Comonad    
+    Comonad
     )
 
 instance (Show a, Transformable a) => Show (Placed a) where
@@ -86,9 +86,9 @@ instance Wrapped (Placed a) where
 instance Rewrapped (Placed a) (Placed b)
 
 instance Transformable a => Transformable (Placed a) where
-  transform t = 
-    over (from placed . _1) (transform t) 
-    . 
+  transform t =
+    over (from placed . _1) (transform t)
+    .
     over (from placed . _2) (stretch $ stretchComponent t)
 
 instance IsString a => IsString (Placed a) where

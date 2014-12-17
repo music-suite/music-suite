@@ -48,16 +48,6 @@ module Music.Time.Chord (
   ) where
 
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.String
-import           Data.VectorSpace
 import           Control.Applicative
 import           Control.Lens           hiding (Indexable, Level, above, below,
                                          index, inside, parts, reversed,
@@ -65,11 +55,21 @@ import           Control.Lens           hiding (Indexable, Level, above, below,
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable)
 import qualified Data.Foldable          as Foldable
+import           Data.Map               (Map)
+import qualified Data.Map               as Map
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Set               (Set)
+import qualified Data.Set               as Set
+import           Data.String
 import           Data.Traversable       (Traversable)
 import qualified Data.Traversable       as T
 import           Data.Typeable
+import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal

@@ -1,8 +1,8 @@
 
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -60,7 +60,7 @@ module Music.Time.Voice (
         -- ** Fuse rests
         fuseRests,
         coverRests,
-        
+
         -- * Homophonic/Polyphonic texture
         sameDurations,
         mergeIfSameDuration,
@@ -72,7 +72,7 @@ module Music.Time.Voice (
         offsetsRelative,
         midpointsRelative,
         erasRelative,
-        
+
         -- * Context
         -- TODO clean
         withContext,
@@ -84,21 +84,6 @@ module Music.Time.Voice (
 
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
-import           Data.Functor.Adjunction  (unzipR)
-import           Data.Functor.Context
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import           Data.Maybe
-import           Data.Ratio
-import           Data.Semigroup
-import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
-import           Data.Sequence            (Seq)
-import qualified Data.Sequence            as Seq
-import           Data.String
-import           Data.VectorSpace
 import           Control.Applicative
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
@@ -106,19 +91,34 @@ import           Control.Lens             hiding (Indexable, Level, above,
 import           Control.Monad
 import           Control.Monad.Compose
 import           Control.Monad.Plus
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
+import           Data.Functor.Adjunction  (unzipR)
+import           Data.Functor.Context
 import qualified Data.List
 import           Data.List.NonEmpty       (NonEmpty)
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Maybe
+import           Data.Ratio
+import           Data.Semigroup
+import           Data.Sequence            (Seq)
+import qualified Data.Sequence            as Seq
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Data.String
 import           Data.Traversable         (Traversable)
 import qualified Data.Traversable         as T
 import           Data.Typeable
+import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Internal.Util
 import           Music.Time.Juxtapose
 import           Music.Time.Note
-import           Music.Time.Internal.Util
 
 -- |
 -- A 'Voice' is a sequential composition of non-overlapping note values.
@@ -136,12 +136,12 @@ newtype Voice a = Voice { getVoice :: [Note a] }
     Eq,
     Ord,
     Typeable,
-    Foldable, 
-    Traversable, 
+    Foldable,
+    Traversable,
 
-    Functor, 
-    Semigroup, 
-    Monoid 
+    Functor,
+    Semigroup,
+    Monoid
     )
 
 instance (Show a, Transformable a) => Show (Voice a) where
@@ -174,7 +174,7 @@ instance Monad Voice where
 instance MonadPlus Voice where
   mzero = mempty
   mplus = mappend
-  
+
 instance Wrapped (Voice a) where
   type Unwrapped (Voice a) = [Note a]
   _Wrapped' = iso getVoice Voice
@@ -408,13 +408,13 @@ fuseBy' p g = over unsafePairs $ fmap foldNotes . Data.List.groupBy (inspectingB
     -- non-empty lists of equal elements.
     foldNotes (unzip -> (ds, as)) = (sum ds, g as)
 
--- | 
+-- |
 -- Fuse all rests in the given voice. The resulting voice will have no consecutive rests.
 --
 fuseRests :: Voice (Maybe a) -> Voice (Maybe a)
 fuseRests = fuseBy (\x y -> isNothing x && isNothing y)
 
--- | 
+-- |
 -- Remove all rests in the given voice by prolonging the previous note. Returns 'Nothing'
 -- if and only if the given voice contains rests only.
 --
@@ -509,7 +509,7 @@ homoToPolyphonic      :: Voice [a] -> [Voice a]
 homoToPolyphonic xs = case nvoices xs of
   Nothing -> []
   Just n  -> fmap (\n -> fmap (!! n) xs) [0..n-1]
-  where                  
+  where
     nvoices :: Voice [a] -> Maybe Int
     nvoices = maybeMinimum . fmap length . (^.valuesV)
 

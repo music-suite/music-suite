@@ -1,9 +1,9 @@
 
-{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE CPP #-}
 
 module Music.Time.Past (
         Past(..),
@@ -16,20 +16,20 @@ module Music.Time.Past (
         futureSeg,
   ) where
 
-import Control.Lens -- DEBUG
 import           Control.Applicative
 import           Control.Comonad
+import           Control.Lens
+import           Control.Monad
 import           Data.Functor.Couple
-import           Data.Ord            (comparing)
-import           Data.List           (takeWhile, sort, sortBy, group)
+import           Data.List            (group, sort, sortBy, takeWhile)
 import           Data.List.Ordered
 import           Data.Maybe
+import           Data.Ord             (comparing)
 import           Data.Semigroup
-import           Control.Monad
 
 import           Music.Time.Behavior
-import           Music.Time.Segment
 import           Music.Time.Juxtapose
+import           Music.Time.Segment
 
 -- |
 -- 'Past' represents a value occuring /before and at/ some point in time.
@@ -49,13 +49,13 @@ newtype Future a = Future { getFuture :: (Max (Maybe Time), a) }
 
 -- instance HasDuration (Past a) where
 --   _duration _ = 0
--- 
+--
 -- instance HasDuration (Future a) where
 --   _duration _ = 0
--- 
+--
 -- instance HasPosition (Past a) where
 --   _position (Past ((extract . extract) -> t,_)) _ = t
--- 
+--
 -- instance HasPosition (Future a) where
   -- _position (Future (extract -> t,_)) _ = t
 

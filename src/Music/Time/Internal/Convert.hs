@@ -30,20 +30,20 @@ module Music.Time.Internal.Convert (
   ) where
 
 import           Control.Applicative
-import           Control.Lens hiding (transform, time)
+import           Control.Lens           hiding (time, transform)
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable          (Foldable (..))
+import qualified Data.Foldable          as Foldable
+import qualified Data.List              as List
 import           Data.Ord
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.String
 import           Data.Traversable
 import           Data.VectorSpace
-import qualified Data.Foldable          as Foldable
-import qualified Data.List              as List
 
 import           Music.Time
 

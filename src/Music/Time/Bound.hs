@@ -113,10 +113,10 @@ instance (HasPosition a, Splittable a) => Splittable (Bound a) where
 instance Transformable a => Transformable (Bound a) where
   transform t = over _Wrapped (transform t `bimap` transform t)
 
-instance (HasPosition a, HasDuration a) => HasDuration (Bound a) where
-  _duration x = _offset x .-. _onset x
+instance (HasPosition a, HasDuration a, Transformable a) => HasDuration (Bound a) where
+  _duration x = x^.offset .-. x^.onset
 
-instance HasPosition a => HasPosition (Bound a) where
+instance (HasPosition a, Transformable a) => HasPosition (Bound a) where
   -- TODO lawless
   -- _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
   _position (Bound (view range -> (t, u), x)) = alerp t u

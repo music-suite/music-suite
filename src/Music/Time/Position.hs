@@ -1,8 +1,9 @@
 
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -10,8 +11,6 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE CPP                        #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -72,17 +71,17 @@ module Music.Time.Position (
   ) where
 
 
+import           Control.Lens             hiding (Indexable, Level, above,
+                                           below, index, inside, parts,
+                                           reversed, transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Map               (Map)
-import qualified Data.Map               as Map
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
 import           Data.Semigroup
-import           Data.Set               (Set)
-import qualified Data.Set               as Set
-import           Data.VectorSpace       hiding (Sum)
-import           Control.Lens           hiding (Indexable, Level, above, below,
-                                         index, inside, parts, reversed,
-                                         transform, (<|), (|>))
+import           Data.Set                 (Set)
+import qualified Data.Set                 as Set
+import           Data.VectorSpace         hiding (Sum)
 
 
 import           Music.Time.Duration
@@ -116,7 +115,7 @@ class HasDuration a => HasPosition a where
 
   _era :: HasPosition a => a -> Span
   _era x = x `_position` 0 <-> x `_position` 1
-  
+
 instance HasPosition Span where
   _era = id
 
