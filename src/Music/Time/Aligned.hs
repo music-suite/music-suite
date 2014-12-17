@@ -65,31 +65,32 @@ import           Music.Time.Voice
 --
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.
-newtype Aligned v = Aligned { getAligned :: (Time, LocalDuration, v) }
+newtype Aligned v = Aligned { getAligned :: ((Time, LocalDuration), v) }
+  deriving (Functor, Eq, Ord, Foldable, Traversable)
 
 -- | Align the given value so that its local duration occurs at the given time.
 aligned :: Time -> LocalDuration -> v -> Aligned v
-aligned t d a = Aligned (t, d, a)
+aligned t d a = Aligned ((t, d), a)
 
 instance Show a => Show (Aligned a) where
-  show (Aligned (t,d,v)) = "aligned ("++show t++") ("++show d++") ("++ show v++")"
+  show (Aligned ((t,d),v)) = "aligned ("++show t++") ("++show d++") ("++ show v++")"
 
 instance Transformable v => Transformable (Aligned v) where
-  transform s (Aligned (t, d, v)) = Aligned (transform s t, d, transform s v)
+  transform s (Aligned ((t, d), v)) = Aligned ((transform s t, d), transform s v)
 
 instance (HasDuration v, Transformable v) => HasDuration (Aligned v) where
-  _duration (Aligned (_, _, v)) = v^.duration
+  _duration (Aligned (_, v)) = v^.duration
 
 instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
   -- _position (Aligned (position, alignment, v)) = alerp (position .-^ (size * alignment)) (position .+^ (size * (1-alignment)))
-  _era (Aligned (position, alignment, v)) =
+  _era (Aligned ((position, alignment), v)) =
     (position .-^ (size * alignment)) <-> (position .+^ (size * (1-alignment)))
     where
       size = v^.duration
 
 -- renderAligned :: AlignedVoice a -> Score a
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
-renderAligned f a@(Aligned (_, _, v)) = f (_era a) v
+renderAligned f a@(Aligned (_, v)) = f (_era a) v
 
 
 
