@@ -12,8 +12,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time (
-    module Data.Functor.Rep.Lens,
-
     module Music.Time.Types,
 
     module Music.Time.Transform,
@@ -41,6 +39,8 @@ module Music.Time (
     module Music.Time.Reactive,
     module Music.Time.Segment,
     module Music.Time.Behavior,
+
+    module Data.Functor.Rep.Lens,
   ) where
 
 import           Data.Functor.Rep

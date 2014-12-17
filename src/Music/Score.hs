@@ -12,17 +12,6 @@
 -------------------------------------------------------------------------------------
 
 module Music.Score (
-        module Control.Lens,
-        module Control.Applicative,
-        module Control.Monad,
-        module Control.Monad.Plus,
-        module Data.Semigroup,
-        module Data.VectorSpace,
-        module Data.AffineSpace,
-        module Data.AffineSpace.Point,
-
-        module Music.Time,
-        -- module Music.Score.Combinators,
         module Music.Score.Part,
         module Music.Score.Pitch,
         module Music.Score.Dynamics,
@@ -58,6 +47,17 @@ module Music.Score (
         module Music.Score.Export.SuperCollider,
         module Music.Score.Export.Lilypond,
         module Music.Score.Export.MusicXml,
+
+        module Music.Time,
+
+        module Control.Lens,
+        module Control.Applicative,
+        module Control.Monad,
+        module Control.Monad.Plus,
+        module Data.Semigroup,
+        module Data.VectorSpace,
+        module Data.AffineSpace,
+        module Data.AffineSpace.Point,
 )
 where
 
