@@ -390,3 +390,6 @@ inspectingBy :: (b -> a) -> (a -> a -> Bool) -> (b -> b -> Bool)
 inspectingBy f e = getEquivalence $ contramap f $ Equivalence e
 -- inspectingBy f p x y = f x `p` f y
 
+dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
+dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
+

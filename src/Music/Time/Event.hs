@@ -58,7 +58,7 @@ import           Data.VectorSpace
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
 
-import           Music.Time.Internal.Util (through, tripped)
+import           Music.Time.Internal.Util (through, tripped, dependingOn)
 import           Music.Time.Juxtapose
 import           Music.Time.Meta
 
@@ -198,10 +198,4 @@ spanEvent = iso (\s -> (s,())^.event) (^.era)
 -- | View a event as a @(time, duration, value)@ triple.
 triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
 triple = from event . bimapping delta id . tripped
-
-
--- TODO consolidate
-dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
-dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
-
 

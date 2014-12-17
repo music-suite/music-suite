@@ -49,6 +49,7 @@ import           Data.VectorSpace
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Time.Internal.Util (dependingOn)
 import           Music.Time.Juxtapose
 
 
@@ -110,6 +111,3 @@ placee = from placed `dependingOn` (transformed . delayingTime)
   where
     delayingTime = (>-> 1)
 
--- TODO consolidate
-dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
-dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
