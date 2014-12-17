@@ -1,7 +1,7 @@
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -30,6 +30,7 @@ module Music.Time.Internal.Util (
   partial2,
   partial3,
   _zipList,
+  dependingOn,
   ) where
 
 {-

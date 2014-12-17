@@ -39,12 +39,6 @@ module Music.Time.Voice (
         -- ** Separating rhythms and values
         valuesV,
         durationsV,
-        -- withValues,
-        -- withDurations,
-        -- rotateValues,
-        -- rotateDurations,
-        -- reverseValues,
-        -- reverseDurations,
 
         -- ** Zips
         unzipVoice,
