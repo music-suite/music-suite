@@ -96,25 +96,25 @@ import           Music.Time.Internal.Util
 -- a /global/ position. While the local position goes from 0 to 1, the global position
 -- goes from the 'onset' to the 'offset' of the value.
 --
--- For instantaneous values, a suitable instance is:
+-- Should satisfy
 --
 -- @
--- '_position' x = 'const' t
--- @
---
--- For values with an onset and offset we can use 'alerp':
---
--- @
--- '_position' x = 'alerp' ('_onset' x) ('_offset' x)
+-- x^.duration   = x^.era.duration
+-- x^.position n = x^.era.position n
+-- (transform s x)^.era = transform s (x^.era)
 -- @
 --
 class HasDuration a => HasPosition a where
 
+  -- | Map a local time in value to global time.
   _position :: a -> Duration -> Time
   _position x = alerp a b where (a, b) = (_era x)^.range
 
+  -- | Return the conventional bounds of a value (local time 0 and 1).
   _era :: HasPosition a => a -> Span
   _era x = x `_position` 0 <-> x `_position` 1
+
+  {-# MINIMAL (_position | _era) #-}
 
 instance HasPosition Span where
   _era = id

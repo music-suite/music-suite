@@ -22,16 +22,16 @@ module Music.Time (
     module Music.Time.Split,
     module Music.Time.Reverse,
     module Music.Time.Juxtapose,
-    module Music.Time.Rest,
     module Music.Time.Aligned,
 
-    module Music.Time.Placed,
+    module Music.Time.Rest,
     module Music.Time.Note,
-    module Music.Time.Event,
-    module Music.Time.Voice,
     module Music.Time.Chord,
-    module Music.Time.Track,
+    module Music.Time.Voice,
+    module Music.Time.Event,
     module Music.Time.Score,
+    module Music.Time.Placed,
+    module Music.Time.Track,
 
     module Music.Time.Nominal,
     module Music.Time.Graces,
@@ -39,7 +39,6 @@ module Music.Time (
     module Music.Time.Future,
     module Music.Time.Past,
     module Music.Time.Reactive,
-
     module Music.Time.Segment,
     module Music.Time.Behavior,
   ) where

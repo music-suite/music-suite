@@ -45,14 +45,18 @@ import           Music.Time.Transform
 -- |
 -- Class of values that have a duration.
 --
--- Law Duration
+-- Should satisfy
 --
 -- @
--- x^.duration = (x^.offset '.-.' x^.onset)
+-- (transform s x)^.duration = transform s (x^.duration)
 -- @
 --
 class HasDuration a where
+
+  -- | Return the duration of a value.
   _duration :: a -> Duration
+
+  {-# MINIMAL _duration #-}
 
 instance HasDuration Duration where
   _duration = id
