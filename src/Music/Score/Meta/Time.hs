@@ -161,7 +161,7 @@ getTimeSignature :: TimeSignature -> ([Integer], Integer)
 getTimeSignature (TimeSignature x) = x
 
 -- | Set the time signature of the given score.
-timeSignature :: (HasMeta a, HasPosition a) => TimeSignature -> a -> a
+timeSignature :: (HasMeta a, HasPosition a, Transformable a) => TimeSignature -> a -> a
 timeSignature c x = timeSignatureDuring (0 <-> _offset x) c x
 
 -- use (_onset x <-> _offset x) instead of (0 <-> _offset x)
