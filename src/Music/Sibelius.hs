@@ -4,33 +4,33 @@
 
 module Music.Sibelius (
 
-        -- -- * Scores and staves
-        -- SibeliusScore(..),
-        -- SibeliusStaff(..),
-        -- SibeliusBar(..),
-        -- 
-        -- -- * Bar objects
-        -- SibeliusBarObject(..),
-        -- 
-        -- -- ** Notes
-        -- SibeliusChord(..),
-        -- SibeliusNote(..),
-        -- 
-        -- -- ** Lines
-        -- SibeliusSlur(..),
-        -- SibeliusCrescendoLine(..),
-        -- SibeliusDiminuendoLine(..),
-        -- 
-        -- -- ** Tuplets
-        -- SibeliusTuplet(..),
-        -- SibeliusArticulation(..),
-        -- readSibeliusArticulation,
-        -- 
-        -- -- ** Miscellaneous
-        -- SibeliusClef(..),
-        -- SibeliusKeySignature(..),
-        -- SibeliusTimeSignature(..),
-        -- SibeliusText(..),
+        -- * Scores and staves
+        SibeliusScore(..),
+        SibeliusStaff(..),
+        SibeliusBar(..),
+        
+        -- * Bar objects
+        SibeliusBarObject(..),
+        
+        -- ** Notes
+        SibeliusChord(..),
+        SibeliusNote(..),
+        
+        -- ** Lines
+        SibeliusSlur(..),
+        SibeliusCrescendoLine(..),
+        SibeliusDiminuendoLine(..),
+        
+        -- ** Tuplets
+        SibeliusTuplet(..),
+        SibeliusArticulation(..),
+        readSibeliusArticulation,
+        
+        -- ** Miscellaneous
+        SibeliusClef(..),
+        SibeliusKeySignature(..),
+        SibeliusTimeSignature(..),
+        SibeliusText(..),
 
   ) where
 
