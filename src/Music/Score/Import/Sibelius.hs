@@ -59,8 +59,23 @@ readSibeliusEither' path = do
 --
 fromSibelius :: IsSibelius a => SibeliusScore -> Score a
 fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff) =
-    foldr (</>) mempty $ fmap fromSibeliusStaff staves
+    pcat $ fmap (\staff -> set (parts') (partFromSibeliusStaff staff) (fromSibeliusStaff staff)) $ staves
     -- TODO meta information
+        where
+            partFromSibeliusStaff (SibeliusStaff bars name shortName) = partFromName (name, shortName)
+            
+            partFromName ("Violin I",_) = violins1
+            partFromName ("Violin II",_) = violins2
+            partFromName ("Viola",_) = violas
+            partFromName ("Violin",_) = violins
+            partFromName ("Violoncello",_) = cellos
+            partFromName ("Violoncello (a)",_) = (!! 0) $ divide 2 cellos
+            partFromName ("Violoncello (b)",_) = (!! 1) $ divide 2 cellos
+            partFromName ("Contrabass",_) = doubleBasses
+            partFromName ("Piano",_)       = tutti piano
+            partFromName ("Piano (a)",_)       = tutti piano
+            partFromName ("Piano (b)",_)       = tutti piano
+            partFromName (n,_) = error $ "Unknown instrument: " ++ n
 
 fromSibeliusStaff :: IsSibelius a => SibeliusStaff -> Score a
 fromSibeliusStaff (SibeliusStaff bars name shortName) =
