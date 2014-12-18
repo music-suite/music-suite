@@ -75,6 +75,13 @@ instance FromJSON SibeliusScore where
         -- TODO system staff
         <*> return ()
 
+data SibeliusSystemStaff = SibeliusSystemStaff {
+            systemStaffBars                :: [SibeliusBar]
+    }
+    deriving (Eq, Ord, Show)
+instance FromJSON SibeliusSystemStaff where
+    parseJSON (Object v) = SibeliusSystemStaff
+        <$> v .: "bars"
 
 data SibeliusStaff = SibeliusStaff {
             staffBars                :: [SibeliusBar],

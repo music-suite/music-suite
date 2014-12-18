@@ -47,6 +47,10 @@ readSibeliusEither :: IsSibelius a => FilePath -> IO (Either String (Score a))
 readSibeliusEither path = do
     json <- ByteString.readFile path
     return $ fmap fromSibelius $ eitherDecode' json
+readSibeliusEither' :: FilePath -> IO (Either String SibeliusScore)
+readSibeliusEither' path = do
+    json <- ByteString.readFile path
+    return $ eitherDecode' json
 
 
 
