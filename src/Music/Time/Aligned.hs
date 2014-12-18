@@ -23,6 +23,9 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Aligned (
+      -- * Alignable class
+      Alignable(..),
+      -- * Aligned values
       Aligned,
       aligned,
       renderAligned,
@@ -56,6 +59,15 @@ import           Music.Time.Note
 import           Music.Time.Score
 import           Music.Time.Voice
 
+-- TODO should this be a Setter or a Lens instead?
+class Alignable a where
+  align :: LocalDuration -> a -> a
+
+instance Alignable a => Alignable [a] where
+  align l = fmap (align l)
+
+instance Alignable (Aligned a) where
+  align l (Aligned ((t, _), a)) = Aligned ((t, l), a)
 
 -- type AlignedVoice a = Aligned (Voice a)
 
