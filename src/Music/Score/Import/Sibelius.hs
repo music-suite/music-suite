@@ -12,14 +12,14 @@ module Music.Score.Import.Sibelius (
 
 import Control.Lens
 import Music.Sibelius
-import Music.Score
+import qualified Music.Score as S
 import Music.Pitch hiding (Pitch, Interval)
 import Data.Aeson
 import qualified Music.Prelude
 import Music.Pitch.Literal (IsPitch)
 #ifdef GHCI
 import qualified System.Process
-import Music.Prelude (StandardNote)
+import Music.Prelude
 #endif
 
 import qualified Music.Pitch.Literal as Pitch
@@ -145,15 +145,15 @@ type IsSibelius a = (
     HasPart' a, 
     HasArticulation' a,
     HasDynamic' a,
-    Pitch a ~ Behavior Music.Prelude.Pitch,
+    S.Pitch a ~ Behavior Pitch,
     
     HasText a, 
-    Ord (Part a), 
-    Articulation a ~ Music.Prelude.Articulation,
+    Ord (S.Part a), 
+    S.Articulation a ~ Music.Prelude.Articulation,
     HasTremolo a,
     Tiable a,
     
-    Enum (Part a) 
+    Enum (S.Part a) 
     -- Num (Pitch a), 
     -- HasTremolo a, 
     -- HasText a,
