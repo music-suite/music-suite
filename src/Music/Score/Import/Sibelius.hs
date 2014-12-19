@@ -4,20 +4,24 @@
 
 module Music.Score.Import.Sibelius (
         IsSibelius(..),
-        -- fromSibelius,
-        -- readSibelius,
-        -- readSibeliusMaybe,
-        -- readSibeliusEither
+        fromSibelius,
+        readSibelius,
+        readSibeliusMaybe,
+        readSibeliusEither
   ) where
 
 import Control.Lens
 import Music.Sibelius
 import qualified Data.Maybe
 import qualified Music.Score as S
-import Music.Pitch hiding (Pitch, Interval)
 import Data.Aeson
 import qualified Music.Prelude
 import Music.Pitch.Literal (IsPitch)
+import Music.Score hiding (Pitch, Interval, Articulation, Part)
+import Music.Pitch
+import Music.Articulation
+import Music.Dynamics
+import Music.Parts
 #ifdef GHCI
 import qualified System.Process
 import Music.Prelude
