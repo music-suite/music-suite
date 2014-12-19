@@ -7,10 +7,12 @@ module Music.Sibelius (
         -- * Scores and staves
         SibeliusScore(..),
         SibeliusStaff(..),
+        SibeliusSystemStaff(..),
         SibeliusBar(..),
         
         -- * Bar objects
         SibeliusBarObject(..),
+        isTimeSignature,
         
         -- ** Notes
         SibeliusChord(..),
@@ -61,7 +63,7 @@ data SibeliusScore = SibeliusScore {
             scoreStaffHeight       :: Double,
             scoreTransposing       :: Bool,
             scoreStaves            :: [SibeliusStaff],
-            scoreSystemStaff       :: ()
+            scoreSystemStaff       :: SibeliusSystemStaff
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusScore where
@@ -72,8 +74,7 @@ instance FromJSON SibeliusScore where
         <*> v .: "staffHeight"
         <*> v .: "transposing"
         <*> v .: "staves"          
-        -- TODO system staff
-        <*> return ()
+        <*> v .: "systemStaff"          
 
 data SibeliusSystemStaff = SibeliusSystemStaff {
             systemStaffBars                :: [SibeliusBar]
@@ -113,8 +114,12 @@ data SibeliusBarObject
     | SibeliusBarObjectKeySignature SibeliusKeySignature
     | SibeliusBarObjectTuplet SibeliusTuplet
     | SibeliusBarObjectChord SibeliusChord
+    | SibeliusBarObjectUnknown String -- type
     deriving (Eq, Ord, Show)
 -- TODO highlights, lyric, barlines, comment, other lines and symbols
+
+isTimeSignature (SibeliusBarObjectTimeSignature _) = True
+isTimeSignature _ = False
 
 instance FromJSON SibeliusBarObject where
     parseJSON x@(Object v) = case HashMap.lookup "type" v of    
@@ -128,7 +133,8 @@ instance FromJSON SibeliusBarObject where
         Just "key"       -> SibeliusBarObjectKeySignature <$> parseJSON x
         Just "tuplet"    -> SibeliusBarObjectTuplet <$> parseJSON x
         Just "chord"     -> SibeliusBarObjectChord <$> parseJSON x
-        _                -> mempty -- failure
+        Just typ         -> SibeliusBarObjectUnknown <$> (return $ show typ)
+        _                -> mempty -- failure: no type field
 
 data SibeliusText = SibeliusText {
             textVoice               :: Int,
@@ -201,7 +207,7 @@ instance FromJSON SibeliusDiminuendoLine where
 data SibeliusTimeSignature = SibeliusTimeSignature {
             timeVoice               :: Int,
             timePosition            :: Int,
-            timeValue               :: Rational,
+            timeValue               :: [Int],
             timeIsCommon            :: Bool,
             timeIsAllaBreve         :: Bool
     }
@@ -210,7 +216,7 @@ instance FromJSON SibeliusTimeSignature where
     parseJSON (Object v) = SibeliusTimeSignature
         <$> v .: "voice" 
         <*> v .: "position"
-        <*> fmap (\[x,y] -> (x::Rational) / (y::Rational)) (v .: "value")
+        <*> v .: "value"
         <*> v .: "common"
         <*> v .: "allaBreve"
 
@@ -235,7 +241,7 @@ data SibeliusTuplet = SibeliusTuplet {
             tupletPosition            :: Int,
             tupletDuration            :: Int,
             tupletPlayedDuration      :: Int,
-            tupletValue               :: Rational
+            tupletValue               :: [Int]
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusTuplet where
@@ -244,7 +250,7 @@ instance FromJSON SibeliusTuplet where
         <*> v .: "position"
         <*> v .: "duration"
         <*> v .: "playedDuration"
-        <*> (v .: "value" >>= \[x,y] -> return $ x / y) -- TODO unsafe
+        <*> v .: "value"
 
 data SibeliusArticulation
     = UpBow

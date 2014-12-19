@@ -1,6 +1,6 @@
 
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction, 
-             ConstraintKinds, FlexibleContexts, TypeFamilies, CPP #-}
+             ConstraintKinds, FlexibleContexts, TypeFamilies, CPP, ViewPatterns #-}
 
 module Music.Score.Import.Sibelius (
         IsSibelius(..),
@@ -12,6 +12,7 @@ module Music.Score.Import.Sibelius (
 
 import Control.Lens
 import Music.Sibelius
+import qualified Data.Maybe
 import qualified Music.Score as S
 import Music.Pitch hiding (Pitch, Interval)
 import Data.Aeson
@@ -52,16 +53,33 @@ readSibeliusEither' path = do
     json <- ByteString.readFile path
     return $ eitherDecode' json
 
+-- Get the eventual time signature changes in each bar
+getSibeliusTimeSignatures :: SibeliusSystemStaff -> [Maybe TimeSignature]
+getSibeliusTimeSignatures x = fmap (getTimeSignatureInBar) 
+  $ systemStaffBars x
+  where
+    getTimeSignatureInBar = fmap convertTimeSignature . Data.Maybe.listToMaybe . filter isTimeSignature . barElements
 
+convertTimeSignature :: SibeliusBarObject -> TimeSignature
+convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voice position [m,n] isCommon isAllaBReve)) = 
+    (fromIntegral m / fromIntegral n)  
 
 -- |
 -- Convert a score from a Sibelius representation.
 --
 fromSibelius :: IsSibelius a => SibeliusScore -> Score a
 fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff) =
-    pcat $ fmap (\staff -> set (parts') (partFromSibeliusStaff staff) (fromSibeliusStaff staff)) $ staves
+    timeSig $ pcat $ fmap (\staff -> set (parts') (partFromSibeliusStaff staff) (fromSibeliusStaff barDur staff)) $ staves
     -- TODO meta information
         where
+            -- FIXME only reads TS in first bar
+            barDur = case head (getSibeliusTimeSignatures systemStaff) of
+              Nothing -> 1
+              Just ts -> barDuration ts
+            timeSig = case head (getSibeliusTimeSignatures systemStaff) of
+              Nothing -> id
+              Just ts -> timeSignature ts
+          
             partFromSibeliusStaff (SibeliusStaff bars name shortName) = partFromName (name, shortName)
             
             partFromName ("Violin I",_) = violins1
@@ -76,19 +94,22 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Piano (a)",_)       = tutti piano
             partFromName ("Piano (b)",_)       = tutti piano
             partFromName (n,_) = error $ "Unknown instrument: " ++ n
+-- TODO move to Score.Meta.TimeSignature
 
-fromSibeliusStaff :: IsSibelius a => SibeliusStaff -> Score a
-fromSibeliusStaff (SibeliusStaff bars name shortName) =
-    removeRests $ scat $ fmap fromSibeliusBar bars
-    -- TODO bar length hardcoded
+barDuration :: TimeSignature -> Duration
+barDuration (getTimeSignature -> (as,b)) =  realToFrac (sum as) / realToFrac b
+
+fromSibeliusStaff :: IsSibelius a => Duration -> SibeliusStaff -> Score a
+fromSibeliusStaff d (SibeliusStaff bars name shortName) =
+    removeRests $ scat $ fmap (fromSibeliusBar d) bars
     -- TODO meta information
     -- NOTE slur pos/dur always "stick" to an adjacent note, regardless of visual position
     --      for other lines (cresc etc) this might not be the case
     -- WARNING key sig changes goes at end of previous bar
 
-fromSibeliusBar :: IsSibelius a => SibeliusBar -> Score (Maybe a)
-fromSibeliusBar (SibeliusBar elems) = 
-    fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> return Nothing^*1
+fromSibeliusBar :: IsSibelius a => Duration -> SibeliusBar -> Score (Maybe a)
+fromSibeliusBar d (SibeliusBar elems) = 
+    fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> return Nothing^*d
     where
         chords   = filter isChord elems
         tuplets  = filter isTuplet elems -- TODO use these
