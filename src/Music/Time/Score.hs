@@ -360,7 +360,7 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
 triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-triples = events . _zipList . through triple triple . from _zipList
+triples = unsafeTriples
 
 
 -- | Map over the values in a score.
