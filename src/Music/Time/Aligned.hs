@@ -28,6 +28,7 @@ module Music.Time.Aligned (
       -- * Aligned values
       Aligned,
       aligned,
+      realign,
       renderAligned,
       renderAlignedVoice,
       renderAlignedNote,
@@ -100,11 +101,15 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
     where
       size = v^.duration
 
+-- | Change the alignment of a value without moving it.
+--
+-- > x^.'era' = ('realign' l x)^.'era'
+realign :: (HasDuration a, Transformable a) => LocalDuration -> Aligned a -> Aligned a
+realign l a@(Aligned ((t,_),x)) = Aligned ((a^.position l,l),x)
+
 -- renderAligned :: AlignedVoice a -> Score a
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
 renderAligned f a@(Aligned (_, v)) = f (_era a) v
-
-
 
 
 -- Somewhat suspect, see below for clarity...
