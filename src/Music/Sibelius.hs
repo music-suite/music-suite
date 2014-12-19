@@ -140,7 +140,7 @@ data SibeliusText = SibeliusText {
             textVoice               :: Int,
             textPosition            :: Int,
             textText                :: String,
-            textStyle               :: String
+            textStyle               :: Maybe String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusText where
@@ -153,7 +153,7 @@ instance FromJSON SibeliusText where
 data SibeliusClef = SibeliusClef {
             clefVoice               :: Int,
             clefPosition            :: Int,
-            clefStyle               :: String
+            clefStyle               :: Maybe String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusClef where
@@ -166,7 +166,7 @@ data SibeliusSlur = SibeliusSlur {
             slurVoice               :: Int,
             slurPosition            :: Int,
             slurDuration            :: Int,
-            slurStyle               :: String
+            slurStyle               :: Maybe String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusSlur where
@@ -180,7 +180,7 @@ data SibeliusCrescendoLine = SibeliusCrescendoLine {
             crescVoice               :: Int,
             crescPosition            :: Int,
             crescDuration            :: Int,
-            crescStyle               :: String
+            crescStyle               :: Maybe String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusCrescendoLine where
@@ -194,7 +194,7 @@ data SibeliusDiminuendoLine = SibeliusDiminuendoLine {
             dimVoice               :: Int,
             dimPosition            :: Int,
             dimDuration            :: Int,
-            dimStyle               :: String
+            dimStyle               :: Maybe String
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusDiminuendoLine where
@@ -310,7 +310,7 @@ data SibeliusNote = SibeliusNote {
             noteDiatonicPitch       :: Int,
             noteAccidental          :: Int,
             noteTied                :: Bool,
-            noteStyle               :: Int -- not String?
+            noteStyle               :: Maybe Int -- not String?
     }
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusNote where
