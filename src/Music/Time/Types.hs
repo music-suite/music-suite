@@ -511,8 +511,8 @@ reflectSpan p = over (range . both) (reflectThrough p)
 -- Normalize a span, i.e. reverse it if negative, and do nothing otherwise.
 --
 -- @
--- _duration s = _duration (normalizeSpan s)
--- _midpoint s = _midpoint (normalizeSpan s)
+-- abs $ s^.'duration' = abs $ ('normalizeSpan' s)^.'duration'
+-- s^.'midpoint' = ('normalizeSpan' s)^.'midpoint'
 -- @
 --
 normalizeSpan :: Span -> Span
