@@ -56,7 +56,8 @@ ambitus = iso toA unA . _Unwrapped
     unA a = case (I.lowerBound a, I.upperBound a) of
       (Finite m, Finite n) -> (m, n)
       -- FIXME this can happen as empty span can be represented as PosInf..NegInf
-      _                    -> error $ "Strange ambitus: " ++ show (I.lowerBound a, I.upperBound a)
+      -- _                    -> error $ "Strange ambitus: " ++ show (I.lowerBound a, I.upperBound a)
+      _                    -> error $ "Strange ambitus"
 
 ambitus' :: (Num a, Ord a) => Iso' (a, a) (Ambitus a)
 ambitus' = ambitus
