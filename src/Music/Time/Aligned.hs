@@ -103,7 +103,9 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
 
 -- | Change the alignment of a value without moving it.
 --
--- > x^.'era' = ('realign' l x)^.'era'
+-- @
+-- x^.'era' = ('realign' l x)^.'era'
+-- @
 realign :: (HasDuration a, Transformable a) => LocalDuration -> Aligned a -> Aligned a
 realign l a@(Aligned ((t,_),x)) = Aligned ((a^.position l,l),x)
 
