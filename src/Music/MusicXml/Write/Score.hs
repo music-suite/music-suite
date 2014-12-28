@@ -150,6 +150,7 @@ instance WriteMusicXml MusicElem where
     write (MusicDirection x)  = single $ unode "direction" (unode "direction-type" $ write x)
     write (MusicBackup d)     = single $ unode "backup" (unode "duration" $ show $ getDivs $ d)
     write (MusicForward d)    = single $ unode "forward" (unode "duration" $ show $ getDivs $ d)
+    write (MusicBarline x)    = write x
 
 -- ----------------------------------------------------------------------------------
 -- Attributes
@@ -409,6 +410,19 @@ instance WriteMusicXml Direction where
     write Bracket                               = notImplemented "Unsupported directions"
     write (OtherDirection dir)                  = notImplemented "OtherDirection"
 
+-- ----------------------------------------------------------------------------------
+-- Barline
+-- ----------------------------------------------------------------------------------
+
+instance WriteMusicXml Barline where
+    write (Barline location style repeat) = single $ 
+                                            addAttr (uattr "location" (show location)) $ 
+                                            unode "barline" $ 
+                                            [unode "bar-style" (show style)] <> 
+                                            maybe [] write repeat
+
+instance WriteMusicXml Repeat where
+    write (Repeat dir) = single $ addAttr (uattr "direction" (show dir)) $ unode "repeat" ()
 
 -- ----------------------------------------------------------------------------------
 -- Lyrics
