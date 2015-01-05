@@ -85,6 +85,25 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
               Just ts -> timeSignature ts
           
             partFromSibeliusStaff (SibeliusStaff bars name shortName) = partFromName (name, shortName)
+
+            -- TODO something more robust (in part library...)
+            partFromName ("Piccolo",_) = piccoloFlutes
+            partFromName ("Piccolo Flute",_) = piccoloFlutes
+            partFromName ("Flute",_) = flutes
+            partFromName ("Oboe",_) = oboes
+            partFromName ("Cor Anglais",_) = tutti corAnglais
+            partFromName ("Clarinet",_) = clarinets
+            partFromName ("Clarinet in Bb",_) = clarinets
+            partFromName ("Clarinet in A",_) = clarinets
+            partFromName ("Bassoon",_) = bassoons
+            partFromName ("Bassoon (a)",_) = (!! 0) $ divide 2 cellos
+            partFromName ("Bassoon (b)",_) = (!! 1) $ divide 2 cellos
+            partFromName ("Horn",_) = horns
+            partFromName ("Horn in F",_) = horns
+            partFromName ("Horn in E",_) = horns
+            partFromName ("Trumpet",_) = trumpets
+            partFromName ("Trombone",_) = trombones
+            partFromName ("Timpani",_) = tutti timpani
             
             partFromName ("Violin I",_) = violins1
             partFromName ("Violin II",_) = violins2
