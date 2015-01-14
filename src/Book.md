@@ -8,7 +8,8 @@ Basics of time
 Working with melody
   Notes, voices and melodies
   Duration patterns and rhythms to voices
-  Aligned voices and metrical grids
+  Aligned voices, phrases and metrical grids
+  Phrase traversals and isos
   Recursive voices and infinite melody
 Working with polyphony
   Multiple aligned voices
