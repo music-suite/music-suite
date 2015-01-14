@@ -1,5 +1,8 @@
 
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -11,99 +14,167 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Equal temperament pitch of any size.
+-- Generic equal temperament pitch.
+--
+-- Use the type-level numbers from @type-unary@ to construct an temperement dividing
+-- the octave in any number of steps. Common cases such as 6-TET (whole-tones),
+-- 12-TET (half-tones) and 24-TET (quarter-tones) are provided for convenience.
 --
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Equal (
-    -- Equal,
-    -- toEqual,
-    -- Equal6,
-    -- Equal12,
-    -- Equal17,
-    -- Equal24,
-    -- Equal36,
-    -- -- toEqual',
-    -- unsafeToEqual,
-    -- value,
-    -- size,
-    -- cast,
+    -- * Equal temperament
+    Equal,
+    toEqual,
+    fromEqual,
+    equalToRatio,
+    size,
+    cast,
+
+    -- ** Synonyms
+    Equal6,
+    Equal12,
+    Equal17,
+    Equal24,
+    Equal36,
+
+    -- ** Extra type-level naturals
+    N20,
+    N30,
+    N17,
+    N24,
+    N36,
 )
 where
 
--- {-
+import Data.Maybe
+import Data.Either
+import Data.Semigroup
+import Data.VectorSpace
+import Data.AffineSpace
+import Control.Monad
+import Control.Applicative
+
+import Music.Pitch.Absolute
+
+import TypeUnary.Nat
+
+-- Based on Data.Fixed
+
+newtype Equal a = Equal { getEqual :: Int }
+
+deriving instance {-IsNat a =>-} Eq (Equal a)
+deriving instance {-IsNat a =>-} Ord (Equal a)
+
+instance {-IsNat a =>-} Show (Equal a) where
+  show (Equal a) = show a
+  -- showsPrec d (Equal x) = showParen (d > app_prec) $
+  --      showString "Equal " . showsPrec (app_prec+1) x
+  --   where app_prec = 10
+
+instance IsNat a => Num (Equal a) where
+  Equal a + Equal b = Equal (a + b)
+  Equal a * Equal b = Equal (a * b)
+  negate (Equal a)  = Equal (negate a)
+  abs (Equal a)     = Equal (abs a)
+  signum (Equal a)  = Equal (signum a)
+  fromInteger       = toEqual . fromIntegral
+
+instance IsNat a => Semigroup (Equal a) where
+  (<>)    = (+)
+
+instance IsNat a => Monoid (Equal a) where
+  mempty  = 0
+  mappend = (+)
+
+instance IsNat a => AdditiveGroup (Equal a) where
+  zeroV   = 0
+  (^+^)   = (+)
+  negateV = negate
+
+instance IsNat a => VectorSpace (Equal a) where
+  type Scalar (Equal a) = Equal a
+  (*^) = (*)
+
+-- Convenience to avoid ScopedTypeVariables etc    
+getSize :: IsNat a => Equal a -> Nat a
+getSize _ = nat 
+
+-- | Size of this type (value not evaluated).
 -- 
--- TODO mixing things up here
+-- >>> size (undefined :: Equal N2)
+-- 2
 -- 
---   This type implements limited values (useful for interval *steps*)
---   An ET-interval is just an int, with a type-level size (divMod is "separate")
+-- >>> size (undefined :: Equal N12)
+-- 12
 -- 
+size :: IsNat a => Equal a -> Int
+size = natToZ . getSize
+
+-- TODO I got this part wrong
 -- 
--- -}
+-- This type implements limited values (useful for interval *steps*)
+-- An ET-interval is just an int, with a type-level size (divMod is "separate")
+
+-- -- | Create an equal-temperament value.
+-- toEqual :: IsNat a => Int -> Maybe (Equal a)
+-- toEqual = checkSize . Equal
 -- 
+-- -- | Unsafely create an equal-temperament value.
+-- unsafeToEqual :: IsNat a => Int -> Equal a
+-- unsafeToEqual n = case toEqual n of
+--   Nothing -> error $ "Bad equal: " ++ show n
+--   Just x  -> x
 -- 
--- import Data.Maybe
--- import Data.Either
--- import Data.Semigroup
--- import Control.Monad
--- import Control.Applicative
--- import Music.Pitch.Absolute
+-- checkSize :: IsNat a => Equal a -> Maybe (Equal a)
+-- checkSize x = if 0 <= fromEqual x && fromEqual x < size x then Just x else Nothing
 -- 
--- import Data.TypeLevel.Num hiding ((<), (>), (+), (<=), (*))
--- import qualified Data.TypeLevel.Num as TL
--- 
--- data Foo = Foo Int deriving Show
--- 
--- newtype Equal a = Equal { getEqual :: Pos a => Int }
---   deriving ()
--- 
--- instance Pos a => Show (Equal a) where
---   -- show (Equal x) = "(Equal " ++ (show x) ++ ")"
---   showsPrec d (Equal x) = showParen (d > app_prec) $
---        showString "Equal " . showsPrec (app_prec+1) x
---     where app_prec = 10
--- 
--- -- Convenience to avoid ScopedTypeVariables etc    
--- getSize :: Pos a => Equal a -> a
--- getSize = undefined
--- 
--- -- | Value, which is in @[0,size x)@.
--- value :: Pos a => Equal a -> Int
--- value = getEqual
--- 
--- -- | Size of this type (value not evaluated).
--- size :: Pos a => Equal a -> Int
--- size = toInt . getSize
--- 
--- toEqual :: Pos a => Int -> Maybe (Equal a)
--- toEqual = toEqual' undefined
--- 
--- toEqual' :: Pos a => a -> Int -> Maybe (Equal a)
--- toEqual' s n = if 0 <= n && n < toInt s then Just (Equal n) else Nothing
--- 
--- unsafeToEqual :: Int -> Equal a
--- unsafeToEqual n = Equal n
--- 
--- type Equal6  = Equal D6
--- type Equal12 = Equal D12
--- type Equal17 = Equal D17
--- type Equal24 = Equal D24
--- type Equal36 = Equal D36
--- 
--- -- unsafemapValue :: (Int -> Int) -> Equal a -> Equal b
--- -- mapValue
--- 
--- -- b = 24, a = 12, mul = 24/12
--- -- | Safely cast a tempered value to a larger size.
--- --
--- -- >>> cast (unsafeToEqual 1 :: Equal12) :: Equal24
--- -- Equal 2 :: Equal24
--- --
--- cast :: (Pos a, Pos b, Pos c, Div b a c) => Equal a -> Equal b
--- cast = cast' undefined
--- 
--- cast' :: (Pos a, Pos b, Pos c, Div b a c) => Equal c -> Equal a -> Equal b
--- cast' cDummy (Equal a) = Equal (a * size cDummy)
--- 
--- 
--- 
+
+-- | Create an equal-temperament value.
+toEqual :: IsNat a => Int -> Equal a
+toEqual = Equal
+
+-- | Extract an equal-temperament value.
+fromEqual :: IsNat a => Equal a -> Int
+fromEqual = getEqual
+
+-- | Convert an equal-temeperament value to a frequency ratio.
+--
+-- >>> equalToRatio (7 :: Equal12)
+-- 1.4983070768766815
+--
+-- >>> equalToRatio (4 :: Equal12)
+-- 1.2599210498948732
+--
+equalToRatio :: IsNat a => Equal a -> Double
+equalToRatio x = 2**(realToFrac (fromEqual x) / realToFrac (size x))
+
+-- | Safely cast a tempered value to another size.
+--
+-- >>> cast (1 :: Equal12) :: Equal24
+-- 2 :: Equal24
+--
+-- >>> cast (8 :: Equal12) :: Equal6
+-- 4 :: Equal6
+--
+-- >>> (2 :: Equal12) + cast (2 :: Equal24)
+-- 3 :: Equal12
+--
+cast :: (IsNat a, IsNat b) => Equal a -> Equal b
+cast = cast' undefined
+
+cast' :: (IsNat a, IsNat b) => Equal b -> Equal a -> Equal b
+cast' bDummy aDummy@(Equal a) = Equal $ (a * size bDummy) `div` size aDummy
+
+type Equal6  = Equal N6
+type Equal12 = Equal N12
+type Equal17 = Equal N17
+type Equal24 = Equal N24
+type Equal36 = Equal N36
+
+type N20 = N10 :*: N2
+type N30 = N10 :*: N3
+type N17 = N10 :+: N7
+type N24 = N20 :+: N4
+type N36 = N30 :+: N6
+

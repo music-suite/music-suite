@@ -12,14 +12,42 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Clefs and staff positions.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Pitch.Clef (
+      -- * Clef representation
       ClefSymbol,
-      OctaveAdjustment,
+      ClefOctave,
       Clef,
       symbolName,
       symbolPitch,
       positionPitch,
       pitchPosition,
+      -- ** Properties
+      isModernClef,
+      isHistoricalClef,
+      isVoiceClef,
+
+      -- * Standard clefs
+      trebleClef,
+      bassClef,
+      sopranoClef,
+      mezzoSopranoClef,
+      altoClef,
+      tenorClef,
+      baritoneClef,
   ) where
 
 import Data.Typeable
@@ -31,9 +59,10 @@ import Music.Pitch.Literal
 data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
     deriving (Eq, Ord, Show, Typeable)
 
-type OctaveAdjustment = Integer
+type ClefOctave = Integer
+type ClefLine   = StaffLines
 
-type Clef = (ClefSymbol, OctaveAdjustment, StaffLines)
+type Clef = (ClefSymbol, ClefOctave, ClefLine)
 
 symbolName :: ClefSymbol -> String
 symbolName GClef = "G clef"
@@ -79,11 +108,33 @@ Map this to Pitch.Common
   If 1), do we need to separate G/C/F in ClefSymbol, maybe just put a single constructor for common pitch.
   In that case, maybe a function isStandardClefPitch (i.e. c/f/g) would be appropriate.
 -}
+trebleClef :: Clef
+bassClef :: Clef
+sopranoClef :: Clef
+mezzoSopranoClef :: Clef
+altoClef :: Clef
+tenorClef :: Clef
+baritoneClef :: Clef
+trebleClef        = (GClef, -1 :: ClefOctave, -1 :: ClefLine)
+bassClef          = (FClef, 1  :: ClefOctave, -1 :: ClefLine)
+sopranoClef       = (CClef, 0  :: ClefOctave, -2 :: ClefLine)
+mezzoSopranoClef  = (CClef, 0  :: ClefOctave, -1 :: ClefLine)
+altoClef          = (CClef, 0  :: ClefOctave, 0  :: ClefLine)
+tenorClef         = (CClef, 0  :: ClefOctave, 1  :: ClefLine)
+baritoneClef      = (CClef, 0  :: ClefOctave, 2  :: ClefLine)
 
+isModernClef :: Clef -> Bool
+isModernClef x | x == trebleClef  = True
+isModernClef x | x == bassClef    = True
+isModernClef x | x == altoClef    = True
+isModernClef x | x == tenorClef   = True
+isModernClef x | otherwise        = False
 
--- isModernClef :: Clef -> Bool
--- isHistoricalClef :: Clef -> Bool
+isHistoricalClef :: Clef -> Bool
+isHistoricalClef _ = False
 
--- i.e. a c clef on some staff
--- isVoiceClef :: Clef -> Bool
-
+-- | Is this a voice clef, i.e. a c clef on some staff.
+isVoiceClef :: Clef -> Bool
+isVoiceClef x | x == altoClef    = True
+isVoiceClef x | x == tenorClef   = True
+isVoiceClef x | otherwise        = False

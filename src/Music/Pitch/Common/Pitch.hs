@@ -1,6 +1,9 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, 
-    FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -19,48 +22,61 @@
 module Music.Pitch.Common.Pitch (
         -- * Accidentals
         Accidental,
-        natural, 
-        flat, 
-        sharp, 
-        doubleFlat, 
+        natural,
+        flat,
+        sharp,
+        doubleFlat,
         doubleSharp,
 
         -- ** Inspecting accidentals
         isNatural,
         isFlattened,
         isSharpened,
-        isStandard,
+        isStandardAccidental,
 
         -- ** Name
         Name(..),
 
         -- * Pitch
         Pitch,
-        Pitch(..),
-        
         mkPitch,
         name,
         accidental,
+
+        -- ** Diatonic and chromatic pitch
+        upDiatonicP,
+        downDiatonicP,
+        upChromaticP,
+        downChromaticP,
+        invertDiatonicallyP,
+        invertChromaticallyP,
+        
+        -- ** Utility
         asPitch
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Data.Typeable
-import Control.Monad
-import Control.Applicative
-import qualified Data.Char as Char
-import qualified Data.List as List
+import           Control.Applicative
+import           Control.Monad
+import           Control.Lens hiding (simple)
+import           Data.AffineSpace
+import           Data.AffineSpace.Point
+import qualified Data.Char                    as Char
+import           Data.Either
+import qualified Data.List                    as List
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.Typeable
+import           Data.VectorSpace
 
-import Music.Pitch.Absolute
-import Music.Pitch.Literal
-import Music.Pitch.Alterable
-import Music.Pitch.Augmentable
-import Music.Pitch.Common.Interval
-import Music.Pitch.Common.Semitones
+import           Music.Pitch.Absolute
+import           Music.Pitch.Alterable
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Number
+import           Music.Pitch.Common.Interval
+import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Common.Chromatic
+import           Music.Pitch.Common.Diatonic
+import           Music.Pitch.Literal
 
 -- |
 -- An accidental is either flat, natural or sharp.
@@ -68,31 +84,31 @@ import Music.Pitch.Common.Semitones
 -- This representation allows for an arbitrary number of flats or sharps rather than just
 -- single and double.
 --
--- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones, 
+-- The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones,
 -- i.e. a double flat is @-2@, natural @0@ and so on.
 --
 newtype Accidental = Accidental { getAccidental :: Integer }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
-    
+  deriving (Eq, Ord, Num, Enum, Real, Integral)
+
 instance Show Accidental where
-    show n | n == 0    = "natural"
-           | n == 1    = "sharp"
-           | n == (-1) = "flat"
-           | n == 2    = "doubleSharp"
-           | n == (-2) = "doubleFlat"
-           | n > 0     = "sharp * " ++ show (getAccidental n)
-           | n < 0     = "flat * " ++ show (negate $ getAccidental n)
+  show n | n == 0    = "natural"
+         | n == 1    = "sharp"
+         | n == (-1) = "flat"
+         | n == 2    = "doubleSharp"
+         | n == (-2) = "doubleFlat"
+         | n > 0     = "sharp * " ++ show (getAccidental n)
+         | n < 0     = "flat * " ++ show (negate $ getAccidental n)
 
 instance Alterable Accidental where
-    sharpen = succ
-    flatten = pred
+  sharpen = succ
+  flatten = pred
 
--- | 
+-- |
 -- Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
 --
 instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
-    fromPitch l 1       = sharpen (fromPitch l)
-    fromPitch l (-1)    = flatten (fromPitch l)
+  fromPitch l 1     = sharpen (fromPitch l)
+  fromPitch l (-1)  = flatten (fromPitch l)
 -- Requires FlexibleInstances
 
 sharp, flat, natural, doubleFlat, doubleSharp :: Accidental
@@ -114,27 +130,27 @@ doubleFlat  = -2
 
 isNatural, isSharpened, isFlattened :: Accidental -> Bool
 
--- | Returns whether this is a natural accidental.
+-- | Returns whether this is a natural accidental.
 isNatural   = (== 0)
 
--- | Returns whether this is a sharp, double sharp etc.
+-- | Returns whether this is a sharp, double sharp etc.
 isSharpened = (> 0)
 
--- | Returns whether this is a flat, double flat etc.
+-- | Returns whether this is a flat, double flat etc.
 isFlattened = (< 0)
 
 
--- | Returns whether this is a standard accidental, i.e.
+-- | Returns whether this is a standard accidental, i.e.
 --   either a double flat, flat, natural, sharp or double sharp.
-isStandard :: Accidental -> Bool
-isStandard a = abs a < 2
-
+isStandardAccidental :: Accidental -> Bool
+isStandardAccidental a = abs a < 2
+-- was: isStandard
 
 -- |
 -- A pitch name.
 --
 data Name = C | D | E | F | G | A | B
-    deriving (Eq, Ord, Show, Enum)
+  deriving (Eq, Ord, Show, Enum)
 
 -- |
 -- Common pitch representation.
@@ -188,51 +204,52 @@ data Name = C | D | E | F | G | A | B
 -- > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Pitch = Pitch { getPitch :: Interval }
-    deriving (Eq, Ord, Typeable)
-    
-instance Num Pitch where
-    Pitch a + Pitch b = Pitch (a + b)
-    negate (Pitch a)  = Pitch (negate a)
-    abs (Pitch a)     = Pitch (abs a)
-    (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
-    signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
-    fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+  deriving (Eq, Ord, Typeable)
 
-instance AffineSpace Pitch where
-    type Diff Pitch     = Interval
-    Pitch a .-. Pitch b = a ^-^ b
-    Pitch a .+^ b       = Pitch (a ^+^ b)
-
-instance Show Pitch where
-    show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
-        where        
-            showName = fmap Char.toLower . show
-            showOctave n
-                | n > 0     = replicate' n '\''
-                | otherwise = replicate' (negate n) '_'
-            showAccidental n
-                | n > 0     = replicate' n 's'
-                | otherwise = replicate' (negate n) 'b'
-
-instance Alterable Pitch where
-    sharpen (Pitch a) = Pitch (augment a)
-    flatten (Pitch a) = Pitch (diminish a)
+instance IsPitch Pitch where
+  fromPitch (PitchL (c, a, o)) =
+    Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
+    where
+      qual Nothing  = 0
+      qual (Just n) = round n
 
 instance Enum Pitch where
-    toEnum = Pitch . mkInterval' 0 . fromIntegral
-    fromEnum = fromIntegral . pred . number . (.-. c)
+  toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b)^.interval') 0 . fromIntegral
+  fromEnum = fromIntegral . pred . number . (.-. c)
 
--- |
--- This is just the identity function, but is useful to fix the type of 'Pitch'.
---
-asPitch :: Pitch -> Pitch
-asPitch = id
+instance Alterable Pitch where
+  sharpen (Pitch a) = Pitch (augment a)
+  flatten (Pitch a) = Pitch (diminish a)
+
+instance Show Pitch where
+  show p = showName (name p) ++ showAccidental (accidental p) ++ showOctave (octaves $ getPitch p)
+    where
+      showName = fmap Char.toLower . show
+      showOctave n
+        | n > 0     = replicate (fromIntegral n) '\''
+        | otherwise = replicate (negate $ fromIntegral n) '_'
+      showAccidental n
+        | n > 0     = replicate (fromIntegral n) 's'
+        | otherwise = replicate (negate $ fromIntegral n) 'b'
+
+instance Num Pitch where
+  Pitch a + Pitch b = Pitch (a + b)
+  negate (Pitch a)  = Pitch (negate a)
+  abs (Pitch a)     = Pitch (abs a)
+  (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
+  signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
+  fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+
+instance AffineSpace Pitch where
+  type Diff Pitch     = Interval
+  Pitch a .-. Pitch b = a ^-^ b
+  Pitch a .+^ b       = Pitch (a ^+^ b)
 
 -- |
 -- Creates a pitch from name accidental.
 --
 mkPitch :: Name -> Accidental -> Pitch
-mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
+mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (fromIntegral acc) (fromEnum name)
 
 -- |
 -- Returns the name of a pitch.
@@ -245,7 +262,7 @@ mkPitch name acc = Pitch $ mkInterval' (fromIntegral acc) (fromEnum name)
 -- @
 --
 name :: Pitch -> Name
-name x               
+name x
   | i == 7           = toEnum 0 -- Arises for flat C etc.
   | 0 <= i && i <= 6 = toEnum i
   | otherwise        = error $ "Pitch.name: Bad value " ++ show i
@@ -259,22 +276,31 @@ name x
 --
 accidental :: Pitch -> Accidental
 accidental = fromIntegral . intervalDiff . simple . getPitch
+  where
+    intervalDiff = view (from interval'._1)
 
--- | The same as 'c', but fixed to 'Pitch'. This is useful if you want
---   to treat 'Pitch' as an affine space around middle C, that is /C4/ in Scientific Pitch Notation.
-middleC :: Pitch
-middleC = c
+-- |
+-- This is just the identity function, but is useful to fix the type of 'Pitch'.
+--
+asPitch :: Pitch -> Pitch
+asPitch = id
 
-instance IsPitch Pitch where
-    fromPitch (PitchL (c, a, o)) =
-        Pitch $ mkInterval' (qual a) c
-            ^+^
-            (perfect octave^* fromIntegral o)
-        where
-            qual Nothing  = 0
-            qual (Just n) = round n
+upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+upChromaticP origin n = relative origin $ (_alteration +~ n)
 
--- midiNumber :: Pitch -> Integer
--- midiNumber = fromIntegral . semitones . getPitch
+downChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
+downChromaticP origin n = relative origin $ (_alteration -~ n)
 
-replicate' n = replicate (fromIntegral n)
+upDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+upDiatonicP origin n = relative origin $ (_steps +~ n)
+
+downDiatonicP :: Pitch -> DiatonicSteps -> Pitch -> Pitch
+downDiatonicP origin n = relative origin $ (_steps -~ n)
+
+invertDiatonicallyP :: Pitch -> Pitch -> Pitch
+invertDiatonicallyP origin = relative origin $ (_steps %~ negate)
+
+invertChromaticallyP :: Pitch -> Pitch -> Pitch
+invertChromaticallyP origin = relative origin $ (_alteration %~ negate)
+
+

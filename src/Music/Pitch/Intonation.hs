@@ -1,4 +1,6 @@
 
+{-# LANGUAGE ViewPatterns #-}
+
 -------------------------------------------------------------------------------------
 -- |
 -- Copyright   : (c) Hans Hoglund 2012
@@ -9,7 +11,7 @@
 -- Stability   : experimental
 -- Portability : portable
 --
--- Provides intonation.
+-- Provides intonation, i.e. mappings from relative to absolute pitch.
 --
 -------------------------------------------------------------------------------------
 
@@ -45,18 +47,26 @@ import Data.Either
 import Data.Semigroup
 import Data.VectorSpace
 import Data.AffineSpace
+import Data.Basis
 import Control.Monad
 import Control.Applicative
 import Data.Fixed
 import Data.Ratio
+import Control.Lens
 
 import Music.Pitch.Absolute
-import Music.Pitch.Literal
+import Music.Pitch.Literal as Intervals
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Pitch
 
 type Intonation p = p -> Hertz
 type Tuning i = i -> Double
+
+basis_A1 :: Interval
+basis_A1 = basisValue Chromatic
+basis_d2 :: Interval
+basis_d2 = basisValue Diatonic
+
 
 synTune :: (Interval, Double) -> (Interval, Double) -> Interval -> Double
 synTune (i1, i1rat) (i2, i2rat) (Interval (a1, d2)) =

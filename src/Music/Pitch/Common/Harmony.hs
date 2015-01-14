@@ -1,4 +1,18 @@
 
+------------------------------------------------------------------------------------
+-- |
+-- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
+--
+-- License     : BSD-style
+--
+-- Maintainer  : hans@hanshoglund.se
+-- Stability   : experimental
+-- Portability : non-portable (TF,GNTD)
+--
+-- Provides standard intervals.
+--
+-------------------------------------------------------------------------------------
+
 module Music.Pitch.Common.Harmony (
         isDissonance,
         isConsonance,
@@ -9,6 +23,8 @@ module Music.Pitch.Common.Harmony (
   ) where
 
 import Music.Pitch.Common.Interval
+import Music.Pitch.Common.Number
+import Music.Pitch.Common.Quality
 import Music.Pitch.Literal      
 
 import Data.Semigroup
@@ -25,9 +41,9 @@ import qualified Data.Set as Set
 -- | Whether the given interval is a (harmonic) dissonance.
 isDissonance :: Interval -> Bool
 isDissonance x = case number (simple x) of
-    2 -> True
-    7 -> True
-    _ -> False
+  2 -> True
+  7 -> True
+  _ -> False
 
 -- | Whether the given interval is a (harmonic) consonance.
 isConsonance :: Interval -> Bool
@@ -36,17 +52,17 @@ isConsonance x = isPerfectConsonance x || isImperfectConsonance x
 -- | Whether the given interval is a perfect (harmonic) consonance.
 isPerfectConsonance :: Interval -> Bool
 isPerfectConsonance x = case number (simple x) of
-    1 -> True
-    4 -> True
-    5 -> True
-    _ -> False
+  1 -> True
+  4 -> True
+  5 -> True
+  _ -> False
 
 -- | Whether the given interval is an imperfect (harmonic) consonance.
 isImperfectConsonance :: Interval -> Bool
 isImperfectConsonance x = case number (simple x) of
-    3 -> True
-    6 -> True
-    _ -> False
+  3 -> True
+  6 -> True
+  _ -> False
 
 -- | Whether the given interval is a melodic dissonance.
 isMelodicDissonance :: Interval -> Bool
@@ -56,6 +72,7 @@ isMelodicDissonance x = not $ isMelodicConsonance x
 isMelodicConsonance :: Interval -> Bool
 isMelodicConsonance x = quality x `elem` [Perfect, Major, Minor]
 
+{-
 type Chord = Set Interval
 
 majorTriad, minorTriad :: Chord
@@ -67,3 +84,4 @@ min7 = (<> Set.fromList [m7])
 maj7 = (<> Set.fromList [_M7])
 
 
+-}

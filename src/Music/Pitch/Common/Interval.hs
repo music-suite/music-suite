@@ -1,6 +1,9 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies,
-             NoMonomorphismRestriction, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 ------------------------------------------------------------------------------------
 -- |
@@ -17,41 +20,19 @@
 -------------------------------------------------------------------------------------
 
 module Music.Pitch.Common.Interval (
-        -- * Quality
-        Quality(..),    
-        HasQuality(..),
-        invertQuality,
-        isPerfect,
-        isMajor,
-        isMinor,
-        isAugmented,
-        isDiminished,
 
-        -- ** Number
-        Number,
-        HasNumber(..),   
-        unison,
-        prime,
-        second,
-        third,
-        fourth,
-        fifth,
-        sixth,
-        seventh,
-        octave,
-        ninth,
-        tenth,
-        twelfth, 
-        duodecim,
-        thirteenth,
-        fourteenth,
-        fifteenth,  
 
-        -- ** Intervals
+        -- * Intervals
         Interval(..),
-
-        -- *** Creating intervals
-        mkInterval,
+        -- ** Creating intervals
+        interval,
+        interval',
+        _number,
+        _quality,
+        _steps,
+        _alteration,
+        
+        -- ** Synonyms
         perfect,
         major,
         minor,
@@ -60,7 +41,7 @@ module Music.Pitch.Common.Interval (
         doublyAugmented,
         doublyDiminished,
 
-        -- *** Inspecting intervals
+        -- ** Inspecting intervals
         isNegative,
         isPositive,
         isNonNegative,
@@ -68,7 +49,7 @@ module Music.Pitch.Common.Interval (
         isStep,
         isLeap,
 
-        -- *** Simple and compound intervals
+        -- ** Simple and compound intervals
         isSimple,
         isCompound,
         separate,
@@ -83,234 +64,59 @@ module Music.Pitch.Common.Interval (
 
         -- * Basis values
         IntervalBasis(..),
-       
+
         -- ** Converting basis
         convertBasis,
         convertBasisFloat,
         intervalDiv,
-        
-        -- ** Basis values (TODO cleanup)
-        basis_P1,
-        basis_A1,
-        basis_d2,
-        basis_P8,
-        basis_P5,
-        
-        -- ** Utility
-        intervalDiff,
-        mkInterval',
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
--- import Data.AffineSpace
-import Data.Basis
-import Data.Typeable
-import Control.Monad
-import Control.Applicative
-import qualified Data.List as List
+import           Data.Either
+import           Data.Maybe
+import           Data.Semigroup
+import           Data.VectorSpace
+import           Data.AffineSpace.Point (relative)
+import           Control.Applicative
+import           Control.Monad
+import           Control.Lens hiding (simple)
+import           Data.Basis
+import qualified Data.List                    as List
+import           Data.Typeable
+import           Numeric.Positive
 
-import Music.Pitch.Augmentable
-import Music.Pitch.Literal
-import Music.Pitch.Common.Semitones
+import           Music.Pitch.Absolute
+import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Semitones
+import           Music.Pitch.Common.Quality
+import           Music.Pitch.Common.Number
+import           Music.Pitch.Common.Chromatic
+import           Music.Pitch.Common.Diatonic
+import           Music.Pitch.Literal
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- |
--- Interval quality is either perfect, major, minor, augmented, and
--- diminished. This representation allows for an arbitrary number of
--- augmentations or diminutions, so /augmented/ is represented by @Augmented
--- 1@, /doubly augmented/ by @Augmented 2@ and so on.
+-- A musical interval such as minor third, augmented fifth, duodecim etc.
 --
--- The quality of a compound interval is the quality of the simple interval on
--- which it is based.
+-- We include direction in in this definition, so a downward minor third (written @-m3@)
+-- is distinct from an upward minor third (written @m3@). Note that @_P1@ and @-P1@ are
+-- synynoms.
 --
--- Note that (Augmented 0) and (Diminished 0) are superfluous identity
--- values, use Perfect instead. Augmented and Diminished must also
--- take only positive arguments.
-
-data Quality
-    = Major
-    | Minor
-    | Perfect
-    | Augmented Int
-    | Diminished Int
-    deriving (Eq, Ord, Show)
-
-instance HasQuality Quality where
-    quality = id
-
-
--- | Augmentable Quality instance
--- 
--- This Augmentable instance exists solely for use of the getQuality
--- function, which ensures that there is never any ambiguity around
--- diminished/augmented intervals turning into major/minor/perfect
--- intervals.
-
-instance Augmentable Quality where
-  augment Major = Augmented 1
-  augment Minor = Major
-  augment Perfect = Augmented 1
-  augment (Augmented n) = Augmented (n + 1)
-  augment (Diminished n) = Diminished (n - 1)
-  diminish Major = Minor
-  diminish Minor = Diminished 1
-  diminish Perfect = Diminished 1
-  diminish (Augmented n) = Augmented (n - 1)
-  diminish (Diminished n) = Diminished (n + 1)
-
-class HasQuality a where
-    quality :: a -> Quality
-
--- |
--- Invert a quality.
--- 
--- Perfect is unaffected, major becomes minor and vice versa, augmented
--- becomes diminished and vice versa. 
---
-invertQuality :: Quality -> Quality
-invertQuality = go
-    where
-        go Major            = Minor
-        go Minor            = Major
-        go Perfect          = Perfect
-        go (Augmented n)    = Diminished n
-        go (Diminished n)   = Augmented n
-
-
--- | 
--- Returns whether the given quality is perfect.
--- 
-isPerfect :: HasQuality a => a -> Bool
-isPerfect a = case quality a of { Perfect -> True ; _ -> False }
-
--- | 
--- Returns whether the given quality is major.
--- 
-isMajor :: HasQuality a => a -> Bool
-isMajor a = case quality a of { Major -> True ; _ -> False }
-
--- | 
--- Returns whether the given quality is minor.
--- 
-isMinor :: HasQuality a => a -> Bool
-isMinor a = case quality a of { Minor -> True ; _ -> False }
-
--- | 
--- Returns whether the given quality is /augmented/ (including double augmented etc).
--- 
-isAugmented :: HasQuality a => a -> Bool
-isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
-
--- | 
--- Returns whether the given quality is /diminished/ (including double diminished etc).
--- 
-isDiminished :: HasQuality a => a -> Bool
-isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
-
--- |
--- The number portion of an interval (i.e. second, third, etc).
---
--- Note that the interval number is always one step larger than number of steps spanned by
--- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
--- over addition:
---
--- > number (a + b) = number a + number b - 1
---
-newtype Number = Number { getNumber :: Int }
-    deriving (Eq, Ord, Num, Enum, Real, Integral)
-    
-instance Show Number where { show = show . getNumber }
-instance HasNumber Number where number = id
-
-
--- | A synonym for @1@.
-unison      :: Number
-unison      = 1
-
--- | A synonym for @1@.
-prime       :: Number
-prime       = 1
-
--- | A synonym for @2@.
-second      :: Number
-second      = 2
-
--- | A synonym for @3@.
-third       :: Number
-third       = 3
-
--- | A synonym for @4@.
-fourth      :: Number
-fourth      = 4     
-
--- | A synonym for @5@.
-fifth       :: Number
-fifth       = 5
-
--- | A synonym for @6@.
-sixth       :: Number
-sixth       = 6
-
--- | A synonym for @7@.
-seventh     :: Number
-seventh     = 7
-
--- | A synonym for @8@.
-octave      :: Number
-octave      = 8
-
--- | A synonym for @9@.
-ninth       :: Number
-ninth       = 9
-
--- | A synonym for @10@.
-tenth       :: Number
-tenth       = 10
-
--- | A synonym for @11@.
-eleventh    :: Number
-eleventh    = 11
-
--- | A synonym for @12@.
-twelfth     :: Number
-twelfth     = 12
-
--- | A synonym for @12@.
-duodecim    :: Number
-duodecim    = 12
-
--- | A synonym for @13@.
-thirteenth  :: Number
-thirteenth  = 13
-
--- | A synonym for @14@.
-fourteenth  :: Number
-fourteenth  = 14
-
--- | A synonym for @15@.
-fifteenth   :: Number
-fifteenth   = 15
-
-class HasNumber a where
-    -- |
-    -- Returns the number portion of an interval.
-    --
-    -- The interval number is negative if and only if the interval is negative.
-    --
-    -- See also 'quality', 'octaves' and 'semitones'.
-    --
-    number :: a -> Number
-
-                                                   
-                                                   
--- |
--- An interval is the difference between two pitches, incuding negative
--- intervals.
---
--- Intervals and pitches can be added using '.+^'. To get the interval between
--- two pitches, use '.-.'.
+-- Not to be confused with a mathematical inverval in pitch space, which is called
+-- 'Ambitus'. Intervals and pitches form an affine-vector space pair with intervals and
+-- /vectors/ and pitches as /points/. To add an interval to a, use '.+^'. To get the
+-- interval between two pitches, use '.-.'.
 --
 -- > c .+^ minor third == eb
 -- > f .-. c           == perfect fourth
@@ -320,20 +126,18 @@ class HasNumber a where
 -- > m3 ^+^ _M3 = _P5
 -- > d5 ^+^ _M6 = m10
 --
--- The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain
--- type on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a
--- major ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
+-- The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain type
+-- on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a major
+-- ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
 -- (arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
 -- 'signum' on intervals, consider switching to '*^' or 'normalized'.
 --
--- Intervals are generally described in terms of 'Quality' and 'Number'. To
--- construct an interval, use the 'interval' constructor, the utility
--- constructors 'major', 'minor', 'augmented' and 'diminished', or the
--- interval literals:
+-- Intervals are generally described in terms of 'Quality' and 'Number'. To construct an
+-- interval, use the 'interval' constructor, the utility constructors 'major', 'minor',
+-- 'augmented' and 'diminished', or the interval literals:
 --
--- > m5  == minor   fifth    == interval Minor   5
--- > _P4 == perfect fourth   == interval Perfect 5
--- > d5  == diminished fifth == diminish (perfect fifth)
+-- > m5  == minor   fifth    == interval Minor   5 > _P4 == perfect fourth   == interval
+-- Perfect 5 > d5  == diminished fifth == diminish (perfect fifth)
 --
 newtype Interval = Interval { getInterval :: (
             Int,  -- Number of A1, i.e. chromatic steps
@@ -345,18 +149,18 @@ newtype Interval = Interval { getInterval :: (
 -- Interval first, as it's tied to the Number which is expected to be
 -- 'bigger' than the Quality, assuming ordinary tuning systems
 instance Ord Interval where
-  Interval a `compare` Interval b = swap a `compare` swap b 
+  Interval a `compare` Interval b = swap a `compare` swap b
     where swap (x,y) = (y,x)
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
-    (+)           = addInterval
-    negate        = negateInterval
-    abs a         = if isNegative a then negate a else a
-    (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
-    signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
-    fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
-        
+  (+)           = addInterval
+  negate        = negateInterval
+  abs a         = if isNegative a then negate a else a
+  (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
+  signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
+  fromInteger   = error "Music.Pitch.Common.Interval: no overloading for fromInteger"
+
 instance Show Interval where
   show a
     | isNegative a = "-" ++ showQuality (extractQuality a) ++ show (abs $ extractNumber a)
@@ -365,24 +169,24 @@ instance Show Interval where
       showQuality Major            = "_M"
       showQuality Minor            = "m"
       showQuality Perfect          = "_P"
-      showQuality (Augmented n)    = "_" ++ replicate' n 'A'
-      showQuality (Diminished n)   = replicate' n 'd'
+      showQuality (Augmented n)    = "_" ++ replicate (fromIntegral n) 'A'
+      showQuality (Diminished n)   = replicate (fromIntegral n) 'd'
 
 instance Semigroup Interval where
-    (<>)    = addInterval
+  (<>)    = addInterval
 
 instance Monoid Interval where
-    mempty  = perfect unison
-    mappend = addInterval
+  mempty  = basis_P1
+  mappend = addInterval
 
 instance AdditiveGroup Interval where
-    zeroV   = perfect unison
-    (^+^)   = addInterval
-    negateV = negateInterval
+  zeroV   = basis_P1
+  (^+^)   = addInterval
+  negateV = negateInterval
 
 instance VectorSpace Interval where
-    type Scalar Interval = Integer
-    (*^) = stackInterval
+  type Scalar Interval = Integer
+  (*^) = stackInterval
 
 -- TODO move
 data IntervalBasis = Chromatic | Diatonic
@@ -419,8 +223,9 @@ addInterval :: Interval -> Interval -> Interval
 addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
 
 stackInterval :: Integer -> Interval -> Interval
-stackInterval n a | n >= 0    = mconcat $ replicate (fromIntegral n) a
-                  | otherwise = negate $ stackInterval (negate n) a
+stackInterval n a
+  | n >= 0    = mconcat $ replicate (fromIntegral n) a
+  | otherwise = negate $ stackInterval (negate n) a
 
 intervalDiff :: Interval -> Int
 intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
@@ -432,7 +237,7 @@ intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
 -- major interval instead. Given 'Major' or 'Minor' with a number indicating a perfect
 -- consonance, 'interval' returns a perfect or diminished interval respectively.
 --
-mkInterval' 
+mkInterval'
   :: Int        -- ^ Difference in chromatic steps (?).
   -> Int        -- ^ Number of diatonic steps (NOT interval number).
   -> Interval
@@ -445,60 +250,6 @@ basis_P5 = Interval (7, 4)
 basis_P8 = Interval (12, 7)
 
 
-mkInterval :: Quality -> Number -> Interval
-
-mkInterval (Diminished 1) 1 = basis_P1 ^-^ basis_A1
-mkInterval Perfect 1 = basis_P1
-mkInterval (Augmented 1) 1 = basis_A1
-
-mkInterval (Diminished 1) 2 = basis_d2
-mkInterval Minor 2 = basis_d2 ^+^ basis_A1
-mkInterval Major 2 = (mkInterval Minor 2) ^+^ basis_A1
-mkInterval (Augmented 1) 2 = (mkInterval Major 2) ^+^ basis_A1
-
-mkInterval (Diminished 1) 3 = (mkInterval Minor 3) ^-^ basis_A1
-mkInterval Minor 3 = (mkInterval Major 2) ^+^ (mkInterval Minor 2)
-mkInterval Major 3 = (mkInterval Major 2) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 3 =  (mkInterval Major 3) ^+^ basis_A1
-
-mkInterval (Diminished 1) 4 = (mkInterval Perfect 4) ^-^ basis_A1
-mkInterval Perfect 4 = (mkInterval Major 3) ^+^ (mkInterval Minor 2)
-mkInterval (Augmented 1) 4 =  (mkInterval Perfect 4) ^+^ basis_A1
-
-mkInterval (Diminished 1) 5 = (mkInterval Perfect 5) ^-^ basis_A1
-mkInterval Perfect 5 = (mkInterval Perfect 4) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 5 =  (mkInterval Perfect 5) ^+^ basis_A1
-
-mkInterval (Diminished 1) 6 = (mkInterval Minor 6) ^-^ basis_A1
-mkInterval Minor 6 = (mkInterval Perfect 5) ^+^ (mkInterval Minor 2)
-mkInterval Major 6 = (mkInterval Perfect 5) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 6 =  (mkInterval Major 6) ^+^ basis_A1
-
-mkInterval (Diminished 1) 7 = (mkInterval Minor 7) ^-^ basis_A1
-mkInterval Minor 7 = (mkInterval Major 6) ^+^ (mkInterval Minor 2)
-mkInterval Major 7 = (mkInterval Major 6) ^+^ (mkInterval Major 2)
-mkInterval (Augmented 1) 7 =  (mkInterval Major 7) ^+^ basis_A1
-
-mkInterval q (Number n) = if n > 0
-                          then (mkInterval q (Number (n - 7))) ^+^ basis_P8
-                          else (mkInterval q (Number (n + 7))) ^-^ basis_P8
-
-mkInterval Minor 1 = error "invalid interval"
-mkInterval Major 1 = error "invalid interval"
-mkInterval Perfect 2 = error "invalid interval"
-mkInterval Perfect 3 = error "invalid interval"
-mkInterval Minor 4 = error "invalid interval"
-mkInterval Major 4 = error "invalid interval"
-mkInterval Minor 5 = error "invalid interval"
-mkInterval Major 5 = error "invalid interval"
-mkInterval Perfect 6 = error "invalid interval"
-mkInterval Perfect 7 = error "invalid interval"
-
-mkInterval (Diminished 0) n = error "(Diminished 0) is not a valid Quality"
-mkInterval (Augmented 0) n = error  "(Augmented 0) is not a valid Quality"
-
-mkInterval (Diminished q) n = (mkInterval (Diminished (q - 1)) n) ^-^ basis_A1
-mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 
 -- |
 -- Extracting the 'number' from an interval vector.
@@ -507,7 +258,7 @@ mkInterval (Augmented q) n = (mkInterval (Diminished (q - 1)) n) ^+^ basis_A1
 -- * d2), so the 'number' part of the interval must be stored entirely
 -- in the d * d2 part (adding a unison, perfect or otherwise, can
 -- never increase the number of the interval)
--- 
+--
 extractNumber :: Interval -> Number
 extractNumber (Interval (a, d))
   | d >= 0    = Number (d + 1)
@@ -592,10 +343,10 @@ doublyDiminished = mkInterval (Diminished 2)
 
 Prelude Music.Prelude> separate (2*^_P8+m3)
 (2,m3)
-Prelude Music.Prelude> 
+Prelude Music.Prelude>
 Prelude Music.Prelude> separate (3*^_P8+m3)
 (3,m3)
-Prelude Music.Prelude> 
+Prelude Music.Prelude>
 Prelude Music.Prelude> separate (0*^_P8+m3)
 (0,m3)
 Prelude Music.Prelude> separate ((-1)*^_P8+m3)
@@ -617,14 +368,7 @@ separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
 -- > _P8^*octaves x ^+^ simple x = x
 --
 octaves :: Interval -> Octaves
-octaves i 
-  | isNegative i && not (isOctaveMultiple i) = negate (octaves' i) - 1
-  | isNegative i && isOctaveMultiple i       = negate (octaves' i)
-  | otherwise                                = octaves' i
-
-isOctaveMultiple (Interval (_,d)) = d `mod` 7 == 0
-
-octaves' i = fromIntegral $ intervalDiv i basis_P8
+octaves (Interval (_,d)) = fromIntegral $ d `div` 7
 
 -- |
 -- Returns the simple part of an interval.
@@ -673,7 +417,7 @@ isNonNegative (Interval (a, d)) = d >= 0
 -- Returns whether the given interval a perfect unison.
 --
 isPerfectUnison :: Interval -> Bool
-isPerfectUnison = (== perfect unison)
+isPerfectUnison (Interval (a, d)) = (a,d) == (0,0)
 
 -- |
 -- Returns whether the given interval is a step (a second or smaller).
@@ -683,7 +427,7 @@ isPerfectUnison = (== perfect unison)
 -- semitones.
 --
 isStep :: Interval -> Bool
-isStep (Interval (a, d)) = (abs d) <= 2
+isStep (Interval (a, d)) = (abs d) <= 1
 
 -- |
 -- Returns whether the given interval is a leap (larger than a second).
@@ -693,7 +437,7 @@ isStep (Interval (a, d)) = (abs d) <= 2
 -- semitones.
 --
 isLeap :: Interval -> Bool
-isLeap (Interval (a, d)) = (abs d) > 2
+isLeap (Interval (a, d)) = (abs d) > 1
 
 
 -- |
@@ -716,16 +460,106 @@ invert = simple . negate
 asInterval :: Interval -> Interval
 asInterval = id
 
+
+
+
+
+
+
+mkInterval :: Quality -> Number -> Interval
+mkInterval q n = mkInterval' (fromIntegral diff) (fromIntegral steps)
+  where
+    diff  = qualityToDiff (n > 0) (expectedQualityType n) (q)
+    steps = case n `compare` 0 of
+      GT -> n - 1
+      EQ -> error "diatonicSteps: Invalid number 0"
+      LT -> n + 1
+    -- steps = n^.diatonicSteps
+
+
+
+
+
+
+-- | View or set the alteration (i.e. the number of chromatic steps differing from the excepted number) in an interval.
+_alteration :: Lens' Interval ChromaticSteps
+_alteration = from interval' . _1
+
+-- | View or set the number of chromatic steps in an interval.
+_steps :: Lens' Interval DiatonicSteps
+_steps = from interval' . _2
+
+-- | View or set the quality of an interval.
+_quality :: Lens' Interval Quality
+_quality = from interval . _1
+
+-- | View or set the number component of an interval.
+_number :: Lens' Interval Number 
+_number = from interval . _2
+
+-- | View an interval as a pair of quality and number or vice versa.
+interval :: Iso' (Quality, Number) Interval
+interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
+
+-- | View an interval as a pair of alteration and diatonic steps or vice versa.
+interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
+interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
+  (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
+
 {-
-isPerfectNumber :: Int -> Bool
-isPerfectNumber 0 = True
-isPerfectNumber 1 = False
-isPerfectNumber 2 = False
-isPerfectNumber 3 = True
-isPerfectNumber 4 = True
-isPerfectNumber 5 = False
-isPerfectNumber 6 = False
+
+-- -- TODO be "nice"
+-- mkIntervalNice :: Quality -> Number -> Interval
+-- mkIntervalNice q n
+--   | expectedQualityType n `elem` qualityTypes q = mkInterval q n 
+--   | expectedQualityType n == MajorMinorType     = mkInterval (toMajorMinorType q) n
+--   | expectedQualityType n == PerfectType        = mkInterval (toPerfectType q) n
+
+toMajorMinorType Perfect = Major
+toPerfectType    Major   = Perfect
+toPerfectType    Minor   = (Diminished 1)
+-- toPerfectType    x = x
+
 -}
+
+
+          
+{-|
+>>> m3 & _number %~ pred
+m2
+>>> m3 & _number %~ succ
+d4
+>>> _M3 & _number %~ succ
+_P4
+
+
+>>> m3 & _number +~ 1
+d4
+>>> m3 & _number +~ 2
+d5
+>>> m3 & _number +~ 3
+m6
+>>> m3 & _number +~ 4
+
+
+>>> m3 & _quality .~ Minor
+m3
+>>> _P5 & _quality .~ Minor
+d5
+>>> (-d5) & _quality %~ diminish
+
+
+TODO only obeys lens laws up to quality normalization
+
+>>> _P5 & _quality .~ Minor
+d5
+>>> _P5 & _quality .~ (Diminished 1)
+d5
+
+-}             
+
+
+-- Internal stuff
 
 -- TODO more generic pattern here
 diatonicToChromatic :: Int -> Int
@@ -735,14 +569,6 @@ diatonicToChromatic d = (octaves*12) + go restDia
         (octaves, restDia) = d `divMod` 7
         go = ([0,2,4,5,7,9,11] !!)
 
--- {-# DEPRECATED intervalDiff "This should be hidden" #-}
--- {-# DEPRECATED mkInterval'  "This should be hidden "#-}
-
-replicate' n = replicate (fromIntegral n)
-
-
-
-
 -- | Integer div of intervals: i / di = x, where x is an integer
 intervalDiv :: Interval -> Interval -> Int
 intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
@@ -751,7 +577,7 @@ intervalDiv i di
   | (i > basis_P1) = intervalDivPos i di
   | (i < basis_P1) = intervalDivNeg i di
   | otherwise = 0 :: Int
-  where 
+  where
     intervalDivPos i di
       | (i < basis_P1) = undefined
       | (i ^-^ di) < basis_P1 = 0
@@ -762,36 +588,37 @@ intervalDiv i di
       | otherwise = 1 + (intervalDiv (i ^+^ di) di)
 
 -- | Represent an interval i in a new basis (j, k).
--- 
+--
 -- We want x,y where i = x*j + y*k
 --
 -- e.g., convertBasis basis_d2 _P5 basis_P8 == Just (-12,7), as expected.
 
 convertBasis
-  :: Interval 
-  -> Interval 
-  -> Interval 
+  :: Interval
+  -> Interval
+  -> Interval
   -> Maybe (Int, Int)
 convertBasis i j k
   | (p == 0) = Nothing
   | not $ p `divides` r = Nothing
   | not $ p `divides` q = Nothing
   | otherwise = Just (r `div` p, q `div` p)
-  where Interval (m, n) = i
-        Interval (a, b) = j
-        Interval (c, d) = k
-        p = (a*d - b*c)
-        q = (a*n - b*m)
-        r = (d*m - c*n)
+  where
+    Interval (m, n) = i
+    Interval (a, b) = j
+    Interval (c, d) = k
+    p = (a*d - b*c)
+    q = (a*n - b*m)
+    r = (d*m - c*n)
 
 
 -- | Same as above, but don't worry if new interval has non-integer
 -- coefficients -- useful when getting a value to use as a frequency
 -- ratio in a tuning system.
 convertBasisFloat :: (Fractional t, Eq t)
-  => Interval 
-  -> Interval 
-  -> Interval 
+  => Interval
+  -> Interval
+  -> Interval
   -> Maybe (t, t)
 convertBasisFloat i j k
   | (p == 0) = Nothing
