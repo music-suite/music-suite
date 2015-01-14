@@ -50,7 +50,7 @@ import           Music.Pitch.Literal
 -- Absolute frequency in Hertz.
 --
 newtype Hertz = Hertz { getHertz :: Double }
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
+    deriving (Read, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 {-
 -- |
@@ -91,6 +91,8 @@ newtype Fifths = Fifths { getFifths :: Hertz }
   deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 
+instance Show Hertz where show h = (show (getHertz h)) ++ " Hz"
+
 instance Semigroup Hertz    where (<>) = (*)
 instance Semigroup Octaves  where (<>) = (+)
 instance Semigroup Fifths   where (<>) = (+)
@@ -101,34 +103,10 @@ instance Monoid Octaves     where { mempty  = 0 ; mappend = (+) }
 instance Monoid Fifths      where { mempty  = 0 ; mappend = (+) }
 instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
 
-{-
-instance AdditiveGroup FreqRatio where
-  zeroV   = 1
-  (^+^)   = (*)
-  negateV f = 1 / f
-
-instance VectorSpace FreqRatio where
-  type Scalar FreqRatio = Double
-  (*^) x f = FreqRatio ((getFreqRatio f) ** x)
-
 instance AffineSpace Hertz where
-  type Diff Hertz = FreqRatio
-  (.-.) f1 f2 = FreqRatio $ (getHertz f1) / (getHertz f2)
-  (.+^) p f = Hertz $ (getHertz p) * (getFreqRatio f)
--}
-instance AdditiveGroup Hertz where
-  zeroV   = 1
-  (^+^)   = (*)
-  negateV f = 1 / f
-
-instance VectorSpace Hertz where
-  type Scalar Hertz = Hertz
-  (*^) x f = Hertz ((getHertz f) ** getHertz x)
-
-instance AffineSpace Hertz where
-  type Diff Hertz = Hertz
-  (.-.) = (-)
-  (.+^) = (+)
+  type Diff Hertz = Double
+  (.-.) f1 f2 = (getHertz f1) / (getHertz f2)
+  (.+^) f x = Hertz $ (getHertz f) * x
 
 class HasFrequency a where
   frequency :: a -> Hertz
@@ -161,15 +139,16 @@ cents a = Cents $ logBase (2/1) (frequency a) * 1200
 --  * Does not work with HasPitch (up, down...) etc as we do not have an affine/vector space pair
 --
 -- Can we fix this with newtype wrappers?
---
-instance IsInterval Hertz where
-  fromInterval (IntervalL (o,d,c)) = (2**fromIntegral o) * (r !! fromIntegral c)
-    where
-      r = [
-        1/1,
-        (8*2)/15, 9/8,      (2*3)/5, 5/4,     (2*2)/3,
-        10/7,
-        3/2,      (4*2)/5,  5/3,     (2*8)/9, 15/8
-        ]
+-- 
+
+-- instance IsInterval Hertz where
+  -- fromInterval (IntervalL (o,d,c)) = (2**fromIntegral o) * (r !! fromIntegral c)
+    -- where
+      -- r = [
+        -- 1/1,
+        -- (8*2)/15, 9/8,      (2*3)/5, 5/4,     (2*2)/3,
+        -- 10/7,
+        -- 3/2,      (4*2)/5,  5/3,     (2*8)/9, 15/8
+        -- ]
 
 

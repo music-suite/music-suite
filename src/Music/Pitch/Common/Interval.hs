@@ -23,7 +23,7 @@ module Music.Pitch.Common.Interval (
 
 
         -- * Intervals
-        Interval,
+        Interval(..),
         -- ** Creating intervals
         interval,
         interval',
