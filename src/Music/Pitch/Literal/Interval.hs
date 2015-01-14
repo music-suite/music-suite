@@ -82,6 +82,7 @@ instance IsInterval Int where
 instance IsInterval Word where
     fromInterval x = fromIntegral (fromInterval x :: Integer)
 
+{-
 instance IsInterval Float where
     fromInterval x = realToFrac (fromInterval x :: Double)
 
@@ -93,6 +94,7 @@ instance Integral a => IsInterval (Ratio a) where
 
 instance IsInterval Double where
     fromInterval = fromIntegral . asInteger . fromInterval
+-}
 
 instance IsInterval Integer where
     fromInterval (IntervalL (o, d, c)) = o * 12 + c
