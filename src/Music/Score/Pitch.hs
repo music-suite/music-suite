@@ -221,7 +221,7 @@ type HasPitches' a = HasPitches a a
 --
 -- Same as 'pitch', but without polymorphic update.
 --
-pitch' :: (HasPitch s t, s ~ t) => Lens' s (Pitch s)
+pitch' :: HasPitch' s => Lens' s (Pitch s)
 pitch' = pitch
 {-# INLINE pitch' #-}
 
@@ -230,7 +230,7 @@ pitch' = pitch
 -- 
 -- Same as 'pitches', but without polymorphic update.
 --
-pitches' :: (HasPitches s t, s ~ t) => Traversal' s (Pitch s)
+pitches' :: HasPitches' s => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
 

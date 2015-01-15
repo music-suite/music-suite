@@ -433,6 +433,9 @@ coverRests x = if hasOnlyRests then Nothing else Just (fmap fromJust $ fuseBy me
 withContext :: Voice a -> Voice (Ctxt a)
 withContext = over valuesV addCtxt
 
+-- durationsV and valuesV are useful, but slightly odd
+-- What happens if the user changes the length of the list?
+-- Is there a more safe idiom that can be used instead?
 -- TODO more elegant definition?
 
 -- | A lens to the durations in a voice.
@@ -567,32 +570,21 @@ durations = undefined
 
 {-
 
-sameDurations           :: Voice a -> Voice b -> Bool
-mergeIfSameDuration     :: Voice a -> Voice b -> Maybe (Voice (a, b))
-mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c)
-splitAt :: [Duration] -> Voice a -> [Voice a]
--- splitTiesAt :: Tiable a => [Duration] -> Voice a -> [Voice a]
 splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
 splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
 polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
-polyToHomophonicForce :: [Voice a] -> Voice [a]
-homoToPolyphonic      :: Voice [a] -> [Voice a]
-joinVoice             :: Voice (Voice a) -> a
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
+
 processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
 processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
-onsetsRelative    :: Time -> Voice a -> [Time]
-offsetsRelative   :: Time -> Voice a -> [Time]
-midpointsRelative :: Time -> Voice a -> [Time]
-erasRelative      :: Time -> Voice a -> [Span]
+
+-- These are a bit confusing. Do they act as pseudo-behaviors, or do they simply construct a look-up table of spans etc.
 onsetMap  :: Time -> Voice a -> Map Time a
 offsetMap :: Time -> Voice a -> Map Time a
 midpointMap :: Time -> Voice a -> Map Time a
 eraMap :: Time -> Voice a -> Map Span a
-durations :: Voice a -> [Duration]
-values    :: Voice a -> [a] -- Same as Foldable.toList
-isPossiblyInfinite :: Voice a -> Bool
+
 hasMelodicDissonanceWith :: (a -> a -> Bool) -> Voice a -> Bool
 hasIntervalWith :: AffineSpace a => (Diff a -> Bool) -> Voice a -> Bool
 hasDurationWith :: (Duration -> Bool) -> Voice a -> Bool
@@ -608,6 +600,7 @@ freeVoiceR :: (forall a. -> [a] -> a)          -> Voice a -> (a, Duration)
 freeVoiceRNoDur :: ([a] -> a)          -> Voice a -> a
 freeVoice  :: (forall a. -> [a] -> [a])        -> Voice a -> Voice a
 freeVoice2 :: (forall a. -> [a] -> [a] -> [a]) -> Voice a -> Voice a -> Voice a
+
 empty :: Voice a
 singleton :: a -> Voice a
 cons :: a -> Voice a -> Voice a
