@@ -300,15 +300,6 @@ instance HasPitch a b => HasPitch (c, a) (c, b) where
 instance HasPitches a b => HasPitches (c, a) (c, b) where
   pitches = traverse . pitches
 
-instance HasPitches a b => HasPitches [a] [b] where
-  pitches = traverse . pitches
-
-instance HasPitches a b => HasPitches (Seq a) (Seq b) where
-  pitches = traverse . pitches
-
-instance HasPitches a b => HasPitches (Map k a) (Map k b) where
-  pitches = traverse . pitches
-
 instance (HasPitches a b) => HasPitches (Event a) (Event b) where
   pitches = from event . whilstL pitches
 instance (HasPitch a b) => HasPitch (Event a) (Event b) where
@@ -323,6 +314,15 @@ instance (HasPitches a b) => HasPitches (Note a) (Note b) where
   pitches = _Wrapped . whilstLD pitches
 instance (HasPitch a b) => HasPitch (Note a) (Note b) where
   pitch = _Wrapped . whilstLD pitch
+
+instance HasPitches a b => HasPitches [a] [b] where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Seq a) (Seq b) where
+  pitches = traverse . pitches
+
+instance HasPitches a b => HasPitches (Map k a) (Map k b) where
+  pitches = traverse . pitches
 
 instance HasPitches a b => HasPitches (Maybe a) (Maybe b) where
   pitches = traverse . pitches
