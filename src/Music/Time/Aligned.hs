@@ -109,7 +109,7 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
 realign :: (HasDuration a, Transformable a) => LocalDuration -> Aligned a -> Aligned a
 realign l a@(Aligned ((t,_),x)) = Aligned ((a^.position l,l),x)
 
--- renderAligned :: AlignedVoice a -> Score a
+-- | Render an aligned value. The given span represents the actual span of the aligned value.
 renderAligned :: (HasDuration a, Transformable a) => (Span -> a -> b) -> Aligned a -> b
 renderAligned f a@(Aligned (_, v)) = f (_era a) v
 
