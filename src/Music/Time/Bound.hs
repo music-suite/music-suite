@@ -103,9 +103,6 @@ instance Reversible a => Reversible (Bound a) where
   -- rev = over (_Wrapped . each) rev
   rev = over _Wrapped $ (bimap rev rev)
 
-instance (HasPosition a, Splittable a) => Splittable (Bound a) where
-  -- TODO
-
 -- |
 -- 'Bound' transform by transforming the bounded value as well as
 -- the bounds.

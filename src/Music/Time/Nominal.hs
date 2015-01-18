@@ -56,8 +56,8 @@ instance Applicative f => Applicative (Nominal f) where
 instance Transformable (Nominal f a) where
   transform _ = id
 
-instance Splittable (Nominal f a) where
-  split _ x = (x,x)
+-- instance Splittable (Nominal f a) where
+  -- split _ x = (x,x)
 
 instance Reversible (f a) => Reversible (Nominal f a) where
   rev (Nominal x) = Nominal (rev x)
