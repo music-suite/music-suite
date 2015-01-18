@@ -127,9 +127,6 @@ instance Transformable Attribute where
   transform _ (Attribute a) = Attribute a
   transform s (TAttribute a) = TAttribute (transform s a)
 
-instance Splittable Attribute where
-  split _ x = (x,x)
-
 instance Reversible Attribute where
   rev = id
 
