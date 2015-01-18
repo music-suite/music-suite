@@ -93,6 +93,7 @@ import           Control.Monad.Compose
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
+import qualified Data.Either
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
 import           Data.Functor.Adjunction  (unzipR)
@@ -102,6 +103,7 @@ import           Data.List.NonEmpty       (NonEmpty)
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
 import           Data.Maybe
+import qualified Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Sequence            (Seq)
@@ -200,13 +202,31 @@ instance HasDuration (Voice a) where
 instance Reversible a => Reversible (Voice a) where
   rev = over notes reverse . fmap rev
 
--- instance Splittable a => Splittable (Voice a) where
---   split t x
---     | t <= 0           = (mempty, x)
---     | t >= x^.'duration' = (x,      mempty)
---     | otherwise        = let (a,b) = split' t {-split-} (x^._Wrapped) in (a^._Unwrapped, b^._Unwrapped)
---     where
---       split' = error "TODO"
+instance (Transformable a, Splittable a) => Splittable (Voice a) where
+  -- TODO meta
+  split d v = case splitNotes d (v^.notes) of
+    (as,Nothing,cs)     -> (as^.voice, cs^.voice)
+    (as,Just(b1,b2),cs) -> (as^.voice `snoc` b1, b2 `cons` cs^.voice)
+
+splitNotes :: (Transformable a, Splittable a) => Duration -> [a] -> ([a], Maybe (a, a), [a])
+splitNotes d xs = case (durAndNumNotesToFirst, needSplit) of
+  (Just (_,0),_)     -> ([],Nothing,xs)
+  (Nothing   ,False) -> (xs,Nothing,[])
+  (Just (_,n),False) -> (take n xs,Nothing,drop n xs)
+  (Nothing   ,True)  -> (init xs,Just (splitEnd (sum (fmap (^.duration) xs) - d) (last xs)),[])
+  (Just (d',n),True) -> (
+    take (n-1) xs
+   ,Just (splitEnd (d'-d) (xs!!pred n)) -- (d'-d) is how much we have to cut
+    ,drop n xs)
+  where
+    needSplit = case durAndNumNotesToFirst of
+        Nothing     -> d < sum (fmap (^.duration) xs)
+        Just (d',_) -> d /= d' 
+    -- Given dur is >= requested dur
+    -- Nothing means all goes to first
+    durAndNumNotesToFirst = accumUntil (\(ds,ns) x -> if ds < d then Left(ds+x,ns+1) else Right (ds,ns)) 
+      (0,0) (fmap (^.duration) xs)
+    splitEnd d x = split ((x^.duration) - d) x
 
 instance IsString a => IsString (Voice a) where
   fromString = pure . fromString
@@ -629,3 +649,11 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
 maybeMaximum xs = if null xs then Nothing else Just (maximum xs)
+
+-- >>> accumUntil (\s a -> if s < 345 then Left (s + a) else Right s) 0 [1..]
+-- Just 351
+accumUntil :: (s -> a -> Either s b) -> s -> [a] -> Maybe b
+accumUntil f z xs = Data.Maybe.listToMaybe $ fmap fromRight $ dropWhile Data.Either.isLeft $ scanl (f . fromLeft) (Left z) xs
+    where
+      fromRight (Right x) = x
+      fromLeft (Left x) = x

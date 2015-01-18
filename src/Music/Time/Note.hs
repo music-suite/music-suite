@@ -9,6 +9,7 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -91,6 +92,70 @@ instance Transformable (Note a) where
 
 instance HasDuration (Note a) where
   _duration = _duration . view (from note)
+
+{-  
+  split t d = (da+db)
+  split (t/d) x = (xa*p+xb*q)
+  split t (d*x) = (da*xa+db*xb)
+  
+  d = da+db         [split laws]
+  x = (xa*p+xb*q)   [split laws]
+  d*x = da*xa+db*xb [split laws]
+  
+  Isolate p and q!
+
+  xa*p + xb*q = x
+  xa*p = x - xb*q
+  p = (x - xb*q)/xa
+
+  xa*p + xb*q = x
+  xb*q = x - xa*p
+  q = (x - xa*p)/xb
+  
+  -- Assuming we know t, d, x, xa*p, xb*q, da*xa, db*xb
+  xa = da*xa/da
+  xb = db*xb/db
+
+  -- Example
+  t = 0.6, d = 1, x = 2
+  da = 0.6, db = 0.4
+    [split t d]
+  xa*p = 3/5, xb*q = 7/5,
+    [split (t/d) x]
+  da*xa = 3/5, db*xb = 7/5
+    [split t (d*x)]
+
+  xb = (7/5)/0.4 = 3.5
+    [db*xb/db = xb]
+  xa = (3/5)/0.6 = 1
+    [da*xa/da = xa]
+  
+  p = (2 - 7/5) / 1 = 0.6  
+    [p def]
+  q = (2 - 3/5) / 3.5 = 0.4
+    [q def]
+  
+  >>> split 0.6 (1,(2,_)^.note)^.note -- 2
+            ( (0.6,(1,a)^.note)^.note                 -- da*xa
+            , (0.4,(3.5,mempty)^.note)^.note            -- db*xb
+  
+-}
+instance (Splittable a, Transformable a) => Splittable (Note a) where
+  split t ((^.from note) -> (d, x)) = over both (^.note) $ split' t d x
+
+split' :: (Transformable a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
+split' t d x  = ((da, compress p xa_p), (db, compress q xb_q))
+  -- We are really returning ((da, xa), (db, xb))
+  -- However we must derive xa and xb from split (t/d) x, hence the bothering with p and q
+  where
+    (da,db)        = split t d
+    (xa_p, xb_q)   = split (t/d) x
+    (da_xa, db_xb) = split t (d*(x^.duration))
+    xa = da_xa/da
+    xb = db_xb/db
+    p = ((x^.duration) - (xb_q^.duration))/xa
+    q = ((x^.duration) - (xa_p^.duration))/xb   
+
 
 instance IsString a => IsString (Note a) where
   fromString = pure . fromString
