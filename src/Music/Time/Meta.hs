@@ -135,7 +135,7 @@ instance Reversible Attribute where
 
 -- Meta is Transformable because the contents of the map is transformable
 newtype Meta = Meta { _getMeta :: Map String Attribute }
-  deriving (Transformable, Reversible, Splittable)
+  deriving (Transformable, Reversible)
 
 instance Semigroup Meta where
   Meta s1 <> Meta s2 = Meta $ Map.unionWith (<>) s1 s2
