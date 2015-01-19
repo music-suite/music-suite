@@ -238,7 +238,7 @@ instance Num Pitch where
   abs (Pitch a)     = Pitch (abs a)
   (*)           = error  "Music.Pitch.Common.Pitch: no overloading for (*)"
   signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
-  fromInteger   = error "Music.Pitch.Common.Pitch: no overloading for fromInteger"
+  fromInteger   = toEnum . fromInteger
 
 instance AffineSpace Pitch where
   type Diff Pitch     = Interval
