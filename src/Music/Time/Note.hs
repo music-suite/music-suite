@@ -93,7 +93,18 @@ instance Transformable (Note a) where
 instance HasDuration (Note a) where
   _duration = _duration . view (from note)
 
-{-  
+{-
+  Splitting a note is surprisingly difficult because of the recursive nature of split.
+  
+  In brief, when splitting (d,(x,a)^.note)^.note at t, we have to split the inner value x at (t/d),
+  and then scale the results xa and xb by some values p and q such that the duration of the new
+  nested notes (da*xa) and (db*xb) is the duration of the original nested note (d*x), as stated
+  by the Splittable laws.
+  
+  Full derivation below.
+  
+  -----
+  
   split t d = (da+db)
   split (t/d) x = (xa*p+xb*q)
   split t (d*x) = (da*xa+db*xb)
@@ -146,13 +157,18 @@ instance (Splittable a, Transformable a) => Splittable (Note a) where
 split' :: (Transformable a, Splittable a) => Duration -> Duration -> a -> ((Duration, a), (Duration, a))
 split' t d x  = ((da, compress p xa_p), (db, compress q xb_q))
   -- We are really returning ((da, xa), (db, xb))
-  -- However we must derive xa and xb from split (t/d) x, hence the bothering with p and q
+  -- However because of the polymorphic value, we must derive xa and xb from split (t/d) x, p and q
   where
+    -- (da+db)       = split t d
+    -- (xa*p+xb*q)   = split (t/d) x
+    -- (da*xa+db*xb) = split t (d*x)
     (da,db)        = split t d
     (xa_p, xb_q)   = split (t/d) x
     (da_xa, db_xb) = split t (d*(x^.duration))
+
     xa = da_xa/da
     xb = db_xb/db
+
     p = ((x^.duration) - (xb_q^.duration))/xa
     q = ((x^.duration) - (xa_p^.duration))/xb   
 
