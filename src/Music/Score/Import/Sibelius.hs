@@ -104,6 +104,24 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Trumpet",_) = trumpets
             partFromName ("Trombone",_) = trombones
             partFromName ("Timpani",_) = tutti timpani
+
+            partFromName ("Strings (a)",_) = (!! 0) $ divide 8 violins
+            partFromName ("Strings (b)",_) = (!! 0) $ divide 8 cellos
+            partFromName ("Strings (c)",_) = (!! 1) $ divide 8 violins
+            partFromName ("Strings (d)",_) = (!! 1) $ divide 8 cellos
+            partFromName ("Strings (e)",_) = (!! 2) $ divide 8 violins
+            partFromName ("Strings (f)",_) = (!! 2) $ divide 8 cellos
+            partFromName ("Strings (g)",_) = (!! 3) $ divide 8 violins
+            partFromName ("Strings (h)",_) = (!! 3) $ divide 8 cellos
+            partFromName ("Strings (i)",_) = (!! 4) $ divide 8 violins
+            partFromName ("Strings (j)",_) = (!! 4) $ divide 8 cellos
+            partFromName ("Strings (k)",_) = (!! 5) $ divide 8 violins
+            partFromName ("Strings (l)",_) = (!! 5) $ divide 8 cellos
+            partFromName ("Strings (m)",_) = (!! 6) $ divide 8 violins
+            partFromName ("Strings (n)",_) = (!! 6) $ divide 8 cellos
+            partFromName ("Strings (o)",_) = (!! 7) $ divide 8 violins
+            partFromName ("Strings (p)",_) = (!! 7) $ divide 8 cellos
+            -- partFromName ("Strings (q)",_) = (!! 0) $ divide 2 violins
             
             partFromName ("Violin I",_) = violins1
             partFromName ("Violin II",_) = violins2
