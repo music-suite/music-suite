@@ -238,6 +238,28 @@ renderBarMusic = go
 setDefaultVoice :: MusicXml.Music -> MusicXml.Music
 setDefaultVoice = MusicXml.setVoice 1
 
+{-
+Sibelius quirks
+
+Only looks at the part-name attribute (use part-name-display/display-text to override name)
+Expects transposition first, i.e. "C Trumpet, Bb Clarinet"
+Expects "French Horn", "Cello" and "English Horn"
+Does not like numbers (I, II etc) after the instrument name
+-}
+toAcceptableName :: Show a => a -> (String, String)
+toAcceptableName x = (overrideName defName, defName)
+  where
+    defName = show x
+    overrideName y
+      | "Clarinet"      `Data.List.isPrefixOf` y = "Bb Clarinet"
+      | "Clarinet in A" `Data.List.isPrefixOf` y = "A Clarinet"
+      | "Bassoon"       `Data.List.isPrefixOf` y = "Bassoon"
+      | "Violoncello"   `Data.List.isPrefixOf` y = "Cello"
+      | "Trumpet in Bb" `Data.List.isPrefixOf` y = "Bb Trumpet"
+      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
+      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
+      | "Horn"          `Data.List.isPrefixOf` y = "French Horn"
+      | otherwise                                = y
 
 instance (
   HasDynamicNotation a b c,
@@ -258,7 +280,7 @@ instance (
     where
       title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score
       composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart score
-      partList = MusicXml.partList (fmap show $ allParts score)
+      partList = MusicXml.partListDisplay (fmap toAcceptableName $ allParts score)
       tempo    = (metaAtStart score :: Tempo)
       (timeSignatureMarks, barDurations) = extractTimeSignatures score
 
