@@ -106,7 +106,7 @@ import qualified Music.MusicXml.Simple                   as MusicXml
 --
 class HasMusicXmlInstrument a where
   getMusicXmlClef :: a -> Int
-
+  getMusicXmlNumberOfStaves :: a -> Int
 
 
 
@@ -135,7 +135,7 @@ data ScoreInfo = ScoreInfo { scoreTitle    :: String,
   deriving (Eq, Show)
 
 
-data StaffInfo = StaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line) }
+data StaffInfo = StaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line), staffCount :: Int }
   deriving (Eq, Show)
 
 data BarInfo = BarInfo { x_barTimeSignature :: Maybe TimeSignature }
@@ -210,6 +210,7 @@ finalizeStaff tempo (XmlStaff (info, x))
         <> MusicXml.defaultDivisions
         <> MusicXml.defaultKey
         <> MusicXml.metronome (realToFrac nv) (realToFrac bpm)
+        <> MusicXml.staves (staffCount info) -- TODO
         -- <> Xml.commonTime
     (nv, bpm) = getTempo tempo
 
@@ -299,7 +300,8 @@ instance (
       exportStaff :: Tiable a
         => [Maybe TimeSignature]
         -> [Duration]
-        -> Int    -- ^ clef, as per Music.Parts
+        -> Int    -- Clef, as per Music.Parts
+        -> Int    -- Number of staff lines 
         -> MVoice a
         -> XmlStaff (XmlContext a)
 
@@ -313,10 +315,10 @@ instance (
         -> Rhythm (XmlContext a)
 
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part)
+        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part) (getMusicXmlNumberOfStaves part)
         . view singleMVoice
 
-      exportStaff timeSignatures barDurations clefId
+      exportStaff timeSignatures barDurations clefId staffCount'
         = XmlStaff
         . addStaffInfo
         . zipWith exportBar timeSignatures
@@ -326,7 +328,7 @@ instance (
             0 -> (MusicXml.GClef, 2)
             1 -> (MusicXml.CClef, 3)
             2 -> (MusicXml.FClef, 4)
-          addStaffInfo  = (,) $ StaffInfo { staffClef = clef }
+          addStaffInfo  = (,) $ StaffInfo { staffClef = clef, staffCount = staffCount' }
           splitIntoBars = splitTiesAt
 
       exportBar timeSignature
@@ -341,6 +343,7 @@ instance (
           -- FIXME propagate quantization errors
           handleErrors (Left e)  = error $ "Quantization failed: " ++ e
           handleErrors (Right x) = x
+
 
 --------------------------------------------------------------------------------
 
