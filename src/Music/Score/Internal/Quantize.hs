@@ -177,7 +177,7 @@ rewriteR = go where
   go (Dotted n r)   = Dotted n ((rewriteR . rewrite1) r)
   go (Tuplet n r)   = Tuplet n ((rewriteR . rewrite1) r)
 
-rewrite1 = tupletDot . splitTupletIfLongEnough . singleGroup
+rewrite1 = tupletDot . {-splitTupletIfLongEnough .-} singleGroup
 
 -- | Removes single-note groups
 singleGroup :: Rhythm a -> Rhythm a
