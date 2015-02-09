@@ -30,6 +30,7 @@ module Music.MusicXml.Simple (
 
         -- ** Part lists
         partList,
+        partListDisplay,
         partListAbbr,
         bracket,
         brace,
@@ -277,13 +278,20 @@ fromParts title composer partList music
 -- Create a part list from instrument names.
 --
 partList :: [String] -> PartList
-partList = PartList . zipWith (\partId name -> Part partId name Nothing) standardPartAttributes
+partList = PartList . zipWith (\partId name -> Part partId name Nothing Nothing  Nothing) standardPartAttributes
+
+-- | 
+-- Create a part list from instrument names and displayed names (some applications need the name to be something 
+-- specific, so use displayed name to override).
+--
+partListDisplay :: [(String, String)] -> PartList
+partListDisplay = PartList . zipWith (\partId (name,dispName) -> Part partId name Nothing (Just dispName) Nothing) standardPartAttributes
 
 -- | 
 -- Create a part list from instrument names and abbreviations.
 --
 partListAbbr :: [(String, String)] -> PartList
-partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr)) standardPartAttributes
+partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr) Nothing Nothing) standardPartAttributes
 
 -- | 
 -- Enclose the given parts in a bracket.

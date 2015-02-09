@@ -108,13 +108,19 @@ instance WriteMusicXml Identification where
 instance WriteMusicXml PartListElem where
     write (Part id
                 name
-                abbrev) = single
+                abbrev
+                nameDisplay
+                abbrevDisplay
+                )       = single
                         $ addAttr (uattr "id" id)
                         $ unode "score-part"
-                        $ writeName name <> writeAbbrev abbrev
+                        $ mconcat [writeName name, writeAbbrev abbrev, 
+                                   writeNameDisplay nameDisplay, writeAbbrevDisplay abbrevDisplay]
         where
-            writeName   = single . unode "part-name"
-            writeAbbrev = maybeToList . fmap (unode "part-abbreviation")
+            writeName          = single      . unode "part-name"
+            writeAbbrev        = maybeToList . fmap (unode "part-abbreviation")
+            writeNameDisplay   = maybeToList . fmap (unode "part-name-display"         . unode "display-text")
+            writeAbbrevDisplay = maybeToList . fmap (unode "part-abbreviation-display" . unode "display-text")
 
     write (Group level
                  startStop
