@@ -65,6 +65,7 @@ module Music.MusicXml.Simple (
         commonTime,
         cutTime,
         time,
+        staves,
 
         -- ** Tempo
         -- TODO #15 tempo
@@ -420,6 +421,10 @@ cutTime    = Music . single $ MusicAttributes $ Time CutTime
 time :: Beat -> BeatType -> Music
 time a b = Music . single $ MusicAttributes $ Time $ DivTime a b
 
+staves :: Int -> Music
+staves n = Music $ single $ MusicAttributes $ Staves (fromIntegral n)
+
+
 -- |
 -- Create a metronome mark.
 --
@@ -438,6 +443,7 @@ metronome' :: NoteVal -> Bool -> Tempo -> Music
 metronome' nv dot tempo = Music . single $ MusicDirection (Metronome nv dot tempo)
 
 -- TODO #15 tempo
+
 
 backup :: Duration -> Music
 backup d = Music . single $ MusicBackup d

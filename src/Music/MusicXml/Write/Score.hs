@@ -188,6 +188,8 @@ instance WriteMusicXml Attributes where
                                                         [ unode "beats" (show $ getBeat beats),
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
+    write (Staves n)                        = single $ unode "staves" $ show n
+
 -- ----------------------------------------------------------------------------------
 -- Notes
 -- ----------------------------------------------------------------------------------
