@@ -366,7 +366,7 @@ bound' d = do
   -- TODO doesn't know order
   -- Need to have relative phase in the parser context!
   return $ Group [Beat (getBeatDuration a) b, 
-    if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat d c) else (error "Bad bound rhythm")
+    if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
       ]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
