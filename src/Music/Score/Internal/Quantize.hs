@@ -326,7 +326,9 @@ dotted = msum . fmap dotted' $ konstNumDotsAllowed
 -- | Matches a bound rhythm
 -- TODO this should be abolished, see below!
 bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = msum $ fmap bound' $ (konstBounds <> fmap (*(3/2)) konstBounds)
+bound = msum $ fmap bound' $ konstBounds
+-- bound = msum $ fmap bound' $ (konstBounds <> fmap (*(3/2)) konstBounds)
+
 {-
 What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
 -}
@@ -366,7 +368,8 @@ bound' d = do
   -- TODO doesn't know order
   -- Need to have relative phase in the parser context!
   return $ Group [Beat (getBeatDuration a) b, 
-    if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
+    Beat d c
+    -- if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
       ]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
