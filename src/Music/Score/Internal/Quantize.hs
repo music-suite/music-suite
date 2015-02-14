@@ -238,7 +238,7 @@ testQuantize x = case fmap rewrite $ quantize' (atEnd rhythm) $ fmap (\x -> (x,(
 
 
 konstNumDotsAllowed :: [Int]
-konstNumDotsAllowed = [1..2]
+konstNumDotsAllowed = [1..3]
 
 konstBounds :: [Duration]
 konstBounds = [ 1/2, 1/4, 1/8, 1/16 ]
@@ -285,7 +285,7 @@ modifyTupleDepth f (RhythmContext tm ts td) = RhythmContext tm ts (f td)
 type RhythmParser a b = Parsec [(Duration, a)] RhythmContext b
 
 quantize' :: Tiable a => RhythmParser a b -> [(Duration, a)] -> Either String b
-quantize' p = over _Left show . runParser p mempty ""
+quantize' p rh = over _Left show . runParser p mempty ("Rhythm pattern: '" ++ show (fmap fst rh) ++ "'") $ rh
 
 
 
@@ -324,8 +324,12 @@ dotted :: Tiable a => RhythmParser a (Rhythm a)
 dotted = msum . fmap dotted' $ konstNumDotsAllowed
 
 -- | Matches a bound rhythm
+-- TODO this should be abolished, see below!
 bound :: Tiable a => RhythmParser a (Rhythm a)
-bound = msum . fmap bound' $ konstBounds
+bound = msum $ fmap bound' $ (konstBounds <> fmap (*(3/2)) konstBounds)
+{-
+What this should really do is to split the rhythm into two rhythms where the first have the bound duration...
+-}
 
 -- | Matches a tuplet
 tuplet :: Tiable a => RhythmParser a (Rhythm a)
@@ -358,9 +362,12 @@ bound' d = do
   a <- beat
   modifyState $ modifyTimeSub (subtract d)
   let (b,c) = toTied $ getBeatValue a
-
+  
   -- TODO doesn't know order
-  return $ Group [Beat (getBeatDuration a) b, Beat d c]
+  -- Need to have relative phase in the parser context!
+  return $ Group [Beat (getBeatDuration a) b, 
+    if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat d c) else (error "Bad bound rhythm")
+      ]
 
 -- tuplet' 2/3 for triplet, 4/5 for quintuplet etc
 tuplet' :: Tiable a => Duration -> RhythmParser a (Rhythm a)
