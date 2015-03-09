@@ -134,6 +134,14 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Piano",_)       = tutti piano
             partFromName ("Piano (a)",_)       = tutti piano
             partFromName ("Piano (b)",_)       = tutti piano
+
+            partFromName ("Soprano",_) = violins1
+            partFromName ("Mezzo-Soprano",_) = violins2
+            partFromName ("Alto",_) = violas
+            partFromName ("Tenor",_) = (!! 0) $ divide 2 cellos
+            partFromName ("Baritone",_) = (!! 1) $ divide 2 cellos
+            partFromName ("Bass",_) = doubleBasses
+
             partFromName (n,_) = error $ "Unknown instrument: " ++ n
 -- TODO move to Score.Meta.TimeSignature
 
