@@ -99,9 +99,17 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Bassoon (a)",_) = (!! 0) $ divide 2 cellos
             partFromName ("Bassoon (b)",_) = (!! 1) $ divide 2 cellos
             partFromName ("Horn",_) = horns
+            partFromName ("Horn (a)",_) = (!! 0) $ divide 4 $ horns
+            partFromName ("Horn (b)",_) = (!! 1) $ divide 4 $ horns
+            partFromName ("Horn (c)",_) = (!! 2) $ divide 4 $ horns
+            partFromName ("Horn (d)",_) = (!! 3) $ divide 4 $ horns
             partFromName ("Horn in F",_) = horns
             partFromName ("Horn in E",_) = horns
             partFromName ("Trumpet",_) = trumpets
+            partFromName ("Trumpet (a)",_) = (!! 0) $ divide 4 $ trumpets
+            partFromName ("Trumpet (b)",_) = (!! 1) $ divide 4 $ trumpets
+            partFromName ("Trumpet (c)",_) = (!! 2) $ divide 4 $ trumpets
+            partFromName ("Trumpet (d)",_) = (!! 3) $ divide 4 $ trumpets
             partFromName ("Trombone",_) = trombones
             partFromName ("Timpani",_) = tutti timpani
 
