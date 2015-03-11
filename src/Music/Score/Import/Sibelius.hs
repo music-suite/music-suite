@@ -137,6 +137,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
 
             partFromName ("Soprano",_) = violins1
             partFromName ("Mezzo-Soprano",_) = violins2
+            partFromName ("Mezzo-soprano",_) = violins2
             partFromName ("Alto",_) = violas
             partFromName ("Tenor",_) = (!! 0) $ divide 2 cellos
             partFromName ("Baritone",_) = (!! 1) $ divide 2 cellos
