@@ -141,6 +141,9 @@ module Music.Parts (
         defaultMidiChannel,
         defaultMidiNote,
 
+        -- * Orchestration
+        doubleParts,
+        doublePartsInOctave,
 
         -- * Basic
         module Music.Parts.Basic
@@ -150,6 +153,8 @@ module Music.Parts (
 import           Control.Applicative
 import           Control.Lens                    (toListOf, Lens, Lens')
 import           Data.Default
+-- import           Data.Monoid
+-- import           Control.Lens (set)
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
 import           Data.Maybe
@@ -1668,3 +1673,24 @@ harp = tutti harp'
   <sound id="wood.wood-block"/>
 -}
 
+{-
+-- | Orchestrate a melody by doubling in all given parts.
+--
+-- >>> doublePartsInOctave [violins,flutes] $ scat[c,d,e]
+--
+doubleParts :: (Monoid a, HasParts' a) => [PartOf a] -> a -> a       
+doubleParts ps x = mconcat $ fmap (\p -> set parts' p x) ps
+
+doublePartsF :: (Monoid (f b), HasParts' b, Functor f) => [PartOf b] -> f b -> f b
+doublePartsF ps x = mconcat $ fmap (\p -> set (mapped.parts') p x) ps
+
+-- | Orchestrate a melody by doubling in all given parts.
+--
+-- >>> doublePartsInOctave [(violins,0),(flutes,1)] $ scat[c,d,e]
+--
+doublePartsInOctave :: (Monoid a, Transposable a, HasParts' a) => [(PartOf a, Int)] -> a -> a       
+doublePartsInOctave ps x = mconcat $ fmap (\(p, n) -> set parts' p $ octavesUp (fromIntegral n) x) ps
+
+doublePartsInOctaveF :: (Monoid (f a), Transposable a, HasParts' a, Functor f) => [(PartOf a, Int)] -> f a -> f a       
+doublePartsInOctaveF ps x = mconcat $ fmap (\(p, n) -> set (mapped . parts') p $ fmap (octavesUp (fromIntegral n)) x) ps
+-}
