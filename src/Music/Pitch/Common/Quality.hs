@@ -5,6 +5,7 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+-- | Common interval quality.
 module Music.Pitch.Common.Quality (
     -- * Quality
     Quality(..),

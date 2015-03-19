@@ -5,6 +5,7 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+-- | Number component of intervals.
 module Music.Pitch.Common.Number where
 
 import Control.Lens

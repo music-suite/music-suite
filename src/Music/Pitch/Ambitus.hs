@@ -2,20 +2,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Musical ambitus, or pitch ranges.
---
--------------------------------------------------------------------------------------
-
+-- | Pitch range or ambitus.
 module Music.Pitch.Ambitus (
     Ambitus,
     ambitus,
@@ -32,12 +19,10 @@ import Control.Lens
 import Data.VectorSpace
 import Data.AffineSpace
 
--- | An ambitus is a closed interval (in the mathematical sense).
+-- | An ambitus is (mathematical) interval.
 -- 
 -- Also known as /range/ or /tessitura/, this type can be used to restrict the
--- range of a melody, chord or other pitch container.
--- 
--- It is also used in @music-parts@ to represent the range of instruments.
+-- range instruments, chords, melodies etc.
 -- 
 newtype Ambitus a = Ambitus { getAmbitus :: (I.Interval a) }
 

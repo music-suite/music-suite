@@ -4,25 +4,15 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeFamilies #-}
 
--------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012
+-- | Generic equal temperament pitch.
 --
--- License     : BSD-style
+-- Use the type-level numbers to construct an temperement dividing
+-- the octave in any number of equal-sized steps.
 --
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : portable
+-- Common cases such as 6, 12 and 24 are provided for convenience.
 --
--- Generic equal temperament pitch.
---
--- Use the type-level numbers from @type-unary@ to construct an temperement dividing
--- the octave in any number of steps. Common cases such as 6-TET (whole-tones),
--- 12-TET (half-tones) and 24-TET (quarter-tones) are provided for convenience.
---
--------------------------------------------------------------------------------------
-
-module Music.Pitch.Equal (
+module Music.Pitch.Equal
+(
     -- * Equal temperament
     Equal,
     toEqual,

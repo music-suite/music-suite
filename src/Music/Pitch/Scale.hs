@@ -7,18 +7,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--------------------------------------------------------------------------------------
-
+-- | Scales and chords.
 module Music.Pitch.Scale (
   Mode,
   Scale,

@@ -3,20 +3,7 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Provides pitch spellings.
---
--------------------------------------------------------------------------------------
-
+-- | Provides pitch spelling.
 module Music.Pitch.Common.Spell (
         -- ** Spelling
         -- * About

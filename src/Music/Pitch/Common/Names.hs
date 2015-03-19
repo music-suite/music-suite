@@ -1,18 +1,5 @@
 
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund, Edward Lilley 2012–2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Provides standard intervals.
---
--------------------------------------------------------------------------------------
-
+-- | Common pitch names in various (human) languages.
 module Music.Pitch.Common.Names (
       Language(..),
       Mode(..),

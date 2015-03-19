@@ -2,37 +2,21 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies               #-}
 
--------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : portable
---
--- Absolute pitch representation.
---
--- The canonical pitch representation is frequency in Hertz (Hz).
---
--- For conversion, see 'HasFrequency'.
---
--------------------------------------------------------------------------------------
-
-module Music.Pitch.Absolute (
-        -- * Absolute pitch representation
-        Hertz(..),
-        -- FreqRatio(..),
-        -- Octaves,
-        Cents,
-        Fifths,
-        
-        -- * HasFrequency class
-        HasFrequency(..),
-        -- octaves,
-        fifths,
-        cents,
+-- | Absolute pitch representation.
+module Music.Pitch.Absolute
+  (
+  -- * Absolute pitch representation
+  Hertz(..),
+  -- FreqRatio(..),
+  -- Octaves,
+  Cents,
+  Fifths,
+  
+  -- * HasFrequency class
+  HasFrequency(..),
+  -- octaves,
+  fifths,
+  cents,
   ) where
 
 import           Control.Applicative

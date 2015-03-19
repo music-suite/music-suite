@@ -5,6 +5,7 @@
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 
+-- | Diatonic pitch.
 module Music.Pitch.Common.Diatonic (
     DiatonicSteps,
   ) where
