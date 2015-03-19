@@ -52,10 +52,22 @@ module Music.Pitch.Clef (
 
 import Data.Typeable
 
-import Music.Pitch.StaffLines
 import Music.Pitch.Common
 import Music.Pitch.Literal
 
+-- | Represents staff number relative middle. Staff zero is either the middle staff, or if using an
+-- even number of lines, the staff below the middle space.
+--
+newtype StaffLines = StaffLines { getStaffLines :: Integer }
+  deriving (Eq, Ord, Read, Show, Enum,
+           Num, Real, Integral, Typeable)
+
+-- | Represents the difference betwee  staff positions (often corresponding to one diatonic step).
+newtype HalfSpaces = HalfSpaces { getHalfSpaces :: Integer }
+  deriving (Eq, Ord, Read, Show, Enum,
+           Num, Real, Integral, Typeable)
+
+-- | Common clef symbols
 data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
     deriving (Eq, Ord, Show, Typeable)
 
