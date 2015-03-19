@@ -141,9 +141,9 @@ module Music.Parts (
         defaultMidiChannel,
         defaultMidiNote,
 
-        -- * Orchestration
-        doubleParts,
-        doublePartsInOctave,
+        -- -- * Orchestration
+        -- doubleParts,
+        -- doublePartsInOctave,
 
         -- * Basic
         module Music.Parts.Basic
