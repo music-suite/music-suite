@@ -74,11 +74,8 @@ library
                         Music.Time.Event
                         Music.Time.Future
                         Music.Time.Past
-                        Music.Time.Nominal
-                        Music.Time.Graces
                         Music.Time.Track
                         Music.Time.Voice
-                        Music.Time.Chord
                         Music.Time.Score
                         -- Music.Time.Linear   ?
                         -- Music.Time.Spline   ?
