@@ -131,24 +131,3 @@ fifths a = Fifths $ logBase (3/2) (frequency a)
 
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2/1) (frequency a) * 1200
-
---
--- For convenience. TODO problematic for these reasons:
---
---  * Confusing as _P8+m2 is not the same as _P8<>m2
---  * Does not work with HasPitch (up, down...) etc as we do not have an affine/vector space pair
---
--- Can we fix this with newtype wrappers?
--- 
-
--- instance IsInterval Hertz where
-  -- fromInterval (IntervalL (o,d,c)) = (2**fromIntegral o) * (r !! fromIntegral c)
-    -- where
-      -- r = [
-        -- 1/1,
-        -- (8*2)/15, 9/8,      (2*3)/5, 5/4,     (2*2)/3,
-        -- 10/7,
-        -- 3/2,      (4*2)/5,  5/3,     (2*8)/9, 15/8
-        -- ]
-
-
