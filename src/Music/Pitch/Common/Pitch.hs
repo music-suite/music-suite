@@ -1,4 +1,6 @@
 
+{-# LANGUAGE FlexibleInstances #-}
+
 -- | Common pitch.
 module Music.Pitch.Common.Pitch (
         -- * Accidentals
