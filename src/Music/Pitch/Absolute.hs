@@ -52,14 +52,6 @@ import           Music.Pitch.Literal
 newtype Hertz = Hertz { getHertz :: Double }
     deriving (Read, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
-{-
--- |
--- A ratio between two different (Hertz) frequencies.
---
-newtype FreqRatio = FreqRatio { getFreqRatio :: Double }
-  deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
--}
-
 -- |
 -- Number of pure octaves.
 --
