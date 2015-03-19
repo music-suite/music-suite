@@ -1,10 +1,4 @@
 
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Number component of intervals.
 module Music.Pitch.Common.Number where
 

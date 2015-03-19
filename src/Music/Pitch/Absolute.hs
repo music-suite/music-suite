@@ -1,7 +1,4 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Absolute pitch representation.
 module Music.Pitch.Absolute
   (

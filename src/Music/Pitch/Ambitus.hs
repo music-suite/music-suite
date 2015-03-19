@@ -1,7 +1,4 @@
 
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 -- | Pitch range or ambitus.
 module Music.Pitch.Ambitus (
     Ambitus,

@@ -1,8 +1,5 @@
 
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
 
 -- | Generic equal temperament pitch.
 --

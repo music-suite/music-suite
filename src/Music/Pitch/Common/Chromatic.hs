@@ -1,10 +1,4 @@
 
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Chromatic pitch.
 module Music.Pitch.Common.Chromatic (
     ChromaticSteps,

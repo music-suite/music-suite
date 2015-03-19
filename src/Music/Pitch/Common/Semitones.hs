@@ -1,7 +1,4 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-
 -- | Semitones and enharmonic equivalence.
 module Music.Pitch.Common.Semitones (
         -- * Types

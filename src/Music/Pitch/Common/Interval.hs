@@ -1,10 +1,4 @@
 
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Common intervals.
 module Music.Pitch.Common.Interval (
 

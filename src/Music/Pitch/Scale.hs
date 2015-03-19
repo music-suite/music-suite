@@ -1,12 +1,4 @@
 
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Scales and chords.
 module Music.Pitch.Scale (
   Mode,

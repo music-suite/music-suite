@@ -1,6 +1,4 @@
 
-{-# LANGUAGE ViewPatterns #-}
-
 -- | Intonation and tuning.
 module Music.Pitch.Intonation (
       Intonation,

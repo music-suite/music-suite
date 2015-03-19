@@ -1,10 +1,4 @@
 
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Common pitch.
 module Music.Pitch.Common.Pitch (
         -- * Accidentals

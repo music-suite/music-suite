@@ -1,8 +1,4 @@
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-
 -- | Provides pitch spelling.
 module Music.Pitch.Common.Spell (
         -- ** Spelling
