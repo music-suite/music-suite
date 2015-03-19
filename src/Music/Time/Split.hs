@@ -104,16 +104,6 @@ instance Splittable Duration where
   split t x = (t' `min` x, x ^-^ (t' `min` x))
     where t' = t `max` 0
 
--- Removing non-vector-style instance
--- instance Splittable Span where
---   -- Splitting a span splits the duration
---   split pos (view delta -> (t, d)) = (t >-> d1, (t .+^ d1) >-> d2)
---     where (d1, d2) = split pos d
-
--- instance (Ord k, Splittable a) => Splittable (Map k a) where
-  -- split d = unzipR . Map.map (split d)
-
-
 -- takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
 -- takeMWhile d p xs = if xs^.'duration' <= 0 then mempty else takeMWhile' d p xs
 --   where

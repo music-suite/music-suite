@@ -24,15 +24,11 @@ module Music.Time (
 
     module Music.Time.Rest,
     module Music.Time.Note,
-    module Music.Time.Chord,
     module Music.Time.Voice,
     module Music.Time.Event,
     module Music.Time.Score,
     module Music.Time.Placed,
     module Music.Time.Track,
-
-    module Music.Time.Nominal,
-    module Music.Time.Graces,
 
     module Music.Time.Future,
     module Music.Time.Past,
@@ -59,11 +55,8 @@ import           Music.Time.Types
 import           Music.Time.Aligned
 
 import           Music.Time.Behavior
-import           Music.Time.Chord
 import           Music.Time.Placed
 import           Music.Time.Future
-import           Music.Time.Graces
-import           Music.Time.Nominal
 import           Music.Time.Event
 import           Music.Time.Past
 import           Music.Time.Reactive

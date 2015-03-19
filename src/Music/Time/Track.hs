@@ -114,13 +114,6 @@ instance Rewrapped (Track a) (Track b)
 instance Transformable a => Transformable (Track a) where
   transform s = over _Wrapped' (transform s)
 
--- instance Splittable a => Splittable (Track a) where
---   -- TODO
-
--- instance Reversible a => Reversible (Track a) where
---   -- TODO
-
-
 -- | Create a track from a list of notes.
 track :: Getter [Placed a] (Track a)
 track = from unsafeTrack

@@ -1,5 +1,4 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -93,26 +92,18 @@ import           Control.Monad.Compose
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import qualified Data.Either
 import           Data.Foldable            (Foldable)
-import qualified Data.Foldable            as Foldable
 import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Context
-import qualified Data.List
 import           Data.List.NonEmpty       (NonEmpty)
 import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
 import           Data.Maybe
-import qualified Data.Maybe
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Sequence            (Seq)
-import qualified Data.Sequence            as Seq
 import           Data.Set                 (Set)
-import qualified Data.Set                 as Set
 import           Data.String
 import           Data.Traversable         (Traversable)
-import qualified Data.Traversable         as T
 import           Data.Typeable
 import           Data.VectorSpace
 
@@ -121,6 +112,10 @@ import           Music.Pitch.Literal
 import           Music.Time.Internal.Util
 import           Music.Time.Juxtapose
 import           Music.Time.Note
+
+import qualified Data.List
+import qualified Data.Foldable
+import qualified Data.Either
 
 -- |
 -- A 'Voice' is a sequential composition of non-overlapping note values.
@@ -221,12 +216,20 @@ splitNotes d xs = case (durAndNumNotesToFirst, needSplit) of
   where
     needSplit = case durAndNumNotesToFirst of
         Nothing     -> d < sum (fmap (^.duration) xs)
-        Just (d',_) -> d /= d' 
+        Just (d',_) -> d /= d'
     -- Given dur is >= requested dur
     -- Nothing means all goes to first
-    durAndNumNotesToFirst = accumUntil (\(ds,ns) x -> if ds < d then Left(ds+x,ns+1) else Right (ds,ns)) 
+    durAndNumNotesToFirst = accumUntil (\(ds,ns) x -> if ds < d then Left(ds+x,ns+1) else Right (ds,ns))
       (0,0) (fmap (^.duration) xs)
     splitEnd d x = split ((x^.duration) - d) x
+
+    -- >>> accumUntil (\s a -> if s < 345 then Left (s + a) else Right s) 0 [1..]
+    -- Just 351
+    accumUntil :: (s -> a -> Either s b) -> s -> [a] -> Maybe b
+    accumUntil f z xs = Data.Maybe.listToMaybe $ fmap fromRight $ dropWhile Data.Either.isLeft $ scanl (f . fromLeft) (Left z) xs
+        where
+          fromRight (Right x) = x
+          fromLeft (Left x) = x
 
 instance IsString a => IsString (Voice a) where
   fromString = pure . fromString
@@ -243,7 +246,7 @@ instance IsDynamics a => IsDynamics (Voice a) where
 -- Bogus instance, so we can use [c..g] expressions
 instance Enum a => Enum (Voice a) where
   toEnum = return . toEnum
-  fromEnum = list 0 (fromEnum . head) . Foldable.toList
+  fromEnum = list 0 (fromEnum . head) . Data.Foldable.toList
 
 -- Bogus instance, so we can use numeric literals
 instance Num a => Num (Voice a) where
@@ -536,6 +539,9 @@ homoToPolyphonic xs = case nvoices xs of
     nvoices :: Voice [a] -> Maybe Int
     nvoices = maybeMinimum . fmap length . (^.valuesV)
 
+    maybeMinimum :: Ord a => [a] -> Maybe a
+    maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
+
 changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 changeCrossing = undefined
 
@@ -647,13 +653,3 @@ expandRepeats :: [Voice (Variant a)] -> Voice a
 
 -}
 
-maybeMinimum xs = if null xs then Nothing else Just (minimum xs)
-maybeMaximum xs = if null xs then Nothing else Just (maximum xs)
-
--- >>> accumUntil (\s a -> if s < 345 then Left (s + a) else Right s) 0 [1..]
--- Just 351
-accumUntil :: (s -> a -> Either s b) -> s -> [a] -> Maybe b
-accumUntil f z xs = Data.Maybe.listToMaybe $ fmap fromRight $ dropWhile Data.Either.isLeft $ scanl (f . fromLeft) (Left z) xs
-    where
-      fromRight (Right x) = x
-      fromLeft (Left x) = x
