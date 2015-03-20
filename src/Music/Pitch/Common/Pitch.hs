@@ -34,7 +34,7 @@ module Music.Pitch.Common.Pitch
         downChromaticP,
         invertDiatonicallyP,
         invertChromaticallyP,
-  ) where
+) where
 
 import           Control.Applicative
 import           Control.Monad

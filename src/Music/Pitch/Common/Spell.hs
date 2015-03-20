@@ -15,7 +15,7 @@ module Music.Pitch.Common.Spell
         modally,
         usingSharps,
         usingFlats,
-  ) where
+) where
 
 import           Data.AffineSpace
 import           Data.VectorSpace

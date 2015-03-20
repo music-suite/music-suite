@@ -42,7 +42,7 @@ module Music.Pitch.Scale
         halfDiminishedChord,
         majorSeventhChord,
   
-  ) where
+) where
 
 import Data.VectorSpace
 import Data.AffineSpace

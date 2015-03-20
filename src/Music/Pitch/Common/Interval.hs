@@ -46,7 +46,7 @@ module Music.Pitch.Common.Interval
         convertBasis,
         convertBasisFloat,
         intervalDiv,
-  ) where
+) where
 
 import           Data.Either
 import           Data.Maybe

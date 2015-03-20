@@ -25,20 +25,9 @@ module Music.Pitch.Common.Semitones
         -- * Enharmonic equivalence
         (=:=),
         (/:=),
-  ) where
+) where
 
--- |
--- An interval represented as a number of octaves, including negative
--- intervals.
---
--- > octaves a = semitones a `div` 12
--- > steps   a = semitones a `mod` 12
---
-newtype Octaves = Octaves { getOctaves :: Integer }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show       Octaves where { show = show . getOctaves }
-instance HasOctaves Octaves where { octaves = id }
+import Music.Pitch.Common.Diatonic
 
 -- |
 -- Class of intervals that has a number of 'Octaves'.
@@ -58,19 +47,8 @@ class HasOctaves a where
   --
   octaves :: a -> Octaves
 
+instance HasOctaves Octaves where { octaves = id }
 
-
--- |
--- An interval represented as a number of steps in the range /0 ≤ x < 12/.
---
--- > octaves a = semitones a `div` 12
--- > steps   a = semitones a `mod` 12
---
-newtype Steps = Steps { getSteps :: Integer }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show Steps where { show = show . getSteps }
--- instance HasSteps Steps where { steps = id }
 
 {-
 -- |
@@ -88,30 +66,6 @@ class HasSteps a where
   --
   steps :: a -> Steps
 -}
-
-
-
--- |
--- An interval represented as a number of semitones, including negative
--- intervals, as well as intervals larger than one octave. This representation
--- does not take spelling into account, so for example a major third and a
--- diminished fourth can not be distinguished.
---
--- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
--- not have an unequivocal spelling. To convert these to an interval, a
--- 'Spelling' must be provided:
---
--- >>> spell usingSharps tritone
--- _A4
---
--- >>> spell usingFlats  tritone
--- d5
---
-newtype Semitones = Semitones { getSemitones :: Integer }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show         Semitones where { show = show . getSemitones }
-instance HasSemitones Semitones where { semitones = id }
 
 -- |
 -- Class of intervals that can be converted to a number of 'Semitones'.
@@ -135,6 +89,7 @@ class HasSemitones a where
   --
   semitones :: a -> Semitones
 
+instance HasSemitones Semitones where { semitones = id }
 
 
 semitone, tone, ditone, tritone :: Semitones

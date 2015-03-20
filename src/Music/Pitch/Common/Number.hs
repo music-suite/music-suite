@@ -26,19 +26,6 @@ module Music.Pitch.Common.Number
 import Control.Lens
 import Music.Pitch.Common.Diatonic
 
--- |
--- The number portion of an interval (i.e. second, third, etc).
---
--- Note that the interval number is always one step larger than number of steps spanned by
--- the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
--- over addition:
---
--- > number (a + b) = number a + number b - 1
---
-newtype Number = Number { getNumber :: Int }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show Number where { show = show . getNumber }
 instance HasNumber Number where number = id
 
 -- | A synonym for @1@.

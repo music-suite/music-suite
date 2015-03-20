@@ -22,6 +22,7 @@ module Music.Pitch.Common.Quality
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Chromatic
+import           Music.Pitch.Common.Diatonic
 
 -- | Types of value that has an interval quality (mainly 'Interval' and 'Quality' itself).
 class HasQuality a where
