@@ -83,13 +83,6 @@ import           Music.Pitch.Literal
 
 
 
--- | Lexicographical ordering, comparing the 'd2' component of the
--- Interval first, as it's tied to the Number which is expected to be
--- 'bigger' than the Quality, assuming ordinary tuning systems
-instance Ord Interval where
-  Interval a `compare` Interval b = swap a `compare` swap b
-    where swap (x,y) = (y,x)
-
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
   (+)           = addInterval
