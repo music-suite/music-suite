@@ -29,74 +29,31 @@ import Music.Pitch.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 
+{-| A type -}
 newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
+{-| A type -}
 newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-|
-An interval represented as a number of octaves, including negative
-intervals.
-
-> octaves a = semitones a `div` 12
-> steps   a = semitones a `mod` 12
--}
+{-| A type -}
 newtype Octaves = Octaves { getOctaves :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show       Octaves where { show = show . getOctaves }
 
-
--- {-|
--- An interval represented as a number of semitones, including negative
--- intervals, as well as intervals larger than one octave. This representation
--- does not take spelling into account, so for example a major third and a
--- diminished fourth can not be distinguished.
--- 
--- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
--- not have an unequivocal spelling. To convert these to an interval, a
--- 'Spelling' must be provided:
--- 
--- >>> spell usingSharps tritone
--- _A4
--- 
--- >>> spell usingFlats  tritone
--- d5
--- 
--- -}
--- newtype Semitones = Semitones { getSemitones :: Integer }
---   deriving (Eq, Ord, Num, Enum, Real, Integral)
--- 
--- instance Show         Semitones where { show = show . getSemitones }
-
+{-| A type -}
 type Semitones = ChromaticSteps
 
-{-|
-The number portion of an interval (i.e. second, third, etc).
-
-Note that the interval number is always one step larger than number of steps spanned by
-the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
-over addition:
-
-> number (a + b) = number a + number b - 1
-
--}
+{-| A type -}
 newtype Number = Number { getNumber :: Int }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show Number where { show = show . getNumber }
 
-{-|
-Interval quality is either perfect, major, minor, augmented, and
-diminished. This representation allows for an arbitrary number of
-augmentations or diminutions, so /augmented/ is represented by @Augmented
-1@, /doubly augmented/ by @Augmented 2@ and so on.
 
-The quality of a compound interval is the quality of the simple interval on
-which it is based.
-
--}
+{-| A type -}
 data Quality
   = Major
   | Minor
@@ -107,22 +64,10 @@ data Quality
   | Diminished Integer
   deriving (Eq, Ord, Show)
 
-
 data QualityType = PerfectType | MajorMinorType
   deriving (Eq, Ord, Read, Show)
 
-
-
-{-|
-An accidental is either flat, natural or sharp.
-
-This representation allows for an arbitrary number of flats or sharps rather than just
-single and double.
-
-The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones,
-i.e. a double flat is @-2@, natural @0@ and so on.
-
--}
+{-| A type -}
 newtype Accidental = Accidental { getAccidental :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
@@ -149,44 +94,12 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
 data Name = C | D | E | F | G | A | B
   deriving (Eq, Ord, Show, Enum)
 
+{-| A type -}
 data IntervalBasis = Chromatic | Diatonic
   deriving (Eq, Ord, Show, Enum)
 
 
-{-|
-A musical interval such as minor third, augmented fifth, duodecim etc.
-
-We include direction in in this definition, so a downward minor third (written @-m3@)
-is distinct from an upward minor third (written @m3@). Note that @_P1@ and @-P1@ are
-synynoms.
-
-Not to be confused with a mathematical inverval in pitch space, which is called
-'Ambitus'. Intervals and pitches form an affine-vector space pair with intervals and
-/vectors/ and pitches as /points/. To add an interval to a, use '.+^'. To get the
-interval between two pitches, use '.-.'.
-
-> c .+^ minor third == eb
-> f .-. c           == perfect fourth
-
-Adding intervals preserves spelling. For example:
-
-> m3 ^+^ _M3 = _P5
-> d5 ^+^ _M6 = m10
-
-The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain type
-on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a major
-ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
-(arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
-'signum' on intervals, consider switching to '*^' or 'normalized'.
-
-Intervals are generally described in terms of 'Quality' and 'Number'. To construct an
-interval, use the 'interval' constructor, the utility constructors 'major', 'minor',
-'augmented' and 'diminished', or the interval literals:
-
-> m5  == minor   fifth    == interval Minor   5 > _P4 == perfect fourth   == interval
-Perfect 5 > d5  == diminished fifth == diminish (perfect fifth)
-
--}
+{- A type -}
 newtype Interval = Interval { getInterval :: (
             Int,  -- Number of A1, i.e. chromatic steps
             Int   -- Number of d2, i.e. diatonic steps
@@ -200,9 +113,26 @@ Interval first, as it's tied to the Number which is expected to be
 instance Ord Interval where
   Interval a `compare` Interval b = swap a `compare` swap b
     where swap (x,y) = (y,x)
- 
+
+{-| A type -}
+newtype Pitch = Pitch { getPitch :: Interval }
+  deriving (Eq, Ord, Typeable)
+
+
+
+
+
 {-
-|
+The number portion of an interval (i.e. second, third, etc).
+
+Note that the interval number is always one step larger than number of steps spanned by
+the interval (i.e. a third spans two diatonic steps). Thus 'number' does not distribute
+over addition:
+
+> number (a + b) = number a + number b - 1
+-}
+
+{-
 Common pitch representation.
 
 Intervals and pitches can be added using '.+^'. To get the interval between
@@ -254,5 +184,70 @@ Pitches are described by name, accidental and octave number.
 > d5  == diminished fifth == diminish (perfect fifth)
 
 -}
-newtype Pitch = Pitch { getPitch :: Interval }
-  deriving (Eq, Ord, Typeable)
+
+{-
+A musical interval such as minor third, augmented fifth, duodecim etc.
+
+We include direction in in this definition, so a downward minor third (written @-m3@)
+is distinct from an upward minor third (written @m3@). Note that @_P1@ and @-P1@ are
+synynoms.
+
+Not to be confused with a mathematical inverval in pitch space, which is called
+'Ambitus'. Intervals and pitches form an affine-vector space pair with intervals and
+/vectors/ and pitches as /points/. To add an interval to a, use '.+^'. To get the
+interval between two pitches, use '.-.'.
+
+> c .+^ minor third == eb
+> f .-. c           == perfect fourth
+
+Adding intervals preserves spelling. For example:
+
+> m3 ^+^ _M3 = _P5
+> d5 ^+^ _M6 = m10
+
+The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain type
+on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a major
+ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
+(arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
+'signum' on intervals, consider switching to '*^' or 'normalized'.
+
+Intervals are generally described in terms of 'Quality' and 'Number'. To construct an
+interval, use the 'interval' constructor, the utility constructors 'major', 'minor',
+'augmented' and 'diminished', or the interval literals:
+
+> m5  == minor   fifth    == interval Minor   5 > _P4 == perfect fourth   == interval
+Perfect 5 > d5  == diminished fifth == diminish (perfect fifth)
+
+-}
+
+
+{-
+An accidental is either flat, natural or sharp.
+
+This representation allows for an arbitrary number of flats or sharps rather than just
+single and double.
+
+The 'Num' and 'Enum' instances treat 'Accidental' as the number of altered semitones,
+i.e. a double flat is @-2@, natural @0@ and so on.
+
+-}
+
+{-
+Interval quality is either perfect, major, minor, augmented, and
+diminished. This representation allows for an arbitrary number of
+augmentations or diminutions, so /augmented/ is represented by @Augmented
+1@, /doubly augmented/ by @Augmented 2@ and so on.
+
+The quality of a compound interval is the quality of the simple interval on
+which it is based.
+
+-}
+
+{-
+An interval represented as a number of octaves, including negative
+intervals.
+
+> octaves a = semitones a `div` 12
+> steps   a = semitones a `mod` 12
+-}
+

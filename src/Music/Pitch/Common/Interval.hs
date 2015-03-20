@@ -70,19 +70,6 @@ import           Music.Pitch.Common.Number
 import           Music.Pitch.Literal
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
   (+)           = addInterval
