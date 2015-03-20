@@ -63,11 +63,10 @@ import           Numeric.Positive
 
 import           Music.Pitch.Absolute
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Types
 import           Music.Pitch.Common.Semitones
 import           Music.Pitch.Common.Quality
 import           Music.Pitch.Common.Number
-import           Music.Pitch.Common.Chromatic
-import           Music.Pitch.Common.Diatonic
 import           Music.Pitch.Literal
 
 

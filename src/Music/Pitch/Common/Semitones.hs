@@ -27,7 +27,7 @@ module Music.Pitch.Common.Semitones
         (/:=),
 ) where
 
-import Music.Pitch.Common.Diatonic
+import Music.Pitch.Common.Types
 
 -- |
 -- Class of intervals that has a number of 'Octaves'.

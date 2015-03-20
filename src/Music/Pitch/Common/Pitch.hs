@@ -52,11 +52,10 @@ import           Data.VectorSpace
 import           Music.Pitch.Absolute
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
+import           Music.Pitch.Common.Types
 import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Interval
 import           Music.Pitch.Common.Semitones
-import           Music.Pitch.Common.Chromatic
-import           Music.Pitch.Common.Diatonic
 import           Music.Pitch.Literal
 
 -- |

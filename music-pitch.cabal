@@ -37,10 +37,9 @@ library
                         Music.Pitch.Absolute
                         Music.Pitch.Equal
                         Music.Pitch.Common
+                        Music.Pitch.Common.Types
                         Music.Pitch.Common.Quality
                         Music.Pitch.Common.Number
-                        Music.Pitch.Common.Diatonic
-                        Music.Pitch.Common.Chromatic
                         Music.Pitch.Common.Interval
                         Music.Pitch.Common.Pitch
                         Music.Pitch.Common.Semitones

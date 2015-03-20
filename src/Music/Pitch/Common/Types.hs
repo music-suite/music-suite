@@ -1,11 +1,11 @@
 
 -- | Diatonic pitch.
-module Music.Pitch.Common.Diatonic
+module Music.Pitch.Common.Types
 (
-        DiatonicSteps,
-        ChromaticSteps,
         Octaves,
         Steps,
+        DiatonicSteps,
+        ChromaticSteps,
         Semitones,
         Number,        
 ) where
@@ -38,6 +38,8 @@ newtype Steps = Steps { getSteps :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 instance Show Steps where { show = show . getSteps }
+
+
 -- instance HasSteps Steps where { steps = id }
 -- |
 -- An interval represented as a number of semitones, including negative

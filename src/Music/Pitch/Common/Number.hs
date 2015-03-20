@@ -24,7 +24,7 @@ module Music.Pitch.Common.Number
 ) where
 
 import Control.Lens
-import Music.Pitch.Common.Diatonic
+import Music.Pitch.Common.Types
 
 instance HasNumber Number where number = id
 
