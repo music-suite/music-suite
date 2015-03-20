@@ -101,7 +101,7 @@ import           Music.Score.Tremolo
 import           Music.Time
 import           Music.Score.Internal.Quantize
 
-import qualified Music.Lilypond                          as Lilypond
+import qualified Data.Music.Lilypond                     as Lilypond
 
 
 
