@@ -13,16 +13,6 @@ module Music.Pitch.Common (
     module Music.Pitch.Common.Names,
   ) where
 
-import Data.Maybe
-import Data.Either
-import Data.Semigroup
-import Data.VectorSpace
-import Data.AffineSpace
-import Control.Monad
-import Control.Applicative
-
-import Music.Pitch.Absolute
-import Music.Pitch.Literal
 import Music.Pitch.Common.Pitch
 import Music.Pitch.Common.Quality
 import Music.Pitch.Common.Number

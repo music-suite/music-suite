@@ -124,3 +124,5 @@ isVoiceClef :: Clef -> Bool
 isVoiceClef x | x == altoClef    = True
 isVoiceClef x | x == tenorClef   = True
 isVoiceClef x | otherwise        = False
+
+
