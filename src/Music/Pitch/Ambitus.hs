@@ -26,10 +26,12 @@ newtype Ambitus a = Ambitus { getAmbitus :: (I.Interval a) }
 instance Wrapped (Ambitus a) where
   type Unwrapped (Ambitus a) = I.Interval a
   _Wrapped' = iso getAmbitus Ambitus
+
 instance Rewrapped (Ambitus a) (Ambitus b)
 
 instance (Show a, Num a, Ord a) => Show (Ambitus a) where
   show a = show (a^.from ambitus) ++ "^.ambitus"
+
 
 ambitus :: (Num a, Ord a) => Iso (a, a) (b, b) (Ambitus a) (Ambitus b)
 ambitus = iso toA unA . _Unwrapped

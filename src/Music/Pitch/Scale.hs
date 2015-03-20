@@ -4,6 +4,12 @@ module Music.Pitch.Scale
 (
         Mode,
         Scale,
+        Function,
+        _intervals,
+        _repeat,
+        Chord,
+        _tonic,
+
         majorScale,
         pureMinorScale,
         harmonicMinorScale,
@@ -28,12 +34,6 @@ module Music.Pitch.Scale
         fifthMode,
         sixthMode,
         seventhMode,
-
-        Function,
-        _intervals,
-        _repeat,
-        Chord,
-        _tonic,
 
         majorTriad,
         minorTriad,

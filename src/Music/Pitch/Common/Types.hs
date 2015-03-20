@@ -17,7 +17,7 @@ module Music.Pitch.Common.Types
         IntervalBasis(..),
         Interval(..),
 
-        -- * Pitches
+        -- * Pitch
         Name(..),
         Accidental,
         Pitch(..),        
@@ -41,17 +41,12 @@ newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
 newtype Octaves = Octaves { getOctaves :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-instance Show       Octaves where { show = show . getOctaves }
-
 {-| A type -}
 type Semitones = ChromaticSteps
 
 {-| A type -}
 newtype Number = Number { getNumber :: Int }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show Number where { show = show . getNumber }
-
 
 {-| A type -}
 data Quality
@@ -70,6 +65,31 @@ data QualityType = PerfectType | MajorMinorType
 {-| A type -}
 newtype Accidental = Accidental { getAccidental :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
+
+-- | Common pitch names.
+data Name = C | D | E | F | G | A | B
+  deriving (Eq, Ord, Show, Enum)
+
+{-| A type -}
+data IntervalBasis = Chromatic | Diatonic
+  deriving (Eq, Ord, Show, Enum)
+
+{- A type -}
+newtype Interval = Interval { getInterval :: (Int, Int) }
+  deriving (Eq, Typeable)
+    -- Number of (A1,d2) i.e. (chromatic,diatonic) steps
+
+{-| A type -}
+newtype Pitch = Pitch { getPitch :: Interval }
+  deriving (Eq, Ord, Typeable)
+
+
+
+instance Show Octaves where
+  show = show . getOctaves
+
+instance Show Number where
+  show = show . getNumber
 
 instance Show Accidental where
   show n | n == 0    = "natural"
@@ -90,22 +110,6 @@ instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
   fromPitch l (-1)  = flatten (fromPitch l)
 -- Requires FlexibleInstances
 
--- | Common pitch names.
-data Name = C | D | E | F | G | A | B
-  deriving (Eq, Ord, Show, Enum)
-
-{-| A type -}
-data IntervalBasis = Chromatic | Diatonic
-  deriving (Eq, Ord, Show, Enum)
-
-
-{- A type -}
-newtype Interval = Interval { getInterval :: (
-            Int,  -- Number of A1, i.e. chromatic steps
-            Int   -- Number of d2, i.e. diatonic steps
-    ) }
-    deriving (Eq, Typeable)
-
 {-| Lexicographical ordering, comparing the 'd2' component of the
 Interval first, as it's tied to the Number which is expected to be
 'bigger' than the Quality, assuming ordinary tuning systems
@@ -114,9 +118,7 @@ instance Ord Interval where
   Interval a `compare` Interval b = swap a `compare` swap b
     where swap (x,y) = (y,x)
 
-{-| A type -}
-newtype Pitch = Pitch { getPitch :: Interval }
-  deriving (Eq, Ord, Typeable)
+
 
 
 

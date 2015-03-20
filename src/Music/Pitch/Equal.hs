@@ -1,13 +1,13 @@
 
 {-# LANGUAGE RankNTypes #-}
 
--- | Generic equal temperament pitch.
---
--- Use the type-level numbers to construct an temperement dividing
--- the octave in any number of equal-sized steps.
---
--- Common cases such as 6, 12 and 24 are provided for convenience.
---
+{-| Generic equal temperament pitch.
+
+Use the type-level numbers to construct an temperement dividing
+the octave in any number of equal-sized steps.
+
+Common cases such as 6, 12 and 24 are provided for convenience.
+-}
 module Music.Pitch.Equal
 (
     -- * Equal temperament
@@ -88,14 +88,14 @@ instance IsNat a => VectorSpace (Equal a) where
 getSize :: IsNat a => Equal a -> Nat a
 getSize _ = nat 
 
--- | Size of this type (value not evaluated).
--- 
--- >>> size (undefined :: Equal N2)
--- 2
--- 
--- >>> size (undefined :: Equal N12)
--- 12
--- 
+{-| Size of this type (value not evaluated).
+
+>>> size (undefined :: Equal N2)
+2
+
+>>> size (undefined :: Equal N12)
+12
+-}
 size :: IsNat a => Equal a -> Int
 size = natToZ . getSize
 
@@ -126,28 +126,29 @@ toEqual = Equal
 fromEqual :: IsNat a => Equal a -> Int
 fromEqual = getEqual
 
--- | Convert an equal-temeperament value to a frequency ratio.
---
--- >>> equalToRatio (7 :: Equal12)
--- 1.4983070768766815
---
--- >>> equalToRatio (4 :: Equal12)
--- 1.2599210498948732
---
+{-| Convert an equal-temeperament value to a frequency ratio.
+
+>>> equalToRatio (7 :: Equal12)
+1.4983070768766815
+
+>>> equalToRatio (4 :: Equal12)
+1.2599210498948732
+
+-}
 equalToRatio :: IsNat a => Equal a -> Double
 equalToRatio x = 2**(realToFrac (fromEqual x) / realToFrac (size x))
 
--- | Safely cast a tempered value to another size.
---
--- >>> cast (1 :: Equal12) :: Equal24
--- 2 :: Equal24
---
--- >>> cast (8 :: Equal12) :: Equal6
--- 4 :: Equal6
---
--- >>> (2 :: Equal12) + cast (2 :: Equal24)
--- 3 :: Equal12
---
+{-| Safely cast a tempered value to another size.
+
+>>> cast (1 :: Equal12) :: Equal24
+2 :: Equal24
+
+>>> cast (8 :: Equal12) :: Equal6
+4 :: Equal6
+
+>>> (2 :: Equal12) + cast (2 :: Equal24)
+3 :: Equal12
+-}
 cast :: (IsNat a, IsNat b) => Equal a -> Equal b
 cast = cast' undefined
 

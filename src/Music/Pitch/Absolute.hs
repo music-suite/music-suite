@@ -27,40 +27,42 @@ import           Data.VectorSpace
 
 import           Music.Pitch.Literal
 
--- |
--- Absolute frequency in Hertz.
---
+{-|
+Absolute frequency in Hertz.
+-}
 newtype Hertz = Hertz { getHertz :: Double }
     deriving (Read, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
--- |
--- Number of pure octaves.
---
--- Octaves are a logarithmic representation of frequency such that
---
--- > f * (2/1) = frequency (octaves f + 1)
---
+{-|
+Number of pure octaves.
+
+Octaves are a logarithmic representation of frequency such that
+
+> f * (2/1) = frequency (octaves f + 1)
+-}
 newtype Octaves = Octaves { getOctaves :: Hertz }
   deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
--- |
--- Number of pure octaves.
---
--- Cents are a logarithmic representation of frequency such that
---
--- > f * (2/1) = frequency (cents f + 1200)
---
-newtype Cents = Cents { getCents :: Hertz }
+{-|
+Number of pure fifths.
+
+Fifths are a logarithmic representation of frequency.
+
+> f * (3/2) = frequency (fifths f + 1)
+
+-}
+newtype Fifths = Fifths { getFifths :: Hertz }
   deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
--- |
--- Number of pure fifths.
---
--- Fifths are a logarithmic representation of frequency.
---
--- > f * (3/2) = frequency (fifths f + 1)
---
-newtype Fifths = Fifths { getFifths :: Hertz }
+{-|
+Number of cents.
+
+Cents are a logarithmic representation of frequency such that
+
+> f * (2/1) = frequency (cents f + 1200)
+
+-}
+newtype Cents = Cents { getCents :: Hertz }
   deriving (Read, Show, Eq, Enum, Num, Ord, Fractional, Floating, Real, RealFrac)
 
 
@@ -71,10 +73,10 @@ instance Semigroup Octaves  where (<>) = (+)
 instance Semigroup Fifths   where (<>) = (+)
 instance Semigroup Cents    where (<>) = (+)
 
-instance Monoid Hertz       where { mempty  = 1 ; mappend = (*) }
-instance Monoid Octaves     where { mempty  = 0 ; mappend = (+) }
-instance Monoid Fifths      where { mempty  = 0 ; mappend = (+) }
-instance Monoid Cents       where { mempty  = 0 ; mappend = (+) }
+instance Monoid Hertz       where mempty  = 1 ; mappend = (*)
+instance Monoid Octaves     where mempty  = 0 ; mappend = (+)
+instance Monoid Fifths      where mempty  = 0 ; mappend = (+)
+instance Monoid Cents       where mempty  = 0 ; mappend = (+)
 
 instance AffineSpace Hertz where
   type Diff Hertz = Double
@@ -104,3 +106,4 @@ fifths a = Fifths $ logBase (3/2) (frequency a)
 
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2/1) (frequency a) * 1200
+
