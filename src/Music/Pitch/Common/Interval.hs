@@ -239,10 +239,10 @@ basis_P8 = Interval (12, 7)
 -- in the d * d2 part (adding a unison, perfect or otherwise, can
 -- never increase the number of the interval)
 --
-extractNumber :: Interval -> Number
+extractNumber                     :: Interval -> Number
 extractNumber (Interval (a, d))
-  | d >= 0    = Number (d + 1)
-  | otherwise = Number (d - 1)
+  | d >= 0                        = fromIntegral (d + 1)
+  | otherwise                     = fromIntegral (d - 1)
 
 
 -- |
@@ -253,39 +253,39 @@ extractNumber (Interval (a, d))
 -- we are used to reading.
 
 extractQuality :: Interval -> Quality
-extractQuality (Interval (a, d))
-  | (a < 0) && (d == 0) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (0, 0) = Perfect
-  | (a > 0) && (d == 0) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 1) && (d == 1) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (1, 1) = Minor
-  | (a, d) == (2, 1) = Major
-  | (a > 2) && (d == 1) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 3) && (d == 2) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (3, 2) = Minor
-  | (a, d) == (4, 2) = Major
-  | (a > 4) && (d == 2) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 5) && (d == 3) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (5, 3) = Perfect
-  | (a > 5) && (d == 3) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 7) && (d == 4) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (7, 4) = Perfect
-  | (a > 7) && (d == 4) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 8) && (d == 5) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (8, 5) = Minor
-  | (a, d) == (9, 5) = Major
-  | (a > 9) && (d == 5) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 10) && (d == 6) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (10, 6) = Minor
-  | (a, d) == (11, 6) = Major
-  | (a > 11) && (d == 6) = augment (extractQuality (Interval ((a - 1), d)))
-  | (a < 12) && (d == 7) = diminish (extractQuality (Interval ((a + 1), d)))
-  | (a, d) == (12, 7) = Perfect
-  | (a > 12) && (d == 7) = augment (extractQuality (Interval ((a - 1), d)))
--- note: these last two cases *have* to be this way round, otherwise
--- infinite loop occurs.
-  | (a > 12) || (d > 7) = extractQuality (Interval ((a - 12), (d - 7)))
-  | (a < 0) || (d < 0) = extractQuality (Interval ((-a), (-d)))
+extractQuality (Interval (a, d))  
+  | (a < 0)  && (d == 0)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (0, 0)            = Perfect
+  | (a > 0)  && (d == 0)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 1)  && (d == 1)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (1, 1)            = Minor
+  | (a, d)   == (2, 1)            = Major
+  | (a > 2)  && (d == 1)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 3)  && (d == 2)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (3, 2)            = Minor
+  | (a, d)   == (4, 2)            = Major
+  | (a > 4)  && (d == 2)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 5)  && (d == 3)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (5, 3)            = Perfect
+  | (a > 5)  && (d == 3)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 7)  && (d == 4)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (7, 4)            = Perfect
+  | (a > 7)  && (d == 4)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 8)  && (d == 5)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (8, 5)            = Minor
+  | (a, d)   == (9, 5)            = Major
+  | (a > 9)  && (d == 5)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 10) && (d == 6)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (10, 6)           = Minor
+  | (a, d)   == (11, 6)           = Major
+  | (a > 11) && (d == 6)          = augment  $ extractQuality (Interval ((a - 1), d))
+  | (a < 12) && (d == 7)          = diminish $ extractQuality (Interval ((a + 1), d))
+  | (a, d)   == (12, 7)           = Perfect
+  | (a > 12) && (d == 7)          = augment  $ extractQuality (Interval ((a - 1), d))
+  -- note: these last two cases *have* to be this way round, otherwise
+  -- infinite loop occurs.
+  | (a > 12) || (d > 7)           = extractQuality (Interval ((a - 12), (d - 7)))
+  | (a < 0)  || (d < 0)           = extractQuality (Interval ((-a), (-d)))
 
 
 -- | Creates a perfect interval.
