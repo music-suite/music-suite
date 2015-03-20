@@ -50,11 +50,12 @@ import TypeUnary.Nat
 
 newtype Equal a = Equal { getEqual :: Int }
 
-deriving instance {-IsNat a =>-} Eq (Equal a)
-deriving instance {-IsNat a =>-} Ord (Equal a)
+deriving instance Eq (Equal a)
+deriving instance Ord (Equal a)
 
-instance {-IsNat a =>-} Show (Equal a) where
+instance Show (Equal a) where
   show (Equal a) = show a
+  -- OR:
   -- showsPrec d (Equal x) = showParen (d > app_prec) $
   --      showString "Equal " . showsPrec (app_prec+1) x
   --   where app_prec = 10
