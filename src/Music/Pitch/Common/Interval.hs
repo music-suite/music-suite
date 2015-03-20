@@ -311,24 +311,19 @@ doublyAugmented  = mkInterval (Augmented 2)
 doublyDiminished :: Number -> Interval
 doublyDiminished = mkInterval (Diminished 2)
 
-{-
-
-Prelude Music.Prelude> separate (2*^_P8+m3)
-(2,m3)
-Prelude Music.Prelude>
-Prelude Music.Prelude> separate (3*^_P8+m3)
-(3,m3)
-Prelude Music.Prelude>
-Prelude Music.Prelude> separate (0*^_P8+m3)
-(0,m3)
-Prelude Music.Prelude> separate ((-1)*^_P8+m3)
-
--}
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
 -- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
 --
+-- >>> separate (2*^_P8+m3)
+-- (2,m3)
+-- >>> separate (3*^_P8+m3)
+-- (3,m3)
+-- >>> separate (0*^_P8+m3)
+-- (0,m3)
+-- >>> separate ((-1)*^_P8+m3)
+-- 
 separate :: Interval -> (Octaves, Interval)
 separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
   where
