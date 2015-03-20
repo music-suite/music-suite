@@ -18,7 +18,7 @@
 -- Portability : GHC
 --
 -------------------------------------------------------------------------------------
-module Data.Data.Music.Lilypond (
+module Data.Music.Lilypond (
 
         -- * Representation
         
