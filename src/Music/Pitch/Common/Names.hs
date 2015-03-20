@@ -35,6 +35,12 @@ data Language
   | NewSwedish
   deriving (Show, Eq, Ord)
   
+data Mode = MajorMode | MinorMode
+  deriving (Eq, Ord, Show)
+
+showKey :: Language -> Pitch -> Mode -> String
+showKey lang pitch mode = showPitch lang pitch ++ showSep lang ++ showMode lang mode
+
 showPitch :: Language -> Pitch -> String
 showPitch lang pitch = (!! (pitchToIndex + pitchNameOffset)) $ fromMaybe (error "showPitch: Bad lang") $ listToMaybe $ filter (\xs -> head xs == show lang) $ pitchNames
   where
@@ -49,18 +55,12 @@ showPitch lang pitch = (!! (pitchToIndex + pitchNameOffset)) $ fromMaybe (error 
        bb,b,bs]     
     pitchNameOffset = 3
 
-data Mode = MajorMode | MinorMode
-  deriving (Eq, Ord, Show)
-
 showMode :: Language -> Mode -> String
 showMode lang mode = (!! (modeToIndex + modeNameOffset)) $ fromMaybe (error "showMode: Bad lang") $ listToMaybe $ filter (\xs -> head xs == show lang) $ modeNames
   where
     modeToIndex = fromMaybe (error "showPitch: Bad mode") $ Data.List.findIndex (== mode) 
       [MajorMode,MinorMode]     
     modeNameOffset = 1
-
-showKey :: Language -> Pitch -> Mode -> String
-showKey lang pitch mode = showPitch lang pitch ++ showSep lang ++ showMode lang mode
 
 showSep :: Language -> String
 showSep lang = fromMaybe (error "showSep: Bad lang") $ Data.List.lookup (show lang) nameModeSeparator
