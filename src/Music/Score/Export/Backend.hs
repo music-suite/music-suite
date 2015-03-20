@@ -54,8 +54,8 @@ import           Data.Maybe
 import           Data.Monoid.Average
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
-import qualified Music.Lilypond                as Lilypond
-import qualified Music.MusicXml.Simple         as MusicXml
+import qualified Data.Music.Lilypond                as Lilypond
+import qualified Data.Music.MusicXml.Simple         as MusicXml
 import           Music.Score.Internal.Export   hiding (MVoice)
 import           System.Process
 import           Music.Score.Internal.Quantize

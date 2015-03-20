@@ -97,7 +97,7 @@ import           Music.Time
 import           Music.Score.Internal.Quantize
 
 import qualified Text.Pretty                             as Pretty
-import qualified Music.MusicXml.Simple                   as MusicXml
+import qualified Data.Music.MusicXml.Simple              as MusicXml
 
 
 -- |
