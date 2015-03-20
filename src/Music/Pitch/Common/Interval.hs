@@ -82,44 +82,6 @@ import           Music.Pitch.Literal
 
 
 
--- |
--- A musical interval such as minor third, augmented fifth, duodecim etc.
---
--- We include direction in in this definition, so a downward minor third (written @-m3@)
--- is distinct from an upward minor third (written @m3@). Note that @_P1@ and @-P1@ are
--- synynoms.
---
--- Not to be confused with a mathematical inverval in pitch space, which is called
--- 'Ambitus'. Intervals and pitches form an affine-vector space pair with intervals and
--- /vectors/ and pitches as /points/. To add an interval to a, use '.+^'. To get the
--- interval between two pitches, use '.-.'.
---
--- > c .+^ minor third == eb
--- > f .-. c           == perfect fourth
---
--- Adding intervals preserves spelling. For example:
---
--- > m3 ^+^ _M3 = _P5
--- > d5 ^+^ _M6 = m10
---
--- The scalar type of 'Interval' is 'Int', using '^*' to stack intervals of a certain type
--- on top of each other. For example @_P5 ^* 2@ is a stack of 2 perfect fifths, or a major
--- ninth. The 'Num' instance works as expected for '+', 'negate' and 'abs', and
--- (arbitrarily) uses minor seconds for multiplication. If you find yourself '*', or
--- 'signum' on intervals, consider switching to '*^' or 'normalized'.
---
--- Intervals are generally described in terms of 'Quality' and 'Number'. To construct an
--- interval, use the 'interval' constructor, the utility constructors 'major', 'minor',
--- 'augmented' and 'diminished', or the interval literals:
---
--- > m5  == minor   fifth    == interval Minor   5 > _P4 == perfect fourth   == interval
--- Perfect 5 > d5  == diminished fifth == diminish (perfect fifth)
---
-newtype Interval = Interval { getInterval :: (
-            Int,  -- Number of A1, i.e. chromatic steps
-            Int   -- Number of d2, i.e. diatonic steps
-    ) }
-    deriving (Eq, Typeable)
 
 -- | Lexicographical ordering, comparing the 'd2' component of the
 -- Interval first, as it's tied to the Number which is expected to be

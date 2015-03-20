@@ -92,59 +92,6 @@ isStandardAccidental :: Accidental -> Bool
 isStandardAccidental a = abs a < 2
 -- was: isStandard
 
--- |
--- Common pitch representation.
---
--- Intervals and pitches can be added using '.+^'. To get the interval between
--- two pitches, use '.-.'.
---
--- Pitches are normally entered using the following literals.
---
--- > c d e f g a b
---
--- Notes with accidentals can be written by adding the @s@ or @b@ suffices
--- (or two for double sharps and flats).
---
--- > cs, ds, es ...    -- sharp
--- > cb, db, eb ...    -- flat
--- > css, dss, ess ... -- double sharp
--- > cbb, dbb, ebb ... -- double flat
---
--- There is also a convenience syntax for entering pitches one octave up or
--- down, using @'@ and @_@ respectively.
---
--- > g a b c'
--- > d c b_ c
---
--- Because of some overloading magic, we can actually write @sharp@ and
--- @flat@ as /postfix/ functions. This gives a better read:
---
--- > cs == c sharp
--- > db == c flat
---
--- You can of course use typical functional transformation of pitch as well.
--- For example 'sharpen' and 'flatten' are the ordinary (prefix) versions of
--- 'sharp' and 'flat'
---
--- > sharpen c             == c sharp       == cs
--- > flatten d             == d flat        == ds
--- > (sharpen . sharpen) c == c doubleSharp == css
--- > (flatten . flatten) d == d doubleFlat  == dss
---
--- Note that there is no guarantee that your pitch representation use
--- enharmonic equivalence, so @cs == db@ may or may not hold.
---
--- > c .+^ minor third == eb
--- > f .-. c           == perfect fourth
---
--- Pitches are described by name, accidental and octave number.
---
--- > c   == fromIntegral 0
--- > _P4 == perfect fourth   == interval Perfect 5
--- > d5  == diminished fifth == diminish (perfect fifth)
---
-newtype Pitch = Pitch { getPitch :: Interval }
-  deriving (Eq, Ord, Typeable)
 
 instance IsPitch Pitch where
   fromPitch (PitchL (c, a, o)) =
