@@ -1,7 +1,7 @@
 
 {-# LANGUAGE FlexibleInstances #-}
 
--- | Common pitches intervals and related types.
+-- | Common (Western classical) pitches, intervals and related types.
 module Music.Pitch.Common.Types
 (
         -- * Even octaves and steps
@@ -29,57 +29,99 @@ import Music.Pitch.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 
-{-| A type -}
+{-|
+Number of chromatic steps.
+May be negative, indicating a downward interval. 
+-}
 newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-| A type -}
+{-| 
+Number of diatonic steps.
+May be negative, indicating a downward interval. 
+-}
 newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-| A type -}
+{-| 
+Number of octaves.
+May be negative, indicating a downward interval. 
+-}
 newtype Octaves = Octaves { getOctaves :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-{-| A type -}
+{-|
+Number of semitones.
+May be negative, indicating a downward interval. 
+-}
 type Semitones = ChromaticSteps
 
-{-| A type -}
-newtype Number = Number { getNumber :: Int }
+{-|
+The /number/ component of an interval (fourth, fifth) etc.
+May be negative, indicating a downward interval. 
+-}
+newtype Number = Number { getNumber :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
-{-| A type -}
+{-|
+The /quality/ component of an interval (minor, major, augmented).
+Generalized from single\/double augmented\/diminished to any number of steps.
+-}
 data Quality
   = Major
   | Minor
   | Perfect
-  -- TODO we really want to use Positive here, but that requires a
-  -- rewrite of extractQuality below
   | Augmented Integer
   | Diminished Integer
   deriving (Eq, Ord, Show)
+{-
+TODO we really want to use Positive instead of Integer
+Alternatively, we could do it as a recursive type
 
+data Quality
+  = Major
+  | Minor
+  | Perfect
+  | Augment Quality
+  | Diminish Quality
+-}
+
+{-|
+The alteration implied by a quality is dependent on whether it is attached
+to a major\/minor vs. a perfect-style number. This type represents the two possibilities.
+-}
 data QualityType = PerfectType | MajorMinorType
   deriving (Eq, Ord, Read, Show)
 
-{-| A type -}
+{-|
+Accidental, represented as number of alterations.
+Generalized from natural and single\/double sharp\/flat to any number of steps.
+-}
 newtype Accidental = Accidental { getAccidental :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
--- | Common pitch names.
+{-|
+Pitch name component.
+-}
 data Name = C | D | E | F | G | A | B
   deriving (Eq, Ord, Show, Enum)
 
-{-| A type -}
+{-|
+This type represents standard basis for intervbals.
+ -}
 data IntervalBasis = Chromatic | Diatonic
   deriving (Eq, Ord, Show, Enum)
 
-{- A type -}
+{-|
+Interval type.
+ -}
 newtype Interval = Interval { getInterval :: (Int, Int) }
   deriving (Eq, Typeable)
     -- Number of (A1,d2) i.e. (chromatic,diatonic) steps
 
-{-| A type -}
+{-|
+Pitch type.
+-}
 newtype Pitch = Pitch { getPitch :: Interval }
   deriving (Eq, Ord, Typeable)
 
