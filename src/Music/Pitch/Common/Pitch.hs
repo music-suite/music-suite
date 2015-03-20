@@ -34,9 +34,6 @@ module Music.Pitch.Common.Pitch
         downChromaticP,
         invertDiatonicallyP,
         invertChromaticallyP,
-        
-        -- ** Utility
-        asPitch
   ) where
 
 import           Control.Applicative

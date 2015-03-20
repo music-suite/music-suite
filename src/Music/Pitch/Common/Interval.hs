@@ -39,9 +39,6 @@ module Music.Pitch.Common.Interval
         -- *** Inversion
         invert,
 
-        -- * Utility
-        asInterval,
-
         -- * Basis values
         IntervalBasis(..),
 
