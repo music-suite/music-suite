@@ -26,31 +26,6 @@ module Music.Pitch.Common.Number
 import Control.Lens
 import Music.Pitch.Common.Diatonic
 
-{-
-
--- ** Number
-Number,
-HasNumber(..),
-unison,
-prime,
-second,
-third,
-fourth,
-fifth,
-sixth,
-seventh,
-octave,
-ninth,
-tenth,
-twelfth,
-duodecim,
-thirteenth,
-fourteenth,
-fifteenth,
-
--}
-
-
 -- |
 -- The number portion of an interval (i.e. second, third, etc).
 --

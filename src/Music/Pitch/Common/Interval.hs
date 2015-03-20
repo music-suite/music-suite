@@ -486,24 +486,7 @@ interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
   (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
 
-{-
-
--- -- TODO be "nice"
--- mkIntervalNice :: Quality -> Number -> Interval
--- mkIntervalNice q n
---   | expectedQualityType n `elem` qualityTypes q = mkInterval q n 
---   | expectedQualityType n == MajorMinorType     = mkInterval (toMajorMinorType q) n
---   | expectedQualityType n == PerfectType        = mkInterval (toPerfectType q) n
-
-toMajorMinorType Perfect = Major
-toPerfectType    Major   = Perfect
-toPerfectType    Minor   = (Diminished 1)
--- toPerfectType    x = x
-
--}
-
-
-          
+         
 {-|
 >>> m3 & _number %~ pred
 m2
@@ -535,7 +518,6 @@ TODO only obeys lens laws up to quality normalization
 d5
 >>> _P5 & _quality .~ (Diminished 1)
 d5
-
 -}             
 
 
@@ -590,7 +572,9 @@ convertBasis i j k
     p = (a*d - b*c)
     q = (a*n - b*m)
     r = (d*m - c*n)
-
+    
+    divides :: Integral a => a -> a -> Bool
+    x `divides` y = (y `rem` x) == 0
 
 -- | Same as above, but don't worry if new interval has non-integer
 -- coefficients -- useful when getting a value to use as a frequency
@@ -609,8 +593,3 @@ convertBasisFloat i j k
         p = fromIntegral $ (a*d - b*c)
         q = fromIntegral $ (a*n - b*m)
         r = fromIntegral $ (d*m - c*n)
-
-
-divides :: Integral a => a -> a -> Bool
-x `divides` y = (y `rem` x) == 0
-
