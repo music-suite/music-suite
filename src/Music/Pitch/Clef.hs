@@ -1,14 +1,16 @@
 
 -- | Clefs and staff positions.
-module Music.Pitch.Clef (
+module Music.Pitch.Clef
+(
       -- * Clef representation
-      ClefSymbol,
+      ClefSymbol(..),
       ClefOctave,
       Clef,
       symbolName,
       symbolPitch,
       positionPitch,
       pitchPosition,
+
       -- ** Properties
       isModernClef,
       isHistoricalClef,
@@ -22,7 +24,7 @@ module Music.Pitch.Clef (
       altoClef,
       tenorClef,
       baritoneClef,
-  ) where
+) where
 
 import Data.Typeable
 
@@ -34,12 +36,12 @@ import Music.Pitch.Literal
 --
 newtype StaffLines = StaffLines { getStaffLines :: Integer }
   deriving (Eq, Ord, Read, Show, Enum,
-           Num, Real, Integral, Typeable)
+            Num, Real, Integral, Typeable)
 
 -- | Represents the difference betwee  staff positions (often corresponding to one diatonic step).
 newtype HalfSpaces = HalfSpaces { getHalfSpaces :: Integer }
   deriving (Eq, Ord, Read, Show, Enum,
-           Num, Real, Integral, Typeable)
+            Num, Real, Integral, Typeable)
 
 -- | Common clef symbols
 data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
@@ -50,6 +52,7 @@ type ClefLine   = StaffLines
 
 type Clef = (ClefSymbol, ClefOctave, ClefLine)
 
+-- | Return the English name of the given clef.
 symbolName :: ClefSymbol -> String
 symbolName GClef = "G clef"
 symbolName CClef = "C clef"
@@ -57,6 +60,7 @@ symbolName FClef = "F clef"
 symbolName PercClef = "Percussion clef"
 symbolName NeutralClef = "Neutral clef"
 
+-- | Return the pitcvh implied by the given clef, if any.
 symbolPitch :: ClefSymbol -> Maybe Pitch
 symbolPitch GClef = Just g
 symbolPitch CClef = Just c
@@ -79,7 +83,7 @@ positionPitch (s,o,l) x = fmap (upDiatonic relativePosition) referencePitch
 
 -- TODO implement fully in Pitch.Common.Diatonic
 upDiatonic :: Number -> Pitch -> Pitch
-upDiatonic = error "Not implemented: upDiatonic"
+upDiatonic = upDiatonicP c . fromIntegral -- TODO Why c?
 
 {-
 TODO
@@ -94,12 +98,20 @@ Map this to Pitch.Common
   If 1), do we need to separate G/C/F in ClefSymbol, maybe just put a single constructor for common pitch.
   In that case, maybe a function isStandardClefPitch (i.e. c/f/g) would be appropriate.
 -}
+
+-- | Standard treble clef.
 trebleClef :: Clef
+-- | Standard bass clef.
 bassClef :: Clef
+-- | Standard soprano clef.
 sopranoClef :: Clef
+-- | Standard mezzo soprano clef.
 mezzoSopranoClef :: Clef
+-- | Standard alto clef.
 altoClef :: Clef
+-- | Standard tenor clef.
 tenorClef :: Clef
+-- | Standard baritone clef.
 baritoneClef :: Clef
 trebleClef        = (GClef, -1 :: ClefOctave, -1 :: ClefLine)
 bassClef          = (FClef, 1  :: ClefOctave, -1 :: ClefLine)
@@ -109,6 +121,7 @@ altoClef          = (CClef, 0  :: ClefOctave, 0  :: ClefLine)
 tenorClef         = (CClef, 0  :: ClefOctave, 1  :: ClefLine)
 baritoneClef      = (CClef, 0  :: ClefOctave, 2  :: ClefLine)
 
+-- | Is this a clef used in contemporary notation?
 isModernClef :: Clef -> Bool
 isModernClef x | x == trebleClef  = True
 isModernClef x | x == bassClef    = True
@@ -116,10 +129,11 @@ isModernClef x | x == altoClef    = True
 isModernClef x | x == tenorClef   = True
 isModernClef x | otherwise        = False
 
+-- | Is this an historical clef?
 isHistoricalClef :: Clef -> Bool
 isHistoricalClef _ = False
 
--- | Is this a voice clef, i.e. a c clef on some staff.
+-- | Is this a traditional voice clef, i.e. a C clef on some staff.
 isVoiceClef :: Clef -> Bool
 isVoiceClef x | x == altoClef    = True
 isVoiceClef x | x == tenorClef   = True
