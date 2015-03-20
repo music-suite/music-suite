@@ -164,10 +164,6 @@ instance VectorSpace Interval where
   type Scalar Interval = Integer
   (*^) = stackInterval
 
--- TODO move
-data IntervalBasis = Chromatic | Diatonic
-  deriving (Eq, Ord, Show, Enum)
-
 instance HasBasis Interval where
   type Basis Interval = IntervalBasis
   basisValue Chromatic = basis_A1

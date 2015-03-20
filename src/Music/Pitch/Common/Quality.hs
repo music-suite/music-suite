@@ -57,25 +57,6 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
--- |
--- Interval quality is either perfect, major, minor, augmented, and
--- diminished. This representation allows for an arbitrary number of
--- augmentations or diminutions, so /augmented/ is represented by @Augmented
--- 1@, /doubly augmented/ by @Augmented 2@ and so on.
---
--- The quality of a compound interval is the quality of the simple interval on
--- which it is based.
---
-data Quality
-  = Major
-  | Minor
-  | Perfect
-  -- TODO we really want to use Positive here, but that requires a
-  -- rewrite of extractQuality below
-  | Augmented Integer
-  | Diminished Integer
-  deriving (Eq, Ord, Show)
-
 instance HasQuality Quality where
   quality = id
 
@@ -115,9 +96,6 @@ invertQuality = go
     go (Augmented n)    = Diminished n
     go (Diminished n)   = Augmented n
 
-
-data QualityType = PerfectType | MajorMinorType
-  deriving (Eq, Ord, Read, Show)
 
 expectedQualityType :: HasNumber a => a -> QualityType
 expectedQualityType x = if ((abs (number x) - 1) `mod` 7) + 1 `elem` [1,4,5]
