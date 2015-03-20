@@ -129,17 +129,7 @@ import qualified Data.Either
 -- (i.e. 'Duration'), that also happens to carry around other values, such as pitches.
 --
 newtype Voice a = Voice { getVoice :: [Note a] }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Foldable,
-    Traversable,
-
-    Functor,
-    Semigroup,
-    Monoid
-    )
+  deriving (Eq, Ord, Typeable, Foldable, Traversable, Functor, Semigroup, Monoid)
 
 instance (Show a, Transformable a) => Show (Voice a) where
   show x = show (x^.notes) ++ "^.voice"

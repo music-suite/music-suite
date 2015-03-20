@@ -118,24 +118,8 @@ instance (Comonad f, Comonad g) => Comonad (Compose f g) where
 #endif
 
 newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Foldable,
-    Applicative,
-    Monad,
-    -- Comonad,
-    Traversable,
-
-    Functor,
-
-    Num,
-    Fractional,
-    Floating,
-    Real,
-    RealFrac
-    )
+  deriving (Eq, Ord, Typeable, Foldable, Applicative, Monad, {- Comonad, -} Traversable,
+            Functor, Num, Fractional, Floating, Real, RealFrac)
 
 instance Wrapped (Event a) where
   type Unwrapped (Event a) = AddMeta (Span, a)

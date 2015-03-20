@@ -60,23 +60,9 @@ import           Music.Time.Juxtapose
 -- value can still be delayed using @'fmap' 'delay'@.
 --
 newtype Note a = Note { getNote :: Duration `Couple` a }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Foldable,
-    Traversable,
-
-    Functor,
-    Applicative,
-    Monad,
-
-    Num,
-    Fractional,
-    Floating,
-    Real,
-    RealFrac
-    )
+  deriving (Eq, Ord, Typeable, Foldable, Traversable,
+            Functor, Applicative, Monad,
+            Num, Fractional, Floating, Real, RealFrac)
 
 instance (Show a, Transformable a) => Show (Note a) where
   show x = show (x^.from note) ++ "^.note"

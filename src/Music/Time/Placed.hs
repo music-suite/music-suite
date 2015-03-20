@@ -63,18 +63,8 @@ import           Music.Time.Juxtapose
 -- contrast to a note the /duration/ is not stretched.
 --
 newtype Placed a = Placed { getPlaced :: Time `Couple` a }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Foldable,
-    Traversable,
-
-    Functor,
-    Applicative,
-    Monad,
-    Comonad
-    )
+  deriving (Eq, Ord, Typeable, Foldable, Traversable,
+            Functor, Applicative, Monad, Comonad)
 
 instance (Show a, Transformable a) => Show (Placed a) where
   show x = show (x^.from placed) ++ "^.placed"

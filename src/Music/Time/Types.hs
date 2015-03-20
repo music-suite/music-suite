@@ -167,17 +167,7 @@ type LocalDuration = Duration
 -- The standard names can be used: @1\/2@ for half note @1\/4@ for a quarter note and so on.
 --
 newtype Duration = Duration { getDuration :: TimeBase }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Enum,
-
-    Num,
-    Fractional,
-    Real,
-    RealFrac
-    )
+  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Duration is a one-dimensional 'VectorSpace', and is the associated vector space of time points.
 -- It is a also an 'AdditiveGroup' (and hence also 'Monoid' and 'Semigroup') under addition.
@@ -220,17 +210,7 @@ instance InnerSpace Duration where
 -- infinite, or contain a musical pickup. Hence 'Time' values can be negative.
 --
 newtype Time = Time { getTime :: TimeBase }
-  deriving (
-    Eq,
-    Ord,
-    Typeable,
-    Enum,
-
-    Num,
-    Fractional,
-    Real,
-    RealFrac
-    )
+  deriving (Eq, Ord, Typeable, Enum, Num, Fractional, Real, RealFrac)
 
 -- Time forms an affine space with durations as the underlying vector space, that is, we
 -- can add a time to a duration to get a new time using '.+^', take the difference of two
@@ -312,11 +292,7 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 -- onset is translation and duration is scaling.
 --
 newtype Span = Span { getSpan :: (Time, Duration) }
-  deriving (
-    Eq,
-    Ord,
-    Typeable
-    )
+  deriving (Eq, Ord, Typeable)
 
 -- You can create a span using the constructors '<->', '<-<' and '>->'. Note that:
 --
