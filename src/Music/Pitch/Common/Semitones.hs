@@ -5,11 +5,6 @@ module Music.Pitch.Common.Semitones
         -- * Types
         -- ** Octaves
         Octaves,
-        -- HasOctaves(..),
-
-        -- ** Steps
-        Steps,
-        -- HasSteps(..),
 
         -- ** Semitones
         Semitones,
@@ -89,7 +84,7 @@ class HasSemitones a where
   --
   semitones :: a -> Semitones
 
-instance HasSemitones Semitones where { semitones = id }
+instance HasSemitones ChromaticSteps where { semitones = id }
 
 
 semitone, tone, ditone, tritone :: Semitones

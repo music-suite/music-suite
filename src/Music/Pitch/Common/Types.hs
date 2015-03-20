@@ -4,18 +4,22 @@
 -- | Common pitches intervals and related types.
 module Music.Pitch.Common.Types
 (
+        -- * Even octaves and steps
         Octaves,
-        Steps,
         DiatonicSteps,
         ChromaticSteps,
         Semitones,
+        
+        -- * Intervals
         Number,
         Quality(..),
         QualityType(..),
-        Accidental,
-        Name(..),
         IntervalBasis(..),
         Interval(..),
+
+        -- * Pitches
+        Name(..),
+        Accidental,
         Pitch(..),        
 ) where
 
@@ -43,43 +47,30 @@ newtype Octaves = Octaves { getOctaves :: Integer }
 
 instance Show       Octaves where { show = show . getOctaves }
 
-{-
-|
-An interval represented as a number of steps in the range /0 ≤ x < 12/.
 
-> octaves a = semitones a `div` 12
-> steps   a = semitones a `mod` 12
+-- {-|
+-- An interval represented as a number of semitones, including negative
+-- intervals, as well as intervals larger than one octave. This representation
+-- does not take spelling into account, so for example a major third and a
+-- diminished fourth can not be distinguished.
+-- 
+-- Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
+-- not have an unequivocal spelling. To convert these to an interval, a
+-- 'Spelling' must be provided:
+-- 
+-- >>> spell usingSharps tritone
+-- _A4
+-- 
+-- >>> spell usingFlats  tritone
+-- d5
+-- 
+-- -}
+-- newtype Semitones = Semitones { getSemitones :: Integer }
+--   deriving (Eq, Ord, Num, Enum, Real, Integral)
+-- 
+-- instance Show         Semitones where { show = show . getSemitones }
 
--}
-newtype Steps = Steps { getSteps :: Integer }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show Steps where { show = show . getSteps }
-
--- instance HasSteps Steps where { steps = id }
-
-{-|
-An interval represented as a number of semitones, including negative
-intervals, as well as intervals larger than one octave. This representation
-does not take spelling into account, so for example a major third and a
-diminished fourth can not be distinguished.
-
-Intervals that name a number of semitones (i.e. 'semitone', 'tritone') does
-not have an unequivocal spelling. To convert these to an interval, a
-'Spelling' must be provided:
-
->>> spell usingSharps tritone
-_A4
-
->>> spell usingFlats  tritone
-d5
-
--}
-newtype Semitones = Semitones { getSemitones :: Integer }
-  deriving (Eq, Ord, Num, Enum, Real, Integral)
-
-instance Show         Semitones where { show = show . getSemitones }
-
+type Semitones = ChromaticSteps
 
 {-|
 The number portion of an interval (i.e. second, third, etc).
