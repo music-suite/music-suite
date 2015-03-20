@@ -1,22 +1,22 @@
 
 -- | Common interval quality.
-module Music.Pitch.Common.Quality (
-    -- * Quality
-    Quality(..),
-    HasQuality(..),
-    invertQuality,
-    isPerfect,
-    isMajor,
-    isMinor,
-    isAugmented,
-    isDiminished,
+module Music.Pitch.Common.Quality
+(
+        -- * Quality
+        Quality(..),
+        HasQuality(..),
+        invertQuality,
+        isPerfect,
+        isMajor,
+        isMinor,
+        isAugmented,
+        isDiminished,
 
-    -- * Quality type
-    QualityType(..),
-    expectedQualityType,
-    qualityTypes,
-    qualityToDiff
-
+        -- * Quality type
+        QualityType(..),
+        expectedQualityType,
+        qualityTypes,
+        qualityToDiff
 ) where
 
 import           Music.Pitch.Augmentable

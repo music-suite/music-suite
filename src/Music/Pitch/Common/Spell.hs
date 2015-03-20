@@ -1,6 +1,7 @@
 
 -- | Provides pitch spelling.
-module Music.Pitch.Common.Spell (
+module Music.Pitch.Common.Spell
+(
         -- ** Spelling
         -- * About
         -- $semitonesAndSpellings

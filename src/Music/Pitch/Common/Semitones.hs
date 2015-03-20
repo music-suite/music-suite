@@ -1,6 +1,7 @@
 
 -- | Semitones and enharmonic equivalence.
-module Music.Pitch.Common.Semitones (
+module Music.Pitch.Common.Semitones
+(
         -- * Types
         -- ** Octaves
         Octaves,

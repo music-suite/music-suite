@@ -2,7 +2,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 -- | Common pitch.
-module Music.Pitch.Common.Pitch (
+module Music.Pitch.Common.Pitch
+(
         -- * Accidentals
         Accidental,
         natural,

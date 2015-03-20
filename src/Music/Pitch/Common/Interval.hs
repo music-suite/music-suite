@@ -1,8 +1,7 @@
 
 -- | Common intervals.
-module Music.Pitch.Common.Interval (
-
-
+module Music.Pitch.Common.Interval
+(
         -- * Intervals
         Interval(..),
         -- ** Creating intervals
