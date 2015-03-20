@@ -11,13 +11,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Write (
-    WriteMusicXml(..)
-
+module Data.Music.MusicXml.Read (
   ) where
 
-import Text.XML.Light (Element)
-
-class WriteMusicXml a where
-    write :: a -> [Element]
 

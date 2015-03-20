@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Score (
+module Data.Music.MusicXml.Score (
 
         -----------------------------------------------------------------------------
         -- * Score
@@ -142,9 +142,9 @@ import Data.Foldable
 import Numeric.Natural
 import TypeUnary.Nat
 
-import Music.MusicXml.Time
-import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Time
+import Data.Music.MusicXml.Pitch
+import Data.Music.MusicXml.Dynamics
 
 import qualified Data.List as List
 

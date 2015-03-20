@@ -11,7 +11,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Write.Score (
+module Data.Music.MusicXml.Write.Score (
   ) where
 
 import Prelude hiding (getLine)
@@ -23,12 +23,12 @@ import Numeric.Natural
 
 import Text.XML.Light hiding (Line)
 
-import Music.MusicXml.Score
-import Music.MusicXml.Time
-import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics
-import Music.MusicXml.Read
-import Music.MusicXml.Write
+import Data.Music.MusicXml.Score
+import Data.Music.MusicXml.Time
+import Data.Music.MusicXml.Pitch
+import Data.Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Read
+import Data.Music.MusicXml.Write
 
 import qualified Data.List as List
 import qualified Data.Char as Char
@@ -497,7 +497,7 @@ writeNoteVal (NoteVal x)
     | x == (2/1)    = "breve"
     | x == (4/1)    = "long"
     | x == (8/1)    = "maxima"
-    | otherwise     = error $ "Music.MusicXml.Write.Score.wrietNoteVal: Invalid note value:" ++ show x
+    | otherwise     = error $ "Data.Music.MusicXml.Write.Score.wrietNoteVal: Invalid note value:" ++ show x
 
 writeClef :: ClefSign -> String
 writeClef GClef    = "G"

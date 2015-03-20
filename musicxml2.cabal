@@ -28,14 +28,14 @@ library
                         xml,
                         music-pitch-literal     == 1.8.1,
                         music-dynamics-literal  == 1.8.1
-    exposed-modules:    Music.MusicXml
-                        Music.MusicXml.Time
-                        Music.MusicXml.Pitch
-                        Music.MusicXml.Dynamics
-                        Music.MusicXml.Read
-                        Music.MusicXml.Score
-                        Music.MusicXml.Write
-                        Music.MusicXml.Simple
-    other-modules:      Music.MusicXml.Write.Score
+    exposed-modules:    Data.Music.MusicXml
+                        Data.Music.MusicXml.Time
+                        Data.Music.MusicXml.Pitch
+                        Data.Music.MusicXml.Dynamics
+                        Data.Music.MusicXml.Read
+                        Data.Music.MusicXml.Score
+                        Data.Music.MusicXml.Write
+                        Data.Music.MusicXml.Simple
+    other-modules:      Data.Music.MusicXml.Write.Score
     hs-source-dirs:     src
     default-language:   Haskell2010

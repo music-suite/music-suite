@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Dynamics (
+module Data.Music.MusicXml.Dynamics (
 
     Dynamics(..)
 

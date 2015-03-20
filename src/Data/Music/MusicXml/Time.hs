@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Time (
+module Data.Music.MusicXml.Time (
         Duration(..),
         NoteType(..),
 

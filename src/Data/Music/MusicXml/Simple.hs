@@ -16,7 +16,7 @@
 
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Simple (
+module Data.Music.MusicXml.Simple (
         
         module Music.MusicXml,
         

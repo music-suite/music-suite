@@ -17,7 +17,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml.Pitch (
+module Data.Music.MusicXml.Pitch (
 
         Pitch(..),
         DisplayPitch(..),

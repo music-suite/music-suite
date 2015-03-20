@@ -10,13 +10,13 @@
 -- Portability : portable
 --
 -- A Haskell representation of MusicXML.
--- You may want to use the "Music.MusicXml.Simple" module to generate the representation.
+-- You may want to use the "Data.Music.MusicXml.Simple" module to generate the representation.
 --
 -- For an introduction to MusicXML, see <http://www.makemusic.com/musicxml/tutorial>.
 --
 -------------------------------------------------------------------------------------
 
-module Music.MusicXml (
+module Data.Music.MusicXml (
 
         -- * Score
         Score(..),
@@ -124,14 +124,14 @@ module Music.MusicXml (
 
 import Text.XML.Light hiding (Line)
 
-import Music.MusicXml.Score
-import Music.MusicXml.Time
-import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics
-import Music.MusicXml.Read
-import Music.MusicXml.Write
+import Data.Music.MusicXml.Score
+import Data.Music.MusicXml.Time
+import Data.Music.MusicXml.Pitch
+import Data.Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Read
+import Data.Music.MusicXml.Write
 
-import Music.MusicXml.Write.Score
+import Data.Music.MusicXml.Write.Score
 
 -- --------------------------------------------------------------------------------
 -- Import and export functions
