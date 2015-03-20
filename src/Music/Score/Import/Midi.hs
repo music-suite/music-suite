@@ -59,8 +59,6 @@ import qualified Data.Map as Map
 import qualified Codec.Midi                as Midi
 import qualified Data.List                 as List
 import qualified Data.Map                  as Map
-import qualified Music.Lilypond            as Lilypond
-import qualified Music.MusicXml.Simple     as Xml
 import qualified Text.Pretty               as Pretty
 import Data.Monoid
 

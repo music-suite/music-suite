@@ -51,8 +51,6 @@ import           Data.Functor.Couple
 import           Data.Maybe
 import           Data.Ratio
 import           Data.Traversable              (Traversable, sequenceA)
-import qualified Music.Lilypond                as Lilypond
-import qualified Music.MusicXml.Simple         as MusicXml
 import           Music.Score.Internal.Export   hiding (MVoice)
 import           System.Process
 import           Music.Score.Internal.Quantize
