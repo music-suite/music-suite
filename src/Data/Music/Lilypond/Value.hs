@@ -16,7 +16,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.Value (
+module Data.Music.Lilypond.Value (
         Value,
         toValue,
         toLiteralValue,

@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.Pitch (
+module Data.Music.Lilypond.Pitch (
         Pitch(..),
         PitchName(..),
         Accidental(..),

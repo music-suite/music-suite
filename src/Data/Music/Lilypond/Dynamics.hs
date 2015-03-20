@@ -13,7 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.Dynamics (
+module Data.Music.Lilypond.Dynamics (
         Dynamics(..),
   ) where
 

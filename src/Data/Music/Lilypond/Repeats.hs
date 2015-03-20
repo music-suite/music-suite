@@ -13,6 +13,6 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.Repeats (
+module Data.Music.Lilypond.Repeats (
   ) where
 

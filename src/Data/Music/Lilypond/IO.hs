@@ -13,11 +13,11 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.IO -- (
+module Data.Music.Lilypond.IO -- (
   -- )
 where
 
-import Music.Lilypond
+import Data.Music.Lilypond
 
 writeMusic :: FilePath -> Music -> IO ()
 writeMusic = error "writeMusic: Not implemented"

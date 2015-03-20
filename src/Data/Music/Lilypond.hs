@@ -18,7 +18,7 @@
 -- Portability : GHC
 --
 -------------------------------------------------------------------------------------
-module Music.Lilypond (
+module Data.Data.Music.Lilypond (
 
         -- * Representation
         
@@ -150,9 +150,9 @@ import Music.Pitch.Literal
 
 -- import System.Process -- TODO debug
 
-import Music.Lilypond.Pitch
-import Music.Lilypond.Dynamics
-import Music.Lilypond.Value
+import Data.Music.Lilypond.Pitch
+import Data.Music.Lilypond.Dynamics
+import Data.Music.Lilypond.Value
 
 
 {-
@@ -324,7 +324,7 @@ instance IsPitch Music where
 instance AdditiveGroup Music where
     zeroV   = Rest (Just $ 1/4) []
     a ^+^ b = Sequential [a,b]
-    negateV = error "No Music.Lilypond.Music.negateV"
+    negateV = error "No Data.Music.Lilypond.Music.negateV"
 
 instance VectorSpace Music where
     type Scalar Music = Duration

@@ -13,6 +13,6 @@
 --
 -------------------------------------------------------------------------------------
 
-module Music.Lilypond.Expression (
+module Data.Music.Lilypond.Rhythms (
   ) where
 
