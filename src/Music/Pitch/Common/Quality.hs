@@ -89,16 +89,17 @@ instance HasQuality Quality where
 -- intervals.
 
 instance Augmentable Quality where
-  augment Major = Augmented 1
-  augment Minor = Major
-  augment Perfect = Augmented 1
-  augment (Augmented n) = Augmented (n + 1)
-  augment (Diminished n) = Diminished (n - 1)
-  diminish Major = Minor
-  diminish Minor = Diminished 1
-  diminish Perfect = Diminished 1
-  diminish (Augmented n) = Augmented (n - 1)
-  diminish (Diminished n) = Diminished (n + 1)
+  augment Major                   = Augmented 1
+  augment Minor                   = Major
+  augment Perfect                 = Augmented 1
+  augment (Augmented n)           = Augmented (n + 1)
+  augment (Diminished n)          = Diminished (n - 1)
+
+  diminish Major                  = Minor
+  diminish Minor                  = Diminished 1
+  diminish Perfect                = Diminished 1
+  diminish (Augmented n)          = Augmented (n - 1)
+  diminish (Diminished n)         = Diminished (n + 1)
 
 -- |
 -- Invert a quality.
