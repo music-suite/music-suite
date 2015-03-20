@@ -18,7 +18,7 @@
 
 module Data.Music.MusicXml.Simple (
         
-        module Music.MusicXml,
+        module Data.Music.MusicXml,
         
         -----------------------------------------------------------------------------
         -- * Score and parts
@@ -232,13 +232,13 @@ import Data.Ratio
 import Data.Monoid
 import Control.Arrow
 
-import Music.MusicXml
-import Music.MusicXml.Score
-import Music.MusicXml.Time
-import Music.MusicXml.Pitch
-import Music.MusicXml.Dynamics
-import Music.MusicXml.Read
-import Music.MusicXml.Write
+import Data.Music.MusicXml
+import Data.Music.MusicXml.Score
+import Data.Music.MusicXml.Time
+import Data.Music.MusicXml.Pitch
+import Data.Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Read
+import Data.Music.MusicXml.Write
 
 import qualified Data.List as List
 
@@ -470,7 +470,7 @@ rest dur = case dots of
     1 -> rest' dur' <> rest' (dur' / 2)
     2 -> rest' dur' <> rest' (dur' / 2) <> rest' (dur' / 4)
     3 -> rest' dur' <> rest' (dur' / 2) <> rest' (dur' / 4) <> rest' (dur' / 8)
-    _ -> error "Music.MusicXml.Simple.rest: too many dots"
+    _ -> error "Data.Music.MusicXml.Simple.rest: too many dots"
     where
         (dur', dots) = separateDots dur
 
@@ -536,7 +536,7 @@ separateDots' (div:divs) nv
     where                                                        
         (nv', dots')    = separateDots' divs (nv*div)
 
-errorNoteValue  = error "Music.MusicXml.Simple.separateDots: Note value must be a multiple of two or dotted"
+errorNoteValue  = error "Data.Music.MusicXml.Simple.separateDots: Note value must be a multiple of two or dotted"
 
 
 
