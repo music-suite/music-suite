@@ -166,12 +166,6 @@ accidental = fromIntegral . intervalDiff . simple . getPitch
   where
     intervalDiff = view (from interval'._1)
 
--- |
--- This is just the identity function, but is useful to fix the type of 'Pitch'.
---
-asPitch :: Pitch -> Pitch
-asPitch = id
-
 upChromaticP :: Pitch -> ChromaticSteps -> Pitch -> Pitch
 upChromaticP origin n = relative origin $ (_alteration +~ n)
 

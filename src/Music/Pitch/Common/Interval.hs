@@ -72,8 +72,8 @@ import           Music.Pitch.Literal
 
 -- | Avoid using '(*)', or 'signum' on intervals.
 instance Num Interval where
-  (+)           = addInterval
-  negate        = negateInterval
+  (+)           = (^+^)
+  negate        = negateV
   abs a         = if isNegative a then negate a else a
   (*)           = error "Music.Pitch.Common.Interval: no overloading for (*)"
   signum        = error "Music.Pitch.Common.Interval: no overloading for signum"
@@ -91,20 +91,24 @@ instance Show Interval where
       showQuality (Diminished n)   = replicate (fromIntegral n) 'd'
 
 instance Semigroup Interval where
-  (<>)    = addInterval
+  (<>)    = (^+^)
 
 instance Monoid Interval where
   mempty  = basis_P1
-  mappend = addInterval
+  mappend = (^+^)
 
 instance AdditiveGroup Interval where
   zeroV   = basis_P1
-  (^+^)   = addInterval
-  negateV = negateInterval
+  (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
+  negateV (Interval (a, d)) = Interval (-a, -d)
 
 instance VectorSpace Interval where
   type Scalar Interval = Integer
   (*^) = stackInterval
+    where
+      stackInterval n a
+        | n >= 0    = mconcat $ replicate (fromIntegral n) a
+        | otherwise = negate $ stackInterval (negate n) a
 
 instance HasBasis Interval where
   type Basis Interval = IntervalBasis
@@ -129,17 +133,6 @@ instance HasSemitones Interval where
 
 instance IsInterval Interval where
   fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
-
-negateInterval :: Interval -> Interval
-negateInterval (Interval (a, d)) = Interval (-a, -d)
-
-addInterval :: Interval -> Interval -> Interval
-addInterval (Interval (a1, d1)) (Interval (a2, d2)) = Interval (a1 + a2, d1 + d2)
-
-stackInterval :: Integer -> Interval -> Interval
-stackInterval n a
-  | n >= 0    = mconcat $ replicate (fromIntegral n) a
-  | otherwise = negate $ stackInterval (negate n) a
 
 intervalDiff :: Interval -> Int
 intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
@@ -362,14 +355,6 @@ isLeap (Interval (a, d)) = (abs d) > 1
 --
 invert :: Interval -> Interval
 invert = simple . negate
-
--- |
--- This is just the identity function, but is useful to fix the type of 'Interval'.
---
-asInterval :: Interval -> Interval
-asInterval = id
-
-
 
 
 
