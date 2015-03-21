@@ -10,10 +10,24 @@ module Music.Pitch.Scale
         Chord,
         _tonic,
 
+        complementInterval,
+        characteristicInterval,
+        invertChord,
+        functionToChord,
+        chordToList,
+
+        leadingInterval,
+        shiftMode,
+        modeToScale,
+        scaleToList,
+
+        -- * Common modes
+        -- ** Classical modes
         majorScale,
         pureMinorScale,
         harmonicMinorScale,
         melodicMinorScaleUp,
+        -- ** Church modes
         aeolian,
         locrian,
         ionian,
@@ -26,8 +40,12 @@ module Music.Pitch.Scale
         bluesMinor,
         bluesMajor,
         bebopScale,
+        
+        -- ** Miscellaneous modes
         wholeTone,
         octatonic,
+        
+        -- ** Modes of limited transposition
         firstMode,
         secondMode,
         thirdMode,
@@ -36,6 +54,7 @@ module Music.Pitch.Scale
         sixthMode,
         seventhMode,
 
+        -- * Common chords
         majorTriad,
         minorTriad,
         augmentedChord,
@@ -83,6 +102,7 @@ harmonicMinorScale = Mode [_M2,m2,_M2,_M2,m2,_A2] _P8
 
 melodicMinorScaleUp :: Mode Pitch
 melodicMinorScaleUp = Mode [_M2,m2,_M2,_M2,_M2,_M2] _P8
+
 
 {-
 >>> leadingInterval majorScale 
