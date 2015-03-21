@@ -17,7 +17,7 @@ module Music.Pitch.Scale
         chordToList,
 
         leadingInterval,
-        shiftMode,
+        invertMode,
         modeToScale,
         scaleToList,
 
@@ -115,12 +115,12 @@ _M2
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode steps repeating) = repeating ^-^ sumV steps
 
-shiftModeUp1 :: AffineSpace a => Mode a -> Mode a
-shiftModeUp1 mode@(Mode steps repeating) = Mode (tail steps ++ [leadingInterval mode]) repeating
+invertModeUp1 :: AffineSpace a => Mode a -> Mode a
+invertModeUp1 mode@(Mode steps repeating) = Mode (tail steps ++ [leadingInterval mode]) repeating
 
-shiftMode :: AffineSpace a => Int -> Mode a -> Mode a
-shiftMode 0 = id
-shiftMode n = shiftMode (n-1) . shiftModeUp1
+invertMode :: AffineSpace a => Int -> Mode a -> Mode a
+invertMode 0 = id
+invertMode n = invertMode (n-1) . invertModeUp1
 
 modeToScale :: AffineSpace a => a -> Mode a -> Scale a
 modeToScale = Scale
@@ -130,37 +130,37 @@ scaleToList (Scale tonic mode@(Mode steps repeating)) = offsetPoints tonic steps
 
   
 ionian :: Mode Pitch
-ionian = shiftMode 0 majorScale
+ionian = invertMode 0 majorScale
 
 dorian :: Mode Pitch
-dorian = shiftMode 1 majorScale
+dorian = invertMode 1 majorScale
 
 phrygian :: Mode Pitch
-phrygian = shiftMode 2 majorScale
+phrygian = invertMode 2 majorScale
 
 lydian :: Mode Pitch
-lydian = shiftMode 3 majorScale
+lydian = invertMode 3 majorScale
 
 mixolydian :: Mode Pitch
-mixolydian = shiftMode 4 majorScale
+mixolydian = invertMode 4 majorScale
 
 aeolian :: Mode Pitch
-aeolian = shiftMode 5 majorScale
+aeolian = invertMode 5 majorScale
 
 locrian :: Mode Pitch
-locrian = shiftMode 6 majorScale
+locrian = invertMode 6 majorScale
 
 majorPentaTonic :: Mode Pitch
 majorPentaTonic = Mode [_M2,_M2,m3,_M2] _P8
 
 bluesMinor :: Mode Pitch
-bluesMinor = shiftMode 2 majorPentaTonic
+bluesMinor = invertMode 2 majorPentaTonic
 
 bluesMajor :: Mode Pitch
-bluesMajor = shiftMode 3 majorPentaTonic
+bluesMajor = invertMode 3 majorPentaTonic
 
 minorPentaTonic :: Mode Pitch
-minorPentaTonic = shiftMode 4 majorPentaTonic
+minorPentaTonic = invertMode 4 majorPentaTonic
 
 
 
