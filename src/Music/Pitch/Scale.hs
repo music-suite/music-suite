@@ -13,7 +13,7 @@ module Music.Pitch.Scale
         majorScale,
         pureMinorScale,
         harmonicMinorScale,
-        melodicMinorScale,
+        melodicMinorScaleUp,
         aeolian,
         locrian,
         ionian,
@@ -23,7 +23,8 @@ module Music.Pitch.Scale
         mixolydian,
         majorPentaTonic,
         minorPentaTonic,
-        bluesScale,
+        bluesMinor,
+        bluesMajor,
         bebopScale,
         wholeTone,
         octatonic,
@@ -40,7 +41,8 @@ module Music.Pitch.Scale
         augmentedChord,
         diminishedChord,
         halfDiminishedChord,
-        majorSeventhChord,
+        majorMinorSeventhChord,
+        majorMajorSeventhChord,
   
 ) where
 
@@ -71,100 +73,174 @@ _tonic :: Lens' (Chord a) a
 _tonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
 
 majorScale :: Mode Pitch
-majorScale = Mode [_M2,_M2] _P8
+majorScale = Mode [_M2,_M2,m2,_M2,_M2,_M2] _P8
 
 pureMinorScale :: Mode Pitch
-pureMinorScale = undefined
+pureMinorScale = Mode [_M2,m2,_M2,_M2,m2,_M2] _P8
 
 harmonicMinorScale :: Mode Pitch
-harmonicMinorScale = undefined
+harmonicMinorScale = Mode [_M2,m2,_M2,_M2,m2,_A2] _P8
 
-melodicMinorScale :: Mode Pitch
-melodicMinorScale = undefined
+melodicMinorScaleUp :: Mode Pitch
+melodicMinorScaleUp = Mode [_M2,m2,_M2,_M2,_M2,_M2] _P8
 
-aeolian :: Mode Pitch
-aeolian = Mode [_M2,_M2,m2,_M2,_M2,m2,_M2] _P8
+{-
+>>> leadingInterval majorScale 
+m2
+>>> leadingInterval harmonicMinorScale 
+m2
+>>> leadingInterval pureMinorScale 
+_M2
+-}
+leadingInterval :: AffineSpace a => Mode a -> Diff a
+leadingInterval (Mode steps repeating) = repeating ^-^ sumV steps
 
-locrian :: Mode Pitch
-locrian = undefined
+shiftModeUp1 :: AffineSpace a => Mode a -> Mode a
+shiftModeUp1 mode@(Mode steps repeating) = Mode (tail steps ++ [leadingInterval mode]) repeating
 
+shiftMode :: AffineSpace a => Int -> Mode a -> Mode a
+shiftMode 0 = id
+shiftMode n = shiftMode (n-1) . shiftModeUp1
+
+modeToScale :: AffineSpace a => a -> Mode a -> Scale a
+modeToScale = Scale
+
+scaleToList :: AffineSpace a => Scale a -> [a]
+scaleToList (Scale tonic mode@(Mode steps repeating)) = offsetPoints tonic steps
+
+  
 ionian :: Mode Pitch
-ionian = undefined
+ionian = shiftMode 0 majorScale
 
 dorian :: Mode Pitch
-dorian = undefined
+dorian = shiftMode 1 majorScale
 
 phrygian :: Mode Pitch
-phrygian = undefined
+phrygian = shiftMode 2 majorScale
 
 lydian :: Mode Pitch
-lydian = undefined
+lydian = shiftMode 3 majorScale
 
 mixolydian :: Mode Pitch
-mixolydian = undefined
+mixolydian = shiftMode 4 majorScale
+
+aeolian :: Mode Pitch
+aeolian = shiftMode 5 majorScale
+
+locrian :: Mode Pitch
+locrian = shiftMode 6 majorScale
 
 majorPentaTonic :: Mode Pitch
-majorPentaTonic = undefined
+majorPentaTonic = Mode [_M2,_M2,m3,_M2] _P8
+
+bluesMinor :: Mode Pitch
+bluesMinor = shiftMode 2 majorPentaTonic
+
+bluesMajor :: Mode Pitch
+bluesMajor = shiftMode 3 majorPentaTonic
 
 minorPentaTonic :: Mode Pitch
-minorPentaTonic = undefined
+minorPentaTonic = shiftMode 4 majorPentaTonic
 
-bluesScale :: Mode Pitch
-bluesScale = undefined
+
 
 bebopScale :: Mode Pitch
 bebopScale = undefined
 
 wholeTone :: Mode Pitch
-wholeTone = undefined
+wholeTone = Mode [_M2,_M2,_M2,_M2,_M2] _P8
 
 octatonic :: Mode Pitch
-octatonic = undefined
+octatonic = Mode [m2,_M2,_A1,_M2,m2,_M2,m2{-M2-}] _P8
+
+-- What is this?
+-- Mode [_A1,m3,m2,m3,_A1{-m3-}] _P8
 
 firstMode :: Mode Pitch
-firstMode = undefined
+firstMode = wholeTone
 
 secondMode :: Mode Pitch
-secondMode = undefined
+secondMode = octatonic
 
+-- tone, semitone, semitone, tone, semitone, semitone, tone, semitone, semitone
 thirdMode :: Mode Pitch
 thirdMode = undefined
 
+-- semitone, semitone, minor third, semitone, semitone, semitone, minor third, semitone
 fourthMode :: Mode Pitch
 fourthMode = undefined
 
+-- semitone, major third, semitone, semitone, major third, semitone
 fifthMode :: Mode Pitch
 fifthMode = undefined
 
+-- tone, tone, semitone, semitone, tone, tone, semitone, semitone
 sixthMode :: Mode Pitch
 sixthMode = undefined
 
+--  semitone, semitone, semitone, tone, semitone, semitone, semitone, semitone, tone, semitone 
 seventhMode :: Mode Pitch
 seventhMode = undefined
 
 
 
+{-
+>>> complementInterval majorScale 
+m2
+>>> complementInterval harmonicMinorScale 
+m2
+>>> complementInterval pureMinorScale 
+_M2
+-}
+complementInterval :: AffineSpace a => Function a -> Diff a
+complementInterval (Function leaps repeating) = repeating ^-^ sumV leaps
+
+-- TODO name?
+characteristicInterval :: AffineSpace a => Function a -> Diff a
+characteristicInterval (Function leaps repeating) = sumV leaps
+
+invertChordUp1 :: AffineSpace a => Function a -> Function a
+invertChordUp1 function@(Function leaps repeating) = Function (tail leaps ++ [complementInterval function]) repeating
+
+invertChord :: AffineSpace a => Int -> Function a -> Function a
+invertChord 0 = id
+invertChord n = invertChord (n-1) . invertChordUp1
+
+
+functionToChord :: AffineSpace a => a -> Function a -> Chord a
+functionToChord = Chord
+
+chordToList :: AffineSpace a => Chord a -> [a]
+chordToList (Chord tonic mode@(Function leaps repeating)) = offsetPoints tonic leaps
+-- TODO inversion?
 
 majorTriad :: Function Pitch
-majorTriad = undefined
+majorTriad = Function [_M3,m3] _P8
 
 minorTriad :: Function Pitch
-minorTriad = undefined
+minorTriad = Function [m3,_M3] _P8
 
 augmentedChord :: Function Pitch
-augmentedChord = undefined
+augmentedChord = Function [_M3,_M3] _P8
 
 diminishedChord :: Function Pitch
-diminishedChord = undefined
+diminishedChord = Function [m3,m3,_A2] _P8
 
 halfDiminishedChord :: Function Pitch
-halfDiminishedChord = undefined
+halfDiminishedChord = Function [m3,m3,_M3] _P8
 
-majorSeventhChord :: Function Pitch
-majorSeventhChord = undefined
+majorMinorSeventhChord :: Function Pitch
+majorMinorSeventhChord = Function [_M3,m3,m3] _P8
+
+majorMajorSeventhChord :: Function Pitch
+majorMajorSeventhChord = Function [_M3,m3,_M3] _P8
+
+-- 
 
 
 
 
-
+-- TODO consolidate
+offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
+offsetPoints = scanl (.+^)
 

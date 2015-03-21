@@ -60,11 +60,11 @@ symbolName FClef = "F clef"
 symbolName PercClef = "Percussion clef"
 symbolName NeutralClef = "Neutral clef"
 
--- | Return the pitcvh implied by the given clef, if any.
+-- | Return the pitch implied by the given clef at the middle space or line.
 symbolPitch :: ClefSymbol -> Maybe Pitch
-symbolPitch GClef = Just g
+symbolPitch GClef = Just b'
 symbolPitch CClef = Just c
-symbolPitch FClef = Just f
+symbolPitch FClef = Just d_
 symbolPitch _     = Nothing
 
 -- TODO consolidate with common
