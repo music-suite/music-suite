@@ -91,6 +91,40 @@ _pitches f (Chord t xs) = fmap (\xs -> Chord t (fmap (.-. t) xs)) $ f (fmap (.+
 _tonic :: Lens' (Chord a) a
 _tonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
 
+{-
+>>> complementInterval majorScale 
+m2
+>>> complementInterval harmonicMinorScale 
+m2
+>>> complementInterval pureMinorScale 
+_M2
+-}
+complementInterval :: AffineSpace a => Function a -> Diff a
+complementInterval (Function leaps repeating) = repeating ^-^ sumV leaps
+
+-- TODO name?
+characteristicInterval :: AffineSpace a => Function a -> Diff a
+characteristicInterval (Function leaps repeating) = sumV leaps
+
+invertChord :: AffineSpace a => Int -> Function a -> Function a
+invertChord 0 = id
+invertChord n = invertChord (n-1) . invertChord1
+  where
+    invertChord1 :: AffineSpace a => Function a -> Function a
+    invertChord1 function@(Function leaps repeating) = Function (tail leaps ++ [complementInterval function]) repeating
+
+functionToChord :: AffineSpace a => a -> Function a -> Chord a
+functionToChord = Chord
+
+chordToList :: AffineSpace a => Chord a -> [a]
+chordToList (Chord tonic mode@(Function leaps repeating)) = offsetPoints tonic leaps
+-- TODO inversion?
+
+
+
+
+
+
 majorScale :: Mode Pitch
 majorScale = Mode [_M2,_M2,m2,_M2,_M2,_M2] _P8
 
@@ -115,12 +149,12 @@ _M2
 leadingInterval :: AffineSpace a => Mode a -> Diff a
 leadingInterval (Mode steps repeating) = repeating ^-^ sumV steps
 
-invertModeUp1 :: AffineSpace a => Mode a -> Mode a
-invertModeUp1 mode@(Mode steps repeating) = Mode (tail steps ++ [leadingInterval mode]) repeating
-
 invertMode :: AffineSpace a => Int -> Mode a -> Mode a
 invertMode 0 = id
-invertMode n = invertMode (n-1) . invertModeUp1
+invertMode n = invertMode (n-1) . invertMode1
+  where
+    invertMode1 :: AffineSpace a => Mode a -> Mode a
+    invertMode1 mode@(Mode steps repeating) = Mode (tail steps ++ [leadingInterval mode]) repeating
 
 modeToScale :: AffineSpace a => a -> Mode a -> Scale a
 modeToScale = Scale
@@ -203,36 +237,6 @@ seventhMode :: Mode Pitch
 seventhMode = undefined
 
 
-
-{-
->>> complementInterval majorScale 
-m2
->>> complementInterval harmonicMinorScale 
-m2
->>> complementInterval pureMinorScale 
-_M2
--}
-complementInterval :: AffineSpace a => Function a -> Diff a
-complementInterval (Function leaps repeating) = repeating ^-^ sumV leaps
-
--- TODO name?
-characteristicInterval :: AffineSpace a => Function a -> Diff a
-characteristicInterval (Function leaps repeating) = sumV leaps
-
-invertChordUp1 :: AffineSpace a => Function a -> Function a
-invertChordUp1 function@(Function leaps repeating) = Function (tail leaps ++ [complementInterval function]) repeating
-
-invertChord :: AffineSpace a => Int -> Function a -> Function a
-invertChord 0 = id
-invertChord n = invertChord (n-1) . invertChordUp1
-
-
-functionToChord :: AffineSpace a => a -> Function a -> Chord a
-functionToChord = Chord
-
-chordToList :: AffineSpace a => Chord a -> [a]
-chordToList (Chord tonic mode@(Function leaps repeating)) = offsetPoints tonic leaps
--- TODO inversion?
 
 majorTriad :: Function Pitch
 majorTriad = Function [_M3,m3] _P8
