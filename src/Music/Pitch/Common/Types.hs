@@ -24,6 +24,7 @@ module Music.Pitch.Common.Types
 ) where
 
 import Data.Typeable
+import Data.AdditiveGroup
 
 import Music.Pitch.Literal
 import Music.Pitch.Alterable
@@ -33,21 +34,21 @@ import Music.Pitch.Augmentable
 Number of chromatic steps.
 May be negative, indicating a downward interval. 
 -}
-newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
+newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Int }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
 {-| 
 Number of diatonic steps.
 May be negative, indicating a downward interval. 
 -}
-newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
+newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Int }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
 {-| 
 Number of octaves.
 May be negative, indicating a downward interval. 
 -}
-newtype Octaves = Octaves { getOctaves :: Integer }
+newtype Octaves = Octaves { getOctaves :: Int }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 {-|
@@ -115,9 +116,8 @@ data IntervalBasis = Chromatic | Diatonic
 {-|
 Interval type.
  -}
-newtype Interval = Interval { getInterval :: (Int, Int) }
+newtype Interval = Interval { getInterval :: (ChromaticSteps, DiatonicSteps) }
   deriving (Eq, Typeable)
-    -- Number of (A1,d2) i.e. (chromatic,diatonic) steps
 
 {-|
 Pitch type.
@@ -160,7 +160,15 @@ instance Ord Interval where
   Interval a `compare` Interval b = swap a `compare` swap b
     where swap (x,y) = (y,x)
 
+instance AdditiveGroup ChromaticSteps where
+  zeroV = 0
+  (^+^) = (+)
+  negateV = negate
 
+instance AdditiveGroup DiatonicSteps where
+  zeroV = 0
+  (^+^) = (+)
+  negateV = negate
 
 
 

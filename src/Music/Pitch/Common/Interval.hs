@@ -135,7 +135,7 @@ instance IsInterval Interval where
   fromInterval (IntervalL (o,d,c)) = (basis_P8^*o) ^+^ (basis_A1^*c) ^+^ (basis_d2^*d)
 
 intervalDiff :: Interval -> Int
-intervalDiff (Interval (c, d)) = c - diatonicToChromatic d
+intervalDiff (Interval (c, d)) = fromIntegral $ c - fromIntegral (diatonicToChromatic d)
 
 -- |
 -- Creates an interval from a quality and number.
@@ -148,7 +148,7 @@ mkInterval'
   :: Int        -- ^ Difference in chromatic steps (?).
   -> Int        -- ^ Number of diatonic steps (NOT interval number).
   -> Interval
-mkInterval' diff diatonic = Interval (diatonicToChromatic diatonic + diff, diatonic)
+mkInterval' diff diatonic = Interval (diatonicToChromatic (fromIntegral diatonic) + fromIntegral diff, fromIntegral diatonic)
 
 basis_P1 = Interval (0, 0)
 basis_A1 = Interval (1, 0)
@@ -438,17 +438,17 @@ d5
 -- Internal stuff
 
 -- TODO more generic pattern here
-diatonicToChromatic :: Int -> Int
-diatonicToChromatic d = (octaves*12) + go restDia
+diatonicToChromatic :: DiatonicSteps -> ChromaticSteps
+diatonicToChromatic d = fromIntegral $ (octaves*12) + go restDia
     where
         -- restDia is always in [0..6]
-        (octaves, restDia) = d `divMod` 7
+        (octaves, restDia) = fromIntegral d `divMod` 7
         go = ([0,2,4,5,7,9,11] !!)
 
 -- | Integer div of intervals: i / di = x, where x is an integer
 intervalDiv :: Interval -> Interval -> Int
-intervalDiv (Interval (a, d)) (Interval (1, 0)) = a
-intervalDiv (Interval (a, d)) (Interval (0, 1)) = d
+intervalDiv (Interval (a, d)) (Interval (1, 0)) = fromIntegral a
+intervalDiv (Interval (a, d)) (Interval (0, 1)) = fromIntegral d
 intervalDiv i di
   | (i > basis_P1) = intervalDivPos i di
   | (i < basis_P1) = intervalDivNeg i di
@@ -480,9 +480,9 @@ convertBasis i j k
   | not $ p `divides` q = Nothing
   | otherwise = Just (r `div` p, q `div` p)
   where
-    Interval (m, n) = i
-    Interval (a, b) = j
-    Interval (c, d) = k
+    Interval (fromIntegral -> m, fromIntegral -> n) = i
+    Interval (fromIntegral -> a, fromIntegral -> b) = j
+    Interval (fromIntegral -> c, fromIntegral -> d) = k
     p = (a*d - b*c)
     q = (a*n - b*m)
     r = (d*m - c*n)
@@ -501,9 +501,9 @@ convertBasisFloat :: (Fractional t, Eq t)
 convertBasisFloat i j k
   | (p == 0) = Nothing
   | otherwise = Just (r / p, q / p)
-  where Interval (m, n) = i
-        Interval (a, b) = j
-        Interval (c, d) = k
+  where Interval (fromIntegral -> m, fromIntegral -> n) = i
+        Interval (fromIntegral -> a, fromIntegral -> b) = j
+        Interval (fromIntegral -> c, fromIntegral -> d) = k
         p = fromIntegral $ (a*d - b*c)
         q = fromIntegral $ (a*n - b*m)
         r = fromIntegral $ (d*m - c*n)
