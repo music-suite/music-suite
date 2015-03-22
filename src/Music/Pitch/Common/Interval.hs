@@ -399,7 +399,12 @@ interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
   (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
+{-
+Note: This is *not* the same as wrapping/unwrapping, as the number of chromatic steps viewed here is
+an *alteration*, rather than the total number of chromatic steps (basis d2).
 
+E.g. d5 is internally represented as (6,4) but _P5^.from interval' == (-1,4).
+-}
          
 {-|
 >>> m3 & _number %~ pred
