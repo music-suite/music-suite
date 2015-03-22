@@ -1,11 +1,11 @@
 
 
 
-data    Mode a = Mode [Diff a] (Diff a)         -- intervals, repeat (usually octave)
-data    Scale a = Scale a (Mode a)              -- root, mode
+data    Mode a     = Mode [Diff a] (Diff a)         -- intervals, repeat (usually octave)
+data    Scale a    = Scale a (Mode a)              -- root, mode
 data    Function a = Function [Diff a] (Diff a) -- intervals, repeat, repeat (usually octave)
-data    Chord a = Chord a (Function a)          -- root, function 
-data    Ambitus a = Ambitus a a | Ambitus a (Diff a) | Ambitus (Diff a) a
+data    Chord a    = Chord a (Function a)          -- root, function 
+data    Ambitus a  = Ambitus a a | Ambitus a (Diff a) | Ambitus (Diff a) a
 
 newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Integer }
 newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Integer }
