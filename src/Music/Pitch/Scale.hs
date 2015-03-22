@@ -1,4 +1,17 @@
 
+{-
+Hi all,
+
+A terminology question:
+
+As we all know, the process that generates a chord by rotating its intervals (i.e. C E G -> E G C) is called *inversion*. What is the corresponding term for a mode? I.e. the process that transforms C major mode into D dorian, D dorian into E phrygian and so on.
+
+Is it acceptable to use "invert" here as well (i.e. to talk of the church modes as "inversions" of major mode), or is there a better term?
+
+Best,
+Hans
+
+-}
 -- | Scales and chords.
 module Music.Pitch.Scale
 (
@@ -202,39 +215,31 @@ bebopScale :: Mode Pitch
 bebopScale = undefined
 
 wholeTone :: Mode Pitch
-wholeTone = Mode [_M2,_M2,_M2,_M2,_M2] _P8
+wholeTone = firstMode
 
 octatonic :: Mode Pitch
-octatonic = Mode [m2,_M2,_A1,_M2,m2,_M2,m2{-M2-}] _P8
-
--- What is this?
--- Mode [_A1,m3,m2,m3,_A1{-m3-}] _P8
+octatonic = secondMode
 
 firstMode :: Mode Pitch
-firstMode = wholeTone
+firstMode = Mode [_M2,_M2,_M2,_M2,_M2] _P8
 
 secondMode :: Mode Pitch
-secondMode = octatonic
+secondMode = Mode [m2,_M2,_A1,_M2,m2,_M2,m2] _P8
 
--- tone, semitone, semitone, tone, semitone, semitone, tone, semitone, semitone
 thirdMode :: Mode Pitch
-thirdMode = undefined
+thirdMode = Mode [_M2,m2,m2,_M2,m2,m2,_M2,m2] _P8
 
--- semitone, semitone, minor third, semitone, semitone, semitone, minor third, semitone
 fourthMode :: Mode Pitch
-fourthMode = undefined
+fourthMode = Mode [m2,m2,m3,m2,m2,m2,m3] _P8
 
--- semitone, major third, semitone, semitone, major third, semitone
 fifthMode :: Mode Pitch
-fifthMode = undefined
+fifthMode = Mode [m2,_M3,m2,m2,_M3] _P8
 
--- tone, tone, semitone, semitone, tone, tone, semitone, semitone
 sixthMode :: Mode Pitch
-sixthMode = undefined
+sixthMode = Mode [_M2,_M2,m2,m2,_M2,_M2,m2] _P8
 
---  semitone, semitone, semitone, tone, semitone, semitone, semitone, semitone, tone, semitone 
 seventhMode :: Mode Pitch
-seventhMode = undefined
+seventhMode = Mode [m2,m2,m2,_M2,m2,m2,m2,m2,_M2] _P8
 
 
 
