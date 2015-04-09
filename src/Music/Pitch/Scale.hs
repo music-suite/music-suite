@@ -1,17 +1,4 @@
 
-{-
-Hi all,
-
-A terminology question:
-
-As we all know, the process that generates a chord by rotating its intervals (i.e. C E G -> E G C) is called *inversion*. What is the corresponding term for a mode? I.e. the process that transforms C major mode into D dorian, D dorian into E phrygian and so on.
-
-Is it acceptable to use "invert" here as well (i.e. to talk of the church modes as "inversions" of major mode), or is there a better term?
-
-Best,
-Hans
-
--}
 -- | Scales and chords.
 module Music.Pitch.Scale
 (
