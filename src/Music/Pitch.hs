@@ -21,13 +21,16 @@ module Music.Pitch (
 
         module Music.Pitch.Augmentable,
         module Music.Pitch.Alterable,
+
         module Music.Pitch.Absolute,
-        module Music.Pitch.Ambitus,
-        module Music.Pitch.Equal,
         module Music.Pitch.Common,
+        module Music.Pitch.Equal,
+
         module Music.Pitch.Clef,
         module Music.Pitch.Intonation,
         module Music.Pitch.Literal,
+        module Music.Pitch.Ambitus,
+        module Music.Pitch.Scale,
   ) where
 
 import Data.Semigroup
@@ -45,4 +48,5 @@ import Music.Pitch.Common.Names
 import Music.Pitch.Literal
 import Music.Pitch.Clef
 import Music.Pitch.Intonation
+import Music.Pitch.Scale
 
