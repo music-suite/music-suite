@@ -3,21 +3,25 @@
 module Music.Pitch.Scale
 (
         Mode,
-        Scale,
+        modeIntervals,
+        modeRepeat,
         Function,
-        _intervals,
-        _repeat,
+        functionIntervals,
+        functionRepeat,
+        
+        Scale,
+        scaleTonic,
         Chord,
-        _tonic,
+        chordTonic,
 
-        complementInterval,
-        characteristicInterval,
-        invertChord,
-        functionToChord,
-        chordToList,
+        complementInterval,        -- AffineSpace a => Function a -> Diff a
+        characteristicInterval,    -- AffineSpace a => Function a -> Diff a
+        invertChord,               -- AffineSpace a => Int -> Function a -> Function a
+        functionToChord,           -- AffineSpace a => a -> Function a -> Chord a
+        chordToList,               -- AffineSpace a => Music.Pitch.Scale.Chord a -> [a]
 
-        leadingInterval,
-        invertMode,
+        leadingInterval,           -- AffineSpace a => Music.Pitch.Scale.Mode a -> Diff a
+        invertMode,                -- AffineSpace a => Int -> Mode a -> Mode a
         modeToScale,
         scaleToList,
 
@@ -69,27 +73,43 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Music.Pitch.Literal
 import Control.Lens
-import Music.Pitch hiding (Mode) -- Test
+-- import Music.Pitch hiding (Mode) -- Test
+import Music.Pitch.Literal
+import Music.Pitch.Common hiding (Mode)
 
-data Mode a = Mode [Diff a] (Diff a) -- intervals, repeat (usually octave)
+-- | A scale is a mode with a specified tonic.
 data Scale a = Scale a (Mode a) -- root, mode
 
+-- | A mode is a list of intervals and a characteristic repeating inverval. 
+data Mode a = Mode [Diff a] (Diff a) -- intervals, repeat (usually octave)
+
+modeIntervals :: Lens' (Function a) [Diff a]
+modeIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
+
+modeRepeat :: Lens' (Function a) (Diff a)
+modeRepeat f (Function is r) = fmap (\r -> Function is r) $ f r
+
+scaleTonic :: Lens' (Scale a) a
+scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
+
+
+
+data Chord a = Chord a (Function a) -- root, function
 data Function a = Function [Diff a] (Diff a) -- intervals, repeat, repeat (usually octave)
-data Chord a = Chord a (Function a) -- root, function 
 
-_intervals :: Lens' (Function a) [Diff a]
-_intervals f (Function is r) = fmap (\is -> Function is r) $ f is
+functionIntervals :: Lens' (Function a) [Diff a]
+functionIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
 
-_repeat :: Lens' (Function a) (Diff a)
-_repeat f (Function is r) = fmap (\r -> Function is r) $ f r
+functionRepeat :: Lens' (Function a) (Diff a)
+functionRepeat f (Function is r) = fmap (\r -> Function is r) $ f r
 
 {-
 _pitches :: Lens' (Chord a) [a]
 _pitches f (Chord t xs) = fmap (\xs -> Chord t (fmap (.-. t) xs)) $ f (fmap (.+^ t) $ xs) . _intervals
 -}
 
-_tonic :: Lens' (Chord a) a
-_tonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
+chordTonic :: Lens' (Chord a) a
+chordTonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
 
 {-
 >>> complementInterval majorScale 
