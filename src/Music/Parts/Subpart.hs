@@ -47,6 +47,9 @@ import Music.Parts.Division
 newtype Subpart = Subpart [Division]
     deriving (Eq, Ord, Default, Semigroup, Monoid)
 
+-- TODO hide internals
+-- expose _divisions :: Traversal' Subpart Division or similar 
+
 instance Show Subpart where
     show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
         where
