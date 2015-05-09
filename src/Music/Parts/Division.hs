@@ -76,7 +76,7 @@ showDivision  = show . succ . fst . getDivision
 -- | Create a division out of a ratio. Dual of getDivision.
 division :: Int -> Int -> Division
 division n m
-  | n <= 0 || m <= 0 = error "Invalid division"
+  | n < 0 || m <= 0  = error "Invalid division"
   | n <  m           = Division (n, m)
   | otherwise        = error "Invalid division"
 
