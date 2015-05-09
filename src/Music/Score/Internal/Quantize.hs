@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE ViewPatterns               #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 
 -------------------------------------------------------------------------------------
 -- |
@@ -228,18 +229,29 @@ splits xs = List.inits xs `zip` List.tails xs
 firstJust :: [Maybe a] -> Maybe a
 firstJust = listToMaybe . fmap fromJust . List.dropWhile isNothing
 
-
+{-
+For now, try both strategies (first original, then quSimp).
+-}
 quantize :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
-quantize = quantize' (atEnd rhythm)
+quantize xs = case quOrig xs of
+  Right x -> Right x
+  Left e1 -> case quSimp xs of
+    Right x -> Right x
+    Left e2 -> Left $ e1 ++ ", " ++ e2
 
 testQuantize :: [Duration] -> IO ()
-testQuantize x = case fmap rewrite $ quantize' (atEnd rhythm) $ fmap (\x -> (x,())) $ x of
+testQuantize x = case fmap rewrite $ qAlg $ fmap (\x -> (x,())) $ x of
   Left e -> error e
   Right x -> putStrLn $ drawRhythm x
+  where
+    -- qAlg = quOrig
+    -- qAlg = quSimp
+    qAlg = quantize
 
+quOrig = quantize' (atEnd rhythm)
 
 konstNumDotsAllowed :: [Int]
-konstNumDotsAllowed = [1..3]
+konstNumDotsAllowed = [1..2]
 
 konstBounds :: [Duration]
 konstBounds = [ 1/2, 1/4, 1/8, 1/16 ]
@@ -453,9 +465,39 @@ logBaseR k n | otherwise                             = logBase (fromRational k) 
 
 -- As it sounds, do NOT use infix
 -- Only works for simple n such as 2 or 3, TODO determine
-isPowerOf :: Duration -> Duration -> Bool
+-- isPowerOf :: Duration -> Duration -> Bool
 isPowerOf n = (== 0.0) . snd . properFraction . logBaseR (toRational n) . toRational
 
-isPowerOf2 :: Duration -> Bool
+-- isPowerOf2 :: Duration -> Bool
 isPowerOf2 = isPowerOf 2
+
+greatestSmallerPowerOf2 :: Integer -> Integer
+greatestSmallerPowerOf2 x
+  | x < 0        = error "greatestSmallerPowerOf2: Must be > 0"
+  | isPowerOf2 x = x
+  | otherwise    = greatestSmallerPowerOf2 (x - 1)
+
+
+{-
+An "emergency" quantizer that ignores input durations and outputs a single beat sequence
+with all notes in the same length.
+-}
+quSimp :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
+quSimp xs = if isPowerOf2 totDur then (Right $ qu1 totDur xs)
+  else Left "This strategy only works for total duration that are powers of two (i.e. 4/4, 2/4)"
+  where
+    totDur = sum $ fmap fst xs
+
+    qu1 totDur xs = if isPowerOf2 n then 
+                  Group (fmap (\(_,a) -> Beat (totDur/fromIntegral n) a) xs) else
+      Tuplet (q) (Group (fmap (\(_,a) -> Beat (totDur/fromIntegral p) a) xs)) 
+      where
+        q = fromIntegral p / fromIntegral n :: Duration
+        p = greatestSmallerPowerOf2 n :: Integer
+        n = fromIntegral $ length xs
+    -- (1/n) = q(1/p)
+    -- (1/n) = (p/n)(1/p)
+    -- (1/n) = (p/np)
+    -- (1/n) = (1/n)
+
 
