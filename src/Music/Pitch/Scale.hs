@@ -3,9 +3,11 @@
 module Music.Pitch.Scale
 (
         Mode,
+        modeFromSteps,
         modeIntervals,
         modeRepeat,
         Function,
+        functionFromSteps,
         functionIntervals,
         functionRepeat,
         
@@ -15,7 +17,6 @@ module Music.Pitch.Scale
         chordTonic,
 
         complementInterval,        -- AffineSpace a => Function a -> Diff a
-        characteristicInterval,    -- AffineSpace a => Function a -> Diff a
         invertChord,               -- AffineSpace a => Int -> Function a -> Function a
         functionToChord,           -- AffineSpace a => a -> Function a -> Chord a
         chordToList,               -- AffineSpace a => Music.Pitch.Scale.Chord a -> [a]
@@ -73,43 +74,54 @@ import Data.VectorSpace
 import Data.AffineSpace
 import Music.Pitch.Literal
 import Control.Lens
--- import Music.Pitch hiding (Mode) -- Test
 import Music.Pitch.Literal
 import Music.Pitch.Common hiding (Mode)
 
 -- | A scale is a mode with a specified tonic.
-data Scale a = Scale a (Mode a) -- root, mode
+data Scale a = Scale a (Mode a)      -- root, mode
 
 -- | A mode is a list of intervals and a characteristic repeating inverval. 
 data Mode a = Mode [Diff a] (Diff a) -- intervals, repeat (usually octave)
 
-modeIntervals :: Lens' (Function a) [Diff a]
-modeIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
-
-modeRepeat :: Lens' (Function a) (Diff a)
-modeRepeat f (Function is r) = fmap (\r -> Function is r) $ f r
-
 scaleTonic :: Lens' (Scale a) a
 scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
 
+modeIntervals :: Lens' (Mode a) [Diff a]
+modeIntervals f (Mode is r) = fmap (\is -> Mode is r) $ f is
+
+modeRepeat :: Lens' (Mode a) (Diff a)
+modeRepeat f (Mode is r) = fmap (\r -> Mode is r) $ f r
+
+-- |
+-- > [Interval] -> Interval -> Mode Pitch
+modeFromSteps :: [Diff a] -> Diff a -> Mode a
+modeFromSteps = Mode
 
 
-data Chord a = Chord a (Function a) -- root, function
+data Chord a = Chord a (Function a)          -- root, function
+
 data Function a = Function [Diff a] (Diff a) -- intervals, repeat, repeat (usually octave)
+
+chordTonic :: Lens' (Chord a) a
+chordTonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
 
 functionIntervals :: Lens' (Function a) [Diff a]
 functionIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
 
 functionRepeat :: Lens' (Function a) (Diff a)
 functionRepeat f (Function is r) = fmap (\r -> Function is r) $ f r
+-- |
+-- > [Interval] -> Interval -> Function Pitch
+functionFromSteps :: [Diff a] -> Diff a -> Function a
+functionFromSteps = Function
 
 {-
 _pitches :: Lens' (Chord a) [a]
 _pitches f (Chord t xs) = fmap (\xs -> Chord t (fmap (.-. t) xs)) $ f (fmap (.+^ t) $ xs) . _intervals
 -}
 
-chordTonic :: Lens' (Chord a) a
-chordTonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
+
+
 
 {-
 >>> complementInterval majorScale 
@@ -121,10 +133,6 @@ _M2
 -}
 complementInterval :: AffineSpace a => Function a -> Diff a
 complementInterval (Function leaps repeating) = repeating ^-^ sumV leaps
-
--- TODO name?
-characteristicInterval :: AffineSpace a => Function a -> Diff a
-characteristicInterval (Function leaps repeating) = sumV leaps
 
 invertChord :: AffineSpace a => Int -> Function a -> Function a
 invertChord 0 = id
@@ -139,24 +147,10 @@ functionToChord = Chord
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList (Chord tonic mode@(Function leaps repeating)) = offsetPoints tonic leaps
 -- TODO inversion?
-
-
-
-
-
-
-majorScale :: Mode Pitch
-majorScale = Mode [_M2,_M2,m2,_M2,_M2,_M2] _P8
-
-pureMinorScale :: Mode Pitch
-pureMinorScale = Mode [_M2,m2,_M2,_M2,m2,_M2] _P8
-
-harmonicMinorScale :: Mode Pitch
-harmonicMinorScale = Mode [_M2,m2,_M2,_M2,m2,_A2] _P8
-
-melodicMinorScaleUp :: Mode Pitch
-melodicMinorScaleUp = Mode [_M2,m2,_M2,_M2,_M2,_M2] _P8
-
+  where
+    -- TODO consolidate
+    offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
+    offsetPoints = scanl (.+^)
 
 {-
 >>> leadingInterval majorScale 
@@ -181,8 +175,28 @@ modeToScale = Scale
 
 scaleToList :: AffineSpace a => Scale a -> [a]
 scaleToList (Scale tonic mode@(Mode steps repeating)) = offsetPoints tonic steps
+  where
+    -- TODO consolidate
+    offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
+    offsetPoints = scanl (.+^)
 
-  
+
+
+
+-- Common scales
+
+majorScale :: Mode Pitch
+majorScale = Mode [_M2,_M2,m2,_M2,_M2,_M2] _P8
+
+pureMinorScale :: Mode Pitch
+pureMinorScale = Mode [_M2,m2,_M2,_M2,m2,_M2] _P8
+
+harmonicMinorScale :: Mode Pitch
+harmonicMinorScale = Mode [_M2,m2,_M2,_M2,m2,_A2] _P8
+
+melodicMinorScaleUp :: Mode Pitch
+melodicMinorScaleUp = Mode [_M2,m2,_M2,_M2,_M2,_M2] _P8
+
 ionian :: Mode Pitch
 ionian = invertMode 0 majorScale
 
@@ -216,10 +230,8 @@ bluesMajor = invertMode 3 majorPentaTonic
 minorPentaTonic :: Mode Pitch
 minorPentaTonic = invertMode 4 majorPentaTonic
 
-
-
 bebopScale :: Mode Pitch
-bebopScale = undefined
+bebopScale = Mode [_M2,_M2,m2,_M2,m2,m2,_M2] _P8
 
 wholeTone :: Mode Pitch
 wholeTone = firstMode
@@ -248,7 +260,7 @@ sixthMode = Mode [_M2,_M2,m2,m2,_M2,_M2,m2] _P8
 seventhMode :: Mode Pitch
 seventhMode = Mode [m2,m2,m2,_M2,m2,m2,m2,m2,_M2] _P8
 
-
+-- Common chords
 
 majorTriad :: Function Pitch
 majorTriad = Function [_M3,m3] _P8
@@ -271,12 +283,4 @@ majorMinorSeventhChord = Function [_M3,m3,m3] _P8
 majorMajorSeventhChord :: Function Pitch
 majorMajorSeventhChord = Function [_M3,m3,_M3] _P8
 
--- 
-
-
-
-
--- TODO consolidate
-offsetPoints :: AffineSpace p => p -> [Diff p] -> [p]
-offsetPoints = scanl (.+^)
 
