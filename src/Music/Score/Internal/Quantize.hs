@@ -31,7 +31,8 @@ module Music.Score.Internal.Quantize (
         dotMod,
         
         -- * Utility
-        drawRhythm
+        drawRhythm,
+        testQuantize,
   ) where
 
 import           Prelude             hiding (concat, concatMap, foldl, foldr,
