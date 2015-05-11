@@ -483,11 +483,11 @@ An "emergency" quantizer that ignores input durations and outputs a single beat 
 with all notes in the same length.
 -}
 quSimp :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
-quSimp xs = if isPowerOf2 totDur then (Right $ qu1 totDur xs)
-  else Left "This strategy only works for total duration that are powers of two (i.e. 4/4, 2/4)"
+quSimp = Right . qu1 1
+-- quSimp xs = if isPowerOf2 totDur then (Right $ qu1 totDur xs)
+--   else Left ("This strategy only works for total duration that are powers of two (i.e. 4/4, 2/4), given"++show totDur)
   where
-    totDur = sum $ fmap fst xs
-
+--     totDur = sum $ fmap fst xs
     qu1 totDur xs = if isPowerOf2 n then 
                   Group (fmap (\(_,a) -> Beat (totDur/fromIntegral n) a) xs) else
       Tuplet (q) (Group (fmap (\(_,a) -> Beat (totDur/fromIntegral p) a) xs)) 
