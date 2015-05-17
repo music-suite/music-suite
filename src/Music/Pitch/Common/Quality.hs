@@ -121,9 +121,13 @@ qualityToDiff positive qt q = fromIntegral $ go positive qt q
     go False MajorMinorType Minor          = 0
     go False MajorMinorType (Diminished n) = 0 + n
     
-    go _ PerfectType (Augmented n)  = 0 + n
-    go _ PerfectType Perfect        = 0
-    go _ PerfectType (Diminished n) = 0 - n
+    go True PerfectType (Augmented n)  = 0 + n
+    go True PerfectType Perfect        = 0
+    go True PerfectType (Diminished n) = 0 - n
+
+    go False PerfectType (Augmented n)  = 0 - n
+    go False PerfectType Perfect        = 0
+    go False PerfectType (Diminished n) = 0 + n
     
     go _ qt q = error $ "qualityToDiff: Unknown interval expression (" ++ show qt ++ ", " ++ show q ++ ")"
 
