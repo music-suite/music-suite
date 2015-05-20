@@ -64,8 +64,8 @@ instance Enum Instrument where
 instance Ord Instrument where
     StdInstrument x   `compare` StdInstrument   y = gmScoreOrder x `compare` gmScoreOrder y
     OtherInstrument x `compare` OtherInstrument y = x `compare` y
-    StdInstrument x   `compare` OtherInstrument y = StdInstrument x
-    OtherInstrument x `compare` StdInstrument   y = StdInstrument y
+    StdInstrument x   `compare` OtherInstrument y = LT
+    OtherInstrument x `compare` StdInstrument   y = GT
 
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
