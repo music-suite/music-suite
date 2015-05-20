@@ -62,7 +62,10 @@ instance Enum Instrument where
     fromEnum (OtherInstrument _) = error "Instrument.fromEnum used on unknown instrument"
 
 instance Ord Instrument where
-    StdInstrument x `compare` StdInstrument y = gmScoreOrder x `compare` gmScoreOrder y
+    StdInstrument x   `compare` StdInstrument   y = gmScoreOrder x `compare` gmScoreOrder y
+    OtherInstrument x `compare` OtherInstrument y = x `compare` y
+    StdInstrument x   `compare` OtherInstrument y = StdInstrument x
+    OtherInstrument x `compare` StdInstrument   y = StdInstrument y
 
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
