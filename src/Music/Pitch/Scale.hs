@@ -13,8 +13,10 @@ module Music.Pitch.Scale
         
         Scale,
         scaleTonic,
+        scaleMode,
         Chord,
         chordTonic,
+        chordFunction,
 
         complementInterval,        -- AffineSpace a => Function a -> Diff a
         invertChord,               -- AffineSpace a => Int -> Function a -> Function a
@@ -86,6 +88,9 @@ data Mode a = Mode [Diff a] (Diff a) -- intervals, repeat (usually octave)
 scaleTonic :: Lens' (Scale a) a
 scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
 
+scaleMode :: Lens' (Scale a) (Mode a)
+scaleMode f (Scale t xs) = fmap (\xs -> Scale t xs) $ f xs
+
 modeIntervals :: Lens' (Mode a) [Diff a]
 modeIntervals f (Mode is r) = fmap (\is -> Mode is r) $ f is
 
@@ -104,6 +109,9 @@ data Function a = Function [Diff a] (Diff a) -- intervals, repeat, repeat (usual
 
 chordTonic :: Lens' (Chord a) a
 chordTonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
+
+chordFunction :: Lens' (Chord a) (Function a)
+chordFunction f (Chord t xs) = fmap (\xs -> Chord t xs) $ f xs
 
 functionIntervals :: Lens' (Function a) [Diff a]
 functionIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
@@ -144,6 +152,7 @@ invertChord n = invertChord (n-1) . invertChord1
 functionToChord :: AffineSpace a => a -> Function a -> Chord a
 functionToChord = Chord
 
+-- | Returns a single inversion of the given chord (no repeats!).
 chordToList :: AffineSpace a => Chord a -> [a]
 chordToList (Chord tonic mode@(Function leaps repeating)) = offsetPoints tonic leaps
 -- TODO inversion?
