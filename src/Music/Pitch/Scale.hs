@@ -3,13 +3,14 @@
 module Music.Pitch.Scale
 (
         Mode,
-        modeFromSteps,
         modeIntervals,
         modeRepeat,
         Function,
-        functionFromSteps,
         functionIntervals,
         functionRepeat,
+
+        modeFromSteps,
+        functionFromSteps,
         
         Scale,
         scaleTonic,
@@ -82,18 +83,26 @@ import Music.Pitch.Common hiding (Mode)
 -- | A scale is a mode with a specified tonic.
 data Scale a = Scale a (Mode a)      -- root, mode
 
--- | A mode is a list of intervals and a characteristic repeating inverval. 
+-- | A mode is a list of intervals and a characteristic repeating interval. 
 data Mode a = Mode [Diff a] (Diff a) -- intervals, repeat (usually octave)
 
+-- |
+-- > Lens' (Scale Pitch) Pitch
 scaleTonic :: Lens' (Scale a) a
 scaleTonic f (Scale t xs) = fmap (\t -> Scale t xs) $ f t
 
+-- |
+-- > Lens' (Scale Pitch) (Mode Pitch)
 scaleMode :: Lens' (Scale a) (Mode a)
 scaleMode f (Scale t xs) = fmap (\xs -> Scale t xs) $ f xs
 
+-- |
+-- > Lens' (Mode Pitch) [Interval]
 modeIntervals :: Lens' (Mode a) [Diff a]
 modeIntervals f (Mode is r) = fmap (\is -> Mode is r) $ f is
 
+-- |
+-- > Lens' (Mode Pitch) Interval
 modeRepeat :: Lens' (Mode a) (Diff a)
 modeRepeat f (Mode is r) = fmap (\r -> Mode is r) $ f r
 
@@ -107,17 +116,26 @@ data Chord a = Chord a (Function a)          -- root, function
 
 data Function a = Function [Diff a] (Diff a) -- intervals, repeat, repeat (usually octave)
 
+-- |
+-- > Lens' (Chord Pitch) Pitch
 chordTonic :: Lens' (Chord a) a
 chordTonic f (Chord t xs) = fmap (\t -> Chord t xs) $ f t
 
+-- |
+-- > Lens' (Chord Pitch) (Function Pitch)
 chordFunction :: Lens' (Chord a) (Function a)
 chordFunction f (Chord t xs) = fmap (\xs -> Chord t xs) $ f xs
 
+-- |
+-- > Lens' (Function Pitch) [Interval]
 functionIntervals :: Lens' (Function a) [Diff a]
 functionIntervals f (Function is r) = fmap (\is -> Function is r) $ f is
 
+-- |
+-- > Lens' (Function Pitch) Interval
 functionRepeat :: Lens' (Function a) (Diff a)
 functionRepeat f (Function is r) = fmap (\r -> Function is r) $ f r
+
 -- |
 -- > [Interval] -> Interval -> Function Pitch
 functionFromSteps :: [Diff a] -> Diff a -> Function a
@@ -131,14 +149,16 @@ _pitches f (Chord t xs) = fmap (\xs -> Chord t (fmap (.-. t) xs)) $ f (fmap (.+
 
 
 
-{-
->>> complementInterval majorScale 
-m2
->>> complementInterval harmonicMinorScale 
-m2
->>> complementInterval pureMinorScale 
-_M2
--}
+-- |
+--
+-- >>> complementInterval majorScale 
+-- m2
+-- >>> complementInterval harmonicMinorScale 
+-- m2
+-- >>> complementInterval pureMinorScale 
+-- _M2
+--
+-- > Lens' (Function Pitch) Interval
 complementInterval :: AffineSpace a => Function a -> Diff a
 complementInterval (Function leaps repeating) = repeating ^-^ sumV leaps
 
