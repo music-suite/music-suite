@@ -18,13 +18,13 @@ module Music.Pitch.Scale
         chordTonic,
         chordFunction,
 
-        complementInterval,        -- AffineSpace a => Function a -> Diff a
-        invertChord,               -- AffineSpace a => Int -> Function a -> Function a
-        functionToChord,           -- AffineSpace a => a -> Function a -> Chord a
-        chordToList,               -- AffineSpace a => Music.Pitch.Scale.Chord a -> [a]
+        complementInterval,        
+        invertChord,               
+        functionToChord,           
+        chordToList,               
 
-        leadingInterval,           -- AffineSpace a => Music.Pitch.Scale.Mode a -> Diff a
-        invertMode,                -- AffineSpace a => Int -> Mode a -> Mode a
+        leadingInterval,           
+        invertMode,                
         modeToScale,
         scaleToList,
 
@@ -195,16 +195,16 @@ scaleToList (Scale tonic mode@(Mode steps repeating)) = offsetPoints tonic steps
 -- Common scales
 
 majorScale :: Mode Pitch
-majorScale = Mode [_M2,_M2,m2,_M2,_M2,_M2] _P8
+majorScale = modeFromSteps [_M2,_M2,m2,_M2,_M2,_M2] _P8
 
 pureMinorScale :: Mode Pitch
-pureMinorScale = Mode [_M2,m2,_M2,_M2,m2,_M2] _P8
+pureMinorScale = modeFromSteps [_M2,m2,_M2,_M2,m2,_M2] _P8
 
 harmonicMinorScale :: Mode Pitch
-harmonicMinorScale = Mode [_M2,m2,_M2,_M2,m2,_A2] _P8
+harmonicMinorScale = modeFromSteps [_M2,m2,_M2,_M2,m2,_A2] _P8
 
 melodicMinorScaleUp :: Mode Pitch
-melodicMinorScaleUp = Mode [_M2,m2,_M2,_M2,_M2,_M2] _P8
+melodicMinorScaleUp = modeFromSteps [_M2,m2,_M2,_M2,_M2,_M2] _P8
 
 ionian :: Mode Pitch
 ionian = invertMode 0 majorScale
@@ -228,7 +228,7 @@ locrian :: Mode Pitch
 locrian = invertMode 6 majorScale
 
 majorPentaTonic :: Mode Pitch
-majorPentaTonic = Mode [_M2,_M2,m3,_M2] _P8
+majorPentaTonic = modeFromSteps [_M2,_M2,m3,_M2] _P8
 
 bluesMinor :: Mode Pitch
 bluesMinor = invertMode 2 majorPentaTonic
@@ -240,7 +240,7 @@ minorPentaTonic :: Mode Pitch
 minorPentaTonic = invertMode 4 majorPentaTonic
 
 bebopScale :: Mode Pitch
-bebopScale = Mode [_M2,_M2,m2,_M2,m2,m2,_M2] _P8
+bebopScale = modeFromSteps [_M2,_M2,m2,_M2,m2,m2,_M2] _P8
 
 wholeTone :: Mode Pitch
 wholeTone = firstMode
@@ -249,25 +249,25 @@ octatonic :: Mode Pitch
 octatonic = secondMode
 
 firstMode :: Mode Pitch
-firstMode = Mode [_M2,_M2,_M2,_M2,_M2] _P8
+firstMode = modeFromSteps [_M2,_M2,_M2,_M2,_M2] _P8
 
 secondMode :: Mode Pitch
-secondMode = Mode [m2,_M2,_A1,_M2,m2,_M2,m2] _P8
+secondMode = modeFromSteps [m2,_M2,_A1,_M2,m2,_M2,m2] _P8
 
 thirdMode :: Mode Pitch
-thirdMode = Mode [_M2,m2,m2,_M2,m2,m2,_M2,m2] _P8
+thirdMode = modeFromSteps [_M2,m2,m2,_M2,m2,m2,_M2,m2] _P8
 
 fourthMode :: Mode Pitch
-fourthMode = Mode [m2,m2,m3,m2,m2,m2,m3] _P8
+fourthMode = modeFromSteps [m2,m2,m3,m2,m2,m2,m3] _P8
 
 fifthMode :: Mode Pitch
-fifthMode = Mode [m2,_M3,m2,m2,_M3] _P8
+fifthMode = modeFromSteps [m2,_M3,m2,m2,_M3] _P8
 
 sixthMode :: Mode Pitch
-sixthMode = Mode [_M2,_M2,m2,m2,_M2,_M2,m2] _P8
+sixthMode = modeFromSteps [_M2,_M2,m2,m2,_M2,_M2,m2] _P8
 
 seventhMode :: Mode Pitch
-seventhMode = Mode [m2,m2,m2,_M2,m2,m2,m2,m2,_M2] _P8
+seventhMode = modeFromSteps [m2,m2,m2,_M2,m2,m2,m2,m2,_M2] _P8
 
 -- Common chords
 
