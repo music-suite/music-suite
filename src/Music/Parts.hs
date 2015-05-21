@@ -355,22 +355,27 @@ doubleBass      = StdInstrument 43
 
 
 
-defaultClef :: Part -> Int
-defaultMidiNote :: Part -> Int
+{-
+Parameters by various backends.
+The giant lookup table is only implemented for GM-instruments, for others
+just use default values for now.
+-}
 defaultMidiProgram :: Part -> Int
-defaultMidiChannel :: Part -> Int
-defaultScoreOrder :: Part -> Double
+defaultMidiProgram (Part _ (StdInstrument x) _) = x
+defaultMidiProgram (Part _ (OtherInstrument x) _) = 0
 
+defaultMidiNote :: Part -> Int
 defaultMidiNote _ = 0
 
-defaultMidiProgram (Part _ (StdInstrument x) _) = x
-
+defaultMidiChannel :: Part -> Int
 defaultMidiChannel = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
     where get (x,_,_,_) = x
 
+defaultScoreOrder :: Part -> Double
 defaultScoreOrder = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
     where get (_,x,_,_) = x
 
+defaultClef :: Part -> Int
 defaultClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
     where get (_,_,x,_) = x
 
