@@ -303,17 +303,17 @@ tutti instr     = Part Tutti instr def
 
 piccoloFlute    = StdInstrument 72
 flute           = StdInstrument 73
-altoFlute       = OtherInstrument "Woodwind.Flute.Alto"
-bassFlute       = OtherInstrument "Woodwind.Flute.Bass"
+altoFlute       = OtherInstrument "wind.flutes.flute.alto"
+bassFlute       = OtherInstrument "wind.flutes.flute.bass"
 
 oboe            = StdInstrument 68
 corAnglais      = StdInstrument 69
-heckelphone     = OtherInstrument "Woodwind.DoubleReed.Heckelphone"
+heckelphone     = OtherInstrument "wind.reed.oboes.heckelphone"
 
-ebClarinet      = OtherInstrument "Woodwind.SingleReed.Clarinet.Eb"
+ebClarinet      = OtherInstrument "wind.reed.clarinet.eflat"
 clarinet        = StdInstrument 71
-aClarinet       = OtherInstrument "Woodwind.SingleReed.Clarinet.A"
-bassClarinet    = OtherInstrument "Woodwind.SingleReed.Clarinet.Bass"
+aClarinet       = OtherInstrument "wind.reed.clarinet.a"
+bassClarinet    = OtherInstrument "wind.reed.clarinet.bass"
 
 sopranoSax      = StdInstrument 64
 altoSax         = StdInstrument 65
@@ -321,16 +321,16 @@ tenorSax        = StdInstrument 66
 baritoneSax     = StdInstrument 67
 
 bassoon         = StdInstrument 70
-contraBassoon   = OtherInstrument "Woodwind.DoubleReed.Bassoon.Contra"
+contraBassoon   = OtherInstrument "wind.reed.contrabassoon"
 
 horn            = StdInstrument 60
-piccoloTrumpet  = OtherInstrument "Brass.Trumpet.Piccolo"
+piccoloTrumpet  = OtherInstrument "brass.trumpet.piccolo"
 trumpet         = StdInstrument 56
-bassTrumpet     = OtherInstrument "Brass.Trumpet.Bass"
-altoTrombone    = OtherInstrument "Brass.Trombone.Alto"
+bassTrumpet     = OtherInstrument "brass.trumpet.bass"
+altoTrombone    = OtherInstrument "brass.trombone.alto"
+trombone        = tenorTrombone
 tenorTrombone   = StdInstrument 57
-trombone        = StdInstrument 57
-bassTrombone    = OtherInstrument "Brass.Trombone.Bass"
+bassTrombone    = OtherInstrument "brass.trombone.bass"
 tuba            = StdInstrument 58
 
 timpani         = StdInstrument 47
@@ -341,7 +341,7 @@ glockenspiel    = StdInstrument 9
 vibraphone      = StdInstrument 11
 marimba         = StdInstrument 12
 xylophone       = StdInstrument 13
-xylorimba       = OtherInstrument "Percussion.Pitched.Xylorimba"
+xylorimba       = OtherInstrument "pitched-percussion.xylorimba"
 tubularBells    = StdInstrument 14
 dulcimer        = StdInstrument 15
 

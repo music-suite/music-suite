@@ -55,7 +55,14 @@ data Instrument
 
 instance Show Instrument where
     show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
-    show (OtherInstrument str) = str
+    show (OtherInstrument str) = go str
+        where
+            go "wind.flutes.flute.alto"   = "Alto Flute"
+            go "wind.flutes.flute.bass"   = "Bass Flute"
+            go "wind.reed.clarinet.eflat" = "Clarinet in Eb"
+            go "wind.reed.clarinet.bass"  = "Bass Clarinet in Bb"
+            go "wind.reed.contrabassoon"  = "Contrabassoon"
+            go x = x
 instance Enum Instrument where
     toEnum = StdInstrument
     fromEnum (StdInstrument x) = x
