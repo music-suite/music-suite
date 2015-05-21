@@ -22,6 +22,7 @@ source-repository head
   
 library
     build-depends:      base                    >= 4 && < 5,
+                        base-orphans            >= 0.1 && < 0.4,
                         aeson                   >= 0.7.0.6 && < 1,
                         lens                    >= 4.6      && < 4.7,
                         process                 >= 1.2 && < 1.3,
