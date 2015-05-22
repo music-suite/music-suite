@@ -2,6 +2,11 @@
 -- | Clefs and staff positions.
 module Music.Pitch.Clef
 (
+      -- * Staff lines
+      StaffLines,
+      HalfSpaces,
+      ClefLine,
+      
       -- * Clef representation
       ClefSymbol(..),
       ClefOctave,

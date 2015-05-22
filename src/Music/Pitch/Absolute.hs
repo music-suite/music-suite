@@ -98,12 +98,15 @@ instance HasFrequency Fifths where
 instance HasFrequency Cents where
   frequency (Cents f)   =  (2/1) ** (f / 1200)
 
+-- | Convert a frequency to octaves.
 octaves :: HasFrequency a => a -> Octaves
 octaves a = Octaves $ logBase (2/1) (frequency a)
 
+-- | Convert a frequency to fifths.
 fifths :: HasFrequency a => a -> Fifths
 fifths a = Fifths $ logBase (3/2) (frequency a)
 
+-- | Convert a frequency to cents.
 cents :: HasFrequency a => a -> Cents
 cents a = Cents $ logBase (2/1) (frequency a) * 1200
 

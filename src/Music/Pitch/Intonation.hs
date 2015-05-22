@@ -7,7 +7,7 @@ module Music.Pitch.Intonation (
       intone,
       -- makeBasis,
       synTune,
-      tetTune,
+      -- tetTune,
       pureOctaveWith,
 
       -- * Specific tunings
@@ -55,7 +55,7 @@ basis_d2 :: Interval
 basis_d2 = basisValue Diatonic
 
 synTune :: (Interval, Double) -> (Interval, Double) -> Interval -> Double
-synTune (i1, i1rat) (i2, i2rat) (Interval (a1, d2)) =
+synTune (i1, i1rat) (i2, i2rat) (view (from interval'') -> (a1, d2)) =
   ((makeA1 (i1, i1rat) (i2, i2rat)) ** (fromIntegral a1)) * ((maked2 (i1, i1rat) (i2, i2rat)) ** (fromIntegral d2))
   where makeA1 = makeBasis basis_A1
         maked2 = makeBasis basis_d2
@@ -75,6 +75,7 @@ intone (b, f) (Tuning t) = Intonation $ int
 
 -- Standard syntonic (meantone) tunings, with P8 = 2
 
+pureOctaveWith :: (Interval, Double) -> Tuning Interval
 pureOctaveWith = Tuning . synTune (_P8, 2)
 
 pythagorean :: Tuning Interval
@@ -88,6 +89,7 @@ schismaticMeantone = pureOctaveWith (8 *^ _P4, 10)
 
 -- TET tunings, i.e. where P8 = 2 and (some other interval) = 1
 
+tetTune :: Interval -> Tuning Interval
 tetTune i = pureOctaveWith (i, 1)
 
 fiveToneEqual :: Tuning Interval
@@ -112,6 +114,12 @@ fiftyThreeToneEqual = tetTune ddddddd6 where ddddddd6 = 31 *^ _P8 ^-^ 53 *^ _P5 
 standardIntonation :: Intonation Pitch
 standardIntonation = intone (a, 440) twelveToneEqual
 
+{-
+Possible instances for numeric types based on standard intonation.
+
+Not used, the user should choose perform the appropriate conversion for a given
+tuning system.
+
 instance IsInterval Double where
   fromInterval i = getTuning twelveToneEqual $ fromInterval i
 
@@ -123,3 +131,4 @@ instance HasResolution a => IsInterval (Fixed a) where
 
 instance Integral a => IsInterval (Ratio a) where
     fromInterval x = realToFrac (fromInterval x :: Double)
+-}

@@ -3,10 +3,11 @@
 module Music.Pitch.Common.Interval
 (
         -- * Intervals
-        Interval(..),
+        Interval,
         -- ** Creating intervals
         interval,
         interval',
+        interval'',
         _number,
         _quality,
         _steps,
@@ -249,7 +250,7 @@ doublyDiminished = mkInterval (Diminished 2)
 -- |
 -- Separate a compound interval into octaves and a simple interval.
 --
--- > (perfect octave)^*x + y = z  iff  (x, y) = separate z
+-- > x*^_P8 + y = z  iff  (x, y) = separate z
 --
 -- >>> separate (2*^_P8+m3)
 -- (2,m3)
@@ -405,6 +406,11 @@ interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
 interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
   (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
+
+-- | View an interval as a pair of total number of chromatic and diatonic steps.
+interval'' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
+interval'' = iso Interval getInterval
+
 {-
 Note: This is *not* the same as wrapping/unwrapping, as the number of chromatic steps viewed here is
 an *alteration*, rather than the total number of chromatic steps (basis d2).
