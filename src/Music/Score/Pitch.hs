@@ -43,7 +43,7 @@ module Music.Score.Pitch (
         -- * HasPitch classes
         HasPitch(..),
         HasPitches(..),
-        fromPitch',
+        -- fromPitch',
 
         -- ** Simple versions
         HasPitch',
@@ -234,6 +234,7 @@ pitches' :: HasPitches' s => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
 
+{-
 -- |
 -- Inject a pitch into some larger type.
 --
@@ -241,6 +242,7 @@ fromPitch' :: (HasPitches' a, IsPitch a) => Pitch a -> a
 fromPitch' x = c & pitches' .~ x
 {-# INLINE fromPitch' #-}
 -- TODO swap name of this and Music.Pitch.Literal.fromPitch (or call that something else, i.e. fromPitchL)
+-}
 
 
 #define PRIM_PITCH_INSTANCE(TYPE)       \
