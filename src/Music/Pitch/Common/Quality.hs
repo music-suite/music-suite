@@ -28,6 +28,7 @@ module Music.Pitch.Common.Quality
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Types
 import           Music.Pitch.Common.Number
+import           Data.Maybe (fromMaybe)
 
 -- | Types of value that has an interval quality (mainly 'Interval' and 'Quality' itself).
 class HasQuality a where
@@ -125,30 +126,36 @@ data Direction = Upward | Downward
 -- |
 -- Return the alteration in chromatic steps implied by the given quality
 -- in the context of an interval of the specified type.
-qualityToAlteration :: Direction -> QualityType -> Quality -> ChromaticSteps
-qualityToAlteration positive qt q = fromIntegral $ go positive qt q
+qualityToAlteration :: Direction -> QualityType -> Quality -> Maybe ChromaticSteps
+qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
   where
-    go Upward MajorMinorType (Augmented n)  = 0 + n
-    go Upward MajorMinorType Major          = 0
-    go Upward MajorMinorType Minor          = (-1)
-    go Upward MajorMinorType (Diminished n) = -(1 + n)
+    go Upward MajorMinorType (Augmented n)    = Just $ 0 + n
+    go Upward MajorMinorType Major            = Just $ 0
+    go Upward MajorMinorType Minor            = Just $ (-1)
+    go Upward MajorMinorType (Diminished n)   = Just $ -(1 + n)
 
-    go Downward MajorMinorType (Augmented n)  = -(1 + n)
-    go Downward MajorMinorType Major          = -1
-    go Downward MajorMinorType Minor          = 0
-    go Downward MajorMinorType (Diminished n) = 0 + n
+    go Downward MajorMinorType (Augmented n)  = Just $ -(1 + n)
+    go Downward MajorMinorType Major          = Just $ -1
+    go Downward MajorMinorType Minor          = Just $ 0
+    go Downward MajorMinorType (Diminished n) = Just $ 0 + n
     
-    go Upward PerfectType (Augmented n)  = 0 + n
-    go Upward PerfectType Perfect        = 0
-    go Upward PerfectType (Diminished n) = 0 - n
+    go Upward PerfectType (Augmented n)       = Just $ 0 + n
+    go Upward PerfectType Perfect             = Just $ 0
+    go Upward PerfectType (Diminished n)      = Just $ 0 - n
 
-    go Downward PerfectType (Augmented n)  = 0 - n
-    go Downward PerfectType Perfect        = 0
-    go Downward PerfectType (Diminished n) = 0 + n
+    go Downward PerfectType (Augmented n)     = Just $ 0 - n
+    go Downward PerfectType Perfect           = Just $ 0
+    go Downward PerfectType (Diminished n)    = Just $ 0 + n
     
-    go _ qt q = error $ "qualityToDiff: Unknown interval expression (" ++ show qt ++ ", " ++ show q ++ ")"
+    go _ qt q = Nothing
 
-qualityToDiff True  = qualityToAlteration Upward
-qualityToDiff False = qualityToAlteration Downward
+qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
+  where
+    f True  = Upward
+    f False = Downward
+    e       = error $
+      "qualityToDiff: Unknown interval expression (" 
+      ++ show qt ++ ", " ++ show q ++ ")"
+
 {-# DEPRECATED qualityToDiff "Use qualityToAlteration" #-}
 

@@ -292,7 +292,13 @@ isSimple x = octaves x == 0
 -- Returns whether the given interval is compound.
 --
 -- A compound interval is either a negative interval, or a positive interval spanning
--- one octave or more.
+-- one octave or more. Note that compound intervals may be smaller than an octave if
+-- they are negative, so
+--
+-- >>> isCompound (-m3)
+-- True 
+-- >>> isCompound $ abs (-m3)
+-- False 
 --
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
