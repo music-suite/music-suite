@@ -11,7 +11,7 @@ module Music.Score.Import.Sibelius (
   ) where
 
 import Control.Lens
-import Music.Sibelius
+import Data.Music.Sibelius
 import qualified Data.Maybe
 import qualified Music.Score as S
 import Data.Aeson
