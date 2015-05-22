@@ -119,13 +119,19 @@ qualityTypes Major   = [MajorMinorType]
 qualityTypes Minor   = [MajorMinorType]
 qualityTypes _       = [PerfectType, MajorMinorType]
 
+-- |
+-- Return whether the given combination of quality and number forms a valid interval
+-- expression.
+--  
+isValidQualityNumber :: Quality -> Number -> Bool
+isValidQualityNumber q n = expectedQualityType n `elem` qualityTypes q
 
 data Direction = Upward | Downward
   deriving (Eq, Ord, Show)
 
 -- |
--- Return the alteration in chromatic steps implied by the given quality
--- in the context of an interval of the specified type.
+-- Return the alteration in implied by the given quality to a number of a given quality type.
+--
 qualityToAlteration :: Direction -> QualityType -> Quality -> Maybe ChromaticSteps
 qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
   where
