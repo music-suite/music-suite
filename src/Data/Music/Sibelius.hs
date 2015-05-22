@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction, 
              ConstraintKinds, FlexibleContexts #-}
 
-module Music.Sibelius (
+module Data.Music.Sibelius (
 
         -- * Scores and staves
         SibeliusScore(..),
