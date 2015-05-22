@@ -4,6 +4,8 @@ module Music.Pitch.Common.Quality
 (
         -- * Quality
         Quality(..),
+        qualityTypes,
+        
         HasQuality(..),
         invertQuality,
         isPerfect,
@@ -12,10 +14,14 @@ module Music.Pitch.Common.Quality
         isAugmented,
         isDiminished,
 
-        -- * Quality type
+        -- ** Quality type
         QualityType(..),
         expectedQualityType,
-        qualityTypes,
+
+        -- ** Quality to alteration
+        Direction(..),
+        qualityToAlteration,
+
         qualityToDiff
 ) where
 
@@ -46,13 +52,13 @@ isMinor :: HasQuality a => a -> Bool
 isMinor a = case quality a of { Minor -> True ; _ -> False }
 
 -- |
--- Returns whether the given quality is /augmented/ (including double augmented etc).
+-- Returns whether the given quality is augmented (including double augmented etc).
 --
 isAugmented :: HasQuality a => a -> Bool
 isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 
 -- |
--- Returns whether the given quality is /diminished/ (including double diminished etc).
+-- Returns whether the given quality is diminished (including double diminished etc).
 --
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
@@ -97,39 +103,52 @@ invertQuality = go
     go (Diminished n)   = Augmented n
 
 
+-- | 
+-- The quality type expected for a given number, i.e. perfect for unisons, fourths,
+-- and fifths and major/minor for everything else.  
 expectedQualityType :: HasNumber a => a -> QualityType
 expectedQualityType x = if ((abs (number x) - 1) `mod` 7) + 1 `elem` [1,4,5]
   then PerfectType else MajorMinorType
 
+-- |
+-- Return all possible quality types for a given quality.
 qualityTypes :: Quality -> [QualityType]
 qualityTypes Perfect = [PerfectType]
 qualityTypes Major   = [MajorMinorType]
 qualityTypes Minor   = [MajorMinorType]
 qualityTypes _       = [PerfectType, MajorMinorType]
 
--- FIXME problem that this treats major as neutral, while this only holds for positive intervals
-qualityToDiff :: Bool -> QualityType -> Quality -> ChromaticSteps
-qualityToDiff positive qt q = fromIntegral $ go positive qt q
+
+data Direction = Upward | Downward
+  deriving (Eq, Ord, Show)
+
+-- |
+-- Return the alteration in chromatic steps implied by the given quality
+-- in the context of an interval of the specified type.
+qualityToAlteration :: Direction -> QualityType -> Quality -> ChromaticSteps
+qualityToAlteration positive qt q = fromIntegral $ go positive qt q
   where
-    go True MajorMinorType (Augmented n)  = 0 + n
-    go True MajorMinorType Major          = 0
-    go True MajorMinorType Minor          = (-1)
-    go True MajorMinorType (Diminished n) = -(1 + n)
+    go Upward MajorMinorType (Augmented n)  = 0 + n
+    go Upward MajorMinorType Major          = 0
+    go Upward MajorMinorType Minor          = (-1)
+    go Upward MajorMinorType (Diminished n) = -(1 + n)
 
-    go False MajorMinorType (Augmented n)  = -(1 + n)
-    go False MajorMinorType Major          = -1
-    go False MajorMinorType Minor          = 0
-    go False MajorMinorType (Diminished n) = 0 + n
+    go Downward MajorMinorType (Augmented n)  = -(1 + n)
+    go Downward MajorMinorType Major          = -1
+    go Downward MajorMinorType Minor          = 0
+    go Downward MajorMinorType (Diminished n) = 0 + n
     
-    go True PerfectType (Augmented n)  = 0 + n
-    go True PerfectType Perfect        = 0
-    go True PerfectType (Diminished n) = 0 - n
+    go Upward PerfectType (Augmented n)  = 0 + n
+    go Upward PerfectType Perfect        = 0
+    go Upward PerfectType (Diminished n) = 0 - n
 
-    go False PerfectType (Augmented n)  = 0 - n
-    go False PerfectType Perfect        = 0
-    go False PerfectType (Diminished n) = 0 + n
+    go Downward PerfectType (Augmented n)  = 0 - n
+    go Downward PerfectType Perfect        = 0
+    go Downward PerfectType (Diminished n) = 0 + n
     
     go _ qt q = error $ "qualityToDiff: Unknown interval expression (" ++ show qt ++ ", " ++ show q ++ ")"
 
-
+qualityToDiff True  = qualityToAlteration Upward
+qualityToDiff False = qualityToAlteration Downward
+{-# DEPRECATED qualityToDiff "Use qualityToAlteration" #-}
 

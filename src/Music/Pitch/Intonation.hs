@@ -1,8 +1,8 @@
 
 -- | Intonation and tuning.
 module Music.Pitch.Intonation (
-      Intonation,
-      Tuning,
+      Intonation(..),
+      Tuning(..),
 
       intone,
       -- makeBasis,
@@ -44,14 +44,15 @@ import Music.Pitch.Literal as Intervals
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Pitch
 
-type Intonation p = p -> Hertz
-type Tuning i = i -> Double
+newtype Tuning i = Tuning { getTuning :: i -> Double }
+
+newtype Intonation p = Intonation { getIntonation :: p -> Hertz }
 
 basis_A1 :: Interval
 basis_A1 = basisValue Chromatic
+
 basis_d2 :: Interval
 basis_d2 = basisValue Diatonic
-
 
 synTune :: (Interval, Double) -> (Interval, Double) -> Interval -> Double
 synTune (i1, i1rat) (i2, i2rat) (Interval (a1, d2)) =
@@ -66,14 +67,15 @@ makeBasis i (i1, r1) (i2, r2) = case (convertBasisFloat i i1 i2) of
 
 -- | Turn a tuning into an intonation.
 intone :: (Pitch, Hertz) -> Tuning Interval -> Intonation Pitch
-intone (b, f) t p = f .+^ (t i) where i = p .-. b
+intone (b, f) (Tuning t) = Intonation $ int
+  where int p = f .+^ (t i) where i = p .-. b
 -- More generally:
 -- intone :: AffineSpace p => (p, Hertz) -> Tuning (Diff p) -> Intonation p
 
 
 -- Standard syntonic (meantone) tunings, with P8 = 2
 
-pureOctaveWith = synTune (_P8, 2)
+pureOctaveWith = Tuning . synTune (_P8, 2)
 
 pythagorean :: Tuning Interval
 pythagorean = pureOctaveWith (_P5, 3/2)
@@ -111,7 +113,7 @@ standardIntonation :: Intonation Pitch
 standardIntonation = intone (a, 440) twelveToneEqual
 
 instance IsInterval Double where
-  fromInterval i = twelveToneEqual $ fromInterval i
+  fromInterval i = getTuning twelveToneEqual $ fromInterval i
 
 instance IsInterval Float where
     fromInterval x = realToFrac (fromInterval x :: Double)
