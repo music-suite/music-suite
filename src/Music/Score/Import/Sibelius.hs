@@ -105,11 +105,11 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Horn (d)",_) = (!! 3) $ divide 4 $ horns
             partFromName ("Horn in F",_) = horns
             partFromName ("Horn in E",_) = horns
-            partFromName ("Trumpet",_) = trumpets
             partFromName ("Trumpet (a)",_) = (!! 0) $ divide 4 $ trumpets
             partFromName ("Trumpet (b)",_) = (!! 1) $ divide 4 $ trumpets
             partFromName ("Trumpet (c)",_) = (!! 2) $ divide 4 $ trumpets
             partFromName ("Trumpet (d)",_) = (!! 3) $ divide 4 $ trumpets
+            partFromName ('T':'r':'u':'m':'p':'e':'t':_,_) = trumpets
             partFromName ("Trombone",_) = trombones
             partFromName ("Timpani",_) = tutti timpani
 
@@ -139,6 +139,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Violoncello (a)",_) = (!! 0) $ divide 2 cellos
             partFromName ("Violoncello (b)",_) = (!! 1) $ divide 2 cellos
             partFromName ("Contrabass",_) = doubleBasses
+            partFromName ("Double Bass",_) = doubleBasses
             partFromName ("Piano",_)       = tutti piano
             partFromName ("Piano (a)",_)       = tutti piano
             partFromName ("Piano (b)",_)       = tutti piano
