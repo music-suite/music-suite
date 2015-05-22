@@ -106,8 +106,8 @@ invertQuality = go
 -- | 
 -- The quality type expected for a given number, i.e. perfect for unisons, fourths,
 -- and fifths and major/minor for everything else.  
-expectedQualityType :: HasNumber a => a -> QualityType
-expectedQualityType x = if ((abs (number x) - 1) `mod` 7) + 1 `elem` [1,4,5]
+expectedQualityType :: Number -> QualityType
+expectedQualityType x = if ((abs x - 1) `mod` 7) + 1 `elem` [1,4,5]
   then PerfectType else MajorMinorType
 
 -- |

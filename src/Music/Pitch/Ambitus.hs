@@ -3,7 +3,7 @@
 module Music.Pitch.Ambitus (
     Ambitus,
     ambitus,
-    ambitus',
+    -- ambitus',
     mapAmbitus,
     ambitusHighest,
     ambitusLowest,
@@ -43,8 +43,8 @@ ambitus = iso toA unA . _Unwrapped
       -- _                    -> error $ "Strange ambitus: " ++ show (I.lowerBound a, I.upperBound a)
       _                    -> error $ "Strange ambitus"
 
-ambitus' :: (Num a, Ord a) => Iso' (a, a) (Ambitus a)
-ambitus' = ambitus
+-- ambitus' :: (Num a, Ord a) => Iso' (a, a) (Ambitus a)
+-- ambitus' = ambitus
 
 -- | Not a true functor for similar reasons as sets.
 mapAmbitus :: (Ord b, Num b) => (a -> b) -> Ambitus a -> Ambitus b
