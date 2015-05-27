@@ -31,7 +31,7 @@ module Music.Time.Split (
         Splittable(..),
 
         -- * Miscellaneous
-        splitAbs,
+        -- splitAbs,
         chunks,
 
   ) where
