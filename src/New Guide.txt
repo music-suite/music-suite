@@ -1,0 +1,49 @@
+Install
+Setting up backends
+    Wizard:
+      What backend do you primarily want to use for exporting scores?
+      What backend do you primarily want to use for viewing scores?
+      What backend do you primarily want to use for playing MIDI files?
+      Do you want to use the SuperCollider backend for playing sounds?
+    
+Working with music
+Basics
+    Internal representation, import export
+    Generalized notion of music
+    Representation of notes and rests
+    The TFs PitchOf etc
+    Lens, Iso, Traversal
+Time
+    Time vs. duration
+    Time spans
+    Rhythms
+    Rhythmical alignment
+    Patterns
+Pitches
+    Scales, modes and chords
+    Melodies and chord sequences
+    Common pitch
+    Spelling
+    Intonation, tunings and frequencies
+      Overtone series
+      Quarter-tones, approximating frequency in 12 or 24-TET
+    Glissando and portamento
+Parts and orchestration
+    Parts, subparts, division
+    Solo vs. tutti
+    Playing techniques
+Dynamics and articulation
+Meta-data
+    Title, attribution etc
+    Key signature
+    Time signature
+    Tempo
+    Fermantas
+    Fermatas, caesuras and breathing marks
+    Ritardando and accellerando
+    Rehearsal marks
+    Barlines and repeats
+    Clefs
+    Annotations
+    Custom
+
