@@ -35,6 +35,8 @@ module Music.Time.Types (
         -- * Basic types
         Time,
         Duration,
+        Alignment,
+        
         LocalDuration,
 
         -- ** Convert between time and duration
@@ -159,7 +161,10 @@ deriving instance Floating Time
 deriving instance Floating Duration
 -}
 
-type LocalDuration = Duration
+type Alignment     = Duration
+
+type LocalDuration = Alignment
+{-# DEPRECATED LocalDuration "Use 'Alignment'"#-}
 
 
 -- |
@@ -290,6 +295,8 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.
+--
+-- This type is known as 'Arc' in Tidal and as 'Era' in the active package.
 --
 newtype Span = Span { getSpan :: (Time, Duration) }
   deriving (Eq, Ord, Typeable)
