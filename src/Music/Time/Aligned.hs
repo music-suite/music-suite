@@ -81,6 +81,10 @@ instance Alignable (Aligned a) where
 newtype Aligned v = Aligned { getAligned :: ((Time, LocalDuration), v) }
   deriving (Functor, Eq, Ord, Foldable, Traversable)
 
+instance Wrapped (Aligned a) where
+  type Unwrapped (Aligned a) = ((Time, LocalDuration), v)
+  _Wrapped' = iso getAligned Aligned
+
 -- | Align the given value so that its local duration occurs at the given time.
 aligned :: Time -> LocalDuration -> v -> Aligned v
 aligned t d a = Aligned ((t, d), a)
