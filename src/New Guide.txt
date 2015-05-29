@@ -11,15 +11,81 @@ Basics
     Internal representation, import export
     Generalized notion of music
     Representation of notes and rests
+
+    Type classes
+      Many types in MS are Monoids and Semigroups
+      Most aspects are VectorSpaces or AffineSpaces
+      For higher-order types, we use Functor, Applicative and Monad
+
+    Lens, Iso, Prism and Traversal
+      
+      MS uses optics, mainly lenses, prisms, isos and traversals.
+        A Lens is a value that allow you to *get* and *set* a part of a product type, such as the `a` in `(a, b)`
+          x^.o        Extract value using l from x
+          x & o .~ a  Set value using l to a in x        
+        A Prism is a value that allow you to view part of a sum type, such as the `a` in `Either a b`
+          x ^? o
+        An Iso allow you to convert a type `a` to `b` and back without losing any information
+          x ^. o
+        A Traversal generalizes a lens, allowing you to extract or map over *multiple* elements
+          x ^.. o
+
+      In MS many types provide a lens or iso as a constructor
+        >>> let n = (2,c::Pitch)^.note
+        >>> n
+        (2,c)^.note
+        >>> n^.from note
+        (2,c)        
+        >>> n^.duration
+        2        
+        >>> n^.pitch
+        c
+
     The TFs PitchOf etc
-    Lens, Iso, Traversal
+      Most types in MS support querying for musical *aspects*. The standard aspects are: pitch, dynamic, part/instrument and articulation.
+        >>> let x = c::StandardNote
+        >>> x^.pitch
+        c
+        >>> x^.dynamic
+        mf
+        >>> x^.articulation
+        straight
+        >>> x^.part
+        piano
+
+        >>> let x = c::Voice StandardNote
+        >>> x^..pitches
+        [c]
+        >>> x^..dynamicss
+        [mf]
+        >>> x^..articulations
+        [straight]
+        >>> x^..parts
+        [piano]
+    
+        printPitches
+        printAspects
+        
+        TODO use of over
+    
 Time
     Time vs. duration
+      Time and durations are separate types, representing points in time and distances (vectors) between points respectively
+      The time 0 generally is the start of the music
+      We generally use *notated* duration, something of duration 1 lasts 1 whole note, 1/4 a crotchet and so on
+        TODO performance of written duration
+      Tuplets as multiplication
     Time spans
+      As 2 points/point+vector
+    Time transformations: transform, stretch and delay
+    Alignment/Types with duration vs. Types with eras (the era is a function providing *a* span)
     Rhythms
-    Rhythmical alignment
+      Rhythms as lists
+      Rhythms as trees
+    Splitting (durations, notes and voices)
     Patterns
 Pitches
+    Pitch vs. interval type
     Scales, modes and chords
     Melodies and chord sequences
     Common pitch
@@ -30,6 +96,7 @@ Pitches
     Glissando and portamento
 Parts and orchestration
     Parts, subparts, division
+    Instrument
     Solo vs. tutti
     Playing techniques
 Dynamics and articulation
