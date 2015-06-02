@@ -39,10 +39,10 @@ pointOffsets or = (zeroV :) . snd . mapAccumL g or
 -- > offsetVs p . distanceVs p = id 
 -- > distanceVs p . offsetVs p = id 
 offsetVs :: AffineSpace p => p -> [Diff p] -> [p]
-offsetVs = tail . offsetPoints
+offsetVs p = tail . offsetPoints p
 
 distanceVs :: AffineSpace p => p -> [p] -> [Diff p]
-distanceVs = tail . pointOffsets
+distanceVs p = tail . pointOffsets p
 
 {-
 offsetted :: AffineSpace p => p -> Iso' [Diff p] [p]
