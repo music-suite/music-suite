@@ -2,6 +2,9 @@
 module Data.AffineSpace.Point.Offsets (
       offsetPoints,
       pointOffsets,
+      offsetVs,
+      distanceVs,
+      offsetted,
   ) where
 
 import Data.AffineSpace
@@ -28,4 +31,19 @@ pointOffsets :: AffineSpace p => p -> [p] -> [Diff p]
 pointOffsets or = (zeroV :) . snd . mapAccumL g or
   where
     g prev p = (p, p .-. prev)
+
+-- How they should really have been defined
+
+-- |
+-- For all p
+-- > offsetVs p . distanceVs p = id 
+-- > distanceVs p . offsetVs p = id 
+offsetVs :: AffineSpace p => p -> [Diff p] -> [p]
+offsetVs = tail . offsetPoints
+
+distanceVs :: AffineSpace p => p -> [p] -> [Diff p]
+distanceVs = tail . pointOffsets
+
+offsetted :: AffineSpace p => p -> Iso' [Diff p] [p]
+offsetted = iso distanceVs offsetVs
 
