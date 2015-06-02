@@ -4,7 +4,7 @@ module Data.AffineSpace.Point.Offsets (
       pointOffsets,
       offsetVs,
       distanceVs,
-      offsetted,
+      -- offsetted,
   ) where
 
 import Data.AffineSpace
@@ -44,6 +44,8 @@ offsetVs = tail . offsetPoints
 distanceVs :: AffineSpace p => p -> [p] -> [Diff p]
 distanceVs = tail . pointOffsets
 
+{-
 offsetted :: AffineSpace p => p -> Iso' [Diff p] [p]
 offsetted = iso distanceVs offsetVs
+-}
 
