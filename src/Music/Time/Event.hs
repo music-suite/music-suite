@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -54,6 +55,8 @@ import           Data.Semigroup
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -153,6 +156,12 @@ instance IsDynamics a => IsDynamics (Event a) where
 
 instance (Show a, Transformable a) => Show (Event a) where
   show x = show (x^.from event) ++ "^.event"
+
+instance ToJSON a => ToJSON (Event a) where
+  -- TODO meta
+  toJSON a = JSON.object [ ("span", toJSON s), ("value", toJSON x) ]
+    where
+      (s, x) = a^.from event
 
 instance Comonad Event where
   extract e   = e^.eventValue

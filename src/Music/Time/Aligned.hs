@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -50,6 +51,8 @@ import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -91,6 +94,9 @@ aligned t d a = Aligned ((t, d), a)
 
 instance Show a => Show (Aligned a) where
   show (Aligned ((t,d),v)) = "aligned ("++show t++") ("++show d++") ("++ show v++")"
+
+instance ToJSON a => ToJSON (Aligned a) where
+  toJSON (Aligned ((t,d),v)) = JSON.object [ ("alignment", toJSON d), ("origin", toJSON t), ("value", toJSON v) ]
 
 instance Transformable v => Transformable (Aligned v) where
   transform s (Aligned ((t, d), v)) = Aligned ((transform s t, d), transform s v)

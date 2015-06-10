@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -106,6 +107,8 @@ import           Data.String
 import           Data.Traversable         (Traversable)
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -178,6 +181,12 @@ instance Snoc (Voice a) (Voice b) (Note a) (Note b) where
     Nothing      -> Left  mempty
     Just (xs, x) -> Right (view voice xs, x)
 
+instance ToJSON a => ToJSON (Voice a) where
+  -- TODO meta
+  toJSON x = JSON.object [ ("notes", toJSON ns) ]
+    where
+      ns = x^.notes
+      
 instance Transformable (Voice a) where
   transform s = over notes (transform s)
 

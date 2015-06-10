@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
@@ -44,6 +45,8 @@ import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -170,6 +173,12 @@ instance IsInterval a => IsInterval (Note a) where
 
 instance IsDynamics a => IsDynamics (Note a) where
   fromDynamics = pure . fromDynamics
+
+instance ToJSON a => ToJSON (Note a) where
+  -- TODO meta
+  toJSON a = JSON.object [ ("duration", toJSON d), ("value", toJSON x) ]
+    where
+      (d, x) = a^.from note
 
 -- | View a note value as a pair of the original value and a stretch factor.
 note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)

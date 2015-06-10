@@ -1,4 +1,5 @@
 
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -91,6 +92,8 @@ import qualified Data.Traversable         as T
 import           Data.Typeable
 import           Data.VectorSpace
 import           Data.VectorSpace         hiding (Sum (..))
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
@@ -163,6 +166,12 @@ instance FoldableWithIndex Span Score where
 instance TraversableWithIndex Span Score where
   itraverse f (Score (m,x)) = fmap (\x -> Score (m,x)) $ itraverse f x
 -}
+
+instance ToJSON a => ToJSON (Score a) where
+  -- TODO meta
+  toJSON x = JSON.object [ ("events", toJSON es) ]
+    where
+      es = x^.events
 
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)
