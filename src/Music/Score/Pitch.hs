@@ -61,30 +61,18 @@ module Music.Score.Pitch (
         below,
         octavesUp,
         octavesDown,
-        octavesAbove,
-        octavesBelow,
-        fifthsUp,
-        fifthsDown,
-        fifthsAbove,
-        fifthsBelow,
         _15va,
         _8va,
         _8vb,
         _15vb,
 
         -- * Inversion
-        inv,
         invertPitches,
 
         -- * Folds
         highest,
         lowest,
         meanPitch,
-
-        -- -- * Intervals
-        -- augmentIntervals,
-        -- TODO pitchIs, to write filter pitchIs ... etc
-        -- TODO gliss etc        
   ) where
 
 import           Control.Applicative
@@ -99,6 +87,7 @@ import qualified Data.List                     as List
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.String
+import           Data.Monoid.Average
 import           Data.Traversable              (Traversable)
 import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
@@ -297,6 +286,12 @@ type instance SetPitch b (Track a)        = Track (SetPitch b a)
 type instance Pitch (Score a)             = Pitch a
 type instance SetPitch b (Score a)        = Score (SetPitch b a)
 
+type instance Pitch (Aligned a) = Pitch a
+type instance SetPitch b (Aligned a) = Aligned (SetPitch b a)
+
+instance HasPitches a b => HasPitches (Aligned a) (Aligned b) where
+  pitches = _Wrapped . pitches
+
 instance HasPitch a b => HasPitch (c, a) (c, b) where
   pitch = _2 . pitch
 instance HasPitches a b => HasPitches (c, a) (c, b) where
@@ -425,9 +420,7 @@ type Transposable a = (
   )
 
 -- |
--- Transpose pitch upwards.
---
--- Not to be confused with matrix transposition.
+-- Transpose (translate) up.
 --
 -- >>> up m3 (c :: Pitch)
 -- eb
@@ -440,12 +433,9 @@ type Transposable a = (
 --
 up :: Transposable a => Interval a -> a -> a
 up v = pitches %~ (.+^ v)
-{-# INLINE up #-}
 
 -- |
--- Transpose pitch downwards.
---
--- Not to be confused with matrix transposition.
+-- Transpose (translate) down.
 --
 -- >>> down m3 (c :: Pitch)
 -- a
@@ -455,7 +445,6 @@ up v = pitches %~ (.+^ v)
 --
 down :: Transposable a => Interval a -> a -> a
 down v = pitches %~ (.-^ v)
-{-# INLINE down #-}
 
 -- |
 -- Add the given interval above.
@@ -465,7 +454,6 @@ down v = pitches %~ (.-^ v)
 --
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above v x = x <> up v x
-{-# INLINE above #-}
 
 -- |
 -- Add the given interval below.
@@ -475,11 +463,6 @@ above v x = x <> up v x
 --
 below :: (Semigroup a, Transposable a) => Interval a -> a -> a
 below v x = x <> down v x
-{-# INLINE below #-}
-
-inv :: Transposable a => Pitch a -> a -> a
-inv = invertPitches
-{-# DEPRECATED inv "Use 'invertPitches'" #-}
 
 -- |
 -- Invert pitches.
@@ -501,7 +484,6 @@ invertPitches p = pitches %~ reflectThrough p
 --
 octavesUp :: Transposable a => Scalar (Interval a) -> a -> a
 octavesUp n = up (_P8^*n)
-{-# INLINE octavesUp #-}
 
 -- |
 -- Transpose down by the given number of octaves.
@@ -517,101 +499,32 @@ octavesUp n = up (_P8^*n)
 --
 octavesDown :: Transposable a => Scalar (Interval a) -> a -> a
 octavesDown n = down (_P8^*n)
-{-# INLINE octavesDown #-}
 
--- |
--- Add the given octave above.
---
-octavesAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-octavesAbove n = above (_P8^*n)
-{-# INLINE octavesAbove #-}
-
--- |
--- Add the given octave below.
---
-octavesBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-octavesBelow n = below (_P8^*n)
-{-# INLINE octavesBelow #-}
-
--- |
--- Transpose up by the given number of fifths.
---
-fifthsUp :: Transposable a => Scalar (Interval a) -> a -> a
-fifthsUp n = up (_P8^*n)
-{-# INLINE fifthsUp #-}
-
--- |
--- Transpose down by the given number of fifths.
---
-fifthsDown :: Transposable a => Scalar (Interval a) -> a -> a
-fifthsDown n = down (_P8^*n)
-{-# INLINE fifthsDown #-}
-
--- |
--- Add the given octave above.
---
-fifthsAbove :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-fifthsAbove n = above (_P8^*n)
-{-# INLINE fifthsAbove #-}
-
--- |
--- Add the given octave below.
---
-fifthsBelow :: (Semigroup a, Transposable a) => Scalar (Interval a) -> a -> a
-fifthsBelow n = below (_P8^*n)
-{-# INLINE fifthsBelow #-}
-
--- | Shorthand for @'octavesUp' 2@.
+-- | Same as @'octavesUp' 2@.
 _15va :: Transposable a => a -> a
 _15va = octavesUp 2
-{-# INLINE _15va #-}
 
--- | Shorthand for @'octavesUp' 1@.
+-- | Same as @'octavesUp' 1@.
 _8va :: Transposable a => a -> a
 _8va  = octavesUp 1
-{-# INLINE _8va #-}
 
--- | Shorthand for @'octavesDown' 1@.
+-- | Same as @'octavesDown' 1@.
 _8vb :: Transposable a => a -> a
 _8vb  = octavesDown 1
-{-# INLINE _8vb #-}
 
--- | Shorthand for @'octavesDown' 2@.
+-- | Same as @'octavesDown' 2@.
 _15vb :: Transposable a => a -> a
 _15vb = octavesDown 2
-{-# INLINE _15vb #-}
 
-
--- |
--- Return the highest pitch in the given music.
---
+-- | Extract the highest pitch. Returns @Nothing@ if there are none.
 highest :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
 highest = maximumOf pitches'
 
--- |
--- Return the lowest pitch in the given music.
---
+-- | Extract the lowest pitch. Returns @Nothing@ if there are none.
 lowest :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
 lowest = minimumOf pitches'
 
--- |
--- Return the mean pitch in the given music.
---
-meanPitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Pitch a
-meanPitch = mean . toListOf pitches'
-  where
-    mean x = fst $ foldl (\(m, n) x -> (m+(x-m)/(n+1),n+1)) (0,0) x
-
-
-augmentIntervals :: (HasPhrases' s a, Transposable a) => Interval a -> s -> s
-augmentIntervals x = over phrases (augmentIntervals' x)
-
-augmentIntervals' :: Transposable a => Interval a -> Voice a -> Voice a
-augmentIntervals' = error "Not implemented: augmentIntervals"
--- TODO generalize to any type where we can traverse phrases of something that has pitch
-
-
--- TODO augment/diminish intervals (requires phrase traversal)
--- TODO rotatePitch (requires phrase traversal)
--- TODO invert diatonically
+-- | Extract the average pitch. Returns @Nothing@ if there are none.
+meanPitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
+meanPitch = maybeAverage . Average . toListOf pitches'
 

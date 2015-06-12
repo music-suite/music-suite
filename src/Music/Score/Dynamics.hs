@@ -191,6 +191,15 @@ type instance SetDynamic b (Track a)  = Track (SetDynamic b a)
 type instance Dynamic (Score a)       = Dynamic a
 type instance SetDynamic b (Score a)  = Score (SetDynamic b a)
 
+type instance Dynamic (Aligned a) = Dynamic a
+type instance SetDynamic b (Aligned a) = Aligned (SetDynamic b a)
+
+instance HasDynamics a b => HasDynamics (Aligned a) (Aligned b) where
+  dynamics = _Wrapped . dynamics
+
+
+
+
 instance HasDynamic a b => HasDynamic (c, a) (c, b) where
   dynamic = _2 . dynamic
 

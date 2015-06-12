@@ -88,6 +88,8 @@ instance Wrapped (Aligned v) where
   type Unwrapped (Aligned v) = ((Time, LocalDuration), v)
   _Wrapped' = iso getAligned Aligned
 
+instance Rewrapped (Aligned a) (Aligned b)
+
 -- | Align the given value so that its local duration occurs at the given time.
 aligned :: Time -> LocalDuration -> v -> Aligned v
 aligned t d a = Aligned ((t, d), a)
