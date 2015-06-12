@@ -60,5 +60,6 @@ library
                         GeneralizedNewtypeDeriving,
                         MultiParamTypeClasses,
                         DeriveDataTypeable,
-                        ViewPatterns
+                        ViewPatterns,
+                        OverloadedStrings
     ghc-options:        -fno-warn-typed-holes
