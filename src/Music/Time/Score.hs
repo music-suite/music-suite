@@ -214,14 +214,13 @@ instance Enum a => Enum (Score a) where
   toEnum = return . toEnum
   fromEnum = list 0 (fromEnum . head) . Foldable.toList
 
--- Bogus instance, so we can use numeric literals
 instance Num a => Num (Score a) where
   fromInteger = return . fromInteger
   abs    = fmap abs
   signum = fmap signum
-  (+)    = error "Not implemented"
-  (-)    = error "Not implemented"
-  (*)    = error "Not implemented"
+  (+)    = liftA2 (+)
+  (-)    = liftA2 (-)
+  (*)    = liftA2 (*)
 
 {-
 -- Bogus instances, so we can use c^*2 etc.
