@@ -223,6 +223,7 @@ instance Num a => Num (Score a) where
   (-)    = error "Not implemented"
   (*)    = error "Not implemented"
 
+{-
 -- Bogus instances, so we can use c^*2 etc.
 instance AdditiveGroup (Score a) where
   zeroV   = error "Not implemented"
@@ -232,6 +233,7 @@ instance AdditiveGroup (Score a) where
 instance VectorSpace (Score a) where
   type Scalar (Score a) = Duration
   d *^ s = d `stretch` s
+-}
 
 instance HasMeta (Score a) where
   meta = _Wrapped . _1
