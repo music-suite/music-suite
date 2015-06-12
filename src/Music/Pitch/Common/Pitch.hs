@@ -46,6 +46,8 @@ import           Data.Maybe
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
+import           Data.Aeson                    (ToJSON (..))
+import qualified Data.Aeson
 
 import           Music.Pitch.Absolute
 import           Music.Pitch.Alterable
@@ -131,6 +133,9 @@ instance AffineSpace Pitch where
   type Diff Pitch     = Interval
   Pitch a .-. Pitch b = a ^-^ b
   Pitch a .+^ b       = Pitch (a ^+^ b)
+
+instance ToJSON Pitch where
+  toJSON = toJSON . (.-. c)
 
 -- |
 -- Creates a pitch from name accidental.
