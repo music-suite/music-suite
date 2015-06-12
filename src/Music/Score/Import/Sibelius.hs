@@ -168,7 +168,7 @@ fromSibeliusStaff d (SibeliusStaff bars name shortName) =
 
 fromSibeliusBar :: IsSibelius a => Duration -> SibeliusBar -> Score (Maybe a)
 fromSibeliusBar d (SibeliusBar elems) = 
-    fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> return Nothing^*d
+    fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> stretch d rest
     where
         chords   = filter isChord elems
         tuplets  = filter isTuplet elems -- TODO use these
