@@ -1,20 +1,6 @@
 
-
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012-2015
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Provides basic voice types. Useful for vocal music but also for abstract
--- voice leading etc.
---
--------------------------------------------------------------------------------------
-
+-- | Provides basic voice types. Useful for vocal music but also for abstract
+--   voice leading problems etc.
 module Music.Parts.Voices (
   ) where
 

@@ -1,17 +1,5 @@
 
-
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012-2015
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--------------------------------------------------------------------------------------
-
+-- | A type to represent (flat) subdivisions of a part.
 module Music.Parts.Division (
         Division,
         division,
