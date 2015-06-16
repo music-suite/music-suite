@@ -17,5 +17,6 @@ import Music.Pitch.Common.Number
 import Music.Pitch.Common.Interval
 import Music.Pitch.Common.Semitones
 import Music.Pitch.Common.Spell
+import Music.Pitch.Common.Types
 import Music.Pitch.Common.Harmony
 import Music.Pitch.Common.Names
