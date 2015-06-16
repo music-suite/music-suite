@@ -77,3 +77,12 @@ library
     other-modules:      Music.Parts.Internal.Data
     hs-source-dirs:     src
     default-language:   Haskell2010
+    default-extensions: StandaloneDeriving,
+                        TypeFamilies,
+                        TypeOperators,
+                        GeneralizedNewtypeDeriving,
+                        MultiParamTypeClasses,
+                        DeriveDataTypeable,
+                        ViewPatterns,
+                        OverloadedStrings
+ 
