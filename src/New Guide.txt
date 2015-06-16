@@ -6,7 +6,6 @@ Setting up backends
       What backend do you primarily want to use for playing MIDI files?
       Do you want to use the SuperCollider backend for playing sounds?
     
-Working with music
 Basics
     Internal representation, import export
     Generalized notion of music
@@ -64,7 +63,7 @@ Basics
         [piano]
     
         printPitches
-        printAspects
+        printMusic
         
         TODO use of over
     
@@ -81,6 +80,10 @@ Time
     Alignment/Types with duration vs. Types with eras (the era is a function providing *a* span)
     Rhythms
       Rhythms as lists
+        >>> audify $ ([3,1,2,2]|/8)^.rhythm
+        >>> audify $ beginning 5 (zipVoiceWith const (cycle [c,d,e]^.voice) ((cycle [3,1,2,2]|/8)^.rhythm) :: Voice Pitch)
+        
+      
       Rhythms as trees
     Splitting (durations, notes and voices)
     Patterns
