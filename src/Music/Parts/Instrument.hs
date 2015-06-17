@@ -42,13 +42,17 @@ import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
 
 {-
-Semantically, our instrument type is the MusicXML Standard Sounds 3.0
-See http://www.musicxml.com/for-developers/standard-sounds/
+Semantically, our instrument type is superset of the MusicXML Standard Sounds 3.0
+  See http://www.musicxml.com/for-developers/standard-sounds/
 
-We use the following map between GM2 and MusicXML Standard Sounds.
+All extensions has ".x." as part of their ID!
 -}
 
---System.IO.Unsafe.unsafePerformIO $ 
+{-
+Don't edit data files!
+Original here
+  https://docs.google.com/spreadsheets/d/1I7lCGd8u4ggqqa_ATMVb87V10Vc8J8TP9w-vXu0M18o/edit#gid=0
+-}
 getInstrumentData :: IO [Map String String]
 getInstrumentData = do
   fp <- Paths_music_parts.getDataFileName "data/instruments.csv"
@@ -56,6 +60,12 @@ getInstrumentData = do
   return $ case Data.Csv.decodeByName d of
     Left e -> error $ "Could not find data/instruments.csv"++show e
     Right (_header, toListOf traverse -> x) -> x
+
+
+
+
+
+
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
