@@ -10,17 +10,17 @@ category:               Music
 tested-with:            GHC
 build-type:             Simple
 cabal-version:          >= 1.10
+data-files:             data/instruments.csv
 
 description: 
     Abstract representation of musical parts and instruments.
     .
     This library is part of the Music Suite, see <http://music-suite.github.io>.
-data-dir:           data
 
 source-repository head
   type:                 git
   location:             git://github.com/music-suite/music-parts.git
-  
+
 library                    
     build-depends:      base                    >= 4 &&        < 5,
                         containers              >= 0.5.5.1  && < 1,
@@ -76,6 +76,7 @@ library
                         -- TODO some sub-subdivision (not for player allocation, but hand/finger)
                         
     other-modules:      Music.Parts.Internal.Data
+                        Paths_music_parts
     hs-source-dirs:     src
     default-language:   Haskell2010
     default-extensions: StandaloneDeriving,

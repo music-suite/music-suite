@@ -16,10 +16,13 @@ module Music.Parts.Instrument (
         transpositionString,
         
         -- TODO
-        getDataPath
+        gmInstrs,
+        getInstrumentFilePath,
+        getDataPath,
   ) where
 
 import qualified Paths_music_parts
+import qualified System.IO.Unsafe
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
 import           Data.Default
@@ -42,6 +45,7 @@ See http://www.musicxml.com/for-developers/standard-sounds/
 
 We use the following map between GM2 and MusicXML Standard Sounds.
 -}
+getInstrumentFilePath = System.IO.Unsafe.unsafePerformIO $ getDataPath "data/instruments.csv"
 getDataPath = Paths_music_parts.getDataFileName
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
