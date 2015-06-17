@@ -13,9 +13,13 @@ module Music.Parts.Instrument (
         fullName,
         shortName,
         transposition,
-        transpositionString
+        transpositionString,
+        
+        -- TODO
+        getDataPath
   ) where
 
+import qualified Paths_music_parts
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
 import           Data.Default
@@ -31,6 +35,14 @@ import           Music.Dynamics                  (Dynamics)
 import           Music.Pitch                     (Ambitus, Clef, trebleClef, bassClef)
 import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
+
+{-
+Semantically, our instrument type is the MusicXML Standard Sounds 3.0
+See http://www.musicxml.com/for-developers/standard-sounds/
+
+We use the following map between GM2 and MusicXML Standard Sounds.
+-}
+getDataPath = Paths_music_parts.getDataFileName
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument

@@ -378,19 +378,6 @@ defaultClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs) . defaultMidiProgram
 
 
 
-gmClef :: Int -> Int
-gmMidiChannel :: Int -> Int
-gmScoreOrder :: Int -> Double
-
-gmMidiChannel = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
-    where get (x,_,_,_) = x
-
-gmScoreOrder = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
-    where get (_,x,_,_) = x
-
-gmClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
-    where get (_,_,x,_) = x
-
 
 gmInstrName :: Int -> Maybe String
 gmInstrName = fmap get . (`lookup` gmInstrs)
