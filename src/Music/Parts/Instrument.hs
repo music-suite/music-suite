@@ -17,12 +17,13 @@ module Music.Parts.Instrument (
         
         -- TODO
         gmInstrs,
-        getInstrumentFilePath,
-        getDataPath,
+        getInstrumentData,
   ) where
 
 import qualified Paths_music_parts
 import qualified System.IO.Unsafe
+import qualified Data.ByteString.Lazy
+import qualified Data.Csv
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
 import           Data.Default
@@ -32,6 +33,7 @@ import           Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
 import           Data.Set                        (Set)
+import           Data.Map                        (Map)
 import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Music.Dynamics                  (Dynamics)
@@ -45,8 +47,15 @@ See http://www.musicxml.com/for-developers/standard-sounds/
 
 We use the following map between GM2 and MusicXML Standard Sounds.
 -}
-getInstrumentFilePath = System.IO.Unsafe.unsafePerformIO $ getDataPath "data/instruments.csv"
-getDataPath = Paths_music_parts.getDataFileName
+
+--System.IO.Unsafe.unsafePerformIO $ 
+getInstrumentData :: IO [Map String String]
+getInstrumentData = do
+  fp <- Paths_music_parts.getDataFileName "data/instruments.csv"
+  d <- Data.ByteString.Lazy.readFile fp
+  return $ case Data.Csv.decodeByName d of
+    Left e -> error $ "Could not find data/instruments.csv"++show e
+    Right (_header, toListOf traverse -> x) -> x
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
