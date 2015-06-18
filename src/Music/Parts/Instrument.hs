@@ -45,6 +45,7 @@ import           Music.Pitch                     (Ambitus, Clef, trebleClef, bas
 import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
 
+import Music.Parts.Internal.Data as Data
 {-
 Semantically, our instrument type is superset of the MusicXML Standard Sounds 3.0
   See http://www.musicxml.com/for-developers/standard-sounds/

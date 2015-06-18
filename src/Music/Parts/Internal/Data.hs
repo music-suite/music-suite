@@ -3,7 +3,14 @@
 {-# LANGUAGE FlexibleInstances #-}  -- because clef
 {-# LANGUAGE CPP #-}
 
-module Music.Parts.Internal.Data where
+module Music.Parts.Internal.Data (
+  SoundId,
+  -- InstrumentTopCategory(..),
+  InstrumentDef(..),
+  getInstrumentDefById,
+  getInstrumentDefByGeneralMidiProgram,
+  getInstrumentDefByGeneralMidiPercussionNote,
+) where
 
 import           Data.Map                        (Map)
 import Control.Monad.Plus
