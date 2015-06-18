@@ -20,10 +20,6 @@ module Music.Parts.Instrument (
         getInstrumentData,
   ) where
 
-import qualified Paths_music_parts
-import qualified System.IO.Unsafe
-import qualified Data.ByteString.Lazy
-import qualified Data.Csv
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
 import           Data.Default
@@ -47,22 +43,6 @@ Semantically, our instrument type is superset of the MusicXML Standard Sounds 3.
 
 All extensions has ".x." as part of their ID!
 -}
-
-{-
-Don't edit data files!
-Original here
-  https://docs.google.com/spreadsheets/d/1I7lCGd8u4ggqqa_ATMVb87V10Vc8J8TP9w-vXu0M18o/edit#gid=0
--}
-getInstrumentData :: IO [Map String String]
-getInstrumentData = do
-  fp <- Paths_music_parts.getDataFileName "data/instruments.csv"
-  d <- Data.ByteString.Lazy.readFile fp
-  return $ case Data.Csv.decodeByName d of
-    Left e -> error $ "Could not find data/instruments.csv"++show e
-    Right (_header, toListOf traverse -> x) -> x
-
-
-
 
 
 
