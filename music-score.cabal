@@ -78,8 +78,6 @@ library
                         Music.Time.Track
                         Music.Time.Voice
                         Music.Time.Score
-                        -- Music.Time.Linear   ?
-                        -- Music.Time.Spline   ?
                         Music.Time.Segment
                         Music.Time.Behavior
                         Music.Time.Reactive
@@ -102,7 +100,6 @@ library
                         Music.Score.Meta.Title
                         Music.Score.Meta.Pickup
                         Music.Score.Meta.Extract
-                        -- Music.Score.Clef
                         Music.Score.Pitch
                         Music.Score.Articulation
                         Music.Score.Dynamics
