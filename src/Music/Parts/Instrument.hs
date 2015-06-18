@@ -19,11 +19,16 @@ module Music.Parts.Instrument (
         playableRange,
         comfortableRange,
         -- playableDynamics,
-
+        
+        -- * Legacy
+        defau
         
         -- TODO
         gmInstrs,
-        getInstrumentData,
+        gmClef,
+        gmMidiChannel,
+        gmScoreOrder,
+        gmInstrName,
   ) where
 
 import           Control.Applicative
@@ -85,11 +90,65 @@ instance Default Instrument where
     def = StdInstrument 0
 
 
+
+
+
+
+
+
+
+
+allowedClefs      :: Instrument -> Set Clef
+allowedClefs = error "No allowedClefs"
+
+data BracketType = Bracket | Brace | SubBracket
+data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
+
+pianoStaff :: StaffLayout
+pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
+
+
+playableRange     :: Instrument -> Ambitus Pitch
+playableRange = error "No playableRange"
+
+comfortableRange  :: Instrument -> Ambitus Pitch
+comfortableRange = error "No comfortableRange"
+
+-- playableDynamics :: Instrument -> Pitch -> Dynamics
+-- playableDynamics = error "No playableDynamics"
+
+-- instrumentName              :: Instrument -> String
+-- instrumentName = error "No name"
+
+fullName          :: Instrument -> String
+fullName = error "No fullName"
+
+shortName         :: Instrument -> String
+shortName = error "No shortName"
+
+-- sounding .-. written, i.e. -P5 for horn
+transposition     :: Instrument -> Interval
+transposition = error "No transposition"
+
+-- pitch sounding when c is notated (i.e. F for Horn in F)
+transpositionString :: Instrument -> String
+transpositionString = error "No transpositionString"
+
+
+
+
+
+
+
+
+
+
 -- TODO consolidate
 
 gmClef :: Int -> Int
 gmMidiChannel :: Int -> Int
 gmScoreOrder :: Int -> Double
+gmInstrName :: Int -> Maybe String
 
 gmMidiChannel = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
     where get (x,_,_,_) = x
@@ -100,8 +159,6 @@ gmScoreOrder = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
 gmClef = fromMaybe 0 . fmap get . (`lookup` gmInstrs)
     where get (_,_,x,_) = x
 
-
-gmInstrName :: Int -> Maybe String
 gmInstrName = fmap get . (`lookup` gmInstrs)
     where get (_,_,_,x) = x
 
@@ -320,41 +377,4 @@ gmPerc = [
     (81, "Open Triangle")
     ]
 
-
-
-allowedClefs      :: Instrument -> Set Clef
-allowedClefs = error "No allowedClefs"
-
-data BracketType = Bracket | Brace | SubBracket
-data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
-
-pianoStaff :: StaffLayout
-pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
-
-
-playableRange     :: Instrument -> Ambitus Pitch
-playableRange = error "No playableRange"
-
-comfortableRange  :: Instrument -> Ambitus Pitch
-comfortableRange = error "No comfortableRange"
-
--- playableDynamics :: Instrument -> Pitch -> Dynamics
--- playableDynamics = error "No playableDynamics"
-
--- instrumentName              :: Instrument -> String
--- instrumentName = error "No name"
-
-fullName          :: Instrument -> String
-fullName = error "No fullName"
-
-shortName         :: Instrument -> String
-shortName = error "No shortName"
-
--- sounding .-. written, i.e. -P5 for horn
-transposition     :: Instrument -> Interval
-transposition = error "No transposition"
-
--- pitch sounding when c is notated (i.e. F for Horn in F)
-transpositionString :: Instrument -> String
-transpositionString = error "No transpositionString"
 
