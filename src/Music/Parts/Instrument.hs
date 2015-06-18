@@ -3,17 +3,23 @@
 module Music.Parts.Instrument (
         Instrument(..),
         -- TODO hide impl
-        allowedClefs,
-        playableRange,
-        comfortableRange,
-        playableDynamics,
-
+        
         -- * Name etc
-        instrumentName,
+        -- instrumentName,
         fullName,
         shortName,
+
+        -- * Clefs and transposition
         transposition,
         transpositionString,
+        standardClef,
+        allowedClefs,
+
+        -- * Playing range
+        playableRange,
+        comfortableRange,
+        -- playableDynamics,
+
         
         -- TODO
         gmInstrs,
@@ -332,11 +338,11 @@ playableRange = error "No playableRange"
 comfortableRange  :: Instrument -> Ambitus Pitch
 comfortableRange = error "No comfortableRange"
 
-playableDynamics :: Instrument -> Pitch -> Dynamics
-playableDynamics = error "No playableDynamics"
+-- playableDynamics :: Instrument -> Pitch -> Dynamics
+-- playableDynamics = error "No playableDynamics"
 
-instrumentName              :: Instrument -> String
-instrumentName = error "No name"
+-- instrumentName              :: Instrument -> String
+-- instrumentName = error "No name"
 
 fullName          :: Instrument -> String
 fullName = error "No fullName"
@@ -344,10 +350,11 @@ fullName = error "No fullName"
 shortName         :: Instrument -> String
 shortName = error "No shortName"
 
--- sounding .-. written, i.e. -P5 for clarinet
+-- sounding .-. written, i.e. -P5 for horn
 transposition     :: Instrument -> Interval
 transposition = error "No transposition"
 
+-- pitch sounding when c is notated (i.e. F for Horn in F)
 transpositionString :: Instrument -> String
 transpositionString = error "No transpositionString"
 

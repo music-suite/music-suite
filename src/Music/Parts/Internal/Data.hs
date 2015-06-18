@@ -144,7 +144,12 @@ readClef = go where
   
   percClef = (PercClef, 0, 0) -- TODO move
 
+{-
+Can't stop these instances from being reexported (https://www.haskell.org/onlinereport/modules.html)
+so they are transitively exported by all modules depending on the Suite!
 
+Drats!
+-}
 instance FromField [Int] where
   parseField v = fmap (mcatMaybes . map safeRead) $ fmap (splitBy ',') $ parseField v
 instance FromField Pitch where
@@ -158,7 +163,6 @@ instance FromField Clef where
   parseField v = mcatMaybes $ fmap readClef $ parseField v
 instance FromField [Clef] where
   parseField v = fmap (mcatMaybes . map readClef) $ fmap (splitBy ',') $ parseField v
-
 
 instance FromRecord InstrumentDef where
   parseRecord v = InstrumentDef
