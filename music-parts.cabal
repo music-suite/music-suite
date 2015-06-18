@@ -80,9 +80,10 @@ library
                         -- so we know what goes on which staff, what kind of bracket to generate etc
                         
                         -- TODO some sub-subdivision (not for player allocation, but hand/finger)
-                        
-    other-modules:      Music.Parts.Internal.Data
-                        Paths_music_parts
+
+                        -- For GHCI
+                        Music.Parts.Internal.Data
+    other-modules:      Paths_music_parts
     hs-source-dirs:     src
     default-language:   Haskell2010
     default-extensions: StandaloneDeriving,
