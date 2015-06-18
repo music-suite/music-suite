@@ -97,15 +97,13 @@ import           Data.Foldable            (Foldable)
 import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Context
 import           Data.List.NonEmpty       (NonEmpty)
-import           Data.Map                 (Map)
 import           Data.Maybe
-import           Data.Ratio
 import           Data.Semigroup
 import           Data.Sequence            (Seq)
 import           Data.Set                 (Set)
 import           Data.String
 import           Data.Traversable         (Traversable)
-import           Data.Typeable
+import           Data.Typeable            (Typeable)
 import           Data.VectorSpace
 import           Data.Aeson                    (ToJSON (..))
 import qualified Data.Aeson                    as JSON
@@ -562,82 +560,19 @@ midpointsRelative o v = zipWith between (onsetsRelative o v) (offsetsRelative o 
 erasRelative :: Time -> Voice a -> [Span]
 erasRelative o v = zipWith (<->) (onsetsRelative o v) (offsetsRelative o v)
 
-onsetMap  :: Time -> Voice a -> Map Time a
-onsetMap = undefined
+{-
+onsetMap  :: Score a -> Map Time a
+onsetMap = fmap (view onset) . eraMap
 
-offsetMap :: Time -> Voice a -> Map Time a
-offsetMap = undefined
+offsetMap :: Score a -> Map Time a
+offsetMap = fmap (view offset) . eraMap
 
-midpointMap :: Time -> Voice a -> Map Time a
-midpointMap = undefined
+midpointMap :: Score a -> Map Time a
+midpointMap = fmap (view midpoint) . eraMap
 
-eraMap :: Time -> Voice a -> Map Span a
-eraMap = undefined
+eraMap :: Score a -> Map Span a
+eraMap = error "No eraMap"
 
 durations :: Voice a -> [Duration]
-durations = undefined
-
--- values :: Voice a -> [a] -- Same as Foldable.toList
--- values = undefined
-
-
-
-{-
-
-splitLatterToAssureSameDuration :: Voice b -> Voice b -> Voice b
-splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
-polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
-changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
-changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
-
-processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
-processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
-
--- These are a bit confusing. Do they act as pseudo-behaviors, or do they simply construct a look-up table of spans etc.
-onsetMap  :: Time -> Voice a -> Map Time a
-offsetMap :: Time -> Voice a -> Map Time a
-midpointMap :: Time -> Voice a -> Map Time a
-eraMap :: Time -> Voice a -> Map Span a
-
-hasMelodicDissonanceWith :: (a -> a -> Bool) -> Voice a -> Bool
-hasIntervalWith :: AffineSpace a => (Diff a -> Bool) -> Voice a -> Bool
-hasDurationWith :: (Duration -> Bool) -> Voice a -> Bool
-reifyVoice :: Voice a -> Voice (Duration, a)
-mapWithIndex :: (Int -> a -> b) -> Voice a -> Voice b
-mapWithDuration :: (Duration -> a -> b) -> Voice a -> Voice b
-mapWithIndexAndDuration :: (Int -> Duration -> a -> b) -> Voice a -> Voice b
-_ :: Iso (Voice ()) [Duration]
-asingleton' :: Prism (Voice a) (Duration, a)
-asingleton :: Prism (Voice a) a
-separateVoicesWith :: (a -> k) -> Voice a -> Map k (Voice a)
-freeVoiceR :: (forall a. -> [a] -> a)          -> Voice a -> (a, Duration)
-freeVoiceRNoDur :: ([a] -> a)          -> Voice a -> a
-freeVoice  :: (forall a. -> [a] -> [a])        -> Voice a -> Voice a
-freeVoice2 :: (forall a. -> [a] -> [a] -> [a]) -> Voice a -> Voice a -> Voice a
-
-empty :: Voice a
-singleton :: a -> Voice a
-cons :: a -> Voice a -> Voice a
-snoc :: Voice a -> a -> Voice a
-append :: Voice a -> Voice a -> Voice a
-ap :: Voice (a -> b) -> Voice a -> Voice b
-apDur :: Voice (Duration -> Duration -> a -> b) -> Voice a -> Voice b
-intersperse :: Duration -> a -> Voice a -> Voice a
--- intercalate :: Voice a -> Voice (Voice a) -> Voice a
-subsequences :: Voice a -> [Voice a]
-permutations :: Voice a -> [Voice a]
-iterate :: (a -> a) -> a -> Voice a
-repeat :: a -> Voice a
-replicate :: Int -> a -> Voice a
-unfoldr :: (b -> Maybe (a, b)) -> b -> Voice a
-Differences between Voice and Chord (except the obviously different composition styles):
-  - Voice is a Monoid, Chord just a Semigroup (??)
-  - TODO represent spanners using (Voice a, Map (Int,Int) s)
-  Arguably this should be part of Voice
-  TODO the MVoice/TVoice stuff
-newtype MVoice = Voice (Maybe a)
-newtype PVoice = [Either Duration (Voice a)]
-expandRepeats :: [Voice (Variant a)] -> Voice a
-
+durations = view durationsV
 -}
-
