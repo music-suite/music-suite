@@ -21,14 +21,11 @@ module Music.Parts.Instrument (
         -- playableDynamics,
         
         -- * Legacy
-        defau
-        
-        -- TODO
         gmInstrs,
         gmClef,
         gmMidiChannel,
         gmScoreOrder,
-        gmInstrName,
+        -- gmInstrName,
   ) where
 
 import           Control.Applicative
@@ -100,6 +97,9 @@ instance Default Instrument where
 
 allowedClefs      :: Instrument -> Set Clef
 allowedClefs = error "No allowedClefs"
+
+standardClef      :: Instrument -> Maybe Clef
+standardClef = error "No standardClef"
 
 data BracketType = Bracket | Brace | SubBracket
 data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
