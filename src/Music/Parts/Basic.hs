@@ -1,5 +1,5 @@
 
--- | Representaitons of musical instruments, subdivisions and parts.
+-- | Basic part representation.
 module Music.Parts.Basic (
         BasicPart
   ) where
