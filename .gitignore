@@ -5,3 +5,4 @@ dist
 *.pdf
 *.xml
 *sandbox.config
+.DS_Store
