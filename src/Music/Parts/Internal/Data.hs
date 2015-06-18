@@ -102,7 +102,6 @@ getInstrumentDefByGeneralMidiPercussionNote a = Data.List.find (\x -> a `elem` _
     defs = System.IO.Unsafe.unsafePerformIO getInstrumentData
 
 
-
 -- TODO move
 pitchFromSPN :: String -> Maybe Pitch
 pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS

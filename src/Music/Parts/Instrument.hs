@@ -33,6 +33,7 @@ import           Control.Lens                    (toListOf)
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
+import qualified Data.Set
 import           Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
@@ -44,7 +45,7 @@ import           Music.Dynamics                  (Dynamics)
 import           Music.Pitch                     (Ambitus, Clef, trebleClef, bassClef)
 import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
-
+import Music.Pitch
 import Music.Parts.Internal.Data as Data
 {-
 Semantically, our instrument type is superset of the MusicXML Standard Sounds 3.0
@@ -63,15 +64,7 @@ data Instrument
     deriving (Eq)
 
 instance Show Instrument where
-    show (StdInstrument x) = fromMaybe "(unknown)" $ gmInstrName x
-    show (OtherInstrument str) = go str
-        where
-            go "wind.flutes.flute.alto"   = "Alto Flute"
-            go "wind.flutes.flute.bass"   = "Bass Flute"
-            go "wind.reed.clarinet.eflat" = "Clarinet in Eb"
-            go "wind.reed.clarinet.bass"  = "Bass Clarinet in Bb"
-            go "wind.reed.contrabassoon"  = "Contrabassoon"
-            go x = x
+    show x = fromMaybe "(unknown)" $ fullName x
 instance Enum Instrument where
     toEnum = StdInstrument
     fromEnum (StdInstrument x) = x
@@ -97,10 +90,10 @@ instance Default Instrument where
 
 
 allowedClefs      :: Instrument -> Set Clef
-allowedClefs = error "No allowedClefs"
+allowedClefs = Data.Set.fromList . _allowedClefs . fetchInstrumentDef
 
 standardClef      :: Instrument -> Maybe Clef
-standardClef = error "No standardClef"
+standardClef = listToMaybe . _standardClef . fetchInstrumentDef
 
 data BracketType = Bracket | Brace | SubBracket
 data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
@@ -110,10 +103,10 @@ pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
 
 
 playableRange     :: Instrument -> Ambitus Pitch
-playableRange = error "No playableRange"
+playableRange = fromMaybe (error "Missing comfortableRange for instrument") . _playableRange . fetchInstrumentDef
 
 comfortableRange  :: Instrument -> Ambitus Pitch
-comfortableRange = error "No comfortableRange"
+comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") . _comfortableRange . fetchInstrumentDef
 
 -- playableDynamics :: Instrument -> Pitch -> Dynamics
 -- playableDynamics = error "No playableDynamics"
@@ -121,24 +114,38 @@ comfortableRange = error "No comfortableRange"
 -- instrumentName              :: Instrument -> String
 -- instrumentName = error "No name"
 
-fullName          :: Instrument -> String
-fullName = error "No fullName"
+fullName          :: Instrument -> Maybe String
+fullName = _sibeliusName . fetchInstrumentDef -- for now use _sibeliusName
 
-shortName         :: Instrument -> String
-shortName = error "No shortName"
+shortName         :: Instrument -> Maybe String
+shortName = _shortName . fetchInstrumentDef
 
 -- sounding .-. written, i.e. -P5 for horn
-transposition     :: Instrument -> Interval
-transposition = error "No transposition"
+transposition :: Instrument -> Interval
+transposition = _transposition . fetchInstrumentDef
+  where
 
--- pitch sounding when c is notated (i.e. F for Horn in F)
+-- pitch class sounding when c is notated (i.e. F for Horn in F)
 transpositionString :: Instrument -> String
-transpositionString = error "No transpositionString"
+transpositionString x = pitchToPCString (c .+^ transposition x)
 
 
 
 
+-- TODO move
+pitchToPCString :: Pitch -> String
+pitchToPCString x = show (name x) ++ showA (accidental x)
+  where
+    showA 1    = "#"
+    showA 0    = ""
+    showA (-1) = "b"
 
+
+
+-- internal
+fetchInstrumentDef :: Instrument -> InstrumentDef
+fetchInstrumentDef (StdInstrument x)   = fromMaybe (error "Bad instr") $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+fetchInstrumentDef (OtherInstrument x) = fromMaybe (error "Bad instr") $ Data.getInstrumentDefById x
 
 
 
