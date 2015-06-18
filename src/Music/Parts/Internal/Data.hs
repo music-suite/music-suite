@@ -161,7 +161,7 @@ instance FromField [Int] where
 instance FromField Pitch where
   parseField v = mcatMaybes $ fmap pitchFromSPN $ parseField v
 instance FromField (Maybe (Ambitus Pitch)) where
-  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromSPN) $ fmap (splitBy ',') $ parseField v
+  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromSPN) $ fmap (splitBy '-') $ parseField v
     where
       listToAmbitus [a,b] = Just $ (a,b)^.ambitus
       listToAmbitus _     = Nothing
