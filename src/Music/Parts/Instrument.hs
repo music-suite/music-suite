@@ -114,6 +114,7 @@ comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") .
 -- instrumentName              :: Instrument -> String
 -- instrumentName = error "No name"
 
+-- | Full instrument name.
 fullName          :: Instrument -> Maybe String
 -- for now use _sibeliusName if present
 fullName x = _sibeliusName (fetchInstrumentDef x) `first` _longName (fetchInstrumentDef x)
@@ -122,17 +123,20 @@ fullName x = _sibeliusName (fetchInstrumentDef x) `first` _longName (fetchInstru
     first _ (Just x) = Just x
     first Nothing Nothing = Nothing
 
+-- | Instrument name abbrevation.
 shortName         :: Instrument -> Maybe String
 shortName = _shortName . fetchInstrumentDef
 
 -- sounding .-. written, i.e. -P5 for horn
+-- | Transposition interval.
 transposition :: Instrument -> Interval
 transposition = _transposition . fetchInstrumentDef
   where
 
--- pitch class sounding when c is notated (i.e. F for Horn in F)
+-- | A string representing transposition such as "Bb" or "F".
 transpositionString :: Instrument -> String
 transpositionString x = pitchToPCString (c .+^ transposition x)
+pitch class sounding when c is notated (i.e. F for Horn in F)
 
 
 
