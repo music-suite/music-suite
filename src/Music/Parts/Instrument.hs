@@ -170,9 +170,11 @@ gmInstrName :: Int -> Maybe String
 
 gmClef x = fromMaybe 0 $ fmap (go . _standardClef) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
   where
-    go cs | cs == [trebleClef] = 0
-    go cs | cs == [altoClef]   = 1
-    go cs | cs == [bassClef]   = 2
+    go cs | head cs == trebleClef = 0
+          | head cs == altoClef   = 1
+          | head cs == bassClef   = 2
+          | otherwise = error "gmClef: Unknown clef"
+    
 gmScoreOrder x = fromMaybe 0 $ fmap (_scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
 gmMidiChannel x = fromMaybe 0 $ (=<<) (_defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
 gmInstrName x = (=<<) (_longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
