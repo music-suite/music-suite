@@ -148,7 +148,7 @@ readClef = go where
   go "perc"   = Just percClef
   go _        = Nothing
   
-  percClef = (PercClef, 0, 0) -- TODO move
+  percClef = Clef (PercClef, 0, 0) -- TODO move
 
 {-
 Can't stop these instances from being reexported (https://www.haskell.org/onlinereport/modules.html)
