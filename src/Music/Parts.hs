@@ -211,8 +211,10 @@ instance Enum Part where
 
 -- Semantics: Monoid (Option . First)
 instance Monoid Part where
-  mappend x _ = x
   mempty = def
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x 
 instance Semigroup Part where
   (<>) = mappend
 instance Default Part where
