@@ -10,7 +10,7 @@ module Music.Pitch.Clef
       -- * Clef representation
       ClefSymbol(..),
       ClefOctave,
-      Clef,
+      Clef(..),
       symbolName,
       symbolPitch,
       positionPitch,
@@ -55,8 +55,20 @@ data ClefSymbol = GClef | CClef | FClef | PercClef | NeutralClef
 type ClefOctave = Integer
 type ClefLine   = StaffLines
 
-type Clef = (ClefSymbol, ClefOctave, ClefLine)
+newtype Clef = Clef { getClef :: (ClefSymbol, ClefOctave, ClefLine) }
+  deriving (Eq, Ord, Typeable)
 
+instance Show Clef where
+  show x@(Clef a)
+    | x == trebleClef       = "trebleClef"
+    | x == bassClef         = "bassClef"
+    | x == sopranoClef      = "sopranoClef"
+    | x == mezzoSopranoClef = "mezzoSopranoClef"
+    | x == altoClef         = "altoClef"
+    | x == tenorClef        = "tenorClef"
+    | x == baritoneClef     = "baritoneClef"
+    | otherwise             = show a
+    
 -- | Return the English name of the given clef.
 symbolName :: ClefSymbol -> String
 symbolName GClef = "G clef"
@@ -74,13 +86,13 @@ symbolPitch _     = Nothing
 
 -- TODO consolidate with common
 pitchPosition :: Clef -> Pitch -> Maybe StaffLines
-pitchPosition (s,o,l) x = undefined
+pitchPosition (Clef (s,o,l)) x = undefined
   where
     numbersPerOctave = 7
     referencePitch = symbolPitch s :: Maybe Pitch
 
 positionPitch :: Clef -> StaffLines -> Maybe Pitch
-positionPitch (s,o,l) x = fmap (upDiatonic relativePosition) referencePitch
+positionPitch (Clef (s,o,l)) x = fmap (upDiatonic relativePosition) referencePitch
   where
     numbersPerOctave = 7
     referencePitch = symbolPitch s :: Maybe Pitch
@@ -118,13 +130,13 @@ altoClef :: Clef
 tenorClef :: Clef
 -- | Standard baritone clef.
 baritoneClef :: Clef
-trebleClef        = (GClef, -1 :: ClefOctave, -1 :: ClefLine)
-bassClef          = (FClef, 1  :: ClefOctave, -1 :: ClefLine)
-sopranoClef       = (CClef, 0  :: ClefOctave, -2 :: ClefLine)
-mezzoSopranoClef  = (CClef, 0  :: ClefOctave, -1 :: ClefLine)
-altoClef          = (CClef, 0  :: ClefOctave, 0  :: ClefLine)
-tenorClef         = (CClef, 0  :: ClefOctave, 1  :: ClefLine)
-baritoneClef      = (CClef, 0  :: ClefOctave, 2  :: ClefLine)
+trebleClef        = Clef (GClef, -1 :: ClefOctave, -1 :: ClefLine)
+bassClef          = Clef (FClef, 1  :: ClefOctave, -1 :: ClefLine)
+sopranoClef       = Clef (CClef, 0  :: ClefOctave, -2 :: ClefLine)
+mezzoSopranoClef  = Clef (CClef, 0  :: ClefOctave, -1 :: ClefLine)
+altoClef          = Clef (CClef, 0  :: ClefOctave, 0  :: ClefLine)
+tenorClef         = Clef (CClef, 0  :: ClefOctave, 1  :: ClefLine)
+baritoneClef      = Clef (CClef, 0  :: ClefOctave, 2  :: ClefLine)
 
 -- | Is this a clef used in contemporary notation?
 isModernClef :: Clef -> Bool
