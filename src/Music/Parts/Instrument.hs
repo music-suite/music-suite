@@ -136,7 +136,7 @@ transposition = _transposition . fetchInstrumentDef
 -- | A string representing transposition such as "Bb" or "F".
 transpositionString :: Instrument -> String
 transpositionString x = pitchToPCString (c .+^ transposition x)
-pitch class sounding when c is notated (i.e. F for Horn in F)
+-- pitch class sounding when c is notated (i.e. F for Horn in F)
 
 
 
@@ -168,13 +168,13 @@ gmScoreOrder :: Int -> Double
 gmInstrName :: Int -> Maybe String
 
 
-gmClef x = fromMaybe 0 $ fmap (go . _standardClef) $ Data.getInstrumentDefByGeneralMidiProgram x
+gmClef x = fromMaybe 0 $ fmap (go . _standardClef) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
   where
     go cs | cs == [trebleClef] = 0
     go cs | cs == [altoClef]   = 1
     go cs | cs == [bassClef]   = 2
-gmScoreOrder x = fromMaybe 0 $ fmap (_scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram x
-gmMidiChannel x = fromMaybe 0 $ (=<<) (_defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram x
-gmInstrName x = (=<<) (_longName) $ Data.getInstrumentDefByGeneralMidiProgram x
+gmScoreOrder x = fromMaybe 0 $ fmap (_scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+gmMidiChannel x = fromMaybe 0 $ (=<<) (_defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+gmInstrName x = (=<<) (_longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
   
 
