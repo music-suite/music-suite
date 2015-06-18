@@ -48,9 +48,19 @@ module Music.Time.Transform (
         undelay,
         stretch,
         compress,
+        (|*),
+        (*|),
+        (|/),
 
   ) where
 
 import           Music.Time.Internal.Transform
 import           Music.Time.Types
 
+infixl 7 |*
+infixr 7 *|
+infixr 7 |/
+
+x |* d = stretch d x
+d *| x = stretch d x
+x |/ d = compress d x 
