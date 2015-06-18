@@ -115,7 +115,12 @@ comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") .
 -- instrumentName = error "No name"
 
 fullName          :: Instrument -> Maybe String
-fullName = _sibeliusName . fetchInstrumentDef -- for now use _sibeliusName
+-- for now use _sibeliusName if present
+fullName x = _sibeliusName (fetchInstrumentDef x) `first` _longName (fetchInstrumentDef x)
+  where
+    first (Just x) _ = Just x
+    first _ (Just x) = Just x
+    first Nothing Nothing = Nothing
 
 shortName         :: Instrument -> Maybe String
 shortName = _shortName . fetchInstrumentDef
