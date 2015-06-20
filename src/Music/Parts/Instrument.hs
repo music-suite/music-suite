@@ -69,20 +69,20 @@ All extensions has ".x." as part of their ID!
 data Instrument
     = StdInstrument Int
     | OtherInstrument String
-    deriving (Eq)
 
 instance Show Instrument where
     show x = fromMaybe "(unknown)" $ fullName x
+
+-- TODO remove this instrance
 instance Enum Instrument where
     toEnum = StdInstrument
     fromEnum (StdInstrument x) = x
     fromEnum (OtherInstrument _) = error "Instrument.fromEnum used on unknown instrument"
 
+instance Eq Instrument where
+  x == y = soundId x == soundId y
 instance Ord Instrument where
-    StdInstrument x   `compare` StdInstrument   y = gmScoreOrder x `compare` gmScoreOrder y
-    OtherInstrument x `compare` OtherInstrument y = x `compare` y
-    StdInstrument x   `compare` OtherInstrument y = LT
-    OtherInstrument x `compare` StdInstrument   y = GT
+  compare x y = compare (scoreOrder x) (scoreOrder y)
 
 -- | This instance is quite arbitrary but very handy.
 instance Default Instrument where
@@ -107,8 +107,11 @@ fromMusicXmlSoundId = OtherInstrument
 -- | Convert an instrument to a MusicXML Standard Sound ID.
 -- If the given instrument is not in the MusicXMl standard, return @Nothing@.
 toMusicXmlSoundId :: Instrument -> Maybe String
-toMusicXmlSoundId = Just . _soundId . fetchInstrumentDef
+toMusicXmlSoundId = Just . soundId
 -- TODO filter everything with .x. in them
+
+soundId :: Instrument -> String
+soundId = _soundId . fetchInstrumentDef
 
 -- | Clefs allowed for this instrument.
 allowedClefs      :: Instrument -> Set Clef
@@ -175,6 +178,8 @@ pitchToPCString x = show (name x) ++ showA (accidental x)
     showA (-1) = "b"
 
 
+scoreOrder :: Instrument -> Double
+scoreOrder = _scoreOrder . fetchInstrumentDef
 
 -- internal
 fetchInstrumentDef :: Instrument -> InstrumentDef
@@ -186,6 +191,7 @@ fetchInstrumentDef (OtherInstrument x) = fromMaybe (error "Bad instr") $ Data.ge
 
 
 -- Legacy
+-- TODO remove
 
 gmClef :: Int -> Int
 gmMidiChannel :: Int -> Int
@@ -199,7 +205,7 @@ gmClef x = fromMaybe 0 $ fmap (go . _standardClef) $ Data.getInstrumentDefByGen
           | head cs == altoClef   = 1
           | head cs == bassClef   = 2
           | otherwise = error "gmClef: Unknown clef"
-    
+
 gmScoreOrder x = fromMaybe 0 $ fmap (_scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
 gmMidiChannel x = fromMaybe 0 $ (=<<) (_defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
 gmInstrName x = (=<<) (_longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
