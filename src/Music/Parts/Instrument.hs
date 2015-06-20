@@ -98,7 +98,7 @@ fromMidiProgram = StdInstrument
 -- | Convert an instrument to a MIDI program number.
 -- If the given instrument is not representable as a MIDI program, return @Nothing@.
 toMidiProgram :: Instrument -> Maybe Int
-toMidiProgram = listToMaybe . _generalMidiProgram . fetchInstrumentDef
+toMidiProgram = fmap pred . listToMaybe . _generalMidiProgram . fetchInstrumentDef
 
 -- | Create an instrument from a MusicXML Standard Sound ID.
 fromMusicXmlSoundId :: String -> Instrument
