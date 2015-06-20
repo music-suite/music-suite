@@ -50,8 +50,8 @@ module Music.Time.Voice (
         zipVoiceNoScale3,
         zipVoiceNoScale4,
         zipVoiceScaleWith,
-        zipVoiceScaleWith',
         zipVoiceWithNoScale,
+        zipVoiceWith',
 
         -- * Fusion
         fuse,
@@ -370,19 +370,19 @@ zipVoiceNoScale5 a b c d e = zipVoiceNoScale a (zipVoiceNoScale b (zipVoiceNoSca
 -- Join the given voices by multiplying durations and combining values using the given function.
 --
 zipVoiceScaleWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceScaleWith = zipVoiceScaleWith' (*)
+zipVoiceScaleWith = zipVoiceWith' (*)
 
 -- |
 -- Join the given voices without combining durations.
 --
 zipVoiceWithNoScale :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceWithNoScale = zipVoiceScaleWith' const
+zipVoiceWithNoScale = zipVoiceWith' const
 
 -- |
 -- Join the given voices by combining durations and values using the given function.
 --
-zipVoiceScaleWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
-zipVoiceScaleWith' f g
+zipVoiceWith' :: (Duration -> Duration -> Duration) -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith' f g
   ((unzip.view pairs) -> (ad, as))
   ((unzip.view pairs) -> (bd, bs))
   = let cd = zipWith f ad bd
@@ -455,7 +455,7 @@ durationsV = lens getDurs (flip setDurs)
     getDurs = map fst . view pairs
 
     setDurs :: [Duration] -> Voice a -> Voice a
-    setDurs ds as = zipVoiceScaleWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
+    setDurs ds as = zipVoiceWith' (\a b -> a) (\a b -> b) (mconcat $ map durToVoice ds) as
 
     durToVoice d = stretch d $ pure ()
 
@@ -467,14 +467,14 @@ valuesV = lens getValues (flip setValues)
     getValues = map snd . view pairs
 
     -- setValues :: [a] -> Voice b -> Voice a
-    setValues as bs = zipVoiceScaleWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
+    setValues as bs = zipVoiceWith' (\a b -> b) (\a b -> a) (listToVoice as) bs
 
     listToVoice = mconcat . map pure
 
 -- Lens "filtered" through a voice
 voiceLens :: (s -> a) -> (b -> s -> t) -> Lens (Voice s) (Voice t) (Voice a) (Voice b)
 voiceLens getter setter = lens (fmap getter) (flip $ zipVoiceWithNoScale setter)
--- TODO could also use (zipVoiceScaleWith' max) or (zipVoiceScaleWith' min)
+-- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
 
 -- | Whether two notes have exactly the same duration pattern.
 -- Two empty voices are considered to have the same duration pattern.
@@ -493,7 +493,7 @@ mergeIfSameDurationWith :: (a -> b -> c) -> Voice a -> Voice b -> Maybe (Voice c
 mergeIfSameDurationWith f a b
   | sameDurations a b = Just $ zipVoiceWithNoScale f a b
   | otherwise         = Nothing
--- TODO could also use (zipVoiceScaleWith' max) or (zipVoiceScaleWith' min)
+-- TODO could also use (zipVoiceWith' max) or (zipVoiceWith' min)
 
 -- -- |
 -- -- Split all notes of the latter voice at the onset/offset of the former.
