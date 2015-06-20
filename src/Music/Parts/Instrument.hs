@@ -88,12 +88,14 @@ instance Default Instrument where
 
 
 
-
+-- | Clefs allowed for this instrument.
 allowedClefs      :: Instrument -> Set Clef
 allowedClefs = Data.Set.fromList . _allowedClefs . fetchInstrumentDef
 
+-- | Standard clef used for this instrument.
 standardClef      :: Instrument -> Maybe Clef
 standardClef = listToMaybe . _standardClef . fetchInstrumentDef
+-- TODO what about multi-staves?
 
 data BracketType = Bracket | Brace | SubBracket
 data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
@@ -101,10 +103,11 @@ data StaffLayout = Staff Clef | Staves BracketType [StaffLayout]
 pianoStaff :: StaffLayout
 pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
 
-
+-- | Playable range for this instrument.
 playableRange     :: Instrument -> Ambitus Pitch
 playableRange = fromMaybe (error "Missing comfortableRange for instrument") . _playableRange . fetchInstrumentDef
 
+-- | Comfortable range for this instrument.
 comfortableRange  :: Instrument -> Ambitus Pitch
 comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") . _comfortableRange . fetchInstrumentDef
 
