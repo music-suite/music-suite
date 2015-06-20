@@ -1,13 +1,21 @@
 
--- | Representation of musical instruments.
+{-| Representation of musical instruments.
+
+The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3.0 set,
+with some extensions. See <http://www.musicxml.com/for-developers/standard-sounds>.
+-}
 module Music.Parts.Instrument (
         Instrument(..),
         -- TODO hide impl
         
-        -- * Name etc
+        -- * Name
         -- instrumentName,
         fullName,
         shortName,
+        fromMidiProgram,
+        toMidiProgram,
+        fromMusicXmlSoundId,
+        toMusicXmlSoundId,
 
         -- * Clefs and transposition
         transposition,
@@ -82,11 +90,25 @@ instance Default Instrument where
 
 
 
+-- | Create an instrument from a MIDI program number.
+-- Given number should be in the range 0 - 127.
+fromMidiProgram :: Int -> Instrument
+fromMidiProgram = StdInstrument
 
+-- | Convert an instrument to a MIDI program number.
+-- If the given instrument is not representable as a MIDI program, return @Nothing@.
+toMidiProgram :: Instrument -> Maybe Int
+toMidiProgram = listToMaybe . _generalMidiProgram . fetchInstrumentDef
 
+-- | Create an instrument from a MusicXML Standard Sound ID.
+fromMusicXmlSoundId :: String -> Instrument
+fromMusicXmlSoundId = OtherInstrument
 
-
-
+-- | Convert an instrument to a MusicXML Standard Sound ID.
+-- If the given instrument is not in the MusicXMl standard, return @Nothing@.
+toMusicXmlSoundId :: Instrument -> Maybe String
+toMusicXmlSoundId = Just . _soundId . fetchInstrumentDef
+-- TODO filter everything with .x. in them
 
 -- | Clefs allowed for this instrument.
 allowedClefs      :: Instrument -> Set Clef
