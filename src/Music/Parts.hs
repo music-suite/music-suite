@@ -286,63 +286,62 @@ solo instr      = Part Solo instr def
 tutti instr     = Part Tutti instr def
 
 
-piccoloFlute    = StdInstrument 72
-flute           = StdInstrument 73
-altoFlute       = OtherInstrument "wind.flutes.flute.alto"
-bassFlute       = OtherInstrument "wind.flutes.flute.bass"
+piccoloFlute    = fromMidiProgram 72
+flute           = fromMidiProgram 73
+altoFlute       = fromMusicXmlSoundId "wind.flutes.flute.alto"
+bassFlute       = fromMusicXmlSoundId "wind.flutes.flute.bass"
 
-oboe            = StdInstrument 68
-corAnglais      = StdInstrument 69
-heckelphone     = OtherInstrument "wind.reed.oboes.heckelphone"
+oboe            = fromMidiProgram 68
+corAnglais      = fromMidiProgram 69
+heckelphone     = fromMusicXmlSoundId "wind.reed.oboes.heckelphone"
 
-ebClarinet      = OtherInstrument "wind.reed.clarinet.eflat"
-clarinet        = StdInstrument 71
-aClarinet       = OtherInstrument "wind.reed.clarinet.a"
-bassClarinet    = OtherInstrument "wind.reed.clarinet.bass"
+ebClarinet      = fromMusicXmlSoundId "wind.reed.clarinet.eflat"
+clarinet        = fromMidiProgram 71
+aClarinet       = fromMusicXmlSoundId "wind.reed.clarinet.a"
+bassClarinet    = fromMusicXmlSoundId "wind.reed.clarinet.bass"
 
-sopranoSax      = StdInstrument 64
-altoSax         = StdInstrument 65
-tenorSax        = StdInstrument 66
-baritoneSax     = StdInstrument 67
+sopranoSax      = fromMidiProgram 64
+altoSax         = fromMidiProgram 65
+tenorSax        = fromMidiProgram 66
+baritoneSax     = fromMidiProgram 67
 
-bassoon         = StdInstrument 70
-contraBassoon   = OtherInstrument "wind.reed.contrabassoon"
+bassoon         = fromMidiProgram 70
+contraBassoon   = fromMusicXmlSoundId "wind.reed.contrabassoon"
 
-horn            = StdInstrument 60
-piccoloTrumpet  = OtherInstrument "brass.trumpet.piccolo"
-trumpet         = StdInstrument 56
-bassTrumpet     = OtherInstrument "brass.trumpet.bass"
-altoTrombone    = OtherInstrument "brass.trombone.alto"
+horn            = fromMidiProgram 60
+piccoloTrumpet  = fromMusicXmlSoundId "brass.trumpet.piccolo"
+trumpet         = fromMidiProgram 56
+bassTrumpet     = fromMusicXmlSoundId "brass.trumpet.bass"
+altoTrombone    = fromMusicXmlSoundId "brass.trombone.alto"
 trombone        = tenorTrombone
-tenorTrombone   = StdInstrument 57
-bassTrombone    = OtherInstrument "brass.trombone.bass"
-tuba            = StdInstrument 58
+tenorTrombone   = fromMidiProgram 57
+bassTrombone    = fromMusicXmlSoundId "brass.trombone.bass"
+tuba            = fromMidiProgram 58
 
-timpani         = StdInstrument 47
-piano           = StdInstrument 0
+timpani         = fromMidiProgram 47
+piano           = fromMidiProgram 0
 
-celesta         = StdInstrument 8
-glockenspiel    = StdInstrument 9
-vibraphone      = StdInstrument 11
-marimba         = StdInstrument 12
-xylophone       = StdInstrument 13
-xylorimba       = OtherInstrument "pitched-percussion.xylorimba"
-tubularBells    = StdInstrument 14
-dulcimer        = StdInstrument 15
+celesta         = fromMidiProgram 8
+glockenspiel    = fromMidiProgram 9
+vibraphone      = fromMidiProgram 11
+marimba         = fromMidiProgram 12
+xylophone       = fromMidiProgram 13
+xylorimba       = fromMusicXmlSoundId "pitched-percussion.xylorimba"
+tubularBells    = fromMidiProgram 14
+dulcimer        = fromMidiProgram 15
 
-accordion       = StdInstrument 21
-harmonica       = StdInstrument 22
+accordion       = fromMidiProgram 21
+harmonica       = fromMidiProgram 22
 
-violin          = StdInstrument 40
-viola           = StdInstrument 41
-cello           = StdInstrument 42
-doubleBass      = StdInstrument 43
+violin          = fromMidiProgram 40
+viola           = fromMidiProgram 41
+cello           = fromMidiProgram 42
+doubleBass      = fromMidiProgram 43
 
 
 
 defaultMidiProgram :: Part -> Int
-defaultMidiProgram (Part _ (StdInstrument x) _) = x
-defaultMidiProgram (Part _ (OtherInstrument x) _) = 0
+defaultMidiProgram (Part _ instr _) = fromMaybe 0 $ toMidiProgram instr
 
 defaultMidiNote :: Part -> Int
 defaultMidiNote _ = 0
@@ -484,6 +483,6 @@ violas = tutti viola
 cellos = tutti cello
 doubleBasses = tutti doubleBass
 
-harp' = StdInstrument 46
+harp' = fromMidiProgram 46
 harp = tutti harp'
 
