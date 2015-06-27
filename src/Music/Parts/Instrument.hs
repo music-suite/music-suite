@@ -52,6 +52,8 @@ import           Music.Dynamics                  (Dynamics)
 import           Music.Pitch                     (Ambitus, Clef, trebleClef, bassClef)
 import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
+import qualified Data.Aeson
+import Data.Aeson (ToJSON(..))
 import Music.Pitch
 import Music.Parts.Internal.Data as Data
 {-
@@ -80,6 +82,7 @@ instance Enum Instrument where
 
 instance Eq Instrument where
   x == y = soundId x == soundId y
+
 instance Ord Instrument where
   compare x y = compare (scoreOrder x) (scoreOrder y)
 
@@ -87,6 +90,9 @@ instance Ord Instrument where
 instance Default Instrument where
     def = StdInstrument 0
 
+instance ToJSON Instrument where
+  toJSON (StdInstrument x) = Data.Aeson.object [("midi-instrument", toJSON x)]
+  toJSON (OtherInstrument x) = Data.Aeson.object [("instrument-id", toJSON x)]
 
 
 -- | Create an instrument from a MIDI program number.
