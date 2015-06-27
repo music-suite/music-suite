@@ -5,8 +5,7 @@ The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3
 with some extensions. See <http://www.musicxml.com/for-developers/standard-sounds>.
 -}
 module Music.Parts.Instrument (
-        Instrument(..),
-        -- TODO hide impl
+        Instrument,
         
         -- * Name
         -- instrumentName,
