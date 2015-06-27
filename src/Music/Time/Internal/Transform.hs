@@ -133,6 +133,9 @@ instance Transformable Time where
 instance Transformable Span where
   transform = (<>)
 
+instance Transformable a => Transformable (Maybe a) where
+  transform s = fmap (transform s)
+
 instance Transformable a => Transformable (Option a) where
   transform s = fmap (transform s)
 

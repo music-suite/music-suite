@@ -316,10 +316,8 @@ instance Bounded a => Bounded [a] where
 type instance Dynamic (a,b,c) = (a,b,c)
 type instance SetDynamic g (a,b,c) = g
 
-instance Transformable a => Transformable (Maybe a) where
-  transform s = fmap (transform s)
-instance (Transformable a, Transformable b, Transformable c) => Transformable (a,b,c) where
-  transform s (a,b,c) = (transform s a,transform s b,transform s c)
+-- instance (Transformable a, Transformable b, Transformable c) => Transformable (a,b,c) where
+--   transform s (a,b,c) = (transform s a,transform s b,transform s c)
 
 -- TODO place for this?
 -- For use with single-note scores etc
