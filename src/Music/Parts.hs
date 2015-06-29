@@ -171,12 +171,7 @@ vocal music, but some concetps may be useful in electronic music as well.
 
 -}
 
-
-
-
-
 -- | A part is a subdivided group of instruments of a given type.
---
 data Part = Part Solo Instrument Subpart
     deriving (Eq, Ord)
 
@@ -190,7 +185,7 @@ instance Show Part where
             addS "" = ""
             addS x = " " ++ x
 
--- FIXME bad instance (?)
+-- Bad instance (?)
 instance Enum Part where
     toEnum x = Part Tutti (toEnum x) def
     fromEnum (Part solo instr subp) = fromEnum instr
@@ -201,8 +196,10 @@ instance Monoid Part where
   mappend x y
     | x == mempty = y
     | otherwise   = x 
+
 instance Semigroup Part where
   (<>) = mappend
+
 instance Default Part where
   def = Part def def def
 
@@ -423,39 +420,6 @@ defaultClef = gmClef . defaultMidiProgram
         | Pno
 
 -}
--- TODO move
--- instance Num a => Num (Option a) where
---   (+)       = liftA2 (+)
---   (-)       = liftA2 (-)
---   (*)       = liftA2 (*)
---   abs       = fmap abs
---   signum    = fmap signum
---   fromInteger = pure . fromInteger
--- instance Integral a => Integral (Option a) where
---   quotRem x y = unzipR $ liftA2 quotRem x y
---   toInteger = toInteger . get where get = (head.toListOf traverse)
--- instance Real a => Real (Option a) where
---   toRational = toRational . get where get = (head.toListOf traverse)
--- instance Enum a => Enum (Option a) where
---   fromEnum = fromEnum . get where get = (head.toListOf traverse)
---   toEnum = pure . toEnum
---
--- instance Num a => Num (First a) where
---   (+)       = liftA2 (+)
---   (-)       = liftA2 (-)
---   (*)       = liftA2 (*)
---   abs       = fmap abs
---   signum    = fmap signum
---   fromInteger = pure . fromInteger
--- instance Integral a => Integral (First a) where
---   quotRem x y = unzipR $ liftA2 quotRem x y
---   toInteger = toInteger . get where get = (head.toListOf traverse)
--- instance Real a => Real (First a) where
---   toRational = toRational . get where get = (head.toListOf traverse)
--- -- instance Enum a => Enum (First a) where
---   -- toEnum = toEnum . get where get = (head.toListOf traverse)
---   -- fromEnum = pure . fromEnum
-
 
 piccoloFlutes = tutti piccoloFlute
 flutes = tutti flute
