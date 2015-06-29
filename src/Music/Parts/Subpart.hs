@@ -32,14 +32,21 @@ import Music.Parts.Division
 newtype Subpart = Subpart [Division]
     deriving (Eq, Ord, Default, Semigroup, Monoid)
 
--- TODO hide internals
--- expose _divisions :: Traversal' Subpart Division or similar 
+{-
+TODO hide internals
+
+Expose
+
+_divisions :: Traversal' Subpart Division
+
+or similar 
+-}
 
 instance Show Subpart where
-    show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
-        where
-            mapFR f g []     = []
-            mapFR f g (x:xs) = f x : fmap g xs
+  show (Subpart ps) = Data.List.intercalate "." $ mapFR showDivisionR showDivision $ ps
+    where
+      mapFR f g []     = []
+      mapFR f g (x:xs) = f x : fmap g xs
 
 containsSubpart :: Subpart -> Subpart -> Bool
 containsSubpart = flip isSubpartOf
@@ -50,8 +57,8 @@ properlyContainsSubpart = flip isProperSubpartOf
 isSubpartOf :: Subpart -> Subpart -> Bool
 Subpart x `isSubpartOf` Subpart y = y `Data.List.isPrefixOf` x
 
-x `isProperSubpartOf` y =
-  x `isSubpartOf` y && x /= y
+isProperSubpartOf :: Subpart -> Subpart -> Bool
+x `isProperSubpartOf` y = x `isSubpartOf` y && x /= y
 
 
 
