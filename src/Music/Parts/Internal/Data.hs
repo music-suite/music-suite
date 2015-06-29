@@ -1,7 +1,7 @@
 
-{-# LANGUAGE TypeSynonymInstances #-}  -- because clef
-{-# LANGUAGE FlexibleInstances #-}  -- because clef
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Music.Parts.Internal.Data (
   SoundId,
@@ -12,34 +12,32 @@ module Music.Parts.Internal.Data (
   getInstrumentDefByGeneralMidiPercussionNote,
 ) where
 
-import           Data.Map                        (Map)
-import Control.Monad.Plus
+import           Control.Monad.Plus
+import           Data.Map                   (Map)
+
+import           Control.Applicative
+import           Control.Lens               (toListOf, (^.))
+import           Data.AffineSpace
+import qualified Data.ByteString.Lazy
+import qualified Data.ByteString.Lazy.Char8
+import           Data.Csv                   (FromField (..), FromRecord (..),
+                                             (.!))
+import qualified Data.Csv
+import qualified Data.List
+import           Data.Traversable           (traverse)
+import           Data.VectorSpace
+import qualified System.IO.Unsafe
+
+import           Music.Pitch
+import           Music.Pitch.Ambitus
+import           Music.Pitch.Clef
+
 #ifndef GHCI
 #define GET_DATA_FILE Paths_music_parts.getDataFileName
 import qualified Paths_music_parts
 #else
 #define GET_DATA_FILE (return . ("../music-parts/"++))
 #endif
-
-import Control.Applicative
-import           Control.Lens                    (toListOf, (^.))
-import qualified System.IO.Unsafe
-import qualified Data.ByteString.Lazy
-import qualified Data.ByteString.Lazy.Char8
-import Data.Csv (FromField(..), FromRecord(..), (.!))
-import qualified Data.Csv
-import           Data.Traversable                (traverse)
-import Data.VectorSpace
-import Data.AffineSpace
-import qualified Data.List
-
-import Music.Pitch.Clef
-import Music.Pitch.Ambitus
-import Music.Pitch
-
-
-
-
 
 
 type SoundId = String
@@ -65,17 +63,17 @@ data InstrumentTopCategory
 
 data InstrumentDef = InstrumentDef {
 
-    _soundId                   :: SoundId,     -- ID
-    _generalMidiProgram        :: [Int], -- GM Program
-    _generalMidiPercussionNote :: [Int], -- GM Percussion Note
-    _defaultMidiChannel        :: Maybe Int,   -- Default MIDI Channel
-    _scoreOrder                :: Double, -- Score Order
+    _soundId                   :: SoundId,      -- ID
+    _generalMidiProgram        :: [Int],        -- GM Program
+    _generalMidiPercussionNote :: [Int],        -- GM Percussion Note
+    _defaultMidiChannel        :: Maybe Int,    -- Default MIDI Channel
+    _scoreOrder                :: Double,       -- Score Order
 
 
-    _allowedClefs              :: [Clef], -- Allowed Clefs
-    _standardClef              :: [Clef], -- Standard Clef (1 elem for single staff, more otherwise, never empty)
+    _allowedClefs              :: [Clef],       -- Allowed Clefs
+    _standardClef              :: [Clef],       -- Standard Clef (1 elem for single staff, more otherwise, never empty)
 
-    _transposition             :: Interval, -- Transposition
+    _transposition             :: Interval,     -- Transposition
     _playableRange             :: Maybe (Ambitus Pitch), -- Playable Range
     _comfortableRange          :: Maybe (Ambitus Pitch), -- Comfortable Range
     _longName                  :: Maybe String,
@@ -131,7 +129,7 @@ pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
     pc "Bb" = Just bb
     pc _ = Nothing
     pcS = init x
-    octS = pure $ last x
+    octS = pure $ last x
 
 safeRead x = Just (read x) -- TODO catch exception
 
@@ -147,7 +145,7 @@ readClef = go where
   go "bass"   = Just bassClef
   go "perc"   = Just percClef
   go _        = Nothing
-  
+
   percClef = Clef (PercClef, 0, 0) -- TODO move
 
 {-
@@ -157,18 +155,22 @@ so they are transitively exported by all modules depending on the Suite!
 Drats!
 -}
 instance FromField [Int] where
-  parseField v = fmap (mcatMaybes . map safeRead) $ fmap (splitBy ',') $ parseField v
+  parseField v = fmap (mcatMaybes . map safeRead) $ fmap (splitBy ',') $ parseField v
+
 instance FromField Pitch where
-  parseField v = mcatMaybes $ fmap pitchFromSPN $ parseField v
+  parseField v = mcatMaybes $ fmap pitchFromSPN $ parseField v
+
 instance FromField (Maybe (Ambitus Pitch)) where
-  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromSPN) $ fmap (splitBy '-') $ parseField v
+  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromSPN) $ fmap (splitBy '-') $ parseField v
     where
-      listToAmbitus [a,b] = Just $ (a,b)^.ambitus
+      listToAmbitus [a,b] = Just $ (a,b)^.ambitus
       listToAmbitus _     = Nothing
+
 instance FromField Clef where
   parseField v = mcatMaybes $ fmap readClef $ parseField v
+
 instance FromField [Clef] where
-  parseField v = fmap (mcatMaybes . map readClef) $ fmap (splitBy ',') $ parseField v
+  parseField v = fmap (mcatMaybes . map readClef) $ fmap (splitBy ',') $ parseField v
 
 instance FromRecord InstrumentDef where
   parseRecord v = InstrumentDef
@@ -180,14 +182,13 @@ instance FromRecord InstrumentDef where
 
     <*> v .! 5
     <*> v .! 6
-    
+
     <*> fmap (.-.(c::Pitch)) (v .! 7) -- sounding - written, i.e. -P8 for double bass
     <*> v .! 8
     <*> v .! 9
     <*> v .! 10
     <*> v .! 11
     <*> v .! 12
-
 
 {-
 Don't edit data files!
@@ -209,3 +210,12 @@ getInstrumentData = do
   return $ case Data.Csv.decode Data.Csv.HasHeader d of
     Left e -> error $ "Could not read data/instruments.csv "++show e
     Right (x) -> toListOf traverse x
+
+splitBy :: Eq a => a -> [a] -> [[a]]
+splitBy _ [] = []
+splitBy x xs = splitBy1 x xs
+  where
+    splitBy1 delimiter = foldr f [[]]
+        where f c l@(x:xs) | c == delimiter = []:l
+                           | otherwise = (c:x):xs
+
