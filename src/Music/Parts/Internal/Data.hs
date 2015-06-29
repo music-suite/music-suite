@@ -209,17 +209,3 @@ getInstrumentData = do
   return $ case Data.Csv.decode Data.Csv.HasHeader d of
     Left e -> error $ "Could not read data/instruments.csv "++show e
     Right (x) -> toListOf traverse x
-
-
-
-
-
-
--- TODO move
-splitBy1 :: Eq a => a -> [a] -> [[a]]
-splitBy _ [] = []
-splitBy x xs = splitBy1 x xs
-splitBy1 delimiter = foldr f [[]] 
-            where f c l@(x:xs) | c == delimiter = []:l
-                             | otherwise = (c:x):xs
-                             

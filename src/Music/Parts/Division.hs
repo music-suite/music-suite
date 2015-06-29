@@ -13,8 +13,6 @@ import           Control.Applicative
 import           Control.Lens            (toListOf)
 import           Data.Default
 import           Data.Functor.Adjunction (unzipR)
--- import qualified Data.List
--- import qualified Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
 import           Data.Traversable                (traverse)

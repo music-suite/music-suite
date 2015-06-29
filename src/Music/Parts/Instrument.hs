@@ -51,10 +51,10 @@ import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Text.Numeral.Roman              (toRoman)
 
-import           Music.Pitch
 import           Music.Dynamics                  (Dynamics)
 import           Music.Parts.Internal.Data       (InstrumentDef)
 import qualified Music.Parts.Internal.Data       as Data
+import           Music.Pitch
 
 {-
 Instrument is represented either by instrument ID or (more concisely) as GM program number.
