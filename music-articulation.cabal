@@ -21,8 +21,8 @@ source-repository head
   location:         git://github.com/music-suite/music-articulation.git
 
 library
-    build-depends:      base                    >= 4 && < 5,
-                        average                 >= 0.6 && < 1,
+    build-depends:      base                    >= 4        && < 5,
+                        average                 >= 0.6.1    && < 1,
                         semigroups              >= 0.13.0.1 && < 1
     exposed-modules:    Music.Articulation
     hs-source-dirs:     src
