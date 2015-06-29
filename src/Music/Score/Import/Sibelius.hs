@@ -90,19 +90,47 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Piccolo",_) = piccoloFlutes
             partFromName ("Piccolo Flute",_) = piccoloFlutes
             partFromName ("Flute",_) = flutes
+            partFromName ("Flutes (a)",_) = (!! 0) $ divide 4 $ flutes
+            partFromName ("Flutes (b)",_) = (!! 1) $ divide 4 $ flutes
+            partFromName ("Flutes (c)",_) = (!! 2) $ divide 4 $ flutes
+            partFromName ("Flutes (d)",_) = (!! 3) $ divide 4 $ flutes
             partFromName ("Oboe",_) = oboes
+            partFromName ("Oboes (a)",_) = (!! 0) $ divide 4 $ oboes
+            partFromName ("Oboes (b)",_) = (!! 1) $ divide 4 $ oboes
+            partFromName ("Oboes (c)",_) = (!! 2) $ divide 4 $ oboes
+            partFromName ("Oboes (d)",_) = (!! 3) $ divide 4 $ oboes
             partFromName ("Cor Anglais",_) = tutti corAnglais
             partFromName ("Clarinet",_) = clarinets
             partFromName ("Clarinet in Bb",_) = clarinets
             partFromName ("Clarinet in A",_) = clarinets
+            partFromName ("Clarinets",_) = clarinets
+            partFromName ("Clarinets in Bb",_) = clarinets
+            partFromName ("Clarinets in Bb (a)",_) = (!! 0) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb (b)",_) = (!! 1) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb (c)",_) = (!! 2) $ divide 3 clarinets
+            partFromName ("Clarinets in A",_) = clarinets
             partFromName ("Bassoon",_) = bassoons
-            partFromName ("Bassoon (a)",_) = (!! 0) $ divide 2 cellos
-            partFromName ("Bassoon (b)",_) = (!! 1) $ divide 2 cellos
+            partFromName ("Bassoon (a)",_) = (!! 0) $ divide 4 bassoons
+            partFromName ("Bassoon (b)",_) = (!! 1) $ divide 4 bassoons
+            partFromName ("Bassoon (c)",_) = (!! 2) $ divide 4 bassoons
+            partFromName ("Bassoon (d)",_) = (!! 3) $ divide 4 bassoons
             partFromName ("Horn",_) = horns
             partFromName ("Horn (a)",_) = (!! 0) $ divide 4 $ horns
             partFromName ("Horn (b)",_) = (!! 1) $ divide 4 $ horns
             partFromName ("Horn (c)",_) = (!! 2) $ divide 4 $ horns
             partFromName ("Horn (d)",_) = (!! 3) $ divide 4 $ horns
+
+            partFromName ("Horns",_) = horns
+            partFromName ("Horns (a)",_) = (!! 0) $ divide 4 $ horns
+            partFromName ("Horns (b)",_) = (!! 1) $ divide 4 $ horns
+            partFromName ("Horns (c)",_) = (!! 2) $ divide 4 $ horns
+            partFromName ("Horns (d)",_) = (!! 3) $ divide 4 $ horns
+
+            partFromName ("Horns in F",_) = horns
+            partFromName ("Horns in F (a)",_) = (!! 0) $ divide 4 $ horns
+            partFromName ("Horns in F (b)",_) = (!! 1) $ divide 4 $ horns
+            partFromName ("Horns in F (c)",_) = (!! 2) $ divide 4 $ horns
+            partFromName ("Horns in F (d)",_) = (!! 3) $ divide 4 $ horns
             partFromName ("Horn in F",_) = horns
             partFromName ("Horn in E",_) = horns
             partFromName ("Trumpet (a)",_) = (!! 0) $ divide 4 $ trumpets
@@ -111,7 +139,12 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Trumpet (d)",_) = (!! 3) $ divide 4 $ trumpets
             partFromName ('T':'r':'u':'m':'p':'e':'t':_,_) = trumpets
             partFromName ("Trombone",_) = trombones
+            partFromName ("Trombones",_) = trombones
             partFromName ("Timpani",_) = tutti timpani
+
+            partFromName ("Harp",_)     = harp
+            partFromName ("Harp (a)",_) = (!! 0) $ divide 2 harp
+            partFromName ("Harp (b)",_) = (!! 1) $ divide 2 harp
 
             partFromName ("Strings (a)",_) = (!! 0) $ divide 8 violins
             partFromName ("Strings (b)",_) = (!! 0) $ divide 8 cellos
