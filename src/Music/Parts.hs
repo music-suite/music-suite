@@ -1,5 +1,5 @@
 
--- | Representaitons of musical instruments, parts and playing techniques.
+-- | Representation of musical instruments, parts and playing techniques.
 module Music.Parts (
         -- * Terminology
         -- $terminology
