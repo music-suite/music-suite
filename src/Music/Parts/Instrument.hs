@@ -1,12 +1,12 @@
 
-{-| Representation of musical instruments.
+{-| Representation of musical instruments.
 
 The 'Instrument' type represent any instrument in the MusicXML Standard Sounds 3.0 set,
 with some extensions. See <http://www.musicxml.com/for-developers/standard-sounds>.
 -}
 module Music.Parts.Instrument (
         Instrument,
-        
+
         -- * Name
         -- instrumentName,
         fullName,
@@ -26,7 +26,7 @@ module Music.Parts.Instrument (
         playableRange,
         comfortableRange,
         -- playableDynamics,
-        
+
         -- * Legacy
         gmClef,
         gmMidiChannel,
@@ -35,36 +35,33 @@ module Music.Parts.Instrument (
   ) where
 
 import           Control.Applicative
-import Music.Pitch.Clef
 import           Control.Lens                    (toListOf)
+import           Data.Aeson                      (ToJSON (..))
+import qualified Data.Aeson
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
-import qualified Data.Set
-import           Data.Maybe
+import           Data.Map                        (Map)
+import qualified Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
 import           Data.Set                        (Set)
-import           Data.Map                        (Map)
+import qualified Data.Set
 import           Data.Traversable                (traverse)
 import           Data.Typeable
-import           Music.Dynamics                  (Dynamics)
-import           Music.Pitch                     (Ambitus, Clef, trebleClef, bassClef)
-import           Music.Pitch.Common              (Interval, Pitch)
 import           Text.Numeral.Roman              (toRoman)
-import qualified Data.Aeson
-import Data.Aeson (ToJSON(..))
-import Music.Pitch
-import Music.Parts.Internal.Data as Data
+
+import           Music.Pitch
+import           Music.Dynamics                  (Dynamics)
+import           Music.Parts.Internal.Data       (InstrumentDef)
+import qualified Music.Parts.Internal.Data       as Data
+
 {-
-Semantically, our instrument type is superset of the MusicXML Standard Sounds 3.0
-  See http://www.musicxml.com/for-developers/standard-sounds/
+Instrument is represented either by instrument ID or (more concisely) as GM program number.
+The first GM program match in the data table is used.
 
-All extensions has ".x." as part of their ID!
+Instruments not in the MusicXML 3 standard has has ".x." as part of their ID.
 -}
-
-
-
 
 -- | An 'Instrument' represents the set of all instruments of a given type.
 data Instrument
@@ -72,7 +69,7 @@ data Instrument
     | OtherInstrument String
 
 instance Show Instrument where
-    show x = fromMaybe "(unknown)" $ fullName x
+    show x = Data.Maybe.fromMaybe "(unknown)" $ fullName x
 
 -- TODO remove this instrance
 instance Enum Instrument where
@@ -95,36 +92,36 @@ instance ToJSON Instrument where
   toJSON (OtherInstrument x) = Data.Aeson.object [("instrument-id", toJSON x)]
 
 
--- | Create an instrument from a MIDI program number.
+-- | Create an instrument from a MIDI program number.
 -- Given number should be in the range 0 - 127.
 fromMidiProgram :: Int -> Instrument
 fromMidiProgram = StdInstrument
 
--- | Convert an instrument to a MIDI program number.
+-- | Convert an instrument to a MIDI program number.
 -- If the given instrument is not representable as a MIDI program, return @Nothing@.
 toMidiProgram :: Instrument -> Maybe Int
-toMidiProgram = fmap pred . listToMaybe . _generalMidiProgram . fetchInstrumentDef
+toMidiProgram = fmap pred . Data.Maybe.listToMaybe . Data._generalMidiProgram . fetchInstrumentDef
 
--- | Create an instrument from a MusicXML Standard Sound ID.
+-- | Create an instrument from a MusicXML Standard Sound ID.
 fromMusicXmlSoundId :: String -> Instrument
 fromMusicXmlSoundId = OtherInstrument
 
--- | Convert an instrument to a MusicXML Standard Sound ID.
+-- | Convert an instrument to a MusicXML Standard Sound ID.
 -- If the given instrument is not in the MusicXMl standard, return @Nothing@.
 toMusicXmlSoundId :: Instrument -> Maybe String
 toMusicXmlSoundId = Just . soundId
 -- TODO filter everything with .x. in them
 
 soundId :: Instrument -> String
-soundId = _soundId . fetchInstrumentDef
+soundId = Data._soundId . fetchInstrumentDef
 
 -- | Clefs allowed for this instrument.
 allowedClefs      :: Instrument -> Set Clef
-allowedClefs = Data.Set.fromList . _allowedClefs . fetchInstrumentDef
+allowedClefs = Data.Set.fromList . Data._allowedClefs . fetchInstrumentDef
 
--- | Standard clef used for this instrument.
+-- | Standard clef used for this instrument.
 standardClef      :: Instrument -> Maybe Clef
-standardClef = listToMaybe . _standardClef . fetchInstrumentDef
+standardClef = Data.Maybe.listToMaybe . Data._standardClef . fetchInstrumentDef
 -- TODO what about multi-staves?
 
 data BracketType = Bracket | Brace | SubBracket
@@ -135,11 +132,11 @@ pianoStaff = Staves Brace [Staff trebleClef, Staff bassClef]
 
 -- | Playable range for this instrument.
 playableRange     :: Instrument -> Ambitus Pitch
-playableRange = fromMaybe (error "Missing comfortableRange for instrument") . _playableRange . fetchInstrumentDef
+playableRange = Data.Maybe.fromMaybe (error "Missing comfortableRange for instrument") . Data._playableRange . fetchInstrumentDef
 
 -- | Comfortable range for this instrument.
 comfortableRange  :: Instrument -> Ambitus Pitch
-comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") . _comfortableRange . fetchInstrumentDef
+comfortableRange = Data.Maybe.fromMaybe (error "Missing comfortableRange for instrument") . Data._comfortableRange . fetchInstrumentDef
 
 -- playableDynamics :: Instrument -> Pitch -> Dynamics
 -- playableDynamics = error "No playableDynamics"
@@ -150,7 +147,7 @@ comfortableRange = fromMaybe (error "Missing comfortableRange for instrument") .
 -- | Full instrument name.
 fullName          :: Instrument -> Maybe String
 -- for now use _sibeliusName if present
-fullName x = _sibeliusName (fetchInstrumentDef x) `first` _longName (fetchInstrumentDef x)
+fullName x = Data._sibeliusName (fetchInstrumentDef x) `first` Data._longName (fetchInstrumentDef x)
   where
     first (Just x) _ = Just x
     first _ (Just x) = Just x
@@ -158,12 +155,12 @@ fullName x = _sibeliusName (fetchInstrumentDef x) `first` _longName (fetchInstru
 
 -- | Instrument name abbrevation.
 shortName         :: Instrument -> Maybe String
-shortName = _shortName . fetchInstrumentDef
+shortName = Data._shortName . fetchInstrumentDef
 
 -- sounding .-. written, i.e. -P5 for horn
--- | Transposition interval.
+-- | Transposition interval.
 transposition :: Instrument -> Interval
-transposition = _transposition . fetchInstrumentDef
+transposition = Data._transposition . fetchInstrumentDef
   where
 
 -- | A string representing transposition such as "Bb" or "F".
@@ -184,12 +181,12 @@ pitchToPCString x = show (name x) ++ showA (accidental x)
 
 
 scoreOrder :: Instrument -> Double
-scoreOrder = _scoreOrder . fetchInstrumentDef
+scoreOrder = Data._scoreOrder . fetchInstrumentDef
 
 -- internal
 fetchInstrumentDef :: Instrument -> InstrumentDef
-fetchInstrumentDef (StdInstrument x)   = fromMaybe (error "Bad instr") $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-fetchInstrumentDef (OtherInstrument x) = fromMaybe (error "Bad instr") $ Data.getInstrumentDefById x
+fetchInstrumentDef (StdInstrument x)   = Data.Maybe.fromMaybe (error "Bad instr") $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+fetchInstrumentDef (OtherInstrument x) = Data.Maybe.fromMaybe (error "Bad instr") $ Data.getInstrumentDefById x
 
 
 
@@ -204,15 +201,15 @@ gmScoreOrder :: Int -> Double
 gmInstrName :: Int -> Maybe String
 
 
-gmClef x = fromMaybe 0 $ fmap (go . _standardClef) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+gmClef x = Data.Maybe.fromMaybe 0 $ fmap (go . Data._standardClef) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
   where
     go cs | head cs == trebleClef = 0
           | head cs == altoClef   = 1
           | head cs == bassClef   = 2
           | otherwise = error "gmClef: Unknown clef"
 
-gmScoreOrder x = fromMaybe 0 $ fmap (_scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-gmMidiChannel x = fromMaybe 0 $ (=<<) (_defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-gmInstrName x = (=<<) (_longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-  
+gmScoreOrder x = Data.Maybe.fromMaybe 0 $ fmap (Data._scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+gmMidiChannel x = Data.Maybe.fromMaybe 0 $ (=<<) (Data._defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+gmInstrName x = (=<<) (Data._longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
+
 

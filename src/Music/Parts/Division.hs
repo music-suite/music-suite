@@ -10,11 +10,11 @@ module Music.Parts.Division (
   ) where
 
 import           Control.Applicative
-import           Control.Lens                    (toListOf)
+import           Control.Lens            (toListOf)
 import           Data.Default
-import           Data.Functor.Adjunction         (unzipR)
-import qualified Data.List
-import           Data.Maybe
+import           Data.Functor.Adjunction (unzipR)
+-- import qualified Data.List
+-- import qualified Data.Maybe
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
 import           Data.Traversable                (traverse)
