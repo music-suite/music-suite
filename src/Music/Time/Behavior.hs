@@ -78,7 +78,6 @@ import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
 
-import           Music.Time.Bound
 import           Music.Time.Event
 import           Music.Time.Internal.Transform
 import           Music.Time.Juxtapose
