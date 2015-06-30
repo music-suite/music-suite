@@ -169,17 +169,17 @@ timeSignature c x = timeSignatureDuring (0 <-> x^.offset) c x
 
 -- | Set the time signature of the given part of a score.
 timeSignatureDuring :: HasMeta a => Span -> TimeSignature -> a -> a
-timeSignatureDuring s c = addMetaNote $ view event (s, optionFirst c)
+timeSignatureDuring s c = addMetaNote $ view event (s, optionLast c)
 
 getTimeSignatures :: TimeSignature -> Score a -> Reactive TimeSignature
-getTimeSignatures def = fmap (fromMaybe def . unOptionFirst) . fromMetaReactive . (view meta)
+getTimeSignatures def = fmap (fromMaybe def . unOptionLast) . fromMetaReactive . (view meta)
 
 getTimeSignatureChanges :: TimeSignature -> Score a -> [(Time, TimeSignature)]
 getTimeSignatureChanges def = updates . getTimeSignatures def
 
 -- | Extract the time signature from the given score, using the given default time signature.
 withTimeSignature :: TimeSignature -> (TimeSignature -> Score a -> Score a) -> Score a -> Score a
-withTimeSignature def f = withMeta (f . fromMaybe def . unOptionFirst)
+withTimeSignature def f = withMeta (f . fromMaybe def . unOptionLast)
 
 -- | Given a list of time signatures and the duration between them (TODO use voice), return a list of appropriate
 --   bar durations.
@@ -237,8 +237,8 @@ standardTimeSignature x = case unRatio (toRational x) of
     -- _     -> error "standardTimeSignature: Stange value"
 
 -- TODO consolidate
-optionFirst = Option . Just . First
-unOptionFirst = fmap getFirst . getOption
+optionLast = Option . Just . Last
+unOptionLast = fmap getLast . getOption
 
 
 -- JUNK
