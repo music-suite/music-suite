@@ -322,16 +322,16 @@ newtype Span = Span { getSpan :: (Time, Duration) }
 --
 -- $musicTimeSpanIsos
 --
--- >>> (2 <-> 3)^.range
+-- >>> (2 <-> 3)^.onsetAndOffset
 -- (2,3)
 --
--- >>> (2 <-> 3)^.delta
+-- >>> (2 <-> 3)^.onsetAndDuration
 -- (2,1)
 --
--- >>> (10 >-> 5)^.range
+-- >>> (10 >-> 5)^.onsetAndOffset
 -- (10,15)
 --
--- >>> (10 >-> 5)^.delta
+-- >>> (10 >-> 5)^.onsetAndDuration
 -- (10,5)
 --
 
@@ -433,37 +433,37 @@ codelta = durationAndOffset
 -- Show a span in range notation, i.e. @t1 \<-\> t2@.
 --
 showRange :: Span -> String
-showRange (view range -> (t,u)) = show t ++ " <-> " ++ show u
+showRange (view onsetAndOffset -> (t,u)) = show t ++ " <-> " ++ show u
 
 -- |
 -- Show a span in delta notation, i.e. @t >-> d@.
 --
 showDelta :: Span -> String
-showDelta (view delta -> (t,d)) = show t ++ " >-> " ++ show d
+showDelta (view onsetAndDuration -> (t,d)) = show t ++ " >-> " ++ show d
 
 -- |
 -- Show a span in codelta notation, i.e. @t <-< d@.
 --
 showCodelta :: Span -> String
-showCodelta (view codelta -> (d,u)) = show d ++ " <-< " ++ show u
+showCodelta (view durationAndOffset -> (d,u)) = show d ++ " <-< " ++ show u
 
 -- |
 -- Access the delay component in a span.
 --
 delayComponent :: Span -> Time
-delayComponent x = x ^. delta . _1
+delayComponent x = x ^. onsetAndDuration . _1
 
 -- |
 -- Access the stretch component in a span.
 --
 stretchComponent :: Span -> Duration
-stretchComponent x = x ^. delta . _2
+stretchComponent x = x ^. onsetAndDuration . _2
 
 -- |
 -- A prism to the subset of 'Span' that performs a delay but no stretch.
 --
 fixedDurationSpan :: Prism' Span Time
-fixedDurationSpan = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view delta x of
+fixedDurationSpan = prism' (\t -> view (from onsetAndDuration) (t, 1)) $ \x -> case view onsetAndDuration x of
   (t, 1) -> Just t
   _      -> Nothing
 
@@ -471,7 +471,7 @@ fixedDurationSpan = prism' (\t -> view (from delta) (t, 1)) $ \x -> case view de
 -- A prism to the subset of 'Span' that performs a stretch but no delay.
 --
 fixedOnsetSpan :: Prism' Span Duration
-fixedOnsetSpan = prism' (\d -> view (from delta) (0, d)) $ \x -> case view delta x of
+fixedOnsetSpan = prism' (\d -> view (from onsetAndDuration) (0, d)) $ \x -> case view onsetAndDuration x of
   (0, d) -> Just d
   _      -> Nothing
 

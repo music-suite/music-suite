@@ -65,7 +65,7 @@ import           Music.Time.Voice
 
 -- TODO should this be a Setter or a Lens instead?
 class Alignable a where
-  align :: LocalDuration -> a -> a
+  align :: Alignment -> a -> a
 
 instance Alignable a => Alignable [a] where
   align l = fmap (align l)
@@ -81,17 +81,17 @@ instance Alignable (Aligned a) where
 --
 -- This is analogous to alignment in a graphical program. To align something at onset, midpoint
 -- or offset, use 0, 0.5 or 1 as the local duration value.
-newtype Aligned v = Aligned { getAligned :: ((Time, LocalDuration), v) }
+newtype Aligned v = Aligned { getAligned :: ((Time, Alignment), v) }
   deriving (Functor, Eq, Ord, Foldable, Traversable)
 
 instance Wrapped (Aligned v) where
-  type Unwrapped (Aligned v) = ((Time, LocalDuration), v)
+  type Unwrapped (Aligned v) = ((Time, Alignment), v)
   _Wrapped' = iso getAligned Aligned
 
 instance Rewrapped (Aligned a) (Aligned b)
 
 -- | Align the given value so that its local duration occurs at the given time.
-aligned :: Time -> LocalDuration -> v -> Aligned v
+aligned :: Time -> Alignment -> v -> Aligned v
 aligned t d a = Aligned ((t, d), a)
 
 instance Show a => Show (Aligned a) where
@@ -118,7 +118,7 @@ instance (HasDuration v, Transformable v) => HasPosition (Aligned v) where
 -- @
 -- x^.'era' = ('realign' l x)^.'era'
 -- @
-realign :: (HasDuration a, Transformable a) => LocalDuration -> Aligned a -> Aligned a
+realign :: (HasDuration a, Transformable a) => Alignment -> Aligned a -> Aligned a
 realign l a@(Aligned ((t,_),x)) = Aligned ((a^.position l,l),x)
 
 -- | Render an aligned value. The given span represents the actual span of the aligned value.

@@ -353,7 +353,7 @@ unsafeTriples = iso _getScore _score
 
     _getScore :: {-Transformable a => -}Score a -> [(Time, Duration, a)]
     _getScore =
-      fmap (\(view delta -> (t,d),x) -> (t,d,x)) .
+      fmap (\(view onsetAndDuration -> (t,d),x) -> (t,d,x)) .
       List.sortBy (Ord.comparing fst) .
       Foldable.toList .
       fmap (view $ from event) .
@@ -387,7 +387,7 @@ mapFilterWithSpan f = mcatMaybes . mapWithSpan f
 
 -- | Map over the values in a score.
 mapTriples :: (Time -> Duration -> a -> b) -> Score a -> Score b
-mapTriples f = mapWithSpan (uncurry f . view delta)
+mapTriples f = mapWithSpan (uncurry f . view onsetAndDuration)
 
 -- | Filter the values in a score.
 filterTriples   :: (Time -> Duration -> a -> Bool) -> Score a -> Score a
@@ -440,7 +440,7 @@ simultaneous' sc = (^. from unsafeTriples) vs
     -- vs :: [(Time, Duration, [a])]
     es  = List.nub $ toListOf eras sc
     evs = fmap (`chordEvents` sc) es
-    vs  = zipWith (\(view delta -> (t,d)) a -> (t,d,a)) es evs
+    vs  = zipWith (\(view onsetAndDuration -> (t,d)) a -> (t,d,a)) es evs
 
 -- overSimult :: Transformable a => (Score [a] -> Score [b]) -> Score a -> Score b
 -- overSimult f = mscatter . f . simultaneous'
