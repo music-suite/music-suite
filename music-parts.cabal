@@ -1,6 +1,6 @@
 
 name:                   music-parts
-version:                1.8.1
+version:                1.9.0
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -36,8 +36,8 @@ library
                         vector-space            >= 0.10.2   && < 1,
                         vector-space-points     >= 0.2      && < 1,
 
-                        music-pitch             == 1.8.1,
-                        music-dynamics          == 1.8.1
+                        music-pitch             == 1.9.0,
+                        music-dynamics          == 1.9.0
     exposed-modules:    Data.Semigroup.Option.Instances
                         
                         Music.Parts
