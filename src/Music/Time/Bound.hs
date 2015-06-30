@@ -90,7 +90,7 @@ newtype Bound a = Bound { getBound :: (Span, a) }
 --
 -- This is a Writer-style instance with interval arithmetic style union/empty as the Monoid
 -- A possible problem with this is that there are multiple representations of the empty
--- set (namely [(t, t)^.from range | t <- {Time} ]).
+-- set (namely [(t, t)^.from onsetAndOffset | t <- {Time} ]).
 --
 
 instance Wrapped (Bound a) where
@@ -115,8 +115,8 @@ instance (HasPosition a, HasDuration a, Transformable a) => HasDuration (Bound a
 
 instance (HasPosition a, Transformable a) => HasPosition (Bound a) where
   -- TODO lawless
-  -- _position (Bound (view range -> (t, u), x)) d = truncating t u (_position x d)
-  _position (Bound (view range -> (t, u), x)) = alerp t u
+  -- _position (Bound (view onsetAndOffset -> (t, u), x)) d = truncating t u (_position x d)
+  _position (Bound (view onsetAndOffset -> (t, u), x)) = alerp t u
 
 truncating :: Ord a => a -> a -> a -> a
 truncating t u x = (x `max` t) `min` u
@@ -135,5 +135,5 @@ bounds t u x = Bound (t <-> u, x)
 -- @
 --
 bounding :: Span -> a -> Bound a
-bounding (view range -> (t, u)) = bounds t u
+bounding (view onsetAndOffset -> (t, u)) = bounds t u
 

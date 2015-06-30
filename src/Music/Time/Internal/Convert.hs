@@ -48,7 +48,7 @@ import           Data.VectorSpace
 import           Music.Time
 
 reactiveToVoice' :: Span -> Reactive a -> Voice a
-reactiveToVoice' (view range -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)
+reactiveToVoice' (view onsetAndOffset -> (u,v)) r = (^. voice) $ fmap (^. note) $ durs `zip` (fmap (r `atTime`) times)
     where
         times = 0 : filter (\t -> u < t && t < v) (occs r)
         durs  = toRelativeTimeN' v times
@@ -66,7 +66,7 @@ scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. tri
                g u (t, d, x)
                    | u == t    = (t .+^ d, [(t, d, Just x)])
                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-                   | otherwise = error "scoreToVoice: Strange prevTime"
+                   | otherwise = error "scoreToVoice: StonsetAndOffset prevTime"
 {-# DEPRECATED scoreToVoice "" #-}
 
 {-

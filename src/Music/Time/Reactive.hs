@@ -214,7 +214,7 @@ switchR t (Reactive (tx, bx)) (Reactive (ty, by)) = Reactive $ (,)
     (filter (< t) tx <> [t] <> filter (> t) ty) (switch t bx by)
 
 trimR :: Monoid a => Span -> Reactive a -> Reactive a
-trimR (view range -> (t, u)) x = switchR t mempty (switchR u x mempty)
+trimR (view onsetAndOffset -> (t, u)) x = switchR t mempty (switchR u x mempty)
 
 -- |
 -- Get all intermediate values.

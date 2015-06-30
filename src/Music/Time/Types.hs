@@ -340,7 +340,7 @@ instance Show Span where
   -- Which form should we use?
 
 instance ToJSON Span where
-  toJSON (view range -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
+  toJSON (view onsetAndOffset -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
 
 instance Semigroup Span where
   (<>) = (^+^)
@@ -513,7 +513,7 @@ reverseSpan s = reflectSpan (_midpointS s) s
 -- Reflect a span through an arbitrary point.
 --
 reflectSpan :: Time -> Span -> Span
-reflectSpan p = over (range . both) (reflectThrough p)
+reflectSpan p = over (onsetAndOffset . both) (reflectThrough p)
 
 -- |
 -- Normalize a span, i.e. reverse it if negative, and do nothing otherwise.
@@ -531,7 +531,7 @@ normalizeSpan s = if isForwardSpan s then s else reverseSpan s
 -- Whether this is a proper span, i.e. whether @'_onset' x '<' '_offset' x@.
 --
 isProper :: Span -> Bool
-isProper (view range -> (t, u)) = t < u
+isProper (view onsetAndOffset -> (t, u)) = t < u
 {-# DEPRECATED isProper "Use 'isForwardSpan'" #-}
 
 infixl 5 `inside`
@@ -554,7 +554,7 @@ infixl 5 `overlaps`
 -- True
 --
 inside :: Time -> Span -> Bool
-inside x (view range -> (t, u)) = t <= x && x <= u
+inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 
 -- |
 -- Whether the first given span encloses the second span.
@@ -702,8 +702,8 @@ a `isBefore` b = (_onsetS a `max` _offsetS a) <= (_onsetS b `min` _offsetS b)
 
 -- TODO resolve this so we can use actual onset/offset etc in the above definitions
 -- Same as (onset, offset), defined here for bootstrapping reasons
-_onsetS    (view range -> (t1, t2)) = t1
-_offsetS   (view range -> (t1, t2)) = t2
+_onsetS    (view onsetAndOffset -> (t1, t2)) = t1
+_offsetS   (view onsetAndOffset -> (t1, t2)) = t2
 _midpointS  s = _onsetS s .+^ _durationS s / 2
 _durationS s = _offsetS s .-. _onsetS s
 

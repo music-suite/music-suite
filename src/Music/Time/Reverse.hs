@@ -95,7 +95,7 @@ import           Music.Time.Position
 -- For 'Span'
 --
 -- @
--- 'rev' = 'over' 'range' 'swap'
+-- 'rev' = 'over' 'onsetAndOffset' 'swap'
 -- @
 --
 class Transformable a => Reversible a where

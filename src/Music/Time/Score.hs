@@ -278,7 +278,7 @@ instance Transformable (Score' a) where
 --   rev (Score' xs) = Score' (fmap rev xs)
 
 instance HasPosition (Score' a) where
-  _era x = (f x, g x)^.from range
+  _era x = (f x, g x)^.from onsetAndOffset
     where
       f = safeMinimum . fmap ((^.onset)  . normalizeSpan) . toListOf (_Wrapped . each . era)
       g = safeMaximum . fmap ((^.offset) . normalizeSpan) . toListOf (_Wrapped . each . era)
