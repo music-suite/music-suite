@@ -1,6 +1,6 @@
 
 name:                   music-pitch
-version:                1.8.1
+version:                1.9.0
 cabal-version:          >= 1.10
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
@@ -26,7 +26,7 @@ library
                         containers,
                         lens                    >= 4.11     && < 5,
                         semigroups              >= 0.13.0.1 && < 1,
-                        music-pitch-literal     == 1.8.1,
+                        music-pitch-literal     == 1.9.0,
                         data-interval           >= 1.0.0    && < 2,
                         vector-space            >= 0.10.2   && < 1,
                         vector-space-points     >= 0.2      && < 1,
