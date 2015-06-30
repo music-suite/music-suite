@@ -46,6 +46,7 @@ module Music.Time.Reactive (
         splitReactive,
 
         -- * Sampling
+        Segment,
         continous,
         continousWith,
         sample,
@@ -88,7 +89,6 @@ import           Music.Time.Behavior
 import           Music.Time.Bound
 import           Music.Time.Event
 import           Music.Time.Juxtapose
-import           Music.Time.Segment
 
 -- |
 -- Forms an applicative as per 'Behavior', but only switches at discrete points.
@@ -231,6 +231,8 @@ intermediate (updates -> xs) = fmap (\((t1, x), (t2, _)) -> (t1 <-> t2, x)^.even
 --
 discrete :: Reactive a -> Behavior a
 discrete = continous . fmap pure
+
+type Segment a = Behavior a
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continous :: Reactive (Segment a) -> Behavior a

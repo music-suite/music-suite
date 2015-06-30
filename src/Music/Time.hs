@@ -33,7 +33,6 @@ module Music.Time (
     module Music.Time.Future,
     module Music.Time.Past,
     module Music.Time.Reactive,
-    module Music.Time.Segment,
     module Music.Time.Behavior,
 
     module Data.Functor.Rep.Lens,
@@ -61,7 +60,6 @@ import           Music.Time.Event
 import           Music.Time.Past
 import           Music.Time.Reactive
 import           Music.Time.Score
-import           Music.Time.Segment
 import           Music.Time.Note
 import           Music.Time.Track
 import           Music.Time.Voice

@@ -303,15 +303,6 @@ instance Tiable a => Tiable (PartT n a) where
   isTieEndBeginning (PartT (_,a)) = isTieEndBeginning a
   toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 
-
-type instance Part                 (Segment a) = Segment (Part a)
-type instance SetPart (Segment g) (Segment a) = Segment (SetPart g a)
-
-instance (HasPart a a, HasPart a b) => HasParts (Segment a) (Segment b) where
-  parts = through part part
-instance (HasPart a a, HasPart a b) => HasPart (Segment a) (Segment b) where
-  part = through part part
-
 type instance Part                 (Behavior a) = Behavior (Part a)
 type instance SetPart (Behavior g) (Behavior a) = Behavior (SetPart g a)
 

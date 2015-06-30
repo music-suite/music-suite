@@ -12,8 +12,8 @@ module Music.Time.Past (
         future,
         indexPast,
         firstTrue,
-        pastSeg,
-        futureSeg,
+        -- pastSeg,
+        -- futureSeg,
   ) where
 
 import           Control.Applicative
@@ -29,7 +29,6 @@ import           Data.Semigroup
 
 import           Music.Time.Behavior
 import           Music.Time.Juxtapose
-import           Music.Time.Segment
 
 -- |
 -- 'Past' represents a value occuring /before and at/ some point in time.
@@ -80,14 +79,14 @@ indexPast ps t = firstTrue $ fmap (\p -> past p t) $ sortBy (comparing tv) ps
 firstTrue :: [Maybe a] -> Maybe a
 firstTrue = listToMaybe . join . fmap maybeToList
 -- firstTrue = join . listToMaybe . dropWhile isNothing
-
--- | Project a segment (backwards) up to the given point.
-pastSeg :: Past (Segment a) -> Behavior (Maybe a)
-pastSeg = undefined
-
--- | Project a segment starting from the given point.
-futureSeg :: Future (Segment a) -> Behavior (Maybe a)
-futureSeg = undefined
+-- 
+-- -- | Project a segment (backwards) up to the given point.
+-- pastSeg :: Past (Segment a) -> Behavior (Maybe a)
+-- pastSeg = undefined
+-- 
+-- -- | Project a segment starting from the given point.
+-- futureSeg :: Future (Segment a) -> Behavior (Maybe a)
+-- futureSeg = undefined
 
 
 

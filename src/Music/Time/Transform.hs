@@ -61,6 +61,9 @@ infixl 7 |*
 infixr 7 *|
 infixr 7 |/
 
+-- | Infix version of 'stretch'.
 x |* d = stretch d x
+-- | Infix version of 'stretch'.
 d *| x = stretch d x
+-- | Infix version of 'compress'.
 x |/ d = compress d x 

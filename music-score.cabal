@@ -78,7 +78,6 @@ library
                         Music.Time.Track
                         Music.Time.Voice
                         Music.Time.Score
-                        Music.Time.Segment
                         Music.Time.Behavior
                         Music.Time.Reactive
                         Music.Time.Bound
