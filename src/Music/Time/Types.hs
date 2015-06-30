@@ -57,7 +57,10 @@ module Music.Time.Types (
         delta,
         range,
         codelta,
-
+        onsetAndOffset,
+        onsetAndDuration,
+        durationAndOffset,
+        
         stretchComponent,
         delayComponent,
         fixedDurationSpan,
@@ -388,21 +391,43 @@ a <-< b = (b .-^ a) <-> b
 -- |
 -- View a span as pair of onset and offset.
 --
+onsetAndOffset :: Iso' Span (Time, Time)
+onsetAndOffset = iso (\x -> let (t, d) = getSpan x in (t, t .+^ d)) (uncurry (<->))
+
+-- |
+-- View a span as a pair of onset and duration.
+--
+
+onsetAndDuration :: Iso' Span (Time, Duration)
+onsetAndDuration = iso getSpan Span
+
+-- |
+-- View a span as a pair of duration and offset.
+--
+durationAndOffset :: Iso' Span (Duration, Time)
+durationAndOffset = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
+
+-- |
+-- View a span as pair of onset and offset.
+--
 range :: Iso' Span (Time, Time)
-range = iso (\x -> let (t, d) = getSpan x in (t, t .+^ d)) (uncurry (<->))
+range = onsetAndOffset
+{-# DEPRECATED range "Use onsetAndOffset" #-}
 
 -- |
 -- View a span as a pair of onset and duration.
 --
 
 delta :: Iso' Span (Time, Duration)
-delta = iso getSpan Span
+delta = onsetAndDuration
+{-# DEPRECATED delta "Use onsetAndDuration" #-}
 
 -- |
 -- View a span as a pair of duration and offset.
 --
 codelta :: Iso' Span (Duration, Time)
-codelta = iso (\x -> let (t, d) = getSpan x in (d, t .+^ d)) (uncurry (<-<))
+codelta = durationAndOffset
+{-# DEPRECATED codelta "Use durationAndOffset" #-}
 
 -- |
 -- Show a span in range notation, i.e. @t1 \<-\> t2@.
