@@ -51,8 +51,7 @@ library
                         music-dynamics-literal  == 1.9.0,
                         prettify,
                         parsec                  >= 3.1.9 && < 4
-    exposed-modules:    Data.Clipped
-                        Data.PairMonad
+    exposed-modules:    Data.PairMonad
                         Data.AffineSpace.Point.Offsets
                         Data.Functor.Couple
                         Data.Functor.Context
