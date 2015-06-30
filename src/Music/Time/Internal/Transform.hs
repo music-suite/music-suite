@@ -125,10 +125,10 @@ instance Transformable Double where
   transform _ = id
 
 instance Transformable Duration where
-  (view delta -> (_, d1)) `transform` d2 = d1 * d2
+  (view onsetAndDuration -> (_, d1)) `transform` d2 = d1 * d2
 
 instance Transformable Time where
-  (view delta -> (t1, d1)) `transform` t2 = t1 ^+^ d1 *^ t2
+  (view onsetAndDuration -> (t1, d1)) `transform` t2 = t1 ^+^ d1 *^ t2
 
 instance Transformable Span where
   transform = (<>)
@@ -259,8 +259,8 @@ delayTime = transform . delayingTime
 --
 -- $musicTimeSpanConstruct
 --
--- - To convert a span to a pair, use @s^.'delta'@.
--- - To construct a span from a pair, use @(t, d)^.'from' 'delta'@.
+-- - To convert a span to a pair, use @s^.'onsetAndDuration'@.
+-- - To construct a span from a pair, use @(t, d)^.'from' 'onsetAndDuration'@.
 --
 
 --

@@ -71,7 +71,7 @@ instance HasDuration Duration where
   _duration = id
 
 instance HasDuration Span where
-  _duration = snd . view delta
+  _duration = snd . view onsetAndDuration
 
 --
 -- By convention, we treat pairs and triplets as having the form

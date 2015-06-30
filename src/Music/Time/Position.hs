@@ -105,7 +105,7 @@ class HasDuration a => HasPosition a where
 
   -- | Map a local time in value to global time.
   _position :: a -> Duration -> Time
-  _position x = alerp a b where (a, b) = (_era x)^.range
+  _position x = alerp a b where (a, b) = (_era x)^.onsetAndOffset
 
   -- | Return the conventional bounds of a value (local time 0 and 1).
   _era :: HasPosition a => a -> Span
@@ -121,7 +121,7 @@ instance (HasPosition a, Transformable a) => HasDuration [a] where
   _duration x = _offset x .-. _onset x
 
 instance (HasPosition a, Transformable a) => HasPosition [a] where
-  _era x = (f x, g x)^.from range
+  _era x = (f x, g x)^.from onsetAndOffset
     where
       f  = foldr min 0 . fmap _onset
       g = foldr max 0 . fmap _offset
