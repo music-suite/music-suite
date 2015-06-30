@@ -1,6 +1,6 @@
 
 name:                   music-score
-version:                1.8.1
+version:                1.9.0
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund
 license:                BSD3
@@ -45,10 +45,10 @@ library
                         HCodecs                 >= 0.5 && < 0.6,
                         vector-space            >= 0.10.2 && < 1,
                         vector-space-points     >= 0.2 && < 1,
-                        musicxml2               == 1.8.1,
-                        lilypond                == 1.8.1,
-                        music-pitch-literal     == 1.8.1,
-                        music-dynamics-literal  == 1.8.1,
+                        musicxml2               == 1.9.0,
+                        lilypond                == 1.9.0,
+                        music-pitch-literal     == 1.9.0,
+                        music-dynamics-literal  == 1.9.0,
                         prettify,
                         parsec                  >= 3.1.9 && < 4
     exposed-modules:    Data.Clipped
