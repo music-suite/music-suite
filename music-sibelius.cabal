@@ -1,6 +1,6 @@
 
 name:                   music-sibelius
-version:                1.8.1
+version:                1.9.0
 author:                 Hans Hoglund
 maintainer:             Hans Hoglund <hans@hanshoglund.se>
 license:                BSD3
@@ -28,13 +28,13 @@ library
                         monadplus,
                         unordered-containers,
                         bytestring,
-                        music-score             == 1.8.1,
-                        music-pitch             == 1.8.1,
-                        music-parts             == 1.8.1,
-                        music-dynamics          == 1.8.1,
-                        music-articulation      == 1.8.1,
-                        music-pitch-literal     == 1.8.1,
-                        music-preludes          == 1.8.1,
+                        music-score             == 1.9.0,
+                        music-pitch             == 1.9.0,
+                        music-parts             == 1.9.0,
+                        music-dynamics          == 1.9.0,
+                        music-articulation      == 1.9.0,
+                        music-pitch-literal     == 1.9.0,
+                        music-preludes          == 1.9.0,
                         aeson
     exposed-modules:    Data.Music.Sibelius
                         Music.Score.Import.Sibelius
