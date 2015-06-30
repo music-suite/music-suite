@@ -58,6 +58,15 @@ class HasDuration a where
 
   {-# MINIMAL _duration #-}
 
+instance HasDuration Char where
+  _duration = const 1
+
+instance HasDuration Int where
+  _duration = const 1
+
+instance HasDuration Double where
+  _duration = const 1
+
 instance HasDuration Duration where
   _duration = id
 
