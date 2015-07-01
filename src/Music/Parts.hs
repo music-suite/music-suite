@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 -- | Representation of musical instruments, parts and playing techniques.
 module Music.Parts (
