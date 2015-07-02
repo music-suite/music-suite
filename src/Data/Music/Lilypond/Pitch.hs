@@ -1,5 +1,4 @@
-
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 -------------------------------------------------------------------------------------
 -- |

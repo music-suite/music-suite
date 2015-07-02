@@ -1,5 +1,6 @@
 
 {-# LANGUAGE 
+    FlexibleContexts,
     OverloadedStrings, 
     GeneralizedNewtypeDeriving,
     StandaloneDeriving,
