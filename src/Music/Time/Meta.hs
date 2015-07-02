@@ -252,6 +252,11 @@ instance HasMeta (AddMeta a) where
   -- twain, pair, element
   meta = _Wrapped . _Wrapped . _1
 
+instance Traversable AddMeta where
+  traverse = annotated
+
+-- instance Eq1 AddMeta where
+--   eq1 = (==)
 
 -- instance FunctorWithIndex i AddMeta where
   -- imap f = over annotated $ imap f

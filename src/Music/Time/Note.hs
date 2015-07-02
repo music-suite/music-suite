@@ -35,6 +35,7 @@ module Music.Time.Note (
   ) where
 
 import           Control.Applicative
+import           Control.Comonad
 import           Control.Lens             hiding (Indexable, Level, above,
                                            below, index, inside, parts,
                                            reversed, transform, (<|), (|>))
@@ -64,7 +65,7 @@ import           Music.Time.Juxtapose
 --
 newtype Note a = Note { getNote :: Duration `Couple` a }
   deriving (Eq, Ord, Typeable, Foldable, Traversable,
-            Functor, Applicative, Monad,
+            Functor, Applicative, Monad, Comonad,
             Num, Fractional, Floating, Real, RealFrac)
 
 instance (Show a, Transformable a) => Show (Note a) where

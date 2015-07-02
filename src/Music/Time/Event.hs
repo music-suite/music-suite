@@ -81,52 +81,13 @@ import           Music.Time.Meta
 -- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
 -- @
 --
-
-#ifndef GHCI
--- TODO move
-instance Traversable AddMeta where
-  traverse = annotated
-instance Eq1 AddMeta where
-  eq1 = (==)
-instance Eq a => Eq1 (Couple a) where
-  eq1 = (==)
-instance Ord1 AddMeta where
-  compare1 = compare
-instance Ord a => Ord1 (Couple a) where
-  compare1 = compare
-
-instance Num (f (g a)) => Num (Compose f g a) where
-  Compose a + Compose b = Compose (a + b)
-  Compose a - Compose b = Compose (a - b)
-  Compose a * Compose b = Compose (a * b)
-  signum (Compose a) = Compose (signum a)
-  abs (Compose a) = Compose (abs a)
-  fromInteger = Compose . fromInteger
-instance Fractional (f (g a)) => Fractional (Compose f g a) where
-  Compose a / Compose b = Compose (a / b)
-  fromRational = Compose . fromRational
-instance Floating (f (g a)) => Floating (Compose f g a) where
-
-instance (Real (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => Real (Compose f g a) where
-  -- TODO
-instance (RealFrac (f (g a)), Ord1 f, Ord1 g, Ord a, Functor f) => RealFrac (Compose f g a) where
-  -- TODO
-instance (Functor f, Monad f, Monad g, Traversable g) => Monad (Compose f g) where
-  return = Compose . return . return
-  xs >>= f = Compose $ mbind (getCompose . f) (getCompose xs)
-instance (Comonad f, Comonad g) => Comonad (Compose f g) where
-  extract (Compose f) = (extract . extract) f
-  duplicate = error "No Comonad Compose.duplicate (in Music.Time.Event)"
-  -- TODO duplicate
-#endif
-
-newtype Event a = Event { getEvent :: Compose AddMeta (Couple Span) a }
-  deriving (Eq, Ord, Typeable, Foldable, Applicative, Monad, {- Comonad, -} Traversable,
+newtype Event a = Event { getEvent :: Span `Couple` a }
+  deriving (Eq, Ord, Typeable, Foldable, Applicative, Monad, Comonad, Traversable,
             Functor, Num, Fractional, Floating, Real, RealFrac)
 
 instance Wrapped (Event a) where
-  type Unwrapped (Event a) = AddMeta (Span, a)
-  _Wrapped' = iso (fmap getCouple . getCompose . getEvent) (Event . Compose . fmap Couple)
+  type Unwrapped (Event a) = (Span, a)
+  _Wrapped' = iso (getCouple . getEvent) (Event . Couple)
 
 instance Rewrapped (Event a) (Event b)
 
@@ -138,9 +99,6 @@ instance HasDuration (Event a) where
 
 instance HasPosition (Event a) where
   _era = view eventSpan
-
-instance HasMeta (Event a) where
-  meta = _Wrapped . meta
 
 instance IsString a => IsString (Event a) where
   fromString = pure . fromString
@@ -163,17 +121,10 @@ instance ToJSON a => ToJSON (Event a) where
     where
       (s, x) = a^.from event
 
-instance Comonad Event where
-  extract e   = e^.eventValue
-  duplicate e = set meta (e^.meta) $ (e^.eventSpan,e)^.event
-
-
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)
-event = from (_Wrapped . unsafeAnnotated)
--- TODO not safe anymore...
+event = from _Wrapped
 
--- safeUnevent = _Wrapped . annotated == from event
 eventSpan :: Lens' (Event a) Span
 eventSpan = from event . _1
 
