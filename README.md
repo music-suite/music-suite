@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/music-suite/lilypond.png)](https://travis-ci.org/music-suite/lilypond)
 
 # Lilypond
 
