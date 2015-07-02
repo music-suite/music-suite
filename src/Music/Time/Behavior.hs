@@ -94,8 +94,6 @@ import           Music.Time.Score
 -- |
 -- A 'Behavior' is a value varying over time.
 --
--- Use 'focusing' to view a particular segment.
---
 newtype Behavior a  = Behavior { getBehavior :: Time -> a }
   deriving (Functor, Applicative, Monad, Typeable)
 
