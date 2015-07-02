@@ -31,7 +31,6 @@ module Music.Time.Split (
         Splittable(..),
 
         -- * Miscellaneous
-        -- splitAbs,
         chunks,
 
   ) where
@@ -84,16 +83,16 @@ import           Music.Time.Position
 -- [(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> (1/2),(1/2) <-> 1),(0 <-> 1,1 <-> 1),(0 <-> 1,1 <-> 1)]
 --
 class HasDuration a => Splittable a where
+
   split      :: Duration -> a -> (a, a)
+  split   d x = (beginning d x, ending d x)
+
   beginning  :: Duration -> a -> a
   ending     :: Duration -> a -> a
-  split   d x = (beginning d x, ending d x)
   beginning d = fst . split d
   ending    d = snd . split d
--- TODO rename beginning/ending to fstSplit/sndSplit or similar
 
-instance HasDuration () where
-  _duration () = 1
+  {-# MINIMAL (split) | (beginning, ending) #-}
 
 instance Splittable () where
   split _ x = (x, x)
@@ -104,18 +103,8 @@ instance Splittable Duration where
   split t x = (t' `min` x, x ^-^ (t' `min` x))
     where t' = t `max` 0
 
--- takeMWhile :: (Monoid a, HasDuration a, Splittable a) => Duration -> (a -> Bool) -> a -> a
--- takeMWhile d p xs = if xs^.'duration' <= 0 then mempty else takeMWhile' d p xs
---   where
---     takeMWhile' d p (split d -> (x, xs)) = if p x then x `mappend` takeMWhile d p xs else mempty
-
-chunks :: (Splittable a, HasDuration a, Transformable a) => Duration -> a -> [a]
+chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]
 chunks d xs = if xs^.duration <= 0 then [] else chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
-
-
-splitAbs :: (HasPosition a, Transformable a, Splittable a) => Time -> a -> (a, a)
-splitAbs t x = split (t .-. x^.onset) x
-
 

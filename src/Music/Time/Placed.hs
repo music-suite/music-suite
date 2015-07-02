@@ -56,12 +56,6 @@ import           Music.Time.Juxtapose
 -- |
 -- 'Placed' represents a value with an offset in time.
 --
--- A placed value has a known 'position', but no 'duration'.
---
--- Placing a value inside 'Placed' does not make it invariant under 'stretch', as the
--- offset of a placed value may be stretched with respect to the origin. However, in
--- contrast to a note the /duration/ is not stretched.
---
 newtype Placed a = Placed { getPlaced :: Time `Couple` a }
   deriving (Eq, Ord, Typeable, Foldable, Traversable,
             Functor, Applicative, Monad, Comonad)

@@ -58,14 +58,21 @@ class HasDuration a where
 
   {-# MINIMAL _duration #-}
 
+{-
+"Standard" values has duration 1 and are non-transformable, to allow storage in recursive containers.
+-}
+
+instance HasDuration () where
+  _duration _ = 1
+
 instance HasDuration Char where
-  _duration = const 1
+  _duration _ = 1
 
 instance HasDuration Int where
-  _duration = const 1
+  _duration _ = 1
 
 instance HasDuration Double where
-  _duration = const 1
+  _duration _ = 1
 
 instance HasDuration Duration where
   _duration = id
