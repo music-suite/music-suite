@@ -45,11 +45,9 @@ import           Music.Time.Transform
 -- |
 -- Class of values that have a duration.
 --
--- Should satisfy
+-- For any type that is also 'Transformable', you should ensure that:
 --
--- @
--- (transform s x)^.duration = transform s (x^.duration)
--- @
+-- @('transform' s x)^.'duration' = 'transform' s (x^.'duration')@
 --
 class HasDuration a where
 

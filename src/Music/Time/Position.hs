@@ -90,15 +90,15 @@ import           Music.Time.Internal.Util
 -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
 -- attack point, offset, decay point time etc. Rather than having separate methods for a
 -- discrete set of cases, this class provides an interpolation from a /local/ position to
--- a /global/ position. While the local position goes from 0 to 1, the global position
--- goes from the 'onset' to the 'offset' of the value.
+-- a /global/ position. While the local position goes from zero to one,
+-- the global position goes from the 'onset' to the 'offset' of the value.
 --
--- Should satisfy
+-- Instances should satisfy:
 --
 -- @
--- x^.duration   = x^.era.duration
--- x^.position n = x^.era.position n
--- (transform s x)^.era = transform s (x^.era)
+-- x ^. 'duration'   = x ^. 'era' . 'duration'
+-- x ^. 'position' n = x ^. 'era' . 'position' n
+-- ('transform' s x) ^. 'era' = 'transform' s (x ^. 'era')
 -- @
 --
 class HasDuration a => HasPosition a where
@@ -107,7 +107,7 @@ class HasDuration a => HasPosition a where
   _position :: a -> Duration -> Time
   _position x = alerp a b where (a, b) = (_era x)^.onsetAndOffset
 
-  -- | Return the conventional bounds of a value (local time 0 and 1).
+  -- | Return the conventional bounds of a value (local time zero and one).
   _era :: HasPosition a => a -> Span
   _era x = x `_position` 0 <-> x `_position` 1
 
