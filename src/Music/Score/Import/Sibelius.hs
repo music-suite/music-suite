@@ -247,7 +247,8 @@ fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
         setArt Accent          = accent
         setArt Tenuto          = tenuto
         setArt Staccato        = staccato
-        setArt a               = error $ "fromSibeliusChord: Unsupported articulation" ++ show a        
+        setArt Harmonic        = harmonic 0
+        setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a        
     -- TODO tremolo and appogiatura/acciaccatura support
 
 
@@ -280,6 +281,7 @@ type IsSibelius a = (
     HasDynamic' a,
     S.Dynamic a ~ Dynamics,
     
+    HasHarmonic a,
     HasText a, 
     HasTremolo a,
     Tiable a

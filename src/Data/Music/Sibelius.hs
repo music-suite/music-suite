@@ -145,10 +145,10 @@ data SibeliusText = SibeliusText {
     deriving (Eq, Ord, Show)
 instance FromJSON SibeliusText where
     parseJSON (Object v) = SibeliusText
-        <$> v .: "voice" 
-        <*> v .: "position"
-        <*> v .: "text"
-        <*> v .: "style"
+        <$> v .:  "voice" 
+        <*> v .:  "position"
+        <*> v .:  "text"
+        <*> v .:? "style"
      
 data SibeliusClef = SibeliusClef {
             clefVoice               :: Int,
