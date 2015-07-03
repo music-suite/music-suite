@@ -22,10 +22,6 @@ import Music.Pitch
 import Music.Articulation
 import Music.Dynamics
 import Music.Parts
-#ifdef GHCI
-import qualified System.Process
-import Music.Prelude
-#endif
 
 import qualified Music.Pitch.Literal as Pitch
 import qualified Data.ByteString.Lazy as ByteString
@@ -73,7 +69,7 @@ convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voic
 --
 fromSibelius :: IsSibelius a => SibeliusScore -> Score a
 fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff) =
-    timeSig $ pcat $ fmap (\staff -> set (parts') (partFromSibeliusStaff staff) (fromSibeliusStaff barDur staff)) $ staves
+    timeSig $ pcat $ fmap (\staff -> set parts' (partFromSibeliusStaff staff) (fromSibeliusStaff barDur staff)) $ staves
     -- TODO meta information
         where
             -- FIXME only reads TS in first bar
@@ -83,109 +79,120 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             timeSig = case head (getSibeliusTimeSignatures systemStaff) of
               Nothing -> id
               Just ts -> timeSignature ts
-          
-            partFromSibeliusStaff (SibeliusStaff bars name shortName) = partFromName (name, shortName)
+            
+            partFromSibeliusStaff = either (error . ("Unknown instrument: " ++)) id . partFromSibeliusStaff'
+            
+            partFromSibeliusStaff' :: SibeliusStaff -> Either String Part
+            partFromSibeliusStaff' (SibeliusStaff bars name shortName) = partFromName (name, shortName)
 
             -- TODO something more robust (in part library...)
-            partFromName ("Piccolo",_) = piccoloFlutes
-            partFromName ("Piccolo Flute",_) = piccoloFlutes
-            partFromName ("Flute",_) = flutes
-            partFromName ("Flutes (a)",_) = (!! 0) $ divide 4 $ flutes
-            partFromName ("Flutes (b)",_) = (!! 1) $ divide 4 $ flutes
-            partFromName ("Flutes (c)",_) = (!! 2) $ divide 4 $ flutes
-            partFromName ("Flutes (d)",_) = (!! 3) $ divide 4 $ flutes
-            partFromName ("Oboe",_) = oboes
-            partFromName ("Oboes (a)",_) = (!! 0) $ divide 4 $ oboes
-            partFromName ("Oboes (b)",_) = (!! 1) $ divide 4 $ oboes
-            partFromName ("Oboes (c)",_) = (!! 2) $ divide 4 $ oboes
-            partFromName ("Oboes (d)",_) = (!! 3) $ divide 4 $ oboes
-            partFromName ("Cor Anglais",_) = tutti corAnglais
-            partFromName ("Clarinet",_) = clarinets
-            partFromName ("Clarinet in Bb",_) = clarinets
-            partFromName ("Clarinet in A",_) = clarinets
-            partFromName ("Clarinets",_) = clarinets
-            partFromName ("Clarinets in Bb",_) = clarinets
-            partFromName ("Clarinets in Bb (a)",_) = (!! 0) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb (b)",_) = (!! 1) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb (c)",_) = (!! 2) $ divide 3 clarinets
-            partFromName ("Clarinets in A",_) = clarinets
-            partFromName ("Bassoon",_) = bassoons
-            partFromName ("Bassoon (a)",_) = (!! 0) $ divide 4 bassoons
-            partFromName ("Bassoon (b)",_) = (!! 1) $ divide 4 bassoons
-            partFromName ("Bassoon (c)",_) = (!! 2) $ divide 4 bassoons
-            partFromName ("Bassoon (d)",_) = (!! 3) $ divide 4 bassoons
-            partFromName ("Horn",_) = horns
-            partFromName ("Horn (a)",_) = (!! 0) $ divide 4 $ horns
-            partFromName ("Horn (b)",_) = (!! 1) $ divide 4 $ horns
-            partFromName ("Horn (c)",_) = (!! 2) $ divide 4 $ horns
-            partFromName ("Horn (d)",_) = (!! 3) $ divide 4 $ horns
+            partFromName ("Piccolo",_)        = Right $ piccoloFlutes
+            partFromName ("Piccolo Flute",_)  = Right $ piccoloFlutes
+            partFromName ("Flute",_)          = Right $ flutes
+            partFromName ("Flutes (a)",_)     = Right $ (!! 0) $ divide 4 $ flutes
+            partFromName ("Flutes (b)",_)     = Right $ (!! 1) $ divide 4 $ flutes
+            partFromName ("Flutes (c)",_)     = Right $ (!! 2) $ divide 4 $ flutes
+            partFromName ("Flutes (d)",_)     = Right $ (!! 3) $ divide 4 $ flutes
+            partFromName ("Flute (a)",_)      = Right $ (!! 0) $ divide 4 $ flutes
+            partFromName ("Flute (b)",_)      = Right $ (!! 1) $ divide 4 $ flutes
+            partFromName ("Flute (c)",_)      = Right $ (!! 2) $ divide 4 $ flutes
+            partFromName ("Flute (d)",_)      = Right $ (!! 3) $ divide 4 $ flutes
+            partFromName ("Flute I",_)        = Right $ (!! 0) $ divide 4 $ flutes
+            partFromName ("Flute II",_)       = Right $ (!! 1) $ divide 4 $ flutes
+            partFromName ("Flute III",_)      = Right $ (!! 2) $ divide 4 $ flutes
+            partFromName ("Flute IV",_)       = Right $ (!! 3) $ divide 4 $ flutes
+            partFromName ("Oboe",_)           = Right $ oboes
+            partFromName ("Oboes (a)",_)      = Right $ (!! 0) $ divide 4 $ oboes
+            partFromName ("Oboes (b)",_)      = Right $ (!! 1) $ divide 4 $ oboes
+            partFromName ("Oboes (c)",_)      = Right $ (!! 2) $ divide 4 $ oboes
+            partFromName ("Oboes (d)",_)      = Right $ (!! 3) $ divide 4 $ oboes
+            partFromName ("Cor Anglais",_)    = Right $ tutti corAnglais
+            partFromName ("Clarinet",_) = Right $ clarinets
+            partFromName ("Clarinet in Bb",_) = Right $ clarinets
+            partFromName ("Clarinet in A",_) = Right $ clarinets
+            partFromName ("Clarinets",_) = Right $ clarinets
+            partFromName ("Clarinets in Bb",_) = Right $ clarinets
+            partFromName ("Clarinets in Bb (a)",_) = Right $ (!! 0) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb (b)",_) = Right $ (!! 1) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb (c)",_) = Right $ (!! 2) $ divide 3 clarinets
+            partFromName ("Clarinets in A",_) = Right $ clarinets
+            partFromName ("Bassoon",_) = Right $ bassoons
+            partFromName ("Bassoon (a)",_) = Right $ (!! 0) $ divide 4 bassoons
+            partFromName ("Bassoon (b)",_) = Right $ (!! 1) $ divide 4 bassoons
+            partFromName ("Bassoon (c)",_) = Right $ (!! 2) $ divide 4 bassoons
+            partFromName ("Bassoon (d)",_) = Right $ (!! 3) $ divide 4 bassoons
+            partFromName ("Horn",_) = Right $ horns
+            partFromName ("Horn (a)",_) = Right $ (!! 0) $ divide 4 $ horns
+            partFromName ("Horn (b)",_) = Right $ (!! 1) $ divide 4 $ horns
+            partFromName ("Horn (c)",_) = Right $ (!! 2) $ divide 4 $ horns
+            partFromName ("Horn (d)",_) = Right $ (!! 3) $ divide 4 $ horns
 
-            partFromName ("Horns",_) = horns
-            partFromName ("Horns (a)",_) = (!! 0) $ divide 4 $ horns
-            partFromName ("Horns (b)",_) = (!! 1) $ divide 4 $ horns
-            partFromName ("Horns (c)",_) = (!! 2) $ divide 4 $ horns
-            partFromName ("Horns (d)",_) = (!! 3) $ divide 4 $ horns
+            partFromName ("Horns",_) = Right $ horns
+            partFromName ("Horns (a)",_) = Right $ (!! 0) $ divide 4 $ horns
+            partFromName ("Horns (b)",_) = Right $ (!! 1) $ divide 4 $ horns
+            partFromName ("Horns (c)",_) = Right $ (!! 2) $ divide 4 $ horns
+            partFromName ("Horns (d)",_) = Right $ (!! 3) $ divide 4 $ horns
 
-            partFromName ("Horns in F",_) = horns
-            partFromName ("Horns in F (a)",_) = (!! 0) $ divide 4 $ horns
-            partFromName ("Horns in F (b)",_) = (!! 1) $ divide 4 $ horns
-            partFromName ("Horns in F (c)",_) = (!! 2) $ divide 4 $ horns
-            partFromName ("Horns in F (d)",_) = (!! 3) $ divide 4 $ horns
-            partFromName ("Horn in F",_) = horns
-            partFromName ("Horn in E",_) = horns
-            partFromName ("Trumpet (a)",_) = (!! 0) $ divide 4 $ trumpets
-            partFromName ("Trumpet (b)",_) = (!! 1) $ divide 4 $ trumpets
-            partFromName ("Trumpet (c)",_) = (!! 2) $ divide 4 $ trumpets
-            partFromName ("Trumpet (d)",_) = (!! 3) $ divide 4 $ trumpets
-            partFromName ('T':'r':'u':'m':'p':'e':'t':_,_) = trumpets
-            partFromName ("Trombone",_) = trombones
-            partFromName ("Trombones",_) = trombones
-            partFromName ("Timpani",_) = tutti timpani
+            partFromName ("Horns in F",_) = Right $ horns
+            partFromName ("Horns in F (a)",_) = Right $ (!! 0) $ divide 4 $ horns
+            partFromName ("Horns in F (b)",_) = Right $ (!! 1) $ divide 4 $ horns
+            partFromName ("Horns in F (c)",_) = Right $ (!! 2) $ divide 4 $ horns
+            partFromName ("Horns in F (d)",_) = Right $ (!! 3) $ divide 4 $ horns
+            partFromName ("Horn in F",_) = Right $ horns
+            partFromName ("Horn in E",_) = Right $ horns
+            partFromName ("Trumpet (a)",_) = Right $ (!! 0) $ divide 4 $ trumpets
+            partFromName ("Trumpet (b)",_) = Right $ (!! 1) $ divide 4 $ trumpets
+            partFromName ("Trumpet (c)",_) = Right $ (!! 2) $ divide 4 $ trumpets
+            partFromName ("Trumpet (d)",_) = Right $ (!! 3) $ divide 4 $ trumpets
+            partFromName ('T':'r':'u':'m':'p':'e':'t':_,_) = Right $ trumpets
+            partFromName ("Trombone",_) = Right $ trombones
+            partFromName ("Trombones",_) = Right $ trombones
+            partFromName ("Timpani",_) = Right $ tutti timpani
 
-            partFromName ("Harp",_)     = harp
-            partFromName ("Harp (a)",_) = (!! 0) $ divide 2 harp
-            partFromName ("Harp (b)",_) = (!! 1) $ divide 2 harp
+            partFromName ("Harp",_)     = Right $ harp
+            partFromName ("Harp (a)",_) = Right $ (!! 0) $ divide 2 harp
+            partFromName ("Harp (b)",_) = Right $ (!! 1) $ divide 2 harp
 
-            partFromName ("Strings (a)",_) = (!! 0) $ divide 8 violins
-            partFromName ("Strings (b)",_) = (!! 0) $ divide 8 cellos
-            partFromName ("Strings (c)",_) = (!! 1) $ divide 8 violins
-            partFromName ("Strings (d)",_) = (!! 1) $ divide 8 cellos
-            partFromName ("Strings (e)",_) = (!! 2) $ divide 8 violins
-            partFromName ("Strings (f)",_) = (!! 2) $ divide 8 cellos
-            partFromName ("Strings (g)",_) = (!! 3) $ divide 8 violins
-            partFromName ("Strings (h)",_) = (!! 3) $ divide 8 cellos
-            partFromName ("Strings (i)",_) = (!! 4) $ divide 8 violins
-            partFromName ("Strings (j)",_) = (!! 4) $ divide 8 cellos
-            partFromName ("Strings (k)",_) = (!! 5) $ divide 8 violins
-            partFromName ("Strings (l)",_) = (!! 5) $ divide 8 cellos
-            partFromName ("Strings (m)",_) = (!! 6) $ divide 8 violins
-            partFromName ("Strings (n)",_) = (!! 6) $ divide 8 cellos
-            partFromName ("Strings (o)",_) = (!! 7) $ divide 8 violins
-            partFromName ("Strings (p)",_) = (!! 7) $ divide 8 cellos
-            -- partFromName ("Strings (q)",_) = (!! 0) $ divide 2 violins
+            partFromName ("Strings (a)",_) = Right $ (!! 0) $ divide 8 violins
+            partFromName ("Strings (b)",_) = Right $ (!! 0) $ divide 8 cellos
+            partFromName ("Strings (c)",_) = Right $ (!! 1) $ divide 8 violins
+            partFromName ("Strings (d)",_) = Right $ (!! 1) $ divide 8 cellos
+            partFromName ("Strings (e)",_) = Right $ (!! 2) $ divide 8 violins
+            partFromName ("Strings (f)",_) = Right $ (!! 2) $ divide 8 cellos
+            partFromName ("Strings (g)",_) = Right $ (!! 3) $ divide 8 violins
+            partFromName ("Strings (h)",_) = Right $ (!! 3) $ divide 8 cellos
+            partFromName ("Strings (i)",_) = Right $ (!! 4) $ divide 8 violins
+            partFromName ("Strings (j)",_) = Right $ (!! 4) $ divide 8 cellos
+            partFromName ("Strings (k)",_) = Right $ (!! 5) $ divide 8 violins
+            partFromName ("Strings (l)",_) = Right $ (!! 5) $ divide 8 cellos
+            partFromName ("Strings (m)",_) = Right $ (!! 6) $ divide 8 violins
+            partFromName ("Strings (n)",_) = Right $ (!! 6) $ divide 8 cellos
+            partFromName ("Strings (o)",_) = Right $ (!! 7) $ divide 8 violins
+            partFromName ("Strings (p)",_) = Right $ (!! 7) $ divide 8 cellos
+            -- partFromName ("Strings (q)",_) = Right $ (!! 0) $ divide 2 violins
             
-            partFromName ("Violin I",_) = violins1
-            partFromName ("Violin II",_) = violins2
-            partFromName ("Viola",_) = violas
-            partFromName ("Violin",_) = violins
-            partFromName ("Violoncello",_) = cellos
-            partFromName ("Violoncello (a)",_) = (!! 0) $ divide 2 cellos
-            partFromName ("Violoncello (b)",_) = (!! 1) $ divide 2 cellos
-            partFromName ("Contrabass",_) = doubleBasses
-            partFromName ("Double Bass",_) = doubleBasses
-            partFromName ("Piano",_)       = tutti piano
-            partFromName ("Piano (a)",_)       = tutti piano
-            partFromName ("Piano (b)",_)       = tutti piano
+            partFromName ("Violin",_)          = Right $ violins
+            partFromName ("Violin I",_)        = Right $ violins1
+            partFromName ("Violin II",_)       = Right $ violins2
+            partFromName ("Viola",_)           = Right $ violas
+            partFromName ("Violoncello",_)     = Right $ cellos
+            partFromName ("Violoncello (a)",_) = Right $ (!! 0) $ divide 2 cellos
+            partFromName ("Violoncello (b)",_) = Right $ (!! 1) $ divide 2 cellos
+            partFromName ("Contrabass",_)      = Right $ doubleBasses
+            partFromName ("Double Bass",_)     = Right $ doubleBasses
+            partFromName ("Piano",_)           = Right $ tutti piano
+            partFromName ("Piano (a)",_)       = Right $ tutti piano
+            partFromName ("Piano (b)",_)       = Right $ tutti piano
 
-            partFromName ("Soprano",_) = violins1
-            partFromName ("Mezzo-Soprano",_) = violins2
-            partFromName ("Mezzo-soprano",_) = violins2
-            partFromName ("Alto",_) = violas
-            partFromName ("Tenor",_) = (!! 0) $ divide 2 cellos
-            partFromName ("Baritone",_) = (!! 1) $ divide 2 cellos
-            partFromName ("Bass",_) = doubleBasses
+            partFromName ("Soprano",_) = Right $ violins1
+            partFromName ("Mezzo-Soprano",_) = Right $ violins2
+            partFromName ("Mezzo-soprano",_) = Right $ violins2
+            partFromName ("Alto",_) = Right $ violas
+            partFromName ("Tenor",_) = Right $ (!! 0) $ divide 2 cellos
+            partFromName ("Baritone",_) = Right $ (!! 1) $ divide 2 cellos
+            partFromName ("Bass",_) = Right $ doubleBasses
 
-            partFromName (n,_) = error $ "Unknown instrument: " ++ n
+            partFromName (n,_) = Left n
 -- TODO move to Score.Meta.TimeSignature
 
 barDuration :: TimeSignature -> Duration
@@ -260,7 +267,7 @@ fromSibeliusNote (SibeliusNote pitch diatonicPitch acc tied style) =
     where
       actualPitch = midiOrigin .+^ (d2^*fromIntegral diatonicPitch ^+^ _A1^*fromIntegral pitch)
       midiOrigin = octavesDown 5 Pitch.c -- As middle C is (60 = 5*12)
-      
+
 fromPitch'' :: IsPitch a => Music.Prelude.Pitch -> a
 fromPitch'' x = let i = x .-. c in 
   fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
@@ -298,12 +305,3 @@ every :: (a -> b -> b) -> [a] -> b -> b
 every f = flip (foldr f)
 
 kTicksPerWholeNote = 1024 -- Always in Sibelius
-
--- Debug
-#ifdef GHCI
-openAudacity :: Score StandardNote -> IO ()    
-openAudacity x = do
-    void $ writeMidi "test.mid" $ x
-    void $ System.Process.system "timidity -Ow test.mid"
-    void $ System.Process.system "open -a Audacity test.wav"
-#endif
