@@ -135,6 +135,7 @@ import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
 
+import           Music.Score.Internal.Util     (unRatio)
 import           Music.Time.Internal.Util      (showRatio)
 -- import           Data.Fixed
 
@@ -187,7 +188,8 @@ instance Show Duration where
   show = showRatio . toRational
 
 instance ToJSON Duration where
-  toJSON = JSON.Number . realToFrac
+  -- toJSON = JSON.Number . realToFrac
+  toJSON x = let (a,b) = unRatio (toRational x) in toJSON [a,b]
 
 instance Semigroup Duration where
   (<>) = (*^)
@@ -229,7 +231,7 @@ instance Show Time where
   show = showRatio . toRational
 
 instance ToJSON Time where
-  toJSON = JSON.Number . realToFrac
+  toJSON x = toJSON $ (x.-.0)
 
 instance Semigroup Time where
   (<>)    = (+)
