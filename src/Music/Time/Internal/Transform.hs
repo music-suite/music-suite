@@ -55,8 +55,6 @@ module Music.Time.Internal.Transform (
         undelay,
         stretch,
         compress,
-        delayTime,
-
   ) where
 
 import           Control.Applicative
@@ -185,8 +183,8 @@ transformed s = iso (transform s) (transform $ negateV s)
 -- 4 <-> 6
 --
 whilst :: (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
--- f `whilst` t = transform (negateV t) . f . transform t
 f `whilst` t = over (transformed t) f
+-- f `whilst` t = transform (negateV t) . f . transform t
 
 
 delayed :: (Transformable a, Transformable b) => Time -> Iso a b a b
@@ -200,6 +198,8 @@ stretched = transformed . stretching
 --
 delaying :: Duration -> Span
 delaying x = (0 .+^ x) >-> 1
+
+delayingTime :: Time -> Span
 delayingTime x = x >-> 1
 
 -- |
@@ -243,17 +243,6 @@ stretch = transform . stretching
 --
 compress :: Transformable a => Duration -> a -> a
 compress = transform . compressing
-
-
--- |
--- Delay relative to 'origin'.
---
--- Provided for situations when we really want to use 'startAt', but the
--- type does not have an instance for 'HasPosition' and we can assume that
--- the value is starting at time zero.
---
-delayTime :: Transformable a => Time -> a -> a
-delayTime = transform . delayingTime
 
 
 --
