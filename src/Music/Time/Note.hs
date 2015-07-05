@@ -182,11 +182,11 @@ instance ToJSON a => ToJSON (Note a) where
       (d, x) = a^.from note
 
 instance FromJSON a => FromJSON (Note a) where
-  parseJSON (Data.Aeson.Object x) = liftA2 (\x y -> (x,y)^.note) dur value
+  parseJSON (JSON.Object x) = liftA2 (\x y -> (x,y)^.note) dur value
     where
-      dur   = x Data.Aeson..: "duration"
-      value = x Data.Aeson..: "value"
-  parseJSON _ = mzero
+      dur   = x JSON..: "duration"
+      value = x JSON..: "value"
+  parseJSON _ = empty
 
 -- | View a note value as a pair of the original value and a stretch factor.
 note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)

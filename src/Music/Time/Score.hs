@@ -175,11 +175,11 @@ instance ToJSON a => ToJSON (Score a) where
 
 instance FromJSON a => FromJSON (Score a) where
   -- TODO change to include meta
-  parseJSON (Data.Aeson.Object x) = parseEL =<< (x Data.Aeson..: "events")
+  parseJSON (JSON.Object x) = parseEL =<< (x JSON..: "events")
     where
-      parseEL (Data.Aeson.Array xs) = fmap ((^.score) . toList) $ traverse parseJSON xs
+      parseEL (JSON.Array xs) = fmap ((^.score) . toList) $ traverse parseJSON xs
       toList = toListOf traverse
-  parseJSON _ = mzero
+  parseJSON _ = empty
 
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)

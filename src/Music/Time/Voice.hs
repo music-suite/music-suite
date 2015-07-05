@@ -187,11 +187,11 @@ instance ToJSON a => ToJSON (Voice a) where
 
 instance FromJSON a => FromJSON (Voice a) where
   -- TODO change to include meta
-  parseJSON (Data.Aeson.Object x) = parseNL =<< (x Data.Aeson..: "notes")
+  parseJSON (JSON.Object x) = parseNL =<< (x JSON..: "notes")
     where
-      parseNL (Data.Aeson.Array xs) = fmap ((^.voice) . toList) $ traverse parseJSON xs
+      parseNL (JSON.Array xs) = fmap ((^.voice) . toList) $ traverse parseJSON xs
       toList = toListOf traverse
-  parseJSON _ = mzero
+  parseJSON _ = empty
       
 instance Transformable (Voice a) where
   transform s = over notes (transform s)

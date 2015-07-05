@@ -119,6 +119,7 @@ module Music.Time.Types (
         showCodelta,
   ) where
 
+import           Control.Applicative
 import           Control.Applicative.Backwards
 import           Control.Lens                  hiding (Indexable, Level, above,
                                                 below, index, inside, parts,
@@ -353,10 +354,10 @@ instance ToJSON Span where
   toJSON (view onsetAndOffset -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
 
 instance FromJSON Span where
-  parseJSON (Data.Aeson.Object x) = liftA2 (<->) onset offset
+  parseJSON (JSON.Object x) = liftA2 (<->) onset offset
     where
-      onset  = x Data.Aeson..: "onset"
-      offset = x Data.Aeson..: "offset"
+      onset  = x JSON..: "onset"
+      offset = x JSON..: "offset"
   parseJSON _ = mzero
 
 instance Semigroup Span where
