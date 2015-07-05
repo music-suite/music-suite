@@ -88,9 +88,14 @@ module Music.Parts (
         -- ** Ensembles
         piccoloFlutes,
         flutes,
+        altoFlutes,
         oboes,
+        corAnglaises,
         clarinets,
+        ebClarinets,
+        bassClarinetsm
         bassoons,
+        contraBassoons,
 
         flutes1,
         flutes2,
@@ -429,8 +434,13 @@ clarinets = tutti clarinet
 bassoons = tutti bassoon
 
 [flutes1, flutes2] = divide 2 flutes
+altoFlutes     = tutti altoFlute
 [oboes1, oboes2] = divide 2 oboes
+corAnglaises = tutti corAnglais
 [clarinets1, clarinets2] = divide 2 clarinets
+ebClarinets    = tutti ebClarinet
+bassClarinets  = tutti bassClarinet
+contraBassoons = tutti contraBassoon
 
 
 horns = tutti horn
