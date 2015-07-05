@@ -355,12 +355,15 @@ fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
         -- the duration/playedDuration fields
         setTime = delay (fromIntegral pos / kTicksPerWholeNote)
         setDur  = stretch (fromIntegral dur / kTicksPerWholeNote)
-        setArt Marcato         = marcato
-        setArt Accent          = accent
-        setArt Tenuto          = tenuto
-        setArt Staccato        = staccato
-        setArt Harmonic        = harmonic 0
-        setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a        
+
+        setArt _ = id
+        -- setArt :: SibeliusArticulation -> Score a -> Score a
+        -- setArt Marcato         = marcato
+        -- setArt Accent          = accent
+        -- setArt Tenuto          = tenuto
+        -- setArt Staccato        = staccato
+        -- setArt Harmonic        = harmonic 0
+        -- setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a        
     -- TODO tremolo and appogiatura/acciaccatura support
 
 
