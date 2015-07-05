@@ -93,7 +93,7 @@ module Music.Parts (
         corAnglaises,
         clarinets,
         ebClarinets,
-        bassClarinetsm
+        bassClarinets,
         bassoons,
         contraBassoons,
 
