@@ -105,7 +105,7 @@ import           Data.String
 import           Data.Traversable         (Traversable)
 import           Data.Typeable            (Typeable)
 import           Data.VectorSpace
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
@@ -184,6 +184,14 @@ instance ToJSON a => ToJSON (Voice a) where
   toJSON x = JSON.object [ ("notes", toJSON ns) ]
     where
       ns = x^.notes
+
+instance FromJSON a => FromJSON (Voice a) where
+  -- TODO change to include meta
+  parseJSON (Data.Aeson.Object x) = parseNL =<< (x Data.Aeson..: "notes")
+    where
+      parseNL (Data.Aeson.Array xs) = fmap ((^.voice) . toList) $ traverse parseJSON xs
+      toList = toListOf traverse
+  parseJSON _ = mzero
       
 instance Transformable (Voice a) where
   transform s = over notes (transform s)

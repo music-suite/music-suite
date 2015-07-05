@@ -125,7 +125,7 @@ import           Control.Lens                  hiding (Indexable, Level, above,
                                                 reversed, transform, (<|), (|>))
 import           Control.Monad.State.Lazy
 import           Data.AffineSpace.Point.Offsets
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson                    as JSON
 import           Data.AffineSpace
 import           Data.AffineSpace.Point

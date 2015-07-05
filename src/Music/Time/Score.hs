@@ -92,7 +92,7 @@ import qualified Data.Traversable         as T
 import           Data.Typeable
 import           Data.VectorSpace
 import           Data.VectorSpace         hiding (Sum (..))
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
@@ -172,6 +172,14 @@ instance ToJSON a => ToJSON (Score a) where
   toJSON x = JSON.object [ ("events", toJSON es) ]
     where
       es = x^.events
+
+instance FromJSON a => FromJSON (Score a) where
+  -- TODO change to include meta
+  parseJSON (Data.Aeson.Object x) = parseEL =<< (x Data.Aeson..: "events")
+    where
+      parseEL (Data.Aeson.Array xs) = fmap ((^.score) . toList) $ traverse parseJSON xs
+      toList = toListOf traverse
+  parseJSON _ = mzero
 
 instance Transformable (Score a) where
   transform t (Score (m,x)) = Score (transform t m, transform t x)

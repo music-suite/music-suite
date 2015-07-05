@@ -55,7 +55,7 @@ import           Data.Semigroup
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
@@ -120,6 +120,13 @@ instance ToJSON a => ToJSON (Event a) where
   toJSON a = JSON.object [ ("span", toJSON s), ("value", toJSON x) ]
     where
       (s, x) = a^.from event
+
+instance FromJSON a => FromJSON (Event a) where
+  parseJSON (Data.Aeson.Object x) = liftA2 (\x y -> (x,y)^.event) era value
+    where
+      era   = x Data.Aeson..: "span" -- TODO should change this name
+      value = x Data.Aeson..: "value"
+  parseJSON _ = mzero
 
 -- | View a event as a pair of the original value and the transformation (and vice versa).
 event :: Iso (Span, a) (Span, b) (Event a) (Event b)

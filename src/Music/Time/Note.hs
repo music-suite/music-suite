@@ -46,7 +46,7 @@ import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson                    as JSON
 
 import           Music.Dynamics.Literal
@@ -180,6 +180,13 @@ instance ToJSON a => ToJSON (Note a) where
   toJSON a = JSON.object [ ("duration", toJSON d), ("value", toJSON x) ]
     where
       (d, x) = a^.from note
+
+instance FromJSON a => FromJSON (Note a) where
+  parseJSON (Data.Aeson.Object x) = liftA2 (\x y -> (x,y)^.note) dur value
+    where
+      dur   = x Data.Aeson..: "duration"
+      value = x Data.Aeson..: "value"
+  parseJSON _ = mzero
 
 -- | View a note value as a pair of the original value and a stretch factor.
 note :: Iso (Duration, a) (Duration, b) (Note a) (Note b)
