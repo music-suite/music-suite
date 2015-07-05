@@ -131,8 +131,14 @@ instance Reversible Double where
 instance Reversible Integer where
   rev = id
 
+instance Reversible Char where
+  rev = id
+
+instance Reversible a => Reversible (Maybe a) where
+  rev = fmap rev
+
 instance Reversible a => Reversible [a] where
-  rev = reverse . map rev
+  rev = reverse . fmap rev
 
 instance Reversible a => Reversible (Seq a) where
   rev = Seq.reverse . fmap rev
