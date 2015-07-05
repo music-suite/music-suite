@@ -46,7 +46,7 @@ import           Data.Maybe
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.VectorSpace
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 
 import           Music.Pitch.Absolute
@@ -136,6 +136,9 @@ instance AffineSpace Pitch where
 
 instance ToJSON Pitch where
   toJSON = toJSON . (.-. c)
+
+instance FromJSON Pitch where
+  parseJSON = fmap (c .+^) . parseJSON
 
 -- |
 -- Creates a pitch from name accidental.

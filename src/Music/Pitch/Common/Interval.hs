@@ -61,7 +61,7 @@ import           Data.Basis
 import qualified Data.List                    as List
 import           Data.Typeable
 import           Numeric.Positive
-import           Data.Aeson                    (ToJSON (..))
+import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 
 import           Music.Pitch.Absolute
@@ -140,11 +140,24 @@ instance IsInterval Interval where
 instance ToJSON DiatonicSteps where
   toJSON = toJSON . toInteger
 
+instance FromJSON DiatonicSteps where
+  parseJSON = fmap fromInteger . parseJSON
+
 instance ToJSON ChromaticSteps where
   toJSON = toJSON . toInteger
 
+instance FromJSON ChromaticSteps where
+  parseJSON = fmap fromInteger . parseJSON
+
 instance ToJSON Interval where
   toJSON i = Data.Aeson.object [("steps", toJSON $ i^._steps), ("alteration", toJSON $ i^._alteration)]
+
+instance FromJSON Interval where
+  parseJSON (Data.Aeson.Object x) = liftA2 (curry (^.interval')) alteration steps
+    where
+      steps      = x Data.Aeson..: "steps"
+      alteration = x Data.Aeson..: "alteration"
+  parseJSON _ = empty
 
 intervalDiff :: Interval -> Int
 intervalDiff (Interval (c, d)) = fromIntegral $ c - fromIntegral (diatonicToChromatic d)
