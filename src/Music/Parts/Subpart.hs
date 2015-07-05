@@ -9,7 +9,7 @@ module Music.Parts.Subpart (
   ) where
 
 import           Control.Applicative
-import           Control.Lens                    (toListOf)
+import           Control.Lens                    (toListOf, Wrapped(..), Rewrapped(..))
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
@@ -31,6 +31,14 @@ import Music.Parts.Division
 --
 newtype Subpart = Subpart [Division]
     deriving (Eq, Ord, Default, Semigroup, Monoid)
+
+instance Wrapped Subpart where
+  type Unwrapped Subpart = [Division]
+  _Wrapped' = iso getSubpart Subpart
+    where
+      getSubpart (Subpart x) = x
+
+instance Rewrapped Subpart Subpart   
 
 {-
 TODO hide internals
