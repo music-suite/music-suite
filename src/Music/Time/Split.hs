@@ -96,6 +96,12 @@ class HasDuration a => Splittable a where
 
 instance Splittable () where
   split _ x = (x, x)
+instance Splittable Char where
+  split _ x = (x,x)
+instance Splittable Int where
+  split _ x = (x,x)
+instance Splittable Double where
+  split _ x = (x,x)
 
 instance Splittable Duration where
   -- Directly from the laws
