@@ -9,7 +9,7 @@ module Music.Parts.Subpart (
   ) where
 
 import           Control.Applicative
-import           Control.Lens                    (toListOf, Wrapped(..), Rewrapped(..))
+import           Control.Lens                    (toListOf, Wrapped(..), Rewrapped(..), iso)
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
