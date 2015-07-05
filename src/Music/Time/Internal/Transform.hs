@@ -313,23 +313,14 @@ whilstL id
 
 -}
 
--- dofoo
-  -- :: Functor f => (t -> t2) -> (a1 -> a) -> (t2 -> f a1) -> (t1, t) -> f (t1, a)
+-- type LensLike (f :: * -> *) s t a b = (a -> f b) -> s -> f t
+
+dofoo :: Functor f => (x -> s -> a) -> (x -> b -> t) -> LensLike f (x,s) (x,t) a b
 dofoo v w = \f (s,a) -> (s,) <$> w s <$> f ((v s) a)
 
-
-
-dobar :: (Functor f)
-
-  =>
-  (sp -> (s -> f t) -> (s -> f t))
-  -> ((s -> f t) -> a -> f b)
-  -> (s -> f t)  -> ((sp, a) -> f (sp, b))
-
+-- :: Functor f => (x -> afb -> afb') -> (afb' -> s -> f t) -> afb -> (x, s) -> f (x, t)
+dobar :: Functor f => (x -> LensLike f a' b' a b) -> LensLike f s t a' b' -> LensLike f (x,s) (x,t) a b
 dobar q l = \f (s,a) -> (s,) <$> (l (q s f)) a
-
--- whilstL2 :: (Transformable a, Transformable b) => Lens (Span, a) (Span, b) a b
-whilstL2 = dofoo (transform) (transform . negateV)
 
 whilstL :: (Functor f, Transformable a, Transformable b)
   => LensLike f s t a b
