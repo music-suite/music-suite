@@ -191,6 +191,11 @@ instance ToJSON Duration where
   -- toJSON = JSON.Number . realToFrac
   toJSON x = let (a,b) = unRatio (toRational x) in toJSON [a,b]
 
+instance FromJSON Duration where
+  parseJSON x = do
+    [a,b] <- parseJSON x
+    return $ realToFrac $ (a::Integer) Data.Ratio.% b
+
 instance Semigroup Duration where
   (<>) = (*^)
 
@@ -232,6 +237,9 @@ instance Show Time where
 
 instance ToJSON Time where
   toJSON x = toJSON $ (x.-.0)
+
+instance FromJSON Time where
+  parseJSON = fmap (0.+^) . parseJSON
 
 instance Semigroup Time where
   (<>)    = (+)
@@ -343,6 +351,13 @@ instance Show Span where
 
 instance ToJSON Span where
   toJSON (view onsetAndOffset -> (a,b)) = JSON.object [ ("onset", toJSON a), ("offset", toJSON b) ]
+
+instance FromJSON Span where
+  parseJSON (Data.Aeson.Object x) = liftA2 (<->) onset offset
+    where
+      onset  = x Data.Aeson..: "onset"
+      offset = x Data.Aeson..: "offset"
+  parseJSON _ = mzero
 
 instance Semigroup Span where
   (<>) = (^+^)
