@@ -10,6 +10,8 @@ module Music.Parts.Subpart (
 
 import           Control.Applicative
 import           Control.Lens                    (toListOf, Wrapped(..), Rewrapped(..), iso)
+import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import qualified Data.Aeson
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
@@ -39,6 +41,12 @@ instance Wrapped Subpart where
       getSubpart (Subpart x) = x
 
 instance Rewrapped Subpart Subpart   
+
+instance ToJSON Subpart where
+  toJSON (Subpart xs) = toJSON xs
+
+instance FromJSON Subpart where
+  parseJSON = (fmap . fmap) Subpart $ parseJSON
 
 {-
 TODO hide internals

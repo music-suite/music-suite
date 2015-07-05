@@ -5,6 +5,8 @@ module Music.Parts.Solo (
   ) where
 
 import           Control.Applicative
+import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import qualified Data.Aeson
 import           Control.Lens                    (toListOf)
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
@@ -23,4 +25,13 @@ data Solo
 
 instance Default Solo where
     def = Tutti
+
+instance ToJSON Solo where
+  toJSON Solo  = toJSON ("solo"::String)
+  toJSON Tutti = toJSON ("tutti"::String)
+instance FromJSON Solo where
+  parseJSON (Data.Aeson.String "solo") = return Solo
+  parseJSON (Data.Aeson.String "tutti") = return Tutti
+  parseJSON _ = empty
+
 

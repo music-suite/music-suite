@@ -140,7 +140,9 @@ module Music.Parts (
   ) where
 
 import           Control.Applicative
-import           Control.Lens                    (toListOf, Lens, Lens')
+import           Control.Lens                    (toListOf, Lens, Lens', (^.))
+import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import qualified Data.Aeson
 import           Data.Default
 -- import           Data.Monoid
 -- import           Control.Lens (set)
@@ -208,6 +210,21 @@ instance Semigroup Part where
 
 instance Default Part where
   def = Part def def def
+
+instance ToJSON Part where
+  toJSON p = Data.Aeson.object [
+    ("instrument", toJSON $ p^._instrument),
+    ("subpart",    toJSON $ p^._subpart),
+    ("solo",       toJSON $ p^._solo)
+    ]
+
+instance FromJSON Part where
+  parseJSON (Data.Aeson.Object v) = do
+    s <- v Data.Aeson..: "solo"
+    i <- v Data.Aeson..: "instrument"
+    u <- v Data.Aeson..: "subpart"
+    return $ Part s i u
+  parseJSON _ = empty
 
 -- |
 -- @a \`containsPart\` b@ holds if the set of players represented by a is an improper subset of the

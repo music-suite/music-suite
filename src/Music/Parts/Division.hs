@@ -11,6 +11,8 @@ module Music.Parts.Division (
 
 import           Control.Applicative
 import           Control.Lens            (toListOf)
+import           Data.Aeson                      (ToJSON (..), FromJSON(..))
+import qualified Data.Aeson
 import           Data.Default
 import           Data.Functor.Adjunction (unzipR)
 import           Data.Semigroup
@@ -47,6 +49,15 @@ instance Show Division where
 
 instance Default Division where
     def = Division (0,1)
+
+instance ToJSON Division where
+  toJSON (getDivision -> (x,y)) = Data.Aeson.object [("num-parts",toJSON y),("part-div",toJSON (x + 1))]
+instance FromJSON Division where
+  parseJSON (Data.Aeson.Object v) = do
+    x <- v Data.Aeson..: "part-div"
+    y <- v Data.Aeson..: "num-parts"
+    return $ division (x - 1) y
+  parseJSON _ = empty
 
 -- | Show division in roman numerals.
 showDivisionR :: Division -> String

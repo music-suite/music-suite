@@ -36,7 +36,7 @@ module Music.Parts.Instrument (
 
 import           Control.Applicative
 import           Control.Lens                    (toListOf)
-import           Data.Aeson                      (ToJSON (..))
+import           Data.Aeson                      (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 import           Data.Default
 import           Data.Functor.Adjunction         (unzipR)
@@ -90,6 +90,16 @@ instance Default Instrument where
 instance ToJSON Instrument where
   toJSON (StdInstrument x) = Data.Aeson.object [("midi-instrument", toJSON x)]
   toJSON (OtherInstrument x) = Data.Aeson.object [("instrument-id", toJSON x)]
+
+instance FromJSON Instrument where
+  parseJSON (Data.Aeson.Object v) = do
+    mi <- v Data.Aeson..:? "midi-instrument"
+    ii <- v Data.Aeson..:? "instrument-id"
+    case (mi,ii) of
+      (Just mi,_)       -> return $ fromMidiProgram mi
+      (Nothing,Just ii) -> return $ fromMusicXmlSoundId ii
+      _ -> empty
+  parseJSON _ = empty
 
 
 -- | Create an instrument from a MIDI program number.
