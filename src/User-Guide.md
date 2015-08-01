@@ -120,19 +120,19 @@ TODO delay
 Offset and duration is not limited to simple numbers. Here are some more complex examples:
 
 ```music+haskell
-c^*(9/8) |> d^*(7/8)
+c|*(9/8) |> d|*(7/8)
 ```
 
 ```music+haskell
-stretch (2/3) (scat [c,d,e]) |> f^*2
+stretch (2/3) (scat [c,d,e]) |> f|*2
 ```
 
 As you can see, note values, tuplets and ties are added automatically
 
-The `^*` and `^/` operators can be used as shorthands for `delay` and `compress`.
+The `|*` and `|/` operators can be used as shorthands for `delay` and `compress`.
 
 ```music+haskell
-(c |> d |> e |> c |> d^*2 |> d^*2)^/16
+(c |> d |> e |> c |> d|*2 |> d|*2)|/16
 ```
 
 
@@ -170,21 +170,21 @@ Here is a more complex example:
 
 ```music+haskell
 let            
-    scale = scat [c,d,e,f,g,a,g,f]^/8
+    scale = scat [c,d,e,f,g,a,g,f]|/8
     triad a = a <> up _M3 a <> up _P5 a
-in up _P8 scale </> (triad c)^/2 |> (triad g_)^/2
+in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2
 ```
 
 As a shorthand for `x |> y |> z ..`, we can write @[scat] `[x, y, z]` (short for *sequential concatenation*).
 
 ```music+haskell
-scat [c,e..g]^/4
+scat [c,e..g]|/4
 ```
 
 For `x <> y <> z ..`, we can write @[pcat] `[x, y, z]` (short for *parallel concatenation*).
 
 ```music+haskell
-pcat [c,e..g]^/2
+pcat [c,e..g]|/2
 ```
 
 Actually, @[scat] and @[pcat] used to be called `melody` and `chord` back in the days, but
@@ -333,44 +333,44 @@ TODO other ways of applying level
 Some basic articulation functions are @[legato], @[staccato], @[portato], @[tenuto], @[separated], @[staccatissimo]:
 
 ```music+haskell
-legato (scat [c..g]^/8)
+legato (scat [c..g]|/8)
     </>
-staccato (scat [c..g]^/8)
+staccato (scat [c..g]|/8)
     </>
-portato (scat [c..g]^/8)
+portato (scat [c..g]|/8)
     </>
-tenuto (scat [c..g]^/8)
+tenuto (scat [c..g]|/8)
     </>
-separated (scat [c..g]^/8)
+separated (scat [c..g]|/8)
     </>
-staccatissimo (scat [c..g]^/8)
+staccatissimo (scat [c..g]|/8)
 ```
 
 @[accent]
 @[marcato]
 
 ```music+haskell
-accent (scat [c..g]^/8)
+accent (scat [c..g]|/8)
     </>
-marcato (scat [c..g]^/8)
+marcato (scat [c..g]|/8)
 ```
 
 @[accentLast]
 @[accentAll]
 
 ```music+haskell
-accentLast (scat [c..g]^/8)
+accentLast (scat [c..g]|/8)
     </>
-accentAll (scat [c..g]^/8)
+accentAll (scat [c..g]|/8)
 ```
 
 Applying articulations over multiple parts:
 
 ```music+haskell     
 let
-    p1 = scat [c..c']^/4
-    p2 = delay (1/4) $ scat [c..c']^/4
-    p3 = delay (3/4) $ scat [c..c']^/4
+    p1 = scat [c..c']|/4
+    p2 = delay (1/4) $ scat [c..c']|/4
+    p3 = delay (3/4) $ scat [c..c']|/4
 in (accent . legato) (p1 </> p2 </> p3)
 ```
 
@@ -396,7 +396,7 @@ TODO
 @[tremolo]
 
 ```music+haskell
-tremolo 2 $ times 2 $ (c |> d)^/2
+tremolo 2 $ times 2 $ (c |> d)|/2
 ```
 
 TODO chord tremolo
@@ -407,7 +407,7 @@ TODO chord tremolo
 @[glissando]
 
 ```music+haskell
-glissando $ scat [c,d]^/2
+glissando $ scat [c,d]|/2
 ```
 
 ## Harmonics
@@ -415,11 +415,11 @@ glissando $ scat [c,d]^/2
 Use the @[harmonic] function:
 
 ```music+haskell
-(harmonic 1 $ c^/2)
+(harmonic 1 $ c|/2)
     </>
-(harmonic 2 $ c^/2)
+(harmonic 2 $ c|/2)
     </>
-(harmonic 3 $ c^/2)
+(harmonic 3 $ c|/2)
 ```
 
 TODO artificial harmonics
@@ -434,7 +434,7 @@ TODO
 @[text]
 
 ```music+haskell
-text "pizz." $ c^/2
+text "pizz." $ c|/2
 ```
 
 ## Chords
@@ -455,7 +455,6 @@ TODO how part separation works w.r.t. division etc
 
 @[simultaneous]
 
-@[simult]
 
 ## Rests
 
@@ -466,7 +465,7 @@ TODO add explicit rests etc
 @[mcatMaybes] 
 
 ```music+haskell
-mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8 
+mcatMaybes $ times 4 (accentAll g|*2 |> rest |> scat [d,d]|/2)|/8 
 ```
                  
 
@@ -481,7 +480,7 @@ mcatMaybes $ times 4 (accentAll g^*2 |> rest |> scat [d,d]^/2)^/8
 
 ```music+haskell
 let
-    melody = accent $ legato $ scat [d, scat [g,fs]^/2,bb^*2]^/4
+    melody = accent $ legato $ scat [d, scat [g,fs]|/2,bb|*2]|/4
 in melody |> rev melody
 ```
 
@@ -489,7 +488,7 @@ in melody |> rev melody
 
 ```music+haskell
 let
-    melody = legato $ scat [c,d,e,c]^/16
+    melody = legato $ scat [c,d,e,c]|/16
 in times 4 $ melody
 ```
 
@@ -501,9 +500,9 @@ scat [e,d,f,e] <> c
 
 ## Onset and duration
 
-```music+haskell
+```music+haskellx
 let                
-    melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g^*2]
+    melody = asScore $ legato $ scat [scat [c,d,e,c], scat [e,f], g|*2]
     pedal  = asScore $ delayTime (melody^.onset) $ stretch (melody^.duration) $ c_
 in compress 4 $ melody </> pedal
 ```
@@ -513,11 +512,11 @@ in compress 4 $ melody </> pedal
 @[invertPitches]
 
 ```music+haskell
-(scat [c..g]^*(2/5))
+(scat [c..g]|*(2/5))
     </>
-(invertPitches c $ scat [c..g]^*(2/5))
+(invertPitches c $ scat [c..g]|*(2/5))
     </>
-(invertPitches e $ scat [c..g]^*(2/5))
+(invertPitches e $ scat [c..g]|*(2/5))
 ```
 
 
@@ -648,11 +647,11 @@ The @[Span] type represents a *slice* of time. We can represent spans in exactly
 A @[Voice] represents a single voice of music. It consists of a sequence of values with duration. 
 
 ```music+haskell
-stretch (1/4) $ scat [c..a]^/2 |> b |> c'^*4
+stretch (1/4) $ scat [c..a]|/2 |> b |> c'|*4
 ```
 
 ```music+haskell
-stretch (1/2) $ scat [c..e]^/3 |> f |> g^*2
+stretch (1/2) $ scat [c..e]|/3 |> f |> g|*2
 ```
 
 
@@ -718,7 +717,7 @@ The distinction between ordinary musical data and meta-data is not always clear 
 Title, subtitle etc is grouped together as a single type `Title`, thus an arbitrary number of nested titles is supported. The simplest way to add a title is to use the functions @[title], @[subtitle], @[subsubtitle] and so son.
 
 ```music+haskell
-title "Frere Jaques" $ scat [c,d,e,c]^/4
+title "Frere Jaques" $ scat [c,d,e,c]|/4
 ```
 
 ## Attribution
@@ -730,7 +729,7 @@ composer "Anonymous" $ scat [c,d,e,c]
 ```
 
 ```music+haskell
-composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]^/4
+composer "Anonymous" $ lyricist "Anonymous" $ arranger "Hans" $ scat [c,d,e,c]|/4
 ```
 
 ## Key signatures

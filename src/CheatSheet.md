@@ -74,11 +74,18 @@ Simplified. For the full version, see types in the API.
     rest
     removeRests <music>
   
+    <dur>   *| <music>
+    <music> |* <dur>
     stretch <dur> <music>
+
+    <music> |/ <dur>
     compress <dur> <music>
+
     delay <dur> <music>
     undelay <dur> <music>
+
     transform <span> <music>
+
     view duration <music>
     view (onset|offset|midpoint) <music>
     view (position 0.3) <music>
