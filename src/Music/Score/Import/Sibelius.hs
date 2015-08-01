@@ -134,7 +134,6 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Clarinets in Bb II",_)                  = Right $ (!! 1) $ divide 3 clarinets
             partFromName ("Clarinets in Bb III",_)                 = Right $ (!! 2) $ divide 3 clarinets
             partFromName ("Clarinets in Bb IV",_)                  = Right $ (!! 3) $ divide 3 clarinets
-            partFromName ("Clarinet in A",_)                      = Right $ clarinets
             partFromName ("Bass Clarinet in Bb",_)                = Right $ (!! 0) $ divide 3 clarinets
             
             partFromName ("Bassoon",_)                            = Right $ bassoons
@@ -297,6 +296,19 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Tenor",_)                              = Right $ (!! 0) $ divide 2 cellos
             partFromName ("Baritone",_)                           = Right $ (!! 1) $ divide 2 cellos
             partFromName ("Bass",_)                               = Right $ doubleBasses
+
+            partFromName ("S",_)                                  = Right $ violins1
+            partFromName ("Mez",_)                                = Right $ violins2
+            partFromName ("A",_)                                  = Right $ violas
+            partFromName ("T",_)                                  = Right $ (!! 0) $ divide 2 cellos
+            partFromName ("Bar",_)                                = Right $ (!! 1) $ divide 2 cellos
+            partFromName ("B",_)                                  = Right $ doubleBasses
+            partFromName ("S.",_)                                 = Right $ violins1
+            partFromName ("Mez.",_)                               = Right $ violins2
+            partFromName ("A.",_)                                 = Right $ violas
+            partFromName ("T.",_)                                 = Right $ (!! 0) $ divide 2 cellos
+            partFromName ("Bar.",_)                               = Right $ (!! 1) $ divide 2 cellos
+            partFromName ("B.",_)                                 = Right $ doubleBasses
 
             partFromName (n,_)                                    = Left n
 
