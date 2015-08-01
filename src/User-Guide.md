@@ -58,34 +58,22 @@ Music files and Haskell files using `open` are equivalent in every aspect. In fa
 
 ## Interactive use
 
-An advantage of Haskell files is that you can load them into a Haskell interpreter.
+An advantage of Haskell files is that you can load them into a Haskell interpreter (i.e. GHCI).
 
 TODO configuration
 
-Here is an example `.ghci` file.
+In the interpreter, the @[display] and @[audify] functions are the most convenient ways of inspecting music. Note that because these functions are overloaded you may be required to provide a specific type signature.
 
+```hs
+>>> display $ ([c,g,bb]^.chord :: Chord Pitch)
+>>> audify  $ (c :: Pitch)
+>>> display $ ([c,g,bb]^.chord :: Chord Pitch)
+>>> audify  $ [1,2,1]^.rhythm
 ```
-:m + Music.Prelude
-:def! open  (\x -> return $ "open  $ asScore $ "++ x)
-:def! play  (\x -> return $ "play  $ asScore $ "++ x)
-:def! write (\x -> return $ "write $ asScore $ "++ x)
-putStrLn "Welcome to the Music Suite!"
-putStrLn "Try :open <music> or :play <music>"
-```
+
 
 
 # Writing music
-
-This chapter will cover how to use the Music Suite to *write* music. Later on we will cover how to *import* and *transform* music.
-
-One of the main points of the Music Suite is to avoid committing to a *single*, closed music representation. Instead it provides a set of types and type constructors that can be used to construct an arbitrary representation of music. 
-
-Usually you will not want to invent a new representation from scratch, but rather start with a standard representation and customize it when needed. The default representation is defined in the `Music.Prelude` module, which imported in all music files by default. 
-
-<!--
-See [Customizing the Music Representation](#customizing-music-representation) for other examples.
--->
-
 
 ## Time and Duration
 

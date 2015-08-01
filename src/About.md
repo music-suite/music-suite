@@ -1,4 +1,4 @@
-% The Music Suite
+% Music Suite
 
 ## Music Suite
 
