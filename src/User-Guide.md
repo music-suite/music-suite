@@ -989,6 +989,8 @@ This feature could of course also be used to convert Sibelius scores to other fo
 
 
 
+<!--
+
 # Customizing music representation
 
 ## Adding an new representation
@@ -1012,14 +1014,17 @@ TODO
 - If your representation supports *parallel* composition it should be a trivial (non-lifted) @[Monoid]. It it also supports sequential composition, it should support @[Transformable] and @[HasPosition].
 - Optionally, add instances for @[Splittable] and @[Reversible].
 
+-->
 
-# Acknowledgements
+# Related work and libraries
 
-The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [Max/MSP][max-msp], [SuperCollider][supercollider], [nyquist][nyquist], [music21][music21], [Guido][guido], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
+The Music Suite is indebted to many other previous libraries and computer music environments, particularly [Common Music][common-music], [PWGL][pwgl], [nyquist][nyquist], [music21][music21], [Lilypond][lilypond] and [Abjad][abjad]. Some of the ideas for the quantization algorithms came from [Fomus][fomus].
 
-The Music Suite obviously ows much to the previous Haskell libraries for music representation, including [Haskore][haskore], [Euterpea][euterpea] and [temporal-media][temporal-media]. The idea of defining a custom internal representation, but relying on standardized formats for input and output comes from [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite].
+The work of Paul Hudak and the the Yale Haskell group, including [Haskore][haskore], [Euterpea][euterpea] is a major influence. The  and [temporal-media][temporal-media] package is a similar take on these ideas. The popular [Tidal][tidal] language provide a way of expressing infinite time structures, similar to the ones defined in `music-score`.
 
-The temporal structures, their instances and the concept of denotational design comes from [Reactive][reactive] (and its predecessors). [Diagrams][diagrams] provided the daring example and some general influences on the design.
+The idea of defining a custom internal representation, but relying on standardized formats for input and output is influenced by [Pandoc][pandoc]. The idea of splitting the library into a set of packages (and the name) comes from the [Haskell Suite][haskell-suite].
+
+The temporal structures, their instances and more general design philosophy comes from Conal Elliott's [Reactive][reactive] (and its predecessors). Brent Yorgey's [Diagrams][diagrams] provided the separation of points and vectors which was a main influence.
 
 
 ```music-extra
@@ -1055,11 +1060,12 @@ The temporal structures, their instances and the concept of denotational design 
 [euterpea]:         http://haskell.cs.yale.edu/euterpea/
 [haskell]:          http://haskell.org
 [pandoc]:           http://johnmacfarlane.net/pandoc/
+[tidal]:            http://yaxu.org/tidal/
 
 [declaration-style]: http://www.haskell.org/haskellwiki/Declaration_vs._expression_style
 
 ----
 
-*Copyright Hans Jacob Höglund 2012–2013*
+*Copyright Hans Jacob Höglund 2012–2015*
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This documentation is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.

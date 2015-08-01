@@ -1,24 +1,10 @@
 % The Music Suite
 
-## The Music Suite
+## Music Suite
 
-The Music Suite is a language for description, analysis, composition and manipulation of music. It is [embedded][dsl] in the Haskell language, meaning that it is both a language in its own right and a set of Haskell libraries.
+Music Suite is a language for describing music, based on Haskell.
 
-The Music Suite defines many common musical structures, which can be combined in many ways to form a suitable representation for almost any kind of music. Standard notation is included as a special case. The Music Suite differs from many other music representation systems in that it allows *continuous* representation of pitch, dynamics and other musical aspects, in addition to the common *discrete* representations. 
-
-<!--
-It is based on the [Haskell][Haskell] language. It is designed with three goals in mind:
-
-* Describe what the music *is*, rather than how it is to be performed.
-* Avoid imposing stylistic or theoretical assumptions on the music.
-* Include common notation and theory as a *special case*.
-
-The Music Suite is both a language in its own right and a Haskell library. Being embedded in Haskell has several advantages, it allow the developers to focus on the contents and the users to make use of any feature in the Haskell language.
--->
-
-<!--
-The Music Suite uses several advanced language constructs internally and requires a relatively new Haskell compiler (see [Installing the Suite](#installing-the-suite)).
--->
+It allow representation and manipulation of music in a very general sense, that is compatible with standard notation and supporting a variety of [import and export formats](#import-and-export). The use of Haskell allow for music to be created, transformed or analyzed using the full expressive power of the Haskell language.
 
 
 ### An example
