@@ -536,7 +536,7 @@ instance Pretty Articulation where
     -- pretty Staccatissimo      = "\\staccatissimo"
     pretty Accent             = ">"
     pretty Marcato            = "^"
-    pretty Staccatissimo      = "|"
+    pretty Staccatissimo      = "!"
     pretty Espressivo         = "\\espressivo"
     -- pretty Staccato           = "\\staccato"
     -- pretty Tenuto             = "\\tenuto"
