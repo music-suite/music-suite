@@ -26,7 +26,7 @@ SRC=src
 OUT=build
 PAGE=index.html
 TUTORIAL_PAGE=tutorial.html
-MODULE_GRAPH=module-graph.png
+# MODULE_GRAPH=module-graph.png
 
 # upload-wiki: transform
 # 	pushd $(OUT) && \
@@ -44,8 +44,9 @@ html: transform
 			| $(PANDOC_HTML) -o $(PAGE) && \
 		cp $(CSS) styles.css && \
 		cp -R ../js js && \
-		cp ../$(MODULE_GRAPH) module-graph.png && \
 	popd
+
+#	cp ../$(MODULE_GRAPH) module-graph.png && \
 
 html-tutorial: transform
 	pushd $(OUT) && \
