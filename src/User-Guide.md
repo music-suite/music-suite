@@ -636,7 +636,7 @@ Time points and vectors are represented by two types @[Time] and @[Duration]. Th
 
 Time points form an affine space over durations, so we can use the operators @[.+^] and @[.-.] to convert between the two.
 
-The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[range], @[delta] and @[codelta], which are *isomorphisms* using the definition from the `lens` package.
+The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
 ## Rests, Notes and Chords
 
@@ -804,8 +804,6 @@ Whenever a bar line is created as a result of a meta-event, an shorted time sign
 ```music+haskell
 compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
 ```
-
-TODO adapt getBarDurations and getBarTimeSignatures to actually do this
 
 TODO repeats
 
