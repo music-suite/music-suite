@@ -56,12 +56,7 @@ import           Music.Time.Juxtapose
 
 
 -- |
--- A value 'Note' value, representing a suspended stretch of some 'Transformable'
--- value. We can access the value in bothits original and note form using 'note'
--- and 'notee', respectively.
---
--- Placing a value inside 'Note' makes it invariant under 'delay', however the inner
--- value can still be delayed using @'fmap' 'delay'@.
+-- A value 'Note' value, representing a value stretched by some 'Duration'.
 --
 newtype Note a = Note { getNote :: Duration `Couple` a }
   deriving (Eq, Ord, Typeable, Foldable, Traversable,

@@ -163,20 +163,23 @@ type family SetPitch (b :: *) (s :: *) :: *
 class HasPitches s t => HasPitch s t where
 
   -- | Access the pitch.
-  --
-  --   As this is a 'Traversal', you can use all combinators from the lens package,
-  --   for example:
-  --
-  --   @
-  --   'pitch' .~ c    :: ('HasPitch'' a, 'IsPitch' a)      => a -> a
-  --   'pitch' +~ 2    :: ('HasPitch'' a, 'Num' ('Pitch' a))  => a -> a
-  --   'pitch' %~ 'succ' :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
-  --   'view' 'pitch'    :: 'HasPitches'' a                 => a -> 'Pitch' a
-  --   'set'  'pitch'    :: 'HasPitches' a b                => 'Pitch' b -> a -> b
-  --   'over' 'pitch'    :: 'HasPitches' a b                => ('Pitch' a -> 'Pitch' b) -> a -> b
-  --   @
-  --
   pitch :: Lens s t (Pitch s) (Pitch t)
+
+-- TODO move doc
+--
+--   As this is a 'Traversal', you can use all combinators from the lens package,
+--   for example:
+--
+--   @
+--   'pitch' .~ c    :: ('HasPitch'' a, 'IsPitch' a)      => a -> a
+--   'pitch' +~ 2    :: ('HasPitch'' a, 'Num' ('Pitch' a))  => a -> a
+--   'pitch' %~ 'succ' :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
+--   'view' 'pitch'    :: 'HasPitches'' a                 => a -> 'Pitch' a
+--   'set'  'pitch'    :: 'HasPitches' a b                => 'Pitch' b -> a -> b
+--   'over' 'pitch'    :: 'HasPitches' a b                => ('Pitch' a -> 'Pitch' b) -> a -> b
+--   @
+--
+
 
 -- |
 -- Class of types that provide zero or more pitches.
@@ -186,18 +189,6 @@ class (Transformable (Pitch s),
        SetPitch (Pitch t) s ~ t) => HasPitches s t where
 
   -- | Access all pitches.
-  --
-  --   As this is a 'Traversal', you can use all combinators from the lens package,
-  --   for example:
-  --
-  --   @
-  --   'toListOf' 'pitches'  :: 'HasPitches'' a                  => a -> ['Pitch' a]
-  --   'allOf' 'pitches'     :: ('HasPitches'' a)                => ('Pitch' a -> 'Bool') -> a -> 'Bool'
-  --   'maximumOf' 'pitches' :: ('HasPitches'' a, 'Ord' ('Pitch' a)) => a -> 'Maybe' ('Pitch' a)
-  --   'set'  'pitches'      :: 'HasPitches' a b                 => 'Pitch' b -> a -> b
-  --   'over' 'pitches'      :: 'HasPitches' a b                 => ('Pitch' a -> 'Pitch' b) -> a -> b
-  --   @
-  --
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
 type HasPitch' a = HasPitch a a

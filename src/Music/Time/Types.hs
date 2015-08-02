@@ -303,9 +303,7 @@ toRelativeTimeN xs = toRelativeTimeN' (last xs) xs
 
 
 -- |
--- A 'Span' represents a specific time interval, such as the duration of
--- a note, phrase or musical piece. It can be modelled as two points, or as
--- a point and a vector.
+-- A 'Span' represents a specific time interval.
 --
 -- Another way of looking at 'Span' is that it represents a time transformation where
 -- onset is translation and duration is scaling.

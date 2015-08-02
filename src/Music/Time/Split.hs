@@ -55,39 +55,27 @@ import           Music.Time.Position
 -- |
 -- Class of values that can be split.
 --
--- For non-positioned values such as 'Stretched', split cuts a value into pieces
--- of the given duration and the rest.
---
--- For positioned values succh as 'Note', split cuts a value relative to its onset.
--- To split at an absolute position, see 'splitAbs'.
---
---
--- Law
+-- Instances should satisfy:
 --
 -- @
 -- ('beginning' t x)^.'duration' + ('ending' t x)^.'duration' = x^.'duration'
---
 -- ('beginning' t x)^.'duration' = t `min` x^.'duration'                    iff t >= 0
---
 -- ('ending' t x)^.'duration'    = x^.'duration' - (t `min` x^.'duration')    iff t >= 0
---
 -- @
 --
 -- (Note that any of these three laws can be derived from the other two, so it is
 -- sufficient to prove two!).
 --
--- >>> (\x -> fmap (flip split x) [-2,-1,0,0.5,1,2]) $ (1::Duration)
--- [(0,1),(0,1),(0,1),((1/2),(1/2)),(1,0),(1,0)]
---
--- >>> (\x -> fmap (flip split x) [-2,-1,0,0.5,1,2]) $ (0<->1)
--- [(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> 0,0 <-> 1),(0 <-> (1/2),(1/2) <-> 1),(0 <-> 1,1 <-> 1),(0 <-> 1,1 <-> 1)]
---
 class HasDuration a => Splittable a where
-
+  
+  -- | Split a value at the given duration and return both parts.
   split      :: Duration -> a -> (a, a)
   split   d x = (beginning d x, ending d x)
 
+  -- | Split a value at the given duration and return only the first part.
   beginning  :: Duration -> a -> a
+
+  -- | Split a value at the given duration and return only the second part.
   ending     :: Duration -> a -> a
   beginning d = fst . split d
   ending    d = snd . split d

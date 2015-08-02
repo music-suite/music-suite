@@ -67,19 +67,7 @@ import           Music.Time.Meta
 
 
 -- |
--- A 'Event' is a value with an 'onset' and and 'offset' in time. It is an instance
--- of 'Transformable'.
---
--- You can use 'value' to apply a function in the context of the transformation,
--- i.e.
---
--- @
--- over value (* line) (delay 2 $ return line)
--- @
---
--- @
--- ('view' 'value') . 'transform' s = 'transform' s . ('view' 'value')
--- @
+-- A 'Event' is a value transformed to appear in some 'Span'. Like 'Span', it is an instance of 'Transformable'.
 --
 newtype Event a = Event { getEvent :: Span `Couple` a }
   deriving (Eq, Ord, Typeable, Foldable, Applicative, Monad, Comonad, Traversable,
