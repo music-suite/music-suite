@@ -14,6 +14,7 @@ PANDOC_PDF=$(PANDOC) --write=pdf
 PANDOC_HTML=$(PANDOC) --write=html --toc-depth 4 --css styles.css --template $(PANDOC_TEMPLATE)
 
 CABAL_FILES=\
+	../../music-preludes/music-preludes.cabal \
 	../../music-score/music-score.cabal \
 	../../music-pitch/music-pitch.cabal \
 	../../music-dynamics/music-dynamics.cabal \
