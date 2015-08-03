@@ -73,6 +73,45 @@ In the interpreter, the @[display] and @[audify] functions are the most convenie
 
 
 
+# Basic concepts
+
+## Lens, Prism and Iso
+
+Music Suite use lenses as a delibrate design choice. Can be fantastically complicated. XXX just the basics:
+
+- *Lenses* provide a way to view part a product type. Canonical example: `_1` provides a view to the first element of a `(,)`.
+- *Prisms* provide a way to view part a sum type. Canonical example: `_Left` provides a view to the first element of an `Either`.
+- *Isos* provide an alternative view of the whole thing that does not lose any information. I.e. curried provides a way to transorm `(a,b) -> c` into `a -> b -> c` and back.
+- XXX traversal
+
+XXX `lens` provides lots of combinators for working with these. Most importantly:
+
+- `(.)` composes any of these objects
+- `(^.)` and `view` extracts an element of a lens or iso, and of a prism if possible
+- `(^?)` and `preview` extracts the first element of any optic if there is one
+- `(^..)` or `toListOf` extracts all element of any optic
+- `over` and `set` updates elements
+- `from` turns isos around
+
+## Semigroups, monoids, groups and vector spaces
+
+- A *semigroup* has an associative combination operator. Examples: non-empty lists, integers with (+).
+  - A *monoid* is a semigroup with an identity element. Examples: lists, integers with (+) and 0.
+    - A *group*  is a monoid with a negation element. Examples: integers with (+), 0 and `negate`.
+      - A *vector space* is a group whose elements can be multiplied by a  *scalar*. Example: 2D vectors with real numbers as scalars.
+
+Most standard musical aspects are vector spaces:
+
+- Durations
+- Pitches
+- Dynamics
+
+## Separating points and vectors
+
+Music Suite takes inspiration from diagrams in *separating points and vectors*. XXX just briefly hint why this is important.
+
+
+
 # Writing music
 
 ## Time and Duration
@@ -599,6 +638,12 @@ TODO
 @[asPitch]
 @[asAccidental]
 
+TODO Ambitus, Chord and Scale
+
+TODO spelling
+
+TODO equal temperament and intonation
+
 ## Articulation
 ## Dynamics
 ## Parts
@@ -626,7 +671,7 @@ Time points form an affine space over durations, so we can use the operators @[.
 
 The @[Span] type represents a *slice* of time. We can represent spans in exactly three ways: as two points representing *onset* and *offset*, as one point representing *onset* and a duration, or alternatively as a point representing *offset* and a duration. To convert between these representations, we can use @[onsetAndOffset], @[onsetAndDuration] and @[durationAndOffset], which are *isomorphisms* using the definition from the `lens` package.
 
-## Rests, Notes and Chords
+## Note, Chord and Event
 
 @[Note]
 
@@ -661,9 +706,9 @@ in stretch (1/8) $ voiceToScore $ y
 ```
 -->
 
-## Segment and Linear
-
 ## Behavior and Reactive
+
+## Aligned
 
 ## Tracks
 
