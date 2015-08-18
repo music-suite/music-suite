@@ -13,6 +13,7 @@ module Music.Score.Import.Sibelius (
 import Control.Lens
 import Data.Music.Sibelius
 import qualified Data.Maybe
+import qualified Data.List
 import qualified Music.Score as S
 import Data.Aeson
 import qualified Music.Prelude
@@ -83,7 +84,22 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromSibeliusStaff = either (error . ("Unknown instrument: " ++)) id . partFromSibeliusStaff'
             
             partFromSibeliusStaff' :: SibeliusStaff -> Either String Part
-            partFromSibeliusStaff' (SibeliusStaff bars name shortName) = partFromName (name, shortName)
+            partFromSibeliusStaff' (SibeliusStaff bars name shortName) = partFromNameWithSolo (name, shortName)
+
+            partFromNameWithSolo (n,sn)
+              | " Solo" `Data.List.isSuffixOf` n
+                = fmap toSolo $ partFromName (dropEnd 5 n,sn)
+              | " solo" `Data.List.isSuffixOf` n
+                = fmap toSolo $ partFromName (dropEnd 5 n,sn)
+              | "Solo " `Data.List.isPrefixOf` n
+                = fmap toSolo $ partFromName (drop 5 n,sn)
+              | "solo " `Data.List.isPrefixOf` n
+                = fmap toSolo $ partFromName (drop 5 n,sn)
+              | otherwise
+                = partFromName (n,sn)
+
+            toSolo = _solo .~ Solo
+            dropEnd n = reverse . drop n . reverse
 
             -- TODO something more robust (in part library...)
             partFromName ("Piccolo",_)                            = Right $ piccoloFlutes
