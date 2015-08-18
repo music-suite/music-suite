@@ -124,14 +124,14 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Oboes (b)",_)                          = Right $ (!! 1) $ divide 4 $ oboes
             partFromName ("Oboes (c)",_)                          = Right $ (!! 2) $ divide 4 $ oboes
             partFromName ("Oboes (d)",_)                          = Right $ (!! 3) $ divide 4 $ oboes
-            partFromName ("Oboe (a)",_)                          = Right $ (!! 0) $ divide 4 $ oboes
-            partFromName ("Oboe (b)",_)                          = Right $ (!! 1) $ divide 4 $ oboes
-            partFromName ("Oboe (c)",_)                          = Right $ (!! 2) $ divide 4 $ oboes
-            partFromName ("Oboe (d)",_)                          = Right $ (!! 3) $ divide 4 $ oboes
-            partFromName ("Oboe I",_)                            = Right $ (!! 0) $ divide 4 $ oboes
-            partFromName ("Oboe II",_)                           = Right $ (!! 1) $ divide 4 $ oboes
-            partFromName ("Oboe III",_)                          = Right $ (!! 2) $ divide 4 $ oboes
-            partFromName ("Oboe IV",_)                           = Right $ (!! 3) $ divide 4 $ oboes
+            partFromName ("Oboe (a)",_)                           = Right $ (!! 0) $ divide 4 $ oboes
+            partFromName ("Oboe (b)",_)                           = Right $ (!! 1) $ divide 4 $ oboes
+            partFromName ("Oboe (c)",_)                           = Right $ (!! 2) $ divide 4 $ oboes
+            partFromName ("Oboe (d)",_)                           = Right $ (!! 3) $ divide 4 $ oboes
+            partFromName ("Oboe I",_)                             = Right $ (!! 0) $ divide 4 $ oboes
+            partFromName ("Oboe II",_)                            = Right $ (!! 1) $ divide 4 $ oboes
+            partFromName ("Oboe III",_)                           = Right $ (!! 2) $ divide 4 $ oboes
+            partFromName ("Oboe IV",_)                            = Right $ (!! 3) $ divide 4 $ oboes
             partFromName ("Cor Anglais",_)                        = Right $ tutti corAnglais
             
             partFromName ("Clarinet",_)                           = Right $ clarinets
@@ -146,10 +146,10 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Clarinet in Bb II",_)                  = Right $ (!! 1) $ divide 3 clarinets
             partFromName ("Clarinet in Bb III",_)                 = Right $ (!! 2) $ divide 3 clarinets
             partFromName ("Clarinet in Bb IV",_)                  = Right $ (!! 3) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb I",_)                   = Right $ (!! 0) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb II",_)                  = Right $ (!! 1) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb III",_)                 = Right $ (!! 2) $ divide 3 clarinets
-            partFromName ("Clarinets in Bb IV",_)                  = Right $ (!! 3) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb I",_)                  = Right $ (!! 0) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb II",_)                 = Right $ (!! 1) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb III",_)                = Right $ (!! 2) $ divide 3 clarinets
+            partFromName ("Clarinets in Bb IV",_)                 = Right $ (!! 3) $ divide 3 clarinets
             partFromName ("Bass Clarinet in Bb",_)                = Right $ (!! 0) $ divide 3 clarinets
             
             partFromName ("Bassoon",_)                            = Right $ bassoons
@@ -157,6 +157,11 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Bassoon (b)",_)                        = Right $ (!! 1) $ divide 4 bassoons
             partFromName ("Bassoon (c)",_)                        = Right $ (!! 2) $ divide 4 bassoons
             partFromName ("Bassoon (d)",_)                        = Right $ (!! 3) $ divide 4 bassoons
+            partFromName ("Bassoons",_)                           = Right $ bassoons
+            partFromName ("Bassoons (a)",_)                       = Right $ (!! 0) $ divide 4 bassoons
+            partFromName ("Bassoons (b)",_)                       = Right $ (!! 1) $ divide 4 bassoons
+            partFromName ("Bassoons (c)",_)                       = Right $ (!! 2) $ divide 4 bassoons
+            partFromName ("Bassoons (d)",_)                       = Right $ (!! 3) $ divide 4 bassoons
             partFromName ("Bassoon I",_)                          = Right $ (!! 0) $ divide 4 bassoons
             partFromName ("Bassoon II",_)                         = Right $ (!! 1) $ divide 4 bassoons
             partFromName ("Bassoon III",_)                        = Right $ (!! 2) $ divide 4 bassoons
@@ -292,10 +297,10 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Contrabass (b)",_)                     = Right $ (!! 2) $ divide 20 doubleBasses
             partFromName ("Contrabass (c)",_)                     = Right $ (!! 3) $ divide 20 doubleBasses
             partFromName ("Contrabass (d)",_)                     = Right $ (!! 4) $ divide 20 doubleBasses
-            partFromName ("Contrabass soli (a)",_)                     = Right $ (!! 1) $ divide 20 $ solo doubleBass
-            partFromName ("Contrabass soli (b)",_)                     = Right $ (!! 2) $ divide 20 $ solo doubleBass
-            partFromName ("Contrabass soli (c)",_)                     = Right $ (!! 3) $ divide 20 $ solo doubleBass
-            partFromName ("Contrabass soli (d)",_)                     = Right $ (!! 4) $ divide 20 $ solo doubleBass
+            partFromName ("Contrabass soli (a)",_)                = Right $ (!! 1) $ divide 20 $ solo doubleBass
+            partFromName ("Contrabass soli (b)",_)                = Right $ (!! 2) $ divide 20 $ solo doubleBass
+            partFromName ("Contrabass soli (c)",_)                = Right $ (!! 3) $ divide 20 $ solo doubleBass
+            partFromName ("Contrabass soli (d)",_)                = Right $ (!! 4) $ divide 20 $ solo doubleBass
             partFromName ("Contrabass (e)",_)                     = Right $ (!! 5) $ divide 20 doubleBasses
             partFromName ("Contrabass (f)",_)                     = Right $ (!! 6) $ divide 20 doubleBasses
 
