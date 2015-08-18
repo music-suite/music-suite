@@ -209,6 +209,11 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Tuba",_)                               = Right $ (!! 0) $ divide 4 $ trombones
 
             partFromName ("Timpani",_)                            = Right $ tutti timpani
+
+            partFromName ("Tambourine",_)                          = Right $ tutti (fromMusicXmlSoundId "drum.tambourine")
+            partFromName ("Triangle",_)                            = Right $ tutti (fromMusicXmlSoundId "metal.triangle")
+
+
             partFromName ("Percussion I (a)",_)                   = Right $ (!! 1) $ divide 3 $ tutti piano
             partFromName ("Percussion I (b)",_)                   = Right $ (!! 2) $ divide 3 $ tutti piano
 
