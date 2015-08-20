@@ -2,6 +2,10 @@
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 
+-- |
+-- Provides a way to annotate data-types with 'Transformable' meta-data.
+-- Inspired by Clojure meta-data and Diagrams styles.
+--
 module Music.Time.Meta (
         -- * Attributes
         AttributeClass,

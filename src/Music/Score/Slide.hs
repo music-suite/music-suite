@@ -1,4 +1,6 @@
 
+-- | Provides a representation of musical /slides/, commonly known as /glissando/ or
+-- /portamento/. 
 module Music.Score.Slide (
         -- * Slides and glissando
         HasSlide(..),

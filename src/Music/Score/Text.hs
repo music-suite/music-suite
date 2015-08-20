@@ -1,4 +1,5 @@
 
+-- | Provides a way of adding text to notes.
 module Music.Score.Text (
         -- * Text
         HasText(..),

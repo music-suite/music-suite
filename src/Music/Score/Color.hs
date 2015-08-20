@@ -1,4 +1,6 @@
 
+-- | Provides colored note heads.
+
 module Music.Score.Color (
         -- ** HasColor class
         HasColor(..),

@@ -5,6 +5,8 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-- | Provides functions for manipulating articulation.
+
 module Music.Score.Articulation (
 
         -- ** Articulation type functions

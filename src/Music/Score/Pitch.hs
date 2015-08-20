@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+-- | Provides functions for manipulating pitch.
 module Music.Score.Pitch (
         
         -- * Pitch type

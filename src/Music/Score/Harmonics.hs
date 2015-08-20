@@ -1,4 +1,6 @@
 
+-- | Provides a representation of harmonics. 
+
 module Music.Score.Harmonics (
         -- * Harmonics
         HasHarmonic(..),

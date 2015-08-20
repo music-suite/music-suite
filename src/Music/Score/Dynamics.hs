@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
+-- | Provides functions for manipulating dynamics.
 module Music.Score.Dynamics (
 
         -- * Dynamic type functions

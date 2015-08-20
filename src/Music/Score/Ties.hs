@@ -1,4 +1,8 @@
 
+-- |
+-- Provides a representation for tied notes, and a class to split a single note
+-- into a pair of tied notes.
+--
 module Music.Score.Ties (
 
         -- * Tiable class

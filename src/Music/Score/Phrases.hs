@@ -3,6 +3,8 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
 
+-- | Provides phrase-wise traversal.
+
 module Music.Score.Phrases (
     -- * HasPhrases class
     HasPhrases(..),
