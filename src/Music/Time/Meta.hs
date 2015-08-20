@@ -1,33 +1,6 @@
 
--- {-# LANGUAGE ConstraintKinds            #-}
--- {-# LANGUAGE DeriveDataTypeable         #-}
--- {-# LANGUAGE DeriveFoldable             #-}
--- {-# LANGUAGE DeriveFunctor              #-}
--- {-# LANGUAGE DeriveTraversable          #-}
--- {-# LANGUAGE FlexibleContexts           #-}
--- {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
--- {-# LANGUAGE StandaloneDeriving         #-}
--- {-# LANGUAGE TypeFamilies               #-}
--- {-# LANGUAGE TypeOperators              #-}
-
--------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012–2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Provides a way to annotate data-types with 'Transformable' meta-data.
--- Inspired by Clojure meta-data and Diagrams styles.
---
--------------------------------------------------------------------------------------
 
 module Music.Time.Meta (
         -- * Attributes

@@ -1,16 +1,4 @@
 
--------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012-2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--------------------------------------------------------------------------------------
-
 module Music.Score (
         module Music.Score.Part,
         module Music.Score.Pitch,

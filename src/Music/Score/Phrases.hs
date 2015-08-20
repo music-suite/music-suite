@@ -1,30 +1,8 @@
 
--- {-# LANGUAGE ConstraintKinds            #-}
--- {-# LANGUAGE DeriveDataTypeable         #-}
--- {-# LANGUAGE DeriveFoldable             #-}
--- {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE MultiParamTypeClasses      #-}
--- {-# LANGUAGE OverloadedStrings          #-}
--- {-# LANGUAGE TypeFamilies               #-}
--- {-# LANGUAGE TypeOperators              #-}
-
--------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012-2014
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- This module provides phrase-wise traversal.
---
--------------------------------------------------------------------------------------
-
+ß
 module Music.Score.Phrases (
     -- * HasPhrases class
     HasPhrases(..),

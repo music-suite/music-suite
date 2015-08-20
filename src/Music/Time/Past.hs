@@ -1,10 +1,4 @@
 
--- {-# LANGUAGE CPP                        #-}
--- {-# LANGUAGE DeriveFunctor              #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- {-# LANGUAGE RankNTypes                 #-}
--- {-# LANGUAGE ViewPatterns               #-}
-
 module Music.Time.Past (
         Past(..),
         Future(..),
