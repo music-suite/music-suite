@@ -3,10 +3,9 @@
 -- {-# LANGUAGE DeriveDataTypeable         #-}
 -- {-# LANGUAGE DeriveFoldable             #-}
 -- {-# LANGUAGE DeriveFunctor              #-}
--- {-# LANGUAGE FlexibleContexts           #-}
--- {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
--- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- {-# LANGUAGE MultiParamTypeClasses      #-}
 -- {-# LANGUAGE OverloadedStrings          #-}
 -- {-# LANGUAGE TypeFamilies               #-}
