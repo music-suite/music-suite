@@ -1,15 +1,15 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
+-- {-# LANGUAGE ConstraintKinds            #-}
+-- {-# LANGUAGE DeriveDataTypeable         #-}
+-- {-# LANGUAGE DeriveFoldable             #-}
+-- {-# LANGUAGE DeriveFunctor              #-}
+-- {-# LANGUAGE FlexibleContexts           #-}
+-- {-# LANGUAGE FlexibleInstances          #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- {-# LANGUAGE MultiParamTypeClasses      #-}
+-- {-# LANGUAGE StandaloneDeriving         #-}
+-- {-# LANGUAGE TypeFamilies               #-}
+-- {-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |

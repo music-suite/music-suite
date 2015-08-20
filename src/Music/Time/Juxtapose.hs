@@ -1,12 +1,12 @@
 
-{-# LANGUAGE ConstraintKinds           #-}
-{-# LANGUAGE MultiParamTypeClasses     #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE RankNTypes                #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TupleSections             #-}
-{-# LANGUAGE TypeFamilies              #-}
-{-# LANGUAGE UndecidableInstances      #-}
+-- {-# LANGUAGE ConstraintKinds           #-}
+-- {-# LANGUAGE MultiParamTypeClasses     #-}
+-- {-# LANGUAGE NoMonomorphismRestriction #-}
+-- {-# LANGUAGE RankNTypes                #-}
+-- {-# LANGUAGE ScopedTypeVariables       #-}
+-- {-# LANGUAGE TupleSections             #-}
+-- {-# LANGUAGE TypeFamilies              #-}
+-- {-# LANGUAGE UndecidableInstances      #-}
 
 -------------------------------------------------------------------------------------
 -- |

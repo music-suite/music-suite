@@ -138,6 +138,8 @@ library
                         RankNTypes,
                         StandaloneDeriving,
                         TupleSections,
-                        TypeFamilies
+                        TypeFamilies,
+                        ViewPatterns,
+                        OverloadedStrings
     
     ghc-options:        -fno-warn-typed-holes

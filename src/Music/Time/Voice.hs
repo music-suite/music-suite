@@ -1,16 +1,16 @@
 
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
+-- {-# LANGUAGE OverloadedStrings          #-}
+-- {-# LANGUAGE DeriveDataTypeable         #-}
+-- {-# LANGUAGE DeriveFoldable             #-}
+-- {-# LANGUAGE DeriveFunctor              #-}
+-- {-# LANGUAGE DeriveTraversable          #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- {-# LANGUAGE MultiParamTypeClasses      #-}
+-- {-# LANGUAGE RankNTypes                 #-}
+-- {-# LANGUAGE StandaloneDeriving         #-}
+-- {-# LANGUAGE TupleSections              #-}
+-- {-# LANGUAGE TypeFamilies               #-}
+-- {-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |

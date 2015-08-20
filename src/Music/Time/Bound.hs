@@ -1,12 +1,12 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE ViewPatterns               #-}
+-- {-# LANGUAGE ConstraintKinds            #-}
+-- {-# LANGUAGE DeriveDataTypeable         #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- {-# LANGUAGE MultiParamTypeClasses      #-}
+-- {-# LANGUAGE StandaloneDeriving         #-}
+-- {-# LANGUAGE TupleSections              #-}
+-- {-# LANGUAGE TypeFamilies               #-}
+-- {-# LANGUAGE ViewPatterns               #-}
 
 -------------------------------------------------------------------------------------
 -- |

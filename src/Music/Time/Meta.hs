@@ -1,18 +1,18 @@
 
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
+-- {-# LANGUAGE ConstraintKinds            #-}
+-- {-# LANGUAGE DeriveDataTypeable         #-}
+-- {-# LANGUAGE DeriveFoldable             #-}
+-- {-# LANGUAGE DeriveFunctor              #-}
+-- {-# LANGUAGE DeriveTraversable          #-}
+-- {-# LANGUAGE FlexibleContexts           #-}
+-- {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeOperators              #-}
+-- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+-- {-# LANGUAGE MultiParamTypeClasses      #-}
+-- {-# LANGUAGE ScopedTypeVariables        #-}
+-- {-# LANGUAGE StandaloneDeriving         #-}
+-- {-# LANGUAGE TypeFamilies               #-}
+-- {-# LANGUAGE TypeOperators              #-}
 
 -------------------------------------------------------------------------------------
 -- |
