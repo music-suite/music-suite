@@ -181,7 +181,7 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 -- @
 --
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-behavior = R.tabulated
+behavior = tabulated
 
 -- |
 -- View a time function as a behavior.
@@ -201,7 +201,7 @@ unbehavior = from behavior
 -- for convenience.
 --
 line :: Fractional a => Behavior a
-line = realToFrac ^. R.tabulated
+line = realToFrac ^. tabulated
 --
 -- > f t = t
 --
