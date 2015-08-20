@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
-ß
+
 module Music.Score.Phrases (
     -- * HasPhrases class
     HasPhrases(..),
