@@ -14,7 +14,10 @@ module Music.Time.Internal.Preliminaries (
   module Data.Typeable,
   module Data.VectorSpace,
   module Data.Aeson,
-  module Data.Aeson,
+  module Data.Distributive,
+  module Data.Functor.Rep (),
+  module Data.Functor.Rep.Lens,
+  module Data.Typeable
 ) where
 
 import           Control.Applicative
@@ -26,11 +29,14 @@ import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Bifunctor
 import           Data.Foldable           (Foldable)
-import qualified Data.Foldable           as Foldable
 import           Data.Functor.Adjunction (unzipR)
 import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
 import           Data.VectorSpace
 import           Data.Aeson                    (ToJSON (..))
-import qualified Data.Aeson                    as JSON
+import           Data.Distributive
+import           Data.Functor.Rep ()
+import           Data.Functor.Rep.Lens
+import           Data.Typeable
+

@@ -31,27 +31,11 @@ module Music.Time.Behavior (
 
   ) where
 
-import           Data.AffineSpace
-import           Data.AffineSpace.Point
 import           Data.Map                      (Map)
 import qualified Data.Map                      as Map
-import           Data.Ratio
-import           Data.Semigroup
 import           Data.Set                      (Set)
 import qualified Data.Set                      as Set
-import           Data.String
-import           Data.VectorSpace
-import           Prelude
-
-import           Control.Applicative
-import           Control.Lens                  hiding (Indexable, Level, above,
-                                                below, index, inside, parts,
-                                                reversed, transform, (<|), (|>))
-
-import           Data.Distributive
-import           Data.Functor.Rep              as R
-import           Data.Functor.Rep.Lens
-import           Data.Typeable
+import           Music.Time.Internal.Preliminaries
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable

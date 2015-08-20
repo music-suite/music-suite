@@ -12,6 +12,7 @@ module Music.Time.Aligned (
       renderAlignedDuration,
   ) where
 
+import qualified Data.Aeson as JSON
 import           Music.Time.Internal.Preliminaries
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
