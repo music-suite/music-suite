@@ -1,5 +1,5 @@
 
--- {-# LANGUAGE CPP                        #-}
+{-# LANGUAGE CPP                        #-}
 -- {-# LANGUAGE ConstraintKinds            #-}
 -- {-# LANGUAGE DeriveDataTypeable         #-}
 -- {-# LANGUAGE DeriveFoldable             #-}
