@@ -9,7 +9,7 @@
 {-# LANGUAGE GADTs                      #-}
 -- {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- {-# LANGUAGE MultiParamTypeClasses      #-}
--- {-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 -- {-# LANGUAGE StandaloneDeriving         #-}
 -- {-# LANGUAGE TypeFamilies               #-}
 -- {-# LANGUAGE TypeOperators              #-}

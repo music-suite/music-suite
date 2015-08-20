@@ -139,6 +139,7 @@ library
                         StandaloneDeriving,
                         TupleSections,
                         TypeFamilies,
+                        TypeOperators,
                         ViewPatterns,
                         OverloadedStrings
     
