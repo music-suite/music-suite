@@ -9,3 +9,4 @@ test.pdf
 dist
 cabal.sandbox.config
 _build
+src/private

@@ -10,7 +10,7 @@ PANDOC_TEMPLATE=../templates/pandoc-bootstrap-template/template.html
 #PANDOC_TEMPLATE=../templates/music-suite/template.html
 
 PANDOC=pandoc --standalone --toc
-PANDOC_PDF=$(PANDOC) --write=pdf
+PANDOC_PDF=$(PANDOC) --write=latex
 PANDOC_HTML=$(PANDOC) --write=html --toc-depth 4 --css styles.css --template $(PANDOC_TEMPLATE)
 
 CABAL_FILES=\
@@ -65,15 +65,15 @@ pdf: transform-pdf
 		(cat 	About.md \
 			User-Guide.md \
 			) \
-			| $(PANDOC_PWD) -o ../test.pdf && \
+			| $(PANDOC_PDF) -o ../test.pdf && \
 	popd
 
 transform: 
 	mkdir -p $(OUT)
 	pushd $(OUT) && \
 		pwd && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/About.md 	>About.md  && \
-		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Usage.md 	>Usage.md   && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/About.md 		>About.md  && \
+		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Usage.md 		>Usage.md   && \
 		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/User-Guide.md  	>User-Guide.md  && \
 		( $(RESOLVE_LINKS) $(CABAL_FILES) | $(TRANSFORM) ) <../$(SRC)/Tutorial.md  	>Tutorial.md  && \
 		rm -f *.eps	 && \
