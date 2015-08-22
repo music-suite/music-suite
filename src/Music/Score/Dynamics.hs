@@ -26,7 +26,10 @@ module Music.Score.Dynamics (
         louder,
         softer,
         level,
-        compressor,
+        compressUp,
+        compressDown,
+        
+        -- compressor,
         fadeIn,
         fadeOut,
 
@@ -43,6 +46,7 @@ import           Control.Comonad
 import           Control.Lens                  hiding (Level, transform)
 import           Control.Monad
 import           Data.AffineSpace
+import           Data.AffineSpace.Point        (relative)
 import           Data.Foldable
 import           Data.Functor.Couple
 import           Data.Functor.Context
@@ -330,12 +334,27 @@ volume a = dynamics *~ a
 level :: Attenuable a => Dynamic a -> a -> a
 level a = dynamics .~ a
 
-compressor :: Attenuable a =>
+compressor :: (Attenuable a, Ord (Level a), Num (Level a)) =>
   Dynamic a           -- ^ Threshold
   -> Scalar (Level a) -- ^ Ratio
   -> a
   -> a
-compressor = error "Not implemented: compressor"
+compressor = compressUp
+{-# DEPRECATED compressor "Use compressUp (or compressDown)" #-}
+
+compressUp :: (Attenuable a, Ord (Level a), Num (Level a)) =>
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a
+  -> a
+compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x^* r)
+
+compressDown :: (Attenuable a, Ord (Level a), Num (Level a)) =>
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a
+  -> a
+compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x^* r)
 
 --
 -- TODO non-linear fades etc
