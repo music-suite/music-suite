@@ -88,7 +88,7 @@ data Quality
 -}
 
 {-|
-The alteration implied by a quality is dependent on whether it is attached
+The actual alteration implied by a quality is dependent on whether it is attached
 to a major\/minor vs. a perfect-style number. This type represents the two possibilities.
 -}
 data QualityType = PerfectType | MajorMinorType

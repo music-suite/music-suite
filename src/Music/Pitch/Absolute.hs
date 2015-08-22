@@ -4,7 +4,6 @@ module Music.Pitch.Absolute
   (
   -- * Absolute pitch representation
   Hertz(..),
-  -- FreqRatio(..),
   -- Octaves,
   Cents,
   Fifths,

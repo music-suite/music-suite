@@ -71,10 +71,10 @@ instance Show Clef where
     
 -- | Return the English name of the given clef.
 symbolName :: ClefSymbol -> String
-symbolName GClef = "G clef"
-symbolName CClef = "C clef"
-symbolName FClef = "F clef"
-symbolName PercClef = "Percussion clef"
+symbolName GClef       = "G clef"
+symbolName CClef       = "C clef"
+symbolName FClef       = "F clef"
+symbolName PercClef    = "Percussion clef"
 symbolName NeutralClef = "Neutral clef"
 
 -- | Return the pitch implied by the given clef at the middle space or line.

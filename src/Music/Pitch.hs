@@ -1,18 +1,5 @@
 
-------------------------------------------------------------------------------------
--- |
--- Copyright   : (c) Hans Hoglund 2012
---
--- License     : BSD-style
---
--- Maintainer  : hans@hanshoglund.se
--- Stability   : experimental
--- Portability : non-portable (TF,GNTD)
---
--- Provides various representations of musical pitches and intervals. 
---
--------------------------------------------------------------------------------------
-
+-- | Standard pitch representation.
 module Music.Pitch (
         module Data.Semigroup,
         module Data.VectorSpace,
