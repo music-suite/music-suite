@@ -871,7 +871,7 @@ asPitch :: Pitch -> Pitch
 
 
 
-
+-- | Separate a dotted note into an undotted note-value and number of dots.
 separateDots :: Duration -> (Duration, Int)
 separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 

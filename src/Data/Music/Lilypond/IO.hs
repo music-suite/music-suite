@@ -13,8 +13,7 @@
 --
 -------------------------------------------------------------------------------------
 
-module Data.Music.Lilypond.IO -- (
-  -- )
+module Data.Music.Lilypond.IO
 where
 
 import Data.Music.Lilypond
