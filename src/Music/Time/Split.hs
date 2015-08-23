@@ -74,7 +74,7 @@ instance Splittable Duration where
     where t' = t `max` 0
 
 chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]
-chunks d xs = if lengthOf (notes.each) xs <= 0 then [] else chunks' d xs
+chunks d xs = chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
 
