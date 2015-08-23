@@ -8,6 +8,7 @@ module Music.Score.Dynamics (
 
         -- * Dynamic type functions
         Dynamic,
+        Level,
         SetDynamic,
         DynamicLensLaws',
         DynamicLensLaws,
@@ -20,12 +21,13 @@ module Music.Score.Dynamics (
         dynamic',
         dynamics',
 
-        -- * Manipulating dynamics
-        Level,
+        -- * Attenuable class
         Attenuable,
+        
+        -- * Manipulating dynamics
+        level,
         louder,
         softer,
-        level,
         compressUp,
         compressDown,
         
@@ -295,66 +297,91 @@ instance (HasDynamics a b) => HasDynamics (SlideT a) (SlideT b) where
 instance (HasDynamic a b) => HasDynamic (SlideT a) (SlideT b) where
   dynamic = _Wrapped . dynamic
 
-
-
 -- |
--- Associated interval type.
+-- The 'Level' type represents difference in dynamics.
 --
 type Level a = Diff (Dynamic a)
+
+-- | Set dynamic level, overwriting previous value.
+level :: Attenuable a => Dynamic a -> a -> a
+level a = dynamics .~ a
 
 -- |
 -- Class of types that can be transposed.
 --
 type Attenuable a
   = (HasDynamics a a,
-     VectorSpace (Level a), AffineSpace (Dynamic a),
-     {-IsLevel (Level a), -} IsDynamics (Dynamic a))
+     VectorSpace (Level a), AffineSpace (Dynamic a))
 
--- |
--- Transpose up.
+-- | 
+-- Increase dynamics (linear).
+-- For standard notation, switches dynamic marks the given number of step upwards. 
+--
+-- >>> louder 1 (mp :: Dynamics)
+-- _p
+--
+-- >>> louder 1 (ff :: Dynamics)
+-- fff
+--
+-- >>> louder 5 [ppp,mf :: Dynamics]
+-- [_f, fffff]
 --
 louder :: Attenuable a => Level a -> a -> a
 louder a = dynamics %~ (.+^ a)
 
--- |
--- Transpose down.
+-- >>> louder 1 (level ff cs :: DynamicT Dynamics (Sum Pitch))
+-- DynamicT {getDynamicT = (fff,Sum {getSum = cs})}
 --
+-- >>> louder 1 (level ff cs :: Note (DynamicT Dynamics (Sum Pitch)))
+-- (1,DynamicT {getDynamicT = (fff,Sum {getSum = cs})})^.note
+--
+
+-- | Decrease dynamic (linear).
+--   For standard notation, switches dynamic marks the given number of step downwards. 
 softer :: Attenuable a => Level a -> a -> a
 softer a = dynamics %~ (.-^ a)
 
--- |
--- Transpose down.
---
+-- | Scale dynamic values.
 volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t -> s -> t
 volume a = dynamics *~ a
 
--- |
--- Transpose down.
+-- | Compress dynamics upwards.
+-- 
+-- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
+-- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
 --
-level :: Attenuable a => Dynamic a -> a -> a
-level a = dynamics .~ a
+-- >>> compressUp 0 (1/2) (0.2 :: Amplitude)
+-- Amplitude {getAmplitude = 0.1}
+-- 
+compressUp :: (Attenuable a, Ord (Level a), Num (Level a)) =>
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a                -- ^ Value to compress
+  -> a
+compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x^* r)
+
+-- | Compress dynamics downwards.
+-- 
+-- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
+-- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
+-- 
+-- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
+-- Amplitude {getAmplitude = -0.30000000000000004}
+-- 
+compressDown :: (Attenuable a, Ord (Level a), Num (Level a)) =>
+  Dynamic a           -- ^ Threshold
+  -> Scalar (Level a) -- ^ Ratio
+  -> a                -- ^ Value to compress
+  -> a
+compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x^* r)
 
 compressor :: (Attenuable a, Ord (Level a), Num (Level a)) =>
   Dynamic a           -- ^ Threshold
   -> Scalar (Level a) -- ^ Ratio
-  -> a
+  -> a                -- ^ Value to compress
   -> a
 compressor = compressUp
 {-# DEPRECATED compressor "Use compressUp (or compressDown)" #-}
-
-compressUp :: (Attenuable a, Ord (Level a), Num (Level a)) =>
-  Dynamic a           -- ^ Threshold
-  -> Scalar (Level a) -- ^ Ratio
-  -> a
-  -> a
-compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x^* r)
-
-compressDown :: (Attenuable a, Ord (Level a), Num (Level a)) =>
-  Dynamic a           -- ^ Threshold
-  -> Scalar (Level a) -- ^ Ratio
-  -> a
-  -> a
-compressDown th r = over dynamics (relative th $ \x -> if x > 0 then x else x^* r)
 
 --
 -- TODO non-linear fades etc
