@@ -26,6 +26,8 @@ library
                         type-unary              >= 0.2.16 && < 1.0,
                         reverse-apply,
                         xml,
+                        music-pitch             == 1.9.0,
+                        music-dynamics          == 1.9.0,
                         music-pitch-literal     == 1.9.0,
                         music-dynamics-literal  == 1.9.0
     exposed-modules:    Data.Music.MusicXml
