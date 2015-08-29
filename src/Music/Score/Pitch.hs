@@ -70,6 +70,8 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 
+import           Music.Pitch.Common hiding (Pitch, Interval)
+import qualified Music.Pitch.Common
 import           Music.Pitch.Literal
 import           Music.Score.Harmonics
 import           Music.Score.Part
@@ -185,16 +187,6 @@ pitch' = pitch
 pitches' :: HasPitches' s => Traversal' s (Pitch s)
 pitches' = pitches
 {-# INLINE pitches' #-}
-
-{-
--- |
--- Inject a pitch into some larger type.
---
-fromPitch' :: (HasPitches' a, IsPitch a) => Pitch a -> a
-fromPitch' x = c & pitches' .~ x
-{-# INLINE fromPitch' #-}
--- TODO swap name of this and Music.Pitch.Literal.fromPitch (or call that something else, i.e. fromPitchL)
--}
 
 
 #define PRIM_PITCH_INSTANCE(TYPE)       \
@@ -329,7 +321,6 @@ instance (Transformable a, Transformable b, b ~ Pitch b) => HasPitch (Behavior a
 
 type instance Pitch (Couple c a)        = Pitch a
 type instance SetPitch g (Couple c a)   = Couple c (SetPitch g a)
-
 type instance Pitch (TextT a)           = Pitch a
 type instance SetPitch g (TextT a)      = TextT (SetPitch g a)
 type instance Pitch (HarmonicT a)       = Pitch a
