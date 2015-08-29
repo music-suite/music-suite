@@ -7,6 +7,7 @@ module Music.Pitch.Common (
     module Music.Pitch.Common.Interval,
     module Music.Pitch.Common.Pitch,
     module Music.Pitch.Common.Spell,
+    module Music.Pitch.Common.Types,
     module Music.Pitch.Common.Harmony,
     module Music.Pitch.Common.Names,
   ) where
