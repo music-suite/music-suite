@@ -843,6 +843,7 @@ addVarCoda :: Music -> Music
 addVarCoda = addArticulation VarCoda
 
 
+-- Utility
 
 removeSingleChords :: Music -> Music
 removeSingleChords = foldMusic go
@@ -851,25 +852,11 @@ removeSingleChords = foldMusic go
         go x                   = x
 
 
-
-
-
-
-
-
-
+notImpl :: String -> a
 notImpl a = error $ "Not implemented: " ++ a
+
 asPitch = id
 asPitch :: Pitch -> Pitch
-
-
-
-
-
-
-
-
-
 
 -- | Separate a dotted note into an undotted note-value and number of dots.
 separateDots :: Duration -> (Duration, Int)
@@ -899,66 +886,3 @@ equalTo  = (==)
 infixl <=>
 a <=> b = sep [a,b]
 
-
-
-{-
-Debug stuff
-
-runLy = runCommand "lilypond -f pdf test.ly"
-
-engrave :: Music -> IO ()
-engrave e = do
-    writeFile "test.ly" $ show $ pretty e
-    runLy
-    return ()
-
-
-main = engrave test
--}
-
-test = Simultaneous False [
-        New "StaffGroup" Nothing (Simultaneous False [
-            New "Staff" Nothing (Relative c' $ Sequential [
-                Set "Staff.instrumentName" (toValue "Violin I"),
-                (addDynamics FF c), d, e
-                ]),
-            New "Staff" Nothing (Sequential [
-                Set "Staff.instrumentName" (toValue "Violin II"),
-                Clef Bass, c, g_, c])
-        ])
-    ]
-
--- test =
---     Simultaneous False 
---         [ Relative g' (Sequential [
---             addMarkup ([Bold "Hello", Italic (markup [MarkupText "cruel", Bold $ MarkupText "world"])]) rest,
---             addArticulation Mordent $ chord [c,e,g]^*2,
---             d^*1,
---             e^*2,
---             c^*(3/2),
---             fs^*(1/2)
---             ])
---         , Sequential [Tremolo 4 (Sequential [c^/4,d^/4]), Tremolo 4 (Sequential [c^/4,d^/4])]
---         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
---         , Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)]
---         , Relative g (Sequential [rest,c^*2,d^*1,e^*2,c^*(3/2),fs^*(1/2)])
---         , Sequential 
---             [ Times (4/5) (Sequential 
---                 [
---                     rest,
---                     addArticulation Accent $ addPost BeginSlur $ addPost BeginCresc $ c^*2,
---                     d^*1,
---                     addPost Tie $ e^*1
---                 ])
---             , Times (4/5) (Sequential 
---                 [      
---                     addPost BeginDim $ addPost EndCrescDim $ e^*1,
---                     c^*(3/2),
---                     addPost EndSlur $ fs^*(1/2),
---                     addPost EndCrescDim $ c^*2
---                 ])
---             ]
---         ]              
-        
-        
-    
