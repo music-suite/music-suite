@@ -37,14 +37,34 @@ module Music.Score.Pitch (
         _8va,
         _8vb,
         _15vb,
+        upDiatonic,
+        downDiatonic,
+        upChromatic,
+        downChromatic,
 
         -- * Inversion
         invertPitches,
+        invertDiatonic,
+        invertChromatic,
+        
+        -- * Ambitus
+        highestPitch,
+        lowestPitch,
+        averagePitch,
+        ambitusOctaves,
+        ambitusLowestOctave,
+        interpolateAmbitus,
+        interpolateAmbitus',
+        
+        -- * Enumeration
+        enumDiatonicFromTo,
+        enumChromaticFromTo,
+        enumDownDiatonicFromTo,
+        enumDownChromaticFromTo,
+        
+        -- * Utility
+        printPitches,
 
-        -- * Folds
-        highest,
-        lowest,
-        meanPitch,
   ) where
 
 import           Control.Applicative
@@ -55,7 +75,7 @@ import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable                 (Foldable)
 import           Data.Functor.Couple
-import qualified Data.List                     as List
+import qualified Data.List
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.String
@@ -70,8 +90,10 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 
+import           Music.Pitch.Ambitus
+import           Music.Pitch.Absolute
 import           Music.Pitch.Common hiding (Pitch, Interval)
-import qualified Music.Pitch.Common
+import qualified Music.Pitch.Common as Common
 import           Music.Pitch.Literal
 import           Music.Score.Harmonics
 import           Music.Score.Part
@@ -471,14 +493,193 @@ _15vb :: Transposable a => a -> a
 _15vb = octavesDown 2
 
 -- | Extract the highest pitch. Returns @Nothing@ if there are none.
-highest :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
-highest = maximumOf pitches'
+--
+-- >>> highestPitch [c,d,e :: Pitch]
+-- Just e
+--
+-- >>> highestPitch (Data.Map.fromList [("do",c),("re",d)] :: Data.Map.Map String Pitch)
+-- Just d
+--
+highestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+highestPitch = maximumOf pitches'
 
 -- | Extract the lowest pitch. Returns @Nothing@ if there are none.
-lowest :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
-lowest = minimumOf pitches'
+--
+-- >>> highestPitch [c,d,e :: Pitch]
+-- Just c
+--
+-- >>> highestPitch (Data.Map.fromList [("do",c),("re",d)] :: Data.Map.Map String Pitch)
+-- Just c
+--
+lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
+lowestPitch = minimumOf pitches'
 
 -- | Extract the average pitch. Returns @Nothing@ if there are none.
-meanPitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
-meanPitch = maybeAverage . Average . toListOf pitches'
+-- 
+-- >>> averagePitch (Data.Map.fromList [(True,440::Hertz),(False,445)])
+-- Just 442.5 Hz
+-- 
+averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
+averagePitch = maybeAverage . Average . toListOf pitches'
 
+{-# DEPRECATED lowest "Use lowestPitch "#-}
+{-# DEPRECATED highest "Use highestPitch "#-}
+{-# DEPRECATED meanPitch "Use averagePitch "#-}
+lowest = lowestPitch
+highest = highestPitch
+meanPitch = averagePitch
+
+-- | The number of whole octaves in an ambitus.
+ambitusOctaves :: Ambitus Common.Pitch -> Int
+ambitusOctaves = fromIntegral . octaves . ambitusInterval
+
+-- | The lowest octave (relative middle C) in present a given ambitus.
+ambitusLowestOctave :: Ambitus Common.Pitch -> Int
+ambitusLowestOctave = fromIntegral . octaves . (.-. c) . ambitusLowest
+
+-- | Interpolate between the highest and lowest points in an ambitus.
+--
+-- Can be used as a primitive contour-based melody generator.
+--
+interpolateAmbitus :: (Ord a, Num a, AffinePair (Diff a) a) => Ambitus a -> Scalar (Diff a) -> a
+interpolateAmbitus a = let (m,n) = a^.from ambitus in alerp m n
+
+-- |
+-- Same as @interpolateAmbitus@ but allow continous interpolation of standard pitch
+-- (as @Scalar (Diff Pitch) ~ Integer@).
+--
+interpolateAmbitus' :: Ambitus Common.Pitch -> Double -> Common.Pitch
+interpolateAmbitus' a x = (^.from pitchDouble) $ interpolateAmbitus (mapAmbitus (^.pitchDouble) a) x
+  where
+    -- We can't interpolate an (Ambitus Pitch) using fractions because of music-pitch/issues/16
+    -- Work around by converting pitches into doubles and back
+    -- Use Double rather than Hertz due to the latter's suspect affine space instance
+    -- Only an Iso up to enharmonic equivalence.
+    pitchDouble :: Iso' Common.Pitch Double
+    pitchDouble = iso (\x -> fromIntegral (semitones (x.-.c))) (\x -> c .+^ spell usingSharps (round x::Semitones))
+
+printPitches :: (HasPitches' a, Pitch a ~ p, Show p, Ord p) => a -> IO ()
+printPitches x = mapM_ print $ Data.List.sort $ Data.List.nub $ toListOf pitches x
+
+
+-- |
+-- >>> enumDiatonicFromTo c c
+-- [c]
+-- >>> enumDiatonicFromTo f f'
+-- [f,g,a,bb,c',d',e',f']
+-- >>> 
+-- >>> enumChromaticFromTo c c'
+-- [c,cs,d,ds,e,f,fs,g,gs,a,as,b,c']
+-- >>> 
+-- >>> enumChromaticFromTo bs bs'
+-- [bs,bss,css',csss',dss',es',ess',fss',fsss',gss',gsss',ass',bs']
+--
+enumDiatonicFromTo :: Common.Pitch -> Common.Pitch -> [Common.Pitch]
+enumDiatonicFromTo  x y = takeWhile (<= y) $ fmap (\n -> upDiatonic x n x) [0..]
+
+-- |
+--
+enumChromaticFromTo :: Common.Pitch -> Common.Pitch -> [Common.Pitch]
+enumChromaticFromTo x y = takeWhile (<= y) $ fmap (\n -> upChromatic x n x) [0..]
+
+-- |
+--
+enumDownDiatonicFromTo :: Common.Pitch -> Common.Pitch -> [Common.Pitch]
+enumDownDiatonicFromTo  x y = takeWhile (>= y) $ fmap (\n -> downDiatonic x n x) [0..]
+
+-- |
+--
+enumDownChromaticFromTo :: Common.Pitch -> Common.Pitch -> [Common.Pitch]
+enumDownChromaticFromTo x y = takeWhile (>= y) $ fmap (\n -> downChromatic x n x) [0..]
+
+-- |
+-- >>> upDiatonic c 1 (e :: Pitch)
+-- f
+-- >>> upDiatonic g 1 (e :: Pitch)
+-- fs
+-- >>> upDiatonic c 2 [e,f,g :: Pitch]
+-- [g,a,b]
+-- >>> upDiatonic f 2 [e,f,g :: Pitch]
+-- [g,a,bb]
+upDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> DiatonicSteps -> a -> a
+upDiatonic o n  = over pitches' (upDiatonicP o n)
+
+-- |
+-- >>> upDiatonic c 1 (e :: Pitch)
+-- f
+-- >>> upDiatonic g 1 (e :: Pitch)
+-- fs
+-- >>> upDiatonic c 2 [e,f,g :: Pitch]
+-- [g,a,b]
+-- >>> upDiatonic f 2 [e,f,g :: Pitch]
+-- [g,a,bb]
+downDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> DiatonicSteps -> a -> a
+downDiatonic o n  = over pitches' (downDiatonicP o n)
+
+-- |
+-- >>> upDiatonic c 1 (e :: Pitch)
+-- f
+-- >>> upDiatonic g 1 (e :: Pitch)
+-- fs
+-- >>> upDiatonic c 2 [e,f,g :: Pitch]
+-- [g,a,b]
+-- >>> upDiatonic f 2 [e,f,g :: Pitch]
+-- [g,a,bb]
+upChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> ChromaticSteps -> a -> a
+upChromatic o n = over pitches' (upChromaticP' o n)
+
+-- |
+-- >>> upDiatonic c 1 (e :: Pitch)
+-- f
+-- >>> upDiatonic g 1 (e :: Pitch)
+-- fs
+-- >>> upDiatonic c 2 [e,f,g :: Pitch]
+-- [g,a,b]
+-- >>> upDiatonic f 2 [e,f,g :: Pitch]
+-- [g,a,bb]
+downChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> ChromaticSteps -> a -> a
+downChromatic o n = over pitches' (downChromaticP' o n)
+
+-- |
+-- >>> invertDiatonic c ([e,gs]^.score :: Score Pitch)
+-- [(0 <-> 1,a_)^.event,(0 <-> 1,fs_)^.event]^.score
+--
+invertDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> a -> a
+invertDiatonic o = over pitches' (invertDiatonicallyP o)
+
+-- |
+-- >>> invertChromatic c ([e,gs]^.score :: Score Pitch)
+-- [(0 <-> 1,e)^.event,(0 <-> 1,gb)^.event]^.score
+-- 
+invertChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> a -> a
+invertChromatic o = over pitches' (invertChromaticallyP o)
+
+
+downChromaticP' :: Common.Pitch -> ChromaticSteps -> Common.Pitch -> Common.Pitch
+downChromaticP' o n = upChromaticP' o (-n)
+
+upChromaticP' :: Common.Pitch -> ChromaticSteps -> Common.Pitch -> Common.Pitch
+upChromaticP' _ n p
+  | n >= 0 = p .+^ spell usingSharps (fromIntegral n :: Semitones)
+  | n <  0 = p .-^ spell usingFlats (fromIntegral (abs n) :: Semitones)
+
+
+instance Transformable Common.Pitch where
+  transform _ = id
+type instance Pitch Common.Pitch = Common.Pitch
+type instance SetPitch a Common.Pitch = a
+
+instance (Transformable a, a ~ Pitch a) => HasPitch Common.Pitch a where
+  pitch = ($)
+instance (Transformable a, a ~ Pitch a) => HasPitches Common.Pitch a where
+  pitches = ($)
+
+instance Transformable Hertz where
+  transform _ = id
+type instance Pitch Hertz = Hertz
+type instance SetPitch a Hertz = a
+
+instance (Transformable a, a ~ Pitch a) => HasPitch Hertz a where
+  pitch = ($)
+instance (Transformable a, a ~ Pitch a) => HasPitches Hertz a where
+  pitches = ($)
