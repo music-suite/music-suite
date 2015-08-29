@@ -4,29 +4,14 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
--- | Provides functions for manipulating pitch.
+-- | Provides generic functions for inspecting and manipulating pitch.
+--
+-- The pitches will usually be of type 'Pitch', as defined in "Music.Pitch.Common", but it is also
+-- possible to use other types such as 'Hertz'.
+-- 
 module Music.Score.Pitch (
-        
-        -- * Pitch type
-        Pitch,
-        SetPitch,
-        Interval,
-        
-        -- * HasPitch classes
-        HasPitch(..),
-        HasPitches(..),
-        -- fromPitch',
-
-        -- ** Simple versions
-        HasPitch',
-        HasPitches',
-        pitch',
-        pitches',
-        
-        -- * Transposition
-        PitchPair,
-        AffinePair,
-        Transposable,
+        -- * Pitch functions
+        -- ** Transposition
         up,
         down,
         above,
@@ -42,12 +27,12 @@ module Music.Score.Pitch (
         upChromatic,
         downChromatic,
 
-        -- * Inversion
+        -- ** Inversion
         invertPitches,
         invertDiatonic,
         invertChromatic,
         
-        -- * Ambitus
+        -- ** Ambitus
         highestPitch,
         lowestPitch,
         averagePitch,
@@ -56,14 +41,35 @@ module Music.Score.Pitch (
         interpolateAmbitus,
         interpolateAmbitus',
         
-        -- * Enumeration
+        -- ** Enumeration
         enumDiatonicFromTo,
         enumChromaticFromTo,
         enumDownDiatonicFromTo,
         enumDownChromaticFromTo,
         
-        -- * Utility
+        -- ** Utility
         printPitches,
+
+        -- * Pitch type
+        Pitch,
+        SetPitch,
+        Interval,
+        
+        -- * HasPitch classes
+        HasPitch(..),
+        HasPitches(..),
+        -- fromPitch',
+
+        -- ** Simple versions
+        HasPitch',
+        HasPitches',
+        pitch',
+        pitches',
+
+        -- ** Utility classes
+        Transposable,
+        PitchPair,
+        AffinePair,
 
   ) where
 
@@ -425,9 +431,12 @@ down v = pitches %~ (.-^ v)
 -- |
 -- Add the given interval above.
 --
--- >>> above _P8 [c :: Pitch]
--- [c,c']
+-- >>> above _P5 [c :: Pitch]
+-- [c,g]
 --
+-- >>> above _P5 (c :: Score Pitch)
+-- [c,g]^.score
+-- 
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above v x = x <> up v x
 
