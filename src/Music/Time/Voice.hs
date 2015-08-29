@@ -8,7 +8,7 @@ module Music.Time.Voice (
         voice,
         notes,
         pairs,
-        durationsVoice,
+        durationsAsVoice,
 
         -- * Traversal
         -- ** Separating rhythms and values
@@ -57,6 +57,9 @@ module Music.Time.Voice (
         unsafeNotes,
         unsafePairs,
 
+        -- * Legacy
+        durationsVoice,
+        
   ) where
 
 import           Control.Applicative
@@ -291,8 +294,11 @@ unsafeNotes = _Wrapped
 unsafePairs :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
 unsafePairs = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
-durationsVoice :: Iso' [Duration] (Voice ())
-durationsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
+durationsAsVoice :: Iso' [Duration] (Voice ())
+durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
+
+durationsVoice = durationsAsVoice
+{-# DEPRECATED durationsVoice "Use durationsAsVoice" #-}
 
 -- |
 -- Unzip the given voice.
