@@ -85,7 +85,7 @@ withSpan :: Score a -> Score (Span, a)
 withSpan = mapTriples (\t d x -> (t >-> d,x))
 withTime = mapTriples (\t d x -> (t, x))
 
-inSpan t' (view range -> (t,u)) = t <= t' && t' < u
+inSpan t' (view onsetAndOffset -> (t,u)) = t <= t' && t' < u
 
 mapBefore :: Time -> (Score a -> Score a) -> Score a -> Score a
 mapDuring :: Span -> (Score a -> Score a) -> Score a -> Score a
@@ -105,7 +105,7 @@ noteToReactive :: Monoid a => Event a -> Reactive a
 noteToReactive n = (pure <$> n) `activate` pure mempty
 
 activate :: Event (Reactive a) -> Reactive a -> Reactive a
-activate (view (from event) -> (view range -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
+activate (view (from event) -> (view onsetAndOffset -> (start,stop), x)) y = y `turnOn` (x `turnOff` y)
     where
         turnOn  = switchR start
         turnOff = switchR stop

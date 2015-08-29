@@ -186,9 +186,9 @@ tempoDuring s c = addMetaNote $ view event (s, c)
 
 -- TODO move
 inSpan :: Span -> Time -> Bool
-inSpan (view range -> (t,u)) x = t <= x && x <= u
+inSpan (view onsetAndOffset -> (t,u)) x = t <= x && x <= u
 
-inSpan' (view range -> (t,u)) x = t <= x && x < u
+inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
 
 mkNote s x = view note (s, x)
 
@@ -268,7 +268,7 @@ renderTempoTime (TempoRegion notRegOn notRegOff soRegOn str) t
 renderTempoTime' (TempoRegion notRegOn notRegOff soRegOn str) t  = soRegOn .+^ ((t .-. notRegOn) ^* str)
 
 renderTempoSpan :: TempoRegion -> Span -> Span
-renderTempoSpan tr = over range $ \(t,u) ->
+renderTempoSpan tr = over onsetAndOffset $ \(t,u) ->
     if inSpan' (tempoRegionNotated tr) t
         then (renderTempoTime' tr t, renderTempoTime' tr u)
         else (t, u)
