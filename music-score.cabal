@@ -49,6 +49,8 @@ library
                         lilypond                == 1.9.0,
                         music-pitch-literal     == 1.9.0,
                         music-dynamics-literal  == 1.9.0,
+                        music-pitch             == 1.9.0,
+                        music-dynamics          == 1.9.0,
                         prettify,
                         parsec                  >= 3.1.9 && < 4
     exposed-modules:    Data.PairMonad
