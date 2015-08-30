@@ -47,9 +47,6 @@ module Music.Score.Pitch (
         enumDownDiatonicFromTo,
         enumDownChromaticFromTo,
         
-        -- ** Utility
-        printPitches,
-
         -- * Pitch type
         Pitch,
         SetPitch,
@@ -110,82 +107,39 @@ import           Music.Score.Phrases
 import           Music.Time
 import           Music.Time.Internal.Transform
 
--- |
--- This type fuction is used to access the pitch type for a given type.
+-- | A type function that returns the pitch type associated with a given type.
+--
+-- For simple types this is identity (they are their own pitch).
+--
+-- > PitchOf Pitch = Pitch
+--
+-- For containers this is a morhism
+--
+-- > PitchOf (Voice Pitch) = PitchOf Pitch = Pitch
 --
 type family Pitch (s :: *) :: *
---
--- @
--- 'Pitch' (c,a)             ~ 'Pitch' a
--- 'Pitch' [a]               ~ 'Pitch' a
--- 'Pitch' ('Event' a)          ~ 'Pitch' a
--- 'Pitch' ('Voice' a)         ~ 'Pitch' a
--- 'Pitch' ('Score' a)         ~ 'Pitch' a
--- @
---
--- For types representing pitch, it is generally 'Identity', i.e
---
--- @
--- Pitch Integer ~ Integer
--- Pitch Double ~ Double
--- @
---
--- and so on.
---
--- For containers, 'Pitch' provides a morphism:
---
 
 -- |
--- This type fuction is used to update the pitch type for a given type.
--- The first argument is the new type.
+-- A type function to change the pitch type associate with a given type, where the first argument is the new pitch type,
+-- and the second argument is the previous compound type.
+--
+-- For simple types this is constant (replacing means replacing the whole type).
+--
+-- > SetPitch Hertz Pitch = Hertz
+--
+-- For containers this is a morhism
+--
+-- > SetPitch Hertz (Voice Pitch) = Voice Hertz
 --
 type family SetPitch (b :: *) (s :: *) :: *
---
--- @
--- 'SetPitch' b (c,a)          ~ (c, 'SetPitch' b a)
--- 'SetPitch' b [a]            ~ ['SetPitch' b a]
--- 'SetPitch' g ('Event' a)       ~ Event ('SetPitch' g a)
--- 'SetPitch' g ('Voice' a)      ~ 'Voice' ('SetPitch' g a)
--- 'SetPitch' g ('Score' a)      ~ 'Score' ('SetPitch' g a)
--- @
---
--- For types representing pitch, it is generally 'Constant', i.e
---
--- @
--- SetPitch a Double ~ a
--- SetPitch a Integer ~ a
--- @
---
--- For containers, 'SetPitch' provides a morphism:
---
 
--- |
--- Class of types that provide a single pitch.
---
+-- | Types which has a single pitch (i.e notes, events, the pitches themselves).
 class HasPitches s t => HasPitch s t where
-
+  
   -- | Access the pitch.
   pitch :: Lens s t (Pitch s) (Pitch t)
 
--- TODO move doc
---
---   As this is a 'Traversal', you can use all combinators from the lens package,
---   for example:
---
---   @
---   'pitch' .~ c    :: ('HasPitch'' a, 'IsPitch' a)      => a -> a
---   'pitch' +~ 2    :: ('HasPitch'' a, 'Num' ('Pitch' a))  => a -> a
---   'pitch' %~ 'succ' :: ('HasPitch'' a, 'Enum' ('Pitch' a)) => a -> a
---   'view' 'pitch'    :: 'HasPitches'' a                 => a -> 'Pitch' a
---   'set'  'pitch'    :: 'HasPitches' a b                => 'Pitch' b -> a -> b
---   'over' 'pitch'    :: 'HasPitches' a b                => ('Pitch' a -> 'Pitch' b) -> a -> b
---   @
---
-
-
--- |
--- Class of types that provide zero or more pitches.
---
+-- | Types which has multiple pitches (i.e. voices, scores).
 class (Transformable (Pitch s),
        Transformable (Pitch t),
        SetPitch (Pitch t) s ~ t) => HasPitches s t where
@@ -193,28 +147,19 @@ class (Transformable (Pitch s),
   -- | Access all pitches.
   pitches :: Traversal s t (Pitch s) (Pitch t)
 
+-- | Same as 'HasPitch' but does not allow you to change the type.
 type HasPitch' a = HasPitch a a
 
+-- | Same as 'HasPitches' but does not allow you to change the type.
 type HasPitches' a = HasPitches a a
 
-
--- | 
--- Access the pitch.
---
--- Same as 'pitch', but without polymorphic update.
---
+-- |  Access the pitch. This is the same as 'pitch', but does not allow you to change the type.
 pitch' :: HasPitch' s => Lens' s (Pitch s)
 pitch' = pitch
-{-# INLINE pitch' #-}
 
--- | 
--- Access all pitches.
--- 
--- Same as 'pitches', but without polymorphic update.
---
+-- | Access all pitches. Same as 'pitches', but does not allow you to change the type.
 pitches' :: HasPitches' s => Traversal' s (Pitch s)
 pitches' = pitches
-{-# INLINE pitches' #-}
 
 
 #define PRIM_PITCH_INSTANCE(TYPE)       \
@@ -410,9 +355,6 @@ type Transposable a = (
 -- >>> up _P5 [c,d,e :: Pitch]
 -- [g,a,b]
 --
--- >>> up _P5 [440 :: Hertz, 442, 810]
--- [g,a,b]
---
 up :: Transposable a => Interval a -> a -> a
 up v = pitches %~ (.+^ v)
 
@@ -461,9 +403,6 @@ invertPitches p = pitches %~ reflectThrough p
 -- >>> octavesUp 2 (c :: Pitch)
 -- c''
 --
--- >>> octavesUp 1 [c,d,e]
--- [c',d',e']
---
 -- >>> octavesUp (-1) [c,d,e]
 -- [c_,d_,e_]
 --
@@ -475,9 +414,6 @@ octavesUp n = up (_P8^*n)
 --
 -- >>> octavesDown 2 (c :: Pitch)
 -- c__
---
--- >>> octavesDown 1 [c,d,e]
--- [c_,d_,e_]
 --
 -- >>> octavesDown (-1) [c,d,e]
 -- [c',d',e']
@@ -567,10 +503,6 @@ interpolateAmbitus' a x = (^.from pitchDouble) $ interpolateAmbitus (mapAmbitus 
     pitchDouble :: Iso' Common.Pitch Double
     pitchDouble = iso (\x -> fromIntegral (semitones (x.-.c))) (\x -> c .+^ spell usingSharps (round x::Semitones))
 
-printPitches :: (HasPitches' a, Pitch a ~ p, Show p, Ord p) => a -> IO ()
-printPitches x = mapM_ print $ Data.List.sort $ Data.List.nub $ toListOf pitches x
-
-
 -- |
 -- >>> enumDiatonicFromTo c c
 -- [c]
@@ -601,7 +533,8 @@ enumDownDiatonicFromTo  x y = takeWhile (>= y) $ fmap (\n -> downDiatonic x n x)
 enumDownChromaticFromTo :: Common.Pitch -> Common.Pitch -> [Common.Pitch]
 enumDownChromaticFromTo x y = takeWhile (>= y) $ fmap (\n -> downChromatic x n x) [0..]
 
--- |
+-- | Diatonic transposition, using the diatonic scale centered around the given note.
+--
 -- >>> upDiatonic c 1 (e :: Pitch)
 -- f
 -- >>> upDiatonic g 1 (e :: Pitch)
@@ -610,10 +543,15 @@ enumDownChromaticFromTo x y = takeWhile (>= y) $ fmap (\n -> downChromatic x n x
 -- [g,a,b]
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
-upDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> DiatonicSteps -> a -> a
+upDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> DiatonicSteps  -- ^ Number of steps to transpose
+  -> a              -- ^ Original music
+  -> a
 upDiatonic o n  = over pitches' (upDiatonicP o n)
 
--- |
+-- | Diatonic transposition, using the diatonic scale centered around the given note.
+--
 -- >>> upDiatonic c 1 (e :: Pitch)
 -- f
 -- >>> upDiatonic g 1 (e :: Pitch)
@@ -622,10 +560,15 @@ upDiatonic o n  = over pitches' (upDiatonicP o n)
 -- [g,a,b]
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
-downDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> DiatonicSteps -> a -> a
+downDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> DiatonicSteps  -- ^ Number of steps to transpose
+  -> a              -- ^ Original music
+  -> a
 downDiatonic o n  = over pitches' (downDiatonicP o n)
 
--- |
+-- | Chromatic transposition, using the diatonic scale centered around the given note.
+--
 -- >>> upDiatonic c 1 (e :: Pitch)
 -- f
 -- >>> upDiatonic g 1 (e :: Pitch)
@@ -634,10 +577,15 @@ downDiatonic o n  = over pitches' (downDiatonicP o n)
 -- [g,a,b]
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
-upChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> ChromaticSteps -> a -> a
+upChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> ChromaticSteps -- ^ Number of steps to transpose
+  -> a              -- ^ Original music
+  -> a
 upChromatic o n = over pitches' (upChromaticP' o n)
 
--- |
+-- | Chromatic transposition, using the diatonic scale centered around the given note.
+--
 -- >>> upDiatonic c 1 (e :: Pitch)
 -- f
 -- >>> upDiatonic g 1 (e :: Pitch)
@@ -646,21 +594,31 @@ upChromatic o n = over pitches' (upChromaticP' o n)
 -- [g,a,b]
 -- >>> upDiatonic f 2 [e,f,g :: Pitch]
 -- [g,a,bb]
-downChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> ChromaticSteps -> a -> a
+downChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> ChromaticSteps -- ^ Number of steps to transpose
+  -> a              -- ^ Original music
+  -> a
 downChromatic o n = over pitches' (downChromaticP' o n)
 
 -- |
 -- >>> invertDiatonic c ([e,gs]^.score :: Score Pitch)
 -- [(0 <-> 1,a_)^.event,(0 <-> 1,fs_)^.event]^.score
 --
-invertDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> a -> a
+invertDiatonic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> a              -- ^ Original music
+  -> a
 invertDiatonic o = over pitches' (invertDiatonicallyP o)
 
 -- |
 -- >>> invertChromatic c ([e,gs]^.score :: Score Pitch)
 -- [(0 <-> 1,e)^.event,(0 <-> 1,gb)^.event]^.score
 -- 
-invertChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch) => Common.Pitch -> a -> a
+invertChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch)
+  => Common.Pitch   -- ^ Tonic
+  -> a              -- ^ Original music
+  -> a
 invertChromatic o = over pitches' (invertChromaticallyP o)
 
 
