@@ -17,7 +17,7 @@ module Music.Parts (
         module Music.Parts.Instrument,
 
         -- * Parts
-        Part(..),
+        Part,
         _solo,
         _subpart,
         _instrument,
@@ -180,7 +180,11 @@ vocal music, but some concetps may be useful in electronic music as well.
 -}
 
 -- | A part is a subdivided group of instruments of a given type.
-data Part = Part Solo Instrument Subpart
+data Part = Part 
+  Solo        -- Solo vs. tutti
+  Instrument  -- Type of instrument
+  Subpart     -- Subdivision within instrument chorus
+  -- TODO Layer
     deriving (Eq, Ord)
 
 instance Show Part where
