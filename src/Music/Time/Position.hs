@@ -65,9 +65,9 @@ import           Music.Time.Internal.Util
 --
 -- Many values such as notes, envelopes etc can in fact have many positions such as onset,
 -- attack point, offset, decay point time etc. Rather than having separate methods for a
--- discrete set of cases, this class provides an interpolation from a /local/ position to
--- a /global/ position. While the local position goes from zero to one,
--- the global position goes from the 'onset' to the 'offset' of the value.
+-- fixed set of cases, this class provides an interpolation from a /local/ position to
+-- a /global/ position. While the local position goes from zero to one, the global position
+-- goes from the 'onset' to the 'offset' of the value.
 --
 -- Instances should satisfy:
 --
