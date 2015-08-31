@@ -496,6 +496,7 @@ data Articulation
     | Staccato
     | Tenuto
     | Portato
+
     | Upbow
     | Downbow
     | Flageolet
@@ -509,6 +510,7 @@ data Articulation
     | Turn
     | ReverseTurn
     | Trill
+
     | Prall
     | Mordent
     | PrallPrall
@@ -521,10 +523,12 @@ data Articulation
     | PrallUp
     | LinePrall
     | SignumCongruentiae
+
     | ShortFermata
     | Fermata
     | LongFermata
     | VeryLongFermata
+
     | Segno
     | Coda
     | VarCoda
@@ -841,6 +845,32 @@ addCoda = addArticulation Coda
 
 addVarCoda :: Music -> Music
 addVarCoda = addArticulation VarCoda
+
+
+-- Specifics (TODO I/O)
+data NoteHeadStyle
+  = DefaultNoteHead
+  | AltDefaultNoteHead -- Same as default, except printing of breves
+  | BaroqueNoteHead
+  | NeomensuralNoteHead
+  | PetrucciNoteHead
+  | HarmonicNoteHead
+  | HarmonicBlackNoteHead
+  | HarmonicMixedNoteHead
+  | DiamondNoteHead
+  | CrossNoteHead
+  | XCircleNoteHead
+  | TriangleNoteHead
+  | SlashNoteHead
+  
+  
+
+
+
+
+
+
+
 
 
 -- Utility
