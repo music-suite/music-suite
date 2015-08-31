@@ -5,10 +5,11 @@ Basics of time
   Time, Duration, Span (quick introduction)
   There are many other types...
     (just demonstrate Pitch, Interval, Part, Instrument and some other useful ones)
+Working with rhythm
+  Duration patterns and rhythms to voices
 Working with melody
   Notes, voices and melodies
-  Duration patterns and rhythms to voices
-  Aligned voices, phrases and metrical grids
+  Aligned voices, phrases and metrical grids (the new TREE thing)
   Phrase traversals and isos
   Recursive voices and infinite melody
 Working with polyphony
@@ -17,6 +18,7 @@ Working with polyphony
   Homophonic to polyphonic texture
   XXX instroduce quantization?
 Rests, multi-level rhythmical texture etc
+  Nested scores
 Working with harmony
   Chords and scales
 Working with orchestration

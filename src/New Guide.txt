@@ -1,3 +1,6 @@
+
+-- Compare this with Book.md and the present guide
+
 Install
 Setting up backends
     Wizard:
@@ -5,8 +8,15 @@ Setting up backends
       What backend do you primarily want to use for viewing scores?
       What backend do you primarily want to use for playing MIDI files?
       Do you want to use the SuperCollider backend for playing sounds?
+
+
+What is Music Suite
+    Music Suite is a way of composing, analyzing or transforming music, using a text-based language. This is not a new idea
+    Music Suite is designed to be extremely *powerful* and *flexible*.
     
-Basics
+# Basics
+    ## How Music Suite works
+
     Internal representation, import export
     Generalized notion of music
     Representation of notes and rests
@@ -14,7 +24,7 @@ Basics
     Type classes
       Many types in MS are Monoids and Semigroups
       Most aspects are VectorSpaces or AffineSpaces
-      For higher-order types, we use Functor, Applicative and Monad
+      For higher-order types, we use Functor, Applicative, Monad and Comonad
 
     Lens, Iso, Prism and Traversal
       
@@ -41,14 +51,15 @@ Basics
         c
 
     The TFs PitchOf etc
-      Most types in MS support querying for musical *aspects*. The standard aspects are: pitch, dynamic, part/instrument and articulation.
-        >>> let x = c::StandardNote
+      Most types in MS support querying for musical *aspects*. The standard aspects are: pitch, part (which includes both instrument, subdivision and playing technique), dynamics and articulation.
+      
+        >>> let x = c::Event (PartT Part (ArticulationT Articulation (DynamicT Dynamics Pitch)))
         >>> x^.pitch
         c
         >>> x^.dynamic
-        mf
+        mempty
         >>> x^.articulation
-        straight
+        mempty
         >>> x^.part
         piano
 
@@ -61,10 +72,7 @@ Basics
         [straight]
         >>> x^..parts
         [piano]
-    
-        printPitches
-        printMusic
-        
+            
         TODO use of over
     
 Time
@@ -108,7 +116,7 @@ Meta-data
     Key signature
     Time signature
     Tempo
-    Fermantas
+    Fermatas
     Fermatas, caesuras and breathing marks
     Ritardando and accellerando
     Rehearsal marks
