@@ -126,14 +126,17 @@ instance Monoid StaffInfo where
 type Pitch                  = Music.Pitch.Pitch
 data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
-data CrossBeamNotation      = CrossBeams Int | ZBeam
+-- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
+-- TODO No way to represent 2-pitch tremolo
+data TremoloNotation      = BeamedTremolo Int | UnmeasuredTremolo
   deriving (Eq,Ord,Show)
 data BreathNotation         = Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
-type CrossStaff             = () -- TODO
-
+type HarmonicNotation       = (Any, Sum Int)        -- (artificial?, partial number)
+type SlideNotation          = ((Any,Any),(Any,Any)) -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
+type Ties                   = (Any,Any)             -- (endTie?,beginTie?)
 -- TODO appogiatura/acciatura
 -- TODO beaming
 
@@ -141,16 +144,19 @@ type CrossStaff             = () -- TODO
 data Chord = Chord {
   _pitches::[Pitch], 
   _arpeggioNotation::Maybe ArpeggioNotation, 
-  _crossBeamNotation::Maybe CrossBeamNotation, 
+  _tremoloNotation::Maybe TremoloNotation, 
   _breathNotation::Maybe BreathNotation, 
   _articulationNotation::Maybe ArticulationNotation, -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
-  _dynamicNotation::Maybe DynamicNotation
-  --, 
-  -- _crossStaff::CrossStaff
+  _dynamicNotation::Maybe DynamicNotation,
+  _chordColor::Maybe (Colour Double),
+  _chordText::[String],
+  _harmonicNotation::HarmonicNotation,
+  _slideNotation::SlideNotation,
+  _ties::Ties
   }
   deriving (Eq, Show); makeLenses ''Chord
 instance Monoid Chord where
-  mempty = Chord [] Nothing Nothing Nothing Nothing Nothing
+  mempty = Chord [] Nothing Nothing Nothing Nothing Nothing mempty mempty mempty mempty mempty
 
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
@@ -194,9 +200,9 @@ data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
 -- type UpDown       = Up | Down
 -- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
 -- data ArpeggioNotation   = TODO
--- data CrossBeamNotation  = TODO
+-- data TremoloNotation  = TODO
 -- data BreathNotation = Fermata | PauseAfter | CaesuraAfter
--- type Bar          = [Voice ([Pitch], ArpeggioNotation, CrossBeamNotation, BreathNotation, ArticulationNotation, CrossStaff)], Voice DynamicNotation
+-- type Bar          = [Voice ([Pitch], ArpeggioNotation, TremoloNotation, BreathNotation, ArticulationNotation, CrossStaff)], Voice DynamicNotation
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -242,37 +248,61 @@ toLyBar sysBar bar = do
   -- TODO ignoring system bar
   let layers = bar^.pitchLayers
   error "No toLyBar"
+  
+  where
+    go :: Rhythm a -> Lilypond.Music
+    go (Beat d x)            = undefined
+    go (Dotted n (Beat d x)) = undefined
+    go (Dotted n _)          = error "FIXME"
+    go (Group rs)            = scatL $ fmap go rs
+    go (Tuplet m r)          = Lilypond.Times (realToFrac m) (go r)
+      where
+        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+    
+    unRatio = Music.Score.Internal.Util.unRatio
+    bimap = Music.Score.bimap
 
 {-
-_arpeggioNotation::Maybe ArpeggioNotation, 
-_crossBeamNotation::Maybe CrossBeamNotation, 
-_breathNotation::Maybe BreathNotation, 
-_articulationNotation::Maybe ArticulationNotation, -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
-_dynamicNotation::Maybe DynamicNotation
-
+TODO _arpeggioNotation::Maybe ArpeggioNotation, 
+TODO _tremoloNotation::Maybe TremoloNotation, 
+TODO _breathNotation::Maybe BreathNotation, 
 -}  
 toLyChord :: Duration -> Chord -> E Lilypond.Music
-toLyChord d chord = case (chord^.pitches) of
-    []  -> return $ Lilypond.Rest                               (Just (realToFrac d)) []
-    [x] -> return $ Lilypond.Note  (toLyNote x)                 (Just (realToFrac d)) []
-    xs  -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
+toLyChord d chord = id
+    <$> notateTies (chord^.ties)
+    <$> notateGliss (chord^.slideNotation)
+    <$> notateHarmonic (chord^.harmonicNotation)
+    <$> notateText (chord^.chordText)
+    <$> notateColor (chord^.chordColor)
+    <$> maybe id notateDynamic (chord^.dynamicNotation)
+    <$> maybe id notateArticulation (chord^.articulationNotation)
+    <$> notatePitches d (chord^.pitches)
   where
-    
+    notatePitches :: Duration -> [Pitch] -> E Lilypond.Music
+    notatePitches d pitches = case pitches of
+        []  -> return $ Lilypond.Rest                               (Just (realToFrac d)) []
+        [x] -> return $ Lilypond.Note  (toLyNote x)                 (Just (realToFrac d)) []
+        xs  -> return $ Lilypond.Chord (fmap ((,[]) . toLyNote) xs) (Just (realToFrac d)) []
+
+    toLyNote :: Pitch -> Lilypond.Note
     toLyNote p = (`Lilypond.NotePitch` Nothing) $ Lilypond.Pitch (
       toEnum (fromEnum $ Music.Pitch.name p),
-      fromIntegral (Music.Pitch.accidental p), -- TODO catch >2 (or simply normalize)
+      -- FIXME catch if (abs accidental)>2 (or simply normalize)
+      fromIntegral (Music.Pitch.accidental p),
       -- Lilypond expects SPN, so middle c is octave 4
       fromIntegral $ Music.Pitch.octaves (p.-.Music.Score.octavesDown 4 Music.Pitch.Literal.c)
       )
 
-    -- notateDynamic      :: DynamicNotation                                -> Lilypond.Music -> Lilypond.Music
-    -- notateArticulation :: ArticulationNotation                           -> Lilypond.Music -> Lilypond.Music
-    -- notateColor        :: Option (Data.Semigroup.Last (Colour Double))   -> Lilypond.Music -> Lilypond.Music
-    -- notateTremolo      :: Maybe (TremoloT a) -> Duration                 -> (Lilypond.Music -> Lilypond.Music, Duration)
-    -- notateText         :: [String]                         -> Lilypond.Music -> Lilypond.Music
-    -- notateHarmonic     :: (Eq t, Num t) => (Any, Sum t)    -> Lilypond.Music -> Lilypond.Music
-    -- notateGliss        :: ((Any, Any), (Any, Any))         -> Lilypond.Music -> Lilypond.Music
-    -- notateTie          :: (Any, Any)                       -> Lilypond.Music -> Lilypond.Music
+    -- notateDynamic      :: Maybe DynamicNotation                -> Lilypond.Music -> Lilypond.Music
+    -- notateArticulation :: Maybe ArticulationNotation           -> Lilypond.Music -> Lilypond.Music
+    -- notateColor        :: Maybe (Colour Double)                -> Lilypond.Music -> Lilypond.Music
+    -- notateTremolo      :: Maybe Int                -> Duration -> (Lilypond.Music -> Lilypond.Music, Duration)
+    -- notateText         :: [String]                             -> Lilypond.Music -> Lilypond.Music
+    -- notateHarmonic     :: (Any, Sum Int)                       -> Lilypond.Music -> Lilypond.Music
+    -- notateGliss        :: ((Any, Any), (Any, Any))             -> Lilypond.Music -> Lilypond.Music
+    --    (endGliss,endSlide),(beginGliss,beginSlide)
+    -- notateTies          :: (Any, Any)                           -> Lilypond.Music -> Lilypond.Music
+    --    (endTie,beginTie)
 
     notateDynamic :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
     notateDynamic (DN.DynamicNotation (crescDims, level))
@@ -314,9 +344,9 @@ toLyChord d chord = case (chord^.pitches) of
 
     -- TODO This syntax will change in future Lilypond versions
     -- TODO handle any color
-    notateColor :: Option (Data.Semigroup.Last (Colour Double)) -> Lilypond.Music -> Lilypond.Music
-    notateColor (Option Nothing)             = id
-    notateColor (Option (Just (Data.Semigroup.Last color))) = \x -> Lilypond.Sequential [
+    notateColor :: Maybe (Colour Double) -> Lilypond.Music -> Lilypond.Music
+    notateColor Nothing      = id
+    notateColor (Just color) = \x -> Lilypond.Sequential [
       Lilypond.Override "NoteHead#' color"
         (Lilypond.toLiteralValue $ "#" ++ colorName color),
       x,
@@ -330,10 +360,10 @@ toLyChord d chord = case (chord^.pitches) of
       | otherwise        = error "Lilypond backend: Unkown color"
 
     -- Note: must use returned duration
-    notateTremolo :: Maybe (TremoloT a) -> Duration -> (Lilypond.Music -> Lilypond.Music, Duration)
+    notateTremolo :: Maybe Int -> Duration -> (Lilypond.Music -> Lilypond.Music, Duration)
     notateTremolo Nothing d                        = (id, d)
-    notateTremolo (Just (runTremoloT -> (0, _))) d = (id, d)
-    notateTremolo (Just (runTremoloT -> (n, _))) d = let
+    notateTremolo (Just 0) d = (id, d)
+    notateTremolo (Just n) d = let
       scale   = 2^n
       newDur  = (d `min` (1/4)) / scale
       repeats = d / newDur
@@ -342,7 +372,7 @@ toLyChord d chord = case (chord^.pitches) of
     notateText :: [String] -> Lilypond.Music -> Lilypond.Music
     notateText texts = composed (fmap Lilypond.addText texts)
 
-    notateHarmonic :: (Eq t, Num t) => (Any, Sum t) -> Lilypond.Music -> Lilypond.Music
+    notateHarmonic :: (Any, Sum Int) -> Lilypond.Music -> Lilypond.Music
     notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
       (_,     0) -> id
       (True,  n) -> notateNatural n
@@ -357,8 +387,8 @@ toLyChord d chord = case (chord^.pitches) of
       | bs  = Lilypond.beginGlissando
       | otherwise = id
 
-    notateTie :: (Any, Any) -> Lilypond.Music -> Lilypond.Music
-    notateTie (Any ta, Any tb)
+    notateTies :: (Any, Any) -> Lilypond.Music -> Lilypond.Music
+    notateTies (Any ta, Any tb)
       | ta && tb  = Lilypond.beginTie
       | tb        = Lilypond.beginTie
       | ta        = id
