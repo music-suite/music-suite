@@ -252,24 +252,26 @@ instance (
     . (ScoreInfo,)
     -- Store time signatures etc for later use by finalizeScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
-
-#ifdef COMPLEX_POLY_STUFF
-    -- Notate articulation
-    . map (second $ over articulations notateArticulation)
-    . map (second $ preserveMeta addArtCon)
-
-    -- Notate dynamics
-    . map (second $ removeCloseDynMarks)
-    . map (second $ over dynamics notateDynamic)
-    . map (second $ preserveMeta addDynCon)
-
-    -- Merge simultaneous chords
-    . map (second $ preserveMeta simultaneous)
-#endif
-
+    . notateAspects
     . extractPartsWithInfo
     $ normScore
     where
+      -- notateAspects :: [(part,score)]
+      notateAspects = id
+#ifdef COMPLEX_POLY_STUFF
+          -- Notate articulation
+          . map (second $ over articulations notateArticulation)
+          . map (second $ preserveMeta addArtCon)
+
+          -- Notate dynamics
+          . map (second $ removeCloseDynMarks)
+          . map (second $ over dynamics notateDynamic)
+          . map (second $ preserveMeta addDynCon)
+
+          -- Merge simultaneous chords
+          . map (second $ preserveMeta simultaneous)
+#endif
+
       (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
       normScore = normalizeScore score
 
