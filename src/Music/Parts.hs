@@ -123,6 +123,9 @@ module Music.Parts (
 
   ) where
 
+import           Control.Lens                    (toListOf, Lens, Lens', (^.))
+import           Data.Maybe
+
 import           Music.Parts.Basic
 import           Music.Parts.Division
 import           Music.Parts.Solo
