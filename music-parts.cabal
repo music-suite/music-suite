@@ -39,25 +39,12 @@ library
                         music-pitch             == 1.9.0,
                         music-dynamics          == 1.9.0
     exposed-modules:    Data.Semigroup.Option.Instances
-                        
                         Music.Parts
-                        
                         Music.Parts.Basic
                         Music.Parts.Voices
                         Music.Parts.Division
                         Music.Parts.Subpart
                         Music.Parts.Solo
-                        
-                        -- TODO "ensembles", essentially echoing the instrument hierarchy but in plural, i.e. (flute :: Instrument, flutes :: Part)
-                        -- TODO write something nice about how division works, why we don't usually export flute1 etc.
-                        -- Music.Parts.Strings
-                        -- Music.Parts.Woodwind
-                        -- Music.Parts.Brass
-                        -- Music.Parts.Percussion
-                        -- Music.Parts.Instrument.Keyboard
-                        -- Music.Parts.Rhythm
-                        -- Music.Parts.Other
-                        
                         Music.Parts.Part
                         Music.Parts.Group
                         Music.Parts.Instrument
@@ -67,11 +54,6 @@ library
                         Music.Parts.Instrument.Percussion
                         Music.Parts.Instrument.Keyboard
                         Music.Parts.Instrument.Vocal
-                        -- Music.Parts.Instrument.Rhythm
-                        
-                        -- TODO some sub-subdivision (not for player allocation, but hand/finger)
-
-                        -- For GHCI
                         Music.Parts.Internal.Data
     other-modules:      Paths_music_parts
     hs-source-dirs:     src
