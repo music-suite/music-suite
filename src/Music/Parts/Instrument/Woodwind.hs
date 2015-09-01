@@ -11,16 +11,22 @@ module Music.Parts.Instrument.Woodwind (
   ) where
 
 import Control.Lens
+import Control.Monad.Plus (partial)
+import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
 import Music.Pitch.Common (Pitch, Interval)
 import Music.Pitch (Ambitus, Clef)
 
-newtype WoodwindInstrument = WoodwindInstrument Instrument
+newtype WoodwindInstrument = WoodwindInstrument { getWoodwindInstrument :: Instrument }
 
 woodwindInstrument :: Prism' Instrument WoodwindInstrument
-woodwindInstrument = undefined
--- TODO
+woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstr)
+  where
+    isWoodwindInstr x = case toMusicXmlSoundId x of 
+      Nothing -> False
+      Just i  -> Data.List.isPrefixOf "wind" i 
+    
 
 type GlissandoRange = Ambitus Pitch
 type Glissando      = Ambitus Pitch

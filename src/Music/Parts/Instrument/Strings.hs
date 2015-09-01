@@ -17,16 +17,21 @@ module Music.Parts.Instrument.Strings (
   ) where
 
 import Control.Lens
+import Control.Monad.Plus (partial)
+import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
 import Music.Pitch.Common (Pitch, Interval)
 import Music.Pitch (Ambitus, Clef)
 
-newtype StringInstrument = StringInstrument Instrument
+newtype StringInstrument = StringInstrument { getStringInstrument :: Instrument}
 
 stringInstrument :: Prism' Instrument StringInstrument
-stringInstrument = undefined
--- TODO
+stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstr)
+  where
+    isStringInstr x = case toMusicXmlSoundId x of 
+      Nothing -> False
+      Just i  -> Data.List.isPrefixOf "strings" i
 
 type StringTuning = [Pitch]
 

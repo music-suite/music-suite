@@ -7,13 +7,19 @@ module Music.Parts.Instrument.Vocal (
   ) where
 
 import Control.Lens
+import Control.Monad.Plus (partial)
+import Data.List (isPrefixOf)
 import Music.Parts.Instrument
 import Data.Set (Set)
 import Music.Pitch.Common (Pitch, Interval)
 import Music.Pitch (Ambitus, Clef)
 
-newtype VocalInstrument = VocalInstrument Instrument
+newtype VocalInstrument = VocalInstrument { getVocalInstrument :: Instrument}
 
 vocalInstrument :: Prism' Instrument VocalInstrument
-vocalInstrument = undefined
--- TODO
+vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVoice)
+  where
+    isVoice x = case toMusicXmlSoundId x of 
+      Nothing -> False
+      Just i  -> Data.List.isPrefixOf "voice" i 
+    
