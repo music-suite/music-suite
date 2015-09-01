@@ -98,11 +98,15 @@ type TimeSignature          = Music.Score.Meta.Time.TimeSignature
 type KeySignature           = Music.Score.Meta.Key.KeySignature
 type RehearsalMark          = Music.Score.Meta.RehearsalMark.RehearsalMark
 type TempoMark              = Music.Score.Meta.Tempo.Tempo
+
 -- TODO w/wo connecting barlines
 data BracketType            = NoBracket | Bracket | Brace | Subbracket deriving (Eq, Ord, Show)
+
 type SpecialBarline         = () -- TODO
 -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline) -- (prev,next) biased to next
+
 -- TODO lyrics
+
 data SystemBar              = SystemBar {
         _barNumbers::Maybe BarNumber,
         _timeSignature::Maybe TimeSignature,
@@ -137,16 +141,23 @@ type Pitch                  = Music.Pitch.Pitch
 data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
 -- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
+
 -- TODO No way to represent 2-pitch tremolo
 data TremoloNotation      = BeamedTremolo Int | UnmeasuredTremolo
   deriving (Eq,Ord,Show)
+
+-- type UpDown       = Up | Down
+-- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
+-- data BreathNotation = Fermata | PauseAfter | CaesuraAfter
 data BreathNotation         = Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
+
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
 type HarmonicNotation       = (Any, Sum Int)        -- (artificial?, partial number)
 type SlideNotation          = ((Any,Any),(Any,Any)) -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
 type Ties                   = (Any,Any)             -- (endTie?,beginTie?)
+
 -- TODO appogiatura/acciatura
 -- TODO beaming
 
@@ -207,12 +218,6 @@ data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
 
 
 
--- type UpDown       = Up | Down
--- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
--- data ArpeggioNotation   = TODO
--- data TremoloNotation  = TODO
--- data BreathNotation = Fermata | PauseAfter | CaesuraAfter
--- type Bar          = [Voice ([Pitch], ArpeggioNotation, TremoloNotation, BreathNotation, ArticulationNotation, CrossStaff)], Voice DynamicNotation
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -235,11 +240,11 @@ toLy w = do
   m <- toLyMusic $ r
   return ("", m)
   -- TODO all top-level and template stuff
-  -- TODO assume one movement
+  -- TODO assumes one movement
 
 toLyMusic :: Movement -> E Lilypond.Music
 toLyMusic m = do
-  -- TODO ignore info
+  -- TODO ignores info
   -- We will copy system-staff info to each bar (time sigs, key sigs and so on, which seems to be what Lilypond expects),
   -- so the system staff is included in the rendering of each staff
   renderedStaves <- Data.Traversable.mapM (toLyStaff $ m^.systemStaff) (m^.staves)
@@ -251,7 +256,7 @@ toLyStaff sysBars staff = id
   <$> Lilypond.New "Staff" Nothing
   <$> Lilypond.Sequential
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
-  -- TODO ignoring staff info (name and clef esp!)
+  -- TODOs ignoring staff info (name and clef esp!)
 
 toLyBar :: SystemBar -> Bar -> E Lilypond.Music
 toLyBar sysBar bar = do
