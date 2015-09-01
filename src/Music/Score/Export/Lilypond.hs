@@ -310,6 +310,7 @@ instance (
          addBarInfo = (,) $ BarInfo timeSignature
 
       quantizeBar :: Tiable a => MVoice a -> Rhythm (LyContext a)
+      -- Note: this is when quantized duration escapes to LyContext!
       quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view pairs
         where
           -- FIXME propagate quantization errors

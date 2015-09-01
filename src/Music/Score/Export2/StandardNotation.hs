@@ -14,10 +14,11 @@ import Data.Map (Map)
 import Control.Lens.Operators
 import Control.Lens (view, preview, set, over, under, _head)
 import Control.Lens.TH (makeLenses)
-
+import Music.Score.Ties (TieT(..))
 import Data.Functor.Identity
 import Control.Monad.Except
 import Control.Monad.Writer
+import Music.Time.Meta (meta)
 
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace hiding (Sum)
@@ -45,9 +46,17 @@ import qualified Music.Pitch
 import qualified Music.Dynamics
 import qualified Music.Articulation
 import qualified Music.Parts
+import Music.Parts (Group(..))
+
+import Music.Score.Pitch ()
+import Music.Score.Dynamics (DynamicT)
+import Music.Score.Articulation (ArticulationT)
+import Music.Score.Part (PartT)
+
 import qualified Music.Score.Internal.Util
 import qualified Music.Score.Internal.Export
-import Music.Score.Internal.Quantize (Rhythm(..))
+import Music.Score.Internal.Quantize (Rhythm(..), dotMod, quantize, rewrite)
+import Music.Score (MVoice)
 
 {-
 type StandardNote =
@@ -102,6 +111,7 @@ data SystemBar              = SystemBar {
         _tempoMark::Maybe TempoMark
         -- ,_barLines::BarLines -- Tricky because of ambiguity. Use balanced pair or an alt-list in SystemStaff.
         } deriving (Eq,Ord,Show)
+makeLenses ''SystemBar
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
 type SystemStaff            = [SystemBar]
@@ -241,21 +251,21 @@ toLyStaff sysBars staff = id
   <$> Lilypond.New "Staff" Nothing
   <$> Lilypond.Sequential
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
-  -- TODO ignoring staff info
+  -- TODO ignoring staff info (name and clef esp!)
 
 toLyBar :: SystemBar -> Bar -> E Lilypond.Music
 toLyBar sysBar bar = do
-  -- TODO ignoring system bar
+  -- TODO system bar (time sig especially!)
   let layers = bar^.pitchLayers
-  error "No toLyBar"
+  Lilypond.Simultaneous False <$> mapM go layers
   
   where
-    go :: Rhythm a -> Lilypond.Music
-    go (Beat d x)            = undefined
-    go (Dotted n (Beat d x)) = undefined
+    go :: Rhythm Chord -> E Lilypond.Music
+    go (Beat d x)            = toLyChord d x
+    go (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
     go (Dotted n _)          = error "FIXME"
-    go (Group rs)            = scatL $ fmap go rs
-    go (Tuplet m r)          = Lilypond.Times (realToFrac m) (go r)
+    go (Group rs)            = Lilypond.Sequential <$> mapM go rs
+    go (Tuplet m r)          = Lilypond.Times (realToFrac m) <$> (go r)
       where
         (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
     
@@ -418,13 +428,96 @@ toXml = undefined
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-fromAspects :: Score (Music.Parts.Part, Music.Articulation.Articulation, Music.Dynamics.Dynamics, Music.Pitch.Pitch) -> Work
-fromAspects = undefined
+type Asp1 = (PartT Music.Parts.Part 
+  (ArticulationT Music.Articulation.Articulation 
+    (DynamicT Music.Dynamics.Dynamics Pitch)))
+-- We require all notes in a chords to have the same kind of ties
+type Asp2 = TieT (PartT Music.Parts.Part 
+  (ArticulationT Music.Articulation.Articulation 
+    (DynamicT Music.Dynamics.Dynamics 
+      [Pitch])))
 
+type Asp = Score Asp1
 
+asp1ToAsp2 :: Asp1 -> Asp2
+asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
+-- TODO context for dyn and art
+foo3 :: Maybe Asp2 -> Chord
+foo3 Nothing    = mempty
+foo3 (Just asp) = pitches .~ (asp^..(Music.Score.pitches)) $ mempty
 
+foo2 :: Rhythm (Maybe Asp2) -> Bar
+foo2 rh = Bar [layer1] -- TODO more layers (see below)
+  where
+    layer1 = fmap foo3 rh
 
+foo :: (Music.Parts.Part, [Rhythm (Maybe Asp2)]) -> Staff
+foo (p,bars) = Staff mempty (fmap foo2 bars)
+
+fromAspects :: Asp -> E Work
+fromAspects sc = return 
+  $ Work mempty [Movement mempty systemStaff (fmap foo partsAndInfo5)]
+  
+    
+  
+  where
+    systemStaff :: SystemStaff
+    systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
+
+    partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp2)])
+    partsAndInfo5 = getStaffStructure partsAndInfo4
+
+    -- tie splitting
+    -- list is list of bars, there is no layering
+    partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp2)])]
+    partsAndInfo4 = (fmap.fmap) (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
+
+    -- convert to singleMVoice
+    -- TODO handle failure
+    partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp2))]
+    partsAndInfo3 = (fmap.fmap) (view Music.Score.singleMVoice) partsAndInfo2
+
+    partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
+    partsAndInfo2 = (fmap.fmap) (simultaneous . fmap asp1ToAsp2) partsAndInfo
+
+    partsAndInfo :: [(Music.Parts.Part,Score Asp1)]
+    partsAndInfo = Music.Score.extractPartsWithInfo normScore
+
+    (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
+    normScore = normalizeScore sc -- TODO not necessarliy set to 0...
+    m = sc^.meta
+
+quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> Rhythm (Maybe a)
+-- Note: this is when quantized duration escapes to LyContext!
+quantizeBar = rewrite . handleErrors . quantize . view Music.Score.pairs
+  where
+    -- FIXME propagate quantization errors
+    handleErrors (Left e)  = error $ "Quantization failed: " ++ e
+    handleErrors (Right x) = x
+
+pureTieT :: a -> TieT a
+pureTieT = pure
+
+extractTimeSignatures
+  :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
+extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
+
+getStaffStructure :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+getStaffStructure = groupToLabelTree . partDefault
+
+partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
+partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
+
+groupToLabelTree :: Group a -> LabelTree (BracketType) a
+groupToLabelTree (Single (_,a)) = Leaf a
+groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
+  where
+    k Music.Parts.Bracket   = Bracket
+    k Music.Parts.Invisible = Bracket -- FIXME
+    -- k Music.Parts.Subbracket = Just SubBracket
+    k Music.Parts.PianoStaff = Brace
+    k Music.Parts.GrandStaff = Brace
 
 
 
@@ -433,25 +526,25 @@ fromAspects = undefined
 
 
 -- Util
-pcatL :: [Lilypond.Music] -> Lilypond.Music
-pcatL = pcatL' False
-
-pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
-pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
-
-scatL :: [Lilypond.Music] -> Lilypond.Music
-scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
-
-spellL :: Integer -> Lilypond.Note
-spellL a = Lilypond.NotePitch (spellL' a) Nothing
-
-spellL' :: Integer -> Lilypond.Pitch
-spellL' p = Lilypond.Pitch (
-  toEnum $ fromIntegral pc,
-  fromIntegral alt,
-  fromIntegral oct
-  )
-  where (pc,alt,oct) = Music.Score.Internal.Export.spellPitch (p + 72)
+-- pcatL :: [Lilypond.Music] -> Lilypond.Music
+-- pcatL = pcatL' False
+-- 
+-- pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
+-- pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
+-- 
+-- scatL :: [Lilypond.Music] -> Lilypond.Music
+-- scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
+-- 
+-- spellL :: Integer -> Lilypond.Note
+-- spellL a = Lilypond.NotePitch (spellL' a) Nothing
+-- 
+-- spellL' :: Integer -> Lilypond.Pitch
+-- spellL' p = Lilypond.Pitch (
+--   toEnum $ fromIntegral pc,
+--   fromIntegral alt,
+--   fromIntegral oct
+--   )
+--   where (pc,alt,oct) = Music.Score.Internal.Export.spellPitch (p + 72)
 
 -- Test
 
@@ -461,3 +554,5 @@ test = runENoLog $ toLy $
       Leaf (Staff mempty [Bar [Beat 1 mempty]]),
       Leaf (Staff mempty [Bar [Beat 1 mempty]])
       ])] 
+
+test2 x = runENoLog $ toLy =<< fromAspects x
