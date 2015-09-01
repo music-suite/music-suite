@@ -2,6 +2,7 @@
 module Music.Parts.Instrument.Strings (
         StringInstrument,
         stringInstrument,
+        isStringInstrument,
         
         StringTuning,
         standardTuning,
@@ -27,11 +28,11 @@ import Music.Pitch (Ambitus, Clef)
 newtype StringInstrument = StringInstrument { getStringInstrument :: Instrument}
 
 stringInstrument :: Prism' Instrument StringInstrument
-stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstr)
-  where
-    isStringInstr x = case toMusicXmlSoundId x of 
-      Nothing -> False
-      Just i  -> Data.List.isPrefixOf "strings" i
+stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
+
+isStringInstrument x = case toMusicXmlSoundId x of 
+  Nothing -> False
+  Just i  -> Data.List.isPrefixOf "strings" i
 
 type StringTuning = [Pitch]
 

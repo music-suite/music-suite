@@ -2,6 +2,7 @@
 module Music.Parts.Instrument.Woodwind (
         WoodwindInstrument,
         woodwindInstrument,
+        isWoodwindInstrument,
         
         GlissandoRange,
         Glissando,
@@ -21,11 +22,11 @@ import Music.Pitch (Ambitus, Clef)
 newtype WoodwindInstrument = WoodwindInstrument { getWoodwindInstrument :: Instrument }
 
 woodwindInstrument :: Prism' Instrument WoodwindInstrument
-woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstr)
-  where
-    isWoodwindInstr x = case toMusicXmlSoundId x of 
-      Nothing -> False
-      Just i  -> Data.List.isPrefixOf "wind" i 
+woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstrument)
+
+isWoodwindInstrument x = case toMusicXmlSoundId x of 
+  Nothing -> False
+  Just i  -> Data.List.isPrefixOf "wind" i 
     
 
 type GlissandoRange = Ambitus Pitch

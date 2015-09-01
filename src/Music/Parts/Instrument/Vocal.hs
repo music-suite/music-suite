@@ -4,6 +4,7 @@
 module Music.Parts.Instrument.Vocal (
         VocalInstrument,
         vocalInstrument,
+        isVocalInstrument,
   ) where
 
 import Control.Lens
@@ -17,9 +18,9 @@ import Music.Pitch (Ambitus, Clef)
 newtype VocalInstrument = VocalInstrument { getVocalInstrument :: Instrument}
 
 vocalInstrument :: Prism' Instrument VocalInstrument
-vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVoice)
-  where
-    isVoice x = case toMusicXmlSoundId x of 
-      Nothing -> False
-      Just i  -> Data.List.isPrefixOf "voice" i 
+vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVocalInstrument)
+
+isVocalInstrument x = case toMusicXmlSoundId x of 
+  Nothing -> False
+  Just i  -> Data.List.isPrefixOf "voice" i 
     

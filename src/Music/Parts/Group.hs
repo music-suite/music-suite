@@ -24,6 +24,14 @@ import           Music.Parts.Instrument
 import           Music.Parts.Part
 import           Music.Parts.Subpart
 
+import           Music.Parts.Instrument.Brass
+import           Music.Parts.Instrument.Keyboard
+import           Music.Parts.Instrument.Percussion
+import           Music.Parts.Instrument.Strings
+import           Music.Parts.Instrument.Vocal
+import           Music.Parts.Instrument.Woodwind
+
+
 {-
     ## Terminology: Voice vs Part
 
@@ -94,6 +102,38 @@ import           Music.Parts.Subpart
 
 -}
 
--- data GroupType
-  -- = Bracket
-  -- | 
+type BarLines = Bool
+
+data GroupType
+  = Invisible
+  | Bracket           -- ly: StaffGroup,  xml: GroupSymbol=bracket
+  | SubBracket        -- ly: PianoStaff?, xml: GroupSymbol=line
+  | PianoStaff        -- ly: PianoStaff,  xml: GroupSymbol=brace
+  | GrandStaff        -- ly: GrandStaff,  xml: GroupSymbol=brace
+  deriving (Eq, Ord, Show)
+  
+data Group a
+  = Single (Instrument, a)
+  | Many GroupType BarLines [Group a]
+  deriving (Eq, Ord, Show, Functor)
+
+groupDefault :: [(Instrument, a)] -> Group a
+groupDefault xs = Many Invisible False 
+                    [Many Bracket True   $ fmap Single ww, 
+                     Many Bracket True   $ fmap Single br,
+                     Many Bracket True   $ fmap Single pc,
+                     Many Invisible True $ fmap Single kb,
+                     Many Bracket False  $ fmap Single voc,
+                     Many Bracket True   $ fmap Single str
+                     ]
+  where
+    ww  = filter (isWoodwindInstrument . fst) xs
+    br  = filter (isBrassInstrument . fst) xs
+    pc  = filter (isPercussionInstrument . fst) xs
+    kb  = filter (isKeyboardInstrument . fst) xs
+    voc = filter (isVocalInstrument . fst) xs
+    str = filter (isStringInstrument . fst) xs
+    
+    
+    
+    

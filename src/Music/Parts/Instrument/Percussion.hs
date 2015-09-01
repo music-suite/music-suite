@@ -2,6 +2,7 @@
 module Music.Parts.Instrument.Percussion (
         PercussionInstrument,
         percussionInstrument,
+        isPercussionInstrument,
   ) where
 
 import Control.Lens
@@ -15,9 +16,9 @@ import Music.Pitch (Ambitus, Clef)
 newtype PercussionInstrument = PercussionInstrument { getPercussionInstrument :: Instrument }
 
 percussionInstrument :: Prism' Instrument PercussionInstrument
-percussionInstrument = prism' getPercussionInstrument (fmap PercussionInstrument . partial isPercussionInstr)
-  where
-    isPercussionInstr x = case toMusicXmlSoundId x of 
-      Nothing -> False
-      Just i  -> any (== True) $ fmap (`Data.List.isPrefixOf` i) 
-                         ["pitched-percussion", "drum", "wood", "metal"]
+percussionInstrument = prism' getPercussionInstrument (fmap PercussionInstrument . partial isPercussionInstrument)
+
+isPercussionInstrument x = case toMusicXmlSoundId x of 
+  Nothing -> False
+  Just i  -> any (== True) $ fmap (`Data.List.isPrefixOf` i) 
+                     ["pitched-percussion", "drum", "wood", "metal"]
