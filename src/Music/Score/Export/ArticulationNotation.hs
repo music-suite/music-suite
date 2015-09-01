@@ -69,7 +69,8 @@ instance Monoid Mark where
 
 newtype ArticulationNotation 
   = ArticulationNotation { getArticulationNotation :: ([Slur], [Mark]) }
-
+  deriving (Eq, Ord, Show)
+  
 instance Wrapped ArticulationNotation where
   type Unwrapped ArticulationNotation = ([Slur], [Mark])
   _Wrapped' = iso getArticulationNotation ArticulationNotation

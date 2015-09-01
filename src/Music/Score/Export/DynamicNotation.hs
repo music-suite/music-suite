@@ -61,6 +61,7 @@ instance Monoid CrescDim where
 
 newtype DynamicNotation 
   = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
+  deriving (Eq, Ord, Show)
 
 instance Wrapped DynamicNotation where
   type Unwrapped DynamicNotation = ([CrescDim], Maybe Double)
