@@ -252,9 +252,7 @@ instance (
     . (ScoreInfo,)
     -- Store time signatures etc for later use by finalizeScore
     . map (uncurry $ exportPart timeSignatureMarks barDurations)
-    . notateAspects
-    . extractPartsWithInfo
-    $ normScore
+    . notateAspects . extractPartsWithInfo $ normScore
     where
       -- notateAspects :: [(part,score)]
       notateAspects = id
@@ -271,7 +269,6 @@ instance (
           -- Merge simultaneous chords
           . map (second $ preserveMeta simultaneous)
 #endif
-
       (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
       normScore = normalizeScore score
 
@@ -286,6 +283,9 @@ instance (
         -> Part a
         -> Score a
         -> LyStaff (LyContext a)
+      exportPart timeSignatureMarks barDurations part
+        = exportStaff timeSignatureMarks barDurations (show part) (getLilypondClef part)
+        . view singleMVoice
 
       exportStaff :: Tiable a
         => [Maybe TimeSignature]
@@ -294,25 +294,8 @@ instance (
         -> Int    -- ^ clef, as per Music.Parts
         -> MVoice a
         -> LyStaff (LyContext a)
-
-      exportBar :: Tiable a
-        => Maybe TimeSignature
-        -> MVoice a
-        -> LyBar (LyContext a)
-
-      quantizeBar :: Tiable a
-        => MVoice a
-        -> Rhythm (LyContext a)
-
-      exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (show part) (getLilypondClef part)
-        . view singleMVoice
-
       exportStaff timeSignatures barDurations name clefId
-        = LyStaff
-        . addStaffInfo
-        . zipWith exportBar timeSignatures
-        . splitIntoBars barDurations
+        = LyStaff . addStaffInfo . zipWith exportBar timeSignatures . splitIntoBars barDurations
         where
           clef = case clefId of
             0 -> Lilypond.Treble
@@ -321,13 +304,12 @@ instance (
           addStaffInfo  = (,) $ StaffInfo { staffName = name, staffClef = clef }
           splitIntoBars = splitTiesAt
 
-      exportBar timeSignature
-        = LyBar
-        . addBarInfo
-        . quantizeBar
+      exportBar :: Tiable a => Maybe TimeSignature -> MVoice a -> LyBar (LyContext a)
+      exportBar timeSignature = LyBar . addBarInfo . quantizeBar
        where
          addBarInfo = (,) $ BarInfo timeSignature
 
+      quantizeBar :: Tiable a => MVoice a -> Rhythm (LyContext a)
       quantizeBar = mapWithDur LyContext . rewrite . handleErrors . quantize . view pairs
         where
           -- FIXME propagate quantization errors
