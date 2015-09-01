@@ -44,14 +44,6 @@ library
                         
                         Music.Parts.Basic
                         Music.Parts.Voices
-                        
-                        -- -- TODO choral voicings etc
-                        -- -- TODO use single type or many? How to do "subtyping"
-                        -- -- Prisms, TFs, something else?
-                        -- 
-                        -- -- TODO require pitch dep
-                        -- Music.Parts.Range
-
                         Music.Parts.Division
                         Music.Parts.Subpart
                         Music.Parts.Solo
@@ -66,6 +58,8 @@ library
                         -- Music.Parts.Rhythm
                         -- Music.Parts.Other
                         
+                        Music.Parts.Part
+                        Music.Parts.Group
                         Music.Parts.Instrument
                         Music.Parts.Instrument.Strings
                         Music.Parts.Instrument.Woodwind
@@ -74,10 +68,6 @@ library
                         Music.Parts.Instrument.Keyboard
                         Music.Parts.Instrument.Vocal
                         -- Music.Parts.Instrument.Rhythm
-                        -- Music.Parts.Instrument.Other
-                        
-                        -- TODO a way to classify parts
-                        -- so we know what goes on which staff, what kind of bracket to generate etc
                         
                         -- TODO some sub-subdivision (not for player allocation, but hand/finger)
 
