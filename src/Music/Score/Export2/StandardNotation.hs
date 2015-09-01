@@ -99,7 +99,7 @@ type KeySignature           = Music.Score.Meta.Key.KeySignature
 type RehearsalMark          = Music.Score.Meta.RehearsalMark.RehearsalMark
 type TempoMark              = Music.Score.Meta.Tempo.Tempo
 -- TODO w/wo connecting barlines
-data BracketType            = Bracket | Brace | Subbracket deriving (Eq, Ord, Show)
+data BracketType            = NoBracket | Bracket | Brace | Subbracket deriving (Eq, Ord, Show)
 type SpecialBarline         = () -- TODO
 -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline) -- (prev,next) biased to next
 -- TODO lyrics
@@ -300,7 +300,7 @@ toLyChord d chord = id
       -- FIXME catch if (abs accidental)>2 (or simply normalize)
       fromIntegral (Music.Pitch.accidental p),
       -- Lilypond expects SPN, so middle c is octave 4
-      fromIntegral $ Music.Pitch.octaves (p.-.Music.Score.octavesDown 4 Music.Pitch.Literal.c)
+      fromIntegral $ Music.Pitch.octaves (p.-.Music.Score.octavesDown (4+1) Music.Pitch.Literal.c)
       )
 
     -- notateDynamic      :: Maybe DynamicNotation                -> Lilypond.Music -> Lilypond.Music
@@ -414,6 +414,7 @@ toLyStaffGroup = return . foldLabelTree id g
   where
     -- Note: PianoStaff is handled in toLyStaffGroup
     -- Note: Nothing for name (we dump everything inside staves, so no need to identify them)
+    g NoBracket  ms =                                     k ms
     g Bracket    ms = Lilypond.New "StaffGroup" Nothing $ k ms
     g Subbracket ms = Lilypond.New "GrandStaff" Nothing $ k ms
     g Brace      ms = Lilypond.New "GrandStaff" Nothing $ k ms
@@ -514,7 +515,7 @@ groupToLabelTree (Single (_,a)) = Leaf a
 groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
   where
     k Music.Parts.Bracket   = Bracket
-    k Music.Parts.Invisible = Bracket -- FIXME
+    k Music.Parts.Invisible = NoBracket -- FIXME
     -- k Music.Parts.Subbracket = Just SubBracket
     k Music.Parts.PianoStaff = Brace
     k Music.Parts.GrandStaff = Brace
