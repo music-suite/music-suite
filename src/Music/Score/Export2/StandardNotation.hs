@@ -287,6 +287,8 @@ toLyStaff sysBars staff = id
   <$> Lilypond.Sequential
   <$> addPartName (staff^.staffInfo.instrumentFullName)
   <$> addClef (toLyClef $ staff^.staffInfo.instrumentDefaultClef)
+  -- TODO Currently score is always in C with no oct-transp.
+  -- To get a transposing score, add \transpose <written> <sounding>
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
 
 toLyClef c
