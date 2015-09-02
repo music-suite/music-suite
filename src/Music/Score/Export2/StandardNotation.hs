@@ -132,6 +132,7 @@ type SmallOrLarge           = Any -- def False
 type ScoreOrder             = Sum Double -- def 0
 
 data StaffInfo              = StaffInfo {
+  -- TODO instrument part no. (I, II.1 etc)
   _instrumentShortName::InstrumentShortName,
   _instrumentFullName::InstrumentFullName,
   _sibeliusFriendlyName::SibeliusFriendlyName,
@@ -287,6 +288,8 @@ toLyStaff sysBars staff = id
   <$> Lilypond.Sequential
   <$> addPartName (staff^.staffInfo.instrumentFullName)
   <$> addClef (toLyClef $ staff^.staffInfo.instrumentDefaultClef)
+  -- TODO Currently score is always in C with no oct-transp.
+  -- To get a transposing score, add \transpose <written> <sounding>
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
 
 toLyClef c
