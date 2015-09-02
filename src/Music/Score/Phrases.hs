@@ -1,4 +1,5 @@
 
+{-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
@@ -24,6 +25,7 @@ module Music.Score.Phrases (
     pVoiceTVoice,
     unsafeMVoicePVoice,
     singleMVoice,
+    oldSingleMVoice,
     mapPhrasesWithPrevAndCurrentOnset,
   ) where
 
@@ -61,7 +63,7 @@ import           System.Process
 
 import           Music.Score.Part
 import           Music.Time
-import           Music.Time.Internal.Convert
+import           Music.Time.Internal.Convert ()
 import           Music.Time.Internal.Util
 
 
@@ -113,20 +115,17 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   mvoices = from unsafeMVoicePVoice
 
 -- | Traverses all phrases in each voice, using 'extracted'.
-instance (HasPart' a, {-HasPart a b, -}{-Transformable a,-} Ord (Part a)) =>
-  HasPhrases (Score a) (Score b) a b where
+instance (HasPart' a, Ord (Part a)) => HasPhrases (Score a) (Score b) a b where
+  mvoices = extracted . each . oldSingleMVoice
+{-
+FIXME Should be written like this, above instance to be phased out!
+
+-- | Traverses all phrases in each voice, using 'extracted'.
+instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
+-}
 
 type HasPhrases' s a = HasPhrases s s a a
-
-{-
-Phrase traversal for score:
-
-phrasesS :: (Ord (Part a), HasPart' a, Transformable a) => Traversal' (Score a) (Phrase a)
-phrasesS = extracted . each . singleMVoice . mVoicePVoice . each . _Right
-
-More generally:
--}
 
 -- |
 -- A simple generic phrase-traversal.
@@ -178,12 +177,11 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     phraseToVoice :: Phrase a -> MVoice a
     phraseToVoice = fmap Just
 
-
--- TODO failure
-singleMVoice :: Prism (Score a) (Score b) (MVoice a) (MVoice b)
-singleMVoice = iso scoreToVoice voiceToScore'
-  where
-    scoreToVoice :: {-Transformable a =>-} Score a -> MVoice a
+-- TODO unsafe, phase out
+oldSingleMVoice :: Iso (Score a) (Score b) (MVoice a) (MVoice b)
+oldSingleMVoice = iso scoreToVoice voiceToScore'
+  where    
+    scoreToVoice :: Score a -> MVoice a
     scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
       -- TODO
       List.sortBy (comparing (^._1))
@@ -196,13 +194,39 @@ singleMVoice = iso scoreToVoice voiceToScore'
             g u (t, d, x)
               | u == t    = (t .+^ d, [(t, d, Just x)])
               | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-              | otherwise = error "singleMVoice: Strange prevTime"
+              | otherwise = error "oldSingleMVoice: Strange prevTime"
 
     voiceToScore :: Voice a -> Score a
     voiceToScore = renderAlignedVoice . aligned 0 0
 
-    voiceToScore' :: MVoice a -> Score a
+    voiceToScore' :: MVoice b -> Score b
     voiceToScore' = mcatMaybes . voiceToScore
+
+singleMVoice :: (a ~ b) => Prism (Score a) (Score b) (MVoice a) (MVoice b)
+singleMVoice = prism' voiceToScore' scoreToVoice
+  where    
+    voiceToScore :: Voice a -> Score a
+    voiceToScore = renderAlignedVoice . aligned 0 0
+
+    voiceToScore' :: MVoice b -> Score b
+    voiceToScore' = mcatMaybes . voiceToScore
+
+scoreToVoice :: Score a -> Maybe (MVoice a)
+scoreToVoice sc
+  | hasOverlappingEvents sc = Nothing
+  | otherwise               = Just . (^. voice) . fmap (^. note) . fmap throwTime . addRests .
+  -- TODO
+  List.sortBy (comparing (^._1))
+  -- end TODO
+  . (^. triples) $ sc
+  where
+    throwTime (t,d,x) = (d,x)
+    addRests = concat . snd . List.mapAccumL g 0
+      where
+        g u (t, d, x)
+          | u == t    = (t .+^ d, [(t, d, Just x)])
+          | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+          | otherwise = error "scoreToVoice: Impossible!" -- Because of overlapping events guard
 
 
 -- foo :: HasPhrases' s a => s -> [TVoice a]

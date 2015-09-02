@@ -316,7 +316,7 @@ instance (
 
       exportPart timeSignatureMarks barDurations part
         = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part) (getMusicXmlNumberOfStaves part)
-        . view singleMVoice
+        . view oldSingleMVoice
 
       exportStaff timeSignatures barDurations clefId staffCount'
         = XmlStaff

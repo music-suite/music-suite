@@ -285,7 +285,7 @@ instance (
         -> LyStaff (LyContext a)
       exportPart timeSignatureMarks barDurations part
         = exportStaff timeSignatureMarks barDurations (show part) (getLilypondClef part)
-        . view singleMVoice
+        . view oldSingleMVoice
 
       exportStaff :: Tiable a
         => [Maybe TimeSignature]

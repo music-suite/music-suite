@@ -520,6 +520,14 @@ asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
 fmap2 = fmap.fmap
 
+
+{-
+Note:
+  Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
+  (HasPhrases Score) instance. See comment in Music.Score.Phrases.
+  
+  We use the MVoice instance here, so this is safe.
+-}
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
 asp2ToAsp3 = id
   . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon) 
@@ -566,7 +574,7 @@ fromAspects sc = do
   -- TODO handle failure (overlapping notes)
   -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
   let partsAndInfo3 = fmap2 (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
-
+  -- TODO must do simultaneous before singleMVoice!
 
   -- partsAndInfo2b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
   let partsAndInfo2b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
