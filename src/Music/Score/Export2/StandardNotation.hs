@@ -520,9 +520,6 @@ type Asp = Score Asp1
 asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
-fmap2 = fmap.fmap
-
-
 {-
 Note:
   Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
@@ -657,6 +654,8 @@ groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
 
 
 -- Util
+fmap2 = fmap.fmap
+
 -- pcatL :: [Lilypond.Music] -> Lilypond.Music
 -- pcatL = pcatL' False
 --
