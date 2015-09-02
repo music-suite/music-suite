@@ -580,8 +580,6 @@ fromAspects sc = do
   -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
   partsAndInfo3 <- return $ fmap2 asp2ToAsp3 $ partsAndInfo2b
      
-  -- TODO must do simultaneous before singleMVoice!
-
   -- partsAndInfo2b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
   let partsAndInfo2b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
 
