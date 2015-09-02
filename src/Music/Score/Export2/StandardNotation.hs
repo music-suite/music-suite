@@ -692,7 +692,7 @@ test3 x = do
     Left e -> fail ("test3: "++e)
     Right (h,ly) -> do
       let ly2 = h ++ show (Pretty.pretty ly)
-      putStrLn ly2 
+      -- putStrLn ly2 
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
     
