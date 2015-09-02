@@ -8,6 +8,7 @@ import           Control.Lens                            (over, preview, set, to
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
+import           Control.Monad.Plus
 import           Control.Monad.Writer
 import           Data.AffineSpace                        hiding (Sum)
 import           Data.Colour                             (Colour)
@@ -233,7 +234,7 @@ data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
 
 -- Log and failure monad
 newtype E a = E { runE :: WriterT String (ExceptT String Identity) a }
-  deriving (Functor, Applicative, Monad, MonadError String, MonadWriter String)
+  deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadError String, MonadWriter String)
 
 runENoLog :: E b -> Either String b
 runENoLog = fmap fst . runExcept . runWriterT . runE
@@ -559,6 +560,9 @@ foo (part,bars) = Staff info (fmap foo2 bars)
       $ instrumentFullName     .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.fullName)) 
       $ mempty
 
+toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
+toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
+
 fromAspects :: Asp -> E Work
 fromAspects sc = do
    -- Part extraction (for now assume no overlapping notes)
@@ -568,12 +572,14 @@ fromAspects sc = do
   -- Go to Asp2 as we need Semigroup to compose all simultanous notes
   -- partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
   let partsAndInfo2 = fmap2 (simultaneous . fmap asp1ToAsp2) partsAndInfo
+  partsAndInfo2b <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ partsAndInfo2
 
   -- Convert to voice
   -- Go to Asp3, rewriting dynamics and articulation context-sensitivitily
   -- TODO handle failure (overlapping notes)
   -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
-  let partsAndInfo3 = fmap2 (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
+  partsAndInfo3 <- return $ fmap2 asp2ToAsp3 $ partsAndInfo2b
+     
   -- TODO must do simultaneous before singleMVoice!
 
   -- partsAndInfo2b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
