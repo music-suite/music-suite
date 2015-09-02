@@ -574,7 +574,7 @@ fromAspects sc = do
   -- Tie splitting
   -- List is list of bars, there is no layering
   -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  partsAndInfo4 <- return $ fmap (fmap (fmap quantizeBar)) partsAndInfo2b
+  partsAndInfo4 <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) partsAndInfo2b
 
   -- Parts as a sequence of quantized bars, with localized dynamics and articulation
   -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
@@ -596,16 +596,13 @@ fromAspects sc = do
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
-quantizeBar2 :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
-quantizeBar2 = return . quantizeBar
-
-quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> (Rhythm (Maybe a))
--- Note: this is when quantized duration escapes to LyContext!
-quantizeBar = rewrite . handleErrors . quantize . view Music.Score.pairs
+-- TODO log rewriting etc
+quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
+quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
   where
-    -- FIXME propagate quantization errors
-    handleErrors (Left e)  = error $ "Quantization failed: " ++ e
-    handleErrors (Right x) = x
+    quantize' x = case quantize x of 
+      Left e  -> throwError $ "Quantization failed: " ++ e
+      Right x -> return x
 
 pureTieT :: a -> TieT a
 pureTieT = pure
@@ -670,7 +667,7 @@ test2 x = runENoLog $ toLy =<< fromAspects x
 test3 x = do
   let r = test2 x
   case r of 
-    Left e -> fail e
+    Left e -> fail ("test3: "++e)
     Right (h,ly) -> do
       let ly2 = h ++ show (Pretty.pretty ly)
       putStrLn ly2 
