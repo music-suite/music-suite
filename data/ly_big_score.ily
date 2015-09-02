@@ -26,8 +26,8 @@
 }
 
 \header {
-  title         = "Fiskeskar"
-  composer      = "Hans Jacob Hoeglund (2015)"
+  title         = $(title)
+  composer      = $(composer)
   tagline       = ""  % removed   
 }
 
