@@ -47,6 +47,7 @@ import qualified Music.Score.Internal.Export
 import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
                                                           quantize, rewrite)
 import qualified Music.Score.Internal.Util
+import qualified Music.Score.Internal.Instances ()
 import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution

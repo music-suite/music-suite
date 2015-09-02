@@ -49,6 +49,8 @@ import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
 import           Music.Pitch.Augmentable
 import           Music.Pitch.Literal
+import qualified Music.Pitch
+import qualified Music.Parts
 import           Music.Score.Articulation
 import           Music.Score.Color
 import           Music.Score.Dynamics
@@ -339,5 +341,37 @@ instance IsInterval a => IsInterval (Average a) where
 
 instance IsDynamics a => IsDynamics (Average a) where
   fromDynamics = pure . fromDynamics
+
+
+
+
+
+deriving instance Typeable Music.Parts.Part
+
+instance Tiable Music.Pitch.Pitch where
+    beginTie = id
+    endTie = id
+
+instance Transformable Music.Parts.Part where
+  transform _ = id
+type instance Part Music.Parts.Part = Music.Parts.Part
+type instance SetPart a Music.Parts.Part = a
+
+instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
+  part = ($)
+instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
+  parts = ($)
+
+
+
+instance Transformable Music.Parts.BasicPart where
+  transform _ = id
+type instance Part Music.Parts.BasicPart = Music.Parts.BasicPart
+type instance SetPart a Music.Parts.BasicPart = a
+
+instance (Transformable a, a ~ Part a) => HasPart Music.Parts.BasicPart a where
+  part = ($)
+instance (Transformable a, a ~ Part a) => HasParts Music.Parts.BasicPart a where
+  parts = ($)
 
 

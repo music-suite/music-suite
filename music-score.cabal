@@ -28,6 +28,7 @@ library
                         aeson                   >= 0.7.0.6 && < 1,
                         lens                    >= 4.11     && < 5,
                         process                 >= 1.2 && < 1.3,
+                        split                   >= 0.2.2    && < 1,
                         containers,
                         nats,          
                         average                 >= 0.6.1    && < 1,
@@ -53,6 +54,8 @@ library
                         music-dynamics-literal  == 1.9.0,
                         music-pitch             == 1.9.0,
                         music-dynamics          == 1.9.0,
+                        music-articulation      == 1.9.0,
+                        music-parts             == 1.9.0,
                         prettify,
                         parsec                  >= 3.1.9 && < 4
     exposed-modules:    Data.PairMonad
@@ -118,6 +121,7 @@ library
                         Music.Score.Export.MusicXml
                         Music.Score.Export.ArticulationNotation
                         Music.Score.Export.DynamicNotation
+                        Music.Score.Export2.StandardNotation
                         Music.Score.Import.Abc
                         Music.Score.Import.Lilypond
                         Music.Score.Import.Midi
