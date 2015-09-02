@@ -42,6 +42,7 @@ import qualified Music.Score.Internal.Export
 import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
                                                           quantize, rewrite)
 import qualified Music.Score.Internal.Util
+import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Key
 import qualified Music.Score.Meta.RehearsalMark
@@ -54,7 +55,7 @@ import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
 import           Music.Time
 import           Music.Time.Meta                         (meta)
 import qualified Text.Pretty                             as Pretty
-
+import qualified System.Process --DEBUG
 
 {-
 type StandardNote =
@@ -232,13 +233,16 @@ runENoLog = fmap fst . runExcept . runWriterT . runE
 
 toLy :: Work -> E (String, Lilypond.Music)
 toLy w = do
+  
+  -- TODO alt headers, top-level and template stuff
+  let header = getData "ly_big_score.ily"
+  
+  -- TODO assumes one movement
   r <- case w^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
   m <- toLyMusic $ r
-  return ("", m)
-  -- TODO all top-level and template stuff
-  -- TODO assumes one movement
+  return (header, m)
 
 toLyMusic :: Movement -> E Lilypond.Music
 toLyMusic m = do
@@ -456,9 +460,12 @@ asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
 -- TODO context for dyn and art
+-- TODO ties
 foo3 :: Maybe Asp2 -> Chord
 foo3 Nothing    = mempty
-foo3 (Just asp) = pitches .~ (asp^..(Music.Score.pitches)) $ mempty
+foo3 (Just asp) = ties .~ (Any endTie,Any beginTie) $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
+  where
+    (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
 foo2 :: Rhythm (Maybe Asp2) -> Bar
 foo2 rh = Bar [layer1] -- TODO more layers (see below)
@@ -569,3 +576,14 @@ test = runENoLog $ toLy $
       ])]
 
 test2 x = runENoLog $ toLy =<< fromAspects x
+test3 x = do
+  let r = test2 x
+  case r of 
+    Left e -> fail e
+    Right (h,ly) -> do
+      let ly2 = h ++ show (Pretty.pretty ly)
+      putStrLn ly2 
+      writeFile "t.ly" $ ly2
+      void $ System.Process.system "lilypond t.ly"
+    
+
