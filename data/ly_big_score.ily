@@ -26,8 +26,8 @@
 }
 
 \header {
-  title         = $(title)
-  composer      = $(composer)
+  title         = "$(title)"
+  composer      = "$(composer)"
   tagline       = ""  % removed   
 }
 
