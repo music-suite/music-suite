@@ -585,13 +585,13 @@ fromAspects sc = do
   -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
   partsAndInfo3 <- return $ fmap2 asp2ToAsp3 $ partsAndInfo2b
      
-  -- partsAndInfo2b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
-  let partsAndInfo2b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
+  -- partsAndInfo3b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
+  let partsAndInfo3b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
 
   -- Tie splitting
   -- List is list of bars, there is no layering
   -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  partsAndInfo4 <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) partsAndInfo2b
+  partsAndInfo4 <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) partsAndInfo3b
 
   -- Parts as a sequence of quantized bars, with localized dynamics and articulation
   -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
