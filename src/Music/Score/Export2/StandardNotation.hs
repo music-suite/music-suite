@@ -571,33 +571,33 @@ toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return
 fromAspects :: Asp -> E Work
 fromAspects sc = do
    -- Part extraction (for now assume no overlapping notes)
-   -- partsAndInfo :: [(Music.Parts.Part,Score Asp1)]
-  let partsAndInfo = Music.Score.extractPartsWithInfo normScore
+   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
+  let postPartExtract = Music.Score.extractPartsWithInfo normScore
 
   -- Go to Asp2 as we need Semigroup to compose all simultanous notes
-  -- partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
-  let partsAndInfo2 = fmap2 (simultaneous . fmap asp1ToAsp2) partsAndInfo
-  partsAndInfo2b <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ partsAndInfo2
+  -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
+  let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
+  postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ postChordMerge
 
   -- Convert to voice
   -- Go to Asp3, rewriting dynamics and articulation context-sensitivitily
   -- TODO handle failure (overlapping notes)
-  -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
-  partsAndInfo3 <- return $ fmap2 asp2ToAsp3 $ partsAndInfo2b
+  -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
+  postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
      
-  -- partsAndInfo3b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
-  let partsAndInfo3b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
+  -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
+  let postTieSplit = fmap2 (Music.Score.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
 
   -- Tie splitting
   -- List is list of bars, there is no layering
-  -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  partsAndInfo4 <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) partsAndInfo3b
+  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  postQuantize <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
 
   -- Parts as a sequence of quantized bars, with localized dynamics and articulation
-  -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
-  let partsAndInfo5 = getStaffStructure partsAndInfo4
+  -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
+  let postStaffGrouping = generateStaffGrouping postQuantize
 
-  return $ Work mempty [Movement info systemStaff (fmap foo partsAndInfo5)]  
+  return $ Work mempty [Movement info systemStaff (fmap foo postStaffGrouping)]  
   where
     info = id
       $ movementTitle .~ (
@@ -628,8 +628,8 @@ extractTimeSignatures
   :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
 extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
 
-getStaffStructure :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
-getStaffStructure = groupToLabelTree . partDefault
+generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+generateStaffGrouping = groupToLabelTree . partDefault
 
 partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
 partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
