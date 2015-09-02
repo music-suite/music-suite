@@ -2,61 +2,59 @@
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor, DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module Music.Score.Export2.StandardNotation where
-import Control.Monad.Zip
-import Data.Traversable (Traversable)
-import qualified Data.Traversable
-import Data.Foldable (Foldable)
-import Music.Time
-import Control.Applicative
-import qualified Data.Maybe
-import qualified Music.Score
-import Data.Map (Map)
-import Control.Lens.Operators
-import Control.Lens (view, preview, set, over, under, _head)
-import Control.Lens.TH (makeLenses)
-import Music.Score.Ties (TieT(..))
-import Data.Functor.Identity
-import Control.Monad.Except
-import Control.Monad.Writer
-import Music.Time.Meta (meta)
-
-import Data.VectorSpace hiding (Sum)
-import Data.AffineSpace hiding (Sum)
-import           Data.Colour
-import Music.Dynamics.Literal
+import           Control.Applicative
+import           Control.Lens                            (over, preview, set,
+                                                          under, view, _head)
+import           Control.Lens.Operators
+import           Control.Lens.TH                         (makeLenses)
+import           Control.Monad.Except
+import           Control.Monad.Writer
+import           Data.AffineSpace                        hiding (Sum)
+import           Data.Colour                             (Colour)
 import           Data.Colour.Names                       as Color
+import           Data.Foldable                           (Foldable)
+import           Data.Functor.Identity                   (Identity)
+import           Data.Map                                (Map)
+import qualified Data.Maybe
+import qualified Data.Music.Lilypond                     as Lilypond
+import qualified Data.Music.MusicXml.Simple              as MusicXml
+import           Data.Semigroup
+import           Data.Traversable                        (Traversable)
+import qualified Data.Traversable
+import           Data.VectorSpace                        hiding (Sum)
+import qualified Music.Articulation
+import qualified Music.Dynamics
+import           Music.Dynamics.Literal                  (DynamicsL(..), fromDynamics)
+import           Music.Parts                             (Group (..))
+import qualified Music.Parts
+import qualified Music.Pitch
 import qualified Music.Pitch
 import qualified Music.Pitch.Literal
-import           Data.Semigroup
-import qualified Music.Score.Meta
-import qualified Music.Score.Meta.Time
-import qualified Music.Score.Meta.Key
-import qualified Music.Score.Meta.Tempo
-import qualified Music.Score.Meta.RehearsalMark
-import Music.Score.Tremolo (TremoloT, runTremoloT)
-
+import           Music.Score                             (MVoice)
+import qualified Music.Score
+import           Music.Score.Articulation                (ArticulationT)
+import           Music.Score.Dynamics                    (DynamicT)
 import qualified Music.Score.Export.ArticulationNotation
-import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.ArticulationNotation as AN
-import qualified Music.Score.Export.DynamicNotation as DN
-import qualified Data.Music.Lilypond as Lilypond
-import qualified Text.Pretty as Pretty
-import qualified Data.Music.MusicXml.Simple as MusicXml
-import qualified Music.Pitch
-import qualified Music.Dynamics
-import qualified Music.Articulation
-import qualified Music.Parts
-import Music.Parts (Group(..))
-
-import Music.Score.Pitch ()
-import Music.Score.Dynamics (DynamicT)
-import Music.Score.Articulation (ArticulationT)
-import Music.Score.Part (PartT)
-
-import qualified Music.Score.Internal.Util
+import qualified Music.Score.Export.DynamicNotation
+import qualified Music.Score.Export.DynamicNotation      as DN
 import qualified Music.Score.Internal.Export
-import Music.Score.Internal.Quantize (Rhythm(..), dotMod, quantize, rewrite)
-import Music.Score (MVoice)
+import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
+                                                          quantize, rewrite)
+import qualified Music.Score.Internal.Util
+import qualified Music.Score.Meta
+import qualified Music.Score.Meta.Key
+import qualified Music.Score.Meta.RehearsalMark
+import qualified Music.Score.Meta.Tempo
+import qualified Music.Score.Meta.Time
+import           Music.Score.Part                        (PartT)
+import           Music.Score.Pitch                       ()
+import           Music.Score.Ties                        (TieT (..))
+import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
+import           Music.Time
+import           Music.Time.Meta                         (meta)
+import qualified Text.Pretty                             as Pretty
+
 
 {-
 type StandardNote =
@@ -88,7 +86,7 @@ foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
 -- fromList :: [a] -> AltList () a
 -- fromList []     = Nil
 -- fromList (x:xs) = Cons () (Cons x (fromList xs))
--- 
+--
 -- toList Nil          = []
 -- toList (Cons x Nil)  = x : toList xs
 -- toList (Cons () )  = x : toList xs
@@ -163,10 +161,10 @@ type Ties                   = (Any,Any)             -- (endTie?,beginTie?)
 
 -- Rests, single-notes and chords (most attributes are not shown for rests)
 data Chord = Chord {
-  _pitches::[Pitch], 
-  _arpeggioNotation::Maybe ArpeggioNotation, 
-  _tremoloNotation::Maybe TremoloNotation, 
-  _breathNotation::Maybe BreathNotation, 
+  _pitches::[Pitch],
+  _arpeggioNotation::Maybe ArpeggioNotation,
+  _tremoloNotation::Maybe TremoloNotation,
+  _breathNotation::Maybe BreathNotation,
   _articulationNotation::Maybe ArticulationNotation, -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
   _dynamicNotation::Maybe DynamicNotation,
   _chordColor::Maybe (Colour Double),
@@ -196,19 +194,19 @@ data MovementInfo = MovementInfo {
   _movementTitle::Title,
   _movementAnnotations::Annotations,
   _movementAttribution::Attribution
-  } 
+  }
   deriving (Eq, Show); makeLenses ''MovementInfo
 instance Monoid MovementInfo where
   mempty = MovementInfo mempty mempty mempty
 
-data Movement     = Movement { 
-  _movementInfo::MovementInfo, 
-  _systemStaff::SystemStaff, 
+data Movement     = Movement {
+  _movementInfo::MovementInfo,
+  _systemStaff::SystemStaff,
   _staves::LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
   }
   deriving (Eq, Show); makeLenses ''Movement
 
-data WorkInfo     = WorkInfo { _title::Title, _annotations::Annotations, _attribution::Attribution} 
+data WorkInfo     = WorkInfo { _title::Title, _annotations::Annotations, _attribution::Attribution}
   deriving (Eq, Show); makeLenses ''WorkInfo
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
@@ -234,7 +232,7 @@ runENoLog = fmap fst . runExcept . runWriterT . runE
 
 toLy :: Work -> E (String, Lilypond.Music)
 toLy w = do
-  r <- case w^?movements._head of 
+  r <- case w^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
   m <- toLyMusic $ r
@@ -263,7 +261,7 @@ toLyBar sysBar bar = do
   -- TODO system bar (time sig especially!)
   let layers = bar^.pitchLayers
   Lilypond.Simultaneous False <$> mapM go layers
-  
+
   where
     go :: Rhythm Chord -> E Lilypond.Music
     go (Beat d x)            = toLyChord d x
@@ -273,15 +271,15 @@ toLyBar sysBar bar = do
     go (Tuplet m r)          = Lilypond.Times (realToFrac m) <$> (go r)
       where
         (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-    
+
     unRatio = Music.Score.Internal.Util.unRatio
     bimap = Music.Score.bimap
 
 {-
-TODO _arpeggioNotation::Maybe ArpeggioNotation, 
-TODO _tremoloNotation::Maybe TremoloNotation, 
-TODO _breathNotation::Maybe BreathNotation, 
--}  
+TODO _arpeggioNotation::Maybe ArpeggioNotation,
+TODO _tremoloNotation::Maybe TremoloNotation,
+TODO _breathNotation::Maybe BreathNotation,
+-}
 toLyChord :: Duration -> Chord -> E Lilypond.Music
 toLyChord d chord = id
     <$> notateTies (chord^.ties)
@@ -412,7 +410,7 @@ toLyChord d chord = id
     -- Use rcomposed as notateDynamic returns "mark" order, not application order
     composed = Music.Score.Internal.Util.composed
     rcomposed = Music.Score.Internal.Util.composed . reverse
-    
+
 
 toLyStaffGroup :: LabelTree BracketType (Lilypond.Music) -> E Lilypond.Music
 toLyStaffGroup = return . foldLabelTree id g
@@ -434,13 +432,13 @@ toXml = undefined
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-type Asp1 = (PartT Music.Parts.Part 
-  (ArticulationT Music.Articulation.Articulation 
+type Asp1 = (PartT Music.Parts.Part
+  (ArticulationT Music.Articulation.Articulation
     (DynamicT Music.Dynamics.Dynamics Pitch)))
 -- We require all notes in a chords to have the same kind of ties
-type Asp2 = TieT (PartT Music.Parts.Part 
-  (ArticulationT Music.Articulation.Articulation 
-    (DynamicT Music.Dynamics.Dynamics 
+type Asp2 = TieT (PartT Music.Parts.Part
+  (ArticulationT Music.Articulation.Articulation
+    (DynamicT Music.Dynamics.Dynamics
       [Pitch])))
 
 type Asp = Score Asp1
@@ -462,11 +460,11 @@ foo :: (Music.Parts.Part, [Rhythm (Maybe Asp2)]) -> Staff
 foo (p,bars) = Staff mempty (fmap foo2 bars)
 
 fromAspects :: Asp -> E Work
-fromAspects sc = return 
+fromAspects sc = return
   $ Work mempty [Movement mempty systemStaff (fmap foo partsAndInfo5)]
-  
-    
-  
+
+
+
   where
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
@@ -534,16 +532,16 @@ groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
 -- Util
 -- pcatL :: [Lilypond.Music] -> Lilypond.Music
 -- pcatL = pcatL' False
--- 
+--
 -- pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
 -- pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
--- 
+--
 -- scatL :: [Lilypond.Music] -> Lilypond.Music
 -- scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
--- 
+--
 -- spellL :: Integer -> Lilypond.Note
 -- spellL a = Lilypond.NotePitch (spellL' a) Nothing
--- 
+--
 -- spellL' :: Integer -> Lilypond.Pitch
 -- spellL' p = Lilypond.Pitch (
 --   toEnum $ fromIntegral pc,
@@ -559,6 +557,6 @@ test = runENoLog $ toLy $
     Branch Bracket [
       Leaf (Staff mempty [Bar [Beat 1 mempty]]),
       Leaf (Staff mempty [Bar [Beat 1 mempty]])
-      ])] 
+      ])]
 
 test2 x = runENoLog $ toLy =<< fromAspects x
