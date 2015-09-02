@@ -558,9 +558,13 @@ foo (part,bars) = Staff info (fmap foo2 bars)
       $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition)) 
       $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef)) 
       $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName)) 
-      $ instrumentFullName     .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.fullName)) 
+      $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr]) 
       $ mempty
-
+      where
+        soloStr = if (part^.(Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
+        nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
+        subpartStr = Just $ show (part^.(Music.Parts._subpart))
+        
 toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
 toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
 
