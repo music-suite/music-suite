@@ -15,6 +15,12 @@ module Music.Parts (
         
         -- * Instruments
         module Music.Parts.Instrument,
+        module Music.Parts.Instrument.Brass,
+        module Music.Parts.Instrument.Keyboard,
+        module Music.Parts.Instrument.Percussion,
+        module Music.Parts.Instrument.Strings,
+        module Music.Parts.Instrument.Vocal,
+        module Music.Parts.Instrument.Woodwind,
 
         -- * Parts
         module Music.Parts.Part,
@@ -133,6 +139,12 @@ import           Music.Parts.Instrument
 import           Music.Parts.Part
 import           Music.Parts.Subpart
 import           Music.Parts.Group
+import Music.Parts.Instrument.Brass
+import Music.Parts.Instrument.Keyboard
+import Music.Parts.Instrument.Percussion
+import Music.Parts.Instrument.Strings
+import Music.Parts.Instrument.Vocal
+import Music.Parts.Instrument.Woodwind
 
 {- $terminology
 
