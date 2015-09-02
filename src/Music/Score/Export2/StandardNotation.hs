@@ -265,23 +265,33 @@ toLyBar sysBar bar = do
   -- TODO system bar (time sig especially!)
   let layers = bar^.pitchLayers
   -- TODO emit \new Voice for eachlayer
-  sim <$> mapM go layers
-
+  sim <$> sysStuff <$> mapM (toLyLayer) layers
   where
+    -- System information need not be replicated in all layers
+    sysStuff [] = []
+    sysStuff (x:xs) = (addTimeSignature (sysBar^.timeSignature) x:xs)
+    
     sim [x] = x
     sim xs  = Lilypond.Simultaneous False xs
     
-    go :: Rhythm Chord -> E Lilypond.Music
-    go (Beat d x)            = toLyChord d x
-    go (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
-    go (Dotted n _)          = error "FIXME"
-    go (Group rs)            = Lilypond.Sequential <$> mapM go rs
-    go (Tuplet m r)          = Lilypond.Times (realToFrac m) <$> (go r)
+    addTimeSignature :: Maybe Music.Score.Meta.Time.TimeSignature -> Lilypond.Music -> Lilypond.Music
+    addTimeSignature timeSignature x = (setTimeSignature `ifJust` timeSignature) x
       where
-        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-
+        ifJust = maybe id
+        setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x = Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+    
+    
+toLyLayer :: Rhythm Chord -> E Lilypond.Music
+toLyLayer (Beat d x)            = toLyChord d x
+toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
+toLyLayer (Dotted n _)          = error "FIXME"
+toLyLayer (Group rs)            = Lilypond.Sequential <$> mapM toLyLayer rs
+toLyLayer (Tuplet m r)          = Lilypond.Times (realToFrac m) <$> (toLyLayer r)
+  where
+    (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
     unRatio = Music.Score.Internal.Util.unRatio
     bimap = Music.Score.bimap
+
 
 {-
 TODO _arpeggioNotation::Maybe ArpeggioNotation,
