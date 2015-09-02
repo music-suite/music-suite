@@ -526,7 +526,6 @@ asp2ToAsp3 = id
   . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon) 
   -- . fmap2 (over Music.Score.articulation (const ()))
 
--- TODO context for dyn and art
 foo3 :: Maybe Asp3 -> Chord
 foo3 Nothing    = mempty
 foo3 (Just asp) = id 
@@ -553,8 +552,31 @@ foo (part,bars) = Staff info (fmap foo2 bars)
       $ mempty
 
 fromAspects :: Asp -> E Work
-fromAspects sc = return
-  $ Work mempty [Movement info systemStaff (fmap foo partsAndInfo5)]
+fromAspects sc = do
+   -- Part extraction (for now assume no overlapping notes)
+   -- partsAndInfo :: [(Music.Parts.Part,Score Asp1)]
+  let partsAndInfo = Music.Score.extractPartsWithInfo normScore
+
+  -- Go to Asp2 as we need Semigroup, then compose all simultanous notes in this part
+  -- partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
+  let partsAndInfo2 = (fmap.fmap) (simultaneous . fmap asp1ToAsp2) partsAndInfo
+
+  -- Convert to voice
+  -- TODO context-sensitive dynamics and articulation here
+  -- TODO handle failure (overlapping notes)
+  -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
+  let partsAndInfo3 = (fmap.fmap) (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
+
+
+  -- Tie splitting
+  -- list is list of bars, there is no layering
+  -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  let partsAndInfo4 = (fmap.fmap) (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
+
+  -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
+  let partsAndInfo5 = getStaffStructure partsAndInfo4
+
+  return $ Work mempty [Movement info systemStaff (fmap foo partsAndInfo5)]  
   where
     info = id
       $ movementTitle .~ (
@@ -566,28 +588,6 @@ fromAspects sc = return
     
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
-
-    partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
-    partsAndInfo5 = getStaffStructure partsAndInfo4
-
-    -- Tie splitting
-    -- list is list of bars, there is no layering
-    partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-    partsAndInfo4 = (fmap.fmap) (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
-
-    -- Convert to voice
-    -- TODO context-sensitive dynamics and articulation here
-    -- TODO handle failure (overlapping notes)
-    partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
-    partsAndInfo3 = (fmap.fmap) (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
-
-    -- Go to Asp2 as we need Semigroup, then compose all simultanous notes in this part
-    partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
-    partsAndInfo2 = (fmap.fmap) (simultaneous . fmap asp1ToAsp2) partsAndInfo
-
-    -- Part extraction (for now assume no overlapping notes)
-    partsAndInfo :: [(Music.Parts.Part,Score Asp1)]
-    partsAndInfo = Music.Score.extractPartsWithInfo normScore
 
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
