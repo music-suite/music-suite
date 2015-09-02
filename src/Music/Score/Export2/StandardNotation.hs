@@ -3,7 +3,7 @@
 
 module Music.Score.Export2.StandardNotation where
 import           Control.Applicative
-import           Control.Lens                            (over, preview, set,
+import           Control.Lens                            (over, preview, set, to,
                                                           under, view, _head)
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
@@ -129,13 +129,16 @@ data StaffInfo              = StaffInfo {
   _instrumentShortName::InstrumentShortName,
   _instrumentFullName::InstrumentFullName,
   _sibeliusFriendlyName::SibeliusFriendlyName,
+  -- TODO allow for clef/instrument changes within staff
+  _instrumentDefaultClef::Music.Pitch.Clef,
   _transposition::Transposition,
   _smallOrLarge::SmallOrLarge,
   _scoreOrder::ScoreOrder
   }
   deriving (Eq,Ord,Show)
+makeLenses ''StaffInfo
 instance Monoid StaffInfo where
-  mempty = StaffInfo mempty mempty mempty mempty mempty mempty
+  mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
 type Pitch                  = Music.Pitch.Pitch
 data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
@@ -257,8 +260,23 @@ toLyStaff :: SystemStaff -> Staff -> E Lilypond.Music
 toLyStaff sysBars staff = id
   <$> Lilypond.New "Staff" Nothing
   <$> Lilypond.Sequential
+  <$> addPartName (staff^.staffInfo.instrumentFullName)
+  <$> addClef (toLyClef $ staff^.staffInfo.instrumentDefaultClef)
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
   -- TODOs ignoring staff info (name and clef esp!)
+
+toLyClef c
+  | c == Music.Pitch.trebleClef = Lilypond.Treble
+  | c == Music.Pitch.altoClef   = Lilypond.Alto
+  | c == Music.Pitch.tenorClef  = Lilypond.Tenor
+  | c == Music.Pitch.bassClef   = Lilypond.Bass
+  | otherwise                   = Lilypond.Treble
+
+addClef c xs = Lilypond.Clef c : xs
+addPartName partName xs = longName : shortName : xs
+  where
+    longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
+    shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
 
 toLyBar :: SystemBar -> Bar -> E Lilypond.Music
 toLyBar sysBar bar = do
@@ -483,7 +501,14 @@ foo2 rh = Bar [layer1] -- TODO more layers (see below)
     layer1 = fmap foo3 rh
 
 foo :: (Music.Parts.Part, [Rhythm (Maybe Asp2)]) -> Staff
-foo (p,bars) = Staff mempty (fmap foo2 bars)
+foo (part,bars) = Staff info (fmap foo2 bars)
+  where
+    info = id
+      $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition)) 
+      $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef)) 
+      $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName)) 
+      $ instrumentFullName     .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.fullName)) 
+      $ mempty
 
 fromAspects :: Asp -> E Work
 fromAspects sc = return
