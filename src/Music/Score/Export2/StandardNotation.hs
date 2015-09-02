@@ -260,9 +260,13 @@ toLyBar :: SystemBar -> Bar -> E Lilypond.Music
 toLyBar sysBar bar = do
   -- TODO system bar (time sig especially!)
   let layers = bar^.pitchLayers
-  Lilypond.Simultaneous False <$> mapM go layers
+  -- TODO emit \new Voice for eachlayer
+  sim <$> mapM go layers
 
   where
+    sim [x] = x
+    sim xs  = Lilypond.Simultaneous False xs
+    
     go :: Rhythm Chord -> E Lilypond.Music
     go (Beat d x)            = toLyChord d x
     go (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
@@ -435,6 +439,11 @@ toXml = undefined
 type Asp1 = (PartT Music.Parts.Part
   (ArticulationT Music.Articulation.Articulation
     (DynamicT Music.Dynamics.Dynamics Pitch)))
+
+type Asp1B = (PartT Music.Parts.Part
+  (ArticulationT AN.ArticulationNotation
+    (DynamicT DN.DynamicNotation Pitch)))
+
 -- We require all notes in a chords to have the same kind of ties
 type Asp2 = TieT (PartT Music.Parts.Part
   (ArticulationT Music.Articulation.Articulation
@@ -518,7 +527,7 @@ groupToLabelTree (Single (_,a)) = Leaf a
 groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
   where
     k Music.Parts.Bracket   = Bracket
-    k Music.Parts.Invisible = NoBracket -- FIXME
+    k Music.Parts.Invisible = NoBracket
     -- k Music.Parts.Subbracket = Just SubBracket
     k Music.Parts.PianoStaff = Brace
     k Music.Parts.GrandStaff = Brace
