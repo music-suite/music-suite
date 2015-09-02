@@ -557,21 +557,21 @@ fromAspects sc = do
    -- partsAndInfo :: [(Music.Parts.Part,Score Asp1)]
   let partsAndInfo = Music.Score.extractPartsWithInfo normScore
 
-  -- Go to Asp2 as we need Semigroup, then compose all simultanous notes in this part
+  -- Go to Asp2 as we need Semigroup to compose all simultanous notes
   -- partsAndInfo2 :: [(Music.Parts.Part,Score Asp2)]
-  let partsAndInfo2 = (fmap.fmap) (simultaneous . fmap asp1ToAsp2) partsAndInfo
+  let partsAndInfo2 = fmap2 (simultaneous . fmap asp1ToAsp2) partsAndInfo
 
   -- Convert to voice
-  -- TODO context-sensitive dynamics and articulation here
+  -- Go to Asp3, rewriting dynamics and articulation context-sensitivitily
   -- TODO handle failure (overlapping notes)
   -- partsAndInfo3 :: [(Music.Parts.Part,Voice (Maybe Asp3))]
-  let partsAndInfo3 = (fmap.fmap) (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
+  let partsAndInfo3 = fmap2 (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
 
 
   -- Tie splitting
   -- list is list of bars, there is no layering
   -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  let partsAndInfo4 = (fmap.fmap) (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
+  let partsAndInfo4 = fmap2 (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
 
   -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
   let partsAndInfo5 = getStaffStructure partsAndInfo4
