@@ -248,7 +248,6 @@ toLy w = do
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
 
-  -- TODO alt headers, top-level and template stuff
   let headerTempl = Data.Map.fromList [
         ("title",    (r^.movementInfo.movementTitle)),
         ("composer", Data.Maybe.fromMaybe "" $ r^.movementInfo.movementAttribution.at "composer")
@@ -276,7 +275,6 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 
 toLyMusic :: Movement -> E Lilypond.Music
 toLyMusic m = do
-  -- TODO ignores info
   -- We will copy system-staff info to each bar (time sigs, key sigs and so on, which seems to be what Lilypond expects),
   -- so the system staff is included in the rendering of each staff
   renderedStaves <- Data.Traversable.mapM (toLyStaff $ m^.systemStaff) (m^.staves)
@@ -290,7 +288,6 @@ toLyStaff sysBars staff = id
   <$> addPartName (staff^.staffInfo.instrumentFullName)
   <$> addClef (toLyClef $ staff^.staffInfo.instrumentDefaultClef)
   <$> (sequence $ zipWith toLyBar sysBars (staff^.bars))
-  -- TODOs ignoring staff info (name and clef esp!)
 
 toLyClef c
   | c == Music.Pitch.trebleClef = Lilypond.Treble
@@ -307,12 +304,12 @@ addPartName partName xs = longName : shortName : xs
 
 toLyBar :: SystemBar -> Bar -> E Lilypond.Music
 toLyBar sysBar bar = do
-  -- TODO system bar (time sig especially!)
   let layers = bar^.pitchLayers
   -- TODO emit \new Voice for eachlayer
   sim <$> sysStuff <$> mapM (toLyLayer) layers
   where
     -- System information need not be replicated in all layers
+    -- TODO other system stuff (reh marks, special barlines etc)
     sysStuff [] = []
     sysStuff (x:xs) = (addTimeSignature (sysBar^.timeSignature) x:xs)
     
@@ -418,7 +415,7 @@ toLyChord d chord = id
       AN.BeginSlur -> Lilypond.beginSlur
       AN.EndSlur   -> Lilypond.endSlur
 
-    -- TODO This syntax will change in future Lilypond versions
+    -- TODO This syntax might change in future Lilypond versions
     -- TODO handle any color
     notateColor :: Maybe (Colour Double) -> Lilypond.Music -> Lilypond.Music
     notateColor Nothing      = id
@@ -515,7 +512,6 @@ asp1ToAsp2 :: Asp1 -> Asp2
 asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
 -- TODO context for dyn and art
--- TODO ties
 foo3 :: Maybe Asp2 -> Chord
 foo3 Nothing    = mempty
 foo3 (Just asp) = ties .~ (Any endTie,Any beginTie) $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
