@@ -536,9 +536,9 @@ asp2ToAsp3 = id
   . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon) 
   -- . fmap2 (over Music.Score.articulation (const ()))
 
-foo3 :: Maybe Asp3 -> Chord
-foo3 Nothing    = mempty
-foo3 (Just asp) = id 
+aspectsToChord :: Maybe Asp3 -> Chord
+aspectsToChord Nothing    = mempty
+aspectsToChord (Just asp) = id 
   $ ties .~ (Any endTie,Any beginTie)
   $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic)) 
   $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation)) 
@@ -546,13 +546,13 @@ foo3 (Just asp) = id
   where
     (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
-foo2 :: Rhythm (Maybe Asp3) -> Bar
-foo2 rh = Bar [layer1] -- TODO more layers (see below)
+aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
+aspectsToBar rh = Bar [layer1] -- TODO more layers (see below)
   where
-    layer1 = fmap foo3 rh
+    layer1 = fmap aspectsToChord rh
 
-foo :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
-foo (part,bars) = Staff info (fmap foo2 bars)
+aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
+aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
   where
     info = id
       $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition)) 
@@ -570,34 +570,40 @@ toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return
 
 fromAspects :: Asp -> E Work
 fromAspects sc = do
-   -- Part extraction (for now assume no overlapping notes)
-   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
+   -- Part extraction
   let postPartExtract = Music.Score.extractPartsWithInfo normScore
+  -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
-  -- Go to Asp2 as we need Semigroup to compose all simultanous notes
-  -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
+  -- Change aspect type as we need Semigroup to compose all simultanous notes
+  -- Merge simultanous notes into chords, to simplify voice-separation
   let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
+  -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
+  
+  -- Separate voices (called "layers" to avoid confusion)
+  -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
   postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ postChordMerge
 
-  -- Convert to voice
-  -- Go to Asp3, rewriting dynamics and articulation context-sensitivitily
-  -- TODO handle failure (overlapping notes)
-  -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
+  -- Rewrite dynamics and articulation to be context-sensitive
+  -- This changes the aspect type again
   postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
-     
-  -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
+  -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
+
+  -- Split each part into bars, splitting notes and adding ties when necessary
+  -- Resulting list is list of bars, there is no layering (yet)
   let postTieSplit = fmap2 (Music.Score.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
+  -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
 
-  -- Tie splitting
-  -- List is list of bars, there is no layering
-  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   postQuantize <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
+  -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  
+  -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
 
-  -- Parts as a sequence of quantized bars, with localized dynamics and articulation
-  -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
+  -- Group staves, generating brackets and braces
   let postStaffGrouping = generateStaffGrouping postQuantize
+  -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
-  return $ Work mempty [Movement info systemStaff (fmap foo postStaffGrouping)]  
+  return $ Work mempty [Movement info systemStaff (fmap aspectsToStaff postStaffGrouping)]  
   where
     info = id
       $ movementTitle .~ (
