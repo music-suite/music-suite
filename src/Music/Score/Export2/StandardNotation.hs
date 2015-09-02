@@ -568,11 +568,15 @@ fromAspects sc = do
   let partsAndInfo3 = fmap2 (asp2ToAsp3 . view Music.Score.singleMVoice) partsAndInfo2
 
 
-  -- Tie splitting
-  -- list is list of bars, there is no layering
-  -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  let partsAndInfo4 = fmap2 (fmap quantizeBar . Music.Score.splitTiesAt barDurations) partsAndInfo3
+  -- partsAndInfo2b :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
+  let partsAndInfo2b = fmap2 (Music.Score.splitTiesAt barDurations) $ partsAndInfo3
 
+  -- Tie splitting
+  -- List is list of bars, there is no layering
+  -- partsAndInfo4 :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
+  partsAndInfo4 <- return $ fmap (fmap (fmap quantizeBar)) partsAndInfo2b
+
+  -- Parts as a sequence of quantized bars, with localized dynamics and articulation
   -- partsAndInfo5 :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
   let partsAndInfo5 = getStaffStructure partsAndInfo4
 
@@ -580,7 +584,7 @@ fromAspects sc = do
   where
     info = id
       $ movementTitle .~ (
-        Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0                  $ Music.Score.Meta.metaAtStart sc
+        Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $ Music.Score.Meta.metaAtStart sc
         ) 
       $ (movementAttribution.at "composer") .~ (
         flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
@@ -592,7 +596,10 @@ fromAspects sc = do
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
-quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> Rhythm (Maybe a)
+quantizeBar2 :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
+quantizeBar2 = return . quantizeBar
+
+quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> (Rhythm (Maybe a))
 -- Note: this is when quantized duration escapes to LyContext!
 quantizeBar = rewrite . handleErrors . quantize . view Music.Score.pairs
   where
