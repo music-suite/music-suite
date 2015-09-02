@@ -4,7 +4,7 @@
 module Music.Score.Export2.StandardNotation where
 import           Control.Applicative
 import           Control.Lens                            (over, preview, set, to,
-                                                          under, view, _head)
+                                                          under, view, _head, at)
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
@@ -15,6 +15,10 @@ import           Data.Colour.Names                       as Color
 import           Data.Foldable                           (Foldable)
 import           Data.Functor.Identity                   (Identity)
 import           Data.Map                                (Map)
+import qualified Data.Char
+import qualified Data.List
+import qualified Data.Map
+import qualified Data.List.Split
 import qualified Data.Maybe
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
@@ -44,6 +48,8 @@ import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
 import qualified Music.Score.Internal.Util
 import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
+import qualified Music.Score.Meta.Attribution
+import qualified Music.Score.Meta.Title
 import qualified Music.Score.Meta.Key
 import qualified Music.Score.Meta.RehearsalMark
 import qualified Music.Score.Meta.Tempo
@@ -237,15 +243,36 @@ runENoLog = fmap fst . runExcept . runWriterT . runE
 toLy :: Work -> E (String, Lilypond.Music)
 toLy w = do
   
-  -- TODO alt headers, top-level and template stuff
-  let header = getData "ly_big_score.ily"
-  
   -- TODO assumes one movement
   r <- case w^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
+
+  -- TODO alt headers, top-level and template stuff
+  let headerTempl = Data.Map.fromList [
+        ("title",    (r^.movementInfo.movementTitle)),
+        ("composer", Data.Maybe.fromMaybe "" $ r^.movementInfo.movementAttribution.at "composer")
+        ]
+  let header = getData "ly_big_score.ily" `expandTemplate` headerTempl
+  
   m <- toLyMusic $ r
   return (header, m)
+
+type Template = String
+-- |
+-- One-function templating system.
+--
+-- >>> expand "me : $(name)" (Map.fromList [("name","Hans")])
+-- "me : Hans"
+--
+expandTemplate :: Template -> Map String String -> String
+expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
+  where
+    expander vs k = replace ("$(" ++ k ++ ")") (Data.Maybe.fromJust $ Data.Map.lookup k vs)
+    composed = foldr (.) id
+    replace old new = Data.List.intercalate new . Data.List.Split.splitOn old
+    toCamel (x:xs) = Data.Char.toUpper x : xs
+
 
 toLyMusic :: Movement -> E Lilypond.Music
 toLyMusic m = do
@@ -512,11 +539,16 @@ foo (part,bars) = Staff info (fmap foo2 bars)
 
 fromAspects :: Asp -> E Work
 fromAspects sc = return
-  $ Work mempty [Movement mempty systemStaff (fmap foo partsAndInfo5)]
-
-
-
+  $ Work mempty [Movement info systemStaff (fmap foo partsAndInfo5)]
   where
+    info = id
+      $ movementTitle .~ (
+        Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0                  $ Music.Score.Meta.metaAtStart sc
+        ) 
+      $ (movementAttribution.at "composer") .~ (
+        flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
+      ) $ mempty
+    
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
 
@@ -541,7 +573,6 @@ fromAspects sc = return
 
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
-    m = sc^.meta
 
 quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> Rhythm (Maybe a)
 -- Note: this is when quantized duration escapes to LyContext!
