@@ -30,9 +30,9 @@ instance Wrapped (Ctxt a) where
 
 instance Rewrapped (Ctxt a) (Ctxt b)
 
-instance Applicative Ctxt where
-  pure x = Ctxt (Nothing, x, Nothing)
-  Ctxt (b,x,a) <*> Ctxt (b',x',a') = Ctxt (b <*> b', x x', a <*> a')
+-- instance Applicative Ctxt where
+--   pure x = Ctxt (Nothing, x, Nothing)
+--   Ctxt (b,x,a) <*> Ctxt (b',x',a') = Ctxt (b <*> b', x x', a <*> a')
   
 -- instance Comonad Ctxt where
   -- extract (Ctxt (b,x,a)) = x
