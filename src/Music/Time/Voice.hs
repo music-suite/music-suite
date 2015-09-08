@@ -504,7 +504,7 @@ mergeIfSameDurationWith f a b
 -- polyToHomophonicForce :: [Voice a] -> Voice [a]
 -- polyToHomophonicForce = undefined
 
--- | Split a homophonic texture into a polyphonic one. The returned voice list will not
+-- | Split a homophonic texture into a polyphonic one. The returned voice list will
 -- have as many elements as the chord with the fewest number of notes.
 homoToPolyphonic      :: Voice [a] -> [Voice a]
 homoToPolyphonic xs = case nvoices xs of
