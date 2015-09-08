@@ -122,7 +122,6 @@ data SystemBar              = SystemBar {
         _tempoMark::Maybe TempoMark
         -- ,_barLines::BarLines -- Tricky because of ambiguity. Use balanced pair or an alt-list in SystemStaff.
         } deriving (Eq,Ord,Show)
-makeLenses ''SystemBar
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
 type SystemStaff            = [SystemBar]
@@ -145,7 +144,6 @@ data StaffInfo              = StaffInfo {
   _scoreOrder::ScoreOrder
   }
   deriving (Eq,Ord,Show)
-makeLenses ''StaffInfo
 instance Monoid StaffInfo where
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
 type Pitch                  = Music.Pitch.Pitch
@@ -186,7 +184,7 @@ data Chord = Chord {
   _slideNotation::SlideNotation,
   _ties::Ties
   }
-  deriving (Eq, Show); makeLenses ''Chord
+  deriving (Eq, Show)
 instance Monoid Chord where
   mempty = Chord [] Nothing Nothing Nothing Nothing Nothing mempty mempty mempty mempty mempty
 
@@ -194,10 +192,10 @@ type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
 
 data Bar                    = Bar    {_pitchLayers::[PitchLayer] {-, _dynamicLayer::DynamicLayer-}}
-  deriving (Eq, Show); makeLenses ''Bar
+  deriving (Eq, Show)
 
 data Staff                  = Staff  {_staffInfo::StaffInfo,_bars::[Bar]}
-  deriving (Eq, Show); makeLenses ''Staff
+  deriving (Eq, Show)
 
 type Title                  = String
 type Annotations            = [(Span, String)]
@@ -208,7 +206,8 @@ data MovementInfo = MovementInfo {
   _movementAnnotations::Annotations,
   _movementAttribution::Attribution
   }
-  deriving (Eq, Show); makeLenses ''MovementInfo
+  deriving (Eq, Show)
+
 instance Monoid MovementInfo where
   mempty = MovementInfo mempty mempty mempty
 
@@ -217,18 +216,25 @@ data Movement     = Movement {
   _systemStaff::SystemStaff,
   _staves::LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
   }
-  deriving (Eq, Show); makeLenses ''Movement
+  deriving (Eq, Show)
 
 data WorkInfo     = WorkInfo { _title::Title, _annotations::Annotations, _attribution::Attribution}
-  deriving (Eq, Show); makeLenses ''WorkInfo
+  deriving (Eq, Show)
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
 
 data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
-  deriving (Show); makeLenses ''Work
+  deriving (Show)
 
-
-
+makeLenses ''SystemBar
+makeLenses ''StaffInfo
+makeLenses ''Chord
+makeLenses ''Bar
+makeLenses ''Staff
+makeLenses ''MovementInfo
+makeLenses ''Movement
+makeLenses ''WorkInfo
+makeLenses ''Work
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
