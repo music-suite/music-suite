@@ -86,7 +86,6 @@ library
                         Music.Time.Score
                         Music.Time.Behavior
                         Music.Time.Reactive
-                        -- Music.Time.Bound
                         Music.Time.Meta
                         Music.Score
                         Music.Score.Ties
