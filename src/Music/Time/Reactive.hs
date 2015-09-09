@@ -49,6 +49,7 @@ import           Control.Lens            hiding (Indexable, Level, above, below,
 import           Control.Monad
 import           Control.Monad.Plus
 import           Data.Distributive
+import           Data.Maybe (fromJust)
 import           Data.Functor.Rep
 import           Data.Functor.Rep.Lens
 import qualified Data.List               as List
@@ -63,6 +64,7 @@ import           Music.Pitch.Literal
 
 import           Music.Time.Behavior
 import           Music.Time.Event
+import           Music.Time.Score
 import           Music.Time.Juxtapose
 
 -- |
@@ -212,7 +214,18 @@ type Segment a = Behavior a
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continous :: Reactive (Segment a) -> Behavior a
-continous = error "Not implemented: (continous)"
+continous = join . reactiveToBehavior
+  where
+    reactiveToBehavior (Reactive (_,b)) = b
+-- TODO this is actually wrong! (Reactive vs Segment!)
+
+-- Fine in the span where 'intermediate' is defined:
+-- continous = g
+--   where
+--     g = \x -> fmap (fromJust.fmap getFirst.getOption) . continousM . fmap (fmap (Option . Just . First)) $ x
+-- 
+-- continousM :: Monoid a => Reactive (Behavior a) -> Behavior a
+-- continousM = concatB . view score . intermediate
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
