@@ -141,9 +141,6 @@ initial r = r `atTime` minB (occs r)
 updates :: Reactive a -> [(Time, a)]
 updates r = (\t -> (t, r `atTime` t)) <$> (List.sort . List.nub) (occs r)
 
-renderR :: Reactive a -> (a, [(Time, a)])
-renderR x = (initial x, updates x)
-
 occs :: Reactive a -> [Time]
 occs = fst . (^. _Wrapped')
 
@@ -181,8 +178,9 @@ atTime = (!) . snd . (^. _Wrapped')
 -- Get the final value.
 --
 final :: Reactive a -> a
-final (renderR -> (i,[])) = i
-final (renderR -> (i,xs)) = snd $ last xs
+final x = case (initial x, updates x) of
+  (i,[]) -> i
+  (i,xs) -> snd $ last xs
 
 -- | @switch t a b@ behaves as @a@ before time @t@, then as @b@.
 switchR :: Time -> Reactive a -> Reactive a -> Reactive a
