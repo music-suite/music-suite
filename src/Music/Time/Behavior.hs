@@ -11,10 +11,10 @@ module Music.Time.Behavior (
     switch,
     switch',
     -- splice,
-    -- trim,
+    trim,
     trimBefore,
     trimAfter,
-    -- concatB,
+    concatB,
 
     -- * Common behaviors
     -- ** Oscillators
@@ -290,6 +290,12 @@ switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
   EQ -> ry ! u
   GT -> rz ! u
 
+trimB :: Monoid a => Span -> Behavior a -> Behavior a
+trimB (view onsetAndOffset -> (on,off)) x = (\t -> if on <= t && t <= off then x ! t else mempty)^.behavior
+
+-- Treat each event as a segment in the range (0<->1) and compose.
+concatB :: Monoid a => Score (Behavior a) -> Behavior a
+concatB = mconcat . toListOf traverse . mapWithSpan transform . fmap (trimB mempty)
 
 -- Internal
 
