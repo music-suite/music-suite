@@ -11,7 +11,7 @@ module Music.Time.Behavior (
     switch,
     switch',
     -- splice,
-    trim,
+    trimB,
     trimBefore,
     trimAfter,
     concatB,

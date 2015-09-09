@@ -211,6 +211,7 @@ type Segment a = Behavior a
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continous :: Reactive (Segment a) -> Behavior a
+continous = error "Not implemented: (continous)"
 
 -- | Realize a 'Reactive' value as an continous behavior.
 continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
@@ -218,47 +219,5 @@ continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 
 -- | Sample a 'Behavior' into a reactive.
 sample   :: [Time] -> Behavior a -> Reactive a
-
--- TODO linear approximation
-(continous, sample) = error "Not implemented: (continous, sample)"
-
-
-window :: [Time] -> Behavior a -> Reactive (Segment a)
-windowed :: Iso (Behavior a) (Behavior b) (Reactive (Segment a)) (Reactive (Segment b))
-(window, windowed) = error "Not implemented: (window, windowed)"
-
-{-
-
--- Fre monad of ?
-{-
-data Score s a
-  = SOne a
-  | SPlus s [Score a]
--}
-newtype Trans s a = Trans (s, [a]) deriving (Functor)
-instance Monoid s => Monad (Trans s) where
-  return = Trans . return . return
-  -- TODO the usual >>=
-
-type Score s a = Free (Trans s) a
-
-viewScore :: Monoid s => Score s a -> [(s, a)]
-viewScore x = case retract x of
-  Trans (s,as) -> zip (repeat s) as
-
-
--- Free monad of (a,a)
-{-
-data Tree a
-  = One a
-  | Plus (Tree a) (Tree a)
--}
-data Pair a = Pair a a deriving (Functor)
-newtype MaybePair a = MaybePair (Maybe (Pair a)) deriving (Functor) -- Use compose
-type Tree a = Free MaybePair a
-
--- CPS-version of Tree
-newtype Search a = Search { getSearch :: forall r . (a -> Tree r) -> Tree r }
-   -}
-
+sample ts b = Reactive (ts,b)
 
