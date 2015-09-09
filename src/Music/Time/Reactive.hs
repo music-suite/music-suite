@@ -71,20 +71,23 @@ import           Music.Time.Juxtapose
 newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
     deriving (Functor, Semigroup, Monoid, Typeable)
 
--- $semantics
---
--- type Reactive a = (a, Time, Voice a)
---
 
---
--- TODO Define a more compact representation and reimplement Behavior as (Reactive Segment).
---
--- Possible approach:
---
---  * Implement PosReactive (no negative values) and define Reactive = Delayed (PosReactive)
---
---  * Implement liftA2 for PosReactive (preferably with a single traversal)
---
+{-
+  TODO Semantic fuzz
+
+  Reactive implies that values change at switchpoints, but should not make assumptions about what the value is *at* the
+  switchpoint. 
+  
+  Behavior represents continous values, so it knows the value at each switchpoint (semantically: Time -> a).
+  Hence the combinator (switch' :: Time -> B a -> B a -> B a -> B a) makes sense.
+  
+  Reactive can do this as well (i.e. with the current semantics: ([Time], Behavior a)), however this is not necessarily
+  desirable.
+  
+  Bad:
+      updates - Promotes association of Time with value (though it makes no assumption that the Reactive *is* this value at the given time).
+      discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
+-}
 
 instance Transformable (Reactive a) where
     transform s (Reactive (t,r)) = Reactive (transform s t, transform s r)
