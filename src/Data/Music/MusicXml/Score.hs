@@ -75,6 +75,14 @@ module Data.Music.MusicXml.Score (
         Direction(..),
 
         -----------------------------------------------------------------------------
+        -- ** Barlines
+        Barline(..),
+        BarStyle(..),
+        BarlineLocation(..),
+        Repeat(..),
+        RepeatDirection(..),
+
+        -----------------------------------------------------------------------------
         -- ** Lyrics
 
         Lyric(..),
@@ -263,11 +271,12 @@ data MusicElem
         Note
     | MusicDirection
         Direction
+    | MusicBarline                 
+        Barline
     | MusicHarmony                      -- TODO
     | MusicFiguredBass                  -- TODO
     | MusicPrint                        -- TODO
     | MusicSound                        -- TODO
-    | MusicBarline                      -- TODO
     | MusicGrouping                     -- TODO
     | MusicLink                         -- TODO
     | MusicBookmark                     -- TODO
@@ -529,6 +538,53 @@ data Direction
     | Percussion                        -- TODO
     | OtherDirection
         String
+
+
+-- ----------------------------------------------------------------------------------
+-- Barlines/Repeats
+-- ----------------------------------------------------------------------------------
+
+-- TODO: footnote, level, wavyLine, segno, coda, fermata, ending, divisions
+data Barline = Barline 
+             BarlineLocation
+             BarStyle
+             (Maybe Repeat)
+ deriving (Show,Eq)
+
+-- TODO: color
+data BarStyle = BSRegular|BSDotted|BSDashed|BSHeavy|BSLightLight|
+                BSLightHeavy|BSHeavyLight|BSHeavyHeavy|BSTick|
+                BSShort|BSNone deriving (Eq,Enum)
+
+instance Show BarStyle where 
+    show BSRegular = "regular"
+    show BSDotted = "dotted"
+    show BSDashed = "dashed"
+    show BSHeavy = "heavy"
+    show BSLightLight = "light-light"
+    show BSLightHeavy = "light-heavy"
+    show BSHeavyLight = "heavy-light"
+    show BSHeavyHeavy = "heavy-heavy"
+    show BSTick = "tick"
+    show BSShort = "short"
+    show BSNone = "none"
+
+-- TODO: times
+data Repeat = Repeat RepeatDirection deriving (Eq,Show)
+
+data RepeatDirection = RepeatBackward|RepeatForward deriving (Eq)
+
+instance Show RepeatDirection where 
+    show RepeatForward = "forward"
+    show RepeatBackward = "backward"
+
+data BarlineLocation = BLRight|BLLeft|BLMiddle deriving (Eq)
+
+instance Show BarlineLocation where
+    show BLRight = "right"
+    show BLLeft = "left"
+    show BLMiddle = "middle"
+
 
 
 -- ----------------------------------------------------------------------------------

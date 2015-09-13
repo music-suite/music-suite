@@ -217,6 +217,14 @@ module Data.Music.MusicXml.Simple (
         coda,
 
         -----------------------------------------------------------------------------
+        -- * Barlines/Repeats
+        -----------------------------------------------------------------------------
+        barline,
+        doubleBarline,
+        beginRepeat,
+        endRepeat,
+
+        -----------------------------------------------------------------------------
         -- * Folds and maps
         -----------------------------------------------------------------------------
         
@@ -450,6 +458,24 @@ backup d = Music . single $ MusicBackup d
 
 forward :: Duration -> Music
 forward d = Music . single $ MusicForward d
+
+-- ----------------------------------------------------------------------------------
+-- Barlines
+-- ----------------------------------------------------------------------------------
+
+-- | All-purpose barline function.
+barline :: Barline -> Music
+barline = Music . single . MusicBarline
+
+-- | Inserts double bar at beginning of bar.
+doubleBarline :: Music
+doubleBarline = barline $ Barline BLLeft BSLightLight Nothing
+
+beginRepeat :: Music
+beginRepeat = barline $ Barline BLLeft BSHeavyLight $ Just $ Repeat RepeatForward
+
+endRepeat :: Music
+endRepeat = barline $ Barline BLRight BSLightHeavy $ Just $ Repeat RepeatBackward
 
 -- ----------------------------------------------------------------------------------
 -- Notes
