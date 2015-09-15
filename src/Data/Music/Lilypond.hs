@@ -1,12 +1,12 @@
 
-{-# LANGUAGE 
-    FlexibleContexts,
-    OverloadedStrings, 
+{-# LANGUAGE
+    OverloadedStrings,
     GeneralizedNewtypeDeriving,
     StandaloneDeriving,
     TypeFamilies,
-    ScopedTypeVariables,     
-    ExistentialQuantification #-}
+    ScopedTypeVariables,
+    ExistentialQuantification,
+    FlexibleContexts #-}
 
 -------------------------------------------------------------------------------------
 -- |
