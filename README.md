@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/music-suite/music-pitch.png)](https://travis-ci.org/music-suite/music-pitch)
 
 # music-pitch
 
