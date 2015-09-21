@@ -17,6 +17,7 @@ module Music.Pitch.Common.Quality
         -- ** Quality type
         QualityType(..),
         expectedQualityType,
+        isValidQualityNumber,
 
         -- ** Quality to alteration
         Direction(..),
