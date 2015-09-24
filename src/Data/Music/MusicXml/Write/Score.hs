@@ -445,7 +445,7 @@ instance WriteMusicXml Lyric where
 -- ----------------------------------------------------------------------------------
 
 
-writeBeamType BeginBeam                 = "begin"
+writeBeamType BeginBeam                 = "begin" :: String
 writeBeamType ContinueBeam              = "continue"
 writeBeamType EndBeam                   = "end"
 writeBeamType ForwardHook               = "forward-hook"
@@ -455,22 +455,22 @@ writeStartStop         = writeStartStopContinueChange
 writeStartStopChange   = writeStartStopContinueChange
 writeStartStopContinue = writeStartStopContinueChange
 
-writeStartStopContinueChange Start      = "start"
+writeStartStopContinueChange Start      = "start" :: String
 writeStartStopContinueChange Stop       = "stop"
 writeStartStopContinueChange Continue   = "continue"
 writeStartStopContinueChange Change     = "change"
 
-writeStemDirection StemDown             = "down"
+writeStemDirection StemDown             = "down" :: String
 writeStemDirection StemUp               = "up"
 writeStemDirection StemNone             = "none"
 writeStemDirection StemDouble           = "double"
 
-writeLineType Solid                     = "solid"
+writeLineType Solid                     = "solid" :: String
 writeLineType Dashed                    = "dashed"
 writeLineType Dotted                    = "dotted"
 writeLineType Wavy                      = "wavy"
 
-writeNoteHead SlashNoteHead             = "slash"
+writeNoteHead SlashNoteHead             = "slash" :: String
 writeNoteHead TriangleNoteHead          = "triangle"
 writeNoteHead DiamondNoteHead           = "diamond"
 writeNoteHead SquareNoteHead            = "square"
@@ -489,7 +489,7 @@ writeNoteHead LeftTriangleNoteHead      = "left-triangle"
 writeNoteHead RectangleNoteHead         = "rectangle"
 writeNoteHead NoNoteHead                = "none"
 
-writeAccidental DoubleFlat              = "double-flat"
+writeAccidental DoubleFlat              = "double-flat" :: String
 writeAccidental Flat                    = "flat"
 writeAccidental Natural                 = "natural"
 writeAccidental Sharp                   = "sharp"
@@ -524,17 +524,17 @@ writeMode :: Mode -> String
 writeMode NoMode = "none"
 writeMode x = toLowerString . show $ x
 
-writeGroupSymbol GroupBrace     = "brace"
+writeGroupSymbol GroupBrace     = "brace" :: String
 writeGroupSymbol GroupLine      = "line"
 writeGroupSymbol GroupBracket   = "bracket"
 writeGroupSymbol GroupSquare    = "square"
 writeGroupSymbol NoGroupSymbol  = "none"
 
-writeGroupBarlines GroupBarLines        = "yes"
+writeGroupBarlines GroupBarLines        = "yes" :: String
 writeGroupBarlines GroupNoBarLines      = "no"
 writeGroupBarlines GroupMensurstrich    = "Mensurstrich"
 
-writeFermataSign NormalFermata          = "normal"
+writeFermataSign NormalFermata          = "normal" :: String
 writeFermataSign AngledFermata          = "angled"
 writeFermataSign SquaredFermata         = "squared"
 
