@@ -33,8 +33,8 @@ module Music.Score (
         module Music.Score.Export.NoteList,
         module Music.Score.Export.Midi,
         module Music.Score.Export.SuperCollider,
-        module Music.Score.Export.Lilypond,
-        module Music.Score.Export.MusicXml,
+        -- module Music.Score.Export.Lilypond,
+        -- module Music.Score.Export.MusicXml,
 
         module Music.Time,
 
@@ -78,9 +78,9 @@ import           Music.Score.Export.NoteList
 import           Music.Score.Export.Midi
 import           Music.Score.Export.SuperCollider
 import           Music.Score.Export.Abc
-import           Music.Score.Export.Lilypond
+-- import           Music.Score.Export.Lilypond
 import           Music.Score.Export.Midi
-import           Music.Score.Export.MusicXml
+-- import           Music.Score.Export.MusicXml
 import           Music.Score.Harmonics
 import           Music.Score.Import.Abc
 import           Music.Score.Import.Lilypond

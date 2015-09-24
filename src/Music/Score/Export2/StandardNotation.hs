@@ -1,4 +1,5 @@
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor, DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module Music.Score.Export2.StandardNotation where

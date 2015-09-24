@@ -1,4 +1,6 @@
 
+{-# LANGUAGE FlexibleContexts #-}
+
 module Music.Time.Score (
         -- * Score type
         Score,
