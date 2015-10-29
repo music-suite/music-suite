@@ -62,7 +62,7 @@ instance Semigroup Bel          where (<>) = (+)
 
 instance Monoid Amplitude       where { mempty  = 1 ; mappend = (*) }
 instance Monoid Decibel         where { mempty  = 0 ; mappend = (+) }
-instance Monoid Bel         where { mempty  = 0 ; mappend = (+) }
+instance Monoid Bel             where { mempty  = 0 ; mappend = (+) }
 
 class HasAmplitude a where
     amplitude :: a -> Amplitude
@@ -76,10 +76,10 @@ instance HasAmplitude Decibel where
 instance HasAmplitude Bel where
     amplitude (Bel f)       = (10/1) ** (f / 1)
 
-decibel :: HasAmplitude a => a -> Decibel
-decibel a = Decibel $ logBase (10/1) (amplitude a) * 10
+decibel     :: HasAmplitude a => a -> Decibel
+decibel a   = Decibel $ logBase (10/1) (amplitude a) * 10
 
-bel :: HasAmplitude a => a -> Bel
-bel a = Bel $ logBase (10/1) (amplitude a) * 1
+bel         :: HasAmplitude a => a -> Bel
+bel a       = Bel $ logBase (10/1) (amplitude a) * 1
 
 
