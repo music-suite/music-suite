@@ -186,6 +186,10 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Horn in F (b)",_)                      = Right $ (!! 1) $ divide 4 $ horns
             partFromName ("Horn in F (c)",_)                      = Right $ (!! 2) $ divide 4 $ horns
             partFromName ("Horn in F (d)",_)                      = Right $ (!! 3) $ divide 4 $ horns
+            partFromName ("Horn in F I",_)                        = Right $ (!! 0) $ divide 4 $ horns
+            partFromName ("Horn in F II",_)                       = Right $ (!! 1) $ divide 4 $ horns
+            partFromName ("Horn in F III",_)                      = Right $ (!! 2) $ divide 4 $ horns
+            partFromName ("Horn in F IV",_)                       = Right $ (!! 3) $ divide 4 $ horns
             partFromName ("Horn in F",_)                          = Right $ horns
             partFromName ("Horn in E",_)                          = Right $ horns
             
@@ -197,6 +201,10 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Trumpet in C (b)",_)                   = Right $ (!! 1) $ divide 4 $ trumpets
             partFromName ("Trumpet in C (c)",_)                   = Right $ (!! 2) $ divide 4 $ trumpets
             partFromName ("Trumpet in C (d)",_)                   = Right $ (!! 3) $ divide 4 $ trumpets
+            partFromName ("Trumpet in C I",_)                     = Right $ (!! 0) $ divide 4 $ trumpets
+            partFromName ("Trumpet in C II",_)                    = Right $ (!! 1) $ divide 4 $ trumpets
+            partFromName ("Trumpet in C III",_)                   = Right $ (!! 2) $ divide 4 $ trumpets
+            partFromName ("Trumpet in C IV",_)                    = Right $ (!! 3) $ divide 4 $ trumpets
             partFromName ('T':'r':'u':'m':'p':'e':'t':_,_)        = Right $ trumpets
             partFromName ("Trombone",_)                           = Right $ trombones
 
@@ -204,6 +212,10 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Trombone (b)",_)                       = Right $ (!! 1) $ divide 4 $ trombones
             partFromName ("Trombone (c)",_)                       = Right $ (!! 2) $ divide 4 $ trombones
             partFromName ("Trombone (d)",_)                       = Right $ (!! 3) $ divide 4 $ trombones
+            partFromName ("Trombone I",_)                         = Right $ (!! 0) $ divide 4 $ trombones
+            partFromName ("Trombone II",_)                        = Right $ (!! 1) $ divide 4 $ trombones
+            partFromName ("Trombone III",_)                       = Right $ (!! 2) $ divide 4 $ trombones
+            partFromName ("Trombone IV",_)                        = Right $ (!! 3) $ divide 4 $ trombones
             partFromName ("Trombones",_)                          = Right $ trombones
 
             partFromName ("Tuba",_)                               = Right $ (!! 0) $ divide 4 $ trombones
