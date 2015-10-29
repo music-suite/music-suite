@@ -1,6 +1,5 @@
 
-# PLUGIN_PATH=~/appsupport/sibelius/Plugins
-PLUGIN_PATH=~/appsupport/sibelius7/Plugins
+PLUGIN_PATH=/Users/Hoglund/Library/Application\ Support/Avid/Sibelius\ 7/Plugins
 APP_NAME="Sibelius 7"
 
 # EXAMPLE=~/Documents/Musik/Konserter/Flöjt/*.sib
@@ -17,6 +16,7 @@ install-plugin:
 	mkdir -p $(PLUGIN_PATH)/JSON/
 	mv ExportJSON.plg $(PLUGIN_PATH)/JSON/ExportJSON.plg
 
+run-sibelius: install-plugin
 	killall $(APP_NAME)
 	open -a $(APP_NAME) #$(EXAMPLE)
 
