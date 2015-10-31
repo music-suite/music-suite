@@ -41,3 +41,21 @@ library
     other-modules:      Data.Music.MusicXml.Write.Score
     hs-source-dirs:     src
     default-language:   Haskell2010
+
+test-suite "musicxml2-tests"
+    build-depends:      base                    >= 4 && < 5,
+                        semigroups              >= 0.13.0.1 && < 1,
+                        nats,
+                        data-default,
+                        type-unary              >= 0.2.16 && < 1.0,
+                        reverse-apply,
+                        xml,
+                        music-pitch             == 1.9.2,
+                        music-dynamics          == 1.9.2,
+                        music-pitch-literal     == 1.9.2,
+                        music-dynamics-literal  == 1.9.2,
+                        musicxml2
+    type:               exitcode-stdio-1.0
+    main-is:            Main.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010

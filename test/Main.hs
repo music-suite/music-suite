@@ -6,12 +6,13 @@ module Main where
 import Data.Default
 import Data.Semigroup
 import Control.Apply.Reverse
-import System.Posix.Process
+-- import System.Posix.Process
 
 import Music.Pitch.Literal
-import Music.MusicXml
-import Music.MusicXml.Dynamics
-import Music.MusicXml.Simple
+
+import Data.Music.MusicXml
+import Data.Music.MusicXml.Dynamics
+import Data.Music.MusicXml.Simple
 
 
 score = testNotes
@@ -284,12 +285,12 @@ testManyParts = fromParts
         strings = partList ["Violin I", "Violin II", "Viola", "Violoncello", "Double Bass"]
 
         parts = bracket winds <> bracket brass <> bracket strings
-        
+
         contents = [
             [defaultDivisions <> trebleClef <> bar1, bar2],
             [defaultDivisions <> trebleClef <> bar1, bar2],
             [defaultDivisions <> trebleClef <> bar1, bar2],
-                                                     
+
             [defaultDivisions <> trebleClef <> bar1, bar2],
             [defaultDivisions <> trebleClef <> bar1, bar2],
             [defaultDivisions <> trebleClef <> bar1, bar2],
@@ -372,34 +373,36 @@ misc = fromParts
 
 music = mconcat
 
-main = openScore
+main = putStrLn "Testing musicxml2 OK"
 
-openScore = openSib score
--- openScore = openLy score
--- openScore = openMus score
-
-showScore = putStrLn $ showXml $ score
-
-openSib :: Score -> IO ()
-openSib score =
-    do  writeFile "test.xml" (showXml score)
-        execute "open" ["-a", "/Applications/Sibelius 7.app/Contents/MacOS/Sibelius 7", "test.xml"]
-
-openLy :: Score -> IO ()
-openLy score =
-    do  writeFile "test.xml" (showXml score)
-        execute "musicxml2ly" ["test.xml"]
-        execute "lilypond" ["test.ly"]
-        execute "open" ["test.pdf"]
-
-openMus :: Score -> IO ()
-openMus score =
-    do  writeFile "test.xml" (showXml score)
-        execute "open" ["-a", "/Applications/MuseScore.app/Contents/MacOS/mscore", "test.xml"]
-
-
-execute :: FilePath -> [String] -> IO ()
-execute program args = do
-    forkProcess $ executeFile program True args Nothing
-    return ()
-
+-- main = openScore
+--
+-- openScore = openSib score
+-- -- openScore = openLy score
+-- -- openScore = openMus score
+--
+-- showScore = putStrLn $ showXml $ score
+--
+-- openSib :: Score -> IO ()
+-- openSib score =
+--     do  writeFile "test.xml" (showXml score)
+--         execute "open" ["-a", "/Applications/Sibelius 7.app/Contents/MacOS/Sibelius 7", "test.xml"]
+--
+-- openLy :: Score -> IO ()
+-- openLy score =
+--     do  writeFile "test.xml" (showXml score)
+--         execute "musicxml2ly" ["test.xml"]
+--         execute "lilypond" ["test.ly"]
+--         execute "open" ["test.pdf"]
+--
+-- openMus :: Score -> IO ()
+-- openMus score =
+--     do  writeFile "test.xml" (showXml score)
+--         execute "open" ["-a", "/Applications/MuseScore.app/Contents/MacOS/mscore", "test.xml"]
+--
+--
+-- execute :: FilePath -> [String] -> IO ()
+-- execute program args = do
+--     forkProcess $ executeFile program True args Nothing
+--     return ()
+--
