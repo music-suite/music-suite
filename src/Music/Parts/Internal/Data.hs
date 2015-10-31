@@ -133,6 +133,7 @@ pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
     octS = pure $ last x
 
 -- safeRead x = Just (read x) -- TODO catch exception
+safeRead :: Read a => String -> Maybe a
 safeRead = fmap fst . Data.Maybe.listToMaybe . reads
 
 readClef :: String -> Maybe Clef
