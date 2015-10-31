@@ -1,4 +1,6 @@
 
+{-# LANGUAGE FlexibleContexts #-}
+
 -- | Common pitch.
 module Music.Pitch.Common.Pitch
 (

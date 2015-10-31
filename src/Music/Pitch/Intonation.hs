@@ -1,4 +1,6 @@
 
+{-# LANGUAGE FlexibleContexts #-}
+
 -- | Intonation and tuning.
 module Music.Pitch.Intonation (
       Intonation(..),
