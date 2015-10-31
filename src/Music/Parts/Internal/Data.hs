@@ -24,6 +24,7 @@ import           Data.Csv                   (FromField (..), FromRecord (..),
                                              (.!))
 import qualified Data.Csv
 import qualified Data.List
+import qualified Data.Maybe
 import           Data.Traversable           (traverse)
 import           Data.VectorSpace
 import qualified System.IO.Unsafe
@@ -131,7 +132,8 @@ pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
     pcS = init x
     octS = pure $ last x
 
-safeRead x = Just (read x) -- TODO catch exception
+-- safeRead x = Just (read x) -- TODO catch exception
+safeRead = fmap fst . Data.Maybe.listToMaybe . reads
 
 readClef :: String -> Maybe Clef
 readClef = go where
