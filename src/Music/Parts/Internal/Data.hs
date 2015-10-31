@@ -7,6 +7,7 @@ module Music.Parts.Internal.Data (
   SoundId,
   -- InstrumentTopCategory(..),
   InstrumentDef(..),
+  getInstrumentData,
   getInstrumentDefById,
   getInstrumentDefByGeneralMidiProgram,
   getInstrumentDefByGeneralMidiPercussionNote,
