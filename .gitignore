@@ -1,2 +1,5 @@
 dist
 cabal.sandbox.config
+.cabal-sandbox
+*.ly
+*.pdf
