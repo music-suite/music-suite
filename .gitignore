@@ -6,3 +6,4 @@ dist
 *.xml
 *sandbox.config
 .DS_Store
+*.mid
