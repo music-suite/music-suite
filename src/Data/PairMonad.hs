@@ -15,12 +15,14 @@ import Control.Lens()
 
 import Data.Monoid
 import Data.Foldable
+import Data.Orphans ()
 import Data.Traversable
 
 -- Equivalent to the Monad Writer instance.
-instance Monoid o => Monad ((,) o) where
-  return      = pure
-  (o,a) >>= f = (o `mappend` o', a') where (o',a') = f a
+-- The following is provided by Data.Orphans
+-- instance Monoid o => Monad ((,) o) where
+--   return      = pure
+--   (o,a) >>= f = (o `mappend` o', a') where (o',a') = f a
 
 -- #ifndef __HAS_LENS__
 -- deriving instance Foldable ((,) o)
