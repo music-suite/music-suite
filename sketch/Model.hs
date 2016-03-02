@@ -13,10 +13,6 @@ type Aligned a = (Time, LocalDuration, a)
 
 
 type Behavior a = Time -> a
-type Reactive a = ([Time], a)
+type Reactive a = ([Time], Time -> a)
 
 -- Remove segment
-
-
-
-
