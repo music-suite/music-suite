@@ -6,6 +6,7 @@
 
 module Data.Semigroup.Instances () where
 
+import Data.Orphans ()
 import Data.Semigroup
 import Data.VectorSpace hiding (Sum)
 import Data.AffineSpace
@@ -48,16 +49,6 @@ deriving instance IsDynamics a => IsDynamics (Sum a)
 deriving instance IsDynamics a => IsDynamics (Product a)
 deriving instance IsPitch a => IsPitch (Sum a)
 deriving instance IsPitch a => IsPitch (Product a)
-
-deriving instance Functor Product
-instance Applicative Product where
-  pure = Product
-  Product f <*> Product x = Product (f x)
-
-deriving instance Functor Sum
-instance Applicative Sum where
-  pure = Sum
-  Sum f <*> Sum x = Sum (f x)
 
 
 {-
