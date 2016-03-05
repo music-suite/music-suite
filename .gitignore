@@ -3,3 +3,4 @@ cabal.sandbox.config
 .cabal-sandbox
 *.ly
 *.pdf
+.DS_Store
