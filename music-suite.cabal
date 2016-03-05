@@ -11,7 +11,7 @@ tested-with:            GHC
 build-type:             Custom
 cabal-version:          >= 1.10
 
-description: 
+description:
     This is a package without source code that imports Music Suite(see <http://music-suite.github.io/>).
     .
     It exists so that can install all (stable) packages in the suite as follows:
@@ -30,8 +30,6 @@ source-repository head
 library
   default-language: Haskell2010
   build-depends:
-    music-dynamics-literal    == 1.9.2,
-    music-pitch-literal       == 1.9.2,
     -- abcnotation               == 1.9.2,
     musicxml2                 == 1.9.2,
     lilypond                  == 1.9.2,
