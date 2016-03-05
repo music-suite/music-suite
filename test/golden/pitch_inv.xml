@@ -1,0 +1,486 @@
+<?xml version='1.0' ?>
+<score-partwise>
+  <movement-title></movement-title>
+  <identification>
+    <creator type="composer"></creator>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name></part-name>
+      <part-name-display>
+        <display-text></display-text>
+      </part-name-display>
+    </score-part>
+    <score-part id="P2">
+      <part-name></part-name>
+      <part-name-display>
+        <display-text></display-text>
+      </part-name-display>
+    </score-part>
+    <score-part id="P3">
+      <part-name></part-name>
+      <part-name-display>
+        <display-text></display-text>
+      </part-name-display>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <attributes>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+      </attributes>
+      <direction>
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+      </direction>
+      <attributes>
+        <staves>1</staves>
+      </attributes>
+      <attributes>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <attributes>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <mf />
+          </dynamics>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="start" />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>E</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="stop" />
+          <tuplet number="1" type="start" />
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+  </part>
+  <part id="P2">
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <attributes>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+      </attributes>
+      <direction>
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+      </direction>
+      <attributes>
+        <staves>1</staves>
+      </attributes>
+      <attributes>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <attributes>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <mf />
+          </dynamics>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>B</step>
+          <alter>-1.0</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>A</step>
+          <alter>-1.0</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="start" />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>A</step>
+          <alter>-1.0</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="stop" />
+          <tuplet number="1" type="start" />
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <alter>0.0</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>0.0</alter>
+          <octave>3</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+  </part>
+  <part id="P3">
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <attributes>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+      </attributes>
+      <direction>
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+      </direction>
+      <attributes>
+        <staves>1</staves>
+      </attributes>
+      <attributes>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <attributes>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <mf />
+          </dynamics>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>G</step>
+          <alter>1.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <alter>1.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="start" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="start" />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>E</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>614</duration>
+        <tie type="stop" />
+        <voice>1</voice>
+        <type>quarter</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <technical />
+          <tied type="stop" />
+          <tuplet number="1" type="start" />
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <alter>1.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+      </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <alter>1.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1229</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <time-modification>
+          <actual-notes>5</actual-notes>
+          <normal-notes>4</normal-notes>
+        </time-modification>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <tuplet number="1" type="stop" />
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

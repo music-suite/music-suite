@@ -1,0 +1,709 @@
+data Music.Parts.Part = Part Solo Instrument Subpart
+aClarinet :: Instrument
+accordion :: Instrument
+altoFlute :: Instrument
+altoSax :: Instrument
+altoTrombone :: Instrument
+baritoneSax :: Instrument
+bassClarinet :: Instrument
+bassFlute :: Instrument
+bassTrombone :: Instrument
+bassTrumpet :: Instrument
+bassoon :: Instrument
+bassoons :: Music.Parts.Part
+celesta :: Instrument
+cello :: Instrument
+cellos :: Music.Parts.Part
+clarinet :: Instrument
+clarinets :: Music.Parts.Part
+clarinets1 :: Music.Parts.Part
+clarinets2 :: Music.Parts.Part
+containsPart ::
+  Music.Parts.Part -> Music.Parts.Part -> GHC.Types.Bool
+contraBassoon :: Instrument
+corAnglais :: Instrument
+defaultClef :: Music.Parts.Part -> GHC.Types.Int
+defaultMidiChannel :: Music.Parts.Part -> GHC.Types.Int
+defaultMidiNote :: Music.Parts.Part -> GHC.Types.Int
+defaultMidiProgram :: Music.Parts.Part -> GHC.Types.Int
+divide :: GHC.Types.Int -> Music.Parts.Part -> [Music.Parts.Part]
+doubleBass :: Instrument
+doubleBasses :: Music.Parts.Part
+dulcimer :: Instrument
+ebClarinet :: Instrument
+flute :: Instrument
+flutes :: Music.Parts.Part
+flutes1 :: Music.Parts.Part
+flutes2 :: Music.Parts.Part
+glockenspiel :: Instrument
+harmonica :: Instrument
+harp :: Music.Parts.Part
+heckelphone :: Instrument
+highHorns :: [Music.Parts.Part]
+horn :: Instrument
+horns :: Music.Parts.Part
+lowHorns :: [Music.Parts.Part]
+marimba :: Instrument
+oboe :: Instrument
+oboes :: Music.Parts.Part
+oboes1 :: Music.Parts.Part
+oboes2 :: Music.Parts.Part
+piano :: Instrument
+piccoloFlute :: Instrument
+piccoloFlutes :: Music.Parts.Part
+piccoloTrumpet :: Instrument
+solo :: Instrument -> Music.Parts.Part
+sopranoSax :: Instrument
+tenorSax :: Instrument
+tenorTrombone :: Instrument
+timpani :: Instrument
+trombone :: Instrument
+trombones :: Music.Parts.Part
+trombones1 :: Music.Parts.Part
+trombones2 :: Music.Parts.Part
+trumpet :: Instrument
+trumpets :: Music.Parts.Part
+trumpets1 :: Music.Parts.Part
+trumpets2 :: Music.Parts.Part
+tuba :: Instrument
+tubas :: Music.Parts.Part
+tubularBells :: Instrument
+tutti :: Instrument -> Music.Parts.Part
+vibraphone :: Instrument
+viola :: Instrument
+violas :: Music.Parts.Part
+violin :: Instrument
+violins :: Music.Parts.Part
+violins1 :: Music.Parts.Part
+violins2 :: Music.Parts.Part
+xylophone :: Instrument
+xylorimba :: Instrument
+newtype BasicPart
+  = Music.Parts.Basic.BasicPart {Music.Parts.Basic.getBasicPart :: Option
+                                                                     (First
+                                                                        integer-gmp:GHC.Integer.Type.Integer)}
+newtype Division
+  = Music.Parts.Division.Division {getDivision :: (GHC.Types.Int,
+                                                   GHC.Types.Int)}
+data Instrument
+  = StdInstrument GHC.Types.Int | OtherInstrument GHC.Base.String
+data Solo = Solo | Tutti
+newtype Subpart = Subpart [Division]
+containsSubpart :: Subpart -> Subpart -> GHC.Types.Bool
+divisions :: GHC.Types.Int -> [Division]
+showDivision :: Division -> GHC.Base.String
+showDivisionR :: Division -> GHC.Base.String
+
+
+newtype Amplitude = Amplitude {getAmplitude :: GHC.Types.Double}
+newtype Bel
+  = Music.Dynamics.Absolute.Bel {Music.Dynamics.Absolute.getBel :: Amplitude}
+newtype Decibel
+  = Music.Dynamics.Absolute.Decibel {Music.Dynamics.Absolute.getDecibel :: Amplitude}
+type Dynamics = Data.Monoid.Average.Average GHC.Types.Double
+newtype DynamicsL
+  = DynamicsL {getDynamicsL :: (Data.Maybe.Maybe GHC.Types.Double,
+                                Data.Maybe.Maybe GHC.Types.Double)}
+class HasAmplitude a where
+  amplitude :: a -> Amplitude
+class IsDynamics a where
+  fromDynamics :: DynamicsL -> a
+_f :: IsDynamics a => a
+_p :: IsDynamics a => a
+bel :: HasAmplitude a => a -> Bel
+decibel :: HasAmplitude a => a -> Decibel
+ff :: IsDynamics a => a
+fff :: IsDynamics a => a
+ffff :: IsDynamics a => a
+fffff :: IsDynamics a => a
+ffffff :: IsDynamics a => a
+fp :: IsDynamics a => a
+fz :: IsDynamics a => a
+mf :: IsDynamics a => a
+mp :: IsDynamics a => a
+pp :: IsDynamics a => a
+ppp :: IsDynamics a => a
+pppp :: IsDynamics a => a
+ppppp :: IsDynamics a => a
+pppppp :: IsDynamics a => a
+rfz :: IsDynamics a => a
+sffz :: IsDynamics a => a
+sfz :: IsDynamics a => a
+
+type Music.Articulation.Articulation =
+  (Data.Monoid.Average.Average GHC.Types.Double,
+   Data.Monoid.Average.Average GHC.Types.Double)
+   
+newtype Cents
+  = Music.Pitch.Absolute.Cents {Music.Pitch.Absolute.getCents :: Hertz}
+newtype Fifths
+  = Music.Pitch.Absolute.Fifths {Music.Pitch.Absolute.getFifths :: Hertz}
+class HasFrequency a where
+  frequency :: a -> Hertz
+newtype Hertz = Hertz {getHertz :: GHC.Types.Double}
+cents :: HasFrequency a => a -> Cents
+fifths :: HasFrequency a => a -> Fifths
+
+type Intonation p = p -> Hertz
+type Tuning i = i -> Hertz
+fiftyThreeToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+fiveToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+intone ::
+  (Music.Pitch.Common.Pitch.Pitch, Hertz)
+  -> Tuning Music.Pitch.Common.Interval.Interval
+  -> Intonation Music.Pitch.Common.Pitch.Pitch
+nineteenToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+pureOctaveWith ::
+  (Music.Pitch.Common.Interval.Interval, Hertz)
+  -> Music.Pitch.Common.Interval.Interval -> Hertz
+pythagorean :: Tuning Music.Pitch.Common.Interval.Interval
+quarterCommaMeantone :: Tuning Music.Pitch.Common.Interval.Interval
+schismaticMeantone :: Tuning Music.Pitch.Common.Interval.Interval
+sevenToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+standardIntonation :: Intonation Music.Pitch.Common.Pitch.Pitch
+synTune ::
+  (Music.Pitch.Common.Interval.Interval, Hertz)
+  -> (Music.Pitch.Common.Interval.Interval, Hertz)
+  -> Music.Pitch.Common.Interval.Interval
+  -> Hertz
+tetTune ::
+  Music.Pitch.Common.Interval.Interval
+  -> Music.Pitch.Common.Interval.Interval -> Hertz
+thirtyOneToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+twelveToneEqual :: Tuning Music.Pitch.Common.Interval.Interval
+
+(/:=) :: HasSemitones a => a -> a -> GHC.Types.Bool
+(=:=) :: HasSemitones a => a -> a -> GHC.Types.Bool
+newtype Accidental
+  = Music.Pitch.Common.Pitch.Accidental {Music.Pitch.Common.Pitch.getAccidental :: integer-gmp:GHC.Integer.Type.Integer}
+class HasNumber a where
+  number :: a -> Number
+class HasQuality a where
+  quality :: a -> Quality
+class HasSemitones a where
+  semitones :: a -> Semitones
+newtype Interval
+  = Interval {getInterval :: (GHC.Types.Int, GHC.Types.Int)}
+data IntervalBasis = Chromatic | Diatonic
+data Name = C | D | E | F | G | A | B
+newtype Number
+  = Music.Pitch.Common.Interval.Number {Music.Pitch.Common.Interval.getNumber :: GHC.Types.Int}
+newtype Octaves
+  = Music.Pitch.Common.Semitones.Octaves {Music.Pitch.Common.Semitones.getOctaves :: integer-gmp:GHC.Integer.Type.Integer}
+newtype Pitch = Pitch {getPitch :: Interval}
+data Quality
+  = Major
+  | Minor
+  | Perfect
+  | Augmented GHC.Types.Int
+  | Diminished GHC.Types.Int
+newtype Semitones
+  = Music.Pitch.Common.Semitones.Semitones {Music.Pitch.Common.Semitones.getSemitones :: integer-gmp:GHC.Integer.Type.Integer}
+type Spelling = Semitones -> Number
+newtype Steps
+  = Music.Pitch.Common.Semitones.Steps {Music.Pitch.Common.Semitones.getSteps :: integer-gmp:GHC.Integer.Type.Integer}
+accidental :: Pitch -> Accidental
+asInterval :: Interval -> Interval
+asPitch :: Pitch -> Pitch
+augmented :: Number -> Interval
+basis_A1 :: Interval
+basis_P1 :: Interval
+basis_P5 :: Interval
+basis_P8 :: Interval
+basis_d2 :: Interval
+convertBasis ::
+  Interval
+  -> Interval
+  -> Interval
+  -> Data.Maybe.Maybe (GHC.Types.Int, GHC.Types.Int)
+convertBasisFloat ::
+  (GHC.Real.Fractional t, GHC.Classes.Eq t) =>
+  Interval -> Interval -> Interval -> Data.Maybe.Maybe (t, t)
+diminished :: Number -> Interval
+ditone :: Semitones
+doubleFlat :: Accidental
+doubleSharp :: Accidental
+doublyAugmented :: Number -> Interval
+doublyDiminished :: Number -> Interval
+duodecim :: Number
+fifteenth :: Number
+fifth :: Number
+flat :: Accidental
+fourteenth :: Number
+fourth :: Number
+intervalDiff :: Interval -> GHC.Types.Int
+intervalDiv :: Interval -> Interval -> GHC.Types.Int
+invert :: Interval -> Interval
+invertQuality :: Quality -> Quality
+isAugmented :: HasQuality a => a -> GHC.Types.Bool
+isCompound :: Interval -> GHC.Types.Bool
+isConsonance :: Interval -> GHC.Types.Bool
+isDiminished :: HasQuality a => a -> GHC.Types.Bool
+isDissonance :: Interval -> GHC.Types.Bool
+isFlattened :: Accidental -> GHC.Types.Bool
+isImperfectConsonance :: Interval -> GHC.Types.Bool
+isLeap :: Interval -> GHC.Types.Bool
+isMajor :: HasQuality a => a -> GHC.Types.Bool
+isMelodicConsonance :: Interval -> GHC.Types.Bool
+isMelodicDissonance :: Interval -> GHC.Types.Bool
+isMinor :: HasQuality a => a -> GHC.Types.Bool
+isNatural :: Accidental -> GHC.Types.Bool
+isNegative :: Interval -> GHC.Types.Bool
+isNonNegative :: Interval -> GHC.Types.Bool
+isPerfect :: HasQuality a => a -> GHC.Types.Bool
+isPerfectConsonance :: Interval -> GHC.Types.Bool
+isPerfectUnison :: Interval -> GHC.Types.Bool
+isPositive :: Interval -> GHC.Types.Bool
+isSemitone :: HasSemitones a => a -> GHC.Types.Bool
+isSharpened :: Accidental -> GHC.Types.Bool
+isSimple :: Interval -> GHC.Types.Bool
+isStandard :: Accidental -> GHC.Types.Bool
+isStep :: Interval -> GHC.Types.Bool
+isTone :: HasSemitones a => a -> GHC.Types.Bool
+isTritone :: HasSemitones a => a -> GHC.Types.Bool
+major :: Number -> Interval
+minor :: Number -> Interval
+mkInterval :: Quality -> Number -> Interval
+mkInterval' :: GHC.Types.Int -> GHC.Types.Int -> Interval
+mkPitch :: Name -> Accidental -> Pitch
+modally :: Spelling
+name :: Pitch -> Name
+natural :: Accidental
+ninth :: Number
+octave :: Number
+octaves :: Interval -> Octaves
+perfect :: Number -> Interval
+prime :: Number
+second :: Number
+semitone :: Semitones
+separate :: Interval -> (Octaves, Interval)
+seventh :: Number
+sharp :: Accidental
+simple :: Interval -> Interval
+sixth :: Number
+spell :: HasSemitones a => Spelling -> a -> Interval
+spelled :: HasSemitones a => a -> Spelling -> Interval
+tenth :: Number
+third :: Number
+thirteenth :: Number
+tone :: Semitones
+tritone :: Semitones
+twelfth :: Number
+unison :: Number
+usingFlats :: Spelling
+usingSharps :: Spelling
+
+(!) ::
+  Data.Functor.Rep.Representable f =>
+  f a -> Data.Functor.Rep.Rep f -> a
+(<-<) :: Duration -> Time -> Span
+(<->) :: Time -> Time -> Span
+(<|) ::
+  (Data.Semigroup.Semigroup a, HasPosition a, Transformable a) =>
+  a -> a -> a
+(>->) :: Time -> Duration -> Span
+newtype Behavior a
+  = Music.Time.Behavior.Behavior {Music.Time.Behavior.getBehavior :: Time
+                                                                     -> a}
+newtype Bound a
+  = Music.Time.Bound.Bound {Music.Time.Bound.getBound :: (Span, a)}
+type role Chord nominal
+newtype Chord a
+  = Music.Time.Chord.Chord {Music.Time.Chord.getChord :: Music.Time.Chord.ChordList
+                                                           (Music.Time.Chord.ChordEv a)}
+newtype Delayed a
+  = Music.Time.Delayed.Delayed {Music.Time.Delayed._delayedValue :: (Time,
+                                                                     a)}
+newtype Duration
+  = Music.Time.Types.Duration {Music.Time.Types.getDuration :: Music.Time.Types.TimeBase}
+newtype Future a
+  = Future {getFuture :: (Data.Semigroup.Max Time, a)}
+type role Graces representational nominal
+newtype Graces (f :: * -> *) a
+  = Graces {getGraces :: (Nominal f a, f a, Nominal f a)}
+class HasDuration a where
+  _duration :: a -> Duration
+class HasDuration a => HasPosition a where
+  _position :: a -> Duration -> Time
+  _onset :: a -> Time
+  _offset :: a -> Time
+newtype NoReverse a = NoReverse {getNoReverse :: a}
+type role Nominal representational nominal
+newtype Nominal (f :: * -> *) a = Nominal {getNominal :: f a}
+newtype Note a
+  = Music.Time.Note.Note {Music.Time.Note._noteValue :: (Span, a)}
+newtype Past a = Past {getPast :: (Data.Semigroup.Min Time, a)}
+newtype Reactive a
+  = Music.Time.Reactive.Reactive {Music.Time.Reactive.getReactive :: ([Time],
+                                                                      Behavior a)}
+class Transformable a => Reversible a where
+  rev :: a -> a
+newtype Score a
+  = Music.Time.Score.Score {Music.Time.Score.getScore' :: (Music.Time.Meta.Meta,
+                                                           Music.Time.Score.NScore a)}
+newtype Segment a
+  = Music.Time.Segment.Segment {Music.Time.Segment.getSegment :: Data.Clipped.Clipped
+                                                                   Duration
+                                                                 -> a}
+newtype Span
+  = Music.Time.Types.Delta {Music.Time.Types._delta :: (Time,
+                                                        Duration)}
+class Splittable a where
+  split :: Duration -> a -> (a, a)
+  beginning :: Duration -> a -> a
+  ending :: Duration -> a -> a
+newtype Stretched a
+  = Music.Time.Stretched.Stretched {Music.Time.Stretched._stretchee :: Data.Functor.Couple.Couple
+                                                                         Duration a}
+newtype Time
+  = Music.Time.Types.Time {Music.Time.Types.getTime :: Music.Time.Types.TimeBase}
+type role Track nominal
+newtype Track a
+  = Music.Time.Track.Track {Music.Time.Track.getTrack :: Music.Time.Track.TrackList
+                                                           (Music.Time.Track.TrackEv a)}
+class Transformable a where
+  transform :: Span -> a -> a
+type role Voice nominal
+newtype Voice a
+  = Music.Time.Voice.Voice {Music.Time.Voice.getVoice :: Music.Time.Voice.VoiceList
+                                                           (Music.Time.Voice.VoiceEv a)}
+_getEra :: HasPosition a => a -> Span
+_setEra :: (HasPosition a, Transformable a) => Span -> a -> a
+after ::
+  (Data.Semigroup.Semigroup a, Transformable a, HasPosition a) =>
+  a -> a -> a
+afterOffset :: Time -> Span -> GHC.Types.Bool
+afterOnset :: Time -> Span -> GHC.Types.Bool
+apSegments :: Voice (Segment a) -> Stretched (Segment a)
+apSegments' ::
+  Stretched (Segment a)
+  -> Stretched (Segment a) -> Stretched (Segment a)
+atTime :: Reactive a -> Time -> a
+before ::
+  (Data.Semigroup.Semigroup a, Transformable a, HasPosition a) =>
+  a -> a -> a
+beforeOffset :: Time -> Span -> GHC.Types.Bool
+beforeOnset :: Time -> Span -> GHC.Types.Bool
+behavior ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Behavior a) (f (Behavior b)) -> p (Time -> a) (f (Time -> b))
+bounded ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Bound (Behavior a)) (f (Bound (Behavior b)))
+  -> p (Note (Segment a)) (f (Note (Segment b)))
+bounded' ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Bound (Behavior a)) (f (Bound (Behavior a)))
+  -> p (Note (Segment a)) (f (Note (Segment a)))
+bounding :: Span -> a -> Bound a
+bounds :: Time -> Time -> a -> Bound a
+chord ::
+  (Data.Functor.Contravariant.Contravariant f, GHC.Base.Functor f) =>
+  (Chord a -> f (Chord a)) -> [Delayed a] -> f [Delayed a]
+chunks :: (Splittable a, HasDuration a) => Duration -> a -> [a]
+codelta ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Duration, Time) (f (Duration, Time)) -> p Span (f Span)
+compress :: Transformable a => Duration -> a -> a
+compressing :: Duration -> Span
+concatB :: Data.Monoid.Monoid a => Score (Behavior a) -> Behavior a
+continous :: Reactive (Segment a) -> Behavior a
+continousWith :: Segment (a -> b) -> Reactive a -> Behavior b
+cosine :: GHC.Float.Floating a => Behavior a
+coverRests ::
+  Voice (Data.Maybe.Maybe a) -> Data.Maybe.Maybe (Voice a)
+delay :: Transformable a => Duration -> a -> a
+delayComponent :: Span -> Time
+delayTime :: Transformable a => Time -> a -> a
+delayed ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Delayed a) (f (Delayed b)) -> p (Time, a) (f (Time, b))
+delayedValue ::
+  (Transformable a, Transformable b) =>
+  Control.Lens.Type.Lens (Delayed a) (Delayed b) a b
+delayeds ::
+  GHC.Base.Functor f =>
+  ([Delayed a] -> f [Delayed b]) -> Track a -> f (Track b)
+delaying :: Duration -> Span
+delta ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Time, Duration) (f (Time, Duration)) -> p Span (f Span)
+discrete :: Reactive a -> Behavior a
+duration ::
+  (Transformable a, HasDuration a) =>
+  Control.Lens.Type.Lens' a Duration
+durationsV ::
+  GHC.Base.Functor f =>
+  ([Duration] -> f [Duration]) -> Voice a -> f (Voice a)
+during ::
+  (HasPosition a, HasPosition b, Transformable a, Transformable b) =>
+  a -> b -> a
+encloses :: Span -> Span -> GHC.Types.Bool
+era ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Span
+eras ::
+  Control.Applicative.Applicative f =>
+  (Span -> f Span) -> Score a -> f (Score a)
+event ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Time, Duration, a) (f (Time, Duration, b))
+  -> p (Note a) (f (Note b))
+events ::
+  GHC.Base.Functor f =>
+  ([(Time, Duration, a)] -> f [(Time, Duration, b)])
+  -> Score a -> f (Score b)
+eventsV ::
+  GHC.Base.Functor f =>
+  ([(Duration, a)] -> f [(Duration, b)]) -> Voice a -> f (Voice b)
+filterEvents ::
+  (Time -> Duration -> a -> GHC.Types.Bool) -> Score a -> Score a
+filterWithSpan ::
+  (Span -> a -> GHC.Types.Bool) -> Score a -> Score a
+final :: Reactive a -> a
+firstTrue :: [Data.Maybe.Maybe a] -> Data.Maybe.Maybe a
+fixedDurationSpan ::
+  (Data.Profunctor.Choice p, Control.Applicative.Applicative f) =>
+  p Time (f Time) -> p Span (f Span)
+fixedOnsetSpan ::
+  (Data.Profunctor.Choice p, Control.Applicative.Applicative f) =>
+  p Duration (f Duration) -> p Span (f Span)
+focusing ::
+  GHC.Base.Functor f =>
+  (Segment a -> f (Segment a)) -> Behavior a -> f (Behavior a)
+follow ::
+  (HasPosition a, HasPosition b, Transformable b) => a -> b -> b
+fuse :: GHC.Classes.Eq a => Voice a -> Voice a
+fuseBy :: (a -> a -> GHC.Types.Bool) -> Voice a -> Voice a
+fuseRests ::
+  Voice (Data.Maybe.Maybe a) -> Voice (Data.Maybe.Maybe a)
+future :: Future a -> Time -> Data.Maybe.Maybe a
+futureSeg :: Future (Segment a) -> Behavior (Data.Maybe.Maybe a)
+impulse :: GHC.Num.Num a => Behavior a
+indexPast :: [Past a] -> Time -> Data.Maybe.Maybe a
+initial :: Reactive a -> a
+inside :: Time -> Span -> GHC.Types.Bool
+intermediate :: Transformable a => Reactive a -> [Note a]
+isBackwardSpan :: Span -> GHC.Types.Bool
+isBefore :: Span -> Span -> GHC.Types.Bool
+isEmptySpan :: Span -> GHC.Types.Bool
+isForwardSpan :: Span -> GHC.Types.Bool
+isProper :: Span -> GHC.Types.Bool
+itransform :: Transformable a => Span -> a -> a
+lead ::
+  (HasPosition a, HasPosition b, Transformable a) => a -> b -> a
+line :: GHC.Real.Fractional a => Behavior a
+listAsVoice ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Voice a) (f (Voice b)) -> p [a] (f [b])
+mapEvents :: (Time -> Duration -> a -> b) -> Score a -> Score b
+mapFilterEvents ::
+  (Time -> Duration -> a -> Data.Maybe.Maybe b) -> Score a -> Score b
+mapFilterWithSpan ::
+  (Span -> a -> Data.Maybe.Maybe b) -> Score a -> Score b
+mapWithSpan :: (Span -> a -> b) -> Score a -> Score b
+midpoint ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+normalizeScore :: Score a -> Score a
+normalizeSpan :: Span -> Span
+note ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Note a) (f (Note b)) -> p (Span, a) (f (Span, b))
+noteValue ::
+  (Transformable a, Transformable b) =>
+  Control.Lens.Type.Lens (Note a) (Note b) a b
+notes ::
+  GHC.Base.Functor f =>
+  ([Note a] -> f [Note b]) -> Score a -> f (Score b)
+occs :: Reactive a -> [Time]
+offset ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+offsetPoints ::
+  Data.AffineSpace.AffineSpace a =>
+  a -> [Data.AffineSpace.Diff a] -> [a]
+onset ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+overlaps :: Span -> Span -> GHC.Types.Bool
+palindrome ::
+  (Data.Semigroup.Semigroup a, Reversible a, HasPosition a) => a -> a
+past :: Past a -> Time -> Data.Maybe.Maybe a
+pastSeg :: Past (Segment a) -> Behavior (Data.Maybe.Maybe a)
+pcat ::
+  (Data.Semigroup.Semigroup a, Data.Monoid.Monoid a) => [a] -> a
+placeAt ::
+  (Transformable a, HasPosition a) => Duration -> Time -> a -> a
+position ::
+  (HasPosition a, Transformable a) =>
+  Duration -> Control.Lens.Type.Lens' a Time
+postOffset ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+postOnset ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+preOnset ::
+  (HasPosition a, Transformable a) => Control.Lens.Type.Lens' a Time
+printEras :: Score a -> GHC.Types.IO ()
+properlyEncloses :: Span -> Span -> GHC.Types.Bool
+range ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Time, Time) (f (Time, Time)) -> p Span (f Span)
+reflectSpan :: Time -> Span -> Span
+rest :: Control.Applicative.Applicative f => f (Data.Maybe.Maybe a)
+revDefault :: (HasPosition a, Transformable a) => a -> a
+reverseDurations :: Voice a -> Voice a
+reverseSpan :: Span -> Span
+reverseValues :: Voice a -> Voice a
+reversed :: Reversible a => Control.Lens.Type.Iso' a a
+rotateDurations :: GHC.Types.Int -> Voice a -> Voice a
+rotateValues :: GHC.Types.Int -> Voice a -> Voice a
+sample :: [Time] -> Behavior a -> Reactive a
+sawtooth :: GHC.Real.RealFrac a => Behavior a
+scat ::
+  (Data.Semigroup.Semigroup a, Data.Monoid.Monoid a, HasPosition a,
+   Transformable a) =>
+  [a] -> a
+score ::
+  (Data.Functor.Contravariant.Contravariant f, GHC.Base.Functor f) =>
+  (Score a -> f (Score a)) -> [Note a] -> f [Note a]
+segment ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Segment a) (f (Segment b))
+  -> p (Duration -> a) (f (Duration -> b))
+showCodelta :: Span -> GHC.Base.String
+showDelta :: Span -> GHC.Base.String
+showRange :: Span -> GHC.Base.String
+simult ::
+  Transformable a =>
+  Control.Lens.Type.Lens (Score a) (Score b) (Score [a]) (Score [b])
+simultaneous ::
+  (Transformable a, Data.Semigroup.Semigroup a) => Score a -> Score a
+sine :: GHC.Float.Floating a => Behavior a
+singleDelayed ::
+  (Data.Profunctor.Choice p, Control.Applicative.Applicative f) =>
+  p (Delayed a) (f (Delayed a)) -> p (Track a) (f (Track a))
+singleNote ::
+  (Data.Profunctor.Choice p, Control.Applicative.Applicative f) =>
+  p (Note a) (f (Note a)) -> p (Score a) (f (Score a))
+singleStretched ::
+  (Data.Profunctor.Choice p, Control.Applicative.Applicative f) =>
+  p (Stretched a) (f (Stretched a)) -> p (Voice a) (f (Voice a))
+splice :: Behavior a -> Bound (Behavior a) -> Behavior a
+splitAbs :: (HasPosition a, Splittable a) => Time -> a -> (a, a)
+splitReactive ::
+  Reactive a -> Data.Either.Either a ((a, Time), [Note a], (Time, a))
+startAt :: (Transformable a, HasPosition a) => Time -> a -> a
+startsBefore :: Span -> Span -> GHC.Types.Bool
+startsLater :: Span -> Span -> GHC.Types.Bool
+startsWhenStarts :: Span -> Span -> GHC.Types.Bool
+startsWhenStops :: Span -> Span -> GHC.Types.Bool
+stopAt :: (Transformable a, HasPosition a) => Time -> a -> a
+stopsAtTheSameTime :: Span -> Span -> GHC.Types.Bool
+stopsBefore :: Span -> Span -> GHC.Types.Bool
+stopsLater :: Span -> Span -> GHC.Types.Bool
+stopsWhenStarts :: Span -> Span -> GHC.Types.Bool
+stopsWhenStops :: Span -> Span -> GHC.Types.Bool
+stretch :: Transformable a => Duration -> a -> a
+stretchComponent :: Span -> Duration
+stretchTo :: (Transformable a, HasDuration a) => Duration -> a -> a
+stretched ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p (Stretched a) (f (Stretched b))
+  -> p (Duration, a) (f (Duration, b))
+stretcheds ::
+  GHC.Base.Functor f =>
+  ([Stretched a] -> f [Stretched b]) -> Voice a -> f (Voice b)
+stretchee ::
+  (Transformable a, Transformable b) =>
+  Control.Lens.Type.Lens (Stretched a) (Stretched b) a b
+stretching :: Duration -> Span
+strictlyAfterOffset :: Time -> Span -> GHC.Types.Bool
+strictlyAfterOnset :: Time -> Span -> GHC.Types.Bool
+strictlyBeforeOffset :: Time -> Span -> GHC.Types.Bool
+strictlyBeforeOnset :: Time -> Span -> GHC.Types.Bool
+sustain ::
+  (Data.Semigroup.Semigroup a, HasPosition a, Transformable a) =>
+  a -> a -> a
+switch :: Time -> Behavior a -> Behavior a -> Behavior a
+switch' ::
+  Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
+switchR :: Time -> Reactive a -> Reactive a -> Reactive a
+times ::
+  (Data.Semigroup.Semigroup a, Data.Monoid.Monoid a, HasPosition a,
+   Transformable a) =>
+  GHC.Types.Int -> a -> a
+toAbsoluteTime :: [Duration] -> [Time]
+toRelativeTime :: [Time] -> [Duration]
+toRelativeTimeN :: [Time] -> [Duration]
+toRelativeTimeN' :: Time -> [Time] -> [Duration]
+track ::
+  (Data.Functor.Contravariant.Contravariant f, GHC.Base.Functor f) =>
+  (Track a -> f (Track a)) -> [Delayed a] -> f [Delayed a]
+transformed ::
+  (Transformable a, Transformable b) =>
+  Span -> Control.Lens.Type.Iso a b a b
+trim :: Data.Monoid.Monoid b => Bound (Behavior b) -> Behavior b
+trimAfter ::
+  Data.Monoid.Monoid a => Time -> Behavior a -> Behavior a
+trimBefore ::
+  Data.Monoid.Monoid a => Time -> Behavior a -> Behavior a
+trimR :: Data.Monoid.Monoid a => Span -> Reactive a -> Reactive a
+turnOff :: GHC.Num.Num a => Behavior a
+turnOn :: GHC.Num.Num a => Behavior a
+unchord ::
+  GHC.Base.Functor f =>
+  ([Delayed a] -> f [Delayed b]) -> Chord a -> f (Chord b)
+undelay :: Transformable a => Duration -> a -> a
+undelaying :: Duration -> Span
+unit :: GHC.Real.Fractional a => Behavior a
+unsafeChord ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [Delayed a] (f [Delayed b]) -> p (Chord a) (f (Chord b))
+unsafeEvents ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [(Time, Duration, a)] (f [(Time, Duration, b)])
+  -> p (Score a) (f (Score b))
+unsafeEventsV ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [(Duration, a)] (f [(Duration, b)]) -> p (Voice a) (f (Voice b))
+unsafeNotes ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [Note a] (f [Note b]) -> p (Score a) (f (Score b))
+unsafeStretcheds ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [Stretched a] (f [Stretched b]) -> p (Voice a) (f (Voice b))
+unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
+updates :: Reactive a -> [(Time, a)]
+valuesV ::
+  GHC.Base.Functor f => ([a] -> f [b]) -> Voice a -> f (Voice b)
+voice ::
+  (Data.Functor.Contravariant.Contravariant f, GHC.Base.Functor f) =>
+  (Voice a -> f (Voice a)) -> [Stretched a] -> f [Stretched a]
+voiceAsList ::
+  (Data.Profunctor.Unsafe.Profunctor p, GHC.Base.Functor f) =>
+  p [a] (f [b]) -> p (Voice a) (f (Voice b))
+voiceLens ::
+  (s -> a)
+  -> (b -> s -> t)
+  -> Control.Lens.Type.Lens (Voice s) (Voice t) (Voice a) (Voice b)
+whilst ::
+  (Transformable a, Transformable b) => (a -> b) -> Span -> a -> b
+withContext :: Voice a -> Voice (Data.Functor.Context.Ctxt a)
+withDurations :: ([Duration] -> [Duration]) -> Voice a -> Voice a
+withValues :: ([a] -> [b]) -> Voice a -> Voice b
+zipVoice :: Voice a -> Voice b -> Voice (a, b)
+zipVoice3 :: Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+zipVoice4 ::
+  Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+zipVoiceNoScale :: Voice a -> Voice b -> Voice (a, b)
+zipVoiceNoScale3 ::
+  Voice a -> Voice b -> Voice c -> Voice (a, (b, c))
+zipVoiceNoScale4 ::
+  Voice a -> Voice b -> Voice c -> Voice d -> Voice (a, (b, (c, d)))
+zipVoiceWith :: (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWith' ::
+  (Duration -> Duration -> Duration)
+  -> (a -> b -> c) -> Voice a -> Voice b -> Voice c
+zipVoiceWithNoScale ::
+  (a -> b -> c) -> Voice a -> Voice b -> Voice c
+(|>) ::
+  (Data.Semigroup.Semigroup a, HasPosition a, Transformable a) =>
+  a -> a -> a
+>>> 

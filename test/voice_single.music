@@ -1,0 +1,11 @@
+let
+    x = [ (1, c)^.note,
+          (1, d)^.note,
+          (1, f)^.note,
+          (1, e)^.note ]^.voice
+
+    y = join $ [ (1, x)^.note, 
+                 (0.5, up _P5 x)^.note, 
+                 (4, up _P8 x)^.note ]^.voice
+
+in stretch (1/8) $ view (re singleMVoice) . fmap Just $ y

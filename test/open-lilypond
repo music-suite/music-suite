@@ -1,0 +1,6 @@
+#!/bin/bash
+lilypond $@
+rm -f *.eps
+rm -f *.count
+rm -f *.tex
+rm -f *.texi

@@ -1,0 +1,78 @@
+module API where
+
+class Semigroup a where
+class Monoid a where
+class AdditiveGroup v where
+class AdditiveGroup (Diff p) => AffineSpace p where
+class (VectorSpace v, AdditiveGroup (Scalar v)) => InnerSpace v where
+class AdditiveGroup v => VectorSpace v where
+
+class Functor f where
+class Contravariant f where
+class Bifunctor p where
+class Profunctor p where
+class Functor f => Applicative f where
+class Applicative f => Alternative f where
+class Monad m where
+class Monad m => MonadPlus m where
+
+
+class Data.Foldable.Foldablef => FoldableWithIndex i f | f -> i where
+class Functor f => FunctorWithIndex i f | f -> i where
+class Snoc s t a b | s -> a, t -> b, s b -> t, t a -> s where
+class (Functor t, Data.Foldable.Foldable t) => Traversable t where
+class (FunctorWithIndex i t, FoldableWithIndex i t, Traversable t) => TraversableWithIndex i t | t -> i where
+class Wrapped s where
+
+
+
+
+-- Backend-related
+class Functor (BackendScore b) => HasBackend b where
+class HasBackend b => HasBackendNote b a where
+class HasBackend b => HasBackendScore b s where
+
+-- Aspect-related
+class Alterable a where
+class (Fractional (Accentuation a), Fractional (Separation a),
+       AffineSpace (Accentuation a),
+       AffineSpace (Separation a)) => Articulated a where
+class Augmentable a where
+class HasAmplitude a where
+class HasArticulations s t => HasArticulation s t where
+type HasArticulations' a = HasArticulations a a
+class HasDynamics s t => HasDynamic s t where
+class (Transformable (Dynamic s), Transformable (Dynamic t)) => HasDynamics s t where
+class HasFrequency a where
+class HasMusicXmlInstrument a where
+class HasLilypondInstrument a where
+class HasMidiProgram a where
+
+-- Misc
+class HasPhrases s t a b | s -> a, t -> b, s b -> t, t a -> s where
+class HasSlide a where
+class HasText a where
+class HasTremolo a where
+class Tiable a where
+class HasColor a where
+class HasHarmonic a where
+class HasMeta a where
+class HasNumber a where
+class HasParts s t => HasPart s t where
+class (Transformable (Music.Score.Part.Part s), Transformable (Music.Score.Part.Part t)) => HasParts s t where
+class HasPitches s t => HasPitch s t where
+class (Transformable (Music.Score.Pitch.Pitch s), Transformable (Music.Score.Pitch.Pitch t)) => HasPitches s t where
+class HasQuality a where
+class HasSemitones a where
+class IsDynamics a where
+class IsInterval a where
+class IsPitch a where
+
+  class Splittable a where
+class Transformable a where
+class Transformable a => Reversible a where
+class HasDuration a => HasPosition a where
+  class HasDuration a where
+
+
+
