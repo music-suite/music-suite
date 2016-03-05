@@ -20,15 +20,14 @@
 --
 -------------------------------------------------------------------------------------
 module Data.Music.Lilypond (
-
         -- * Representation
-        
+
         -- ** Music expressions
         Music(..),
         Note(..),
         Clef(..),
         Mode(..),
-        
+
         -- ** Attributes
         Value,
         toValue,
@@ -63,11 +62,11 @@ module Data.Music.Lilypond (
         chord,
         chordHarm,
         chordWithPost,
-        
+
         -- ** Composition
         sequential,
         simultaneous,
-        
+
         -- ** Post events
         addPost,
         addText,
@@ -155,9 +154,8 @@ import Data.Music.Lilypond.Pitch
 import Data.Music.Lilypond.Dynamics
 import Data.Music.Lilypond.Value
 
-
 {-
-data Lilypond 
+data Lilypond
     = Book      Id [BookBlock]
     | BookPart  Id [BookPartBlock]
     | Score     Id [ScoreBlock]
@@ -174,17 +172,17 @@ data BookPartBlock
     | BookPartScore    Id [ScoreBlock]
     | BookPartMusic    CompositeMusic
     -- full markup etc
-    
+
 data ScoreBlock
     = ScoreMusic     Music
     -- full markup etc
 -}
 
 -- | A Lilypond music expression.
---   
+--
 --   Use the 'Pretty' instance to convert into Lilypond syntax.
---   
-data Music    
+--
+data Music
     = Rest (Maybe Duration) [PostEvent]             -- ^ Single rest.
     | Note Note (Maybe Duration) [PostEvent]        -- ^ Single note.
     | Chord [(Note, [ChordPostEvent])] (Maybe Duration) [PostEvent]     -- ^ Single chord.
@@ -202,7 +200,7 @@ data Music
     | Tempo (Maybe String) (Maybe (Duration,Integer)) -- ^ Tempo mark.
     | New String (Maybe String) Music               -- ^ New expression.
     | Context String (Maybe String) Music           -- ^ Context expression.
-    | Set String Value                            
+    | Set String Value
     | Override String Value
     | Revert String
     deriving (Eq, Show)
@@ -210,14 +208,14 @@ data Music
 foldMusic :: (Music -> Music) -> Music -> Music
 foldMusic f = go
     where
-        go (Sequential ms)      = Sequential (fmap go ms)                          
-        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)                     
-        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)  
-        go (Tremolo n m)        = Tremolo n (go m)                             
-        go (Times r m)          = Times r (go m)                          
-        go (Transpose p p2 m)   = Transpose p p2 (go m)                   
-        go (Relative p m)       = Relative p (go m)                          
-        go (New s v m)          = New s v (go m)               
+        go (Sequential ms)      = Sequential (fmap go ms)
+        go (Simultaneous b ms)  = Simultaneous b (fmap go ms)
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (go *** go) qmm)
+        go (Tremolo n m)        = Tremolo n (go m)
+        go (Times r m)          = Times r (go m)
+        go (Transpose p p2 m)   = Transpose p p2 (go m)
+        go (Relative p m)       = Relative p (go m)
+        go (New s v m)          = New s v (go m)
         go (Context s v m)      = Context s v (go m)
         go x = f x
 
@@ -226,7 +224,7 @@ foldMusic' :: (Music -> Music) -- Rest Note Chord
            -> (Music -> Music) -- Recursive
            -> Music -> Music
 foldMusic' f g h = go
-    where               
+    where
         go m@(Rest _ _)           = f m
         go m@(Note _ _ _)         = f m
         go m@(Chord _ _ _)        = f m
@@ -238,14 +236,14 @@ foldMusic' f g h = go
         go m@(Set _ _)            = g m
         go m@(Override _ _)       = g m
         go m@(Revert _)           = g m
-        go (Sequential ms)      = Sequential (fmap h ms)                          
-        go (Simultaneous b ms)  = Simultaneous b (fmap h ms)                     
-        go (Repeat b i m qmm)   = Repeat b i m (fmap (h *** h) qmm)  
-        go (Tremolo n m)        = Tremolo n (h m)                             
-        go (Times r m)          = Times r (h m)                          
-        go (Transpose p p2 m)   = Transpose p p2 (h m)                   
-        go (Relative p m)       = Relative p (h m)                          
-        go (New s v m)          = New s v (h m)               
+        go (Sequential ms)      = Sequential (fmap h ms)
+        go (Simultaneous b ms)  = Simultaneous b (fmap h ms)
+        go (Repeat b i m qmm)   = Repeat b i m (fmap (h *** h) qmm)
+        go (Tremolo n m)        = Tremolo n (h m)
+        go (Times r m)          = Times r (h m)
+        go (Transpose p p2 m)   = Transpose p p2 (h m)
+        go (Relative p m)       = Relative p (h m)
+        go (New s v m)          = New s v (h m)
         go (Context s v m)      = Context s v (h m)
 
 
@@ -254,7 +252,7 @@ instance Pretty Music where
 
     pretty (Note n d p)     = pretty n <> pretty d <> prettyList p
 
-    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ fmap (uncurry (<>) <<< pretty *** pretty) ns) <> char '>' 
+    pretty (Chord ns d p)   = "<" <> nest 4 (sepByS "" $ fmap (uncurry (<>) <<< pretty *** pretty) ns) <> char '>'
                                   <> pretty d <> prettyList p
 
     pretty (Sequential xs)  = "{" <=> nest 4 ((hsep . fmap pretty) xs) <=> "}"
@@ -262,9 +260,9 @@ instance Pretty Music where
     pretty (Simultaneous False xs) = "<<" <//> nest 4 ((vcat . fmap pretty) xs)           <//> ">>"
     pretty (Simultaneous True xs)  = "<<" <//> nest 4 ((sepByS " \\\\" . fmap pretty) xs) <//> ">>"
 
-    pretty (Repeat unfold times x alts) = 
+    pretty (Repeat unfold times x alts) =
         "\\repeat" <=> unf unfold <=> int times <=> pretty x <=> alt alts
-        where 
+        where
             unf p = if p then "unfold" else "volta"
             alt Nothing      = empty
             alt (Just (x,y)) = "\\alternative" <> pretty x <> pretty y
@@ -272,7 +270,7 @@ instance Pretty Music where
     pretty (Tremolo n x) =
         "\\repeat tremolo" <+> pretty n <=> pretty x
 
-    pretty (Times n x) = 
+    pretty (Times n x) =
         "\\times" <+> frac n <=> pretty x
         where
             frac n = pretty (numerator n) <> "/" <> pretty (denominator n)
@@ -286,9 +284,9 @@ instance Pretty Music where
     pretty (Clef c) = "\\clef" <+> pretty c
 
     pretty (Key p m) = "\\key" <+> pretty p <+> pretty m
-    
+
     pretty (Time m n) = "\\time" <+> (pretty m <> "/" <> pretty n)
-    
+
     pretty (Breathe Nothing) = "\\breathe"
     pretty (Breathe a)       = notImpl "Non-standard breath marks"
 
@@ -298,12 +296,12 @@ instance Pretty Music where
     pretty (Tempo (Just t) (Just (d,bpm)))   = "\\time" <+> pretty t <+> pretty d <+> "=" <+> pretty bpm
 
     -- TODO metronome
-    -- TODO tempo    
+    -- TODO tempo
 
-    pretty (New typ name x) = 
+    pretty (New typ name x) =
         "\\new" <+> string typ <+> pretty name <+> pretty x
 
-    pretty (Context typ name x) = 
+    pretty (Context typ name x) =
         "\\context" <+> string typ <+> pretty name <+> pretty x
 
     pretty (Set name val) =
@@ -390,11 +388,11 @@ data ChordPostEvent
 
 instance Pretty ChordPostEvent where
     pretty Harmonic = "\\harmonic"
-    
+
 data PostEvent
     = Articulation Direction Articulation
     | Dynamics Direction Dynamics
-    | Tie      
+    | Tie
     | Glissando
     | BeginBeam
     | EndBeam
@@ -409,7 +407,7 @@ data PostEvent
     | Markup Direction Markup
     deriving (Eq, Show)
 
-instance Pretty PostEvent where 
+instance Pretty PostEvent where
     pretty (Articulation d a)   = pretty d <> pretty a
     pretty (Dynamics d a)       = pretty d <> pretty a
     pretty Tie                  = "~"
@@ -461,9 +459,9 @@ instance HasMarkup a => HasMarkup [a] where
     markup = MarkupList . fmap markup
 instance IsString Markup where
     fromString = MarkupText
-    
+
 instance Pretty Markup where
-    pretty (MarkupText s)       = (string . show) s 
+    pretty (MarkupText s)       = (string . show) s
     pretty (MarkupList as)      = "{" <+> hsep (fmap pretty as) <+> "}"
     pretty (Bold a)             = "\\bold" <+> pretty a
     pretty (Box a)              = "\\box" <+> pretty a
@@ -534,7 +532,7 @@ data Articulation
     | VarCoda
     deriving (Eq, Show)
 
-instance Pretty Articulation where 
+instance Pretty Articulation where
     -- pretty Accent             = "\\accent"
     -- pretty Marcato            = "\\marcato"
     -- pretty Staccatissimo      = "\\staccatissimo"
@@ -591,7 +589,7 @@ data Direction
 
 instance Default Direction where
     def = Default
-    
+
 instance Pretty Direction where
     pretty Above              = "^"
     pretty Default            = "-"
@@ -615,28 +613,28 @@ instance Pretty Duration where
         where
             pnv 4 = "\\longa"
             pnv 2 = "\\breve"
-            pnv n = show (denominator n)             
+            pnv n = show (denominator n)
             pds n = concat $ replicate n "."
             (nv, ds) = separateDots a
 
 -- | Construct a rest of default duration @1/4@.
---   
+--
 --   Use the 'VectorSpace' methods to change duration.
---   
+--
 rest :: Music
 rest = Rest (Just $ 1/4) []
 
 -- | Construct a note of default duration @1/4@.
---   
+--
 --   Use the 'VectorSpace' methods to change duration.
---   
+--
 note :: Note -> Music
 note n = Note n (Just $ 1/4) []
 
 -- | Construct a chord of default duration @1/4@.
---   
+--
 --   Use the 'VectorSpace' methods to change duration.
---   
+--
 chord :: [Note] -> Music
 chord ns = Chord (fmap (\x -> (x,[])) ns) (Just $ 1/4) []
 
@@ -862,8 +860,8 @@ data NoteHeadStyle
   | XCircleNoteHead
   | TriangleNoteHead
   | SlashNoteHead
-  
-  
+
+
 
 
 
@@ -894,16 +892,16 @@ separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 
 separateDots' :: [Duration] -> Duration -> (Duration, Int)
 separateDots' []         nv = error "separateDots: Strange"
-separateDots' (div:divs) nv 
+separateDots' (div:divs) nv
     | isDivisibleBy 2 nv = (nv,  0)
     | otherwise          = (nv', dots' + 1)
-    where                                                        
+    where
         (nv', dots')    = separateDots' divs (nv*div)
 
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseR k n 
+logBaseR k n
     | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
-logBaseR k n 
+logBaseR k n
     | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n                         = logBase (fromRational k) (fromRational n)
 
@@ -915,4 +913,3 @@ equalTo  = (==)
 
 infixl <=>
 a <=> b = sep [a,b]
-
