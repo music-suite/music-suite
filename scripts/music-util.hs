@@ -2,13 +2,6 @@
     --resolver lts-5.5
     --install-ghc
     runghc
-    --package text
-    --package containers
-    --package shelly
-    --package process
-    --package split
-    --package directory
-    --package Cabal
   -}
 
 {-# LANGUAGE OverloadedStrings, ViewPatterns, CPP, NoMonomorphismRestriction, FlexibleContexts #-}
@@ -41,13 +34,7 @@ import qualified System.Exit
 import qualified System.Directory
 import qualified System.Environment                    as E
 import Data.Version (showVersion)
-#ifndef NOPATH
-import qualified Paths_music_util                      as Paths
-#endif
 import System.IO (hGetContents)
-#ifndef mingw32_HOST_OS
-import qualified System.Posix.Env   as PE
-#endif
 
 default (T.Text)
 
@@ -64,8 +51,22 @@ replPackage = "music-preludes"
 
 -- Names of all packages
 packages :: [String]
+packages = [
+        ("abcnotation")               ,
+        ("musicxml2")                 ,
+        ("lilypond")                  ,
+        ("music-score")               ,
+        ("music-pitch")               ,
+        ("music-dynamics")            ,
+        ("music-articulation")        ,
+        ("music-parts")               ,
+        ("music-sibelius")            ,
+        ("music-suite")               ,
+        ("music-docs")
+    ]
+
 -- FIXME
-packages = []
+-- packages = []
 -- packages = labels dependencies
 
 -- Names of all real packages (i.e. actual Music Suite libraries)
@@ -222,7 +223,7 @@ main3 path (subCmd : args) =
         "--version" -> printVersion args
         "repl"      -> repl args
         "document"  -> document args
-        "install"   -> install args
+        -- "install"   -> install args
         "list"      -> list args
         "graph"     -> graph args
         "foreach"   -> forEach args
@@ -261,7 +262,7 @@ usage = do
     echo $ ""
     echo $ "  setup                   Download all packages and setup sandbox"
     echo $ "  setup clone             Download all packages"
-    echo $ "  setup sandbox           Setup the sandbox"
+    -- echo $ "  setup sandbox           Setup the sandbox"
     echo $ "  package-path            Print a suitable GHC_PACKAGE_PATH value for use with runhaskell etc"
     echo $ ""
     echo $ "  document                Generate and upload documentation"
@@ -270,9 +271,6 @@ usage = do
     echo $ "    --just-api            Skip creating the API documentation"
     echo $ "    --just-guide          Skip creating the user manual"
     echo $ "    --upload              Upload to server"
-    echo $ ""
-    echo $ red "DEPRECATED COMMANDS:"
-    echo $ "  install <package>       Reinstall the given package and its dependencies"
     echo $ ""
     echo $ red "DEPRECATED FLAGS:"
     echo $ "  document --local"
@@ -283,11 +281,7 @@ printVersion _ = do
     prg <- liftIO $ E.getProgName
     echo $ fromString prg <> ", version " <> fromString vs
     where
-#ifdef NOPATH
       vs = "(unknown version)"
-#else
-      vs = (showVersion Paths.version)
-#endif
 
 repl :: [String] -> Sh ()
 repl _ = do
@@ -297,8 +291,8 @@ repl _ = do
 
 setup :: [String] -> Sh ()
 setup ("clone":_)   = setupClone (return ())
-setup ("sandbox":_) = setupSandbox
-setup _             = setupClone setupSandbox
+-- setup ("sandbox":_) = setupSandbox
+setup _             = setupClone (return ())
 
 setupClone cont = do
     path <- pwd
@@ -314,29 +308,29 @@ setupClone cont = do
         return ()
     return ()
 
-setupSandbox :: Sh ()
-setupSandbox = hasCabalSandboxes >>= (`when` setupSandbox')
-
-setupSandbox' = do
-    rm_rf "music-sandbox"
-    mkdir "music-sandbox"
-    chdir "music-sandbox" $ do
-        -- Create the sandbox
-        run "cabal" ["sandbox", "init", "--sandbox", "."]
-        -- Add all music-suite repos as sources to the sandbox
-        forM_ packages $ \p -> do
-            run "cabal" ["sandbox", "add-source", "../" <> T.pack p]
-
-    -- Tell cabal to use the sandbox in all music-suite packages.
-    -- This is typically only needed for top-level packages such as music-preludes, but no
-    -- harm in doing it in all packages.
-    forM_ realPackages $ \p -> chdir (fromString p) $ do
-        run "cabal" ["sandbox", "init", "--sandbox", "../music-sandbox"]
-        run "cabal" ["install", "--only-dependencies"]
-        run "cabal" ["configure"]
-        -- run "cabal" ["install"]
-
-    return ()
+-- setupSandbox :: Sh ()
+-- setupSandbox = hasCabalSandboxes >>= (`when` setupSandbox')
+--
+-- setupSandbox' = do
+--     rm_rf "music-sandbox"
+--     mkdir "music-sandbox"
+--     chdir "music-sandbox" $ do
+--         -- Create the sandbox
+--         run "cabal" ["sandbox", "init", "--sandbox", "."]
+--         -- Add all music-suite repos as sources to the sandbox
+--         forM_ packages $ \p -> do
+--             run "cabal" ["sandbox", "add-source", "../" <> T.pack p]
+--
+--     -- Tell cabal to use the sandbox in all music-suite packages.
+--     -- This is typically only needed for top-level packages such as music-preludes, but no
+--     -- harm in doing it in all packages.
+--     forM_ realPackages $ \p -> chdir (fromString p) $ do
+--         run "cabal" ["sandbox", "init", "--sandbox", "../music-sandbox"]
+--         run "cabal" ["install", "--only-dependencies"]
+--         run "cabal" ["configure"]
+--         -- run "cabal" ["install"]
+--
+--     return ()
 
 -- TODO remove this check when nobody uses 1.17 or lower any more...
 hasCabalSandboxes :: Sh Bool
@@ -376,7 +370,7 @@ graph _ = do
 push :: String -> [String] -> Sh ()
 push root [name] = case findPackageFromStart name of
   Just path -> do
-    -- liftIO $ void $ System.Directory.setCurrentDirectory (root <> "/" <> fromString path)
+    liftIO $ void $ System.Directory.setCurrentDirectory (root <> "/" <> fromString path)
     echo $ fromString root <> "/" <> fromString path
     cd (fromString path)
     liftIO $ void $ System.Exit.exitSuccess
@@ -418,17 +412,17 @@ forEach' (cmd:args) name = do
     where
         substName = rep "MUSIC_PACKAGE" name
 
-install :: [String] -> Sh ()
-install (name:_) = do
-    let all = List.nub $ reverse $ getPackageDeps name
-    -- echo $ show' $ all
-
-    echo $ yellow $ "======================================================================"
-    echo $ yellow $ "Reinstalling the following packages:"
-    mapM (\x -> echo $ "        " <> fromString x) all
-
-    mapM reinstall all
-    return ()
+-- install :: [String] -> Sh ()
+-- install (name:_) = do
+--     let all = List.nub $ reverse $ getPackageDeps name
+--     -- echo $ show' $ all
+--
+--     echo $ yellow $ "======================================================================"
+--     echo $ yellow $ "Reinstalling the following packages:"
+--     mapM (\x -> echo $ "        " <> fromString x) all
+--
+--     mapM reinstall all
+--     return ()
 
 
 document :: [String] -> Sh ()
@@ -564,14 +558,14 @@ upload = do
     return ()
 
 
--- TODO move to fgl
--- | Get all labels
-labels :: Graph gr => gr a b -> [a]
-labels gr = catMaybes . fmap (lab gr) . nodes $ gr
-
--- | Get node from label
-fromLab :: Eq a => Graph gr => a -> gr a b -> Maybe Node
-fromLab l' = getFirst . ufold (\(_,n,l,_) -> if l == l' then (<> First (Just n)) else id) mempty
+-- -- TODO move to fgl
+-- -- | Get all labels
+-- labels :: Graph gr => gr a b -> [a]
+-- labels gr = catMaybes . fmap (lab gr) . nodes $ gr
+--
+-- -- | Get node from label
+-- fromLab :: Eq a => Graph gr => a -> gr a b -> Maybe Node
+-- fromLab l' = getFirst . ufold (\(_,n,l,_) -> if l == l' then (<> First (Just n)) else id) mempty
 
 
 rep :: Eq a => [a] -> [a] -> [a] -> [a]
@@ -591,23 +585,23 @@ replace :: Eq a => [a] -> [a] -> [a] -> [a]
 replace old new = List.intercalate new . splitOn old
 
 
-
--- | Temporarily modfiy an environment variable (POSIX only).
 --
--- @
--- withEnv varName (\oldValueIfPresent -> newValue) $ do
---    ...
--- @
---
-withEnv :: String -> (Maybe String -> String) -> IO a -> IO a
-#ifdef mingw32_HOST_OS
-withEnv _ _ = id
-#else
-withEnv n f k = do
-  x <- PE.getEnv n
-  PE.setEnv n (f x) True
-  res <- k
-  case x of
-    Nothing -> PE.unsetEnv n >> return res
-    Just x2 -> PE.setEnv n x2 True >> return res
-#endif
+-- -- | Temporarily modfiy an environment variable (POSIX only).
+-- --
+-- -- @
+-- -- withEnv varName (\oldValueIfPresent -> newValue) $ do
+-- --    ...
+-- -- @
+-- --
+-- withEnv :: String -> (Maybe String -> String) -> IO a -> IO a
+-- #ifdef mingw32_HOST_OS
+-- withEnv _ _ = id
+-- #else
+-- withEnv n f k = do
+--   x <- PE.getEnv n
+--   PE.setEnv n (f x) True
+--   res <- k
+--   case x of
+--     Nothing -> PE.unsetEnv n >> return res
+--     Just x2 -> PE.setEnv n x2 True >> return res
+-- #endif
