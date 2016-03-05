@@ -2,7 +2,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor, DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
-module Music.Score.Export2.StandardNotation where
+module Music.Score.Export2.StandardNotation
+  ()
+where
+
 import           Control.Applicative
 import           Control.Lens                            (over, preview, set, to,
                                                           under, view, _head, at)
@@ -252,7 +255,7 @@ runENoLog = fmap fst . runExcept . runWriterT . runE
 
 toLy :: Work -> E (String, Lilypond.Music)
 toLy w = do
-  
+
   -- TODO assumes one movement
   r <- case w^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
@@ -263,7 +266,7 @@ toLy w = do
         ("composer", Data.Maybe.fromMaybe "" $ r^.movementInfo.movementAttribution.at "composer")
         ]
   let header = getData "ly_big_score.ily" `expandTemplate` headerTempl
-  
+
   m <- toLyMusic $ r
   return (header, m)
 
@@ -324,17 +327,17 @@ toLyBar sysBar bar = do
     -- TODO other system stuff (reh marks, special barlines etc)
     sysStuff [] = []
     sysStuff (x:xs) = (addTimeSignature (sysBar^.timeSignature) x:xs)
-    
+
     sim [x] = x
     sim xs  = Lilypond.Simultaneous False xs
-    
+
     addTimeSignature :: Maybe Music.Score.Meta.Time.TimeSignature -> Lilypond.Music -> Lilypond.Music
     addTimeSignature timeSignature x = (setTimeSignature `ifJust` timeSignature) x
       where
         ifJust = maybe id
         setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x = Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
-    
-    
+
+
 toLyLayer :: Rhythm Chord -> E Lilypond.Music
 toLyLayer (Beat d x)            = toLyChord d x
 toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
@@ -531,21 +534,21 @@ asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 Note:
   Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
   (HasPhrases Score) instance. See comment in Music.Score.Phrases.
-  
+
   We use the MVoice instance here, so this is safe.
 -}
 asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
 asp2ToAsp3 = id
-  . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon) 
-  . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon) 
+  . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon)
+  . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon)
   -- . fmap2 (over Music.Score.articulation (const ()))
 
 aspectsToChord :: Maybe Asp3 -> Chord
 aspectsToChord Nothing    = mempty
-aspectsToChord (Just asp) = id 
+aspectsToChord (Just asp) = id
   $ ties .~ (Any endTie,Any beginTie)
-  $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic)) 
-  $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation)) 
+  $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic))
+  $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation))
   $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
   where
     (endTie,beginTie) = Music.Score.isTieEndBeginning asp
@@ -559,16 +562,16 @@ aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
 aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
   where
     info = id
-      $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition)) 
-      $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef)) 
-      $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName)) 
-      $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr]) 
+      $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
+      $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
+      $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
+      $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
       $ mempty
       where
         soloStr = if (part^.(Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
         nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
         subpartStr = Just $ show (part^.(Music.Parts._subpart))
-        
+
 toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
 toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
 
@@ -582,7 +585,7 @@ fromAspects sc = do
   -- Merge simultanous notes into chords, to simplify voice-separation
   let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
-  
+
   -- Separate voices (called "layers" to avoid confusion)
   -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
   postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ postChordMerge
@@ -600,23 +603,23 @@ fromAspects sc = do
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   postQuantize <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
-  
+
   -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
 
   -- Group staves, generating brackets and braces
   let postStaffGrouping = generateStaffGrouping postQuantize
   -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
-  return $ Work mempty [Movement info systemStaff (fmap aspectsToStaff postStaffGrouping)]  
+  return $ Work mempty [Movement info systemStaff (fmap aspectsToStaff postStaffGrouping)]
   where
     info = id
       $ movementTitle .~ (
         Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $ Music.Score.Meta.metaAtStart sc
-        ) 
+        )
       $ (movementAttribution.at "composer") .~ (
         flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
       ) $ mempty
-    
+
     systemStaff :: SystemStaff
     systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
 
@@ -627,7 +630,7 @@ fromAspects sc = do
 quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
 quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
   where
-    quantize' x = case quantize x of 
+    quantize' x = case quantize x of
       Left e  -> throwError $ "Quantization failed: " ++ e
       Right x -> return x
 
@@ -695,12 +698,10 @@ test = runENoLog $ toLy $
 test2 x = runENoLog $ toLy =<< fromAspects x
 test3 x = do
   let r = test2 x
-  case r of 
+  case r of
     Left e -> fail ("test3: "++e)
     Right (h,ly) -> do
       let ly2 = h ++ show (Pretty.pretty ly)
-      -- putStrLn ly2 
+      -- putStrLn ly2
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
-    
-
