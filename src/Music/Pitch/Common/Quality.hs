@@ -5,7 +5,7 @@ module Music.Pitch.Common.Quality
         -- * Quality
         Quality(..),
         qualityTypes,
-        
+
         HasQuality(..),
         invertQuality,
         isPerfect,
@@ -107,7 +107,7 @@ invertQuality = go
 
 -- | 
 -- The quality type expected for a given number, i.e. perfect for unisons, fourths,
--- and fifths and major/minor for everything else.  
+-- fifths and their compounds; major/minor for everything else.  
 expectedQualityType :: Number -> QualityType
 expectedQualityType x = if ((abs x - 1) `mod` 7) + 1 `elem` [1,4,5]
   then PerfectType else MajorMinorType
@@ -123,7 +123,7 @@ qualityTypes _       = [PerfectType, MajorMinorType]
 -- |
 -- Return whether the given combination of quality and number forms a valid interval
 -- expression.
---  
+--
 isValidQualityNumber :: Quality -> Number -> Bool
 isValidQualityNumber q n = expectedQualityType n `elem` qualityTypes q
 
@@ -145,7 +145,7 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward MajorMinorType Major          = Just $ -1
     go Downward MajorMinorType Minor          = Just $ 0
     go Downward MajorMinorType (Diminished n) = Just $ 0 + n
-    
+
     go Upward PerfectType (Augmented n)       = Just $ 0 + n
     go Upward PerfectType Perfect             = Just $ 0
     go Upward PerfectType (Diminished n)      = Just $ 0 - n
@@ -153,7 +153,7 @@ qualityToAlteration d qt q = fmap fromIntegral $ go d qt q
     go Downward PerfectType (Augmented n)     = Just $ 0 - n
     go Downward PerfectType Perfect           = Just $ 0
     go Downward PerfectType (Diminished n)    = Just $ 0 + n
-    
+
     go _ qt q = Nothing
 
 qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
@@ -161,8 +161,7 @@ qualityToDiff x qt q = fromMaybe e $ qualityToAlteration (f x) qt q
     f True  = Upward
     f False = Downward
     e       = error $
-      "qualityToDiff: Unknown interval expression (" 
+      "qualityToDiff: Unknown interval expression ("
       ++ show qt ++ ", " ++ show q ++ ")"
 
 {-# DEPRECATED qualityToDiff "Use qualityToAlteration" #-}
-
