@@ -27,9 +27,7 @@ library
                         reverse-apply,
                         xml,
                         music-pitch             == 1.9.2,
-                        music-dynamics          == 1.9.2,
-                        music-pitch-literal     == 1.9.2,
-                        music-dynamics-literal  == 1.9.2
+                        music-dynamics          == 1.9.2
     exposed-modules:    Data.Music.MusicXml
                         Data.Music.MusicXml.Time
                         Data.Music.MusicXml.Pitch
@@ -52,8 +50,6 @@ test-suite "musicxml2-tests"
                         xml,
                         music-pitch             == 1.9.2,
                         music-dynamics          == 1.9.2,
-                        music-pitch-literal     == 1.9.2,
-                        music-dynamics-literal  == 1.9.2,
                         musicxml2
     type:               exitcode-stdio-1.0
     main-is:            Main.hs
