@@ -3,7 +3,99 @@
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor, DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module Music.Score.Export2.StandardNotation
-  ()
+  (
+    LabelTree(..)
+  , foldLabelTree
+
+  -- * Common music notation
+  , BarNumber
+  , TimeSignature
+  , KeySignature
+  , RehearsalMark
+  , TempoMark
+  , BracketType(..)
+  , SpecialBarline
+  , SystemBar
+  , barNumbers
+  , timeSignature
+  , keySignature
+  , rehearsalMark
+  , tempoMark
+  , SystemStaff
+  , InstrumentShortName
+  , InstrumentFullName
+  , Transposition
+  , SibeliusFriendlyName
+  , SmallOrLarge
+  , ScoreOrder
+  , StaffInfo
+  , instrumentShortName
+  , instrumentFullName
+  , sibeliusFriendlyName
+  , instrumentDefaultClef
+  , transposition
+  , smallOrLarge
+  , scoreOrder
+  , Pitch
+  , ArpeggioNotation(..)
+  , TremoloNotation(..)
+  , BreathNotation(..)
+  , ArticulationNotation
+  , DynamicNotation
+  , HarmonicNotation
+  , SlideNotation
+  , Ties
+  , Chord
+  , pitches
+  , arpeggioNotation
+  , tremoloNotation
+  , breathNotation
+  , articulationNotation
+  , dynamicNotation
+  , chordColor
+  , chordText
+  , harmonicNotation
+  , slideNotation
+  , ties
+  , PitchLayer
+  , Bar
+  , pitchLayers
+  , Staff
+  , staffInfo
+  , bars
+  , Title
+  , Annotations
+  , Attribution
+  , MovementInfo
+  , movementTitle
+  , movementAnnotations
+  , movementAttribution
+  , Movement
+  , movementInfo
+  , systemStaff
+  , staves
+  , WorkInfo
+  , title
+  , annotations
+  , attribution
+  , Work
+  , workInfo
+  , movements
+
+  -- * E monad
+  , E
+  , runENoLog
+  -- * Asp
+  , Asp1
+  , Asp
+  , fromAspects
+  -- * Backends
+  , toLy
+  , toXml
+  -- TODO debug
+  , test2
+  , test3
+  )
 where
 
 import           Control.Applicative
@@ -509,11 +601,13 @@ toXml = undefined
 
 type Asp1 = (PartT Music.Parts.Part
   (ArticulationT Music.Articulation.Articulation
-    (DynamicT Music.Dynamics.Dynamics Pitch)))
+    (DynamicT Music.Dynamics.Dynamics
+      Pitch)))
 
 type Asp1B = (PartT Music.Parts.Part
   (ArticulationT AN.ArticulationNotation
-    (DynamicT DN.DynamicNotation Pitch)))
+    (DynamicT DN.DynamicNotation
+      Pitch)))
 
 -- We require all notes in a chords to have the same kind of ties
 type Asp2 = TieT (PartT Music.Parts.Part
