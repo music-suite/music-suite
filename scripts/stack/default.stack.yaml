@@ -1,0 +1,28 @@
+flags: {}
+packages:
+- lilypond/
+- musicxml2/
+- music-articulation/
+- music-dynamics/
+- music-parts/
+- music-pitch/
+- music-score/
+- music-sibelius/
+- music-suite/
+extra-deps:
+- prettify-1.0
+- average-0.6.1
+- data-interval-1.2.0
+- hsini-0.4.2
+- monadplus-1.4.2
+- positive-0.4.1
+- reverse-apply-2.0.1
+- roman-numerals-0.5.1.5
+- type-unary-0.2.19
+- applicative-numbers-0.1.3
+- extended-reals-0.2.1.0
+- ty-0.1.6
+- vector-space-points-0.2.1.1
+resolver: nightly-2016-01-24
+ghc-options:
+  music-preludes: -fno-warn-typed-holes
