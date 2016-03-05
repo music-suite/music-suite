@@ -34,7 +34,7 @@ library
                         music-parts             == 1.9.2,
                         music-dynamics          == 1.9.2,
                         music-articulation      == 1.9.2,
-                        music-preludes          == 1.9.2
+                        music-suite             == 1.9.2
     exposed-modules:    Data.Music.Sibelius
                         Music.Score.Import.Sibelius
     hs-source-dirs:     src
