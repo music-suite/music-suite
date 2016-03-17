@@ -1,5 +1,5 @@
 
-{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction, 
+{-# LANGUAGE OverloadedStrings, GeneralizedNewtypeDeriving, NoMonomorphismRestriction,
              ConstraintKinds, FlexibleContexts, TypeFamilies, CPP, ViewPatterns #-}
 
 module Music.Score.Import.Sibelius (
@@ -30,21 +30,21 @@ import qualified Data.ByteString.Lazy as ByteString
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read or if a parsing
 -- error occurs.
--- 
+--
 readSibelius :: IsSibelius a => FilePath -> IO (Score a)
 readSibelius path = fmap (either (\x -> error $ "Could not read score: " ++ x) id) $ readSibeliusEither path
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read, and returns
 -- @Nothing@ if a parsing error occurs.
--- 
+--
 readSibeliusMaybe :: IsSibelius a => FilePath -> IO (Maybe (Score a))
 readSibeliusMaybe path = fmap (either (const Nothing) Just) $ readSibeliusEither path
 
 -- |
 -- Read a Sibelius score from a file. Fails if the file could not be read, and returns
 -- @Left m@ if a parsing error occurs.
--- 
+--
 readSibeliusEither :: IsSibelius a => FilePath -> IO (Either String (Score a))
 readSibeliusEither path = do
     json <- ByteString.readFile path
@@ -56,14 +56,14 @@ readSibeliusEither' path = do
 
 -- Get the eventual time signature changes in each bar
 getSibeliusTimeSignatures :: SibeliusSystemStaff -> [Maybe TimeSignature]
-getSibeliusTimeSignatures x = fmap (getTimeSignatureInBar) 
+getSibeliusTimeSignatures x = fmap (getTimeSignatureInBar)
   $ systemStaffBars x
   where
     getTimeSignatureInBar = fmap convertTimeSignature . Data.Maybe.listToMaybe . filter isTimeSignature . barElements
 
 convertTimeSignature :: SibeliusBarObject -> TimeSignature
-convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voice position [m,n] isCommon isAllaBReve)) = 
-    (fromIntegral m / fromIntegral n)  
+convertTimeSignature (SibeliusBarObjectTimeSignature (SibeliusTimeSignature voice position [m,n] isCommon isAllaBReve)) =
+    (fromIntegral m / fromIntegral n)
 
 -- |
 -- Convert a score from a Sibelius representation.
@@ -80,9 +80,9 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             timeSig = case head (getSibeliusTimeSignatures systemStaff) of
               Nothing -> id
               Just ts -> timeSignature ts
-            
+
             partFromSibeliusStaff = either (error . ("Unknown instrument: " ++)) id . partFromSibeliusStaff'
-            
+
             partFromSibeliusStaff' :: SibeliusStaff -> Either String Part
             partFromSibeliusStaff' (SibeliusStaff bars name shortName) = partFromNameWithSolo (name, shortName)
 
@@ -118,7 +118,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Flute III",_)                          = Right $ (!! 2) $ divide 4 $ flutes
             partFromName ("Flute IV",_)                           = Right $ (!! 3) $ divide 4 $ flutes
             partFromName ("Alto Flute",_)                         = Right $ tutti altoFlute
-            
+
             partFromName ("Oboe",_)                               = Right $ oboes
             partFromName ("Oboes (a)",_)                          = Right $ (!! 0) $ divide 4 $ oboes
             partFromName ("Oboes (b)",_)                          = Right $ (!! 1) $ divide 4 $ oboes
@@ -133,7 +133,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Oboe III",_)                           = Right $ (!! 2) $ divide 4 $ oboes
             partFromName ("Oboe IV",_)                            = Right $ (!! 3) $ divide 4 $ oboes
             partFromName ("Cor Anglais",_)                        = Right $ tutti corAnglais
-            
+
             partFromName ("Clarinet",_)                           = Right $ clarinets
             partFromName ("Clarinet in Bb",_)                     = Right $ clarinets
             partFromName ("Clarinet in A",_)                      = Right $ clarinets
@@ -151,7 +151,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Clarinets in Bb III",_)                = Right $ (!! 2) $ divide 3 clarinets
             partFromName ("Clarinets in Bb IV",_)                 = Right $ (!! 3) $ divide 3 clarinets
             partFromName ("Bass Clarinet in Bb",_)                = Right $ (!! 0) $ divide 3 clarinets
-            
+
             partFromName ("Bassoon",_)                            = Right $ bassoons
             partFromName ("Bassoon (a)",_)                        = Right $ (!! 0) $ divide 4 bassoons
             partFromName ("Bassoon (b)",_)                        = Right $ (!! 1) $ divide 4 bassoons
@@ -192,7 +192,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Horn in F IV",_)                       = Right $ (!! 3) $ divide 4 $ horns
             partFromName ("Horn in F",_)                          = Right $ horns
             partFromName ("Horn in E",_)                          = Right $ horns
-            
+
             partFromName ("Trumpet (a)",_)                        = Right $ (!! 0) $ divide 4 $ trumpets
             partFromName ("Trumpet (b)",_)                        = Right $ (!! 1) $ divide 4 $ trumpets
             partFromName ("Trumpet (c)",_)                        = Right $ (!! 2) $ divide 4 $ trumpets
@@ -254,7 +254,7 @@ fromSibelius (SibeliusScore title composer info staffH transp staves systemStaff
             partFromName ("Strings (o)",_)                        = Right $ (!! 7) $ divide 8 violins
             partFromName ("Strings (p)",_)                        = Right $ (!! 7) $ divide 8 cellos
             -- partFromName ("Strings (q)",_) = Right $ (!! 0)    $ divide 2 violins
-            
+
             partFromName ("Violin",_)                             = Right $ violins
 
             partFromName ("Violin I",_)                           = Right $ violins1
@@ -362,7 +362,7 @@ fromSibeliusStaff d (SibeliusStaff bars name shortName) =
     -- WARNING key sig changes goes at end of previous bar
 
 fromSibeliusBar :: IsSibelius a => Duration -> SibeliusBar -> Score (Maybe a)
-fromSibeliusBar d (SibeliusBar elems) = 
+fromSibeliusBar d (SibeliusBar elems) =
     fmap Just (pcat $ fmap fromSibeliusChordElem chords) <> stretch d rest
     where
         chords   = filter isChord elems
@@ -388,16 +388,16 @@ isTuplet (SibeliusBarObjectTuplet _) = True
 isTuplet _                      = False
 
 isFloating :: SibeliusBarObject -> Bool
-isFloating x = not (isChord x) && not (isTuplet x) 
+isFloating x = not (isChord x) && not (isTuplet x)
 
-    
+
 
 fromSibeliusChord :: (
   IsSibelius a
   ) => SibeliusChord -> Score a
-fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) = 
+fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
     showVals $ setTime $ setDur $ every setArt ar $ tremolo strem $ pcat $ fmap fromSibeliusNote notes
-    where     
+    where
         -- showVals = text (show pos ++ " " ++ show dur) -- TODO DEBUG
         showVals = id
         -- WARNING for tuplets, positions are absolute (sounding), but durations are relative (written)
@@ -413,31 +413,31 @@ fromSibeliusChord (SibeliusChord pos dur voice ar strem dtrem acci appo notes) =
         -- setArt Tenuto          = tenuto
         -- setArt Staccato        = staccato
         -- setArt Harmonic        = harmonic 0
-        -- setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a        
+        -- setArt a               = error $ "fromSibeliusChord: Unsupported articulation " ++ show a
     -- TODO tremolo and appogiatura/acciaccatura support
 
 
 fromSibeliusNote :: (IsSibelius a, Tiable a) => SibeliusNote -> Score a
 fromSibeliusNote (SibeliusNote pitch diatonicPitch acc tied style) =
     (if tied then fmap beginTie else id)
-    $ fromPitch'' actualPitch
+    $ fromPitch actualPitch
     -- TODO spell correctly if this is Common.Pitch (how to distinguish)
     where
       actualPitch = midiOrigin .+^ (d2^*fromIntegral diatonicPitch ^+^ _A1^*fromIntegral pitch)
       midiOrigin = octavesDown 5 Pitch.c -- As middle C is (60 = 5*12)
 
-fromPitch'' :: IsPitch a => Music.Prelude.Pitch -> a
-fromPitch'' x = let i = x .-. c in 
-  fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
+-- fromPitch'' :: IsPitch a => Music.Prelude.Pitch -> a
+-- fromPitch'' x = let i = x .-. c in
+--   fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
 
 -- |
 -- This constraint includes all note types that can be constructed from a Sibelius representation.
 --
 type IsSibelius a = (
-    HasPitches' a, 
-    IsPitch a, 
+    HasPitches' a,
+    IsPitch a,
 
-    HasPart' a, 
+    HasPart' a,
     S.Part a ~ Part,
 
     HasArticulation' a,
@@ -445,13 +445,13 @@ type IsSibelius a = (
 
     HasDynamic' a,
     S.Dynamic a ~ Dynamics,
-    
+
     HasHarmonic a,
-    HasText a, 
+    HasText a,
     HasTremolo a,
     Tiable a
-    -- Num (Pitch a), 
-    -- HasTremolo a, 
+    -- Num (Pitch a),
+    -- HasTremolo a,
     -- HasText a,
     -- Tiable a
     )
