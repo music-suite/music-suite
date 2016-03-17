@@ -301,7 +301,7 @@ testManyParts = fromParts
             [defaultDivisions <> bassClef   <> bar1, bar2],
             [defaultDivisions <> bassClef   <> bar1, bar2]
             ]
-        bar1 = music [key c Major, dynamic PP, note g 1]
+        bar1 = music [{-key c Major, -}dynamic PP, note g 1]
         bar2 = music [note c (1/4), note d (1/2), note fs_ (1/4)]
 
 
@@ -315,7 +315,7 @@ misc = fromParts
             bar [
                 defaultDivisions,
                 trebleClef,
-                key eb Major,
+                -- key eb Major,
                 commonTime,
 
                 rehearsal "A",
