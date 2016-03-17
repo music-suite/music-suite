@@ -12,7 +12,7 @@ module Music.Pitch.Common.Interval
         _quality,
         _steps,
         _alteration,
-        
+
         -- ** Synonyms
         perfect,
         major,
@@ -99,11 +99,6 @@ instance Semigroup Interval where
 instance Monoid Interval where
   mempty  = basis_P1
   mappend = (^+^)
-
-instance AdditiveGroup Interval where
-  zeroV   = basis_P1
-  (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
-  negateV (Interval (a, d)) = Interval (-a, -d)
 
 instance VectorSpace Interval where
   type Scalar Interval = Integer
@@ -205,7 +200,7 @@ extractNumber (Interval (a, d))
 -- we are used to reading.
 
 extractQuality :: Interval -> Quality
-extractQuality (Interval (a, d))  
+extractQuality (Interval (a, d))
   | (a < 0)  && (d == 0)          = diminish $ extractQuality (Interval ((a + 1), d))
   | (a, d)   == (0, 0)            = Perfect
   | (a > 0)  && (d == 0)          = augment  $ extractQuality (Interval ((a - 1), d))
@@ -283,7 +278,7 @@ doublyDiminished = mkInterval (Diminished 2)
 -- >>> separate (0*^_P8+m3)
 -- (0,m3)
 -- >>> separate ((-1)*^_P8+m3)
--- 
+--
 separate :: Interval -> (Octaves, Interval)
 separate i = (fromIntegral o, i ^-^ (fromIntegral o *^ basis_P8))
   where
@@ -321,9 +316,9 @@ isSimple x = octaves x == 0
 -- they are negative, so
 --
 -- >>> isCompound (-m3)
--- True 
+-- True
 -- >>> isCompound $ abs (-m3)
--- False 
+-- False
 --
 isCompound :: Interval -> Bool
 isCompound x = octaves x /= 0
@@ -419,7 +414,7 @@ _quality :: Lens' Interval Quality
 _quality = from interval . _1
 
 -- | View or set the number component of an interval.
-_number :: Lens' Interval Number 
+_number :: Lens' Interval Number
 _number = from interval . _2
 
 -- | View an interval as a pair of quality and number or vice versa.
@@ -428,7 +423,7 @@ interval = iso (uncurry mkInterval) (\x -> (quality x, number x))
 
 -- | View an interval as a pair of alteration and diatonic steps or vice versa.
 interval' :: Iso' (ChromaticSteps, DiatonicSteps) Interval
-interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s)) 
+interval' = iso (\(d,s) -> mkInterval' (fromIntegral d) (fromIntegral s))
   (\x -> (qualityToDiff (number x >= 0) (expectedQualityType (number x)) (quality x), (number x)^.diatonicSteps))
 
 -- | View an interval as a pair of total number of chromatic and diatonic steps.
@@ -441,7 +436,7 @@ an *alteration*, rather than the total number of chromatic steps (basis d2).
 
 E.g. d5 is internally represented as (6,4) but _P5^.from interval' == (-1,4).
 -}
-         
+
 {-|
 >>> m3 & _number %~ pred
 m2
@@ -473,7 +468,7 @@ TODO only obeys lens laws up to quality normalization
 d5
 >>> _P5 & _quality .~ (Diminished 1)
 d5
--}             
+-}
 
 
 -- Internal stuff
@@ -527,7 +522,7 @@ convertBasis i j k
     p = (a*d - b*c)
     q = (a*n - b*m)
     r = (d*m - c*n)
-    
+
     divides :: Integral a => a -> a -> Bool
     x `divides` y = (y `rem` x) == 0
 

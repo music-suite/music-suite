@@ -9,7 +9,7 @@ module Music.Pitch.Common.Types
         DiatonicSteps,
         ChromaticSteps,
         Semitones,
-        
+
         -- * Intervals
         Number,
         Quality(..),
@@ -20,46 +20,48 @@ module Music.Pitch.Common.Types
         -- * Pitch
         Name(..),
         Accidental,
-        Pitch(..),        
+        Pitch(..),
 ) where
 
 import Data.Typeable
 import Data.AdditiveGroup
+-- import Data.VectorSpace
+import Data.AffineSpace
 
-import Music.Pitch.Literal
+-- import Music.Pitch.Literal
 import Music.Pitch.Alterable
 import Music.Pitch.Augmentable
 
 {-|
 Number of chromatic steps.
-May be negative, indicating a downward interval. 
+May be negative, indicating a downward interval.
 -}
 newtype ChromaticSteps = ChromaticSteps { getChromaticSteps :: Int }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-| 
+{-|
 Number of diatonic steps.
-May be negative, indicating a downward interval. 
+May be negative, indicating a downward interval.
 -}
 newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Int }
   deriving (Eq, Ord, Show, Enum, Num, Real, Integral)
 
-{-| 
+{-|
 Number of octaves.
-May be negative, indicating a downward interval. 
+May be negative, indicating a downward interval.
 -}
 newtype Octaves = Octaves { getOctaves :: Int }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 {-|
 Number of semitones.
-May be negative, indicating a downward interval. 
+May be negative, indicating a downward interval.
 -}
 type Semitones = ChromaticSteps
 
 {-|
 The /number/ component of an interval (fourth, fifth) etc.
-May be negative, indicating a downward interval. 
+May be negative, indicating a downward interval.
 -}
 newtype Number = Number { getNumber :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
@@ -125,6 +127,16 @@ Pitch type.
 newtype Pitch = Pitch { getPitch :: Interval }
   deriving (Eq, Ord, Typeable)
 
+instance AdditiveGroup Interval where
+  zeroV   = basis_P1 where basis_P1 = Interval (0, 0)
+  (Interval (a1, d1)) ^+^ (Interval (a2, d2)) = Interval (a1 ^+^ a2, d1 ^+^ d2)
+  negateV (Interval (a, d)) = Interval (-a, -d)
+
+instance AffineSpace Pitch where
+  type Diff Pitch     = Interval
+  Pitch a .-. Pitch b = a ^-^ b
+  Pitch a .+^ b       = Pitch (a ^+^ b)
+
 
 
 instance Show Octaves where
@@ -146,10 +158,10 @@ instance Alterable Accidental where
   sharpen = succ
   flatten = pred
 
--- | Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
-instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
-  fromPitch l 1     = sharpen (fromPitch l)
-  fromPitch l (-1)  = flatten (fromPitch l)
+-- -- | Magic instance that allow us to write @c sharp@ instead of @sharpen c@.
+-- instance (IsPitch a, Alterable a) => IsPitch (Accidental -> a) where
+--   fromPitch l 1     = sharpen (fromPitch l)
+--   fromPitch l (-1)  = flatten (fromPitch l)
 -- Requires FlexibleInstances
 
 {-| Lexicographical ordering, comparing the 'd2' component of the
@@ -302,4 +314,3 @@ intervals.
 > octaves a = semitones a `div` 12
 > steps   a = semitones a `mod` 12
 -}
-

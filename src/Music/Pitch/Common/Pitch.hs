@@ -47,6 +47,8 @@ import qualified Data.List                    as List
 import           Data.Maybe
 import           Data.Semigroup
 import           Data.Typeable
+import           Data.Fixed (HasResolution(..), Fixed(..))
+import           Data.Ratio
 import           Data.VectorSpace
 import           Data.Aeson                    (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
@@ -97,16 +99,16 @@ isStandardAccidental a = abs a < 2
 -- was: isStandard
 
 
-instance IsPitch Pitch where
-  fromPitch (PitchL (c, a, o)) =
-    Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
-    where
-      qual Nothing  = 0
-      qual (Just n) = round n
+-- instance IsPitch Pitch where
+--   fromPitch (PitchL (c, a, o)) =
+--     Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (qual a) c ^+^ (_P8^* fromIntegral o)
+--     where
+--       qual Nothing  = 0
+--       qual (Just n) = round n
 
 instance Enum Pitch where
   toEnum = Pitch . (\a b -> (fromIntegral a, fromIntegral b)^.interval') 0 . fromIntegral
-  fromEnum = fromIntegral . pred . number . (.-. c)
+  fromEnum = fromIntegral . pred . number . (.-. middleC)
 
 instance Alterable Pitch where
   sharpen (Pitch a) = Pitch (augment a)
@@ -131,16 +133,38 @@ instance Num Pitch where
   signum        = error "Music.Pitch.Common.Pitch: no overloading for signum"
   fromInteger   = toEnum . fromInteger
 
-instance AffineSpace Pitch where
-  type Diff Pitch     = Interval
-  Pitch a .-. Pitch b = a ^-^ b
-  Pitch a .+^ b       = Pitch (a ^+^ b)
-
 instance ToJSON Pitch where
-  toJSON = toJSON . (.-. c)
+  toJSON = toJSON . (.-. middleC)
+
+instance IsPitch Int where
+    fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Word where
+    fromPitch x = fromIntegral (fromPitch x :: Integer)
+
+instance IsPitch Float where
+    fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance HasResolution a => IsPitch (Fixed a) where
+    fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance Integral a => IsPitch (Ratio a) where
+    fromPitch x = realToFrac (fromPitch x :: Double)
+
+instance IsPitch Double where
+  fromPitch p = fromIntegral . semitones $ (p .-. c)
+
+instance IsPitch Integer where
+  fromPitch p = fromIntegral . semitones $ (p .-. c)
+
+instance IsPitch Pitch where
+  fromPitch = id
+
+-- TODO bootstrapping, remove when/if possible
+middleC = c
 
 instance FromJSON Pitch where
-  parseJSON = fmap (c .+^) . parseJSON
+  parseJSON = fmap (middleC .+^) . parseJSON
 
 -- |
 -- Creates a pitch from name accidental.
@@ -193,5 +217,3 @@ invertDiatonicallyP origin = relative origin $ (_steps %~ negate)
 
 invertChromaticallyP :: Pitch -> Pitch -> Pitch
 invertChromaticallyP origin = relative origin $ (_alteration %~ negate)
-
-
