@@ -61,47 +61,47 @@ library
     hs-source-dirs:     src
     default-language:   Haskell2010
 
-executable "music2ly"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2ly.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
-
-executable "music2pdf"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2pdf.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
-
-executable "music2png"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2png.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
-
-executable "music2svg"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2svg.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
-
-executable "music2musicxml"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2musicxml.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
-
-executable "music2midi"
-    build-depends:      base,
-                        music-suite
-    main-is:            music2midi.hs
-    hs-source-dirs:     tools
-    default-language:   Haskell2010
+-- executable "music2ly"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2ly.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
+--
+-- executable "music2pdf"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2pdf.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
+--
+-- executable "music2png"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2png.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
+--
+-- executable "music2svg"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2svg.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
+--
+-- executable "music2musicxml"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2musicxml.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
+--
+-- executable "music2midi"
+--     build-depends:      base,
+--                         music-suite
+--     main-is:            music2midi.hs
+--     hs-source-dirs:     tools
+--     default-language:   Haskell2010
 
 -- test-suite "regression"
 --     build-depends:      base                    >= 4   && < 5,
@@ -110,24 +110,26 @@ executable "music2midi"
 --                         process
 --     type:               exitcode-stdio-1.0
 --     main-is:            tests.hs
---     hs-source-dirs:     tests
+--     hs-source-dirs:     test
 --     default-language:   Haskell2010
 
--- test-suite "music-suite-tests"
---     build-depends:      base                    >= 4   && < 5,
---                         tasty                   >= 0.8 && < 1,
---                         tasty-golden            >= 2.2 && < 3,
---                         process,
---                         average,
---                         containers,
---                         tasty-quickcheck,
---                         QuickCheck,
---                         semigroups,
---                         comonad,
---                         music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
---     -- type:               exitcode-stdio-1.0
---     main-is:            instances.hs
---     hs-source-dirs:     tests
---     default-language:   Haskell2010
---     ghc-options:        -fno-warn-typed-holes
+test-suite "music-suite-tests"
+    build-depends:      base                    >= 4   && < 5,
+                        tasty                   >= 0.8 && < 1,
+                        tasty-golden            >= 2.2 && < 3,
+                        process,
+                        average,
+                        containers,
+                        tasty-quickcheck,
+                        QuickCheck,
+                        semigroups,
+                        comonad,
+                        music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
+    type:               exitcode-stdio-1.0
+    main-is:            instances.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+
+    -- ghc-options:        -fno-warn-typed-holes
     -- ghc-options:        -fno-warn-typed-holes

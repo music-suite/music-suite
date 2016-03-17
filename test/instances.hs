@@ -14,9 +14,10 @@ import Prelude hiding ((**))
 
 import Data.Monoid.Average
 import Data.Ord (comparing)
-import Music.Prelude hiding (elements, unit, (**), Note)
+-- import Music.Prelude hiding (elements, unit, (**), Note)
 -- import Data.VectorSpace hiding (Sum)
-import Music.Time (Note)
+-- import Music.Time (Note)
+import Music.Prelude hiding (elements)
 
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -249,8 +250,8 @@ instance Monoid a => Monoid (Event a) where
 --   x `compare` y = (x^.from note) `compare` (y^.from note)
 instance Eq a => Eq (Score a) where
   x == y = Data.List.sortBy (comparing (^.era)) (x^.events) == Data.List.sortBy (comparing (^.era)) (y^.events)
-instance Splittable Integer where
-  split _ x = (x,x)
+-- instance Splittable Integer where
+  -- split _ x = (x,x)
 instance (Transformable a, HasPosition a, Splittable a) => Splittable [a] where
   split t = unzipR . fmap (split t)
 unzipR f = (fmap fst f, fmap snd f)
