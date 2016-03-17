@@ -421,23 +421,18 @@ main = defaultMain $ testGroup "Instances" $ [
 
 
 {-
+OK
+
+let t = -8
+let s = [(5,3)^.note,((-3),-4)^.note]^.voice
+stretch t (_duration s)
+_duration (stretch t s)
+
+
 FAIL
 
->>> let t = -8.127617881083488
->>> let s = [((5032080227011183/1125899906842624) <-> (3258010814518333/140737488355328),3)^.note,(
-  (4567817857326597/562949953421312) <-> (-372699739887573/8796093022208),-4)^.note,((6664901794497075/562949953421312)
-  <-> (-9025068628947/1099511627776),-5)^.note,((300602057893123/8796093022208)
-  <-> (2046761023586943/1125899906842624),-3)^.note]^.score
->>> stretch t (_duration s)
-(-24057681795560885390114262061183/158456325028528675187087900672)
->>> _duration (stretch t s)
-(96270418646142908887001729741/154742504910672534362390528)>>>
-
->>> let t = -8
->>> let s = [(5 <-> 23,3)^.note,(3 <-> (-3),-4)^.note]^.score
->>> stretch t (_duration s)
->>> _duration (stretch t s)
-
-Caused by negative notes, should help to normalize spans before returning position/duration!
-
+let t = -8
+let s = [(5 <-> 23,3)^.event,(3 <-> (-3),-4)^.event]^.score
+stretch t (_duration s)
+_duration (stretch t s)
 -}
