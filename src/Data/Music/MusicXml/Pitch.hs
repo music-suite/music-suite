@@ -1,8 +1,8 @@
 
-{-# LANGUAGE 
-    GeneralizedNewtypeDeriving, 
-    StandaloneDeriving, 
-    TypeSynonymInstances, 
+{-# LANGUAGE
+    GeneralizedNewtypeDeriving,
+    StandaloneDeriving,
+    TypeSynonymInstances,
     FlexibleInstances #-}
 
 -------------------------------------------------------------------------------------
@@ -35,12 +35,14 @@ module Data.Music.MusicXml.Pitch (
   ) where
 
 import Music.Pitch.Literal
+import Data.AffineSpace ((.-.))
+import Music.Pitch (name, accidental, octaves)
 
 type Pitch        = (PitchClass, Maybe Semitones, Octaves)
 type DisplayPitch = (PitchClass, Octaves)
 
-data Mode         = Major | Minor 
-                  | Dorian | Phrygian | Lydian | Mixolydian 
+data Mode         = Major | Minor
+                  | Dorian | Phrygian | Lydian | Mixolydian
                   | Aeolian | Ionian | Locrian | NoMode
 
 data Accidental   = DoubleFlat | Flat | Natural | Sharp | DoubleSharp
@@ -94,15 +96,22 @@ deriving instance Num  Line
 deriving instance Enum Line
 
 instance IsPitch Pitch where
-    fromPitch (PitchL (pc, Nothing, oct)) = (toEnum pc, Nothing, fromIntegral oct)
-    fromPitch (PitchL (pc, Just st, oct)) = (toEnum pc, Just $ fromRational $ toRational $ st, fromIntegral oct)
+    fromPitch p = let i = p .-. c in
+      ( toEnum $ fromEnum $ name p
+      , Just $ fromIntegral $ accidental p
+      , fromIntegral $ octaves i
+      )
 
 instance IsPitch DisplayPitch where
-    fromPitch (PitchL (pc, _, oct)) = (toEnum pc, fromIntegral oct)
+    fromPitch p = let i = p .-. c in
+      ( toEnum $ fromEnum $ name p
+      , fromIntegral $ octaves i
+      )
 
+{-
 instance IsPitch Fifths where
-    fromPitch (PitchL (pc, Nothing, _)) = pitchToFifths pc 0
-    fromPitch (PitchL (pc, Just ac, _)) = pitchToFifths pc (round ac)
+    fromPitch p = let i = p .-. c in
+      pitchToFifths (fromEnum $ name p) (fromIntegral $ accidental p)
 
 pitchToFifths 1 (-1) = (-4)
 pitchToFifths 2 (-1) = (-3)
@@ -117,3 +126,4 @@ pitchToFifths 4 0 = 1
 pitchToFifths 5 0 = 3
 pitchToFifths 6 0 = 5
 pitchToFifths 3 1 = 6
+-}
