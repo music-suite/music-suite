@@ -41,6 +41,10 @@ module Music.Time.Position (
       transformRelativeOnset,
       transformRelativeMidpoint,
       transformRelativeOffset,
+
+      -- * Legacy
+      _onset,
+      _offset
   ) where
 
 
@@ -231,5 +235,3 @@ transformRelativeMidpoint = transformRelative 0.5
 
 transformRelativeOffset :: (HasPosition a, Transformable a) => Span -> a -> a
 transformRelativeOffset = transformRelative 1
-
-
