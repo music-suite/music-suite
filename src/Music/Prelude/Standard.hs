@@ -61,9 +61,9 @@ asTrack = id
 -- instance Show BasicPart where
 --     show _ = ""
 
-type StandardNote = 
+type StandardNote =
   (PartT Part
-    (ColorT 
+    (ColorT
       (TextT
         (TremoloT
           (HarmonicT
@@ -74,8 +74,8 @@ type StandardNote =
                     Pitch]))))))))
 
 type Music = Score StandardNote
--- testRealize = realize (pitchSet [c,e,g,fs,gs]) undefined (Perm4 31)
 
 fromPitch'' :: IsPitch a => Pitch -> a
-fromPitch'' x = let i = x .-. c in 
-  fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
+fromPitch'' = fromPitch
+
+{-# DEPRECATED fromPitch'' "Use fromPitch (no primes!)"#-}
