@@ -24,6 +24,8 @@ module Data.Music.Lilypond.Pitch (
 
 import Text.Pretty hiding (Mode)
 import Music.Pitch.Literal
+import Data.AffineSpace ((.-.))
+import Music.Pitch (name, accidental, octaves)
 
 data PitchName = C | D | E | F | G | A | B
     deriving (Eq, Ord, Show, Enum)
@@ -35,7 +37,7 @@ instance Pretty Pitch where
     pretty (Pitch (c,a,o)) = string $ pc c ++ acc a ++ oct (o-4)
         where
             pc C = "c" ; pc D = "d" ; pc E = "e" ; pc F = "f"
-            pc G = "g" ; pc A = "a" ; pc B = "b"            
+            pc G = "g" ; pc A = "a" ; pc B = "b"
             acc n | n <  0  =  concat $ replicate (negate n) "es"
                   | n == 0  =  ""
                   | n >  0  =  concat $ replicate (n) "is"
@@ -44,15 +46,14 @@ instance Pretty Pitch where
                   | n >  0  =  concat $ replicate n "'"
 
 instance IsPitch Pitch where
-    fromPitch (PitchL (c, Nothing, o)) = Pitch (toEnum c, 0,       o)                 
-    fromPitch (PitchL (c, Just a, o))  = Pitch (toEnum c, round a, o)
+    fromPitch p = let i = p .-. c in Pitch (toEnum $ fromEnum $ name p, fromIntegral $ accidental p, fromIntegral $ octaves i)
 
 
 -- | For double flat -2, flat -1, natural 0, sharp 1 and double sharp 2.
-type Accidental = Int 
+type Accidental = Int
 
 -- | Number of octaves raised (positive) or flattened (negative).
-type Octaves    = Int 
+type Octaves    = Int
 
 -- | Mode (for key signatures).
 data Mode = Major | Minor
@@ -64,4 +65,3 @@ instance Pretty Mode where
 
 data OctaveCheck = OctaveCheck
     deriving (Eq, Show)
-
