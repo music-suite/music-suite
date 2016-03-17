@@ -69,6 +69,7 @@ import           Music.Time.Reactive
 newtype Fifths = Fifths Integer
     deriving (Eq, Ord, Num, Enum, Integral, Real)
 
+{-
 instance IsPitch Fifths where
     fromPitch (PitchL (d, fromMaybe 0 -> c, _)) = case (d,c) of
         (0,-1) -> (-7)
@@ -100,6 +101,7 @@ instance IsPitch Fifths where
         (6, 1) -> 12
 
         _      -> error "Strange number of Fifths"
+-}
 
 -- | A key signature, represented by number of fifths from C and mode.
 newtype KeySignature = KeySignature (Fifths, Bool)
@@ -126,4 +128,3 @@ keySignatureDuring s c = addMetaNote $ view event (s, (Option $ Just $ Last c))
 -- | Extract all key signatures from the given score, using the given default key signature.
 withKeySignature :: KeySignature -> (KeySignature -> Score a -> Score a) -> Score a -> Score a
 withKeySignature def f = withMeta (f . fromMaybe def . fmap getLast . getOption)
-
