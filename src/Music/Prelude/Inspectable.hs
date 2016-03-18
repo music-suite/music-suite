@@ -50,7 +50,7 @@ defaultConf = Conf
   "timidity -Ow"
   "open -a audacity"
   "lilypond"
-  
+
 -- Not perfect but works for many cases
 --
 -- >>> ucat [[violins],[violas]]
@@ -63,9 +63,9 @@ defaultConf = Conf
 -- [Violin I,Violin II]
 --
 ucat :: (Monoid a, Semigroup a, HasParts a a, Music.Score.Part a ~ Part) => [a] -> a
-ucat xs = if allDistinct ps 
-    then pcat xs 
-    else pcat $ zipWith (set parts') (divide (length xs) p) xs
+ucat xs = if allDistinct ps
+    then pcat xs
+    else pcat $ zipWith (parts' .~) (divide (length xs) p) xs
   where
     ps = concatMap (toListOf parts') xs
     p  = foldr1 largestPart ps
@@ -106,7 +106,7 @@ openCommand :: String
 openCommand = case System.Info.os of
   "darwin" -> "open"
   "linux"  -> "xdg-open"
-    
+
 
 audify'  = play_
   where
@@ -114,35 +114,35 @@ audify'  = play_
       writeMidi "test.mid" x
       System.Process.system "timidity test.mid 2>/dev/null >/dev/null"
       return ()
-      
+
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic
 instance Inspectable (Score Pitch) where
-  inspectableToMusic = inspectableToMusic . asScore . fmap fromPitch''
+  inspectableToMusic = inspectableToMusic . asScore . fmap fromPitch
 instance Inspectable (Voice StandardNote) where
   inspectableToMusic = inspectableToMusic . renderAlignedVoice . aligned 0 0
 instance Inspectable (Voice Pitch) where
-  inspectableToMusic = inspectableToMusic . asScore . renderAlignedVoice . aligned 0 0 . fmap fromPitch''
+  inspectableToMusic = inspectableToMusic . asScore . renderAlignedVoice . aligned 0 0 . fmap fromPitch
 -- instance Inspectable (Voice ()) where
   -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Pitch) where
-  inspectableToMusic x = let (m,n) = x^.from ambitus in glissando $ fromPitch'' m |> fromPitch'' n
+  inspectableToMusic x = let (m,n) = x^.from ambitus in glissando $ fromPitch m |> fromPitch n
 instance Inspectable [Chord Pitch] where
   inspectableToMusic = scat . fmap inspectableToMusic
 instance Inspectable (Mode Pitch) where
   inspectableToMusic = inspectableToMusic . modeToScale c
 instance Inspectable (Scale Pitch) where
-  inspectableToMusic = fmap fromPitch'' . scat . map (\x -> pure x :: Score Pitch) . scaleToList
+  inspectableToMusic = fmap fromPitch . scat . map (\x -> pure x :: Score Pitch) . scaleToList
 instance Inspectable (Function Pitch) where
   inspectableToMusic = inspectableToMusic . functionToChord c
 instance Inspectable (Chord Pitch) where
-  inspectableToMusic = fmap fromPitch'' . pcat . map (\x -> pure x :: Score Pitch) . chordToList
+  inspectableToMusic = fmap fromPitch . pcat . map (\x -> pure x :: Score Pitch) . chordToList
 -- instance Inspectable [Hertz] where
---   inspectableToMusic xs = pcat $ map fromPitch'' $ map (^.from pitchHertz) xs
+--   inspectableToMusic xs = pcat $ map fromPitch $ map (^.from pitchHertz) xs
 -- instance Inspectable [[Hertz]] where
 --   inspectableToMusic = scat . fmap inspectableToMusic
 instance Inspectable [Pitch] where
-  inspectableToMusic = compress 8 . scat . fmap fromPitch''
+  inspectableToMusic = compress 8 . scat . fmap fromPitch
 -- instance Inspectable Hertz where
   -- inspectableToMusic = inspectableToMusic . (:[])
 instance Inspectable Pitch where
@@ -159,7 +159,6 @@ instance Inspectable Duration where
 instance Inspectable [Span] where
   inspectableToMusic xs = ucat $ fmap inspectableToMusic xs
 instance Inspectable [Voice Pitch] where
-  inspectableToMusic = asScore . ucat . fmap (fmap fromPitch'') . fmap (renderAlignedVoice . aligned 0 0)
+  inspectableToMusic = asScore . ucat . fmap (fmap fromPitch) . fmap (renderAlignedVoice . aligned 0 0)
 instance Inspectable [Note Pitch] where
   inspectableToMusic = inspectableToMusic . fmap ((^.voice) . pure)
-
