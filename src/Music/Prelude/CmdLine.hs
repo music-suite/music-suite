@@ -51,9 +51,6 @@ import qualified System.Posix.Env   as PE
 #endif
 import           System.Process
 
-import qualified Music.Prelude.Basic    as PreludeBasic
-import qualified Music.Prelude.Standard as PreludeStandard
-
 -- | Current Music Suite version.
 #ifndef GHCI
 version = Paths.version

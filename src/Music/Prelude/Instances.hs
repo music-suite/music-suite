@@ -83,10 +83,6 @@ spellPitch referenceOctave p = (pitchName, pitchAccidental, octave)
         pitchAccidental = fromIntegral $ accidental p
         octave          = fromIntegral $ (+ referenceOctave) $ octaves (p .-. c)
 
-instance HasMidiProgram BasicPart where
-    getMidiChannel _ = 0
-    getMidiProgram _ = 0
-
 instance HasMidiProgram Music.Parts.Part where
     getMidiChannel = defaultMidiChannel
     getMidiProgram = fixStrings . defaultMidiProgram
@@ -97,9 +93,6 @@ instance HasMidiProgram Music.Parts.Part where
                 42 -> 48
                 x  -> x
 
--- instance HasLilypondInstrument BasicPart where
---     getLilypondClef = 0
---
 -- instance HasLilypondInstrument Music.Parts.Part where
 --     getLilypondClef = defaultClef
 --
@@ -158,13 +151,10 @@ instance Splittable a => Splittable (ArticulationT b a) where
 instance Splittable a => Splittable (DynamicT b a) where
   split t = unzipR . fmap (split t)
 instance Splittable a => Splittable (TieT a) where
-  split t = unzipR . fmap (split t) 
+  split t = unzipR . fmap (split t)
 
 
 instance Reversible Pitch where
   rev = id
 instance Reversible (Score a ) where
   rev = revDefault
-
-
-

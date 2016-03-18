@@ -52,7 +52,6 @@ library
     if !os(windows)
       build-depends:    unix
     exposed-modules:    Music.Prelude
-                        Music.Prelude.Basic
                         Music.Prelude.Standard
                         Music.Prelude.CmdLine
                         Music.Prelude.Instances
