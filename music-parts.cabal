@@ -12,7 +12,7 @@ build-type:             Simple
 cabal-version:          >= 1.10
 data-files:             data/instruments.csv
 
-description: 
+description:
     Abstract representation of musical parts and instruments.
     .
     This library is part of the Music Suite, see <http://music-suite.github.io>.
@@ -21,7 +21,7 @@ source-repository head
   type:                 git
   location:             git://github.com/music-suite/music-parts.git
 
-library                    
+library
     build-depends:      base                    >= 4 &&        < 5,
                         containers              >= 0.5.5.1  && < 1,
                         monadplus,
@@ -39,7 +39,6 @@ library
                         music-dynamics          == 1.9.2
     exposed-modules:    Data.Semigroup.Option.Instances
                         Music.Parts
-                        Music.Parts.Basic
                         Music.Parts.Voices
                         Music.Parts.Division
                         Music.Parts.Subpart
@@ -66,4 +65,3 @@ library
                         DeriveDataTypeable,
                         ViewPatterns,
                         OverloadedStrings
- 

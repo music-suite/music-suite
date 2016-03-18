@@ -17,7 +17,6 @@ import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Text.Numeral.Roman              (toRoman)
 
-import           Music.Parts.Basic
 import           Music.Parts.Division
 import           Music.Parts.Solo
 import           Music.Parts.Instrument
@@ -111,15 +110,15 @@ data GroupType
   | PianoStaff        -- ly: PianoStaff,  xml: GroupSymbol=brace
   | GrandStaff        -- ly: GrandStaff,  xml: GroupSymbol=brace
   deriving (Eq, Ord, Show)
-  
+
 data Group a
   = Single (Instrument, a)
   | Many GroupType BarLines [Group a]
   deriving (Eq, Ord, Show, Functor)
 
 groupDefault :: [(Instrument, a)] -> Group a
-groupDefault xs = Many Invisible False 
-                    [Many Bracket True   $ fmap Single ww, 
+groupDefault xs = Many Invisible False
+                    [Many Bracket True   $ fmap Single ww,
                      Many Bracket True   $ fmap Single br,
                      Many Bracket True   $ fmap Single pc,
                      Many Invisible True $ fmap Single kb,
@@ -133,7 +132,3 @@ groupDefault xs = Many Invisible False
     kb  = filter (isKeyboardInstrument . fst) xs
     voc = filter (isVocalInstrument . fst) xs
     str = filter (isStringInstrument . fst) xs
-    
-    
-    
-    

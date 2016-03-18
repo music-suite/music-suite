@@ -21,13 +21,3 @@ import           Data.Semigroup.Option.Instances
 type SATB       = Int
 type SSAATTBB   = Int
 type SMezATBarB = Int
-
--- newtype BasicPart = BasicPart { getBasicPart :: Option (First Integer) }
---     deriving (Eq, Ord, Num, Integral, Real, Enum, Typeable, Semigroup, Monoid)
--- 
--- instance Default BasicPart where
---   def = mempty
--- 
--- instance Show BasicPart where
---     show _ = ""
---                       

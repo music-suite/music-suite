@@ -36,7 +36,6 @@ import           Data.Traversable                (traverse)
 import           Data.Typeable
 import           Text.Numeral.Roman              (toRoman)
 
-import           Music.Parts.Basic
 import           Music.Parts.Division
 import           Music.Parts.Solo
 import           Music.Parts.Instrument
@@ -44,7 +43,7 @@ import           Music.Parts.Subpart
 
 
 -- | A part is a subdivided group of instruments of a given type.
-data Part = Part 
+data Part = Part
   Solo        -- Solo vs. tutti
   Instrument  -- Type of instrument
   Subpart     -- Subdivision within instrument chorus
@@ -71,7 +70,7 @@ instance Monoid Part where
   mempty = def
   mappend x y
     | x == mempty = y
-    | otherwise   = x 
+    | otherwise   = x
 
 instance Semigroup Part where
   (<>) = mappend
@@ -134,7 +133,7 @@ allDistinct []     = True
 allDistinct (x:xs) = all (distinctFrom x) xs && allDistinct xs
 
 -- | Returns 'True' iff x and y are completely distinct, i.e. neither contains the other.
--- 
+--
 -- >>> violins `distinctFrom` trumpets
 -- True
 -- >>> violins `distinctFrom` violins
@@ -153,7 +152,7 @@ distinctFrom (Part s1 i1 sp1) (Part s2 i2 sp2) = s1 /= s2 || i1 /= i2 || noneSub
     noneSubpart = not (sp1 `isSubpartOf` sp2) && not (sp2 `isSubpartOf` sp1)
 
 
-    
+
     -- if equal
     -- [pa',pb'] = divide 2 pa
 

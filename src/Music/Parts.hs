@@ -12,7 +12,7 @@ module Music.Parts (
 
         -- * Solo vs. tutti
         module Music.Parts.Solo,
-        
+
         -- * Instruments
         module Music.Parts.Instrument,
         module Music.Parts.Instrument.Brass,
@@ -123,16 +123,11 @@ module Music.Parts (
         defaultMidiProgram,
         defaultMidiChannel,
         defaultMidiNote,
-
-        -- * Basic
-        module Music.Parts.Basic
-
   ) where
 
 import           Control.Lens                    (toListOf, Lens, Lens', (^.))
 import           Data.Maybe
 
-import           Music.Parts.Basic
 import           Music.Parts.Division
 import           Music.Parts.Solo
 import           Music.Parts.Instrument
@@ -268,4 +263,3 @@ doubleBasses = tutti doubleBass
 
 harp' = fromMidiProgram 46
 harp = tutti harp'
-
