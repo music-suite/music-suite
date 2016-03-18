@@ -117,6 +117,7 @@ import qualified Data.List
 import qualified Data.Map
 import qualified Data.List.Split
 import qualified Data.Maybe
+import Data.Bifunctor(bimap)
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
 import           Data.Semigroup
@@ -439,7 +440,6 @@ toLyLayer (Tuplet m r)          = Lilypond.Times (realToFrac m) <$> (toLyLayer r
   where
     (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
     unRatio = Music.Score.Internal.Util.unRatio
-    bimap = Music.Score.bimap
 
 
 {-

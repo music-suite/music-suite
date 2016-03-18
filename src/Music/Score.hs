@@ -38,7 +38,7 @@ module Music.Score (
 
         module Music.Time,
 
-        module Control.Lens,
+        module Control.Lens.Operators,
         module Control.Applicative,
         module Control.Monad,
         module Control.Monad.Plus,
@@ -46,14 +46,21 @@ module Music.Score (
         module Data.VectorSpace,
         module Data.AffineSpace,
         module Data.AffineSpace.Point,
+
+        from,
+        toListOf,
+        view,
+        -- to,
 )
 where
 
 import           Control.Applicative
-import           Control.Lens                   hiding (Level, above, below,
-                                                 inside, parts, reversed,
-                                                 rewrite, simple, transform,
-                                                 (<.>), (<|), (|>))
+import Control.Lens.Operators hiding ((<.>), (<|), (|>))
+import Control.Lens (from, toListOf, view)
+-- import           Control.Lens                   hiding (Level, above, below,
+--                                                  inside, parts, reversed,
+--                                                  rewrite, simple, transform,
+--                                                  (<.>), (<|), (|>))
 import           Control.Monad                  hiding (mapM)
 import           Control.Monad.Plus
 import           Data.AffineSpace

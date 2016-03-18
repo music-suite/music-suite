@@ -361,17 +361,3 @@ instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
   part = ($)
 instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
   parts = ($)
-
-
-
-instance Transformable Music.Parts.BasicPart where
-  transform _ = id
-type instance Part Music.Parts.BasicPart = Music.Parts.BasicPart
-type instance SetPart a Music.Parts.BasicPart = a
-
-instance (Transformable a, a ~ Part a) => HasPart Music.Parts.BasicPart a where
-  part = ($)
-instance (Transformable a, a ~ Part a) => HasParts Music.Parts.BasicPart a where
-  parts = ($)
-
-
