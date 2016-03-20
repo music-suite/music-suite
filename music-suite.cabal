@@ -71,7 +71,7 @@ test-suite "music-suite-tests"
                         comonad,
                         music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
     type:               exitcode-stdio-1.0
-    main-is:            instances.hs
+    main-is:            Laws.hs
     hs-source-dirs:     test
     default-language:   Haskell2010
 
