@@ -5,7 +5,7 @@ module Music.Time.Types (
         Time,
         Duration,
         Alignment,
-        
+
         LocalDuration,
 
         -- ** Convert between time and duration
@@ -29,7 +29,7 @@ module Music.Time.Types (
         onsetAndOffset,
         onsetAndDuration,
         durationAndOffset,
-        
+
         stretchComponent,
         delayComponent,
         fixedDurationSpan,
@@ -50,6 +50,8 @@ module Music.Time.Types (
 
         -- ** Points in spans
         inside,
+        strictlyInside,
+        closestPointInside,
 
         -- ** Partial orders
         encloses,
@@ -541,6 +543,36 @@ infixl 5 `overlaps`
 inside :: Time -> Span -> Bool
 inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 
+-- >>> 2 `inside` (3<->4)
+-- False
+-- >>> 3 `inside` (3<->4)
+-- True
+--
+-- >>> 2 `strictlyInside` (3<->4)
+-- False
+-- >>> 3 `strictlyInside` (3<->4)
+-- False
+-- >>> 3.5 `strictlyInside` (3<->4)
+-- True
+--
+strictlyInside :: Time -> Span -> Bool
+t `strictlyInside` s = t `inside` s && (t > s^.onset) && (t < s^.offset)
+
+-- | If the given time is outside the given span, return the closest point inside.
+--   Otherwise return the given time.
+--
+-- >>> closestPointInside (1 <-> 3) 0
+-- 1
+-- >>> closestPointInside (1 <-> 3) 55
+-- 3
+-- >>> closestPointInside (1 <-> 3) 2
+-- 2
+closestPointInside :: Span -> Time -> Time
+closestPointInside ((^.onsetAndOffset) -> (m,n)) t
+  | t < m     = m
+  | t > n     = n
+  | otherwise = t
+
 -- |
 -- Whether the first given span encloses the second span.
 --
@@ -706,6 +738,3 @@ Both equivalent. Proof:
   a + b     = 2a + (b - a)
   a + b     = a + b
 -}
-
-
-
