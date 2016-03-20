@@ -24,7 +24,7 @@ newtype WoodwindInstrument = WoodwindInstrument { getWoodwindInstrument :: Instr
 woodwindInstrument :: Prism' Instrument WoodwindInstrument
 woodwindInstrument = prism' getWoodwindInstrument (fmap WoodwindInstrument . partial isWoodwindInstrument)
 
-v :: Instrument -> Bool
+isWoodwindInstrument :: Instrument -> Bool
 isWoodwindInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "wind" i
