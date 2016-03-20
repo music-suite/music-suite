@@ -556,7 +556,7 @@ inside x (view onsetAndOffset -> (t, u)) = t <= x && x <= u
 -- True
 --
 strictlyInside :: Time -> Span -> Bool
-t `strictlyInside` s = t `inside` s && (t > s^.onset) && (t < s^.offset)
+strictlyInside x (view onsetAndOffset -> (t, u)) = t < x && x < u
 
 -- | If the given time is outside the given span, return the closest point inside.
 --   Otherwise return the given time.
