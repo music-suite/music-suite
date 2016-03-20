@@ -3,18 +3,18 @@ module Music.Parts.Instrument.Strings (
         StringInstrument,
         stringInstrument,
         isStringInstrument,
-        
+
         StringTuning,
         standardTuning,
         allowedTunings,
-        
+
         isAllowedTuning,
         isStandardTuning,
         isNonStandardTuning,
-        
+
         HarmonicPosition,
-        
-        naturalHarmonicPositions,        
+
+        naturalHarmonicPositions,
   ) where
 
 import Control.Lens
@@ -30,6 +30,7 @@ newtype StringInstrument = StringInstrument { getStringInstrument :: Instrument}
 stringInstrument :: Prism' Instrument StringInstrument
 stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
 
+isStringInstrument :: Instrument -> Bool
 isStringInstrument x = case toMusicXmlSoundId x of 
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "strings" i
@@ -58,4 +59,3 @@ type HarmonicPosition = Integer
 
 naturalHarmonicPositions :: StringInstrument -> Set HarmonicPosition
 naturalHarmonicPositions = error "No naturalHarmonicPositions"
-

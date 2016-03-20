@@ -18,7 +18,8 @@ newtype PercussionInstrument = PercussionInstrument { getPercussionInstrument ::
 percussionInstrument :: Prism' Instrument PercussionInstrument
 percussionInstrument = prism' getPercussionInstrument (fmap PercussionInstrument . partial isPercussionInstrument)
 
+isPercussionInstrument :: Instrument -> Bool
 isPercussionInstrument x = case toMusicXmlSoundId x of 
   Nothing -> False
-  Just i  -> any (== True) $ fmap (`Data.List.isPrefixOf` i) 
+  Just i  -> any (== True) $ fmap (`Data.List.isPrefixOf` i)
                      ["pitched-percussion", "drum", "wood", "metal"]

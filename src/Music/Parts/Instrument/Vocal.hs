@@ -20,7 +20,7 @@ newtype VocalInstrument = VocalInstrument { getVocalInstrument :: Instrument}
 vocalInstrument :: Prism' Instrument VocalInstrument
 vocalInstrument = prism' getVocalInstrument (fmap VocalInstrument . partial isVocalInstrument)
 
+isVocalInstrument :: Instrument -> Bool
 isVocalInstrument x = case toMusicXmlSoundId x of 
   Nothing -> False
-  Just i  -> Data.List.isPrefixOf "voice" i 
-    
+  Just i  -> Data.List.isPrefixOf "voice" i

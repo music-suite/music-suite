@@ -19,6 +19,7 @@ keyboardInstrument :: Prism' Instrument KeyboardInstrument
 keyboardInstrument = prism' getKeyboardInstrument (fmap KeyboardInstrument . partial isKeyboardInstrument)
 -- TODO
 
+isKeyboardInstrument :: Instrument -> Bool
 isKeyboardInstrument x = case toMusicXmlSoundId x of 
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "keyboard" i
