@@ -38,7 +38,6 @@ library
                         average                 >= 0.6.1    && < 1,
                         semigroups              >= 0.13.0.1 && < 1,
                         hsini                   >= 0.4.1    && < 1,
-                        -- data-default,
                         monadplus,
                         lilypond                == 1.9.2,
                         musicxml2               == 1.9.2,
@@ -47,7 +46,6 @@ library
                         music-dynamics          == 1.9.2,
                         music-articulation      == 1.9.2,
                         music-parts             == 1.9.2,
-                        -- For examples2
                         async
     if !os(windows)
       build-depends:    unix
