@@ -18,8 +18,6 @@ module Music.Time (
     module Music.Time.Placed,
     module Music.Time.Track,
 
-    module Music.Time.Future,
-    module Music.Time.Past,
     module Music.Time.Reactive,
     module Music.Time.Behavior,
 
@@ -43,9 +41,7 @@ import           Music.Time.Aligned
 
 import           Music.Time.Behavior
 import           Music.Time.Placed
-import           Music.Time.Future
 import           Music.Time.Event
-import           Music.Time.Past
 import           Music.Time.Reactive
 import           Music.Time.Score
 import           Music.Time.Note

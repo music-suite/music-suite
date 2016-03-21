@@ -8,7 +8,7 @@ module Music.Score.Meta (
         addMetaNote,
         fromMetaReactive,
 
-        metaAt,
+        -- metaAt,
         metaAtStart,
         withMeta,
         withMetaAtStart,
@@ -109,5 +109,3 @@ activate (view (from event) -> (view onsetAndOffset -> (start,stop), x)) y = y `
     where
         turnOn  = switchR start
         turnOff = switchR stop
-
-

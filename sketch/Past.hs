@@ -1,11 +1,12 @@
 
 module Music.Time.Past (
-        Past(..),
-        Future(..),
-        past,
-        future,
-        indexPast,
-        firstTrue,
+        -- Past(..),
+        -- Future(..),
+        -- past,
+        -- future,
+        -- indexPast,
+        -- firstTrue,
+
         -- pastSeg,
         -- futureSeg,
   ) where
@@ -73,14 +74,11 @@ indexPast ps t = firstTrue $ fmap (\p -> past p t) $ sortBy (comparing tv) ps
 firstTrue :: [Maybe a] -> Maybe a
 firstTrue = listToMaybe . join . fmap maybeToList
 -- firstTrue = join . listToMaybe . dropWhile isNothing
--- 
+--
 -- -- | Project a segment (backwards) up to the given point.
 -- pastSeg :: Past (Segment a) -> Behavior (Maybe a)
 -- pastSeg = undefined
--- 
+--
 -- -- | Project a segment starting from the given point.
 -- futureSeg :: Future (Segment a) -> Behavior (Maybe a)
 -- futureSeg = undefined
-
-
-

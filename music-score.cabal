@@ -61,7 +61,6 @@ library
                         Data.Functor.Couple
                         Data.Functor.Context
                         Data.Functor.Rep.Lens
-                        Data.List.Ordered
                         Data.Semigroup.Instances
                         Control.Monad.Compose
                         Music.Time
@@ -77,8 +76,6 @@ library
                         Music.Time.Note
                         Music.Time.Placed
                         Music.Time.Event
-                        Music.Time.Future
-                        Music.Time.Past
                         Music.Time.Track
                         Music.Time.Voice
                         Music.Time.Score
