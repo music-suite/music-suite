@@ -234,6 +234,7 @@ main3 path (subCmd : args) =
         "setup"     -> setup args
         "package-path" -> packagePath args
         "help"      -> usage
+        "cat-tests" -> catTests args
         _           -> echo "Unknown command, try music-util help"
 
 usage :: Sh ()
@@ -241,11 +242,11 @@ usage = do
     echo $ red "USAGE:" <> " music-util " <> "<command>" <> " " <> "[args]"
     echo $ ""
     echo $ red "COMMANDS:"
-    echo $ "  repl                    Start a GHCI session with the development version of the suite"
-    echo $ "  test [opts]             Run unit tests"
+    -- echo $ "  repl                    Start a GHCI session with the development version of the suite"
+    -- echo $ "  test [opts]             Run unit tests"
     echo $ "  grep <expr> [opts]      Search in the Music Suite source code"
     echo $ "  list                    Show a list all packages in the Music Suite"
-    echo $ "  graph                   Show a graph all packages in the Music Suite (requires Graphviz)"
+    -- echo $ "  graph                   Show a graph all packages in the Music Suite (requires Graphviz)"
     echo $ "  foreach <command>       Run a command in each source directory"
     echo $ "                          In <command> you can use MUSIC_PACKAGE in place of the"
     echo $ "                          name of the current package, i.e `foreach echo MUSIC_PACKAGE`"
@@ -254,19 +255,41 @@ usage = do
     echo $ ""
     echo $ "  setup                   Download all packages and setup sandbox"
     echo $ "  setup clone             Download all packages"
+    echo $ ""
+    echo $ "  cat-tests               Catenate test files"
     -- echo $ "  setup sandbox           Setup the sandbox"
-    echo $ "  package-path            Print a suitable GHC_PACKAGE_PATH value for use with runhaskell etc"
-    echo $ ""
-    echo $ "  document                Generate and upload documentation"
-    echo $ "    --no-api              Skip creating the API documentation"
-    echo $ "    --no-guide            Skip creating the user manual"
-    echo $ "    --just-api            Skip creating the API documentation"
-    echo $ "    --just-guide          Skip creating the user manual"
-    echo $ "    --upload              Upload to server"
-    echo $ ""
-    echo $ red "DEPRECATED FLAGS:"
-    echo $ "  document --local"
-    echo $ "  document --no-reference (same as no-guide)"
+    -- echo $ "  package-path            Print a suitable GHC_PACKAGE_PATH value for use with runhaskell etc"
+    -- echo $ ""
+    -- echo $ "  document                Generate and upload documentation"
+    -- echo $ "    --no-api              Skip creating the API documentation"
+    -- echo $ "    --no-guide            Skip creating the user manual"
+    -- echo $ "    --just-api            Skip creating the API documentation"
+    -- echo $ "    --just-guide          Skip creating the user manual"
+    -- echo $ "    --upload              Upload to server"
+    -- echo $ ""
+    -- echo $ red "DEPRECATED FLAGS:"
+    -- echo $ "  document --local"
+    -- echo $ "  document --no-reference (same as no-guide)"
+
+catTests :: [String] -> Sh ()
+catTests _ = do
+  files1 <- ls "music-suite/test/legacy-music-files" >>= mapM toTextWarn
+  let musicFiles = filter (".music" `T.isSuffixOf`) files1
+  -- musicFileContentsT :: [Text]
+  musicFileContentsT <- forM musicFiles $ \f -> do
+    t <- Shelly.readfile $ fromText f
+    return (f, t)
+  let fullText = prelims <> "\n\n" <> T.intercalate "\n\n" (fmap
+              (\(f,t) -> "-- " <> f <> "\n" <> simpleName f <> " =\n" <> ident t
+              )
+              musicFileContentsT)
+  echo fullText
+  return ()
+  where
+    prelims = "import Music.Prelude"
+    simpleName = T.drop (T.length "music-suite/test/legacy-music-files/") . T.dropEnd (T.length ".music")
+    ident = T.unlines . fmap ("  " <>) . T.lines
+    dropEnd n = T.reverse . T.drop n . T.reverse
 
 printVersion :: [String] -> Sh ()
 printVersion _ = do
