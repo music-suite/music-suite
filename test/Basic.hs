@@ -79,6 +79,12 @@ dynamics_test4 :: Music
 dynamics_test4 =
   scat $ softer (ff-pp) $ zipWith level [pp,ff,pp] [c,d,e]
 
+-- TODO more basic dynamics stuff
+-- TODO music-part
+-- TODO music-pitch
+
+
+
 -- TODO more dynamics (fadeIn, fadeOut, alternate fade curves, compress up/down)
 
 -- TODO ties
@@ -211,7 +217,6 @@ octaves =
 -- music-suite/test/legacy-music-files/overlay_chords.music
 overlay_chords :: Music
 overlay_chords =
-
   pcat [c,e,g] |> pcat [d,f,a] |> pcat [e,g,b] |> pcat [c,e,g]
 
 
@@ -329,6 +334,21 @@ times' =
       melody = legato $ scat [c,d,e,cs,ds,es]|/16
   in times 4 $ melody
 
+-- TODO Aligned
+-- TODO Behavior/Reactive
+-- TODO HasDuration/HasPosition
+-- TODO Transformable
+-- TODO basic time types (Time, Duration, Span)
+-- TODO Event?Note/Placed
+-- TODO AddMeta?
+-- TODO basic time combinators
+-- TODO Rest (remove?)
+-- TODO Reverse
+-- TODO Split
+-- TODO Score
+-- TODO Track (remove?)
+-- TODO Voice
+-- TODO Quantization (basic)
 
 -- music-suite/test/legacy-music-files/track_single.music
 track_single :: Music
