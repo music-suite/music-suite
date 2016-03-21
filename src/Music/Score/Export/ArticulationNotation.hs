@@ -41,17 +41,18 @@ import Data.Semigroup
 import Data.Functor.Context
 import Data.Functor.Adjunction (unzipR)
 import Control.Lens -- ()
-import Music.Score.Articulation
--- import Music.Score.Instances
-import Music.Score.Ties
-import Music.Time
+
+import Music.Score.Articulation (Articulation, Articulated(..), Separation, Accentuation)
+import Music.Score.Ties (Tiable(..))
+import Music.Time (Transformable(..))
+import qualified Music.Score.Articulation
+import qualified Music.Articulation
 
 -- TODO need NoSlur etc?
 
 data Slur = NoSlur | BeginSlur | EndSlur
   deriving (Eq, Ord, Show)
 
--- data CrescDim = NoCrescDim | BeginCresc | EndCresc | BeginDim | EndDim
 data Mark = NoMark | Staccato | MoltoStaccato | Marcato | Accent | Tenuto
   deriving (Eq, Ord, Show)
 
@@ -137,6 +138,10 @@ allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> 
 allMarks y = mempty
   <> getSeparationMarks (realToFrac $ y^.separation)
   <> getAccentMarks (realToFrac $ y^.accentuation)
+
+-- -- TODO why doesn't this work
+-- notateArticulationS :: (Ord a, Articulated a, Music.Score.Articulation.Articulation a ~ Music.Articulation.Articulation) => Ctxt a -> ArticulationNotation
+-- notateArticulationS = notateArticulation
 
 notateArticulation :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x
