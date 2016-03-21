@@ -34,10 +34,9 @@ module Music.Score.Export.DynamicNotation (
     CrescDim(..),
     DynamicNotation(..),
     notateDynamic,
-    
+
     -- * Utility
     removeCloseDynMarks,
-    removeDynMark,
   ) where
 
 import Data.Semigroup
@@ -59,7 +58,7 @@ instance Monoid CrescDim where
   mappend a NoCrescDim = a
   mappend a _ = a
 
-newtype DynamicNotation 
+newtype DynamicNotation
   = DynamicNotation { getDynamicNotation :: ([CrescDim], Maybe Double) }
   deriving (Eq, Ord, Show)
 
@@ -75,8 +74,8 @@ instance Transformable DynamicNotation where
   transform _ = id
 
 instance Tiable DynamicNotation where
-  toTied (DynamicNotation (beginEnd, marks)) 
-    = (DynamicNotation (beginEnd, marks), 
+  toTied (DynamicNotation (beginEnd, marks))
+    = (DynamicNotation (beginEnd, marks),
        DynamicNotation (mempty, Nothing))
 
 instance Monoid DynamicNotation where

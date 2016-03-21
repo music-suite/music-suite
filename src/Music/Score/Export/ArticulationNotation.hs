@@ -58,19 +58,17 @@ data Mark = NoMark | Staccato | MoltoStaccato | Marcato | Accent | Tenuto
 instance Monoid Slur where
   mempty = NoSlur
   mappend NoSlur a = a
-  mappend a NoSlur = a
-  mappend a _ = a
+  mappend a _      = a
 
 instance Monoid Mark where
   mempty = NoMark
   mappend NoMark a = a
-  mappend a NoMark = a
-  mappend a _ = a
+  mappend a _      = a
 
-newtype ArticulationNotation 
+newtype ArticulationNotation
   = ArticulationNotation { getArticulationNotation :: ([Slur], [Mark]) }
   deriving (Eq, Ord, Show)
-  
+
 instance Wrapped ArticulationNotation where
   type Unwrapped ArticulationNotation = ([Slur], [Mark])
   _Wrapped' = iso getArticulationNotation ArticulationNotation
@@ -83,8 +81,8 @@ instance Transformable ArticulationNotation where
   transform _ = id
 
 instance Tiable ArticulationNotation where
-  toTied (ArticulationNotation (slur, marks)) 
-    = (ArticulationNotation (slur1, marks1), 
+  toTied (ArticulationNotation (slur, marks))
+    = (ArticulationNotation (slur1, marks1),
        ArticulationNotation (slur2, marks2))
     where
       (marks1, marks2) = splitMarks marks
@@ -137,7 +135,7 @@ hasSlur y = hasSlur' (realToFrac $ view separation $ y)
 
 allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> [Mark]
 allMarks y = mempty
-  <> getSeparationMarks (realToFrac $ y^.separation) 
+  <> getSeparationMarks (realToFrac $ y^.separation)
   <> getAccentMarks (realToFrac $ y^.accentuation)
 
 notateArticulation :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
@@ -153,4 +151,3 @@ notateArticulation (getCtxt -> x) = go x
           (False, True, True) -> [BeginSlur]
           (True, True, False) -> [EndSlur]
           _                   -> []
-
