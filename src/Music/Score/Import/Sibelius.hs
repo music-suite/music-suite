@@ -426,10 +426,6 @@ fromSibeliusNote (SibeliusNote pitch diatonicPitch acc tied style) =
       actualPitch = midiOrigin .+^ (d2^*fromIntegral diatonicPitch ^+^ _A1^*fromIntegral pitch)
       midiOrigin = octavesDown 5 Pitch.c -- As middle C is (60 = 5*12)
 
--- fromPitch'' :: IsPitch a => Music.Prelude.Pitch -> a
--- fromPitch'' x = let i = x .-. c in
---   fromPitch $ PitchL ((fromIntegral $ i^._steps) `mod` 7, Just (fromIntegral (i^._alteration)), fromIntegral $ octaves i)
-
 -- |
 -- This constraint includes all note types that can be constructed from a Sibelius representation.
 --
@@ -450,10 +446,6 @@ type IsSibelius a = (
     HasText a,
     HasTremolo a,
     Tiable a
-    -- Num (Pitch a),
-    -- HasTremolo a,
-    -- HasText a,
-    -- Tiable a
     )
 
 
