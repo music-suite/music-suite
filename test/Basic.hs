@@ -45,6 +45,8 @@ articulation_staccato :: Music
 articulation_staccato =
   staccato (scat [c..g]|/8)
 
+-- TODO articulation, more high-level combinators (a la photoshop)
+
 
 -- music-suite/test/legacy-music-files/decl_style1.music
 -- decl_style1 =
@@ -61,10 +63,30 @@ articulation_staccato =
 
 
 -- music-suite/test/legacy-music-files/dynamics_constant.music
-dynamics_constant :: Music
-dynamics_constant =
+dynamics_test :: Music
+dynamics_test =
   scat $ zipWith level [fff,ff,_f,mf,mp,_p,pp,ppp] [c..]
 
+dynamics_test2 :: Music
+dynamics_test2 =
+  scat $ louder 1 $ zipWith level [pp,ff,pp] [c,d,e]
+
+dynamics_test3 :: Music
+dynamics_test3 =
+  scat $ softer 1 $ zipWith level [pp,ff,pp] [c,d,e]
+
+dynamics_test4 :: Music
+dynamics_test4 =
+  scat $ softer (ff-pp) $ zipWith level [pp,ff,pp] [c,d,e]
+
+-- TODO more dynamics (fadeIn, fadeOut, alternate fade curves, compress up/down)
+
+-- TODO ties
+-- We probably need to retain this for internal purposes, but can we trim
+-- the API?
+
+-- TODO color
+-- Should be moved to meta
 
 -- music-suite/test/legacy-music-files/melody_chords.music
 melody_chords :: Music
@@ -208,7 +230,6 @@ voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
 -- music-suite/test/legacy-music-files/pitch_inv.music
 pitch_inv :: Music
 pitch_inv =
-
   (scat [c..g]|*(2/5))
       </>
   (invertPitches c $ scat [c..g]|*(2/5))
@@ -246,7 +267,9 @@ single_note =
 special_gliss :: Music
 special_gliss =
   glissando $ scat [c,d]|/2
-
+-- TODO slide/gliss
+-- This should be moved to pitch using Behavior or similar
+-- How?
 
 -- music-suite/test/legacy-music-files/special_harmonics.music
 special_harmonics :: Music
@@ -256,18 +279,29 @@ special_harmonics =
   (harmonic 2 $ c|/2)
       </>
   (harmonic 3 $ c|/2)
-
+-- TODO should be moved to techniques
+-- Nicer way of distinguishing artificial/natural (for instruments where this
+-- makes sense).
 
 -- music-suite/test/legacy-music-files/special_text.music
 special_text :: Music
 special_text =
   text "pizz." $ c|/2
+-- TODO text
+-- Should be split up into expressive marks (lento, dolce etc) and what else
+-- Lyrics should be separate
+-- Arguably all technical instructions (pizz etc) are better represented as
+-- part of the instrument/technique tuple.
+
 
 
 -- music-suite/test/legacy-music-files/special_tremolo.music
 special_tremolo :: Music
 special_tremolo =
   tremolo 2 $ times 2 $ (c |> d)|/2
+-- TODO should be moved to techniques
+-- Would not mind retaining this top-level combinator
+-- What about unmeasured tremolo?
 
 
 -- music-suite/test/legacy-music-files/stretch_single_note1.music
@@ -308,6 +342,11 @@ track_single =
       trackToScore d = view score . map (view event . (\(t,x) -> (t >-> d,x)) . (view $ from placed)) . view placeds
 
   in trackToScore (1/8) y
+-- TODO can we do without/rename track
+-- TODO note vs event
+--   Irritating that we can not call the things are score is made up of "notes"
+--   Maybe use a parameterized type (data family?) such as (Note Voice :: * -> *)
+-- (Note Score :: * -> *), i.e. Note has kind ((* -> *) -> * -> *) etc.
 
 string_quartet :: Music
 string_quartet = mainCanon2
