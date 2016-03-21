@@ -87,6 +87,7 @@ test-suite "music-suite-test-basic"
                         QuickCheck,
                         semigroups,
                         comonad,
+                        lens,
                         music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
     type:               exitcode-stdio-1.0
     main-is:            Basic.hs

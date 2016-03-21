@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 
 import Music.Prelude
+import Control.Lens(set)
 
 -- music-suite/test/legacy-music-files/articulation_all_accents.music
 articulation_all_accents :: Music
@@ -79,6 +80,32 @@ meta_annotations :: Music
 meta_annotations =
   showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
 
+meta_annotations2 :: Music
+meta_annotations2 =
+  showAnnotations $ annotate "First note" $ scat [c,d,e]
+
+meta_annotations3 :: Music
+meta_annotations3 =
+  showAnnotations $ annotateSpan (1 <-> 2) "First note" $ scat [c,d,e]
+
+meta_barlines :: Music
+meta_barlines = scat [c{-, barline-}, d{-, doubleBarline-}, e, f {-, finalBarline-}]
+
+-- music-suite/test/legacy-music-files/meta_composer.music
+meta_attribution :: Music
+meta_attribution =
+  composer "Anonymous" $ scat [c,d,e,c]
+
+meta_attribution2 :: Music
+meta_attribution2 =
+  lyricist "Anonymous" $ scat [c,d,e,c]
+
+meta_attribution3 :: Music
+meta_attribution3 =
+  arrangerDuring (0 <-> 1) "Anonymous I" $
+  arrangerDuring (1 <-> 2) "Anonymous II" $
+    scat [c,d,e,c]
+
 
 -- music-suite/test/legacy-music-files/meta_clef1.music
 meta_clef1 :: Music
@@ -88,25 +115,61 @@ meta_clef1 =
       part2 = clef c $ staccato $ scat [ab_,eb,d,a]
       part3 = clef g $ staccato $ accentLast $ scat [g,fs,e,d]
   in compress 8 $ part1 |> part2 |> part3
+  -- TODO need a better API here, integrated with Music.Pitch.Clef
+  -- This should only be a hint, as clefs should be automatically inferred
+
+-- meta_fermata :: Music
+-- meta_fermata = scat [c, d, fermata StandardFermata e]
+-- TODO does not work (Fermata /~ FermataType)
+-- TODO just saying "fermata" should yield a standard fermata
+
+-- meta_fermata2 :: Music
+-- meta_fermata2 = scat [c, d, fermata LongFermata e]
+
+-- meta_fermata3 :: Music
+-- meta_fermata3 = fermataAt 2 $ scat [c, d, e]
+-- TODO does not work (Fermata /~ FermataType)
+-- TODO remove fermataDuring, add fermataAt (fermatas attach to points, not spans)
 
 
--- music-suite/test/legacy-music-files/meta_composer.music
-meta_composer :: Music
-meta_composer =
-  composer "Anonymous" $ scat [c,d,e,c]
+meta_key_signature :: Music
+meta_key_signature =
+  keySignature (key 1 False) $ scat [c,d,e,f,g]
+  -- TODO should really be (keySignature g major) or similar
+  -- Integrate with music-pitch
 
+-- meta_rehearsal_mark :: Music
+-- meta_rehearsal_mark =
+  -- rehearsalMark $ scat [c,d,e,f,g]
+  -- TODO
 
 -- music-suite/test/legacy-music-files/meta_time_signature.music
 meta_time_signature :: Music
 meta_time_signature =
   compress 4 $ timeSignature (4/4) (scat [c,d,e,c,d,e,f,d,g,d]) |> timeSignature (3/4) (scat [a,g,f,g,f,e])
 
+-- music-suite/test/legacy-music-files/meta_time_signature.music
+meta_time_signature2 :: Music
+meta_time_signature2 =
+  compress 16 $ timeSignature ((3+2)/16) $ scat [c,d,e,f,g]
+
+meta_tempo :: Music
+meta_tempo = scat
+  [ tempo presto $ scat [c,d,e,f,g]
+  , tempo allegretto $ scat [c,d,e,f,g]
+  , tempo (metronome (1/4) 48) $ scat [c,d,e,f,g]
+  ]
+  -- TODO custom tempo names
 
 -- music-suite/test/legacy-music-files/meta_title.music
 meta_title :: Music
 meta_title =
   title "Piece" $ scat [c,d,e,c]
 
+meta_title2 :: Music
+meta_title2 =
+  subtitle "I" $ scat [c,d,e,c]
+  -- TODO alternative for indexing movements by number etc
 
 -- music-suite/test/legacy-music-files/misc_counterpoint.music
 misc_counterpoint :: Music
@@ -135,6 +198,12 @@ overlay_voices :: Music
 overlay_voices =
   scat [c,d,e,c] <> scat [e,f,g,e] <> scat [g,a,b,g]
 
+voice1 :: Voice Pitch
+voice1 = a -- mconcat [a,a,b,b,b,b,c,c]
+  where
+    a = [(1,c)^.note, (1,d)^.note, (2,e)^.note]^.voice
+    -- b = [(1,d)^.note]^.voice
+    -- c = [(2,c)^.note]^.voice
 
 -- music-suite/test/legacy-music-files/pitch_inv.music
 pitch_inv :: Music
@@ -240,6 +309,90 @@ track_single =
 
   in trackToScore (1/8) y
 
+string_quartet :: Music
+string_quartet = mainCanon2
+  where
+    mainCanon2 = (palindrome mainCanon <> celloEntry) |> tremCanon
+
+    celloEntry = set parts' cellos e''|*(25*5/8)
+
+    mainCanon = timeSignature (time 6 8) $ asScore $
+        (set parts' violins1 $ harmonic 2 $ times 50 $ legato $ accentLast $
+            octavesUp 2 $ scat [a_,e,a,cs',cs',a,e,a_]|/8)
+            <>
+        (set parts' violins2 $ harmonic 2 $ times 50 $ legato $ accentLast $
+            octavesUp 2 $ scat [d,g,b,b,g,d]|/8)|*(3/2)
+            <>
+        (set parts' violas $ harmonic 2 $ times 50 $ legato $ accentLast $
+            octavesUp 2 $ scat [a,d,a,a,d,a]|/8)|*(3*2/2)
+            <>
+        set parts' cellos a'|*(25*5/8)
+
+    tremCanon = compress 4 $
+        (delay 124 $ set parts' violins1 $ subjs|*1)
+            <>
+        (delay 120 $ set parts' violins2 $ subjs|*1)
+            <>
+        (delay 4 $ set parts' violas $ subjs|*2)
+            <>
+        (delay 0 $ set parts' cellos  $ subjs|*2)
+        where
+          subjs = scat $ map (\n -> palindrome $ rev $ subj n) [1..40::Int]
+          subj n
+              | n < 8     = a_|*2  |> e|*1   |> a|*1
+              | n < 16    = a_|*2  |> e|*1   |> a|*1   |> e|*1   |> a|*1
+              | n < 24    = a_|*2  |> e|*0.5 |> a|*0.5 |> e|*0.5 |> a|*0.5
+              | otherwise = e|*0.5 |> a|*0.5
+
+bartok_mikrokosmos :: Music
+bartok_mikrokosmos = let
+    meta = id
+      . title "Mikrokosmos (excerpt)"
+      . composer "Bela Bartok"
+      . timeSignature (2/4)
+      . timeSignatureDuring ((2/4) >-> (5/4)) (3/4)
+
+    left = (level pp . legato)
+         (scat [a,g,f,e] |> d|*2)
+      |> {-(level ((mp |> mp `cresc` mf |> mf)|*8) . legato)-}id
+         (scat [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
+    --
+    right = up _P4 . delay 2 $
+         (level pp . legato)
+         (scat [a,g,f,e] |> d|*2)
+      |> (level mp . legato)
+         (scat [g,f,e,d] |> c |> (d |> e)|/2 |> f |> e |> d|*8)
+
+  in meta $ compress 8 $ left <> set parts' cellos (down _P8 right)
+
+chopin_etude :: Music
+chopin_etude = music
+  where
+    rh :: Music
+    rh = [((1/2) <-> (3/4),e)^.event,((3/4) <-> (15/16),cs')^.event,((15/16) <-> 1,d')^.event,(1 <-> (5/4),d)^.event,(1 <->
+      (5/4),gs)^.event,(1 <-> (5/4),b)^.event,((5/4) <-> (3/2),d)^.event,((5/4) <-> (3/2),gs)^.event,((5/4) <->
+      (3/2),b)^.event,((3/2) <-> 2,d)^.event,((3/2) <-> 2,gs)^.event,((3/2) <-> 2,b)^.event,(2 <-> (9/4),d')^.event,(2 <->
+      (9/4),fs')^.event,((9/4) <-> (39/16),bs)^.event,((9/4) <-> (39/16),ds')^.event,((39/16) <-> (5/2),cs')^.event,((39/16) <->
+      (5/2),e')^.event,((5/2) <-> (11/4),cs')^.event,((5/2) <-> (11/4),a')^.event,((11/4) <-> 3,cs')^.event,((11/4) <->
+      3,a')^.event,(3 <-> (7/2),cs')^.event,(3 <-> (7/2),a')^.event,((7/2) <-> (15/4),e)^.event,((7/2) <->
+      (15/4),cs')^.event,((15/4) <-> (63/16),cs)^.event,((15/4) <-> (63/16),as)^.event,((63/16) <-> 4,d)^.event,((63/16) <->
+      4,b)^.event,(4 <-> (17/4),fs)^.event,(4 <-> (17/4),d')^.event,((17/4) <-> (9/2),fs)^.event,((17/4) <->
+      (9/2),d')^.event,((9/2) <-> 5,fs)^.event,((9/2) <-> 5,d')^.event,(5 <-> (21/4),d)^.event,(5 <-> (21/4),gs)^.event,((21/4)
+      <-> (87/16),d)^.event,((21/4) <-> (87/16),gs)^.event,((87/16) <-> (11/2),cs)^.event,((87/16) <-> (11/2),a)^.event,((11/2)
+      <-> (23/4),cs)^.event,((11/2) <-> (23/4),cs')^.event,((23/4) <-> 6,cs)^.event,((23/4) <-> 6,cs')^.event,(6 <->
+      (13/2),cs)^.event,(6 <-> (13/2),cs')^.event]^.score
+
+    lh :: Music
+    lh = [((3/4) <-> 1,e__)^.event,(1 <-> (5/4),e_)^.event,(1 <-> (5/4),e)^.event,((5/4) <-> (3/2),e_)^.event,((5/4) <->
+      (3/2),e)^.event,((3/2) <-> 2,e_)^.event,((3/2) <-> 2,e)^.event,((9/4) <-> (5/2),a__)^.event,((5/2) <->
+      (11/4),a_)^.event,((5/2) <-> (11/4),e)^.event,((11/4) <-> 3,a_)^.event,((11/4) <-> 3,e)^.event,(3 <-> (7/2),a_)^.event,(3
+      <-> (7/2),e)^.event,((15/4) <-> 4,e__)^.event,(4 <-> (17/4),e_)^.event,(4 <-> (17/4),b_)^.event,((17/4) <->
+      (9/2),e_)^.event,((17/4) <-> (9/2),b_)^.event,((9/2) <-> 5,e_)^.event,((9/2) <-> 5,b_)^.event,((21/4) <->
+      (11/2),a___)^.event,((11/2) <-> (23/4),e_)^.event,((11/2) <-> (23/4),a_)^.event,((11/2) <-> (23/4),e)^.event,((23/4) <->
+      6,e_)^.event,((23/4) <-> 6,a_)^.event,((23/4) <-> 6,e)^.event,(6 <-> (13/2),e_)^.event,(6 <-> (13/2),a_)^.event,(6 <->
+      (13/2),e)^.event]^.score
+
+    music = timeSignature (3/4) $ lh <> rh
 
 -- music-suite/test/legacy-music-files/voice_single.music
 -- voice_single =
