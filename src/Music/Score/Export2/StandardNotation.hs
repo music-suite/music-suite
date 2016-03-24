@@ -222,6 +222,9 @@ data SystemBar              = SystemBar {
         } deriving (Eq,Ord,Show)
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 type SystemStaff            = [SystemBar]
 
 
@@ -246,6 +249,9 @@ data StaffInfo              = StaffInfo {
   deriving (Eq,Ord,Show)
 instance Monoid StaffInfo where
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 type Pitch                  = Music.Pitch.Pitch
 data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
@@ -287,6 +293,9 @@ data Chord = Chord {
   deriving (Eq, Show)
 instance Monoid Chord where
   mempty = Chord [] Nothing Nothing Nothing Nothing Nothing mempty mempty mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
@@ -313,6 +322,9 @@ data MovementInfo = MovementInfo {
 
 instance Monoid MovementInfo where
   mempty = MovementInfo mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 data Movement     = Movement {
   _movementInfo::MovementInfo,
@@ -325,6 +337,9 @@ data WorkInfo     = WorkInfo { _title::Title, _annotations::Annotations, _attrib
   deriving (Eq, Show)
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
   deriving (Show)
