@@ -17,10 +17,10 @@ import Data.VectorSpace
 import Data.AffineSpace
 
 -- | An ambitus is (mathematical) interval.
--- 
+--
 -- Also known as /range/ or /tessitura/, this type can be used to restrict the
 -- range instruments, chords, melodies etc.
--- 
+--
 newtype Ambitus a = Ambitus { getAmbitus :: (I.Interval a) }
 
 instance Wrapped (Ambitus a) where
@@ -60,3 +60,27 @@ ambitusLowest x = let (m,n) = x^.from ambitus in m
 ambitusHighest :: (Num a, Ord a) => Ambitus a -> a
 ambitusHighest x = let (m,n) = x^.from ambitus in n
 
+
+{-
+Misc stuff from data-interval and friends. What is relevant?
+
+member :: Ord r => r -> Interval r -> Bool
+isSubsetOf :: Ord r => Interval r -> Interval r -> Bool
+isProperSubsetOf :: Ord r => Interval r -> Interval r -> Bool
+-- TODO exact type here depends on what type of interval we use underneath
+lowerBound :: Interval r -> Extended r
+width :: (Num r, Ord r) => Interval r -> r
+intersection :: Ord a => Interval a -> Interval a -> Interval a
+hull :: Ord a => Interval a -> Interval a -> Interval a
+bisect :: Fractional a => Interval a -> (Interval a, Interval a)
+distance :: (Num a, Ord a) => Interval a -> Interval a -> a
+(...) :: Ord a => a -> a -> Interval a infix 3
+(+/-) :: (Num a, Ord a) => a -> a -> Interval a infixl 6
+null :: Interval a -> Bool
+singleton :: a -> Interval a
+elem :: Ord a => a -> Interval a -> Bool
+singular :: Ord a => Interval a -> Bool
+width :: Num a => Interval a -> a
+midpoint :: Fractional a => Interval a -> a
+inflate/deflate :: (Num a, Ord a) => a -> Interval a -> Interval a
+-}
