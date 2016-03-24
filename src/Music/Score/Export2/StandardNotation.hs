@@ -106,7 +106,7 @@ import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
 import           Control.Monad.Plus
-import           Control.Monad.Writer
+import           Control.Monad.Writer                    hiding ((<>))
 import           Data.AffineSpace                        hiding (Sum)
 import           Data.Colour                             (Colour)
 import           Data.Colour.Names                       as Color
@@ -577,7 +577,7 @@ toLy w = do
         notateText :: [String] -> Lilypond.Music -> Lilypond.Music
         notateText texts = composed (fmap Lilypond.addText texts)
 
-        notateHarmonic :: (Any, Sum Int) -> Lilypond.Music -> Lilypond.Music
+        notateHarmonic :: HarmonicNotation -> Lilypond.Music -> Lilypond.Music
         notateHarmonic (Any isNat, Sum n) = case (isNat, n) of
           (_,     0) -> id
           (True,  n) -> notateNatural n
@@ -586,13 +586,13 @@ toLy w = do
             notateNatural n = Lilypond.addFlageolet -- addOpen?
             notateArtificial n = id -- TODO
 
-        notateGliss :: ((Any, Any), (Any, Any)) -> Lilypond.Music -> Lilypond.Music
+        notateGliss :: SlideNotation -> Lilypond.Music -> Lilypond.Music
         notateGliss ((Any eg, Any es),(Any bg, Any bs))
           | bg  = Lilypond.beginGlissando
           | bs  = Lilypond.beginGlissando
           | otherwise = id
 
-        notateTies :: (Any, Any) -> Lilypond.Music -> Lilypond.Music
+        notateTies :: Ties -> Lilypond.Music -> Lilypond.Music
         notateTies (Any ta, Any tb)
           | ta && tb  = Lilypond.beginTie
           | tb        = Lilypond.beginTie
@@ -802,54 +802,8 @@ toAcceptableName x = (overrideName defName, defName)
 
 
 
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicNotation a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
-    where
-      notate (DynamicNotation (crescDims, level))
-        = composed (fmap notateCrescDim crescDims)
-        . notateLevel level
+-}
 
-      notateCrescDim crescDims = case crescDims of
-        NoCrescDim -> id
-        BeginCresc -> (<>) MusicXml.beginCresc
-        EndCresc   -> (<>) MusicXml.endCresc
-        BeginDim   -> (<>) MusicXml.beginDim
-        EndDim     -> (<>) MusicXml.endDim
-
-      -- TODO these literals are not so nice...
-      notateLevel showLevel = case showLevel of
-         Nothing -> id
-         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-
-      fixLevel :: Double -> Double
-      fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-
-      -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
-      -- rcomposed = composed . reverse
-
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT b{-ArticulationNotation-} a) where
-  exportNote b = exportNote b . fmap extract
-  -- exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
-  --   where
-  --     notate (ArticulationNotation (slurs, marks))
-  --       = composed (fmap notateMark marks)
-  --       . composed (fmap notateSlur slurs)
-  --
-  --     notateMark mark = case mark of
-  --       NoMark         -> id
-  --       Staccato       -> MusicXml.staccato
-  --       MoltoStaccato  -> MusicXml.staccatissimo
-  --       Marcato        -> MusicXml.strongAccent
-  --       Accent         -> MusicXml.accent
-  --       Tenuto         -> MusicXml.tenuto
-  --
-  --     notateSlur slurs = case slurs of
-  --       NoSlur    -> id
-  --       BeginSlur -> MusicXml.beginSlur
-  --       EndSlur   -> MusicXml.endSlur
-
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
-  exportNote b = exportNote b . fmap extract
 {-
   exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
     where
@@ -869,23 +823,60 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
         | c == Color.blue  = "blue"
         | otherwise        = error "MusicXml backend: Unkown color"
 -}
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TremoloT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . runTremoloT . sequenceA
-    where
-      notate n = case n of
-        0 -> id
-        n -> MusicXml.tremolo (fromIntegral n)
 
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TextT a) where
-  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
-    where
-      notate texts a = mconcat (fmap MusicXml.text texts) <> a
+notateDynamic :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
+notateDynamic (DN.DynamicNotation (crescDims, level))
+  = Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
+  . notateLevel level
+  where
+      notateCrescDim crescDims = case crescDims of
+        DN.NoCrescDim -> id
+        DN.BeginCresc -> (<>) MusicXml.beginCresc
+        DN.EndCresc   -> (<>) MusicXml.endCresc
+        DN.BeginDim   -> (<>) MusicXml.beginDim
+        DN.EndDim     -> (<>) MusicXml.endDim
 
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (HarmonicT a) where
-  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
-    where
-      notateX (Any isNat, Sum n) = notate isNat n
+      -- TODO these literals are not so nice...
+      notateLevel showLevel = case showLevel of
+         Nothing -> id
+         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
+      fixLevel :: Double -> Double
+      fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+
+      -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
+      -- rcomposed = composed . reverse
+
+notateArticulation :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
+notateArticulation (AN.ArticulationNotation (slurs, marks))
+  = Music.Score.Internal.Util.composed (fmap notateMark marks)
+  . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
+  where
+      notateMark mark = case mark of
+        AN.NoMark         -> id
+        AN.Staccato       -> MusicXml.staccato
+        AN.MoltoStaccato  -> MusicXml.staccatissimo
+        AN.Marcato        -> MusicXml.strongAccent
+        AN.Accent         -> MusicXml.accent
+        AN.Tenuto         -> MusicXml.tenuto
+
+      notateSlur slurs = case slurs of
+        AN.NoSlur    -> id
+        AN.BeginSlur -> MusicXml.beginSlur
+        AN.EndSlur   -> MusicXml.endSlur
+
+notateTremolo :: Integral a => a -> MusicXml.Music -> MusicXml.Music
+notateTremolo n = case n of
+  0 -> id
+  n -> MusicXml.tremolo (fromIntegral n)
+
+notateText :: [String] -> MusicXml.Music -> MusicXml.Music
+notateText texts a = mconcat (fmap MusicXml.text texts) <> a
+
+
+notateHarmonic :: HarmonicNotation -> MusicXml.Music -> MusicXml.Music
+notateHarmonic (Any isNat, Sum n) = notate isNat n
+  where
       notate _     0 = id
       notate True  n = notateNatural n
       notate False n = notateArtificial n
@@ -896,29 +887,21 @@ instance HasBackendNote MusicXml a => HasBackendNote MusicXml (HarmonicT a) wher
       -- We set a single diamond notehead instead, which can be manually replaced
       notateArtificial n = id -- TODO
 
+notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
+notateSlide ((eg,es),(bg,bs)) = notate
+  where
+      notate = neg . nes . nbg . nbs
+      neg    = if getAny eg then MusicXml.endGliss else id
+      nes    = if getAny es then MusicXml.endSlide else id
+      nbg    = if getAny bg then MusicXml.beginGliss else id
+      nbs    = if getAny bs then MusicXml.beginSlide else id
 
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (SlideT a) where
-  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getSlideT . sequenceA
-    where
-      notateX ((eg,es),(bg,bs)) = notate
-          where
-              notate = neg . nes . nbg . nbs
-              neg    = if view _Wrapped' eg then MusicXml.endGliss else id
-              nes    = if view _Wrapped' es then MusicXml.endSlide else id
-              nbg    = if view _Wrapped' bg then MusicXml.beginGliss else id
-              nbs    = if view _Wrapped' bs then MusicXml.beginSlide else id
-
-instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
-  exportNote b  = uncurry notateTie . getTieT . fmap (exportNote b) . sequenceA
-  exportChord b = uncurry notateTie . getTieT . fmap (exportChord b) . sequenceA . fmap sequenceA
-
+notateTie :: Ties -> MusicXml.Music -> MusicXml.Music
 notateTie (Any ta, Any tb)
   | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
   | tb        = MusicXml.beginTie
   | ta        = MusicXml.endTie
   | otherwise = id
-
--}
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
