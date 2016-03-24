@@ -606,6 +606,305 @@ toLy w = do
 toXml :: Work -> MusicXml.Score
 toXml = undefined
 
+
+{-
+
+finalizeScore :: XmlScore MusicXml.Music -> MusicXml.Score
+finalizeScore (XmlScore (info, x))
+  = MusicXml.fromParts title composer partList
+  . map (finalizeStaff tempo) $ x
+  where
+    title    = scoreTitle info
+    composer = scoreComposer info
+    partList = scorePartList info
+    tempo    = scoreTempo info
+
+-- TODO finalizeStaffGroup
+
+finalizeStaff :: Tempo -> XmlStaff MusicXml.Music -> [MusicXml.Music]
+finalizeStaff tempo (XmlStaff (info, x))
+  = id
+  -- Staff name is not added here as MusicXML uses a separate part list
+  . addStartInfo
+  . addClef (staffClef info)
+  . map finalizeBar $ x
+  where
+    -- TODO name
+    -- TODO clef
+
+    -- Both of these stick to the first bar
+    -- TODO clean
+    addClef :: (MusicXml.ClefSign, MusicXml.Line) -> [MusicXml.Music] -> [MusicXml.Music]
+    addClef _                []     = []
+    addClef (clefSign, line) (x:xs) = (MusicXml.clef clefSign line <> x):xs
+
+    addStartInfo :: [MusicXml.Music] -> [MusicXml.Music]
+    addStartInfo []     = []
+    addStartInfo (x:xs) = (startInfo <> x):xs
+
+    startInfo :: MusicXml.Music
+    startInfo = mempty
+        <> MusicXml.defaultDivisions
+        <> MusicXml.defaultKey
+        <> MusicXml.metronome (realToFrac nv) (realToFrac bpm)
+        <> MusicXml.staves (staffCount info) -- TODO
+        -- <> Xml.commonTime
+    (nv, bpm) = getTempo tempo
+
+
+finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
+finalizeBar (XmlBar (BarInfo timeSignature, x))
+  = maybe id setBarTimeSignature timeSignature
+  . renderBarMusic $ x
+  where
+    -- TODO key signatures
+    -- TODO rehearsal marks
+    -- TODO bar number change
+    -- TODO compound time signatures
+    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
+
+renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
+renderBarMusic = go
+  where
+    go (Beat d x)            = setDefaultVoice x
+    go (Dotted n (Beat d x)) = setDefaultVoice x
+    go (Group rs)            = mconcat $ map renderBarMusic rs
+    go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
+      where
+        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+
+setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+setDefaultVoice = MusicXml.setVoice 1
+
+{-
+Sibelius quirks
+
+Only looks at the part-name attribute (use part-name-display/display-text to override name)
+Expects transposition first, i.e. "C Trumpet, Bb Clarinet"
+Expects "French Horn", "Cello" and "English Horn"
+Does not like numbers (I, II etc) after the instrument name
+-}
+toAcceptableName :: Show a => a -> (String, String)
+toAcceptableName x = (overrideName defName, defName)
+  where
+    defName = show x
+    overrideName y
+      | "Clarinet"      `Data.List.isPrefixOf` y = "Bb Clarinet"
+      | "Clarinet in A" `Data.List.isPrefixOf` y = "A Clarinet"
+      | "Bassoon"       `Data.List.isPrefixOf` y = "Bassoon"
+      | "Violoncello"   `Data.List.isPrefixOf` y = "Cello"
+      | "Trumpet in Bb" `Data.List.isPrefixOf` y = "Bb Trumpet"
+      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
+      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
+      | "Horn"          `Data.List.isPrefixOf` y = "French Horn"
+      | otherwise                                = y
+
+
+
+
+  exportScore b score = XmlScore
+    . (ScoreInfo title composer partList tempo,)
+    . map (uncurry $ exportPart timeSignatureMarks barDurations)
+    . map (second (over dynamics notateDynamic))
+    . map (second (preserveMeta addDynCon))
+    . map (second (preserveMeta simultaneous))
+    . extractPartsWithInfo
+    . normalizeScore
+    $ score
+    where
+      title    = fromMaybe "" $ flip getTitleAt 0              $ metaAtStart score
+      composer = fromMaybe "" $ flip getAttribution "composer" $ metaAtStart score
+      partList = MusicXml.partListDisplay (fmap toAcceptableName $ allParts score)
+      tempo    = (metaAtStart score :: Tempo)
+      (timeSignatureMarks, barDurations) = extractTimeSignatures score
+
+
+      -- | Export a score as a single part. Overlapping notes will cause an error.
+      exportPart :: (
+        Tiable a,
+        HasMusicXmlInstrument (Part a)
+        )
+        => [Maybe TimeSignature]
+        -> [Duration]
+        -> Part a
+        -> Score a
+        -> XmlStaff (XmlContext a)
+
+      exportStaff :: Tiable a
+        => [Maybe TimeSignature]
+        -> [Duration]
+        -> Int    -- Clef, as per Music.Parts
+        -> Int    -- Number of staff lines
+        -> MVoice a
+        -> XmlStaff (XmlContext a)
+
+      exportBar :: Tiable a
+        => Maybe TimeSignature
+        -> MVoice a
+        -> XmlBar (XmlContext a)
+
+      quantizeBar :: Tiable a
+        => MVoice a
+        -> Rhythm (XmlContext a)
+
+      exportPart timeSignatureMarks barDurations part
+        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part) (getMusicXmlNumberOfStaves part)
+        . view oldSingleMVoice
+
+      exportStaff timeSignatures barDurations clefId staffCount'
+        = XmlStaff
+        . addStaffInfo
+        . zipWith exportBar timeSignatures
+        . splitIntoBars barDurations
+        where
+          clef = case clefId of
+            0 -> (MusicXml.GClef, 2)
+            1 -> (MusicXml.CClef, 3)
+            2 -> (MusicXml.FClef, 4)
+          addStaffInfo  = (,) $ StaffInfo { staffClef = clef, staffCount = staffCount' }
+          splitIntoBars = splitTiesAt
+
+      exportBar timeSignature
+        = XmlBar
+        . addBarInfo
+        . quantizeBar
+       where
+         addBarInfo = (,) $ BarInfo timeSignature
+
+      quantizeBar = mapWithDur XmlContext . rewrite . handleErrors . quantize . view pairs
+        where
+          -- FIXME propagate quantization errors
+          handleErrors (Left e)  = error $ "Quantization failed: " ++ e
+          handleErrors (Right x) = x
+
+
+
+
+
+
+
+
+
+
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (DynamicT DynamicNotation a) where
+  exportNote b = uncurry notate . fmap (exportNote b) . getDynamicT . sequenceA
+    where
+      notate (DynamicNotation (crescDims, level))
+        = composed (fmap notateCrescDim crescDims)
+        . notateLevel level
+
+      notateCrescDim crescDims = case crescDims of
+        NoCrescDim -> id
+        BeginCresc -> (<>) MusicXml.beginCresc
+        EndCresc   -> (<>) MusicXml.endCresc
+        BeginDim   -> (<>) MusicXml.beginDim
+        EndDim     -> (<>) MusicXml.endDim
+
+      -- TODO these literals are not so nice...
+      notateLevel showLevel = case showLevel of
+         Nothing -> id
+         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+
+      fixLevel :: Double -> Double
+      fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+
+      -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
+      -- rcomposed = composed . reverse
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ArticulationT b{-ArticulationNotation-} a) where
+  exportNote b = exportNote b . fmap extract
+  -- exportNote b = uncurry notate . fmap (exportNote b) . getArticulationT . sequenceA
+  --   where
+  --     notate (ArticulationNotation (slurs, marks))
+  --       = composed (fmap notateMark marks)
+  --       . composed (fmap notateSlur slurs)
+  --
+  --     notateMark mark = case mark of
+  --       NoMark         -> id
+  --       Staccato       -> MusicXml.staccato
+  --       MoltoStaccato  -> MusicXml.staccatissimo
+  --       Marcato        -> MusicXml.strongAccent
+  --       Accent         -> MusicXml.accent
+  --       Tenuto         -> MusicXml.tenuto
+  --
+  --     notateSlur slurs = case slurs of
+  --       NoSlur    -> id
+  --       BeginSlur -> MusicXml.beginSlur
+  --       EndSlur   -> MusicXml.endSlur
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (ColorT a) where
+  exportNote b = exportNote b . fmap extract
+{-
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getColorT . sequenceA
+    where
+      -- TODO This syntax will change in future MusicXml versions
+      -- TODO handle any color
+      notate (Option Nothing)             = id
+      notate (Option (Just (Last color))) = \x -> MusicXml.Sequential [
+        MusicXml.Override "NoteHead#' color"
+          (MusicXml.toLiteralValue $ "#" ++ colorName color),
+        x,
+        MusicXml.Revert "NoteHead#' color"
+        ]
+
+      colorName c
+        | c == Color.black = "black"
+        | c == Color.red   = "red"
+        | c == Color.blue  = "blue"
+        | otherwise        = error "MusicXml backend: Unkown color"
+-}
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TremoloT a) where
+  exportNote b = uncurry notate . fmap (exportNote b) . runTremoloT . sequenceA
+    where
+      notate n = case n of
+        0 -> id
+        n -> MusicXml.tremolo (fromIntegral n)
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TextT a) where
+  exportNote b = uncurry notate . fmap (exportNote b) . getCouple . getTextT . sequenceA
+    where
+      notate texts a = mconcat (fmap MusicXml.text texts) <> a
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (HarmonicT a) where
+  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getHarmonicT . sequenceA
+    where
+      notateX (Any isNat, Sum n) = notate isNat n
+
+      notate _     0 = id
+      notate True  n = notateNatural n
+      notate False n = notateArtificial n
+
+      -- notateNatural n = Xml.harmonic -- openString?
+      notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
+      -- Most programs do not recognize the harmonic tag
+      -- We set a single diamond notehead instead, which can be manually replaced
+      notateArtificial n = id -- TODO
+
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (SlideT a) where
+  exportNote b = uncurry notateX . fmap (exportNote b) . getCouple . getSlideT . sequenceA
+    where
+      notateX ((eg,es),(bg,bs)) = notate
+          where
+              notate = neg . nes . nbg . nbs
+              neg    = if view _Wrapped' eg then MusicXml.endGliss else id
+              nes    = if view _Wrapped' es then MusicXml.endSlide else id
+              nbg    = if view _Wrapped' bg then MusicXml.beginGliss else id
+              nbs    = if view _Wrapped' bs then MusicXml.beginSlide else id
+
+instance HasBackendNote MusicXml a => HasBackendNote MusicXml (TieT a) where
+  exportNote b  = uncurry notateTie . getTieT . fmap (exportNote b) . sequenceA
+  exportChord b = uncurry notateTie . getTieT . fmap (exportChord b) . sequenceA . fmap sequenceA
+
+notateTie (Any ta, Any tb)
+  | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
+  | tb        = MusicXml.beginTie
+  | ta        = MusicXml.endTie
+  | otherwise = id
+
+-}
+
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
@@ -669,6 +968,8 @@ fromAspects sc = do
 
   return $ Work mempty [Movement info systemStaff (fmap aspectsToStaff postStaffGrouping)]
   where
+    fmap2 = fmap . fmap
+
     info = id
       $ movementTitle .~ (
         Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $ Music.Score.Meta.metaAtStart sc
@@ -765,13 +1066,6 @@ fromAspects sc = do
     toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
     toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
 
-
-
-
-
-
--- Util
-fmap2 = fmap.fmap
 
 -- pcatL :: [Lilypond.Music] -> Lilypond.Music
 -- pcatL = pcatL' False
