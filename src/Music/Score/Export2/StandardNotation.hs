@@ -513,39 +513,44 @@ toLy w = do
         notateDynamic (DN.DynamicNotation (crescDims, level))
           = rcomposed (fmap notateCrescDim crescDims)
           . notateLevel level
+          where
+            notateCrescDim :: DN.CrescDim -> Lilypond.Music -> Lilypond.Music
+            notateCrescDim crescDims = case crescDims of
+              DN.NoCrescDim -> id
+              DN.BeginCresc -> Lilypond.beginCresc
+              DN.EndCresc   -> Lilypond.endCresc
+              DN.BeginDim   -> Lilypond.beginDim
+              DN.EndDim     -> Lilypond.endDim
 
-        notateCrescDim crescDims = case crescDims of
-          DN.NoCrescDim -> id
-          DN.BeginCresc -> Lilypond.beginCresc
-          DN.EndCresc   -> Lilypond.endCresc
-          DN.BeginDim   -> Lilypond.beginDim
-          DN.EndDim     -> Lilypond.endDim
+            -- TODO these literals are not so nice...
+            notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
+            notateLevel showLevel = case showLevel of
+               Nothing -> id
+               Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
-        -- TODO these literals are not so nice...
-        notateLevel showLevel = case showLevel of
-           Nothing -> id
-           Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
-
-        fixLevel :: Double -> Double
-        fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
+            fixLevel :: Double -> Double
+            fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
         notateArticulation :: ArticulationNotation -> Lilypond.Music -> Lilypond.Music
         notateArticulation (AN.ArticulationNotation (slurs, marks))
           = rcomposed (fmap notateMark marks)
           . rcomposed (fmap notateSlur slurs)
+          where
+            notateMark :: AN.Mark
+                                  -> Lilypond.Music -> Lilypond.Music
+            notateMark mark = case mark of
+              AN.NoMark         -> id
+              AN.Staccato       -> Lilypond.addStaccato
+              AN.MoltoStaccato  -> Lilypond.addStaccatissimo
+              AN.Marcato        -> Lilypond.addMarcato
+              AN.Accent         -> Lilypond.addAccent
+              AN.Tenuto         -> Lilypond.addTenuto
 
-        notateMark mark = case mark of
-          AN.NoMark         -> id
-          AN.Staccato       -> Lilypond.addStaccato
-          AN.MoltoStaccato  -> Lilypond.addStaccatissimo
-          AN.Marcato        -> Lilypond.addMarcato
-          AN.Accent         -> Lilypond.addAccent
-          AN.Tenuto         -> Lilypond.addTenuto
-
-        notateSlur slurs = case slurs of
-          AN.NoSlur    -> id
-          AN.BeginSlur -> Lilypond.beginSlur
-          AN.EndSlur   -> Lilypond.endSlur
+            notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
+            notateSlur slurs = case slurs of
+              AN.NoSlur    -> id
+              AN.BeginSlur -> Lilypond.beginSlur
+              AN.EndSlur   -> Lilypond.endSlur
 
         -- TODO This syntax might change in future Lilypond versions
         -- TODO handle any color
