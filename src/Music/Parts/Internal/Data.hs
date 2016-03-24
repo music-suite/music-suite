@@ -42,7 +42,8 @@ import qualified Paths_music_parts
 #endif
 
 
-type SoundId = String
+type SoundId     = String
+type TechniqueId = String
 
 #ifndef GHCI
 instance Num Clef where
@@ -62,6 +63,15 @@ data InstrumentTopCategory
   | Other
   deriving (Show)
 
+
+data TechniqueDef = TechniqueDef
+  { _techniqueId :: TechniqueId  -- ID
+  , _instruments :: [String]
+  , _musicXmlTechnique :: Maybe String
+  , _musicXmlDirection :: Maybe String
+  -- TODO rest
+  }
+  deriving (Show)
 
 data InstrumentDef = InstrumentDef {
 
@@ -222,4 +232,3 @@ splitBy x xs = splitBy1 x xs
     splitBy1 delimiter = foldr f [[]]
         where f c l@(x:xs) | c == delimiter = []:l
                            | otherwise = (c:x):xs
-
