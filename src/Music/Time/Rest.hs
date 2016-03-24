@@ -19,3 +19,6 @@ import           Music.Time.Juxtapose
 
 rest :: Applicative f => f (Maybe a)
 rest = pure Nothing
+
+-- TODO overload a la IsPitch (bottom instances for ()/Maybe, transformed like IsPitch)
+-- Or remove?

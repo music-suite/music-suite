@@ -61,7 +61,7 @@ module Music.Time.Voice (
 
         -- * Legacy
         durationsVoice,
-        
+
   ) where
 
 import           Control.Applicative
@@ -172,7 +172,7 @@ instance FromJSON a => FromJSON (Voice a) where
       parseNL (JSON.Array xs) = fmap ((^.voice) . toList) $ traverse parseJSON xs
       toList = toListOf traverse
   parseJSON _ = empty
-      
+
 instance Transformable (Voice a) where
   transform s = over notes (transform s)
 
@@ -496,13 +496,13 @@ mergeIfSameDurationWith f a b
 -- splitLatterToAssureSameDuration = splitLatterToAssureSameDurationWith dup
 --   where
 --     dup x = (x,x)
--- 
+--
 -- splitLatterToAssureSameDurationWith :: (b -> (b, b)) -> Voice b -> Voice b -> Voice b
 -- splitLatterToAssureSameDurationWith = undefined
 
 -- polyToHomophonic      :: [Voice a] -> Maybe (Voice [a])
 -- polyToHomophonic = undefined
--- 
+--
 -- polyToHomophonicForce :: [Voice a] -> Voice [a]
 -- polyToHomophonicForce = undefined
 
@@ -521,13 +521,13 @@ homoToPolyphonic xs = case nvoices xs of
 
 -- changeCrossing   :: Ord a => Voice a -> Voice a -> (Voice a, Voice a)
 -- changeCrossing = undefined
--- 
+--
 -- changeCrossingBy :: Ord b => (a -> b) -> Voice a -> Voice a -> (Voice a, Voice a)
 -- changeCrossingBy = undefined
--- 
+--
 -- processExactOverlaps :: (a -> a -> (a, a)) -> Voice a -> Voice a -> (Voice a, Voice a)
 -- processExactOverlaps = undefined
--- 
+--
 -- processExactOverlaps' :: (a -> b -> Either (a,b) (b,a)) -> Voice a -> Voice b -> (Voice (Either b a), Voice (Either a b))
 -- processExactOverlaps' = undefined
 

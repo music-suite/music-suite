@@ -78,14 +78,14 @@ newtype Reactive a = Reactive { getReactive :: ([Time], Behavior a) }
   TODO Semantic fuzz
 
   Reactive implies that values change at switchpoints, but should not make assumptions about what the value is *at* the
-  switchpoint. 
-  
+  switchpoint.
+
   Behavior represents continous values, so it knows the value at each switchpoint (semantically: Time -> a).
   Hence the combinator (switch' :: Time -> B a -> B a -> B a -> B a) makes sense.
-  
+
   Reactive can do this as well (i.e. with the current semantics: ([Time], Behavior a)), however this is not necessarily
   desirable.
-  
+
   Bad:
       updates - Promotes association of Time with value (though it makes no assumption that the Reactive *is* this value at the given time).
       discrete/atTime/continous - Forces implementation to choose arbitrary value at switchpoint
@@ -223,7 +223,7 @@ continous = join . reactiveToBehavior
 -- continous = g
 --   where
 --     g = \x -> fmap (fromJust.fmap getFirst.getOption) . continousM . fmap (fmap (Option . Just . First)) $ x
--- 
+--
 -- continousM :: Monoid a => Reactive (Behavior a) -> Behavior a
 -- continousM = concatB . view score . intermediate
 
@@ -234,4 +234,3 @@ continousWith f x = continous $ liftA2 (<*>) (pure f) (fmap pure x)
 -- | Sample a 'Behavior' into a reactive.
 sample   :: [Time] -> Behavior a -> Reactive a
 sample ts b = Reactive (ts,b)
-
