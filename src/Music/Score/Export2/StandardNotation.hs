@@ -223,6 +223,8 @@ data SystemBar              = SystemBar {
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
 type SystemStaff            = [SystemBar]
+
+
 type InstrumentShortName    = String
 type InstrumentFullName     = String
 type Transposition          = Music.Pitch.Interval
@@ -291,6 +293,9 @@ type PitchLayer             = Rhythm Chord
 
 data Bar                    = Bar    {_pitchLayers::[PitchLayer] {-, _dynamicLayer::DynamicLayer-}}
   deriving (Eq, Show)
+
+
+
 
 data Staff                  = Staff  {_staffInfo::StaffInfo,_bars::[Bar]}
   deriving (Eq, Show)
@@ -678,85 +683,87 @@ fromAspects sc = do
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
--- TODO log rewriting etc
-quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
-quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
-  where
-    quantize' x = case quantize x of
-      Left e  -> throwError $ "Quantization failed: " ++ e
-      Right x -> return x
-
-pureTieT :: a -> TieT a
-pureTieT = pure
-
-extractTimeSignatures
-  :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
-extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
-
-generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
-generateStaffGrouping = groupToLabelTree . partDefault
-
-partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
-partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
-
-groupToLabelTree :: Group a -> LabelTree (BracketType) a
-groupToLabelTree (Single (_,a)) = Leaf a
-groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
-  where
-    k Music.Parts.Bracket   = Bracket
-    k Music.Parts.Invisible = NoBracket
-    -- k Music.Parts.Subbracket = Just SubBracket
-    k Music.Parts.PianoStaff = Brace
-    k Music.Parts.GrandStaff = Brace
 
 
-asp1ToAsp2 :: Asp1 -> Asp2
-asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
-
-{-
-Note:
-  Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
-  (HasPhrases Score) instance. See comment in Music.Score.Phrases.
-
-  We use the MVoice instance here, so this is safe.
--}
-asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
-asp2ToAsp3 = id
-  . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon)
-  . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon)
-  -- . fmap2 (over Music.Score.articulation (const ()))
-
-aspectsToChord :: Maybe Asp3 -> Chord
-aspectsToChord Nothing    = mempty
-aspectsToChord (Just asp) = id
-  $ ties .~ (Any endTie,Any beginTie)
-  $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic))
-  $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation))
-  $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
-  where
-    (endTie,beginTie) = Music.Score.isTieEndBeginning asp
-
-aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
-aspectsToBar rh = Bar [layer1] -- TODO more layers (see below)
-  where
-    layer1 = fmap aspectsToChord rh
-
-aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
-aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
-  where
-    info = id
-      $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
-      $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
-      $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
-      $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
-      $ mempty
+    -- TODO log rewriting etc
+    quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
+    quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
       where
-        soloStr = if (part^.(Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
-        nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
-        subpartStr = Just $ show (part^.(Music.Parts._subpart))
+        quantize' x = case quantize x of
+          Left e  -> throwError $ "Quantization failed: " ++ e
+          Right x -> return x
 
-toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
-toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
+    pureTieT :: a -> TieT a
+    pureTieT = pure
+
+    extractTimeSignatures
+      :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
+    extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
+
+    generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+    generateStaffGrouping = groupToLabelTree . partDefault
+
+    partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
+    partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
+
+    groupToLabelTree :: Group a -> LabelTree (BracketType) a
+    groupToLabelTree (Single (_,a)) = Leaf a
+    groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
+      where
+        k Music.Parts.Bracket   = Bracket
+        k Music.Parts.Invisible = NoBracket
+        -- k Music.Parts.Subbracket = Just SubBracket
+        k Music.Parts.PianoStaff = Brace
+        k Music.Parts.GrandStaff = Brace
+
+
+    asp1ToAsp2 :: Asp1 -> Asp2
+    asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
+
+    {-
+    Note:
+      Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
+      (HasPhrases Score) instance. See comment in Music.Score.Phrases.
+
+      We use the MVoice instance here, so this is safe.
+    -}
+    asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
+    asp2ToAsp3 = id
+      . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon)
+      . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon)
+      -- . fmap2 (over Music.Score.articulation (const ()))
+
+    aspectsToChord :: Maybe Asp3 -> Chord
+    aspectsToChord Nothing    = mempty
+    aspectsToChord (Just asp) = id
+      $ ties .~ (Any endTie,Any beginTie)
+      $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic))
+      $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation))
+      $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
+      where
+        (endTie,beginTie) = Music.Score.isTieEndBeginning asp
+
+    aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
+    aspectsToBar rh = Bar [layer1] -- TODO more layers (see below)
+      where
+        layer1 = fmap aspectsToChord rh
+
+    aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
+    aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
+      where
+        info = id
+          $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
+          $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
+          $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
+          $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
+          $ mempty
+          where
+            soloStr = if (part^.(Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
+            nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
+            subpartStr = Just $ show (part^.(Music.Parts._subpart))
+
+    toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
+    toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
 
 
 
