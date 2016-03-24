@@ -2,6 +2,15 @@
     --resolver lts-5.5
     --install-ghc
     runghc
+    --package shelly
+    --package container
+    --package split
+    --package data-layer-1.0.4
+    --package functor-utils-1.1
+    --package lens-utils-1.2
+    --package typelevel-1.0.4
+    --package convert
+    --package data-construction
   -}
 
 {-# LANGUAGE OverloadedStrings, ViewPatterns, CPP, NoMonomorphismRestriction, FlexibleContexts #-}
