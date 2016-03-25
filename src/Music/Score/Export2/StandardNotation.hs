@@ -714,10 +714,9 @@ toXml work = do
     Just x  -> return x
 
   let title     = firstMovement^.movementInfo.movementTitle
-  let composer  = firstMovement^.movementInfo.movementAttribution.at "composer"
+  let composer  = maybe "" id $ firstMovement^.movementInfo.movementAttribution.at "composer"
   let partList  = movementToPartList firstMovement
-    -- MusicXml.fromParts title composer partList music
-  return undefined
+  return $ MusicXml.fromParts title composer partList music
   where
     movementToPartList :: Movement -> MusicXml.PartList
     movementToPartList m = foldLabelTree f g (m^.staves)
@@ -730,7 +729,10 @@ toXml work = do
           Bracket     -> MusicXml.bracket $ mconcat pl
           Brace       -> MusicXml.brace $ mconcat pl
 
+    -- TODO
+    music = []
 
+{-
     info :: XmlScoreInfo
     info     = undefined
 
@@ -790,21 +792,19 @@ toXml work = do
     setDefaultVoice :: MusicXml.Music -> MusicXml.Music
     setDefaultVoice = MusicXml.setVoice 1
 
+      exportStaff timeSignatures barDurations clefId staffCount'
+        = XmlStaff
+        . addStaffInfo
+        . zipWith exportBar timeSignatures
+        . splitIntoBars barDurations
+        where
+          clef = case clefId of
+            0 -> (MusicXml.GClef, 2)
+            1 -> (MusicXml.CClef, 3)
+            2 -> (MusicXml.FClef, 4)
+          addStaffInfo  = (,) $ StaffInfo { staffClef = clef, staffCount = staffCount' }
+-}
 
-      -- timeSignatureMarks = undefined
-      -- barDurations = undefined
-
-      -- exportStaff timeSignatures barDurations clefId staffCount'
-      --   = XmlStaff
-      --   . addStaffInfo
-      --   . zipWith exportBar timeSignatures
-      --   . splitIntoBars barDurations
-      --   where
-      --     clef = case clefId of
-      --       0 -> (MusicXml.GClef, 2)
-      --       1 -> (MusicXml.CClef, 3)
-      --       2 -> (MusicXml.FClef, 4)
-      --     addStaffInfo  = (,) $ StaffInfo { staffClef = clef, staffCount = staffCount' }
 
 
 notateDynamicX :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
