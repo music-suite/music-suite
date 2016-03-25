@@ -1,7 +1,7 @@
 
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor, DeriveTraversable, TemplateHaskell
-  , GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor
+  , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module Music.Score.Export2.StandardNotation
   (
@@ -205,10 +205,12 @@ type RehearsalMark          = Music.Score.Meta.RehearsalMark.RehearsalMark
 type TempoMark              = Music.Score.Meta.Tempo.Tempo
 
 -- TODO w/wo connecting barlines
-data BracketType            = NoBracket | Bracket | Brace | Subbracket deriving (Eq, Ord, Show)
+data BracketType            = NoBracket | Bracket | Brace | Subbracket
+  deriving (Eq, Ord, Show)
 
 type SpecialBarline         = () -- TODO
--- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline) -- (prev,next) biased to next
+-- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline)
+-- (prev,next) biased to next
 
 -- TODO lyrics
 
@@ -218,7 +220,9 @@ data SystemBar              = SystemBar {
         _keySignature::Maybe KeySignature,
         _rehearsalMark::Maybe RehearsalMark,
         _tempoMark::Maybe TempoMark
-        -- ,_barLines::BarLines -- Tricky because of ambiguity. Use balanced pair or an alt-list in SystemStaff.
+        -- ,_barLines::BarLines
+          -- Tricky because of ambiguity. Use balanced pair
+          -- or an alt-list in SystemStaff.
         } deriving (Eq,Ord,Show)
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
@@ -269,9 +273,12 @@ data BreathNotation         = Comma | Caesura | CaesuraWithFermata
 
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
-type HarmonicNotation       = (Any, Sum Int)        -- (artificial?, partial number)
-type SlideNotation          = ((Any,Any),(Any,Any)) -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
-type Ties                   = (Any,Any)             -- (endTie?,beginTie?)
+type HarmonicNotation       = (Any, Sum Int)
+  -- (artificial?, partial number)
+type SlideNotation          = ((Any,Any),(Any,Any))
+  -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
+type Ties                   = (Any,Any)
+  -- (endTie?,beginTie?)
 
 -- TODO appogiatura/acciatura
 -- TODO beaming
@@ -282,7 +289,8 @@ data Chord = Chord {
   _arpeggioNotation::Maybe ArpeggioNotation,
   _tremoloNotation::Maybe TremoloNotation,
   _breathNotation::Maybe BreathNotation,
-  _articulationNotation::Maybe ArticulationNotation, -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
+  _articulationNotation::Maybe ArticulationNotation,
+    -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
   _dynamicNotation::Maybe DynamicNotation,
   _chordColor::Maybe (Colour Double),
   _chordText::[String],
@@ -300,7 +308,8 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
 
-data Bar                    = Bar    {_pitchLayers::[PitchLayer] {-, _dynamicLayer::DynamicLayer-}}
+data Bar                    = Bar    {_pitchLayers::[PitchLayer]
+  {-, _dynamicLayer::DynamicLayer-}}
   deriving (Eq, Show)
 
 
@@ -406,10 +415,12 @@ toLy w = do
 
     toLyMusic :: Movement -> E Lilypond.Music
     toLyMusic m = do
-      -- We will copy system-staff info to each bar (time sigs, key sigs and so on, which seems to be what Lilypond expects),
-      -- so the system staff is included in the rendering of each staff
+      -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
+      -- which seems to be what Lilypond expects), so the system staff is included
+      -- in the rendering of each staff
       renderedStaves <- Data.Traversable.mapM (toLyStaff $ m^.systemStaff) (m^.staves)
-      -- Now we still have (LabelTree BracketType), which is converted to a parallel music expression, using \StaffGroup etc
+      -- Now we still have (LabelTree BracketType), which is converted to a parallel
+      -- music expression, using \StaffGroup etc
       toLyStaffGroup renderedStaves
 
     toLyStaff :: SystemStaff -> Staff -> E Lilypond.Music
@@ -449,11 +460,15 @@ toLy w = do
         sim [x] = x
         sim xs  = Lilypond.Simultaneous False xs
 
-        addTimeSignature :: Maybe Music.Score.Meta.Time.TimeSignature -> Lilypond.Music -> Lilypond.Music
+        addTimeSignature
+          :: Maybe Music.Score.Meta.Time.TimeSignature
+          -> Lilypond.Music
+          -> Lilypond.Music
         addTimeSignature timeSignature x = (setTimeSignature `ifJust` timeSignature) x
           where
             ifJust = maybe id
-            setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x = Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
+            setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x =
+                Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
 
 
     toLyLayer :: Rhythm Chord -> E Lilypond.Music
@@ -495,19 +510,9 @@ toLy w = do
           -- FIXME catch if (abs accidental)>2 (or simply normalize)
           fromIntegral (Music.Pitch.accidental p),
           -- Lilypond expects SPN, so middle c is octave 4
-          fromIntegral $ Music.Pitch.octaves (p.-.Music.Score.octavesDown (4+1) Music.Pitch.Literal.c)
+          fromIntegral $ Music.Pitch.octaves
+            (p.-.Music.Score.octavesDown (4+1) Music.Pitch.Literal.c)
           )
-
-        -- notateDynamic      :: Maybe DynamicNotation                -> Lilypond.Music -> Lilypond.Music
-        -- notateArticulation :: Maybe ArticulationNotation           -> Lilypond.Music -> Lilypond.Music
-        -- notateColor        :: Maybe (Colour Double)                -> Lilypond.Music -> Lilypond.Music
-        -- notateTremolo      :: Maybe Int                -> Duration -> (Lilypond.Music -> Lilypond.Music, Duration)
-        -- notateText         :: [String]                             -> Lilypond.Music -> Lilypond.Music
-        -- notateHarmonic     :: (Any, Sum Int)                       -> Lilypond.Music -> Lilypond.Music
-        -- notateGliss        :: ((Any, Any), (Any, Any))             -> Lilypond.Music -> Lilypond.Music
-        --    (endGliss,endSlide),(beginGliss,beginSlide)
-        -- notateTies          :: (Any, Any)                           -> Lilypond.Music -> Lilypond.Music
-        --    (endTie,beginTie)
 
         notateDynamic :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
         notateDynamic (DN.DynamicNotation (crescDims, level))
@@ -526,7 +531,8 @@ toLy w = do
             notateLevel :: Maybe Double -> Lilypond.Music -> Lilypond.Music
             notateLevel showLevel = case showLevel of
                Nothing -> id
-               Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+               Just lvl -> Lilypond.addDynamics (fromDynamics (DynamicsL
+                (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
             fixLevel :: Double -> Double
             fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
@@ -681,7 +687,8 @@ finalizeBar (XmlBar (BarInfo timeSignature, x))
     -- TODO rehearsal marks
     -- TODO bar number change
     -- TODO compound time signatures
-    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
+    setBarTimeSignature (getTimeSignature -> (ms, n)) x = mconcat
+      [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
 
 renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
 renderBarMusic = go
@@ -768,7 +775,8 @@ toAcceptableName x = (overrideName defName, defName)
         -> Rhythm (XmlContext a)
 
       exportPart timeSignatureMarks barDurations part
-        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part) (getMusicXmlNumberOfStaves part)
+        = exportStaff timeSignatureMarks barDurations (getMusicXmlClef part)
+          (getMusicXmlNumberOfStaves part)
         . view oldSingleMVoice
 
       exportStaff timeSignatures barDurations clefId staffCount'
@@ -844,7 +852,8 @@ notateDynamic (DN.DynamicNotation (crescDims, level))
       -- TODO these literals are not so nice...
       notateLevel showLevel = case showLevel of
          Nothing -> id
-         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL (Just (fixLevel . realToFrac $ lvl), Nothing)))
+         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL
+          (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
       fixLevel :: Double -> Double
       fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
@@ -947,7 +956,8 @@ fromAspects sc = do
 
   -- Separate voices (called "layers" to avoid confusion)
   -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
-  postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) -> Data.Traversable.mapM (toLayer p) a) $ postChordMerge
+  postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) ->
+    Data.Traversable.mapM (toLayer p) a) $ postChordMerge
 
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
@@ -960,7 +970,8 @@ fromAspects sc = do
   -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
-  postQuantize <- Data.Traversable.mapM (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
+  postQuantize <- Data.Traversable.mapM
+    (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
@@ -975,7 +986,8 @@ fromAspects sc = do
 
     info = id
       $ movementTitle .~ (
-        Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $ Music.Score.Meta.metaAtStart sc
+        Data.Maybe.fromMaybe "" $ flip Music.Score.Meta.Title.getTitleAt 0 $
+          Music.Score.Meta.metaAtStart sc
         )
       $ (movementAttribution.at "composer") .~ (
         flip Music.Score.Meta.Attribution.getAttribution "composer" $ Music.Score.Meta.metaAtStart sc
@@ -1056,10 +1068,14 @@ fromAspects sc = do
     aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
       where
         info = id
-          $ transposition  .~ (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
-          $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME") (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
-          $ instrumentShortName    .~ Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
-          $ instrumentFullName     .~ (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
+          $ transposition  .~
+            (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
+          $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME")
+            (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
+          $ instrumentShortName    .~
+            Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
+          $ instrumentFullName     .~
+            (Data.List.intercalate " " $ Data.Maybe.catMaybes [soloStr, nameStr, subpartStr])
           $ mempty
           where
             soloStr = if (part^.(Music.Parts._solo)) == Music.Parts.Solo then Just "Solo" else Nothing
@@ -1067,7 +1083,9 @@ fromAspects sc = do
             subpartStr = Just $ show (part^.(Music.Parts._subpart))
 
     toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
-    toLayer p = maybe (throwError $ "Overlapping events in part: " ++ show p) return . preview Music.Score.singleMVoice
+    toLayer p =
+      maybe (throwError $ "Overlapping events in part: " ++ show p)
+        return . preview Music.Score.singleMVoice
 
 
 -- pcatL :: [Lilypond.Music] -> Lilypond.Music
