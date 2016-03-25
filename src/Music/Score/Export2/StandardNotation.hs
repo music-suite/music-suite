@@ -133,6 +133,7 @@ import qualified Music.Parts
 import qualified Music.Pitch
 import qualified Music.Pitch
 import qualified Music.Pitch.Literal
+import           Music.Pitch.Literal                     (fromPitch)
 import           Music.Score                             (MVoice)
 import qualified Music.Score
 import           Music.Score.Articulation                (ArticulationT)
@@ -651,63 +652,60 @@ toLy work = do
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-
--- |
--- Extract instrument info as per "Music.Part"
--- This is really crude, needs rethinking!
 --
-class HasMusicXmlInstrument a where
-  getMusicXmlClef :: a -> Int
-  getMusicXmlNumberOfStaves :: a -> Int
+-- -- |
+-- -- Extract instrument info as per "Music.Part"
+-- -- This is really crude, needs rethinking!
+-- --
+-- class HasMusicXmlInstrument a where
+--   getMusicXmlClef :: a -> Int
+--   getMusicXmlNumberOfStaves :: a -> Int
+--
+--
+-- -- TODO move
+-- deriving instance Show MusicXml.Line
+-- deriving instance Show MusicXml.ClefSign
+-- -- deriving instance Eq MusicXml.PartList
+-- -- deriving instance Show MusicXml.PartList
+-- -- deriving instance Eq MusicXml.PartListElem
+-- -- deriving instance Show MusicXml.PartListElem
+-- -- deriving instance Show MusicXml.GroupBarLines
+-- -- FIXME bogus
+-- instance Eq MusicXml.PartList where
+-- instance Show MusicXml.PartList where
+--
+-- data XmlScoreInfo = XmlScoreInfo { scoreTitle    :: String,
+--                              scoreComposer :: String,
+--                              scorePartList :: MusicXml.PartList,
+--                              scoreTempo    :: Tempo
+--                              }
+--   deriving (Eq, Show)
+--
+--
+-- data XmlStaffInfo = XmlStaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line), staffCount :: Int }
+--   deriving (Eq, Show)
+--
+-- data XmlBarInfo = XmlBarInfo { x_barTimeSignature :: Maybe TimeSignature }
+--   deriving (Eq, Show)
+--
+-- -- | Hierachical representation of a MusicXml score.
+-- --   A score is a parallel composition of staves.
+-- data XmlScore a = XmlScore { getXmlScore :: (XmlScoreInfo, [XmlStaff a]) }
+--   deriving (Functor, Eq, Show)
+--
+-- -- | A staff is a sequential composition of bars.
+-- data XmlStaff a = XmlStaff { getXmlStaff :: (XmlStaffInfo, [XmlBar a]) }
+--   deriving (Functor, Eq, Show)
+--
+-- -- | A bar is a sequential composition of chords/notes/rests.
+-- data XmlBar a = XmlBar { getXmlBar :: (XmlBarInfo, Rhythm a) }
+--   deriving (Functor, Eq, Show)
+--
+-- -- | Context passed to the note export.
+-- --   Includes duration and note/rest distinction.
+-- data XmlContext a = XmlContext Duration (Maybe a)
+--   deriving (Functor, Foldable, Traversable, Eq, Show)
 
-
--- TODO move
-deriving instance Show MusicXml.Line
-deriving instance Show MusicXml.ClefSign
--- deriving instance Eq MusicXml.PartList
--- deriving instance Show MusicXml.PartList
--- deriving instance Eq MusicXml.PartListElem
--- deriving instance Show MusicXml.PartListElem
--- deriving instance Show MusicXml.GroupBarLines
--- FIXME bogus
-instance Eq MusicXml.PartList where
-instance Show MusicXml.PartList where
-
-data XmlScoreInfo = XmlScoreInfo { scoreTitle    :: String,
-                             scoreComposer :: String,
-                             scorePartList :: MusicXml.PartList,
-                             scoreTempo    :: Tempo
-                             }
-  deriving (Eq, Show)
-
-
-data XmlStaffInfo = XmlStaffInfo { staffClef :: (MusicXml.ClefSign, MusicXml.Line), staffCount :: Int }
-  deriving (Eq, Show)
-
-data XmlBarInfo = XmlBarInfo { x_barTimeSignature :: Maybe TimeSignature }
-  deriving (Eq, Show)
-
--- | Hierachical representation of a MusicXml score.
---   A score is a parallel composition of staves.
-data XmlScore a = XmlScore { getXmlScore :: (XmlScoreInfo, [XmlStaff a]) }
-  deriving (Functor, Eq, Show)
-
--- | A staff is a sequential composition of bars.
-data XmlStaff a = XmlStaff { getXmlStaff :: (XmlStaffInfo, [XmlBar a]) }
-  deriving (Functor, Eq, Show)
-
--- | A bar is a sequential composition of chords/notes/rests.
-data XmlBar a = XmlBar { getXmlBar :: (XmlBarInfo, Rhythm a) }
-  deriving (Functor, Eq, Show)
-
--- | Context passed to the note export.
---   Includes duration and note/rest distinction.
-data XmlContext a = XmlContext Duration (Maybe a)
-  deriving (Functor, Foldable, Traversable, Eq, Show)
-
-
-
-m = undefined :: Movement
 
 toXml :: Work -> E MusicXml.Score
 toXml work = do
@@ -725,7 +723,7 @@ toXml work = do
     movementToPartList m = foldLabelTree f g (m^.staves)
       where
         -- TODO generally, what name to use?
-        -- TODO use toAcceptableName? Or not needed anymore?
+        -- TODO use MusicXML sound id
         f s = MusicXml.partList [s^.staffInfo.sibeliusFriendlyName]
         g bt pl = case bt of
           NoBracket   -> mconcat pl
@@ -741,11 +739,12 @@ toXml work = do
 
     ----
     systemStaffX :: SystemStaff
-    systemStaffX = m^.systemStaff
+    systemStaffX = (undefined :: Movement)^.systemStaff
     -- TODO bar numbers
     -- TODO reh marks
     -- TODO tempo marks
     -- TODO key sigs
+    -- TODO compound time sigs
     timeSignaturesX :: [MusicXml.Music]
     timeSignaturesX = fmap expTS $ fmap (^.timeSignature) systemStaffX
       where
@@ -764,7 +763,7 @@ toXml work = do
     ----
 
     stavesX :: [Staff]
-    stavesX  = m^..staves.traverse
+    stavesX  = (undefined :: Movement)^..staves.traverse
 
     renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
     renderBarMusic = go
@@ -788,70 +787,41 @@ renderStaff :: Staff -> [MusicXml.Music]
 renderStaff st = fmap renderBar (st^.bars)
 
 renderBar :: Bar -> MusicXml.Music
-renderBar = undefined
+renderBar b = case b^.pitchLayers of
+  _   -> error "Expected one pitch layer"
+  [x] -> renderPL x
 
+renderPL :: Rhythm Chord -> MusicXml.Music
+renderPL = renderBarMusic . fmap renderC
 
+renderC ::  Chord -> Duration -> MusicXml.Music
+renderC ch d = post $ case ch^.pitches of
+  []  -> MusicXml.rest (realToFrac d)
+  [p] -> MusicXml.note (fromPitch p) (realToFrac d)
+  ps  -> MusicXml.chord (fmap fromPitch ps) (realToFrac d)
+  where
+    -- TODO arpeggio, breath, color
+    post = id
+      . maybe id notateDynamicX (ch^.dynamicNotation)
+      . maybe id notateArticulationX (ch^.articulationNotation)
+      . maybe id notateTremolo (ch^.tremoloNotation)
+      . notateText (ch^.chordText)
+      . notateHarmonic (ch^.harmonicNotation)
+      . notateSlide (ch^.slideNotation)
+      . notateTie (ch^.ties)
 
-{-
-    info :: XmlScoreInfo
-    info     = undefined
-
-    finalizeStaff :: Tempo -> XmlStaff MusicXml.Music -> [MusicXml.Music]
-    finalizeStaff tempo (XmlStaff (info, x))
-      = id
-      -- Staff name is not added here as MusicXML uses a separate part list
-      . addStartInfo
-      . addClef (staffClef info)
-      . map finalizeBar $ x
+renderBarMusic :: Rhythm (Duration -> MusicXml.Music) -> MusicXml.Music
+renderBarMusic = go
+  where
+    go (Beat d x)            = setDefaultVoice (x d)
+    go (Dotted n (Beat d x)) = setDefaultVoice (x (d * dotMod n))
+    go (Group rs)            = mconcat $ map renderBarMusic rs
+    go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
       where
-        -- TODO name
-        -- TODO clef
+        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
-        -- Both of these stick to the first bar
-        -- TODO clean
-        addClef :: (MusicXml.ClefSign, MusicXml.Line) -> [MusicXml.Music] -> [MusicXml.Music]
-        addClef _                []     = []
-        addClef (clefSign, line) (x:xs) = (MusicXml.clef clefSign line <> x):xs
-
-        addStartInfo :: [MusicXml.Music] -> [MusicXml.Music]
-        addStartInfo []     = []
-        addStartInfo (x:xs) = (startInfo <> x):xs
-
-        startInfo :: MusicXml.Music
-        startInfo = mempty
-            <> MusicXml.defaultDivisions
-            <> MusicXml.defaultKey
-            <> MusicXml.metronome (realToFrac nv) (realToFrac bpm)
-            <> MusicXml.staves (staffCount info) -- TODO
-            -- <> Xml.commonTime
-        (nv, bpm) = Music.Score.getTempo tempo
-
-
-    finalizeBar :: XmlBar MusicXml.Music -> MusicXml.Music
-    finalizeBar (XmlBar (XmlBarInfo timeSignature, x))
-      = maybe id setBarTimeSignature timeSignature
-      . renderBarMusic $ x
-      where
-        -- TODO key signatures
-        -- TODO rehearsal marks
-        -- TODO bar number change
-        -- TODO compound time signatures
-        setBarTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x =
-            mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
-
-      exportStaff timeSignatures barDurations clefId staffCount'
-        = XmlStaff
-        . addStaffInfo
-        . zipWith exportBar timeSignatures
-        . splitIntoBars barDurations
-        where
-          clef = case clefId of
-            0 -> (MusicXml.GClef, 2)
-            1 -> (MusicXml.CClef, 3)
-            2 -> (MusicXml.FClef, 4)
-          addStaffInfo  = (,) $ StaffInfo { staffClef = clef, staffCount = staffCount' }
--}
-
+setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+setDefaultVoice = MusicXml.setVoice 1
 
 
 notateDynamicX :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
@@ -896,10 +866,12 @@ notateArticulationX (AN.ArticulationNotation (slurs, marks))
         AN.BeginSlur -> MusicXml.beginSlur
         AN.EndSlur   -> MusicXml.endSlur
 
-notateTremolo :: Integral a => a -> MusicXml.Music -> MusicXml.Music
+notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
 notateTremolo n = case n of
-  0 -> id
-  n -> MusicXml.tremolo (fromIntegral n)
+  BeamedTremolo 0 -> id
+  BeamedTremolo n -> MusicXml.tremolo (fromIntegral n)
+  -- TODO optionally use z cross-beam
+  UnmeasuredTremolo -> MusicXml.tremolo 3
 
 notateText :: [String] -> MusicXml.Music -> MusicXml.Music
 notateText texts a = mconcat (fmap MusicXml.text texts) <> a
@@ -933,33 +905,6 @@ notateTie (Any ta, Any tb)
   | tb        = MusicXml.beginTie
   | ta        = MusicXml.endTie
   | otherwise = id
-
-{-
-Sibelius quirks
-
-Only looks at the part-name attribute (use part-name-display/display-text to override name)
-Expects transposition first, i.e. "C Trumpet, Bb Clarinet"
-Expects "French Horn", "Cello" and "English Horn"
-Does not like numbers (I, II etc) after the instrument name
--}
-toAcceptableName :: Show a => a -> (String, String)
-toAcceptableName x = (overrideName defName, defName)
-  where
-    defName = show x
-    overrideName y
-      | "Clarinet"      `Data.List.isPrefixOf` y = "Bb Clarinet"
-      | "Clarinet in A" `Data.List.isPrefixOf` y = "A Clarinet"
-      | "Bassoon"       `Data.List.isPrefixOf` y = "Bassoon"
-      | "Violoncello"   `Data.List.isPrefixOf` y = "Cello"
-      | "Trumpet in Bb" `Data.List.isPrefixOf` y = "Bb Trumpet"
-      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
-      | "Trumpet in C"  `Data.List.isPrefixOf` y = "C Trumpet"
-      | "Horn"          `Data.List.isPrefixOf` y = "French Horn"
-      | otherwise                                = y
-
-
-
-
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
