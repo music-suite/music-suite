@@ -415,21 +415,22 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 -- TODO replace E with (MonadLog m, MonadThrow...) => m
 -- or whatever
 toLy :: Work -> E (String, Lilypond.Music)
-toLy w = do
+toLy work = do
 
   -- TODO assumes one movement
-  r <- case w^?movements._head of
+  firstMovement <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
 
   let headerTempl = Data.Map.fromList [
-        ("title",    (r^.movementInfo.movementTitle)),
-        ("composer", Data.Maybe.fromMaybe "" $ r^.movementInfo.movementAttribution.at "composer")
+        ("title",    (firstMovement^.movementInfo.movementTitle)),
+        ("composer", Data.Maybe.fromMaybe "" $
+          firstMovement^.movementInfo.movementAttribution.at "composer")
         ]
   let header = getData "ly_big_score.ily" `expandTemplate` headerTempl
 
-  m <- toLyMusic $ r
-  return (header, m)
+  music <- toLyMusic $ firstMovement
+  return (header, music)
 
   where
 
@@ -705,19 +706,30 @@ data XmlContext a = XmlContext Duration (Maybe a)
   deriving (Functor, Foldable, Traversable, Eq, Show)
 
 
-toXml :: Work -> MusicXml.Score
-toXml _ = MusicXml.fromParts title composer partList music
+toXml :: Work -> E MusicXml.Score
+toXml work = do
+  -- TODO assumes one movement
+  firstMovement <- case work^?movements._head of
+    Nothing -> throwError "StandardNotation: Expected a one-movement piece"
+    Just x  -> return x
+
+  let title     = firstMovement^.movementInfo.movementTitle
+  let composer  = firstMovement^.movementInfo.movementAttribution.at "composer"
+  let partList  = movementToPartList firstMovement
+    -- MusicXml.fromParts title composer partList music
+  return undefined
   where
-    title    = scoreTitle info
-    composer = scoreComposer info
-    partList = scorePartList info
-    tempo    = scoreTempo info
+    movementToPartList :: Movement -> MusicXml.PartList
+    movementToPartList m = foldLabelTree f g (m^.staves)
+      where
+        -- TODO generally, what name to use?
+        f s = MusicXml.partList [s^.staffInfo.sibeliusFriendlyName]
+        g bt pl = case bt of
+          NoBracket   -> mconcat pl
+          Subbracket  -> mconcat pl
+          Bracket     -> MusicXml.bracket $ mconcat pl
+          Brace       -> MusicXml.brace $ mconcat pl
 
-    music :: [[MusicXml.Music]]
-    music    = map (finalizeStaff tempo) $ _music
-
-    _music :: [XmlStaff MusicXml.Music]
-    _music = undefined
 
     info :: XmlScoreInfo
     info     = undefined
@@ -779,14 +791,6 @@ toXml _ = MusicXml.fromParts title composer partList music
     setDefaultVoice = MusicXml.setVoice 1
 
 
-exportScoreX :: [XmlStaff a] -> XmlScore a
-exportScoreX score = XmlScore
-    (XmlScoreInfo title composer partList tempo, score)
-    where
-      title = undefined
-      composer = undefined
-      partList = undefined
-      tempo = undefined
       -- timeSignatureMarks = undefined
       -- barDurations = undefined
 
