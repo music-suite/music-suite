@@ -706,6 +706,9 @@ data XmlContext a = XmlContext Duration (Maybe a)
   deriving (Functor, Foldable, Traversable, Eq, Show)
 
 
+
+m = undefined :: Movement
+
 toXml :: Work -> E MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
@@ -722,6 +725,7 @@ toXml work = do
     movementToPartList m = foldLabelTree f g (m^.staves)
       where
         -- TODO generally, what name to use?
+        -- TODO use toAcceptableName? Or not needed anymore?
         f s = MusicXml.partList [s^.staffInfo.sibeliusFriendlyName]
         g bt pl = case bt of
           NoBracket   -> mconcat pl
@@ -730,7 +734,48 @@ toXml work = do
           Brace       -> MusicXml.brace $ mconcat pl
 
     -- TODO
+    -- list outer to inner: stave, bar (music: list of MusicElement)
+    music :: [[MusicXml.Music]]
     music = []
+
+    ----
+    systemStaffX :: SystemStaff
+    systemStaffX = m^.systemStaff
+    -- TODO bar numbers
+    -- TODO reh marks
+    -- TODO tempo marks
+    -- TODO key sigs
+    timeSignaturesX :: [MusicXml.Music]
+    timeSignaturesX = fmap expTS $ Data.Maybe.catMaybes $ fmap (^.timeSignature) systemStaffX
+      where
+        expTS ts =
+          let (ms, n) = Music.Score.getTimeSignature ts
+          in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
+    -- System bar directions per bar
+
+    -- Each entry in outer list must be prepended to the FIRST staff (whatever that is)
+    -- We could also prepend it to other staves, but that is reduntant and makes the
+    -- generated XML file much larger.
+    allSystemBarDirections :: [MusicXml.Music]
+    allSystemBarDirections = timeSignaturesX
+    ----
+
+    stavesX :: [Staff]
+    stavesX      = m^..staves.traverse
+
+    renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
+    renderBarMusic = go
+      where
+        go (Beat d x)            = setDefaultVoice x
+        go (Dotted n (Beat d x)) = setDefaultVoice x
+        go (Group rs)            = mconcat $ map renderBarMusic rs
+        go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
+          where
+            (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+
+    setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+    setDefaultVoice = MusicXml.setVoice 1
+
 
 {-
     info :: XmlScoreInfo
@@ -778,19 +823,6 @@ toXml work = do
         -- TODO compound time signatures
         setBarTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x =
             mconcat [MusicXml.time (fromIntegral $ sum ms) (fromIntegral n), x]
-
-    renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
-    renderBarMusic = go
-      where
-        go (Beat d x)            = setDefaultVoice x
-        go (Dotted n (Beat d x)) = setDefaultVoice x
-        go (Group rs)            = mconcat $ map renderBarMusic rs
-        go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
-          where
-            (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-
-    setDefaultVoice :: MusicXml.Music -> MusicXml.Music
-    setDefaultVoice = MusicXml.setVoice 1
 
       exportStaff timeSignatures barDurations clefId staffCount'
         = XmlStaff
