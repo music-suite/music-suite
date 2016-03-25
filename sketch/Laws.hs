@@ -21,6 +21,10 @@ position p (transform s a) = transform s (position p a)
 position p . transform s = transform s . position p
 
 
+TODO how transform/duration/position distributes over (Note/Score/Voice) transformations
+TODO how split/reverse distributes over (Note/Score/Voice) transformations (if at all!)
+
+
 Duration/Position laws
 =====
 -- Duration and era
