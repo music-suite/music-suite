@@ -4,6 +4,286 @@
 import Music.Prelude
 import Control.Lens(set)
 
+-- Pitch and interval literals
+
+{-
+
+semitones (2:: ChromaticSteps)  == 2
+semitones (9:: ChromaticSteps)  == 9
+semitones (-3:: ChromaticSteps) == -3
+
+
+c .+ m3     ==    eb
+c' .+ m3'   ==    eb'
+g' .-. c    ==    (_P5 ^+^ _P8)
+
+-- TODO can not see these instances in Haddocks
+instance HasSemitones Music.Pitch.Interval
+instance HasNumber Music.Pitch.Interval
+instance HasQuality Music.Pitch.Interval
+
+-- TODO Diatonic/ChromaticSteps Show instance
+-- TODO move or rename Music.Pitch.Common.Number diatonicSteps
+
+semitones (m3 :: Music.Pitch.Interval)    == (3 :: Semitones)
+semitones (m3 :: Music.Pitch.Interval)    == 3
+semitones (_A4 :: Music.Pitch.Interval)   == tritone
+semitones (d5 :: Music.Pitch.Interval)    == tritone
+isTritone (d5 :: Music.Pitch.Interval)    == True
+
+((_A2 :: Music.Pitch.Interval) /= m3)   == True
+((_A2 :: Music.Pitch.Interval) =:= m3)  == True
+((_A2 :: Music.Pitch.Interval) == m3)   == False
+((_A2 :: Music.Pitch.Interval) /:= m3)  == False
+
+expectedQualityType 3 == MajorMinorType
+True
+expectedQualityType 2 == MajorMinorType
+True
+expectedQualityType (-2) == MajorMinorType
+True
+expectedQualityType (-9) == MajorMinorType
+True
+expectedQualityType (-11) == PerfectType
+True
+expectedQualityType (-4) == PerfectType
+True
+expectedQualityType (-5) == PerfectType
+True
+quality (m3 :: Music.Pitch.Interval) == Music.Pitch.Minor
+True
+quality (_A4 :: Music.Pitch.Interval) == Music.Pitch.Augmented 1
+True
+quality (m3 :: Music.Pitch.Interval) == Music.Pitch.Minor
+True
+quality (_A4 :: Music.Pitch.Interval) == Music.Pitch.Augmented 1
+True
+qualityToAlteration Upward PerfectType Music.Pitch.Minor
+Nothing
+qualityToAlteration Upward MajorMinorType  Music.Pitch.Minor
+Just (-1)
+qualityToAlteration Downward MajorMinorType  Music.Pitch.Minor
+Just 0
+qualityToAlteration Downward MajorMinorType  (Music.Pitch.Augmented 1)
+Just (-2)
+qualityToAlteration Downward PerfectType   (Music.Pitch.Augmented 1)
+Just (-1)
+
+-- TODO the Isos inteval/interval'/interval'' are really confusing
+-- TODO swap/change names of _number/number, _quality/quality, steps, alteration
+
+-- TODO test Music.Pitch(fifth, augmened...etc)
+-- TODO test Music.Pitch(natural, flat ...etc)
+-- TODO test Music.Pitch(perfect, major, minor, augmented, diminished, doublyAugmented, doublyDiminished)
+-- TODO test Music.Pitch(isNegative, isPositive, isNonNegative, isStep, isLeap)
+-- TODO test Music.Pitch(isSimple, isCompound, separate, simple, octaves)
+-- TODO unify the two fifths/octaves types
+-- TODO test/doc Music.Pitch.invert better
+
+-- TODO better example use of the HasBasis interval
+-- Nicer relation to convertBasis/convertBasisFloat/intervalDiv
+
+-- TODO nicer alternative to mkPitch (also including octaves)
+-- TODO nicer alternative to upDiatonicP et al
+  -- Interval instance (w.o. need to provide origin)
+  -- Maybe provide tonic/origin in a reader monad?
+
+-- Nicer spelling/normalization API, including function to remove all
+-- overflow spellings (this should be used by default by backends)
+
+-- Rename the Music.Pitch.Equal(Equal) to something better
+-- Doc Music.Pitch.Clef(positionPitch ...)
+
+
+
+
+
+
+
+-- TODO swap/change names of _solo, _subpart, _instrument
+-- TODO is the subpart definition really sound?
+-- I.e. how do we handle colliding notes when working with arbitrary string
+-- division, for instance?
+
+
+
+
+
+
+-- TODO fix problems with phrase traversals
+
+
+
+
+
+-- TODO test/fix meta-data
+
+
+
+
+
+
+
+
+
+-- TODO new TT imple (based on MTL derivation)
+  -- Proper HasMeta inst for notes?
+
+
+
+
+-- TODO fix type of voice zips (use real n-tuples!)
+-- TODO fix/remove valuesV/durationsV in Time.Voice (what is the alternative?)
+
+
+
+
+
+-- TODO transformations back/forth betwe Score and more restricted types
+-- Laws governing this
+
+
+
+
+
+
+
+-- TODO what to do with negative durations/spans?
+Reasoning:
+  We allow negative semitones/intervals
+  For all affine (point-like) types such as pitch, dynamics, articulation etc "negative" is kind of arbitrary anyway (as the origin/zero is arbitrary)
+
+  For vector-like types (interval, duration etc), negativity is OK, but note that we often want to talk about magnitude and direction separately
+  (as in "a downward minor third").
+
+  Is there a process to simply "turning a vector around" if it is negative? What is it called?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Show instances
+
+
+
+Aligned - OK but use showsPrec
+> aligned 2 0 ()
+aligned (2) (0) (())
+> aligned 2 0 EQ
+aligned (2) (0) (EQ)
+
+> (1<->2, GT)^.event
+(1 <-> 2,GT)^.event
+> (3,GT)^.note
+(3,GT)^.note
+> (3,GT)^.placed
+(3,GT)^.placed
+
+-- TODO AddMeta
+-- We should just use pure here, as meta-data can be ignored AFA Show/Eq/Ord is concerned
+-- (I.e. they are defined up to meta-data, or up to meta-data modification).
+
+> pure GT :: AddMeta Ordering
+AddMeta {getAddMeta = Twain {getTwain = ({ meta },GT)}}
+-- TODO Show Reactive?
+> [(3,GT)^.note]^.voice
+[(3,GT)^.note]^.voice
+> [(1<->2, GT)^.event]^.score
+[(1 <-> 2,GT)^.event]^.score
+-- TODO Track
+? [(3,GT)^.placed]^.track
+Track {getTrack = [(3,GT)^.placed]}
+
+> 2 :: Time
+2
+
+> 2 :: Duration
+2
+> 2 <-> 3
+2 <-> 3
+
+
+-- TODO Dynamics
+> ff :: Music.Dynamics.Dynamics
+Average {getAverage = [2.5]}
+
+
+-- TODO Articulation
+> mempty :: Music.Articulation.Articulation
+(Average {getAverage = []},Average {getAverage = []})
+
+-- TODO Part
+> mempty :: Music.Parts.Part
+Piano
+
+> cs :: Music.Pitch.Pitch
+cs
+
+> m3 :: Music.Pitch.Interval
+m3
+
+
+-- TODO Fifths/Cents
+music-suite> 3 :: Music.Pitch.Fifths
+Fifths {getFifths = 3.0 Hz}
+music-suite> 3 :: Music.Pitch.Cents
+Cents {getCents = 3.0 Hz}
+
+-- TODO DiatonicSteps/ChromaticSteps
+> 3  :: DiatonicSteps
+DiatonicSteps {getDiatonicSteps = 3}
+>
+> 3 :: Chromatic
+
+<interactive>:277:6:
+    Not in scope: type constructor or class ‘Chromatic’
+    A data constructor of that name is in scope; did you mean DataKinds?
+> 3 :: ChromaticSteps
+ChromaticSteps {getChromaticSteps = 3}
+> 3 :: Music.Pitch.Octaves
+3
+> 3 :: Music.Pitch.Semitones
+ChromaticSteps {getChromaticSteps = 3}
+> Augment
+Augmentable  Augmented
+> Augmented 2
+Augmented 2
+> third
+3
+> 3 :: Number
+3
+>
+> C :: Name
+C
+
+
+-- TODO showsPrec for sharp
+> sharpen doubleSharp
+sharp * 3
+> sharp * 3
+sharp * 3
+
+-- TODO Bounded instance for Pitch.Name
+
+-- TODO Show instances for meta-types (unnecessary?)
+
+
+
+-}
+
+
 -- Rhythms
 -- Percussion instruments
 -- Scales
@@ -12,6 +292,9 @@ import Control.Lens(set)
 -- Chord sequences
 -- (Hierachical) melodies
 -- Orchestration patterns
+
+
+-- TODO comprehensive export tests, i.e. piano/orchestral scores/quartets/vocal/pop/unusual stuff
 
 -- "infinite" rhytmical and harmonic patterns
 -- Misc 20th century harmony tehcniques
