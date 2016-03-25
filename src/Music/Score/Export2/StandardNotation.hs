@@ -733,10 +733,11 @@ toXml work = do
           Bracket     -> MusicXml.bracket $ mconcat pl
           Brace       -> MusicXml.brace $ mconcat pl
 
-    -- TODO
     -- list outer to inner: stave, bar (music: list of MusicElement)
     music :: [[MusicXml.Music]]
-    music = []
+    music = case staffMusic of
+      []     -> []
+      (x:xs) -> (zipWith (<>) allSystemBarDirections x:xs)
 
     ----
     systemStaffX :: SystemStaff
@@ -746,9 +747,11 @@ toXml work = do
     -- TODO tempo marks
     -- TODO key sigs
     timeSignaturesX :: [MusicXml.Music]
-    timeSignaturesX = fmap expTS $ Data.Maybe.catMaybes $ fmap (^.timeSignature) systemStaffX
+    timeSignaturesX = fmap expTS $ fmap (^.timeSignature) systemStaffX
       where
-        expTS ts =
+        -- TODO recognize common/cut
+        expTS Nothing   = mempty
+        expTS (Just ts) =
           let (ms, n) = Music.Score.getTimeSignature ts
           in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
     -- System bar directions per bar
@@ -761,7 +764,7 @@ toXml work = do
     ----
 
     stavesX :: [Staff]
-    stavesX      = m^..staves.traverse
+    stavesX  = m^..staves.traverse
 
     renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
     renderBarMusic = go
@@ -775,6 +778,18 @@ toXml work = do
 
     setDefaultVoice :: MusicXml.Music -> MusicXml.Music
     setDefaultVoice = MusicXml.setVoice 1
+
+    -- TODO
+    -- list outer to inner: stave, bar (music: list of MusicElement)
+    staffMusic :: [[MusicXml.Music]]
+    staffMusic = fmap renderStaff stavesX
+
+renderStaff :: Staff -> [MusicXml.Music]
+renderStaff st = fmap renderBar (st^.bars)
+
+renderBar :: Bar -> MusicXml.Music
+renderBar = undefined
+
 
 
 {-
