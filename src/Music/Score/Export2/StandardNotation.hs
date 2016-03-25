@@ -1045,8 +1045,9 @@ fromAspects sc = do
     -}
     asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
     asp2ToAsp3 = id
-      . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic . Music.Score.addDynCon)
-      . (over Music.Score.articulations AN.notateArticulation . Music.Score.addArtCon)
+      . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic
+      . Music.Score.addDynCon) . (over Music.Score.articulations AN.notateArticulation
+      . Music.Score.addArtCon)
       -- . fmap2 (over Music.Score.articulation (const ()))
 
     aspectsToChord :: Maybe Asp3 -> Chord
@@ -1088,25 +1089,8 @@ fromAspects sc = do
         return . preview Music.Score.singleMVoice
 
 
--- pcatL :: [Lilypond.Music] -> Lilypond.Music
--- pcatL = pcatL' False
---
--- pcatL' :: Bool -> [Lilypond.Music] -> Lilypond.Music
--- pcatL' p = foldr Lilypond.simultaneous (Lilypond.Simultaneous p [])
---
--- scatL :: [Lilypond.Music] -> Lilypond.Music
--- scatL = foldr Lilypond.sequential (Lilypond.Sequential [])
---
--- spellL :: Integer -> Lilypond.Note
--- spellL a = Lilypond.NotePitch (spellL' a) Nothing
---
--- spellL' :: Integer -> Lilypond.Pitch
--- spellL' p = Lilypond.Pitch (
---   toEnum $ fromIntegral pc,
---   fromIntegral alt,
---   fromIntegral oct
---   )
---   where (pc,alt,oct) = Music.Score.Internal.Export.spellPitch (p + 72)
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 -- Test
 
