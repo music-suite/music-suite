@@ -896,16 +896,12 @@ type Asp1 = (PartT Music.Parts.Part
     (DynamicT Music.Dynamics.Dynamics
       Pitch)))
 
-type Asp1B = (PartT Music.Parts.Part
-  (ArticulationT AN.ArticulationNotation
-    (DynamicT DN.DynamicNotation
-      Pitch)))
-
 -- We require all notes in a chords to have the same kind of ties
 type Asp2 = TieT (PartT Music.Parts.Part
   (ArticulationT Music.Articulation.Articulation
     (DynamicT Music.Dynamics.Dynamics
       [Pitch])))
+
 type Asp3 = TieT (PartT Music.Parts.Part
   (ArticulationT AN.ArticulationNotation
     (DynamicT DN.DynamicNotation
