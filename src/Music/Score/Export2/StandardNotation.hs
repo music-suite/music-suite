@@ -717,7 +717,8 @@ toXml work = do
   let title     = firstMovement^.movementInfo.movementTitle
   let composer  = maybe "" id $ firstMovement^.movementInfo.movementAttribution.at "composer"
   let partList  = movementToPartList firstMovement
-  return $ MusicXml.fromParts title composer partList music
+  return $ MusicXml.fromParts title composer partList (movementToPartwiseXml firstMovement)
+
   where
     movementToPartList :: Movement -> MusicXml.PartList
     movementToPartList m = foldLabelTree f g (m^.staves)
@@ -731,180 +732,161 @@ toXml work = do
           Bracket     -> MusicXml.bracket $ mconcat pl
           Brace       -> MusicXml.brace $ mconcat pl
 
-    -- list outer to inner: stave, bar (music: list of MusicElement)
-    music :: [[MusicXml.Music]]
-    music = case staffMusic of
-      []     -> []
-      (x:xs) -> (zipWith (<>) allSystemBarDirections x:xs)
-
-    ----
-    systemStaffX :: SystemStaff
-    systemStaffX = (undefined :: Movement)^.systemStaff
-    -- TODO bar numbers
-    -- TODO reh marks
-    -- TODO tempo marks
-    -- TODO key sigs
-    -- TODO compound time sigs
-    timeSignaturesX :: [MusicXml.Music]
-    timeSignaturesX = fmap expTS $ fmap (^.timeSignature) systemStaffX
+    movementToPartwiseXml :: Movement -> [[MusicXml.Music]]
+    movementToPartwiseXml movement = music
       where
-        -- TODO recognize common/cut
-        expTS Nothing   = mempty
-        expTS (Just ts) =
-          let (ms, n) = Music.Score.getTimeSignature ts
-          in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
-    -- System bar directions per bar
+        -- list outer to inner: stave, bar (music: list of MusicElement)
+        music :: [[MusicXml.Music]]
+        music = case staffMusic of
+          []     -> []
+          (x:xs) -> (zipWith (<>) allSystemBarDirections x:xs)
 
-    -- Each entry in outer list must be prepended to the FIRST staff (whatever that is)
-    -- We could also prepend it to other staves, but that is reduntant and makes the
-    -- generated XML file much larger.
-    allSystemBarDirections :: [MusicXml.Music]
-    allSystemBarDirections = timeSignaturesX
-    ----
-
-    stavesX :: [Staff]
-    stavesX  = (undefined :: Movement)^..staves.traverse
-
-    renderBarMusic :: Rhythm MusicXml.Music -> MusicXml.Music
-    renderBarMusic = go
-      where
-        go (Beat d x)            = setDefaultVoice x
-        go (Dotted n (Beat d x)) = setDefaultVoice x
-        go (Group rs)            = mconcat $ map renderBarMusic rs
-        go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
+        -- Each entry in outer list must be prepended to the FIRST staff (whatever that is)
+        -- We could also prepend it to other staves, but that is reduntant and makes the
+        -- generated XML file much larger.
+        allSystemBarDirections :: [MusicXml.Music]
+        allSystemBarDirections = timeSignaturesX
           where
-            (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+            -- TODO bar numbers
+            -- TODO reh marks
+            -- TODO tempo marks
+            -- TODO key sigs
+            -- TODO compound time sigs
+            timeSignaturesX :: [MusicXml.Music]
+            timeSignaturesX = fmap expTS $ fmap (^.timeSignature) (movement^.systemStaff)
+              where
+                -- TODO recognize common/cut
+                expTS Nothing   = mempty
+                expTS (Just ts) =
+                  let (ms, n) = Music.Score.getTimeSignature ts
+                  in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
+            -- System bar directions per bar
 
-    setDefaultVoice :: MusicXml.Music -> MusicXml.Music
-    setDefaultVoice = MusicXml.setVoice 1
+        staffMusic :: [[MusicXml.Music]]
+        staffMusic = fmap renderStaff $ movement^..staves.traverse
+          where
+            renderStaff :: Staff -> [MusicXml.Music]
+            renderStaff st = fmap renderBar (st^.bars)
 
-    -- TODO
-    -- list outer to inner: stave, bar (music: list of MusicElement)
-    staffMusic :: [[MusicXml.Music]]
-    staffMusic = fmap renderStaff stavesX
+            renderBar :: Bar -> MusicXml.Music
+            renderBar b = case b^.pitchLayers of
+              _   -> error "Expected one pitch layer"
+              [x] -> renderPL x
 
-renderStaff :: Staff -> [MusicXml.Music]
-renderStaff st = fmap renderBar (st^.bars)
+            renderPL :: Rhythm Chord -> MusicXml.Music
+            renderPL = renderBarMusic . fmap renderC
 
-renderBar :: Bar -> MusicXml.Music
-renderBar b = case b^.pitchLayers of
-  _   -> error "Expected one pitch layer"
-  [x] -> renderPL x
+            renderC ::  Chord -> Duration -> MusicXml.Music
+            renderC ch d = post $ case ch^.pitches of
+              []  -> MusicXml.rest (realToFrac d)
+              [p] -> MusicXml.note (fromPitch p) (realToFrac d)
+              ps  -> MusicXml.chord (fmap fromPitch ps) (realToFrac d)
+              where
+                -- TODO arpeggio, breath, color
+                post = id
+                  . maybe id notateDynamicX (ch^.dynamicNotation)
+                  . maybe id notateArticulationX (ch^.articulationNotation)
+                  . maybe id notateTremolo (ch^.tremoloNotation)
+                  . notateText (ch^.chordText)
+                  . notateHarmonic (ch^.harmonicNotation)
+                  . notateSlide (ch^.slideNotation)
+                  . notateTie (ch^.ties)
 
-renderPL :: Rhythm Chord -> MusicXml.Music
-renderPL = renderBarMusic . fmap renderC
+            renderBarMusic :: Rhythm (Duration -> MusicXml.Music) -> MusicXml.Music
+            renderBarMusic = go
+              where
+                go (Beat d x)            = setDefaultVoice (x d)
+                go (Dotted n (Beat d x)) = setDefaultVoice (x (d * dotMod n))
+                go (Group rs)            = mconcat $ map renderBarMusic rs
+                go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
+                  where
+                    (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
 
-renderC ::  Chord -> Duration -> MusicXml.Music
-renderC ch d = post $ case ch^.pitches of
-  []  -> MusicXml.rest (realToFrac d)
-  [p] -> MusicXml.note (fromPitch p) (realToFrac d)
-  ps  -> MusicXml.chord (fmap fromPitch ps) (realToFrac d)
-  where
-    -- TODO arpeggio, breath, color
-    post = id
-      . maybe id notateDynamicX (ch^.dynamicNotation)
-      . maybe id notateArticulationX (ch^.articulationNotation)
-      . maybe id notateTremolo (ch^.tremoloNotation)
-      . notateText (ch^.chordText)
-      . notateHarmonic (ch^.harmonicNotation)
-      . notateSlide (ch^.slideNotation)
-      . notateTie (ch^.ties)
-
-renderBarMusic :: Rhythm (Duration -> MusicXml.Music) -> MusicXml.Music
-renderBarMusic = go
-  where
-    go (Beat d x)            = setDefaultVoice (x d)
-    go (Dotted n (Beat d x)) = setDefaultVoice (x (d * dotMod n))
-    go (Group rs)            = mconcat $ map renderBarMusic rs
-    go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
-      where
-        (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
-
-setDefaultVoice :: MusicXml.Music -> MusicXml.Music
-setDefaultVoice = MusicXml.setVoice 1
-
-
-notateDynamicX :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
-notateDynamicX (DN.DynamicNotation (crescDims, level))
-  = Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
-  . notateLevel level
-  where
-      notateCrescDim crescDims = case crescDims of
-        DN.NoCrescDim -> id
-        DN.BeginCresc -> (<>) MusicXml.beginCresc
-        DN.EndCresc   -> (<>) MusicXml.endCresc
-        DN.BeginDim   -> (<>) MusicXml.beginDim
-        DN.EndDim     -> (<>) MusicXml.endDim
-
-      -- TODO these literals are not so nice...
-      notateLevel showLevel = case showLevel of
-         Nothing -> id
-         Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL
-          (Just (fixLevel . realToFrac $ lvl), Nothing)))
-
-      fixLevel :: Double -> Double
-      fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
-
-      -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
-      -- rcomposed = composed . reverse
-
-notateArticulationX :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
-notateArticulationX (AN.ArticulationNotation (slurs, marks))
-  = Music.Score.Internal.Util.composed (fmap notateMark marks)
-  . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
-  where
-      notateMark mark = case mark of
-        AN.NoMark         -> id
-        AN.Staccato       -> MusicXml.staccato
-        AN.MoltoStaccato  -> MusicXml.staccatissimo
-        AN.Marcato        -> MusicXml.strongAccent
-        AN.Accent         -> MusicXml.accent
-        AN.Tenuto         -> MusicXml.tenuto
-
-      notateSlur slurs = case slurs of
-        AN.NoSlur    -> id
-        AN.BeginSlur -> MusicXml.beginSlur
-        AN.EndSlur   -> MusicXml.endSlur
-
-notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
-notateTremolo n = case n of
-  BeamedTremolo 0 -> id
-  BeamedTremolo n -> MusicXml.tremolo (fromIntegral n)
-  -- TODO optionally use z cross-beam
-  UnmeasuredTremolo -> MusicXml.tremolo 3
-
-notateText :: [String] -> MusicXml.Music -> MusicXml.Music
-notateText texts a = mconcat (fmap MusicXml.text texts) <> a
+            setDefaultVoice :: MusicXml.Music -> MusicXml.Music
+            setDefaultVoice = MusicXml.setVoice 1
 
 
-notateHarmonic :: HarmonicNotation -> MusicXml.Music -> MusicXml.Music
-notateHarmonic (Any isNat, Sum n) = notate isNat n
-  where
-      notate _     0 = id
-      notate True  n = notateNatural n
-      notate False n = notateArtificial n
+            notateDynamicX :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
+            notateDynamicX (DN.DynamicNotation (crescDims, level))
+              = Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
+              . notateLevel level
+              where
+                  notateCrescDim crescDims = case crescDims of
+                    DN.NoCrescDim -> id
+                    DN.BeginCresc -> (<>) MusicXml.beginCresc
+                    DN.EndCresc   -> (<>) MusicXml.endCresc
+                    DN.BeginDim   -> (<>) MusicXml.beginDim
+                    DN.EndDim     -> (<>) MusicXml.endDim
 
-      -- notateNatural n = Xml.harmonic -- openString?
-      notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
-      -- Most programs do not recognize the harmonic tag
-      -- We set a single diamond notehead instead, which can be manually replaced
-      notateArtificial n = id -- TODO
+                  -- TODO these literals are not so nice...
+                  notateLevel showLevel = case showLevel of
+                     Nothing -> id
+                     Just lvl -> (<>) $ MusicXml.dynamic (fromDynamics (DynamicsL
+                      (Just (fixLevel . realToFrac $ lvl), Nothing)))
 
-notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
-notateSlide ((eg,es),(bg,bs)) = notate
-  where
-      notate = neg . nes . nbg . nbs
-      neg    = if getAny eg then MusicXml.endGliss else id
-      nes    = if getAny es then MusicXml.endSlide else id
-      nbg    = if getAny bg then MusicXml.beginGliss else id
-      nbs    = if getAny bs then MusicXml.beginSlide else id
+                  fixLevel :: Double -> Double
+                  fixLevel x = fromIntegral (round (x - 0.5)) + 0.5
 
-notateTie :: Ties -> MusicXml.Music -> MusicXml.Music
-notateTie (Any ta, Any tb)
-  | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
-  | tb        = MusicXml.beginTie
-  | ta        = MusicXml.endTie
-  | otherwise = id
+                  -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
+                  -- rcomposed = composed . reverse
+
+            notateArticulationX :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
+            notateArticulationX (AN.ArticulationNotation (slurs, marks))
+              = Music.Score.Internal.Util.composed (fmap notateMark marks)
+              . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
+              where
+                  notateMark mark = case mark of
+                    AN.NoMark         -> id
+                    AN.Staccato       -> MusicXml.staccato
+                    AN.MoltoStaccato  -> MusicXml.staccatissimo
+                    AN.Marcato        -> MusicXml.strongAccent
+                    AN.Accent         -> MusicXml.accent
+                    AN.Tenuto         -> MusicXml.tenuto
+
+                  notateSlur slurs = case slurs of
+                    AN.NoSlur    -> id
+                    AN.BeginSlur -> MusicXml.beginSlur
+                    AN.EndSlur   -> MusicXml.endSlur
+
+            notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
+            notateTremolo n = case n of
+              BeamedTremolo 0 -> id
+              BeamedTremolo n -> MusicXml.tremolo (fromIntegral n)
+              -- TODO optionally use z cross-beam
+              UnmeasuredTremolo -> MusicXml.tremolo 3
+
+            notateText :: [String] -> MusicXml.Music -> MusicXml.Music
+            notateText texts a = mconcat (fmap MusicXml.text texts) <> a
+
+
+            notateHarmonic :: HarmonicNotation -> MusicXml.Music -> MusicXml.Music
+            notateHarmonic (Any isNat, Sum n) = notate isNat n
+              where
+                  notate _     0 = id
+                  notate True  n = notateNatural n
+                  notate False n = notateArtificial n
+
+                  -- notateNatural n = Xml.harmonic -- openString?
+                  notateNatural n = MusicXml.setNoteHead MusicXml.DiamondNoteHead
+                  -- Most programs do not recognize the harmonic tag
+                  -- We set a single diamond notehead instead, which can be manually replaced
+                  notateArtificial n = id -- TODO
+
+            notateSlide :: SlideNotation -> MusicXml.Music -> MusicXml.Music
+            notateSlide ((eg,es),(bg,bs)) = notate
+              where
+                  notate = neg . nes . nbg . nbs
+                  neg    = if getAny eg then MusicXml.endGliss else id
+                  nes    = if getAny es then MusicXml.endSlide else id
+                  nbg    = if getAny bg then MusicXml.beginGliss else id
+                  nbs    = if getAny bs then MusicXml.beginSlide else id
+
+            notateTie :: Ties -> MusicXml.Music -> MusicXml.Music
+            notateTie (Any ta, Any tb)
+              | ta && tb  = MusicXml.beginTie . MusicXml.endTie -- TODO flip order?
+              | tb        = MusicXml.beginTie
+              | ta        = MusicXml.endTie
+              | otherwise = id
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1091,6 +1073,7 @@ test = runENoLog $ toLy $
       ])]
 
 test2 x = runENoLog $ toLy =<< fromAspects x
+
 test3 x = do
   let r = test2 x
   case r of
@@ -1100,3 +1083,5 @@ test3 x = do
       -- putStrLn ly2
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
+
+test4 x = runENoLog $ toXml =<< fromAspects x
