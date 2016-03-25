@@ -4,6 +4,29 @@
 import Music.Prelude
 import Control.Lens(set)
 
+-- Rhythms
+-- Percussion instruments
+-- Scales
+-- Chords
+-- Bass lines
+-- Chord sequences
+-- (Hierachical) melodies
+-- Orchestration patterns
+
+-- "infinite" rhytmical and harmonic patterns
+-- Misc 20th century harmony tehcniques
+
+-- Voice separation, part extraction
+-- I.e. string divisions (a la Mist)
+
+-- Hierarchical/inexact melody, variation
+
+-- Counterpoint
+
+-- Converting scores to more restricted forms and back
+-- Using the monoid instances of score/voice
+
+
 -- music-suite/test/legacy-music-files/articulation_all_accents.music
 articulation_all_accents :: Music
 articulation_all_accents =
