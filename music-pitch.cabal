@@ -32,7 +32,8 @@ library
                         nats,
                         positive                >= 0.4      && < 1,
                         type-unary              >= 0.2.16   && < 1.0,
-                        aeson                   >= 0.7.0.6  && < 1
+                        aeson                   >= 0.7.0.6  && < 1,
+                        modular-arithmetic
     exposed-modules:    Music.Pitch
                         Music.Pitch.Absolute
                         Music.Pitch.Equal
