@@ -22,7 +22,7 @@ module Music.Pitch.Literal.Interval (
         IntervalL(..),
 
         -- * Literal values
-        
+
         -- ** Simple intervals
         d1,  _P1,  _A1,
         d2,   m2,  _M2,  _A2,
@@ -51,6 +51,8 @@ import           Data.Fixed
 import           Data.Ratio
 import           Data.Semigroup
 import           Data.Word
+
+import Music.Pitch.Common.Types
 
 newtype IntervalL = IntervalL (Integer, Integer, Integer)
 -- (octaves, diatonic steps, chromatic steps)
