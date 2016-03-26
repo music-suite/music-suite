@@ -1,9 +1,16 @@
 
-{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeFamilies #-}
 
-import Music.Prelude
+import Data.Functor.Identity(Identity(..))
 import Control.Lens(set)
 
+import Music.Prelude
+import qualified Music.Pitch
+import qualified Music.Parts
+import qualified Music.Dynamics
+import qualified Music.Articulation
+import qualified Music.Score
+import Music.Score.Export2.StandardNotation(fromAspects, E, Work, runENoLog)
 -- Pitch and interval literals
 
 {-
@@ -758,6 +765,110 @@ chopin_etude = music
       (13/2),e)^.event]^.score
 
     music = timeSignature (3/4) $ lh <> rh
+
+-- aspects_basic
+
+
+type PitchOf a          = Music.Score.Pitch a
+type P a                = Music.Score.Pitch a
+type PartOf a           = Music.Score.Part a
+type R a                = Music.Score.Part a
+type DynamicOf a        = Music.Score.Dynamic a
+type D a                = Music.Score.Dynamic a
+type ArticulationOf a   = Music.Score.Articulation a
+type A a                = Music.Score.Articulation a
+
+
+toAspects ::
+  ( IsPitch b
+  , HasPitches a a
+  , HasPart a a
+  , HasPart b b
+  , HasArticulation a a
+  , HasArticulation b b
+  , HasDynamic a a
+  , HasDynamic b b
+  , PartOf b         ~ PartOf a
+  , ArticulationOf b ~ ArticulationOf a
+  , DynamicOf b      ~ DynamicOf a
+  , PitchOf a        ~ Pitch
+  , Functor f
+  ) =>
+    f a -> f b
+toAspects = fmap toAspects1
+
+toAspects1 ::
+  ( IsPitch b
+  , HasPitches a a
+  , HasPart a a
+  , HasPart b b
+  , HasArticulation a a
+  , HasArticulation b b
+  , HasDynamic a a
+  , HasDynamic b b
+  , PartOf b         ~ PartOf a
+  , ArticulationOf b ~ ArticulationOf a
+  , DynamicOf b      ~ DynamicOf a
+  , PitchOf a        ~ Pitch
+  ) =>
+     a -> b
+toAspects1 x = set part' r $ set articulation' a $ set dynamic' d $ fromPitch p
+  where
+    p = x^?!pitches
+    d = x^.dynamic
+    a = x^.articulation
+    r = x^.part
+
+
+
+toStandardNotation ::
+  ( HasPitches a a
+  , HasPart a a
+  , HasArticulation a a
+  , HasDynamic a a
+  , PartOf a         ~ Part
+  , ArticulationOf a ~ Articulation
+  , DynamicOf a      ~ Dynamics
+  , PitchOf a        ~ Pitch
+  -- TODO suitable restriction on f (need @f a -> Score a@), i.e. @Score a@, @Voice a@, @Identity a@.
+  , HasScore f
+  ) =>
+    f a -> E Work
+toStandardNotation = fromAspects  . toAspects . toScore
+
+class (Functor f) => HasScore f where
+  toScore :: f a -> Score a
+instance HasScore Score where
+  toScore = id
+instance HasScore Voice where
+  toScore = voiceToScore
+instance HasScore Note where
+  toScore = voiceToScore . noteToVoice
+instance HasScore Event where
+  toScore = eventToScore
+instance HasScore Identity where
+  toScore (Identity x) = return x
+
+voiceToScore :: Voice a -> Score a
+voiceToScore = renderAlignedVoice . aligned 0 0 :: Voice a -> Score a
+noteToVoice :: Note a -> Voice a
+noteToVoice = view voice . pure
+eventToScore :: Event a -> Score a
+eventToScore = view score . pure
+
+testAll = do
+  runENoLog $ toStandardNotation (c :: Voice StandardNote)
+  runENoLog $ toStandardNotation (c :: Note StandardNote)
+  runENoLog $ toStandardNotation (c :: Score StandardNote)
+
+  -- TODO something like this still not possible
+  -- TODO test this with records too!
+  -- Probably requires FlexibleInstances (as in the Inspectable module)
+
+  -- runENoLog $ toStandardNotation (c :: Voice Pitch)
+  -- runENoLog $ toStandardNotation (c :: Voice Pitch)
+
+
 
 -- music-suite/test/legacy-music-files/voice_single.music
 -- voice_single =
