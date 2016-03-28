@@ -25,7 +25,7 @@ module Music.Score.Phrases (
     pVoiceTVoice,
     unsafeMVoicePVoice,
     singleMVoice,
-    oldSingleMVoice,
+    -- oldSingleMVoice,
     mapPhrasesWithPrevAndCurrentOnset,
   ) where
 
