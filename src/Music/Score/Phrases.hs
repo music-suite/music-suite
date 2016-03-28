@@ -115,8 +115,8 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   mvoices = from unsafeMVoicePVoice
 
 -- | Traverses all phrases in each voice, using 'extracted'.
-instance (HasPart' a, Ord (Part a)) => HasPhrases (Score a) (Score b) a b where
-  mvoices = extracted . each . oldSingleMVoice
+-- instance (HasPart' a, Ord (Part a)) => HasPhrases (Score a) (Score b) a b where
+  -- mvoices = extracted . each . oldSingleMVoice
 {-
 FIXME Should be written like this, above instance to be phased out!
 

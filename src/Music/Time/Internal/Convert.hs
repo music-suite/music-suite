@@ -25,7 +25,7 @@
 -------------------------------------------------------------------------------------
 
 module Music.Time.Internal.Convert (
-        scoreToVoice,
+        -- scoreToVoice,
         reactiveToVoice'
   ) where
 
@@ -54,23 +54,22 @@ reactiveToVoice' (view onsetAndOffset -> (u,v)) r = (^. voice) $ fmap (^. note) 
         durs  = toRelativeTimeN' v times
 {-# DEPRECATED reactiveToVoice' "" #-}
 
--- |
--- Convert a score to a voice. Fails if the score contain overlapping events.
---
-scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
-scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. triples)
-    where
-       throwTime (t,d,x) = (d,x)
-       addRests = concat . snd . mapAccumL g 0
-           where
-               g u (t, d, x)
-                   | u == t    = (t .+^ d, [(t, d, Just x)])
-                   | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-                   | otherwise = error "scoreToVoice: StonsetAndOffset prevTime"
-{-# DEPRECATED scoreToVoice "" #-}
+-- -- |
+-- -- Convert a score to a voice. Fails if the score contain overlapping events.
+-- --
+-- scoreToVoice :: Transformable a => Score a -> Voice (Maybe a)
+-- scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests . (^. triples)
+--     where
+--        throwTime (t,d,x) = (d,x)
+--        addRests = concat . snd . mapAccumL g 0
+--            where
+--                g u (t, d, x)
+--                    | u == t    = (t .+^ d, [(t, d, Just x)])
+--                    | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+--                    | otherwise = error "scoreToVoice: StonsetAndOffset prevTime"
+-- {-# DEPRECATED scoreToVoice "" #-}
 
 {-
 voiceToScore :: Voice a -> Score a
 voiceToScore = renderAlignedVoice . aligned (0 :: Time) (0 :: LocalDuration)
 -}
-

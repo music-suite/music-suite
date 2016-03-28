@@ -22,7 +22,7 @@ module Music.Score.Internal.Export (
         -- separateBars,
         spellPitch,
         MVoice,
-        toMVoice,
+        -- toMVoice,
         unvoice,
         openCommand
           ) where
@@ -74,10 +74,10 @@ import           System.Process
 
 extractTimeSignatures :: Score a -> ([Maybe TimeSignature], [Duration])
 extractTimeSignatures score = (barTimeSignatures, barDurations)
-  where                                          
+  where
     defaultTimeSignature = time 4 4
-    timeSignatures = fmap swap 
-      $ view pairs . fuse . reactiveToVoice' (0 <-> (score^.offset)) 
+    timeSignatures = fmap swap
+      $ view pairs . fuse . reactiveToVoice' (0 <-> (score^.offset))
       $ getTimeSignatures defaultTimeSignature score
 
     -- Despite the fuse above we need retainUpdates here to prevent redundant repetition of time signatures
@@ -112,8 +112,8 @@ spellPitch p = (
 
 type MVoice a = Voice (Maybe a)
 
-toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
-toMVoice = scoreToVoice . simultaneous
+-- toMVoice :: (Semigroup a, Transformable a) => Score a -> MVoice a
+-- toMVoice = scoreToVoice . simultaneous
 
 unvoice :: Voice b -> [(Duration, b)]
 unvoice = toListOf (notes . traverse . from note)
