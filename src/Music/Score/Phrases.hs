@@ -187,31 +187,6 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     phraseToVoice :: Phrase a -> MVoice a
     phraseToVoice = fmap Just
 
--- TODO unsafe, phase out
--- oldSingleMVoice :: Iso (Score a) (Score b) (MVoice a) (MVoice b)
--- oldSingleMVoice = iso scoreToVoice voiceToScore'
---   where
---     scoreToVoice :: Score a -> MVoice a
---     scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
---       -- TODO
---       List.sortBy (comparing (^._1))
---       -- end TODO
---       . (^. triples)
---       where
---         throwTime (t,d,x) = (d,x)
---         addRests = concat . snd . List.mapAccumL g 0
---           where
---             g u (t, d, x)
---               | u == t    = (t .+^ d, [(t, d, Just x)])
---               | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
---               | otherwise = error "oldSingleMVoice: Strange prevTime"
---
---     voiceToScore :: Voice a -> Score a
---     voiceToScore = renderAlignedVoice . aligned 0 0
---
---     voiceToScore' :: MVoice b -> Score b
---     voiceToScore' = mcatMaybes . voiceToScore
-
 singleMVoice :: (a ~ b) => Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = prism' voiceToScore' scoreToVoice
   where

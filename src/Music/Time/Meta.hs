@@ -37,6 +37,7 @@ module Music.Time.Meta (
         setMetaAttr,
         setMetaTAttr,
         preserveMeta,
+        preserveMetaF,
 
         -- ** Add meta-data to arbitrary types
         AddMeta,
@@ -200,6 +201,10 @@ setMetaTAttr a = applyMeta (wrapTMeta a)
 preserveMeta :: (HasMeta a, HasMeta b) => (a -> b) -> a -> b
 preserveMeta f x = let m = view meta x in set meta m (f x)
 
+-- | Apply a function without affecting meta-data.
+preserveMetaF :: (HasMeta a, HasMeta b, Functor f) => (a -> f b) -> a -> f b
+preserveMetaF f x = let m = view meta x in fmap (set meta m) (f x)
+
 -- |
 -- Annotate an arbitrary type with meta-data, preserving instances of
 -- all common type classes. In particular 'Functor' and 'Applicative' is lifted and
@@ -302,4 +307,3 @@ extracted = iso extract pure
 
 extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
 extractedRep = iso extractRep pureRep
-
