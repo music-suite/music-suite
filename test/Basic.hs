@@ -1,5 +1,6 @@
 
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeFamilies
+  , QuasiQuotes, DataKinds, MultiParamTypeClasses #-}
 
 import Data.Functor.Identity(Identity(..))
 import Control.Lens(set)
@@ -11,6 +12,9 @@ import qualified Music.Dynamics
 import qualified Music.Articulation
 import qualified Music.Score
 import Music.Score.Export2.StandardNotation(fromAspects, E, Work, runENoLog)
+
+import Record(r, l)
+import Record.Types -- TODO import list
 -- Pitch and interval literals
 
 {-
@@ -864,10 +868,81 @@ noteToVoice = view voice . pure
 eventToScore :: Event a -> Score a
 eventToScore = view score . pure
 
+
+
+-- type Mus = [r|
+--   { pitch        :: Pitch
+--   , dynamic      :: Dynamics
+--   , articulation :: Articulation
+--   , part         :: Part
+--   }|]
+type Mus = Record4
+  "pitch"        Pitch
+  "dynamic"      Dynamics
+  "articulation" Articulation
+  "part"         Part
+
+-- TODO qualify to assure fields in correct order
+type instance
+  Music.Score.Pitch        (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v1
+type instance
+  Music.Score.Dynamic      (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v2
+type instance
+  Music.Score.Articulation (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v3
+type instance
+  Music.Score.Part         (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v4
+type instance
+  Music.Score.SetPitch  v1' (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = (Record4 n1 v1' n2 v2 n3 v3 n4 v4)
+type instance
+  Music.Score.SetDynamic  v2' (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = (Record4 n1 v1 n2 v2' n3 v3 n4 v4)
+type instance
+  Music.Score.SetArticulation  v3' (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = (Record4 n1 v1 n2 v2 n3 v3' n4 v4)
+type instance
+  Music.Score.SetPart  v4' (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = (Record4 n1 v1 n2 v2 n3 v3 n4 v4')
+
+instance (Transformable v1, Transformable v1', n1 ~ "pitch") => HasPitches
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1' n2 v2 n3 v3 n4 v4) where
+  pitches = [l|pitch|]
+instance (Transformable v2, Transformable v2', n2 ~ "dynamic") => HasDynamics
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2' n3 v3 n4 v4) where
+  dynamics = [l|dynamic|]
+instance (Transformable v3, Transformable v3', n3 ~ "articulation") => HasArticulations
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2 n3 v3' n4 v4) where
+  articulations = [l|articulation|]
+instance (Transformable v4, Transformable v4', n4 ~ "part") => HasParts
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4') where
+  parts = [l|part|]
+instance (Transformable v1, Transformable v1', n1 ~ "pitch") => HasPitch
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1' n2 v2 n3 v3 n4 v4) where
+  pitch = [l|pitch|]
+instance (Transformable v2, Transformable v2', n2 ~ "dynamic") => HasDynamic
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2' n3 v3 n4 v4) where
+  dynamic = [l|dynamic|]
+instance (Transformable v3, Transformable v3', n3 ~ "articulation") => HasArticulation
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2 n3 v3' n4 v4) where
+  articulation = [l|articulation|]
+instance (Transformable v4, Transformable v4', n4 ~ "part") => HasPart
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4)
+  (Record4 n1 v1 n2 v2 n3 v3 n4 v4') where
+  part = [l|part|]
+instance (IsPitch v1, Monoid v2, Monoid v3, Monoid v4) => IsPitch (Record4  n1 v1 n2 v2 n3 v3 n4 v4)
+  where
+    fromPitch p = Record4 (fromPitch p) mempty mempty mempty
+
 testAll = do
   runENoLog $ toStandardNotation (c :: Voice StandardNote)
   runENoLog $ toStandardNotation (c :: Note StandardNote)
   runENoLog $ toStandardNotation (c :: Score StandardNote)
+
+
+  runENoLog $ toStandardNotation (c :: Score Mus)
 
   -- TODO something like this still not possible
   -- TODO test this with records too!

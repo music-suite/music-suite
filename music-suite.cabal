@@ -46,6 +46,7 @@ library
                         music-dynamics          == 1.9.2,
                         music-articulation      == 1.9.2,
                         music-parts             == 1.9.2,
+                        record,
                         async
     if !os(windows)
       build-depends:    unix
@@ -88,6 +89,7 @@ test-suite "music-suite-test-basic"
                         semigroups,
                         comonad,
                         lens,
+                        record,
                         music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
     type:               exitcode-stdio-1.0
     main-is:            Basic.hs
