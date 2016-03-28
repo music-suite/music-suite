@@ -1012,10 +1012,13 @@ fromAspects sc = do
     -}
     asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
     asp2ToAsp3 = id
-      . (DN.removeCloseDynMarks . over Music.Score.dynamics DN.notateDynamic
-      . Music.Score.addDynCon) . (over Music.Score.articulations AN.notateArticulation
-      . Music.Score.addArtCon)
-      -- . fmap2 (over Music.Score.articulation (const ()))
+      . ( DN.removeCloseDynMarks
+        . over Music.Score.dynamics DN.notateDynamic
+        . Music.Score.addDynCon
+        )
+      . ( over Music.Score.articulations AN.notateArticulation
+        . Music.Score.addArtCon
+        )
 
     aspectsToChord :: Maybe Asp3 -> Chord
     aspectsToChord Nothing    = mempty
