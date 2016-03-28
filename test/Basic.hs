@@ -870,7 +870,7 @@ eventToScore = view score . pure
 
 
 
-type Mus = [r|
+type PitchDynamicArticulationPart = [r|
   { pitch        :: Pitch
   , dynamic      :: Dynamics
   , articulation :: Articulation
@@ -882,9 +882,54 @@ type Mus = [r|
 --   "part"         Part
 --   "pitch"        Pitch
 
+{-
+The following instances should look in alphabetical order, i.e.
+
+(articulation, dynamic, part, pitch)
+
+(dynamic, part, pitch)
+(articulation, part, pitch)
+(articulation, dynamic, pitch)
+(articulation, dynamic, part)
+
+(part, pitch)
+(dynamic, pitch)
+(dynamic, part)
+(articulation, pitch)
+(articulation, part)
+(articulation, dynamic)
+
+-- TODO all in all this forces us to define
+  (12+12+8)*2=64 HasT instances AND
+  (12+12+8)*2=64 T/SetT instances
+
+Below example defines the 4-tuple case and part of the 3-tuple case (ca 20 out of 128 instances)
+-}
+
+-- TOOD allow both dynamic and articulation in 1st pos
+type instance
+  Music.Score.Articulation        (Record3 "articulation" v1 n2 v2 n3 v3) = v1
+type instance
+  Music.Score.SetArticulation  v1' (Record3 "articulation" v1 n2 v2 n3 v3) = (Record3 "articulation" v1' n2 v2 n3 v3)
+instance (Transformable v1, Transformable v1', n1 ~ "articulation") => HasArticulations
+  (Record3 n1 v1 n2 v2 n3 v3)
+  (Record3 n1 v1' n2 v2 n3 v3) where
+  articulations = [l|articulation|]
+
+type instance
+  Music.Score.Dynamic        (Record3 "dynamic" v1 n2 v2 n3 v3) = v1
+type instance
+  Music.Score.SetDynamic  v1' (Record3 "dynamic" v1 n2 v2 n3 v3) = (Record3 "dynamic" v1' n2 v2 n3 v3)
+instance (Transformable v1, Transformable v1', n1 ~ "dynamic") => HasDynamics
+  (Record3 n1 v1 n2 v2 n3 v3)
+  (Record3 n1 v1' n2 v2 n3 v3) where
+  dynamics = [l|dynamic|]
+
+
+
 -- TODO qualify to assure fields in correct order
 type instance
-  Music.Score.Articulation        (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v1
+  Music.Score.Articulation        (Record4 "articulation" v1 n2 v2 n3 v3 n4 v4) = v1
 type instance
   Music.Score.Dynamic      (Record4 n1 v1 n2 v2 n3 v3 n4 v4) = v2
 type instance
@@ -939,12 +984,21 @@ instance (IsPitch v4, Monoid v2, Monoid v3, Monoid v1) => IsPitch (Record4  n1 v
     fromPitch p = Record4 mempty mempty mempty (fromPitch p)
 
 testAll = do
-  runENoLog $ toStandardNotation (c :: Voice StandardNote)
-  runENoLog $ toStandardNotation (c :: Note StandardNote)
-  runENoLog $ toStandardNotation (c :: Score StandardNote)
+  pure $ runENoLog $ toStandardNotation (c :: Voice StandardNote)
+  pure $ runENoLog $ toStandardNotation (c :: Note StandardNote)
+  pure $ runENoLog $ toStandardNotation (c :: Score StandardNote)
+  pure $ runENoLog $ toStandardNotation (c :: Score PitchDynamicArticulationPart)
 
+  print $ runENoLog $ toStandardNotation $
+    [ (0 <-> 2, [r|{ pitch = c, dynamic = pp, articulation = mempty, part = violins}|] )^.event
+    , (0 <-> 2, [r|{ pitch = e, dynamic = pp, articulation = mempty, part = violins}|] )^.event
+    , (0 <-> 2, [r|{ pitch = g, dynamic = pp, articulation = mempty, part = violins}|] )^.event
+    , (0 <-> 2, [r|{ pitch = d, dynamic = pp, articulation = mempty, part = violins}|] )^.event
+    , (0 <-> 2, [r|{ pitch = f, dynamic = pp, articulation = mempty, part = violins}|] )^.event
+    , (2 <-> 4, [r|{ pitch = a, dynamic = pp, articulation = mempty, part = violins}|] )^.event
 
-  runENoLog $ toStandardNotation (c :: Score Mus)
+    , (1 <-> 2, [r|{ pitch = b, dynamic = pp, articulation = mempty, part = violas}|] )^.event
+    ]^.score
 
   -- TODO something like this still not possible
   -- TODO test this with records too!
@@ -969,5 +1023,5 @@ testAll = do
 --
 --   in stretch (1/8) $ view (re singleMVoice) . fmap Just $ y
 
-
-main = return ()
+main = testAll
+-- main = return ()
