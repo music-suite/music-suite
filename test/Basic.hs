@@ -11,7 +11,7 @@ import qualified Music.Parts
 import qualified Music.Dynamics
 import qualified Music.Articulation
 import qualified Music.Score
-import Music.Score.Export2.StandardNotation(fromAspects, E, Work, runENoLog)
+import Music.Score.Export2.StandardNotation(fromAspects, Work, PureExportM, runPureExportMNoLog)
 
 import Record(r, l)
 import Record.Types -- TODO import list
@@ -105,6 +105,11 @@ Just (-1)
 -- Rename the Music.Pitch.Equal(Equal) to something better
 -- Doc Music.Pitch.Clef(positionPitch ...)
 
+-- TODO generic ambitus/chord (w o time)/scale
+-- Solve chord naming dilemma
+
+
+-- TODO basic rhythm library (use tree representation)
 
 
 
@@ -833,7 +838,7 @@ toStandardNotation ::
   -- TODO suitable restriction on f (need @f a -> Score a@), i.e. @Score a@, @Voice a@, @Identity a@.
   , HasScore f
   ) =>
-    f a -> E Work
+    f a -> PureExportM Work
 toStandardNotation = fromAspects  . toAspects . toScore
 
 class (Functor f) => HasScore f where
@@ -972,12 +977,12 @@ instance (IsPitch v4, Monoid v2, Monoid v3, Monoid v1) => IsPitch (Record4  n1 v
     fromPitch p = Record4 mempty mempty mempty (fromPitch p)
 
 testAll = do
-  pure $ runENoLog $ toStandardNotation (c :: Voice StandardNote)
-  pure $ runENoLog $ toStandardNotation (c :: Note StandardNote)
-  pure $ runENoLog $ toStandardNotation (c :: Score StandardNote)
-  pure $ runENoLog $ toStandardNotation (c :: Score PitchDynamicArticulationPart)
+  pure $ runPureExportMNoLog $ toStandardNotation (c :: Voice StandardNote)
+  pure $ runPureExportMNoLog $ toStandardNotation (c :: Note StandardNote)
+  pure $ runPureExportMNoLog $ toStandardNotation (c :: Score StandardNote)
+  pure $ runPureExportMNoLog $ toStandardNotation (c :: Score PitchDynamicArticulationPart)
 
-  print $ runENoLog $ toStandardNotation $
+  print $ runPureExportMNoLog $ toStandardNotation $
     [ (0 <-> 2, [r|{ pitch = c, dynamic = pp, articulation = mempty, part = violins}|] )^.event
     , (0 <-> 2, [r|{ pitch = e, dynamic = pp, articulation = mempty, part = violins}|] )^.event
     , (0 <-> 2, [r|{ pitch = g, dynamic = pp, articulation = mempty, part = violins}|] )^.event
@@ -992,8 +997,8 @@ testAll = do
   -- TODO test this with records too!
   -- Probably requires FlexibleInstances (as in the Inspectable module)
 
-  -- runENoLog $ toStandardNotation (c :: Voice Pitch)
-  -- runENoLog $ toStandardNotation (c :: Voice Pitch)
+  -- runPureExportMNoLog $ toStandardNotation (c :: Voice Pitch)
+  -- runPureExportMNoLog $ toStandardNotation (c :: Voice Pitch)
 
 
 
