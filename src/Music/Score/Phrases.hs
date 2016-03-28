@@ -180,7 +180,7 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
 -- TODO unsafe, phase out
 oldSingleMVoice :: Iso (Score a) (Score b) (MVoice a) (MVoice b)
 oldSingleMVoice = iso scoreToVoice voiceToScore'
-  where    
+  where
     scoreToVoice :: Score a -> MVoice a
     scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
       -- TODO
@@ -204,7 +204,7 @@ oldSingleMVoice = iso scoreToVoice voiceToScore'
 
 singleMVoice :: (a ~ b) => Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = prism' voiceToScore' scoreToVoice
-  where    
+  where
     voiceToScore :: Voice a -> Score a
     voiceToScore = renderAlignedVoice . aligned 0 0
 

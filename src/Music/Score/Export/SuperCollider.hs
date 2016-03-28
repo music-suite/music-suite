@@ -28,7 +28,7 @@
 --
 -- A backend to generate SuperCollider code.
 --
--- This is a very simple thing that generates /patterns/ (which are basically lazy event 
+-- This is a very simple thing that generates /patterns/ (which are basically lazy event
 -- lists) in the SuperCollider language.
 --
 -- It would of course also be nice to have a backend based the Haskell bindings (see
@@ -116,10 +116,10 @@ instance HasBackend SuperCollider where
   type BackendMusic   SuperCollider    = String
 
   finalizeExport _ (ScScore trs) = composeTracksInParallel $ map exportTrack trs
-    where        
+    where
       composeTracksInParallel :: [String] -> String
       composeTracksInParallel = (\x -> "Ppar([" ++ x ++ "])") . Data.List.intercalate ", "
-      
+
       exportTrack :: [(Duration, Maybe ScEvent)] -> String
       exportTrack triples = "Pbind("
         ++ "\\dur, Pseq(" ++ show durs ++ ")"
@@ -127,10 +127,10 @@ instance HasBackend SuperCollider where
         ++ "\\midinote, Pseq(" ++ showRestList pitches ++ ")"
         ++ ")"
         where
-          showRestList = (\x -> "[" ++ x ++ "]") 
-            . Data.List.intercalate ", " 
-            . map (maybe "\\rest" show) 
-  
+          showRestList = (\x -> "[" ++ x ++ "]")
+            . Data.List.intercalate ", "
+            . map (maybe "\\rest" show)
+
           -- triples :: ScEvent
           durs    :: [Double]
           pitches :: [Maybe Double]
@@ -138,17 +138,17 @@ instance HasBackend SuperCollider where
           durs    = map (realToFrac . fst) triples
           pitches = map (fmap fst . snd) triples
           ampls   = map (fmap snd . snd) triples
-          
+
 
 instance () => HasBackendScore SuperCollider (Voice (Maybe a)) where
   type BackendScoreEvent SuperCollider (Voice (Maybe a)) = a
   exportScore _ xs = Identity <$> ScScore [view pairs xs]
 
-instance (HasPart' a, Ord (Part a)) => HasBackendScore SuperCollider (Score a) where
-  type BackendScoreEvent SuperCollider (Score a) = a
-  exportScore b = mconcat
-    . map (exportScore b . view oldSingleMVoice)
-    . extractParts
+-- instance (HasPart' a, Ord (Part a)) => HasBackendScore SuperCollider (Score a) where
+--   type BackendScoreEvent SuperCollider (Score a) = a
+--   exportScore b = mconcat
+--     . map (exportScore b . view oldSingleMVoice)
+--     . extractParts
   
 instance HasBackendNote SuperCollider a => HasBackendNote SuperCollider [a] where
   exportNote b ps = head $ map (exportNote b) $ sequenceA ps
@@ -225,4 +225,3 @@ writeSuperCollider path score =
 --
 openSuperCollider :: HasSuperCollider a => a -> IO ()
 openSuperCollider = writeSuperCollider "test.sc"
-
