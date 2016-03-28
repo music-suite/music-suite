@@ -85,6 +85,8 @@ module Music.Score.Export2.StandardNotation
   , workInfo
   , movements
 
+  -- * MonadLog
+  , MonadLog(..)
   -- * Pure export monad
   , PureExportM
   , runPureExportMNoLog
@@ -123,7 +125,7 @@ import qualified Data.List
 import qualified Data.Map
 import qualified Data.List.Split
 import qualified Data.Maybe
-import Data.Bifunctor(bimap, first, second)
+import           Data.Bifunctor                          (bimap, first, second)
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
 import           Data.Semigroup
@@ -131,12 +133,14 @@ import           Data.Traversable                        (Traversable)
 import qualified Data.Traversable
 import           Data.VectorSpace                        hiding (Sum)
 import qualified Music.Articulation
+import           Music.Articulation                      (Articulation)
 import qualified Music.Dynamics
+import           Music.Dynamics                          (Dynamics)
 import           Music.Dynamics.Literal                  (DynamicsL(..), fromDynamics)
-import           Music.Parts                             (Group (..))
+import           Music.Parts                             (Group (..), Part)
 import qualified Music.Parts
 import qualified Music.Pitch
-import qualified Music.Pitch
+import           Music.Pitch                             (Pitch)
 import qualified Music.Pitch.Literal
 import           Music.Pitch.Literal                     (fromPitch)
 import           Music.Score                             (MVoice)
@@ -216,22 +220,22 @@ type TempoMark              = Music.Score.Meta.Tempo.Tempo
 data BracketType            = NoBracket | Bracket | Brace | Subbracket
   deriving (Eq, Ord, Show)
 
-type SpecialBarline         = () -- TODO
+type SpecialBarline         = () -- TODO Dashed | Double | Final
 -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline)
 -- (prev,next) biased to next
 
 -- TODO lyrics
 
-data SystemBar              = SystemBar {
-        _barNumbers::Maybe BarNumber,
-        _timeSignature::Maybe TimeSignature,
-        _keySignature::Maybe KeySignature,
-        _rehearsalMark::Maybe RehearsalMark,
-        _tempoMark::Maybe TempoMark
-        -- ,_barLines::BarLines
-          -- Tricky because of ambiguity. Use balanced pair
-          -- or an alt-list in SystemStaff.
-        } deriving (Eq,Ord,Show)
+data SystemBar              = SystemBar
+  { _barNumbers :: Maybe BarNumber
+  , _timeSignature :: Maybe TimeSignature
+  , _keySignature :: Maybe KeySignature
+  , _rehearsalMark :: Maybe RehearsalMark
+  , _tempoMark :: Maybe TempoMark
+  -- ,_barLines :: BarLines
+    -- Tricky because of ambiguity. Use balanced pair
+    -- or an alt-list in SystemStaff.
+  } deriving (Eq,Ord,Show)
 instance Monoid SystemBar where
   mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
   mappend x y
@@ -247,17 +251,17 @@ type SibeliusFriendlyName   = String
 type SmallOrLarge           = Any -- def False
 type ScoreOrder             = Sum Double -- def 0
 
-data StaffInfo              = StaffInfo {
+data StaffInfo              = StaffInfo
+  { _instrumentShortName :: InstrumentShortName
   -- TODO instrument part no. (I, II.1 etc)
-  _instrumentShortName::InstrumentShortName,
-  _instrumentFullName::InstrumentFullName,
-  _sibeliusFriendlyName::SibeliusFriendlyName,
+  , _instrumentFullName :: InstrumentFullName
+  , _sibeliusFriendlyName :: SibeliusFriendlyName
+  , _instrumentDefaultClef :: Music.Pitch.Clef
   -- See also _clefChange
-  _instrumentDefaultClef::Music.Pitch.Clef,
+  , _transposition :: Transposition
   -- Purely informational, i.e. written notes are assumed to be in correct transposition
-  _transposition::Transposition,
-  _smallOrLarge::SmallOrLarge,
-  _scoreOrder::ScoreOrder
+  , _smallOrLarge :: SmallOrLarge
+  , _scoreOrder :: ScoreOrder
   }
   deriving (Eq,Ord,Show)
 instance Monoid StaffInfo where
@@ -265,7 +269,7 @@ instance Monoid StaffInfo where
   mappend x y
     | x == mempty = y
     | otherwise   = x
-type Pitch                  = Music.Pitch.Pitch
+-- type Pitch                  = Music.Pitch.Pitch
 data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
 -- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
@@ -285,7 +289,8 @@ data TremoloNotation
 
 -- type UpDown       = Up | Down
 -- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
--- data BreathNotation = Fermata | PauseAfter | CaesuraAfter
+
+-- Always apply *after* the indicated chord.
 data BreathNotation         = Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
 
@@ -302,19 +307,19 @@ type Ties                   = (Any,Any)
 -- TODO beaming
 
 -- Rests, single-notes and chords (most attributes are not shown for rests)
-data Chord = Chord {
-  _pitches::[Pitch],
-  _arpeggioNotation::Maybe ArpeggioNotation,
-  _tremoloNotation::Maybe TremoloNotation,
-  _breathNotation::Maybe BreathNotation,
-  _articulationNotation::Maybe ArticulationNotation,
+data Chord = Chord
+  { _pitches :: [Pitch]
+  , _arpeggioNotation :: Maybe ArpeggioNotation
+  , _tremoloNotation :: Maybe TremoloNotation
+  , _breathNotation :: Maybe BreathNotation
+  , _articulationNotation :: Maybe ArticulationNotation
   -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
-  _dynamicNotation::Maybe DynamicNotation,
-  _chordColor::Maybe (Colour Double),
-  _chordText::[String],
-  _harmonicNotation::HarmonicNotation,
-  _slideNotation::SlideNotation,
-  _ties::Ties
+  , _dynamicNotation :: Maybe DynamicNotation
+  , _chordColor :: Maybe (Colour Double)
+  , _chordText :: [String]
+  , _harmonicNotation :: HarmonicNotation
+  , _slideNotation :: SlideNotation
+  , _ties :: Ties
   }
   deriving (Eq, Show)
 instance Monoid Chord where
@@ -326,17 +331,18 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
 
-data Bar                    = Bar {
-    _pitchLayers::[PitchLayer]
-  , _clefChange::Map Duration Music.Pitch.Clef
-  {-, _dynamicLayer::DynamicLayer-}
+data Bar = Bar {
+    _pitchLayers :: [PitchLayer]
+  , _clefChange :: Map Duration Music.Pitch.Clef
+  {-, _dynamicLayer :: DynamicLayer-}
   }
   deriving (Eq, Show)
 
 
-
-
-data Staff                  = Staff  {_staffInfo::StaffInfo,_bars::[Bar]}
+data Staff = Staff
+  { _staffInfo :: StaffInfo
+  , _bars :: [Bar]
+  }
   deriving (Eq, Show)
 
 type Title                  = String
@@ -344,9 +350,9 @@ type Annotations            = [(Span, String)]
 type Attribution            = Map String String -- composer, lyricist etc
 
 data MovementInfo = MovementInfo {
-  _movementTitle::Title,
-  _movementAnnotations::Annotations,
-  _movementAttribution::Attribution
+  _movementTitle :: Title,
+  _movementAnnotations :: Annotations,
+  _movementAttribution :: Attribution
   }
   deriving (Eq, Show)
 
@@ -356,14 +362,18 @@ instance Monoid MovementInfo where
     | x == mempty = y
     | otherwise   = x
 
-data Movement     = Movement {
-  _movementInfo::MovementInfo,
-  _systemStaff::SystemStaff,
-  _staves::LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
+data Movement = Movement {
+  _movementInfo :: MovementInfo,
+  _systemStaff :: SystemStaff,
+  _staves :: LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
   }
   deriving (Eq, Show)
 
-data WorkInfo     = WorkInfo { _title::Title, _annotations::Annotations, _attribution::Attribution}
+data WorkInfo = WorkInfo
+  { _title  ::  Title
+  , _annotations :: Annotations
+  , _attribution :: Attribution
+  }
   deriving (Eq, Show)
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
@@ -371,7 +381,10 @@ instance Monoid WorkInfo where
     | x == mempty = y
     | otherwise   = x
 
-data Work         = Work { _workInfo::WorkInfo, _movements::[Movement] }
+data Work = Work
+  { _workInfo :: WorkInfo
+  , _movements :: [Movement]
+  }
   deriving (Show)
 
 makeLenses ''SystemBar
@@ -409,7 +422,7 @@ class Monad m => MonadLog w m | m -> w where
 {-|
 Basic monad for exporting music.
 
-Runs as a pure computation with internally logging.
+Run as a pure computation with internal logging.
 -}
 newtype PureExportM a = PureExportM { runE :: WriterT String (ExceptT String Identity) a }
   deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadError String, MonadWriter String)
@@ -935,18 +948,18 @@ toXml work = do
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-type Asp1 = (PartT Music.Parts.Part
-  (ArticulationT Music.Articulation.Articulation
-    (DynamicT Music.Dynamics.Dynamics
+type Asp1 = (PartT Part
+  (ArticulationT Articulation
+    (DynamicT Dynamics
       Pitch)))
 
 -- We require all notes in a chords to have the same kind of ties
-type Asp2 = TieT (PartT Music.Parts.Part
-  (ArticulationT Music.Articulation.Articulation
-    (DynamicT Music.Dynamics.Dynamics
+type Asp2 = TieT (PartT Part
+  (ArticulationT Articulation
+    (DynamicT Dynamics
       [Pitch])))
 
-type Asp3 = TieT (PartT Music.Parts.Part
+type Asp3 = TieT (PartT Part
   (ArticulationT AN.ArticulationNotation
     (DynamicT DN.DynamicNotation
       [Pitch])))
@@ -1055,13 +1068,6 @@ fromAspects sc = do
     asp1ToAsp2 :: Asp1 -> Asp2
     asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
 
-    {-
-    Note:
-      Both addDynCon and addArtCon should *not* be used on scores for the time being, due to the faulty
-      (HasPhrases Score) instance. See comment in Music.Score.Phrases.
-
-      We use the MVoice instance here, so this is safe.
-    -}
     asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
     asp2ToAsp3 = id
       . ( DN.removeCloseDynMarks
