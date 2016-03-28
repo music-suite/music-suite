@@ -320,7 +320,6 @@ sharp * 3
 -- Converting scores to more restricted forms and back
 -- Using the monoid instances of score/voice
 
-{-
 -- music-suite/test/legacy-music-files/articulation_all_accents.music
 articulation_all_accents :: Music
 articulation_all_accents =
@@ -361,7 +360,6 @@ articulation_portato =
 articulation_staccato :: Music
 articulation_staccato =
   staccato (scat [c..g]|/8)
--}
 -- TODO articulation, more high-level combinators (a la photoshop)
 
 
@@ -421,7 +419,6 @@ melody_chords =
 
 
 -- music-suite/test/legacy-music-files/meta_annotations.music
-{-
 meta_annotations :: Music
 meta_annotations =
   showAnnotations $ annotate "First note" c |> d |> annotate "Last note" d
@@ -433,7 +430,6 @@ meta_annotations2 =
 meta_annotations3 :: Music
 meta_annotations3 =
   showAnnotations $ annotateSpan (1 <-> 2) "First note" $ scat [c,d,e]
--}
 
 meta_barlines :: Music
 meta_barlines = scat [c{-, barline-}, d{-, doubleBarline-}, e, f {-, finalBarline-}]
@@ -453,7 +449,6 @@ meta_attribution3 =
   arrangerDuring (1 <-> 2) "Anonymous II" $
     scat [c,d,e,c]
 
-{-
 -- music-suite/test/legacy-music-files/meta_clef1.music
 meta_clef1 :: Music
 meta_clef1 =
@@ -464,7 +459,6 @@ meta_clef1 =
   in compress 8 $ part1 |> part2 |> part3
   -- TODO need a better API here, integrated with Music.Pitch.Clef
   -- This should only be a hint, as clefs should be automatically inferred
--}
 
 
 -- meta_fermata :: Music
@@ -588,7 +582,6 @@ single_note :: Music
 single_note =
   c
 
-{-
 -- music-suite/test/legacy-music-files/special_gliss.music
 special_gliss :: Music
 special_gliss =
@@ -596,7 +589,6 @@ special_gliss =
 -- TODO slide/gliss
 -- This should be moved to pitch using Behavior or similar
 -- How?
--}
 
 -- music-suite/test/legacy-music-files/special_harmonics.music
 special_harmonics :: Music
@@ -610,7 +602,6 @@ special_harmonics =
 -- Nicer way of distinguishing artificial/natural (for instruments where this
 -- makes sense).
 
-{-
 -- music-suite/test/legacy-music-files/special_text.music
 special_text :: Music
 special_text =
@@ -620,7 +611,6 @@ special_text =
 -- Lyrics should be separate
 -- Arguably all technical instructions (pizz etc) are better represented as
 -- part of the instrument/technique tuple.
--}
 
 
 -- music-suite/test/legacy-music-files/special_tremolo.music
@@ -691,7 +681,6 @@ track_single =
 --   Maybe use a parameterized type (data family?) such as (Note Voice :: * -> *)
 -- (Note Score :: * -> *), i.e. Note has kind ((* -> *) -> * -> *) etc.
 
-{-
 string_quartet :: Music
 string_quartet = mainCanon2
   where
@@ -726,7 +715,6 @@ string_quartet = mainCanon2
               | n < 16    = a_|*2  |> e|*1   |> a|*1   |> e|*1   |> a|*1
               | n < 24    = a_|*2  |> e|*0.5 |> a|*0.5 |> e|*0.5 |> a|*0.5
               | otherwise = e|*0.5 |> a|*0.5
--}
 
 bartok_mikrokosmos :: Music
 bartok_mikrokosmos = let
