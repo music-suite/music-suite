@@ -93,14 +93,13 @@ instance Transformable a => Transformable (Track a) where
 
 -- | Create a track from a list of notes.
 track :: Getter [Placed a] (Track a)
-track = from unsafeTrack
+track = from trackIgnoringMeta
 {-# INLINE track #-}
 
 placeds :: Lens (Track a) (Track b) [Placed a] [Placed b]
-placeds = unsafeTrack
+placeds = trackIgnoringMeta
 {-# INLINE placeds #-}
 
-unsafeTrack :: Iso (Track a) (Track b) [Placed a] [Placed b]
-unsafeTrack = _Wrapped
-{-# INLINE unsafeTrack #-}
-
+trackIgnoringMeta :: Iso (Track a) (Track b) [Placed a] [Placed b]
+trackIgnoringMeta = _Wrapped
+{-# INLINE trackIgnoringMeta #-}

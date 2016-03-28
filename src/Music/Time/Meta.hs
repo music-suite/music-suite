@@ -43,7 +43,7 @@ module Music.Time.Meta (
         AddMeta,
         annotated,
         unannotated,
-        unsafeAnnotated
+        annotatedIgnoringMeta
   ) where
 
 import           Control.Applicative
@@ -273,7 +273,7 @@ instance HasDuration a => HasDuration (AddMeta a) where
 -- @
 --
 annotated :: Lens (AddMeta a) (AddMeta b) a b
-annotated = unsafeAnnotated
+annotated = annotatedIgnoringMeta
 
 -- |
 -- Access the annotated value.
@@ -283,11 +283,11 @@ annotated = unsafeAnnotated
 -- @
 --
 unannotated :: Getter a (AddMeta a)
-unannotated = from unsafeAnnotated
+unannotated = from annotatedIgnoringMeta
 
 -- |
 -- Access the annotated value. This is only an isomorphism up to meta-data
--- equivalence. In particular @under unsafeAnnotated@ leads to meta-data being
+-- equivalence. In particular @under annotatedIgnoringMeta@ leads to meta-data being
 -- thrown away. See 'annotated' and 'unannotated' for safe (but less general)
 -- definitions.
 --
@@ -295,8 +295,8 @@ unannotated = from unsafeAnnotated
 -- over annotated = fmap
 -- @
 --
-unsafeAnnotated :: Iso (AddMeta a) (AddMeta b) a b
-unsafeAnnotated = _Wrapped . extracted
+annotatedIgnoringMeta :: Iso (AddMeta a) (AddMeta b) a b
+annotatedIgnoringMeta = _Wrapped . extracted
 
 
 -- Nice generalizations

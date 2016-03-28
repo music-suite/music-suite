@@ -35,8 +35,8 @@ module Music.Time.Score (
         printEras,
 
         -- * Unsafe versions
-        unsafeEvents,
-        unsafeTriples,
+        eventsIgnoringMeta,
+        triplesIgnoringMeta,
 
   ) where
 
@@ -275,7 +275,7 @@ instance HasDuration (Score' a) where
 
 -- | Create a score from a list of events.
 score :: Getter [Event a] (Score a)
-score = from unsafeEvents
+score = from eventsIgnoringMeta
 {-# INLINE score #-}
 
 -- | View a 'Score' as a list of 'Event' values.
@@ -320,16 +320,16 @@ events = _Wrapped . _2 . _Wrapped . sorted
 
 -- | A score is a list of events up to meta-data. To preserve meta-data, use the more
 -- restricted 'score' and 'events'.
-unsafeEvents :: Iso (Score a) (Score b) [Event a] [Event b]
-unsafeEvents = _Wrapped . noMeta . _Wrapped . sorted
+eventsIgnoringMeta :: Iso (Score a) (Score b) [Event a] [Event b]
+eventsIgnoringMeta = _Wrapped . noMeta . _Wrapped . sorted
   where
     sorted = iso (List.sortBy (Ord.comparing (^.onset))) (List.sortBy (Ord.comparing (^.onset)))
     noMeta = iso extract return
 
 -- | A score is a list of (time-duration-value triples) up to meta-data.
 -- To preserve meta-data, use the more restricted 'triples'.
-unsafeTriples :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-unsafeTriples = iso _getScore _score
+triplesIgnoringMeta :: Iso (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
+triplesIgnoringMeta = iso _getScore _score
   where
     _score :: [(Time, Duration, a)] -> Score a
     _score = mconcat . fmap (uncurry3 event)
@@ -355,7 +355,7 @@ reifyScore = over (_Wrapped . _2 . _Wrapped) $ fmap duplicate
 
 -- | View a score as a list of time-duration-value triplets.
 triples :: {-Transformable a => -}Lens (Score a) (Score b) [(Time, Duration, a)] [(Time, Duration, b)]
-triples = unsafeTriples
+triples = triplesIgnoringMeta
 
 
 -- | Map over the values in a score.
@@ -418,7 +418,7 @@ chordEvents :: Transformable a => Span -> Score a -> [a]
 chordEvents s = fmap extract . filter ((== s) . view era) . view events
 
 simultaneous' :: Transformable a => Score a -> Score [a]
-simultaneous' sc = (^. from unsafeTriples) vs
+simultaneous' sc = (^. from triplesIgnoringMeta) vs
   where
     -- es :: [Era]
     -- evs :: [[a]]

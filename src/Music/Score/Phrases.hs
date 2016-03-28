@@ -23,7 +23,7 @@ module Music.Score.Phrases (
     mVoicePVoice,
     mVoiceTVoice,
     pVoiceTVoice,
-    unsafeMVoicePVoice,
+    mVoicePVoiceIgnoringMeta,
     singleMVoice,
     -- oldSingleMVoice,
     mapPhrasesWithPrevAndCurrentOnset,
@@ -112,7 +112,7 @@ instance HasPhrases (MVoice a) (MVoice b) a b where
   -- | Traverses all phrases in a voice.
 instance HasPhrases (PVoice a) (PVoice b) a b where
   -- Note: This is actually OK in 'phr', as that just becomes (id . each . _Right)
-  mvoices = from unsafeMVoicePVoice
+  mvoices = from mVoicePVoiceIgnoringMeta
 
 -- | Traverses all phrases in each voice, using 'extracted'.
 instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
@@ -153,7 +153,7 @@ phrases = mvoices . mVoicePVoice . each . _Right
 -- View an 'MVoice' as a 'PVoice'.
 --
 mVoicePVoice :: Lens (MVoice a) (MVoice b) (PVoice a) (PVoice b)
-mVoicePVoice = unsafeMVoicePVoice
+mVoicePVoice = mVoicePVoiceIgnoringMeta
 -- TODO meta
 
 -- |
@@ -161,13 +161,13 @@ mVoicePVoice = unsafeMVoicePVoice
 --
 -- This a valid 'Iso' up to meta-data equivalence.
 --
-unsafeMVoicePVoice :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
-unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
+mVoicePVoiceIgnoringMeta :: Iso (MVoice a) (MVoice b) (PVoice a) (PVoice b)
+mVoicePVoiceIgnoringMeta = iso mvoiceToPVoice pVoiceToMVoice
   where
     mvoiceToPVoice :: MVoice a -> PVoice a
     mvoiceToPVoice =
       map ( bimap voiceToRest voiceToPhrase
-          . bimap (^.from unsafePairs) (^.from unsafePairs) )
+          . bimap (^.from pairsIgnoringMeta) (^.from pairsIgnoringMeta) )
        . groupDiff' (isJust . snd)
        . view pairs
 

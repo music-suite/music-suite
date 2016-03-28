@@ -56,8 +56,8 @@ module Music.Time.Voice (
         -- voiceLens,
 
         -- * Unsafe versions
-        unsafeNotes,
-        unsafePairs,
+        notesIgnoringMeta,
+        pairsIgnoringMeta,
 
         -- * Legacy
         durationsVoice,
@@ -243,12 +243,12 @@ instance Num a => Num (Voice a) where
 
 -- | Create a 'Voice' from a list of 'Note's.
 voice :: Getter [Note a] (Voice a)
-voice = from unsafeNotes
+voice = from notesIgnoringMeta
 {-# INLINE voice #-}
 
 -- | View a 'Voice' as a list of 'Note' values.
 notes :: Lens (Voice a) (Voice b) [Note a] [Note b]
-notes = unsafeNotes
+notes = notesIgnoringMeta
 
 --
 -- @
@@ -284,17 +284,17 @@ notes = unsafeNotes
 
 -- | View a score as a list of duration-value pairs. Analogous to 'triples'.
 pairs :: Lens (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-pairs = unsafePairs
+pairs = pairsIgnoringMeta
 
 -- | A voice is a list of notes up to meta-data. To preserve meta-data, use the more
 -- restricted 'voice' and 'notes'.
-unsafeNotes :: Iso (Voice a) (Voice b) [Note a] [Note b]
-unsafeNotes = _Wrapped
+notesIgnoringMeta :: Iso (Voice a) (Voice b) [Note a] [Note b]
+notesIgnoringMeta = _Wrapped
 
 -- | A score is a list of (duration-value pairs) up to meta-data.
 -- To preserve meta-data, use the more restricted 'pairs'.
-unsafePairs :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
-unsafePairs = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
+pairsIgnoringMeta :: Iso (Voice a) (Voice b) [(Duration, a)] [(Duration, b)]
+pairsIgnoringMeta = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note))
 
 durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
@@ -378,7 +378,7 @@ zipVoiceWith' f g
   ((unzip.view pairs) -> (bd, bs))
   = let cd = zipWith f ad bd
         cs = zipWith g as bs
-     in view (from unsafePairs) (zip cd cs)
+     in view (from pairsIgnoringMeta) (zip cd cs)
 
 
 -- TODO generalize these to use a Monoidal interface, rather than ([a] -> a)
@@ -400,7 +400,7 @@ fuseBy p = fuseBy' p head
 -- Merge consecutive equal notes using the given equality predicate and merge function.
 --
 fuseBy' :: (a -> a -> Bool) -> ([a] -> a) -> Voice a -> Voice a
-fuseBy' p g = over unsafePairs $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
+fuseBy' p g = over pairsIgnoringMeta $ fmap foldNotes . Data.List.groupBy (inspectingBy snd p)
   where
     -- Add up durations and use a custom function to combine notes
     --
