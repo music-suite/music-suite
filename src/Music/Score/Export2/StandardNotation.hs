@@ -247,8 +247,9 @@ data StaffInfo              = StaffInfo {
   _instrumentShortName::InstrumentShortName,
   _instrumentFullName::InstrumentFullName,
   _sibeliusFriendlyName::SibeliusFriendlyName,
-  -- TODO allow for clef/instrument changes within staff
+  -- See also _clefChange
   _instrumentDefaultClef::Music.Pitch.Clef,
+  -- Purely informational, i.e. written notes are assumed to be in correct transposition
   _transposition::Transposition,
   _smallOrLarge::SmallOrLarge,
   _scoreOrder::ScoreOrder
@@ -293,7 +294,7 @@ data Chord = Chord {
   _tremoloNotation::Maybe TremoloNotation,
   _breathNotation::Maybe BreathNotation,
   _articulationNotation::Maybe ArticulationNotation,
-    -- I'd like to put this in a separate layer, but neither Lily nor MusicXML thinks this way
+  -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
   _dynamicNotation::Maybe DynamicNotation,
   _chordColor::Maybe (Colour Double),
   _chordText::[String],
@@ -311,8 +312,11 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
 
-data Bar                    = Bar    {_pitchLayers::[PitchLayer]
-  {-, _dynamicLayer::DynamicLayer-}}
+data Bar                    = Bar {
+    _pitchLayers::[PitchLayer]
+  , _clefChange::Map Duration Music.Pitch.Clef
+  {-, _dynamicLayer::DynamicLayer-}
+  }
   deriving (Eq, Show)
 
 
@@ -1031,7 +1035,9 @@ fromAspects sc = do
         (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
-    aspectsToBar rh = Bar [layer1] -- TODO more layers (see below)
+    -- TODO more layers (see below)
+    -- TODO place clef changes here
+    aspectsToBar rh = Bar [layer1] mempty
       where
         layer1 = fmap aspectsToChord rh
 
@@ -1067,8 +1073,8 @@ fromAspects sc = do
 test = runENoLog $ toLy $
   Work mempty [Movement mempty [mempty] (
     Branch Bracket [
-      Leaf (Staff mempty [Bar [Beat 1 mempty]]),
-      Leaf (Staff mempty [Bar [Beat 1 mempty]])
+      Leaf (Staff mempty [Bar [Beat 1 mempty] mempty]),
+      Leaf (Staff mempty [Bar [Beat 1 mempty] mempty])
       ])]
 
 test2 x = runENoLog $ toLy =<< fromAspects x
