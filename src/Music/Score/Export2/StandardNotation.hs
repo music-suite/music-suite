@@ -89,11 +89,14 @@ module Music.Score.Export2.StandardNotation
   , PureExportM
   , runPureExportMNoLog
   -- * Asp
+  , StandardNotationExportM
   , Asp1
   , Asp
   , fromAspects
   -- * Backends
+  , LilypondExportM
   , toLy
+  , MusicXmlExportM
   , toXml
   -- TODO debug
   , test2
@@ -439,9 +442,9 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 
 -- TODO replace E with (MonadLog m, MonadThrow...) => m
 -- or whatever
-type LyExportM m = (MonadLog String m, MonadError String m)
+type LilypondExportM m = (MonadLog String m, MonadError String m)
 
-toLy :: (LyExportM m) => Work -> m (String, Lilypond.Music)
+toLy :: (LilypondExportM m) => Work -> m (String, Lilypond.Music)
 toLy work = do
 
   -- TODO assumes one movement
@@ -463,7 +466,7 @@ toLy work = do
 
   where
 
-    toLyMusic :: (LyExportM m) => Movement -> m Lilypond.Music
+    toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
     toLyMusic m = do
       -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
       -- which seems to be what Lilypond expects), so the system staff is included
@@ -473,7 +476,7 @@ toLy work = do
       -- music expression, using \StaffGroup etc
       toLyStaffGroup renderedStaves
 
-    toLyStaff :: (LyExportM m) => SystemStaff -> Staff -> m Lilypond.Music
+    toLyStaff :: (LilypondExportM m) => SystemStaff -> Staff -> m Lilypond.Music
     toLyStaff sysBars staff = id
       <$> Lilypond.New "Staff" Nothing
       <$> Lilypond.Sequential
@@ -496,7 +499,7 @@ toLy work = do
         longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
         shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
 
-    toLyBar :: (LyExportM m) => SystemBar -> Bar -> m Lilypond.Music
+    toLyBar :: (LilypondExportM m) => SystemBar -> Bar -> m Lilypond.Music
     toLyBar sysBar bar = do
       let layers = bar^.pitchLayers
       -- TODO emit \new Voice for eachlayer
@@ -521,7 +524,7 @@ toLy work = do
                 Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
 
 
-    toLyLayer :: (LyExportM m) => Rhythm Chord -> m Lilypond.Music
+    toLyLayer :: (LilypondExportM m) => Rhythm Chord -> m Lilypond.Music
     toLyLayer (Beat d x)            = toLyChord d x
     toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
     toLyLayer (Dotted n _)          = error "FIXME"
@@ -537,7 +540,7 @@ toLy work = do
     TODO _tremoloNotation::Maybe TremoloNotation,
     TODO _breathNotation::Maybe BreathNotation,
     -}
-    toLyChord :: (LyExportM m) => Duration -> Chord -> m Lilypond.Music
+    toLyChord :: (LilypondExportM m) => Duration -> Chord -> m Lilypond.Music
     toLyChord d chord = id
         <$> notateTies (chord^.ties)
         <$> notateGliss (chord^.slideNotation)
@@ -549,7 +552,7 @@ toLy work = do
         <$> maybe id notateArticulationLy (chord^.articulationNotation)
         <$> notatePitches d (chord^.pitches)
       where
-        notatePitches :: (LyExportM m) => Duration -> [Pitch] -> m Lilypond.Music
+        notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
         notatePitches d pitches = case pitches of
             []  -> return $ Lilypond.Rest                               (Just (realToFrac d)) []
             [x] -> return $ Lilypond.Note  (toLyNote x)                 (Just (realToFrac d)) []
@@ -667,7 +670,7 @@ toLy work = do
         rcomposed = Music.Score.Internal.Util.composed . reverse
 
 
-    toLyStaffGroup :: (LyExportM m) => LabelTree BracketType (Lilypond.Music) -> m Lilypond.Music
+    toLyStaffGroup :: (LilypondExportM m) => LabelTree BracketType (Lilypond.Music) -> m Lilypond.Music
     toLyStaffGroup = return . foldLabelTree id g
       where
         -- Note: PianoStaff is handled in toLyStaffGroup
