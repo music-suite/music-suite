@@ -115,14 +115,24 @@ instance HasPhrases (PVoice a) (PVoice b) a b where
   mvoices = from unsafeMVoicePVoice
 
 -- | Traverses all phrases in each voice, using 'extracted'.
--- instance (HasPart' a, Ord (Part a)) => HasPhrases (Score a) (Score b) a b where
-  -- mvoices = extracted . each . oldSingleMVoice
-{-
-FIXME Should be written like this, above instance to be phased out!
-
--- | Traverses all phrases in each voice, using 'extracted'.
 instance (HasPart' a, Ord (Part a), a ~ b) => HasPhrases (Score a) (Score b) a b where
   mvoices = extracted . each . singleMVoice
+{-
+TODO get rid of the (a ~ b) restriction
+
+To understand why it is there in the first place:
+
+- Consider a score where some part has overlapping events
+
+- The overlap means that singleMVoice will fail to match that particular part
+  (this is why singleMVoice is a Prism and not an Iso/Lens).
+
+- Consequently, the phrase traversal may not be able to modify certain parts, and must
+  therefore retain them in their original form.
+
+To get around this, we would need a version of singleMVoice that included voice separation.
+That way, we would have the option to break up arbitrary scores into parts for them
+purpose of the phrase traversal.
 -}
 
 type HasPhrases' s a = HasPhrases s s a a
@@ -178,29 +188,29 @@ unsafeMVoicePVoice = iso mvoiceToPVoice pVoiceToMVoice
     phraseToVoice = fmap Just
 
 -- TODO unsafe, phase out
-oldSingleMVoice :: Iso (Score a) (Score b) (MVoice a) (MVoice b)
-oldSingleMVoice = iso scoreToVoice voiceToScore'
-  where
-    scoreToVoice :: Score a -> MVoice a
-    scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
-      -- TODO
-      List.sortBy (comparing (^._1))
-      -- end TODO
-      . (^. triples)
-      where
-        throwTime (t,d,x) = (d,x)
-        addRests = concat . snd . List.mapAccumL g 0
-          where
-            g u (t, d, x)
-              | u == t    = (t .+^ d, [(t, d, Just x)])
-              | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-              | otherwise = error "oldSingleMVoice: Strange prevTime"
-
-    voiceToScore :: Voice a -> Score a
-    voiceToScore = renderAlignedVoice . aligned 0 0
-
-    voiceToScore' :: MVoice b -> Score b
-    voiceToScore' = mcatMaybes . voiceToScore
+-- oldSingleMVoice :: Iso (Score a) (Score b) (MVoice a) (MVoice b)
+-- oldSingleMVoice = iso scoreToVoice voiceToScore'
+--   where
+--     scoreToVoice :: Score a -> MVoice a
+--     scoreToVoice = (^. voice) . fmap (^. note) . fmap throwTime . addRests .
+--       -- TODO
+--       List.sortBy (comparing (^._1))
+--       -- end TODO
+--       . (^. triples)
+--       where
+--         throwTime (t,d,x) = (d,x)
+--         addRests = concat . snd . List.mapAccumL g 0
+--           where
+--             g u (t, d, x)
+--               | u == t    = (t .+^ d, [(t, d, Just x)])
+--               | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+--               | otherwise = error "oldSingleMVoice: Strange prevTime"
+--
+--     voiceToScore :: Voice a -> Score a
+--     voiceToScore = renderAlignedVoice . aligned 0 0
+--
+--     voiceToScore' :: MVoice b -> Score b
+--     voiceToScore' = mcatMaybes . voiceToScore
 
 singleMVoice :: (a ~ b) => Prism (Score a) (Score b) (MVoice a) (MVoice b)
 singleMVoice = prism' voiceToScore' scoreToVoice
@@ -211,25 +221,23 @@ singleMVoice = prism' voiceToScore' scoreToVoice
     voiceToScore' :: MVoice b -> Score b
     voiceToScore' = mcatMaybes . voiceToScore
 
-scoreToVoice :: Score a -> Maybe (MVoice a)
-scoreToVoice sc
-  | hasOverlappingEvents sc = Nothing
-  | otherwise               = Just . (^. voice) . fmap (^. note) . fmap throwTime . addRests .
-  -- TODO
-  List.sortBy (comparing (^._1))
-  -- end TODO
-  . (^. triples) $ sc
-  where
-    throwTime (t,d,x) = (d,x)
-    addRests = concat . snd . List.mapAccumL g 0
+    scoreToVoice :: Score a -> Maybe (MVoice a)
+    scoreToVoice sc
+      | hasOverlappingEvents sc = Nothing
+      | otherwise               = Just . (^. voice) . fmap (^. note) . fmap throwTime . addRests .
+      -- TODO
+      List.sortBy (comparing (^._1))
+      -- end TODO
+      . (^. triples) $ sc
       where
-        g u (t, d, x)
-          | u == t    = (t .+^ d, [(t, d, Just x)])
-          | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
-          | otherwise = error "scoreToVoice: Impossible!" -- Because of overlapping events guard
+        throwTime (t,d,x) = (d,x)
+        addRests = concat . snd . List.mapAccumL g 0
+          where
+            g u (t, d, x)
+              | u == t    = (t .+^ d, [(t, d, Just x)])
+              | u <  t    = (t .+^ d, [(u, t .-. u, Nothing), (t, d, Just x)])
+              | otherwise = error "scoreToVoice: Impossible!" -- Because of overlapping events guard
 
-
--- foo :: HasPhrases' s a => s -> [TVoice a]
 mapPhrasesWithPrevAndCurrentOnset :: HasPhrases s t a b => (Maybe Time -> Time -> Phrase a -> Phrase b) -> s -> t
 mapPhrasesWithPrevAndCurrentOnset f = over (mvoices . mVoiceTVoice) (withPrevAndCurrentOnset f)
 
