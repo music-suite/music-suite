@@ -1,5 +1,7 @@
 
 {-# LANGUAGE FlexibleContexts #-}
+-- For MonadLog String:
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor
   , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving, FunctionalDependencies #-}
 
@@ -373,7 +375,9 @@ makeLenses ''Work
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- | A weaker form of 'MonadWriter' which supports imperative logging.
+-- | A weaker form of 'MonadWriter' which also supports imperative logging.
+--
+--   If something is an instance of both 'MonadWriter' and 'MonadLog' you should assure @say = tell@.
 class Monad m => MonadLog w m | m -> w where
     logger :: (a,w) -> m a
     logger ~(a, w) = do
@@ -393,6 +397,9 @@ class Monad m => MonadLog w m | m -> w where
 -- Log and failure monad
 newtype E a = E { runE :: WriterT String (ExceptT String Identity) a }
   deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadError String, MonadWriter String)
+
+instance MonadLog String E where
+  say = tell
 
 runENoLog :: E b -> Either String b
 runENoLog = fmap fst . runExcept . runWriterT . runE
@@ -423,6 +430,7 @@ toLy :: Work -> E (String, Lilypond.Music)
 toLy work = do
 
   -- TODO assumes one movement
+  say "Lilypond: Assuming one moment only"
   firstMovement <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
@@ -434,6 +442,7 @@ toLy work = do
         ]
   let header = getData "ly_big_score.ily" `expandTemplate` headerTempl
 
+  say "Lilypond: Converting music"
   music <- toLyMusic $ firstMovement
   return (header, music)
 
@@ -714,14 +723,22 @@ toLy work = do
 toXml :: Work -> E MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
+  say "MusicXML: Assuming one moment only"
   firstMovement <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
 
+  say "MusicXML: Extracting title and composer"
   let title     = firstMovement^.movementInfo.movementTitle
   let composer  = maybe "" id $ firstMovement^.movementInfo.movementAttribution.at "composer"
+
+  say "MusicXML: Generating part list"
   let partList  = movementToPartList firstMovement
-  return $ MusicXml.fromParts title composer partList (movementToPartwiseXml firstMovement)
+
+  say "MusicXML: Generating bar content"
+  let partWise  = movementToPartwiseXml firstMovement
+
+  return $ MusicXml.fromParts title composer partList partWise
 
   where
     movementToPartList :: Movement -> MusicXml.PartList
@@ -917,30 +934,36 @@ type Asp = Score Asp1
 fromAspects :: Asp -> E Work
 fromAspects sc = do
    -- Part extraction
+  say "Extracting parts"
   let postPartExtract = Music.Score.extractPartsWithInfo normScore
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
   -- Change aspect type as we need Semigroup to compose all simultanous notes
   -- Merge simultanous notes into chords, to simplify voice-separation
+  say "Merging overlapping notes into chords"
   let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
 
   -- Separate voices (called "layers" to avoid confusion)
   -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
+  say "Separating voices in parts (assuming no overlaps)"
   postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) ->
     Data.Traversable.mapM (toLayer p) a) $ postChordMerge
 
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
+  say "Notate dynamics and articulation"
   postContextSensitiveNotationRewrite <- return $ fmap2 asp2ToAsp3 $ postVoiceSeparation
   -- postContextSensitiveNotationRewrite :: [(Music.Parts.Part,Voice (Maybe Asp3))]
 
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
+  say "Divide score into bars, adding ties where necessary"
   let postTieSplit = fmap2 (Music.Score.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
+  say "Quantize rhythms (generating dotted notes and tuplets)"
   postQuantize <- Data.Traversable.mapM
     (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
@@ -948,6 +971,7 @@ fromAspects sc = do
   -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
 
   -- Group staves, generating brackets and braces
+  say "Generate staff groups"
   let postStaffGrouping = generateStaffGrouping postQuantize
   -- postStaffGrouping :: LabelTree (BracketType) (Music.Parts.Part, [Rhythm (Maybe Asp3)])
 
