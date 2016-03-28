@@ -125,7 +125,7 @@ instance Inspectable (Voice Pitch) where
 -- instance Inspectable (Voice ()) where
   -- inspectableToMusic = inspectableToMusic . set pitches (c::Pitch)
 instance Inspectable (Ambitus Pitch) where
-  inspectableToMusic x = let (m,n) = x^.from ambitus in glissando $ fromPitch m |> fromPitch n
+  inspectableToMusic x = let (m,n) = x^.from ambitus in {-glissando $-} fromPitch m |> fromPitch n
 instance Inspectable [Chord Pitch] where
   inspectableToMusic = scat . fmap inspectableToMusic
 instance Inspectable (Mode Pitch) where
