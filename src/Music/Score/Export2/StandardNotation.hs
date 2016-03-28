@@ -267,8 +267,17 @@ data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
 -- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
 
--- TODO No way to represent 2-pitch tremolo
-data TremoloNotation      = BeamedTremolo Int | UnmeasuredTremolo
+-- These attach to chords
+--
+-- The distinction between MultiPitchTremolo and CrossBeamTremolo only really make sense
+-- for string and keyboard instruments.
+--
+-- @Just n@ indicates n of extra beams/cross-beams.
+-- For unmeasured tremolo, use @Nothing@.
+data TremoloNotation
+  = MultiPitchTremolo (Maybe Int)
+  | CrossBeamTremolo (Maybe Int)
+  | NoTremolo
   deriving (Eq,Ord,Show)
 
 -- type UpDown       = Up | Down
@@ -535,6 +544,7 @@ toLy work = do
         <$> notateHarmonic (chord^.harmonicNotation)
         <$> notateText (chord^.chordText)
         <$> notateColor (chord^.chordColor)
+        -- <$> notateTremolo (chord^.tremoloNotation)
         <$> maybe id notateDynamicLy (chord^.dynamicNotation)
         <$> maybe id notateArticulationLy (chord^.articulationNotation)
         <$> notatePitches d (chord^.pitches)
@@ -616,7 +626,8 @@ toLy work = do
           | c == Color.blue  = "blue"
           | otherwise        = error "Lilypond backend: Unkown color"
 
-        -- Note: must use returned duration
+        -- TODO use
+        -- Must rescale according to returned duration
         notateTremolo :: Maybe Int -> Duration -> (Lilypond.Music -> Lilypond.Music, Duration)
         notateTremolo Nothing d                        = (id, d)
         notateTremolo (Just 0) d = (id, d)
@@ -878,10 +889,12 @@ toXml work = do
 
             notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
             notateTremolo n = case n of
-              BeamedTremolo 0 -> id
-              BeamedTremolo n -> MusicXml.tremolo (fromIntegral n)
               -- TODO optionally use z cross-beam
-              UnmeasuredTremolo -> MusicXml.tremolo 3
+              -- TODO support multi-pitch
+              NoTremolo -> id
+              CrossBeamTremolo (Just n) -> MusicXml.tremolo (fromIntegral n)
+              CrossBeamTremolo Nothing -> MusicXml.tremolo 3
+              MultiPitchTremolo _ -> id
 
             notateText :: [String] -> MusicXml.Music -> MusicXml.Music
             notateText texts a = mconcat (fmap MusicXml.text texts) <> a
