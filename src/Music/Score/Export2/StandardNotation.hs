@@ -86,8 +86,8 @@ module Music.Score.Export2.StandardNotation
   , movements
 
   -- * E monad
-  , E
-  , runENoLog
+  , PureExportM
+  , runPureExportMNoLog
   -- * Asp
   , Asp1
   , Asp
@@ -395,14 +395,14 @@ class Monad m => MonadLog w m | m -> w where
   -- alter f =
 
 -- Log and failure monad
-newtype E a = E { runE :: WriterT String (ExceptT String Identity) a }
+newtype PureExportM a = PureExportM { runE :: WriterT String (ExceptT String Identity) a }
   deriving (Functor, Applicative, Monad, Alternative, MonadPlus, MonadError String, MonadWriter String)
 
-instance MonadLog String E where
+instance MonadLog String PureExportM where
   say = tell
 
-runENoLog :: E b -> Either String b
-runENoLog = fmap fst . runExcept . runWriterT . runE
+runPureExportMNoLog :: PureExportM b -> Either String b
+runPureExportMNoLog = fmap fst . runExcept . runWriterT . runE
 
 
 type Template = String
@@ -426,7 +426,7 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 
 -- TODO replace E with (MonadLog m, MonadThrow...) => m
 -- or whatever
-toLy :: Work -> E (String, Lilypond.Music)
+toLy :: (MonadLog String m, MonadError String m) => Work -> m (String, Lilypond.Music)
 toLy work = do
 
   -- TODO assumes one movement
@@ -448,7 +448,7 @@ toLy work = do
 
   where
 
-    toLyMusic :: Movement -> E Lilypond.Music
+    toLyMusic :: (MonadLog String m, MonadError String m) => Movement -> m Lilypond.Music
     toLyMusic m = do
       -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
       -- which seems to be what Lilypond expects), so the system staff is included
@@ -458,7 +458,7 @@ toLy work = do
       -- music expression, using \StaffGroup etc
       toLyStaffGroup renderedStaves
 
-    toLyStaff :: SystemStaff -> Staff -> E Lilypond.Music
+    toLyStaff :: (MonadLog String m, MonadError String m) => SystemStaff -> Staff -> m Lilypond.Music
     toLyStaff sysBars staff = id
       <$> Lilypond.New "Staff" Nothing
       <$> Lilypond.Sequential
@@ -481,7 +481,7 @@ toLy work = do
         longName  = Lilypond.Set "Staff.instrumentName" (Lilypond.toValue partName)
         shortName = Lilypond.Set "Staff.shortInstrumentName" (Lilypond.toValue partName)
 
-    toLyBar :: SystemBar -> Bar -> E Lilypond.Music
+    toLyBar :: (MonadLog String m, MonadError String m) => SystemBar -> Bar -> m Lilypond.Music
     toLyBar sysBar bar = do
       let layers = bar^.pitchLayers
       -- TODO emit \new Voice for eachlayer
@@ -506,7 +506,7 @@ toLy work = do
                 Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
 
 
-    toLyLayer :: Rhythm Chord -> E Lilypond.Music
+    toLyLayer :: (MonadLog String m, MonadError String m) => Rhythm Chord -> m Lilypond.Music
     toLyLayer (Beat d x)            = toLyChord d x
     toLyLayer (Dotted n (Beat d x)) = toLyChord (dotMod n * d) x
     toLyLayer (Dotted n _)          = error "FIXME"
@@ -522,7 +522,7 @@ toLy work = do
     TODO _tremoloNotation::Maybe TremoloNotation,
     TODO _breathNotation::Maybe BreathNotation,
     -}
-    toLyChord :: Duration -> Chord -> E Lilypond.Music
+    toLyChord :: (MonadLog String m, MonadError String m) => Duration -> Chord -> m Lilypond.Music
     toLyChord d chord = id
         <$> notateTies (chord^.ties)
         <$> notateGliss (chord^.slideNotation)
@@ -533,7 +533,7 @@ toLy work = do
         <$> maybe id notateArticulationLy (chord^.articulationNotation)
         <$> notatePitches d (chord^.pitches)
       where
-        notatePitches :: Duration -> [Pitch] -> E Lilypond.Music
+        notatePitches :: (MonadLog String m, MonadError String m) => Duration -> [Pitch] -> m Lilypond.Music
         notatePitches d pitches = case pitches of
             []  -> return $ Lilypond.Rest                               (Just (realToFrac d)) []
             [x] -> return $ Lilypond.Note  (toLyNote x)                 (Just (realToFrac d)) []
@@ -650,7 +650,7 @@ toLy work = do
         rcomposed = Music.Score.Internal.Util.composed . reverse
 
 
-    toLyStaffGroup :: LabelTree BracketType (Lilypond.Music) -> E Lilypond.Music
+    toLyStaffGroup :: (MonadLog String m, MonadError String m) => LabelTree BracketType (Lilypond.Music) -> m Lilypond.Music
     toLyStaffGroup = return . foldLabelTree id g
       where
         -- Note: PianoStaff is handled in toLyStaffGroup
@@ -720,7 +720,7 @@ toLy work = do
 --   deriving (Functor, Foldable, Traversable, Eq, Show)
 
 
-toXml :: Work -> E MusicXml.Score
+toXml :: (MonadLog String m, MonadError String m) => Work -> m MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
   say "MusicXML: Assuming one moment only"
@@ -931,7 +931,7 @@ type Asp3 = TieT (PartT Music.Parts.Part
 type Asp = Score Asp1
 
 
-fromAspects :: Asp -> E Work
+fromAspects :: (MonadLog String m, MonadError String m) => Asp -> m Work
 fromAspects sc = do
    -- Part extraction
   say "Extracting parts"
@@ -997,7 +997,7 @@ fromAspects sc = do
 
 
     -- TODO log rewriting etc
-    quantizeBar :: Music.Score.Tiable a => Voice (Maybe a) -> E (Rhythm (Maybe a))
+    quantizeBar :: (MonadLog String m, MonadError String m, Music.Score.Tiable a) => Voice (Maybe a) -> m (Rhythm (Maybe a))
     quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
       where
         quantize' x = case quantize x of
@@ -1083,7 +1083,7 @@ fromAspects sc = do
             nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
             subpartStr = Just $ show (part^.(Music.Parts._subpart))
 
-    toLayer :: Music.Parts.Part -> Score a -> E (MVoice a)
+    toLayer :: (MonadLog String m, MonadError String m) => Music.Parts.Part -> Score a -> m (MVoice a)
     toLayer p =
       maybe (throwError $ "Overlapping events in part: " ++ show p)
         return . preview Music.Score.singleMVoice
@@ -1094,14 +1094,14 @@ fromAspects sc = do
 
 -- Test
 
-test = runENoLog $ toLy $
+test = runPureExportMNoLog $ toLy $
   Work mempty [Movement mempty [mempty] (
     Branch Bracket [
       Leaf (Staff mempty [Bar [Beat 1 mempty] mempty]),
       Leaf (Staff mempty [Bar [Beat 1 mempty] mempty])
       ])]
 
-test2 x = runENoLog $ toLy =<< fromAspects x
+test2 x = runPureExportMNoLog $ toLy =<< fromAspects x
 
 test3 x = do
   let r = test2 x
@@ -1113,4 +1113,4 @@ test3 x = do
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
 
-test4 x = runENoLog $ toXml =<< fromAspects x
+test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
