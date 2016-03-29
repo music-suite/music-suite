@@ -30,7 +30,7 @@ module Music.Score.Internal.Quantize (
         quantize,
         rewrite,
         dotMod,
-        
+
         -- * Utility
         drawRhythm,
         testQuantize,
@@ -72,8 +72,8 @@ data Rhythm a
 instance Transformable (Rhythm a) where
   transform s (Beat d x) = Beat (transform s d) x
   transform s (Group rs) = Group (fmap (transform s) rs)
-  transform s (Dotted n r) = Dotted n (transform s r) 
-  transform s (Tuplet n r) = Tuplet n (transform s r) 
+  transform s (Dotted n r) = Dotted n (transform s r)
+  transform s (Tuplet n r) = Tuplet n (transform s r)
 
 getBeatValue :: Rhythm a -> a
 getBeatValue (Beat d a) = a
@@ -120,7 +120,7 @@ mapWithDur f = go
     go (Beat d x)            = Beat d (f d x)
     go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
     go (Group rs)            = Group $ fmap (mapWithDur f) rs
-    go (Tuplet m r)          = Tuplet m (mapWithDur f r)        
+    go (Tuplet m r)          = Tuplet m (mapWithDur f r)
 
 instance Semigroup (Rhythm a) where
   (<>) = mappend
@@ -248,6 +248,7 @@ testQuantize x = case fmap rewrite $ qAlg $ fmap (\x -> (x,())) $ x of
     -- qAlg = quSimp
     qAlg = quantize
 
+quOrig :: Tiable a => [(Duration, a)] -> Either String (Rhythm a)
 quOrig = quantize' (atEnd rhythm)
 
 konstNumDotsAllowed :: [Int]
@@ -377,10 +378,10 @@ bound' d = do
   a <- beat
   modifyState $ modifyTimeSub (subtract d)
   let (b,c) = toTied $ getBeatValue a
-  
+
   -- TODO doesn't know order
   -- Need to have relative phase in the parser context!
-  return $ Group [Beat (getBeatDuration a) b, 
+  return $ Group [Beat (getBeatDuration a) b,
     Beat d c
     -- if isPowerOf2 d then Beat d c else if isPowerOf2 (d*(2/3)) then Dotted 1 (Beat (d*(2/3)) c) else (error "Bad bound rhythm")
       ]
@@ -488,9 +489,9 @@ quSimp = Right . qu1 1
 --   else Left ("This strategy only works for total duration that are powers of two (i.e. 4/4, 2/4), given"++show totDur)
   where
 --     totDur = sum $ fmap fst xs
-    qu1 totDur xs = if isPowerOf2 n then 
+    qu1 totDur xs = if isPowerOf2 n then
                   Group (fmap (\(_,a) -> Beat (totDur/fromIntegral n) a) xs) else
-      Tuplet (q) (Group (fmap (\(_,a) -> Beat (totDur/fromIntegral p) a) xs)) 
+      Tuplet (q) (Group (fmap (\(_,a) -> Beat (totDur/fromIntegral p) a) xs))
       where
         q = fromIntegral p / fromIntegral n :: Duration
         p = greatestSmallerPowerOf2 n :: Integer
@@ -499,5 +500,3 @@ quSimp = Right . qu1 1
     -- (1/n) = (p/n)(1/p)
     -- (1/n) = (p/np)
     -- (1/n) = (1/n)
-
-
