@@ -331,8 +331,8 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 -- type DynamicLayer           = Rhythm (Maybe DynamicNotation)
 
-data Bar = Bar {
-    _pitchLayers :: [PitchLayer]
+data Bar = Bar
+  { _pitchLayers :: [PitchLayer]
   , _clefChange :: Map Duration Music.Pitch.Clef
   {-, _dynamicLayer :: DynamicLayer-}
   }
@@ -349,10 +349,10 @@ type Title                  = String
 type Annotations            = [(Span, String)]
 type Attribution            = Map String String -- composer, lyricist etc
 
-data MovementInfo = MovementInfo {
-  _movementTitle :: Title,
-  _movementAnnotations :: Annotations,
-  _movementAttribution :: Attribution
+data MovementInfo = MovementInfo
+  { _movementTitle :: Title
+  , _movementAnnotations :: Annotations
+  , _movementAttribution :: Attribution
   }
   deriving (Eq, Show)
 
@@ -362,10 +362,10 @@ instance Monoid MovementInfo where
     | x == mempty = y
     | otherwise   = x
 
-data Movement = Movement {
-  _movementInfo :: MovementInfo,
-  _systemStaff :: SystemStaff,
-  _staves :: LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
+data Movement = Movement
+  { _movementInfo :: MovementInfo
+  , _systemStaff :: SystemStaff
+  , _staves :: LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
   }
   deriving (Eq, Show)
 
@@ -461,7 +461,7 @@ toLy :: (LilypondExportM m) => Work -> m (String, Lilypond.Music)
 toLy work = do
 
   -- TODO assumes one movement
-  say "Lilypond: Assuming one moment only"
+  say "Lilypond: Assuming one movement only"
   firstMovement <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
@@ -757,7 +757,7 @@ type MusicXmlExportM m = (MonadLog String m, MonadError String m)
 toXml :: (MusicXmlExportM m) => Work -> m MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
-  say "MusicXML: Assuming one moment only"
+  say "MusicXML: Assuming one movement only"
   firstMovement <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
@@ -1101,7 +1101,7 @@ fromAspects sc = do
         info = id
           $ transposition  .~
             (part^.(Music.Parts._instrument).(to Music.Parts.transposition))
-          $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe (error "FIXME")
+          $ instrumentDefaultClef  .~ Data.Maybe.fromMaybe Music.Pitch.trebleClef
             (part^.(Music.Parts._instrument).(to Music.Parts.standardClef))
           $ instrumentShortName    .~
             Data.Maybe.fromMaybe "" (part^.(Music.Parts._instrument).(to Music.Parts.shortName))
