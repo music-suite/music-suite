@@ -97,7 +97,7 @@ partitionSimplistic p = recur []
   where
     recur doneSubsets [] = doneSubsets
     recur doneSubsets remainingElements =
-      case observe $ partitionSimplistic1 [] remainingElements p of
+      case observe $ pickNewSubset p remainingElements of
         (newSubset, remainingElements) -> recur (newSubset : doneSubsets) remainingElements
 
     -- | Choose one element and remove it from the list.
@@ -118,21 +118,18 @@ partitionSimplistic p = recur []
     -- aShuffle = reverse
     -- aShuffle = rotate 12 where rotate n xs = drop n xs ++ take n xs
 
-    {-
-    i have selected these values
-    please try to combine them with these other values
-    -}
-    partitionSimplistic1
-      :: [a] -- already picked
-      -> [a] -- other values to consider
-      -> ([a] -> Bool)
+    pickNewSubset
+      :: ([a] -> Bool)
+      -> [a]
       -> Logic ([a], [a]) -- (picked subset, remaining)
-    partitionSimplistic1 alreadyPicked toConsider p = do
-      -- NOTE aShuffle must return some partition (which don't matter for correctness
-      -- but will affect order)
-      ifte (chooseSuchThat (\picked -> p (picked:alreadyPicked)) $ aShuffle toConsider)
-          (\(picked, notPicked) -> partitionSimplistic1 (picked:alreadyPicked) notPicked p)
-          (return (alreadyPicked, toConsider))
+    pickNewSubset p = recur p []
+      where
+        recur p alreadyPicked toConsider = do
+          -- NOTE aShuffle must return some partition (which don't matter for correctness
+          -- but will affect order)
+          ifte (chooseSuchThat (\picked -> p (picked:alreadyPicked)) $ aShuffle toConsider)
+              (\(picked, notPicked) -> recur p (picked:alreadyPicked) notPicked)
+              (return (alreadyPicked, toConsider))
 
 
 -- For testing
