@@ -81,6 +81,12 @@ Possibly good strategy
 
 
 {-
+Partition a set such that each subset matches the predicate.
+
+Simplistic implementation:
+  - Pick elements from unchosen elements such that the predicate matches
+  - If we can not pick anymore elements, proceed to next subset
+
 Fast, but unweighted (in terms of voice sep: may generate strange partitions).
 Essentially:
   Remove elements from a set S until it passes the predicate, this becomes a subset.
@@ -89,25 +95,27 @@ Essentially:
 partitionSimplistic :: ([a] -> Bool) -> [a] -> [[a]]
 partitionSimplistic p = recur []
   where
-    recur voices [] = voices
-    recur voices notes =
-      case observe $ partitionSimplistic1 [] notes p of
-        (newVoice, remainingNotes) -> recur (newVoice : voices) remainingNotes
+    recur doneSubsets [] = doneSubsets
+    recur doneSubsets remainingElements =
+      case observe $ partitionSimplistic1 [] remainingElements p of
+        (newSubset, remainingElements) -> recur (newSubset : doneSubsets) remainingElements
 
-    -- Choose one element (all combinations)
+    -- | Choose one element and remove it from the list.
     choose :: [a] -> Logic (a, [a])
     choose [] = empty
     choose xs = asum $ fmap (\n -> pure $ let (a:as) = rotate n xs in (a, as)) [0..length xs - 1]
       where
         rotate n xs = drop n xs ++ take n xs
+
+    -- | Choose one element matching the given predicate and remove it from the list.
     chooseSuchThat :: (a -> Bool) -> [a] -> Logic (a, [a])
     chooseSuchThat p xs = mfilter (p . fst) $ choose xs
 
-
-    -- Unpredictable shuffle (based on seed)
     aShuffle :: [a] -> [a]
+    -- Unpredictable shuffle (based on seed)
     aShuffle xs = evalRand (shuffleM xs) (mkStdGen 12983)
     -- aShuffle = id
+    -- aShuffle = reverse
     -- aShuffle = rotate 12 where rotate n xs = drop n xs ++ take n xs
 
     {-
@@ -129,10 +137,28 @@ partitionSimplistic p = recur []
 
 -- For testing
 
+-- NOTE all predicates used here should satisfy
+--  p xs ==> p (tail xs)
+-- Name of that property?
+
 allEqual :: Eq a => [a] -> Bool
 allEqual []     = True
 allEqual (x:xs) = all (== x) xs
 
+-- allDistinct
 noDuplicates :: Eq a => [a] -> Bool
 noDuplicates [] = True
-noDuplicates (x:xs) = not $ any (== x) xs
+noDuplicates (x:xs) = all (/= x) xs
+
+testShuffle xs = evalRand (shuffleM xs) (mkStdGen 1828372878)
+
+{-
+TODO test correctness, i.e. that
+  concat (partitionSimplistic p xs) =:= xs
+    where
+     p = anything
+     x =:= y = sort x == sort y
+
+forM_ [0..50] $ \n -> print $ partitionSimplistic noDuplicates  $ testShuffle $ [1..n] ++ [1..n] ++ [3,66,1,2]
+
+-}
