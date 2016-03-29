@@ -45,6 +45,10 @@ library
                         monadplus,
                         NumInstances,
                         combinat,
+                        logict,
+                        random-shuffle,
+                        MonadRandom,
+                        random,
                         colour                  >= 2.3.3 && < 3.0,
                         HCodecs                 >= 0.5 && < 0.6,
                         vector-space            >= 0.10.2 && < 1,
@@ -126,6 +130,7 @@ library
                         Music.Time.Internal.Transform
                         Music.Score.Internal.Data
                         Music.Score.Internal.Quantize
+                        Music.Score.Internal.VoiceSeparation
                         Music.Score.Internal.Instances
                         Music.Score.Internal.Util
                         Music.Score.Internal.Export

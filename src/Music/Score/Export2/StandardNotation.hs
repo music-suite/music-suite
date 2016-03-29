@@ -983,6 +983,7 @@ fromAspects sc = do
 
   -- Separate voices (called "layers" to avoid confusion)
   -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
+  -- TODO layer sepration (which, again, does not actually happen in current code should happen AFTER tie split)
   say "Separating voices in parts (assuming no overlaps)"
   postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) ->
     Data.Traversable.mapM (toLayer p) a) $ postChordMerge
