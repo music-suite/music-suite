@@ -122,13 +122,16 @@ partitionSimplistic p = recur []
       :: ([a] -> Bool)
       -> [a]
       -> Logic ([a], [a]) -- (picked subset, remaining)
-    pickNewSubset p = recur p []
+    pickNewSubset p = recur []
       where
-        recur p alreadyPicked toConsider = do
+        recur alreadyPicked toConsider = do
           -- NOTE aShuffle must return some partition (which don't matter for correctness
           -- but will affect order)
+
+          -- If its first argument succeeds at all, then the results will be fed into the success branch.
+          -- Otherwise, the failure branch is taken.
           ifte (chooseSuchThat (\picked -> p (picked:alreadyPicked)) $ aShuffle toConsider)
-              (\(picked, notPicked) -> recur p (picked:alreadyPicked) notPicked)
+              (\(picked, notPicked) -> recur (picked:alreadyPicked) notPicked)
               (return (alreadyPicked, toConsider))
 
 
