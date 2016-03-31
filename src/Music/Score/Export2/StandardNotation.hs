@@ -1922,7 +1922,7 @@ umts_13a =
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
 
     fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths]
-    modesPerBar = [False, True]
+    modesPerBar = [True, False]
 
 -- ‘13b-KeySignatures-ChurchModes.xml’
 {-All different modes: major, minor, ionian, dorian, phrygian, lydian, mixolydian,
