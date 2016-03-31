@@ -1068,15 +1068,17 @@ toXml work = do
           (typically divisions and attributes).
         -}
         allSystemBarDirections :: [MusicXml.Music]
-        allSystemBarDirections = zipWith (<>) timeSignatures_ keySignatures_
+        allSystemBarDirections = zipWith3 (\a b c -> mconcat [a,b,c])
+          divisions_
+          timeSignatures_
+          keySignatures_
           where
             -- TODO bar numbers (?)
             -- TODO reh marks (direction)
             -- TODO tempo marks (direction)
-            -- TODO compound time sigs (attribute)
-            -- TODO don't forget about divisions
 
-            -- TODO this generates several groups of attributes which is arguably wrong (spec?)
+            divisions_ :: [MusicXml.Music]
+            divisions_ = MusicXml.defaultDivisionsVal : repeat mempty
 
             keySignatures_ :: [MusicXml.Music]
             keySignatures_ = fmap (expTS . unOF) $ fmap (^.keySignature) (movement^.systemStaff)
@@ -1138,17 +1140,16 @@ toXml work = do
 
             -- TODO emit line ===== comments in between measures
 
-            -- TODO use barLayersHaveEqualDuration
             renderBar :: Bar -> MusicXml.Music
-            renderBar b = case b^.pitchLayers of
-              [x]  -> renderPitchLayer $ getPitchLayer x
-              -- TODO
-              xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
-            -- TODO time/tempo
-            -- TODO multiple layers
-
-
-
+            renderBar bar = case barLayersHaveEqualDuration bar of
+              Left _ -> {-throwError-}error "Layers have different durations"
+              Right d -> let layers = bar^.pitchLayers
+                in mconcat $
+                  Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $
+                  fmap (renderPitchLayer . getPitchLayer) layers
+              where
+                durToXmlDur :: Duration -> MusicXml.Duration
+                durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
 
             renderPitchLayer :: Rhythm Chord -> MusicXml.Music
             renderPitchLayer = renderBarMusic . fmap renderChord
