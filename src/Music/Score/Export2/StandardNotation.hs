@@ -1124,6 +1124,11 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
 -- TODO handle infinite system-staff/bar-list (one or the other)?
+-- TODO lyrics
+-- TODO chord symbols
+-- TODO piano staff crossings
+-- TODO trills
+-- TODO 8va etc
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -1340,19 +1345,19 @@ umts_12a = mempty
       , Music.Pitch.altoClef
       , Music.Pitch.tenorClef
       , Music.Pitch.bassClef
-      , Music.Pitch.tabClef
-      -- , Music.Pitch.treble8vbClef
-      -- , Music.Pitch.bass8vbClef
+      -- , TODO Music.Pitch.tabClef
+      -- , TODO Music.Pitch.treble8vbClef
+      -- , TODO Music.Pitch.bass8vbClef
       , Music.Pitch.bassClef -- 2 half-positions lower
       , Music.Pitch.trebleClef -- 2 half-positions lower
       , Music.Pitch.baritoneClef
       , Music.Pitch.mezzoSopranoClef
       , Music.Pitch.sopranoClef
-      , Music.Pitch.tabClef
-      -- , Music.Pitch.treble8vaClef
-      -- , Music.Pitch.bass8vaClef
-      -- , Music.Pitch.tabWithTextTabClef
-      -- , Music.Pitch.noClef
+      -- , TODO Music.Pitch.tabClef
+      -- , TODO Music.Pitch.treble8vaClef
+      -- , TODO Music.Pitch.bass8vaClef
+      -- , TODO Music.Pitch.tabWithTextTabClef
+      -- , TODO Music.Pitch.noClef
       , Music.Pitch.trebleClef -- again!
       ]
 
@@ -1551,6 +1556,22 @@ umts_12a = mempty
 -- ‘72c-TransposingInstruments-Change.xml’
 
 -- ‘73a-Percussion.xml’
+umts_73a :: Work
+umts_73a = mempty
+  where
+    [e_, a__, c] = undefined
+    timpNotes =
+      [ [ (1,e_,True) ]
+      , [ (1/2,e_,False),(1/2,a__,False) ]
+      ]
+    cymbalNotes =
+      [ [ (3/4,c,False), (1/4,c,False) ]
+      , [ (1,c,False) ]
+      ]
+    triangleNotes =
+      [ [ (3/4,c,False), (1/4,c,False) ]
+      , [ (1,c,False) ]
+      ]
 
 -- ‘74a-FiguredBass.xml’
 
