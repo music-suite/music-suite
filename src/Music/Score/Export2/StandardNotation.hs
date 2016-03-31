@@ -204,11 +204,11 @@ type SpecialBarline         = () -- TODO Dashed | Double | Final
 -- TODO lyrics
 
 data SystemBar              = SystemBar
-  { _barNumbers :: Maybe BarNumber
-  , _timeSignature :: Maybe TimeSignature
-  , _keySignature :: Maybe KeySignature
-  , _rehearsalMark :: Maybe RehearsalMark
-  , _tempoMark :: Maybe TempoMark
+  { _barNumbers       :: Maybe BarNumber
+  , _timeSignature    :: Maybe TimeSignature
+  , _keySignature     :: Maybe KeySignature
+  , _rehearsalMark    :: Maybe RehearsalMark
+  , _tempoMark        :: Maybe TempoMark
   -- ,_barLines :: BarLines
     -- Tricky because of ambiguity. Use balanced pair
     -- or an alt-list in SystemStaff.
@@ -229,16 +229,16 @@ type SmallOrLarge           = Any -- def False
 type ScoreOrder             = Sum Double -- def 0
 
 data StaffInfo              = StaffInfo
-  { _instrumentShortName :: InstrumentShortName
+  { _instrumentShortName    :: InstrumentShortName
   -- TODO instrument part no. (I, II.1 etc)
-  , _instrumentFullName :: InstrumentFullName
-  , _sibeliusFriendlyName :: SibeliusFriendlyName
-  , _instrumentDefaultClef :: Music.Pitch.Clef
+  , _instrumentFullName     :: InstrumentFullName
+  , _sibeliusFriendlyName   :: SibeliusFriendlyName
+  , _instrumentDefaultClef  :: Music.Pitch.Clef
   -- See also _clefChange
-  , _transposition :: Transposition
+  , _transposition          :: Transposition
   -- Purely informational, i.e. written notes are assumed to be in correct transposition
-  , _smallOrLarge :: SmallOrLarge
-  , _scoreOrder :: ScoreOrder
+  , _smallOrLarge           :: SmallOrLarge
+  , _scoreOrder             :: ScoreOrder
   }
   deriving (Eq,Ord,Show)
 instance Monoid StaffInfo where
@@ -293,19 +293,20 @@ type Ties                   = (Any,Any)
 -- Rests, single-notes and chords (most attributes are not shown for rests)
 data Chord = Chord
   { _pitches :: [Pitch]
-  , _arpeggioNotation :: Maybe ArpeggioNotation
-  , _tremoloNotation :: Maybe TremoloNotation
-  , _breathNotation :: Maybe BreathNotation
-  , _articulationNotation :: Maybe ArticulationNotation
+  , _arpeggioNotation       :: Maybe ArpeggioNotation
+  , _tremoloNotation        :: Maybe TremoloNotation
+  , _breathNotation         :: Maybe BreathNotation
+  , _articulationNotation   :: Maybe ArticulationNotation
   -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
-  , _dynamicNotation :: Maybe DynamicNotation
-  , _chordColor :: Maybe (Colour Double)
-  , _chordText :: [String]
-  , _harmonicNotation :: HarmonicNotation
-  , _slideNotation :: SlideNotation
-  , _ties :: Ties
+  , _dynamicNotation        :: Maybe DynamicNotation
+  , _chordColor             :: Maybe (Colour Double)
+  , _chordText              :: [String]
+  , _harmonicNotation       :: HarmonicNotation
+  , _slideNotation          :: SlideNotation
+  , _ties                   :: Ties
   }
   deriving (Eq, Show)
+
 instance Monoid Chord where
   mempty = Chord [] Nothing Nothing Nothing Nothing Nothing mempty mempty mempty mempty mempty
   mappend x y
@@ -315,8 +316,8 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 
 data Bar = Bar
-  { _pitchLayers :: [PitchLayer]
-  , _clefChange :: Map Duration Music.Pitch.Clef
+  { _pitchLayers  :: [PitchLayer]
+  , _clefChange   :: Map Duration Music.Pitch.Clef
   {-, _dynamicLayer :: DynamicLayer-}
   }
   deriving (Eq, Show)
@@ -333,9 +334,9 @@ type Annotations            = [(Span, String)]
 type Attribution            = Map String String -- composer, lyricist etc
 
 data MovementInfo = MovementInfo
-  { _movementTitle :: Title
-  , _movementAnnotations :: Annotations
-  , _movementAttribution :: Attribution
+  { _movementTitle        :: Title
+  , _movementAnnotations  :: Annotations
+  , _movementAttribution  :: Attribution
   }
   deriving (Eq, Show)
 
@@ -347,17 +348,19 @@ instance Monoid MovementInfo where
 
 data Movement = Movement
   { _movementInfo :: MovementInfo
-  , _systemStaff :: SystemStaff
-  , _staves :: LabelTree BracketType Staff  -- Don't allow names for staff groups, only staves
+  , _systemStaff  :: SystemStaff
+  -- Don't allow names for staff groups, only staves
+  , _staves       :: LabelTree BracketType Staff
   }
   deriving (Eq, Show)
 
 data WorkInfo = WorkInfo
-  { _title  ::  Title
-  , _annotations :: Annotations
-  , _attribution :: Attribution
+  { _title        ::  Title
+  , _annotations  :: Annotations
+  , _attribution  :: Attribution
   }
   deriving (Eq, Show)
+
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
   mappend x y
@@ -1073,7 +1076,6 @@ test3 x = do
       void $ System.Process.system "lilypond t.ly"
 
 test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
-
 
 
 
