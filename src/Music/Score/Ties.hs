@@ -177,8 +177,8 @@ instance Wrapped (TieT a) where
 
 instance Rewrapped (TieT a) (TieT b)
 
-isTieEndBeginning_ :: TieT a -> (Bool, Bool)
-isTieEndBeginning_ (TieT (ties, _)) = over both getAny $ ties
+isTieEndBeginning :: TieT a -> (Bool, Bool)
+isTieEndBeginning (TieT (ties, _)) = over both getAny $ ties
 
 {-
 -- |
