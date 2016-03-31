@@ -1025,20 +1025,40 @@ toXml work = do
             -- TODO how to best render transposed staves (i.e. clarinets)
             -- TODO how to best render and multi-staff instruments
 
+            {-
+            backup/forward
+              - Moves XML "counter" without emitting notes/rests
+              - Possibly use sanity check to ensure all layers in a bar are of the
+                same length (and the length expected by the time signature).
+                If not, we could get some rather strange results!
+              - Remember we still need to emit the correct voice (starting with 1 - I recall doing something
+               about this, are we always emitting the voice?)
+                YES, see setDefaultVoice below?
+                How about staff, are we always emitting that?
+
+              - TODO how does this interact with the staff-crossing feature?
+                (are we always emitting staff?)
+              - TODO how does it interact with clefs/other in-measure elements not
+                connected to chords?
+
+                Lots of meta-stuff here about how a bar is represented, would be nice to write up music-score
+                eloquently!
+            -}
+
             -- TODO emit line ===== comments in between measures
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
-              [x]  -> renderPL x
+              [x]  -> renderPitchLayer x
               -- TODO
               xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
             -- TODO time/tempo
             -- TODO multiple layers
 
-            renderPL :: Rhythm Chord -> MusicXml.Music
-            renderPL = renderBarMusic . fmap renderC
+            renderPitchLayer :: Rhythm Chord -> MusicXml.Music
+            renderPitchLayer = renderBarMusic . fmap renderChord
 
-            renderC ::  Chord -> Duration -> MusicXml.Music
-            renderC ch d = post $ case ch^.pitches of
+            renderChord ::  Chord -> Duration -> MusicXml.Music
+            renderChord ch d = post $ case ch^.pitches of
               -- TODO Don't emit <alter> tag if 0
               []  -> MusicXml.rest (realToFrac d)
               [p] -> MusicXml.note (fromPitch_ p) (realToFrac d)
