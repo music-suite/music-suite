@@ -491,8 +491,8 @@ instance Semigroup WorkInfo where
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
   mappend x y
-  | x == mempty = y
-  | otherwise   = x
+    | x == mempty = y
+    | otherwise   = x
 
 
 makeLenses ''SystemBar
