@@ -309,6 +309,10 @@ data StaffInfo              = StaffInfo
   TODO change name of _instrumentDefaultClef
   More accurately, it represents the first clef to be used on the staff
   (and the only one, unless there are changes.)
+
+  OTOH having clef in the staff at all is redundant, specifying clef
+  is optional (along with everything else) in this representation anyway.
+  This is arguably wrong, as stanard notation generally requires a clef.
   -}
 
 
@@ -1066,10 +1070,10 @@ toXml work = do
   let composer  = maybe "" id $ firstMovement^.movementInfo.movementAttribution.at "composer"
 
   say "MusicXML: Generating part list"
-  partList  <- movementToPartList firstMovement
+  partList <- movementToPartList firstMovement
 
   say "MusicXML: Generating bar content"
-  let partWise  = movementToPartwiseXml firstMovement
+  partWise <- movementToPartwiseXml firstMovement
 
   return $ MusicXml.fromParts title composer partList partWise
 
@@ -1104,11 +1108,13 @@ toXml work = do
            have a staff child element.
 
     -}
-    movementToPartwiseXml :: Movement -> [[MusicXml.Music]]
+    movementToPartwiseXml :: (MusicXmlExportM m) => Movement -> m [[MusicXml.Music]]
     movementToPartwiseXml movement = music
       where
-        music :: [[MusicXml.Music]]
-        music = fmap (zipWith (<>) allSystemBarDirections) staffMusic
+        music :: (MusicXmlExportM m) => m [[MusicXml.Music]]
+        music = do
+          staffMusic_ <- staffMusic
+          pure $ fmap (zipWith (<>) allSystemBarDirections) staffMusic_
         {-
           Old comment:
                 Each entry in outer list must be prepended to the FIRST staff (whatever that is)
@@ -1163,8 +1169,8 @@ toXml work = do
           We should do a sumilar check on the transpose of the bar/staff matrix
           to assure that all /bars/ have the same duration.
         -}
-        staffMusic :: [[MusicXml.Music]]
-        staffMusic = fmap renderStaff $ movement^..staves.traverse
+        staffMusic :: (MusicXmlExportM m) => m [[MusicXml.Music]]
+        staffMusic = mapM renderStaff $ movement^..staves.traverse
           where
             renderClef :: Music.Pitch.Clef -> MusicXml.Music
             renderClef (Music.Pitch.Clef clef) = case clef of
@@ -1179,8 +1185,11 @@ toXml work = do
                   Music.Pitch.PercClef -> X.PercClef
                   Music.Pitch.NeutralClef -> X.TabClef
 
-            renderStaff :: Staff -> [MusicXml.Music]
-            renderStaff st = renderClef initClef : map renderBar (st^.bars)
+            renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
+            renderStaff st = do
+              fromBars <- mapM renderBar (st^.bars)
+              let fromInitClefMap = renderClef initClef
+              pure $ fromInitClefMap : fromBars
               where
                 initClef = st^.staffInfo.instrumentDefaultClef
 
@@ -1210,14 +1219,14 @@ toXml work = do
 
             -- TODO emit line ===== comments in between measures
 
-            renderBar :: Bar -> MusicXml.Music
+            renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
             renderBar bar = case barLayersHaveEqualDuration bar of
-              Left _ -> {-throwError-}error "Layers have different durations"
-              Right d -> let layers = bar^.pitchLayers
+              Left _ -> throwError "Layers have different durations"
+              Right d -> pure $ let
+                  layers2 = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
+                    fmap renderPitchLayer (bar^.pitchLayers)
                 in mconcat
-                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d)
-                  $ zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..]
-                  $ fmap renderPitchLayer layers
+                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) layers2
                   -- TODO render clef here too
               where
                 durToXmlDur :: Duration -> MusicXml.Duration
@@ -2045,8 +2054,7 @@ umts_12a =
 
     clefs :: [Maybe Music.Pitch.Clef]
     clefs =
-      [ Nothing
-        -- TODO 1st element should be nothing, so we can test default clef
+      [ Nothing -- Verify that staff clef is being used
       , Just $ Music.Pitch.altoClef
       , Just $ Music.Pitch.tenorClef
       , Just $ Music.Pitch.bassClef
