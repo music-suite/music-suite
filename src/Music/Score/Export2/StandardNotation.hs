@@ -1471,43 +1471,18 @@ fromAspects sc = do
     systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
 
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
+
+    -- Make this more prominent!
+    -- This is being used for the actual score!
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
-
-    -- TODO optionally log quantization
-    quantizeBar :: (StandardNotationExportM m, Music.Score.Tiable a) => Voice (Maybe a)
-      -> m (Rhythm (Maybe a))
-    quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
-      where
-        quantize' x = case quantize x of
-          Left e  -> throwError $ "Quantization failed: " ++ e
-          Right x -> return x
-
-    pureTieT :: a -> TieT a
-    pureTieT = pure
-
-    extractTimeSignatures
-      :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
-    extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
-
-    generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
-    generateStaffGrouping = groupToLabelTree . partDefault
-
-    partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
-    partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
-
-    groupToLabelTree :: Group a -> LabelTree (BracketType) a
-    groupToLabelTree (Single (_,a)) = Leaf a
-    groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
-      where
-        k Music.Parts.Bracket   = Bracket
-        k Music.Parts.Invisible = NoBracket
-        -- k Music.Parts.Subbracket = Just SubBracket
-        k Music.Parts.PianoStaff = Brace
-        k Music.Parts.GrandStaff = Brace
-
 
     asp1ToAsp2 :: Asp1 -> Asp2
     asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
+
+    toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
+    toLayer p =
+      maybe (throwError $ "Overlapping events in part: " ++ show p)
+        return . preview Music.Score.singleMVoice
 
     asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
     asp2ToAsp3 = id
@@ -1519,23 +1494,17 @@ fromAspects sc = do
         . Music.Score.addArtCon
         )
 
-    aspectsToChord :: Maybe Asp3 -> Chord
-    aspectsToChord Nothing    = mempty
-    aspectsToChord (Just asp) = id
-      $ ties                  .~ (Any endTie, Any beginTie)
-      $ dynamicNotation       .~ (asp^.(Music.Score.dynamic))
-      $ articulationNotation  .~ (asp^.(Music.Score.articulation))
-      $ pitches               .~ (asp^..(Music.Score.pitches))
-      $ mempty
+    -- TODO optionally log quantization
+    quantizeBar :: (StandardNotationExportM m, Music.Score.Tiable a) => Voice (Maybe a)
+      -> m (Rhythm (Maybe a))
+    quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
       where
-        (endTie,beginTie) = Music.Score.isTieEndBeginning asp
+        quantize' x = case quantize x of
+          Left e  -> throwError $ "Quantization failed: " ++ e
+          Right x -> return x
 
-    aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
-    -- TODO handle >1 layers (see below)
-    -- TODO place clef changes here
-    aspectsToBar rh = Bar mempty [PitchLayer layer1]
-      where
-        layer1 = fmap aspectsToChord rh
+    generateStaffGrouping :: [(Music.Parts.Part, a)] -> LabelTree (BracketType) (Music.Parts.Part, a)
+    generateStaffGrouping = groupToLabelTree . partDefault
 
     aspectsToStaff :: (Music.Parts.Part, [Rhythm (Maybe Asp3)]) -> Staff
     aspectsToStaff (part,bars) = Staff info (fmap aspectsToBar bars)
@@ -1555,10 +1524,50 @@ fromAspects sc = do
             nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
             subpartStr = Just $ show (part^.(Music.Parts._subpart))
 
-    toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
-    toLayer p =
-      maybe (throwError $ "Overlapping events in part: " ++ show p)
-        return . preview Music.Score.singleMVoice
+    -- Not used from top-level
+
+
+
+    pureTieT :: a -> TieT a
+    pureTieT = pure
+
+    extractTimeSignatures
+      :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
+    extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
+
+    partDefault :: [(Music.Parts.Part, a)] -> Music.Parts.Group (Music.Parts.Part, a)
+    partDefault xs = Music.Parts.groupDefault $ fmap (\(p,x) -> (p^.(Music.Parts._instrument),(p,x))) xs
+
+    groupToLabelTree :: Group a -> LabelTree (BracketType) a
+    groupToLabelTree (Single (_,a)) = Leaf a
+    groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
+      where
+        k Music.Parts.Bracket   = Bracket
+        k Music.Parts.Invisible = NoBracket
+        -- k Music.Parts.Subbracket = Just SubBracket
+        k Music.Parts.PianoStaff = Brace
+        k Music.Parts.GrandStaff = Brace
+
+
+    aspectsToChord :: Maybe Asp3 -> Chord
+    aspectsToChord Nothing    = mempty
+    aspectsToChord (Just asp) = id
+      $ ties                  .~ (Any endTie, Any beginTie)
+      $ dynamicNotation       .~ (asp^.(Music.Score.dynamic))
+      $ articulationNotation  .~ (asp^.(Music.Score.articulation))
+      $ pitches               .~ (asp^..(Music.Score.pitches))
+      $ mempty
+      where
+        (endTie,beginTie) = Music.Score.isTieEndBeginning asp
+
+    aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
+    -- TODO handle >1 layers (see below)
+    -- TODO place clef changes here
+    aspectsToBar rh = Bar mempty [PitchLayer layer1]
+      where
+        layer1 = fmap aspectsToChord rh
+
+
 
 
 ----------------------------------------------------------------------------------------------------
