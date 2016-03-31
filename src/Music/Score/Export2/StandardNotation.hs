@@ -381,6 +381,13 @@ data Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
 A chord. A possibly empty list of pitches, composed sequentially.
 Naturally, an empty pitch list renders as a rest and a singleton list as
 a single note.
+
+TODO arguably ties, colors, harmonics and slide/gliss should be represented
+per notehead, and not per chord. This is simpler but may require more
+voices/layers to represent certain music.
+
+TODO what is chord text? Separate different text types (again based on graphical
+presentation rather than semantics).
 -}
 data Chord = Chord
   { _pitches :: [Pitch]
@@ -578,7 +585,24 @@ staffLength :: Staff -> Int
 staffLength (Staff i bs) = length bs
 
 {-|
-Assure all staves (including system-staff) has the same number of bars.
+If all layers have the same duration, return this duration wrapped in 'Right',
+otherwise return a list of mismatching durations in 'Left'.
+-}
+barLayersHaveEqualDuration :: Bar -> Either [Duration] Duration
+barLayersHaveEqualDuration (Bar _ [])     = Left []
+barLayersHaveEqualDuration (Bar _ layers) = if allEqual durs
+    then Right (head durs)
+    else Left durs
+  where
+    allEqual []       = True
+    allEqual (x : xs) = all (== x) xs
+
+    durs = fmap layerDur layers
+    layerDur (PitchLayer rh) = rh^.duration
+
+{-|
+Check that all staves (including system-staff) has the same number of bars.
+If not truncate to assure this.
 -}
 movementAssureSameNumberOfBars :: Movement -> Movement
 movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
@@ -1078,6 +1102,10 @@ toXml work = do
         {-
           A matrix similar to the one returned from movementToPartwiseXml, but
           not including information from the system staff.
+
+          TODO we use movementAssureSameNumberOfBars
+          We should do a sumilar check on the transpose of the bar/staff matrix
+          to assure that all /bars/ have the same duration.
         -}
         staffMusic :: [[MusicXml.Music]]
         staffMusic = fmap renderStaff $ movement^..staves.traverse
@@ -1109,6 +1137,8 @@ toXml work = do
             -}
 
             -- TODO emit line ===== comments in between measures
+
+            -- TODO use barLayersHaveEqualDuration
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
               [x]  -> renderPitchLayer $ getPitchLayer x
@@ -1116,6 +1146,9 @@ toXml work = do
               xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
             -- TODO time/tempo
             -- TODO multiple layers
+
+
+
 
             renderPitchLayer :: Rhythm Chord -> MusicXml.Music
             renderPitchLayer = renderBarMusic . fmap renderChord

@@ -1,5 +1,6 @@
 
 {-# LANGUAGE DeriveFoldable             #-}
+{-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
@@ -44,6 +45,7 @@ import           Control.Lens        (over, (^.), _Left)
 import           Control.Monad       (MonadPlus (..), ap, join)
 import           Data.Either
 import           Data.Foldable
+import           Data.Traversable (Traversable(..))
 import           Data.Function       (on)
 import qualified Data.List           as List
 import           Data.Maybe
@@ -66,7 +68,7 @@ data Rhythm a
   | Group      [Rhythm a]                    --
   | Dotted     Int (Rhythm a)                -- n > 0.
   | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
-  deriving (Eq, Show, Functor, Foldable)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
   -- RInvTuplet  Duration (Rhythm a)
 
 instance Transformable (Rhythm a) where
