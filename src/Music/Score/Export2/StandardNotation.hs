@@ -20,20 +20,26 @@ Sibelius, MusicXML, Lilypond, ABC notation and so on.
 It generally follows the conventions of MusixXML but has a slightly more
 semantic flavor:
 
-- Bars, staves and rhytmical structure is explicit
+- Bars, staves and rhytmical structure is explicit.
 
-- There is no unification of marks based on layout (i.e. grouping hairpins and
- trills because they both apply to time spans)
+- There is no unification of marks or spanners, instead more semantic types such
+  as 'DynamicNotation' are used.
 
-- Spanners are represented by begin/end tags
+- Spanners are represented by begin/end tags.
 
-- Harmoncics are represented as played
+- Harmoncics are represented as played, i.e. not by specifying note head shape
+  etc explicitly.
 
 - Time and key signatures are global. Stave-specific key signatures, time
   signatures or tempi is not allowed.
 
 - The top level type is 'Work', which allow for representation of multi-movement
   concert pieces as well as film and theatre music.
+
+- Like Sibelius (and unlike MusicXML/Lilypond) we use a conceptual \"system
+  staff\" that contains information pertaining to all parts, such as key and
+  time signatures.
+
 -}
 module Music.Score.Export2.StandardNotation
   (
@@ -253,6 +259,7 @@ type SpecialBarline         = () -- TODO Dashed | Double | Final
 data SystemBar              = SystemBar
   {-
   Note: Option First ~ Maybe
+
   Alternatively we could just make these things into Monoids such that
   mempty means "no notation at this point", and remove the "Option First"
   part here.
@@ -873,10 +880,11 @@ toXml :: (MusicXmlExportM m) => Work -> m MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
   say "MusicXML: Assuming one movement only"
-  firstMovement2 <- case work^?movements._head of
-    Nothing -> throwError "StandardNotation: Expected a one-movement piece"
-    Just x  -> return x
-  let firstMovement = movementAssureSameNumberOfBars firstMovement2
+
+  firstMovement <- fmap movementAssureSameNumberOfBars $
+    case work^?movements._head of
+      Nothing -> throwError "StandardNotation: Expected a one-movement piece"
+      Just x  -> return x
 
   say "MusicXML: Extracting title and composer"
   let title     = firstMovement^.movementInfo.movementTitle
@@ -891,6 +899,10 @@ toXml work = do
   return $ MusicXml.fromParts title composer partList partWise
 
   where
+    {-
+      Returns the part list, specifying instruments, staves and gruops
+      (but not the musical contents of the staves).
+    -}
     movementToPartList :: Movement -> MusicXml.PartList
     movementToPartList m = foldLabelTree f g (m^.staves)
       where
@@ -903,14 +915,42 @@ toXml work = do
           Bracket     -> MusicXml.bracket $ mconcat pl
           Brace       -> MusicXml.brace $ mconcat pl
 
+    {-
+      Returns a matrix of bars in in row-major order, i.e. each inner list
+      represents the bars of one particular MusicXML part[1].
+
+      This is suitable for a "partwise" MusicXML score. The transpose of the
+      returned matrix is suitable for a "timewise" score.
+
+      [1]: Note that a MusicXML part can be rendered as 1 staff (default) or more,
+      so there are two ways to render a piano staff:
+        1) Use two MusicXML parts grouped with a brace.
+        2) Use one MusicXML part with 2 staves. In this case each note must
+           have a staff child element.
+
+    -}
     movementToPartwiseXml :: Movement -> [[MusicXml.Music]]
     movementToPartwiseXml movement = music
       where
-        -- list outer to inner: stave, bar (music: list of MusicElement)
+        {-
+          It is usually sufficient to put such information from the system
+          staff in a single part, so we arbitrarily choose the first one.
+
+            TODO emit <divisions> in first bar (always MusicXml.defaultDivisions)
+              Does this have to happen in each part?
+
+            TODO assure this strategy works for everything that is on the system
+            staff, i.e.
+              - Key signatures
+              - Time sign
+              - Bar numbers
+              - Rehearsal marks
+              - Tempo barks
+        -}
         music :: [[MusicXml.Music]]
         music = case staffMusic of
           []     -> []
-          (x:xs) -> (zipWith (<>) allSystemBarDirections x:xs)
+          (x:xs) -> (zipWith (<>) allSystemBarDirections x : xs)
 
         -- Each entry in outer list must be prepended to the FIRST staff (whatever that is)
         -- We could also prepend it to other staves, but that is reduntant and makes the
@@ -935,7 +975,8 @@ toXml work = do
             -- System bar directions per bar
 
         {-
-        TODO emit <divisions> in first bar (always MusicXml.defaultDivisions)
+          A matrix similar to the one returned from movementToPartList, but
+          not including information from the system staff.
         -}
         staffMusic :: [[MusicXml.Music]]
         staffMusic = fmap renderStaff $ movement^..staves.traverse
