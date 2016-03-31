@@ -1484,7 +1484,9 @@ major, then one measure in minor)
 umts_13a :: Work
 umts_13a = mempty
   where
-    fifthPerTwoBars = [-11..11] :: [Music.Pitch.Fifths] -- or Music.Score.Fifths
+    fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths] -- or Music.Pitch.Fifths (see above)
+    modesPerBar = [False, True]
+    keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
 
 -- ‘13b-KeySignatures-ChurchModes.xml’
 {-All different modes: major, minor, ionian, dorian, phrygian, lydian, mixolydian,
@@ -1504,11 +1506,23 @@ aeolian, and locrian; All modes are given with 2 sharps.-}
 umts_21a :: Work
 umts_21a = mempty
   where
+    notes =
+      [ (Music.Pitch.f, 0, 1/4)
+      , (Music.Pitch.a, 0, 1/4)
+      ]
 
 -- ‘21b-Chords-TwoNotes.xml’
 umts_21b :: Work
 umts_21b = mempty
   where
+    notes =
+      [ (Music.Pitch.f, 0, 1/4)
+      , (Music.Pitch.a, 0, 1/4)
+      ]
+    points    = [0,1/4..2]
+    spans     = mapWithPrev (,) points
+    allNotes  = concatMap (\(a,b) -> fmap (\n -> (n, a, b)) notes) spans
+    mapWithPrev f xs = zipWith f xs (tail xs)
 
 -- ‘21c-Chords-ThreeNotesDuration.xml’
 umts_21c :: Work
