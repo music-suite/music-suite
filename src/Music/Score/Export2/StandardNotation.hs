@@ -2438,7 +2438,7 @@ umts_33b =
     staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 1 chords
 
     rh4 :: [Chord] -> Rhythm Chord
-    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+    rh4 cs = mconcat $ fmap (Beat 1) cs
 
     chords :: [Chord]
     chords =
@@ -2574,11 +2574,11 @@ umts_33g =
 
     chords :: [Chord]
     chords =
-      [
+      [ articulationNotation.slurs .~ [AN.BeginSlur] $ pitches .~ [P.g, P.c', P.g'] $ mempty
+      , pitches .~ [P.a, P.d'] $ mempty
+      , articulationNotation.slurs .~ [AN.EndSlur, AN.BeginSlur] $ pitches .~ [P.g, P.d'] $ mempty
+      , articulationNotation.slurs .~ [AN.EndSlur] $ pitches .~ [P.c'] $ mempty
       ]
-    nc  = mempty
-    bc  = pitches .~ [P.c'] $ mempty
-    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
 
     divideList :: Int -> [a] -> [[a]]
     divideList = Music.Score.Internal.Util.divideList
@@ -2599,11 +2599,33 @@ umts_33h =
 
     chords :: [Chord]
     chords =
-      [
+      [ slideNotation .~ ((Any False, Any False), (Any False, Any False)) $ bc
+      , bc2
+      , bc
+      , bc2
+
+      , bc
+      , bc2
+      , bc
+      , bc2
+
+      , bc
+      , bc2
+      , bc
+      , bc2
+
+      , bc
+      , bc2
+      , bc
+      , bc2
+
+      , bc
+      , bc2
+      , bc
+      , bc2
       ]
-    nc  = mempty
-    bc  = pitches .~ [P.c'] $ mempty
-    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+    bc  = pitches .~ [P.g] $ mempty
+    bc2 = pitches .~ [P.f'] $ mempty
 
     divideList :: Int -> [a] -> [[a]]
     divideList = Music.Score.Internal.Util.divideList
