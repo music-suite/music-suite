@@ -1223,12 +1223,15 @@ toXml work = do
             renderBar bar = case barLayersHaveEqualDuration bar of
               Left _ -> throwError "Layers have different durations"
               Right d -> pure $ let
-                  layers2 = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
+                  layers = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
                     fmap renderPitchLayer (bar^.pitchLayers)
+                  clefs = Data.Map.foldMapWithKey (\time clef -> [atPosition time (renderClef clef)]) (bar^.clefChanges)
                 in mconcat
-                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) layers2
-                  -- TODO render clef here too
+                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
               where
+                atPosition :: Duration -> X.Music -> X.Music
+                atPosition d x = (MusicXml.forward $ durToXmlDur d) <> x
+
                 durToXmlDur :: Duration -> MusicXml.Duration
                 durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
 
