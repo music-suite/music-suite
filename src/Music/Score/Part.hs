@@ -257,11 +257,11 @@ instance (Transformable p, Transformable p') => HasParts (PartT p a) (PartT p' a
   parts = _Wrapped . _1
 
 
-instance (IsPitch a, Enum n) => IsPitch (PartT n a) where
-  fromPitch l = PartT (toEnum 0, fromPitch l)
+instance (IsPitch a, Monoid n) => IsPitch (PartT n a) where
+  fromPitch l = PartT (mempty, fromPitch l)
 
-instance (IsDynamics a, Enum n) => IsDynamics (PartT n a) where
-  fromDynamics l = PartT (toEnum 0, fromDynamics l)
+instance (IsDynamics a, Monoid n) => IsDynamics (PartT n a) where
+  fromDynamics l = PartT (mempty, fromDynamics l)
 
 instance Reversible a => Reversible (PartT p a) where
   rev = fmap rev

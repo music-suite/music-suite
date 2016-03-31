@@ -242,8 +242,10 @@ import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
 import           Music.Time
 import           Music.Time.Meta                         (meta)
 
--- TODO
-import qualified Music.Score as MSS
+{-
+TODO we need some instances from here, figure out which and purge this import
+-}
+import Music.Score()
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -1601,12 +1603,12 @@ fromAspects sc = do
     aspectsToChord Nothing    = mempty
     aspectsToChord (Just asp) = id
       $ ties                  .~ (Any endTie, Any beginTie)
-      $ dynamicNotation       .~ (asp^.(MSS.dynamic))
-      $ articulationNotation  .~ (asp^.(MSS.articulation))
-      $ pitches               .~ (asp^..(MSS.pitches))
-      -- $ dynamicNotation       .~ (asp^.(Music.Score.Dynamics.dynamic))
-      -- $ articulationNotation  .~ (asp^.(Music.Score.Articulation.articulation))
-      -- $ pitches               .~ (asp^..(Music.Score.Pitch.pitches))
+      $ dynamicNotation       .~ (asp^.(Music.Score.Dynamics.dynamic))
+      -- $ dynamicNotation       .~ (asp^.(MSS.dynamic))
+      $ articulationNotation  .~ (asp^.(Music.Score.Articulation.articulation))
+      -- $ articulationNotation  .~ (asp^.(MSS.articulation))
+      $ pitches               .~ (asp^..(Music.Score.Pitch.pitches))
+      -- $ pitches               .~ (asp^..(MSS.pitches))
       $ mempty
       where
         (endTie,beginTie) = Music.Score.Ties.isTieEndBeginning asp

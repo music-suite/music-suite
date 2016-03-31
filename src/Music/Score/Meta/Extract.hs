@@ -17,6 +17,8 @@ import Music.Score.Part
 import Music.Time
 import Music.Time.Meta
 
+-- TODO merge this module with Score.Meta or similar
+
 attributionAt :: HasMeta a => Time -> String -> a -> Maybe String
 attributionAt t n x = join
   $ fmap (`getAttribution` n)
@@ -46,17 +48,15 @@ partNames :: (HasParts' a, Show (Part a)) => a -> [String]
 partNames = fmap show . toListOf parts'
 
 commonMetaAt :: HasMeta a => Time -> a -> [(String, Maybe String)]
-commonMetaAt t x = 
-  ("title", join $ fmap getTitle1 $ titleAt t x) 
-  : ("subtitle", join $ fmap getTitle2 $ titleAt t x) 
-  : ("subsubtitle", join $ fmap getTitle3 $ titleAt t x) 
+commonMetaAt t x =
+  ("title", join $ fmap getTitle1 $ titleAt t x)
+  : ("subtitle", join $ fmap getTitle2 $ titleAt t x)
+  : ("subsubtitle", join $ fmap getTitle3 $ titleAt t x)
   : attributionsAt t x
   where
     getTitle1 = (`getTitleAt` 0)
     getTitle2 = (`getTitleAt` 1)
     getTitle3 = (`getTitleAt` 2)
 
---     >>> commonMetaAt 0 $ asScore $ composer "Hans" $ lyricist "Sondheim" c    
+--     >>> commonMetaAt 0 $ asScore $ composer "Hans" $ lyricist "Sondheim" c
 --     [("title",Nothing),("subtitle",Nothing),("subsubtitle",Nothing),("composer",Just "Hans"),("lyricist",Just "Sondheim")]
-
-

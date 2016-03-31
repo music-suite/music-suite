@@ -90,7 +90,7 @@ import           Music.Score.Dynamics
 -- import           Music.Score.Export.Midi
 -- import           Music.Score.Export.MusicXml
 
--- import           Music.Score.Export2.StandardNotation
+-- import           Music.Score.Export2.StandardNotation()
 
 import           Music.Score.Harmonics
 import           Music.Score.Import.Abc
