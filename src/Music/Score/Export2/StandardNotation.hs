@@ -108,7 +108,7 @@ module Music.Score.Export2.StandardNotation
   )
 where
 
-import BasePrelude hiding (first, second, (<>), First(..))
+import           BasePrelude                             hiding (first, second, (<>), First(..))
 import           Control.Lens                            (over, preview, set, to,
                                                           under, view, _head, at)
 import           Control.Lens.Operators
@@ -127,10 +127,11 @@ import qualified Data.Map
 import qualified Data.List.Split
 import qualified Data.Maybe
 import           Data.Bifunctor                          (bimap, first, second)
-import qualified Data.Music.Lilypond                     as Lilypond
-import qualified Data.Music.MusicXml.Simple              as MusicXml
 import           Data.Semigroup
 import           Data.VectorSpace                        hiding (Sum)
+
+import qualified Data.Music.Lilypond                     as Lilypond
+import qualified Data.Music.MusicXml.Simple              as MusicXml
 
 import qualified Music.Articulation
 import           Music.Articulation                      (Articulation)
@@ -1215,126 +1216,256 @@ umts_01c =
     divideList = Music.Score.Internal.Util.divideList
 
 -- ‘01d-Pitches-Microtones.xml’
+
 -- ‘01e-Pitches-ParenthesizedAccidentals.xml’
+
 -- ‘01f-Pitches-ParenthesizedMicrotoneAccidentals.xml’
+
 -- ‘02a-Rests-Durations.xml’
+
 -- ‘02b-Rests-PitchedRests.xml’
+
 -- ‘02c-Rests-MultiMeasureRests.xml’
+
 -- ‘02d-Rests-Multimeasure-TimeSignatures.xml’
+
 -- ‘02e-Rests-NoType.xml’
+
 -- ‘03a-Rhythm-Durations.xml’
+umts_03a = mempty
+  where
+    durs =
+      [ (fmap.fmap) (dotMod 0 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+      , (fmap.fmap) (dotMod 1 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+      , (fmap.fmap) (dotMod 2 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+      ]
+
 -- ‘03b-Rhythm-Backup.xml’
+
 -- ‘03c-Rhythm-DivisionChange.xml’
+
 -- ‘03d-Rhythm-DottedDurations-Factors.xml’
+
 -- ‘11a-TimeSignatures.xml’
+
 -- ‘11b-TimeSignatures-NoTime.xml’
+
 -- ‘11c-TimeSignatures-CompoundSimple.xml’
+
 -- ‘11d-TimeSignatures-CompoundMultiple.xml’
+
 -- ‘11e-TimeSignatures-CompoundMixed.xml’
+
 -- ‘11f-TimeSignatures-SymbolMeaning.xml’
+
 -- ‘11g-TimeSignatures-SingleNumber.xml’
+
 -- ‘11h-TimeSignatures-SenzaMisura.xml’
+
 -- ‘12a-Clefs.xml’
+
 -- ‘12b-Clefs-NoKeyOrClef.xml’
+
 -- ‘13a-KeySignatures.xml’
+
 -- ‘13b-KeySignatures-ChurchModes.xml’
+
 -- ‘13c-KeySignatures-NonTraditional.xml’
+
 -- ‘13d-KeySignatures-Microtones.xml’
+
 -- ‘14a-StaffDetails-LineChanges.xml’
+
 -- ‘21a-Chord-Basic.xml’
+
 -- ‘21b-Chords-TwoNotes.xml’
+
 -- ‘21c-Chords-ThreeNotesDuration.xml’
+
 -- ‘21d-Chords-SchubertStabatMater.xml’
+
 -- ‘21e-Chords-PickupMeasures.xml’
+
 -- ‘21f-Chord-ElementInBetween.xml’
+
 -- ‘22a-Noteheads.xml’
+
 -- ‘22b-Staff-Notestyles.xml’
+
 -- ‘22c-Noteheads-Chords.xml’
+
 -- ‘22d-Parenthesized-Noteheads.xml’
+
 -- ‘23a-Tuplets.xml’
+
 -- ‘23b-Tuplets-Styles.xml’
+
 -- ‘23c-Tuplet-Display-NonStandard.xml’
+
 -- ‘23d-Tuplets-Nested.xml’
+
 -- ‘23e-Tuplets-Tremolo.xml’
+
 -- ‘23f-Tuplets-DurationButNoBracket.xml’
+
 -- ‘24a-GraceNotes.xml’
+
 -- ‘24b-ChordAsGraceNote.xml’
+
 -- ‘24c-GraceNote-MeasureEnd.xml’
+
 -- ‘24d-AfterGrace.xml’
+
 -- ‘24e-GraceNote-StaffChange.xml’
+
 -- ‘24f-GraceNote-Slur.xml’
+
 -- ‘31a-Directions.xml’
+
 -- ‘31c-MetronomeMarks.xml’
+
 -- ‘32a-Notations.xml’
+
 -- ‘32b-Articulations-Texts.xml’
+
 -- ‘32c-MultipleNotationChildren.xml’
+
 -- ‘32d-Arpeggio.xml’
+
 -- ‘33a-Spanners.xml’
+
 -- ‘33b-Spanners-Tie.xml’
+
 -- ‘33c-Spanners-Slurs.xml’
+
 -- ‘33d-Spanners-OctaveShifts.xml’
+
 -- ‘33e-Spanners-OctaveShifts-InvalidSize.xml’
+
 -- ‘33f-Trill-EndingOnGraceNote.xml’
+
 -- ‘33g-Slur-ChordedNotes.xml’
+
 -- ‘33h-Spanners-Glissando.xml’
+
 -- ‘33i-Ties-NotEnded.xml’
+
 -- ‘41a-MultiParts-Partorder.xml’
+
 -- ‘41b-MultiParts-MoreThan10.xml’
+
 -- ‘41c-StaffGroups.xml’
+
 -- ‘41d-StaffGroups-Nested.xml’
+
 -- ‘41e-StaffGroups-InstrumentNames-Linebroken.xml’
+
 -- ‘41f-StaffGroups-Overlapping.xml’
+
 -- ‘41g-PartNoId.xml’
+
 -- ‘41h-TooManyParts.xml’
+
 -- ‘41i-PartNameDisplay-Override.xml’
+
 -- ‘42a-MultiVoice-TwoVoicesOnStaff-Lyrics.xml’
+
 -- ‘42b-MultiVoice-MidMeasureClefChange.xml’
+
 -- ‘43a-PianoStaff.xml’
+
 -- ‘43b-MultiStaff-DifferentKeys.xml’
+
 -- ‘43c-MultiStaff-DifferentKeysAfterBackup.xml’
+
 -- ‘43d-MultiStaff-StaffChange.xml’
+
 -- ‘43e-Multistaff-ClefDynamics.xml’
+
 -- ‘45a-SimpleRepeat.xml’
+
 -- ‘45b-RepeatWithAlternatives.xml’
+
 -- ‘45c-RepeatMultipleTimes.xml’
+
 -- ‘45d-Repeats-Nested-Alternatives.xml’
+
 -- ‘45e-Repeats-Nested-Alternatives.xml’
+
 -- ‘45f-Repeats-InvalidEndings.xml’
+
 -- ‘45g-Repeats-NotEnded.xml’
+
 -- ‘46a-Barlines.xml’
+
 -- ‘46b-MidmeasureBarline.xml’
+
 -- ‘46c-Midmeasure-Clef.xml’
+
 -- ‘46e-PickupMeasure-SecondVoiceStartsLater.xml’
+
 -- ‘46f-IncompleteMeasures.xml’
+
 -- ‘46g-PickupMeasure-Chordnames-FiguredBass.xml’
+
 -- ‘51b-Header-Quotes.xml’
+
 -- ‘51c-MultipleRights.xml’
+
 -- ‘51d-EmptyTitle.xml’
+
 -- ‘52a-PageLayout.xml’
+
 -- ‘52b-Breaks.xml’
+
 -- ‘61a-Lyrics.xml’
+
 -- ‘61b-MultipleLyrics.xml’
+
 -- ‘61c-Lyrics-Pianostaff.xml’
+
 -- ‘61d-Lyrics-Melisma.xml’
+
 -- ‘61e-Lyrics-Chords.xml’
+
 -- ‘61f-Lyrics-GracedNotes.xml’
+
 -- ‘61g-Lyrics-NameNumber.xml’
+
 -- ‘61h-Lyrics-BeamsMelismata.xml’
+
 -- ‘61i-Lyrics-Chords.xml’
+
 -- ‘61j-Lyrics-Elisions.xml’
+
 -- ‘61k-Lyrics-SpannersExtenders.xml’
+
 -- ‘71a-Chordnames.xml’
+
 -- ‘71c-ChordsFrets.xml’
+
 -- ‘71d-ChordsFrets-Multistaff.xml’
+
 -- ‘71e-TabStaves.xml’
+
 -- ‘71f-AllChordTypes.xml’
+
 -- ‘71g-MultipleChordnames.xml’
+
 -- ‘72a-TransposingInstruments.xml’
+
 -- ‘72b-TransposingInstruments-Full.xml’
+
 -- ‘72c-TransposingInstruments-Change.xml’
+
 -- ‘73a-Percussion.xml’
+
 -- ‘74a-FiguredBass.xml’
+
 -- ‘75a-AccordionRegistrations.xml’
+
 -- ‘90a-Compressed-MusicXML.mxl’
+
 -- ‘99a-Sibelius5-IgnoreBeaming.xml’
+
 -- ‘99b-Lyrics-BeamsMelismata-IgnoreBeams.xml’
