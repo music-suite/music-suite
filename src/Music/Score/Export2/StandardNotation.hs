@@ -1132,7 +1132,7 @@ umts_01a =
     staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
 
     rh4 :: [Chord] -> Rhythm Chord
-    rh4 cs = mconcat $ fmap (\c -> Beat (1/4) c) cs
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
 
     chs :: [[Chord]]
     chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
@@ -1171,7 +1171,7 @@ umts_01b =
     staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
 
     rh4 :: [Chord] -> Rhythm Chord
-    rh4 cs = mconcat $ fmap (\c -> Beat (1/4) c) cs
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
 
     chs :: [[Chord]]
     chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
@@ -1203,11 +1203,10 @@ umts_01c =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty)
-      [[ singleNoteChord $ Music.Pitch.Literal.g ]]
+    staff = Staff mempty $ [Bar [rh4 [singleNoteChord $ Music.Pitch.Literal.g]] mempty]
 
     rh4 :: [Chord] -> Rhythm Chord
-    rh4 cs = mconcat $ fmap (\c -> Beat 1 c) cs
+    rh4 cs = mconcat $ fmap (Beat 1) cs
 
     singleNoteChord :: Pitch -> Chord
     singleNoteChord ps = pitches .~ [ps] $ mempty
