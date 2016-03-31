@@ -302,6 +302,24 @@ data StaffInfo              = StaffInfo
   }
   deriving (Eq,Ord,Show)
 
+type Title                  = String
+type Annotations            = [(Span, String)]
+type Attribution            = Map String String -- composer, lyricist etc
+
+data MovementInfo = MovementInfo
+  { _movementTitle        :: Title
+  , _movementAnnotations  :: Annotations
+  , _movementAttribution  :: Attribution
+  }
+  deriving (Eq, Show)
+
+data WorkInfo = WorkInfo
+  { _title        :: Title
+  , _annotations  :: Annotations
+  , _attribution  :: Attribution
+  }
+  deriving (Eq, Show)
+
 data ArpeggioNotation
   = NoArpeggio        -- ^ Don't show anything
   | NoArpeggioBracket -- ^ Show "no arpeggio" bracket
@@ -310,15 +328,17 @@ data ArpeggioNotation
   | DownArpeggio
   deriving (Eq,Ord,Show)
 
--- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
---
--- These attach to chords
---
--- The distinction between MultiPitchTremolo and CrossBeamTremolo only really make sense
--- for string and keyboard instruments.
---
--- @Just n@ indicates n of extra beams/cross-beams.
--- For unmeasured tremolo, use @Nothing@.
+{-|
+As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
+
+These attach to chords
+
+The distinction between MultiPitchTremolo and CrossBeamTremolo only really make sense
+for string and keyboard instruments.
+
+@Just n@ indicates n of extra beams/cross-beams.
+For unmeasured tremolo, use @Nothing@.
+-}
 data TremoloNotation
   = MultiPitchTremolo (Maybe Int)
   | CrossBeamTremolo (Maybe Int)
@@ -349,6 +369,12 @@ data Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
 -- TODO beaming
 
 -- Rests, single-notes and chords (most attributes are not shown for rests)
+
+{-|
+A chord. A possibly empty list of pitches, composed sequentially.
+Naturally, an empty pitch list renders as a rest and a singleton list as
+a single note.
+-}
 data Chord = Chord
   { _pitches :: [Pitch]
   , _arpeggioNotation       :: ArpeggioNotation
@@ -367,8 +393,24 @@ data Chord = Chord
   }
   deriving (Eq, Show)
 
+{-|
+A layer. A sequential composition of chords.
+
+TODO we should replace 'Rhythm' with something similar that also allows
+time-floating elements (i.e. grace notes).
+
+Note that can /not/ use @Rhythm (Bool, Chord)@ (or similar) as that would scew up
+the time semantics of the 'Rhythm' value, in other words: the floating nature
+of these notes should be captured in the time type.
+-}
 type PitchLayer             = Rhythm Chord
 
+{-|
+A bar. A parallel composition of layers.
+
+Each layer should have the same duration
+(TODO backends should truncate to enforce this).
+-}
 data Bar = Bar
   { _clefChanges   :: Map Duration Music.Pitch.Clef
   , _pitchLayers  :: [PitchLayer]
@@ -376,23 +418,36 @@ data Bar = Bar
   }
   deriving (Eq, Show)
 
+{-|
+A staff. A sequential composition of /bars/ with meta-information.
+
+We make no difference between staves and part in this representation
+(that is a semantic difference, not a graphical one).
+  - What is the Lilypond approach here?
+  - In MusicXML staves and parts are separate concepts: the score is
+    a matrix of bar-in-a-staff, each containing objects that may be assigned
+    to different staves.
+
+    The basic catch here is that a MusicXML part may correspond to one or more
+    staves (as represented here.)
+  -}
 data Staff = Staff
   { _staffInfo :: StaffInfo
   , _bars :: [Bar]
   }
   deriving (Eq, Show)
 
-type Title                  = String
-type Annotations            = [(Span, String)]
-type Attribution            = Map String String -- composer, lyricist etc
+{-|
+A movement. A parallel composition of staves grouped by various types of brackets,
+with meta-information.
 
-data MovementInfo = MovementInfo
-  { _movementTitle        :: Title
-  , _movementAnnotations  :: Annotations
-  , _movementAttribution  :: Attribution
-  }
-  deriving (Eq, Show)
+Each staff (including the system-staff) should have the same number of bars
+(TODO backends should truncate to enforce this).
 
+The /system staff/ contains information that pertains to all simultaneous bars,
+such as key and time signature changes (implying that this model does not allow
+different time- or key singatures in different staves).
+-}
 data Movement = Movement
   { _movementInfo :: MovementInfo
   , _systemStaff  :: SystemStaff
@@ -401,13 +456,11 @@ data Movement = Movement
   }
   deriving (Eq, Show)
 
-data WorkInfo = WorkInfo
-  { _title        :: Title
-  , _annotations  :: Annotations
-  , _attribution  :: Attribution
-  }
-  deriving (Eq, Show)
+{-|
+A musical work. A sequential composition of /movements/ with meta-information.
 
+Called work to avoid confusion with 'Score'.
+-}
 data Work = Work
   { _workInfo :: WorkInfo
   , _movements :: [Movement]
