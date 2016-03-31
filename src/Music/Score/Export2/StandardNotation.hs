@@ -1113,7 +1113,7 @@ umts_01a = Work mempty $ pure $ Movement mempty sysStaff (Leaf staff)
   where
     staff = Staff mempty []
     -- TODO fix monoid
-    sysStaff = cycle [SystemBar undefined undefined undefined mempty mempty]
+    sysStaff = cycle [mempty]
     pitches :: [Pitch]
     pitches = replicate 102 Music.Pitch.Literal.c
 -- ‘01b-Pitches-Intervals.xml’
