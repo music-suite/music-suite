@@ -11,6 +11,30 @@
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor
   , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
+{-
+This module defines a monomorphic representation of Western music notation.
+
+Its main use to simplify the addition of notation-centric backends such as
+Sibelius, MusicXML, Lilypond, ABC notation and so on.
+
+It generally follows the conventions of MusixXML but has a slightly more
+semantic flavor:
+
+- Bars, staves and rhytmical structure is explicit
+
+- There is no unification of marks based on layout (i.e. grouping hairpins and
+ trills because they both apply to time spans)
+
+- Spanners are represented by begin/end tags
+
+- Harmoncics are represented as played
+
+- Time and key signatures are global. Stave-specific key signatures, time
+  signatures or tempi is not allowed.
+
+- The top level type is 'Work', which allow for representation of multi-movement
+  concert pieces as well as film and theatre music.
+-}
 module Music.Score.Export2.StandardNotation
   (
     LabelTree(..)
@@ -72,12 +96,13 @@ module Music.Score.Export2.StandardNotation
   , ties
   , PitchLayer
   , Bar
+  , clefChanges
   , pitchLayers
   , Staff
-  , staffLength
-  , staffTakeBars
   , staffInfo
   , bars
+  , staffLength
+  , staffTakeBars
   , Title
   , Annotations
   , Attribution
@@ -272,7 +297,7 @@ data StaffInfo              = StaffInfo
   , _instrumentFullName     :: InstrumentFullName
   , _sibeliusFriendlyName   :: SibeliusFriendlyName
   , _instrumentDefaultClef  :: Music.Pitch.Clef
-  -- See also _clefChange
+  -- See also _clefChanges
   , _transposition          :: Transposition
   -- Purely informational, i.e. written notes are assumed to be in correct transposition
   , _smallOrLarge           :: SmallOrLarge
@@ -392,7 +417,7 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 
 data Bar = Bar
-  { _clefChange   :: Map Duration Music.Pitch.Clef
+  { _clefChanges   :: Map Duration Music.Pitch.Clef
   , _pitchLayers  :: [PitchLayer]
   {-, _dynamicLayer :: DynamicLayer-}
   }
