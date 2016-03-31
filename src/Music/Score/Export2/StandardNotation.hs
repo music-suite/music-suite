@@ -1189,8 +1189,11 @@ toXml work = do
             renderStaff st = do
               fromBars <- mapM renderBar (st^.bars)
               let fromInitClefMap = renderClef initClef
-              pure $ fromInitClefMap : fromBars
+              pure $ mapHead (fromInitClefMap <>) fromBars
               where
+                mapHead f []       = []
+                mapHead f (x : xs) = f x : xs
+
                 initClef = st^.staffInfo.instrumentDefaultClef
 
             -- TODO how to best render transposed staves (i.e. clarinets)
@@ -1221,7 +1224,7 @@ toXml work = do
 
             renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
             renderBar bar = case barLayersHaveEqualDuration bar of
-              Left _ -> throwError "Layers have different durations"
+              Left _  -> throwError "Layers have different durations"
               Right d -> pure $ let
                   layers = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
                     fmap renderPitchLayer (bar^.pitchLayers)
@@ -1230,6 +1233,7 @@ toXml work = do
                   $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
               where
                 atPosition :: Duration -> X.Music -> X.Music
+                atPosition 0 x = x
                 atPosition d x = (MusicXml.forward $ durToXmlDur d) <> x
 
                 durToXmlDur :: Duration -> MusicXml.Duration
@@ -2050,7 +2054,6 @@ umts_12a =
     middleCWithClefBar Nothing =
       Bar mempty
         [PitchLayer $ Beat 1 P.c]
-
     middleCWithClefBar (Just clef) =
       Bar (at 0 .~ Just clef $ mempty)
         [PitchLayer $ Beat 1 P.c]
@@ -2061,14 +2064,17 @@ umts_12a =
       , Just $ Music.Pitch.altoClef
       , Just $ Music.Pitch.tenorClef
       , Just $ Music.Pitch.bassClef
-      , Nothing -- , TODO Music.Pitch.tabClef
+      , Just $ Music.Pitch.percussionClef
+
       , Nothing -- , TODO Music.Pitch.treble8vbClef
       , Nothing -- , TODO Music.Pitch.bass8vbClef
       , Just $ Music.Pitch.bassClef -- TODO 2 half-positions lower
       , Just $ Music.Pitch.trebleClef -- TODO 2 half-positions lower
+
       , Just $ Music.Pitch.baritoneClef
       , Just $ Music.Pitch.mezzoSopranoClef
       , Just $ Music.Pitch.sopranoClef
+
       , Nothing -- , TODO Music.Pitch.tabClef
       , Nothing -- , TODO Music.Pitch.treble8vaClef
       , Nothing -- , TODO Music.Pitch.bass8vaClef
