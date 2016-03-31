@@ -1501,14 +1501,17 @@ aeolian, and locrian; All modes are given with 2 sharps.-}
 -- IGNORE
 
 -- ‘21a-Chord-Basic.xml’
+umts_21a :: Work
 umts_21a = mempty
   where
 
 -- ‘21b-Chords-TwoNotes.xml’
+umts_21b :: Work
 umts_21b = mempty
   where
 
 -- ‘21c-Chords-ThreeNotesDuration.xml’
+umts_21c :: Work
 umts_21c = mempty
   where
 
@@ -1533,26 +1536,32 @@ umts_21c = mempty
 -- IGNORE (nice to have!)
 
 -- ‘23a-Tuplets.xml’
+umts_23a :: Work
 umts_23a = mempty
   where
 
 -- ‘23b-Tuplets-Styles.xml’
+umts_23b :: Work
 umts_23b = mempty
   where
 
 -- ‘23c-Tuplet-Display-NonStandard.xml’
+umts_23c :: Work
 umts_23c = mempty
   where
 
 -- ‘23d-Tuplets-Nested.xml’
+umts_23d :: Work
 umts_23d = mempty
   where
 
 -- ‘23e-Tuplets-Tremolo.xml’
+umts_23e :: Work
 umts_23e = mempty
   where
 
 -- ‘23f-Tuplets-DurationButNoBracket.xml’
+umts_23f :: Work
 umts_23f = mempty
   where
 
@@ -1575,126 +1584,157 @@ umts_23f = mempty
 -- IGNORE (would be nice!)
 
 -- ‘31a-Directions.xml’
+umts_31a :: Work
 umts_31a = mempty
   where
 
 -- ‘31c-MetronomeMarks.xml’
+umts_31c :: Work
 umts_31c = mempty
   where
 
 -- ‘32a-Notations.xml’
+umts_32a :: Work
 umts_32a = mempty
   where
 
 -- ‘32b-Articulations-Texts.xml’
+umts_32b :: Work
 umts_32b = mempty
   where
 
 -- ‘32c-MultipleNotationChildren.xml’
+umts_32c :: Work
 umts_32c = mempty
   where
 
 -- ‘32d-Arpeggio.xml’
+umts_32d :: Work
 umts_32d = mempty
   where
 
 -- ‘33a-Spanners.xml’
+umts_33a :: Work
 umts_33a = mempty
   where
 
 -- ‘33b-Spanners-Tie.xml’
+umts_33b :: Work
 umts_33b = mempty
   where
 
 -- ‘33c-Spanners-Slurs.xml’
+umts_33c :: Work
 umts_33c = mempty
   where
 
 -- ‘33d-Spanners-OctaveShifts.xml’
+umts_33d :: Work
 umts_33d = mempty
   where
 
 -- ‘33e-Spanners-OctaveShifts-InvalidSize.xml’
+umts_33e :: Work
 umts_33e = mempty
   where
 
 -- ‘33f-Trill-EndingOnGraceNote.xml’
+umts_33f :: Work
 umts_33f = mempty
   where
 
 -- ‘33g-Slur-ChordedNotes.xml’
+umts_33g :: Work
 umts_33g = mempty
   where
 
 -- ‘33h-Spanners-Glissando.xml’
+umts_33h :: Work
 umts_33h = mempty
   where
 
 -- ‘33i-Ties-NotEnded.xml’
+umts_33i :: Work
 umts_33i = mempty
   where
 
 -- ‘41a-MultiParts-Partorder.xml’
+umts_41a :: Work
 umts_41a = mempty
   where
 
 -- ‘41b-MultiParts-MoreThan10.xml’
+umts_41b :: Work
 umts_41b = mempty
   where
 
 -- ‘41c-StaffGroups.xml’
-umts_421c = mempty
+umts_41c :: Work
+umts_41c = mempty
   where
 
 -- ‘41d-StaffGroups-Nested.xml’
+umts_41d :: Work
 umts_41d = mempty
   where
 
 -- ‘41e-StaffGroups-InstrumentNames-Linebroken.xml’
+umts_41e :: Work
 umts_41e = mempty
   where
 
 -- ‘41f-StaffGroups-Overlapping.xml’
+umts_41f :: Work
 umts_41f = mempty
   where
 
 -- ‘41g-PartNoId.xml’
+umts_41g :: Work
 umts_41g = mempty
   where
 
 -- ‘41h-TooManyParts.xml’
+umts_41h :: Work
 umts_41h = mempty
   where
 
 -- ‘41i-PartNameDisplay-Override.xml’
+umts_41i :: Work
 umts_41i = mempty
   where
 
 -- ‘42a-MultiVoice-TwoVoicesOnStaff-Lyrics.xml’
+umts_42a :: Work
 umts_42a = mempty
   where
 
 -- ‘42b-MultiVoice-MidMeasureClefChange.xml’
+umts_42b :: Work
 umts_42b = mempty
   where
 
 -- ‘43a-PianoStaff.xml’
+umts_43a :: Work
 umts_43a = mempty
   where
 
 -- ‘43b-MultiStaff-DifferentKeys.xml’
+umts_43b :: Work
 umts_43b = mempty
   where
 
 -- ‘43c-MultiStaff-DifferentKeysAfterBackup.xml’
+umts_43c :: Work
 umts_43c = mempty
   where
 
 -- ‘43d-MultiStaff-StaffChange.xml’
+umts_43d :: Work
 umts_43d = mempty
   where
 
 -- ‘43e-Multistaff-ClefDynamics.xml’
+umts_43e :: Work
 umts_43e = mempty
   where
 
@@ -1720,26 +1760,32 @@ umts_43e = mempty
 -- IGNORE (would be nice!)
 
 -- ‘46a-Barlines.xml’
+umts_46a :: Work
 umts_46a = mempty
   where
 
 -- ‘46b-MidmeasureBarline.xml’
+umts_46b :: Work
 umts_46b = mempty
   where
 
 -- ‘46c-Midmeasure-Clef.xml’
+umts_46c :: Work
 umts_46c = mempty
   where
 
 -- ‘46e-PickupMeasure-SecondVoiceStartsLater.xml’
+umts_46e :: Work
 umts_46e = mempty
   where
 
 -- ‘46f-IncompleteMeasures.xml’
+umts_46f :: Work
 umts_46f = mempty
   where
 
 -- ‘46g-PickupMeasure-Chordnames-FiguredBass.xml’
+umts_46g :: Work
 umts_46g = mempty
   where
 
@@ -1748,10 +1794,12 @@ umts_51b :: Work
 umts_51b = mempty
 
 -- ‘51c-MultipleRights.xml’
+umts_51c :: Work
 umts_51c = mempty
   where
 
 -- ‘51d-EmptyTitle.xml’
+umts_51d :: Work
 umts_51d = mempty
   where
 
@@ -1813,6 +1861,7 @@ umts_51d = mempty
 -- IGNORE (would be nice!)
 
 -- ‘72a-TransposingInstruments.xml’
+umts_72a :: Work
 umts_72a = mempty
   where
     pitches = [] -- TODO [c,d,e,f,g,a,b,c']
@@ -1834,6 +1883,7 @@ pitches.
 
 The final staff is an untransposed instrument.
 -}
+umts_72b :: Work
 umts_72b = mempty
   where
     pitch = Music.Pitch.c'
@@ -1857,6 +1907,7 @@ umts_72b = mempty
       ]
 
 -- ‘72c-TransposingInstruments-Change.xml’
+umts_72c :: Work
 umts_72c = mempty
   where
 
