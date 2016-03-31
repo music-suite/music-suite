@@ -184,7 +184,7 @@ import           Music.Score.Ties                        (TieT (..))
 import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
 import           Music.Time
 import           Music.Time.Meta                         (meta)
-import qualified Text.Pretty                             as Pretty
+import qualified Text.Pretty
 import qualified System.Process --DEBUG
 import qualified System.Directory
 
@@ -891,8 +891,8 @@ toXml work = do
 
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
-              _   -> error "Expected one pitch layer"
-              [x] -> renderPL x
+              [x]  -> renderPL x
+              xs   -> error $ "Expected one pitch layer, got" ++ show (length xs)
 
             renderPL :: Rhythm Chord -> MusicXml.Music
             renderPL = renderBarMusic . fmap renderC
@@ -1223,7 +1223,7 @@ test3 x = do
   case r of
     Left e -> fail ("test3: "++e)
     Right (h,ly) -> do
-      let ly2 = h ++ show (Pretty.pretty ly)
+      let ly2 = h ++ show (Text.Pretty.pretty ly)
       -- putStrLn ly2
       writeFile "t.ly" $ ly2
       void $ System.Process.system "lilypond t.ly"
@@ -2548,19 +2548,32 @@ umts_export = do
   putStrLn $ "Starting UTMS export§"
   let dir = "/tmp/music-suite/umts"
   System.Directory.createDirectoryIfMissing True dir
+
   forM_ umts_all $ \(name,work) -> do
     let baseName = dir ++ "/" ++ name
         xmlName = baseName ++ ".xml"
         lyName  = baseName ++ ".ly"
 
-    ly <- runIOExportM $ toLy work
-    writeFile lyName ly
+    putStr $ name ++ ": \n"
+    c <- newIORef 0
+    h c $ do
+      ly <- runIOExportM $ toLy work
+      writeFile lyName $ show $ Text.Pretty.pretty ly
+      -- TODO preamble
 
-    xml <- runIOExportM $ toXml work
-    writeFile xmlName xml
+    h c $ do
+      xml <- runIOExportM $ toXml work
+      writeFile xmlName $ MusicXml.showXml xml
 
     putStrLn $ "UTMS export done"
-
+    ec <- readIORef c
+    putStrLn $ "  Number of errors: " ++ show ec
+    where
+      h c = handle $ \e -> do
+        modifyIORef c succ
+        putStr "          Error: "
+        print (e :: SomeException)
+      -- h = id
 {-
 TODO change into map and add function that exports
 these as Ly/XML files to a particular directory.
