@@ -155,6 +155,7 @@ import qualified Music.Parts
 import qualified Music.Pitch
 import           Music.Pitch                             (Pitch, fromPitch)
 import qualified Music.Pitch.Literal
+import qualified Music.Pitch.Literal as P
 import           Music.Score                             (MVoice)
 import qualified Music.Score
 import           Music.Score.Articulation                (ArticulationT)
@@ -892,6 +893,7 @@ toXml work = do
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
               [x]  -> renderPL x
+              -- TODO
               xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
 
             renderPL :: Rhythm Chord -> MusicXml.Music
@@ -1255,7 +1257,7 @@ umts_01a :: Work
 umts_01a =
   Work mempty
     $ pure
-    $ Movement mempty sysStaff
+    $ Movement (movementTitle .~ "Pitches and accidentals" $ mempty) sysStaff
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
@@ -1268,18 +1270,16 @@ umts_01a =
     chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
       where
         pitches = mconcat
-          [ [  Music.Pitch.Literal.g__
-            .. Music.Pitch.Literal.c'''
-            ]
-          , fmap Music.Pitch.sharpen
-            [  Music.Pitch.Literal.g__
-            .. Music.Pitch.Literal.c'''
-            ]
-          , fmap Music.Pitch.flatten
-            [  Music.Pitch.Literal.g__
-            .. Music.Pitch.Literal.c'''
-            ]
+          [ baseScale
+          , fmap Music.Pitch.sharpen baseScale
+          , fmap Music.Pitch.flatten baseScale
           -- TODO cx', cbb', cs', cs', cs', cs'(editorial)
+          , [ Music.Pitch.sharpen (Music.Pitch.sharpen Music.Pitch.c')
+            , Music.Pitch.flatten (Music.Pitch.flatten Music.Pitch.c')
+            , Music.Pitch.cs'
+            , Music.Pitch.cs'
+            , Music.Pitch.cs'
+            , Music.Pitch.cs' ]
           ]
 
     -- TODO this is fromPitch
@@ -1289,34 +1289,55 @@ umts_01a =
     divideList :: Int -> [a] -> [[a]]
     divideList = Music.Score.Internal.Util.divideList
 
+    baseScale :: [Pitch]
+    baseScale = Music.Score.enumDiatonicFromTo
+        P.g__
+        P.c'''
+
 -- ‘01b-Pitches-Intervals.xml’
 -- TODO time signature "2/4"
 umts_01b :: Work
 umts_01b =
   Work mempty
     $ pure
-    $ Movement mempty sysStaff
+    $ Movement (movementTitle .~ "Various pitches and interval sizes" $ mempty) sysStaff
     $ Leaf staff
   where
-    sysStaff = cycle [mempty]
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 2/4) $ mempty) : cycle [mempty]
     staff = Staff mempty $ fmap (\chords -> Bar mempty [rh4 chords]) chs
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
 
     chs :: [[Chord]]
-    chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
+    chs = fmap (fmap singleNoteChord) $ divideList 2 pitches
       where
-        pitches =
-          [  Music.Pitch.Literal.g__
-          .. Music.Pitch.Literal.c'''
+        pitches = interleave (u <> Music.Score._8va u) (d <> Music.Score._8vb d)
+        u = Music.Score._8va
+          [       P.c, P.cs
+          , P.db, P.d, P.ds
+          , P.eb, P.e, P.es
+          , P.fb, P.f, P.fs
+          , P.gb, P.g, P.gs
+          , P.ab, P.a, P.as
+          , P.bb, P.b, P.bs
+          , P.cb'
           ]
-        {-
-          TODO actual pitches:
-            let u = [c cs  db d ds eb e es fb f fs gb g gs ab a as bb b bs cb]
-            let d = [c cb bs b bb as a ab gs g gb] — etc
-            in interleave (u <> 8va u) (d <> 8vb d)
-        -}
+        d =
+          [       P.c', P.cb'
+          , P.bs, P.b, P.bb
+          , P.as, P.a, P.ab
+          , P.gs, P.g, P.gb
+          , P.fs, P.f, P.fb
+          , P.es, P.e, P.eb
+          , P.ds, P.d, P.db
+          , P.cs
+          ]
+    interleave :: [a] -> [a] -> [a]
+    interleave [] ys = ys
+    interleave xs [] = xs
+    interleave [] [] = []
+    interleave (x:xs) (y:ys) = x : y : interleave xs ys
 
     singleNoteChord :: Pitch -> Chord
     singleNoteChord ps = pitches .~ [ps] $ mempty
