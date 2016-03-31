@@ -898,6 +898,9 @@ toXml work = do
                   in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
             -- System bar directions per bar
 
+        {-
+        TODO emit <divisions> in first bar (always MusicXml.defaultDivisions)
+        -}
         staffMusic :: [[MusicXml.Music]]
         staffMusic = fmap renderStaff $ movement^..staves.traverse
           where
@@ -907,6 +910,7 @@ toXml work = do
             -- TODO how to best render transposed staves (i.e. clarinets)
             -- TODO how to best render and multi-staff instruments
 
+            -- TODO emit line ===== comments in between measures
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
               [x]  -> renderPL x
@@ -920,10 +924,14 @@ toXml work = do
 
             renderC ::  Chord -> Duration -> MusicXml.Music
             renderC ch d = post $ case ch^.pitches of
+              -- TODO Don't emit <alter> tag if 0
               []  -> MusicXml.rest (realToFrac d)
-              [p] -> MusicXml.note (fromPitch p) (realToFrac d)
-              ps  -> MusicXml.chord (fmap fromPitch ps) (realToFrac d)
+              [p] -> MusicXml.note (fromPitch_ p) (realToFrac d)
+              ps  -> MusicXml.chord (fmap fromPitch_ ps) (realToFrac d)
               where
+              -- Normalize pitch here if it hasn't been done before
+                fromPitch_ = fromPitch . Music.Pitch.useStandardAlterations P.c
+
                 -- TODO arpeggio, breath, color
                 post = id
                   . notateDynamicX (ch^.dynamicNotation)
@@ -1039,6 +1047,9 @@ type AbcNotationExportM m = (MonadLog String m, MonadError String m)
 
 toAbc :: (AbcNotationExportM m) => Work -> m (String, ())
 toAbc work = error "Not implemented"
+{-
+Basic implementation
+-}
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -1878,8 +1889,8 @@ umts_23a = Work mempty $ pure
         ]
       , Tuplet (1/4) $ Group
         [ Beat (1/4) (pitches .~ [P.b'] $ mempty)
-        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
-        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c''] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c''] $ mempty)
         , Beat (1/4) (pitches .~ [P.b'] $ mempty)
         ]
       , Tuplet (3/7) $ Group
@@ -2046,6 +2057,24 @@ umts_31c =
     staff = mempty
 
 -- ‘32a-Notations.xml’
+{-
+All <notation> elements defined in MusicXML. The lyrics show the notation
+assigned to each note.
+
+- Fermatas
+- Arpeggio/Non-arp
+- Articulation marks
+- Doits/Fall-offs
+- Breath marks
+- Trills
+- Baroque Ornaments (w accidentals)
+- Tremolo
+- Bow marks
+- Harmonics
+- Fingerings/fret marks etc
+- Dynamics
+- Above/below
+-}
 umts_32a :: Work
 umts_32a =
   Work mempty
