@@ -1111,6 +1111,7 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
 
+-- TODO handle infinite system-staff/bar-list (one or the other)?
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -1119,6 +1120,7 @@ ascending steps; First without accidentals, then with a sharp and then
 with a flat accidental. Double alterations and cautionary accidentals
 are tested at the end.
 -}
+-- TODO time signature "c"
 umts_01a :: Work
 umts_01a =
   Work mempty
@@ -1155,8 +1157,64 @@ umts_01a =
 
     divideList :: Int -> [a] -> [[a]]
     divideList = Music.Score.Internal.Util.divideList
+
 -- ‘01b-Pitches-Intervals.xml’
+-- TODO time signature "2/4"
+umts_01b :: Work
+umts_01b =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
+  where
+    sysStaff = cycle [mempty]
+    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (\c -> Beat (1/4) c) cs
+
+    chs :: [[Chord]]
+    chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
+      where
+        pitches =
+          [  Music.Pitch.Literal.g__
+          .. Music.Pitch.Literal.c'''
+          ]
+        {-
+          TODO actual pitches:
+            let u = [c cs  db d ds eb e es fb f fs gb g gs ab a as bb b bs cb]
+            let d = [c cb bs b bb as a ab gs g gb] — etc
+            in interleave (u <> 8va u) (d <> 8vb d)
+        -}
+
+    singleNoteChord :: Pitch -> Chord
+    singleNoteChord ps = pitches .~ [ps] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
+
+
 -- ‘01c-Pitches-NoVoiceElement.xml’
+umts_01c :: Work
+umts_01c =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
+  where
+    sysStaff = cycle [mempty]
+    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty)
+      [[ singleNoteChord $ Music.Pitch.Literal.g ]]
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (\c -> Beat 1 c) cs
+
+    singleNoteChord :: Pitch -> Chord
+    singleNoteChord ps = pitches .~ [ps] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
+
 -- ‘01d-Pitches-Microtones.xml’
 -- ‘01e-Pitches-ParenthesizedAccidentals.xml’
 -- ‘01f-Pitches-ParenthesizedMicrotoneAccidentals.xml’
