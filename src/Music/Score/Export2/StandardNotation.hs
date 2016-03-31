@@ -1141,6 +1141,7 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO trills
 -- TODO 8va etc
 -- TODO consolidate clef/key sig representations
+-- TODO names as part of label tree (for piano/harp/chorus/strings etc)
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -1683,19 +1684,57 @@ umts_41b = mempty
   where
 
 -- ‘41c-StaffGroups.xml’
+-- TODO names as part of label tree (for piano/harp/chorus/strings etc)
 umts_41c :: Work
 umts_41c = mempty
   where
+    ls :: LabelTree BracketType String
+    ls = Branch NoBracket
+      [ Branch Bracket
+          [
+
+          ]
+      , Branch Bracket
+          [
+
+          ]
+      , Leaf "Timpani"
+      , Leaf "Percussion"
+      , Branch Brace
+          [ -- harp
+          ]
+      , Branch Brace
+          [ -- piano
+          ]
+      , Branch Bracket
+          [
+
+          ]
+      ]
 
 -- ‘41d-StaffGroups-Nested.xml’
 umts_41d :: Work
 umts_41d = mempty
   where
+    ls :: LabelTree BracketType ()
+    ls = Branch NoBracket
+      [ Leaf ()
+      , Branch Bracket
+        [ Leaf ()
+        , Branch Subbracket
+          [ Leaf ()
+          , Leaf ()
+          ]
+        ]
+      , Leaf ()
+      ]
 
 -- ‘41e-StaffGroups-InstrumentNames-Linebroken.xml’
 umts_41e :: Work
 umts_41e = mempty
   where
+    longName = "Long Staff Name"
+    shortName = "St. Nm."
 
 -- ‘41f-StaffGroups-Overlapping.xml’
 umts_41f :: Work
@@ -1708,9 +1747,7 @@ umts_41g = mempty
   where
 
 -- ‘41h-TooManyParts.xml’
-umts_41h :: Work
-umts_41h = mempty
-  where
+-- IGNORE
 
 -- ‘41i-PartNameDisplay-Override.xml’
 umts_41i :: Work
@@ -2011,7 +2048,6 @@ umts_all =
   , umts_41e
   , umts_41f
   , umts_41g
-  , umts_41h
   , umts_41i
   , umts_42a
   , umts_42b
