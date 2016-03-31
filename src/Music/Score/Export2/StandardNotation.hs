@@ -122,7 +122,7 @@ where
 
 import           BasePrelude                             hiding (first, second, (<>), First(..))
 import           Control.Lens                            (over, preview, set, to,
-                                                          under, view, _head, at)
+                                                          under, view, _head, at, _1, _2)
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
@@ -1559,17 +1559,39 @@ umts_11a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = mempty
+    staff = Staff mempty bars
+
+    bars :: [Bar]
+    bars = fmap (\d -> Bar mempty [quant tie (pitches .~ [P.c'] $ mempty) d]) durs
+
+    tie
+      :: Bool -- begin/end
+      -> Chord
+      -> Chord
+    tie True  = (ties._2) .~ Any True
+    tie False = (ties._1) .~ Any True
+
+    quant :: (Bool -> a -> a) -> a -> Duration -> Rhythm a
+    quant addTie x d = case d of
+      d | d == (3/8) -> Dotted 1 $ Beat (1/4) x
+      d | d == (1/2) ->            Beat (1/2) x
+      d | d == (3/4) -> Dotted 1 $ Beat (1/2) x
+      d | d == (1)   ->            Beat 1 x
+      d | d == (5/4) -> Group [Beat 1 (addTie True x), Beat (1/4) (addTie False x)] -- TODO ties
+      d | d == (6/4) -> Dotted 1 $ Beat 1 x
+      d | otherwise  -> error "umts_11a: bad duration"
 
     sysStaff :: SystemStaff
     sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
 
+    durs :: [Duration]
+    durs = fmap realToFrac timeSigs
+
     timeSigs :: [TimeSignature]
     timeSigs =
-      [
-      -- TODO Music.Score.cutTime
-      -- TODO Music.Score.commonTime
-        2/2
+      [ 2/2 -- TODO Music.Score.cutTime
+      , 4/4 -- TODO Music.Score.commonTime
+      , 2/2
       , 3/2
       , 2/4
       , 3/4
