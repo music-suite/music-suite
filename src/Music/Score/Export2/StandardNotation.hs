@@ -379,6 +379,12 @@ type HarmonicNotation       = (Any, Sum Int)
   -- (artificial?, partial number)
 type SlideNotation          = ((Any,Any),(Any,Any))
   -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
+
+endGliss   = _1 . _1
+endSlide   = _1 . _2
+beginGliss = _2 . _1
+beginSlide = _2 . _2
+
 type Ties                   = (Any,Any)
   -- (endTie?,beginTie?)
 
@@ -416,6 +422,12 @@ Note that MusicXML unfortunately makes no distinction between expressive marks
 (i.e. dolce) versus instructions (i.e. pizz, sul pont).
 
 -}
+
+-- TODO pedal notation
+-- TODO 8va notations
+-- TODO trills
+-- TODO brackets/dashed lines?
+
 data Chord = Chord
   { _pitches                :: [Pitch]
   , _arpeggioNotation       :: ArpeggioNotation
@@ -2550,8 +2562,8 @@ umts_31c =
 All <notation> elements defined in MusicXML. The lyrics show the notation
 assigned to each note.
 
-- Fermatas
-- Arpeggio/Non-arp
+- Fermatas TODO
+- Arpeggio/Non-arp TODO
 - Articulation marks
 - Doits/Fall-offs
 - Breath marks
@@ -2727,10 +2739,59 @@ umts_33a =
     -- TODO ties in bar 1
     chords :: [Chord]
     chords =
+      -- Ignore tuplet for now (should arguably not be in this test at all)
       [ bc
       , bc
       , bc
 
+      -- slur
+      , articulationNotation.slurs .~ [AN.BeginSlur] $ bc
+      , bc
+      , articulationNotation.slurs .~ [AN.EndSlur] $ bc
+
+      -- dashed slur
+      -- TODO add dash
+      , articulationNotation.slurs .~ [AN.BeginSlur] $ bc
+      , bc
+      , articulationNotation.slurs .~ [AN.EndSlur] $ bc
+
+      -- cresc
+      , dynamicNotation.crescDim .~ [DN.BeginCresc] $ bc
+      , bc
+      , dynamicNotation.crescDim .~ [DN.EndCresc] $ bc
+
+      -- dim
+      , dynamicNotation.crescDim .~ [DN.BeginDim] $ bc
+      , bc
+      , dynamicNotation.crescDim .~ [DN.EndDim] $ bc
+
+      -- tr (one short, one long)
+      , bc
+      , bc
+      , bc
+
+      -- start long tr
+      , bc
+      , nc -- drawn as (1/2) rest in test, though this is wrong
+      , nc
+
+      -- 8va
+      , bc
+      , bc
+      , bc
+
+      -- 15mb
+      , bc
+      , bc
+      , bc
+
+      {-
+      brackets
+          solid down/down
+          dashed down/down
+          solid none/down
+          dashed none/upsolid none/none
+      -}
       , bc
       , bc
       , bc
@@ -2751,72 +2812,47 @@ umts_33a =
       , bc
       , bc
 
+      -- dashed line above
       , bc
       , bc
       , bc
 
+      -- gliss (wavy) up
+      , slideNotation.beginSlide .~ Any True $ bc
+      , slideNotation.endSlide .~ Any True $ bc
+      , nc
+
+      -- bend/alter
+      , slideNotation.beginGliss .~ Any True $ bc
+      , slideNotation.endGliss .~ Any True $ bc
+      , nc
+
+      -- slide/gliss (solid) down
+      , slideNotation.beginGliss .~ Any True $ bc
+      , slideNotation.endGliss .~ Any True $ bc
+      , nc
+
+      -- grouping
       , bc
       , bc
       , bc
 
-      , bc
-      , bc
-      , bc
+      -- 2 crossbeam
+      , tremoloNotation .~ CrossBeamTremolo (Just 2) $ bc
+      , tremoloNotation .~ CrossBeamTremolo (Just 2) $ bc
+      , nc
 
+      -- hammer-on
       , bc
       , bc
-      , bc
+      , nc
 
-      -- 11
+      -- pull-off
       , bc
       , bc
-      , bc
+      , nc
 
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
-      -- 21
-      , bc
-      , bc
-      , bc
-
-      , bc
-      , bc
-      , bc
-
+      -- pedal (down/change/up)
       , bc
       , bc
       , bc
@@ -2847,9 +2883,9 @@ umts_33b =
       [ ties .~ (Any False, Any True) $ bc
       , ties .~ (Any True, Any False) $ bc
       ]
-    nc  = mempty
-    bc  = pitches .~ [P.c'] $ mempty
-    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+    -- nc  = mempty
+    bc  = pitches .~ [P.f] $ mempty
+    -- bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
 
     divideList :: Int -> [a] -> [[a]]
     divideList = Music.Score.Internal.Util.divideList
