@@ -1814,6 +1814,9 @@ umts_23c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
+    sysStaff = undefined
+    staff = undefined
+
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ Group
@@ -2407,6 +2410,9 @@ umts_72b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
+    sysStaff = undefined
+    staff = undefined
+
     pitch = Music.Pitch.c'
     origKeySig = (Music.Pitch.g, True) -- G major
 
