@@ -1224,7 +1224,11 @@ toXml work = do
 
             renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
             renderBar bar = case barLayersHaveEqualDuration bar of
+              -- No layers in this bar
+              Left [] -> pure mempty
+              -- Layers have different durations
               Left _  -> throwError "Layers have different durations"
+              -- One or more layers with the same duration
               Right d -> pure $ let
                   layers = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
                     fmap renderPitchLayer (bar^.pitchLayers)
@@ -1590,7 +1594,7 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 -- TODO lyrics
 -- TODO chord symbols
--- TODO piano staff crossings
+-- TODO staff crossings
 -- TODO trills
 -- TODO 8va etc
 -- TODO consolidate clef/key sig representations
@@ -1598,8 +1602,6 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
--- TODO xml/clefs
--- TODO xml/keysigs
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -1899,6 +1901,10 @@ umts_03a =
 Two voices with a backup, that does not jump to the beginning for the measure for
 voice 2, but somewhere in the middle. Voice 2 thus won’t have any notes or rests
 for the first beat of the measures.
+-}
+{-
+TODO when multiple layers are being used, set display-pitch
+in rests to different values to minimize collissions.
 -}
 umts_03b :: Work
 umts_03b =
@@ -3243,8 +3249,14 @@ umts_46c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : cycle [mempty]
+    staff = Staff mempty
+      [ mempty
+      , Bar (at (1/2) .~ Just Music.Pitch.mezzoSopranoClef $ mempty) chords
+      , Bar (at (1/2) .~ Just Music.Pitch.trebleClef $ mempty) chords
+      ]
+    chords =
+      [ PitchLayer $ Group $ replicate 4 $ Beat (1/4) P.c ]
 
 -- ‘46e-PickupMeasure-SecondVoiceStartsLater.xml’
 umts_46e :: Work
