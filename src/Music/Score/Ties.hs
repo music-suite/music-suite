@@ -7,14 +7,14 @@ module Music.Score.Ties (
 
         -- * Tiable class
         Tiable(..),
-        TieT(..),
 
         -- * Splitting tied notes in scores
         -- splitTies,
         splitTiesAt,
 
-        isTieEndBeginning_,
-
+        -- * TieT note transformer
+        TieT(..),
+        isTieEndBeginning,
   ) where
 
 import           Control.Applicative
@@ -70,15 +70,6 @@ class Tiable a where
   --
   toTied    :: a -> (a, a)
   toTied a = (beginTie a, endTie a)
-
-newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
-  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
-
-instance Wrapped (TieT a) where
-  type Unwrapped (TieT a) = ((Any, Any), a)
-  _Wrapped' = iso getTieT TieT
-
-instance Rewrapped (TieT a) (TieT b)
 
 instance Tiable Double      where { beginTie = id ; endTie = id }
 instance Tiable Float       where { beginTie = id ; endTie = id }
@@ -175,6 +166,20 @@ instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   rem = liftA2 rem
   toInteger = toInteger . extract
 
+
+
+newtype TieT a = TieT { getTieT :: ((Any, Any), a) }
+  deriving (Eq, Ord, Show, Functor, Foldable, Typeable, Applicative, Monad, Comonad)
+
+instance Wrapped (TieT a) where
+  type Unwrapped (TieT a) = ((Any, Any), a)
+  _Wrapped' = iso getTieT TieT
+
+instance Rewrapped (TieT a) (TieT b)
+
+isTieEndBeginning_ :: TieT a -> (Bool, Bool)
+isTieEndBeginning_ (TieT (ties, _)) = over both getAny $ ties
+
 {-
 -- |
 -- Split all notes that cross a barlines into a pair of tied notes.
@@ -261,7 +266,3 @@ splitDur maxDur (d,a)
   | maxDur <= 0 = error "splitDur: maxDur must be > 0"
   | d <= maxDur =  ((d, a), Nothing)
   | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
-
-
-isTieEndBeginning_ :: TieT a -> (Bool, Bool)
-isTieEndBeginning_ (TieT (ties, _)) = over both getAny $ ties

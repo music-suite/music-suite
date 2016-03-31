@@ -158,7 +158,7 @@ library
     ghc-options:        -fno-warn-typed-holes
                         -fwarn-tabs
                         -- -fwarn-unused-imports
-                        -fwarn-name-shadowing
+                        -- -fwarn-name-shadowing
                         -fwarn-incomplete-patterns
                         -fwarn-incomplete-uni-patterns
                         -fwarn-overlapping-patterns

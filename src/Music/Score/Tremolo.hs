@@ -74,7 +74,6 @@ deriving instance (Monoid b, Reversible a) => Reversible (Couple b a)
 deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
 deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
 instance Tiable a => Tiable (Couple b a) where
-  isTieEndBeginning (Couple (_,a)) = isTieEndBeginning a
   toTied = unzipR . fmap toTied
 
 

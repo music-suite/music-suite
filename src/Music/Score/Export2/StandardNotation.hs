@@ -1087,7 +1087,7 @@ fromAspects sc = do
       $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation))
       $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
       where
-        (endTie,beginTie) = Music.Score.isTieEndBeginning_ asp
+        (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
     -- TODO more layers (see below)
