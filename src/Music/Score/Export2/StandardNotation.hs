@@ -1557,13 +1557,17 @@ displaying the number of actual notes played. The second tuplet does not have a
 number attribute set.
 -}
 umts_23a :: Work
-umts_23a = Work mempty [Movement mempty
-  [timeSignature .~ (Option $ Just $ First $ 14/4) $ mempty]
-  (Leaf (Staff mempty [Bar [layer] mempty]))
-  ]
+umts_23a = Work mempty $ pure
+  $ Movement mempty (sysBar1 : repeat mempty)
+  $ Leaf
+  $ Staff mempty
+  $ pure bar1
   where
-    layer :: PitchLayer
-    layer = Group
+    sysBar1 :: SystemBar
+    sysBar1 = timeSignature .~ (Option $ Just $ First $ 14/4) $ mempty
+
+    bar1 :: Bar
+    bar1 = flip Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group
         [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
         , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
@@ -1612,8 +1616,42 @@ umts_23a = Work mempty [Movement mempty
 
 -- ‘23b-Tuplets-Styles.xml’
 umts_23b :: Work
-umts_23b = mempty
+umts_23b = Work mempty $ pure
+  $ Movement mempty (sysBar1 : repeat mempty)
+  $ Leaf
+  $ Staff mempty
+  $ [bar1,bar2,bar3,bar4]
   where
+    sysBar1 :: SystemBar
+    sysBar1 = timeSignature .~ (Option $ Just $ First $ 5/4) $ mempty
+
+    bar1 :: Bar
+    bar1 = flip Bar mempty $ pure $ Group
+      [ Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      ]
+    bar2 = flip Bar mempty $ pure $ Group
+      [ Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      ]
+    bar3 = flip Bar mempty $ pure $ Group
+      [ Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      , Tuplet (2/3) $ Group []
+      ]
+    bar4 = flip Bar mempty $ pure $ Group
+      [ Tuplet (3/4) $ Group []
+      , Tuplet (3/17) $ Group []
+      , Group []
+      ]
 
 -- ‘23c-Tuplet-Display-NonStandard.xml’
 umts_23c :: Work
