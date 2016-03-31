@@ -2,10 +2,14 @@
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
+
+-- For MonadLog
+{-# LANGUAGE FunctionalDependencies #-}
 -- For MonadLog String:
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor
-  , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving, FunctionalDependencies #-}
+  , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
 module Music.Score.Export2.StandardNotation
   (
@@ -390,6 +394,9 @@ data WorkInfo = WorkInfo
   }
   deriving (Eq, Show)
 
+instance Semigroup WorkInfo where
+  (<>) = mappend
+
 instance Monoid WorkInfo where
   mempty = WorkInfo mempty mempty mempty
   mappend x y
@@ -401,6 +408,10 @@ data Work = Work
   , _movements :: [Movement]
   }
   deriving (Show)
+
+instance Monoid Work where
+  mempty = Work mempty mempty
+  mappend (Work a1 a2) (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
 
 makeLenses ''SystemBar
 makeLenses ''StaffInfo
@@ -1232,6 +1243,11 @@ umts_01c =
 -- ‘02e-Rests-NoType.xml’
 
 -- ‘03a-Rhythm-Durations.xml’
+{-
+All note durations, from long, brevis, whole until 128th; First with their plain values,
+then dotted and finally doubly-dotted.
+-}
+umts_03a :: Work
 umts_03a = mempty
   where
     durs =
@@ -1241,28 +1257,104 @@ umts_03a = mempty
       ]
 
 -- ‘03b-Rhythm-Backup.xml’
+{-
+Two voices with a backup, that does not jump to the beginning for the measure for
+voice 2, but somewhere in the middle. Voice 2 thus won’t have any notes or rests
+for the first beat of the measures.
+-}
 
 -- ‘03c-Rhythm-DivisionChange.xml’
+-- IGNORE
 
 -- ‘03d-Rhythm-DottedDurations-Factors.xml’
+{-
+Several durations can be written with dots. For multimeasure rests, we can also
+have durations that cannot be expressed with dotted notes (like 5/8).
+-}
 
 -- ‘11a-TimeSignatures.xml’
+{-
+Various time signatures: 2/2 (alla breve), 4/4 (C), 2/2, 3/2, 2/4, 3/4, 4/4,
+5/4, 3/8, 6/8, 12/8
+-}
+umts_11a :: Work
+umts_11a = mempty
+  where
+    timeSigs :: [TimeSignature]
+    timeSigs =
+      [
+      -- TODO Music.Score.cutTime
+      -- TODO Music.Score.commonTime
+        2/2
+      , 3/2
+      , 2/4
+      , 3/4
+      , 4/4
+      , 5/4
+      , 3/8
+      , 6/8
+      , 12/8
+      ]
 
 -- ‘11b-TimeSignatures-NoTime.xml’
 
 -- ‘11c-TimeSignatures-CompoundSimple.xml’
+umts_11c :: Work
+umts_11c = mempty
+  where
+    timeSigs :: [TimeSignature]
+    timeSigs =
+      [ (3+2)/8
+      , (5+3+1)/4
+      ]
 
 -- ‘11d-TimeSignatures-CompoundMultiple.xml’
+-- IGNORE
 
 -- ‘11e-TimeSignatures-CompoundMixed.xml’
+-- IGNORE
 
 -- ‘11f-TimeSignatures-SymbolMeaning.xml’
+-- IGNORE
 
 -- ‘11g-TimeSignatures-SingleNumber.xml’
+-- IGNORE
 
 -- ‘11h-TimeSignatures-SenzaMisura.xml’
+-- IGNORE
 
 -- ‘12a-Clefs.xml’
+{-
+Various clefs: G, C, F, percussion, TAB and none; some are also possible with
+transposition and on other staff lines than their default
+(e.g. soprano/alto/tenor/baritone C clefs); Each measure shows a different clef
+(measure 17 has the "none" clef), only measure 18 has the same treble clef as
+measure 1.
+-}
+umts_12a :: Work
+umts_12a = mempty
+  where
+    clefs :: [Music.Pitch.Clef]
+    clefs =
+      [ Music.Pitch.trebleClef
+      , Music.Pitch.altoClef
+      , Music.Pitch.tenorClef
+      , Music.Pitch.bassClef
+      , Music.Pitch.tabClef
+      -- , Music.Pitch.treble8vbClef
+      -- , Music.Pitch.bass8vbClef
+      , Music.Pitch.bassClef -- 2 half-positions lower
+      , Music.Pitch.trebleClef -- 2 half-positions lower
+      , Music.Pitch.baritoneClef
+      , Music.Pitch.mezzoSopranoClef
+      , Music.Pitch.sopranoClef
+      , Music.Pitch.tabClef
+      -- , Music.Pitch.treble8vaClef
+      -- , Music.Pitch.bass8vaClef
+      -- , Music.Pitch.tabWithTextTabClef
+      -- , Music.Pitch.noClef
+      , Music.Pitch.trebleClef -- again!
+      ]
 
 -- ‘12b-Clefs-NoKeyOrClef.xml’
 
