@@ -333,7 +333,8 @@ type Ties                   = (Any,Any)
   -- (endTie?,beginTie?)
 -- TODO unify with Score.Meta.Fermata
 
-type Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
+data Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
+  deriving (Eq,Ord,Show)
 instance Semigroup Fermata where
   (<>) = mappend
 instance Monoid Fermata where
@@ -356,7 +357,7 @@ data Chord = Chord
   , _dynamicNotation        :: DynamicNotation
   , _fermata                :: Fermata
 
-  , _chordColor             :: Maybe (Colour Double)
+  , _chordColor             :: Option (First (Colour Double))
   , _chordText              :: [String]
   , _harmonicNotation       :: HarmonicNotation
   , _slideNotation          :: SlideNotation
@@ -365,7 +366,9 @@ data Chord = Chord
   deriving (Eq, Show)
 
 instance Monoid Chord where
-  mempty = Chord mempty mempty mempty mempty mempty mempty Nothing mempty mempty mempty mempty
+  mempty = Chord
+    mempty mempty mempty mempty mempty mempty
+    mempty mempty mempty mempty mempty mempty
   mappend x y
     | x == mempty = y
     | otherwise   = x
@@ -752,9 +755,9 @@ toLy work = do
 
         -- TODO This syntax might change in future Lilypond versions
         -- TODO handle any color
-        notateColor :: Maybe (Colour Double) -> Lilypond.Music -> Lilypond.Music
-        notateColor Nothing      = id
-        notateColor (Just color) = \x -> Lilypond.Sequential [
+        notateColor :: Option (First (Colour Double)) -> Lilypond.Music -> Lilypond.Music
+        notateColor (Option Nothing)              = id
+        notateColor (Option (Just (First color))) = \x -> Lilypond.Sequential [
           Lilypond.Override "NoteHead#' color"
             (Lilypond.toLiteralValue $ "#" ++ colorName color),
           x,
