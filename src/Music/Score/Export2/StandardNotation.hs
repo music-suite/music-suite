@@ -180,6 +180,8 @@ import           Data.VectorSpace                        hiding (Sum)
 
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
+import qualified Data.Music.Lilypond                     as L
+import qualified Data.Music.MusicXml.Simple              as X
 import qualified Text.Pretty
 import qualified System.Process --DEBUG
 import qualified System.Directory
@@ -193,7 +195,7 @@ import qualified Music.Dynamics.Literal as D
 import           Music.Parts                             (Group (..), Part, Instrument)
 import qualified Music.Parts
 import qualified Music.Pitch
-import           Music.Pitch                             (Pitch, fromPitch)
+import           Music.Pitch                             (Pitch, fromPitch, IsPitch(..))
 import qualified Music.Pitch.Literal
 import qualified Music.Pitch.Literal as P
 import           Music.Score                             (MVoice)
@@ -249,16 +251,17 @@ Remember:
 -}
 
 
+-- TODO w/wo connecting barlines
+-- TODO parg group names (i.e. "archi", "horns", "chorus", "fl (I && II)")
+data BracketType            = NoBracket | Bracket | Brace | Subbracket
+  deriving (Eq, Ord, Show)
+
 
 type BarNumber              = Int
 type TimeSignature          = Music.Score.Meta.Time.TimeSignature
 type KeySignature           = Music.Score.Meta.Key.KeySignature
 type RehearsalMark          = Music.Score.Meta.RehearsalMark.RehearsalMark
 type TempoMark              = Music.Score.Meta.Tempo.Tempo
-
--- TODO w/wo connecting barlines
-data BracketType            = NoBracket | Bracket | Brace | Subbracket
-  deriving (Eq, Ord, Show)
 
 type SpecialBarline         = () -- TODO Dashed | Double | Final
 -- type BarLines               = (Maybe SpecialBarline, Maybe SpecialBarline)
@@ -301,7 +304,14 @@ data StaffInfo              = StaffInfo
   , _instrumentFullName     :: InstrumentFullName
   , _sibeliusFriendlyName   :: SibeliusFriendlyName
   , _instrumentDefaultClef  :: Music.Pitch.Clef
-  -- See also _clefChanges
+  -- See also clefChanges
+  {-
+  TODO change name of _instrumentDefaultClef
+  More accurately, it represents the first clef to be used on the staff
+  (and the only one, unless there are changes.)
+  -}
+
+
   , _transposition          :: Transposition
   -- Purely informational, i.e. written notes are assumed to be in correct transposition
   , _smallOrLarge           :: SmallOrLarge
@@ -382,15 +392,28 @@ A chord. A possibly empty list of pitches, composed sequentially.
 Naturally, an empty pitch list renders as a rest and a singleton list as
 a single note.
 
+In MusicXML our chords are rendered using <note> elements. The MusicXML convention
+is to render each note or rest using a <note>. If the note is actually a rest,
+it is tagged with a <rest/> element inside the note. If it is part of a chord,
+each note except one (typically the first) is tagged with a <chord/> element.
+
+It makes more sense if you think of the note element as representing a note/rest
+symbol and an implicit advancement of the time counter, and he chord element as
+an instruction to draw a note but skip advancing time (conversely backup/forward)
+do affect the time counter but do not draw anything.
+
 TODO arguably ties, colors, harmonics and slide/gliss should be represented
 per notehead, and not per chord. This is simpler but may require more
 voices/layers to represent certain music.
 
-TODO what is chord text? Separate different text types (again based on graphical
+TODO Better text. Separate different text types (again based on graphical
 presentation rather than semantics).
+Note that MusicXML unfortunately makes no distinction between expressive marks
+(i.e. dolce) versus instructions (i.e. pizz, sul pont).
+
 -}
 data Chord = Chord
-  { _pitches :: [Pitch]
+  { _pitches                :: [Pitch]
   , _arpeggioNotation       :: ArpeggioNotation
   , _tremoloNotation        :: TremoloNotation
   , _breathNotation         :: BreathNotation
@@ -419,11 +442,31 @@ of these notes should be captured in the time type.
 -}
 newtype PitchLayer = PitchLayer { getPitchLayer :: Rhythm Chord }
   deriving (Eq, Show)
+
 {-|
 A bar. A parallel composition of layers.
 
-Each layer should have the same duration
-(TODO backends should truncate to enforce this).
+All layers that make up a bar should have the same duration.
+An bar with no layers is allowed (this is 'mempty') and should be rendered
+as a bar rest.
+
+MusicXML is a part/measure matrix (typically using column-major order) to allow
+it to be represented as a tree. Parts and measures are indexed by unique elements
+(called id and number respectively). Neither of these are rendered in the score
+(don't confuse with actual *visible* bar numbers), instead they are just token
+identifiers, and are conventionally named P1,P2,P3... and 1,2,3... respectively.
+
+    <part id="P1">
+      <measure number="1">
+        ...
+      </measure>
+      <measure number="2">
+        ...
+      </measure>
+    </part>
+    ...
+
+TODO free floating text/symbols?
 -}
 data Bar = Bar
   { _clefChanges   :: Map Duration Music.Pitch.Clef
@@ -435,15 +478,39 @@ data Bar = Bar
 {-|
 A staff. A sequential composition of /bars/ with meta-information.
 
-We make no difference between staves and part in this representation
-(that is a semantic difference, not a graphical one).
-  - What is the Lilypond approach here?
-  - In MusicXML staves and parts are separate concepts: the score is
-    a matrix of bar-in-a-staff, each containing objects that may be assigned
-    to different staves.
+By this we mean an actual staff on the page, whether it correlates with a single
+instrument or not (i.e. because it is part of a multi-staff part for i.e. piano,
+organ or percussion).
 
-    The basic catch here is that a MusicXML part may correspond to one or more
-    staves (as represented here.)
+The hireachy we use here is clear: a score contains staves which are organized
+as a tree with bracket symbols at the branches. Traversing the tree gives us
+the staves top-to-botom.
+
+MusicXML by contrast includes two separate notions of parts and staves.
+
+The score is a part/measure matrix, and the part-list element provides a
+separate annotation for how parts are grouped (i.e. for brackets, barline convention
+and in-between staff names). In MusicXML staves are not part of the hierarchy, but
+are indicated separately: each part may specify a number of staves using
+
+  <attribute>
+    <staves>
+      N
+    </staves>
+  </attribute>
+
+and certain elements (including notes note, forward and direction) [1] can
+be tagget to indicate which staff they should be placed on.
+
+Consequently things like a piano staff can be represented in two ways:
+by using 2 (or more) explicist staves and a part-group, ur using a single part
+and the staff annotations. The single-part approach seem to be favored for piano
+music.
+
+TODO we can also define multiple instrumetns part part using score-instrument,
+and then assign individual notes (and which other objects?) to this.
+
+[1]: http://www.musicxml.com/tutorial/notation-basics/multi-part-music-2/)
   -}
 data Staff = Staff
   { _staffInfo :: StaffInfo
@@ -480,6 +547,17 @@ data Work = Work
   , _movements :: [Movement]
   }
   deriving (Show)
+
+
+makeLenses ''SystemBar
+makeLenses ''StaffInfo
+makeLenses ''Chord
+makeLenses ''Bar
+makeLenses ''Staff
+makeLenses ''MovementInfo
+makeLenses ''Movement
+makeLenses ''WorkInfo
+makeLenses ''Work
 
 
 instance Semigroup SystemBar where
@@ -534,6 +612,9 @@ instance Monoid Chord where
     | x == mempty = y
     | otherwise   = x
 
+instance IsPitch Chord where
+  fromPitch p = pitches .~ [p] $ mempty
+
 instance Monoid Bar where
   mempty = Bar mempty mempty
   mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
@@ -560,17 +641,6 @@ instance Monoid WorkInfo where
   mappend x y
     | x == mempty = y
     | otherwise   = x
-
-
-makeLenses ''SystemBar
-makeLenses ''StaffInfo
-makeLenses ''Chord
-makeLenses ''Bar
-makeLenses ''Staff
-makeLenses ''MovementInfo
-makeLenses ''Movement
-makeLenses ''WorkInfo
-makeLenses ''Work
 
 systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
 systemStaffTakeBars = take
@@ -1096,11 +1166,27 @@ toXml work = do
         staffMusic :: [[MusicXml.Music]]
         staffMusic = fmap renderStaff $ movement^..staves.traverse
           where
+            renderClef :: Music.Pitch.Clef -> MusicXml.Music
+            renderClef (Music.Pitch.Clef clef) = case clef of
+              (clefSymbol, octCh, line) -> X.Music $ pure $ X.MusicAttributes $
+                X.Clef (exportSymbol clefSymbol) (fromIntegral line + 3)
+              where
+                -- TODO add octave-adjust to musicxml2
+                exportSymbol x = case x of
+                  Music.Pitch.GClef -> X.GClef
+                  Music.Pitch.CClef -> X.CClef
+                  Music.Pitch.FClef -> X.FClef
+                  Music.Pitch.PercClef -> X.PercClef
+                  Music.Pitch.NeutralClef -> X.TabClef
+
             renderStaff :: Staff -> [MusicXml.Music]
-            renderStaff st = fmap renderBar (st^.bars)
-            -- TODO clef/key
+            renderStaff st = renderClef initClef : map renderBar (st^.bars)
+              where
+                initClef = st^.staffInfo.instrumentDefaultClef
+
             -- TODO how to best render transposed staves (i.e. clarinets)
-            -- TODO how to best render and multi-staff instruments
+
+
 
             {-
             backup/forward
@@ -1132,6 +1218,7 @@ toXml work = do
                   $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d)
                   $ zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..]
                   $ fmap renderPitchLayer layers
+                  -- TODO render clef here too
               where
                 durToXmlDur :: Duration -> MusicXml.Duration
                 durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
@@ -1944,28 +2031,39 @@ umts_12a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = mempty
+    staff = Staff (instrumentDefaultClef .~ Music.Pitch.trebleClef $ mempty) bars
 
-    clefs :: [Music.Pitch.Clef]
+    bars = fmap middleCWithClefBar clefs
+
+    middleCWithClefBar Nothing =
+      Bar mempty
+        [PitchLayer $ Beat 1 P.c]
+
+    middleCWithClefBar (Just clef) =
+      Bar (at 0 .~ Just clef $ mempty)
+        [PitchLayer $ Beat 1 P.c]
+
+    clefs :: [Maybe Music.Pitch.Clef]
     clefs =
-      [ Music.Pitch.trebleClef
-      , Music.Pitch.altoClef
-      , Music.Pitch.tenorClef
-      , Music.Pitch.bassClef
-      -- , TODO Music.Pitch.tabClef
-      -- , TODO Music.Pitch.treble8vbClef
-      -- , TODO Music.Pitch.bass8vbClef
-      , Music.Pitch.bassClef -- 2 half-positions lower
-      , Music.Pitch.trebleClef -- 2 half-positions lower
-      , Music.Pitch.baritoneClef
-      , Music.Pitch.mezzoSopranoClef
-      , Music.Pitch.sopranoClef
-      -- , TODO Music.Pitch.tabClef
-      -- , TODO Music.Pitch.treble8vaClef
-      -- , TODO Music.Pitch.bass8vaClef
-      -- , TODO Music.Pitch.tabWithTextTabClef
-      -- , TODO Music.Pitch.noClef
-      , Music.Pitch.trebleClef -- again!
+      [ Nothing
+        -- TODO 1st element should be nothing, so we can test default clef
+      , Just $ Music.Pitch.altoClef
+      , Just $ Music.Pitch.tenorClef
+      , Just $ Music.Pitch.bassClef
+      , Nothing -- , TODO Music.Pitch.tabClef
+      , Nothing -- , TODO Music.Pitch.treble8vbClef
+      , Nothing -- , TODO Music.Pitch.bass8vbClef
+      , Just $ Music.Pitch.bassClef -- TODO 2 half-positions lower
+      , Just $ Music.Pitch.trebleClef -- TODO 2 half-positions lower
+      , Just $ Music.Pitch.baritoneClef
+      , Just $ Music.Pitch.mezzoSopranoClef
+      , Just $ Music.Pitch.sopranoClef
+      , Nothing -- , TODO Music.Pitch.tabClef
+      , Nothing -- , TODO Music.Pitch.treble8vaClef
+      , Nothing -- , TODO Music.Pitch.bass8vaClef
+      , Nothing -- , TODO Music.Pitch.tabWithTextTabClef
+      , Nothing -- , TODO Music.Pitch.noClef
+      , Just $ Music.Pitch.trebleClef -- again!
       ]
 
 -- ‘12b-Clefs-NoKeyOrClef.xml’
