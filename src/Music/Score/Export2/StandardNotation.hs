@@ -237,9 +237,9 @@ Actually I'm pretty sure this is the right approach. See also #242
     -- or an alt-list in SystemStaff.
   } deriving (Eq,Ord,Show)
 
--- TODO derive these somehow
 instance Semigroup SystemBar where
   (<>) = mappend
+
 instance Monoid SystemBar where
   mempty = SystemBar mempty mempty mempty mempty mempty
   (SystemBar a1 a2 a3 a4 a5) `mappend` (SystemBar b1 b2 b3 b4 b5)
@@ -331,12 +331,14 @@ type SlideNotation          = ((Any,Any),(Any,Any))
   -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
 type Ties                   = (Any,Any)
   -- (endTie?,beginTie?)
--- TODO unify with Score.Meta.Fermata
 
+  -- TODO unify with Score.Meta.Fermata
 data Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
   deriving (Eq,Ord,Show)
+
 instance Semigroup Fermata where
   (<>) = mappend
+
 instance Monoid Fermata where
   mempty = NoFermata
   mappend x y
@@ -436,7 +438,7 @@ movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
   Nothing -> Movement i ss st
   Just n  -> Movement i (systemStaffTakeBars n ss) (fmap (staffTakeBars n) st)
   where
-    -- TODO take all staves iunto account, don't use head
+    -- TODO take all staves into account (and don't use Prelude.head)
     minBars = shortestListLength ss (_bars $ head $ toList st)
 
     shortestListLength :: [a] -> [b] -> Int
@@ -533,17 +535,17 @@ runPureExportMNoLog = fmap fst . runExcept . runWriterT . runE
 
 
 {-|
-Basic monad for exporting music.
+Basic failure and logging in the 'IO' monad.
 
-Run as a pure computation with internal logging.
-TODO add reader for indentation level etc
+Logs to standard output.
 -}
 newtype IOExportM a = IOExportM { runIOExportM_ :: IO a }
   deriving ( Functor, Applicative, Monad, Alternative, MonadPlus, MonadIO )
+  -- TODO add reader for indentation level etc
 
 instance MonadError String IOExportM where
   throwError e = fail e
-  -- TODO fix
+  -- TODO
   -- catchError (IOExportM k) = IOExportM $ do
   --   catchError k (\e -> throwError (show e))
 
@@ -575,8 +577,6 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
--- TODO replace E with (MonadLog m, MonadThrow...) => m
--- or whatever
 type LilypondExportM m = (MonadLog String m, MonadError String m)
 
 toLy :: (LilypondExportM m) => Work -> m (String, Lilypond.Music)
@@ -770,8 +770,8 @@ toLy work = do
           | c == Data.Colour.Names.blue  = "blue"
           | otherwise        = error "Lilypond backend: Unkown color"
 
-        -- TODO use
-        -- Must rescale according to returned duration
+        -- TODO not used for now
+        -- We need to rescale the music according to the returned duration
         notateTremolo
           :: Maybe Int
           -> Duration
@@ -1095,10 +1095,13 @@ fromAspects sc = do
   let postChordMerge = fmap2 (simultaneous . fmap asp1ToAsp2) postPartExtract
   -- postChordMerge :: [(Music.Parts.Part,Score Asp2)]
 
-  -- Separate voices (called "layers" to avoid confusion)
-  -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
-  -- TODO layer sepration (which, again, does not actually happen in current code should happen
-  -- AFTER tie split)
+  {-
+    Separate voices (called "layers" to avoid confusion)
+    This is currently a trivial algorithm that assumes overlapping notes are in different parts
+
+    TODO layer sepration (which, again, does not actually happen in current code)
+    should happen after ties have been split.
+  -}
   say "Separating voices in parts (assuming no overlaps)"
   postVoiceSeparation <- mapM (\a@(p,_) ->
     mapM (toLayer p) a) $ postChordMerge
@@ -1146,9 +1149,7 @@ fromAspects sc = do
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
-
-
-    -- TODO log rewriting etc
+    -- TODO optionally log quantization
     quantizeBar :: (StandardNotationExportM m, Music.Score.Tiable a) => Voice (Maybe a)
       -> m (Rhythm (Maybe a))
     quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
@@ -1206,7 +1207,7 @@ fromAspects sc = do
         (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
-    -- TODO more layers (see below)
+    -- TODO handle >1 layers (see below)
     -- TODO place clef changes here
     aspectsToBar rh = Bar mempty [layer1]
       where
