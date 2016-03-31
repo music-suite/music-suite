@@ -1551,9 +1551,64 @@ umts_21c = mempty
 -- IGNORE (nice to have!)
 
 -- ‘23a-Tuplets.xml’
+{-
+Some tuplets (3:2, 3:2, 3:2, 4:2, 4:1, 7:3, 6:2) with the default tuplet bracket
+displaying the number of actual notes played. The second tuplet does not have a
+number attribute set.
+-}
 umts_23a :: Work
-umts_23a = mempty
+umts_23a = Work mempty [Movement mempty
+  [timeSignature .~ (Option $ Just $ First $ 14/4) $ mempty]
+  (Leaf (Staff mempty [Bar [layer] mempty]))
+  ]
   where
+    layer :: PitchLayer
+    layer = Group
+      [ Tuplet (2/3) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (2/3) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (2/3) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (2/4) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (1/4) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (3/7) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      , Tuplet (2/6) $ Group
+        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        ]
+      ]
 
 -- ‘23b-Tuplets-Styles.xml’
 umts_23b :: Work
