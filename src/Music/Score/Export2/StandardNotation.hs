@@ -889,12 +889,17 @@ toXml work = do
           where
             renderStaff :: Staff -> [MusicXml.Music]
             renderStaff st = fmap renderBar (st^.bars)
+            -- TODO clef/key
+            -- TODO how to best render transposed staves (i.e. clarinets)
+            -- TODO how to best render and multi-staff instruments
 
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
               [x]  -> renderPL x
               -- TODO
               xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
+            -- TODO time/tempo
+            -- TODO multiple layers
 
             renderPL :: Rhythm Chord -> MusicXml.Music
             renderPL = renderBarMusic . fmap renderC
@@ -1603,10 +1608,8 @@ umts_11a =
       ]
 
 -- ‘11b-TimeSignatures-NoTime.xml’
-
--- ‘11c-TimeSignatures-CompoundSimple.xml’
-umts_11c :: Work
-umts_11c =
+umts_11b :: Work
+umts_11b =
   Work mempty
     $ pure
     $ Movement mempty (repeat mempty)
@@ -1620,6 +1623,9 @@ umts_11c =
       [ (3+2)/8
       , (5+3+1)/4
       ]
+
+-- ‘11c-TimeSignatures-CompoundSimple.xml’
+-- IGNORE
 
 -- ‘11d-TimeSignatures-CompoundMultiple.xml’
 -- IGNORE
@@ -2264,8 +2270,19 @@ umts_42b = mempty
 
 -- ‘43a-PianoStaff.xml’
 umts_43a :: Work
-umts_43a = mempty
+umts_43a =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ staves
   where
+    sysStaff = [timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty]
+    staves = Branch Brace
+      [ Leaf $ Staff mempty [Bar mempty [Beat 1 $ singlePitch P.f]]
+      , Leaf $ Staff (instrumentDefaultClef .~ bc $ mempty) [Bar mempty [Beat 1 $ singlePitch P.b__]]
+      ]
+    bc = Music.Pitch.bassClef
+    singlePitch x = pitches .~ [x] $ mempty
 
 -- ‘43b-MultiStaff-DifferentKeys.xml’
 umts_43b :: Work
@@ -2634,7 +2651,7 @@ umts_all =
   , ("umts_03a",umts_03a)
   , ("umts_03b",umts_03b)
   , ("umts_11a",umts_11a)
-  , ("umts_11c",umts_11c)
+  , ("umts_11b",umts_11b)
   , ("umts_12a",umts_12a)
   , ("umts_12b",umts_12b)
   , ("umts_13a",umts_13a)
