@@ -36,7 +36,7 @@ module Music.Score.Part (
         -- HasPart',
         -- PartT(..),
         -- getParts,
-        
+
         (</>),
         rcat,
   ) where
@@ -222,7 +222,7 @@ extractParts :: (Ord (Part a), HasPart' a) => Score a -> [Score a]
 extractParts = extractPartsG
 
 extractPartsG :: (
-  MonadPlus f, HasParts' (f a), HasPart' a, 
+  MonadPlus f, HasParts' (f a), HasPart' a,
   Part (f a) ~ Part a, Ord (Part a)
   ) => f a -> [f a]
 extractPartsG x = (\p s -> filterPart (== p) s) <$> allParts x <*> return x
@@ -272,7 +272,6 @@ instance Reversible a => Reversible (PartT p a) where
   rev = fmap rev
 
 instance Tiable a => Tiable (PartT n a) where
-  isTieEndBeginning (PartT (_,a)) = isTieEndBeginning a
   toTied (PartT (v,a)) = (PartT (v,b), PartT (v,c)) where (b,c) = toTied a
 
 type instance Part                 (Behavior a) = Behavior (Part a)
@@ -347,4 +346,3 @@ a </> b = a <> moveParts offset b
 
         maximum' :: (Ord a, Foldable t) => a -> t a -> a
         maximum' z = option z getMax . foldMap (Option . Just . Max)
-

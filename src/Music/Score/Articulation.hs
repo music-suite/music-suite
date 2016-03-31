@@ -347,7 +347,7 @@ staccatissimo = set (articulations . separation) 2
 
 newtype ArticulationT n a = ArticulationT { getArticulationT :: (n, a) }
   deriving (
-    Eq, Ord, Show, Typeable, Functor, Applicative, Monad, 
+    Eq, Ord, Show, Typeable, Functor, Applicative, Monad,
     Comonad, Transformable, Monoid, Semigroup
     )
 
@@ -404,11 +404,11 @@ instance Rewrapped (ArticulationT p a) (ArticulationT p' b)
 type instance Articulation (ArticulationT p a) = p
 type instance SetArticulation p' (ArticulationT p a) = ArticulationT p' a
 
-instance (Transformable p, Transformable p') 
+instance (Transformable p, Transformable p')
     => HasArticulation (ArticulationT p a) (ArticulationT p' a) where
   articulation = _Wrapped . _1
 
-instance (Transformable p, Transformable p') 
+instance (Transformable p, Transformable p')
     => HasArticulations (ArticulationT p a) (ArticulationT p' a) where
   articulations = _Wrapped . _1
 
@@ -417,7 +417,6 @@ deriving instance (IsInterval a, Monoid n) => IsInterval (ArticulationT n a)
 deriving instance Reversible a => Reversible (ArticulationT p a)
 
 instance (Tiable n, Tiable a) => Tiable (ArticulationT n a) where
-  isTieEndBeginning (ArticulationT (_,a)) = isTieEndBeginning a
   toTied (ArticulationT (d,a)) = (ArticulationT (d1,a1), ArticulationT (d2,a2))
     where
       (a1,a2) = toTied a
@@ -430,4 +429,3 @@ addArtCon :: (
   ) => s -> t
 addArtCon = over (phrases.varticulation) withContext
 varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
-

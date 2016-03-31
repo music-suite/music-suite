@@ -49,6 +49,7 @@ library
                         random-shuffle,
                         MonadRandom,
                         random,
+                        base-prelude,
                         colour                  >= 2.3.3 && < 3.0,
                         HCodecs                 >= 0.5 && < 0.6,
                         vector-space            >= 0.10.2 && < 1,
@@ -156,7 +157,7 @@ library
 
     ghc-options:        -fno-warn-typed-holes
                         -fwarn-tabs
-                        -fwarn-unused-imports
+                        -- -fwarn-unused-imports
                         -fwarn-name-shadowing
                         -fwarn-incomplete-patterns
                         -fwarn-incomplete-uni-patterns

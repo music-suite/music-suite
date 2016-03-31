@@ -23,14 +23,14 @@ module Music.Score.Dynamics (
 
         -- * Attenuable class
         Attenuable,
-        
+
         -- * Manipulating dynamics
         level,
         louder,
         softer,
         compressUp,
         compressDown,
-        
+
         -- compressor,
         fadeIn,
         fadeOut,
@@ -104,7 +104,7 @@ type DynamicLensLaws s t = DynamicLensLaws' s t (Dynamic s) (Dynamic t)
 --
 class (
   Transformable (Dynamic s),
-  Transformable (Dynamic t), 
+  Transformable (Dynamic t),
   -- SetDynamic (Dynamic t) s ~ t
   DynamicLensLaws s t
   ) => HasDynamics s t where
@@ -313,9 +313,9 @@ type Attenuable a
   = (HasDynamics a a,
      VectorSpace (Level a), AffineSpace (Dynamic a))
 
--- | 
+-- |
 -- Increase dynamics (linear).
--- For standard notation, switches dynamic marks the given number of step upwards. 
+-- For standard notation, switches dynamic marks the given number of step upwards.
 --
 -- >>> louder 1 (mp :: Dynamics)
 -- _p
@@ -337,7 +337,7 @@ louder a = dynamics %~ (.+^ a)
 --
 
 -- | Decrease dynamic (linear).
---   For standard notation, switches dynamic marks the given number of step downwards. 
+--   For standard notation, switches dynamic marks the given number of step downwards.
 softer :: Attenuable a => Level a -> a -> a
 softer a = dynamics %~ (.-^ a)
 
@@ -346,13 +346,13 @@ volume :: (Num (Dynamic t), HasDynamics s t, Dynamic s ~ Dynamic t) => Dynamic t
 volume a = dynamics *~ a
 
 -- | Compress dynamics upwards.
--- 
+--
 -- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
 -- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
 --
 -- >>> compressUp 0 (1/2) (0.2 :: Amplitude)
 -- Amplitude {getAmplitude = 0.1}
--- 
+--
 compressUp :: (Attenuable a, Ord (Level a), Num (Level a)) =>
   Dynamic a           -- ^ Threshold
   -> Scalar (Level a) -- ^ Ratio
@@ -361,13 +361,13 @@ compressUp :: (Attenuable a, Ord (Level a), Num (Level a)) =>
 compressUp th r = over dynamics (relative th $ \x -> if x < 0 then x else x^* r)
 
 -- | Compress dynamics downwards.
--- 
+--
 -- >>> compressUp mp 2 [ppp,pp,_p,mp,mf,_f,ff,fff::Dynamics]
 -- [ppp,pp,_p,mp,mp,fff,fffff,fffffff]
--- 
+--
 -- >>> compressDown 0 1.5 (-0.2 :: Amplitude)
 -- Amplitude {getAmplitude = -0.30000000000000004}
--- 
+--
 compressDown :: (Attenuable a, Ord (Level a), Num (Level a)) =>
   Dynamic a           -- ^ Threshold
   -> Scalar (Level a) -- ^ Ratio
@@ -459,11 +459,11 @@ instance Rewrapped (DynamicT p a) (DynamicT p' b)
 type instance Dynamic (DynamicT p a) = p
 type instance SetDynamic p' (DynamicT p a) = DynamicT p' a
 
-instance (Transformable p, Transformable p') 
+instance (Transformable p, Transformable p')
   => HasDynamic (DynamicT p a) (DynamicT p' a) where
   dynamic = _Wrapped . _1
 
-instance (Transformable p, Transformable p') 
+instance (Transformable p, Transformable p')
   => HasDynamics (DynamicT p a) (DynamicT p' a) where
   dynamics = _Wrapped . _1
 
@@ -477,7 +477,6 @@ instance (IsDynamics n, Monoid a) => IsDynamics (DynamicT n a) where
 deriving instance Reversible a => Reversible (DynamicT p a)
 
 instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
-  isTieEndBeginning (DynamicT (_,a)) = isTieEndBeginning a
   toTied (DynamicT (d,a)) = (DynamicT (d1,a1), DynamicT (d2,a2))
     where
       (a1,a2) = toTied a
@@ -488,15 +487,14 @@ instance (Tiable n, Tiable a) => Tiable (DynamicT n a) where
 -- |
 -- View just the dynamices in a voice.
 --
-vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b) 
+vdynamic :: ({-SetDynamic (Dynamic t) s ~ t,-} HasDynamic a a, HasDynamic a b)
   => Lens (Voice a) (Voice b) (Voice (Dynamic a)) (Voice (Dynamic b))
 
 vdynamic = lens (fmap $ view dynamic) (flip $ zipVoiceWithNoScale (set dynamic))
 -- vdynamic = through dynamic dynamic
 
 addDynCon :: (
-  HasPhrases s t a b, HasDynamic a a, HasDynamic a b, 
+  HasPhrases s t a b, HasDynamic a a, HasDynamic a b,
   Dynamic a ~ d, Dynamic b ~ Ctxt d
   ) => s -> t
 addDynCon = over (phrases.vdynamic) withContext
-

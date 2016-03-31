@@ -144,4 +144,3 @@ instance (HasArticulation a b) => HasArticulation (TremoloT a) (TremoloT b) wher
 --
 runTremoloT :: TremoloT a -> (Int, a)
 runTremoloT (TremoloT (Couple (Max n, a))) = (fromIntegral n, a)
-

@@ -183,7 +183,6 @@ deriving instance HasText a => HasText (TieT a)
 -- TextT
 
 instance Tiable a => Tiable (TextT a) where
-  isTieEndBeginning (TextT (Couple (_,a))) = isTieEndBeginning a
   toTied (TextT (Couple (n,a))) = (TextT (Couple (n,b)), TextT (Couple (mempty,c))) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (TextT a)
 deriving instance HasHarmonic a => HasHarmonic (TextT a)
@@ -193,7 +192,6 @@ deriving instance HasSlide a => HasSlide (TextT a)
 -- HarmonicT
 
 instance Tiable a => Tiable (HarmonicT a) where
-  isTieEndBeginning (HarmonicT (Couple (_,a))) = isTieEndBeginning a
   -- toTied = unzipR . fmap toTied
   toTied (HarmonicT (Couple (n,a))) = (HarmonicT (Couple (n,b)), HarmonicT (Couple (mempty,c))) where (b,c) = toTied a
 deriving instance HasTremolo a => HasTremolo (HarmonicT a)
@@ -205,7 +203,6 @@ deriving instance HasText a => HasText (HarmonicT a)
 
 
 instance Tiable a => Tiable (SlideT a) where
-  isTieEndBeginning (SlideT (Couple (_,a))) = isTieEndBeginning a
   toTied = unzipR . fmap toTied
 deriving instance HasTremolo a => HasTremolo (SlideT a)
 deriving instance HasHarmonic a => HasHarmonic (SlideT a)
