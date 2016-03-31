@@ -22,9 +22,6 @@ semantic flavor:
 
 - Bars, staves and rhytmical structure is explicit.
 
-- There is no unification of marks or spanners, instead more semantic types such
-  as 'DynamicNotation' are used.
-
 - Spanners are represented by begin/end tags.
 
 - Harmoncics are represented as played, i.e. not by specifying note head shape
@@ -100,7 +97,7 @@ module Music.Score.Export2.StandardNotation
   , harmonicNotation
   , slideNotation
   , ties
-  , PitchLayer
+  , PitchLayer(..)
   , Bar
   , clefChanges
   , pitchLayers
@@ -240,6 +237,16 @@ foldLabelTree :: (a -> c) -> (b -> [c] -> c) -> LabelTree b a -> c
 foldLabelTree f g (Leaf x)      = f x
 foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
 
+
+{-
+Remember:
+
+- Purpose here is to represent a standard/common/Western etc classical score.
+- This type does /not/ have to be easy to enter manually.
+- Keep it as simple as possible and CLEAR.
+-
+
+-}
 
 
 
@@ -403,8 +410,8 @@ Note that can /not/ use @Rhythm (Bool, Chord)@ (or similar) as that would scew u
 the time semantics of the 'Rhythm' value, in other words: the floating nature
 of these notes should be captured in the time type.
 -}
-type PitchLayer             = Rhythm Chord
-
+newtype PitchLayer = PitchLayer { getPitchLayer :: Rhythm Chord }
+  deriving (Eq, Show)
 {-|
 A bar. A parallel composition of layers.
 
@@ -739,7 +746,7 @@ toLy work = do
     toLyBar sysBar bar = do
       let layers = bar^.pitchLayers
       -- TODO emit \new Voice for eachlayer
-      sim <$> sysStuff <$> mapM (toLyLayer) layers
+      sim <$> sysStuff <$> mapM (toLyLayer . getPitchLayer) layers
       where
         -- System information need not be replicated in all layers
         -- TODO other system stuff (reh marks, special barlines etc)
@@ -1104,7 +1111,7 @@ toXml work = do
             -- TODO emit line ===== comments in between measures
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
-              [x]  -> renderPitchLayer x
+              [x]  -> renderPitchLayer $ getPitchLayer x
               -- TODO
               xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
             -- TODO time/tempo
@@ -1400,7 +1407,7 @@ fromAspects sc = do
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
     -- TODO handle >1 layers (see below)
     -- TODO place clef changes here
-    aspectsToBar rh = Bar mempty [layer1]
+    aspectsToBar rh = Bar mempty [PitchLayer layer1]
       where
         layer1 = fmap aspectsToChord rh
 
@@ -1436,8 +1443,8 @@ fromAspects sc = do
 test = runPureExportMNoLog $ toLy $
   Work mempty [Movement mempty [mempty] (
     Branch Bracket [
-      Leaf (Staff mempty [Bar mempty [Beat 1 mempty]]),
-      Leaf (Staff mempty [Bar mempty [Beat 1 mempty]])
+      Leaf (Staff mempty [Bar mempty [PitchLayer $ Beat 1 mempty]]),
+      Leaf (Staff mempty [Bar mempty [PitchLayer $ Beat 1 mempty]])
       ])]
 
 test2 x = runPureExportMNoLog $ toLy =<< fromAspects x
@@ -1488,7 +1495,7 @@ umts_01a =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ fmap (\chords -> Bar mempty [rh4 chords]) chs
+    staff = Staff mempty $ fmap (\chords -> Bar mempty [PitchLayer $ rh4 chords]) chs
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -1531,7 +1538,7 @@ umts_01b =
     $ Leaf staff
   where
     sysStaff = (timeSignature .~ (Option $ Just $ First $ 2/4) $ mempty) : cycle [mempty]
-    staff = Staff mempty $ fmap (\chords -> Bar mempty [rh4 chords]) chs
+    staff = Staff mempty $ fmap (\chords -> Bar mempty [PitchLayer $ rh4 chords]) chs
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -1582,7 +1589,7 @@ umts_01c =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ [Bar mempty [rh4 [singleNoteChord $ Music.Pitch.Literal.g]]]
+    staff = Staff mempty $ [Bar mempty [PitchLayer $ rh4 [singleNoteChord $ Music.Pitch.Literal.g]]]
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat 1) cs
@@ -1700,7 +1707,7 @@ umts_02d =
     sysStaff = map (\ts -> timeSignature .~ (Option $ fmap First ts) $ mempty) timeSigs2
 
     bars :: [Bar]
-    bars = fmap (\d -> Bar mempty [quant (pitches .~ [] $ mempty) d]) durs
+    bars = fmap (\d -> Bar mempty [PitchLayer $ quant (pitches .~ [] $ mempty) d]) durs
 
     quant :: a -> Duration -> Rhythm a
     quant x d = case d of
@@ -1751,7 +1758,7 @@ umts_03a =
       ]
 
     mkBar :: Int -> [Duration] -> Bar
-    mkBar numDots ds = Bar mempty $ pure $ Group $ fmap (\d ->
+    mkBar numDots ds = Bar mempty $ pure $ PitchLayer $ Group $ fmap (\d ->
       (if numDots > 0 then Dotted numDots else id)
         $ Beat d (pitches .~ [P.c'] $ mempty)) ds
 
@@ -1780,8 +1787,8 @@ umts_03b =
     $ Staff mempty
     $ pure
     $ Bar mempty
-      [ listToRh $ fmap maybePitchToCh voice1
-      , listToRh $ fmap maybePitchToCh voice2
+      [ PitchLayer $ listToRh $ fmap maybePitchToCh voice1
+      , PitchLayer $ listToRh $ fmap maybePitchToCh voice2
       ]
   where
     listToRh :: [a] -> Rhythm a
@@ -1830,7 +1837,7 @@ umts_11a =
     sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
 
     bars :: [Bar]
-    bars = fmap (\d -> Bar mempty [quant tie (pitches .~ [P.c'] $ mempty) d]) durs
+    bars = fmap (\d -> Bar mempty [PitchLayer $ quant tie (pitches .~ [P.c'] $ mempty) d]) durs
 
     tie
       :: Bool -- begin/end
@@ -1956,7 +1963,7 @@ umts_12b =
     -- and also all the other variants (which can always be written as a fractional number)
     sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : cycle [mempty]
     staff = Staff mempty $ [bar,bar]
-    bar = Bar mempty [rh4 [singleNoteChord $ Music.Pitch.Literal.c]]
+    bar = Bar mempty [PitchLayer $ rh4 [singleNoteChord $ Music.Pitch.Literal.c]]
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat 1) cs
@@ -1981,7 +1988,7 @@ umts_13a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = Staff mempty $ repeat $ Bar mempty [Beat (1/2) $ pitches .~ [P.c] $ mempty]
+    staff = Staff mempty $ repeat $ Bar mempty [PitchLayer $ Beat (1/2) $ pitches .~ [P.c] $ mempty]
 
     -- sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
     --   -- TODO just 2/4
@@ -2097,7 +2104,7 @@ umts_23a = Work mempty $ pure
     sysBar1 = timeSignature .~ (Option $ Just $ First $ 14/4) $ mempty
 
     bar1 :: Bar
-    bar1 = Bar mempty $ pure $ Group
+    bar1 = Bar mempty $ pure $ PitchLayer $ Group
       [ Tuplet (2/3) $ Group
         [ Beat (1/4) (pitches .~ [P.c] $ mempty)
         , Beat (1/4) (pitches .~ [P.d] $ mempty)
@@ -2157,28 +2164,28 @@ umts_23b = Work mempty $ pure
 
     bars :: [Bar]
     bars =
-      [ Bar mempty $ pure $ Group
+      [ Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (3/4) $ Group []
         , Tuplet (3/17) $ Group []
         , Group []
@@ -2198,19 +2205,19 @@ umts_23c =
 
     bars :: [Bar]
     bars =
-      [ Bar mempty $ pure $ Group
+      [ Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
         , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
         , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
         , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
         ]
-      , Bar mempty $ pure $ Group
+      , Bar mempty $ pure $ PitchLayer $ Group
         [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
         , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
         ]
@@ -2275,7 +2282,7 @@ umts_31a =
     $ Leaf staff
   where
     sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2397,7 +2404,7 @@ umts_32a =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2514,7 +2521,7 @@ umts_32d =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2544,7 +2551,7 @@ umts_33a =
     $ Leaf staff
   where
     sysStaff = (timeSignature .~ (Option $ Just $ First $ 3/4) $ mempty) : repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 3 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 3 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2662,7 +2669,7 @@ umts_33b =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 1 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 1 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat 1) cs
@@ -2688,7 +2695,7 @@ umts_33c =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2719,7 +2726,7 @@ umts_33d =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2744,7 +2751,7 @@ umts_33e =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2769,7 +2776,7 @@ umts_33f =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2794,7 +2801,7 @@ umts_33g =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2819,7 +2826,7 @@ umts_33h =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -2866,7 +2873,7 @@ umts_33i =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [PitchLayer $ rh4 ch]) $ divideList 4 chords
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -3001,8 +3008,8 @@ umts_43a =
   where
     sysStaff = [timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty]
     staves = Branch Brace
-      [ Leaf $ Staff mempty [Bar mempty [Beat 1 $ singlePitch P.f]]
-      , Leaf $ Staff (instrumentDefaultClef .~ bc $ mempty) [Bar mempty [Beat 1 $ singlePitch P.b__]]
+      [ Leaf $ Staff mempty [Bar mempty [PitchLayer $ Beat 1 $ singlePitch P.f]]
+      , Leaf $ Staff (instrumentDefaultClef .~ bc $ mempty) [Bar mempty [PitchLayer $ Beat 1 $ singlePitch P.b__]]
       ]
     bc = Music.Pitch.bassClef
     singlePitch x = pitches .~ [x] $ mempty
@@ -3133,6 +3140,7 @@ umts_51b = Work mempty $ pure
   $ pure
   $ Bar mempty
   $ pure
+  $ PitchLayer
   $ Beat 1 mempty
   where
     title_      = "\"Quotes\" in header fields"
