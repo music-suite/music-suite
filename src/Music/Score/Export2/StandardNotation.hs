@@ -345,8 +345,8 @@ instance Monoid Chord where
 type PitchLayer             = Rhythm Chord
 
 data Bar = Bar
-  { _pitchLayers  :: [PitchLayer]
-  , _clefChange   :: Map Duration Music.Pitch.Clef
+  { _clefChange   :: Map Duration Music.Pitch.Clef
+  , _pitchLayers  :: [PitchLayer]
   {-, _dynamicLayer :: DynamicLayer-}
   }
   deriving (Eq, Show)
@@ -1077,7 +1077,7 @@ fromAspects sc = do
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
     -- TODO more layers (see below)
     -- TODO place clef changes here
-    aspectsToBar rh = Bar [layer1] mempty
+    aspectsToBar rh = Bar mempty [layer1]
       where
         layer1 = fmap aspectsToChord rh
 
@@ -1113,8 +1113,8 @@ fromAspects sc = do
 test = runPureExportMNoLog $ toLy $
   Work mempty [Movement mempty [mempty] (
     Branch Bracket [
-      Leaf (Staff mempty [Bar [Beat 1 mempty] mempty]),
-      Leaf (Staff mempty [Bar [Beat 1 mempty] mempty])
+      Leaf (Staff mempty [Bar mempty [Beat 1 mempty]]),
+      Leaf (Staff mempty [Bar mempty [Beat 1 mempty]])
       ])]
 
 test2 x = runPureExportMNoLog $ toLy =<< fromAspects x
@@ -1159,7 +1159,7 @@ umts_01a =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
+    staff = Staff mempty $ fmap (\chords -> Bar mempty [rh4 chords]) chs
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -1198,7 +1198,7 @@ umts_01b =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
+    staff = Staff mempty $ fmap (\chords -> Bar mempty [rh4 chords]) chs
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat (1/4)) cs
@@ -1233,7 +1233,7 @@ umts_01c =
     $ Leaf staff
   where
     sysStaff = cycle [mempty]
-    staff = Staff mempty $ [Bar [rh4 [singleNoteChord $ Music.Pitch.Literal.g]] mempty]
+    staff = Staff mempty $ [Bar mempty [rh4 [singleNoteChord $ Music.Pitch.Literal.g]]]
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat 1) cs
@@ -1349,10 +1349,10 @@ umts_03b =   Work mempty
     $ Leaf
     $ Staff mempty
     $ pure
-    $ Bar
+    $ Bar mempty
       [ listToRh $ fmap maybePitchToCh voice1
       , listToRh $ fmap maybePitchToCh voice2
-      ] mempty
+      ]
   where
     listToRh :: [a] -> Rhythm a
     listToRh xs = Group $ fmap (Beat (1/4)) xs
@@ -1484,7 +1484,7 @@ umts_12b =
     -- and also all the other variants (which can always be written as a fractional number)
     sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : cycle [mempty]
     staff = Staff mempty $ [bar,bar]
-    bar = Bar [rh4 [singleNoteChord $ Music.Pitch.Literal.c]] mempty
+    bar = Bar mempty [rh4 [singleNoteChord $ Music.Pitch.Literal.c]]
 
     rh4 :: [Chord] -> Rhythm Chord
     rh4 cs = mconcat $ fmap (Beat 1) cs
@@ -1586,7 +1586,7 @@ umts_23a = Work mempty $ pure
     sysBar1 = timeSignature .~ (Option $ Just $ First $ 14/4) $ mempty
 
     bar1 :: Bar
-    bar1 = flip Bar mempty $ pure $ Group
+    bar1 = Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group
         [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
         , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
@@ -1645,28 +1645,28 @@ umts_23b = Work mempty $ pure
     sysBar1 = timeSignature .~ (Option $ Just $ First $ 5/4) $ mempty
 
     bar1 :: Bar
-    bar1 = flip Bar mempty $ pure $ Group
+    bar1 = Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       ]
-    bar2 = flip Bar mempty $ pure $ Group
+    bar2 = Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       ]
-    bar3 = flip Bar mempty $ pure $ Group
+    bar3 = Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       , Tuplet (2/3) $ Group []
       ]
-    bar4 = flip Bar mempty $ pure $ Group
+    bar4 = Bar mempty $ pure $ Group
       [ Tuplet (3/4) $ Group []
       , Tuplet (3/17) $ Group []
       , Group []
@@ -1969,7 +1969,9 @@ umts_51b = Work mempty $ pure
   $ Leaf
   $ Staff (instrumentFullName .~ instrName_ $ mempty)
   $ pure
-  $ flip Bar mempty $ pure $ Beat 1 mempty
+  $ Bar mempty
+  $ pure
+  $ Beat 1 mempty
   where
     title_      = "\"Quotes\" in header fields"
     composer_   = "Some \"Tester\" name"
