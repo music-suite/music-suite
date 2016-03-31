@@ -165,7 +165,7 @@ import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
                                                           quantize, rewrite)
 import qualified Music.Score.Internal.Util
 import           Music.Score.Internal.Util (unRatio)
-import qualified Music.Score.Internal.Instances ()
+-- import qualified Music.Score.Internal.Instances ()
 import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
@@ -1179,6 +1179,10 @@ test3 x = do
 test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+
 -- TODO lyrics
 -- TODO chord symbols
 -- TODO piano staff crossings
@@ -1226,6 +1230,7 @@ umts_01a =
           -- TODO cx', cbb', cs', cs', cs', cs'(editorial)
           ]
 
+    -- TODO this is fromPitch
     singleNoteChord :: Pitch -> Chord
     singleNoteChord ps = pitches .~ [ps] $ mempty
 
@@ -1685,6 +1690,7 @@ umts_21c =
 -- IGNORE
 
 -- ‘21e-Chords-PickupMeasures.xml’
+-- TODO
 
 -- ‘21f-Chord-ElementInBetween.xml’
 -- IGNORE
@@ -2489,72 +2495,72 @@ umts_73a =
 TODO change into map and add function that exports
 these as Ly/XML files to a particular directory.
 -}
-umts_all :: [Work]
+umts_all :: [(String, Work)]
 umts_all =
-  [ umts_01a
-  , umts_01b
-  , umts_01c
-  , umts_01d
-  , umts_02a
-  , umts_02b
-  , umts_02c
-  , umts_02d
-  , umts_03a
-  , umts_03b
-  , umts_11a
-  , umts_11c
-  , umts_12a
-  , umts_12b
-  , umts_13a
-  , umts_21a
-  , umts_21b
-  , umts_21c
-  , umts_23a
-  , umts_23b
-  , umts_23c
-  , umts_23d
-  , umts_23e
-  , umts_23f
-  , umts_31a
-  , umts_31c
-  , umts_32a
-  , umts_32b
-  , umts_32c
-  , umts_32d
-  , umts_33a
-  , umts_33b
-  , umts_33c
-  , umts_33d
-  , umts_33e
-  , umts_33f
-  , umts_33g
-  , umts_33h
-  , umts_33i
-  , umts_41a
-  , umts_41b
-  , umts_41c
-  , umts_41d
-  , umts_41e
-  , umts_41f
-  , umts_41g
-  , umts_41i
-  , umts_42a
-  , umts_42b
-  , umts_43a
-  , umts_43b
-  , umts_43c
-  , umts_43d
-  , umts_43e
-  , umts_46a
-  , umts_46b
-  , umts_46c
-  , umts_46e
-  , umts_46f
-  , umts_46g
-  , umts_51b
-  , umts_51d
-  , umts_72a
-  , umts_72b
-  , umts_72c
-  , umts_73a
+  [ ("umts_01a",umts_01a)
+  , ("umts_01b",umts_01b)
+  , ("umts_01c",umts_01c)
+  , ("umts_01d",umts_01d)
+  , ("umts_02a",umts_02a)
+  , ("umts_02b",umts_02b)
+  , ("umts_02c",umts_02c)
+  , ("umts_02d",umts_02d)
+  , ("umts_03a",umts_03a)
+  , ("umts_03b",umts_03b)
+  , ("umts_11a",umts_11a)
+  , ("umts_11c",umts_11c)
+  , ("umts_12a",umts_12a)
+  , ("umts_12b",umts_12b)
+  , ("umts_13a",umts_13a)
+  , ("umts_21a",umts_21a)
+  , ("umts_21b",umts_21b)
+  , ("umts_21c",umts_21c)
+  , ("umts_23a",umts_23a)
+  , ("umts_23b",umts_23b)
+  , ("umts_23c",umts_23c)
+  , ("umts_23d",umts_23d)
+  , ("umts_23e",umts_23e)
+  , ("umts_23f",umts_23f)
+  , ("umts_31a",umts_31a)
+  , ("umts_31c",umts_31c)
+  , ("umts_32a",umts_32a)
+  , ("umts_32b",umts_32b)
+  , ("umts_32c",umts_32c)
+  , ("umts_32d",umts_32d)
+  , ("umts_33a",umts_33a)
+  , ("umts_33b",umts_33b)
+  , ("umts_33c",umts_33c)
+  , ("umts_33d",umts_33d)
+  , ("umts_33e",umts_33e)
+  , ("umts_33f",umts_33f)
+  , ("umts_33g",umts_33g)
+  , ("umts_33h",umts_33h)
+  , ("umts_33i",umts_33i)
+  , ("umts_41a",umts_41a)
+  , ("umts_41b",umts_41b)
+  , ("umts_41c",umts_41c)
+  , ("umts_41d",umts_41d)
+  , ("umts_41e",umts_41e)
+  , ("umts_41f",umts_41f)
+  , ("umts_41g",umts_41g)
+  , ("umts_41i",umts_41i)
+  , ("umts_42a",umts_42a)
+  , ("umts_42b",umts_42b)
+  , ("umts_43a",umts_43a)
+  , ("umts_43b",umts_43b)
+  , ("umts_43c",umts_43c)
+  , ("umts_43d",umts_43d)
+  , ("umts_43e",umts_43e)
+  , ("umts_46a",umts_46a)
+  , ("umts_46b",umts_46b)
+  , ("umts_46c",umts_46c)
+  , ("umts_46e",umts_46e)
+  , ("umts_46f",umts_46f)
+  , ("umts_46g",umts_46g)
+  , ("umts_51b",umts_51b)
+  , ("umts_51d",umts_51d)
+  , ("umts_72a",umts_72a)
+  , ("umts_72b",umts_72b)
+  , ("umts_72c",umts_72c)
+  , ("umts_73a",umts_73a)
   ]
