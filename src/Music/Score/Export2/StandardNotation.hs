@@ -11,7 +11,7 @@
 {-# LANGUAGE TupleSections, DeriveDataTypeable, DeriveFoldable, ViewPatterns, DeriveFunctor
   , DeriveTraversable, TemplateHaskell, GeneralizedNewtypeDeriving #-}
 
-{-
+{-|
 This module defines a monomorphic representation of Western music notation.
 
 Its main use to simplify the addition of notation-centric backends such as
@@ -128,6 +128,7 @@ module Music.Score.Export2.StandardNotation
 
   -- * Pure export monad
   , PureExportM
+  , runPureExportM
   , runPureExportMNoLog
   -- * IO export monad
   , IOExportM
@@ -176,6 +177,9 @@ import           Data.VectorSpace                        hiding (Sum)
 
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
+import qualified Text.Pretty
+import qualified System.Process --DEBUG
+import qualified System.Directory
 
 import qualified Music.Articulation
 import           Music.Articulation                      (Articulation)
@@ -220,9 +224,6 @@ import           Music.Score.Ties                        (TieT (..))
 import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
 import           Music.Time
 import           Music.Time.Meta                         (meta)
-import qualified Text.Pretty
-import qualified System.Process --DEBUG
-import qualified System.Directory
 
 
 -- Annotated tree
@@ -523,8 +524,6 @@ makeLenses ''Work
 ----------------------------------------------------------------------------------------------------
 
 -- | A weaker form of 'MonadWriter' which also supports imperative logging.
---
---   If something is an instance of both 'MonadWriter' and 'MonadLog' you should assure @say = tell@.
 class Monad m => MonadLog w m | m -> w where
     logger :: (a,w) -> m a
     logger ~(a, w) = do
@@ -546,14 +545,27 @@ Basic monad for exporting music.
 
 Run as a pure computation with internal logging.
 -}
-newtype PureExportM a = PureExportM { runE :: WriterT String (ExceptT String Identity) a }
+newtype PureExportM a = PureExportM { runE :: WriterT [String] (ExceptT String Identity) a }
   deriving ( Functor, Applicative, Monad, Alternative, MonadPlus
-           , MonadError String, MonadWriter String )
+           , MonadError String, MonadWriter [String] )
 
 instance MonadLog String PureExportM where
-  say = tell
+  say x = tell [x]
 
-runPureExportMNoLog :: PureExportM b -> Either String b
+{-|
+Run the computation.
+
+Return the result and all emitted log messages, or an error message.
+-}
+runPureExportM :: PureExportM a -> Either String (a, [String])
+runPureExportM = runExcept . runWriterT . runE
+
+{-|
+Run the computation.
+
+Return the result or an error message. The log messages are discarded.
+-}
+runPureExportMNoLog :: PureExportM a -> Either String a
 runPureExportMNoLog = fmap fst . runExcept . runWriterT . runE
 
 
@@ -1564,16 +1576,39 @@ umts_03a =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ Leaf
+    $ Staff mempty bars
   where
-    sysStaff = repeat mempty
-    staff = mempty
-    durs :: [[[Duration]]]
-    durs =
-      [ (fmap.fmap) (dotMod 0 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
-      , (fmap.fmap) (dotMod 1 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
-      , (fmap.fmap) (dotMod 2 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+    sysStaff =
+        [ timeSignature .~ (Option $ Just $ First (16/4)) $ mempty, mempty
+        , timeSignature .~ (Option $ Just $ First (24/4)) $ mempty, mempty
+        , timeSignature .~ (Option $ Just $ First (28/4)) $ mempty, mempty
+        ]
+
+    bars :: [Bar]
+    bars =
+      [ mkBar 0 [4]
+      , mkBar 0 baseDurs
+      , mkBar 1 [4]
+      , mkBar 1 baseDurs
+      , mkBar 2 [4]
+      , mkBar 2 baseDurs
       ]
+
+    mkBar :: Int -> [Duration] -> Bar
+    mkBar numDots ds = Bar mempty $ pure $ Group $ fmap (\d ->
+      (if numDots > 0 then Dotted numDots else id)
+        $ Beat d (pitches .~ [P.c'] $ mempty)) ds
+
+
+    baseDurs = [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]
+    -- -- 2 bars of 16/4, two bars of 24/4, two bars of 28/4
+    -- durs :: [[Duration]]
+    -- durs = mconcat
+    --   [ (fmap.fmap) (dotMod 0 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+    --   , (fmap.fmap) (dotMod 1 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+    --   , (fmap.fmap) (dotMod 2 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
+    --   ]
 
 -- ‘03b-Rhythm-Backup.xml’
 {-
