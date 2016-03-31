@@ -55,6 +55,7 @@ module Music.Score.Export2.StandardNotation
   , DynamicNotation
   , HarmonicNotation
   , SlideNotation
+  , Fermata(..)
   , Ties
   , Chord
   , pitches
@@ -63,6 +64,7 @@ module Music.Score.Export2.StandardNotation
   , breathNotation
   , articulationNotation
   , dynamicNotation
+  , fermata
   , chordColor
   , chordText
   , harmonicNotation
@@ -98,9 +100,14 @@ module Music.Score.Export2.StandardNotation
 
   -- * MonadLog
   , MonadLog(..)
+
   -- * Pure export monad
   , PureExportM
   , runPureExportMNoLog
+  -- * IO export monad
+  , IOExportM
+  , runIOExportM
+
   -- * Asp
   , StandardNotationExportM
   , Asp1
@@ -112,8 +119,8 @@ module Music.Score.Export2.StandardNotation
   , MusicXmlExportM
   , toXml
 
-
-  -- TODO debug
+  -- * Test
+  -- TODO hide/remove
   , test2
   , test3
   , umts_export
@@ -161,7 +168,9 @@ import qualified Music.Score
 import           Music.Score.Articulation                (ArticulationT)
 import           Music.Score.Dynamics                    (DynamicT)
 import qualified Music.Score.Export.ArticulationNotation
+import           Music.Score.Export.ArticulationNotation (slurs, marks)
 import qualified Music.Score.Export.ArticulationNotation as AN
+import           Music.Score.Export.DynamicNotation      (crescDim, dynamicLevel)
 import qualified Music.Score.Export.DynamicNotation
 import qualified Music.Score.Export.DynamicNotation      as DN
 import qualified Music.Score.Internal.Export
@@ -281,7 +290,12 @@ instance Monoid StaffInfo where
     | x == mempty = y
     | otherwise   = x
 
-data ArpeggioNotation       = NoArpeggio | Arpeggio | UpArpeggio | DownArpeggio
+data ArpeggioNotation
+  = NoArpeggio        -- ^ Don't show anything
+  | NoArpeggioBracket -- ^ Show "no arpeggio" bracket
+  | Arpeggio
+  | UpArpeggio
+  | DownArpeggio
   deriving (Eq,Ord,Show)
 
 instance Monoid ArpeggioNotation where
@@ -2085,6 +2099,91 @@ umts_32a =
   where
     sysStaff = repeat mempty
     staff = mempty
+    chords :: [Chord]
+    chords =
+      [ fermata .~ Fermata $ bc
+      , fermata .~ Fermata $ bc
+      , fermata .~ ShortFermata $ bc
+      , fermata .~ LongFermata $ bc
+      , fermata .~ Fermata $ bc -- TODO inverted
+      , arpeggioNotation .~ Arpeggio $ bc2
+      , arpeggioNotation .~ NoArpeggio $ bc2
+      , bc -- accidental mark
+
+      , articulationNotation.marks .~ [AN.Accent] $ bc
+      , articulationNotation.marks .~ [AN.Marcato] $ bc
+      , articulationNotation.marks .~ [AN.Staccato] $ bc
+      , articulationNotation.marks .~ [AN.Tenuto] $ bc
+      , articulationNotation.marks .~ [AN.Tenuto, AN.Staccato] $ bc
+      , articulationNotation.marks .~ [AN.Staccatissimo] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc
+      , nc
+
+      -- Trills/Ornaments
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , nc
+      , nc
+
+      -- Bowing etc
+      , bc
+      , bc
+      , harmonicNotation .~ (Any True, 1) $ bc
+      , harmonicNotation .~ (Any True, 1) $ bc
+
+      , harmonicNotation .~ (Any True, 1) $ bc
+      , harmonicNotation .~ (Any True, 1) $ bc
+      , harmonicNotation .~ (Any True, 1) $ bc
+      , harmonicNotation .~ (Any True, 1) $ bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      , bc, bc, bc, bc
+
+      -- Dynamic
+      , dynamicNotation .~ [] $ bc
+      , bc
+      , bc
+      , bc
+      , bc
+      , bc
+
+      , nc
+      , nc
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
 
 -- ‘32b-Articulations-Texts.xml’
 umts_32b :: Work

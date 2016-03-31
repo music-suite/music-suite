@@ -34,6 +34,8 @@ module Music.Score.Export.ArticulationNotation (
     Slur(..),
     Mark(..),
     ArticulationNotation(..),
+    slurs,
+    marks,
     notateArticulation,
   ) where
 
@@ -109,6 +111,12 @@ instance Monoid ArticulationNotation where
   ArticulationNotation ([], []) `mappend` y = y
   x `mappend` ArticulationNotation ([], []) = x
   x `mappend` y = x
+
+slurs :: Lens' ArticulationNotation [Slur]
+slurs = _Wrapped' . _1
+
+marks :: Lens' ArticulationNotation [Mark]
+marks = _Wrapped' . _2
 
 getSeparationMarks :: Double -> [Mark]
 getSeparationMarks = fst . getSeparationMarks'

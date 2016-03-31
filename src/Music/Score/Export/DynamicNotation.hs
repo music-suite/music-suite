@@ -33,6 +33,9 @@
 module Music.Score.Export.DynamicNotation (
     CrescDim(..),
     DynamicNotation(..),
+    crescDim,
+    dynamicLevel,
+    
     notateDynamic,
 
     -- * Utility
@@ -83,6 +86,12 @@ instance Monoid DynamicNotation where
   DynamicNotation ([], Nothing) `mappend` y = y
   x `mappend` DynamicNotation ([], Nothing) = x
   x `mappend` y = x
+
+crescDim :: Lens' DynamicNotation [CrescDim]
+crescDim = _Wrapped' . _1
+
+dynamicLevel :: Lens' DynamicNotation (Maybe Double)
+dynamicLevel = _Wrapped' . _2
 
 -- Given a dynamic value and its context, decide:
 --
