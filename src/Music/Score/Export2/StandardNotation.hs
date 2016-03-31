@@ -157,7 +157,7 @@ module Music.Score.Export2.StandardNotation
 where
 
 import           BasePrelude                             hiding (first, second, (<>), First(..))
-import           Control.Lens                            (over, preview, set, to,
+import           Control.Lens                            (over, preview, set, to, Lens'(..),
                                                           under, view, _head, at, _1, _2)
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
@@ -374,15 +374,37 @@ data BreathNotation         = NoBreath | Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
 
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
+
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
+
 type HarmonicNotation       = (Any, Sum Int)
   -- (artificial?, partial number)
+
 type SlideNotation          = ((Any,Any),(Any,Any))
   -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
 
+{-
+For historical reasons we have two equivalent conventions for representing
+begin/end of spanners:
+
+  - (beginSlide::Any, endSlide::Any)
+  - [EndCresc, BeginCresc]
+
+These are isomorphic (at least as long as the list is considered as Set).
+Both are monoids (assuming Any is being used and abscence in the set is taken
+to mean "no begin/end").
+-}
+
+endGliss :: Lens' SlideNotation Any
 endGliss   = _1 . _1
+
+endSlide :: Lens' SlideNotation Any
 endSlide   = _1 . _2
+
+beginGliss :: Lens' SlideNotation Any
 beginGliss = _2 . _1
+
+beginSlide :: Lens' SlideNotation Any
 beginSlide = _2 . _2
 
 type Ties                   = (Any,Any)
@@ -1489,7 +1511,7 @@ fromAspects sc = do
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...
 
     asp1ToAsp2 :: Asp1 -> Asp2
-    asp1ToAsp2 = pureTieT . (fmap.fmap.fmap) (:[])
+    asp1ToAsp2 = pure . (fmap . fmap . fmap) pure
 
     toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
     toLayer p =
@@ -1539,9 +1561,6 @@ fromAspects sc = do
     -- Not used from top-level
 
 
-
-    pureTieT :: a -> TieT a
-    pureTieT = pure
 
     extractTimeSignatures
       :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
