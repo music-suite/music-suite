@@ -142,7 +142,7 @@ import           Music.Articulation                      (Articulation)
 import qualified Music.Dynamics
 import           Music.Dynamics                          (Dynamics)
 import           Music.Dynamics.Literal                  (DynamicsL(..), fromDynamics)
-import           Music.Parts                             (Group (..), Part)
+import           Music.Parts                             (Group (..), Part, Instrument)
 import qualified Music.Parts
 import qualified Music.Pitch
 import           Music.Pitch                             (Pitch, fromPitch)
@@ -1129,6 +1129,7 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO piano staff crossings
 -- TODO trills
 -- TODO 8va etc
+-- TODO consolidate clef/key sig representations
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -1232,20 +1233,82 @@ umts_01c =
     divideList = Music.Score.Internal.Util.divideList
 
 -- ‘01d-Pitches-Microtones.xml’
+{-
+Some microtones: c flat-and-a-half, d half-flat, e half-sharp, f sharp-and-a half.
+Once in the lower and once in the upper region of the staff.
+-}
+umts_01d :: Work
+umts_01d = mempty
+  where
+    pitches =
+      [
+        {-
+          Possible naming convention:
+            Name    Adjustment (whole-tones)
+            cbb     -1
+            cqb     -3/4
+            cb      -1/2
+            cq      -1/4
+            c       0
+            cz      1/4
+            cs      1/2
+            czs     3/4
+            css     1
+        -}
+
+        -- c 3/4 flat
+        -- d 1/4 flat
+        -- e 1/4 sharp
+        -- f 3/4 sharp
+        -- c' 3/4 flat
+        -- d' 1/4 flat
+        -- e' 1/4 sharp
+        -- f' 3/4 sharp
+      ]
+
 
 -- ‘01e-Pitches-ParenthesizedAccidentals.xml’
+-- IGNORE
 
 -- ‘01f-Pitches-ParenthesizedMicrotoneAccidentals.xml’
+-- IGNORE
 
 -- ‘02a-Rests-Durations.xml’
+umts_02a :: Work
+umts_02a = mempty
+  where
+    -- As specified:
+    durs = mconcat
+      [ fmap (dotMod 0 *) [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/128]
+      , fmap (dotMod 1 *) [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/128]
+      ]
+    -- Note: this does not render as expected in Lilypond suite
 
 -- ‘02b-Rests-PitchedRests.xml’
+umts_02b :: Work
+umts_02b = mempty
+  where
+    durs = [1, 1, 1, 1, 1] :: [Duration]
+    timeSignature = 5/4 :: TimeSignature
+
+    restPositions :: [Pitch] -- Other type?
+    restPositions = fmap (\n -> Music.Score.up (Music.Pitch._P5^*n) Music.Pitch.b) [0,-1,1,-2,2]
 
 -- ‘02c-Rests-MultiMeasureRests.xml’
+umts_02c :: Work
+umts_02c = mempty
+  where
+    durs = [3,16,12] :: [Duration]
 
 -- ‘02d-Rests-Multimeasure-TimeSignatures.xml’
+umts_02d :: Work
+umts_02d = mempty
+  where
+    numBarRests = [2,3,2,2] :: [Duration]
+    timeSigs = [4/4, 3/4, 2/4, 4/4] :: [TimeSignature]
 
 -- ‘02e-Rests-NoType.xml’
+-- IGNORE
 
 -- ‘03a-Rhythm-Durations.xml’
 {-
@@ -1267,6 +1330,20 @@ Two voices with a backup, that does not jump to the beginning for the measure fo
 voice 2, but somewhere in the middle. Voice 2 thus won’t have any notes or rests
 for the first beat of the measures.
 -}
+umts_03b :: Work
+umts_03b = mempty
+  where
+    timeSig = 4/4 :: TimeSignature
+    voice1 =
+      [ Just Music.Pitch.c
+      , Just Music.Pitch.c
+      , Nothing
+      ]
+    voice2 =
+      [ Nothing
+      , Just Music.Pitch.a_
+      , Just Music.Pitch.a_
+      ]
 
 -- ‘03c-Rhythm-DivisionChange.xml’
 -- IGNORE
@@ -1276,6 +1353,7 @@ for the first beat of the measures.
 Several durations can be written with dots. For multimeasure rests, we can also
 have durations that cannot be expressed with dotted notes (like 5/8).
 -}
+-- IGNORE
 
 -- ‘11a-TimeSignatures.xml’
 {-
@@ -1362,16 +1440,54 @@ umts_12a = mempty
       ]
 
 -- ‘12b-Clefs-NoKeyOrClef.xml’
+umts_12b :: Work
+umts_12b =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
+  where
+    -- TODO the Option/Just/First pattern is too painful!
+    -- I feel all meta-types should implement this natively (see above)
+    -- I.e. there is the "empty time signature" called mempty
+    -- and also all the other variants (which can always be written as a fractional number)
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : cycle [mempty]
+    staff = Staff mempty $ [bar,bar]
+    bar = Bar [rh4 [singleNoteChord $ Music.Pitch.Literal.c]] mempty
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat 1) cs
+
+    singleNoteChord :: Pitch -> Chord
+    singleNoteChord ps = pitches .~ [ps] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘13a-KeySignatures.xml’
+{-
+Various key signature: from 11 flats to 11 sharps (each one first one measure in
+major, then one measure in minor)
+-}
+-- TODO consolidate key sig between music-score and music-pitch
+umts_13a :: Work
+umts_13a = mempty
+  where
+    fifthPerTwoBars = [-11..11] :: [Music.Pitch.Fifths] -- or Music.Score.Fifths
 
 -- ‘13b-KeySignatures-ChurchModes.xml’
+{-All different modes: major, minor, ionian, dorian, phrygian, lydian, mixolydian,
+aeolian, and locrian; All modes are given with 2 sharps.-}
+-- IGNORE
 
 -- ‘13c-KeySignatures-NonTraditional.xml’
+-- IGNORE
 
 -- ‘13d-KeySignatures-Microtones.xml’
+-- IGNORE
 
 -- ‘14a-StaffDetails-LineChanges.xml’
+-- IGNORE
 
 -- ‘21a-Chord-Basic.xml’
 
@@ -1380,18 +1496,24 @@ umts_12a = mempty
 -- ‘21c-Chords-ThreeNotesDuration.xml’
 
 -- ‘21d-Chords-SchubertStabatMater.xml’
+-- IGNORE
 
 -- ‘21e-Chords-PickupMeasures.xml’
 
 -- ‘21f-Chord-ElementInBetween.xml’
+-- IGNORE
 
 -- ‘22a-Noteheads.xml’
+-- IGNORE (nice to have!)
 
 -- ‘22b-Staff-Notestyles.xml’
+-- IGNORE (nice to have!)
 
 -- ‘22c-Noteheads-Chords.xml’
+-- IGNORE (nice to have!)
 
 -- ‘22d-Parenthesized-Noteheads.xml’
+-- IGNORE (nice to have!)
 
 -- ‘23a-Tuplets.xml’
 
@@ -1406,16 +1528,22 @@ umts_12a = mempty
 -- ‘23f-Tuplets-DurationButNoBracket.xml’
 
 -- ‘24a-GraceNotes.xml’
+-- IGNORE (would be nice!)
 
 -- ‘24b-ChordAsGraceNote.xml’
+-- IGNORE (would be nice!)
 
 -- ‘24c-GraceNote-MeasureEnd.xml’
+-- IGNORE (would be nice!)
 
 -- ‘24d-AfterGrace.xml’
+-- IGNORE (would be nice!)
 
 -- ‘24e-GraceNote-StaffChange.xml’
+-- IGNORE (would be nice!)
 
 -- ‘24f-GraceNote-Slur.xml’
+-- IGNORE (would be nice!)
 
 -- ‘31a-Directions.xml’
 
@@ -1480,18 +1608,25 @@ umts_12a = mempty
 -- ‘43e-Multistaff-ClefDynamics.xml’
 
 -- ‘45a-SimpleRepeat.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45b-RepeatWithAlternatives.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45c-RepeatMultipleTimes.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45d-Repeats-Nested-Alternatives.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45e-Repeats-Nested-Alternatives.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45f-Repeats-InvalidEndings.xml’
+-- IGNORE (would be nice!)
 
 -- ‘45g-Repeats-NotEnded.xml’
+-- IGNORE (would be nice!)
 
 -- ‘46a-Barlines.xml’
 
@@ -1506,54 +1641,118 @@ umts_12a = mempty
 -- ‘46g-PickupMeasure-Chordnames-FiguredBass.xml’
 
 -- ‘51b-Header-Quotes.xml’
+umts_51b :: Work
+umts_51b = mempty
 
 -- ‘51c-MultipleRights.xml’
 
 -- ‘51d-EmptyTitle.xml’
 
 -- ‘52a-PageLayout.xml’
+-- IGNORE (would be nice!)
 
 -- ‘52b-Breaks.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61a-Lyrics.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61b-MultipleLyrics.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61c-Lyrics-Pianostaff.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61d-Lyrics-Melisma.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61e-Lyrics-Chords.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61f-Lyrics-GracedNotes.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61g-Lyrics-NameNumber.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61h-Lyrics-BeamsMelismata.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61i-Lyrics-Chords.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61j-Lyrics-Elisions.xml’
+-- IGNORE (would be nice!)
 
 -- ‘61k-Lyrics-SpannersExtenders.xml’
+-- IGNORE (would be nice!)
 
 -- ‘71a-Chordnames.xml’
+-- IGNORE
 
 -- ‘71c-ChordsFrets.xml’
+-- IGNORE
 
 -- ‘71d-ChordsFrets-Multistaff.xml’
+-- IGNORE
 
 -- ‘71e-TabStaves.xml’
+-- IGNORE
 
 -- ‘71f-AllChordTypes.xml’
+-- IGNORE (would be nice!)
 
 -- ‘71g-MultipleChordnames.xml’
+-- IGNORE (would be nice!)
 
 -- ‘72a-TransposingInstruments.xml’
+umts_72a = mempty
+  where
+    pitches = [] -- TODO [c,d,e,f,g,a,b,c']
+    origKeySig = (Music.Pitch.g, True) -- G major
+
+    instruments :: [Instrument]
+    instruments =
+      [ Music.Parts.trumpet
+      -- TODO can't represent Eb horn, use F
+      , Music.Parts.horn
+      , Music.Parts.piano
+      ]
+
 
 -- ‘72b-TransposingInstruments-Full.xml’
+{-
+Various transposition. Each part plays a C5, just displayed in different display
+pitches.
+
+The final staff is an untransposed instrument.
+-}
+umts_72b = mempty
+  where
+    pitch = Music.Pitch.c'
+    origKeySig = (Music.Pitch.g, True) -- G major
+
+    instruments :: [Instrument]
+    instruments =
+      [ Music.Parts.ebClarinet
+      , Music.Parts.clarinet
+      , Music.Parts.aClarinet
+      , Music.Parts.horn
+      -- TODO can't represent Eb horn, use F
+      , Music.Parts.horn
+      -- TODO can't represent picc in A, use Bb
+      , Music.Parts.piccoloTrumpet
+      , Music.Parts.trumpet
+      , Music.Parts.cTrumpet
+      , Music.Parts.dTrumpet
+      -- , -- TODO custom (displayed c' ~ sounding fs''')
+      , Music.Parts.piano
+      ]
 
 -- ‘72c-TransposingInstruments-Change.xml’
+umts_72c = mempty
+  where
+
 
 -- ‘73a-Percussion.xml’
 umts_73a :: Work
@@ -1574,11 +1773,16 @@ umts_73a = mempty
       ]
 
 -- ‘74a-FiguredBass.xml’
+-- IGNORE (would be nice though!)
 
 -- ‘75a-AccordionRegistrations.xml’
+-- IGNORE
 
 -- ‘90a-Compressed-MusicXML.mxl’
+-- IGNORE
 
 -- ‘99a-Sibelius5-IgnoreBeaming.xml’
+-- IGNORE
 
 -- ‘99b-Lyrics-BeamsMelismata-IgnoreBeams.xml’
+-- IGNORE
