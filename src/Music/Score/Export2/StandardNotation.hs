@@ -1289,6 +1289,9 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO 8va etc
 -- TODO consolidate clef/key sig representations
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
+-- TODO xml/arpeggio
+-- TODO xml/special barlines
+-- TODO xml/fermatas
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -2098,7 +2101,11 @@ umts_32a =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
     chords :: [Chord]
     chords =
       [ fermata .~ Fermata $ bc
@@ -2115,7 +2122,7 @@ umts_32a =
       , articulationNotation.marks .~ [AN.Staccato] $ bc
       , articulationNotation.marks .~ [AN.Tenuto] $ bc
       , articulationNotation.marks .~ [AN.Tenuto, AN.Staccato] $ bc
-      , articulationNotation.marks .~ [AN.Staccatissimo] $ bc
+      , articulationNotation.marks .~ [AN.MoltoStaccato] $ bc
       , articulationNotation.marks .~ [] $ bc
       , articulationNotation.marks .~ [] $ bc
       , articulationNotation.marks .~ [] $ bc
@@ -2171,8 +2178,8 @@ umts_32a =
       , bc, bc, bc, bc
 
       -- Dynamic
-      , dynamicNotation .~ [] $ bc
-      , bc
+      , dynamicNotation.dynamicLevel .~ Just 1.5 $ bc
+      , dynamicNotation.dynamicLevel .~ Just (-3.5) $ bc
       , bc
       , bc
       , bc
@@ -2184,6 +2191,9 @@ umts_32a =
     nc  = mempty
     bc  = pitches .~ [P.c'] $ mempty
     bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘32b-Articulations-Texts.xml’
 umts_32b :: Work
