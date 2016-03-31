@@ -71,15 +71,10 @@ withMetaAtStart f x = let
 
 
 
-
-
-
-
-
-
-
-
--- JUNK
+{-
+Rather ugly internals:
+TODO clean up
+-}
 
 withSpan :: Score a -> Score (Span, a)
 withSpan = mapTriples (\t d x -> (t >-> d,x))
