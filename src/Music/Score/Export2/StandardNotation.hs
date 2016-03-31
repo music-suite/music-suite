@@ -962,6 +962,22 @@ toXml work = do
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+type AbcNotationExportM m = (MonadLog String m, MonadError String m)
+
+toAbc :: (AbcNotationExportM m) => Work -> m (String, ())
+toAbc work = error "Not implemented"
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+type FomusExportM m = (MonadLog String m, MonadError String m)
+
+toFomus :: (FomusExportM m) => Work -> m (String, ())
+toFomus work = error "Not implemented"
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
 type Asp1 = (PartT Part
   (ArticulationT Articulation
     (DynamicT Dynamics
