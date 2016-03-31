@@ -198,8 +198,15 @@ import qualified Music.Pitch
 import           Music.Pitch                             (Pitch, fromPitch, IsPitch(..))
 import qualified Music.Pitch.Literal
 import qualified Music.Pitch.Literal as P
-import           Music.Score                             (MVoice)
-import qualified Music.Score
+import qualified Music.Score.Pitch
+import qualified Music.Score.Part
+import qualified Music.Score.Ties
+import Music.Score.Ties(Tiable(..))
+import qualified Music.Score.Dynamics
+import qualified Music.Score.Phrases
+import qualified Music.Score.Articulation
+import           Music.Score.Phrases                     (MVoice(..))
+
 import           Music.Score.Articulation                (ArticulationT)
 import           Music.Score.Dynamics                    (DynamicT)
 import qualified Music.Score.Export.ArticulationNotation
@@ -213,7 +220,6 @@ import           Music.Score.Internal.Quantize           (Rhythm (..), dotMod,
                                                           quantize, rewrite)
 import qualified Music.Score.Internal.Util
 import           Music.Score.Internal.Util (unRatio)
--- import qualified Music.Score.Internal.Instances ()
 import           Music.Score.Internal.Data               (getData)
 import qualified Music.Score.Meta
 import qualified Music.Score.Meta.Attribution
@@ -230,6 +236,8 @@ import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
 import           Music.Time
 import           Music.Time.Meta                         (meta)
 
+-- TODO
+import qualified Music.Score as MSS
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -901,7 +909,7 @@ toLy work = do
           where
             unOF = fmap getFirst . getOption
             ifJust = maybe id
-            setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x =
+            setTimeSignature (Music.Score.Meta.Time.getTimeSignature -> (ms, n)) x =
                 Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
 
 
@@ -946,7 +954,7 @@ toLy work = do
           fromIntegral (Music.Pitch.accidental p),
           -- Lilypond expects SPN, so middle c is octave 4
           fromIntegral $ Music.Pitch.octaves
-            (p.-.Music.Score.octavesDown (4+1) Music.Pitch.Literal.c)
+            (p.-.Music.Score.Pitch.octavesDown (4+1) Music.Pitch.Literal.c)
           )
 
         notateDynamicLy :: DynamicNotation -> Lilypond.Music -> Lilypond.Music
@@ -1184,7 +1192,7 @@ toXml work = do
                 -- TODO recognize common/cut
                 expTS Nothing   = (mempty :: MusicXml.Music)
                 expTS (Just ks) =
-                  let (fifths, mode) = Music.Score.getKeySignature ks
+                  let (fifths, mode) = Music.Score.Meta.Key.getKeySignature ks
                   in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
 
             timeSignatures_ :: [MusicXml.Music]
@@ -1194,7 +1202,7 @@ toXml work = do
                 -- TODO recognize common/cut
                 expTS Nothing   = (mempty :: MusicXml.Music)
                 expTS (Just ts) =
-                  let (ms, n) = Music.Score.getTimeSignature ts
+                  let (ms, n) = Music.Score.Meta.Time.getTimeSignature ts
                   in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
             -- System bar directions per bar
 
@@ -1447,7 +1455,7 @@ fromAspects :: (StandardNotationExportM m) => Asp -> m Work
 fromAspects sc = do
    -- Part extraction
   say "Extracting parts"
-  let postPartExtract = Music.Score.extractPartsWithInfo normScore
+  let postPartExtract = Music.Score.Part.extractPartsWithInfo normScore
   -- postPartExtract :: [(Music.Parts.Part,Score Asp1)]
 
   -- Change aspect type as we need Semigroup to compose all simultanous notes
@@ -1476,7 +1484,7 @@ fromAspects sc = do
   -- Split each part into bars, splitting notes and adding ties when necessary
   -- Resulting list is list of bars, there is no layering (yet)
   say "Divide score into bars, adding ties where necessary"
-  let postTieSplit = fmap2 (Music.Score.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
+  let postTieSplit = fmap2 (Music.Score.Ties.splitTiesAt barDurations) $ postContextSensitiveNotationRewrite
   -- postTieSplit :: [(Music.Parts.Part,[Voice (Maybe Asp3)])]
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
@@ -1519,22 +1527,22 @@ fromAspects sc = do
     toLayer :: (StandardNotationExportM m) => Music.Parts.Part -> Score a -> m (MVoice a)
     toLayer p =
       maybe (throwError $ "Overlapping events in part: " ++ show p)
-        return . preview Music.Score.singleMVoice
+        return . preview Music.Score.Phrases.singleMVoice
 
     asp2ToAsp3 :: Voice (Maybe Asp2) -> Voice (Maybe Asp3)
     asp2ToAsp3 = id
       . ( DN.removeCloseDynMarks
-        . over Music.Score.dynamics DN.notateDynamic
-        . Music.Score.addDynCon
+        . over Music.Score.Dynamics.dynamics DN.notateDynamic
+        . Music.Score.Dynamics.addDynCon
         )
-      . ( over Music.Score.articulations AN.notateArticulation
-        . Music.Score.addArtCon
+      . ( over Music.Score.Articulation.articulations AN.notateArticulation
+        . Music.Score.Articulation.addArtCon
         )
 
     -- TODO optionally log quantization
-    quantizeBar :: (StandardNotationExportM m, Music.Score.Tiable a) => Voice (Maybe a)
+    quantizeBar :: (StandardNotationExportM m, Tiable a) => Voice (Maybe a)
       -> m (Rhythm (Maybe a))
-    quantizeBar = fmap rewrite . quantize' . view Music.Score.pairs
+    quantizeBar = fmap rewrite . quantize' . view Music.Time.pairs
       where
         quantize' x = case quantize x of
           Left e  -> throwError $ "Quantization failed: " ++ e
@@ -1587,12 +1595,15 @@ fromAspects sc = do
     aspectsToChord Nothing    = mempty
     aspectsToChord (Just asp) = id
       $ ties                  .~ (Any endTie, Any beginTie)
-      $ dynamicNotation       .~ (asp^.(Music.Score.dynamic))
-      $ articulationNotation  .~ (asp^.(Music.Score.articulation))
-      $ pitches               .~ (asp^..(Music.Score.pitches))
+      $ dynamicNotation       .~ (asp^.(MSS.dynamic))
+      $ articulationNotation  .~ (asp^.(MSS.articulation))
+      $ pitches               .~ (asp^..(MSS.pitches))
+      -- $ dynamicNotation       .~ (asp^.(Music.Score.Dynamics.dynamic))
+      -- $ articulationNotation  .~ (asp^.(Music.Score.Articulation.articulation))
+      -- $ pitches               .~ (asp^..(Music.Score.Pitch.pitches))
       $ mempty
       where
-        (endTie,beginTie) = Music.Score.isTieEndBeginning asp
+        (endTie,beginTie) = Music.Score.Ties.isTieEndBeginning asp
 
     aspectsToBar :: Rhythm (Maybe Asp3) -> Bar
     -- TODO handle >1 layers (see below)
@@ -1691,7 +1702,7 @@ umts_01a =
     divideList = Music.Score.Internal.Util.divideList
 
     baseScale :: [Pitch]
-    baseScale = Music.Score.enumDiatonicFromTo
+    baseScale = Music.Score.Pitch.enumDiatonicFromTo
         P.g__
         P.c'''
 
@@ -1713,8 +1724,8 @@ umts_01b =
     chs :: [[Chord]]
     chs = fmap (fmap singleNoteChord) $ divideList 2 pitches
       where
-        pitches = interleave (u <> Music.Score._8va (init u)) (d <> Music.Score._8vb (init d))
-        u = Music.Score._8va
+        pitches = interleave (u <> Music.Score.Pitch._8va (init u)) (d <> Music.Score.Pitch._8vb (init d))
+        u = Music.Score.Pitch._8va
           [       P.c, P.cs
           , P.db, P.d, P.ds
           , P.eb, P.e, P.es
@@ -1846,7 +1857,7 @@ umts_02b =
     timeSignature = 5/4 :: TimeSignature
 
     restPositions :: [Pitch] -- Other type?
-    restPositions = fmap (\n -> Music.Score.up (Music.Pitch._P5^*n) Music.Pitch.b) [0,-1,1,-2,2]
+    restPositions = fmap (\n -> Music.Score.Pitch.up (Music.Pitch._P5^*n) Music.Pitch.b) [0,-1,1,-2,2]
 
 -- ‘02c-Rests-MultiMeasureRests.xml’
 umts_02c :: Work
@@ -2184,9 +2195,9 @@ umts_13a =
 
 
     keySigs :: [KeySignature]
-    keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
+    keySigs = concatMap (\i -> fmap (\m -> Music.Score.Meta.Key.key i m) modesPerBar) fifthPerTwoBars
 
-    fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths]
+    fifthPerTwoBars = [-11..11] :: [Music.Score.Meta.Key.Fifths]
     modesPerBar = [True, False]
 
 -- ‘13b-KeySignatures-ChurchModes.xml’

@@ -29,12 +29,13 @@ module Music.Score (
         module Music.Score.Import.Lilypond,
         module Music.Score.Import.Midi,
 
-        module Music.Score.Export.Backend,
-        module Music.Score.Export.NoteList,
-        module Music.Score.Export.Midi,
-        module Music.Score.Export.SuperCollider,
+        -- module Music.Score.Export.Backend,
+        -- module Music.Score.Export.NoteList,
+        -- module Music.Score.Export.Midi,
+        -- module Music.Score.Export.SuperCollider,
         -- module Music.Score.Export.Lilypond,
         -- module Music.Score.Export.MusicXml,
+        -- module Music.Score.Export2.StandardNotation,
 
         module Music.Time,
 
@@ -80,14 +81,17 @@ import           Music.Time                     hiding (time)
 import           Music.Score.Articulation
 import           Music.Score.Color
 import           Music.Score.Dynamics
-import           Music.Score.Export.Backend
-import           Music.Score.Export.NoteList
-import           Music.Score.Export.Midi
-import           Music.Score.Export.SuperCollider
-import           Music.Score.Export.Abc
+-- import           Music.Score.Export.Backend
+-- import           Music.Score.Export.NoteList
+-- import           Music.Score.Export.Midi
+-- import           Music.Score.Export.SuperCollider
+-- import           Music.Score.Export.Abc
 -- import           Music.Score.Export.Lilypond
-import           Music.Score.Export.Midi
+-- import           Music.Score.Export.Midi
 -- import           Music.Score.Export.MusicXml
+
+-- import           Music.Score.Export2.StandardNotation
+
 import           Music.Score.Harmonics
 import           Music.Score.Import.Abc
 import           Music.Score.Import.Lilypond

@@ -113,11 +113,11 @@ library
                         Music.Score.Text
                         Music.Score.Harmonics
                         Music.Score.Color
-                        Music.Score.Export.Abc
-                        Music.Score.Export.Backend
-                        Music.Score.Export.NoteList
+                        -- Music.Score.Export.Abc
+                        -- Music.Score.Export.Backend
+                        -- Music.Score.Export.NoteList
                         Music.Score.Export.Midi
-                        Music.Score.Export.SuperCollider
+                        -- Music.Score.Export.SuperCollider
                         -- Music.Score.Export.Lilypond
                         -- Music.Score.Export.MusicXml
                         Music.Score.Export.ArticulationNotation
