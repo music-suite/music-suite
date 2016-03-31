@@ -388,7 +388,7 @@ data Movement = Movement
   deriving (Eq, Show)
 
 data WorkInfo = WorkInfo
-  { _title        ::  Title
+  { _title        :: Title
   , _annotations  :: Annotations
   , _attribution  :: Attribution
   }
@@ -1904,10 +1904,15 @@ umts_43e = mempty
 -- IGNORE (would be nice!)
 
 -- ‘46a-Barlines.xml’
+{-
+Different types of (non-repeat) barlines: default (no setting), regular, dotted,
+dashed, heavy, light-light, light-heavy, heavy-light, heavy-heavy, tick, short, none.
+-}
 umts_46a :: Work
 umts_46a = mempty
   where
-
+    barLines =
+      []
 -- ‘46b-MidmeasureBarline.xml’
 umts_46b :: Work
 umts_46b = mempty
@@ -1935,17 +1940,32 @@ umts_46g = mempty
 
 -- ‘51b-Header-Quotes.xml’
 umts_51b :: Work
-umts_51b = mempty
+umts_51b = Work mempty $ pure
+  $ Movement
+    ( movementTitle                      .~ title_
+    $ movementAttribution.at "composer"  .~ Just composer_
+    $ mempty
+    )
+    (repeat mempty)
+  $ Leaf
+  $ Staff (instrumentFullName .~ instrName_ $ mempty)
+  $ pure
+  $ flip Bar mempty $ pure $ Beat 1 mempty
+  where
+    title_      = "\"Quotes\" in header fields"
+    composer_   = "Some \"Tester\" name"
+    instrName_  = "Staff \"Test\""
 
 -- ‘51c-MultipleRights.xml’
-umts_51c :: Work
-umts_51c = mempty
-  where
+-- IGNORE
 
 -- ‘51d-EmptyTitle.xml’
 umts_51d :: Work
 umts_51d = mempty
   where
+    workTitle = mempty
+    mvmTitle = "Empty work title, non-empty movement title"
+    -- a single bar rest
 
 -- ‘52a-PageLayout.xml’
 -- IGNORE (would be nice!)
@@ -2156,7 +2176,6 @@ umts_all =
   , umts_46f
   , umts_46g
   , umts_51b
-  , umts_51c
   , umts_51d
   , umts_72a
   , umts_72b
