@@ -108,14 +108,14 @@ module Music.Score.Export2.StandardNotation
   )
 where
 
-import BasePrelude hiding (first, second, (<>))
+import BasePrelude hiding (first, second, (<>), First(..))
 import           Control.Lens                            (over, preview, set, to,
                                                           under, view, _head, at)
 import           Control.Lens.Operators
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
 import           Control.Monad.Plus
-import           Control.Monad.Writer                    hiding ((<>))
+import           Control.Monad.Writer                    hiding ((<>), First(..))
 import           Data.AffineSpace                        hiding (Sum)
 import           Data.Colour                             (Colour)
 import           Data.Colour.Names
@@ -204,20 +204,31 @@ type SpecialBarline         = () -- TODO Dashed | Double | Final
 -- TODO lyrics
 
 data SystemBar              = SystemBar
-  { _barNumbers       :: Maybe BarNumber
-  , _timeSignature    :: Maybe TimeSignature
-  , _keySignature     :: Maybe KeySignature
-  , _rehearsalMark    :: Maybe RehearsalMark
-  , _tempoMark        :: Maybe TempoMark
+{-
+Note: Option First ~ Maybe
+Alternatively we could just make these things into Monoids such that
+mempty means "no notation at this point", and remove the "Option First"
+part here.
+
+-}
+  { _barNumbers       :: Option (First BarNumber)
+  , _timeSignature    :: Option (First TimeSignature)
+  , _keySignature     :: Option (First KeySignature)
+  , _rehearsalMark    :: Option (First RehearsalMark)
+  , _tempoMark        :: Option (First TempoMark)
   -- ,_barLines :: BarLines
     -- Tricky because of ambiguity. Use balanced pair
     -- or an alt-list in SystemStaff.
   } deriving (Eq,Ord,Show)
+
+-- TODO derive these somehow
+instance Semigroup SystemBar where
+  (<>) = mappend
 instance Monoid SystemBar where
-  mempty = SystemBar Nothing Nothing Nothing Nothing Nothing
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
+  mempty = SystemBar mempty mempty mempty mempty mempty
+  (SystemBar a1 a2 a3 a4 a5) `mappend` (SystemBar b1 b2 b3 b4 b5)
+    = SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
+
 type SystemStaff            = [SystemBar]
 
 
@@ -513,11 +524,12 @@ toLy work = do
         sim xs  = Lilypond.Simultaneous False xs
 
         addTimeSignature
-          :: Maybe Music.Score.Meta.Time.TimeSignature
+          :: Option (First Music.Score.Meta.Time.TimeSignature)
           -> Lilypond.Music
           -> Lilypond.Music
-        addTimeSignature timeSignature x = (setTimeSignature `ifJust` timeSignature) x
+        addTimeSignature timeSignature x = (setTimeSignature `ifJust` (unOF timeSignature)) x
           where
+            unOF = fmap getFirst . getOption
             ifJust = maybe id
             setTimeSignature (Music.Score.getTimeSignature -> (ms, n)) x =
                 Lilypond.Sequential [Lilypond.Time (sum ms) n, x]
@@ -740,8 +752,9 @@ toXml work = do
             -- TODO key sigs
             -- TODO compound time sigs
             timeSignaturesX :: [MusicXml.Music]
-            timeSignaturesX = fmap expTS $ fmap (^.timeSignature) (movement^.systemStaff)
+            timeSignaturesX = fmap (expTS . unOF) $ fmap (^.timeSignature) (movement^.systemStaff)
               where
+                unOF = fmap getFirst . getOption
                 -- TODO recognize common/cut
                 expTS Nothing   = mempty
                 expTS (Just ts) =
@@ -958,7 +971,7 @@ fromAspects sc = do
       ) $ mempty
 
     systemStaff :: SystemStaff
-    systemStaff = fmap (\ts -> timeSignature .~ ts $ mempty) timeSignatureMarks
+    systemStaff = fmap (\ts -> timeSignature .~ Option (fmap First ts) $ mempty) timeSignatureMarks
 
     (timeSignatureMarks, barDurations) = extractTimeSignatures normScore
     normScore = normalizeScore sc -- TODO not necessarliy set to 0...

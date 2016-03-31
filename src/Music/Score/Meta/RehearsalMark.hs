@@ -66,7 +66,6 @@ import           Music.Time.Reactive
 
 -- | Represents a rehearsal mark.
 --
--- TODO this needs zero-duration spans to work properly.
 data RehearsalMark = RehearsalMark (Maybe String) Int
     deriving (Eq, Ord, Typeable)
 -- name level(0=standard)
@@ -98,4 +97,3 @@ rehearsalMarkDuring s x = addMetaNote $ view event (s, x)
 
 withRehearsalMark :: (RehearsalMark -> Score a -> Score a) -> Score a -> Score a
 withRehearsalMark = withMeta
-
