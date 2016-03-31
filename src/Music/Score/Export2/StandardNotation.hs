@@ -1343,9 +1343,25 @@ voice 2, but somewhere in the middle. Voice 2 thus won’t have any notes or res
 for the first beat of the measures.
 -}
 umts_03b :: Work
-umts_03b = mempty
+umts_03b =   Work mempty
+    $ pure
+    $ Movement mempty (mempty : cycle mempty)
+    $ Leaf
+    $ Staff mempty
+    $ pure
+    $ Bar
+      [ listToRh $ fmap maybePitchToCh voice1
+      , listToRh $ fmap maybePitchToCh voice2
+      ] mempty
   where
-    timeSig = 4/4 :: TimeSignature
+    listToRh :: [a] -> Rhythm a
+    listToRh xs = Group $ fmap (Beat (1/4)) xs
+
+    maybePitchToCh :: Maybe Pitch -> Chord
+    maybePitchToCh Nothing  = mempty
+    maybePitchToCh (Just x) = pitches .~ [x] $ mempty
+
+    -- timeSig = 4/4 :: TimeSignature
     voice1 =
       [ Just Music.Pitch.c
       , Just Music.Pitch.c
@@ -1375,6 +1391,9 @@ Various time signatures: 2/2 (alla breve), 4/4 (C), 2/2, 3/2, 2/4, 3/4, 4/4,
 umts_11a :: Work
 umts_11a = mempty
   where
+    sysStaff :: SystemStaff
+    sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
+
     timeSigs :: [TimeSignature]
     timeSigs =
       [
