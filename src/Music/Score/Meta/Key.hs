@@ -28,8 +28,9 @@
 
 module Music.Score.Meta.Key (
         -- * Key signature type
-        Fifths,
-        KeySignature,
+        Fifths(..),
+        -- TODO hide internals
+        KeySignature(..),
         key,
         isMajorKey,
         isMinorKey,
@@ -107,7 +108,7 @@ instance IsPitch Fifths where
 -}
 
 -- | A key signature, represented by number of fifths from C and mode.
-newtype KeySignature = KeySignature (Fifths, Bool)
+newtype KeySignature = KeySignature { getKeySignature :: (Fifths, Bool) }
     deriving (Eq, Ord, Typeable)
 
 instance Show KeySignature where

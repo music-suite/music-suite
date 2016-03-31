@@ -874,6 +874,22 @@ toLy work = do
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
+{-
+Refernces:
+  http://lilypond.org/doc/v2.18/input/regression/musicxml/collated-files.html
+
+  http://www.musicxml.com, specifically
+  http://www.musicxml.com/UserManuals/MusicXML/MusicXML.htm
+
+  Reference files:
+    http://www.musicxml.com/music-in-musicxml/
+    Also formats such as Lilypond, Finale and Sibelius can be converted
+
+  See also reference files in:
+    musicxml2/test/musicxml
+    music-suite/test/extra-musicxml/tests
+-}
+
 type MusicXmlExportM m = (MonadLog String m, MonadError String m)
 
 toXml :: (MusicXmlExportM m) => Work -> m MusicXml.Score
@@ -948,27 +964,50 @@ toXml work = do
               - Tempo barks
         -}
         music :: [[MusicXml.Music]]
-        music = case staffMusic of
-          []     -> []
-          (x:xs) -> (zipWith (<>) allSystemBarDirections x : xs)
+        music = fmap (zipWith (<>) allSystemBarDirections) staffMusic
+        -- music = case staffMusic of
+          -- []     -> []
+          -- (x:xs) -> (zipWith (<>) allSystemBarDirections x : xs)
 
-        -- Each entry in outer list must be prepended to the FIRST staff (whatever that is)
-        -- We could also prepend it to other staves, but that is reduntant and makes the
-        -- generated XML file much larger.
+        {-
+          Old comment:
+                Each entry in outer list must be prepended to the FIRST staff (whatever that is)
+                We could also prepend it to other staves, but that is reduntant and makes the
+                generated XML file much larger.
+          Trying a new approach here by including this in all parts.
+
+          ---
+          Again, this definition is a sequnce of elements to be prepended to each bar
+          (typically divisions and attributes).
+        -}
         allSystemBarDirections :: [MusicXml.Music]
-        allSystemBarDirections = timeSignaturesX
+        allSystemBarDirections = zipWith (<>) timeSignatures_ keySignatures_
           where
-            -- TODO bar numbers
-            -- TODO reh marks
-            -- TODO tempo marks
-            -- TODO key sigs
-            -- TODO compound time sigs
-            timeSignaturesX :: [MusicXml.Music]
-            timeSignaturesX = fmap (expTS . unOF) $ fmap (^.timeSignature) (movement^.systemStaff)
+            -- TODO bar numbers (?)
+            -- TODO reh marks (direction)
+            -- TODO tempo marks (direction)
+            -- TODO key sigs (attribute)
+            -- TODO compound time sigs (attribute)
+            -- TODO don't forget about divisions
+
+            -- TODO this generates several groups of attributes which is arguably wrong (spec?)
+
+            keySignatures_ :: [MusicXml.Music]
+            keySignatures_ = fmap (expTS . unOF) $ fmap (^.keySignature) (movement^.systemStaff)
               where
                 unOF = fmap getFirst . getOption
                 -- TODO recognize common/cut
-                expTS Nothing   = mempty
+                expTS Nothing   = (mempty :: MusicXml.Music)
+                expTS (Just ks) =
+                  let (fifths, mode) = Music.Score.getKeySignature ks
+                  in MusicXml.key (fromIntegral fifths) (if mode then MusicXml.Major else MusicXml.Minor)
+
+            timeSignatures_ :: [MusicXml.Music]
+            timeSignatures_ = fmap (expTS . unOF) $ fmap (^.timeSignature) (movement^.systemStaff)
+              where
+                unOF = fmap getFirst . getOption
+                -- TODO recognize common/cut
+                expTS Nothing   = (mempty :: MusicXml.Music)
                 expTS (Just ts) =
                   let (ms, n) = Music.Score.getTimeSignature ts
                   in MusicXml.time (fromIntegral $ sum ms) (fromIntegral n)
@@ -1869,9 +1908,15 @@ umts_13a =
     staff :: Staff
     staff = Staff mempty $ repeat $ Bar mempty [Beat (1/2) $ pitches .~ [P.c] $ mempty]
 
-    sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
-      ((timeSignature .~ (Option $ Just $ First (2/4))) : repeat mempty)
+    -- sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
+    --   -- TODO just 2/4
+    --   ( (timeSignature .~ (Option $ Just $ First (2/4))) : (timeSignature .~ (Option $ Just $ First (3/4))) : repeat mempty)
+    --   keySigs
+
+    -- TODO include TS too!
+    sysStaff = fmap (\ks -> keySignature .~ (Option $ Just $ First $ ks) $ mempty)
       keySigs
+
 
     keySigs :: [KeySignature]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
