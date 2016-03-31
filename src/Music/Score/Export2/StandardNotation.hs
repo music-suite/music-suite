@@ -1,6 +1,6 @@
 
 
--- {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 -- For MonadLog String:
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
@@ -108,7 +108,7 @@ module Music.Score.Export2.StandardNotation
   )
 where
 
-import           Control.Applicative
+import BasePrelude hiding (first, second, (<>))
 import           Control.Lens                            (over, preview, set, to,
                                                           under, view, _head, at)
 import           Control.Lens.Operators
@@ -118,8 +118,7 @@ import           Control.Monad.Plus
 import           Control.Monad.Writer                    hiding ((<>))
 import           Data.AffineSpace                        hiding (Sum)
 import           Data.Colour                             (Colour)
-import           Data.Colour.Names                       as Color
-import           Data.Foldable                           (Foldable)
+import           Data.Colour.Names
 import           Data.Functor.Identity                   (Identity)
 import           Data.Map                                (Map)
 import qualified Data.Char
@@ -131,9 +130,8 @@ import           Data.Bifunctor                          (bimap, first, second)
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
 import           Data.Semigroup
-import           Data.Traversable                        (Traversable)
-import qualified Data.Traversable
 import           Data.VectorSpace                        hiding (Sum)
+
 import qualified Music.Articulation
 import           Music.Articulation                      (Articulation)
 import qualified Music.Dynamics
@@ -142,9 +140,8 @@ import           Music.Dynamics.Literal                  (DynamicsL(..), fromDyn
 import           Music.Parts                             (Group (..), Part)
 import qualified Music.Parts
 import qualified Music.Pitch
-import           Music.Pitch                             (Pitch)
+import           Music.Pitch                             (Pitch, fromPitch)
 import qualified Music.Pitch.Literal
-import           Music.Pitch.Literal                     (fromPitch)
 import           Music.Score                             (MVoice)
 import qualified Music.Score
 import           Music.Score.Articulation                (ArticulationT)
@@ -176,18 +173,6 @@ import           Music.Time
 import           Music.Time.Meta                         (meta)
 import qualified Text.Pretty                             as Pretty
 import qualified System.Process --DEBUG
-
-{-
-type StandardNote =
-  PartT
-    Part
-    (ColorT
-       (TextT
-          (TremoloT
-             (HarmonicT
-                (SlideT
-                   (ArticulationT Articulation (DynamicT Dynamics [TieT Pitch])))))))
--}
 
 -- TODO
 instance Show Music.Score.Meta.Key.KeySignature where show = const "TEMPkeysig"
@@ -486,7 +471,7 @@ toLy work = do
       -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
       -- which seems to be what Lilypond expects), so the system staff is included
       -- in the rendering of each staff
-      renderedStaves <- Data.Traversable.mapM (toLyStaff $ m^.systemStaff) (m^.staves)
+      renderedStaves <- mapM (toLyStaff $ m^.systemStaff) (m^.staves)
       -- Now we still have (LabelTree BracketType), which is converted to a parallel
       -- music expression, using \StaffGroup etc
       toLyStaffGroup renderedStaves
@@ -639,9 +624,9 @@ toLy work = do
           ]
 
         colorName c
-          | c == Color.black = "black"
-          | c == Color.red   = "red"
-          | c == Color.blue  = "blue"
+          | c == Data.Colour.Names.black = "black"
+          | c == Data.Colour.Names.red   = "red"
+          | c == Data.Colour.Names.blue  = "blue"
           | otherwise        = error "Lilypond backend: Unkown color"
 
         -- TODO use
@@ -987,8 +972,8 @@ fromAspects sc = do
   -- This is currently a trivial algorithm that assumes overlapping notes are in different parts
   -- TODO layer sepration (which, again, does not actually happen in current code should happen AFTER tie split)
   say "Separating voices in parts (assuming no overlaps)"
-  postVoiceSeparation <- Data.Traversable.mapM (\a@(p,_) ->
-    Data.Traversable.mapM (toLayer p) a) $ postChordMerge
+  postVoiceSeparation <- mapM (\a@(p,_) ->
+    mapM (toLayer p) a) $ postChordMerge
 
   -- Rewrite dynamics and articulation to be context-sensitive
   -- This changes the aspect type again
@@ -1004,8 +989,7 @@ fromAspects sc = do
 
   -- For each bar, quantize all layers. This is where tuplets/note values are generated.
   say "Quantize rhythms (generating dotted notes and tuplets)"
-  postQuantize <- Data.Traversable.mapM
-    (Data.Traversable.mapM (Data.Traversable.mapM quantizeBar)) postTieSplit
+  postQuantize <- mapM (mapM (mapM quantizeBar)) postTieSplit
   -- postQuantize :: [(Music.Parts.Part,[Rhythm (Maybe Asp3)])]
 
   -- TODO all steps above that start with fmap or mapM can be factored out (functor law)
