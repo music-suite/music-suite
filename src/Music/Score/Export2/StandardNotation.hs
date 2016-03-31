@@ -31,6 +31,8 @@ module Music.Score.Export2.StandardNotation
   , rehearsalMark
   , tempoMark
   , SystemStaff
+  , systemStaffLength
+  , systemStaffTakeBars
   , InstrumentShortName
   , InstrumentFullName
   , Transposition
@@ -70,6 +72,8 @@ module Music.Score.Export2.StandardNotation
   , Bar
   , pitchLayers
   , Staff
+  , staffLength
+  , staffTakeBars
   , staffInfo
   , bars
   , Title
@@ -83,6 +87,7 @@ module Music.Score.Export2.StandardNotation
   , movementInfo
   , systemStaff
   , staves
+  , movementAssureSameNumberOfBars
   , WorkInfo
   , title
   , annotations
@@ -237,6 +242,11 @@ instance Monoid SystemBar where
 
 type SystemStaff            = [SystemBar]
 
+systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
+systemStaffTakeBars = take
+
+systemStaffLength :: SystemStaff -> Int
+systemStaffLength = length
 
 type InstrumentShortName    = String
 type InstrumentFullName     = String
@@ -362,6 +372,12 @@ data Staff = Staff
   }
   deriving (Eq, Show)
 
+staffTakeBars :: Int -> Staff -> Staff
+staffTakeBars n (Staff i bs) = Staff i (take n bs)
+
+staffLength :: Staff -> Int
+staffLength (Staff i bs) = length bs
+
 type Title                  = String
 type Annotations            = [(Span, String)]
 type Attribution            = Map String String -- composer, lyricist etc
@@ -386,6 +402,18 @@ data Movement = Movement
   , _staves       :: LabelTree BracketType Staff
   }
   deriving (Eq, Show)
+
+{-|
+Assure all staves (including system-staff) has the same number of bars.
+-}
+movementAssureSameNumberOfBars :: Movement -> Movement
+movementAssureSameNumberOfBars (Movement i ss st) = case maxBars of
+  Nothing -> Movement i ss st
+  Just n  -> Movement i (systemStaffTakeBars n ss) (fmap (staffTakeBars n) st)
+  where
+    maxBars = safeMaximum $ systemStaffLength ss : (fmap staffLength $ toList st)
+    safeMaximum [] = Nothing
+    safeMaximum xs = Just $ maximum xs
 
 data WorkInfo = WorkInfo
   { _title        :: Title
@@ -507,7 +535,9 @@ toLy work = do
   where
 
     toLyMusic :: (LilypondExportM m) => Movement -> m Lilypond.Music
-    toLyMusic m = do
+    toLyMusic m2 = do
+      let m = movementAssureSameNumberOfBars m2
+
       -- We will copy system-staff info to each bar (time sigs, key sigs and so on,
       -- which seems to be what Lilypond expects), so the system staff is included
       -- in the rendering of each staff
@@ -740,9 +770,10 @@ toXml :: (MusicXmlExportM m) => Work -> m MusicXml.Score
 toXml work = do
   -- TODO assumes one movement
   say "MusicXML: Assuming one movement only"
-  firstMovement <- case work^?movements._head of
+  firstMovement2 <- case work^?movements._head of
     Nothing -> throwError "StandardNotation: Expected a one-movement piece"
     Just x  -> return x
+  let firstMovement = movementAssureSameNumberOfBars firstMovement2
 
   say "MusicXML: Extracting title and composer"
   let title     = firstMovement^.movementInfo.movementTitle
@@ -1132,9 +1163,6 @@ test3 x = do
 test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
-
-
--- TODO handle infinite system-staff/bar-list (one or the other)?
 -- TODO lyrics
 -- TODO chord symbols
 -- TODO piano staff crossings
