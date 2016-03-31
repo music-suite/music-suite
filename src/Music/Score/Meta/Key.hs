@@ -69,6 +69,9 @@ import           Music.Time.Reactive
 newtype Fifths = Fifths Integer
     deriving (Eq, Ord, Num, Enum, Integral, Real)
 
+instance Show Fifths where
+  show (Fifths n) = show n
+
 {-
 instance IsPitch Fifths where
     fromPitch (PitchL (d, fromMaybe 0 -> c, _)) = case (d,c) of
@@ -106,6 +109,9 @@ instance IsPitch Fifths where
 -- | A key signature, represented by number of fifths from C and mode.
 newtype KeySignature = KeySignature (Fifths, Bool)
     deriving (Eq, Ord, Typeable)
+
+instance Show KeySignature where
+  show (KeySignature (f, b)) = "key " ++ showsPrec 1 f "" ++ " " ++ showsPrec 1 b ""
 
 -- | Create a major or minor signature.
 key :: Fifths -> Bool -> KeySignature

@@ -157,6 +157,7 @@ import           Music.Articulation                      (Articulation)
 import qualified Music.Dynamics
 import           Music.Dynamics                          (Dynamics)
 import           Music.Dynamics.Literal                  (DynamicsL(..), fromDynamics)
+import qualified Music.Dynamics.Literal as D
 import           Music.Parts                             (Group (..), Part, Instrument)
 import qualified Music.Parts
 import qualified Music.Pitch
@@ -198,10 +199,6 @@ import qualified Text.Pretty
 import qualified System.Process --DEBUG
 import qualified System.Directory
 
--- TODO
-instance Show Music.Score.Meta.Key.KeySignature where show = const "TEMPkeysig"
-
-
 
 -- Annotated tree
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
@@ -228,14 +225,14 @@ type SpecialBarline         = () -- TODO Dashed | Double | Final
 -- TODO lyrics
 
 data SystemBar              = SystemBar
-{-
-Note: Option First ~ Maybe
-Alternatively we could just make these things into Monoids such that
-mempty means "no notation at this point", and remove the "Option First"
-part here.
+  {-
+  Note: Option First ~ Maybe
+  Alternatively we could just make these things into Monoids such that
+  mempty means "no notation at this point", and remove the "Option First"
+  part here.
 
-Actually I'm pretty sure this is the right approach. See also #242
--}
+  Actually I'm pretty sure this is the right approach. See also #242
+  -}
   { _barNumbers       :: Option (First BarNumber)
   , _timeSignature    :: Option (First TimeSignature)
   , _keySignature     :: Option (First KeySignature)
@@ -269,9 +266,9 @@ type SibeliusFriendlyName   = String
 type SmallOrLarge           = Any -- def False
 type ScoreOrder             = Sum Double -- def 0
 
+-- TODO instrument part no. (I, II.1 etc)
 data StaffInfo              = StaffInfo
   { _instrumentShortName    :: InstrumentShortName
-  -- TODO instrument part no. (I, II.1 etc)
   , _instrumentFullName     :: InstrumentFullName
   , _sibeliusFriendlyName   :: SibeliusFriendlyName
   , _instrumentDefaultClef  :: Music.Pitch.Clef
@@ -282,8 +279,10 @@ data StaffInfo              = StaffInfo
   , _scoreOrder             :: ScoreOrder
   }
   deriving (Eq,Ord,Show)
+
 instance Semigroup StaffInfo where
   (<>) = mempty
+
 instance Monoid StaffInfo where
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
   mappend x y
@@ -331,6 +330,7 @@ instance Monoid TremoloNotation where
 -- Always apply *after* the indicated chord.
 data BreathNotation         = NoBreath | Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
+
 instance Monoid BreathNotation where
   mempty = NoBreath
   mappend x y
@@ -457,21 +457,6 @@ movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
 
     shortestListLength :: [a] -> [b] -> Int
     shortestListLength xs ys = length (zip xs ys)
-    -- minBars = systemStaffLength ss `raceMin` (safeMinimum $ fmap staffLength $ toList st)
-    -- safeMinimum [] = Nothing
-    -- safeMinimum xs = Just $ minimum xs
-    --
-    -- -- raceMin a undefined = a
-    -- -- racemin undefined a = a
-    -- -- racemin a b         = min a b
-    -- raceMin a b =
-    --   let a_ = do
-    --     let ae! = a
-    --     return ae
-    --   let b_ = do
-    --     let be! = a
-    --     return be
-    -- unsafePerformIO $ Control.Concurrent.Async.race (return a) (return b)
 
 data WorkInfo = WorkInfo
   { _title        :: Title
@@ -1292,6 +1277,8 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
+-- TODO xml/clefs
+-- TODO xml/keysigs
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -2060,9 +2047,91 @@ umts_31a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : repeat mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
 
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    -- TODO ties in bar 1
+    chords :: [Chord]
+    chords =
+      [ bc
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+      , bc
+
+      , dynamicNotation.dynamicLevel .~ D._p $ bc
+      , dynamicNotation.dynamicLevel .~ D.pp $ bc
+      , dynamicNotation.dynamicLevel .~ D.ppp $ bc
+      , dynamicNotation.dynamicLevel .~ D.pppp $ bc
+
+      , dynamicNotation.dynamicLevel .~ D.ppppp $ bc
+      , dynamicNotation.dynamicLevel .~ D.pppppp $ bc
+      , dynamicNotation.dynamicLevel .~ D._f $ bc
+      , dynamicNotation.dynamicLevel .~ D.ff $ bc
+
+      , dynamicNotation.dynamicLevel .~ D.fff $ bc
+      , dynamicNotation.dynamicLevel .~ D.ffff $ bc
+      , dynamicNotation.dynamicLevel .~ D.fffff $ bc
+      , dynamicNotation.dynamicLevel .~ D.ffffff $ bc
+
+      , dynamicNotation.dynamicLevel .~ D.mp $ bc
+      , dynamicNotation.dynamicLevel .~ D.mf $ bc
+      , {-dynamicNotation.dynamicLevel .~ D.sf $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.sfp $-} bc
+
+      , {-dynamicNotation.dynamicLevel .~ D.sfpp $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.fp $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.rf $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.rfz $-} bc
+
+      , {-dynamicNotation.dynamicLevel .~ D.sfz $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.sffz $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.fz $-} bc
+      , bc
+
+      , dynamicNotation.crescDim .~ pure DN.BeginCresc $ bc
+      , dynamicNotation.crescDim .~ pure DN.EndCresc $ bc
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+      , bc
+      -- 11
+      , bc
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+      , bc
+
+      , dynamicNotation.dynamicLevel .~ D._p $ bc -- subito
+      , dynamicNotation.dynamicLevel .~ D.ppp $ dynamicNotation.crescDim .~ pure DN.BeginCresc $ bc -- subito
+      , dynamicNotation.dynamicLevel .~ D.fff $ dynamicNotation.crescDim .~ pure DN.EndCresc $ bc -- subito
+      , bc
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 -- ‘31c-MetronomeMarks.xml’
 umts_31c :: Work
 umts_31c =
@@ -2207,15 +2276,7 @@ umts_32b =
     staff = mempty
 
 -- ‘32c-MultipleNotationChildren.xml’
-umts_32c :: Work
-umts_32c =
-  Work mempty
-    $ pure
-    $ Movement mempty sysStaff
-    $ Leaf staff
-  where
-    sysStaff = repeat mempty
-    staff = mempty
+-- IGNORE
 
 -- ‘32d-Arpeggio.xml’
 umts_32d :: Work
@@ -2226,7 +2287,26 @@ umts_32d =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [ arpeggioNotation .~ Arpeggio $ bc
+      , arpeggioNotation .~ UpArpeggio $ bc
+      , arpeggioNotation .~ Arpeggio $ bc
+      , arpeggioNotation .~ DownArpeggio $ bc
+
+      , arpeggioNotation .~ Arpeggio $ bc
+      , arpeggioNotation .~ NoArpeggioBracket $ bc
+      , arpeggioNotation .~ Arpeggio $ bc
+      ]
+    bc = pitches .~ [P.c, P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33a-Spanners.xml’
 umts_33a :: Work
@@ -2236,8 +2316,115 @@ umts_33a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 3/4) $ mempty) : repeat mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 3 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    -- TODO ties in bar 1
+    chords :: [Chord]
+    chords =
+      [ bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      -- 11
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      -- 21
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      , bc
+      , bc
+      , bc
+
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.b] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33b-Spanners-Tie.xml’
 umts_33b :: Work
@@ -2248,7 +2435,22 @@ umts_33b =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 1 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [ ties .~ (Any False, Any True) $ bc
+      , ties .~ (Any True, Any False) $ bc
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33c-Spanners-Slurs.xml’
 umts_33c :: Work
@@ -2259,7 +2461,27 @@ umts_33c =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [ articulationNotation.slurs .~ [AN.BeginSlur] $ bc P.g
+      , articulationNotation.slurs .~ [AN.BeginSlur, AN.EndSlur] $ bc P.c'
+      , articulationNotation.slurs .~ [AN.BeginSlur, AN.EndSlur] $ bc P.a
+      , articulationNotation.slurs .~ [AN.EndSlur] $ bc P.g
+
+      , articulationNotation.slurs .~ [AN.BeginSlur] $ bc P.g
+      , bc P.c'
+      , articulationNotation.slurs .~ [AN.EndSlur] $ bc P.a
+      , bc P.g
+      ]
+    bc x = pitches .~ [x] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33d-Spanners-OctaveShifts.xml’
 umts_33d :: Work
@@ -2270,7 +2492,21 @@ umts_33d =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33e-Spanners-OctaveShifts-InvalidSize.xml’
 umts_33e :: Work
@@ -2281,7 +2517,21 @@ umts_33e =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33f-Trill-EndingOnGraceNote.xml’
 umts_33f :: Work
@@ -2292,7 +2542,21 @@ umts_33f =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33g-Slur-ChordedNotes.xml’
 umts_33g :: Work
@@ -2303,7 +2567,21 @@ umts_33g =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33h-Spanners-Glissando.xml’
 umts_33h :: Work
@@ -2314,7 +2592,21 @@ umts_33h =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘33i-Ties-NotEnded.xml’
 umts_33i :: Work
@@ -2325,7 +2617,21 @@ umts_33i =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty $ fmap (\ch -> Bar mempty [rh4 ch]) $ divideList 4 chords
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (Beat (1/4)) cs
+
+    chords :: [Chord]
+    chords =
+      [
+      ]
+    nc  = mempty
+    bc  = pitches .~ [P.c'] $ mempty
+    bc2 = pitches .~ [P.c', P.e', P.g'] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 
 -- ‘41a-MultiParts-Partorder.xml’
 umts_41a :: Work
@@ -2836,7 +3142,6 @@ umts_all =
   , ("umts_31c",umts_31c)
   , ("umts_32a",umts_32a)
   , ("umts_32b",umts_32b)
-  , ("umts_32c",umts_32c)
   , ("umts_32d",umts_32d)
   , ("umts_33a",umts_33a)
   , ("umts_33b",umts_33b)
