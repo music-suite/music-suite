@@ -892,7 +892,7 @@ toXml work = do
             renderBar :: Bar -> MusicXml.Music
             renderBar b = case b^.pitchLayers of
               [x]  -> renderPL x
-              xs   -> error $ "Expected one pitch layer, got" ++ show (length xs)
+              xs   -> error $ "Expected one pitch layer, got " ++ show (length xs)
 
             renderPL :: Rhythm Chord -> MusicXml.Music
             renderPL = renderBarMusic . fmap renderC
@@ -2545,29 +2545,29 @@ umts_73a =
 
 umts_export :: IO ()
 umts_export = do
-  putStrLn $ "Starting UTMS export§"
+  putStrLn $ "Starting UTMS export"
   let dir = "/tmp/music-suite/umts"
   System.Directory.createDirectoryIfMissing True dir
 
+  errorCount <- newIORef 0
   forM_ umts_all $ \(name,work) -> do
     let baseName = dir ++ "/" ++ name
         xmlName = baseName ++ ".xml"
         lyName  = baseName ++ ".ly"
 
     putStr $ name ++ ": \n"
-    c <- newIORef 0
-    h c $ do
+    h errorCount $ do
       ly <- runIOExportM $ toLy work
       writeFile lyName $ show $ Text.Pretty.pretty ly
       -- TODO preamble
 
-    h c $ do
+    h errorCount $ do
       xml <- runIOExportM $ toXml work
       writeFile xmlName $ MusicXml.showXml xml
 
-    putStrLn $ "UTMS export done"
-    ec <- readIORef c
-    putStrLn $ "  Number of errors: " ++ show ec
+  putStrLn $ "UTMS export done"
+  ec <- readIORef errorCount
+  putStrLn $ "  Number of errors: " ++ show ec
     where
       h c = handle $ \e -> do
         modifyIORef c succ
