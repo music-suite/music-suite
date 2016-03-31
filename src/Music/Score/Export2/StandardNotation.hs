@@ -1384,7 +1384,7 @@ umts_01b =
     chs :: [[Chord]]
     chs = fmap (fmap singleNoteChord) $ divideList 2 pitches
       where
-        pitches = interleave (u <> Music.Score._8va u) (d <> Music.Score._8vb d)
+        pitches = interleave (u <> Music.Score._8va (init u)) (d <> Music.Score._8vb (init d))
         u = Music.Score._8va
           [       P.c, P.cs
           , P.db, P.d, P.ds
@@ -1822,15 +1822,21 @@ umts_13a :: Work
 umts_13a =
   Work mempty
     $ pure
-    $ Movement mempty (repeat mempty)
+    $ Movement mempty sysStaff
     $ Leaf staff
   where
     staff :: Staff
-    staff = mempty
+    staff = Staff mempty $ repeat $ Bar mempty [Beat (1/2) $ pitches .~ [P.c] $ mempty]
 
-    fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths] -- or Music.Pitch.Fifths (see above)
-    modesPerBar = [False, True]
+    sysStaff = zipWith (\setTS ks -> setTS $ keySignature .~ (Option $ Just $ First $ ks) $ mempty)
+      ((timeSignature .~ (Option $ Just $ First (2/4))) : repeat mempty)
+      keySigs
+
+    keySigs :: [KeySignature]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
+
+    fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths]
+    modesPerBar = [False, True]
 
 -- ‘13b-KeySignatures-ChurchModes.xml’
 {-All different modes: major, minor, ionian, dorian, phrygian, lydian, mixolydian,
