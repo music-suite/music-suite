@@ -1294,8 +1294,14 @@ Some microtones: c flat-and-a-half, d half-flat, e half-sharp, f sharp-and-a hal
 Once in the lower and once in the upper region of the staff.
 -}
 umts_01d :: Work
-umts_01d = mempty
+umts_01d =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    sysStaff = undefined
+    staff = undefined
     pitches =
       [
         {-
@@ -1331,8 +1337,14 @@ umts_01d = mempty
 
 -- ‘02a-Rests-Durations.xml’
 umts_02a :: Work
-umts_02a = mempty
+umts_02a =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    sysStaff = undefined
+    staff = undefined
     -- As specified:
     durs = mconcat
       [ fmap (dotMod 0 *) [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/128]
@@ -1342,8 +1354,15 @@ umts_02a = mempty
 
 -- ‘02b-Rests-PitchedRests.xml’
 umts_02b :: Work
-umts_02b = mempty
+umts_02b =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    staff = undefined
+    sysStaff = undefined
+
     durs = [1, 1, 1, 1, 1] :: [Duration]
     timeSignature = 5/4 :: TimeSignature
 
@@ -1352,14 +1371,28 @@ umts_02b = mempty
 
 -- ‘02c-Rests-MultiMeasureRests.xml’
 umts_02c :: Work
-umts_02c = mempty
+umts_02c =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    staff = undefined
+    sysStaff = undefined
+
     durs = [3,16,12] :: [Duration]
 
 -- ‘02d-Rests-Multimeasure-TimeSignatures.xml’
 umts_02d :: Work
-umts_02d = mempty
+umts_02d =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    staff = undefined
+    sysStaff = undefined
+
     numBarRests = [2,3,2,2] :: [Duration]
     timeSigs = [4/4, 3/4, 2/4, 4/4] :: [TimeSignature]
 
@@ -1372,8 +1405,15 @@ All note durations, from long, brevis, whole until 128th; First with their plain
 then dotted and finally doubly-dotted.
 -}
 umts_03a :: Work
-umts_03a = mempty
+umts_03a =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    staff = undefined
+    sysStaff = undefined
+    durs :: [[[Duration]]]
     durs =
       [ (fmap.fmap) (dotMod 0 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
       , (fmap.fmap) (dotMod 1 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
@@ -1387,7 +1427,8 @@ voice 2, but somewhere in the middle. Voice 2 thus won’t have any notes or res
 for the first beat of the measures.
 -}
 umts_03b :: Work
-umts_03b =   Work mempty
+umts_03b =
+  Work mempty
     $ pure
     $ Movement mempty (mempty : cycle mempty)
     $ Leaf
@@ -1433,8 +1474,15 @@ Various time signatures: 2/2 (alla breve), 4/4 (C), 2/2, 3/2, 2/4, 3/4, 4/4,
 5/4, 3/8, 6/8, 12/8
 -}
 umts_11a :: Work
-umts_11a = mempty
+umts_11a =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
+
     sysStaff :: SystemStaff
     sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
 
@@ -1458,8 +1506,15 @@ umts_11a = mempty
 
 -- ‘11c-TimeSignatures-CompoundSimple.xml’
 umts_11c :: Work
-umts_11c = mempty
+umts_11c =
+  Work mempty
+    $ pure
+    $ Movement mempty (cycle mempty)
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
+
     timeSigs :: [TimeSignature]
     timeSigs =
       [ (3+2)/8
@@ -1490,8 +1545,15 @@ transposition and on other staff lines than their default
 measure 1.
 -}
 umts_12a :: Work
-umts_12a = mempty
+umts_12a =
+  Work mempty
+    $ pure
+    $ Movement mempty (cycle mempty)
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
+
     clefs :: [Music.Pitch.Clef]
     clefs =
       [ Music.Pitch.trebleClef
@@ -1546,8 +1608,15 @@ major, then one measure in minor)
 -}
 -- TODO consolidate key sig between music-score and music-pitch
 umts_13a :: Work
-umts_13a = mempty
+umts_13a =
+  Work mempty
+    $ pure
+    $ Movement mempty (cycle mempty)
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
+
     fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths] -- or Music.Pitch.Fifths (see above)
     modesPerBar = [False, True]
     keySigs = concatMap (\i -> fmap (\m -> Music.Score.key i m) modesPerBar) fifthPerTwoBars
@@ -1568,8 +1637,14 @@ aeolian, and locrian; All modes are given with 2 sharps.-}
 
 -- ‘21a-Chord-Basic.xml’
 umts_21a :: Work
-umts_21a = mempty
+umts_21a =
+  Work mempty
+    $ pure
+    $ Movement mempty (cycle mempty)
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
     notes =
       [ (Music.Pitch.f, 0, 1/4)
       , (Music.Pitch.a, 0, 1/4)
@@ -1577,8 +1652,15 @@ umts_21a = mempty
 
 -- ‘21b-Chords-TwoNotes.xml’
 umts_21b :: Work
-umts_21b = mempty
+umts_21b =
+  Work mempty
+    $ pure
+    $ Movement mempty (cycle mempty)
+    $ Leaf staff
   where
+    staff :: Staff
+    staff = undefined
+    notes :: [(Pitch, Time, Time)]
     notes =
       [ (Music.Pitch.f, 0, 1/4)
       , (Music.Pitch.a, 0, 1/4)
