@@ -1683,44 +1683,64 @@ umts_23b = Work mempty $ pure
   $ Movement mempty (sysBar1 : repeat mempty)
   $ Leaf
   $ Staff mempty
-  $ [bar1,bar2,bar3,bar4]
+  $ bars
   where
     sysBar1 :: SystemBar
     sysBar1 = timeSignature .~ (Option $ Just $ First $ 5/4) $ mempty
 
-    bar1 :: Bar
-    bar1 = Bar mempty $ pure $ Group
-      [ Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      ]
-    bar2 = Bar mempty $ pure $ Group
-      [ Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      ]
-    bar3 = Bar mempty $ pure $ Group
-      [ Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      , Tuplet (2/3) $ Group []
-      ]
-    bar4 = Bar mempty $ pure $ Group
-      [ Tuplet (3/4) $ Group []
-      , Tuplet (3/17) $ Group []
-      , Group []
+    bars :: [Bar]
+    bars =
+      [ Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (3/4) $ Group []
+        , Tuplet (3/17) $ Group []
+        , Group []
+        ]
       ]
 
 -- ‘23c-Tuplet-Display-NonStandard.xml’
 umts_23c :: Work
 umts_23c = mempty
   where
-
+    bars :: [Bar]
+    bars =
+      [ Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        ]
+      , Bar mempty $ pure $ Group
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        ]
+      ]
 -- ‘23d-Tuplets-Nested.xml’
 umts_23d :: Work
 umts_23d = mempty
