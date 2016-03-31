@@ -210,6 +210,7 @@ Alternatively we could just make these things into Monoids such that
 mempty means "no notation at this point", and remove the "Option First"
 part here.
 
+Actually I'm pretty sure this is the right approach. See also #242
 -}
   { _barNumbers       :: Option (First BarNumber)
   , _timeSignature    :: Option (First TimeSignature)
@@ -258,8 +259,14 @@ instance Monoid StaffInfo where
     | x == mempty = y
     | otherwise   = x
 
-data ArpeggioNotation       = Arpeggio | UpArpeggio | DownArpeggio
+data ArpeggioNotation       = NoArpeggio | Arpeggio | UpArpeggio | DownArpeggio
   deriving (Eq,Ord,Show)
+
+instance Monoid ArpeggioNotation where
+  mempty = NoArpeggio
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 -- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
 --
@@ -286,8 +293,13 @@ instance Monoid TremoloNotation where
 -- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
 
 -- Always apply *after* the indicated chord.
-data BreathNotation         = Comma | Caesura | CaesuraWithFermata
+data BreathNotation         = NoBreath | Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
+instance Monoid BreathNotation where
+  mempty = NoBreath
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
@@ -304,12 +316,13 @@ type Ties                   = (Any,Any)
 -- Rests, single-notes and chords (most attributes are not shown for rests)
 data Chord = Chord
   { _pitches :: [Pitch]
-  , _arpeggioNotation       :: Maybe ArpeggioNotation
-  , _tremoloNotation        :: Maybe TremoloNotation
-  , _breathNotation         :: Maybe BreathNotation
-  , _articulationNotation   :: Maybe ArticulationNotation
+  , _arpeggioNotation       :: ArpeggioNotation
+  , _tremoloNotation        :: TremoloNotation
+  , _breathNotation         :: BreathNotation
+  , _articulationNotation   :: ArticulationNotation
   -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
-  , _dynamicNotation        :: Maybe DynamicNotation
+  , _dynamicNotation        :: DynamicNotation
+
   , _chordColor             :: Maybe (Colour Double)
   , _chordText              :: [String]
   , _harmonicNotation       :: HarmonicNotation
@@ -319,7 +332,7 @@ data Chord = Chord
   deriving (Eq, Show)
 
 instance Monoid Chord where
-  mempty = Chord [] Nothing Nothing Nothing Nothing Nothing mempty mempty mempty mempty mempty
+  mempty = Chord mempty mempty mempty mempty mempty mempty Nothing mempty mempty mempty mempty
   mappend x y
     | x == mempty = y
     | otherwise   = x
@@ -559,8 +572,8 @@ toLy work = do
         <$> notateText (chord^.chordText)
         <$> notateColor (chord^.chordColor)
         -- <$> notateTremolo (chord^.tremoloNotation)
-        <$> maybe id notateDynamicLy (chord^.dynamicNotation)
-        <$> maybe id notateArticulationLy (chord^.articulationNotation)
+        <$> notateDynamicLy (chord^.dynamicNotation)
+        <$> notateArticulationLy (chord^.articulationNotation)
         <$> notatePitches d (chord^.pitches)
       where
         notatePitches :: (LilypondExportM m) => Duration -> [Pitch] -> m Lilypond.Music
@@ -784,9 +797,9 @@ toXml work = do
               where
                 -- TODO arpeggio, breath, color
                 post = id
-                  . maybe id notateDynamicX (ch^.dynamicNotation)
-                  . maybe id notateArticulationX (ch^.articulationNotation)
-                  . maybe id notateTremolo (ch^.tremoloNotation)
+                  . notateDynamicX (ch^.dynamicNotation)
+                  . notateArticulationX (ch^.articulationNotation)
+                  . notateTremolo (ch^.tremoloNotation)
                   . notateText (ch^.chordText)
                   . notateHarmonic (ch^.harmonicNotation)
                   . notateSlide (ch^.slideNotation)
@@ -1026,10 +1039,11 @@ fromAspects sc = do
     aspectsToChord :: Maybe Asp3 -> Chord
     aspectsToChord Nothing    = mempty
     aspectsToChord (Just asp) = id
-      $ ties .~ (Any endTie,Any beginTie)
-      $ dynamicNotation .~ (Just $ asp^.(Music.Score.dynamic))
-      $ articulationNotation .~ (Just $ asp^.(Music.Score.articulation))
-      $ pitches .~ (asp^..(Music.Score.pitches)) $ mempty
+      $ ties                  .~ (Any endTie, Any beginTie)
+      $ dynamicNotation       .~ (asp^.(Music.Score.dynamic))
+      $ articulationNotation  .~ (asp^.(Music.Score.articulation))
+      $ pitches               .~ (asp^..(Music.Score.pitches))
+      $ mempty
       where
         (endTie,beginTie) = Music.Score.isTieEndBeginning asp
 
