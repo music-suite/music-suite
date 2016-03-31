@@ -1471,13 +1471,30 @@ umts_02d =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ Leaf
+    $ Staff mempty bars
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff :: SystemStaff
+    sysStaff = map (\ts -> timeSignature .~ (Option $ fmap First ts) $ mempty) timeSigs2
 
-    numBarRests = [2,3,2,2] :: [Duration]
-    timeSigs = [4/4, 3/4, 2/4, 4/4] :: [TimeSignature]
+    bars :: [Bar]
+    bars = fmap (\d -> Bar mempty [quant (pitches .~ [] $ mempty) d]) durs
+
+    quant :: a -> Duration -> Rhythm a
+    quant x d = case d of
+      d | d == 2/4  ->            Beat (1/2) x
+      d | d == 3/4  -> Dotted 1 $ Beat (1/2) x
+      d | d == 4/4  ->            Beat 1     x
+      d | otherwise  -> error "umts_02d: bad duration"
+
+    timeSigs2 = concat $ zipWith (\n ts -> Just ts : replicate (n-1) Nothing) numBarRests timeSigs
+      :: [Maybe TimeSignature]
+    durs = concat $ zipWith (\n ts -> replicate n (realToFrac ts)) numBarRests timeSigs
+      :: [Duration]
+
+    numBarRests = [2,   3,   2,   2]
+    timeSigs    = [4/4, 3/4, 2/4, 4/4]
+    -- TODO emit whole bar rests (with correct duration?) or multirests
 
 -- ‘02e-Rests-NoType.xml’
 -- IGNORE
@@ -1561,10 +1578,11 @@ umts_11a =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ Leaf
+    $ Staff mempty bars
   where
-    staff :: Staff
-    staff = Staff mempty bars
+    sysStaff :: SystemStaff
+    sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
 
     bars :: [Bar]
     bars = fmap (\d -> Bar mempty [quant tie (pitches .~ [P.c'] $ mempty) d]) durs
@@ -1585,9 +1603,6 @@ umts_11a =
       d | d == (5/4) -> Group [Beat 1 (addTie True x), Beat (1/4) (addTie False x)] -- TODO ties
       d | d == (6/4) -> Dotted 1 $ Beat 1 x
       d | otherwise  -> error "umts_11a: bad duration"
-
-    sysStaff :: SystemStaff
-    sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
 
     durs :: [Duration]
     durs = fmap realToFrac timeSigs
