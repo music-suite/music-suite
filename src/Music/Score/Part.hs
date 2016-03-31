@@ -1,4 +1,5 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE UndecidableInstances       #-}
@@ -41,21 +42,15 @@ module Music.Score.Part (
         rcat,
   ) where
 
-import           Control.Applicative
+import           BasePrelude                   hiding ((<>), first, second, Dynamic)
+
 import           Control.Comonad
-import           Control.Lens                  hiding (parts, transform)
-import           Control.Monad.Plus
--- import           Data.Default
-import           Data.Foldable
+import           Control.Lens                  hiding (parts, transform, (&))
 import           Data.Functor.Couple
-import qualified Data.List                     as List
 import qualified Data.List                     as List
 import           Data.Ord                      (comparing)
 import           Data.PairMonad
-import           Data.Ratio
 import           Data.Semigroup
-import           Data.Traversable
-import           Data.Typeable
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal

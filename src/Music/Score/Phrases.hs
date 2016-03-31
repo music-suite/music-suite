@@ -1,4 +1,5 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -29,37 +30,21 @@ module Music.Score.Phrases (
     mapPhrasesWithPrevAndCurrentOnset,
   ) where
 
-import           Control.Applicative
-import           Control.Applicative
-import           Control.Comonad            (Comonad (..), extract)
-import           Control.Exception          (assert)
-import           Control.Lens
-import           Control.Lens               hiding (rewrite)
-import           Control.Monad
+import           BasePrelude                   hiding ((<>), first, second, Dynamic)
+
+import           Control.Lens               hiding (rewrite, (&))
 import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace
 import           Data.Bifunctor
 import           Data.Colour.Names          as Color
-import           Data.Either
-import           Data.Either
-import           Data.Foldable              (Foldable)
 import           Data.Functor.Adjunction    (unzipR)
 import           Data.Functor.Context
 import           Data.Functor.Contravariant (Op(..))
 import           Data.Functor.Couple
 import qualified Data.List                  as List
-import qualified Data.List
-import           Data.Maybe
-import           Data.Maybe
-import           Data.Ord
-import           Data.Ratio
 import           Data.Semigroup
-import           Data.Semigroup
-import           Data.Traversable
-import           Data.Traversable           (Traversable, sequenceA)
 import           Data.VectorSpace           hiding (Sum (..))
-import           System.Process
 
 import           Music.Score.Part
 import           Music.Time

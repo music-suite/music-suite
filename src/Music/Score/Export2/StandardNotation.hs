@@ -1,4 +1,6 @@
 
+
+-- {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleContexts #-}
 -- For MonadLog String:
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}

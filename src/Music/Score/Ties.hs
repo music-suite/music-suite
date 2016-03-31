@@ -1,4 +1,6 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
+
 -- |
 -- Provides a representation for tied notes, and a class to split a single note
 -- into a pair of tied notes.
@@ -17,21 +19,15 @@ module Music.Score.Ties (
         isTieEndBeginning,
   ) where
 
-import           Control.Applicative
+import           BasePrelude                   hiding ((<>), first, second, Dynamic)
+
 import           Data.Bifunctor
 import           Control.Comonad
-import           Control.Lens            hiding (transform)
-import           Control.Monad
-import           Control.Monad.Plus
+import           Control.Lens            hiding (transform, (&))
 import           Data.AffineSpace
--- import           Data.Default
-import           Data.Foldable           hiding (concat)
 import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List               as List
-import           Data.Maybe
-import           Data.Ratio
 import           Data.Semigroup
-import           Data.Typeable
 import           Data.Monoid.Average
 import           Data.VectorSpace        hiding (Sum, getSum)
 

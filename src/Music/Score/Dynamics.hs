@@ -1,4 +1,5 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -43,20 +44,16 @@ module Music.Score.Dynamics (
 
   ) where
 
-import           Control.Applicative
+import           BasePrelude                   hiding ((<>), first, second, Dynamic)
+
 import           Control.Comonad
-import           Control.Lens                  hiding (Level, transform)
-import           Control.Monad
+import           Control.Lens                  hiding (Level, transform, (&))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point        (relative)
-import           Data.Foldable
 import           Data.Functor.Couple
 import           Data.Functor.Context
 import qualified Data.List                     as List
-import           Data.Maybe
-import           Data.Ratio
 import           Data.Semigroup
-import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
 
 import           Music.Dynamics.Literal

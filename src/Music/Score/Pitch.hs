@@ -1,4 +1,5 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -8,7 +9,7 @@
 --
 -- The pitches will usually be of type 'Pitch', as defined in "Music.Pitch.Common", but it is also
 -- possible to use other types such as 'Hertz'.
--- 
+--
 module Music.Score.Pitch (
         -- * Pitch functions
         -- ** Transposition
@@ -22,6 +23,7 @@ module Music.Score.Pitch (
         _8va,
         _8vb,
         _15vb,
+
         upDiatonic,
         downDiatonic,
         upChromatic,
@@ -31,7 +33,7 @@ module Music.Score.Pitch (
         invertPitches,
         invertDiatonic,
         invertChromatic,
-        
+
         -- ** Ambitus
         highestPitch,
         lowestPitch,
@@ -40,18 +42,18 @@ module Music.Score.Pitch (
         ambitusLowestOctave,
         interpolateAmbitus,
         interpolateAmbitus',
-        
+
         -- ** Enumeration
         enumDiatonicFromTo,
         enumChromaticFromTo,
         enumDownDiatonicFromTo,
         enumDownChromaticFromTo,
-        
+
         -- * Pitch type
         Pitch,
         SetPitch,
         Interval,
-        
+
         -- * HasPitch classes
         HasPitch(..),
         HasPitches(..),
@@ -70,21 +72,15 @@ module Music.Score.Pitch (
 
   ) where
 
-import           Control.Applicative
+import           BasePrelude                   hiding ((<>))
 import           Control.Lens                  hiding (above, below, transform)
-import           Control.Monad                 (MonadPlus (..), ap, join, liftM,
-                                                mfilter)
+                                                -- mfilter)
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Foldable                 (Foldable)
 import           Data.Functor.Couple
 import qualified Data.List
-import           Data.Ratio
 import           Data.Semigroup
-import           Data.String
 import           Data.Monoid.Average
-import           Data.Traversable              (Traversable)
-import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
 import           Data.Set                      (Set)
 import           Data.Map                      (Map)
@@ -135,7 +131,7 @@ type family SetPitch (b :: *) (s :: *) :: *
 
 -- | Types which has a single pitch (i.e notes, events, the pitches themselves).
 class HasPitches s t => HasPitch s t where
-  
+
   -- | Access the pitch.
   pitch :: Lens s t (Pitch s) (Pitch t)
 
@@ -307,7 +303,7 @@ instance (HasPitches a b) => HasPitches (Couple c a) (Couple c b) where
   pitches = _Wrapped . pitches
 instance (HasPitch a b) => HasPitch (Couple c a) (Couple c b) where
   pitch = _Wrapped . pitch
-  
+
 instance (HasPitches a b) => HasPitches (TextT a) (TextT b) where
   pitches = _Wrapped . pitches
 instance (HasPitch a b) => HasPitch (TextT a) (TextT b) where
@@ -378,7 +374,7 @@ down v = pitches %~ (.-^ v)
 --
 -- >>> above _P5 (c :: Score Pitch)
 -- [c,g]^.score
--- 
+--
 above :: (Semigroup a, Transposable a) => Interval a -> a -> a
 above v x = x <> up v x
 
@@ -460,10 +456,10 @@ lowestPitch :: (HasPitches' a, Ord (Pitch a)) => a -> Maybe (Pitch a)
 lowestPitch = minimumOf pitches'
 
 -- | Extract the average pitch. Returns @Nothing@ if there are none.
--- 
+--
 -- >>> averagePitch (Data.Map.fromList [(True,440::Hertz),(False,445)])
 -- Just 442.5 Hz
--- 
+--
 averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
 averagePitch = maybeAverage . Average . toListOf pitches'
 
@@ -508,10 +504,10 @@ interpolateAmbitus' a x = (^.from pitchDouble) $ interpolateAmbitus (mapAmbitus 
 -- [c]
 -- >>> enumDiatonicFromTo f f'
 -- [f,g,a,bb,c',d',e',f']
--- >>> 
+-- >>>
 -- >>> enumChromaticFromTo c c'
 -- [c,cs,d,ds,e,f,fs,g,gs,a,as,b,c']
--- >>> 
+-- >>>
 -- >>> enumChromaticFromTo bs bs'
 -- [bs,bss,css',csss',dss',es',ess',fss',fsss',gss',gsss',ass',bs']
 --
@@ -614,7 +610,7 @@ invertDiatonic o = over pitches' (invertDiatonicallyP o)
 -- |
 -- >>> invertChromatic c ([e,gs]^.score :: Score Pitch)
 -- [(0 <-> 1,e)^.event,(0 <-> 1,gb)^.event]^.score
--- 
+--
 invertChromatic :: (HasPitches' a, Pitch a ~ Common.Pitch)
   => Common.Pitch   -- ^ Tonic
   -> a              -- ^ Original music

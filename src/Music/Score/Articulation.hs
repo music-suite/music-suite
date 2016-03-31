@@ -1,4 +1,5 @@
 
+{-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
@@ -52,23 +53,21 @@ module Music.Score.Articulation (
         addArtCon,
   ) where
 
-import           Control.Applicative
+import           BasePrelude                   hiding ((<>), first, second, Dynamic)
+
 import           Control.Comonad
-import           Control.Lens                  hiding (above, below, transform)
+import           Control.Lens                  hiding (above, below, transform, (&))
 import           Data.AffineSpace
-import           Data.Foldable
 import           Data.Functor.Couple
 import           Data.Semigroup
-import           Data.Typeable
 import           Data.VectorSpace              hiding (Sum)
 import           Data.Functor.Context
 
-import           Music.Score.Part
 import           Music.Time
 import           Music.Time.Internal.Transform
-
 import           Music.Dynamics.Literal
 import           Music.Pitch.Literal
+import           Music.Score.Part
 import           Music.Score.Harmonics
 import           Music.Score.Part
 import           Music.Score.Phrases
