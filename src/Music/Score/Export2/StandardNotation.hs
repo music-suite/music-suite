@@ -331,6 +331,16 @@ type SlideNotation          = ((Any,Any),(Any,Any))
   -- (endGliss?,endSlide?),(beginGliss?,beginSlide?)
 type Ties                   = (Any,Any)
   -- (endTie?,beginTie?)
+-- TODO unify with Score.Meta.Fermata
+
+type Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
+instance Semigroup Fermata where
+  (<>) = mappend
+instance Monoid Fermata where
+  mempty = NoFermata
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 -- TODO appogiatura/acciatura
 -- TODO beaming
@@ -344,6 +354,7 @@ data Chord = Chord
   , _articulationNotation   :: ArticulationNotation
   -- I'd like to put dynamics in a separate layer, but neither Lily nor MusicXML thinks this way
   , _dynamicNotation        :: DynamicNotation
+  , _fermata                :: Fermata
 
   , _chordColor             :: Maybe (Colour Double)
   , _chordText              :: [String]
@@ -1842,48 +1853,48 @@ umts_23a = Work mempty $ pure
     bar1 :: Bar
     bar1 = Bar mempty $ pure $ Group
       [ Tuplet (2/3) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.c] $ mempty)
+        , Beat (1/4) (pitches .~ [P.d] $ mempty)
+        , Beat (1/4) (pitches .~ [P.e] $ mempty)
         ]
       , Tuplet (2/3) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.f] $ mempty)
+        , Beat (1/4) (pitches .~ [P.g] $ mempty)
+        , Beat (1/4) (pitches .~ [P.a] $ mempty)
         ]
       , Tuplet (2/3) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.b] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.d'] $ mempty)
         ]
       , Tuplet (2/4) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.e'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.f'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.g'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.a'] $ mempty)
         ]
       , Tuplet (1/4) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.b'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.b'] $ mempty)
         ]
       , Tuplet (3/7) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.a'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.g'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.f'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.e'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.d'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c'] $ mempty)
+        , Beat (1/4) (pitches .~ [P.b] $ mempty)
         ]
       , Tuplet (2/6) $ Group
-        [ Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
-        , Beat (1/4) (pitches .~ [Music.Pitch.c] $ mempty)
+        [ Beat (1/4) (pitches .~ [P.a] $ mempty)
+        , Beat (1/4) (pitches .~ [P.g] $ mempty)
+        , Beat (1/4) (pitches .~ [P.f] $ mempty)
+        , Beat (1/4) (pitches .~ [P.e] $ mempty)
+        , Beat (1/4) (pitches .~ [P.d] $ mempty)
+        , Beat (1/4) (pitches .~ [P.c] $ mempty)
         ]
       ]
 
@@ -1901,25 +1912,25 @@ umts_23b = Work mempty $ pure
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
       , Bar mempty $ pure $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
       , Bar mempty $ pure $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
+        , Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) (pitches .~ [P.c'] $ mempty))
         ]
       , Bar mempty $ pure $ Group
         [ Tuplet (3/4) $ Group []
