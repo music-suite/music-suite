@@ -240,6 +240,9 @@ foldLabelTree :: (a -> c) -> (b -> [c] -> c) -> LabelTree b a -> c
 foldLabelTree f g (Leaf x)      = f x
 foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
 
+
+
+
 type BarNumber              = Int
 type TimeSignature          = Music.Score.Meta.Time.TimeSignature
 type KeySignature           = Music.Score.Meta.Key.KeySignature
@@ -276,21 +279,7 @@ data SystemBar              = SystemBar
     -- or an alt-list in SystemStaff.
   } deriving (Eq,Ord,Show)
 
-instance Semigroup SystemBar where
-  (<>) = mappend
-
-instance Monoid SystemBar where
-  mempty = SystemBar mempty mempty mempty mempty mempty
-  (SystemBar a1 a2 a3 a4 a5) `mappend` (SystemBar b1 b2 b3 b4 b5)
-    = SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
-
 type SystemStaff            = [SystemBar]
-
-systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
-systemStaffTakeBars = take
-
-systemStaffLength :: SystemStaff -> Int
-systemStaffLength = length
 
 type InstrumentShortName    = String
 type InstrumentFullName     = String
@@ -313,15 +302,6 @@ data StaffInfo              = StaffInfo
   }
   deriving (Eq,Ord,Show)
 
-instance Semigroup StaffInfo where
-  (<>) = mempty
-
-instance Monoid StaffInfo where
-  mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
-
 data ArpeggioNotation
   = NoArpeggio        -- ^ Don't show anything
   | NoArpeggioBracket -- ^ Show "no arpeggio" bracket
@@ -329,12 +309,6 @@ data ArpeggioNotation
   | UpArpeggio
   | DownArpeggio
   deriving (Eq,Ord,Show)
-
-instance Monoid ArpeggioNotation where
-  mempty = NoArpeggio
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
 
 -- As written, i.e. 1/16-notes twice, can be represented as 1/8 note with 1 beams
 --
@@ -351,24 +325,12 @@ data TremoloNotation
   | NoTremolo
   deriving (Eq,Ord,Show)
 
-instance Monoid TremoloNotation where
-  mempty = NoTremolo
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
-
 -- type UpDown       = Up | Down
 -- data CrossStaff   = NoCrossStaff | NextNoteCrossStaff UpDown | PreviousNoteCrossStaff UpDown
 
 -- Always apply *after* the indicated chord.
 data BreathNotation         = NoBreath | Comma | Caesura | CaesuraWithFermata
   deriving (Eq,Ord,Show)
-
-instance Monoid BreathNotation where
-  mempty = NoBreath
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
 
 type ArticulationNotation   = Music.Score.Export.ArticulationNotation.ArticulationNotation
 type DynamicNotation        = Music.Score.Export.DynamicNotation.DynamicNotation
@@ -382,15 +344,6 @@ type Ties                   = (Any,Any)
   -- TODO unify with Score.Meta.Fermata
 data Fermata                = NoFermata | Fermata | ShortFermata | LongFermata
   deriving (Eq,Ord,Show)
-
-instance Semigroup Fermata where
-  (<>) = mappend
-
-instance Monoid Fermata where
-  mempty = NoFermata
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
 
 -- TODO appogiatura/acciatura
 -- TODO beaming
@@ -414,14 +367,6 @@ data Chord = Chord
   }
   deriving (Eq, Show)
 
-instance Monoid Chord where
-  mempty = Chord
-    mempty mempty mempty mempty mempty mempty
-    mempty mempty mempty mempty mempty mempty
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
-
 type PitchLayer             = Rhythm Chord
 
 data Bar = Bar
@@ -431,26 +376,11 @@ data Bar = Bar
   }
   deriving (Eq, Show)
 
-instance Monoid Bar where
-  mempty = Bar mempty mempty
-  mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
-
-
 data Staff = Staff
   { _staffInfo :: StaffInfo
   , _bars :: [Bar]
   }
   deriving (Eq, Show)
-
-instance Monoid Staff where
-  mempty = Staff mempty mempty
-  mappend (Staff a1 a2) (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
-
-staffTakeBars :: Int -> Staff -> Staff
-staffTakeBars n (Staff i bs) = Staff i (take n bs)
-
-staffLength :: Staff -> Int
-staffLength (Staff i bs) = length bs
 
 type Title                  = String
 type Annotations            = [(Span, String)]
@@ -463,12 +393,6 @@ data MovementInfo = MovementInfo
   }
   deriving (Eq, Show)
 
-instance Monoid MovementInfo where
-  mempty = MovementInfo mempty mempty mempty
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
-
 data Movement = Movement
   { _movementInfo :: MovementInfo
   , _systemStaff  :: SystemStaff
@@ -476,6 +400,122 @@ data Movement = Movement
   , _staves       :: LabelTree BracketType Staff
   }
   deriving (Eq, Show)
+
+data WorkInfo = WorkInfo
+  { _title        :: Title
+  , _annotations  :: Annotations
+  , _attribution  :: Attribution
+  }
+  deriving (Eq, Show)
+
+data Work = Work
+  { _workInfo :: WorkInfo
+  , _movements :: [Movement]
+  }
+  deriving (Show)
+
+
+instance Semigroup SystemBar where
+  (<>) = mappend
+
+instance Monoid SystemBar where
+  mempty = SystemBar mempty mempty mempty mempty mempty
+  (SystemBar a1 a2 a3 a4 a5) `mappend` (SystemBar b1 b2 b3 b4 b5)
+    = SystemBar (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4) (a5 <> b5)
+
+instance Semigroup StaffInfo where
+  (<>) = mempty
+
+instance Monoid StaffInfo where
+  mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid ArpeggioNotation where
+  mempty = NoArpeggio
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid TremoloNotation where
+  mempty = NoTremolo
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid BreathNotation where
+  mempty = NoBreath
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Semigroup Fermata where
+  (<>) = mappend
+
+instance Monoid Fermata where
+  mempty = NoFermata
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid Chord where
+  mempty = Chord
+    mempty mempty mempty mempty mempty mempty
+    mempty mempty mempty mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid Bar where
+  mempty = Bar mempty mempty
+  mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
+
+instance Monoid Staff where
+  mempty = Staff mempty mempty
+  mappend (Staff a1 a2) (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
+
+instance Monoid MovementInfo where
+  mempty = MovementInfo mempty mempty mempty
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
+
+instance Monoid Work where
+  mempty = Work mempty mempty
+  mappend (Work a1 a2) (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
+
+instance Semigroup WorkInfo where
+  (<>) = mappend
+
+instance Monoid WorkInfo where
+  mempty = WorkInfo mempty mempty mempty
+  mappend x y
+  | x == mempty = y
+  | otherwise   = x
+
+
+makeLenses ''SystemBar
+makeLenses ''StaffInfo
+makeLenses ''Chord
+makeLenses ''Bar
+makeLenses ''Staff
+makeLenses ''MovementInfo
+makeLenses ''Movement
+makeLenses ''WorkInfo
+makeLenses ''Work
+
+systemStaffTakeBars :: Int -> SystemStaff -> SystemStaff
+systemStaffTakeBars = take
+
+systemStaffLength :: SystemStaff -> Int
+systemStaffLength = length
+
+staffTakeBars :: Int -> Staff -> Staff
+staffTakeBars n (Staff i bs) = Staff i (take n bs)
+
+staffLength :: Staff -> Int
+staffLength (Staff i bs) = length bs
 
 {-|
 Assure all staves (including system-staff) has the same number of bars.
@@ -490,43 +530,6 @@ movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
 
     shortestListLength :: [a] -> [b] -> Int
     shortestListLength xs ys = length (zip xs ys)
-
-data WorkInfo = WorkInfo
-  { _title        :: Title
-  , _annotations  :: Annotations
-  , _attribution  :: Attribution
-  }
-  deriving (Eq, Show)
-
-instance Semigroup WorkInfo where
-  (<>) = mappend
-
-instance Monoid WorkInfo where
-  mempty = WorkInfo mempty mempty mempty
-  mappend x y
-    | x == mempty = y
-    | otherwise   = x
-
-data Work = Work
-  { _workInfo :: WorkInfo
-  , _movements :: [Movement]
-  }
-  deriving (Show)
-
-instance Monoid Work where
-  mempty = Work mempty mempty
-  mappend (Work a1 a2) (Work b1 b2) = Work (a1 <> b1) (a2 <> b2)
-
-makeLenses ''SystemBar
-makeLenses ''StaffInfo
-makeLenses ''Chord
-makeLenses ''Bar
-makeLenses ''Staff
-makeLenses ''MovementInfo
-makeLenses ''Movement
-makeLenses ''WorkInfo
-makeLenses ''Work
-
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
@@ -907,7 +910,7 @@ toXml work = do
   let composer  = maybe "" id $ firstMovement^.movementInfo.movementAttribution.at "composer"
 
   say "MusicXML: Generating part list"
-  let partList  = movementToPartList firstMovement
+  partList  <- movementToPartList firstMovement
 
   say "MusicXML: Generating bar content"
   let partWise  = movementToPartwiseXml firstMovement
@@ -919,8 +922,8 @@ toXml work = do
       Returns the part list, specifying instruments, staves and gruops
       (but not the musical contents of the staves).
     -}
-    movementToPartList :: Movement -> MusicXml.PartList
-    movementToPartList m = foldLabelTree f g (m^.staves)
+    movementToPartList :: (MusicXmlExportM m) => Movement -> m MusicXml.PartList
+    movementToPartList m = return $ foldLabelTree f g (m^.staves)
       where
         -- TODO generally, what name to use?
         -- TODO use MusicXML sound id
