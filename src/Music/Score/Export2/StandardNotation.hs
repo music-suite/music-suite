@@ -392,7 +392,10 @@ begin/end of spanners:
 
 These are isomorphic (at least as long as the list is considered as Set).
 Both are monoids (assuming Any is being used and abscence in the set is taken
-to mean "no begin/end").
+to mean "no begin/end"). Both also support the following type of access:
+
+  endGliss :: Lens' SlideNotation Any
+
 -}
 
 endGliss :: Lens' SlideNotation Any
