@@ -686,6 +686,8 @@ runIOExportM :: IOExportM a -> IO a
 runIOExportM = runIOExportM_
 
 
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 
 type Template = String
@@ -1035,27 +1037,8 @@ toXml work = do
     movementToPartwiseXml :: Movement -> [[MusicXml.Music]]
     movementToPartwiseXml movement = music
       where
-        {-
-          It is usually sufficient to put such information from the system
-          staff in a single part, so we arbitrarily choose the first one.
-
-            TODO emit <divisions> in first bar (always MusicXml.defaultDivisions)
-              Does this have to happen in each part?
-
-            TODO assure this strategy works for everything that is on the system
-            staff, i.e.
-              - Key signatures
-              - Time sign
-              - Bar numbers
-              - Rehearsal marks
-              - Tempo barks
-        -}
         music :: [[MusicXml.Music]]
         music = fmap (zipWith (<>) allSystemBarDirections) staffMusic
-        -- music = case staffMusic of
-          -- []     -> []
-          -- (x:xs) -> (zipWith (<>) allSystemBarDirections x : xs)
-
         {-
           Old comment:
                 Each entry in outer list must be prepended to the FIRST staff (whatever that is)
@@ -1076,9 +1059,10 @@ toXml work = do
             -- TODO bar numbers (?)
             -- TODO reh marks (direction)
             -- TODO tempo marks (direction)
+            -- TODO merge attribute elements in the beginning of each bar?
 
             divisions_ :: [MusicXml.Music]
-            divisions_ = MusicXml.defaultDivisionsVal : repeat mempty
+            divisions_ = MusicXml.defaultDivisions : repeat mempty
 
             keySignatures_ :: [MusicXml.Music]
             keySignatures_ = fmap (expTS . unOF) $ fmap (^.keySignature) (movement^.systemStaff)
@@ -1144,19 +1128,20 @@ toXml work = do
             renderBar bar = case barLayersHaveEqualDuration bar of
               Left _ -> {-throwError-}error "Layers have different durations"
               Right d -> let layers = bar^.pitchLayers
-                in mconcat $
-                  Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $
-                  fmap (renderPitchLayer . getPitchLayer) layers
+                in mconcat
+                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d)
+                  $ zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..]
+                  $ fmap renderPitchLayer layers
               where
                 durToXmlDur :: Duration -> MusicXml.Duration
                 durToXmlDur d = round (realToFrac MusicXml.defaultDivisionsVal * d)
 
-            renderPitchLayer :: Rhythm Chord -> MusicXml.Music
-            renderPitchLayer = renderBarMusic . fmap renderChord
+            renderPitchLayer :: PitchLayer -> MusicXml.Music
+            renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
 
             renderChord ::  Chord -> Duration -> MusicXml.Music
             renderChord ch d = post $ case ch^.pitches of
-              -- TODO Don't emit <alter> tag if 0
+              -- TODO Don't emit <alter> tag if alteration is 0
               []  -> MusicXml.rest (realToFrac d)
               [p] -> MusicXml.note (fromPitch_ p) (realToFrac d)
               ps  -> MusicXml.chord (fmap fromPitch_ ps) (realToFrac d)
@@ -2063,10 +2048,12 @@ umts_21a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = mempty
-    notes =
-      [ (Music.Pitch.f, 0, 1/4)
-      , (Music.Pitch.a, 0, 1/4)
+    staff = Staff mempty [Bar mempty [PitchLayer notes]]
+
+    notes :: Rhythm Chord
+    notes = Group $ fmap (\(ps, d) -> Beat d $ pitches .~ ps $ mempty)
+      [ ([P.f, P.a], 1/4)
+      , ([],         1/4)
       ]
 
 -- ‘21b-Chords-TwoNotes.xml’
@@ -2078,28 +2065,45 @@ umts_21b =
     $ Leaf staff
   where
     staff :: Staff
-    staff = mempty
-    notes :: [(Pitch, Time, Time)]
-    notes =
-      [ (Music.Pitch.f, 0, 1/4)
-      , (Music.Pitch.a, 0, 1/4)
+    staff = Staff mempty [bar, bar]
+
+    -- Same in both bars
+    bar = Bar mempty [PitchLayer notes]
+
+    notes :: Rhythm Chord
+    notes = Group $ fmap (\(ps, d) -> Beat d $ pitches .~ ps $ mempty)
+      [ ([P.f, P.a], 1/4)
+      , ([P.f, P.a], 1/4)
+      , ([P.f, P.a], 1/4)
+      , ([P.f, P.a], 1/4)
       ]
-    points    = [0,1/4..2]
-    spans     = mapWithPrev (,) points
-    allNotes  = concatMap (\(a,b) -> fmap (\n -> (n, a, b)) notes) spans
-    mapWithPrev f xs = zipWith f xs (tail xs)
 
 -- ‘21c-Chords-ThreeNotesDuration.xml’
 umts_21c :: Work
 umts_21c =
   Work mempty
     $ pure
-    $ Movement mempty sysStaff
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    staff :: Staff
+    staff = Staff mempty [bar1, bar2]
 
+    bar1 = Bar mempty [PitchLayer notes1]
+    bar2 = Bar mempty [PitchLayer notes2]
+
+    notes1, notes2 :: Rhythm Chord
+    notes1 = Group $ fmap (\(dots, ps, d) -> (if dots > 0 then Dotted dots else id) $ Beat d $ pitches .~ ps $ mempty)
+      [ (1, [P.f, P.a, P.c'], 1/4)
+      , (0, [P.f, P.a, P.g'], 1/8)
+      , (0, [P.f, P.a, P.c'], 1/4)
+      , (0, [P.f, P.a, P.c'], 1/4)
+      ]
+    notes2 = Group $ fmap (\(ps, d) -> Beat d $ pitches .~ ps $ mempty)
+      [ ([P.f, P.a, P.e'], 1/4)
+      , ([P.f, P.a, P.f'], 1/4)
+      , ([P.f, P.a, P.d'], 1/2)
+      ]
 -- ‘21d-Chords-SchubertStabatMater.xml’
 -- IGNORE
 
