@@ -986,7 +986,6 @@ toXml work = do
             -- TODO bar numbers (?)
             -- TODO reh marks (direction)
             -- TODO tempo marks (direction)
-            -- TODO key sigs (attribute)
             -- TODO compound time sigs (attribute)
             -- TODO don't forget about divisions
 
@@ -1014,7 +1013,7 @@ toXml work = do
             -- System bar directions per bar
 
         {-
-          A matrix similar to the one returned from movementToPartList, but
+          A matrix similar to the one returned from movementToPartwiseXml, but
           not including information from the system staff.
         -}
         staffMusic :: [[MusicXml.Music]]
