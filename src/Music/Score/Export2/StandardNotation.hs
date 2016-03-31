@@ -111,9 +111,12 @@ module Music.Score.Export2.StandardNotation
   , toLy
   , MusicXmlExportM
   , toXml
+
+
   -- TODO debug
   , test2
   , test3
+  , umts_export
   )
 where
 
@@ -183,6 +186,7 @@ import           Music.Time
 import           Music.Time.Meta                         (meta)
 import qualified Text.Pretty                             as Pretty
 import qualified System.Process --DEBUG
+import qualified System.Directory
 
 -- TODO
 instance Show Music.Score.Meta.Key.KeySignature where show = const "TEMPkeysig"
@@ -268,6 +272,8 @@ data StaffInfo              = StaffInfo
   , _scoreOrder             :: ScoreOrder
   }
   deriving (Eq,Ord,Show)
+instance Semigroup StaffInfo where
+  (<>) = mempty
 instance Monoid StaffInfo where
   mempty = StaffInfo mempty mempty mempty Music.Pitch.trebleClef mempty mempty mempty
   mappend x y
@@ -372,6 +378,10 @@ data Staff = Staff
   }
   deriving (Eq, Show)
 
+instance Monoid Staff where
+  mempty = Staff mempty mempty
+  mappend (Staff a1 a2) (Staff b1 b2) = Staff (a1 <> b1) (a2 <> b2)
+
 staffTakeBars :: Int -> Staff -> Staff
 staffTakeBars n (Staff i bs) = Staff i (take n bs)
 
@@ -407,13 +417,30 @@ data Movement = Movement
 Assure all staves (including system-staff) has the same number of bars.
 -}
 movementAssureSameNumberOfBars :: Movement -> Movement
-movementAssureSameNumberOfBars (Movement i ss st) = case maxBars of
+movementAssureSameNumberOfBars (Movement i ss st) = case Just minBars of
   Nothing -> Movement i ss st
   Just n  -> Movement i (systemStaffTakeBars n ss) (fmap (staffTakeBars n) st)
   where
-    maxBars = safeMaximum $ systemStaffLength ss : (fmap staffLength $ toList st)
-    safeMaximum [] = Nothing
-    safeMaximum xs = Just $ maximum xs
+    -- TODO take all staves iunto account, don't use head
+    minBars = shortestListLength ss (_bars $ head $ toList st)
+
+    shortestListLength :: [a] -> [b] -> Int
+    shortestListLength xs ys = length (zip xs ys)
+    -- minBars = systemStaffLength ss `raceMin` (safeMinimum $ fmap staffLength $ toList st)
+    -- safeMinimum [] = Nothing
+    -- safeMinimum xs = Just $ minimum xs
+    --
+    -- -- raceMin a undefined = a
+    -- -- racemin undefined a = a
+    -- -- racemin a b         = min a b
+    -- raceMin a b =
+    --   let a_ = do
+    --     let ae! = a
+    --     return ae
+    --   let b_ = do
+    --     let be! = a
+    --     return be
+    -- unsafePerformIO $ Control.Concurrent.Async.race (return a) (return b)
 
 data WorkInfo = WorkInfo
   { _title        :: Title
@@ -487,6 +514,31 @@ instance MonadLog String PureExportM where
 
 runPureExportMNoLog :: PureExportM b -> Either String b
 runPureExportMNoLog = fmap fst . runExcept . runWriterT . runE
+
+
+
+{-|
+Basic monad for exporting music.
+
+Run as a pure computation with internal logging.
+TODO add reader for indentation level etc
+-}
+newtype IOExportM a = IOExportM { runIOExportM_ :: IO a }
+  deriving ( Functor, Applicative, Monad, Alternative, MonadPlus, MonadIO )
+
+instance MonadError String IOExportM where
+  throwError e = fail e
+  -- TODO fix
+  -- catchError (IOExportM k) = IOExportM $ do
+  --   catchError k (\e -> throwError (show e))
+
+instance MonadLog String IOExportM where
+  say x = liftIO $ putStrLn $ "  " ++ x
+
+runIOExportM :: IOExportM a -> IO a
+runIOExportM = runIOExportM_
+
+
 
 
 type Template = String
@@ -1305,8 +1357,8 @@ umts_01d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
     pitches =
       [
         {-
@@ -1348,8 +1400,8 @@ umts_02a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
     -- As specified:
     durs = mconcat
       [ fmap (dotMod 0 *) [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/128]
@@ -1365,8 +1417,8 @@ umts_02b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    staff = undefined
-    sysStaff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     durs = [1, 1, 1, 1, 1] :: [Duration]
     timeSignature = 5/4 :: TimeSignature
@@ -1382,8 +1434,8 @@ umts_02c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    staff = undefined
-    sysStaff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     durs = [3,16,12] :: [Duration]
 
@@ -1395,8 +1447,8 @@ umts_02d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    staff = undefined
-    sysStaff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     numBarRests = [2,3,2,2] :: [Duration]
     timeSigs = [4/4, 3/4, 2/4, 4/4] :: [TimeSignature]
@@ -1416,8 +1468,8 @@ umts_03a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    staff = undefined
-    sysStaff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
     durs :: [[[Duration]]]
     durs =
       [ (fmap.fmap) (dotMod 0 *) [[4], [2, 1, 1/2, 1/4, 1/8, 1/16, 1/32, 1/64, 1/128, 1/256]]
@@ -1435,7 +1487,7 @@ umts_03b :: Work
 umts_03b =
   Work mempty
     $ pure
-    $ Movement mempty (mempty : cycle mempty)
+    $ Movement mempty (mempty : repeat mempty)
     $ Leaf
     $ Staff mempty
     $ pure
@@ -1486,7 +1538,7 @@ umts_11a =
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
 
     sysStaff :: SystemStaff
     sysStaff = map (\ts -> timeSignature .~ (Option $ Just $ First ts) $ mempty) timeSigs
@@ -1514,11 +1566,11 @@ umts_11c :: Work
 umts_11c =
   Work mempty
     $ pure
-    $ Movement mempty (cycle mempty)
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
 
     timeSigs :: [TimeSignature]
     timeSigs =
@@ -1553,11 +1605,11 @@ umts_12a :: Work
 umts_12a =
   Work mempty
     $ pure
-    $ Movement mempty (cycle mempty)
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
 
     clefs :: [Music.Pitch.Clef]
     clefs =
@@ -1616,11 +1668,11 @@ umts_13a :: Work
 umts_13a =
   Work mempty
     $ pure
-    $ Movement mempty (cycle mempty)
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
 
     fifthPerTwoBars = [-11..11] :: [Music.Score.Fifths] -- or Music.Pitch.Fifths (see above)
     modesPerBar = [False, True]
@@ -1645,11 +1697,11 @@ umts_21a :: Work
 umts_21a =
   Work mempty
     $ pure
-    $ Movement mempty (cycle mempty)
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
     notes =
       [ (Music.Pitch.f, 0, 1/4)
       , (Music.Pitch.a, 0, 1/4)
@@ -1660,11 +1712,11 @@ umts_21b :: Work
 umts_21b =
   Work mempty
     $ pure
-    $ Movement mempty (cycle mempty)
+    $ Movement mempty (repeat mempty)
     $ Leaf staff
   where
     staff :: Staff
-    staff = undefined
+    staff = mempty
     notes :: [(Pitch, Time, Time)]
     notes =
       [ (Music.Pitch.f, 0, 1/4)
@@ -1683,8 +1735,8 @@ umts_21c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘21d-Chords-SchubertStabatMater.xml’
 -- IGNORE
@@ -1820,8 +1872,8 @@ umts_23c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     bars :: [Bar]
     bars =
@@ -1850,8 +1902,8 @@ umts_23d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘23e-Tuplets-Tremolo.xml’
 umts_23e :: Work
@@ -1861,8 +1913,8 @@ umts_23e =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘23f-Tuplets-DurationButNoBracket.xml’
 umts_23f :: Work
@@ -1872,8 +1924,8 @@ umts_23f =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘24a-GraceNotes.xml’
 -- IGNORE (would be nice!)
@@ -1901,8 +1953,8 @@ umts_31a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘31c-MetronomeMarks.xml’
 umts_31c :: Work
@@ -1912,8 +1964,8 @@ umts_31c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘32a-Notations.xml’
 umts_32a :: Work
@@ -1923,8 +1975,8 @@ umts_32a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘32b-Articulations-Texts.xml’
 umts_32b :: Work
@@ -1934,8 +1986,8 @@ umts_32b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘32c-MultipleNotationChildren.xml’
 umts_32c :: Work
@@ -1945,8 +1997,8 @@ umts_32c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘32d-Arpeggio.xml’
 umts_32d :: Work
@@ -1956,8 +2008,8 @@ umts_32d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33a-Spanners.xml’
 umts_33a :: Work
@@ -1967,8 +2019,8 @@ umts_33a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33b-Spanners-Tie.xml’
 umts_33b :: Work
@@ -1978,8 +2030,8 @@ umts_33b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33c-Spanners-Slurs.xml’
 umts_33c :: Work
@@ -1989,8 +2041,8 @@ umts_33c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33d-Spanners-OctaveShifts.xml’
 umts_33d :: Work
@@ -2000,8 +2052,8 @@ umts_33d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33e-Spanners-OctaveShifts-InvalidSize.xml’
 umts_33e :: Work
@@ -2011,8 +2063,8 @@ umts_33e =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33f-Trill-EndingOnGraceNote.xml’
 umts_33f :: Work
@@ -2022,8 +2074,8 @@ umts_33f =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33g-Slur-ChordedNotes.xml’
 umts_33g :: Work
@@ -2033,8 +2085,8 @@ umts_33g =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33h-Spanners-Glissando.xml’
 umts_33h :: Work
@@ -2044,8 +2096,8 @@ umts_33h =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘33i-Ties-NotEnded.xml’
 umts_33i :: Work
@@ -2055,8 +2107,8 @@ umts_33i =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘41a-MultiParts-Partorder.xml’
 umts_41a :: Work
@@ -2066,8 +2118,8 @@ umts_41a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘41b-MultiParts-MoreThan10.xml’
 umts_41b :: Work
@@ -2077,8 +2129,8 @@ umts_41b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘41c-StaffGroups.xml’
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
@@ -2159,8 +2211,8 @@ umts_42a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘42b-MultiVoice-MidMeasureClefChange.xml’
 umts_42b :: Work
@@ -2225,8 +2277,8 @@ umts_46a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
     barLines =
       []
 -- ‘46b-MidmeasureBarline.xml’
@@ -2237,8 +2289,8 @@ umts_46b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘46c-Midmeasure-Clef.xml’
 umts_46c :: Work
@@ -2248,8 +2300,8 @@ umts_46c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘46e-PickupMeasure-SecondVoiceStartsLater.xml’
 umts_46e :: Work
@@ -2259,8 +2311,8 @@ umts_46e =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘46f-IncompleteMeasures.xml’
 umts_46f :: Work
@@ -2270,8 +2322,8 @@ umts_46f =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘46g-PickupMeasure-Chordnames-FiguredBass.xml’
 umts_46g :: Work
@@ -2281,8 +2333,8 @@ umts_46g =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 -- ‘51b-Header-Quotes.xml’
 umts_51b :: Work
@@ -2315,8 +2367,8 @@ umts_51d =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     workTitle = mempty
     mvmTitle = "Empty work title, non-empty movement title"
@@ -2387,8 +2439,8 @@ umts_72a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     pitches = [] -- TODO [c,d,e,f,g,a,b,c']
     origKeySig = (Music.Pitch.g, True) -- G major
@@ -2416,8 +2468,8 @@ umts_72b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
     pitch = Music.Pitch.c'
     origKeySig = (Music.Pitch.g, True) -- G major
@@ -2447,8 +2499,8 @@ umts_72c =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
 
 -- ‘73a-Percussion.xml’
@@ -2459,10 +2511,10 @@ umts_73a =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = undefined
-    staff = undefined
+    sysStaff = repeat mempty
+    staff = mempty
 
-    [e_, a__, c] = undefined
+    [e_, a__, c] = [Music.Pitch.e_, Music.Pitch.a__, Music.Pitch.c]
     timpNotes =
       [ [ (1,e_,True) ]
       , [ (1/2,e_,False),(1/2,a__,False) ]
@@ -2490,6 +2542,24 @@ umts_73a =
 
 -- ‘99b-Lyrics-BeamsMelismata-IgnoreBeams.xml’
 -- IGNORE
+
+umts_export :: IO ()
+umts_export = do
+  putStrLn $ "Starting UTMS export§"
+  let dir = "/tmp/music-suite/umts"
+  System.Directory.createDirectoryIfMissing True dir
+  forM_ umts_all $ \(name,work) -> do
+    let baseName = dir ++ "/" ++ name
+        xmlName = baseName ++ ".xml"
+        lyName  = baseName ++ ".ly"
+
+    ly <- runIOExportM $ toLy work
+    writeFile lyName ly
+
+    xml <- runIOExportM $ toXml work
+    writeFile xmlName xml
+
+    putStrLn $ "UTMS export done"
 
 {-
 TODO change into map and add function that exports

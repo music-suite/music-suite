@@ -46,6 +46,7 @@ library
                         NumInstances,
                         combinat,
                         logict,
+                        directory,
                         random-shuffle,
                         MonadRandom,
                         random,
