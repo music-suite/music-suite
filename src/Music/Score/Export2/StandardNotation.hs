@@ -346,6 +346,10 @@ data Bar = Bar
   }
   deriving (Eq, Show)
 
+instance Monoid Bar where
+  mempty = Bar mempty mempty
+  mappend (Bar a1 a2) (Bar b1 b2) = Bar (a1 <> b1) (a2 <> b2)
+
 
 data Staff = Staff
   { _staffInfo :: StaffInfo
@@ -1109,13 +1113,48 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
 -- ‘01a-Pitches-Pitches.xml’
-umts_01a = Work mempty $ pure $ Movement mempty sysStaff (Leaf staff)
+{-
+All pitches from G to c'''' in
+ascending steps; First without accidentals, then with a sharp and then
+with a flat accidental. Double alterations and cautionary accidentals
+are tested at the end.
+-}
+umts_01a :: Work
+umts_01a =
+  Work mempty
+    $ pure
+    $ Movement mempty sysStaff
+    $ Leaf staff
   where
-    staff = Staff mempty []
-    -- TODO fix monoid
     sysStaff = cycle [mempty]
-    pitches :: [Pitch]
-    pitches = replicate 102 Music.Pitch.Literal.c
+    staff = Staff mempty $ fmap (\chords -> Bar [rh4 chords] mempty) chs
+
+    rh4 :: [Chord] -> Rhythm Chord
+    rh4 cs = mconcat $ fmap (\c -> Beat (1/4) c) cs
+
+    chs :: [[Chord]]
+    chs = fmap (fmap singleNoteChord) $ divideList 4 pitches
+      where
+        pitches = mconcat
+          [ [  Music.Pitch.Literal.g__
+            .. Music.Pitch.Literal.c'''
+            ]
+          , fmap Music.Pitch.sharpen
+            [  Music.Pitch.Literal.g__
+            .. Music.Pitch.Literal.c'''
+            ]
+          , fmap Music.Pitch.flatten
+            [  Music.Pitch.Literal.g__
+            .. Music.Pitch.Literal.c'''
+            ]
+          -- TODO cx', cbb', cs', cs', cs', cs'(editorial)
+          ]
+
+    singleNoteChord :: Pitch -> Chord
+    singleNoteChord ps = pitches .~ [ps] $ mempty
+
+    divideList :: Int -> [a] -> [[a]]
+    divideList = Music.Score.Internal.Util.divideList
 -- ‘01b-Pitches-Intervals.xml’
 -- ‘01c-Pitches-NoVoiceElement.xml’
 -- ‘01d-Pitches-Microtones.xml’
