@@ -22,7 +22,13 @@ semantic flavor:
 
 - Bars, staves and rhytmical structure is explicit.
 
-- Spanners are represented by begin/end tags.
+- Spanners (legato, cresc dim etc) are represented by begin/end tags.
+
+  This is a consequence of representing the score as a tree rather than a graph,
+  as spanners exist independently of the /time/ hierarchy, and trees by
+  definition do not allow multiple hierarchical relationships.
+
+  It could be interesting to use some kind of graph structure instead.
 
 - Harmoncics are represented as played, i.e. not by specifying note head shape
   etc explicitly.
