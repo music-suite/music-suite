@@ -5,6 +5,8 @@ module Music.Pitch.Common.Quality
         -- * Quality
         Quality(..),
         qualityTypes,
+        isStandardQuality,
+        isSimpleQuality,
 
         HasQuality(..),
         invertQuality,
@@ -65,6 +67,24 @@ isAugmented a = case quality a of { Augmented _ -> True ; _ -> False }
 isDiminished :: HasQuality a => a -> Bool
 isDiminished a = case quality a of { Diminished _ -> True ; _ -> False }
 
+{-
+Is this quality standard, i.e. major, minor, perfect, augmented/diminished
+or doubly augmented/diminished.
+-}
+isStandardQuality :: Quality -> Bool
+isStandardQuality (Augmented n)  = n <= 2
+isStandardQuality (Diminished n) = n <= 2
+isStandardQuality _              = True
+
+{-
+Same as 'isStandardQuality' but disallow doubly augmented/diminished.
+-}
+isSimpleQuality :: Quality -> Bool
+isSimpleQuality (Augmented n)  = n <= 1
+isSimpleQuality (Diminished n) = n <= 1
+isSimpleQuality _              = True
+
+
 instance HasQuality Quality where
   quality = id
 
@@ -107,7 +127,7 @@ invertQuality = go
 
 -- | 
 -- The quality type expected for a given number, i.e. perfect for unisons, fourths,
--- fifths and their compounds; major/minor for everything else.  
+-- fifths and their compounds; major/minor for everything else.
 expectedQualityType :: Number -> QualityType
 expectedQualityType x = if ((abs x - 1) `mod` 7) + 1 `elem` [1,4,5]
   then PerfectType else MajorMinorType

@@ -10,11 +10,18 @@ module Music.Pitch.Common.Spell
         Spelling,
         spell,
         spelled,
+        spellPitchRelative,
 
         -- ** Standard spellings
         modally,
         usingSharps,
         usingFlats,
+
+        -- * Simplifying pitches and intervals
+        useStandardQualities,
+        useSimpleQualities,
+        useStandardAlterations,
+        useSimpleAlterations,
 ) where
 
 import           Data.AffineSpace
@@ -27,6 +34,8 @@ import           Music.Pitch.Augmentable
 import           Music.Pitch.Common.Interval
 import           Music.Pitch.Common.Number
 import           Music.Pitch.Common.Pitch
+import           Music.Pitch.Common.Quality (quality, Quality(..)
+                  , isStandardQuality, isSimpleQuality)
 import           Music.Pitch.Common.Semitones
 import           Music.Pitch.Literal
 
@@ -84,6 +93,11 @@ spell spelling x = let
           go 4 = 7
           go 5 = 9
           go 6 = 11
+
+type Tonic = Pitch
+
+spellPitchRelative :: Tonic -> Spelling -> Pitch -> Pitch
+spellPitchRelative tonic s p = tonic .+^ spell s (p .-. tonic)
 
 -- |
 -- Flipped version of 'spell'. To be used infix, as in:
@@ -159,3 +173,39 @@ usingFlats = go
     go 10 = 6
     go 11 = 6
 
+
+
+useStandardQualities :: Interval -> Interval
+useStandardQualities i
+  | quality i >  Perfect && not (ok i)  =  spell usingSharps i
+  | quality i <  Perfect && not (ok i)  =  spell usingFlats i
+  | otherwise                           =  i
+  where
+    ok i = isStandardQuality (quality i)
+
+useSimpleQualities :: Interval -> Interval
+useSimpleQualities i
+  | quality i >  Perfect && not (ok i)  =  spell usingSharps i
+  | quality i <  Perfect && not (ok i)  =  spell usingFlats i
+  | otherwise                           =  i
+  where
+    ok i = isSimpleQuality (quality i)
+
+
+useStandardAlterations :: Tonic -> Pitch -> Pitch
+useStandardAlterations tonic p
+  | quality i >  Perfect && not (ok i)  =  spellPitchRelative tonic usingSharps p
+  | quality i <  Perfect && not (ok i)  =  spellPitchRelative tonic usingFlats p
+  | otherwise                           =  p
+  where
+    i = p .-. tonic
+    ok i = isStandardQuality (quality i)
+
+useSimpleAlterations :: Tonic -> Pitch -> Pitch
+useSimpleAlterations tonic p
+  | quality i >  Perfect && not (ok i)  =  spellPitchRelative tonic usingSharps p
+  | quality i <  Perfect && not (ok i)  =  spellPitchRelative tonic usingFlats p
+  | otherwise                           =  p
+  where
+    i = p .-. tonic
+    ok i = isSimpleQuality (quality i)
