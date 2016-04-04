@@ -71,10 +71,10 @@ The /quality/ component of an interval (minor, major, augmented).
 Generalized from single\/double augmented\/diminished to any number of steps.
 -}
 data Quality
-  = Major
-  | Minor
+  = Augmented Integer
+  | Major
   | Perfect
-  | Augmented Integer
+  | Minor
   | Diminished Integer
   deriving (Eq, Ord, Show)
 {-
