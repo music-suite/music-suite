@@ -172,6 +172,10 @@ Beat d x `subDur` d' = Beat (d-d') x
 
 -}
 
+{-
+  TODO Many (which?) rewrite rules can be replaced with parsing constraints
+-}
+
 rewrite :: Rhythm a -> Rhythm a
 rewrite = rewriteR . rewrite1
 

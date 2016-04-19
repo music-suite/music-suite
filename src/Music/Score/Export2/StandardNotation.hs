@@ -1653,7 +1653,6 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------
 
-
 -- TODO lyrics
 -- TODO chord symbols
 -- TODO staff crossings
@@ -1664,6 +1663,8 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
+-- TODO xml/generate nicer display-pitch for rests when using multiple pitch layers (03b)
+-- TODO xml/51b staff name not printed
 
 -- ‘01a-Pitches-Pitches.xml’
 {-
@@ -3404,15 +3405,15 @@ umts_51b = Work mempty $ pure
 -- ‘51d-EmptyTitle.xml’
 umts_51d :: Work
 umts_51d =
-  Work mempty
+  Work (title .~ wrkTitle $ mempty)
     $ pure
-    $ Movement mempty sysStaff
+    $ Movement (movementTitle .~ mvmTitle $ mempty) sysStaff
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
+    staff = Staff mempty [Bar mempty [PitchLayer (Beat 1 mempty)]]
 
-    workTitle = mempty
+    wrkTitle = mempty
     mvmTitle = "Empty work title, non-empty movement title"
     -- a single bar rest
 
@@ -3521,16 +3522,17 @@ umts_72b =
       [ Music.Parts.ebClarinet
       , Music.Parts.clarinet
       , Music.Parts.aClarinet
-      , Music.Parts.horn
-      -- TODO can't represent Eb horn, use F
-      , Music.Parts.horn
-      -- TODO can't represent picc in A, use Bb
+
+      , Music.Parts.horn -- TODO can't represent Eb horn, use F
+      , Music.Parts.horn -- TODO can't represent picc in A, use Bb
+
       , Music.Parts.piccoloTrumpet
       , Music.Parts.trumpet
       , Music.Parts.cTrumpet
       , Music.Parts.dTrumpet
-      -- , -- TODO custom (displayed c' ~ sounding fs''')
-      , Music.Parts.piano
+
+      , Music.Parts.piano -- TODO custom transposition
+      , Music.Parts.flute -- TODO just treble staff
       ]
 
 -- ‘72c-TransposingInstruments-Change.xml’
