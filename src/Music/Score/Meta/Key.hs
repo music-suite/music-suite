@@ -48,6 +48,7 @@ import           Control.Monad.Plus
 import           Data.Foldable             (Foldable)
 import qualified Data.Foldable             as F
 import qualified Data.List                 as List
+import qualified Data.List
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Maybe
@@ -59,6 +60,8 @@ import           Data.Traversable          (Traversable)
 import qualified Data.Traversable          as T
 import           Data.Typeable
 
+import           Music.Pitch hiding (Pitch, Fifths)
+import qualified Music.Pitch as P
 import           Music.Pitch.Literal
 import           Music.Score.Meta
 import           Music.Score.Part
@@ -72,6 +75,33 @@ newtype Fifths = Fifths Integer
 
 instance Show Fifths where
   show (Fifths n) = show n
+
+instance IsPitch Fifths where
+  fromPitch p =
+    case
+      ( Data.List.findIndex (== norm p) (take 12 cofU)
+      , Data.List.findIndex (== norm p) (take 12 cofD)
+      ) of
+        (Just n, _)       -> fromIntegral $ n
+        (Nothing, Just n) -> fromIntegral $ (-n)
+        _                 -> error "Pitch not in the circle of fifths"
+    where
+      cofU = fmap toFirstOctave $ iterate (up _P5) c
+      cofD = fmap toFirstOctave $ iterate (down _P5) c
+
+      norm :: P.Pitch -> P.Pitch
+      norm = toFirstOctave {- . useStandardAlterations-}
+
+      toFirstOctave :: P.Pitch -> P.Pitch
+      toFirstOctave p = case (name p, accidental p) of
+        (n, a) -> mkPitch n a
+
+  -- fromPitch p = case (name p, accidental p) of
+    -- (C, flat)    -> 0
+    -- (C, natural) -> 0
+    -- (C, natural) -> 0
+
+
 
 {-
 instance IsPitch Fifths where

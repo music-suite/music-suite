@@ -251,6 +251,9 @@ import Music.Score()
 data LabelTree b a = Branch b [LabelTree b a] | Leaf a
   deriving (Functor, Foldable, Traversable, Eq, Ord, Show)
 
+fromListLT :: Monoid b => [a] -> LabelTree b a
+fromListLT = Branch mempty . fmap Leaf
+
 foldLabelTree :: (a -> c) -> (b -> [c] -> c) -> LabelTree b a -> c
 foldLabelTree f g (Leaf x)      = f x
 foldLabelTree f g (Branch b xs) = g b (fmap (foldLabelTree f g) xs)
@@ -272,7 +275,6 @@ Remember:
 data BracketType            = NoBracket | Bracket | Brace | Subbracket
   deriving (Eq, Ord, Show)
 
-
 type BarNumber              = Int
 type TimeSignature          = Music.Score.Meta.Time.TimeSignature
 type KeySignature           = Music.Score.Meta.Key.KeySignature
@@ -287,6 +289,14 @@ type SpecialBarline         = () -- TODO Dashed | Double | Final
 
 data SystemBar              = SystemBar
   {-
+  We treat all the following information as global.
+
+  This is more restrictive than most classical notations, but greatly
+  simplifies representation. In this view, a score is a matrix of bars
+  (each belonging to a single staff). Each bar must have a single
+  time sig/key sig/rehearsal mark/tempo mark.
+
+  ----
   Note: Option First ~ Maybe
 
   Alternatively we could just make these things into Monoids such that
@@ -616,6 +626,12 @@ makeLenses ''Movement
 makeLenses ''WorkInfo
 makeLenses ''Work
 
+
+instance Monoid BracketType where
+  mempty = NoBracket
+  mappend x y
+    | x == mempty = y
+    | otherwise   = x
 
 instance Semigroup SystemBar where
   (<>) = mappend
@@ -1660,6 +1676,8 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO 8va etc
 -- TODO consolidate clef/key sig representations
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
+
+-- TODO xml/render transposed staves (72a, 72b)
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
@@ -3497,6 +3515,7 @@ umts_72a =
       ]
 
 
+
 -- ‘72b-TransposingInstruments-Full.xml’
 {-
 Various transposition. Each part plays a C5, just displayed in different display
@@ -3509,13 +3528,17 @@ umts_72b =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ fromListLT staves
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = [keySignature .~ (Option $ Just $ First origKeySig)$ mempty]
+    staves = fmap mkStaffFromInstrument instruments
 
+    mkStaffFromInstrument _ = Staff mempty [Bar mempty
+      [PitchLayer $ Beat 1 (pitches .~ [pitch] $ mempty) ]]
+
+    ----
     pitch = Music.Pitch.c'
-    origKeySig = (Music.Pitch.g, True) -- G major
+    origKeySig = Music.Score.Meta.Key.key Music.Pitch.g True
 
     instruments :: [Instrument]
     instruments =
