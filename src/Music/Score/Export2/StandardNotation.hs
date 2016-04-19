@@ -324,7 +324,14 @@ type SibeliusFriendlyName   = String
 type SmallOrLarge           = Any -- def False
 type ScoreOrder             = Sum Double -- def 0
 
--- TODO instrument part no. (I, II.1 etc)
+{-
+Staff-related information (not system staff).
+
+We do *not* allow mid-staff instrument changes, so all instrument-related
+information goes here as well.
+
+TODO add instrument part no. (I, II.1 etc)
+-}
 data StaffInfo              = StaffInfo
   { _instrumentShortName    :: InstrumentShortName
   , _instrumentFullName     :: InstrumentFullName
@@ -3176,15 +3183,36 @@ umts_33i =
     divideList = Music.Score.Internal.Util.divideList
 
 -- ‘41a-MultiParts-Partorder.xml’
+{-
+A piece with four parts (P0, P1, P2, P3; different from what Finale creates!). Are they converted in the correct order?
+-}
 umts_41a :: Work
 umts_41a =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ fromListLT staves
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = [keySignature .~ (Option $ Just $ First keySig) $ mempty]
+    staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g True
+
+    bars = fmap (\p -> Bar mempty
+          [ PitchLayer $
+              Group
+                [ Beat (1/4) (pitches .~ [p] $ mempty)
+                , Beat (3/4) (pitches .~ [] $ mempty)
+                ]
+           ]
+           ) pitches_
+
+    names = [ "Part " ++ show n | n <- [1..4] ]
+    pitches_ =
+      [ Music.Pitch.c :: Music.Pitch.Pitch
+      , Music.Pitch.g
+      , Music.Pitch.e
+      , Music.Pitch.b
+      ]
 
 -- ‘41b-MultiParts-MoreThan10.xml’
 umts_41b :: Work
@@ -3192,10 +3220,27 @@ umts_41b =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ fromListLT staves
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = [keySignature .~ (Option $ Just $ First keySig) $ mempty]
+    staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
+    keySig = Music.Score.Meta.Key.key Music.Pitch.g True
+
+    bars = fmap (\p -> Bar mempty
+          [ PitchLayer $
+              Group
+                [ Beat 1 (pitches .~ [] $ mempty)
+                ]
+           ]
+           ) pitches_
+
+    names = [ "P" ++ show n | n <- [1..19] ]
+    pitches_ =
+      [ Music.Pitch.c :: Music.Pitch.Pitch
+      , Music.Pitch.g
+      , Music.Pitch.e
+      , Music.Pitch.b
+      ]
 
 -- ‘41c-StaffGroups.xml’
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
