@@ -1743,10 +1743,6 @@ fromAspects sc = do
             nameStr = (part^.(Music.Parts._instrument).(to Music.Parts.fullName))
             subpartStr = Just $ show (part^.(Music.Parts._subpart))
 
-    -- Not used from top-level
-
-
-
     extractTimeSignatures
       :: Score a -> ([Maybe Music.Score.Meta.Time.TimeSignature], [Duration])
     extractTimeSignatures = Music.Score.Internal.Export.extractTimeSignatures
@@ -1770,11 +1766,8 @@ fromAspects sc = do
     aspectsToChord (Just asp) = id
       $ ties                  .~ (Any endTie, Any beginTie)
       $ dynamicNotation       .~ (asp^.(Music.Score.Dynamics.dynamic))
-      -- $ dynamicNotation       .~ (asp^.(MSS.dynamic))
       $ articulationNotation  .~ (asp^.(Music.Score.Articulation.articulation))
-      -- $ articulationNotation  .~ (asp^.(MSS.articulation))
       $ pitches               .~ (asp^..(Music.Score.Pitch.pitches))
-      -- $ pitches               .~ (asp^..(MSS.pitches))
       $ mempty
       where
         (endTie,beginTie) = Music.Score.Ties.isTieEndBeginning asp
