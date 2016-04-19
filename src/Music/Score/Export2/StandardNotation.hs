@@ -1487,20 +1487,19 @@ type MidiExportM m = (MonadLog String m, MonadError String m)
 
 toMidi :: (AbcNotationExportM m) => Asp -> m M.Midi
 toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
-
-exportScore :: Score Asp1 -> MidiScore Asp1
-exportScore xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), sc))
-    $ Music.Score.Part.extractPartsWithInfo $ fixTempo $ normalizeScore xs)
-    where
-      -- We actually want to extract *all* tempo changes and transform the score appropriately
-      -- For the time being, we assume the whole score has the same tempo
-      fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
-
-      -- TODO
-      getMidiProgram = const 0
-      getMidiChannel = const 0
-
   where
+    exportScore :: Score Asp1 -> MidiScore Asp1
+    exportScore xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), sc))
+        $ Music.Score.Part.extractPartsWithInfo $ fixTempo $ normalizeScore xs)
+        where
+          -- We actually want to extract *all* tempo changes and transform the score appropriately
+          -- For the time being, we assume the whole score has the same tempo
+          fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
+
+          -- TODO
+          getMidiProgram = const 0
+          getMidiChannel = const 0
+
     finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
     finalizeExport (MidiScore trs) = let
       controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
