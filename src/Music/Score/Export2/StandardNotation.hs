@@ -1693,7 +1693,6 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO 8va etc
 -- TODO consolidate clef/key sig representations
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
-
 -- TODO xml/render transposed staves (72a, 72b)
 {-
   Need to emit transpose element like this
@@ -1710,7 +1709,6 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 
 
 -}
-
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
@@ -3229,37 +3227,53 @@ umts_41b =
     sysStaff = [keySignature .~ (Option $ Just $ First keySig) $ mempty]
     staves = zipWith (\name -> Staff (instrumentFullName .~ name $ mempty) . pure) names bars
     keySig = Music.Score.Meta.Key.key Music.Pitch.g True
-
-    bars = fmap (\p -> Bar mempty
+    bars = repeat $ Bar mempty
           [ PitchLayer $
               Group
                 [ Beat 1 (pitches .~ [] $ mempty)
                 ]
            ]
-           ) pitches_
-
     names = [ "P" ++ show n | n <- [1..19] ]
-    pitches_ =
-      [ Music.Pitch.c :: Music.Pitch.Pitch
-      , Music.Pitch.g
-      , Music.Pitch.e
-      , Music.Pitch.b
-      ]
 
 -- ‘41c-StaffGroups.xml’
--- TODO names as part of label tree (for piano/harp/chorus/strings etc)
+{-
+  TODO names as part of label tree (for piano/harp/chorus/strings etc)
+
+  A huge orchestra score with 28 parts and different kinds of nested bracketed groups.
+  Each part/group is assigned a name and an abbreviation to be shown before the staff.
+  Also, most of the groups show unbroken barlines, while the barlines are broken between
+  the groups.
+
+-}
 umts_41c :: Work
 umts_41c = mempty
   where
     ls :: LabelTree BracketType String
     ls = Branch NoBracket
       [ Branch Bracket
-          [
+          [ Leaf "Picc"
+          , Leaf "Flute 1"
+          , Leaf "Flute 2"
 
+          , Leaf "Oboe"
+          , Leaf "English Horn"
+          , Leaf "Clarinet in Eb"
+          , Leaf "Clarinet in Bb 1"
+          , Leaf "Clarinet in Bb 2"
+          , Leaf "Bass Clarinet"
+
+          , Leaf "Bassoon 1"
+          , Leaf "Bassoon 2"
+          , Leaf "Contrabassoon"
           ]
       , Branch Bracket
-          [
-
+          [ Leaf "Horn 1"
+          , Leaf "Horn 2"
+          , Leaf "Trumpet 1"
+          , Leaf "Trumpet 2"
+          , Leaf "Trombone 1"
+          , Leaf "Trombone 2"
+          , Leaf "Tuba"
           ]
       , Leaf "Timpani"
       , Leaf "Percussion"
@@ -3270,8 +3284,11 @@ umts_41c = mempty
           [ -- piano
           ]
       , Branch Bracket
-          [
-
+          [ Leaf "Violin I"
+          , Leaf "Violin II"
+          , Leaf "Viola"
+          , Leaf "Cello"
+          , Leaf "Contrabass"
           ]
       ]
 
