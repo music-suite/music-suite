@@ -153,6 +153,8 @@ module Music.Score.Export2.StandardNotation
   , toLy
   , MusicXmlExportM
   , toXml
+  , MidiExportM
+  , toMidi
 
   -- * Test
   -- TODO hide/remove
@@ -165,7 +167,7 @@ where
 import           BasePrelude                             hiding (first, second, (<>), First(..))
 import           Control.Lens                            (over, preview, set, to, Lens'(..),
                                                           under, view, _head, at, _1, _2)
-import           Control.Lens.Operators
+import           Control.Lens.Operators                  hiding ((|>))
 import           Control.Lens.TH                         (makeLenses)
 import           Control.Monad.Except
 import           Control.Monad.Plus
@@ -173,7 +175,7 @@ import           Control.Monad.Writer                    hiding ((<>), First(..)
 import           Data.AffineSpace                        hiding (Sum)
 import           Data.Colour                             (Colour)
 import           Data.Colour.Names
-import           Data.Functor.Identity                   (Identity)
+import           Data.Functor.Identity                   (Identity(..))
 import           Data.Map                                (Map)
 import qualified Data.Char
 import qualified Data.List
@@ -186,8 +188,10 @@ import           Data.VectorSpace                        hiding (Sum)
 
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
+import qualified Codec.Midi                              as Midi
 import qualified Data.Music.Lilypond                     as L
 import qualified Data.Music.MusicXml.Simple              as X
+import qualified Codec.Midi                              as M
 import qualified Text.Pretty
 import qualified System.Process --DEBUG
 import qualified System.Directory
@@ -213,8 +217,8 @@ import qualified Music.Score.Phrases
 import qualified Music.Score.Articulation
 import           Music.Score.Phrases                     (MVoice(..))
 
-import           Music.Score.Articulation                (ArticulationT)
-import           Music.Score.Dynamics                    (DynamicT)
+import           Music.Score.Articulation                (ArticulationT(..))
+import           Music.Score.Dynamics                    (DynamicT(..))
 import qualified Music.Score.Export.ArticulationNotation
 import           Music.Score.Export.ArticulationNotation (slurs, marks)
 import qualified Music.Score.Export.ArticulationNotation as AN
@@ -235,7 +239,7 @@ import qualified Music.Score.Meta.RehearsalMark
 import qualified Music.Score.Meta.Tempo
 import           Music.Score.Meta.Tempo (Tempo)
 import qualified Music.Score.Meta.Time
-import           Music.Score.Part                        (PartT)
+import           Music.Score.Part                        (PartT(..))
 import           Music.Score.Pitch                       ()
 import           Music.Score.Ties                        (TieT (..))
 import           Music.Score.Tremolo                     (TremoloT, runTremoloT)
@@ -1270,15 +1274,21 @@ toXml work = do
                   Music.Pitch.NeutralClef -> X.TabClef
 
             renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
-            renderStaff st = do
-              fromBars <- mapM renderBar (st^.bars)
-              let fromInitClefMap = renderClef initClef
-              pure $ mapHead (fromInitClefMap <>) fromBars
+            renderStaff staff = do
+              fromBars <- mapM renderBar (staff^.bars)
+              let clef = renderClef initClef
+              pure $ mapHead ((transposeInfo <> clef) <>) fromBars
               where
                 mapHead f []       = []
                 mapHead f (x : xs) = f x : xs
 
-                initClef = st^.staffInfo.instrumentDefaultClef
+                transposeInfo :: MusicXml.Music
+                transposeInfo = mempty
+                {-
+                  Always generate a clef at the beginning of the staff based =
+                  on the instrument default. See comments in the definition of StaffInfo.
+                -}
+                initClef = staff^.staffInfo.instrumentDefaultClef
 
             -- TODO how to best render transposed staves (i.e. clarinets)
 
@@ -1342,8 +1352,8 @@ toXml work = do
 
                 -- TODO arpeggio, breath, color
                 post = id
-                  . notateDynamicX (ch^.dynamicNotation)
-                  . notateArticulationX (ch^.articulationNotation)
+                  . notateDynamic (ch^.dynamicNotation)
+                  . notateArticulation (ch^.articulationNotation)
                   . notateTremolo (ch^.tremoloNotation)
                   . notateText (ch^.chordText)
                   . notateHarmonic (ch^.harmonicNotation)
@@ -1364,8 +1374,8 @@ toXml work = do
             setDefaultVoice = MusicXml.setVoice 1
 
 
-            notateDynamicX :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
-            notateDynamicX (DN.DynamicNotation (crescDims, level))
+            notateDynamic :: DN.DynamicNotation -> MusicXml.Music -> MusicXml.Music
+            notateDynamic (DN.DynamicNotation (crescDims, level))
               = Music.Score.Internal.Util.composed (fmap notateCrescDim crescDims)
               . notateLevel level
               where
@@ -1388,8 +1398,8 @@ toXml work = do
                   -- DO NOT use rcomposed as notateDynamic returns "mark" order, not application order
                   -- rcomposed = composed . reverse
 
-            notateArticulationX :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
-            notateArticulationX (AN.ArticulationNotation (slurs, marks))
+            notateArticulation :: AN.ArticulationNotation -> MusicXml.Music -> MusicXml.Music
+            notateArticulation (AN.ArticulationNotation (slurs, marks))
               = Music.Score.Internal.Util.composed (fmap notateMark marks)
               . Music.Score.Internal.Util.composed (fmap notateSlur slurs)
               where
@@ -1449,6 +1459,130 @@ toXml work = do
               | tb        = MusicXml.beginTie
               | ta        = MusicXml.endTie
               | otherwise = id
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+--   getMidiChannel :: a -> Midi.Channel
+--   getMidiProgram :: a -> Midi.Preset
+--   getMidiChannel _ = 0
+
+
+-- | Every note may give rise to a number of messages. We represent this as a score of messages.
+type MidiEvent = Score Midi.Message
+
+-- | The MIDI channel allocation is somewhat simplistic.
+--   We use a dedicated channel and program number for each instrument (there *will* be colissions).
+type MidiInstr = (Midi.Channel, Midi.Preset)
+
+-- | A Midi file consist of a number of tracks.
+--   Channel and preset info is passed on from exportScore to finalizeExport using this type.
+--
+--   TODO also pass meta-info etc.
+--
+data MidiScore a = MidiScore [(MidiInstr, Score a)]
+  deriving Functor
+
+type MidiExportM m = (MonadLog String m, MonadError String m)
+
+toMidi :: (AbcNotationExportM m) => Asp -> m M.Midi
+toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
+
+exportScore :: Score Asp1 -> MidiScore Asp1
+exportScore xs = MidiScore (map (\(p,sc) -> ((getMidiChannel p, getMidiProgram p), sc))
+    $ Music.Score.Part.extractPartsWithInfo $ fixTempo $ normalizeScore xs)
+    where
+      -- We actually want to extract *all* tempo changes and transform the score appropriately
+      -- For the time being, we assume the whole score has the same tempo
+      fixTempo = stretch (Music.Score.Meta.Tempo.tempoToDuration (Music.Score.Meta.metaAtStart xs))
+
+      -- TODO
+      getMidiProgram = const 0
+      getMidiChannel = const 0
+
+  where
+    finalizeExport :: MidiScore (Score Midi.Message) -> Midi.Midi
+    finalizeExport (MidiScore trs) = let
+      controlTrack  = [(0, Midi.TempoChange 1000000), (endDelta, Midi.TrackEnd)]
+      mainTracks    = fmap (uncurry translMidiTrack . fmap join) trs
+      in
+      Midi.Midi fileType (Midi.TicksPerBeat divisions) (controlTrack : mainTracks)
+
+      where
+        translMidiTrack :: MidiInstr -> Score Midi.Message -> [(Int, Midi.Message)]
+        translMidiTrack (ch, p) = addTrackEnd
+          . setProgramChannel ch p
+          . scoreToMidiTrack
+
+        -- Each track needs TrackEnd
+        -- We place it a long time after last event just in case (necessary?)
+        addTrackEnd :: [(Int, Midi.Message)] -> [(Int, Midi.Message)]
+        addTrackEnd = (<> [(endDelta, Midi.TrackEnd)])
+
+        setProgramChannel :: Midi.Channel -> Midi.Preset -> Midi.Track Midi.Ticks -> Midi.Track Midi.Ticks
+        setProgramChannel ch prg = ([(0, Midi.ProgramChange ch prg)] <>) . fmap (fmap $ setC ch)
+
+        scoreToMidiTrack :: Score Midi.Message -> Midi.Track Midi.Ticks
+        scoreToMidiTrack = fmap (\(t,_,x) -> (round ((t .-. 0) ^* divisions), x)) . toRelative . (^. triples)
+
+        -- Hardcoded values for Midi export
+        -- We always generate MultiTrack (type 1) files with division 1024
+        fileType    = Midi.MultiTrack
+        divisions   = 1024
+        endDelta    = 10000
+
+        -- | Convert absolute to relative durations.
+        -- TODO replace by something more generic
+        toRelative :: [(Time, Duration, b)] -> [(Time, Duration, b)]
+        toRelative = snd . Data.List.mapAccumL g 0
+            where
+                g now (t,d,x) = (t, (0 .+^ (t .-. now),d,x))
+
+
+    exportNote :: Asp1 -> Score Midi.Message
+    exportNote (PartT (_, x)) = exportNoteA x
+      where
+        exportNoteA (ArticulationT (_, x)) = exportNoteD x
+        exportNoteD (DynamicT (realToFrac -> d, x)) = setV (dynLevel d) <$> exportNoteP x
+        exportNoteP pv = mkMidiNote (pitchToInt pv)
+        pitchToInt p = fromIntegral $ Music.Pitch.semitones (p .-. P.c)
+
+    dynLevel :: Double -> Midi.Velocity
+    dynLevel x = round $ (\x -> x * 58.5 + 64) $ f $ inRange (-1,1) (x/3.5)
+      where
+        f = id
+        -- f x = (x^3)
+        inRange (m,n) x = (m `max` x) `min` n
+
+    mkMidiNote :: Int -> Score Midi.Message
+    mkMidiNote p = mempty
+        |> pure (Midi.NoteOn 0 (fromIntegral $ p + 60) 64)
+        |> pure (Midi.NoteOff 0 (fromIntegral $ p + 60) 64)
+
+    setV :: Midi.Velocity -> Midi.Message -> Midi.Message
+    setV v = go
+      where
+        go (Midi.NoteOff c k _)       = Midi.NoteOff c k v
+        go (Midi.NoteOn c k _)        = Midi.NoteOn c k v
+        go (Midi.KeyPressure c k _)   = Midi.KeyPressure c k v
+        go (Midi.ControlChange c n v) = Midi.ControlChange c n v
+        go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
+        go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
+        go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
+        go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
+
+    setC :: Midi.Channel -> Midi.Message -> Midi.Message
+    setC c = go
+      where
+        go (Midi.NoteOff _ k v)       = Midi.NoteOff c k v
+        go (Midi.NoteOn _ k v)        = Midi.NoteOn c k v
+        go (Midi.KeyPressure _ k v)   = Midi.KeyPressure c k v
+        go (Midi.ControlChange _ n v) = Midi.ControlChange c n v
+        go (Midi.ProgramChange _ p)   = Midi.ProgramChange c p
+        go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
+        go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
+        go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
+
 
 ----------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------

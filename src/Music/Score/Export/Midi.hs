@@ -295,7 +295,7 @@ import Music.Score.Export.Backend
 --
 -- toMidi :: HasMidi a => a -> Midi.Midi
 -- toMidi = export (undefined::Midi)
---
+-- toMidi = finalizeExport _ . fmap (exportNote _) . exportScore _
 
 toMidi :: HasMidi a => a -> Midi.Midi
 toMidi = undefined
