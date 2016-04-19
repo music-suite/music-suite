@@ -54,8 +54,26 @@ import qualified Music.Articulation
 
 data Slur = NoSlur | BeginSlur | EndSlur
   deriving (Eq, Ord, Show)
+  {-
+  TODO
+    dashed slur
+    trill
+    8va and variants
+  -}
+data Mark
+  = NoMark
+  | Staccato
+  | MoltoStaccato
+  | Marcato
+  | Accent
+  | Tenuto
 
-data Mark = NoMark | Staccato | MoltoStaccato | Marcato | Accent | Tenuto
+  | Trill -- just trill, no line
+  | Turn Bool  -- inverted?
+  | Mordent Bool -- inverted?
+  | UpBow
+  | DownBow
+  | Circle
   deriving (Eq, Ord, Show)
 
 instance Monoid Slur where
@@ -105,6 +123,12 @@ instance Tiable ArticulationNotation where
       splitMark Accent        = (Accent, mempty)
       splitMark Tenuto        = (Tenuto, mempty)
 
+      splitMark Trill         = (Trill, mempty)
+      splitMark (Turn x)      = (Turn x, mempty)
+      splitMark (Mordent x)   = (Mordent x, mempty)
+      splitMark UpBow         = (UpBow, mempty)
+      splitMark DownBow       = (DownBow, mempty)
+      splitMark Circle        = (Circle, mempty)
 
 instance Monoid ArticulationNotation where
   mempty = ArticulationNotation ([], [])

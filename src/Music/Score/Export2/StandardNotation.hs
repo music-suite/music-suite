@@ -1034,6 +1034,8 @@ toLy work = do
               AN.Marcato        -> Lilypond.addMarcato
               AN.Accent         -> Lilypond.addAccent
               AN.Tenuto         -> Lilypond.addTenuto
+              -- TODO proper exception
+              _                 -> error "Lilypond export: Unknown articulation mark"
 
             notateSlur :: AN.Slur -> Lilypond.Music -> Lilypond.Music
             notateSlur slurs = case slurs of
@@ -1398,6 +1400,8 @@ toXml work = do
                     AN.Marcato        -> MusicXml.strongAccent
                     AN.Accent         -> MusicXml.accent
                     AN.Tenuto         -> MusicXml.tenuto
+                    -- TODO proper exception
+                    _                 -> error "MusicXML export: Unknown articulation mark"
 
                   notateSlur slurs = case slurs of
                     AN.NoSlur    -> id
