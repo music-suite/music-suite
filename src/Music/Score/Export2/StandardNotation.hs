@@ -329,9 +329,9 @@ data StaffInfo              = StaffInfo
   { _instrumentShortName    :: InstrumentShortName
   , _instrumentFullName     :: InstrumentFullName
   , _sibeliusFriendlyName   :: SibeliusFriendlyName
-  , _instrumentDefaultClef  :: Music.Pitch.Clef
-  -- See also clefChanges
   {-
+  See also clefChanges
+
   TODO change name of _instrumentDefaultClef
   More accurately, it represents the first clef to be used on the staff
   (and the only one, unless there are changes.)
@@ -340,10 +340,16 @@ data StaffInfo              = StaffInfo
   is optional (along with everything else) in this representation anyway.
   This is arguably wrong, as stanard notation generally requires a clef.
   -}
+  , _instrumentDefaultClef  :: Music.Pitch.Clef
 
+  {-
+  I.e. -P5 for horn
 
+  Note that this representation indicates *written pitch*, not sounding (as does MusicXML),
+  so this value is redundant when rendering a graphical score. OTOH if this representation
+  is used to render *sound*, pitches need to be transposed acconrdingly.
+  -}
   , _transposition          :: Transposition
-  -- Purely informational, i.e. written notes are assumed to be in correct transposition
   , _smallOrLarge           :: SmallOrLarge
   , _scoreOrder             :: ScoreOrder
   }
@@ -1678,6 +1684,22 @@ test4 x = runPureExportMNoLog $ toXml =<< fromAspects x
 -- TODO names as part of label tree (for piano/harp/chorus/strings etc)
 
 -- TODO xml/render transposed staves (72a, 72b)
+{-
+  Need to emit transpose element like this
+  Must add to musicxml2
+  Add to first bar of staff based on its instrument (we don't allow mid-staff instrument changes)
+  This is for Trumpet in Bb, so interval representation is the same as in Music.Pitch.Interval
+
+    Use Parts.transposition on the instrument, which will give us that interval (-P5 for horn)
+
+     <transpose>
+      <diatonic>-1</diatonic>
+      <chromatic>-2</chromatic>
+    </transpose>
+
+
+-}
+
 -- TODO xml/arpeggio
 -- TODO xml/special barlines
 -- TODO xml/fermatas
