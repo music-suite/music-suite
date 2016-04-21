@@ -5,8 +5,8 @@ module Music.Parts.Part
 (
 Part,
 _solo,
-_subpart,
-_instrument,
+subpart,
+instrument,
 divide,
 containsPart,
 smallestPart,
@@ -60,11 +60,6 @@ instance Show Part where
             addS "" = ""
             addS x = " " ++ x
 
--- Bad instance (?)
-instance Enum Part where
-    toEnum x = Part Tutti (toEnum x) def
-    fromEnum (Part solo instr subp) = fromEnum instr
-
 -- Semantics: Monoid (Option . First)
 instance Monoid Part where
   mempty = def
@@ -80,8 +75,8 @@ instance Default Part where
 
 instance ToJSON Part where
   toJSON p = Data.Aeson.object [
-    ("instrument", toJSON $ p^._instrument),
-    ("subpart",    toJSON $ p^._subpart),
+    ("instrument", toJSON $ p^.instrument),
+    ("subpart",    toJSON $ p^.subpart),
     ("solo",       toJSON $ p^._solo)
     ]
 
@@ -159,11 +154,11 @@ distinctFrom (Part s1 i1 sp1) (Part s2 i2 sp2) = s1 /= s2 || i1 /= i2 || noneSub
 _solo :: Lens' Part Solo
 _solo f (Part s i u) = fmap (\s -> Part s i u) $ f s
 
-_subpart :: Lens' Part Subpart
-_subpart f (Part s i u) = fmap (\u -> Part s i u) $ f u
+subpart :: Lens' Part Subpart
+subpart f (Part s i u) = fmap (\u -> Part s i u) $ f u
 
-_instrument :: Lens' Part Instrument
-_instrument f (Part s i u) = fmap (\i -> Part s i u) $ f i
+instrument :: Lens' Part Instrument
+instrument f (Part s i u) = fmap (\i -> Part s i u) $ f i
 
 -- | Divide a part into @n@ subparts.
 divide :: Int -> Part -> [Part]

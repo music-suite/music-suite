@@ -26,12 +26,6 @@ module Music.Parts.Instrument (
         playableRange,
         comfortableRange,
         -- playableDynamics,
-
-        -- * Legacy
-        gmClef,
-        gmMidiChannel,
-        gmScoreOrder,
-        -- gmInstrName,
   ) where
 
 import           Control.Applicative
@@ -70,12 +64,6 @@ data Instrument
 
 instance Show Instrument where
     show x = Data.Maybe.fromMaybe "(unknown)" $ fullName x
-
--- TODO remove this instrance
-instance Enum Instrument where
-    toEnum = StdInstrument
-    fromEnum (StdInstrument x) = x
-    fromEnum (OtherInstrument _) = error "Instrument.fromEnum used on unknown instrument"
 
 instance Eq Instrument where
   x == y = soundId x == soundId y
@@ -197,29 +185,3 @@ scoreOrder = Data._scoreOrder . fetchInstrumentDef
 fetchInstrumentDef :: Instrument -> InstrumentDef
 fetchInstrumentDef (StdInstrument x)   = Data.Maybe.fromMaybe (error "Bad instr") $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
 fetchInstrumentDef (OtherInstrument x) = Data.Maybe.fromMaybe (error "Bad instr") $ Data.getInstrumentDefById x
-
-
-
-
-
--- Legacy
--- TODO remove
-
-gmClef :: Int -> Int
-gmMidiChannel :: Int -> Int
-gmScoreOrder :: Int -> Double
-gmInstrName :: Int -> Maybe String
-
-
-gmClef x = Data.Maybe.fromMaybe 0 $ fmap (go . Data._standardClef) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-  where
-    go cs | head cs == trebleClef = 0
-          | head cs == altoClef   = 1
-          | head cs == bassClef   = 2
-          | otherwise = error "gmClef: Unknown clef"
-
-gmScoreOrder x = Data.Maybe.fromMaybe 0 $ fmap (Data._scoreOrder) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-gmMidiChannel x = Data.Maybe.fromMaybe 0 $ (=<<) (Data._defaultMidiChannel) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-gmInstrName x = (=<<) (Data._longName) $ Data.getInstrumentDefByGeneralMidiProgram (x + 1)
-
-

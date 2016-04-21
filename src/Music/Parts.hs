@@ -52,6 +52,8 @@ module Music.Parts (
         horn,
         piccoloTrumpet,
         trumpet,
+        cTrumpet,
+        dTrumpet,
         bassTrumpet,
         altoTrombone,
         tenorTrombone,
@@ -117,12 +119,6 @@ module Music.Parts (
         doubleBasses,
 
         harp,
-
-        -- * Legacy
-        defaultClef,
-        defaultMidiProgram,
-        defaultMidiChannel,
-        defaultMidiNote,
   ) where
 
 import           Control.Lens                    (toListOf, Lens, Lens', (^.))
@@ -186,6 +182,8 @@ contraBassoon   = fromMusicXmlSoundId "wind.reed.contrabassoon"
 horn            = fromMidiProgram 60
 piccoloTrumpet  = fromMusicXmlSoundId "brass.trumpet.piccolo"
 trumpet         = fromMidiProgram 56
+cTrumpet        = fromMusicXmlSoundId "brass.trumpet.c"
+dTrumpet        = fromMusicXmlSoundId "brass.trumpet.d"
 bassTrumpet     = fromMusicXmlSoundId "brass.trumpet.bass"
 altoTrombone    = fromMusicXmlSoundId "brass.trombone.alto"
 trombone        = tenorTrombone
@@ -212,23 +210,6 @@ violin          = fromMidiProgram 40
 viola           = fromMidiProgram 41
 cello           = fromMidiProgram 42
 doubleBass      = fromMidiProgram 43
-
-
-
-defaultMidiProgram :: Part -> Int
-defaultMidiProgram p = fromMaybe 0 $ toMidiProgram (p^._instrument)
-
-defaultMidiNote :: Part -> Int
-defaultMidiNote _ = 0
-
-defaultMidiChannel :: Part -> Int
-defaultMidiChannel = gmMidiChannel . defaultMidiProgram
-
-defaultScoreOrder :: Part -> Double
-defaultScoreOrder = gmScoreOrder . defaultMidiProgram
-
-defaultClef :: Part -> Int
-defaultClef = gmClef . defaultMidiProgram
 
 piccoloFlutes = tutti piccoloFlute
 flutes = tutti flute
