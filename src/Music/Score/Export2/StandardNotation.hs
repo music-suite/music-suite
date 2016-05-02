@@ -3464,8 +3464,8 @@ umts_41a =
     names = [ "Part " ++ show n | n <- [1..4] ]
     pitches_ =
       [ Music.Pitch.c :: Music.Pitch.Pitch
-      , Music.Pitch.g
       , Music.Pitch.e
+      , Music.Pitch.g
       , Music.Pitch.b
       ]
 
