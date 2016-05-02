@@ -1298,6 +1298,7 @@ toXml work = do
             -- TODO how to best render transposed staves (i.e. clarinets)
 
 
+
             {-
             backup/forward
               - Moves XML "counter" without emitting notes/rests
@@ -3952,9 +3953,17 @@ umts_73a =
 umts_export :: IO ()
 umts_export = do
   putStrLn $ "Starting UTMS export"
-  let dir = "/tmp/music-suite/umts"
-  System.Directory.createDirectoryIfMissing True dir
+  let hash   = "/tmp/music-suite/umts-hash"
+  let dir    = "/tmp/music-suite/umts"
+  let refDir = "/tmp/music-suite/umts-ref"
 
+  System.Directory.createDirectoryIfMissing True dir
+  System.Directory.createDirectoryIfMissing True refDir
+
+  -- TODO use hashes to make sure output does not change
+  -- currentHash <- readFile hash
+
+  -- Generate files, counting errors
   errorCount <- newIORef 0
   forM_ umts_all $ \(name,work) -> do
     let baseName = dir ++ "/" ++ name
