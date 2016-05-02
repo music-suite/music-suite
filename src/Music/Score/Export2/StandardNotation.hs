@@ -1886,8 +1886,13 @@ umts_01a =
     divideList = Music.Score.Internal.Util.divideList
 
     baseScale :: [Pitch]
-    baseScale = Music.Score.Pitch.enumDiatonicFromTo
-        P.g__
+    baseScale =
+      [ P.g__
+      , P.a__
+      , P.b__
+      ] ++
+      Music.Score.Pitch.enumDiatonicFromTo
+        P.c_
         P.c'''
 
 -- ‘01b-Pitches-Intervals.xml’
