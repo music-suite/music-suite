@@ -33,7 +33,7 @@ instance Rewrapped (Ctxt a) (Ctxt b)
 -- instance Applicative Ctxt where
 --   pure x = Ctxt (Nothing, x, Nothing)
 --   Ctxt (b,x,a) <*> Ctxt (b',x',a') = Ctxt (b <*> b', x x', a <*> a')
-  
+
 -- instance Comonad Ctxt where
   -- extract (Ctxt (b,x,a)) = x
 
@@ -42,6 +42,7 @@ instance Rewrapped (Ctxt a) (Ctxt b)
   -- duplicate (Ctxt (Nothing,x,Just a)) = Ctxt (Nothing, Ctxt (Nothing, x, Just a), Just a)
   -- duplicate (Ctxt (Just b,x,Just a)) = Ctxt (b, Ctxt (b, x, Just a), Just a)
 
+toCtxt :: (Maybe a, a, Maybe a) -> Ctxt a
 toCtxt = Ctxt
 
 mapCtxt :: (a -> b) -> Ctxt a -> Ctxt b
@@ -54,5 +55,4 @@ addCtxt :: [a] -> [Ctxt a]
 addCtxt = fmap Ctxt . withPrevNext
   where
     withPrevNext :: [a] -> [(Maybe a, a, Maybe a)]
-    withPrevNext xs = zip3 (pure Nothing ++ fmap Just xs) xs (fmap Just (tail xs) ++ repeat Nothing)    
-
+    withPrevNext xs = zip3 (pure Nothing ++ fmap Just xs) xs (fmap Just (tail xs) ++ repeat Nothing)

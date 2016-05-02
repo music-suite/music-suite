@@ -154,6 +154,7 @@ getSeparationMarks' x
   | (-1) <  x && x <  1    = ([], False)
   | 1    <= x && x <  2    = ([Staccato], False)
   | 2    <= x              = ([MoltoStaccato], False)
+  | otherwise              = error "Impossible"
 
 getAccentMarks :: Double -> [Mark]
 getAccentMarks x
@@ -161,7 +162,7 @@ getAccentMarks x
   | (-1) <  x && x <  1    = []
   | 1    <= x && x <  2    = [Accent]
   | 2    <= x              = [Marcato]
-  | otherwise           = []
+  | otherwise              = []
 
 hasSlur :: (Real (Separation t), Articulated t) => t -> Bool
 hasSlur y = hasSlur' (realToFrac $ view separation $ y)
@@ -170,10 +171,6 @@ allMarks :: (Real (Separation t), Real (Accentuation t), Articulated t) => t -> 
 allMarks y = mempty
   <> getSeparationMarks (realToFrac $ y^.separation)
   <> getAccentMarks (realToFrac $ y^.accentuation)
-
--- -- TODO why doesn't this work
--- notateArticulationS :: (Ord a, Articulated a, Music.Score.Articulation.Articulation a ~ Music.Articulation.Articulation) => Ctxt a -> ArticulationNotation
--- notateArticulationS = notateArticulation
 
 notateArticulation :: (Ord a, Articulated a, Real (Separation a), Real (Accentuation a)) => Ctxt a -> ArticulationNotation
 notateArticulation (getCtxt -> x) = go x

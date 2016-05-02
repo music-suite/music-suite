@@ -104,3 +104,6 @@ activate (view (from event) -> (view onsetAndOffset -> (start,stop), x)) y = y `
     where
         turnOn  = switchR start
         turnOff = switchR stop
+
+withTime :: forall t. Score t -> Score (Time, t)
+inSpan :: Time -> Span -> Bool

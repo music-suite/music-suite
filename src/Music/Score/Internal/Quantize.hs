@@ -126,7 +126,8 @@ mapWithDur :: (Duration -> a -> b) -> Rhythm a -> Rhythm b
 mapWithDur f = go
   where
     go (Beat d x)            = Beat d (f d x)
-    go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+    -- go (Dotted n (Beat d x)) = Dotted n $ Beat d (f (dotMod n * d) x)
+    go (Dotted n x)          = Dotted n $ mapWithDur (\d -> f (dotMod n * d)) x
     go (Group rs)            = Group $ fmap (mapWithDur f) rs
     go (Tuplet m r)          = Tuplet m (mapWithDur f r)
 
@@ -155,9 +156,11 @@ instance AdditiveGroup (Rhythm a) where
 instance VectorSpace (Rhythm a) where
   type Scalar (Rhythm a) = Duration
   a *^ Beat d x = Beat (a*d) x
-  -- TODO how does this preserve the invariant?
+  a *^ _        = error "instance VectorSpace (Rhythm a): Can only scale beats"
+  -- TODO partial, and might not preserve the invariant?
+  -- This is probably a good reason to get rid of this instance
 
-Beat d x `subDur` d' = Beat (d-d') x
+-- Beat d x `subDur` d' = Beat (d-d') x
 
 
 {-
@@ -512,3 +515,9 @@ quSimp = Right . qu1 1
     -- (1/n) = (p/n)(1/p)
     -- (1/n) = (p/np)
     -- (1/n) = (1/n)
+
+-- subDur :: forall a. Rhythm a -> Duration -> Rhythm a
+rewriteR :: forall a. Rhythm a -> Rhythm a
+rewrite1 :: forall a. Rhythm a -> Rhythm a
+isPowerOf :: forall a a1. (Real a, Real a1) => a -> a1 -> Bool
+isPowerOf2 :: forall a. Real a => a -> Bool

@@ -155,6 +155,7 @@ instance FromJSON a => FromJSON (Score a) where
   parseJSON (JSON.Object x) = parseEL =<< (x JSON..: "events")
     where
       parseEL (JSON.Array xs) = fmap ((^.score) . toList) $ traverse parseJSON xs
+      parseEL _ = empty
       toList = toListOf traverse
   parseJSON _ = empty
 

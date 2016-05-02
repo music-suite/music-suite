@@ -84,6 +84,7 @@ splitWhile p xs = case splitWhile' p xs of
         splitWhile' p []     = [[]]
         splitWhile' p (x:xs) = case splitWhile' p xs of
             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
+            []       -> error "splitWhile"
 
 
 -- | Break up a list into parts of maximum length n, inserting the given list as separator.
@@ -193,6 +194,7 @@ rotated = go
         go n as
             | n >= 0 = iterate rotr as !! n
             | n <  0 = iterate rotl as !! abs n
+            | otherwise = error "Impossible"
 
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d
@@ -394,3 +396,6 @@ inspectingBy f e = getEquivalence $ contramap f $ Equivalence e
 dependingOn :: Lens s t (x,a) (x,b) -> (x -> Lens a b c d) -> Lens s t c d
 dependingOn l depending f = l (\ (x,a) -> (x,) <$> depending x f a)
 
+mapF :: forall b. (b -> b) -> [b] -> [b]
+mapT :: forall b. (b -> b) -> [b] -> [b]
+mapL :: forall b. (b -> b) -> [b] -> [b]

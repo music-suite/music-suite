@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 {-# LANGUAGE NoImplicitPrelude          #-}
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts           #-}
@@ -260,12 +262,6 @@ mapWithDuration = over dual withDurationL . uncurry
 dursToVoice :: [Duration] -> Voice ()
 dursToVoice = mconcat . map (\d -> stretch d $ return ())
 
-{-
->>> print $ view (mVoiceTVoice) $ (fmap Just (dursToVoice [1,2,1]) <> return Nothing <> return (Just ()))
-
-
--}
-
 -- |
 -- Group contigous sequences matching/not-matching the predicate.
 --
@@ -283,6 +279,3 @@ groupDiff' p []     = []
 groupDiff' p (x:xs)
   | not (p x) = Left  (x : List.takeWhile (not . p) xs) : groupDiff' p (List.dropWhile (not . p) xs)
   | p x       = Right (x : List.takeWhile p         xs) : groupDiff' p (List.dropWhile p         xs)
-
-
--- JUNK

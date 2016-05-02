@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -50,7 +52,7 @@ module Music.Score.Meta.Tempo (
         adagio,
         largo,
         lento,
-        
+
         -- * Extracting tempo
         renderTempo,
   ) where

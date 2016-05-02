@@ -463,13 +463,6 @@ lowestPitch = minimumOf pitches'
 averagePitch :: (HasPitches' a, Fractional (Pitch a)) => a -> Maybe (Pitch a)
 averagePitch = maybeAverage . Average . toListOf pitches'
 
-{-# DEPRECATED lowest "Use lowestPitch "#-}
-{-# DEPRECATED highest "Use highestPitch "#-}
-{-# DEPRECATED meanPitch "Use averagePitch "#-}
-lowest = lowestPitch
-highest = highestPitch
-meanPitch = averagePitch
-
 -- | The number of whole octaves in an ambitus.
 ambitusOctaves :: Ambitus Common.Pitch -> Int
 ambitusOctaves = fromIntegral . octaves . ambitusInterval
@@ -625,6 +618,7 @@ upChromaticP' :: Common.Pitch -> ChromaticSteps -> Common.Pitch -> Common.Pitch
 upChromaticP' _ n p
   | n >= 0 = p .+^ spell usingSharps (fromIntegral n :: Semitones)
   | n <  0 = p .-^ spell usingFlats (fromIntegral (abs n) :: Semitones)
+  | otherwise = error "Impossible"
 
 
 instance Transformable Common.Pitch where

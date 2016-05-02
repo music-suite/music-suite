@@ -103,8 +103,11 @@ partitionSimplistic p = recur []
     -- | Choose one element and remove it from the list.
     choose :: [a] -> Logic (a, [a])
     choose [] = empty
-    choose xs = asum $ fmap (\n -> pure $ let (a:as) = rotate n xs in (a, as)) [0..length xs - 1]
+    choose xs = asum $ fmap g [0..length xs - 1]
       where
+        g n = pure $ case rotate n xs of
+          (a : as) -> (a, as)
+          []       -> error "Impossible"
         rotate n xs = drop n xs ++ take n xs
 
     -- | Choose one element matching the given predicate and remove it from the list.
@@ -150,6 +153,7 @@ noDuplicates :: Eq a => [a] -> Bool
 noDuplicates [] = True
 noDuplicates (x:xs) = all (/= x) xs
 
+testShuffle :: forall a. [a] -> [a]
 testShuffle xs = evalRand (shuffleM xs) (mkStdGen 1828372878)
 
 {-

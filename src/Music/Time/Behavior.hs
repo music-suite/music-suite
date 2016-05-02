@@ -304,3 +304,6 @@ tau = 2 * pi
 
 floor' :: RealFrac a => a -> a
 floor' = fromIntegral . floor
+
+turnOn  :: Num a => Behavior a
+turnOff :: Num a => Behavior a

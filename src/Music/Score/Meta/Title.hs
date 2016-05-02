@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -143,4 +145,3 @@ subsubtitleDuring s t = addMetaNote $ view event (s, denoteTitle (denoteTitle t)
 -- | Extract the title in from the given score.
 withTitle :: (Title -> Score a -> Score a) -> Score a -> Score a
 withTitle = withMetaAtStart
-

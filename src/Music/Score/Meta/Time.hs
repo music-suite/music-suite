@@ -93,9 +93,12 @@ newtype TimeSignature = TimeSignature ([Integer], Integer)
 
 mapNums   f (TimeSignature (m,n)) = TimeSignature (f m, n)
 mapDenom  f (TimeSignature (m,n)) = TimeSignature (m, f n)
+
 isSimple    (TimeSignature ([_],_)) = True
 isSimple    _                       = False
+
 getSimple   (TimeSignature ([m],n)) = m `div` n
+getSimple   _                       = error "getSimple: Not a simple time signature"
 
 -- TODO move
 liftRational f = fromRational . f . toRational
@@ -241,4 +244,11 @@ optionLast = Option . Just . Last
 unOptionLast = fmap getLast . getOption
 
 
--- JUNK
+mapNums :: ([Integer] -> [Integer]) -> TimeSignature -> TimeSignature
+mapDenom :: (Integer -> Integer) -> TimeSignature -> TimeSignature
+isSimple :: TimeSignature -> Bool
+getSimple :: TimeSignature -> Integer
+liftRational :: (Fractional c, Real a) => (Rational -> Rational) -> a -> c
+liftRational2 :: (Fractional a, Real a1, Real a2) => (Rational -> Rational -> Rational) -> a1 -> a2 -> a
+optionLast :: a -> Option (Last a)
+unOptionLast :: Option (Last b) -> Maybe b

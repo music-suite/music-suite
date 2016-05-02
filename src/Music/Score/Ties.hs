@@ -159,6 +159,7 @@ instance (Num a, Ord a, Real a) => Real (TieT a) where
 
 instance (Real a, Enum a, Integral a) => Integral (TieT a) where
   quot = liftA2 quot
+  quotRem = fmap (fmap unzipR) (liftA2 quotRem)
   rem = liftA2 rem
   toInteger = toInteger . extract
 
@@ -260,5 +261,7 @@ tsplitDurFor maxDur xs = splitDurFor maxDur $ fmap (\x -> (x,'_')) xs
 splitDur :: Tiable a => Duration -> (Duration, a) -> ((Duration, a), Maybe (Duration, a))
 splitDur maxDur (d,a)
   | maxDur <= 0 = error "splitDur: maxDur must be > 0"
-  | d <= maxDur =  ((d, a), Nothing)
-  | d >  maxDur =  ((maxDur, b), Just (d - maxDur, c)) where (b,c) = toTied a
+  | d      <= maxDur =  ((d, a), Nothing)
+  | d      >  maxDur =  ((maxDur, b), Just (d - maxDur, c))
+  | otherwise   = error "Impossible"
+    where (b,c) = toTied a

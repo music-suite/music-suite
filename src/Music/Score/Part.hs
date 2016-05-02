@@ -335,6 +335,7 @@ a </> b = a <> moveParts offset b
             | n <  0 = f . iterating f g (n + 1)
             | n == 0 = id
             | n >  0 = g . iterating f g (n - 1)
+            | otherwise = error "Impossible"
 
         successor :: (Integral b, Enum a) => b -> a -> a
         successor n = iterating pred succ (fromIntegral n)

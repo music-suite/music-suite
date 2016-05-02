@@ -738,3 +738,9 @@ Both equivalent. Proof:
   a + b     = 2a + (b - a)
   a + b     = a + b
 -}
+
+
+_onsetS    :: Span -> Time
+_offsetS   :: Span -> Time
+_midpointS :: Span -> Time
+_durationS :: Span -> LocalDuration

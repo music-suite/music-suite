@@ -33,8 +33,13 @@ infixr 7 *|
 infixr 7 |/
 
 -- | Infix version of 'stretch'.
+(|*) :: forall a. Transformable a => a -> Duration -> a
 x |* d = stretch d x
+
 -- | Infix version of 'stretch'.
+(*|) :: forall a. Transformable a => Duration -> a -> a
 d *| x = stretch d x
+
 -- | Infix version of 'compress'.
-x |/ d = compress d x 
+(|/) :: forall a. Transformable a => a -> Duration -> a
+x |/ d = compress d x

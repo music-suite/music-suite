@@ -85,9 +85,9 @@ instance (Monoid b, Bounded a) => Bounded (Twain b a) where
   minBound = pure minBound
   maxBound = pure maxBound
 
--- 
+--
 -- Eq, Ord and their subclasses
--- 
+--
 -- If comparison takes both values into account, we must add and (Ord b)
 -- constraint to all of the following instances. Instead, follow the
 -- spirit of the Num et al instances to compare just the second argument.
@@ -97,13 +97,13 @@ instance Eq a => Eq (Twain b a) where
   Twain (b,a) == Twain (b',a')  =  a == a'
 
 instance Ord a => Ord (Twain b a) where
-  Twain (b,a) < Twain (b',a') = a < a'
+  Twain (b,a) <= Twain (b',a') = a < a'
 
 instance (Monoid b, Real a, Enum a, Integral a) => Integral (Twain b a) where
   quot = liftA2 quot
   rem  = liftA2 rem
   quotRem = fmap (fmap unzipR) (liftA2 quotRem)
-  toInteger = toInteger . extract  
+  toInteger = toInteger . extract
 
 instance (Monoid b, Real a) => Real (Twain b a) where
   toRational = toRational . extract
@@ -164,17 +164,16 @@ instance (Eq b, Eq a) => Eq (Couple b a) where
   Couple ((b,a)) == Couple (b',a')  =  (b,a) == (b',a')
 
 instance (Ord b, Ord a) => Ord (Couple b a) where
-  Couple (b,a) < Couple (b',a') = (b,a) < (b',a')
+  Couple (b,a) <= Couple (b',a') = (b,a) < (b',a')
 
 instance (Monoid b, Ord b, Real a, Enum a, Integral a) => Integral (Couple b a) where
   quot = liftA2 quot
   rem  = liftA2 rem
   quotRem = fmap (fmap unzipR) (liftA2 quotRem)
-  toInteger = toInteger . extract  
+  toInteger = toInteger . extract
 
 instance (Monoid b, Ord b, Real a) => Real (Couple b a) where
   toRational = toRational . extract
 
 instance (Monoid b, Ord b, RealFrac a) => RealFrac (Couple b a) where
   properFraction = first extract . unzipR . fmap properFraction
-

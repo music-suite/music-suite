@@ -166,3 +166,4 @@ library
                         -fwarn-incomplete-record-updates
                         -fwarn-missing-signatures
                         -- -fwarn-orphans
+                        -Werror

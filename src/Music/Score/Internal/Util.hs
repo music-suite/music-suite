@@ -51,6 +51,7 @@ splitWhile p xs = case splitWhile' p xs of
         splitWhile' p []     = [[]]
         splitWhile' p (x:xs) = case splitWhile' p xs of
             (xs:xss) -> if p x then []:(x:xs):xss else (x:xs):xss
+            _        -> error "splitWhile"
 
 
 -- | Break up a list into parts of maximum length n, inserting the given list as separator.
@@ -84,6 +85,9 @@ dup x = (x,x)
 unf :: (a -> Maybe a) -> a -> [a]
 unf f = Data.List.unfoldr (fmap dup . f)
 
+mapF :: forall b. (b -> b) -> [b] -> [b]
+mapT :: forall b. (b -> b) -> [b] -> [b]
+mapL :: forall b. (b -> b) -> [b] -> [b]
 -- |
 -- Map over first elements of a list.
 -- Biased on first element for shorter lists.
@@ -160,6 +164,7 @@ rotated = go
         go n as
             | n >= 0 = iterate rotr as !! n
             | n <  0 = iterate rotl as !! abs n
+            | otherwise = error "Impossible"
 
 
 curry3 :: ((a, b, c) -> d) -> a -> b -> c -> d

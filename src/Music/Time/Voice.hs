@@ -59,9 +59,6 @@ module Music.Time.Voice (
         notesIgnoringMeta,
         pairsIgnoringMeta,
 
-        -- * Legacy
-        durationsVoice,
-
   ) where
 
 import           Control.Applicative
@@ -170,6 +167,7 @@ instance FromJSON a => FromJSON (Voice a) where
   parseJSON (JSON.Object x) = parseNL =<< (x JSON..: "notes")
     where
       parseNL (JSON.Array xs) = fmap ((^.voice) . toList) $ traverse parseJSON xs
+      parseNL _ = empty
       toList = toListOf traverse
   parseJSON _ = empty
 
@@ -214,7 +212,9 @@ splitNotes d xs = case (durAndNumNotesToFirst, needSplit) of
     accumUntil f z xs = Data.Maybe.listToMaybe $ fmap fromRight $ dropWhile Data.Either.isLeft $ scanl (f . fromLeft) (Left z) xs
         where
           fromRight (Right x) = x
+          fromRight _ = error "accumUntil"
           fromLeft (Left x) = x
+          fromLeft _ = error "accumUntil"
 
 instance IsString a => IsString (Voice a) where
   fromString = pure . fromString
@@ -298,9 +298,6 @@ pairsIgnoringMeta = iso (map (^.from note) . (^.notes)) ((^.voice) . map (^.note
 
 durationsAsVoice :: Iso' [Duration] (Voice ())
 durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. durationsV)
-
-durationsVoice = durationsAsVoice
-{-# DEPRECATED durationsVoice "Use durationsAsVoice" #-}
 
 -- |
 -- Unzip the given voice.

@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveFoldable             #-}
@@ -153,4 +155,3 @@ withAttribution name f = withAttribution' (fromMaybe id . fmap f . flip getAttri
 -- | Extract all attribution values from a score.
 withAttribution' :: (Attribution -> Score a -> Score a) -> Score a -> Score a
 withAttribution' = withMetaAtStart
-

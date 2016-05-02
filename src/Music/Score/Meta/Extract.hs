@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 {-# LANGUAGE FlexibleContexts #-}
 
 -- Utility to extract meta-data at a specific point in time.

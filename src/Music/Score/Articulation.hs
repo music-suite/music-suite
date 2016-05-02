@@ -427,4 +427,8 @@ addArtCon :: (
   HasPhrases s t a b, HasArticulation' a, HasArticulation a b, Articulation a ~ d, Articulation b ~ Ctxt d
   ) => s -> t
 addArtCon = over (phrases.varticulation) withContext
+
+varticulation :: (HasArticulation s s, HasArticulation s t) =>
+  Lens (Voice s) (Voice t) (Voice (Articulation s)) (Voice (Articulation t))
+
 varticulation = lens (fmap $ view articulation) (flip $ zipVoiceWithNoScale (set articulation))
