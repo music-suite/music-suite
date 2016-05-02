@@ -2604,10 +2604,11 @@ umts_23c =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ Leaf
+    $ Staff mempty
+    $ bars
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 4/4) $ mempty) : repeat mempty
 
     bars :: [Bar]
     bars =
@@ -2634,10 +2635,46 @@ umts_23d =
   Work mempty
     $ pure
     $ Movement mempty sysStaff
-    $ Leaf staff
+    $ Leaf
+    $ Staff mempty
+    $ bars
   where
-    sysStaff = repeat mempty
-    staff = mempty
+    sysStaff = (timeSignature .~ (Option $ Just $ First $ 2/4) $ mempty) : repeat mempty
+
+    bars :: [Bar]
+    bars =
+      [ Bar mempty $ pure $ PitchLayer $ Group
+        [ Tuplet (2/3) $ Group
+          [ baseRh
+          , baseRh
+          , Tuplet (2/5) $ Group
+            [ baseRh
+            , baseRh
+            , baseRh
+            , baseRh
+            , baseRh
+            ]
+          , baseRh
+          , baseRh
+          ]
+        ]
+      , Bar mempty $ pure $ PitchLayer $ Group
+        [ Tuplet (4/15) $ Group
+          [ baseRh
+          , baseRh
+          , baseRh
+          , baseRh
+          , baseRh
+          ]
+        , Group
+          [ baseRh
+          , baseRh
+          ]
+        ]
+      ]
+
+    baseRh = Beat (1/8) (pitches .~ [P.c'] $ mempty)
+
 
 -- ‘23e-Tuplets-Tremolo.xml’
 umts_23e :: Work
