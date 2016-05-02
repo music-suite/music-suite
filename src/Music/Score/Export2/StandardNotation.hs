@@ -3834,12 +3834,13 @@ umts_export = do
   forM_ umts_all $ \(name,work) -> do
     let baseName = dir ++ "/" ++ name
         xmlName = baseName ++ ".xml"
-        lyName  = baseName ++ ".ly"
+        -- lyName  = baseName ++ ".ly"
 
     putStr $ name ++ ": \n"
-    h errorCount $ do
-      ly <- runIOExportM $ toLy work
-      writeFile lyName $ show $ Text.Pretty.pretty ly
+
+    -- h errorCount $ do
+    --   ly <- runIOExportM $ toLy work
+    --   writeFile lyName $ show $ Text.Pretty.pretty ly
       -- TODO preamble
 
     h errorCount $ do
