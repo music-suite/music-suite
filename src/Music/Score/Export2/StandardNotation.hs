@@ -1279,6 +1279,7 @@ toXml work = do
 
             renderStaff :: (MusicXmlExportM m) => Staff -> m [MusicXml.Music]
             renderStaff staff = do
+              say "  MusicXML: Generating staff <<>>"
               fromBars <- mapM renderBar (staff^.bars)
               let clef = renderClef initClef
               pure $ mapHead ((transposeInfo <> clef) <>) fromBars
@@ -1295,7 +1296,6 @@ toXml work = do
                 initClef = staff^.staffInfo.instrumentDefaultClef
 
             -- TODO how to best render transposed staves (i.e. clarinets)
-
 
 
             {-
@@ -1321,18 +1321,23 @@ toXml work = do
             -- TODO emit line ===== comments in between measures
 
             renderBar :: (MusicXmlExportM m) => Bar -> m MusicXml.Music
-            renderBar bar = case barLayersHaveEqualDuration bar of
-              -- No layers in this bar
-              Left [] -> pure mempty
-              -- Layers have different durations
-              Left _  -> throwError "Layers have different durations"
-              -- One or more layers with the same duration
-              Right d -> pure $ let
-                  layers = zipWith (\voiceN music -> MusicXml.setVoice voiceN music) [1..] $
-                    fmap renderPitchLayer (bar^.pitchLayers)
-                  clefs = Data.Map.foldMapWithKey (\time clef -> [atPosition time (renderClef clef)]) (bar^.clefChanges)
-                in mconcat
-                  $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
+            renderBar bar = do
+              say "    MusicXML: Generating bar <<>>"
+              case barLayersHaveEqualDuration bar of
+                -- No layers in this bar
+                Left [] -> pure mempty
+                -- Layers have different durations
+                Left _  -> throwError "Layers have different durations"
+                -- One or more layers with the same duration
+                Right d -> do
+                    let
+                        layers = zipWith (\voiceN music -> MusicXml.setVoice voiceN music)
+                                  [1..]
+                                  (fmap renderPitchLayer (bar^.pitchLayers))
+                        clefs = Data.Map.foldMapWithKey
+                                  (\time clef -> [atPosition time (renderClef clef)])
+                                  (bar^.clefChanges)
+                    pure $ mconcat $ Data.List.intersperse (MusicXml.backup $ durToXmlDur d) $ layers <> clefs
               where
                 atPosition :: Duration -> X.Music -> X.Music
                 atPosition 0 x = x
@@ -1344,6 +1349,11 @@ toXml work = do
             renderPitchLayer :: PitchLayer -> MusicXml.Music
             renderPitchLayer = renderBarMusic . fmap renderChord . getPitchLayer
 
+            {-
+            Render a rest/note/chord.
+
+            This returns a series of <note> elements, with appropriate <chord> tags.
+            -}
             renderChord ::  Chord -> Duration -> MusicXml.Music
             renderChord ch d = post $ case ch^.pitches of
               -- TODO Don't emit <alter> tag if alteration is 0
@@ -1354,8 +1364,13 @@ toXml work = do
               -- Normalize pitch here if it hasn't been done before
                 fromPitch_ = fromPitch . Music.Pitch.useStandardAlterations P.c
 
-                -- TODO arpeggio, breath, color
+                -- TODO arpeggio, breath, color, fermata
+                -- (render all constructors from Chord here, except pitch)
+                post :: MusicXml.Music -> MusicXml.Music
                 post = id
+                  . notateArpeggio (ch^.arpeggioNotation)
+                  . notateBreath (ch^.breathNotation)
+                  . notateFermata (ch^.fermata)
                   . notateDynamic (ch^.dynamicNotation)
                   . notateArticulation (ch^.articulationNotation)
                   . notateTremolo (ch^.tremoloNotation)
@@ -1422,6 +1437,15 @@ toXml work = do
                     AN.NoSlur    -> id
                     AN.BeginSlur -> MusicXml.beginSlur
                     AN.EndSlur   -> MusicXml.endSlur
+
+            notateArpeggio :: ArpeggioNotation -> MusicXml.Music -> MusicXml.Music
+            notateArpeggio _ x = x
+
+            notateBreath :: BreathNotation -> MusicXml.Music -> MusicXml.Music
+            notateBreath _ x = x
+
+            notateFermata :: Fermata -> MusicXml.Music -> MusicXml.Music
+            notateFermata _ x = x
 
             notateTremolo :: TremoloNotation -> MusicXml.Music -> MusicXml.Music
             notateTremolo n = case n of
