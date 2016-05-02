@@ -2632,6 +2632,14 @@ umts_23c =
     ch = pitches .~ [P.c'] $ mempty
 
 -- ‘23d-Tuplets-Nested.xml’
+{-
+TODO crashes Sibelius
+
+Check
+  set tuplet number attribute (level of neting)
+  time-modification
+  duration (should be scaled down, regardless of time-modification?)
+-}
 umts_23d :: Work
 umts_23d =
   Work mempty
@@ -2762,7 +2770,7 @@ umts_31a =
 
       , dynamicNotation.dynamicLevel .~ D.mp $ bc
       , dynamicNotation.dynamicLevel .~ D.mf $ bc
-      , {-dynamicNotation.dynamicLevel .~ D.sf $-} bc
+      , {-dynamicNotation.dynamicLevel .~ D.sf $-} bc       -- TODO special dynamics
       , {-dynamicNotation.dynamicLevel .~ D.sfp $-} bc
 
       , {-dynamicNotation.dynamicLevel .~ D.sfpp $-} bc
@@ -2777,7 +2785,6 @@ umts_31a =
 
       , dynamicNotation.crescDim .~ pure DN.BeginCresc $ bc
       , dynamicNotation.crescDim .~ pure DN.EndCresc $ bc
-      , bc
       , bc
       , bc
 
@@ -2798,13 +2805,13 @@ umts_31a =
 
       , bc
       , bc
-      , bc
-      , bc
+      , nc
+      , nc
 
-      , dynamicNotation.dynamicLevel .~ D._p $ bc -- subito
+      , dynamicNotation.dynamicLevel .~ D._p $ bc -- TODO subito
       , dynamicNotation.dynamicLevel .~ D.ppp $ dynamicNotation.crescDim .~ pure DN.BeginCresc $ bc -- subito
       , dynamicNotation.dynamicLevel .~ D.fff $ dynamicNotation.crescDim .~ pure DN.EndCresc $ bc -- subito
-      , bc
+      , nc
       ]
     nc  = mempty
     bc  = pitches .~ [P.c] $ mempty
@@ -2860,6 +2867,7 @@ umts_32a =
       , fermata .~ Fermata $ bc
       , fermata .~ ShortFermata $ bc
       , fermata .~ LongFermata $ bc
+
       , fermata .~ Fermata $ bc -- TODO inverted
       , arpeggioNotation .~ Arpeggio $ bc2
       , arpeggioNotation .~ NoArpeggio $ bc2
@@ -2869,15 +2877,18 @@ umts_32a =
       , articulationNotation.marks .~ [AN.Marcato] $ bc
       , articulationNotation.marks .~ [AN.Staccato] $ bc
       , articulationNotation.marks .~ [AN.Tenuto] $ bc
+
       , articulationNotation.marks .~ [AN.Tenuto, AN.Staccato] $ bc
       , articulationNotation.marks .~ [AN.MoltoStaccato] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
-      , articulationNotation.marks .~ [] $ bc
+      , articulationNotation.marks .~ [] $ bc -- TODO spicc
+      , articulationNotation.marks .~ [] $ bc -- TODO scoop
+
+      , articulationNotation.marks .~ [] $ bc -- plop
+      , articulationNotation.marks .~ [] $ bc -- doit
+      , articulationNotation.marks .~ [] $ bc -- falloff
+      , articulationNotation.marks .~ [] $ bc -- breath
+
+      , articulationNotation.marks .~ [] $ bc -- caes
       , articulationNotation.marks .~ [] $ bc
       , articulationNotation.marks .~ [] $ bc
       , nc
@@ -2887,52 +2898,89 @@ umts_32a =
       , bc
       , bc
       , bc
+
       , bc
       , bc
       , bc
       , bc
+
+      , bc
+      , bc
+      , bc
+      , bc
+
       , bc
       , bc
       , nc
       , nc
 
       -- Bowing etc
+      , bc -- TODO upbow
+      , bc -- TODO downbow
+      , harmonicNotation .~ (Any True, 1) $ bc -- harm
+      , harmonicNotation .~ (Any True, 1) $ bc -- nat harm
+
+      , harmonicNotation .~ (Any True, 1) $ bc -- art harm
+      , harmonicNotation .~ (Any True, 1) $ bc -- nat h/base
+      , harmonicNotation .~ (Any True, 1) $ bc -- nat h/touching
+      , harmonicNotation .~ (Any True, 1) $ bc -- nat h/soundin
+
+      -- b13
       , bc
       , bc
-      , harmonicNotation .~ (Any True, 1) $ bc
-      , harmonicNotation .~ (Any True, 1) $ bc
+      , bc
+      , bc
 
-      , harmonicNotation .~ (Any True, 1) $ bc
-      , harmonicNotation .~ (Any True, 1) $ bc
-      , harmonicNotation .~ (Any True, 1) $ bc
-      , harmonicNotation .~ (Any True, 1) $ bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      -- b17
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
-      , bc, bc, bc, bc
-
-      , bc, bc, bc, bc
-
-      , bc, bc, bc, bc
+      , bc
+      , bc
+      , bc
+      , bc
 
       -- Dynamic
+      -- TODO double barline before
       , dynamicNotation.dynamicLevel .~ Just 1.5 $ bc
       , dynamicNotation.dynamicLevel .~ Just (-3.5) $ bc
       , bc
       , bc
-      , bc
-      , bc
 
+      , articulationNotation.marks .~ [AN.Staccato, AN.Marcato] $ bc -- both above
+      , articulationNotation.marks .~ [AN.Staccato, AN.Marcato, AN.Tenuto] $ bc -- ab/bel/bel
       , nc
       , nc
       ]
