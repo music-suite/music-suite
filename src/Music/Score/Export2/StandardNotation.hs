@@ -2039,15 +2039,13 @@ umts_02b =
     $ Movement mempty sysStaff
     $ Leaf staff
   where
-    sysStaff = repeat mempty
-
-    -- TODO set display pitch/position for rests
+    sysStaff = [timeSignature .~ (Option $ Just $ First (5/4)) $ mempty]
     staff = Staff mempty [Bar mempty [PitchLayer $ Group $ fmap (\dur -> Beat dur mempty) durs]]
-
     durs = fmap (/ 4) [1, 1, 1, 1, 1] :: [Duration]
-    timeSignature = 5/4 :: TimeSignature
 
-    restPositions :: [Pitch] -- Other type?
+    -- TODO use this info
+    -- Should not be Pitch, but some kind of layout type
+    restPositions :: [Pitch]
     restPositions = fmap (\n -> Music.Score.Pitch.up (Music.Pitch._P5^*n) Music.Pitch.b) [0,-1,1,-2,2]
 
 -- ‘02c-Rests-MultiMeasureRests.xml’
@@ -2369,7 +2367,7 @@ umts_13a :: Work
 umts_13a =
   Work mempty
     $ pure
-    $ Movement mempty sysStaff
+    $ Movement (movementTitle .~ "Different Key signatures" $ mempty) sysStaff
     $ Leaf staff
   where
     staff :: Staff
@@ -2427,9 +2425,11 @@ umts_21b :: Work
 umts_21b =
   Work mempty
     $ pure
-    $ Movement mempty (repeat mempty)
+    $ Movement mempty sysStaff
     $ Leaf staff
   where
+    sysStaff = [timeSignature .~ (Option $ Just $ First (1/4)) $ mempty, mempty]
+
     staff :: Staff
     staff = Staff mempty [bar, bar]
 
@@ -2449,9 +2449,11 @@ umts_21c :: Work
 umts_21c =
   Work mempty
     $ pure
-    $ Movement mempty (repeat mempty)
+    $ Movement mempty sysStaff
     $ Leaf staff
   where
+    sysStaff = [timeSignature .~ (Option $ Just $ First (1/4)) $ mempty, mempty]
+
     staff :: Staff
     staff = Staff mempty [bar1, bar2]
 

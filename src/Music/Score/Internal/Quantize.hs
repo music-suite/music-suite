@@ -67,7 +67,13 @@ data Rhythm a
   = Beat       Duration a                    -- d is divisible by 2
   | Group      [Rhythm a]                    --
   | Dotted     Int (Rhythm a)                -- n > 0.
+                                             -- Can be thought of as a special case of tuplet, where
+                                             --  Dotted n x = Tuplet (dotMod n) x
   | Tuplet     Duration (Rhythm a)           -- d is an emelent of 'konstTuplets'.
+                                             -- d = (sounding dur/notated dur)
+                                             --   Of course this implies (notated * d = sounding)
+                                             --   This is the reciprocal of the ratio usually written in a score
+                                             -- I.e. for standard triplet, sounding/notated = (1/3)/(1/2) = 2/3
   deriving (Eq, Show, Functor, Foldable, Traversable)
   -- RInvTuplet  Duration (Rhythm a)
 
