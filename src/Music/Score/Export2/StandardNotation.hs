@@ -2613,22 +2613,24 @@ umts_23c =
     bars :: [Bar]
     bars =
       [ Bar mempty $ pure $ PitchLayer $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) ch)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) ch)
         ]
       , Bar mempty $ pure $ PitchLayer $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) ch)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) ch)
         ]
       , Bar mempty $ pure $ PitchLayer $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) ch)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) ch)
         ]
       , Bar mempty $ pure $ PitchLayer $ Group
-        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) mempty)
-        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) mempty)
+        [ Tuplet (2/3) $ Group (replicate 3 $ Beat (1/8) ch)
+        , Tuplet (2/3) $ Group (replicate 3 $ Dotted 1 $ Beat (1/4) ch)
         ]
       ]
+    ch = pitches .~ [P.c'] $ mempty
+
 -- ‘23d-Tuplets-Nested.xml’
 umts_23d :: Work
 umts_23d =
