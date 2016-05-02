@@ -2040,9 +2040,11 @@ umts_02b =
     $ Leaf staff
   where
     sysStaff = repeat mempty
-    staff = mempty
 
-    durs = [1, 1, 1, 1, 1] :: [Duration]
+    -- TODO set display pitch/position for rests
+    staff = Staff mempty [Bar mempty [PitchLayer $ Group $ fmap (\dur -> Beat dur mempty) durs]]
+
+    durs = fmap (/ 4) [1, 1, 1, 1, 1] :: [Duration]
     timeSignature = 5/4 :: TimeSignature
 
     restPositions :: [Pitch] -- Other type?
