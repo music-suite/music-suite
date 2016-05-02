@@ -838,6 +838,7 @@ instance MonadError String IOExportM where
   -- TODO
   -- catchError (IOExportM k) = IOExportM $ do
   --   catchError k (\e -> throwError (show e))
+  catchError = error "MonadError String IOExportM: catchError: No implementation"
 
 instance MonadLog String IOExportM where
   say x = liftIO $ putStrLn $ "  " ++ x
@@ -863,7 +864,10 @@ expandTemplate t vs = (composed $ fmap (expander vs) $ Data.Map.keys $ vs) t
   where
     expander vs k = replace ("$(" ++ k ++ ")") (Data.Maybe.fromJust $ Data.Map.lookup k vs)
     composed = foldr (.) id
+
     replace old new = Data.List.intercalate new . Data.List.Split.splitOn old
+
+    toCamel [] = toCamel []
     toCamel (x:xs) = Data.Char.toUpper x : xs
 
 ----------------------------------------------------------------------------------------------------
@@ -1369,6 +1373,7 @@ toXml work = do
                 go (Tuplet m r)          = MusicXml.tuplet b a (renderBarMusic r)
                   where
                     (a,b) = bimap fromIntegral fromIntegral $ unRatio $ realToFrac m
+                go _                     = error "MusicXML export: (Dotted x) requires x to be (Beat _)"
 
             setDefaultVoice :: MusicXml.Music -> MusicXml.Music
             setDefaultVoice = MusicXml.setVoice 1
@@ -1565,10 +1570,11 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
         go (Midi.NoteOn c k _)        = Midi.NoteOn c k v
         go (Midi.KeyPressure c k _)   = Midi.KeyPressure c k v
         go (Midi.ControlChange c n v) = Midi.ControlChange c n v
-        go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
-        go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
-        go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
-        go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
+        -- go (Midi.ProgramChange c p)   = Midi.ProgramChange c p
+        -- go (Midi.ChannelPressure c p) = Midi.ChannelPressure c p
+        -- go (Midi.PitchWheel c w)      = Midi.PitchWheel c w
+        -- go (Midi.ChannelPrefix c)     = Midi.ChannelPrefix c
+        go x                          = x
 
     setC :: Midi.Channel -> Midi.Message -> Midi.Message
     setC c = go
@@ -1581,6 +1587,7 @@ toMidi = pure . finalizeExport . fmap (exportNote) . exportScore
         go (Midi.ChannelPressure _ p) = Midi.ChannelPressure c p
         go (Midi.PitchWheel _ w)      = Midi.PitchWheel c w
         go (Midi.ChannelPrefix _)     = Midi.ChannelPrefix c
+        go x                          = x
 
 
 ----------------------------------------------------------------------------------------------------
@@ -1754,11 +1761,11 @@ fromAspects sc = do
     groupToLabelTree (Single (_,a)) = Leaf a
     groupToLabelTree (Many gt _ xs) = (Branch (k gt) (fmap groupToLabelTree xs))
       where
-        k Music.Parts.Bracket   = Bracket
-        k Music.Parts.Invisible = NoBracket
-        -- k Music.Parts.Subbracket = Just SubBracket
+        k Music.Parts.Bracket    = Bracket
+        k Music.Parts.Invisible  = NoBracket
         k Music.Parts.PianoStaff = Brace
         k Music.Parts.GrandStaff = Brace
+        k _                      = NoBracket
 
 
     aspectsToChord :: Maybe Asp3 -> Chord
@@ -1937,7 +1944,6 @@ umts_01b =
     interleave :: [a] -> [a] -> [a]
     interleave [] ys = ys
     interleave xs [] = xs
-    interleave [] [] = []
     interleave (x:xs) (y:ys) = x : y : interleave xs ys
 
     singleNoteChord :: Pitch -> Chord
@@ -3891,18 +3897,17 @@ umts_73a =
     sysStaff = repeat mempty
     staff = mempty
 
-    [e_, a__, c] = [Music.Pitch.e_, Music.Pitch.a__, Music.Pitch.c]
     timpNotes =
-      [ [ (1,e_,True) ]
-      , [ (1/2,e_,False),(1/2,a__,False) ]
+      [ [ (1,P.e_,True) ]
+      , [ (1/2,P.e_,False),(1/2,P.a__,False) ]
       ]
     cymbalNotes =
-      [ [ (3/4,c,False), (1/4,c,False) ]
-      , [ (1,c,False) ]
+      [ [ (3/4,P.c,False), (1/4,P.c,False) ]
+      , [ (1,P.c,False) ]
       ]
     triangleNotes =
-      [ [ (3/4,c,False), (1/4,c,False) ]
-      , [ (1,c,False) ]
+      [ [ (3/4,P.c,False), (1/4,P.c,False) ]
+      , [ (1,P.c,False) ]
       ]
 
 -- ‘74a-FiguredBass.xml’
@@ -4024,3 +4029,8 @@ umts_all =
   , ("umts_72c",umts_72c)
   , ("umts_73a",umts_73a)
   ]
+
+test  :: Either String (String, L.Music)
+test2 :: Asp -> Either String (String, L.Music)
+test4 :: Asp -> Either String X.Score
+test3 :: Asp -> IO ()

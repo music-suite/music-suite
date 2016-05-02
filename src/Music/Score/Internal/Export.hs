@@ -1,4 +1,6 @@
 
+{-# OPTIONS_GHC -Wwarn #-}
+
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}

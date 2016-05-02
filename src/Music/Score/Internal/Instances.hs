@@ -302,9 +302,9 @@ instance (Enum v, Ord v, Real a, Enum a, Integral a) => Integral (PartT v a) whe
 -- TODO suspect instances
 -- We should remove both these after replacing [] by Chord in Preludes
 --
-instance Enum a => Enum [a] where
-    toEnum a       = [toEnum a]
-    fromEnum ([a]) = fromEnum a
+-- instance Enum a => Enum [a] where
+--     toEnum a       = [toEnum a]
+--     fromEnum ([a]) = fromEnum a
 
 instance Bounded a => Bounded [a] where
     minBound = [minBound]

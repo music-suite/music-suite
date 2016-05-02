@@ -102,17 +102,20 @@ data Tempo = Tempo (Maybe String) (Maybe Duration) Duration
     deriving (Eq, Ord, Typeable)
 -- The internal representation is actually: maybeName maybeDisplayNoteValue scalingFactor
 
--- TODO
 instance Num Tempo where
+    (+) = error "Num Tempo: No implementation"
+    (-) = error "Num Tempo: No implementation"
+    (*) = error "Num Tempo: No implementation"
+    abs = error "Num Tempo: No implementation"
+    signum = error "Num Tempo: No implementation"
     fromInteger = Tempo Nothing Nothing . fromInteger
 
 instance Show Tempo where
     show (getTempo -> (nv, bpm)) = "metronome " ++ showR nv ++ " " ++ showR bpm
         where
-
-showR = showR' . realToFrac
-showR' ((unRatio -> (x, 1))) = show x
-showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
+            showR = showR' . realToFrac
+            showR' ((unRatio -> (x, 1))) = show x
+            showR' ((unRatio -> (x, y))) = "(" ++ show x ++ "/" ++ show y ++ ")"
 
 {-
 instance Default Tempo where
@@ -190,11 +193,6 @@ tempoDuring s c = addMetaNote $ view event (s, c)
 inSpan :: Span -> Time -> Bool
 inSpan (view onsetAndOffset -> (t,u)) x = t <= x && x <= u
 
-inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
-
-mkNote s x = view note (s, x)
-
-
 
 -- | Extract all tempi from the given score, using the given default tempo.
 -- withTempo :: (Tempo -> Score a -> Score a) -> Score a -> Score a
@@ -202,7 +200,10 @@ mkNote s x = view note (s, x)
 
 renderTempo :: Score a -> Score a
 renderTempo = error "renderTempo: Not implemented"
+
 {-
+inSpan' (view onsetAndOffset -> (t,u)) x = t <= x && x < u
+mkNote s x = view note (s, x)
 
 -- | Split a reactive into notes, as well as the values before and after the first/last update
 -- TODO fails if not positive
@@ -298,9 +299,12 @@ data TempoRegion =
     deriving (Eq, Ord, Show)
 
 tempoRegionNotated (TempoRegion t u _ _) = t <-> u
--}
 
--- span :: Iso (Note a) (Note b) Span Span
+frl []  = error "frl: No value"
+frl [x] = error "frl: Just one value"
+frl xs  = (head xs, (tail.init) xs, last xs)
+
+-}
 
 {-
     A "tempo region" is a consecutive span in which the tempo is constant (obtained by @renderR tempo@)
@@ -322,6 +326,15 @@ tempoRegionNotated (TempoRegion t u _ _) = t <-> u
 
 -}
 
+presto :: Tempo
+allegro :: Tempo
+allegretto :: Tempo
+moderato :: Tempo
+andante :: Tempo
+adagio :: Tempo
+largo :: Tempo
+lento :: Tempo
+
 -- presto     = metronome (1/4) 125
 -- allegro    = metronome (1/4) 115
 -- allegretto = metronome (1/4) 105
@@ -339,14 +352,3 @@ andante     = metronome (1/4) 84
 adagio      = metronome (1/4) 64
 largo       = metronome (1/4) 48
 lento       = metronome (1/4) 42
-
--- TODO consolidate
--- optionFirst = Option . Just . First
--- unOptionFirst = fmap getFirst . getOption
-
--- TODO move
-frl []  = error "frl: No value"
-frl [x] = error "frl: Just one value"
-frl xs  = (head xs, (tail.init) xs, last xs)
-
--- JUNK
