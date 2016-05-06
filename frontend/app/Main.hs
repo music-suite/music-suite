@@ -1,7 +1,7 @@
 
 module Main where
 
-import Lib
+-- import Lib
 import Data.String
 import Lubeck.FRP
 import Lubeck.App(runAppReactive)
@@ -12,8 +12,8 @@ import JavaScript.Web.WebSocket
 
 main :: IO ()
 main = do
-  let n = someFunc
-  runAppReactive $ pure $ text $ fromString $ "The number is " ++ show n
+  -- let n = someFunc
+  -- runAppReactive $ pure $ text $ fromString $ "The number is " ++ show n
 
 -- TODO Share
 

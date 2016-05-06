@@ -9,12 +9,17 @@ setup-info:
     url: "https://github.com/nrolland/ghcjs/releases/download/v.0.2.0.20151230.3/ghcjs-0.2.0.20151230.3.tar.gz"
 
 packages:
-- 'lubeck-core'
-- 'lubeck-frp'
-- 'lubeck-drawing'
-- 'lubeck-dv'
-- 'lubeck-web'
+- '.'
 
+- location:
+    git: git@github.com:BeautifulDestinations/lubeck.git
+    commit: b2122a7aadbb7681e2db33978214fc5ad873f2a3
+  subdirs:
+  - lubeck-core
+  - lubeck-frp
+  - lubeck-drawing
+  - lubeck-dv
+  - lubeck-web
 - location:
     git: git@github.com:ghcjs/ghcjs-ffiqq.git
     commit: da31b18582542fcfceade5ef6b2aca66662b9e20
@@ -31,5 +36,5 @@ packages:
     git: https://github.com/ghcjs/ghcjs-base.git
     commit: 831bbe58540158146c3f9b4e2fa960d82b11a1b6
 extra-deps: [ ListZipper-1.2.0.2 ]
+resolver: lts-3.20
 # resolver: lts-3.20
-resolver: lts-5.15
