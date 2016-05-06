@@ -114,7 +114,7 @@ instance WriteMusicXml PartListElem where
                 )       = single
                         $ addAttr (uattr "id" id)
                         $ unode "score-part"
-                        $ mconcat [writeName name, writeAbbrev abbrev, 
+                        $ mconcat [writeName name, writeAbbrev abbrev,
                                    writeNameDisplay nameDisplay, writeAbbrevDisplay abbrevDisplay]
         where
             writeName          = single      . unode "part-name"
@@ -190,6 +190,9 @@ instance WriteMusicXml Attributes where
                                                           unode "beat-type" (show $ getBeatType beatType)]
 
     write (Staves n)                        = single $ unode "staves" $ show n
+    write (Transpose d c)                   = single $ unode "transpose"
+                                                        [ unode "diatonic" (show d),
+                                                          unode "chromatic" (show c) ]
 
 -- ----------------------------------------------------------------------------------
 -- Notes
@@ -221,7 +224,7 @@ instance WriteMusicXml NoteProps where
                             unode "normal-notes" (show n)
                         ]) timeMod
                     -- TODO stem
-                    <> maybeOne (\(nh,_,_) -> unode "notehead" (writeNoteHead nh)) noteHead 
+                    <> maybeOne (\(nh,_,_) -> unode "notehead" (writeNoteHead nh)) noteHead
                     -- TODO notehead-text
                     -- TODO staff
                     <> maybeOne (\(n, typ) -> addAttr (uattr "number" $ show $ getLevel n)
@@ -309,7 +312,7 @@ instance WriteMusicXml Notation where
                                                     $ addAttr (uattr "number"    $ show $ getLevel level)
                                                     $ addAttr (uattr "type"      $ writeStartStopContinue typ)
                                                     $ addAttr (uattr "line-type" $ writeLineType lineTyp)
-                                                    $ case text of 
+                                                    $ case text of
                                                         Nothing   -> unode "glissando" ()
                                                         Just text -> unode "glissando" text
 
@@ -317,13 +320,13 @@ instance WriteMusicXml Notation where
                                                     $ addAttr (uattr "number"    $ show $ getLevel level)
                                                     $ addAttr (uattr "type"      $ writeStartStopContinue typ)
                                                     $ addAttr (uattr "line-type" $ writeLineType lineTyp)
-                                                    $ case text of 
+                                                    $ case text of
                                                         Nothing   -> unode "slide" ()
                                                         Just text -> unode "slide" text
 
     write (Ornaments xs)                        = single $ unode "ornaments" (concatMap writeOrnamentWithAcc xs)
                                                     where
-                                                        writeOrnamentWithAcc (o, as) = write o 
+                                                        writeOrnamentWithAcc (o, as) = write o
                                                             <> fmap (unode "accidental-mark" . writeAccidental) as
 
     write (Technical xs)                        = single $ unode "technical" (concatMap write xs)
@@ -423,10 +426,10 @@ instance WriteMusicXml Direction where
 -- ----------------------------------------------------------------------------------
 
 instance WriteMusicXml Barline where
-    write (Barline location style repeat) = single $ 
-                                            addAttr (uattr "location" (show location)) $ 
-                                            unode "barline" $ 
-                                            [unode "bar-style" (show style)] <> 
+    write (Barline location style repeat) = single $
+                                            addAttr (uattr "location" (show location)) $
+                                            unode "barline" $
+                                            [unode "bar-style" (show style)] <>
                                             maybe [] write repeat
 
 instance WriteMusicXml Repeat where

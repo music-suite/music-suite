@@ -99,14 +99,16 @@ instance IsPitch Pitch where
     fromPitch p = let i = p .-. c in
       ( toEnum $ fromEnum $ name p
       , Just $ fromIntegral $ accidental p
-      , fromIntegral $ octaves i
+      , fromIntegral $ octaves i + 4
       )
+      -- Add 4 so that c ~ C4, c' ~ C5 etc
 
 instance IsPitch DisplayPitch where
     fromPitch p = let i = p .-. c in
       ( toEnum $ fromEnum $ name p
-      , fromIntegral $ octaves i
+      , fromIntegral $ octaves i + 4
       )
+      -- Add 4 so that c ~ C4, c' ~ C5 etc
 
 {-
 instance IsPitch Fifths where

@@ -303,7 +303,9 @@ data Attributes
         ClefSign
         Line
     | StaffDetails                      -- TODO
-    | Transpose                         -- TODO
+    | Transpose
+        Int -- diatonic
+        Int -- chromatic
     | Directive                         -- TODO
     | MeasureStyle                      -- TODO
 

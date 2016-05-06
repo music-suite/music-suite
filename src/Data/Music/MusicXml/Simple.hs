@@ -17,9 +17,9 @@
 -------------------------------------------------------------------------------------
 
 module Data.Music.MusicXml.Simple (
-        
+
         module Data.Music.MusicXml,
-        
+
         -----------------------------------------------------------------------------
         -- * Score and parts
         -----------------------------------------------------------------------------
@@ -34,7 +34,7 @@ module Data.Music.MusicXml.Simple (
         partListAbbr,
         bracket,
         brace,
-               
+
         -- ** Measures
         measure,
         bar,
@@ -55,13 +55,14 @@ module Data.Music.MusicXml.Simple (
         altoClef,
         bassClef,
         defaultClef,
-        clef, 
+        clef,
         defaultKey,
         key,
 
         -- ** Time
+        defaultDivisionsVal,
         defaultDivisions,
-        divisions,        
+        divisions,
         commonTime,
         cutTime,
         time,
@@ -71,7 +72,7 @@ module Data.Music.MusicXml.Simple (
         -- TODO #15 tempo
         metronome,
         metronome',
-        
+
         -----------------------------------------------------------------------------
         -- * Backup and forward
         -----------------------------------------------------------------------------
@@ -82,7 +83,7 @@ module Data.Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
         -- * Notes
         -----------------------------------------------------------------------------
-        
+
         -- ** Basic constructors
         rest,
         note,
@@ -119,7 +120,7 @@ module Data.Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
         -- * Pitch transformations
         -----------------------------------------------------------------------------
-        
+
         -- ** Glissando
         beginGliss,
         endGliss,
@@ -147,18 +148,18 @@ module Data.Music.MusicXml.Simple (
 
         addTechnical,
         addArticulation,
-        
+
         -- ** Technical
         upbow,
         downbow,
         harmonic,
         openString,
-        
+
         -- ** Slurs
         slur,
         beginSlur,
-        endSlur,   
-        
+        endSlur,
+
         -- ** Staccato and tenuto
         staccato,
         tenuto,
@@ -176,7 +177,7 @@ module Data.Music.MusicXml.Simple (
         falloff,
         stress,
         unstress,
-        
+
         -- ** Ornaments
         trill,
         turn,
@@ -205,7 +206,7 @@ module Data.Music.MusicXml.Simple (
         crescFromTo,
         dimFrom,
         dimTo,
-        dimFromTo,        
+        dimFromTo,
 
         -----------------------------------------------------------------------------
         -- * Text
@@ -227,12 +228,12 @@ module Data.Music.MusicXml.Simple (
         -----------------------------------------------------------------------------
         -- * Folds and maps
         -----------------------------------------------------------------------------
-        
+
         -- mapNote,
         mapMusic,
         foldMusic,
 
-  ) 
+  )
 where
 
 import Data.Default
@@ -254,7 +255,7 @@ import qualified Data.List as List
 -- Score and parts
 -- ----------------------------------------------------------------------------------
 
--- | 
+-- |
 -- Create a single-part score.
 --
 -- > fromPart title composer partName measures
@@ -264,10 +265,10 @@ import qualified Data.List as List
 -- @ 'fromPart' \"Suite\" \"Bach\" \"Cello solo\" [] @
 --
 fromPart :: String -> String -> String -> [Music] -> Score
-fromPart title composer partName music = 
+fromPart title composer partName music =
     fromParts title composer (partList [partName]) [music]
 
--- | 
+-- |
 -- Create a multi-part score.
 --
 -- > fromParts title composer partList parts
@@ -277,11 +278,11 @@ fromPart title composer partName music =
 -- @ 'fromParts' \"4'33\" \"Cage\" ('partList' [\"Violin\", \"Viola\", \"Cello\"]) [[]] @
 --
 fromParts :: String -> String -> PartList -> [[Music]] -> Score
-fromParts title composer partList music 
-    = Partwise 
+fromParts title composer partList music
+    = Partwise
         (def)
         (header title composer partList)
-        (addPartwiseAttributes music)  
+        (addPartwiseAttributes music)
 
 -- | 
 -- Create a part list from instrument names.
@@ -290,7 +291,7 @@ partList :: [String] -> PartList
 partList = PartList . zipWith (\partId name -> Part partId name Nothing Nothing  Nothing) standardPartAttributes
 
 -- | 
--- Create a part list from instrument names and displayed names (some applications need the name to be something 
+-- Create a part list from instrument names and displayed names (some applications need the name to be something
 -- specific, so use displayed name to override).
 --
 partListDisplay :: [(String, String)] -> PartList
@@ -302,22 +303,22 @@ partListDisplay = PartList . zipWith (\partId (name,dispName) -> Part partId nam
 partListAbbr :: [(String, String)] -> PartList
 partListAbbr = PartList . zipWith (\partId (name,abbr) -> Part partId name (Just abbr) Nothing Nothing) standardPartAttributes
 
--- | 
+-- |
 -- Enclose the given parts in a bracket.
--- 
+--
 bracket :: PartList -> PartList
 bracket ps = PartList $ mempty
-        <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False] 
-        <> getPartList ps 
+        <> [Group 1 Start "" Nothing (Just GroupBracket) (Just GroupBarLines) False]
+        <> getPartList ps
         <> [Group 1 Stop "" Nothing Nothing Nothing False]
 
--- | 
+-- |
 -- Enclose the given parts in a brace.
--- 
+--
 brace :: PartList -> PartList
 brace ps = PartList $ mempty
-        <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False] 
-        <> getPartList ps 
+        <> [Group 1 Start "" Nothing (Just GroupBrace) (Just GroupBarLines) False]
+        <> getPartList ps
         <> [Group 1 Stop "" Nothing Nothing Nothing False]
 
 
@@ -325,25 +326,25 @@ brace ps = PartList $ mempty
 -- Convenient synonym for 'mconcat', allowing us to write things like
 --
 -- > measure [
--- >    beam [ 
--- >        note c  (1/8), 
+-- >    beam [
+-- >        note c  (1/8),
 -- >        note d  (1/8),
 -- >        note e  (1/8),
--- >        note f  (1/8) 
+-- >        note f  (1/8)
 -- >    ],
--- >    tuplet 3 2 [ 
+-- >    tuplet 3 2 [
 -- >        note g  (1/4),
 -- >        note a  (1/4),
--- >        note b  (1/4) 
+-- >        note b  (1/4)
 -- >    ]
 -- > ]
--- 
+--
 measure :: [Music] -> Music
 measure = mconcat
 
 -- |
 -- Convenient synonym for 'mconcat'.
--- 
+--
 bar :: [Music] -> Music
 bar = measure
 
@@ -372,7 +373,7 @@ addPartwiseAttributes = deepZip partIds barIds
         partIds = fmap PartAttrs standardPartAttributes
         barIds  = fmap MeasureAttrs [1..]
 
-        deepZip :: [a] -> [b] -> [[c]] -> [(a, [(b, c)])]                        
+        deepZip :: [a] -> [b] -> [[c]] -> [(a, [(b, c)])]
         deepZip xs ys = zipWith (curry $ second (zip ys)) xs
 
 -- ----------------------------------------------------------------------------------
@@ -404,7 +405,7 @@ key n m = Music . single $ MusicAttributes $ Key n m
 
 
 -- Number of ticks per whole note (we use 768 per quarter like Sibelius).
-defaultDivisionsVal :: Divs      
+defaultDivisionsVal :: Divs
 defaultDivisionsVal = 768 * 4
 
 -- |
@@ -505,7 +506,7 @@ rest' dur = Music . single $ MusicNote (Note def (defaultDivisionsVal `div` deno
     where
         num   = fromIntegral $ numerator   $ toRational $ dur
         denom = fromIntegral $ denominator $ toRational $ dur
-        val   = NoteVal $ toRational $ dur              
+        val   = NoteVal $ toRational $ dur
 
 -- |
 -- Create a single note.
@@ -527,7 +528,7 @@ chordNote pitch dur = note' True pitch dur' dots
 
 -- |
 -- Create a chord.
--- 
+--
 -- > chord [c,eb,fs_] (3/8)
 -- > chord [c,d,e] quarter
 -- > chord [c,d,e] (dotted eight)
@@ -538,28 +539,32 @@ chord (p:ps) d  = note p d <> Music (concatMap (\p -> getMusic $ chordNote p d) 
 
 
 note' :: Bool -> Pitch -> NoteVal -> Int -> Music
-note' isChord pitch dur dots 
-    = Music . single $ MusicNote $ 
-        Note 
-            (Pitched isChord $ pitch) 
-            (defaultDivisionsVal `div` denom) 
-            noTies 
+note' isChord pitch dur dots
+    = Music . single $ MusicNote $
+        Note
+            (Pitched isChord $ pitch)
+            (defaultDivisionsVal `div` denom)
+            noTies
             (setNoteValP val $ addDots $ def)
-    where                    
+    where
         addDots = foldl (.) id (replicate dots dotP)
+        -- I.e. given a 1/4 note
+        -- num ~ 1
+        -- denom ~ 4
+
         num     = fromIntegral $ numerator   $ toRational $ dur
         denom   = fromIntegral $ denominator $ toRational $ dur
-        val     = NoteVal $ toRational $ dur              
+        val     = NoteVal $ toRational $ dur
 
 separateDots :: NoteVal -> (NoteVal, Int)
 separateDots = separateDots' [2/3, 6/7, 14/15, 30/31, 62/63]
 
 separateDots' :: [NoteVal] -> NoteVal -> (NoteVal, Int)
 separateDots' []         nv = errorNoteValue
-separateDots' (div:divs) nv 
+separateDots' (div:divs) nv
     | isDivisibleBy 2 nv = (nv,  0)
     | otherwise          = (nv', dots' + 1)
-    where                                                        
+    where
         (nv', dots')    = separateDots' divs (nv*div)
 
 errorNoteValue  = error "Data.Music.MusicXml.Simple.separateDots: Note value must be a multiple of two or dotted"
@@ -585,8 +590,8 @@ setNoteHead x = Music . fmap (modifyNoteProps (mapNoteHeadP (const $ Just (x,Fal
 -- TODO clean up, skip empty notation groups etc
 mergeNotations :: [Notation] -> [Notation]
 mergeNotations notations = mempty
-    <> [foldOrnaments ornaments] 
-    <> [foldTechnical technical] 
+    <> [foldOrnaments ornaments]
+    <> [foldTechnical technical]
     <> [foldArticulations articulations]
     <> others
     where
@@ -600,7 +605,7 @@ mergeNotations notations = mempty
         isTechnical _                     = False
         isArticulations (Articulations _) = True
         isArticulations _                 = False
-        
+
         foldOrnaments     = foldr mergeN (Ornaments [])
         foldTechnical     = foldr mergeN (Technical [])
         foldArticulations = foldr mergeN (Articulations [])
@@ -669,8 +674,8 @@ fermata         :: FermataSign -> Music -> Music
 breathMark      :: Music -> Music
 caesura         :: Music -> Music
 fermata         = addNotation . Fermata
-breathMark      = addNotation (Articulations [BreathMark])	 
-caesura         = addNotation (Articulations [Caesura])	 
+breathMark      = addNotation (Articulations [BreathMark])
+caesura         = addNotation (Articulations [Caesura])
 
 -- ----------------------------------------------------------------------------------
 
@@ -704,25 +709,25 @@ doit            :: Music -> Music
 falloff         :: Music -> Music
 stress          :: Music -> Music
 unstress        :: Music -> Music
-accent          = addNotation (Articulations [Accent])	 
-strongAccent    = addNotation (Articulations [StrongAccent])	 
-staccato        = addNotation (Articulations [Staccato])	 
-tenuto          = addNotation (Articulations [Tenuto])	 
-detachedLegato  = addNotation (Articulations [DetachedLegato])	 
-staccatissimo   = addNotation (Articulations [Staccatissimo])	 
-spiccato        = addNotation (Articulations [Spiccato])	 
-scoop           = addNotation (Articulations [Scoop])	 
-plop            = addNotation (Articulations [Plop])	 
-doit            = addNotation (Articulations [Doit])	 
-falloff         = addNotation (Articulations [Falloff])	 
-stress          = addNotation (Articulations [Stress])	 
-unstress        = addNotation (Articulations [Unstress])	 
+accent          = addNotation (Articulations [Accent])
+strongAccent    = addNotation (Articulations [StrongAccent])
+staccato        = addNotation (Articulations [Staccato])
+tenuto          = addNotation (Articulations [Tenuto])
+detachedLegato  = addNotation (Articulations [DetachedLegato])
+staccatissimo   = addNotation (Articulations [Staccatissimo])
+spiccato        = addNotation (Articulations [Spiccato])
+scoop           = addNotation (Articulations [Scoop])
+plop            = addNotation (Articulations [Plop])
+doit            = addNotation (Articulations [Doit])
+falloff         = addNotation (Articulations [Falloff])
+stress          = addNotation (Articulations [Stress])
+unstress        = addNotation (Articulations [Unstress])
 
 -- ----------------------------------------------------------------------------------
 
 cresc, dim                         :: Music -> Music
-crescFrom, crescTo, dimFrom, dimTo :: Dynamics -> Music -> Music 
-crescFromTo, dimFromTo             :: Dynamics -> Dynamics -> Music -> Music 
+crescFrom, crescTo, dimFrom, dimTo :: Dynamics -> Music -> Music
+crescFromTo, dimFromTo             :: Dynamics -> Dynamics -> Music -> Music
 
 cresc           = \m -> beginCresc <> m <> endCresc
 dim             = \m -> beginDim   <> m <> endDim
@@ -749,14 +754,14 @@ tuplet :: Int -> Int -> Music -> Music
 tuplet m n (Music [])   = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ Music []
 tuplet m n (Music [xs]) = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ Music [xs]
 tuplet m n (Music xs)   = scaleDur (fromIntegral n/fromIntegral m :: Rational) $ setTimeMod m n $ (as <> bs <> cs)
-    where                                 
+    where
         as  = beginTuplet $ Music [head xs]
         bs  = Music $ init (tail xs)
         cs  = endTuplet $ Music [last (tail xs)]
 
-scaleDur x = mapMusic id (mapNote 
-    (\f d t p -> (f,round $ fromIntegral d*x,t,p)) 
-    (\f d p -> (f,round $ fromIntegral d*x,p)) 
+scaleDur x = mapMusic id (mapNote
+    (\f d t p -> (f,round $ fromIntegral d*x,t,p))
+    (\f d p -> (f,round $ fromIntegral d*x,p))
     (\f t p -> (f,t,p))) id
 
 beam :: Music -> Music
@@ -776,7 +781,7 @@ slur (Music xs)   = (as <> bs <> cs)
         as  = beginSlur $ Music [head xs]
         bs  = Music $ init (tail xs)
         cs  = endSlur $ Music [last (tail xs)]
-                                           
+
 -- TODO combine tuplet, beam, slur etc
 
 
@@ -824,7 +829,7 @@ coda  = Music . single . MusicDirection $ Coda
 -- ----------------------------------------------------------------------------------
 
 mapNote fn fc fg = go
-    where 
+    where
             go (Note f d t p)    = let (f',d',t',p') = fn f d t p   in Note f' d' t' p'
             go (CueNote f d p)   = let (f',d',p')    = fc f d p     in CueNote f' d' p'
             go (GraceNote f t p) = let (f',t',p')    = fg f t p     in GraceNote f' t' p'
@@ -870,9 +875,9 @@ instance Default NoteProps where
 
 
 logBaseR :: forall a . (RealFloat a, Floating a) => Rational -> Rational -> a
-logBaseR k n 
+logBaseR k n
     | isInfinite (fromRational n :: a)      = logBaseR k (n/k) + 1
-logBaseR k n 
+logBaseR k n
     | isDenormalized (fromRational n :: a)  = logBaseR k (n*k) - 1
 logBaseR k n                         = logBase (fromRational k) (fromRational n)
 
@@ -881,5 +886,3 @@ isDivisibleBy n = (equalTo 0.0) . snd . properFraction . logBaseR (toRational n)
 
 single x = [x]
 equalTo  = (==)
-
-
