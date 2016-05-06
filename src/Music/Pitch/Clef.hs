@@ -6,7 +6,7 @@ module Music.Pitch.Clef
       StaffLines,
       HalfSpaces,
       ClefLine,
-      
+
       -- * Clef representation
       ClefSymbol(..),
       ClefOctave,
@@ -29,6 +29,7 @@ module Music.Pitch.Clef
       altoClef,
       tenorClef,
       baritoneClef,
+      percussionClef,
 ) where
 
 import Data.Typeable
@@ -68,7 +69,7 @@ instance Show Clef where
     | x == tenorClef        = "tenorClef"
     | x == baritoneClef     = "baritoneClef"
     | otherwise             = show a
-    
+
 -- | Return the English name of the given clef.
 symbolName :: ClefSymbol -> String
 symbolName GClef       = "G clef"
@@ -130,13 +131,15 @@ altoClef :: Clef
 tenorClef :: Clef
 -- | Standard baritone clef.
 baritoneClef :: Clef
-trebleClef        = Clef (GClef, -1 :: ClefOctave, -1 :: ClefLine)
-bassClef          = Clef (FClef, 1  :: ClefOctave, -1 :: ClefLine)
-sopranoClef       = Clef (CClef, 0  :: ClefOctave, -2 :: ClefLine)
-mezzoSopranoClef  = Clef (CClef, 0  :: ClefOctave, -1 :: ClefLine)
-altoClef          = Clef (CClef, 0  :: ClefOctave, 0  :: ClefLine)
-tenorClef         = Clef (CClef, 0  :: ClefOctave, 1  :: ClefLine)
-baritoneClef      = Clef (CClef, 0  :: ClefOctave, 2  :: ClefLine)
+percussionClef :: Clef
+trebleClef        = Clef (GClef,   -1 :: ClefOctave, -1 :: ClefLine)
+bassClef          = Clef (FClef,    1 :: ClefOctave,  1 :: ClefLine)
+sopranoClef       = Clef (CClef,    0 :: ClefOctave, -2 :: ClefLine)
+mezzoSopranoClef  = Clef (CClef,    0 :: ClefOctave, -1 :: ClefLine)
+altoClef          = Clef (CClef,    0 :: ClefOctave,  0 :: ClefLine)
+tenorClef         = Clef (CClef,    0 :: ClefOctave,  1 :: ClefLine)
+baritoneClef      = Clef (CClef,    0 :: ClefOctave,  2 :: ClefLine)
+percussionClef    = Clef (PercClef, 0 :: ClefOctave,  0 :: ClefLine)
 
 -- | Is this a clef used in contemporary notation?
 isModernClef :: Clef -> Bool
@@ -155,5 +158,3 @@ isVoiceClef :: Clef -> Bool
 isVoiceClef x | x == altoClef    = True
 isVoiceClef x | x == tenorClef   = True
 isVoiceClef x | otherwise        = False
-
-

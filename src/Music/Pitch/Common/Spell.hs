@@ -174,7 +174,13 @@ usingFlats = go
     go 11 = 6
 
 
+{-
+Respell preserving general augmented/diminished diretion, but disallow all qualities
+except the standard ones.
 
+Standard qualities include major, minor, perfect, augmented/diminished or
+doubly augmented/diminished.
+-}
 useStandardQualities :: Interval -> Interval
 useStandardQualities i
   | quality i >  Perfect && not (ok i)  =  spell usingSharps i
@@ -183,6 +189,9 @@ useStandardQualities i
   where
     ok i = isStandardQuality (quality i)
 
+{-
+Same as 'useStandardQualities' but disallow doubly augmented/diminished.
+-}
 useSimpleQualities :: Interval -> Interval
 useSimpleQualities i
   | quality i >  Perfect && not (ok i)  =  spell usingSharps i
@@ -191,7 +200,12 @@ useSimpleQualities i
   where
     ok i = isSimpleQuality (quality i)
 
+{-
+Respell preserving general sharp/flat diretion, but disallow all qualities
+except the standard ones.
 
+Standard qualities include natural, sharp, flat, double sharp and double flat.
+-}
 useStandardAlterations :: Tonic -> Pitch -> Pitch
 useStandardAlterations tonic p
   | quality i >  Perfect && not (ok i)  =  spellPitchRelative tonic usingSharps p
@@ -201,6 +215,9 @@ useStandardAlterations tonic p
     i = p .-. tonic
     ok i = isStandardQuality (quality i)
 
+{-
+Same as 'useStandardAlterations' but disallow double sharp/flat.
+-}
 useSimpleAlterations :: Tonic -> Pitch -> Pitch
 useSimpleAlterations tonic p
   | quality i >  Perfect && not (ok i)  =  spellPitchRelative tonic usingSharps p

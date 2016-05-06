@@ -50,7 +50,7 @@ newtype DiatonicSteps = DiatonicSteps { getDiatonicSteps :: Int }
 Number of octaves.
 May be negative, indicating a downward interval.
 -}
-newtype Octaves = Octaves { getOctaves :: Int }
+newtype Octaves = Octaves { getOctaves :: Integer }
   deriving (Eq, Ord, Num, Enum, Real, Integral)
 
 {-|

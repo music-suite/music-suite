@@ -172,6 +172,12 @@ instance FromJSON Pitch where
 mkPitch :: Name -> Accidental -> Pitch
 mkPitch name acc = Pitch $ (\a b -> (fromIntegral a, fromIntegral b)^.interval') (fromIntegral acc) (fromEnum name)
 
+-- TODO name
+-- TODO use this to define pitch-class equivalence
+toFirstOctave :: Pitch -> Pitch
+toFirstOctave p = case (name p, accidental p) of
+  (n, a) -> mkPitch n a
+
 -- |
 -- Returns the name of a pitch.
 --
