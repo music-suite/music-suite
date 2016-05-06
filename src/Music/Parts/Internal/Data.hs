@@ -111,10 +111,8 @@ getInstrumentDefByGeneralMidiPercussionNote a = Data.List.find (\x -> a `elem` _
     -- Safe as this file never change
     defs = System.IO.Unsafe.unsafePerformIO getInstrumentData
 
-
--- TODO move
-pitchFromSPN :: String -> Maybe Pitch
-pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
+pitchFromScientificPitchNotation :: String -> Maybe Pitch
+pitchFromScientificPitchNotation x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
   where
     pc "C" = Just c
     pc "D" = Just d
@@ -143,9 +141,8 @@ pitchFromSPN x = fmap (\on -> (.+^ _P8^*(on-4))) (safeRead octS) <*> pc pcS
     pcS = init x
     octS = pure $ last x
 
--- safeRead x = Just (read x) -- TODO catch exception
-safeRead :: Read a => String -> Maybe a
-safeRead = fmap fst . Data.Maybe.listToMaybe . reads
+    safeRead :: Read a => String -> Maybe a
+    safeRead = fmap fst . Data.Maybe.listToMaybe . reads
 
 readClef :: String -> Maybe Clef
 readClef = go where
@@ -170,12 +167,15 @@ Drats!
 -}
 instance FromField [Int] where
   parseField v = fmap (mcatMaybes . map safeRead) $ fmap (splitBy ',') $ parseField v
+    where
+      safeRead :: Read a => String -> Maybe a
+      safeRead = fmap fst . Data.Maybe.listToMaybe . reads
 
 instance FromField Pitch where
-  parseField v = mcatMaybes $ fmap pitchFromSPN $ parseField v
+  parseField v = mcatMaybes $ fmap pitchFromScientificPitchNotation $ parseField v
 
 instance {-# OVERLAPPING #-} FromField (Maybe (Ambitus Pitch)) where
-  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromSPN) $ fmap (splitBy '-') $ parseField v
+  parseField v = fmap (listToAmbitus . mcatMaybes . map pitchFromScientificPitchNotation) $ fmap (splitBy '-') $ parseField v
     where
       listToAmbitus [a,b] = Just $ (a,b)^.ambitus
       listToAmbitus _     = Nothing

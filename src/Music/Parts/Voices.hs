@@ -16,8 +16,7 @@ import           Data.Typeable
 import           Text.Numeral.Roman      (toRoman)
 import           Data.Semigroup.Option.Instances
 
--- TODO newtype...
 -- Related to "bounded" and "sized" integers (i.e. Pitch.Equal)
-type SATB       = Int
-type SSAATTBB   = Int
-type SMezATBarB = Int
+newtype SATB       = SATB Int
+newtype SSAATTBB   = SSAATTBB Int
+newtype SMezATBarB = SMezATBarB Int

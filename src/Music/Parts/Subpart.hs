@@ -40,7 +40,7 @@ instance Wrapped Subpart where
     where
       getSubpart (Subpart x) = x
 
-instance Rewrapped Subpart Subpart   
+instance Rewrapped Subpart Subpart
 
 instance ToJSON Subpart where
   toJSON (Subpart xs) = toJSON xs
@@ -53,9 +53,9 @@ TODO hide internals
 
 Expose
 
-_divisions :: Traversal' Subpart Division
+divisions :: Traversal' Subpart Division
 
-or similar 
+or similar
 -}
 
 instance Show Subpart where
@@ -75,8 +75,3 @@ Subpart x `isSubpartOf` Subpart y = y `Data.List.isPrefixOf` x
 
 isProperSubpartOf :: Subpart -> Subpart -> Bool
 x `isProperSubpartOf` y = x `isSubpartOf` y && x /= y
-
-
-
-
-

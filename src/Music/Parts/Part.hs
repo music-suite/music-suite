@@ -47,8 +47,7 @@ data Part = Part
   Solo        -- Solo vs. tutti
   Instrument  -- Type of instrument
   Subpart     -- Subdivision within instrument chorus
-  -- TODO Layer
-    deriving (Eq, Ord)
+  deriving (Eq, Ord)
 
 instance Show Part where
     show (Part Solo instr subp) = "Solo " ++ show instr ++ addS (show subp)

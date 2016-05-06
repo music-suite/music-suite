@@ -20,8 +20,6 @@ brassInstrument = prism' getBrassInstrument (fmap BrassInstrument . partial isBr
   where
 
 isBrassInstrument :: Instrument -> Bool
-isBrassInstrument x = case toMusicXmlSoundId x of 
+isBrassInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "brass" i
-
--- TODO

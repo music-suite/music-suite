@@ -31,7 +31,7 @@ stringInstrument :: Prism' Instrument StringInstrument
 stringInstrument = prism' getStringInstrument (fmap StringInstrument . partial isStringInstrument)
 
 isStringInstrument :: Instrument -> Bool
-isStringInstrument x = case toMusicXmlSoundId x of 
+isStringInstrument x = case toMusicXmlSoundId x of
   Nothing -> False
   Just i  -> Data.List.isPrefixOf "strings" i
 
@@ -40,10 +40,8 @@ type StringTuning = [Pitch]
 standardTuning :: StringInstrument -> StringTuning
 standardTuning = error "No standardTuning"
 
--- TODO various tunings
 allowedTunings :: StringInstrument -> Set StringTuning
 allowedTunings = error "No allowedTunings"
-
 
 isAllowedTuning :: StringInstrument -> StringTuning -> Bool
 isAllowedTuning = error "No isAllowedTuning"
