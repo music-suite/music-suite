@@ -345,7 +345,7 @@ data StaffInfo              = StaffInfo
 
   TODO change name of _instrumentDefaultClef
   More accurately, it represents the first clef to be used on the staff
-  (and the only one, unless there are changes.)
+  (and the only one if there are no changes.)
 
   OTOH having clef in the staff at all is redundant, specifying clef
   is optional (along with everything else) in this representation anyway.
