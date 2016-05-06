@@ -11,7 +11,7 @@ import qualified Music.Parts
 import qualified Music.Dynamics
 import qualified Music.Articulation
 import qualified Music.Score
-import Music.Score.Export2.StandardNotation(fromAspects, Work, PureExportM, runPureExportMNoLog)
+import Music.Score.Export2.StandardNotation(fromAspects, Work, PureExportM, runPureExportMNoLog, umts_export)
 
 import Record(r, l)
 import Record.Types -- TODO import list
@@ -997,24 +997,6 @@ testAll = do
   -- TODO test this with records too!
   -- Probably requires FlexibleInstances (as in the Inspectable module)
 
-  -- runPureExportMNoLog $ toStandardNotation (c :: Voice Pitch)
-  -- runPureExportMNoLog $ toStandardNotation (c :: Voice Pitch)
-
-
-
--- music-suite/test/legacy-music-files/voice_single.music
--- voice_single =
---   let
---       x = [ (1, c)^.note,
---             (1, d)^.note,
---             (1, f)^.note,
---             (1, e)^.note ]^.voice
---
---       y = join $ [ (1, x)^.note,
---                    (0.5, up _P5 x)^.note,
---                    (4, up _P8 x)^.note ]^.voice
---
---   in stretch (1/8) $ view (re singleMVoice) . fmap Just $ y
-
-main = testAll
+main = do
+  testAll
 -- main = return ()

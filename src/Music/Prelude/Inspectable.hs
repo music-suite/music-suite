@@ -83,7 +83,8 @@ instance Inspectable (Score StandardNote) where
 display :: Inspectable a => a -> IO ()
 audify  :: Inspectable a => a -> IO ()
 display = display' . inspectableToMusic
-audify  = audify' . inspectableToMusic
+-- audify  = audify' . inspectableToMusic
+audify _ = return ()
 
 
 display' = error "Disabled display"
@@ -107,12 +108,12 @@ openCommand = case System.Info.os of
   "linux"  -> "xdg-open"
 
 
-audify'  = play_
-  where
-    play_ x = do
-      writeMidi "test.mid" x
-      System.Process.system "timidity test.mid 2>/dev/null >/dev/null"
-      return ()
+-- audify'  = play_
+--   where
+--     play_ x = do
+--       Music.Score.Export.Midi.writeMidi "test.mid" x
+--       System.Process.system "timidity test.mid 2>/dev/null >/dev/null"
+--       return ()
 
 instance Inspectable a => Inspectable (Maybe a) where
   inspectableToMusic = maybe mempty id . fmap inspectableToMusic

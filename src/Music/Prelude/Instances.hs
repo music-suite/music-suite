@@ -41,21 +41,21 @@ import Data.Functor.Adjunction (unzipR)
 
 
 
-instance HasBackendNote Midi Semitones where
-  exportNote b = exportNote b . fmap toInteger
-  exportChord b = exportChord b . fmap (fmap toInteger)
-
-instance HasBackendNote Midi Pitch where
-  exportNote b = exportNote b . fmap (\p -> semitones (p .-. c))
-  exportChord b = exportChord b . fmap (fmap (\p -> semitones (p .-. c)))
-
-instance HasBackendNote SuperCollider Semitones where
-  exportNote b = exportNote b . fmap toInteger
-  exportChord b = exportChord b . fmap (fmap toInteger)
-
-instance HasBackendNote SuperCollider Pitch where
-  exportNote b = exportNote b . fmap (\p -> semitones (p .-. c))
-  exportChord b = exportChord b . fmap (fmap (\p -> semitones (p .-. c)))
+-- instance HasBackendNote Midi Semitones where
+--   exportNote b = exportNote b . fmap toInteger
+--   exportChord b = exportChord b . fmap (fmap toInteger)
+--
+-- instance HasBackendNote Midi Pitch where
+--   exportNote b = exportNote b . fmap (\p -> semitones (p .-. c))
+--   exportChord b = exportChord b . fmap (fmap (\p -> semitones (p .-. c)))
+--
+-- instance HasBackendNote SuperCollider Semitones where
+--   exportNote b = exportNote b . fmap toInteger
+--   exportChord b = exportChord b . fmap (fmap toInteger)
+--
+-- instance HasBackendNote SuperCollider Pitch where
+--   exportNote b = exportNote b . fmap (\p -> semitones (p .-. c))
+--   exportChord b = exportChord b . fmap (fmap (\p -> semitones (p .-. c)))
 
 
 -- instance HasBackendNote MusicXml Pitch where
@@ -73,25 +73,25 @@ instance HasBackendNote SuperCollider Pitch where
 --   exportChord _ (LyContext d (Just xs))  = (^*realToFrac (d*4)) . Lilypond.chord . fmap (pitchLilypond . Lilypond.Pitch . spellPitch 5) $ xs
 
 -- TODO move
-snd3 f (a, b, c) = (a, f b, c)
+-- snd3 f (a, b, c) = (a, f b, c)
 -- pitchLilypond a = Lilypond.NotePitch a Nothing
 
-spellPitch :: (Enum p, Num a, Num o) => Octaves -> Pitch -> (p, a, o)
-spellPitch referenceOctave p = (pitchName, pitchAccidental, octave)
-    where
-        pitchName       = toEnum $ fromEnum $ name p
-        pitchAccidental = fromIntegral $ accidental p
-        octave          = fromIntegral $ (+ referenceOctave) $ octaves (p .-. c)
-
-instance HasMidiProgram Music.Parts.Part where
-    getMidiChannel = defaultMidiChannel
-    getMidiProgram = fixStrings . defaultMidiProgram
-        where
-            fixStrings x = case x of
-                40 -> 48
-                41 -> 48
-                42 -> 48
-                x  -> x
+-- spellPitch :: (Enum p, Num a, Num o) => Octaves -> Pitch -> (p, a, o)
+-- spellPitch referenceOctave p = (pitchName, pitchAccidental, octave)
+--     where
+--         pitchName       = toEnum $ fromEnum $ name p
+--         pitchAccidental = fromIntegral $ accidental p
+--         octave          = fromIntegral $ (+ referenceOctave) $ octaves (p .-. c)
+--
+-- instance HasMidiProgram Music.Parts.Part where
+--     getMidiChannel = defaultMidiChannel
+--     getMidiProgram = fixStrings . defaultMidiProgram
+--         where
+--             fixStrings x = case x of
+--                 40 -> 48
+--                 41 -> 48
+--                 42 -> 48
+--                 x  -> x
 
 -- instance HasLilypondInstrument Music.Parts.Part where
 --     getLilypondClef = defaultClef
