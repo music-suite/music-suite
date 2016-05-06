@@ -13,7 +13,7 @@ Try to encode the form of classical fugues in table form, see for example
 
 -}
 subj :: Music
-subj = scat [a_|*2,c,d,e|*3,g,
+subj = scat [ a_|*2,c,d,e|*3,g,
  a|*2,g,a,e|*3,e,
  d|*4,e,a_,b_,c,d]
 
@@ -30,16 +30,16 @@ fugue1 = fugue
   , (p2, 9+1*4, _P5)
   , (p3, 9+3*4, _P1)
   , (p4, 9+4*4, -_P8)
-  
+
   , (p1, 14+0*4, _P8)
   , (p2, 14+2*4, -_P8)
   , (p3, 14+3*4, _P5)
   , (p4, 14+4*4, _P1)
-  
+
   , (p1, 20+0*4, _P5)
   , (p2, 20+2*4, _P8)
   , (p3, 20+3*4, _P8+_P5)
-  , (p4, 20+4*4, _P1)   
+  , (p4, 20+4*4, _P1)
   ]
   where [p1,p2,p3,p4] = divide 4 violins
 
@@ -58,7 +58,7 @@ fugue1a' = fugue1 $ scat [c,cs] |> compress 4 (scat [d,b,bb,b] |> scat [gs,cs,d,
 
 fugue1b = fugue1 $ scat [c,e] |> compress 4 (scat [f,a,g,a] |> scat [bb,a,g,f])
 fugue1c = fugue1 $ scat [c,d,b] |> compress 8 (scat [e,d,e,d,e,g,a,e,d])
-fugue1d = fugue1 $ compress 8 (scat 
+fugue1d = fugue1 $ compress 8 (scat
   [e,d,c|*2,f|*2,e,f,g,b,a|*2]
   )
 
@@ -74,4 +74,3 @@ subjX =
   <->(55/16),g)^.event,((55/16)<->(7/2),fs)^.event,((7/2)<->(15/4),gs)^.event,((15/4)<->(31/8),gs)^.event,((31/8)<->
   (63/16),fs)^.event,((63/16)<->4,es)^.event,(4<->(17/4),g)^.event,((17/4)<->(35/8),g)^.event,((35/8)<->
   (71/16),f)^.event,((71/16)<->(9/2),e)^.event]^.score
-
