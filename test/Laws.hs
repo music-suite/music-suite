@@ -299,6 +299,7 @@ instance Eq a => Eq (Score a) where
   -- split _ x = (x,x)
 instance (Transformable a, HasPosition a, Splittable a) => Splittable [a] where
   split t = unzipR . fmap (split t)
+
 unzipR f = (fmap fst f, fmap snd f)
 
 

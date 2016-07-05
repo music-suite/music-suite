@@ -36,7 +36,6 @@ import           Music.Score            hiding (Fifths, Interval, Note, Pitch)
 -- import qualified Data.Music.Lilypond         as Lilypond
 -- import qualified Data.Music.MusicXml.Simple  as Xml
 import qualified Music.Score            as Score
-import Data.Functor.Adjunction (unzipR)
 
 
 
@@ -158,3 +157,5 @@ instance Reversible Pitch where
   rev = id
 instance Reversible (Score a ) where
   rev = revDefault
+
+unzipR x = (fmap fst x, fmap snd x)
