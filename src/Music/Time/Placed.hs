@@ -18,7 +18,6 @@ import           Data.AffineSpace.Point
 import           Data.Bifunctor
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
-import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Couple
 import           Data.String
 import           Data.Typeable
@@ -71,4 +70,3 @@ placee :: (Transformable a, Transformable b) => Lens (Placed a) (Placed b) a b
 placee = from placed `dependingOn` (transformed . delayingTime)
   where
     delayingTime = (>-> 1)
-

@@ -41,7 +41,6 @@ module Music.Score.Export.ArticulationNotation (
 
 import Data.Semigroup
 import Data.Functor.Context
-import Data.Functor.Adjunction (unzipR)
 import Control.Lens -- ()
 
 import Music.Score.Articulation (Articulation, Articulated(..), Separation, Accentuation)
@@ -185,3 +184,7 @@ notateArticulation (getCtxt -> x) = go x
           (False, True, True) -> [BeginSlur]
           (True, True, False) -> [EndSlur]
           _                   -> []
+
+
+unzipR :: Functor f => f (a, b) -> (f a, f b)
+unzipR x = (fmap fst x, fmap snd x)

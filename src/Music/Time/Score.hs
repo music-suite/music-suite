@@ -52,7 +52,6 @@ import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
-import           Data.Functor.Adjunction  (unzipR)
 import qualified Data.List                as List
 import qualified Data.List.NonEmpty       as NonEmpty
 import           Data.Map                 (Map)

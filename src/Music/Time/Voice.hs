@@ -71,7 +71,6 @@ import           Control.Monad.Plus
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
 import           Data.Foldable            (Foldable)
-import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Context
 import           Data.List.NonEmpty       (NonEmpty)
 import           Data.Maybe
@@ -304,6 +303,9 @@ durationsAsVoice = iso (mconcat . fmap (\d -> stretch d $ pure ())) (^. duration
 --
 unzipVoice :: Voice (a, b) -> (Voice a, Voice b)
 unzipVoice = unzipR
+  where
+    unzipR :: Functor f => f (a, b) -> (f a, f b)
+    unzipR x = (fmap fst x, fmap snd x)
 
 -- |
 -- Join the given voices by multiplying durations and pairing values.

@@ -2,7 +2,6 @@
 module Data.Functor.Rep.Lens where
 
 import Control.Lens hiding (index)
-import Data.Functor.Rep
 
 -- $dataFunctorRepLens
 -- Provides access to the definition in "Data.Functor.Rep" in terms of "Control.Lens".
@@ -12,10 +11,10 @@ import Data.Functor.Rep
 --
 -- This is an infix alias for 'index'.
 --
-(!) :: Representable f => f a -> Rep f -> a
-(!) = index
+-- (!) :: Representable f => f a -> Rep f -> a
+-- (!) = index
 
-infixl 6 !
+-- infixl 6 !
 
 {-
 -- |
@@ -28,4 +27,3 @@ infixl 6 !
 tabulated :: (Representable f, Representable g) => Iso (Rep f -> a) (Rep g -> b) (f a) (g b)
 tabulated = iso tabulate index
 -}
-

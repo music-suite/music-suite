@@ -19,7 +19,6 @@ import           Data.Ratio
 import           Data.Semigroup
 import           Data.Typeable
 import           Data.Word
-import           Data.Functor.Adjunction  (unzipR)
 
 import           Music.Dynamics.Literal
 import           Music.Pitch.Alterable
@@ -75,7 +74,8 @@ deriving instance (Monoid b, Alterable a) => Alterable (Couple b a)
 deriving instance (Monoid b, Augmentable a) => Augmentable (Couple b a)
 instance Tiable a => Tiable (Couple b a) where
   toTied = unzipR . fmap toTied
-
+    where
+      unzipR x = (fmap fst x, fmap snd x)
 
 
 newtype TremoloT a = TremoloT { getTremoloT :: Couple (Max Word) a }

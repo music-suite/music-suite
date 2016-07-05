@@ -40,7 +40,6 @@ import           Data.AffineSpace
 import           Data.AffineSpace
 import           Data.Bifunctor
 import           Data.Colour.Names          as Color
-import           Data.Functor.Adjunction    (unzipR)
 import           Data.Functor.Context
 import           Data.Functor.Contravariant (Op(..))
 import           Data.Functor.Couple
@@ -279,3 +278,7 @@ groupDiff' p []     = []
 groupDiff' p (x:xs)
   | not (p x) = Left  (x : List.takeWhile (not . p) xs) : groupDiff' p (List.dropWhile (not . p) xs)
   | p x       = Right (x : List.takeWhile p         xs) : groupDiff' p (List.dropWhile p         xs)
+
+
+unzipR :: Functor f => f (a, b) -> (f a, f b)
+unzipR x = (fmap fst x, fmap snd x)

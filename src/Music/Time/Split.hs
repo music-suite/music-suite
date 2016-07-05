@@ -16,8 +16,6 @@ import           Control.Lens             hiding (Indexable, Level, above,
                                            reversed, transform, (<|), (|>))
 import           Data.AffineSpace
 import           Data.AffineSpace.Point
-import           Data.Functor.Adjunction  (unzipR)
-import           Data.Functor.Rep
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
 import           Data.Semigroup           hiding ()
@@ -43,7 +41,7 @@ import           Music.Time.Position
 -- sufficient to prove two!).
 --
 class HasDuration a => Splittable a where
-  
+
   -- | Split a value at the given duration and return both parts.
   split      :: Duration -> a -> (a, a)
   split   d x = (beginning d x, ending d x)
@@ -77,4 +75,3 @@ chunks :: (Transformable a, Splittable a) => Duration -> a -> [a]
 chunks d xs = chunks' d xs
   where
     chunks' d (split d -> (x, xs)) = [x] ++ chunks d xs
-

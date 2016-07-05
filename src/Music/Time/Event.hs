@@ -17,7 +17,6 @@ import           Control.Lens             hiding (Indexable, Level, above,
                                            reversed, transform, (<|), (|>))
 import           Control.Monad            (join, mapM)
 import           Control.Monad.Compose
-import           Data.Distributive        (distribute)
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as Foldable
 import           Data.Functor.Classes
@@ -110,4 +109,3 @@ spanEvent = iso (\s -> (s,())^.event) (^.era)
 -- | View a event as a @(time, duration, value)@ triple.
 triple :: Iso (Event a) (Event b) (Time, Duration, a) (Time, Duration, b)
 triple = from event . bimapping onsetAndDuration id . tripped
-

@@ -52,9 +52,7 @@ import           Control.Lens             hiding (transform)
 import           Control.Monad.Plus
 import           Data.Foldable            (Foldable)
 import qualified Data.Foldable            as F
-import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Couple
-import           Data.Functor.Rep
 import qualified Data.List                as List
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
@@ -257,6 +255,10 @@ instance Reversible a => Reversible (AddMeta a) where
 
 instance Splittable a => Splittable (AddMeta a) where
   split t = unzipR . fmap (split t)
+    where
+      unzipR :: Functor f => f (a, b) -> (f a, f b)
+      unzipR x = (fmap fst x, fmap snd x)
+
 
 instance HasPosition a => HasPosition (AddMeta a) where
   _era = _era . extract
@@ -305,5 +307,5 @@ annotatedIgnoringMeta = _Wrapped . extracted
 extracted :: (Applicative m, Comonad m) => Iso (m a) (m b) a b
 extracted = iso extract pure
 
-extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
-extractedRep = iso extractRep pureRep
+-- extractedRep :: (Representable m, w ~ Rep m, Monoid w) => Iso (m a) (m b) a b
+-- extractedRep = iso extractRep pureRep

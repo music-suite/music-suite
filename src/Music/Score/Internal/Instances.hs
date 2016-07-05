@@ -34,7 +34,6 @@ import           Control.Monad
 import           Data.AffineSpace
 import           Data.Monoid.Average
 import           Data.Foldable
-import           Data.Functor.Adjunction  (unzipR)
 import           Data.Functor.Couple
 import qualified Data.List                as List
 import           Data.Maybe
@@ -358,3 +357,6 @@ instance (Transformable a, a ~ Part a) => HasPart Music.Parts.Part a where
   part = ($)
 instance (Transformable a, a ~ Part a) => HasParts Music.Parts.Part a where
   parts = ($)
+
+unzipR :: Functor f => f (a, b) -> (f a, f b)
+unzipR x = (fmap fst x, fmap snd x)

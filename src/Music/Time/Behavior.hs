@@ -29,6 +29,8 @@ module Music.Time.Behavior (
     turnOn,
     turnOff,
 
+    (!),
+
   ) where
 
 import           Data.Map                      (Map)
@@ -96,13 +98,13 @@ newtype Behavior a  = Behavior { getBehavior :: Time -> a }
 instance Show (Behavior a) where
   show _ = "<<Behavior>>"
 
-instance Distributive Behavior where
-  distribute = Behavior . distribute . fmap getBehavior
+-- instance Distributive Behavior where
+  -- distribute = Behavior . distribute . fmap getBehavior
 
-instance Representable Behavior where
-  type Rep Behavior = Time
-  tabulate = Behavior
-  index (Behavior x) = x
+-- instance Representable Behavior where
+--   type Rep Behavior = Time
+--   tabulate = Behavior
+--   index (Behavior x) = x
 
 instance Transformable (Behavior a) where
   transform s (Behavior a) = Behavior (a `whilst` s)
@@ -181,7 +183,7 @@ instance AffineSpace a => AffineSpace (Behavior a) where
 -- @
 --
 behavior :: Iso (Time -> a) (Time -> b) (Behavior a) (Behavior b)
-behavior = tabulated
+behavior = iso Behavior getBehavior
 
 -- |
 -- View a time function as a behavior.
@@ -201,7 +203,7 @@ unbehavior = from behavior
 -- for convenience.
 --
 line :: Fractional a => Behavior a
-line = realToFrac ^. tabulated
+line = realToFrac ^. behavior
 --
 -- > f t = t
 --
@@ -285,10 +287,14 @@ trimAfter stop x = switch stop x mempty
 -- Instantly switch from one behavior to another with an optinal intermediate value.
 --
 switch' :: Time -> Behavior a -> Behavior a -> Behavior a -> Behavior a
-switch' t rx ry rz = tabulate $ \u -> case u `compare` t of
+switch' t rx ry rz = view behavior $ \u -> case u `compare` t of
   LT -> rx ! u
   EQ -> ry ! u
   GT -> rz ! u
+
+-- TODO restore to public API?
+(!) :: Behavior a -> Time -> a
+b ! t = getBehavior b t
 
 trimB :: Monoid a => Span -> Behavior a -> Behavior a
 trimB (view onsetAndOffset -> (on,off)) x = (\t -> if on <= t && t <= off then x ! t else mempty)^.behavior

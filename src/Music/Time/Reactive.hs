@@ -48,10 +48,7 @@ import           Control.Lens            hiding (Indexable, Level, above, below,
                                           transform, (<|), (|>))
 import           Control.Monad
 import           Control.Monad.Plus
-import           Data.Distributive
 import           Data.Maybe (fromJust)
-import           Data.Functor.Rep
-import           Data.Functor.Rep.Lens
 import qualified Data.List               as List
 import           Data.Semigroup          hiding ()
 import           Data.Typeable

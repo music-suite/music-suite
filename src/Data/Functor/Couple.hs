@@ -29,7 +29,6 @@ import Data.Functor.Product
 import Data.Functor.Identity
 import Data.Foldable
 import Data.Traversable
-import Data.Functor.Adjunction (unzipR)
 import Data.Semigroup
 import Data.Typeable
 import Control.Applicative
@@ -177,3 +176,6 @@ instance (Monoid b, Ord b, Real a) => Real (Couple b a) where
 
 instance (Monoid b, Ord b, RealFrac a) => RealFrac (Couple b a) where
   properFraction = first extract . unzipR . fmap properFraction
+
+unzipR :: Functor f => f (a, b) -> (f a, f b)
+unzipR x = (fmap fst x, fmap snd x)

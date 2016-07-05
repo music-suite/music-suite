@@ -61,9 +61,7 @@ import           Data.Bifunctor
 import           Data.Colour.Names                       as Color
 import           Data.Either
 import           Data.Foldable                           (Foldable)
-import           Data.Functor.Adjunction                 (unzipR)
 import           Data.Functor.Context
--- import           Data.Functor.Contravariant
 import           Data.Functor.Couple
 import qualified Data.List
 import           Data.Maybe
@@ -229,14 +227,14 @@ instance (
   HasOrdPart a,
   Transformable a,
   Semigroup a,
-  Tiable e, HasOrdPart c, Show (Part c), 
+  Tiable e, HasOrdPart c, Show (Part c),
   HasLilypondInstrument (Part c),
   Satisfied
   )
   => HasBackendScore Lilypond (Score a) where
 #else
 instance (
-  Tiable a, HasOrdPart a, Show (Part a), 
+  Tiable a, HasOrdPart a, Show (Part a),
   HasLilypondInstrument (Part a),
   Satisfied
   )
@@ -439,7 +437,7 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT Art
       rcomposed = composed . reverse
 #else
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ArticulationT {-ArticulationNotation-}b a) where
-  exportNote b = exportNote b . fmap extract     
+  exportNote b = exportNote b . fmap extract
 #endif
 
 instance HasBackendNote Lilypond a => HasBackendNote Lilypond (ColorT a) where
@@ -484,12 +482,12 @@ instance HasBackendNote Lilypond a => HasBackendNote Lilypond (SlideT a) where
   exportNote        :: b -> BC a   -> BN
   exportChord       :: b -> BC [a] -> BN
   uncurry notateTie :: ((Any, Any), LyMusic) -> LyMusic
-  
+
   BC (TieT a)        sequenceA
   TieT (BC a)        fmap (exportNote b)
   TieT BN            notate . getTieT
   BN
-  
+
   BC [TieT a]        fmap sequenceA
   BC (TieT [a])      sequenceA
   TieT (BC [a])      fmap (exportChord b)
@@ -680,7 +678,7 @@ openLilypond' options sc = do
 
 
 
-                                                                          
+
 
 
 pcatL :: [LyMusic] -> LyMusic
@@ -708,5 +706,3 @@ type Satisfied = (() ~ ())
 
 -- | A constraint that is never satisfied.
 type Unsatisfied = (() ~ Bool)
-
-

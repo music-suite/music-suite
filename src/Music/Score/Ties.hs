@@ -25,7 +25,6 @@ import           Data.Bifunctor
 import           Control.Comonad
 import           Control.Lens            hiding (transform, (&))
 import           Data.AffineSpace
-import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List               as List
 import           Data.Semigroup
 import           Data.Monoid.Average
@@ -265,3 +264,6 @@ splitDur maxDur (d,a)
   | d      >  maxDur =  ((maxDur, b), Just (d - maxDur, c))
   | otherwise   = error "Impossible"
     where (b,c) = toTied a
+
+unzipR :: Functor f => f (a, b) -> (f a, f b)
+unzipR x = (fmap fst x, fmap snd x)
