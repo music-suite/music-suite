@@ -7,7 +7,6 @@ module Music.Parts.Voices (
 import           Control.Applicative
 import           Control.Lens            (toListOf)
 import           Data.Default
-import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List
 import           Data.Maybe
 import           Data.Semigroup

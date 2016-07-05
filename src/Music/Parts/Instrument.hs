@@ -33,7 +33,6 @@ import           Control.Lens                    (toListOf)
 import           Data.Aeson                      (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 import           Data.Default
-import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
 import           Data.Map                        (Map)
 import qualified Data.Maybe

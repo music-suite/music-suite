@@ -1,4 +1,5 @@
 
+
 -- | A type to represent (flat) subdivisions of a part.
 module Music.Parts.Division (
         Division,
@@ -14,7 +15,6 @@ import           Control.Lens            (toListOf)
 import           Data.Aeson                      (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 import           Data.Default
-import           Data.Functor.Adjunction (unzipR)
 import           Data.Semigroup
 import           Data.Semigroup.Option.Instances
 import           Data.Traversable                (traverse)
@@ -34,6 +34,7 @@ import           Text.Numeral.Roman              (toRoman)
             sounding = written .+^ transp
         - Suggested clefs
 -}
+
 
 -- |
 -- A division represents a subset of a finite group of performers.
@@ -77,5 +78,3 @@ division n m
 -- | Get all possible divisions for a given divisor in ascending order.
 divisions :: Int -> [Division]
 divisions n = [Division (x,n) | x <- [0..n-1]]
-
-

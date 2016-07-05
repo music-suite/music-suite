@@ -9,7 +9,6 @@ import           Data.Aeson                      (ToJSON (..), FromJSON(..))
 import qualified Data.Aeson
 import           Control.Lens                    (toListOf)
 import           Data.Default
-import           Data.Functor.Adjunction         (unzipR)
 import qualified Data.List
 import           Data.Maybe
 import           Data.Semigroup
@@ -33,5 +32,3 @@ instance FromJSON Solo where
   parseJSON (Data.Aeson.String "solo") = return Solo
   parseJSON (Data.Aeson.String "tutti") = return Tutti
   parseJSON _ = empty
-
-

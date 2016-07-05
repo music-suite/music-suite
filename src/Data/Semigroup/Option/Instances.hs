@@ -4,7 +4,6 @@ module Data.Semigroup.Option.Instances where
 import           Control.Applicative
 import           Control.Lens            (toListOf)
 import           Data.Default
-import           Data.Functor.Adjunction (unzipR)
 import qualified Data.List
 import           Data.Maybe
 import           Data.Semigroup
@@ -45,3 +44,5 @@ instance Integral a => Integral (First a) where
   toInteger = toInteger . get where get = (head.toListOf traverse)
 instance Real a => Real (First a) where
   toRational = toRational . get where get = (head.toListOf traverse)
+
+unzipR x = (fmap fst x, fmap snd x)
