@@ -185,7 +185,6 @@ import qualified Data.Maybe
 import           Data.Bifunctor                          (bimap, first, second)
 import           Data.Semigroup
 import           Data.VectorSpace                        hiding (Sum)
-
 import qualified Data.Music.Lilypond                     as Lilypond
 import qualified Data.Music.MusicXml.Simple              as MusicXml
 import qualified Codec.Midi                              as Midi

@@ -125,11 +125,11 @@ partitionSimplistic p = recur []
       :: ([a] -> Bool)
       -> [a]
       -> Logic ([a], [a]) -- (picked subset, remaining)
-    pickNewSubset p = recur []
+    pickNewSubset p initialSet = recur [] initialSet
       where
         recur alreadyPicked toConsider = do
-          -- NOTE aShuffle must return some partition (which don't matter for correctness
-          -- but will affect order)
+          -- NOTE aShuffle must return some partition (the choice affects order,
+          -- but not correctness)
 
           -- If its first argument succeeds at all, then the results will be fed into the success branch.
           -- Otherwise, the failure branch is taken.
