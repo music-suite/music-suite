@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # music-articulation
@@ -32,6 +33,14 @@ This package provides various representations of musical pitch.
 
 This library is part of the Music Suite, see <http://music-suite.github.io>.
 >>>>>>> 544f0092b250c06af51a1e4da03bc39cc3b15b24
+=======
+
+# music-score
+
+Musical score and part representation.
+
+This library is part of the Music Suite, see <http://music-suite.github.io>.
+>>>>>>> ae6508d8028ed17823820241472dfe7fcbfe0a50
 
 ## Requirements
 

@@ -1,0 +1,167 @@
+
+name:                   music-score
+version:                1.9.2
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund
+license:                BSD3
+license-file:           COPYING
+synopsis:               Musical score and part representation.
+category:               Music
+tested-with:            GHC
+build-type:             Custom
+cabal-version:          >= 1.10
+data-files:             data/ly_big_score.ily
+
+description:
+    Musical time structure, voices, tracks and scores.
+
+    This library is part of the Music Suite, see <http://music-suite.github.io>.
+
+source-repository head
+  type:               git
+  location:           git://github.com/music-suite/music-score.git
+
+library
+    build-depends:      base                    >= 4 && < 5,
+                        base-orphans            >= 0.5 && < 1,
+                        bytestring              >= 0.10.4.0 && < 1,
+                        aeson                   >= 0.7.0.6 && < 1,
+                        lens                    >= 4.11     && < 5,
+                        process                 >= 1.2 && < 1.3,
+                        split                   >= 0.2.2    && < 1,
+                        containers,
+                        nats,
+                        average                 >= 0.6.1    && < 1,
+                        semigroups              >= 0.13.0.1 && < 1,
+                        comonad                 >= 4.2.2 && < 5,
+                        contravariant           >= 1.2 && < 2,
+                        bifunctors              >= 5 && < 6,
+                        -- profunctors             >= 4.2.0.1 && < 5,
+                        mtl                     >= 2.1.3.1 && < 3,
+                        transformers            >= 0.4.2.0 && < 0.5,
+                        transformers-compat     >= 0.4.0.4,
+                        monadplus,
+                        NumInstances,
+                        combinat,
+                        logict,
+                        directory,
+                        random-shuffle,
+                        MonadRandom,
+                        random,
+                        base-prelude,
+                        colour                  >= 2.3.3 && < 3.0,
+                        HCodecs                 >= 0.5 && < 0.6,
+                        vector-space            >= 0.10.2 && < 1,
+                        vector-space-points     >= 0.2 && < 1,
+                        musicxml2               == 1.9.2,
+                        lilypond                == 1.9.2,
+                        prettify                >= 1.0 && < 2,
+                        parsec                  >= 3.1.9 && < 4,
+                        music-pitch             == 1.9.2,
+                        music-dynamics          == 1.9.2,
+                        music-articulation      == 1.9.2,
+                        music-parts             == 1.9.2
+    exposed-modules:    Data.PairMonad
+                        Data.AffineSpace.Point.Offsets
+                        Data.Functor.Couple
+                        Data.Functor.Context
+                        Data.Functor.Rep.Lens
+                        Data.Semigroup.Instances
+                        Control.Monad.Compose
+                        Music.Time
+                        Music.Time.Types
+                        Music.Time.Transform
+                        Music.Time.Duration
+                        Music.Time.Position
+                        Music.Time.Split
+                        Music.Time.Reverse
+                        Music.Time.Juxtapose
+                        Music.Time.Rest
+                        Music.Time.Aligned
+                        Music.Time.Note
+                        Music.Time.Placed
+                        Music.Time.Event
+                        Music.Time.Track
+                        Music.Time.Voice
+                        Music.Time.Score
+                        Music.Time.Behavior
+                        Music.Time.Reactive
+                        Music.Time.Meta
+                        Music.Score
+                        Music.Score.Ties
+                        Music.Score.Part
+                        Music.Score.Phrases
+                        Music.Score.Meta
+                        Music.Score.Meta.Annotations
+                        Music.Score.Meta.Attribution
+                        Music.Score.Meta.Barline
+                        Music.Score.Meta.Clef
+                        Music.Score.Meta.Fermata
+                        Music.Score.Meta.Key
+                        Music.Score.Meta.RehearsalMark
+                        Music.Score.Meta.Tempo
+                        Music.Score.Meta.Time
+                        Music.Score.Meta.Title
+                        Music.Score.Meta.Extract
+                        Music.Score.Pitch
+                        Music.Score.Articulation
+                        Music.Score.Dynamics
+                        Music.Score.Slide
+                        Music.Score.Tremolo
+                        Music.Score.Text
+                        Music.Score.Harmonics
+                        Music.Score.Color
+                        -- Music.Score.Export.Abc
+                        -- Music.Score.Export.Backend
+                        -- Music.Score.Export.NoteList
+                        -- Music.Score.Export.Midi
+                        -- Music.Score.Export.SuperCollider
+                        -- Music.Score.Export.Lilypond
+                        -- Music.Score.Export.MusicXml
+                        Music.Score.Export.ArticulationNotation
+                        Music.Score.Export.DynamicNotation
+                        Music.Score.Export2.StandardNotation
+                        Music.Score.Import.Abc
+                        Music.Score.Import.Lilypond
+                        Music.Score.Import.Midi
+                        -- We expose these to allow GHCI development
+                        Music.Time.Internal.Convert
+                        Music.Time.Internal.Util
+                        Music.Time.Internal.Transform
+                        Music.Score.Internal.Data
+                        Music.Score.Internal.Quantize
+                        Music.Score.Internal.VoiceSeparation
+                        Music.Score.Internal.Instances
+                        Music.Score.Internal.Util
+                        Music.Score.Internal.Export
+    other-modules:      Paths_music_score
+                        Music.Time.Internal.Preliminaries
+    hs-source-dirs:     src
+    default-language:   Haskell2010
+    default-extensions: ConstraintKinds,
+                        DeriveDataTypeable,
+                        DeriveFoldable,
+                        DeriveFunctor,
+                        DeriveTraversable,
+                        GeneralizedNewtypeDeriving,
+                        MultiParamTypeClasses,
+                        NoMonomorphismRestriction ,
+                        RankNTypes,
+                        StandaloneDeriving,
+                        TupleSections,
+                        TypeFamilies,
+                        TypeOperators,
+                        ViewPatterns,
+                        OverloadedStrings
+
+    ghc-options:        -fno-warn-typed-holes
+                        -fwarn-tabs
+                        -- -fwarn-unused-imports
+                        -- -fwarn-name-shadowing
+                        -fwarn-incomplete-patterns
+                        -fwarn-incomplete-uni-patterns
+                        -fwarn-overlapping-patterns
+                        -fwarn-incomplete-record-updates
+                        -fwarn-missing-signatures
+                        -- -fwarn-orphans
+                        -Werror
