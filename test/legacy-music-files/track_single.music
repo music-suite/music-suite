@@ -1,0 +1,9 @@
+let
+    x = [ (0, c)^.placed, (1, d)^.placed, (2, e)^.placed ]^.track
+    y = join $ [ (0, x)^.placed, 
+                (1.5,  up _P5 x)^.placed, 
+                (3.25, up _P8 x)^.placed ]^.track
+
+    trackToScore d = view score . map (view event . (\(t,x) -> (t >-> d,x)) . (view $ from placed)) . view placeds
+    
+in trackToScore (1/8) y

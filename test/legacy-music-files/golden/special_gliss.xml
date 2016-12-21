@@ -1,0 +1,90 @@
+<?xml version='1.0' ?>
+<score-partwise>
+  <movement-title></movement-title>
+  <identification>
+    <creator type="composer"></creator>
+  </identification>
+  <part-list>
+    <score-part id="P1">
+      <part-name></part-name>
+      <part-name-display>
+        <display-text></display-text>
+      </part-name-display>
+    </score-part>
+  </part-list>
+  <part id="P1">
+    <measure number="1">
+      <attributes>
+        <divisions>768</divisions>
+      </attributes>
+      <attributes>
+        <key>
+          <fifths>0</fifths>
+          <mode>major</mode>
+        </key>
+      </attributes>
+      <direction>
+        <direction-type>
+          <metronome>
+            <beat-unit>quarter</beat-unit>
+            <per-minute>120</per-minute>
+          </metronome>
+        </direction-type>
+      </direction>
+      <attributes>
+        <staves>1</staves>
+      </attributes>
+      <attributes>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
+      </attributes>
+      <attributes>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+      </attributes>
+      <direction>
+        <direction-type>
+          <dynamics>
+            <mf />
+          </dynamics>
+        </direction-type>
+      </direction>
+      <note>
+        <pitch>
+          <step>C</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <glissando number="1" type="start" line-type="solid" />
+        </notations>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <alter>0.0</alter>
+          <octave>4</octave>
+        </pitch>
+        <duration>1536</duration>
+        <voice>1</voice>
+        <type>half</type>
+        <notations>
+          <ornaments />
+          <technical />
+          <articulations />
+          <glissando number="1" type="stop" line-type="solid" />
+        </notations>
+      </note>
+    </measure>
+  </part>
+</score-partwise>

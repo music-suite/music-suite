@@ -1,0 +1,114 @@
+
+name:                   music-suite
+version:                1.9.2
+author:                 Hans Hoglund
+maintainer:             Hans Hoglund <music-suite-discuss@googlegroups.com>
+license:                BSD3
+license-file:           COPYING
+synopsis:               A set of libraries for composition, analysis and manipulation of music.
+category:               Music
+tested-with:            GHC
+build-type:             Simple
+cabal-version:          >= 1.10
+
+description:
+    This library is part of the Music Suite, see <http://music-suite.github.io>.
+
+extra-source-files:     README.md,
+                        examples/*.hs,
+                        examples/*.scm
+
+source-repository head
+  type:             	git
+  location:         	git://github.com/music-suite/music-suite.git
+
+library
+    build-depends:      base                    >= 4        && < 5,
+                        lens                    >= 4.11     && < 5,
+                        split                   >= 0.2.2    && < 1,
+                        containers,
+                        comonad                 >= 4.2.2 && < 5,
+                        vector-space            >= 0.10.2   && < 1,
+                        vector-space-points     >= 0.2      && < 1,
+                        process                 >= 1.2      && < 1.3,
+                        filepath                >= 1.3      && < 2,
+                        temporary               >= 1.1      && < 2,
+                        optparse-applicative    >= 0.8      && < 1,
+                        average                 >= 0.6.1    && < 1,
+                        semigroups              >= 0.13.0.1 && < 1,
+                        hsini                   >= 0.4.1    && < 1,
+                        monadplus,
+                        lilypond                == 1.9.2,
+                        musicxml2               == 1.9.2,
+                        music-score             == 1.9.2,
+                        music-pitch             == 1.9.2,
+                        music-dynamics          == 1.9.2,
+                        music-articulation      == 1.9.2,
+                        music-parts             == 1.9.2,
+                        record
+    if !os(windows)
+      build-depends:    unix
+    exposed-modules:    Music.Prelude
+                        Music.Prelude.Standard
+                        Music.Prelude.CmdLine
+                        Music.Prelude.Instances
+                        Music.Prelude.Inspectable
+    other-modules:      Paths_music_suite
+    hs-source-dirs:     src
+    default-language:   Haskell2010
+
+executable "music-suite-test-umts"
+    build-depends:      base                    >= 4   && < 5,
+                        tasty                   >= 0.8 && < 1,
+                        tasty-golden            >= 2.2 && < 3,
+                        process,
+                        average,
+                        containers,
+                        tasty-quickcheck,
+                        QuickCheck,
+                        semigroups,
+                        comonad,
+                        music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
+    main-is:            UMTS.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+test-suite "music-suite-test-laws"
+    build-depends:      base                    >= 4   && < 5,
+                        tasty                   >= 0.8 && < 1,
+                        tasty-golden            >= 2.2 && < 3,
+                        process,
+                        average,
+                        containers,
+                        tasty-quickcheck,
+                        QuickCheck,
+                        semigroups,
+                        comonad,
+                        music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
+    type:               exitcode-stdio-1.0
+    main-is:            Laws.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+
+test-suite "music-suite-test-basic"
+    build-depends:      base                    >= 4   && < 5,
+                        tasty                   >= 0.8 && < 1,
+                        tasty-golden            >= 2.2 && < 3,
+                        process,
+                        average,
+                        containers,
+                        tasty-quickcheck,
+                        QuickCheck,
+                        semigroups,
+                        comonad,
+                        lens,
+                        record,
+                        music-suite, music-score, music-dynamics, music-parts, music-pitch, music-articulation
+    type:               exitcode-stdio-1.0
+    main-is:            Basic.hs
+    hs-source-dirs:     test
+    default-language:   Haskell2010
+
+    -- ghc-options:        -fno-warn-typed-holes
+    -- ghc-options:        -fno-warn-typed-holes

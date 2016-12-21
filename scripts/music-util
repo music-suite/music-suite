@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+stack $MUSIC_SUITE_DIR/music-suite/scripts/music-util.hs $*

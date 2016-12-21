@@ -42,3 +42,8 @@ dist
 *.ly
 *.pdf
 cabal.sandbox.config
+cabal.sandbox.config
+.cabal-sandbox
+*.ly
+*.pdf
+.DS_Store

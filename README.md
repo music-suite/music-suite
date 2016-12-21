@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # music-articulation
@@ -72,3 +73,9 @@ This library an exterimental addition to the Music Suite, see <http://music-suit
 
     make install-plugin
 >>>>>>> d8479b761bb709ffe7c2043012c017b93613c933
+=======
+
+# music-suite
+
+This library is part of the Music Suite, see <http://music-suite.github.io>.
+>>>>>>> e9f60cb927908806e8d70e94fcb7ef3699429cf7

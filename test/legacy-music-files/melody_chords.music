@@ -1,0 +1,4 @@
+let            
+    scale = scat [c,d,e,f,g,a,g,f] |/ 8
+    triad a = a <> up _M3 a <> up _P5 a
+in up _P8 scale </> (triad c)|/2 |> (triad g_)|/2

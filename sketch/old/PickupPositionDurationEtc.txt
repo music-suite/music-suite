@@ -1,0 +1,137 @@
+HasPosition vs HasDuration
+
+Rest/Note/Chord
+Voice
+    Duration but no position
+    Delay has no effect
+    Can not have reset/pickup (as this is a concept that has to do with position)
+    This is a form of vector: sequential catenation adds durations (and "appends"
+    the underlying media, whatever that means)
+    
+Delayed a
+    Has duration if a has duration
+    Defines *some* position: onset, offset or some other local duration.
+    All other durations are computed w.r.t. duration of the underlaying value (what does this mean?)
+    
+Chord = [Delayed a]
+    Two ways of looking at it:
+        1) The time values in delayed "moves" the contained value
+        2) The local origin of the contained value is moved
+
+Think of it as vector/point addition
+Notes and Voices are like vectors: they have no "location"
+    However they might have a notion of a "local origin", typically shorter than itself.
+
+    <-        duration        ->
+    <- pickUp -> | <- putDown ->
+
+    They might also have two origins, one on, one off, a la TPTM.
+    
+    <- pickup -> ON <- sound -> OFF <- putDown ->
+    
+    More generally, they may have an function from "nominal" duration (0 = on, 1 = off)
+    to local duration (i.e. difference between nominal on sounding position).
+    This generalizes what Hudak calls ? in TPTM.
+    
+You can add them up any way.
+
+Note that music21's streams is essentially Stream a = [Delayed a]
+They even provide Monadic join, called "flatten"
+
+    http://www.flexatone.org/static/docs/music21Stream.pdf
+
+TODO
+    Finalize our view on Chords, Transformable/HasPosition/HasDuration and their associated laws!
+
+
+PTM
+    -- Vector model
+    data Primitive a = Note a Duration | Rest Duration  -- actual duration
+    data Music = 
+        Prim (Primitive a)
+        Seq (Music a) (Music a)
+        Par (Music a) (Music a)
+        Modify ... (Music a) -- tempo, transposition, instrument, dynamics/phrasing, player
+
+TPTM
+    -- Point model
+    -- see PTM above
+    data Tile a = Tile Duration Duration (Music a)      -- pre post music, logical duration = post - pre
+
+Tidal:
+    -- Point model
+    type Pattern a = [Event a]
+    type Event a = (Span, a)
+
+Lilypond:
+    -- Vector model
+    -- Simplified
+    Music
+        = Chord [Note] Duration
+        | Sequential [Music]
+        | Simultaneous Bool [Music]
+
+Humdrum/GUIDO model:
+    -- Vector model
+    type Score = [Voice]                         -- parallel composition
+    type Voice = [RestNoteChord]                 -- sequential composition
+    type RestNoteChord = ([Pitch], Duration)     -- parallel composition
+
+music21 model:
+    -- Point model
+    type Stream a = [Delayed a]                  -- parallel with offsets
+    type Note = (Duration, a)
+    type Chord = (Duration, [a])
+    type Rest = Duration
+    -- Generally
+    type Score = Stream Part -- "parallel"
+    type Part = Stream Measure -- "sequential"
+    type Measure = Stream Measure -- "parallel"
+    type Voice = Stream (Either Rest (Either Note Chord)) -- "sequential"
+    
+Abjad model:
+    -- Vector model
+    type Score = [StaffGroup]
+    type StaffGroup = [Staff]
+    type Staff = [Voice]
+    type Voice = [Chord]
+    type Chord = [Note]
+
+
+Our model:
+    Primitive: Time/Duration (or Offset/Note, in which case (Time = Offset ()) etc)
+    TODO the "equivalence" of spans/transformations is not always clear-cut, i.e. delayTime
+
+    type Rest a     = Duration
+    type Note a     = (Duration, a)
+    type Chord a    = (Duration, NonEmpty a) --?
+    type Voice a    = [Note a]
+    -- Translation is impossible (they are *vectors*, not *points*)
+    -- Stretching is scalar multiplication
+    -- Dot product? Related to Applicative instance for Voice?
+    -- Sequential composition of these is a form of vector addition
+    -- Splitting is a form of vector subtraction
+    -- What about negative durations in a voice, say?
+    -- Relationship with the inverse semigroup in TPTM? 
+
+    type Span       = (Time, Duration)
+    type Offset   a = (Time, a)
+    type Group a    = [Offset a]
+    type Score a    = Group (Voice a)
+    type Event a    = Offset (Note a)
+    type Track a    = [Event a]
+    -- Parallel composition is a monoid
+    -- Translation is vector+point addition
+    -- Inverse semigroup? (compare TPTM)
+    -- Offset adds the possibility of pickup. How is this related to local onset/offset (esp. the laws?).
+    
+    realise :: Span            -> Track ()
+    realise :: Note a          -> Track a
+    realise :: Voice a         -> Track a
+    realise :: Voice (Chord a) -> Track a
+    realise :: Score a         -> Track a -- TODO recurive sum (similar to PTM)
+    realise :: Score (Group a) -> Track a -- TODO recurive sum (similar to PTM)
+    
+    Overlapping: Rest/Note/Chord/Voice (and compositions/sums thereof) have no overlapping by definition
+    
+

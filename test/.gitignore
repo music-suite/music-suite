@@ -1,0 +1,4 @@
+*_check.sha
+!golden/*.mid
+!golden/*.ly
+!golden/*.xml

@@ -1,0 +1,6 @@
+
+(scat [c..g]|*(2/5))
+    </>
+(invertPitches c $ scat [c..g]|*(2/5))
+    </>
+(invertPitches e $ scat [c..g]|*(2/5))
